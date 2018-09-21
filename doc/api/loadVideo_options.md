@@ -89,14 +89,16 @@ This property is mandatory.
 _type_: ``Array.<Object>|undefined``
 
 This property is mandatory if the content uses DRM.
+It is here that is defined every options relative to the encryption of your
+content.
 
 This property is an array of objects with the following properties (only
 ``type`` and ``getLicense`` are mandatory here):
 
-  - ``type`` (``string``): either the canonical name of keySystem used (e.g.
-    ``"widevine"``, ``"playready"`` ...), or the type (reversed domain name) of
-    the keySystem (e.g. ``"com.widevine.alpha"``, ``"com.microsoft.playready"``
-    ...).
+  - ``type`` (``string``): name of the DRM system used. Can be either
+    ``"widevine"``, ``"playready"`` or ``clearkey`` or the type (reversed domain
+    name) of the keySystem (e.g. ``"com.widevine.alpha"``,
+    ``"com.microsoft.playready"`` ...).
 
   - ``getLicense`` (``Function``): Callback which will be triggered everytime a
     message is sent by the Content Decryption Module (CDM), usually to
@@ -110,10 +112,13 @@ This property is an array of objects with the following properties (only
          There is only 4 possible message types, all defined in [the w3c
          specification](https://www.w3.org/TR/encrypted-media/#dom-mediakeymessagetype).
 
-      This function should return either synchronously the license, or a Promise
-      which:
-      - resolves if the license was fetched, with the licence in argument
-      - reject if an error was encountered
+      This function should return either synchronously the license, `null` to
+      not set a license for this `message` event or a Promise which should
+      either:
+        - resolves if the license was fetched, with the licence in argument
+        - resolve with ``null`` if you do not want to set a license for this
+          `message` event
+        - reject if an error was encountered
 
       In any case, the license provided by this function should be of a
       ``BufferSource`` type (example: an ``Uint8Array`` or an ``ArrayBuffer``).
@@ -125,8 +130,9 @@ This property is an array of objects with the following properties (only
   - ``serverCertificate`` (``BufferSource|undefined``): Eventual certificate
     used to encrypt messages to the license server.
     If set, we will try to set this certificate on the CDM. If it fails, we will
-    still continue (albeit a warning will be emitted) to try deciphering the
-    stream (the getLicense API will be triggered etc.).
+    still continue to try deciphering the stream (albeit a
+    [warning](./errors.md) will be emitted in that case with the code
+    ``"LICENSE_SERVER_CERTIFICATE_ERROR"``).
 
   - ``persistentLicense`` (``Boolean|undefined``): Set it to ``true`` if you
     want the ability to persist the license for later retrieval.
@@ -156,15 +162,40 @@ This property is an array of objects with the following properties (only
     will be required. This is not needed for most usecases. ``false`` if you do
     not care. ``false`` by default.
 
+  - ``throwOnLicenseExpiration`` (``Boolean|undefined``): `true` by default.
+
+    If set to `true` or not set, the playback will be interrupted as soon as one
+    of the current licenses expires. In that situation, you will be warned with
+    an [``error`` event](./errors.md) with, as a payload, an error with the code
+    `KEY_STATUS_CHANGE_ERROR`.
+
+    If set to `false`, the playback of the current content will not be
+    interrupted even if one of the current licenses is expired. It might however
+    stop decoding in that situation.
+    It's then up to you to update the problematic license, usually through the
+    usual `getLicense` callback.
+
+    You may want to set this value to `false` if a session expiration leads to
+    a license renewal.
+    In that case, content may continue to play once the license has been
+    updated.
+
   - ``onKeyStatusesChange``: (``Function|undefined``): Not needed for most
-    usecases. Triggered each time the key statuses of the current session
+    usecases.
+
+    Triggered each time the key statuses of the current session
     changes, except for the following statuses (which throws immediately):
-    ``expired`` and ``internal-error``. Takes 2 arguments:
+      - ``expired`` if (and only if) `throwOnLicenseExpiration` is not set to
+        `false`
+      - `internal-error`
+
+    Takes 2 arguments:
     1. The keystatuseschange event ``{Event}``
     2. The session associated with the event ``{MediaKeySession}``
 
     Like ``getLicense``, this function should return a promise which emit a
-    license when resolved.
+    license or `null` (for no license) when resolved. It can also return
+    directly the license or `null` if it can be done synchronously.
 
   - ``closeSessionsOnStop`` (``Boolean|undefined``): If set to ``true``, the
     ``MediaKeySession`` created for a content will be immediately closed when the
@@ -175,6 +206,7 @@ This property is an array of objects with the following properties (only
     same content needs to be re-decrypted.
 
 #### Example
+
 Example of a simple DRM configuration for widevine and playready DRMs:
 ```js
 player.loadVideo({
@@ -183,11 +215,16 @@ player.loadVideo({
   keySystems: [{
     type: "widevine",
     getLicense(challenge) {
+      // ajaxPromise is here an AJAX implementation doing a POST request on the
+      // widevineLicenseServer with the challenge in its body.
       return ajaxPromise(widevineLicenseServer, challenge);
     }
   }, {
     type: "playready",
     getLicense(challenge) {
+      // idem
+      // Note: you may need to format the challenge before doing the request
+      // depending on the server configuration.
       return ajaxPromise(playreadyLicenseServer, challenge);
     }
   }]
@@ -198,7 +235,7 @@ player.loadVideo({
 <a name="prop-autoPlay"></a>
 ### autoPlay ###################################################################
 
-_type_: ``Array.<Boolean>|undefined``
+_type_: ``Boolean|undefined``
 
 _defaults_: ``false``
 

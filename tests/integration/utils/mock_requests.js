@@ -1,59 +1,27 @@
 /**
- * Mock manifest request as defined by the mock structure given.
- * @param {Object} fakeServer
- * @param {Object} mock
+ * Mock a single GET request
+ * @param {Object} fakeServer - Sinon's FakeServer instance.
+ * @param {Object} urlData - Informations about the URL you want to mock.
  */
-function mockManifestRequest(fakeServer, mock) {
-  fakeServer.respondWith("GET", mock.manifest.url,
-    [200, {
-      "Content-Type": mock.manifest.contentType,
-    }, mock.manifest.data]);
-}
-
-/**
- * Mock every requests defined in the mock structure given.
- * @param {Object} fakeServer
- * @param {Object} mock
- */
-function mockAllRequests(fakeServer, mock) {
-  mockManifestRequest(fakeServer, mock);
-
-  for (const type of Object.keys(mock)) {
-    if (type !== "manifest") {
-      const contents = mock[type];
-      if (contents && contents.length) {
-        for (const content of contents) {
-          if (content && content.init) {
-            // fakeServer.respondWith("GET", content.init.url, (req) => {
-            //   req.respond(200, {
-            //     "Content-Type": content.init.contentType,
-            //   }, content.init.data);
-            // });
-            fakeServer.respondWith("GET", content.init.url,
-              [200, {
-                "Content-Type": content.init.contentType,
-              }, content.init.data]);
-          }
-          if (content && content.segments) {
-            for (const segment of content.segments) {
-              // fakeServer.respondWith("GET", segment.url, (req) => {
-              //   req.respond(200, {
-              //     "Content-Type": segment.contentType,
-              //   }, segment.data);
-              // });
-              fakeServer.respondWith("GET", segment.url,
-                [200, {
-                  "Content-Type": segment.contentType,
-                }, segment.data]);
-            }
-          }
-        }
-      }
-    }
+function mockRequest(fakeServer, { url, data, contentType }) {
+  if (typeof data === "function") {
+    fakeServer.respondWith("GET", url, (xhr) => {
+      const res = data();
+      xhr.respond(200, { "Content-Type": contentType }, res);
+    });
+  } else {
+    fakeServer.respondWith("GET", url,
+      [200, { "Content-Type": contentType }, data]);
   }
 }
 
-export {
-  mockManifestRequest,
-  mockAllRequests,
-};
+/**
+ * Mock every requests defined in the Content structure given.
+ * @param {Object} fakeServer - Sinon's FakeServer instance.
+ * @param {Array.<Object>} urlData
+ */
+export default function mockRequests(fakeServer, urlData) {
+  for (const media of urlData) {
+    mockRequest(fakeServer, media);
+  }
+}

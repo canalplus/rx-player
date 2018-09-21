@@ -24,7 +24,7 @@ import {
   map,
   mergeMap,
 } from "rxjs/operators";
-import { IMediaKeySession } from "../../compat";
+import { ICustomMediaKeySession } from "../../compat";
 import log from "../../log";
 import arrayIncludes from "../../utils/array-includes";
 import assert from "../../utils/assert";
@@ -35,7 +35,7 @@ import isSessionUsable from "./utils/is_session_usable";
 export interface INewSessionCreatedEvent {
   type : "created-session";
   value : {
-    mediaKeySession : MediaKeySession|IMediaKeySession;
+    mediaKeySession : MediaKeySession|ICustomMediaKeySession;
     sessionType : MediaKeySessionType;
   };
 }
@@ -43,7 +43,7 @@ export interface INewSessionCreatedEvent {
 export interface IPersistentSessionRecoveryEvent {
   type : "loaded-persistent-session";
   value : {
-    mediaKeySession : MediaKeySession|IMediaKeySession;
+    mediaKeySession : MediaKeySession|ICustomMediaKeySession;
     sessionType : MediaKeySessionType;
   };
 }
@@ -62,7 +62,7 @@ export type ICreateSessionEvent =
  */
 function loadPersistentSession(
   sessionId: string,
-  session: MediaKeySession|IMediaKeySession
+  session: MediaKeySession|ICustomMediaKeySession
 ) : Observable<boolean> {
   return observableDefer(() => {
     log.debug("eme: load persisted session", sessionId);

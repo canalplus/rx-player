@@ -75,15 +75,17 @@ depends on the current browser).</p>
 <a name="subchapter-keySystems"></a></p>
 <h3>keySystems</h3>
 <p><em>type</em>: <code>Array.&lt;Object&gt;|undefined</code></p>
-<p>This property is mandatory if the content uses DRM.</p>
+<p>This property is mandatory if the content uses DRM.
+It is here that is defined every options relative to the encryption of your
+content.</p>
 <p>This property is an array of objects with the following properties (only
 <code>type</code> and <code>getLicense</code> are mandatory here):</p>
 <ul>
 <li>
-<p><code>type</code> (<code>string</code>): either the canonical name of keySystem used (e.g.
-<code>&quot;widevine&quot;</code>, <code>&quot;playready&quot;</code> &#x2026;), or the type (reversed domain name) of
-the keySystem (e.g. <code>&quot;com.widevine.alpha&quot;</code>, <code>&quot;com.microsoft.playready&quot;</code>
-&#x2026;).</p>
+<p><code>type</code> (<code>string</code>): name of the DRM system used. Can be either
+<code>&quot;widevine&quot;</code>, <code>&quot;playready&quot;</code> or <code>clearkey</code> or the type (reversed domain
+name) of the keySystem (e.g. <code>&quot;com.widevine.alpha&quot;</code>,
+<code>&quot;com.microsoft.playready&quot;</code> &#x2026;).</p>
 </li>
 <li>
 <p><code>getLicense</code> (<code>Function</code>): Callback which will be triggered everytime a
@@ -98,12 +100,13 @@ received.
 There is only 4 possible message types, all defined in <a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeymessagetype">the w3c
 specification</a>.</li>
 </ol>
-<p>This function should return either synchronously the license, or a Promise
-which:</p>
-<ul>
-<li>resolves if the license was fetched, with the licence in argument</li>
-<li>reject if an error was encountered</li>
-</ul>
+<p>This function should return either synchronously the license, <code>null</code> to
+not set a license for this <code>message</code> event or a Promise which should
+either:
+- resolves if the license was fetched, with the licence in argument
+- resolve with <code>null</code> if you do not want to set a license for this
+<code>message</code> event
+- reject if an error was encountered</p>
 <p>In any case, the license provided by this function should be of a
 <code>BufferSource</code> type (example: an <code>Uint8Array</code> or an <code>ArrayBuffer</code>).</p>
 <p>Note: We set a 10 seconds timeout on this request. If the returned Promise
@@ -114,8 +117,9 @@ error. If this limit is problematic for you, please open an issue.</p>
 <p><code>serverCertificate</code> (<code>BufferSource|undefined</code>): Eventual certificate
 used to encrypt messages to the license server.
 If set, we will try to set this certificate on the CDM. If it fails, we will
-still continue (albeit a warning will be emitted) to try deciphering the
-stream (the getLicense API will be triggered etc.).</p>
+still continue to try deciphering the stream (albeit a
+<a href="errors.html">warning</a> will be emitted in that case with the code
+<code>&quot;LICENSE_SERVER_CERTIFICATE_ERROR&quot;</code>).</p>
 </li>
 <li>
 <p><code>persistentLicense</code> (<code>Boolean|undefined</code>): Set it to <code>true</code> if you
@@ -152,16 +156,39 @@ will be required. This is not needed for most usecases. <code>false</code> if yo
 not care. <code>false</code> by default.</p>
 </li>
 <li>
+<p><code>throwOnLicenseExpiration</code> (<code>Boolean|undefined</code>): <code>true</code> by default.</p>
+<p>If set to <code>true</code> or not set, the playback will be interrupted as soon as one
+of the current licenses expires. In that situation, you will be warned with
+an <a href="errors.html"><code>error</code> event</a> with, as a payload, an error with the code
+<code>KEY_STATUS_CHANGE_ERROR</code>.</p>
+<p>If set to <code>false</code>, the playback of the current content will not be
+interrupted even if one of the current licenses is expired. It might however
+stop decoding in that situation.
+It&#x2019;s then up to you to update the problematic license, usually through the
+usual <code>getLicense</code> callback.</p>
+<p>You may want to set this value to <code>false</code> if a session expiration leads to
+a license renewal.
+In that case, content may continue to play once the license has been
+updated.</p>
+</li>
+<li>
 <p><code>onKeyStatusesChange</code>: (<code>Function|undefined</code>): Not needed for most
-usecases. Triggered each time the key statuses of the current session
-changes, except for the following statuses (which throws immediately):
-<code>expired</code> and <code>internal-error</code>. Takes 2 arguments:</p>
+usecases.</p>
+<p>Triggered each time the key statuses of the current session
+changes, except for the following statuses (which throws immediately):</p>
+<ul>
+<li><code>expired</code> if (and only if) <code>throwOnLicenseExpiration</code> is not set to
+<code>false</code></li>
+<li><code>internal-error</code></li>
+</ul>
+<p>Takes 2 arguments:</p>
 <ol>
 <li>The keystatuseschange event <code>{Event}</code></li>
 <li>The session associated with the event <code>{MediaKeySession}</code></li>
 </ol>
 <p>Like <code>getLicense</code>, this function should return a promise which emit a
-license when resolved.</p>
+license or <code>null</code> (for no license) when resolved. It can also return
+directly the license or <code>null</code> if it can be done synchronously.</p>
 </li>
 <li>
 <p><code>closeSessionsOnStop</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, the
@@ -180,11 +207,16 @@ same content needs to be re-decrypted.</p>
   <span class="hljs-attr">keySystems</span>: [{
     <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;widevine&quot;</span>,
     getLicense(challenge) {
+      <span class="hljs-comment">// ajaxPromise is here an AJAX implementation doing a POST request on the</span>
+      <span class="hljs-comment">// widevineLicenseServer with the challenge in its body.</span>
       <span class="hljs-keyword">return</span> ajaxPromise(widevineLicenseServer, challenge);
     }
   }, {
     <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;playready&quot;</span>,
     getLicense(challenge) {
+      <span class="hljs-comment">// idem</span>
+      <span class="hljs-comment">// Note: you may need to format the challenge before doing the request</span>
+      <span class="hljs-comment">// depending on the server configuration.</span>
       <span class="hljs-keyword">return</span> ajaxPromise(playreadyLicenseServer, challenge);
     }
   }]
@@ -193,7 +225,7 @@ same content needs to be re-decrypted.</p>
 <p><a name="prop-autoPlay"></a>
 <a name="subchapter-autoPlay"></a></p>
 <h3>autoPlay</h3>
-<p><em>type</em>: <code>Array.&lt;Boolean&gt;|undefined</code></p>
+<p><em>type</em>: <code>Boolean|undefined</code></p>
 <p><em>defaults</em>: <code>false</code></p>
 <p>If set to <code>true</code>, the video will play immediately after being loaded.</p>
 <p><a name="prop-startAt"></a>

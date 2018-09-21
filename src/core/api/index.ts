@@ -42,7 +42,7 @@ import {
   mergeMapTo,
   publish,
   share,
-  skipUntil,
+  skipWhile,
   startWith,
   switchMapTo,
   take,
@@ -171,7 +171,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Current version of the RxPlayer.
    * @type {string}
    */
-  public static version = /*PLAYER_VERSION*/"3.6.1";
+  public static version = /*PLAYER_VERSION*/"3.7.0";
 
   /**
    * Current version of the RxPlayer.
@@ -519,7 +519,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.6.1";
+    this.version = /*PLAYER_VERSION*/"3.7.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -847,10 +847,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           .pipe(
             // From the first reload onward, we enter another dynamic (below)
             takeUntil(reloading$),
-
-            // begin only post-LOADED states when the first "play" has been done
-            // (Either auto-play or user play). Else, stay as LOADED.
-            skipUntil(this._priv_playing$.pipe(filter(isPlaying => isPlaying)))
+            skipWhile(state => state === PLAYER_STATES.PAUSED)
           ),
 
         // when reloading

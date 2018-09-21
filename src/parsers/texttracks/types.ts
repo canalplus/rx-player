@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { ICompatVTTCue } from "../../compat";
+
 // Item returned by an HMTL text track parser
 export interface IHTMLCue {
   start : number;
@@ -23,7 +25,7 @@ export interface IHTMLCue {
 
 export type INativeTextTracksParserFn =
   (texttrack : string, timeOffset : number, language? : string) =>
-    Array<VTTCue|TextTrackCue>;
+    Array<ICompatVTTCue|TextTrackCue>;
 
 export type IHTMLTextTracksParserFn =
   (texttrack : string, timeOffset : number, language? : string) =>

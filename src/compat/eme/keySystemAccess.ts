@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-import { IMockMediaKeys } from "./MediaKeys";
+// XXX TODO remove when the issue is resolved
+// https://github.com/Microsoft/TypeScript/issues/19189
+import { ICompatMediaKeySystemConfiguration } from "../constants";
 
-export interface IMediaKeySystemAccess {
+import { ICustomMediaKeys } from "./MediaKeys";
+
+export interface ICustomMediaKeySystemAccess {
   readonly keySystem : string;
-  getConfiguration() : MediaKeySystemConfiguration;
-  createMediaKeys() : Promise<MediaKeys|IMockMediaKeys>;
+  getConfiguration() : ICompatMediaKeySystemConfiguration;
+  createMediaKeys() : Promise<MediaKeys|ICustomMediaKeys>;
 }
 
 /**
@@ -28,7 +32,7 @@ export interface IMediaKeySystemAccess {
  * All needed arguments are given to the constructor
  * @class CustomMediaKeySystemAccess
  */
-export default class CustomMediaKeySystemAccess implements IMediaKeySystemAccess {
+export default class CustomMediaKeySystemAccess implements ICustomMediaKeySystemAccess {
   /**
    * @param {string} _keyType
    * @param {Object} _mediaKeys
@@ -36,8 +40,8 @@ export default class CustomMediaKeySystemAccess implements IMediaKeySystemAccess
    */
   constructor(
     private readonly _keyType : string,
-    private readonly _mediaKeys : IMockMediaKeys|MediaKeys,
-    private readonly _configuration : MediaKeySystemConfiguration
+    private readonly _mediaKeys : ICustomMediaKeys|MediaKeys,
+    private readonly _configuration : ICompatMediaKeySystemConfiguration
   ) {}
 
   /**
@@ -50,14 +54,14 @@ export default class CustomMediaKeySystemAccess implements IMediaKeySystemAccess
   /**
    * @returns {Promise}
    */
-  public createMediaKeys() : Promise<IMockMediaKeys|MediaKeys> {
+  public createMediaKeys() : Promise<ICustomMediaKeys|MediaKeys> {
     return new Promise((res) => res(this._mediaKeys));
   }
 
   /**
    * @returns {Object}
    */
-  public getConfiguration() : MediaKeySystemConfiguration {
+  public getConfiguration() : ICompatMediaKeySystemConfiguration {
     return this._configuration;
   }
 }

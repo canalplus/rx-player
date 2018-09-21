@@ -1,8 +1,13 @@
 import { expect } from "chai";
 import sleep from "../utils/sleep.js";
 import sinon from "sinon";
+
 import RxPlayer from "../../../src";
-import DynamicMock from "../mocks/dash-if_segment-timeline.js";
+
+import {
+  manifestInfos,
+  Manifest_URL,
+} from "../contents/DASH_dynamic_SegmentTimeline";
 
 /**
  *  Workaround to provide a "real" sleep function, which does not depend on
@@ -42,12 +47,12 @@ describe("manifest error management", function () {
 
   it("should retry to download the manifest 5 times", async () => {
     const clock = sinon.useFakeTimers();
-    fakeServer.respondWith("GET", DynamicMock.manifest.url, res =>
+    fakeServer.respondWith("GET", Manifest_URL.url, res =>
       res.respond(500));
 
     player.loadVideo({
-      url: DynamicMock.manifest.url,
-      transport: "dash",
+      url: manifestInfos.url,
+      transport: manifestInfos.transport,
     });
 
     expect(player.getError()).to.equal(null);
@@ -93,19 +98,19 @@ describe("manifest error management", function () {
     const clock = sinon.useFakeTimers();
 
     let requestCounter = 0;
-    fakeServer.respondWith("GET", DynamicMock.manifest.url, (xhr) => {
+    fakeServer.respondWith("GET", Manifest_URL.url, (xhr) => {
       return ++requestCounter >= 2 ?
         xhr.respond(
           200,
-          { "Content-Type": DynamicMock.manifest.contentType },
-          DynamicMock.manifest.data
+          { "Content-Type": Manifest_URL.contentType },
+          Manifest_URL.data
         ) :
         xhr.respond(500);
     });
 
     player.loadVideo({
-      url: DynamicMock.manifest.url,
-      transport: "dash",
+      url: manifestInfos.url,
+      transport: manifestInfos.transport,
     });
 
     expect(player.getError()).to.equal(null);
@@ -130,19 +135,19 @@ describe("manifest error management", function () {
     const clock = sinon.useFakeTimers();
 
     let requestCounter = 0;
-    fakeServer.respondWith("GET", DynamicMock.manifest.url, (xhr) => {
+    fakeServer.respondWith("GET", Manifest_URL.url, (xhr) => {
       return ++requestCounter >= 3 ?
         xhr.respond(
           200,
-          { "Content-Type": DynamicMock.manifest.contentType },
-          DynamicMock.manifest.data
+          { "Content-Type": Manifest_URL.contentType },
+          Manifest_URL.data
         ) :
         xhr.respond(500);
     });
 
     player.loadVideo({
-      url: DynamicMock.manifest.url,
-      transport: "dash",
+      url: manifestInfos.url,
+      transport: manifestInfos.transport,
     });
 
     expect(player.getError()).to.equal(null);
@@ -173,19 +178,19 @@ describe("manifest error management", function () {
     const clock = sinon.useFakeTimers();
 
     let requestCounter = 0;
-    fakeServer.respondWith("GET", DynamicMock.manifest.url, (xhr) => {
+    fakeServer.respondWith("GET", Manifest_URL.url, (xhr) => {
       return ++requestCounter >= 4 ?
         xhr.respond(
           200,
-          { "Content-Type": DynamicMock.manifest.contentType },
-          DynamicMock.manifest.data
+          { "Content-Type": Manifest_URL.contentType },
+          Manifest_URL.data
         ) :
         xhr.respond(500);
     });
 
     player.loadVideo({
-      url: DynamicMock.manifest.url,
-      transport: "dash",
+      url: manifestInfos.url,
+      transport: manifestInfos.transport,
     });
 
     expect(player.getError()).to.equal(null);
@@ -222,19 +227,19 @@ describe("manifest error management", function () {
     const clock = sinon.useFakeTimers();
 
     let requestCounter = 0;
-    fakeServer.respondWith("GET", DynamicMock.manifest.url, (xhr) => {
+    fakeServer.respondWith("GET", Manifest_URL.url, (xhr) => {
       return ++requestCounter >= 5 ?
         xhr.respond(
           200,
-          { "Content-Type": DynamicMock.manifest.contentType },
-          DynamicMock.manifest.data
+          { "Content-Type": Manifest_URL.contentType },
+          Manifest_URL.data
         ) :
         xhr.respond(500);
     });
 
     player.loadVideo({
-      url: DynamicMock.manifest.url,
-      transport: "dash",
+      url: manifestInfos.url,
+      transport: manifestInfos.transport,
     });
 
     expect(player.getError()).to.equal(null);

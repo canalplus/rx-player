@@ -15,16 +15,17 @@
  */
 
 import {
-  IMediaKeySystemAccess,
-  IMockMediaKeys,
+  ICompatMediaKeySystemAccess,
+  ICustomMediaKeys,
+  ICustomMediaKeySystemAccess,
 } from "../../compat";
 import { IKeySystemOption } from "./types";
 import SessionsStore from "./utils/open_sessions_store";
 
 export type IMediaElementMediaKeysInfos = {
   keySystemOptions : IKeySystemOption;
-  mediaKeySystemAccess : IMediaKeySystemAccess;
-  mediaKeys : MediaKeys|IMockMediaKeys;
+  mediaKeySystemAccess : ICustomMediaKeySystemAccess|ICompatMediaKeySystemAccess;
+  mediaKeys : MediaKeys|ICustomMediaKeys;
   sessionsStore : SessionsStore;
 }|null;
 

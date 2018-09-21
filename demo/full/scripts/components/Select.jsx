@@ -17,18 +17,17 @@ export default ({
     <option
       key={index}
       value={index}
-      selected={selected === index ? "selected" : ""}
     >
       {val}
     </option>
   );
 
   const selectEl = disabled ? (
-    <select disabled="disabled" onChange={onChange}>
+    <select value={selected} disabled="disabled" onChange={onChange}>
       {optionsEl}
     </select>
   ) : (
-    <select onChange={onChange}>
+    <select value={selected} onChange={onChange}>
       {optionsEl}
     </select>
   );

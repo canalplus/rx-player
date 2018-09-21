@@ -30,17 +30,9 @@ export interface IAudioConfiguration {
   samplerate?: number;
 }
 
-export interface IDRMConfiguration {
-  persistentLicense?: string;
-  persistentStateRequired?: boolean;
-  distinctiveIdentifierRequired?: boolean;
-  videoRobustnesses?: string[];
-  audioRobustnesses?: string[];
-}
-
 export interface IKeySystem {
   type?: string;
-  configuration?: IDRMConfiguration;
+  configuration?: MediaKeySystemConfiguration;
 }
 
 export interface IOutputProtectionConfiguration {
@@ -61,4 +53,10 @@ export interface IMediaConfiguration {
   keySystem?: IKeySystem;
   hdcp?: string;
   display?: IDisplayConfiguration;
+}
+
+export interface ICompatibleKeySystem {
+  type: string;
+  configuration: MediaKeySystemConfiguration;
+  compatibleConfiguration?: MediaKeySystemConfiguration;
 }

@@ -5,7 +5,7 @@ echo "cleaning previous builds..."
 ./scripts/clean-up_builds
 
 echo "bundling raw modular version..."
-npm run build:modules
+npm run prepare:modular
 rm dist/_esm5.raw/exports.js
 
 echo "processing raw modular build..."

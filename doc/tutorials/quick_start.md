@@ -97,6 +97,9 @@ player.addEventListener("playerStateChange", (state) => {
 There is multiple other events, all documented in [the events documentation
 ](../api/player_events.md).
 
+As the state is a central focus of our API, we also heavily documented states in
+[the player states documentation](../api/states.md).
+
 
 
 ## Interacting with the player #################################################

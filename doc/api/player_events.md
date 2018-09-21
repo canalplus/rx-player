@@ -54,8 +54,10 @@ comes with a payload, which will also be defined here.
 
 _payload type_: ``string``
 
-Emit the current state of the player, every time it changes. Find the different
-possible states [here](./index.md#meth-getPlayerState).
+Emit the current state of the player, every time it changes.
+
+As it is a central part of our API and can be difficult concept to understand,
+we have a special [page of documentation on player states](./states.md).
 
 
 <a name="events-positionUpdate"></a>

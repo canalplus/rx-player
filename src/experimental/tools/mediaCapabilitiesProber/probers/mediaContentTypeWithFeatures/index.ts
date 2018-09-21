@@ -48,7 +48,7 @@ function isTypeSupportedWithFeaturesAPIAvailable(): Promise<void> {
  */
 export default function probeTypeWithFeatures(
   config: IMediaConfiguration
-) : Promise<number> {
+) : Promise<[number]> {
   return isTypeSupportedWithFeaturesAPIAvailable().then(() => {
     const keySystem = config.keySystem;
     const type = keySystem ? (keySystem.type || "org.w3.clearkey") : "org.w3.clearkey";
@@ -63,20 +63,20 @@ export default function probeTypeWithFeatures(
     const result =
       (window as any).MSMediaKeys.isTypeSupportedWithFeatures(type, features);
 
-    function formatSupport(support: ISupportWithFeatures) {
+    function formatSupport(support: ISupportWithFeatures): [number] {
       if (support === "") {
         throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
           "Bad arguments for calling isTypeSupportedWithFeatures");
       } else {
         switch (support) {
           case "Not Supported":
-            return 0;
+            return [0];
           case "Maybe":
-            return 1;
+            return [1];
           case "Probably":
-            return 2;
+            return [2];
           default:
-            return 1;
+            return [1];
         }
       }
     }

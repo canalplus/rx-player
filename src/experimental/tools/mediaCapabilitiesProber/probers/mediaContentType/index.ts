@@ -37,7 +37,7 @@ function isContentTypeAPISupported(): Promise<void> {
  * @param {Object} config
  * @returns {Promise}
  */
-export default function probeContentType(config: IMediaConfiguration): Promise<number> {
+export default function probeContentType(config: IMediaConfiguration): Promise<[number]> {
   return isContentTypeAPISupported().then(() => {
     const contentTypes: string[] = [];
     if (
@@ -56,10 +56,10 @@ export default function probeContentType(config: IMediaConfiguration): Promise<n
         throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
           "Not enough arguments for calling isTypeSupported.");
       }
-      const result = contentTypes.reduce((acc, val) => {
+      const result: [number] = [contentTypes.reduce((acc, val) => {
         const support = (window as any).MediaSource.isTypeSupported(val) ? 2 : 0;
         return Math.min(acc, support);
-      }, 3);
+      }, 3)];
       return result;
     });
 }

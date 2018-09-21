@@ -30,14 +30,20 @@ if ! [ $current_branch == "master" ]; then
   exit 1;
 fi
 
+tmpFontsDir=$(mktemp -d)
+tmpAssetsDir=$(mktemp -d)
 tmpStylesDir=$(mktemp -d)
 tmpDemoFile=$(mktemp)
 tmpRxPlayerFile=$(mktemp)
+tmpIndexFile=$(mktemp)
 
 # Generate demo
 npm run demo:min
+cp -r demo/full/fonts $tmpFontsDir -v
+cp -r demo/full/assets $tmpAssetsDir -v
 cp -r demo/full/styles $tmpStylesDir -v
 cp demo/full/bundle.js $tmpDemoFile -v
+cp demo/full/index.html $tmpIndexFile -v
 cp dist/rx-player.min.js $tmpRxPlayerFile -v
 
 if [ -n "$(git status --porcelain demo/full)" ]; then
@@ -66,7 +72,10 @@ if [ -n "$(git status --porcelain demo/full)" ]; then
       echo "+--------------------------------------------------------+"
     elif [[ $REPLY =~ ^[Aa]bort?$ ]]; then
       echo "exiting"
+      rm -r $tmpFontsDir
+      rm -r $tmpAssetsDir
       rm -r $tmpStylesDir
+      rm $tmpIndexFile
       rm $tmpRxPlayerFile $tmpDemoFile
       exit 0
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
@@ -92,15 +101,24 @@ fi
 # update gh-pages
 git checkout gh-pages
 git pull origin gh-pages
+rm -rf fonts
+rm -rf assets
 rm -rf styles
+mv $tmpFontsDir/fonts .
+mv $tmpAssetsDir/assets .
 mv $tmpStylesDir/styles .
+mv $tmpIndexFile index.html
 mv $tmpRxPlayerFile rx-player.js
 mv $tmpDemoFile bundle.js
+
+sed -i -E "s/\bhttp:\/\/127\.0\.0\.1:3941\/lib.js\b/rx-player.js/g" index.html
+sed -i -E "s/\bhttp:\/\/127\.0\.0\.1:8000\/bundle.js\b/bundle.js/g" index.html
+
 
 if [ -n "$(git status --porcelain demo/full)" ]; then
   echo "-- Current Status on gh-pages: --"
   echo ""
-  git status rx-player.js bundle.js
+  git status rx-player.js bundle.js styles fonts assets index.html
 
   while : ; do
     echo ""
@@ -122,21 +140,21 @@ if [ -n "$(git status --porcelain demo/full)" ]; then
       echo "| h: see this help                                       |"
       echo "+--------------------------------------------------------+"
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-      git add rx-player.js bundle.js
+      git add rx-player.js bundle.js styles fonts assets index.html
       git commit -m "update demo" -S
       git push origin gh-pages
       break
     elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
-      git diff rx-player.js bundle.js || true # ignore when return 1
+      git diff rx-player.js bundle.js styles fonts assets index.html || true # ignore when return 1
     elif [[ $REPLY =~ ^[Ss](tatus)?$ ]]; then
-      git status rx-player.js bundle.js
+      git status rx-player.js bundle.js styles fonts assets index.html
     elif [[ $REPLY =~ ^[Aa](bort)?$ ]]; then
       echo "exiting"
       exit 0
     elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
-      git checkout rx-player.js bundle.js
+      git checkout rx-player.js bundle.js styles fonts assets index.html
     elif [[ $REPLY =~ ^([Tt]|([Ss]tash))?$ ]]; then
-      git stash -u push rx-player.js bundle.js
+      git stash -u push rx-player.js bundle.js styles fonts assets index.html
       break
     fi
   done

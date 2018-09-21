@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-const ISM_REG = /\.(isml?)(\?token=\S+)?$/;
+import warnOnce from "../../utils/warnOnce";
+
+const ISM_REG = /(\.isml?)(\?token=\S+)?$/;
 const TOKEN_REG = /\?token=(\S+)/;
 
 function byteRange([start, end] : [number, number]) : string {
@@ -63,12 +65,12 @@ function replaceToken(url : string, token? : string) : string {
  * @returns {string}
  */
 function resolveManifest(url : string) : string {
-  const ismMatch = url.match(ISM_REG);
-  if (ismMatch) {
-    return url.replace(ismMatch[1], ismMatch[1] + "/manifest");
-  } else {
-    return url;
+  if (ISM_REG.test(url)) {
+    warnOnce("Giving a isml URL to loadVideo is deprecated." +
+      " Please give the Manifest URL directly");
+    return url.replace(ISM_REG, "$1/manifest$2");
   }
+  return url;
 }
 
 export {

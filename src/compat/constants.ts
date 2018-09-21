@@ -16,53 +16,107 @@
 
 import MediaError from "../errors/MediaError";
 
-const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
+// regular MediaKeys type + optional functions present in IE11
+interface ICompatMediaKeysConstructor {
+  isTypeSupported? : (type : string) => boolean; // IE11 only
+  new(keyType? : string) : MediaKeys; // argument for IE11 only
+}
 
-const HTMLElement_ : HTMLElementConstructor = window.HTMLElement;
-const VTTCue_ : VTTCueConstructor|undefined = window.VTTCue || window.TextTrackCue;
+// Regular VTTCue as present in most browsers
+// TODO open TypeScript issue about it?
+declare class ICompatVTTCue {
+  align : string;
+  endTime : number;
+  id : string;
+  line : number|"auto";
+  lineAlign : string;
+  position : number|"auto";
+  positionAlign : string;
+  size : number|string;
+  snapToLines : boolean;
+  startTime : number;
+  vertical : string;
+  constructor(start : number, end : number, cueText : string);
+}
 
-const MediaSource_ : MediaSourceConstructor|undefined = (
-  window.MediaSource ||
-  window.MozMediaSource ||
-  window.WebKitMediaSource ||
-  window.MSMediaSource
-);
+// surcharge TextTrack to allow adding ICompatVTTCue to it
+interface ICompatTextTrack extends TextTrack {
+  addCue(cue: TextTrackCue|ICompatVTTCue) : void;
+  removeCue(cue: TextTrackCue|ICompatVTTCue) : void;
+}
 
-let MediaKeys_ : MediaKeysConstructor|undefined = (
-  window.MediaKeys ||
-  window.MozMediaKeys ||
-  window.WebKitMediaKeys ||
-  window.MSMediaKeys
-);
+// Document with added optional functions for old browsers
+interface ICompatDocument extends Document {
+  mozCancelFullScreen? : () => void;
+  mozFullScreenElement? : HTMLElement;
+  mozHidden? : boolean;
+  msExitFullscreen? : () => void;
+  msFullscreenElement? : HTMLElement;
+  msHidden? : boolean;
+  webkitHidden? : boolean;
+}
 
-if (!MediaKeys_) {
-  const noMediaKeys = () => {
-    throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED", null, true);
-  };
+// Element with added optional functions for old browsers
+interface ICompatElement extends Element {
+  mozRequestFullScreen? : () => void;
+  msRequestFullscreen? : () => void;
+}
 
-  MediaKeys_ = class {
+// for some reasons, Typescript seem to forget about SessionTypes
+// XXX TODO remove when the issue is resolved
+// https://github.com/Microsoft/TypeScript/issues/19189
+interface ICompatMediaKeySystemAccess extends MediaKeySystemAccess {
+  getConfiguration() : ICompatMediaKeySystemConfiguration;
+}
+interface ICompatMediaKeySystemConfiguration {
+  audioCapabilities?: MediaKeySystemMediaCapability[];
+  distinctiveIdentifier?: MediaKeysRequirement;
+  initDataTypes?: string[];
+  persistentState?: MediaKeysRequirement;
+  videoCapabilities?: MediaKeySystemMediaCapability[];
+  sessionTypes: string[];
+}
+
+const win = window as any;
+const HTMLElement_ : typeof HTMLElement = win.HTMLElement;
+const VTTCue_ : typeof ICompatVTTCue|undefined =
+  win.VTTCue ||
+  win.TextTrackCue;
+
+const MediaSource_ : typeof MediaSource|undefined =
+  win.MediaSource ||
+  win.MozMediaSource ||
+  win.WebKitMediaSource ||
+  win.MSMediaSource;
+
+const MediaKeys_ : ICompatMediaKeysConstructor|undefined =
+  win.MediaKeys ||
+  win.MozMediaKeys ||
+  win.WebKitMediaKeys ||
+  win.MSMediaKeys ||
+  class {
     public readonly create : () => never;
     public readonly isTypeSupported : () => never;
     public readonly createSession : () => never;
     public readonly setServerCertificate : () => never;
     constructor() {
+      const noMediaKeys = () => {
+        throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED", null, true);
+      };
       this.create = noMediaKeys;
       this.createSession = noMediaKeys;
       this.isTypeSupported = noMediaKeys;
       this.setServerCertificate = noMediaKeys;
     }
   };
-}
 
 // true for IE / Edge
-const isIE : boolean = (
+const isIE : boolean =
   navigator.appName === "Microsoft Internet Explorer" ||
-  navigator.appName === "Netscape" && /(Trident|Edge)\//.test(navigator.userAgent)
-);
+  navigator.appName === "Netscape" && /(Trident|Edge)\//.test(navigator.userAgent);
 
-const isFirefox : boolean = (
-  navigator.userAgent.toLowerCase().indexOf("firefox") !== -1
-);
+const isFirefox : boolean =
+  navigator.userAgent.toLowerCase().indexOf("firefox") !== -1;
 
 const READY_STATES = {
   HAVE_NOTHING: 0,
@@ -73,12 +127,18 @@ const READY_STATES = {
 };
 
 export {
-  BROWSER_PREFIXES,
   HTMLElement_,
-  MediaSource_,
+  ICompatDocument,
+  ICompatElement,
+  ICompatMediaKeySystemAccess,
+  ICompatMediaKeySystemConfiguration,
+  ICompatMediaKeysConstructor,
+  ICompatTextTrack,
+  ICompatVTTCue,
   MediaKeys_,
-  isIE,
-  isFirefox,
+  MediaSource_,
   READY_STATES,
   VTTCue_,
+  isFirefox,
+  isIE,
 };

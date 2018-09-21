@@ -44,7 +44,9 @@ function isMediaCapabilitiesAPIAvailable(): Promise<void> {
  * @param {Object} config
  * @returns {Promise}
  */
-export default function probeDecodingInfos(config: IMediaConfiguration): Promise<number> {
+export default function probeDecodingInfos(
+  config: IMediaConfiguration
+): Promise<[number]> {
   return isMediaCapabilitiesAPIAvailable().then(() => {
     const hasVideoConfig = (
       config.type &&
@@ -68,9 +70,9 @@ export default function probeDecodingInfos(config: IMediaConfiguration): Promise
     if (hasVideoConfig || hasAudioConfig) {
       return (navigator as any).mediaCapabilities.decodingInfo(config)
         .then((result: IDecodingInfos) => {
-          return result.supported ? 2 : 0;
+          return [result.supported ? 2 : 0];
         }).catch(() => {
-          return 0;
+          return [0];
         });
     }
     throw new Error("MediaCapabilitiesProber >>> API_CALL: " +

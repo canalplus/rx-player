@@ -1,10 +1,19 @@
 import React from "react";
+import parseDRMConfigurations from "../lib/parseDRMConfigurations.js";
 import Button from "../components/Button.jsx";
 import TextInput from "../components/Input.jsx";
 import Select from "../components/Select.jsx";
 import contentsDatabase from "../contents.js";
 
 const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile"];
+const DRM_TYPES = ["Widevine", "Playready", "Clearkey"];
+
+const URL_DENOMINATIONS = {
+  DASH: "URL to the MPD",
+  Smooth: "URL to the Manifest",
+  DirectFile: "URL to the content",
+};
+
 const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
   acc[tech] = contentsDatabase.filter(({ transport }) =>
     transport === tech.toLowerCase()
@@ -20,7 +29,10 @@ class ContentList extends React.Component {
       transportType: TRANSPORT_TYPES[0],
       choiceIndex: 0,
       hasTextInput: !CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]].length,
-      textValue: "",
+      displayDRMSettings: false,
+      manifestUrl: "",
+      drm: DRM_TYPES[0],
+      autoPlay: true,
     };
   }
 
@@ -34,31 +46,42 @@ class ContentList extends React.Component {
     const {
       url,
       transport,
-      autoPlay,
       supplementaryImageTracks,
       supplementaryTextTracks,
       textTrackMode,
+      drmInfos = [],
     } = content;
-    loadVideo({
-      url,
-      transport,
-      autoPlay: !(autoPlay === false),
-      supplementaryImageTracks,
-      supplementaryTextTracks,
-      textTrackMode,
-    });
+
+    parseDRMConfigurations(drmInfos)
+      .then((keySystems) => {
+        loadVideo({
+          url,
+          transport,
+          autoPlay: !(this.state.autoPlay === false),
+          supplementaryImageTracks,
+          supplementaryTextTracks,
+          textTrackMode,
+          keySystems,
+        });
+      });
   }
 
-  loadUrl(url) {
+
+  loadUrl(url, drmInfos, autoPlay) {
     const { loadVideo } = this.props;
-    loadVideo({
-      url,
-      transport: this.state.transportType.toLowerCase(),
-      autoPlay: true, // TODO add checkBox
-      // native browser subtitles engine (VTTCue) doesn't render stylized subs
-      // we force HTML textTrackMode to vizualise styles
-      textTrackMode: "html",
-    });
+    parseDRMConfigurations(drmInfos)
+      .then((keySystems) => {
+        loadVideo({
+          url,
+          transport: this.state.transportType.toLowerCase(),
+          autoPlay,
+
+          // native browser subtitles engine (VTTCue) doesn"t render stylized
+          // subs.  We force HTML textTrackMode to vizualise styles.
+          textTrackMode: "html",
+          keySystems,
+        });
+      });
   }
 
   changeTransportType(transportType) {
@@ -79,14 +102,60 @@ class ContentList extends React.Component {
   }
 
   // TODO Better event?
-  onTextInput(evt) {
+  onManifestInput(evt) {
     this.setState({
-      textValue: evt.target.value,
+      manifestUrl: evt.target.value,
+    });
+  }
+
+  onLicenseServerInput(evt) {
+    this.setState({
+      licenseServerUrl: evt.target.value,
+    });
+  }
+
+  onServerCertificateInput(evt) {
+    this.setState({
+      serverCertificateUrl: evt.target.value,
+    });
+  }
+
+  onDRMChange(evt) {
+    const index = evt.target.value;
+    this.setState({ drm: DRM_TYPES[index] });
+  }
+
+  onDisplayDRMSettings(evt) {
+    const { target } = evt;
+    const value = target.type === "checkbox" ?
+      target.checked : target.value;
+    this.setState({
+      displayDRMSettings: value,
+    });
+  }
+
+  onToggleAutoPlay(evt) {
+    const { target } = evt;
+    const value = target.type === "checkbox" ?
+      target.checked : target.value;
+    this.setState({
+      autoPlay: value,
     });
   }
 
   render() {
-    const { transportType, choiceIndex, hasTextInput, textValue } = this.state;
+    const {
+      transportType,
+      choiceIndex,
+      hasTextInput,
+      manifestUrl,
+      licenseServerUrl,
+      serverCertificateUrl,
+      drm,
+      displayDRMSettings,
+      autoPlay,
+    } = this.state;
+    const { isStopped } = this.props;
     const contents = CONTENTS_PER_TYPE[transportType];
 
     const contentsName = contents.map(content =>
@@ -108,45 +177,122 @@ class ContentList extends React.Component {
 
     const onClickLoad = () => {
       if (choiceIndex === contents.length) {
-        this.loadUrl(textValue);
+        const drmInfos = [{
+          licenseServerUrl,
+          serverCertificateUrl,
+          drm,
+        }];
+        this.loadUrl(manifestUrl, drmInfos, autoPlay);
       } else {
         this.loadContent(contents[choiceIndex]);
       }
     };
 
-    const onTextInput = (t) => this.onTextInput(t);
+    const onClickStop = () => {
+      const { stopVideo } = this.props;
+      stopVideo();
+    };
+
+    const onManifestInput = (evt) =>
+      this.onManifestInput(evt);
+    const onLicenseServerInput = (evt) =>
+      this.onLicenseServerInput(evt);
+    const onServerCertificateInput = (evt) =>
+      this.onServerCertificateInput(evt);
+    const onDRMChange = (evt) =>
+      this.onDRMChange(evt);
+    const onDisplayDRMSettings = (evt) =>
+      this.onDisplayDRMSettings(evt);
+    const onAutoPlayCheckbox = (evt) =>
+      this.onToggleAutoPlay(evt);
 
     return (
-      <div
-        className="choice-inputs-wrapper"
-      >
-        <div
-          className="content-inputs"
-        >
-          <Select
-            className="choice-input transport-type-choice"
-            onChange={onTechChange}
-            options={TRANSPORT_TYPES}
-          />
-          <Select
-            className="choice-input content-choice"
-            onChange={onContentChange}
-            options={contentsName}
-            selected={choiceIndex}
-          />
-          <Button
-            className='choice-input load-button'
-            onClick={onClickLoad}
-            value={String.fromCharCode(0xf144)}
-          />
+      <div className="choice-inputs-wrapper">
+        <div className="content-inputs">
+          <div className="content-inputs-selects">
+            <Select
+              className="choice-input transport-type-choice white-select"
+              onChange={onTechChange}
+              options={TRANSPORT_TYPES}
+            />
+            <Select
+              className="choice-input content-choice white-select"
+              onChange={onContentChange}
+              options={contentsName}
+              selected={choiceIndex}
+            />
+          </div>
+          <div className="choice-input-button-wrapper">
+            <div className="autoplay-checkbox">
+              Auto Play
+              <input
+                name="displayBufferSizeChart"
+                type="checkbox"
+                checked={autoPlay}
+                onChange={onAutoPlayCheckbox}
+              />
+            </div>
+            <Button
+              className="choice-input choice-input-button load-button"
+              onClick={onClickLoad}
+              value={String.fromCharCode(0xf144)}
+            />
+            <Button
+              className="choice-input choice-input-button stop-load-button"
+              onClick={onClickStop}
+              value={String.fromCharCode(0xf04d)}
+              disabled={isStopped}
+            />
+          </div>
         </div>
-        { hasTextInput ?
-          <TextInput
-            className="choice-input text-input"
-            onChange={onTextInput}
-            value={textValue}
-            placeholder={`URL for the ${transportType} manifest`}
-          /> : null
+        {
+          hasTextInput ?
+            (
+              <div className="choice-input custom-input-wrapper">
+                <TextInput
+                  className="choice-input text-input"
+                  onChange={onManifestInput}
+                  value={manifestUrl}
+                  placeholder={
+                    URL_DENOMINATIONS[transportType] ||
+                    `URL to the ${transportType} content`
+                  }
+                />
+                <span className="encryption-checkbox" >
+                  Encrypted content
+                  <input
+                    name="displayDRMSettingsTextInput"
+                    type="checkbox"
+                    checked={displayDRMSettings}
+                    onChange={onDisplayDRMSettings} />
+                </span>
+                {
+                  displayDRMSettings ?
+                    <div className="drm-settings">
+                      <div>
+                        <Select
+                          className="choice-input white-select"
+                          onChange={onDRMChange}
+                          options={DRM_TYPES}
+                        />
+                        <TextInput
+                          className="choice-input text-input"
+                          onChange={onLicenseServerInput}
+                          value={licenseServerUrl}
+                          placeholder={"License server URL"}
+                        />
+                      </div>
+                      <TextInput
+                        className="choice-input text-input"
+                        onChange={onServerCertificateInput}
+                        value={serverCertificateUrl}
+                        placeholder={"Server certificate URL (optional)"}
+                      />
+                    </div> :
+                    null
+                }
+              </div>
+            ) : null
         }
       </div>
     );

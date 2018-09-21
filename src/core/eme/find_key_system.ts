@@ -22,7 +22,12 @@ import {
   Subscription,
 } from "rxjs";
 import {
-  IMediaKeySystemAccess,
+  // XXX TODO remove when the issue is resolved
+  // https://github.com/Microsoft/TypeScript/issues/19189
+  ICompatMediaKeySystemAccess,
+  ICompatMediaKeySystemConfiguration,
+
+  ICustomMediaKeySystemAccess,
   requestMediaKeySystemAccess,
   shouldRenewMediaKeys,
 } from "../../compat";
@@ -38,7 +43,7 @@ type MediaKeysRequirement = "optional" | "required" | "not-allowed";
 export interface IReuseMediaKeySystemAccessEvent {
   type: "reuse-media-key-system-access";
   value: {
-    mediaKeySystemAccess: IMediaKeySystemAccess ;
+    mediaKeySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
     options: IKeySystemOption;
   };
 }
@@ -46,7 +51,7 @@ export interface IReuseMediaKeySystemAccessEvent {
 export interface ICreateMediaKeySystemAccessEvent {
   type: "create-media-key-system-access";
   value: {
-    mediaKeySystemAccess: IMediaKeySystemAccess;
+    mediaKeySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
     options: IKeySystemOption;
   };
 }
@@ -78,16 +83,16 @@ const {
  */
 function checkCachedMediaKeySystemAccess(
   keySystems: IKeySystemOption[],
-  currentKeySystemAccess: IMediaKeySystemAccess,
+  currentKeySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess,
   currentKeySystemOptions: IKeySystemOption
 ) : null|{
   keySystemOptions: IKeySystemOption;
-  keySystemAccess: IMediaKeySystemAccess;
+  keySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
 } {
   const mksConfiguration = currentKeySystemAccess.getConfiguration();
 
   // NOTE(pierre): alwaysRenew flag is used for IE11 which require the
-  // creation of a new MydiaKeys instance for each session creation
+  // creation of a new MediaKeys instance for each session creation
   if (shouldRenewMediaKeys() || !mksConfiguration) {
     return null;
   }
@@ -147,7 +152,7 @@ function findKeySystemCanonicalName(ksType: string)
 function buildKeySystemConfigurations(
   ksName: string,
   keySystem: IKeySystemOption
-) : MediaKeySystemConfiguration[] {
+) : ICompatMediaKeySystemConfiguration[] {
   const sessionTypes = ["temporary"];
   let persistentState: MediaKeysRequirement = "optional";
   let distinctiveIdentifier: MediaKeysRequirement = "optional";

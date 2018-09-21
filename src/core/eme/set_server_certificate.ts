@@ -16,20 +16,32 @@
 
 import {
   defer as observableDefer,
+  EMPTY,
   Observable,
   of as observableOf,
-  Subject,
 } from "rxjs";
 import {
   catchError,
+  ignoreElements,
   mapTo,
 } from "rxjs/operators";
-import { IMockMediaKeys } from "../../compat";
+import { ICustomMediaKeys } from "../../compat";
 import {
   EncryptedMediaError,
-  ICustomError,
 } from "../../errors";
 import castToObservable from "../../utils/castToObservable";
+import { IEMEWarningEvent } from "./types";
+
+type TypedArray =
+  Int8Array |
+  Int16Array |
+  Int32Array |
+  Uint8Array |
+  Uint16Array |
+  Uint32Array |
+  Uint8ClampedArray |
+  Float32Array |
+  Float64Array;
 
 /**
  * Call the setServerCertificate API with the given certificate.
@@ -46,12 +58,12 @@ import castToObservable from "../../utils/castToObservable";
  * @returns {Observable}
  */
 function setServerCertificate(
-  mediaKeys : IMockMediaKeys|MediaKeys,
+  mediaKeys : ICustomMediaKeys|MediaKeys,
   serverCertificate : ArrayBuffer|TypedArray
 ) : Observable<null> {
   return observableDefer(() => {
     return castToObservable(
-      mediaKeys.setServerCertificate(serverCertificate)
+      (mediaKeys as MediaKeys).setServerCertificate(serverCertificate)
     ).pipe(catchError((error) => {
       throw new
       EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", error, true);
@@ -60,25 +72,25 @@ function setServerCertificate(
 }
 
 /**
- * Call the setCertificate API. If it fails just emit the error through the
- * errorStream and complete.
+ * Call the setCertificate API. If it fails just emit the error as warning
+ * and complete.
  * @param {MediaKeys} mediaKeys
  * @param {ArrayBuffer} serverCertificate
  * @returns {Observable}
  */
 export default function trySettingServerCertificate(
-  mediaKeys : IMockMediaKeys|MediaKeys,
-  serverCertificate : ArrayBuffer|TypedArray,
-  errorStream: Subject<Error|ICustomError>
-) : Observable<null> {
+  mediaKeys : ICustomMediaKeys|MediaKeys,
+  serverCertificate : ArrayBuffer|TypedArray
+) : Observable<IEMEWarningEvent> {
   return typeof mediaKeys.setServerCertificate === "function" ?
     setServerCertificate(mediaKeys, serverCertificate)
-      .pipe(catchError(error => {
-        error.fatal = false;
-        errorStream.next(error);
-        return observableOf(null);
-      })) :
-    observableOf(null);
+      .pipe(
+        ignoreElements(),
+        catchError(error => {
+          error.fatal = false;
+          return observableOf({ type: "warning" as "warning", value: error });
+        })) :
+    EMPTY;
 }
 
 export {

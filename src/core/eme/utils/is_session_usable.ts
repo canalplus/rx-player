@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IMediaKeySession } from "../../../compat";
+import { ICustomMediaKeySession } from "../../../compat";
 import log from "../../../log";
 import arrayIncludes from "../../../utils/array-includes";
 
@@ -27,15 +27,17 @@ import arrayIncludes from "../../../utils/array-includes";
  * @returns {MediaKeySession}
  */
 export default function isSessionUsable(
-  loadedSession : IMediaKeySession
+  loadedSession : MediaKeySession|ICustomMediaKeySession
 ) : boolean {
   if (loadedSession.sessionId === "") {
     return false;
   }
 
-  const keyStatusesMap = loadedSession.keyStatuses;
+  // TODO TypeScript f*cked something up, normally there should be no need to
+  // add this "as".
+  const keyStatusesMap = (loadedSession as ICustomMediaKeySession).keyStatuses;
   const keyStatuses: string[] = [];
-  keyStatusesMap.forEach((keyStatus: MediaKeyStatus) => {
+  keyStatusesMap.forEach((keyStatus) => {
     keyStatuses.push(keyStatus);
   });
 

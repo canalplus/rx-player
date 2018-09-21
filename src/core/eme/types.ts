@@ -15,24 +15,32 @@
  */
 
 import {
-  IMediaKeySession,
-  IMediaKeySystemAccess,
-  IMockMediaKeys,
+  ICompatMediaKeySystemAccess,
+  ICustomMediaKeys,
+  ICustomMediaKeySession,
+  ICustomMediaKeySystemAccess,
 } from "../../compat";
+import { ICustomError } from "../../errors";
 import SessionsStore from "./utils/open_sessions_store";
 import PersistedSessionsStore from "./utils/persisted_session_store";
 
+// A minor error happened
+export interface IEMEWarningEvent {
+  type : "warning";
+  value : ICustomError|Error;
+}
+
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {
-  keySystemAccess: IMediaKeySystemAccess;
+  keySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
   keySystemOptions: IKeySystemOption;
 }
 
 // Infos identyfing a single MediaKey
 export interface IMediaKeysInfos {
-  mediaKeySystemAccess: IMediaKeySystemAccess;
+  mediaKeySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
   keySystemOptions: IKeySystemOption; // options set by the user
-  mediaKeys : MediaKeys|IMockMediaKeys;
+  mediaKeys : MediaKeys|ICustomMediaKeys;
   sessionsStore : SessionsStore;
   sessionStorage : PersistedSessionsStore|null;
 }
@@ -65,28 +73,29 @@ type TypedArray =
 export interface IKeySystemOption {
   type : string;
   getLicense : (message : Uint8Array, messageType : string)
-    => Promise<TypedArray|ArrayBuffer>|TypedArray|ArrayBuffer;
+    => Promise<TypedArray|ArrayBuffer|null>|TypedArray|ArrayBuffer|null;
   serverCertificate? : ArrayBuffer|TypedArray;
   persistentLicense? : boolean;
   licenseStorage? : IPersistedSessionStorage;
   persistentStateRequired? : boolean;
   distinctiveIdentifierRequired? : boolean;
   closeSessionsOnStop? : boolean;
-  onKeyStatusesChange? : (evt : Event, session : IMediaKeySession|MediaKeySession)
-    => Promise<TypedArray|ArrayBuffer>|TypedArray|ArrayBuffer;
+  onKeyStatusesChange? : (evt : Event, session : MediaKeySession|ICustomMediaKeySession)
+    => Promise<TypedArray|ArrayBuffer|null>|TypedArray|ArrayBuffer|null;
   videoRobustnesses?: Array<string|undefined>;
   audioRobustnesses?: Array<string|undefined>;
+  throwOnLicenseExpiration? : boolean;
 }
 
 // Keys are the different key statuses possible.
 // Values are ``true`` if such key status defines an error
 /* tslint:disable no-object-literal-type-assertion */
 export const KEY_STATUS_ERRORS = {
-  expired: true,
   "internal-error": true,
-   // "released",
-   // "output-restricted",
-   // "output-downscaled",
-   // "status-pending",
+  expired: false,
+  released: false,
+  "output-restricted": false,
+  "output-downscaled": false,
+  "status-pending": false,
 } as Partial<Record<string, boolean>>;
 /* tslint:enable no-object-literal-type-assertion */
