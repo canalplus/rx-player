@@ -99,8 +99,8 @@ fi
 git checkout gh-pages
 git pull origin gh-pages
 rm -rf styles
-mv $tmpFontsDir
-mv $tmpAssetsDir
+mv $tmpFontsDir/fonts .
+mv $tmpAssetsDir/assets .
 mv $tmpStylesDir/styles .
 mv $tmpRxPlayerFile rx-player.js
 mv $tmpDemoFile bundle.js
