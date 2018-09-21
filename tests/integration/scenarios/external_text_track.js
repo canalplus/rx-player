@@ -166,9 +166,9 @@ describe("external text track", function () {
         defaultTextTrack,
       });
 
-      await sleep(100);
+      await sleep(10);
       fakeServer.respond();
-      await sleep(100);
+      await sleep(10);
 
       const textTracks1 = player.getAvailableTextTracks();
       expect(textTracks1[0].active).to.equal(true);
@@ -199,9 +199,9 @@ describe("external text track", function () {
         defaultTextTrack,
       });
 
-      await sleep(100);
+      await sleep(10);
       fakeServer.respond();
-      await sleep(100);
+      await sleep(10);
 
       const textTracks2 = player.getAvailableTextTracks();
       expect(textTracks2[0].active).to.equal(true);
@@ -229,9 +229,9 @@ describe("external text track", function () {
         defaultTextTrack,
       });
 
-      await sleep(100);
+      await sleep(10);
       fakeServer.respond();
-      await sleep(100);
+      await sleep(10);
 
       const textTracks1 = player.getAvailableTextTracks();
       expect(textTracks1[0].active).to.equal(true);
@@ -262,9 +262,9 @@ describe("external text track", function () {
         defaultTextTrack,
       });
 
-      await sleep(100);
+      await sleep(10);
       fakeServer.respond();
-      await sleep(100);
+      await sleep(10);
 
       const textTracks2 = player.getAvailableTextTracks();
       expect(textTracks2[0].active).to.equal(true);
@@ -296,9 +296,9 @@ describe("external text track", function () {
         defaultTextTrack,
       });
 
-      await sleep(100);
+      await sleep(10);
       fakeServer.respond();
-      await sleep(100);
+      await sleep(10);
 
       const textTracks1 = player.getAvailableTextTracks();
       expect(textTracks1[0].active).to.equal(false);
@@ -329,9 +329,9 @@ describe("external text track", function () {
         defaultTextTrack,
       });
 
-      await sleep(100);
+      await sleep(10);
       fakeServer.respond();
-      await sleep(100);
+      await sleep(10);
 
       const textTracks2 = player.getAvailableTextTracks();
       expect(textTracks2[0].active).to.equal(false);
