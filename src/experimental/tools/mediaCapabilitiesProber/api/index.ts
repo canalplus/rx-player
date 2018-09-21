@@ -16,11 +16,35 @@
 
 import log from "../log";
 import {
+  ICompatibleKeySystem,
   IDisplayConfiguration,
-  IDRMConfiguration,
   IMediaConfiguration,
 } from "../types";
 import probeMediaConfiguration, { IBrowserAPIS } from "./probeMediaConfiguration";
+
+/**
+ * Probe configuration and get status from result.
+ * @param {Object} config
+ * @param {Array.<Object>} browserAPIS
+ * @returns {Promise.<string>}
+ */
+function getStatusFromConfiguration(
+  config: IMediaConfiguration,
+  browserAPIS: IBrowserAPIS[]
+): Promise<string> {
+  return probeMediaConfiguration(config, browserAPIS).then(({ globalStatusNumber }) => {
+    switch (globalStatusNumber) {
+      case 0:
+        return "NotSupported";
+      case 1:
+        return "Unknown";
+      case 2:
+        return "Supported";
+      default:
+        return "NotSupported";
+    }
+  });
+}
 
 /**
  * A set of API to probe media capabilites.
@@ -63,18 +87,7 @@ const mediaCapabilitiesProber = {
       "isTypeSupportedWithFeatures",
       "getStatusForPolicy",
     ];
-    return probeMediaConfiguration(config, browserAPIS).then((result) => {
-      switch (result) {
-        case 0:
-          return "NotSupported";
-        case 1:
-          return "Unknown";
-        case 2:
-          return "Supported";
-        default:
-          return "NotSupported";
-      }
-    });
+    return getStatusFromConfiguration (config, browserAPIS);
   },
 
   /**
@@ -96,40 +109,52 @@ const mediaCapabilitiesProber = {
       "isTypeSupportedWithFeatures",
       "decodingInfos",
     ];
-    return probeMediaConfiguration(config, browserAPIS).then((result) => {
-      switch (result) {
-        case 0:
-          return "NotSupported";
-        case 1:
-          return "MaybeSupported";
-        case 2:
-          return "Supported";
-        default:
-          return "NotSupported";
-      }
-    });
+    return getStatusFromConfiguration(config, browserAPIS);
   },
 
   /**
-   * Tells if browser support deciphering with given drm type and configuration.
-   * @param {string} type
-   * @param {Object} drmConfig
+   * From an array of given configurations (type  and key system configuration), return
+   * supported ones.
+   * @param {Array.<Object>} configurations
    * @returns {Promise}
    */
-  isDRMSupported(
-    type: string,
-    drmConfig: IDRMConfiguration
-  ) : Promise<boolean> {
-    const config = {
-      keySystem: {
-        type,
-        configuration: drmConfig,
-      },
-    };
-    const browserAPIS: IBrowserAPIS[] = ["requestMediaKeySystemAccess"];
-    return probeMediaConfiguration(config, browserAPIS).then((result) => {
-      return result === 2;
+  getCompatibleDRMConfigurations(
+    configurations: Array<{
+      type: string;
+      configuration: MediaKeySystemConfiguration;
+    }>
+  ) : Promise<ICompatibleKeySystem[]> {
+    const promises: Array<Promise<any>> = [];
+    configurations.forEach((configuration) => {
+      const globalConfig = {
+        keySystem: configuration,
+      };
+      const browserAPIS: IBrowserAPIS[] = ["requestMediaKeySystemAccess"];
+      promises.push(probeMediaConfiguration(globalConfig, browserAPIS)
+        .then(({ globalStatusNumber, resultsFromAPIS }) => {
+          const requestMediaKeySystemAccessResults = resultsFromAPIS
+            .find((result) => result.APIName === "requestMediaKeySystemAccess");
+
+          return {
+            // As only one API is called, global status is
+            // requestMediaKeySystemAccess status.
+            globalStatusNumber,
+            result: requestMediaKeySystemAccessResults ?
+              requestMediaKeySystemAccessResults.result : undefined,
+          };
+        })
+        .catch(() => { // API couln't be called.
+          return {
+            globalStatusNumber: 0,
+          };
+        })
+      );
     });
+    return Promise.all(promises)
+      .then((supportedConfigs) => {
+        return supportedConfigs
+          .map(({ result }) => result);
+      });
   },
 
   /**
@@ -146,18 +171,7 @@ const mediaCapabilitiesProber = {
       "matchMedia",
       "isTypeSupportedWithFeatures",
     ];
-    return probeMediaConfiguration(config, browserAPIS).then((result) => {
-      switch (result) {
-        case 0:
-          return "NotSupported";
-        case 1:
-          return "MaybeSupported";
-        case 2:
-          return "Supported";
-        default:
-          return "NotSupported";
-      }
-    });
+    return getStatusFromConfiguration(config, browserAPIS);
   },
 };
 

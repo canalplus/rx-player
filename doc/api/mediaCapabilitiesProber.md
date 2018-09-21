@@ -97,39 +97,161 @@ mediaCapabilitiesProber.LogLevel = "NONE";
 ## Functions ###################################################################
 
 
-### isDRMSupported #############################################################
+### getCompatibleDRMConfigurations #############################################
 
 _arguments_:
 
-  - _type_ (``string``): DRM reverse domain name, identifying the keySystem in
-    the browser.
+  - _keySystems_ (``Array.<Object>``): An array of key system
+    configurations. Those objects have the following properties:
 
-  - _configuration_ (``Object|undefined``): MediaKeySystemConfiguration for this
-    key system as defined in [the EME w3c specification
-    ](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration)
+    - _type_ (``string``): Key system string identifying it in the browser.
+    Always a reverse domain name (e.g. "org.w3.clearkey").
 
-_return value_: ``boolean``
+    - _configuration_ (``Object``): Wanted MediaKeySystemConfiguration for this
+      key system, as defined in [the EME w3c
+      specification.](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration)
 
-Probe for DRM support. The returned boolean is:
+_return value_: ``Array.<Object>``
 
-  - `true`: This DRM configuration is supported.
+Probe the support of various key sytems and for each compatible ones, returns
+the corresponding configuration that will be used.
 
-  - `false`: The DRM configuration is not supported.
+
+#### Return value
+
+The returned value is an array of object with the same number of elements than
+the one given in argument.
+
+It indicates the support for each Key System given in argument in the same
+order.
+
+Due to that, the objects in this array look like the ones given in argument (but
+with an added property):
+
+  - _type_ (``string``): Corresponding key system string given in input.
+
+  - _configuration_ (``Object``): Corresponding wanted
+    MediaKeySystemConfiguration given in input.
+
+  - _compatibleConfiguration_ (``undefined|Object``):
+
+    if the type and configuration are both compatible with the browser, this
+    is the corresponding actual MediaKeySystemConfiguration that will be
+    effectively used.
+    It will often correspond to a subset of the inputted _configuration_
+    object (for example, you might have there fewer _videoCapabilities_ that
+    in the _configuration_ object).
+
+    If the type and/or the configuration are not compatible, this property
+    will not be defined.
+
 
 #### Example
 
 ```js
 import { mediaCapabilitiesProber } from "rx-player/experimental/tools";
 
-mediaCapabilitiesProber.isDRMSupported("com.widevine.alpha", {
-  persistentState: "required"
-}).then((hasWidevineWithPersistentState) => {
-  if (hasWidevineWithPersistentState) {
-    console.log("This DRM configuration is supported");
-  } else {
-    console.log("This DRM configuration is not supported");
-  }
-});
+const mksConfiguration = {
+  initDataTypes: ["cenc"],
+  videoCapabilities: [
+    {
+      contentType: "video/mp4;codecs=\"avc1.4d401e\"", // standard mp4 codec
+      robustness: "HW_SECURE_CRYPTO",
+    },
+    {
+      contentType: "video/mp4;codecs=\"avc1.4d401e\"",
+      robustness: "SW_SECURE_DECODE",
+    }
+  ]
+};
+
+const keySystems = [
+  // Let's consider this one as a compatible key system configuration
+  { type: "com.widevine.alpha", configuration: mksConfiguration },
+
+  // Let's consider this one as not compatible
+  { type: "com.microsoft.playready", configuration: mksConfiguration },
+];
+
+mediaCapabilitiesProber.getCompatibleDRMConfigurations(keySystems)
+  .then((drmConfigs) => {
+    drmConfigs.forEach((config) => {
+      const {
+        type,
+        configuration,
+        compatibleConfiguration
+      } = config;
+
+      if (compatibleConfiguration !== undefined) {
+        console.log("# Compatible configuration #############################");
+        console.log("Key System:", type);
+        console.log("Wanted configuration:", configuration);
+        console.log("Compatible configuration:", compatibleConfiguration);
+        console.log("########################################################");
+        console.log("");
+      } else {
+        console.log("# Incompatible configuration ###########################");
+        console.log("Key System:", type);
+        console.log("Wanted configuration:", configuration);
+        console.log("########################################################");
+        console.log("");
+      }
+    });
+  });
+
+// Example output (please note that in this example, one of the widevine
+// robustness is not supported):
+//
+// # Compatible configuration #############################
+// Key System: com.widevine.alpha
+// Wanted configuration:
+// {
+//   "initDataTypes":["cenc"],
+//   "videoCapabilities": [
+//     {
+//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",
+//       "robustness": "HW_SECURE_CRYPTO"
+//     },
+//     {
+//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",
+//       "robustness": "SW_SECURE_DECODE"
+//     }
+//   ]
+// }
+// Compatible configuration:
+// {
+//   "audioCapabilities": [],
+//   "distinctiveIdentifier": "not-allowed",
+//   "initDataTypes": ["cenc"],
+//   "label": "",
+//   "persistentState": "not-allowed",
+//   "sessionTypes": ["temporary"],
+//   "videoCapabilities": [
+//     {
+//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",
+//       "robustness":"SW_SECURE_DECODE"
+//     }
+//   ]
+// }
+// ########################################################
+//
+// # Incompatible configuration ###########################
+// Key System: com.microsoft.playready
+// Wanted configuration:
+// {
+//   "initDataTypes":["cenc"],
+//   "videoCapabilities": [
+//     {
+//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",
+//       "robustness": "HW_SECURE_CRYPTO"
+//     },
+//     {
+//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",
+//       "robustness": "SW_SECURE_DECODE"
+//     }
+//   ]
+// }
+// ########################################################
 ```
 
 

@@ -16,7 +16,7 @@
 
 import getProbedConfiguration, { ICapabilitiesTypes } from "../capabilities";
 import log from "../log";
-import probers from "../probers";
+import probers, { IResultsFromAPI } from "../probers";
 import { IMediaConfiguration } from "../types";
 
 export type IBrowserAPIS =
@@ -52,19 +52,28 @@ export type IBrowserAPIS =
 async function probeMediaConfiguration(
   config: IMediaConfiguration,
   browserAPIS: IBrowserAPIS[]
-): Promise<number> {
+): Promise<{
+  globalStatusNumber: number;
+  resultsFromAPIS: Array<{
+    APIName: ICapabilitiesTypes;
+    result?: IResultsFromAPI;
+  }>;
+}> {
 
-  let statusNumber = Infinity;
+  let globalStatusNumber = Infinity;
 
-  const resultingAPI: ICapabilitiesTypes[] = [];
+  const resultsFromAPIS: Array<{
+    APIName: ICapabilitiesTypes;
+    result?: IResultsFromAPI;
+  }> = [];
   const promises = [];
   for (const browserAPI of browserAPIS) {
     const probeWithBrowser = probers[browserAPI][0];
     const wantedLogLevel = probers[browserAPI][1];
     if (probeWithBrowser) {
-      promises.push(probeWithBrowser(config).then((probeResult) => {
-        resultingAPI.push(browserAPI);
-        statusNumber = Math.min(statusNumber, probeResult);
+      promises.push(probeWithBrowser(config).then(([statusNumber, result]) => {
+        resultsFromAPIS.push({ APIName: browserAPI, result });
+        globalStatusNumber = Math.min(globalStatusNumber, statusNumber);
       }).catch((err) => {
         switch (wantedLogLevel) {
           case "warn":
@@ -89,11 +98,13 @@ async function probeMediaConfiguration(
 
   await Promise.all(promises);
 
-  const probedCapabilities = getProbedConfiguration(config, resultingAPI);
+  const probedCapabilities =
+    getProbedConfiguration(config, resultsFromAPIS.map((a) => a.APIName));
   const areUnprobedCapabilities =
     JSON.stringify(probedCapabilities).length !== JSON.stringify(config).length;
 
-  statusNumber = Math.min((areUnprobedCapabilities ? 1 : Infinity), statusNumber);
+    globalStatusNumber =
+      Math.min((areUnprobedCapabilities ? 1 : Infinity), globalStatusNumber);
 
   if (areUnprobedCapabilities) {
     log.warn("MediaCapabilitiesProber >>> PROBER: Some capabilities could not " +
@@ -104,7 +115,7 @@ async function probeMediaConfiguration(
   log.info("MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",
     probedCapabilities);
 
-  return statusNumber;
+  return { globalStatusNumber, resultsFromAPIS };
 }
 
 export default probeMediaConfiguration;

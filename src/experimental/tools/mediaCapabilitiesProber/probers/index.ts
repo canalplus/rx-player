@@ -21,10 +21,16 @@ import probeFromMediaContentType from "./mediaContentType";
 import probeFromMediaContentTypeWithFeatures from "./mediaContentTypeWithFeatures";
 import probeFromMediaDisplayInfos from "./mediaDisplayInfos";
 
-import { IMediaConfiguration } from "../types";
+import {
+  ICompatibleKeySystem,
+  IMediaConfiguration,
+} from "../types";
+
+export type IResultsFromAPI = ICompatibleKeySystem;
 
 const probers: {
-  [id: string]: [(config: IMediaConfiguration) => Promise<number>, string];
+  [id: string]: [(config: IMediaConfiguration) =>
+    Promise<[number, IResultsFromAPI?]>, string];
 } = {
   isTypeSupported: [probeFromMediaContentType, "warn"],
   isTypeSupportedWithFeatures: [probeFromMediaContentTypeWithFeatures, "debug"],
