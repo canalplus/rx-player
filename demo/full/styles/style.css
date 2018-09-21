@@ -563,6 +563,10 @@ body {
   margin-bottom: 10px;
 }
 
+.encryption-checkbox.disabled {
+  color: #888;
+}
+
 .chart-checkboxes {
   font-size: 0.8em;
 }

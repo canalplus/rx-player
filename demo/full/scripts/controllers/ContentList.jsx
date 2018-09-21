@@ -280,9 +280,10 @@ class ContentList extends React.Component {
                     ) + (IS_HTTPS ? " (HTTPS only if mixed contents disabled)" : "")
                   }
                 />
-                <span className="encryption-checkbox" >
+                <span className={"encryption-checkbox" + (!HAS_EME_APIs && !IS_HTTPS) ? " disabled" : ""}>
                   Encrypted content
                   <input
+                    disabled={!HAS_EME_APIs && !IS_HTTPS}
                     name="displayDRMSettingsTextInput"
                     type="checkbox"
                     checked={displayDRMSettings}
