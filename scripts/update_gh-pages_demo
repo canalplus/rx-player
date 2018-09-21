@@ -98,6 +98,8 @@ fi
 # update gh-pages
 git checkout gh-pages
 git pull origin gh-pages
+rm -rf fonts
+rm -rf assets
 rm -rf styles
 mv $tmpFontsDir/fonts .
 mv $tmpAssetsDir/assets .
