@@ -17,19 +17,47 @@ const URL_DENOMINATIONS = {
 };
 
 const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
-  acc[tech] = contentsDatabase.filter(({ transport }) =>
-    transport === tech.toLowerCase()
-  );
+  acc[tech] = contentsDatabase
+    .filter(({ transport }) =>
+      transport === tech.toLowerCase()
+    ).map((content) => {
+      let name = content.name;
+      let disabled = false;
+    
+      if (IS_HTTPS) {
+        if (content.url.startsWith("http:")) {
+          name = "[HTTP only] " + name;
+          disabled = true;
+        }
+      } else if (!HAS_EME_APIs && content.drmInfos && content.drmInfos.length) {
+        name = "[HTTPS only] " + name;
+        disabled = true;
+      }
+    
+      if (content.live) {
+        name += " (live)";
+      }
+    
+      return { name, disabled };
+    });
   return acc;
 }, {});
+
+Object.keys(CONTENTS_PER_TYPE).forEach((key) => {
+  CONTENTS_PER_TYPE[key].push({ name: "Custom link", disabled: false });
+})
 
 class ContentList extends React.Component {
   constructor(...args) {
     super(...args);
 
+    const contents = CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]];
+    const firstEnabledContentIndex =
+      contents.findIndex((content) => !content.disabled);
+
     this.state = {
       transportType: TRANSPORT_TYPES[0],
-      choiceIndex: 0,
+      choiceIndex: Math.max(firstEnabledContentIndex, 0),
       hasTextInput: !CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]].length,
       displayDRMSettings: false,
       manifestUrl: "",
@@ -87,9 +115,12 @@ class ContentList extends React.Component {
   }
 
   changeTransportType(transportType) {
+    const contents = CONTENTS_PER_TYPE[transportType];
+    const firstEnabledContentIndex =
+      contents.findIndex((content) => !content.disabled);
     this.setState({
       transportType,
-      choiceIndex: 0,
+      choiceIndex: firstEnabledContentIndex,
       hasTextInput: !CONTENTS_PER_TYPE[transportType].length,
     });
   }
@@ -158,30 +189,7 @@ class ContentList extends React.Component {
       autoPlay,
     } = this.state;
     const { isStopped } = this.props;
-    const contents = CONTENTS_PER_TYPE[transportType];
-
-    const contentsToSelect = contents.map(content => {
-      let name = content.name;
-      let disabled = false;
-
-      if (IS_HTTPS) {
-        if (content.url.startsWith("http:")) {
-          name = "[HTTP only] " + name;
-          disabled = true;
-        }
-      } else if (!HAS_EME_APIs && content.drmInfos && content.drmInfos.length) {
-        name = "[HTTPS only] " + name;
-        disabled = true;
-      }
-
-      if (content.live) {
-        name += " (live)";
-      }
-
-      return { name, disabled };
-    }
-    );
-    contentsToSelect.push({ name: "Custom link", disabled: false });
+    const contentsToSelect = CONTENTS_PER_TYPE[transportType];
 
     const onTechChange = (evt) => {
       const index = +evt.target.value;
