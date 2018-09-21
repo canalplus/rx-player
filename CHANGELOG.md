@@ -1,12 +1,13 @@
 # Changelog
 
-# v3.7.0 (2018/09/19)
+# v3.7.0 (2018/09/21)
 
 ### Features
 
   - eme: add ``throwOnLicenseExpiration`` boolean to ``keySystems``  (``loadVideo`` option) to allow better expiration management
   - eme: in the ``getLicense`` property of ``keySystems``  (``loadVideo`` option), it is now possible to resolve with ``null`` to avoid a license update.
   - eme: in the ``onKeyStatusesChange`` property of ``keySystems``  (``loadVideo`` option), it is now possible to resolve with ``null`` to avoid a license update.
+  - tools: replace experimental tool ``mediaCapabilitiesProber.isDRMSupported`` by the more useful ``mediaCapabilitiesProber.getCompatibleDRMConfigurations``
 
 ### Deprecated
 
