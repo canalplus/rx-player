@@ -5,6 +5,8 @@ import TextInput from "../components/Input.jsx";
 import Select from "../components/Select.jsx";
 import contentsDatabase from "../contents.js";
 
+const IS_HTTPS = window.location.protocol.startsWith("https");
+const HAS_EME_APIs = typeof navigator.requestMediaKeySystemAccess === "function";
 const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile"];
 const DRM_TYPES = ["Widevine", "Playready", "Clearkey"];
 
@@ -158,10 +160,28 @@ class ContentList extends React.Component {
     const { isStopped } = this.props;
     const contents = CONTENTS_PER_TYPE[transportType];
 
-    const contentsName = contents.map(content =>
-      `${content.name}${content.live ? " (live)" : ""}`
+    const contentsToSelect = contents.map(content => {
+      let name = content.name;
+      let disabled = false;
+
+      if (IS_HTTPS) {
+        if (content.url.startsWith("http:")) {
+          name = "[HTTP only] " + name;
+          disabled = true;
+        }
+      } else if (!HAS_EME_APIs && content.drmInfos && content.drmInfos.length) {
+        name = "[HTTPS only] " + name;
+        disabled = true;
+      }
+
+      if (content.live) {
+        name += " (live)";
+      }
+
+      return { name, disabled };
+    }
     );
-    contentsName.push("Custom link");
+    contentsToSelect.push({ name: "Custom link", disabled: false });
 
     const onTechChange = (evt) => {
       const index = +evt.target.value;
@@ -218,7 +238,7 @@ class ContentList extends React.Component {
             <Select
               className="choice-input content-choice white-select"
               onChange={onContentChange}
-              options={contentsName}
+              options={contentsToSelect}
               selected={choiceIndex}
             />
           </div>
@@ -254,8 +274,10 @@ class ContentList extends React.Component {
                   onChange={onManifestInput}
                   value={manifestUrl}
                   placeholder={
-                    URL_DENOMINATIONS[transportType] ||
-                    `URL to the ${transportType} content`
+                    (
+                      URL_DENOMINATIONS[transportType] ||
+                      `URL to the ${transportType} content`
+                    ) + (IS_HTTPS ? " (HTTPS only if mixed contents disabled)" : "")
                   }
                 />
                 <span className="encryption-checkbox" >

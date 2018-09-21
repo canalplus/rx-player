@@ -1,14 +1,5 @@
 export default [
   {
-    "name": "Canal + - BIF Thumbnail Track example",
-    "url": "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/Manifest",
-    "transport": "smooth",
-    "supplementaryImageTracks": {
-      "mimeType": "application/bif",
-      "url": "http://dash-vod-aka-test.canal-bis.com/test/bif/index.bif",
-    },
-  },
-  {
     "name": "DASH-IF - SegmentTimeline live stream",
     "url": "https://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
     "transport": "dash",
@@ -87,13 +78,13 @@ export default [
     "live": true,
   },
   {
-    "name": "Super SpeedWay",
-    "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
+    "name": "Taxi 3 SoundTrack (Audio-Only)",
+    "url": "https://playready.directtaps.net/smoothstreaming/ISMAAACLC/Taxi3_AACLC.ism/Manifest",
     "transport": "smooth",
   },
   {
-    "name": "Taxi 3 SoundTrack (Audio-Only)",
-    "url": "https://playready.directtaps.net/smoothstreaming/ISMAAACLC/Taxi3_AACLC.ism/Manifest",
+    "name": "Super SpeedWay",
+    "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
     "transport": "smooth",
   },
   {
@@ -125,5 +116,14 @@ export default [
     "url": "https://storage.googleapis.com/shaka-demo-assets/sintel-webm-only/dash.mpd",
     "transport": "dash",
     "live": false,
+  },
+  {
+    "name": "Canal + - BIF Thumbnail Track example",
+    "url": "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/Manifest",
+    "transport": "smooth",
+    "supplementaryImageTracks": {
+      "mimeType": "application/bif",
+      "url": "http://dash-vod-aka-test.canal-bis.com/test/bif/index.bif",
+    },
   },
 ];
