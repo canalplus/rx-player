@@ -226,6 +226,8 @@ class ContentList extends React.Component {
     const onAutoPlayCheckbox = (evt) =>
       this.onToggleAutoPlay(evt);
 
+    const shouldDisableEncryptedContent = !HAS_EME_APIs && !IS_HTTPS;
+ 
     return (
       <div className="choice-inputs-wrapper">
         <div className="content-inputs">
@@ -280,10 +282,10 @@ class ContentList extends React.Component {
                     ) + (IS_HTTPS ? " (HTTPS only if mixed contents disabled)" : "")
                   }
                 />
-                <span className={"encryption-checkbox" + (!HAS_EME_APIs && !IS_HTTPS) ? " disabled" : ""}>
-                  Encrypted content
+                <span className={"encryption-checkbox" + (shouldDisableEncryptedContent ? " disabled" : "")}>
+                  {(shouldDisableEncryptedContent ? "[HTTPS only] " : "") + "Encrypted content"}
                   <input
-                    disabled={!HAS_EME_APIs && !IS_HTTPS}
+                    disabled={shouldDisableEncryptedContent}
                     name="displayDRMSettingsTextInput"
                     type="checkbox"
                     checked={displayDRMSettings}
