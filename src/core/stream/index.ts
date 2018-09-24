@@ -118,7 +118,7 @@ export interface IStreamOptions {
   supplementaryImageTracks : ISupplementaryImageTrack[];
   supplementaryTextTracks : ISupplementaryTextTrack[];
   textTrackOptions : ITextTrackSourceBufferOptions;
-  transport : ITransportPipelines;
+  transportPipelines : ITransportPipelines;
   url : string;
   mediaElement : HTMLMediaElement;
 }
@@ -157,7 +157,7 @@ export default function Stream({
   supplementaryImageTracks, // eventual manually added images
   supplementaryTextTracks, // eventual manually added subtitles
   textTrackOptions,
-  transport,
+  transportPipelines,
   url,
   mediaElement,
 } : IStreamOptions) : Observable<IStreamEvent> {
@@ -167,7 +167,7 @@ export default function Stream({
   // Fetch and parse the manifest from the URL given.
   // Throttled to avoid doing multiple simultaneous requests.
   const fetchManifest = throttle(createManifestPipeline(
-    transport,
+    transportPipelines,
     getManifestPipelineOptions(networkConfig),
     warning$,
     supplementaryTextTracks,
@@ -184,7 +184,7 @@ export default function Stream({
 
   // Creates pipelines for downloading segments.
   const segmentPipelinesManager = new SegmentPipelinesManager<any>(
-    transport, requestsInfos$, network$, warning$);
+    transportPipelines, requestsInfos$, network$, warning$);
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".
