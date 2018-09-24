@@ -777,7 +777,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         supplementaryImageTracks,
         supplementaryTextTracks,
         textTrackOptions,
-        transport: {
+        transportPipelineInfos: {
           transportPipelines,
           customRepresentationFilter,
         },

@@ -33,7 +33,7 @@ import createManifest from "../../../manifest/factory";
 import {
   IManifestLoaderArguments,
   IManifestResult,
-  ITransportStreamOptions,
+  ITransportPipelineInfos,
 } from "../../../net/types";
 import Pipeline, {
   IPipelineCache,
@@ -65,7 +65,7 @@ type IPipelineManifestOptions =
  * @returns {Function}
  */
 export default function createManifestPipeline(
-  transport : ITransportStreamOptions,
+  transportPipelineInfos : ITransportPipelineInfos,
   pipelineOptions : IPipelineManifestOptions,
   warning$ : Subject<Error|ICustomError>,
   supplementaryTextTracks : ISupplementaryTextTrack[] = [],
@@ -75,7 +75,7 @@ export default function createManifestPipeline(
     const {
       transportPipelines,
       customRepresentationFilter,
-    } = transport;
+    } = transportPipelineInfos;
     const manifest$ = Pipeline<
       IManifestLoaderArguments, Document|string, IManifestResult
     >(transportPipelines.manifest, pipelineOptions)({ url });

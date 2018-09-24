@@ -230,7 +230,7 @@ export type ITransportSegmentPipeline =
   ITransportTextSegmentPipeline |
   ITransportImageSegmentPipeline;
 
-export interface ITransportStreamOptions {
+export interface ITransportPipelineInfos {
   transportPipelines : ITransportPipelines;
   customRepresentationFilter? : CustomRepresentationFilter;
 }
