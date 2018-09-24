@@ -16,6 +16,7 @@
 
 import arrayFind from "array-find";
 import objectAssign from "object-assign";
+import { CustomRepresentationFilter } from "../net/types";
 import generateNewId from "../utils/id";
 import Representation, {
   IRepresentationArguments
@@ -61,7 +62,10 @@ class Adaptation {
    * @constructor
    * @param {Object} args
    */
-  constructor(args : IAdaptationArguments) {
+  constructor(
+    args : IAdaptationArguments,
+    representationFilter? : CustomRepresentationFilter
+  ) {
     const nId = generateNewId();
     this.id = args.id == null ? nId : "" + args.id;
     this.type = args.type;
@@ -70,6 +74,8 @@ class Adaptation {
         .map(representation =>
           new Representation(objectAssign({ rootId: this.id }, representation))
         )
+        .filter((representation) => representationFilter ?
+          representationFilter(representation) : true)
         .sort((a, b) => a.bitrate - b.bitrate) : [];
 
     if (args.language != null) {
