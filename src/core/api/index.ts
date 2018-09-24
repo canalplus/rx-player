@@ -731,6 +731,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       }
 
       const transportPipelines = transportFn(transportOptions);
+      const customRepresentationFilter =
+        transportOptions ? transportOptions.representationFilter : undefined;
 
       // Options used by the ABR Manager.
       const adaptiveOptions = {
@@ -775,7 +777,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         supplementaryImageTracks,
         supplementaryTextTracks,
         textTrackOptions,
-        transportPipelines,
+        transport: {
+          transportPipelines,
+          customRepresentationFilter,
+        },
         url,
       })
         .pipe(takeUntil(closeStream$))

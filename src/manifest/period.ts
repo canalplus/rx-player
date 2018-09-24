@@ -15,6 +15,7 @@
  */
 
 import arrayFind from "array-find";
+import { CustomRepresentationFilter } from "../net/types";
 import generateNewId from "../utils/id";
 import { normalize as normalizeLang } from "../utils/languages";
 import Adaptation, {
@@ -60,7 +61,10 @@ export default class Period {
    * @constructor
    * @param {Object} args
    */
-  constructor(args : IPeriodArguments) {
+  constructor(
+    args : IPeriodArguments,
+    customRepresentationFilter? : CustomRepresentationFilter
+  ) {
     this.id = args.id;
     this.adaptations =
       (Object.keys(args.adaptations) as IAdaptationType[])
@@ -69,7 +73,7 @@ export default class Period {
             const adaptationsForType = args.adaptations[type];
             if (adaptationsForType) {
               acc[type] = adaptationsForType.map((adaptation) => {
-                return new Adaptation(adaptation);
+                return new Adaptation(adaptation, customRepresentationFilter);
               });
             }
           }
