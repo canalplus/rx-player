@@ -16,11 +16,16 @@
 
 import arrayFind from "array-find";
 import objectAssign from "object-assign";
-import { CustomRepresentationFilter } from "../net/types";
-import generateNewId from "../utils/id";
+import { Subject } from "rxjs";
+import { ICustomError } from "../../errors";
+import MediaError from "../../errors/MediaError";
+import log from "../../log";
+import { CustomRepresentationFilter } from "../../net/types";
+import generateNewId from "../../utils/id";
 import Representation, {
-  IRepresentationArguments
-} from "./representation";
+  IRepresentationArguments,
+} from "../representation";
+import filterSupportedRepresentations from "./filterSupportedRepresentations";
 
 export type IAdaptationType = "video"|"audio"|"text"|"image";
 
@@ -64,18 +69,32 @@ class Adaptation {
    */
   constructor(
     args : IAdaptationArguments,
+    warning$? : Subject<Error|ICustomError>,
     representationFilter? : CustomRepresentationFilter
   ) {
     const nId = generateNewId();
     this.id = args.id == null ? nId : "" + args.id;
     this.type = args.type;
-    this.representations = Array.isArray(args.representations) ?
+    const argsRepresentations = filterSupportedRepresentations(
+      args.type,
       args.representations
+    );
+
+    if (argsRepresentations.length === 0 && warning$) {
+      log.warn("Incompatible codecs for adaptation", args);
+      const error =
+        new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR", null, false);
+      warning$.next(error);
+    }
+
+    this.representations = Array.isArray(argsRepresentations) ?
+      argsRepresentations
         .map(representation =>
           new Representation(objectAssign({ rootId: this.id }, representation))
         )
         .filter((representation) => representationFilter ?
-          representationFilter(representation) : true)
+          representationFilter(representation) : true
+        )
         .sort((a, b) => a.bitrate - b.bitrate) : [];
 
     if (args.language != null) {
