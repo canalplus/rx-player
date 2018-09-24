@@ -379,6 +379,9 @@ considered stable:
   - ``manifestLoader`` (``Function``): defines a custom manifest loader. More
     info on it can be found [here](./plugins.md#manifestLoader).
 
+  - ``representationFilter`` (``Function``): defines a custom representation filter. More
+    info on it can be found [here](./plugins.md#representationFilter).
+
 
 
 <a name="prop-defaultAudioTrack"></a>
