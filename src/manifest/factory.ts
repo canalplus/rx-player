@@ -18,6 +18,7 @@ import { Subject } from "rxjs";
 import { isCodecSupported } from "../compat";
 import { ICustomError, MediaError } from "../errors";
 import log from "../log";
+import { CustomRepresentationFilter } from "../net/types";
 import {
   IParsedAdaptation,
   IParsedManifest,
@@ -55,7 +56,8 @@ export default function createManifest(
   manifestObject : IParsedManifest,
   externalTextTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[],
   externalImageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[],
-  warning$ : Subject<Error|ICustomError>
+  warning$ : Subject<Error|ICustomError>,
+  customRepresentationFilter? : CustomRepresentationFilter
 ) : Manifest {
   manifestObject.periods = (manifestObject.periods).map((period) => {
     Object.keys(period.adaptations).forEach((type) => {
@@ -82,7 +84,7 @@ export default function createManifest(
     return period;
   });
 
-  const manifest = new Manifest(manifestObject);
+  const manifest = new Manifest(manifestObject, customRepresentationFilter);
   manifest.addSupplementaryTextAdaptations(externalTextTracks);
   manifest.addSupplementaryImageAdaptations(externalImageTracks);
   return manifest;

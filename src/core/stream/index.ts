@@ -37,7 +37,10 @@ import {
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "../../manifest";
-import { ITransportPipelines } from "../../net";
+import {
+  CustomRepresentationFilter,
+  ITransportStreamOptions
+} from "../../net/types";
 import throttle from "../../utils/rx-throttle";
 import ABRManager, {
   IABRMetric,
@@ -118,9 +121,10 @@ export interface IStreamOptions {
   supplementaryImageTracks : ISupplementaryImageTrack[];
   supplementaryTextTracks : ISupplementaryTextTrack[];
   textTrackOptions : ITextTrackSourceBufferOptions;
-  transportPipelines : ITransportPipelines;
+  transport : ITransportStreamOptions;
   url : string;
   mediaElement : HTMLMediaElement;
+  customRepresentationFilter?: CustomRepresentationFilter;
 }
 
 // Every events emitted by the stream.
@@ -157,7 +161,7 @@ export default function Stream({
   supplementaryImageTracks, // eventual manually added images
   supplementaryTextTracks, // eventual manually added subtitles
   textTrackOptions,
-  transportPipelines,
+  transport,
   url,
   mediaElement,
 } : IStreamOptions) : Observable<IStreamEvent> {
@@ -167,7 +171,7 @@ export default function Stream({
   // Fetch and parse the manifest from the URL given.
   // Throttled to avoid doing multiple simultaneous requests.
   const fetchManifest = throttle(createManifestPipeline(
-    transportPipelines,
+    transport,
     getManifestPipelineOptions(networkConfig),
     warning$,
     supplementaryTextTracks,
@@ -184,7 +188,7 @@ export default function Stream({
 
   // Creates pipelines for downloading segments.
   const segmentPipelinesManager = new SegmentPipelinesManager<any>(
-    transportPipelines, requestsInfos$, network$, warning$);
+    transport.transportPipelines, requestsInfos$, network$, warning$);
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".

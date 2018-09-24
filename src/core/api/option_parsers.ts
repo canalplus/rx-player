@@ -24,6 +24,7 @@ import config from "../../config";
 import log from "../../log";
 import {
   CustomManifestLoader,
+  CustomRepresentationFilter,
   CustomSegmentLoader,
 } from "../../net/types";
 import {
@@ -50,6 +51,7 @@ export { IKeySystemOption };
 export interface ITransportOptions {
   manifestLoader? : CustomManifestLoader;
   segmentLoader? : CustomSegmentLoader;
+  representationFilter? : CustomRepresentationFilter;
 }
 
 export interface ISupplementaryTextTrackOption {

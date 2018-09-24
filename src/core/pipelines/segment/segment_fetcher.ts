@@ -71,7 +71,7 @@ export type ISegmentFetcher<T> = (
  *   - dispatch the other infos through the right subjects.
  *
  * @param {string} bufferType
- * @param {Object} transport
+ * @param {Object} transportPipelines
  * @param {Subject} network$ - Subject through which network metrics will be
  * sent, for the ABR.
  * @param {Subject} requests$ - Subject through which requests infos will be

@@ -16,6 +16,7 @@
 
 import arrayFind from "array-find";
 import log from "../log";
+import { CustomRepresentationFilter } from "../net/types";
 import assert from "../utils/assert";
 import generateNewId from "../utils/id";
 import { normalize as normalizeLang } from "../utils/languages";
@@ -85,13 +86,16 @@ export default class Manifest {
    * @constructor
    * @param {Object} args
    */
-  constructor(args : IManifestArguments) {
+  constructor(
+    args : IManifestArguments,
+    customRepresentationFilter?: CustomRepresentationFilter
+  ) {
     const nId = generateNewId();
     this.id = args.id == null ? nId : "" + args.id;
     this.transport = args.transportType || "";
 
     this.periods = args.periods.map((period) => {
-      return new Period(period);
+      return new Period(period, customRepresentationFilter);
     });
 
     /**
