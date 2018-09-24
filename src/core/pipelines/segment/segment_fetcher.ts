@@ -83,13 +83,13 @@ export type ISegmentFetcher<T> = (
  */
 export default function createSegmentFetcher<T>(
   bufferType : IBufferType,
-  transport : ITransportPipelines,
+  transportPipelines : ITransportPipelines,
   network$ : Subject<IABRMetric>,
   requests$ : Subject<Subject<IABRRequest>>,
   warning$ : Subject<Error|ICustomError>,
   options : IPipelineOptions<ISegmentLoaderArguments, ISegmentResponse<T>>
 ) : ISegmentFetcher<T> {
-  const basePipeline$ = BasePipeline(transport[bufferType], options);
+  const basePipeline$ = BasePipeline(transportPipelines[bufferType], options);
   let request$ : Subject<IABRRequest>|undefined;
   let id : string|undefined;
 
