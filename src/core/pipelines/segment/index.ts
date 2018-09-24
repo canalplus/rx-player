@@ -70,7 +70,7 @@ export default class SegmentPipelinesManager<T> {
   private readonly _metrics$ : Subject<IABRMetric>;
   private readonly _requestsInfos$ : Subject<Subject<IABRRequest>>;
   private readonly _warning$ : Subject<Error | ICustomError>;
-  private readonly _transport : ITransportPipelines;
+  private readonly _transportPipelines : ITransportPipelines;
   private readonly _prioritizer : ObservablePrioritizer<ISegmentResponse<T>>;
 
   /**
@@ -80,12 +80,12 @@ export default class SegmentPipelinesManager<T> {
    * @param {Subject} warning
    */
   constructor(
-    transport : ITransportPipelines,
+    transportPipelines : ITransportPipelines,
     requestsInfos$ : Subject<Subject<IABRRequest>>,
     metrics$ : Subject<IABRMetric>,
     warning : Subject<Error | ICustomError>
   ) {
-    this._transport = transport;
+    this._transportPipelines = transportPipelines;
     this._metrics$ = metrics$;
     this._requestsInfos$ = requestsInfos$;
     this._warning$ = warning;
@@ -104,7 +104,7 @@ export default class SegmentPipelinesManager<T> {
   ) {
     const segmentFetcher = createSegmentFetcher<T>(
       bufferType,
-      this._transport,
+      this._transportPipelines,
       this._metrics$,
       this._requestsInfos$,
       this._warning$,

@@ -65,7 +65,7 @@ type IPipelineManifestOptions =
  * @returns {Function}
  */
 export default function createManifestPipeline(
-  transport : ITransportPipelines,
+  transportPipelines : ITransportPipelines,
   pipelineOptions : IPipelineManifestOptions,
   warning$ : Subject<Error|ICustomError>,
   supplementaryTextTracks : ISupplementaryTextTrack[] = [],
@@ -74,7 +74,7 @@ export default function createManifestPipeline(
   return function fetchManifest(url : string) {
     const manifest$ = Pipeline<
       IManifestLoaderArguments, Document|string, IManifestResult
-    >(transport.manifest, pipelineOptions)({ url });
+    >(transportPipelines.manifest, pipelineOptions)({ url });
 
     return manifest$.pipe(
 
