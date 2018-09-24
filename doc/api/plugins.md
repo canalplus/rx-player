@@ -182,3 +182,31 @@ const customManifestLoader = (url, callbacks) => {
   };
 };
 ```
+
+
+<a name="representationFilter"></a>
+## representationFilter ########################################################
+
+The representationFilter is a function that can be included in the
+``transportOptions`` of the ``loadVideo`` API call.
+
+A representationFilter allows to define a custom representation filter.
+
+There may be a need for filtering representations, on specific representation
+attributes (that may be related to media properties).
+
+Here is a representation filter that allow video representation to be played
+if the resolution is lower than HD (1920x1080):
+
+```js
+const customRepresentationFilter = (representation) => {
+  if (representation.width != null && representation.height != null) {
+    return (
+      width <= 1920 &&
+      height <= 1080
+    );
+  }
+  // Otherwise, allow all non-video adaptation
+  return representation.mimeType ? !representation.mimeType.startsWith("video") : false;
+}
+```
