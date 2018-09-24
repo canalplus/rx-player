@@ -15,6 +15,8 @@
  */
 
 import arrayFind from "array-find";
+import { Subject } from "rxjs";
+import { ICustomError } from "../errors";
 import log from "../log";
 import { CustomRepresentationFilter } from "../net/types";
 import assert from "../utils/assert";
@@ -88,6 +90,7 @@ export default class Manifest {
    */
   constructor(
     args : IManifestArguments,
+    warning$: Subject<Error|ICustomError>,
     customRepresentationFilter?: CustomRepresentationFilter
   ) {
     const nId = generateNewId();
@@ -95,7 +98,7 @@ export default class Manifest {
     this.transport = args.transportType || "";
 
     this.periods = args.periods.map((period) => {
-      return new Period(period, customRepresentationFilter);
+      return new Period(period, warning$, customRepresentationFilter);
     });
 
     /**
