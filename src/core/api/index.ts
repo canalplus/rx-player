@@ -863,13 +863,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       )
     ).pipe(distinctUntilChanged());
 
-    /**
-     * Emit true each time the player goes into a "play" state.
-     * @type {Observable.<Boolean>}
-     */
-    const videoPlays$ = onPlayPause$(videoElement)
-      .pipe(map(evt => evt.type === "play"));
-
     let streamDisposable : Subscription|undefined;
     this._priv_stopCurrentContent$
       .pipe(take(1))
@@ -879,9 +872,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         }
       });
 
-    videoPlays$
+    onPlayPause$(videoElement)
       .pipe(takeUntil(this._priv_stopCurrentContent$))
-      .subscribe(x => this._priv_onPlayPauseNext(x), noop);
+      .subscribe(e => this._priv_onPlayPauseNext(e.type === "play"), noop);
 
     clock$
       .pipe(takeUntil(this._priv_stopCurrentContent$))
