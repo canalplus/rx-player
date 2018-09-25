@@ -120,10 +120,24 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
     .subscribe(() => {
       state.set({
         availableVideoTracks: player.getAvailableVideoTracks(),
-        availableAudioBitrates: player.getAvailableAudioBitrates(),
-        availableVideoBitrates: player.getAvailableVideoBitrates(),
         availableLanguages: player.getAvailableAudioTracks(),
         availableSubtitles: player.getAvailableTextTracks(),
+      });
+    });
+
+  fromPlayerEvent("audioTrackChange")
+    .pipe(takeUntil($destroy))
+    .subscribe(() => {
+      state.set({
+        availableAudioBitrates: player.getAvailableAudioBitrates(),
+      });
+    });
+
+  fromPlayerEvent("videoTrackChange")
+    .pipe(takeUntil($destroy))
+    .subscribe(() => {
+      state.set({
+        availableVideoBitrates: player.getAvailableVideoBitrates(),
       });
     });
 };
