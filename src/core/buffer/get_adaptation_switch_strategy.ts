@@ -28,8 +28,8 @@ const { ADAPTATION_SWITCH_BUFFER_PADDINGS } = config;
 
 export type IAdaptationSwitchStrategy =
   { type: "continue"; value: undefined } |
-  { type: "clean-buffer"; value: Array<{ start: number; end: number }> } |
-  { type: "reload-stream"; value: undefined };
+  { type: "reload"; value: undefined } |
+  { type: "clean"; value: Array<{ start: number; end: number }> };
 
 /**
  * Find out what to do when switching adaptation, based on the current
@@ -63,7 +63,7 @@ export default function getAdaptationSwitchStrategy(
     clockTick.readyState > 1 &&
     isTimeInRange({ start, end }, currentTime)
   ) {
-    return { type: "reload-stream", value: undefined };
+    return { type: "reload", value: undefined };
   }
 
   const paddingBefore = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].before || 0;
@@ -73,22 +73,22 @@ export default function getAdaptationSwitchStrategy(
     (currentTime - paddingBefore) >= end ||
     (currentTime + paddingAfter) <= start
   ) {
-    return { type: "clean-buffer", value: [{ start, end }]};
+    return { type: "clean", value: [{ start, end }]};
   }
   if (currentTime - paddingBefore <= start) {
     return {
-      type: "clean-buffer",
+      type: "clean",
       value: [{ start: currentTime + paddingAfter, end }],
     };
   }
   if (currentTime + paddingAfter >= end) {
     return {
-      type: "clean-buffer",
+      type: "clean",
       value: [{ start, end: currentTime - paddingBefore }],
     };
   }
   return {
-    type: "clean-buffer",
+    type: "clean",
     value: [
       { start, end: currentTime - paddingBefore },
       { start: currentTime + paddingAfter, end },

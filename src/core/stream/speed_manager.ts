@@ -18,20 +18,21 @@ import {
   defer as observableDefer,
   Observable,
   of as observableOf,
+  Subject,
 } from "rxjs";
 import {
-  filter,
-  map,
-  pairwise,
   startWith,
   switchMap,
   tap,
 } from "rxjs/operators";
 import log from "../../log";
-import { IStreamClockTick } from "./types";
 
 export interface ISpeedManagerOptions {
   pauseWhenStalled? : boolean;
+}
+
+export interface IPauseRequestHandle {
+  free() : void;
 }
 
 /**
@@ -41,58 +42,62 @@ export interface ISpeedManagerOptions {
  *
  * @param {HTMLMediaElement} mediaElement
  * @param {Observable} speed$ - emit speed set by the user
- * @param {Observable} clock$
+ * @param {Observable} isStalled$
  * @param {Object} options - Contains the following properties:
  *   - pauseWhenStalled {Boolean|undefined} - true if the player
  *     stalling should lead to a pause until it un-stalls. True by default.
  * @returns {Observable}
  */
-const speedManager = (
+export default function SpeedManager(
   mediaElement : HTMLMediaElement,
-  speed$ : Observable<number>,
-  clock$ : Observable<IStreamClockTick>,
-  { pauseWhenStalled = true } : ISpeedManagerOptions
-) : Observable<number> => {
-  let forcePause$ : Observable<boolean>;
+  speed$ : Observable<number>
+) : {
+  requestPause : () => IPauseRequestHandle;
+  speedManager$: Observable<number>;
+} {
+  let activePauseRequests = 0;
+  const forcePause$ = new Subject<boolean>();
 
-  if (!pauseWhenStalled) {
-    forcePause$ = observableOf(false);
-  } else {
-    const lastTwoTicks$ : Observable<[IStreamClockTick, IStreamClockTick]> =
-      clock$.pipe(pairwise());
+  return {
+    requestPause() {
+      let freed : boolean = false;
 
-    forcePause$ = lastTwoTicks$
-      .pipe(
-        map(([prevTiming, timing]) => {
-          const isStalled = timing.stalled;
-          const wasStalled = prevTiming.stalled;
-          if (
-            !wasStalled !== !isStalled || // xor
-            (wasStalled && isStalled && wasStalled.reason !== isStalled.reason)
-          ) {
-            return !wasStalled;
-          }
-        }),
-        filter((val : boolean|undefined) : val is boolean => val != null),
-        startWith(false)
-      );
-  }
-
-  return forcePause$
-    .pipe(switchMap(shouldForcePause => {
-      if (shouldForcePause) {
-        return observableDefer(() => {
-          log.info("pause playback to build buffer");
-          mediaElement.playbackRate = 0;
-          return observableOf(0);
-        });
+      activePauseRequests++;
+      log.debug(`SpeedManager: new pause request: ${activePauseRequests}`);
+      if (activePauseRequests === 1) {
+        forcePause$.next(true);
       }
-      return speed$
-        .pipe(tap((speed) => {
-          log.info("resume playback speed", speed);
-          mediaElement.playbackRate = speed;
-        }));
-    }));
-};
+      return {
+        free() {
+          if (freed) {
+            log.warn("SpeedManager: handle already freed");
+            return;
+          }
 
-export default speedManager;
+          --activePauseRequests;
+          log.debug(`SpeedManager: Pause requests remaining: ${activePauseRequests}`);
+          if (activePauseRequests === 0) {
+            forcePause$.next(false);
+            freed = true;
+          }
+        },
+      };
+    },
+
+    speedManager$: forcePause$
+      .pipe(startWith(false), switchMap(shouldForcePause => {
+        if (shouldForcePause) {
+          return observableDefer(() => {
+            log.info("SpeedManager: forcing pause on current playback");
+            mediaElement.playbackRate = 0;
+            return observableOf(0);
+          });
+        }
+        return speed$
+          .pipe(tap((speed) => {
+            log.info("SpeedManager: resuming playback speed", speed);
+            mediaElement.playbackRate = speed;
+          }));
+      })),
+  };
+}

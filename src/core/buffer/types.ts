@@ -170,7 +170,10 @@ export interface ICompletedBufferEvent {
 // The current stream needs to be re-loaded
 export interface INeedsStreamReloadEvent {
   type: "needs-stream-reload";
-  value: undefined;
+  value: {
+    validateReload: Subject<null>;
+    bufferType : IBufferType;
+  };
 }
 
 // Events coming from single PeriodBuffer

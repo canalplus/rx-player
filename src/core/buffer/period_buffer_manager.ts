@@ -16,7 +16,6 @@
 
 import {
   concat as observableConcat,
-  EMPTY,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -31,6 +30,7 @@ import {
   map,
   mapTo,
   mergeMap,
+  mergeMapTo,
   share,
   switchMap,
   take,
@@ -501,24 +501,34 @@ export default function PeriodBufferManager(
           const strategy = getAdaptationSwitchStrategy(
             qSourceBuffer.getBuffered(), period, bufferType, tick);
 
-          if (strategy.type === "reload-stream") {
-            return observableOf(EVENTS.needsStreamReload());
-          }
-
-          const cleanBuffer$ = strategy.type === "clean-buffer" ?
-            observableConcat(
-              ...strategy.value.map(({ start, end }) =>
-                qSourceBuffer.removeBuffer(start, end)
-              )).pipe(ignoreElements()) : EMPTY;
-
-          const bufferGarbageCollector$ = garbageCollectors.get(qSourceBuffer);
-          const adaptationBuffer$ = createAdaptationBuffer(
-            bufferType, period, adaptation, qSourceBuffer);
-
-          return observableConcat(
-            cleanBuffer$,
-            observableMerge(adaptationBuffer$, bufferGarbageCollector$)
+          const runBuffers$ = observableMerge(
+            createAdaptationBuffer(bufferType, period, adaptation, qSourceBuffer),
+            garbageCollectors.get(qSourceBuffer)
           );
+
+          switch (strategy.type) {
+            case "reload":
+              const validateReloadSubject = new ReplaySubject<null>(1);
+              const reload$ = qSourceBuffer.removeBuffer(0, Number.MAX_VALUE)
+                .pipe(mergeMapTo(runBuffers$));
+
+              return observableConcat(
+                observableOf(
+                  EVENTS.needsStreamReload(validateReloadSubject, bufferType)
+                ),
+                validateReloadSubject.pipe(take(1), mergeMapTo(reload$))
+              );
+
+            case "clean":
+              const cleanBuffer$ = observableConcat(
+                ...strategy.value.map(({ start, end }) =>
+                  qSourceBuffer.removeBuffer(start, end)
+                )).pipe(ignoreElements());
+              return observableConcat(cleanBuffer$, runBuffers$);
+
+            default:
+              return runBuffers$;
+          }
         }));
 
       return observableConcat<IPeriodBufferEvent>(

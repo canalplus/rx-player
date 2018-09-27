@@ -14,10 +14,17 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
+import {
+  merge as observableMerge,
+  Observable,
+} from "rxjs";
 import {
   distinctUntilChanged,
+  filter,
+  ignoreElements,
   map,
+  pairwise,
+  scan,
   share,
   tap,
 } from "rxjs/operators";
@@ -25,6 +32,7 @@ import { isPlaybackStuck } from "../../compat";
 import config from "../../config";
 import log from "../../log";
 import { getNextRangeGap } from "../../utils/ranges";
+import { IPauseRequestHandle } from "./speed_manager";
 import { IStreamClockTick } from "./types";
 
 const { DISCONTINUITY_THRESHOLD } = config;
@@ -38,16 +46,41 @@ export interface IStallingItem {
  * Receive "stalling" events from the clock, try to get out of it, and re-emit
  * them for the player if the stalling status changed.
  * @param {HTMLMediaElement} mediaElement
- * @param {Observable} timings$
+ * @param {Observable} clock$
  * @returns {Observable}
  */
 function StallingManager(
   mediaElement : HTMLMediaElement,
-  timings$ : Observable<IStreamClockTick>
+  clock$ : Observable<IStreamClockTick>,
+  requestPause : () => IPauseRequestHandle
 ) : Observable<IStallingItem|null> {
-  return timings$.pipe(
-    tap((timing) => {
-      if (!timing.stalled) {
+  const pauseWhenStalled$ : Observable<never> = clock$.pipe(
+    pairwise(),
+    map(([{ stalled: wasStalled }, { stalled: isStalled }]) =>
+      !wasStalled !== !isStalled /* xor */ ? !wasStalled : null
+    ),
+    filter((val) : val is boolean => val != null),
+    scan((pauseRequest : IPauseRequestHandle|null, shouldPause : boolean) => {
+      if (shouldPause) {
+        if (pauseRequest == null) {
+          log.info("StallingManager: requesting pause to build buffer");
+          return requestPause();
+        }
+        return pauseRequest;
+      }
+
+      if (pauseRequest != null) {
+        log.info("StallingManager: freeing pause request");
+        pauseRequest.free();
+      }
+      return null;
+    }, null),
+    ignoreElements()
+  );
+
+  const stalledEvents$ = clock$.pipe(
+    tap((clockTick) => {
+      if (!clockTick.stalled) {
         return;
       }
 
@@ -55,22 +88,15 @@ function StallingManager(
       //   1. is it a browser bug? -> force seek at the same current time
       //   2. is it a short discontinuity? -> Seek at the beginning of the
       //                                      next range
-      const { buffered, currentTime } = timing;
+      const { buffered, currentTime, stalled, state, currentRange } = clockTick;
       const nextRangeGap = getNextRangeGap(buffered, currentTime);
 
       // Discontinuity check in case we are close a buffer but still
       // calculate a stalled state. This is useful for some
       // implementation that might drop an injected segment, or in
       // case of small discontinuity in the stream.
-      if (
-        isPlaybackStuck(
-          timing.currentTime,
-          timing.currentRange,
-          timing.state,
-          !!timing.stalled
-        )
-      ) {
-        log.warn("after freeze seek", currentTime, timing.currentRange);
+      if (isPlaybackStuck(currentTime, currentRange, state, !!stalled)) {
+        log.warn("after freeze seek", currentTime, currentRange);
         mediaElement.currentTime = currentTime;
       } else if (nextRangeGap < DISCONTINUITY_THRESHOLD) {
         const seekTo = (currentTime + nextRangeGap + 1 / 60);
@@ -79,12 +105,14 @@ function StallingManager(
       }
     }),
     share(),
-    map(timing => timing.stalled),
+    map(({ stalled }) => stalled),
     distinctUntilChanged((wasStalled, isStalled) => {
       return !wasStalled && !isStalled ||
         (!!wasStalled && !!isStalled && wasStalled.reason === isStalled.reason);
     })
   );
+
+  return observableMerge(pauseWhenStalled$, stalledEvents$);
 }
 
 export default StallingManager;

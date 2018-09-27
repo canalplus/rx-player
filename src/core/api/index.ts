@@ -100,6 +100,7 @@ import {
   IReloadingStreamEvent,
   IStalledEvent,
   IStreamLoadedEvent,
+  IStreamReloadedEvent,
 } from "../stream/types";
 import createClock, {
   IClockTick
@@ -807,6 +808,12 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       share()
     );
 
+    // Emit when the Stream is considered "reloaded".
+    const reloaded$ = stream.pipe(
+      filter((evt) : evt is IStreamReloadedEvent => evt.type === "reloaded"),
+      share()
+    );
+
     // Emit when the Stream "reloads" the MediaSource
     const reloading$ = stream.pipe(
       filter((evt) : evt is IReloadingStreamEvent => evt.type === "reloading-stream"),
@@ -853,7 +860,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         // when reloading
         reloading$.pipe(
           switchMapTo(
-            loaded$.pipe(
+            reloaded$.pipe(
               take(1), // wait for the next loaded Stream event
               mergeMapTo(loadedStateUpdates$), // to update the state as usual
               startWith(PLAYER_STATES.RELOADING) // Starts with "RELOADING" state
@@ -1901,9 +1908,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       case "periodBufferCleared":
         this._priv_onPeriodBufferCleared(streamInfos.value);
         break;
-      case "reloading-stream":
-        this._priv_onStreamReload();
-        break;
       case "representationChange":
         this._priv_onRepresentationChange(streamInfos.value);
         break;
@@ -2154,12 +2158,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           this._priv_trackManager.removePeriod(type, period);
         }
         break;
-    }
-  }
-
-  private _priv_onStreamReload() {
-    if (this._priv_trackManager) {
-      this._priv_trackManager.resetPeriods();
     }
   }
 

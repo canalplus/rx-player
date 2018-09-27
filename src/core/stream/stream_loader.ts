@@ -15,18 +15,15 @@
  */
 
 import {
-  EMPTY,
   merge as observableMerge,
   Observable,
   of as observableOf,
-  Subject,
 } from "rxjs";
 import {
   finalize,
-  ignoreElements,
   map,
   mergeMap,
-  takeUntil,
+  share,
 } from "rxjs/operators";
 import { MediaError } from "../../errors";
 import Manifest, {
@@ -42,18 +39,19 @@ import SourceBufferManager, {
 } from "../source_buffers";
 import createBufferClock from "./create_buffer_clock";
 import { setDurationToMediaSource } from "./create_media_source";
-import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
+import handleBufferEvents from "./handle_buffer_events";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
-import onLiveBufferEvent from "./on_live_buffer_event";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
 import {
   IManifestUpdateEvent,
+  IReloadingStreamEvent,
   ISpeedChangedEvent,
   IStalledEvent,
   IStreamClockTick,
   IStreamLoadedEvent,
+  IStreamReloadedEvent,
   IStreamWarningEvent,
 } from "./types";
 
@@ -84,7 +82,9 @@ export type IStreamLoaderEvent =
   IStalledEvent |
   ISpeedChangedEvent |
   IStreamLoadedEvent |
+  IStreamReloadedEvent |
   IStreamWarningEvent |
+  IReloadingStreamEvent |
   IPeriodBufferManagerEvent;
 
 /**
@@ -141,72 +141,53 @@ export default function StreamLoader({
     //    does not support adding more tracks during playback.
     createNativeSourceBuffersForPeriod(sourceBufferManager, initialPeriod);
 
-    const {
-      seek$,
-      load$,
-    } = seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
-
+    const { seek$, load$ } =
+      seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
     const bufferClock$ = createBufferClock(manifest, clock$, seek$, speed$, initialTime);
 
-    // Will be used to cancel any endOfStream tries when the contents resume
-    const cancelEndOfStream$ = new Subject<null>();
-
-    // Will be used to process the events of the buffer
-    const onBufferEvent =
-      manifest.isLive ?
-      onLiveBufferEvent(mediaElement, manifest, refreshManifest) :
-
-      /* tslint:disable no-unnecessary-callback-wrapper */ // needed for TS :/
-      (evt : IPeriodBufferManagerEvent) => observableOf(evt);
-    /* tslint:enable no-unnecessary-callback-wrapper */
-
-    // Creates Observable which will manage every Buffer for the given Content.
-    const buffers$ = PeriodBufferManager(
+    const periodBuffers$ = PeriodBufferManager(
       { manifest, initialPeriod },
       bufferClock$,
       abrManager,
       sourceBufferManager,
       segmentPipelinesManager,
       bufferOptions
-    ).pipe(mergeMap((evt) : Observable<IStreamLoaderEvent> => {
-      switch (evt.type) {
-        case "end-of-stream":
-          return maintainEndOfStream(mediaSource)
-            .pipe(ignoreElements(), takeUntil(cancelEndOfStream$));
-        case "resume-stream":
-          cancelEndOfStream$.next(null);
-          return EMPTY;
-        default:
-          return onBufferEvent(evt);
+    ).pipe(share()); // same PeriodBuffers for everyone listening
+
+    // Update the speed according to:
+    //  - the speed set by the user
+    //  - various pause requests (asked through the requestPause function)
+    const { requestPause, speedManager$ } = SpeedManager(mediaElement, speed$);
+
+    // Try to get out of various infinite stalling issues and pause to build
+    // buffer.
+    const stallingManager$ = StallingManager(mediaElement, clock$, requestPause);
+
+    const onBufferEvent = handleBufferEvents(periodBuffers$, {
+      clock$,
+      manifest,
+      mediaElement,
+      mediaSource,
+      refreshManifest,
+      requestPause,
+    });
+
+    // Manage every Buffer for the given Content.
+    const managedBuffers$ = periodBuffers$.pipe(mergeMap(onBufferEvent));
+
+    const loadedEvent$ = load$.pipe(mergeMap((evt) => {
+      if (evt === "autoplay-blocked") {
+        const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
+        return observableOf(EVENTS.warning(error), EVENTS.loaded());
       }
+      return observableOf(EVENTS.loaded());
     }));
-
-    // Create Speed Manager, an observable which will set the speed set by the
-    // user on the media element while pausing a little longer while the buffer
-    // is stalled.
-    const speedManager$ = SpeedManager(mediaElement, speed$, clock$, {
-      pauseWhenStalled: true,
-    }).pipe(map(EVENTS.speedChanged));
-
-    // Create Stalling Manager, an observable which will try to get out of
-    // various infinite stalling issues
-    const stallingManager$ = StallingManager(mediaElement, clock$)
-      .pipe(map(EVENTS.stalled));
-
-    const loadedEvent$ = load$
-      .pipe(mergeMap((evt) => {
-        if (evt === "autoplay-blocked") {
-          const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
-          return observableOf(EVENTS.warning(error), EVENTS.loaded());
-        }
-        return observableOf(EVENTS.loaded());
-      }));
 
     return observableMerge(
       loadedEvent$,
-      buffers$,
-      speedManager$,
-      stallingManager$
+      managedBuffers$,
+      speedManager$.pipe(map(EVENTS.speedChanged)),
+      stallingManager$.pipe(map(EVENTS.stalled))
     ).pipe(finalize(() => {
       // clean-up every created SourceBuffers
       sourceBufferManager.disposeAll();

@@ -138,8 +138,14 @@ const EVENTS = {
     };
   },
 
-  needsStreamReload() : INeedsStreamReloadEvent {
-    return { type: "needs-stream-reload", value: undefined };
+  needsStreamReload(
+    validateReload : Subject<null>,
+    bufferType: IBufferType
+  ) : INeedsStreamReloadEvent {
+    return {
+      type: "needs-stream-reload",
+      value: { validateReload, bufferType },
+    };
   },
 
   periodBufferReady(
