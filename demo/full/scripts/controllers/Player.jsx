@@ -43,9 +43,9 @@ class Player extends React.Component {
         isStopped,
       ]) => {
         this.setState({ isStopped });
-        if (isLoading || isReloading) {
+        if (isLoading) {
           this.setState({ displaySpinner: true });
-        } else if (isSeeking || isBuffering) {
+        } else if (isSeeking || isBuffering || isReloading) {
           this._displaySpinnerTimeout = setTimeout(() => {
             this.setState({ displaySpinner: true });
           }, SPINNER_TIMEOUT);
@@ -56,9 +56,7 @@ class Player extends React.Component {
           }
 
           if (this.state.displaySpinner) {
-            this.setState({
-              displaySpinner: false,
-            });
+            this.setState({ displaySpinner: false });
           }
         }
 
