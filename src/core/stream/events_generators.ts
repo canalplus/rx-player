@@ -29,6 +29,7 @@ import {
   ISpeedChangedEvent,
   IStalledEvent,
   IStreamLoadedEvent,
+  IStreamReloadedEvent,
   IStreamWarningEvent,
 } from "./types";
 
@@ -38,6 +39,14 @@ import {
  */
 function loaded() : IStreamLoadedEvent {
   return { type: "loaded", value: true };
+}
+
+/**
+ * Construct a "reoladed" event.
+ * @returns {Object}
+ */
+function reloaded() : IStreamReloadedEvent {
+  return { type: "reloaded", value: undefined };
 }
 
 /**
@@ -121,6 +130,7 @@ function reloadingStream() : IReloadingStreamEvent {
 
 const STREAM_EVENTS = {
   loaded,
+  reloaded,
   manifestReady,
   manifestUpdate,
   nullRepresentation,

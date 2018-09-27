@@ -133,34 +133,26 @@ export default function StreamDirectFile({
   clearElementSrc(mediaElement);
 
   log.debug("calculating initial time");
-  const initialTime = () =>
-    getDirectFileInitialTime(mediaElement, startAt);
+  const initialTime = () => getDirectFileInitialTime(mediaElement, startAt);
   log.debug("initial time calculated:", initialTime);
 
-  const {
-    seek$,
-    load$,
-  } = seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
+  const { seek$, load$ } = seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
 
-  // Create EME Manager, an observable which will manage every EME-related
-  // issue.
+  // Manage every EME-related issue.
   const emeManager$ = createEMEManager(mediaElement, keySystems);
 
   // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.
   const errorManager$ = createMediaErrorManager(mediaElement);
 
-  // Create Speed Manager, an observable which will set the speed set by the
-  // user on the media element while pausing a little longer while the buffer
-  // is stalled.
-  const speedManager$ = SpeedManager(mediaElement, speed$, clock$, {
-    pauseWhenStalled: true,
-  }).pipe(map(EVENTS.speedChanged));
+  // Update the speed according to:
+  //  - the speed set by the user
+  //  - your "pausing needs" (through the requestPause function)
+  const { requestPause, speedManager$ } = SpeedManager(mediaElement, speed$);
 
   // Create Stalling Manager, an observable which will try to get out of
   // various infinite stalling issues
-  const stallingManager$ = StallingManager(mediaElement, clock$)
-    .pipe(map(EVENTS.stalled));
+  const stallingManager$ = StallingManager(mediaElement, clock$, requestPause);
 
   // Manage "loaded" event and warn if autoplay is blocked on the current browser
   const loadedEvent$ = load$
@@ -182,8 +174,8 @@ export default function StreamDirectFile({
     initialSeek$,
     emeManager$,
     errorManager$,
-    speedManager$,
-    stallingManager$,
+    speedManager$.pipe(map(EVENTS.speedChanged)),
+    stallingManager$.pipe(map(EVENTS.stalled)),
     linkURL$
   );
 }

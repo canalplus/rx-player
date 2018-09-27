@@ -135,6 +135,13 @@ function isTimeInRange({ start, end } : IRange, time : number) : boolean {
   return start <= time && time < end;
 }
 
+function isTimeInTimeRanges(timeRanges : TimeRanges, time : number) : boolean {
+  for (let i = 0; i < timeRanges.length; i++) {
+    return time >= timeRanges.start(i) && time < timeRanges.end(i);
+  }
+  return false;
+}
+
 /**
  * Returns true if the two ranges given are overlapping.
  * @param {Object} range1
@@ -408,6 +415,7 @@ export {
   insertInto,
   isAfter,
   isBefore,
+  isTimeInTimeRanges,
   isTimeInRange,
   keepRangeIntersection,
   mergeContiguousRanges,

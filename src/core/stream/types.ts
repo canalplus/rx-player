@@ -26,6 +26,7 @@ export interface IStreamClockTick {
   buffered : TimeRanges;
   duration : number;
   bufferGap : number;
+  ended : boolean;
   state : string;
   playbackRate : number;
   currentRange : {
@@ -86,6 +87,12 @@ export interface IStalledEvent {
 export interface IStreamLoadedEvent {
   type : "loaded";
   value : true;
+}
+
+// A reloading step finished
+export interface IStreamReloadedEvent {
+  type : "reloaded";
+  value : undefined;
 }
 
 export { IRepresentationChangeEvent };
