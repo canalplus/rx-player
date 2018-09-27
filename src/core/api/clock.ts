@@ -42,7 +42,6 @@ export type IMediaInfosState =
   "seeking" |
   "seeked" |
   "loadedmetadata" |
-  "canplay" |
   "ratechange" |
   "timeupdate";
 
@@ -83,7 +82,6 @@ function isMediaInfoState(state : string) : state is IMediaInfosState {
     state === "seeking" ||
     state === "seeked" ||
     state === "loadedmetadata" ||
-    state === "canplay" ||
     state === "ratechange" ||
     state ===   "timeupdate";
 }
@@ -108,7 +106,6 @@ const SCANNED_MEDIA_ELEMENTS_EVENTS = [
   "seeking",
   "seeked",
   "loadedmetadata",
-  "canplay",
   "ratechange",
 ];
 
