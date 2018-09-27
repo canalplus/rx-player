@@ -133,6 +133,12 @@ export default [
     "live": false,
   },
   {
+    "name": "Multi Video Tracks",
+    "url": "https://utils.ssl.cdn.cra.cz/dash/1/manifest.mpd",
+    "transport": "dash",
+    "live": false,
+  },
+  {
     "name": "Canal + - BIF Thumbnail Track example",
     "url": "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/Manifest",
     "transport": "smooth",
