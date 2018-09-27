@@ -776,9 +776,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         textTrackOptions,
         transport: transportObj,
         url,
-      })
-        .pipe(takeUntil(closeStream$))
-        .pipe(publish()) as ConnectableObservable<IStreamEvent>;
+      }).pipe(
+        takeUntil(closeStream$),
+        publish()
+      )  as ConnectableObservable<IStreamEvent>;
     } else {
       if (features.directfile == null) {
         throw new Error("DirectFile feature not activated in your build.");
@@ -791,26 +792,16 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         speed$: this._priv_speed$,
         startAt,
         url,
-      })
-        .pipe(takeUntil(closeStream$))
-        .pipe(publish()) as ConnectableObservable<IStreamEvent>;
+      }).pipe(
+        takeUntil(closeStream$),
+        publish()
+      )  as ConnectableObservable<IStreamEvent>;
     }
 
     // Emit an object when the player stalls and null when it unstall
     const stalled$ = stream.pipe(
       filter((evt) : evt is IStalledEvent => evt.type === "stalled"),
-      map(x => x.value)
-    );
-
-    // Emit when the Stream is considered "loaded".
-    const loaded$ = stream.pipe(
-      filter((evt) : evt is IStreamLoadedEvent => evt.type === "loaded"),
-      share()
-    );
-
-    // Emit when the Stream is considered "reloaded".
-    const reloaded$ = stream.pipe(
-      filter((evt) : evt is IStreamReloadedEvent => evt.type === "reloaded"),
+      map(x => x.value),
       share()
     );
 
@@ -820,22 +811,13 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       share()
     );
 
-    // Emit when the media element emits an "ended" event.
-    const endedEvent$ = onEnded$(videoElement)
-      .pipe(mapTo(null));
-
-    // Emit when the media element emits a "seeking" event.
-    const seekingEvent$ = onSeeking$(videoElement)
-      .pipe(mapTo(null));
-
     // State updates when the content is considered "loaded"
     const loadedStateUpdates$ = observableCombineLatest(
       this._priv_playing$,
       stalled$.pipe(startWith(null)),
-      endedEvent$.pipe(startWith(null)),
-      seekingEvent$.pipe(startWith(null))
-    )
-    .pipe(
+      onEnded$(videoElement).pipe(mapTo(null), startWith(null)),
+      onSeeking$(videoElement).pipe(mapTo(null), startWith(null))
+    ).pipe(
       takeUntil(this._priv_stopCurrentContent$),
       map(([isPlaying, stalledStatus]) =>
         getPlayerState(videoElement, isPlaying, stalledStatus)
@@ -847,7 +829,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       observableOf(PLAYER_STATES.LOADING), // Begin with LOADING
 
       // LOADED as soon as the first "loaded" event is sent from the Stream
-      loaded$.pipe(take(1), mapTo(PLAYER_STATES.LOADED)),
+      stream.pipe(
+        filter((evt) : evt is IStreamLoadedEvent => evt.type === "loaded"),
+        take(1),
+        mapTo(PLAYER_STATES.LOADED)
+      ),
 
       observableMerge(
         loadedStateUpdates$
@@ -860,7 +846,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         // when reloading
         reloading$.pipe(
           switchMapTo(
-            reloaded$.pipe(
+            stream.pipe(
+              filter((evt) : evt is IStreamReloadedEvent => evt.type === "reloaded"),
               take(1), // wait for the next loaded Stream event
               mergeMapTo(loadedStateUpdates$), // to update the state as usual
               startWith(PLAYER_STATES.RELOADING) // Starts with "RELOADING" state
