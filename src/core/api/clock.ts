@@ -34,6 +34,18 @@ import {
 import config from "../../config";
 import { getLeftSizeOfRange, getRange } from "../../utils/ranges";
 
+export type IMediaInfosState =
+  "init" |
+  "canplay" |
+  "play" |
+  "progress" |
+  "seeking" |
+  "seeked" |
+  "loadedmetadata" |
+  "canplay" |
+  "ratechange" |
+  "timeupdate";
+
 // Informations recuperated on the media element on each clock
 // tick
 interface IMediaInfos {
@@ -50,7 +62,7 @@ interface IMediaInfos {
   playbackRate : number;
   readyState : number;
   seeking : boolean;
-  state : string;
+  state : IMediaInfosState;
 }
 
 type stalledStatus = {
@@ -61,6 +73,19 @@ type stalledStatus = {
 // Global informations emitted on each clock tick
 export interface IClockTick extends IMediaInfos {
   stalled : stalledStatus;
+}
+
+function isMediaInfoState(state : string) : state is IMediaInfosState {
+  return state === "init" ||
+    state === "canplay" ||
+    state === "play" ||
+    state === "progress" ||
+    state === "seeking" ||
+    state === "seeked" ||
+    state === "loadedmetadata" ||
+    state === "canplay" ||
+    state === "ratechange" ||
+    state ===   "timeupdate";
 }
 
 const {
@@ -130,7 +155,7 @@ function hasLoadedUntilTheEnd(
  */
 function getMediaInfos(
   mediaElement : HTMLMediaElement,
-  currentState : string
+  currentState : IMediaInfosState
 ) : IMediaInfos {
   const {
     buffered,
@@ -303,10 +328,10 @@ function createClock(
      * @param {Event} [evt] - The Event which triggered the callback, if one.
      */
     function emitSample(evt? : Event) {
-      const timingEventType = evt && evt.type || "timeupdate";
-      const mediaTimings = getMediaInfos(mediaElement, timingEventType);
-      const stalledState =
-        getStalledStatus(lastTimings, mediaTimings, withMediaSource);
+      const state : IMediaInfosState = evt && isMediaInfoState(evt.type) ?
+        evt.type : "timeupdate";
+      const mediaTimings = getMediaInfos(mediaElement, state);
+      const stalledState = getStalledStatus(lastTimings, mediaTimings, withMediaSource);
 
       // /!\ Mutate mediaTimings
       lastTimings = objectAssign(mediaTimings,
