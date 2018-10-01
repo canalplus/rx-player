@@ -36,6 +36,7 @@ build:
 script:
   - npm run types
   - npm run lint
+  - npm run lint:demo
   - npm run test
   - sonar-scanner
 
