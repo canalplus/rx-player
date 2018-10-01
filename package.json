@@ -72,6 +72,7 @@
     "build:report": "cross-env RXP_SIZE_REPORT=true webpack --progress --config webpack.config.js",
     "build:min:report": "cross-env RXP_SIZE_REPORT=true cross-env RXP_MINIFY=true webpack --progress --config webpack.config.js",
     "build:watch": "webpack --progress --config webpack.config.js -w",
+    "certificate": "./scripts/generate_certificate",
     "check": "npm run types && npm run lint && npm run test",
     "demo": "webpack --progress --config webpack-demo.config.js",
     "demo:min": "cross-env RXP_MINIFY=true webpack --progress --config webpack-demo.config.js",
