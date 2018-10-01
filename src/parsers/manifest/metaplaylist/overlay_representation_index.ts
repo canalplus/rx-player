@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
+import log from "../../../log";
 import {
   IRepresentationIndex,
   ISegment,
 } from "../../../manifest";
-import log from "../../../utils/log";
 
 export interface IMetaplaylistOverlayData {
   start : number;
