@@ -19,3 +19,6 @@
 /minimal
 /experimental
 /types
+
+/localhost.key
+/localhost.crt
