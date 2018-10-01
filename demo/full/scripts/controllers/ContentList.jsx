@@ -27,7 +27,7 @@ const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
       if (IS_HTTPS) {
         if (content.url.startsWith("http:")) {
           name = "[HTTP only] " + name;
-          disabled = true;
+          disabled = false;
         }
       } else if (!HAS_EME_APIs && content.drmInfos && content.drmInfos.length) {
         name = "[HTTPS only] " + name;
