@@ -32,6 +32,7 @@ import {
   filter,
   ignoreElements,
   map,
+  mapTo,
   mergeMap,
   tap,
 } from "rxjs/operators";
@@ -113,9 +114,11 @@ export default function EMEManager(
       mediaElement,
       keySystemsConfigs,
       attachedMediaKeysInfos
-    )
+    ).pipe(mergeMap((mediaKeysInfos) =>
+      attachMediaKeys(mediaKeysInfos, mediaElement, attachedMediaKeysInfos)
+      .pipe(mapTo(mediaKeysInfos))
+    ))
   ).pipe(
-
     /* Attach server certificate and create/reuse MediaKeySession */
     mergeMap(([encryptedEvent, mediaKeysInfos], i) => {
       log.debug("EME: encrypted event received", encryptedEvent);
@@ -137,17 +140,11 @@ export default function EMEManager(
         })));
 
       if (i === 0) { // first encrypted event for the current content
-        return observableMerge(
-          serverCertificate != null ?
-
-            observableConcat(
-              setServerCertificate(mediaKeys, serverCertificate),
-              session$
-            ) : session$,
-
-            attachMediaKeys(mediaKeysInfos, mediaElement, attachedMediaKeysInfos)
-              .pipe(ignoreElements())
-        );
+        return serverCertificate != null ?
+          observableConcat(
+            setServerCertificate(mediaKeys, serverCertificate),
+            session$
+          ) : session$;
       }
 
       return session$;
