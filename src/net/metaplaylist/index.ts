@@ -230,8 +230,7 @@ export default function(options?: ITransportOptions): ITransportPipelines {
                 return parser({ response: fakeResponse, url: content.url })
                   .pipe(
                     map((mpd) => {
-                      const type = mpd.manifest.type;
-                      if (type !== "static") {
+                      if (!mpd.manifest.isLive) {
                         throw new Error("Content from metaplaylist is not static.");
                       }
                       return objectAssign(content, { manifest: mpd.manifest });
@@ -299,7 +298,7 @@ export default function(options?: ITransportOptions): ITransportPipelines {
             .pipe(
               map(({ segmentData, segmentInfos }) => {
                 if (segmentData == null) {
-                  return ({ segmentData: null, segmentInfos: null });
+                  return { segmentData: null, segmentInfos: null, segmentOffset: 0 };
                 }
                 const responseData = segmentData instanceof Uint8Array ?
                   segmentData :
@@ -312,7 +311,11 @@ export default function(options?: ITransportOptions): ITransportPipelines {
                 if (segmentInfos && segmentInfos.time > -1) {
                   segmentInfos.time += offset;
                 }
-                return { segmentData: segmentPatchedData, segmentInfos };
+                return {
+                  segmentData: segmentPatchedData,
+                  segmentInfos,
+                  segmentOffset: 0, // XXX TODO
+                };
               })
             );
         },
@@ -342,15 +345,13 @@ export default function(options?: ITransportOptions): ITransportPipelines {
         return transport.text.parser(parserArgs)
           .pipe(
             map((parsed) => {
-              if (parsed.segmentData != null) {
-                parsed.segmentData.timeOffset += offset;
-              }
               if (parsed.segmentInfos && parsed.segmentInfos.time > -1) {
                 parsed.segmentInfos.time += offset;
               }
               return {
                 segmentData: parsed.segmentData,
                 segmentInfos: parsed.segmentInfos,
+                segmentOffset: offset, // XXX TODO verify it's not -offset
               };
             })
           );
@@ -385,13 +386,14 @@ export default function(options?: ITransportOptions): ITransportPipelines {
         return transport.image.parser(parserArgs)
           .pipe(
             map((parsed) => {
-              if (parsed.segmentData != null) {
-                parsed.segmentData.timeOffset += offset;
-              }
               if (parsed.segmentInfos && parsed.segmentInfos.time > -1) {
                 parsed.segmentInfos.time += offset;
               }
-              return parsed;
+              return {
+                segmentData: parsed.segmentData,
+                segmentInfos: parsed.segmentInfos,
+                segmentOffset: offset, // XXX TODO verify it's not -offset
+              };
             })
           );
       },

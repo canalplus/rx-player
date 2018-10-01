@@ -176,7 +176,7 @@ export default function parseMetaManifest(
     periods: newPeriods,
     suggestedPresentationDelay,
     transportType: "metaplaylist",
-    type: "dynamic",
+    isLive: true,
     uris: [baseURL],
   };
 
