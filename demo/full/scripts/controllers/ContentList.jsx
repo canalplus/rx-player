@@ -23,7 +23,7 @@ const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
     ).map((content) => {
       let name = content.name;
       let disabled = false;
-    
+
       if (IS_HTTPS) {
         if (content.url.startsWith("http:")) {
           name = "[HTTP only] " + name;
@@ -33,11 +33,11 @@ const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
         name = "[HTTPS only] " + name;
         disabled = true;
       }
-    
+
       if (content.live) {
         name += " (live)";
       }
-    
+
       return { content, name, disabled };
     });
   return acc;
@@ -45,7 +45,7 @@ const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
 
 Object.keys(CONTENTS_PER_TYPE).forEach((key) => {
   CONTENTS_PER_TYPE[key].push({ name: "Custom link", disabled: false });
-})
+});
 
 class ContentList extends React.Component {
   constructor(...args) {
@@ -58,7 +58,8 @@ class ContentList extends React.Component {
     this.state = {
       transportType: TRANSPORT_TYPES[0],
       choiceIndex: firstEnabledContentIndex,
-      hasTextInput: CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]].length - 1 === firstEnabledContentIndex,
+      hasTextInput: CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]].length - 1 ===
+        firstEnabledContentIndex,
       displayDRMSettings: false,
       manifestUrl: "",
       drm: DRM_TYPES[0],
@@ -121,7 +122,8 @@ class ContentList extends React.Component {
     this.setState({
       transportType,
       choiceIndex: firstEnabledContentIndex,
-      hasTextInput: CONTENTS_PER_TYPE[transportType].length - 1 === firstEnabledContentIndex
+      hasTextInput: CONTENTS_PER_TYPE[transportType].length - 1 ===
+        firstEnabledContentIndex,
     });
   }
 
@@ -236,7 +238,7 @@ class ContentList extends React.Component {
       this.onToggleAutoPlay(evt);
 
     const shouldDisableEncryptedContent = !HAS_EME_APIs && !IS_HTTPS;
- 
+
     return (
       <div className="choice-inputs-wrapper">
         <div className="content-inputs">
