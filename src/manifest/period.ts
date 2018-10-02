@@ -102,11 +102,7 @@ export default class Period {
           bitrate: 0,
           id: representationID,
           mimeType,
-          index: new StaticRepresentationIndex({
-            media: url,
-            startTime: this.start,
-            endTime: this.end || Number.MAX_VALUE,
-          }),
+          index: new StaticRepresentationIndex({ media: url }),
         }],
       });
     });
@@ -150,11 +146,7 @@ export default class Period {
             id: representationID,
             mimeType,
             codecs,
-            index: new StaticRepresentationIndex({
-              media: url,
-              startTime: this.start,
-              endTime: this.end || Number.MAX_VALUE,
-            }),
+            index: new StaticRepresentationIndex({ media: url }),
           }],
         });
       }));

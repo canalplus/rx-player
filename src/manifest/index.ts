@@ -139,11 +139,7 @@ export default class Manifest {
           bitrate: 0,
           id: representationID,
           mimeType,
-          index: new StaticRepresentationIndex({
-            media: url,
-            startTime: this.periods[0].start,
-            endTime: this.periods[0].end || Number.MAX_VALUE,
-          }),
+          index: new StaticRepresentationIndex({ media: url }),
         }],
       });
     });
@@ -187,11 +183,7 @@ export default class Manifest {
             id: representationID,
             mimeType,
             codecs,
-            index: new StaticRepresentationIndex({
-              media: url,
-              startTime: this.periods[0].start,
-              endTime: this.periods[0].end || Number.MAX_VALUE,
-            }),
+            index: new StaticRepresentationIndex({ media: url }),
           }],
         });
       }));
