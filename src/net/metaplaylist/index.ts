@@ -28,6 +28,8 @@ import objectAssign from "object-assign";
 
 import { IPrivateInfos, ISegment } from "../../manifest/representation_index/interfaces";
 import parseMetaManifest from "../../parsers/manifest/metaplaylist";
+import DASHTransport from "../dash";
+import SmoothTransport from "../smooth";
 import {
   ILoaderObservable,
   ILoaderResponse,
@@ -41,10 +43,6 @@ import {
   ITransportPipelines,
   SegmentParserObservable,
 } from "../types";
-
-import DASHTransport from "../dash";
-import SmoothTransport from "../smooth";
-import patchSegmentWithTimeOffset from "./isobmff_patcher";
 
 type ITransportTypes = "dash"|"smooth";
 
@@ -304,17 +302,13 @@ export default function(options?: ITransportOptions): ITransportPipelines {
                   segmentData :
                   new Uint8Array(segmentData);
 
-                const segmentPatchedData = patchSegmentWithTimeOffset(
-                  responseData,
-                  offset
-                );
                 if (segmentInfos && segmentInfos.time > -1) {
                   segmentInfos.time += offset;
                 }
                 return {
-                  segmentData: segmentPatchedData,
+                  segmentData: responseData,
                   segmentInfos,
-                  segmentOffset: 0, // XXX TODO
+                  segmentOffset: offset / segment.timescale, // XXX TODO
                 };
               })
             );
