@@ -9,7 +9,7 @@ import {
   manifestInfos,
 } from "../contents/metaplaylist-static-dash";
 
-describe.only("MetaPlaylist with DASH Content", function () {
+describe("MetaPlaylist with DASH Content", function () {
   let player;
   let fakeServer;
   const startTime = (Date.now() / 1000) - 20;
