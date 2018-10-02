@@ -26,7 +26,7 @@ import {
   IParsedManifest,
   IParsedPeriod,
 } from "../types";
-import MetaRepresentationIndex from "./representaton_index";
+import MetaRepresentationIndex from "./representation_index";
 
 export type AdaptationType = "video"|"audio"|"text"|"image";
 
@@ -44,7 +44,7 @@ export default function parseMetaManifest(
   contents: Array<{
       manifest: IParsedManifest;
       url: string;
-      transport: "dash"|"smooth";
+      transport: string;
       startTime: number;
       endTime: number;
       textTracks: Array<{

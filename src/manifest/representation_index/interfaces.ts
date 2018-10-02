@@ -20,7 +20,7 @@ import Manifest, {
 } from "../../manifest";
 import Period from "../period";
 
-export type IMetaPlaylistTransportTypePrivateInfos = "dash"|"smooth";
+export type IMetaPlaylistTransportTypePrivateInfos = string;
 
 export interface ISmoothInitSegmentPrivateInfos {
   codecPrivateData? : string;

@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-import {
-  combineLatest
-} from "rxjs";
+import objectAssign from "object-assign";
+import { combineLatest } from "rxjs";
 import {
   filter,
   map,
   mergeMap,
 } from "rxjs/operators";
-import request from "../../utils/request";
-
-import objectAssign from "object-assign";
-
-import { IPrivateInfos, ISegment } from "../../manifest/representation_index/interfaces";
+import { ISegment } from "../../manifest/representation_index/interfaces";
 import parseMetaManifest from "../../parsers/manifest/metaplaylist";
+import request from "../../utils/request";
 import DASHTransport from "../dash";
 import SmoothTransport from "../smooth";
 import {
@@ -44,15 +40,13 @@ import {
   SegmentParserObservable,
 } from "../types";
 
-type ITransportTypes = "dash"|"smooth";
-
 export interface IMetaManifestInfo {
     manifests: Array<{
       manifest: Document;
       url: string;
       startTime: number;
       endTime: number;
-      transport: ITransportTypes;
+      transport: string;
       textTracks: [{
         url: string;
         language: string;
@@ -66,7 +60,7 @@ interface IMetaPlaylist {
     url: string;
     startTime: number;
     endTime: number;
-    transport: ITransportTypes;
+    transport: string;
     textTracks: [{
       url: string;
       language: string;
@@ -168,24 +162,34 @@ function getParserBaseArguments<T>(
 }
 
 /**
- * Get transport type from segment's privateInfos
- * @param {Object} privateInfos
+ * @param {Object} segment
+ * @param {Object} transports
+ * @returns {Object}
  */
-function getTransportTypeFromSegmentPrivateInfos(
-  privateInfos: IPrivateInfos
-): ITransportTypes {
-  const transportType = privateInfos.transportType;
+function getTransportPipelinesFromSegment(
+  segment : ISegment,
+  transports : Partial<Record<string, ITransportPipelines>>
+): ITransportPipelines {
+  if (!segment.privateInfos) {
+    throw new Error("Segments from metaplaylist must have private infos.");
+  }
 
+  const transportType = segment.privateInfos.transportType;
   if (!transportType) {
     throw new Error("Undefined transport for content for metaplaylist.");
   }
 
-  return transportType;
+  const transport = transports[transportType];
+  if (transport == null) {
+    throw new Error(`MetatPlaylist: Unknown transport ${transportType}.`);
+  }
+
+  return transport;
 }
 
 export default function(options?: ITransportOptions): ITransportPipelines {
 
-    const transports = {
+    const transports : Partial<Record<string, ITransportPipelines>> = {
       dash: DASHTransport(options),
       smooth: SmoothTransport(options),
     };
@@ -220,7 +224,7 @@ export default function(options?: ITransportOptions): ITransportPipelines {
             .pipe(
               filter((res): res is ILoaderResponse<Document> => res.type === "response"),
               mergeMap((res) => {
-                const parser = transports[content.transport].manifest.parser;
+                const parser = transport.manifest.parser;
                 const fakeResponse = {
                   responseData: res.value.responseData,
                 };
@@ -228,7 +232,7 @@ export default function(options?: ITransportOptions): ITransportPipelines {
                 return parser({ response: fakeResponse, url: content.url })
                   .pipe(
                     map((mpd) => {
-                      if (!mpd.manifest.isLive) {
+                      if (mpd.manifest.isLive) {
                         throw new Error("Content from metaplaylist is not static.");
                       }
                       return objectAssign(content, { manifest: mpd.manifest });
@@ -260,12 +264,7 @@ export default function(options?: ITransportOptions): ITransportPipelines {
           period,
           init,
         } = args;
-        if (!segment.privateInfos) {
-          throw new Error("Segments from metaplaylist must have private infos.");
-        }
-        const transportType =
-          getTransportTypeFromSegmentPrivateInfos(segment.privateInfos);
-        const transport = transports[transportType];
+        const transport = getTransportPipelinesFromSegment(segment, transports);
         const segmentLoader = transport.video.loader;
         const offset = (period.start || 0) *
           (init ? (init.timescale || segment.timescale) :  segment.timescale);
@@ -276,16 +275,7 @@ export default function(options?: ITransportOptions): ITransportPipelines {
       parser(args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
         ) : SegmentParserObservable {
           const { period, init, segment } = args;
-          if (!segment.privateInfos) {
-            throw new Error("Segments from metaplaylist must have private infos.");
-          }
-          const transportType =
-            getTransportTypeFromSegmentPrivateInfos(segment.privateInfos);
-          const transport = transports[transportType];
-
-          if (!transport) {
-            throw new Error("Segments from metaplaylist must have private infos.");
-          }
+          const transport = getTransportPipelinesFromSegment(segment, transports);
           const segmentParser = transport.video.parser;
           const offset = (period.start || 0) *
             (init ? (init.timescale || segment.timescale) :  segment.timescale);
@@ -308,7 +298,7 @@ export default function(options?: ITransportOptions): ITransportPipelines {
                 return {
                   segmentData: responseData,
                   segmentInfos,
-                  segmentOffset: offset / segment.timescale, // XXX TODO
+                  segmentOffset: offset / segment.timescale,
                 };
               })
             );
@@ -317,23 +307,13 @@ export default function(options?: ITransportOptions): ITransportPipelines {
 
     const textTrackPipeline = {
       loader: (args: ISegmentLoaderArguments) => {
-        if (!args.segment.privateInfos) {
-          throw new Error("Segments from metaplaylist must have private infos.");
-        }
-        const transportType =
-          getTransportTypeFromSegmentPrivateInfos(args.segment.privateInfos);
-        const transport = transports[transportType];
+        const transport = getTransportPipelinesFromSegment(args.segment, transports);
         const offset = args.period.start;
         const parserArgs = getParserBaseArguments(args.segment, args, offset);
         return transport.text.loader(parserArgs);
       },
       parser: (args: ISegmentParserArguments<ArrayBuffer|string|Uint8Array|null>) => {
-        if (!args.segment.privateInfos) {
-          throw new Error();
-        }
-        const transportType =
-          getTransportTypeFromSegmentPrivateInfos(args.segment.privateInfos);
-        const transport = transports[transportType];
+        const transport = getTransportPipelinesFromSegment(args.segment, transports);
         const offset = args.period.start;
         const parserArgs = getParserBaseArguments(args.segment, args, offset);
         return transport.text.parser(parserArgs)
@@ -345,7 +325,7 @@ export default function(options?: ITransportOptions): ITransportPipelines {
               return {
                 segmentData: parsed.segmentData,
                 segmentInfos: parsed.segmentInfos,
-                segmentOffset: offset, // XXX TODO verify it's not -offset
+                segmentOffset: offset,
               };
             })
           );
@@ -355,12 +335,7 @@ export default function(options?: ITransportOptions): ITransportPipelines {
     const imageTrackPipeline = {
       loader(args : ISegmentLoaderArguments) :
         ILoaderObservable<ArrayBuffer|Uint8Array|null> {
-        if (!args.segment.privateInfos) {
-          throw new Error("Segments from metaplaylist must have private infos.");
-        }
-        const transportType =
-          getTransportTypeFromSegmentPrivateInfos(args.segment.privateInfos);
-        const transport = transports[transportType];
+        const transport = getTransportPipelinesFromSegment(args.segment, transports);
         const offset = args.period.start;
         const parserArgs = getParserBaseArguments(args.segment, args, offset);
         return transport.image.loader(parserArgs);
@@ -368,13 +343,7 @@ export default function(options?: ITransportOptions): ITransportPipelines {
       parser(
         args : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
       ) : ImageParserObservable {
-        if (!args.segment.privateInfos) {
-          throw new Error("Segments from metaplaylist must have private infos.");
-        }
-        const transportType =
-          getTransportTypeFromSegmentPrivateInfos(args.segment.privateInfos);
-        const transport = transports[transportType];
-
+        const transport = getTransportPipelinesFromSegment(args.segment, transports);
         const offset = args.period.start;
         const parserArgs = getParserBaseArguments(args.segment, args, offset);
         return transport.image.parser(parserArgs)
@@ -386,7 +355,7 @@ export default function(options?: ITransportOptions): ITransportPipelines {
               return {
                 segmentData: parsed.segmentData,
                 segmentInfos: parsed.segmentInfos,
-                segmentOffset: offset, // XXX TODO verify it's not -offset
+                segmentOffset: offset,
               };
             })
           );

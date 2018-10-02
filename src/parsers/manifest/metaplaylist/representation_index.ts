@@ -20,8 +20,6 @@ import {
   ISegment,
 } from "../../../manifest/representation_index/interfaces";
 
-type ITransportTypes = "dash"|"smooth";
-
 /**
  * The MetaRepresentationIndex is wrapper for all kind of indexes (dash, smooth, etc)
  *
@@ -33,14 +31,14 @@ type ITransportTypes = "dash"|"smooth";
 export default class MetaRepresentationIndex implements IRepresentationIndex{
   private _wrappedIndex: IRepresentationIndex;
   private _timeOffset: number;
-  private _transport: ITransportTypes;
+  private _transport: string;
   private _contentEnd: number;
   private _baseContentInfos: IBaseContentInfos;
 
   constructor(
       index: IRepresentationIndex,
       timeOffset: number,
-      transport: "dash"|"smooth",
+      transport: string,
       contentEnd: number,
       baseContentInfos: IBaseContentInfos
   ) {

@@ -7,7 +7,7 @@ import contentsDatabase from "../contents.js";
 
 const IS_HTTPS = window.location.protocol.startsWith("https");
 const HAS_EME_APIs = typeof navigator.requestMediaKeySystemAccess === "function";
-const TRANSPORT_TYPES = ["MetaPlaylist", "DASH", "Smooth", "DirectFile"];
+const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile", "MetaPlaylist"];
 const DRM_TYPES = ["Widevine", "Playready", "Clearkey"];
 
 const URL_DENOMINATIONS = {
