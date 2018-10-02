@@ -177,7 +177,7 @@ const overlays5 = [
   },
 ];
 
-describe.only("parsers - overlays/metaplaylist - parsedOverlays", () => {
+describe("parsers - overlays/metaplaylist - parsedOverlays", () => {
   it("should combine overlays by time groups", () => {
     expect(parseOverlays(overlays1)).to.eql([
       { start: 0, end: 100, elements: [element1] },
