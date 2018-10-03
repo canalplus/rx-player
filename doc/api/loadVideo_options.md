@@ -528,18 +528,31 @@ option](#prop-transport)).
 ---
 
 Strategy you want to adopt when updating "manually" the video and audio quality
-through respectively the ``setVideoBitrate`` and ``setAudioBitrate`` API.
+through respectively the ``setVideoBitrate`` and ``setAudioBitrate`` API while
+the content is playing.
 
 There is two possible values:
 
-  - ``"seamless"``: Manual quality updates will be visible after a little time,
-    with the advantage of a very smooth "seamless" transition.
+  - ``"seamless"``: Manual quality updates will be only visible after a little
+    time. This gives the advantage of a very smooth "seamless" transition.
 
-  - ``"direct"``: Manual quality updates will be directly visible, but will
-    trigger a complete reload of the current content (the player will go
-    through the ``"RELOADING"`` state).
+    In this mode, you will have the following behavior:
+      - there will be no visual "cut" between the previous and new quality
+      - parts of the content with a better (or the same) quality won't be
+        replaced.
+      - parts of the content with a lower quality will be only replaced when the
+        better quality is downloaded.
 
-    More informations about the ``"RELOADING"`` state can be found in [the
+  - ``"direct"``: Manual quality updates will be visible more directly, but with
+    a complete reload of the current content. You might encounter a black screen
+    while the player go through the ``"RELOADING"`` state [1].
+
+    In this mode, you will have the following behavior:
+      - there will be a black screen between the previous and new quality
+      - the previous content will be entirely removed
+      - you will only have content with the new quality
+
+    [1] More informations about the ``"RELOADING"`` state can be found in [the
     player states documentation](./states).
 
 
