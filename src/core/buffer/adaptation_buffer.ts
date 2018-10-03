@@ -103,8 +103,10 @@ export default function AdaptationBuffer<T>(
   segmentFetcher : IPrioritizedSegmentFetcher<T>,
   wantedBufferAhead$ : Observable<number>,
   content : { manifest : Manifest; period : Period; adaptation : Adaptation },
-  abrManager : ABRManager
+  abrManager : ABRManager,
+  options : { manualBitrateSwitchingMode : "seamless"|"direct" }
 ) : Observable<IAdaptationBufferEvent<T>> {
+  const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
   const abr$ = getABRForAdaptation(adaptation, abrManager, clock$)
     .pipe(shareReplay());
@@ -133,7 +135,7 @@ export default function AdaptationBuffer<T>(
     switchMap((estimate, i) : Observable<IAdaptationBufferEvent<T>> => {
       // Manual switch needs an immediate feedback.
       // To do that properly, we need to reload the stream
-      if (estimate.manual && i !== 0) {
+      if (directManualBitrateSwitching && estimate.manual && i !== 0) {
         return observableOf(EVENTS.needsStreamReload());
       }
       const { representation } = estimate;

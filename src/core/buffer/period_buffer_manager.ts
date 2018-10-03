@@ -132,6 +132,7 @@ export default function PeriodBufferManager(
     segmentRetry? : number;
     offlineRetry? : number;
     textTrackOptions? : ITextTrackSourceBufferOptions;
+    manualBitrateSwitchingMode : "seamless"|"direct";
   }
 ) : Observable<IPeriodBufferManagerEvent> {
   const { manifest, initialPeriod } = content;
@@ -588,7 +589,8 @@ export default function PeriodBufferManager(
       pipeline,
       wantedBufferAhead$,
       { manifest, period, adaptation },
-      abrManager
+      abrManager,
+      options
     ).pipe(catchError((error : Error) => {
       // non native buffer should not impact the stability of the
       // player. ie: if a text buffer sends an error, we want to

@@ -49,6 +49,12 @@ export default {
   DEFAULT_TEXT_TRACK_MODE: "native" as "native"|"html",
 
   /**
+   * Strategy to adopt when manually switching the current bitrate.
+   * @type {string}
+   */
+  DEFAULT_MANUAL_BITRATE_SWITCHING_MODE: "seamless" as "seamless"|"direct",
+
+  /**
    * If set to true, video through loadVideo will auto play by default
    * @type {Boolean}
    */
