@@ -15,6 +15,7 @@
     - [defaultTextTrack](#prop-defaultTextTrack)
     - [textTrackMode](#prop-textTrackMode)
     - [textTrackElement](#prop-textTrackElement)
+    - [manualBitrateSwitchingMode](#prop-manualBitrateSwitchingMode)
     - [supplementaryTextTracks](#prop-supplementaryTextTracks)
     - [supplementaryImageTracks](#prop-supplementaryImageTracks)
     - [hideNativeSubtitle](#prop-hideNativeSubtitle)
@@ -510,6 +511,36 @@ than the media element it applies to (this allows us to properly place the
 subtitles position without polling where the video is in your UI).
 You can however re-size or update the style of it as you wish, to better suit
 your UI needs.
+
+
+<a name="prop-manualBitrateSwitchingMode"></a>
+### manualBitrateSwitchingMode #################################################
+
+_type_: ``string``
+
+_defaults_: ``"seamless"``
+
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+Strategy you want to adopt when updating "manually" the video and audio quality
+through respectively the ``setVideoBitrate`` and ``setAudioBitrate`` API.
+
+There is two possible values:
+
+  - ``"seamless"``: Manual quality updates will be visible after a little time,
+    with the advantage of a very smooth "seamless" transition.
+
+  - ``"direct"``: Manual quality updates will be directly visible, but will
+    trigger a complete reload of the current content (the player will go
+    through the ``"RELOADING"`` state).
+
+    More informations about the ``"RELOADING"`` state can be found in [the
+    player states documentation](./states).
 
 
 <a name="prop-supplementaryTextTracks"></a>
