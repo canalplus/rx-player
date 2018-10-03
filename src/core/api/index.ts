@@ -21,6 +21,7 @@
  */
 
 import deepEqual from "deep-equal";
+import objectAssign from "object-assign";
 import {
   BehaviorSubject,
   combineLatest as observableCombineLatest,
@@ -674,6 +675,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       defaultAudioTrack,
       defaultTextTrack,
       keySystems,
+      manualBitrateSwitchingMode,
       networkConfig,
       startAt,
       supplementaryImageTracks,
@@ -713,9 +715,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     const videoElement = this.videoElement;
 
     // Global clock used for the whole application.
-    const clock$ = createClock(videoElement, {
-      withMediaSource: !isDirectFile,
-    });
+    const clock$ = createClock(videoElement, { withMediaSource: !isDirectFile });
 
     const closeStream$ = observableMerge(
       this._priv_stopCurrentContent$,
@@ -763,7 +763,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       stream = Stream({
         adaptiveOptions,
         autoPlay,
-        bufferOptions: this._priv_bufferOptions,
+        bufferOptions: objectAssign({
+          manualBitrateSwitchingMode,
+        }, this._priv_bufferOptions),
         clock$,
         keySystems,
         mediaElement: videoElement,
