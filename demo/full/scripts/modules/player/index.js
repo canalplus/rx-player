@@ -77,6 +77,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
           manifestRetry: Infinity,
           offlineRetry: Infinity,
         },
+        manualBitrateSwitchingMode: "direct",
       }, arg));
       state.set({ loadedVideo: arg });
     },
