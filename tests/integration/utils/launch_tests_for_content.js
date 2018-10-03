@@ -1170,7 +1170,7 @@ export default function launchTestsForContent(
           autoPlay: true,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition()).to.be.below(0.01);
+        expect(player.getPosition()).to.be.below(0.1);
         player.seekTo(50);
         expect(player.getPosition()).to.be.closeTo(50, 0.5);
       });
