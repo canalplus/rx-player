@@ -82,6 +82,8 @@ import {
 export type IPeriodBufferManagerClockTick = IAdaptationBufferClockTick;
 
 const {
+  MAXIMUM_MAX_BUFFER_AHEAD,
+  MAXIMUM_MAX_BUFFER_BEHIND,
   DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
   DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE,
 } = config;
@@ -146,14 +148,21 @@ export default function PeriodBufferManager(
    * @type {WeakMapMemory}
    */
   const garbageCollectors =
-    new WeakMapMemory((qSourceBuffer : QueuedSourceBuffer<unknown>) =>
-      BufferGarbageCollector({
+    new WeakMapMemory((qSourceBuffer : QueuedSourceBuffer<unknown>) => {
+      const { bufferType } = qSourceBuffer;
+      const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] != null ?
+        MAXIMUM_MAX_BUFFER_BEHIND[bufferType] as number : Infinity;
+      const defaultMaxAhead = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] != null ?
+        MAXIMUM_MAX_BUFFER_AHEAD[bufferType] as number : Infinity;
+      return BufferGarbageCollector({
         queuedSourceBuffer: qSourceBuffer,
         clock$: clock$.pipe(map(tick => tick.currentTime)),
-        maxBufferBehind$,
-        maxBufferAhead$,
-      })
-    );
+        maxBufferBehind$: maxBufferBehind$
+          .pipe(map(val => Math.min(val, defaultMaxBehind))),
+        maxBufferAhead$: maxBufferAhead$
+          .pipe(map(val => Math.min(val, defaultMaxAhead))),
+      });
+    });
 
   /**
    * Keep track of a unique segmentBookkeeper created per

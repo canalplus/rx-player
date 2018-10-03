@@ -86,6 +86,34 @@ export default {
    */
   DEFAULT_MAX_BUFFER_BEHIND: Infinity,
 
+  /* tslint:disable no-object-literal-type-assertion */
+  /**
+   * Maximum possible buffer ahead for each type of buffer, to avoid too much
+   * memory usage when playing for a long time.
+   * Equal to Infinity if not defined here.
+   * @type {Object}
+   */
+  MAXIMUM_MAX_BUFFER_AHEAD: {
+    image: 5 * 60 * 60,
+    text: 5 * 60 * 60,
+  } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
+  /* tslint:enable no-object-literal-type-assertion */
+
+  /* tslint:disable no-object-literal-type-assertion */
+  /**
+   * Maximum possible buffer behind for each type of buffer, to avoid too much
+   * memory usage when playing for a long time.
+   * Equal to Infinity if not defined here.
+   * @type {Object}
+   */
+  MAXIMUM_MAX_BUFFER_BEHIND: {
+    image: 5 * 60 * 60,
+    text: 5 * 60 * 60,
+    audio: Infinity,
+    video: Infinity,
+  } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
+  /* tslint:enable no-object-literal-type-assertion */
+
   /**
    * Default bitrate ceils initially set as the first content begins.
    *

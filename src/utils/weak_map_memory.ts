@@ -70,7 +70,7 @@ export default class WeakMapMemory<T extends object, U> {
    */
   public get(obj : T) : U {
     const fromMemory = this._weakMap.get(obj);
-    if (!fromMemory) {
+    if (fromMemory === undefined) {
       const newElement = this._fn(obj);
       this._weakMap.set(obj, newElement);
       return newElement;
