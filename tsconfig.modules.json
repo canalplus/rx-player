@@ -4,7 +4,6 @@
     "declaration": true,
     "target": "es5",
     "lib": ["es2017", "dom"],
-    "strict": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": false,
     "noImplicitAny": true,
