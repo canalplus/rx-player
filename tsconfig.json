@@ -4,7 +4,6 @@
     "allowJs": true,
     "target": "es2017",
     "lib": ["es2017", "dom"],
-    "strict": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": false,
     "noImplicitAny": true,
