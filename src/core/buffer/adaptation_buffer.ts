@@ -48,7 +48,9 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import ABRManager from "../abr";
+import ABRManager, {
+  IABREstimation,
+} from "../abr";
 import { IPrioritizedSegmentFetcher } from "../pipelines";
 import { QueuedSourceBuffer } from "../source_buffers";
 import createFakeBuffer from "./create_fake_buffer";
@@ -121,13 +123,12 @@ export default function AdaptationBuffer<T>(
    * Emit the chosen representation each time it changes.
    * @type {Observable}
    */
-  const representation$ : Observable<Representation> = abr$
-    .pipe(map((abr) : Representation|null => abr.representation))
-    .pipe(
-      distinctUntilChanged((a : Representation|null, b : Representation|null) =>
-        !a || !b || (a.bitrate === b.bitrate && a.id === b.id)
-      )
-    ) as Observable<Representation>;
+  const representation$ : Observable<Representation> = abr$.pipe(
+    map((abr) : Representation|null => abr.representation),
+    distinctUntilChanged((a : Representation|null, b : Representation|null) =>
+      !a || !b || (a.bitrate === b.bitrate && a.id === b.id)
+    )
+  ) as Observable<Representation>;
 
   /**
    * Emit each times the RepresentationBuffer should be re-initialized:
@@ -215,10 +216,7 @@ function getABRForAdaptation(
   adaptation : Adaptation,
   abrManager : ABRManager,
   abrBaseClock$ : Observable<IAdaptationBufferClockTick>
-) : Observable<{
-  bitrate: undefined|number;
-  representation: Representation|null;
-}> {
+) : Observable<IABREstimation> {
   const representations = adaptation.representations;
 
   /**

@@ -25,6 +25,7 @@ import {
 import { Representation } from "../../manifest";
 import { IBufferType } from "../source_buffers";
 import RepresentationChooser, {
+  IABREstimation,
   IRepresentationChooserClockTick,
   IRequest,
 } from "./representation_chooser";
@@ -227,10 +228,7 @@ export default class ABRManager {
     type : IBufferType,
     clock$: Observable<IABRClockTick>,
     representations: Representation[] = []
-  ) : Observable<{
-    bitrate: undefined|number;
-    representation: Representation|null;
-  }> {
+  ) : Observable<IABREstimation> {
     return this._lazilyCreateChooser(type).get$(clock$, representations);
   }
 
@@ -329,6 +327,7 @@ export default class ABRManager {
 }
 
 export {
+  IABREstimation,
   IRequest as IABRRequest,
   IMetric as IABRMetric,
   IRepresentationChoosersOptions as IABROptions,
