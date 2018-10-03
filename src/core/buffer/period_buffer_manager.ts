@@ -57,6 +57,7 @@ import SourceBufferManager, {
   BufferGarbageCollector,
   getBufferTypes,
   IBufferType,
+  IOverlaySourceBufferOptions,
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
 } from "../source_buffers";
@@ -130,6 +131,7 @@ export default function PeriodBufferManager(
     segmentRetry? : number;
     offlineRetry? : number;
     textTrackOptions? : ITextTrackSourceBufferOptions;
+    overlayOptions? : IOverlaySourceBufferOptions;
   }
 ) : Observable<IPeriodBufferManagerEvent> {
   const { manifest, initialPeriod } = content;
@@ -472,14 +474,14 @@ export default function PeriodBufferManager(
     adaptation$ : Observable<Adaptation|null>
   ) : Observable<IPeriodBufferEvent> {
     return adaptation$.pipe(switchMap((adaptation) => {
+      const oldSourceBuffer = sourceBufferManager.get(bufferType);
       if (adaptation == null) {
         log.info(`set no ${bufferType} Adaptation`, period);
         let cleanBuffer$ : Observable<null>;
 
-        if (sourceBufferManager.has(bufferType)) {
+        if (oldSourceBuffer != null) {
           log.info(`clearing previous ${bufferType} SourceBuffer`);
-          const _qSourceBuffer = sourceBufferManager.get(bufferType);
-          cleanBuffer$ = _qSourceBuffer
+          cleanBuffer$ = oldSourceBuffer
             .removeBuffer(period.start, period.end || Infinity)
             .pipe(mapTo(null));
         } else {
@@ -494,10 +496,15 @@ export default function PeriodBufferManager(
 
       log.info(`updating ${bufferType} adaptation`, adaptation, period);
 
+      const qSourceBuffer =
+        createOrReuseQueuedSourceBuffer(bufferType, adaptation, oldSourceBuffer);
+      if (qSourceBuffer == null) {
+        return createFakeBuffer(
+          clock$, wantedBufferAhead$, bufferType, { manifest, period });
+      }
       const newBuffer$ = clock$.pipe(
         take(1),
         mergeMap<IPeriodBufferManagerClockTick, IPeriodBufferEvent>((tick) => {
-          const qSourceBuffer = createOrReuseQueuedSourceBuffer(bufferType, adaptation);
           const strategy = getAdaptationSwitchStrategy(
             qSourceBuffer.getBuffered(), period, bufferType, tick);
 
@@ -535,14 +542,24 @@ export default function PeriodBufferManager(
    */
   function createOrReuseQueuedSourceBuffer<T>(
     bufferType : IBufferType,
-    adaptation : Adaptation
-  ) : QueuedSourceBuffer<T> {
-    if (sourceBufferManager.has(bufferType)) {
+    adaptation : Adaptation,
+    oldSourceBuffer? : QueuedSourceBuffer<T>|null
+  ) : QueuedSourceBuffer<T>|null {
+    if (oldSourceBuffer != null) {
       log.info("reusing a previous SourceBuffer for the type", bufferType);
-      return sourceBufferManager.get(bufferType);
+      return oldSourceBuffer;
     }
     const codec = getFirstDeclaredMimeType(adaptation);
-    const sbOptions = bufferType === "text" ?  options.textTrackOptions : undefined;
+    const sbOptions =
+      bufferType === "text" ? options.textTrackOptions :
+      bufferType === "overlay" ? options.overlayOptions :
+      undefined;
+
+    if (bufferType === "overlay" && sbOptions == null) {
+      log.warn("overlay adaptation encountered but no overlayOptions" +
+        "set. Ignoring the adaptation");
+      return null;
+    }
     return sourceBufferManager.createSourceBuffer(bufferType, codec, sbOptions);
   }
 

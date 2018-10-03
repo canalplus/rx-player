@@ -38,6 +38,7 @@ import PeriodBufferManager, {
 } from "../buffer";
 import { SegmentPipelinesManager } from "../pipelines";
 import SourceBufferManager, {
+  IOverlaySourceBufferOptions,
   ITextTrackSourceBufferOptions,
 } from "../source_buffers";
 import createBufferClock from "./create_buffer_clock";
@@ -74,7 +75,8 @@ export interface IStreamLoaderArgument {
     maxBufferBehind$ : Observable<number>;
     offlineRetry? : number;
     segmentRetry? : number;
-    textTrackOptions : ITextTrackSourceBufferOptions;
+    textTrackOptions?: ITextTrackSourceBufferOptions;
+    overlayOptions?: IOverlaySourceBufferOptions;
   };
 }
 
