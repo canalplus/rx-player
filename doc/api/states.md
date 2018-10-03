@@ -118,12 +118,18 @@ at this time and this state acts like what you can expect from HTML5 playback:
 
 This state indicates that the player needs to "re-load" then content.
 
-For now, this only happens when you switch the video track for another one, when
-the previous one was currently decoding. We have then to stop and reload the
-content on the browser-side, due to browser limitation.
+This can happen for different reasons:
 
-This means that if you do not have a "video track switching" use-case in your
-application, you should never encounter this state.
+  - When you switch the video track for another one, when the previous one was
+    currently decoding.
+
+  - When you update manually the audio and video bitrate through respectively
+    the ``setAudioBitrate`` and ``setVideoBitrate`` APIs
+    (Only if you set the ``manualBitrateSwitchingMode`` loadVideo option to
+    ``"direct"``).
+
+In those cases, we need to stop and reload the content on the browser-side, due
+to browser limitation.
 
 While this state is active, multiple player API are unavailable:
   - you cannot play or pause
@@ -137,7 +143,7 @@ This is why we sometime recommend to manage this state as if it was the
 
 However, the player won't go to the `LOADED` state after `RELOADING`, you will
 instead know that it had finished reloading simply when it goes out of this
-state  (see the "Possible state transitions" chapter for more informations).
+state (see the "Possible state transitions" chapter for more informations).
 
 
 ## Possible state transitions ##################################################
@@ -304,6 +310,28 @@ set to `false`:
       - You stopped the current through the [stop](./index.md#meth-stop) method.
       - You are loading a new content.
       - An error happened which made it impossible to play the content.
+        The corresponding [error](./errors.md) can be found either through the
+        [`getError` method](./index.md#meth-getError) method or through the
+        [`playerStateChange`](./player_events.md#events-playerStateChange)
+        [player event](./player_events.md).
+
+
+From `RELOADING`:
+
+  - `PLAYING`: The content finished to reload and was not paused before
+    reloading.
+
+  - `PAUSED`: The content finished to reload and was paused before
+    reloading.
+
+  - `ENDED`: The content finished to reload and you are at the end of the
+    content.
+    Calling [`play`](./index.md#meth-play) will play back from the beginning.
+
+  - `STOPPED`: Either:
+      - You stopped the current through the [stop](./index.md#meth-stop) method.
+      - You are loading a new content.
+      - An error happened which made it impossible to reload the content.
         The corresponding [error](./errors.md) can be found either through the
         [`getError` method](./index.md#meth-getError) method or through the
         [`playerStateChange`](./player_events.md#events-playerStateChange)
