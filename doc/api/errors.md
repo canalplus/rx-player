@@ -173,6 +173,16 @@ A MediaError can have the following codes (``code`` property):
   - ``"MEDIA_STARTING_TIME_NOT_FOUND"``: The provided or calculated starting
     time was not found in the corresponding media.
 
+  - ``"MEDIA_TIME_BEFORE_MANIFEST"``: The current time in the media is behind
+    what is currently declared in the manifest.
+    This can lead to stalling indefinitely as the player won't be able to
+    download new segments arround the current time.
+
+  - ``"MEDIA_TIME_AFTER_MANIFEST"``: The current time in the media is after what
+    is currently declared in the manifest.
+    This can lead to stalling indefinitely as the player won't be able to
+    download new segments arround the current time.
+
 
 
 <a name="types-encrypted_media_error"></a>
