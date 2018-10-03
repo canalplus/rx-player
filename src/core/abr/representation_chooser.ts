@@ -46,6 +46,14 @@ const {
   OUT_OF_STARVATION_GAP,
 } = config;
 
+// Adaptive BitRate estimation object
+export interface IABREstimation {
+  bitrate: undefined|number; // If defined, the currently calculated bitrate
+  manual: boolean; // True if the representation choice was manually dictated
+                   // by the user
+  representation: Representation|null; // The chosen representation
+}
+
 interface IRepresentationChooserClockTick {
   bitrate : number|undefined; // currently set bitrate, in bit per seconds
   bufferGap : number; // time to the end of the buffer, in seconds
@@ -118,16 +126,14 @@ interface IRepresentationChooserOptions {
 function setManualRepresentation(
   representations : Representation[],
   bitrate : number
-) : Observable<{
-  bitrate: undefined;
-  representation: Representation;
-}> {
+) : Observable<IABREstimation> {
   const chosenRepresentation =
     fromBitrateCeil(representations, bitrate) ||
     representations[0];
 
   return observableOf({
     bitrate: undefined, // Bitrate estimation is deactivated here
+    manual: true,
     representation: chosenRepresentation,
   });
 }
@@ -347,13 +353,11 @@ export default class RepresentationChooser {
   public get$(
     clock$ : Observable<IRepresentationChooserClockTick>,
     representations : Representation[]
-  ) : Observable<{
-    bitrate: undefined|number; // bitrate estimation
-    representation: Representation|null; // chosen representation
-  }> {
+  ) : Observable<IABREstimation> {
     if (representations.length < 2) {
       return observableOf({
         bitrate: undefined, // Bitrate estimation is deactivated here
+        manual: false,
         representation: representations.length ?
           representations[0] : null,
       })
@@ -467,6 +471,7 @@ export default class RepresentationChooser {
 
             return {
               bitrate: bandwidthEstimate,
+              manual: false,
               representation: fromBitrateCeil(_representations, nextBitrate) ||
               representations[0],
             };
