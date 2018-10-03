@@ -122,37 +122,31 @@ export default function AdaptationBuffer<T>(
    * Emit the chosen representation each time it changes.
    * @type {Observable}
    */
-  const representation$ : Observable<Representation> = abr$.pipe(
-    map(abr => abr.representation),
-    distinctUntilChanged((a, b) => a.bitrate === b.bitrate && a.id === b.id)
+  const estimateChanges$ = abr$.pipe(
+    distinctUntilChanged((a, b) => a.representation.id === b.representation.id)
   );
 
   /**
-   * Emit each times the RepresentationBuffer should be re-initialized:
-   *   - Each time the Representation change
-   *   - Each time the user seek
    * @type {Observable}
    */
-  const shouldSwitchRepresentationBuffer$ : Observable<Representation> =
-    representation$.pipe(
-      distinctUntilChanged((oldRepresentation, newRepresentation) => {
-        return oldRepresentation.id === newRepresentation.id;
-      }));
-
-  /**
-   * @type {Observable}
-   */
-  const buffer$ = shouldSwitchRepresentationBuffer$.pipe(
-    switchMap((representation) =>
-      observableConcat(
+  const adaptationBuffer$ = estimateChanges$.pipe(
+    switchMap((estimate, i) : Observable<IAdaptationBufferEvent<T>> => {
+      // Manual switch needs an immediate feedback.
+      // To do that properly, we need to reload the stream
+      if (estimate.manual && i !== 0) {
+        return observableOf(EVENTS.needsStreamReload());
+      }
+      const { representation } = estimate;
+      return observableConcat(
         observableOf(
           EVENTS.representationChange(adaptation.type, period, representation)
         ),
         createRepresentationBuffer(representation)
-      )
-    ));
+      );
+    })
+  );
 
-  return observableMerge(buffer$, bitrateEstimate$);
+  return observableMerge(adaptationBuffer$, bitrateEstimate$);
 
   /**
    * Create and returns a new RepresentationBuffer Observable, linked to the
