@@ -125,7 +125,9 @@ export default function AdaptationBuffer<T>(
    * @type {Observable}
    */
   const estimateChanges$ = abr$.pipe(
-    distinctUntilChanged((a, b) => a.representation.id === b.representation.id)
+    distinctUntilChanged((a, b) =>
+      a.manual === b.manual && a.representation.id === b.representation.id
+    )
   );
 
   /**
