@@ -51,7 +51,7 @@ export interface IABREstimation {
   bitrate: undefined|number; // If defined, the currently calculated bitrate
   manual: boolean; // True if the representation choice was manually dictated
                    // by the user
-  representation: Representation|null; // The chosen representation
+  representation: Representation; // The chosen representation
 }
 
 interface IRepresentationChooserClockTick {
@@ -354,14 +354,15 @@ export default class RepresentationChooser {
     clock$ : Observable<IRepresentationChooserClockTick>,
     representations : Representation[]
   ) : Observable<IABREstimation> {
-    if (representations.length < 2) {
+    if (!representations.length) {
+      throw new Error("ABRManager: no representation choice given");
+    }
+    if (representations.length === 1) {
       return observableOf({
         bitrate: undefined, // Bitrate estimation is deactivated here
         manual: false,
-        representation: representations.length ?
-          representations[0] : null,
-      })
-        .pipe(takeUntil(this._dispose$));
+        representation: representations[0],
+      }).pipe(takeUntil(this._dispose$));
     }
 
     const {

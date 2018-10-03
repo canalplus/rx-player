@@ -114,21 +114,18 @@ export default function AdaptationBuffer<T>(
    * @type {Observable}
    */
   const bitrateEstimate$ = abr$.pipe(
-    filter(({ bitrate } : { bitrate? : number }) => bitrate != null),
-    map(({ bitrate } : { bitrate? : number }) =>
-      EVENTS.bitrateEstimationChange(adaptation.type, bitrate)
-    ));
+    filter(({ bitrate }) => bitrate != null),
+    map(({ bitrate }) => EVENTS.bitrateEstimationChange(adaptation.type, bitrate))
+  );
 
   /**
    * Emit the chosen representation each time it changes.
    * @type {Observable}
    */
   const representation$ : Observable<Representation> = abr$.pipe(
-    map((abr) : Representation|null => abr.representation),
-    distinctUntilChanged((a : Representation|null, b : Representation|null) =>
-      !a || !b || (a.bitrate === b.bitrate && a.id === b.id)
-    )
-  ) as Observable<Representation>;
+    map(abr => abr.representation),
+    distinctUntilChanged((a, b) => a.bitrate === b.bitrate && a.id === b.id)
+  );
 
   /**
    * Emit each times the RepresentationBuffer should be re-initialized:
