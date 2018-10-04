@@ -7,6 +7,7 @@ function NextProgramButton({
   currentPeriod,
   manifest,
   player,
+  position,
 }) {
   if (!manifest) {
     return (
@@ -27,9 +28,14 @@ function NextProgramButton({
       />
     );
   }
-  const newPeriod = manifest.periods[indexOf + 1];
+  const newPeriod = indexOf === manifest.periods.length - 1 ?
+    currentPeriod : manifest.periods[indexOf + 1];
   const onClick = function onNextProgramClick() {
-    player.dispatch("SEEK", newPeriod.start - 4);
+    if (position < currentPeriod.end && currentPeriod.end - position < 3) {
+      player.dispatch("SEEK", newPeriod.end - 4);
+    } else {
+      player.dispatch("SEEK", currentPeriod.end - 4);
+    }
   };
   return (
     <Button
@@ -44,6 +50,7 @@ function NextProgramButton({
 export default withModulesState({
   player: {
     currentPeriod: "currentPeriod",
+    currentTime: "position",
     manifest: "manifest",
   },
 })(NextProgramButton);
