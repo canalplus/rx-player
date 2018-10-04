@@ -24,7 +24,11 @@ interface ICompatMediaKeysConstructor {
 
 // Regular VTTCue as present in most browsers
 // TODO open TypeScript issue about it?
-declare class ICompatVTTCue {
+interface ICompatVTTCueConstructor {
+  new(start : number, end : number, cueText : string) : ICompatVTTCue;
+}
+
+interface ICompatVTTCue {
   align : string;
   endTime : number;
   id : string;
@@ -36,7 +40,6 @@ declare class ICompatVTTCue {
   snapToLines : boolean;
   startTime : number;
   vertical : string;
-  constructor(start : number, end : number, cueText : string);
 }
 
 // surcharge TextTrack to allow adding ICompatVTTCue to it
@@ -79,7 +82,7 @@ interface ICompatMediaKeySystemConfiguration {
 
 const win = window as any;
 const HTMLElement_ : typeof HTMLElement = win.HTMLElement;
-const VTTCue_ : typeof ICompatVTTCue|undefined =
+const VTTCue_ : ICompatVTTCueConstructor|undefined =
   win.VTTCue ||
   win.TextTrackCue;
 
@@ -135,6 +138,7 @@ export {
   ICompatMediaKeysConstructor,
   ICompatTextTrack,
   ICompatVTTCue,
+  ICompatVTTCueConstructor,
   MediaKeys_,
   MediaSource_,
   READY_STATES,
