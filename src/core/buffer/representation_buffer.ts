@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import objectAssign from "object-assign";
 import {
   combineLatest as observableCombineLatest,
   concat as observableConcat,
@@ -42,8 +43,8 @@ import Manifest, {
 } from "../../manifest";
 import SimpleSet from "../../utils/simple_set";
 import {
+  IFetchedSegment,
   IPrioritizedSegmentFetcher,
-  ISegmentResponse,
 } from "../pipelines";
 import {
   IBufferType ,
@@ -165,7 +166,7 @@ interface ILoadedSegmentObject<T> {
 // Object describing a pending Segment request
 interface ISegmentRequestObject<T> {
   segment : ISegment; // The Segment the request is for
-  request$ : Observable<ISegmentResponse<T>>; // The request itself
+  request$ : Observable<IFetchedSegment<T>>; // The request itself
   priority : number; // The current priority of the request
 }
 
@@ -191,12 +192,7 @@ export default function RepresentationBuffer<T>({
   wantedBufferAhead$, // emit the buffer goal
 } : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent<T>> {
   // unwrap components of the content
-  const {
-    manifest,
-    period,
-    adaptation,
-    representation,
-  } = content;
+  const { period, adaptation, representation } = content;
   const bufferType = adaptation.type;
   const initSegment = representation.index.getInitSegment();
 
@@ -231,34 +227,29 @@ export default function RepresentationBuffer<T>({
    * Emit the data of a segment when a request succeeded.
    * @returns {Observable}
    */
-  function requestSegments() : Observable<ILoadedSegmentObject<T>> {
+  function loadSegmentsFromQueue() : Observable<ILoadedSegmentObject<T>> {
     const requestNextSegment$ : Observable<ILoadedSegmentObject<T>> =
-      observableDefer(() : Observable<ILoadedSegmentObject<T>> => {
+      observableDefer(() => {
         const currentNeededSegment = downloadQueue.shift();
-        if (currentNeededSegment == null) {
+        if (currentNeededSegment == null) { // queue finished
           return EMPTY;
         }
 
-        const initInfos = initSegmentObject &&
-          initSegmentObject.segmentInfos || undefined;
         const { segment, priority } = currentNeededSegment;
-        const request$ = segmentFetcher.createRequest({
-          adaptation,
-          init: initInfos,
-          manifest,
-          period,
-          representation,
-          segment,
-        }, priority);
+        const request$ = segmentFetcher
+          .createRequest(objectAssign({ segment }, content), priority);
 
         currentSegmentRequest = { segment, priority, request$ };
-        const response$ : Observable<ILoadedSegmentObject<T>> = request$
-          .pipe(map((args) => ({ segment, value: args.parsed })));
-
-        return observableConcat<ILoadedSegmentObject<T>>(
-          response$,
-          requestNextSegment$
+        const response$ = request$.pipe(
+          mergeMap((fetchedSegment) => {
+            const initInfos = initSegmentObject &&
+              initSegmentObject.segmentInfos || undefined;
+            return fetchedSegment.parse(initInfos);
+          }),
+          map((args) => ({ segment, value: args }))
         );
+
+        return observableConcat(response$, requestNextSegment$);
       });
 
     return requestNextSegment$
@@ -270,20 +261,19 @@ export default function RepresentationBuffer<T>({
   /**
    * Append the given segment to the SourceBuffer.
    * Emit the right event when it succeeds.
-   * @param {Object} data
+   * @param {Object} loadedSegment
    * @returns {Observable}
    */
   function appendSegment(
-    data : ILoadedSegmentObject<T>
+    loadedSegment : ILoadedSegmentObject<T>
   ) : Observable<IBufferEventAddedSegment<T>> {
     return observableDefer(() => {
-      const { segment } = data;
-      const { segmentInfos, segmentData, segmentOffset } = data.value;
-
+      const { segment } = loadedSegment;
       if (segment.isInit) {
-        initSegmentObject = data.value;
+        initSegmentObject = loadedSegment.value;
       }
 
+      const { segmentInfos, segmentData, segmentOffset } = loadedSegment.value;
       if (segmentData == null) {
         // no segmentData to add here (for example, a text init segment)
         // just complete directly without appending anything
@@ -298,30 +288,23 @@ export default function RepresentationBuffer<T>({
 
       return append$.pipe(
         mapTo(EVENTS.addedSegment(bufferType, segment, segmentData)),
-        tap(() => {
+        tap(() => { // add to SegmentBookkeeper
           if (segment.isInit) {
             return;
           }
 
-          const {
-            time,
-            duration,
-            timescale,
-          } = segmentInfos ? segmentInfos : segment;
+          const { time, duration, timescale } = segmentInfos != null ?
+            segmentInfos : segment;
 
           // current segment timings informations are used to update
           // bufferedRanges informations
           segmentBookkeeper.insert(
-            period,
-            adaptation,
-            representation,
-            segment,
+            period, adaptation, representation, segment,
             time / timescale, // start
-            duration != null ?
-            (time + duration) / timescale : undefined // end
+            duration != null ? (time + duration) / timescale : undefined // end
           );
         }),
-        finalize(() => {
+        finalize(() => { // remove from queue
           sourceBufferWaitingQueue.remove(segment.id);
         }));
     });
@@ -345,7 +328,8 @@ export default function RepresentationBuffer<T>({
     const neededRange = getWantedRange(
       period, buffered, timing, bufferGoal, paddings);
     const discontinuity = getCurrentDiscontinuity(content, timing);
-    const shouldRefreshManifest = shouldRefreshManifestForRange(content, neededRange);
+    const shouldRefreshManifest = representation.index
+      .shouldRefresh(neededRange.start, neededRange.end);
 
     // /!\ Side effect to the SegmentBookkeeper
     segmentBookkeeper.synchronizeBuffered(buffered);
@@ -370,23 +354,19 @@ export default function RepresentationBuffer<T>({
       ];
     }
 
-    let state : IBufferInternalState;
-    if (!neededSegments.length) {
-      state = period.end != null && neededRange.end >= period.end ?
-        { type: "full-buffer" as "full-buffer", value: undefined } :
-        { type: "idle-buffer" as "idle-buffer", value: undefined };
-    } else {
-      state = {
+    const state = (() => {
+      if (!neededSegments.length) {
+        return period.end != null && neededRange.end >= period.end ?
+          { type: "full-buffer" as "full-buffer", value: undefined } :
+          { type: "idle-buffer" as "idle-buffer", value: undefined };
+      }
+      return {
         type: "need-segments" as "need-segments",
         value: { neededSegments },
       };
-    }
+    })();
 
-    return {
-      discontinuity,
-      shouldRefreshManifest,
-      state,
-    };
+    return { discontinuity, shouldRefreshManifest, state };
   }
 
   /**
@@ -493,7 +473,7 @@ export default function RepresentationBuffer<T>({
   //   - download segment
   //   - append them to the SourceBuffer
   const bufferQueue$ = startQueue$.pipe(
-    switchMap(requestSegments),
+    switchMap(loadSegmentsFromQueue),
     mergeMap(appendSegment)
   );
 
@@ -520,20 +500,6 @@ function getCurrentDiscontinuity(
 }
 
 /**
- * Returns true if the current Manifest needs to be downloaded.
- * @param {Object} content
- * @param {Object} wantedRange
- * @returns {Boolean}
- */
-function shouldRefreshManifestForRange(
-  { representation } : { adaptation : Adaptation; representation : Representation },
-  wantedRange : { start : number; end : number}
-) : boolean {
-  const { start, end } = wantedRange;
-  return representation.index.shouldRefresh(start, end);
-}
-
-/**
  * @param {string} bufferType
  * @param {number} discontinuity
  * @param {boolean} shouldRefreshManifest
@@ -545,14 +511,11 @@ function getNeededActions(
   shouldRefreshManifest : boolean
 ) : IBufferNeededActions[] {
   const neededActions : IBufferNeededActions[] = [];
-
   if (discontinuity > 1) {
     neededActions.push(EVENTS.discontinuityEncountered(bufferType, discontinuity + 1));
   }
-
   if (shouldRefreshManifest) {
     neededActions.push(EVENTS.needsManifestRefresh(bufferType));
   }
-
   return neededActions;
 }

@@ -19,12 +19,18 @@ import {
   Subject,
 } from "rxjs";
 import {
+  catchError,
   filter,
   map,
+  mergeMap,
   share,
   tap,
 } from "rxjs/operators";
-import { ICustomError } from "../../../errors";
+import {
+  ICustomError,
+  isKnownError,
+  OtherError,
+} from "../../../errors";
 import Manifest, {
   IRepresentationFilter,
   ISupplementaryImageTrack,
@@ -32,14 +38,12 @@ import Manifest, {
 } from "../../../manifest";
 import {
   IManifestLoaderArguments,
-  IManifestResult,
   ITransportPipelines,
 } from "../../../net/types";
-import Pipeline, {
-  IPipelineCache,
-  IPipelineData,
-  IPipelineOptions,
-} from "../core_pipeline";
+import createLoader, {
+  IPipelineLoaderOptions,
+  IPipelineLoaderResponse,
+} from "../create_loader";
 
 export interface IManifestTransportInfos {
   pipelines : ITransportPipelines;
@@ -50,19 +54,15 @@ export interface IManifestTransportInfos {
   };
 }
 
-type IPipelineManifestResult =
-  IPipelineData<IManifestResult> |
-  IPipelineCache<IManifestResult>;
-
 type IPipelineManifestOptions =
-  IPipelineOptions<IManifestLoaderArguments, Document|string>;
+  IPipelineLoaderOptions<IManifestLoaderArguments, Document|string>;
 
 /**
  * Create function allowing to easily fetch and parse the manifest from its URL.
  *
  * @example
  * ```js
- * const manifestPipeline = createManifestPipeline(transport, warning$);
+ * const manifestPipeline = createManifestPipeline(transport, options, warning$);
  * manifestPipeline(manifestURL)
  *  .subscribe(manifest => console.log("Manifest:", manifest));
  * ```
@@ -79,8 +79,8 @@ export default function createManifestPipeline(
   warning$ : Subject<Error|ICustomError>
 ) : (url : string) => Observable<Manifest> {
   return function fetchManifest(url : string) {
-    const manifest$ = Pipeline<
-      IManifestLoaderArguments, Document|string, IManifestResult
+    const manifest$ = createLoader<
+      IManifestLoaderArguments, Document|string
     >(transport.pipelines.manifest, pipelineOptions)({ url });
 
     return manifest$.pipe(
@@ -91,12 +91,21 @@ export default function createManifestPipeline(
         }
       }),
 
-      filter((arg) : arg is IPipelineManifestResult =>
-        arg.type === "data" || arg.type === "cache"
+      filter((arg) : arg is IPipelineLoaderResponse<Document|string> =>
+        arg.type === "response"
       ),
 
-      map(({ value }) : Manifest => {
-        return new Manifest(value.parsed.manifest, warning$, transport.options);
+      mergeMap(({ value }) => {
+        return transport.pipelines.manifest.parser({ response: value, url })
+          .pipe(catchError((error) => {
+            const formattedError = isKnownError(error) ?
+              error : new OtherError("PIPELINE_PARSING_ERROR", error, true);
+            throw formattedError;
+          }));
+      }),
+
+      map(({ manifest }) : Manifest => {
+        return new Manifest(manifest, warning$, transport.options);
       }),
       share()
     );
