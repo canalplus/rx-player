@@ -18,16 +18,13 @@ import { Subject } from "rxjs";
 import { ICustomError } from "../errors";
 import MediaError from "../errors/MediaError";
 import log from "../log";
-import { IRepresentationFilter } from "../net/types";
 import arrayIncludes from "../utils/array-includes";
-import generateNewId from "../utils/id";
-import { normalize as normalizeLang } from "../utils/languages";
 import Adaptation, {
   IAdaptationArguments,
   IAdaptationType,
+  IRepresentationFilter,
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "./adaptation";
-import { StaticRepresentationIndex } from "./representation_index";
 
 export type IManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
 
@@ -111,81 +108,6 @@ export default class Period {
 
     if (this.duration != null && this.start != null) {
       this.end = this.start + this.duration;
-    }
-  }
-
-  /**
-   * Add supplementary image Adaptation(s) to the manifest.
-   * @param {Object|Array.<Object>} imageTracks
-   */
-  addSupplementaryImageAdaptations(
-    imageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[]
-  ) : void {
-    const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
-    const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
-      const adaptationID = "gen-image-ada-" + generateNewId();
-      const representationID = "gen-image-rep-" + generateNewId();
-      return new Adaptation({
-        id: adaptationID,
-        type: "image",
-        manuallyAdded: true,
-        representations: [{
-          bitrate: 0,
-          id: representationID,
-          mimeType,
-          index: new StaticRepresentationIndex({ media: url }),
-        }],
-      });
-    });
-
-    if (newImageTracks.length) {
-      this.adaptations.image = this.adaptations.image ?
-        this.adaptations.image.concat(newImageTracks) : newImageTracks;
-    }
-  }
-
-  /**
-   * Add supplementary text Adaptation(s) to the manifest.
-   * @param {Object|Array.<Object>} textTracks
-   */
-  addSupplementaryTextAdaptations(
-    textTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[]
-  ) : void {
-    const _textTracks = Array.isArray(textTracks) ? textTracks : [textTracks];
-    const newTextAdaptations = _textTracks.reduce((allSubs : Adaptation[], {
-      mimeType,
-      codecs,
-      url,
-      language,
-      languages,
-      closedCaption,
-    }) => {
-      const langsToMapOn : string[] = language ? [language] : languages || [];
-
-      return allSubs.concat(langsToMapOn.map((_language) => {
-        const adaptationID = "gen-text-ada-" + generateNewId();
-        const representationID = "gen-text-rep-" + generateNewId();
-        return new Adaptation({
-          id: adaptationID,
-          type: "text",
-          language: _language,
-          normalizedLanguage: normalizeLang(_language),
-          closedCaption,
-          manuallyAdded: true,
-          representations: [{
-            bitrate: 0,
-            id: representationID,
-            mimeType,
-            codecs,
-            index: new StaticRepresentationIndex({ media: url }),
-          }],
-        });
-      }));
-    }, []);
-
-    if (newTextAdaptations.length) {
-      this.adaptations.text = this.adaptations.text ?
-        this.adaptations.text.concat(newTextAdaptations) : newTextAdaptations;
     }
   }
 

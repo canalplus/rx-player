@@ -18,13 +18,13 @@ import arrayFind from "array-find";
 import { Subject } from "rxjs";
 import { ICustomError } from "../errors";
 import log from "../log";
-import { IRepresentationFilter } from "../net/types";
 import assert from "../utils/assert";
 import generateNewId from "../utils/id";
 import { normalize as normalizeLang } from "../utils/languages";
 import warnOnce from "../utils/warnOnce";
 import Adaptation, {
   IAdaptationType,
+  IRepresentationFilter,
 } from "./adaptation";
 import Period, {
   IPeriodArguments,
@@ -65,6 +65,12 @@ interface IManifestArguments {
   uris : string[];
 }
 
+interface IManifestParsingOptions {
+  supplementaryTextTracks? : ISupplementaryTextTrack[];
+  supplementaryImageTracks? : ISupplementaryImageTrack[];
+  representationFilter? : IRepresentationFilter;
+}
+
 /**
  * Normalized Manifest structure.
  * @class Manifest
@@ -90,9 +96,14 @@ export default class Manifest {
    */
   constructor(
     args : IManifestArguments,
-    warning$: Subject<Error|ICustomError>,
-    representationFilter?: IRepresentationFilter
+    warning$ : Subject<Error|ICustomError>,
+    options : IManifestParsingOptions
   ) {
+    const {
+      supplementaryTextTracks = [],
+      supplementaryImageTracks = [],
+      representationFilter,
+    } = options;
     const nId = generateNewId();
     this.id = args.id == null ? nId : "" + args.id;
     this.transport = args.transportType || "";
@@ -125,80 +136,12 @@ export default class Manifest {
       assert(this.presentationLiveGap != null);
       assert(this.timeShiftBufferDepth != null);
     }
-  }
 
-  /**
-   * Add supplementary image Adaptation(s) to the manifest.
-   * @param {Object|Array.<Object>} imageTracks
-   */
-  addSupplementaryImageAdaptations(
-    imageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[]
-  ) {
-    const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
-    const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
-      const adaptationID = "gen-image-ada-" + generateNewId();
-      const representationID = "gen-image-rep-" + generateNewId();
-      return new Adaptation({
-        id: adaptationID,
-        type: "image",
-        manuallyAdded: true,
-        representations: [{
-          bitrate: 0,
-          id: representationID,
-          mimeType,
-          index: new StaticRepresentationIndex({ media: url }),
-        }],
-      });
-    });
-
-    if (newImageTracks.length) {
-      this.adaptations.image = this.adaptations.image ?
-        this.adaptations.image.concat(newImageTracks) : newImageTracks;
+    if (supplementaryImageTracks.length) {
+      this.addSupplementaryImageAdaptations(supplementaryImageTracks, warning$);
     }
-  }
-
-  /**
-   * Add supplementary text Adaptation(s) to the manifest.
-   * @param {Object|Array.<Object>} textTracks
-   */
-  addSupplementaryTextAdaptations(
-    textTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[]
-  ) {
-    const _textTracks = Array.isArray(textTracks) ? textTracks : [textTracks];
-    const newTextAdaptations = _textTracks.reduce((allSubs : Adaptation[], {
-      mimeType,
-      codecs,
-      url,
-      language,
-      languages,
-      closedCaption,
-    }) => {
-      const langsToMapOn : string[] = language ? [language] : languages || [];
-
-      return allSubs.concat(langsToMapOn.map((_language) => {
-        const adaptationID = "gen-text-ada-" + generateNewId();
-        const representationID = "gen-text-rep-" + generateNewId();
-        return new Adaptation({
-          id: adaptationID,
-          type: "text",
-          language: _language,
-          normalizedLanguage: normalizeLang(_language),
-          closedCaption,
-          manuallyAdded: true,
-          representations: [{
-            bitrate: 0,
-            id: representationID,
-            mimeType,
-            codecs,
-            index: new StaticRepresentationIndex({ media: url }),
-          }],
-        });
-      }));
-    }, []);
-
-    if (newTextAdaptations.length) {
-      this.adaptations.text = this.adaptations.text ?
-        this.adaptations.text.concat(newTextAdaptations) : newTextAdaptations;
+    if (supplementaryTextTracks.length) {
+      this.addSupplementaryTextAdaptations(supplementaryTextTracks, warning$);
     }
   }
 
@@ -445,6 +388,83 @@ export default class Manifest {
       max,
     ];
   }
+
+  /**
+   * Add supplementary image Adaptation(s) to the manifest.
+   * @param {Object|Array.<Object>} imageTracks
+   */
+  private addSupplementaryImageAdaptations(
+    imageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[],
+    warning$ : Subject<Error|ICustomError>
+  ) {
+    const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
+    const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
+      const adaptationID = "gen-image-ada-" + generateNewId();
+      const representationID = "gen-image-rep-" + generateNewId();
+      return new Adaptation({
+        id: adaptationID,
+        type: "image",
+        manuallyAdded: true,
+        representations: [{
+          bitrate: 0,
+          id: representationID,
+          mimeType,
+          index: new StaticRepresentationIndex({ media: url }),
+        }],
+      }, warning$);
+    });
+
+    if (newImageTracks.length) {
+      this.adaptations.image = this.adaptations.image ?
+        this.adaptations.image.concat(newImageTracks) : newImageTracks;
+    }
+  }
+
+  /**
+   * Add supplementary text Adaptation(s) to the manifest.
+   * @param {Object|Array.<Object>} textTracks
+   */
+  private addSupplementaryTextAdaptations(
+    textTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[],
+    warning$ : Subject<Error|ICustomError>
+  ) {
+    const _textTracks = Array.isArray(textTracks) ? textTracks : [textTracks];
+    const newTextAdaptations = _textTracks.reduce((allSubs : Adaptation[], {
+      mimeType,
+      codecs,
+      url,
+      language,
+      languages,
+      closedCaption,
+    }) => {
+      const langsToMapOn : string[] = language ? [language] : languages || [];
+
+      return allSubs.concat(langsToMapOn.map((_language) => {
+        const adaptationID = "gen-text-ada-" + generateNewId();
+        const representationID = "gen-text-rep-" + generateNewId();
+        return new Adaptation({
+          id: adaptationID,
+          type: "text",
+          language: _language,
+          normalizedLanguage: normalizeLang(_language),
+          closedCaption,
+          manuallyAdded: true,
+          representations: [{
+            bitrate: 0,
+            id: representationID,
+            mimeType,
+            codecs,
+            index: new StaticRepresentationIndex({ media: url }),
+          }],
+        }, warning$);
+      }));
+    }, []);
+
+    if (newTextAdaptations.length) {
+      this.adaptations.text = this.adaptations.text ?
+        this.adaptations.text.concat(newTextAdaptations) : newTextAdaptations;
+    }
+  }
 }
 
 export {
@@ -455,6 +475,8 @@ export {
 
   // types
   IManifestArguments,
+  IManifestParsingOptions,
+  IRepresentationFilter,
   IRepresentationIndex,
   ISegment,
   ISupplementaryImageTrack,
