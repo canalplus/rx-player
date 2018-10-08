@@ -152,12 +152,11 @@ function filterSupportedRepresentations(
   representations : IRepresentationArguments[]
 ) : IRepresentationArguments[] {
   if (adaptationType === "audio" || adaptationType === "video") {
-    return representations
-      .filter((representation) => {
-        return isCodecSupported(getCodec(representation));
-      });
+    return representations.filter((representation) => {
+      return isCodecSupported(getCodec(representation));
+    });
   }
-  // TODO for the other types
+  // TODO for the other types?
   return representations;
 
   /**
