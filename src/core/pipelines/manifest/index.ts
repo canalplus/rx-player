@@ -19,7 +19,6 @@ import {
   Subject,
 } from "rxjs";
 import {
-  catchError,
   filter,
   map,
   mergeMap,
@@ -28,8 +27,6 @@ import {
 } from "rxjs/operators";
 import {
   ICustomError,
-  isKnownError,
-  OtherError,
 } from "../../../errors";
 import Manifest, {
   IRepresentationFilter,
@@ -38,12 +35,15 @@ import Manifest, {
 } from "../../../manifest";
 import {
   IManifestLoaderArguments,
+  IManifestParserArguments,
+  IManifestResult,
   ITransportPipelines,
 } from "../../../net/types";
 import createLoader, {
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
 } from "../create_loader";
+import createParser from "../create_parser";
 
 export interface IManifestTransportInfos {
   pipelines : ITransportPipelines;
@@ -78,12 +78,17 @@ export default function createManifestPipeline(
   pipelineOptions : IPipelineManifestOptions,
   warning$ : Subject<Error|ICustomError>
 ) : (url : string) => Observable<Manifest> {
-  return function fetchManifest(url : string) {
-    const manifest$ = createLoader<
-      IManifestLoaderArguments, Document|string
-    >(transport.pipelines.manifest, pipelineOptions)({ url });
+  const loader = createLoader<
+  IManifestLoaderArguments, Document|string
+  >(transport.pipelines.manifest, pipelineOptions);
 
-    return manifest$.pipe(
+  const parser = createParser<
+  IManifestParserArguments<Document|string>,
+  IManifestResult
+  >(transport.pipelines.manifest);
+
+  return function fetchManifest(url : string) {
+    return loader({ url }).pipe(
 
       tap((arg) => {
         if (arg.type === "error") {
@@ -95,14 +100,7 @@ export default function createManifestPipeline(
         arg.type === "response"
       ),
 
-      mergeMap(({ value }) => {
-        return transport.pipelines.manifest.parser({ response: value, url })
-          .pipe(catchError((error) => {
-            const formattedError = isKnownError(error) ?
-              error : new OtherError("PIPELINE_PARSING_ERROR", error, true);
-            throw formattedError;
-          }));
-      }),
+      mergeMap(({ value }) => parser({ response: value, url })),
 
       map(({ manifest }) : Manifest => {
         return new Manifest(manifest, warning$, transport.options);
