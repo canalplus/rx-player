@@ -20,14 +20,28 @@ import {
   isKnownError,
   OtherError,
 } from "../../errors";
-import {
-  ITransportPipeline,
-} from "../../net/types";
+import { ITransportPipeline } from "../../net/types";
 
+/**
+ * Create a function allowing to parse data from a transport pipeline's
+ * parse function and to throw the right error if that function throws.
+ *
+ * Type parameters:
+ *   - T : Parser's arguments
+ *   - U ; Parser's response
+ * @param {Object} transportPipeline
+ * @returns {Function}
+ */
 export default function createParser<T, U>(
   transportPipeline : ITransportPipeline
 ) : (args : T) => Observable<U> {
   const parser : (x : T) => Observable<U> = transportPipeline.parser as any;
+
+  /**
+   * Parse the given data and throw a formatted error if that call fails.
+   * @param {*} parserArguments
+   * @returns {Observable}
+   */
   return function parse(parserArguments : T) {
     return parser(parserArguments)
       .pipe(catchError((error) => {

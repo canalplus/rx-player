@@ -48,6 +48,12 @@ function shouldRetry(error : Error) : boolean {
   );
 }
 
+/**
+ * Returns true if we're pretty sure that the current error is due to the
+ * user being offline.
+ * @param {Error} error
+ * @returns {Boolean}
+ */
 function isOfflineRequestError(error : RequestError) : boolean {
   return error.type === RequestErrorTypes.ERROR_EVENT && isOffline();
 }

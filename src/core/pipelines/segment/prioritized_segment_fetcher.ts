@@ -42,6 +42,8 @@ export interface IPrioritizedSegmentFetcher<T> {
  *   - a prioritizer, which will handle the priority of a segment request
  *
  * and returns functions to fetch segments with a given priority.
+ * @param {Object} prioritizer
+ * @param {Object} fetcher
  * @returns {Object}
  */
 export default function applyPrioritizerToSegmentFetcher<T>(
