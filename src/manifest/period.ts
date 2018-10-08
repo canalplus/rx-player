@@ -18,7 +18,7 @@ import { Subject } from "rxjs";
 import { ICustomError } from "../errors";
 import MediaError from "../errors/MediaError";
 import log from "../log";
-import { CustomRepresentationFilter } from "../net/types";
+import { IRepresentationFilter } from "../net/types";
 import arrayIncludes from "../utils/array-includes";
 import generateNewId from "../utils/id";
 import { normalize as normalizeLang } from "../utils/languages";
@@ -69,7 +69,7 @@ export default class Period {
   constructor(
     args : IPeriodArguments,
     warning$: Subject<Error|ICustomError>,
-    customRepresentationFilter? : CustomRepresentationFilter
+    customRepresentationFilter? : IRepresentationFilter
   ) {
     this.id = args.id;
     this.adaptations =

@@ -731,8 +731,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       }
 
       const transportPipelines = transportFn(transportOptions);
-      const customRepresentationFilter =
-        transportOptions ? transportOptions.representationFilter : undefined;
+      const { representationFilter } = transportOptions;
 
       // Options used by the ABR Manager.
       const adaptiveOptions = {
@@ -779,7 +778,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         textTrackOptions,
         transportPipelineInfos: {
           transportPipelines,
-          customRepresentationFilter,
+          representationFilter,
         },
         url,
       })
