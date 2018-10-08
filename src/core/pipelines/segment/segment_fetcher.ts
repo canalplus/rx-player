@@ -203,6 +203,11 @@ export default function createSegmentFetcher<T>(
 
       map((response) => {
         return {
+          /**
+           * Parse the loaded data.
+           * @param {Object} [init]
+           * @returns {Observable}
+           */
           parse(init? : ISegmentTimingInfos) : any {
             return segmentParser(objectAssign(
               { response: response.value, init },

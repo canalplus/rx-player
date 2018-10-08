@@ -63,8 +63,13 @@ import createSegmentFetcher, {
  *   maxRetryOffline: Infinity,
  * });
  *
- * // 3 - request a content with a given priority
+ * // 3 - load a segment with a given priority
  * pipeline.createRequest(myContent, 1)
+ *
+ *   // 4 - parse it
+ *   .pipe(mergeMap(fetchedSegment => fetchedSegment.parse()))
+ *
+ *   // 5 - use it
  *   .subscribe((res) => console.log("audio segment downloaded:", res));
  * ```
  */
@@ -96,9 +101,10 @@ export default class SegmentPipelinesManager<T> {
   }
 
   /**
+   * Create a segment pipeline, allowing to easily perform segment requests.
    * @param {string} bufferType
    * @param {Object} options
-   * @returns {Function}
+   * @returns {Object}
    */
   createPipeline(
     bufferType : IBufferType,
@@ -113,10 +119,7 @@ export default class SegmentPipelinesManager<T> {
       options
     );
 
-    return applyPrioritizerToSegmentFetcher<T>(
-      this._prioritizer,
-      segmentFetcher
-    );
+    return applyPrioritizerToSegmentFetcher<T>(this._prioritizer, segmentFetcher);
   }
 }
 
