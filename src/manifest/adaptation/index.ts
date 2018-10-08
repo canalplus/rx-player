@@ -92,8 +92,8 @@ class Adaptation {
         .map(representation =>
           new Representation(objectAssign({ rootId: this.id }, representation))
         )
-        .filter((representation) => representationFilter ?
-          representationFilter(representation) : true
+        .filter(representation =>
+          !representationFilter || representationFilter(representation)
         )
         .sort((a, b) => a.bitrate - b.bitrate) : [];
 
