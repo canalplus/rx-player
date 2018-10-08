@@ -109,8 +109,6 @@ export default {
   MAXIMUM_MAX_BUFFER_BEHIND: {
     image: 5 * 60 * 60,
     text: 5 * 60 * 60,
-    audio: Infinity,
-    video: Infinity,
   } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
   /* tslint:enable no-object-literal-type-assertion */
 
