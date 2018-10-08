@@ -17,15 +17,15 @@
 import arrayFind from "array-find";
 import objectAssign from "object-assign";
 import { Subject } from "rxjs";
-import { ICustomError } from "../../errors";
-import MediaError from "../../errors/MediaError";
-import log from "../../log";
-import { IRepresentationFilter } from "../../net/types";
-import generateNewId from "../../utils/id";
+import { isCodecSupported } from "../compat";
+import { ICustomError } from "../errors";
+import MediaError from "../errors/MediaError";
+import log from "../log";
+import { IRepresentationFilter } from "../net/types";
+import generateNewId from "../utils/id";
 import Representation, {
   IRepresentationArguments,
-} from "../representation";
-import filterSupportedRepresentations from "./filterSupportedRepresentations";
+} from "./representation";
 
 export type IAdaptationType = "video"|"audio"|"text"|"image";
 
@@ -50,7 +50,7 @@ export interface IAdaptationArguments {
  * Normalized Adaptation structure.
  * @class Adaptation
  */
-class Adaptation {
+export default class Adaptation {
   // required
   public readonly id : string|number;
   public readonly representations : Representation[];
@@ -142,4 +142,33 @@ class Adaptation {
   }
 }
 
-export default Adaptation;
+/**
+ * @param {string} adaptationType
+ * @param {Array.<Object>} representations
+ * @returns {Array.<Object>}
+ */
+function filterSupportedRepresentations(
+  adaptationType : string,
+  representations : IRepresentationArguments[]
+) : IRepresentationArguments[] {
+  if (adaptationType === "audio" || adaptationType === "video") {
+    return representations
+      .filter((representation) => {
+        return isCodecSupported(getCodec(representation));
+      });
+  }
+  // TODO for the other types
+  return representations;
+
+  /**
+   * Construct the codec string from given codecs and mimetype.
+   * @param {Object} representation
+   * @returns {string}
+   */
+  function getCodec(
+    representation : IRepresentationArguments
+  ) : string {
+    const { codecs = "", mimeType = "" } = representation;
+    return `${mimeType};codecs="${codecs}"`;
+  }
+}
