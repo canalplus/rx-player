@@ -26,19 +26,29 @@ import {
 } from "rxjs/operators";
 import { ICustomError } from "../../../errors";
 import Manifest, {
+  IRepresentationFilter,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "../../../manifest";
 import {
   IManifestLoaderArguments,
   IManifestResult,
-  ITransportPipelineInfos,
+  ITransportPipelines,
 } from "../../../net/types";
 import Pipeline, {
   IPipelineCache,
   IPipelineData,
   IPipelineOptions,
 } from "../core_pipeline";
+
+export interface IManifestTransportInfos {
+  pipelines : ITransportPipelines;
+  options : {
+    representationFilter? : IRepresentationFilter;
+    supplementaryImageTracks? : ISupplementaryImageTrack[];
+    supplementaryTextTracks? : ISupplementaryTextTrack[];
+  };
+}
 
 type IPipelineManifestResult =
   IPipelineData<IManifestResult> |
@@ -64,20 +74,14 @@ type IPipelineManifestOptions =
  * @returns {Function}
  */
 export default function createManifestPipeline(
-  transportPipelineInfos : ITransportPipelineInfos,
+  transport : IManifestTransportInfos,
   pipelineOptions : IPipelineManifestOptions,
-  warning$ : Subject<Error|ICustomError>,
-  supplementaryTextTracks : ISupplementaryTextTrack[] = [],
-  supplementaryImageTracks : ISupplementaryImageTrack[] = []
+  warning$ : Subject<Error|ICustomError>
 ) : (url : string) => Observable<Manifest> {
   return function fetchManifest(url : string) {
-    const {
-      transportPipelines,
-      representationFilter,
-    } = transportPipelineInfos;
     const manifest$ = Pipeline<
       IManifestLoaderArguments, Document|string, IManifestResult
-    >(transportPipelines.manifest, pipelineOptions)({ url });
+    >(transport.pipelines.manifest, pipelineOptions)({ url });
 
     return manifest$.pipe(
 
@@ -92,11 +96,7 @@ export default function createManifestPipeline(
       ),
 
       map(({ value }) : Manifest => {
-        const { manifest: fetchedManifest } = value.parsed;
-        const manifest = new Manifest(fetchedManifest, warning$, representationFilter);
-        manifest.addSupplementaryTextAdaptations(supplementaryTextTracks);
-        manifest.addSupplementaryImageAdaptations(supplementaryImageTracks);
-        return manifest;
+        return new Manifest(value.parsed.manifest, warning$, transport.options);
       }),
       share()
     );

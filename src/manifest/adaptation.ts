@@ -21,7 +21,6 @@ import { isCodecSupported } from "../compat";
 import { ICustomError } from "../errors";
 import MediaError from "../errors/MediaError";
 import log from "../log";
-import { IRepresentationFilter } from "../net/types";
 import generateNewId from "../utils/id";
 import Representation, {
   IRepresentationArguments,
@@ -31,6 +30,8 @@ export type IAdaptationType = "video"|"audio"|"text"|"image";
 
 export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] =
   ["audio", "video", "text", "image"];
+
+export type IRepresentationFilter = (representation: Representation) => boolean;
 
 export interface IAdaptationArguments {
   // -- required
@@ -69,33 +70,31 @@ export default class Adaptation {
    */
   constructor(
     args : IAdaptationArguments,
-    warning$? : Subject<Error|ICustomError>,
+    warning$ : Subject<Error|ICustomError>,
     representationFilter? : IRepresentationFilter
   ) {
     const nId = generateNewId();
     this.id = args.id == null ? nId : "" + args.id;
     this.type = args.type;
-    const argsRepresentations = filterSupportedRepresentations(
-      args.type,
-      args.representations
-    );
 
-    if (argsRepresentations.length === 0 && warning$) {
+    const hadRepresentations = !!args.representations.length;
+    const argsRepresentations =
+      filterSupportedRepresentations(args.type, args.representations);
+
+    if (hadRepresentations && argsRepresentations.length === 0) {
       log.warn("Incompatible codecs for adaptation", args);
-      const error =
-        new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR", null, false);
+      const error = new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR", null, false);
       warning$.next(error);
     }
 
-    this.representations = Array.isArray(argsRepresentations) ?
-      argsRepresentations
-        .map(representation =>
-          new Representation(objectAssign({ rootId: this.id }, representation))
-        )
-        .filter(representation =>
-          !representationFilter || representationFilter(representation)
-        )
-        .sort((a, b) => a.bitrate - b.bitrate) : [];
+    this.representations = argsRepresentations
+      .map(representation =>
+        new Representation(objectAssign({ rootId: this.id }, representation))
+      )
+      .sort((a, b) => a.bitrate - b.bitrate)
+      .filter(representation =>
+        !representationFilter || representationFilter(representation)
+      );
 
     if (args.language != null) {
       this.language = args.language;

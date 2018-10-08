@@ -22,10 +22,10 @@
 import objectAssign from "object-assign";
 import config from "../../config";
 import log from "../../log";
+import { IRepresentationFilter } from "../../manifest";
 import {
   CustomManifestLoader,
   CustomSegmentLoader,
-  IRepresentationFilter,
 } from "../../net/types";
 import {
   normalizeAudioTrack,
