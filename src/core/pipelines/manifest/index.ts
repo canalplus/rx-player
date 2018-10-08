@@ -29,7 +29,6 @@ import Manifest, {
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "../../../manifest";
-import createManifest from "../../../manifest/factory";
 import {
   IManifestLoaderArguments,
   IManifestResult,
@@ -93,13 +92,11 @@ export default function createManifestPipeline(
       ),
 
       map(({ value }) : Manifest => {
-        return createManifest(
-          value.parsed.manifest,
-          supplementaryTextTracks,
-          supplementaryImageTracks,
-          warning$,
-          representationFilter
-        );
+        const { manifest: fetchedManifest } = value.parsed;
+        const manifest = new Manifest(fetchedManifest, warning$, representationFilter);
+        manifest.addSupplementaryTextAdaptations(supplementaryTextTracks);
+        manifest.addSupplementaryImageAdaptations(supplementaryImageTracks);
+        return manifest;
       }),
       share()
     );
