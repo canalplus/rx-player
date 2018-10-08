@@ -25,6 +25,7 @@ export default ({
   onMouseOut, // callback called when the mouse stops hovering
   onMouseMove, // callback called when the mouse starts hovering, with the
                // position and the event in arguments
+  isContentLoaded,
 }) => {
   let element;
 
@@ -52,25 +53,30 @@ export default ({
   const percentPosition = Math.min(relativePosition / duration, 1) * 100;
 
   return (
-    <div
-      className="progress-bar-wrapper"
-      ref={el => element = el }
-      onClick={(event) => seek(getMousePosition(event))}
-      onMouseOut={onMouseOut}
-      onMouseMove={evt => onMouseMove(getMousePosition(evt), evt)}
-    >
-      <div
-        className="progress-bar-current"
-        style={{
-          "width": percentPosition + "%",
-        }}
-      />
-      <div
-        className="progress-bar-buffered"
-        style={{
-          "width": percentBuffered + "%",
-        }}
-      />
+    <div className="progress-bar-wrapper">
+      {
+        isContentLoaded ?
+          <div
+            ref={el => element = el }
+            onClick={(event) => seek(getMousePosition(event))}
+            onMouseOut={onMouseOut}
+            onMouseMove={evt => onMouseMove(getMousePosition(evt), evt)}
+          >
+            <div
+              className="progress-bar-current"
+              style={{
+                "width": percentPosition + "%",
+              }}
+            />
+            <div
+              className="progress-bar-buffered"
+              style={{
+                "width": percentBuffered + "%",
+              }}
+            />
+          </div> :
+          null
+      }
     </div>
   );
 
