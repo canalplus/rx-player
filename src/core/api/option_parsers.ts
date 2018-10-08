@@ -24,8 +24,8 @@ import config from "../../config";
 import log from "../../log";
 import {
   CustomManifestLoader,
-  CustomRepresentationFilter,
   CustomSegmentLoader,
+  IRepresentationFilter,
 } from "../../net/types";
 import {
   normalizeAudioTrack,
@@ -52,7 +52,7 @@ export { IKeySystemOption };
 export interface ITransportOptions {
   manifestLoader? : CustomManifestLoader;
   segmentLoader? : CustomSegmentLoader;
-  representationFilter? : CustomRepresentationFilter;
+  representationFilter? : IRepresentationFilter;
 }
 
 export interface ISupplementaryTextTrackOption {
@@ -157,7 +157,7 @@ interface IParsedLoadVideoOptionsBase {
   autoPlay : boolean;
   keySystems : IKeySystemOption[];
   networkConfig: INetworkConfigOption;
-  transportOptions : ITransportOptions|undefined;
+  transportOptions : ITransportOptions;
   supplementaryTextTracks : ISupplementaryTextTrackOption[];
   supplementaryImageTracks : ISupplementaryImageTrackOption[];
   defaultAudioTrack : IDefaultAudioTrackOption|null|undefined;
@@ -369,7 +369,7 @@ function parseLoadVideoOptions(
     }
   }
 
-  const transportOptions = options.transportOptions;
+  const transportOptions = options.transportOptions || {};
 
   if (options.supplementaryTextTracks == null) {
     supplementaryTextTracks = [];

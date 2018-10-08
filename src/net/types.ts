@@ -232,7 +232,7 @@ export type ITransportSegmentPipeline =
 
 export interface ITransportPipelineInfos {
   transportPipelines : ITransportPipelines;
-  customRepresentationFilter? : CustomRepresentationFilter;
+  representationFilter? : IRepresentationFilter;
 }
 
 export type ITransportPipeline =
@@ -267,7 +267,7 @@ export interface ITransportOptions {
   // contentProtectionParser? : IContentProtectionParser;
 }
 
-export type CustomRepresentationFilter = (representation: Representation) => boolean;
+export type IRepresentationFilter = (representation: Representation) => boolean;
 
 export type ITransportFunction = (options? : ITransportOptions) =>
   ITransportPipelines;

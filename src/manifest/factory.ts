@@ -16,7 +16,7 @@
 
 import { Subject } from "rxjs";
 import { ICustomError } from "../errors";
-import { CustomRepresentationFilter } from "../net/types";
+import { IRepresentationFilter } from "../net/types";
 import {
   IParsedManifest,
 } from "../parsers/manifest/types";
@@ -50,7 +50,7 @@ export default function createManifest(
   externalTextTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[],
   externalImageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[],
   warning$ : Subject<Error|ICustomError>,
-  customRepresentationFilter? : CustomRepresentationFilter
+  customRepresentationFilter? : IRepresentationFilter
 ) : Manifest {
   const manifest = new Manifest(
     manifestObject,
