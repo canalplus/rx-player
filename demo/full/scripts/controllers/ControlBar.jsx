@@ -18,19 +18,18 @@ function ControlBar({
   duration,
   toggleSettings,
 }) {
-  const shouldDisplayProgressBar = isContentLoaded;
-
-  let positionElement;
-  if (!shouldDisplayProgressBar) {
-    positionElement = null;
-  } else if (isLive) {
-    positionElement = <LivePosition />;
-  } else {
-    positionElement = <PositionInfos
-      position={currentTime}
-      duration={duration}
-    />;
-  }
+  const positionElement = (() => {
+    if (!isContentLoaded) {
+      return null;
+    } else if (isLive) {
+      return <LivePosition />;
+    } else {
+      return <PositionInfos
+        position={currentTime}
+        duration={duration}
+      />;
+    }
+  })();
 
   const onClickSettings = () => {
     toggleSettings();
@@ -38,7 +37,7 @@ function ControlBar({
 
   return (
     <div className="controls-bar-container">
-      { (!shouldDisplayProgressBar) ? null : <Progressbar player={player} /> }
+      { <Progressbar player={player} /> }
       <div className="controls-bar">
         <PlayPauseButton
           className={"control-button"}
