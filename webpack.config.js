@@ -26,6 +26,10 @@ const plugins = [
         process.env.RXP_DASH === "true" :
         process.env.RXP_DASH !== "false",
 
+      METAPLAYLIST: isBarebone ?
+        process.env.RXP_METAPLAYLIST === "true" :
+        process.env.RXP_METAPLAYLIST !== "false",
+
       DIRECTFILE: isBarebone ?
         process.env.RXP_DIRECTFILE === "true" :
         process.env.RXP_DIRECTFILE !== "false",
@@ -78,6 +82,7 @@ const plugins = [
       BIF_PARSER: JSON.stringify("../parsers/images/bif.ts"),
       SMOOTH: JSON.stringify("../net/smooth/index.ts"),
       DASH: JSON.stringify("../net/dash/index.ts"),
+      METAPLAYLIST: JSON.stringify("../net/metaplaylist/index.ts"),
       NATIVE_TEXT_BUFFER: JSON.stringify("../core/source_buffers/text/native/index.ts"),
       NATIVE_VTT: JSON.stringify("../parsers/texttracks/webvtt/native.ts"),
       NATIVE_SRT: JSON.stringify("../parsers/texttracks/srt/native.ts"),
