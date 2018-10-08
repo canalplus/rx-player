@@ -26,23 +26,14 @@ import Manifest, {
 } from "./index";
 
 /**
- * Run multiple checks during creating the Manifest:
- *   - filter out unsupported adaptation types
- *   - filter out adaptations without representations
- *   - filter out representations with an unsupported codec
- *   - check that every periods have at least one adaptation left
- *   - check that every adaptations have at least one representation left
- *
- * Then create a manifest and:
- *   - add supplementary text tracks
- *   - add supplementary image tracks
- *
+ * Create a manifest and add supplementary text and image tracks.
  * @param {Object} manifest - the parsed manifest
  * @param {Array.<Object>|Object} externalTextTracks - Will be added to the
  * manifest as an adaptation.
  * @param {Array.<Object>|Object} externalImageTracks - Will be added to the
  * manifest as an adaptation.
  * @param {Subject} warning$
+ * @param {Object} customRepresentationFilter
  * @returns {Object}
  */
 export default function createManifest(
