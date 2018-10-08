@@ -25,9 +25,7 @@ import {
   share,
   tap,
 } from "rxjs/operators";
-import {
-  ICustomError,
-} from "../../../errors";
+import { ICustomError } from "../../../errors";
 import Manifest, {
   IRepresentationFilter,
   ISupplementaryImageTrack,
