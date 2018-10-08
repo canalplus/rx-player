@@ -19,41 +19,39 @@ import {
   Subject,
 } from "rxjs";
 import {
+  catchError,
   filter,
   map,
+  mergeMap,
   share,
   tap,
 } from "rxjs/operators";
-import { ICustomError } from "../../../errors";
+import {
+  ICustomError,
+  isKnownError,
+  OtherError,
+} from "../../../errors";
 import Manifest, {
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "../../../manifest";
 import createManifest from "../../../manifest/factory";
 import { ITransportPipelines } from "../../../net";
-import {
-  IManifestLoaderArguments,
-  IManifestResult,
-} from "../../../net/types";
-import Pipeline, {
-  IPipelineCache,
-  IPipelineData,
-  IPipelineOptions,
-} from "../core_pipeline";
-
-type IPipelineManifestResult =
-  IPipelineData<IManifestResult> |
-  IPipelineCache<IManifestResult>;
+import { IManifestLoaderArguments } from "../../../net/types";
+import createLoader, {
+  IPipelineLoaderOptions,
+  IPipelineLoaderResponse,
+} from "../create_loader";
 
 type IPipelineManifestOptions =
-  IPipelineOptions<IManifestLoaderArguments, Document|string>;
+  IPipelineLoaderOptions<IManifestLoaderArguments, Document|string>;
 
 /**
  * Create function allowing to easily fetch and parse the manifest from its URL.
  *
  * @example
  * ```js
- * const manifestPipeline = createManifestPipeline(transport, warning$);
+ * const manifestPipeline = createManifestPipeline(transport, options, warning$);
  * manifestPipeline(manifestURL)
  *  .subscribe(manifest => console.log("Manifest:", manifest));
  * ```
@@ -72,8 +70,8 @@ export default function createManifestPipeline(
   supplementaryImageTracks : ISupplementaryImageTrack[] = []
 ) : (url : string) => Observable<Manifest> {
   return function fetchManifest(url : string) {
-    const manifest$ = Pipeline<
-      IManifestLoaderArguments, Document|string, IManifestResult
+    const manifest$ = createLoader<
+      IManifestLoaderArguments, Document|string
     >(transport.manifest, pipelineOptions)({ url });
 
     return manifest$.pipe(
@@ -84,13 +82,22 @@ export default function createManifestPipeline(
         }
       }),
 
-      filter((arg) : arg is IPipelineManifestResult =>
-        arg.type === "data" || arg.type === "cache"
+      filter((arg) : arg is IPipelineLoaderResponse<Document|string> =>
+        arg.type === "response"
       ),
 
-      map(({ value }) : Manifest => {
+      mergeMap(({ value }) => {
+        return transport.manifest.parser({ response: value, url })
+          .pipe(catchError((error) => {
+            const formattedError = isKnownError(error) ?
+              error : new OtherError("PIPELINE_PARSING_ERROR", error, true);
+            throw formattedError;
+          }));
+      }),
+
+      map(({ manifest }) : Manifest => {
         return createManifest(
-          value.parsed.manifest,
+          manifest,
           supplementaryTextTracks,
           supplementaryImageTracks,
           warning$

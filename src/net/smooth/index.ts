@@ -151,7 +151,6 @@ export default function(
   const segmentPipeline = {
     loader({
       adaptation,
-      init,
       manifest,
       period,
       representation,
@@ -160,7 +159,6 @@ export default function(
     ) : ILoaderObservable<ArrayBuffer|Uint8Array|null> {
       return segmentLoader({
         adaptation,
-        init,
         manifest,
         period,
         representation,
