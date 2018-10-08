@@ -131,11 +131,11 @@ export interface IPipelineLoaderOptions<T, U> {
 /**
  * TODO All that any casting is ugly
  *
- * Returns function allowing to download the wanted transport object through
- * the resolver -> loader -> parser pipeline.
+ * Returns function allowing to download the wanted data through a
+ * resolver -> loader pipeline.
  *
- * (A transport object can be for example: the manifest, audio and video
- * segments, text, images...)
+ * (The data can be for example: the manifest, audio and video segments, text,
+ * images...)
  *
  * The function returned takes the initial data in arguments and returns an
  * Observable which will emit:
@@ -152,7 +152,7 @@ export interface IPipelineLoaderOptions<T, U> {
  *   - each time a minor request error is encountered (type "error").
  *     With the error as a value.
  *
- *   - Lastly, with the obtained data (type "data" or "cache).
+ *   - Lastly, with the fetched data (type "response").
  *
  *
  * Each of these but "error" can be emitted at most one time.
@@ -162,7 +162,7 @@ export interface IPipelineLoaderOptions<T, U> {
  *
  * This observable will complete after emitting the data.
  *
- * @param {Object} transportObject
+ * @param {Object} transportPipeline
  * @param {Object} options
  * @returns {Function}
  *

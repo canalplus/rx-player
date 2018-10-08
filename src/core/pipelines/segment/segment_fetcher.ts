@@ -16,11 +16,10 @@
 
 import objectAssign from "object-assign";
 import {
-  Observable ,
-  Subject
+  Observable,
+  Subject,
 } from "rxjs";
 import {
-  catchError,
   filter,
   finalize,
   map,
@@ -29,8 +28,6 @@ import {
 } from "rxjs/operators";
 import {
   ICustomError,
-  isKnownError,
-  OtherError,
 } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
@@ -48,6 +45,7 @@ import createLoader, {
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
 } from "../create_loader";
+import createParser from "../create_parser";
 
 interface IParsedSegment<T> {
   segmentData : T;
@@ -92,8 +90,8 @@ export default function createSegmentFetcher<T>(
   warning$ : Subject<Error|ICustomError>,
   options : IPipelineLoaderOptions<ISegmentLoaderArguments, T>
 ) : ISegmentFetcher<T> {
-  const segmentLoader$ = createLoader(transport[bufferType], options);
-  const segmentParser : (x : any) => any = transport[bufferType].parser;
+  const segmentLoader = createLoader(transport[bufferType], options);
+  const segmentParser = createParser(transport[bufferType]);
   let request$ : Subject<IABRRequest>|undefined;
   let id : string|undefined;
 
@@ -110,7 +108,7 @@ export default function createSegmentFetcher<T>(
   return function fetchSegment(
     content : ISegmentLoaderArguments
   ) : Observable<IFetchedSegment<T>> {
-    return segmentLoader$(content).pipe(
+    return segmentLoader(content).pipe(
 
       tap((arg) => {
         switch (arg.type) {
@@ -206,16 +204,10 @@ export default function createSegmentFetcher<T>(
       map((response) => {
         return {
           parse(init? : ISegmentTimingInfos) : any {
-            const parserArguments = objectAssign({
-              response: response.value,
-              init,
-            }, content);
-            return segmentParser(parserArguments)
-              .pipe(catchError((error) => {
-                const formattedError = isKnownError(error) ?
-                  error : new OtherError("PIPELINE_PARSING_ERROR", error, true);
-                throw formattedError;
-              }));
+            return segmentParser(objectAssign(
+              { response: response.value, init },
+              content
+            ));
           },
         };
       }),
