@@ -60,8 +60,6 @@ export interface IManifestLoaderArguments {
 
 // loader argument for every other pipelines
 export interface ISegmentLoaderArguments {
-  init? : ISegmentTimingInfos; // Infos about the initialization segment of the
-                               // corresponding Representation
   manifest : Manifest;
   period : Period;
   adaptation : Adaptation;
@@ -120,11 +118,12 @@ export interface IManifestParserArguments<T> {
 
 export interface ISegmentParserArguments<T> {
   response : ILoaderResponseValue<T>;
+  init? : ISegmentTimingInfos; // Infos about the initialization segment of the
+                               // corresponding Representation
   manifest : Manifest;
   adaptation : Adaptation;
   representation : Representation;
   segment : ISegment;
-  init? : ISegmentTimingInfos;
 }
 
 // -- response

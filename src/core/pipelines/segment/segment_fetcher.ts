@@ -20,16 +20,22 @@ import {
   Subject
 } from "rxjs";
 import {
+  catchError,
   filter,
   finalize,
   map,
   share,
   tap,
 } from "rxjs/operators";
-import { ICustomError } from "../../../errors";
+import {
+  ICustomError,
+  isKnownError,
+  OtherError,
+} from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
   ISegmentLoaderArguments,
+  ISegmentTimingInfos,
   ITransportPipelines,
 } from "../../../net/types";
 import generateID from "../../../utils/id";
@@ -38,13 +44,12 @@ import {
   IABRRequest
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
-import BasePipeline, {
-  IPipelineCache,
-  IPipelineData,
-  IPipelineOptions,
-} from "../core_pipeline";
+import createLoader, {
+  IPipelineLoaderOptions,
+  IPipelineLoaderResponse,
+} from "../create_loader";
 
-interface ISegmentResponseParsed<T> {
+interface IParsedSegment<T> {
   segmentData : T;
   segmentInfos : {
     duration? : number;
@@ -54,14 +59,12 @@ interface ISegmentResponseParsed<T> {
   segmentOffset : number;
 }
 
-// Response that should be emitted by the given Pipeline
-export interface ISegmentResponse<T> {
-  parsed: ISegmentResponseParsed<T>;
+export interface IFetchedSegment<T> {
+  parse : (init? : ISegmentTimingInfos) => Observable<IParsedSegment<T>>;
 }
 
-export type ISegmentFetcher<T> = (
-  content : ISegmentLoaderArguments
-) => Observable<ISegmentResponse<T>>;
+export type ISegmentFetcher<T> =
+  (content : ISegmentLoaderArguments) => Observable<IFetchedSegment<T>>;
 
 /**
  * Create a function which will fetch segments.
@@ -87,9 +90,10 @@ export default function createSegmentFetcher<T>(
   network$ : Subject<IABRMetric>,
   requests$ : Subject<Subject<IABRRequest>>,
   warning$ : Subject<Error|ICustomError>,
-  options : IPipelineOptions<ISegmentLoaderArguments, ISegmentResponse<T>>
+  options : IPipelineLoaderOptions<ISegmentLoaderArguments, T>
 ) : ISegmentFetcher<T> {
-  const basePipeline$ = BasePipeline(transport[bufferType], options);
+  const segmentLoader$ = createLoader(transport[bufferType], options);
+  const segmentParser : (x : any) => any = transport[bufferType].parser;
   let request$ : Subject<IABRRequest>|undefined;
   let id : string|undefined;
 
@@ -105,8 +109,8 @@ export default function createSegmentFetcher<T>(
    */
   return function fetchSegment(
     content : ISegmentLoaderArguments
-  ) : Observable<ISegmentResponse<T>> {
-    return basePipeline$(content).pipe(
+  ) : Observable<IFetchedSegment<T>> {
+    return segmentLoader$(content).pipe(
 
       tap((arg) => {
         switch (arg.type) {
@@ -182,16 +186,9 @@ export default function createSegmentFetcher<T>(
         }
       }),
 
-      filter((
-        arg
-      ) : arg is
-        IPipelineData<ISegmentResponseParsed<T>>|
-        IPipelineCache<ISegmentResponseParsed<T>> =>
-        arg.type === "data" || arg.type === "cache"
+      filter((arg) : arg is IPipelineLoaderResponse<any> =>
+        arg.type === "response"
       ),
-
-      // take only value from data/cache events
-      map(({ value }) => value),
 
       finalize(() => {
         if (request$ != null) {
@@ -204,6 +201,23 @@ export default function createSegmentFetcher<T>(
           }
           request$.complete();
         }
+      }),
+
+      map((response) => {
+        return {
+          parse(init? : ISegmentTimingInfos) : any {
+            const parserArguments = objectAssign({
+              response: response.value,
+              init,
+            }, content);
+            return segmentParser(parserArguments)
+              .pipe(catchError((error) => {
+                const formattedError = isKnownError(error) ?
+                  error : new OtherError("PIPELINE_PARSING_ERROR", error, true);
+                throw formattedError;
+              }));
+          },
+        };
       }),
 
       share() // avoid multiple side effects if multiple subs

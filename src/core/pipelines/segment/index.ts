@@ -17,19 +17,21 @@
 import { Subject } from "rxjs";
 import { ICustomError } from "../../../errors";
 import { ITransportPipelines } from "../../../net";
-import { ISegmentLoaderArguments } from "../../../net/types";
+import {
+  ISegmentLoaderArguments,
+} from "../../../net/types";
 import {
   IABRMetric,
   IABRRequest
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
-import { IPipelineOptions } from "../core_pipeline";
+import { IPipelineLoaderOptions } from "../create_loader";
 import applyPrioritizerToSegmentFetcher, {
   IPrioritizedSegmentFetcher,
 } from "./prioritized_segment_fetcher";
 import ObservablePrioritizer from "./prioritizer";
 import createSegmentFetcher, {
-  ISegmentResponse,
+  IFetchedSegment,
 } from "./segment_fetcher";
 
 /**
@@ -71,7 +73,7 @@ export default class SegmentPipelinesManager<T> {
   private readonly _requestsInfos$ : Subject<Subject<IABRRequest>>;
   private readonly _warning$ : Subject<Error | ICustomError>;
   private readonly _transport : ITransportPipelines;
-  private readonly _prioritizer : ObservablePrioritizer<ISegmentResponse<T>>;
+  private readonly _prioritizer : ObservablePrioritizer<IFetchedSegment<T>>;
 
   /**
    * @param {Object} transport
@@ -100,7 +102,7 @@ export default class SegmentPipelinesManager<T> {
    */
   createPipeline(
     bufferType : IBufferType,
-    options : IPipelineOptions<ISegmentLoaderArguments, ISegmentResponse<T>>
+    options : IPipelineLoaderOptions<ISegmentLoaderArguments, T>
   ) {
     const segmentFetcher = createSegmentFetcher<T>(
       bufferType,
@@ -119,7 +121,7 @@ export default class SegmentPipelinesManager<T> {
 }
 
 export {
-  IPipelineOptions,
+  IPipelineLoaderOptions as IPipelineOptions,
   IPrioritizedSegmentFetcher,
-  ISegmentResponse,
+  IFetchedSegment,
 };
