@@ -19,7 +19,6 @@ import {
   Subject,
 } from "rxjs";
 import {
-  catchError,
   filter,
   map,
   mergeMap,
@@ -28,8 +27,6 @@ import {
 } from "rxjs/operators";
 import {
   ICustomError,
-  isKnownError,
-  OtherError,
 } from "../../../errors";
 import Manifest, {
   ISupplementaryImageTrack,
@@ -37,11 +34,16 @@ import Manifest, {
 } from "../../../manifest";
 import createManifest from "../../../manifest/factory";
 import { ITransportPipelines } from "../../../net";
-import { IManifestLoaderArguments } from "../../../net/types";
+import {
+  IManifestLoaderArguments,
+  IManifestParserArguments,
+  IManifestResult,
+} from "../../../net/types";
 import createLoader, {
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
 } from "../create_loader";
+import createParser from "../create_parser";
 
 type IPipelineManifestOptions =
   IPipelineLoaderOptions<IManifestLoaderArguments, Document|string>;
@@ -69,12 +71,17 @@ export default function createManifestPipeline(
   supplementaryTextTracks : ISupplementaryTextTrack[] = [],
   supplementaryImageTracks : ISupplementaryImageTrack[] = []
 ) : (url : string) => Observable<Manifest> {
-  return function fetchManifest(url : string) {
-    const manifest$ = createLoader<
-      IManifestLoaderArguments, Document|string
-    >(transport.manifest, pipelineOptions)({ url });
+  const loader = createLoader<
+  IManifestLoaderArguments, Document|string
+  >(transport.manifest, pipelineOptions);
 
-    return manifest$.pipe(
+  const parser = createParser<
+  IManifestParserArguments<Document|string>,
+  IManifestResult
+  >(transport.manifest);
+
+  return function fetchManifest(url : string) {
+    return loader({ url }).pipe(
 
       tap((arg) => {
         if (arg.type === "error") {
@@ -86,14 +93,7 @@ export default function createManifestPipeline(
         arg.type === "response"
       ),
 
-      mergeMap(({ value }) => {
-        return transport.manifest.parser({ response: value, url })
-          .pipe(catchError((error) => {
-            const formattedError = isKnownError(error) ?
-              error : new OtherError("PIPELINE_PARSING_ERROR", error, true);
-            throw formattedError;
-          }));
-      }),
+      mergeMap(({ value }) => parser({ response: value, url })),
 
       map(({ manifest }) : Manifest => {
         return createManifest(
