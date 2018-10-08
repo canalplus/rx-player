@@ -71,7 +71,7 @@ export type ISegmentFetcher<T> = (
  *   - dispatch the other infos through the right subjects.
  *
  * @param {string} bufferType
- * @param {Object} transportPipelines
+ * @param {Object} transport
  * @param {Subject} network$ - Subject through which network metrics will be
  * sent, for the ABR.
  * @param {Subject} requests$ - Subject through which requests infos will be
@@ -83,13 +83,13 @@ export type ISegmentFetcher<T> = (
  */
 export default function createSegmentFetcher<T>(
   bufferType : IBufferType,
-  transportPipelines : ITransportPipelines,
+  transport : ITransportPipelines,
   network$ : Subject<IABRMetric>,
   requests$ : Subject<Subject<IABRRequest>>,
   warning$ : Subject<Error|ICustomError>,
   options : IPipelineOptions<ISegmentLoaderArguments, ISegmentResponse<T>>
 ) : ISegmentFetcher<T> {
-  const basePipeline$ = BasePipeline(transportPipelines[bufferType], options);
+  const basePipeline$ = BasePipeline(transport[bufferType], options);
   let request$ : Subject<IABRRequest>|undefined;
   let id : string|undefined;
 

@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-import createManifestPipeline from "./manifest";
+import createManifestPipeline, {
+  IManifestTransportInfos,
+} from "./manifest";
 import SegmentPipelinesManager, {
   IPipelineOptions,
   IPrioritizedSegmentFetcher,
@@ -23,6 +25,7 @@ import SegmentPipelinesManager, {
 
 export {
   createManifestPipeline,
+  IManifestTransportInfos,
   IPipelineOptions,
   SegmentPipelinesManager,
   IPrioritizedSegmentFetcher,

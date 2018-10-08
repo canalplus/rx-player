@@ -230,11 +230,6 @@ export type ITransportSegmentPipeline =
   ITransportTextSegmentPipeline |
   ITransportImageSegmentPipeline;
 
-export interface ITransportPipelineInfos {
-  transportPipelines : ITransportPipelines;
-  representationFilter? : IRepresentationFilter;
-}
-
 export type ITransportPipeline =
   ITransportManifestPipeline |
   ITransportSegmentPipeline;
@@ -266,8 +261,6 @@ export interface ITransportOptions {
   // dash only
   // contentProtectionParser? : IContentProtectionParser;
 }
-
-export type IRepresentationFilter = (representation: Representation) => boolean;
 
 export type ITransportFunction = (options? : ITransportOptions) =>
   ITransportPipelines;
