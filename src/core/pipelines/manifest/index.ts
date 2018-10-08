@@ -80,7 +80,12 @@ export default function createManifestPipeline(
   IManifestResult
   >(transport.manifest);
 
-  return function fetchManifest(url : string) {
+  /**
+   * Fetch and parse the manifest corresponding to the URL given.
+   * @param {string} url - URL of the manifest
+   * @returns {Observable}
+   */
+  return function fetchManifest(url : string) : Observable<Manifest> {
     return loader({ url }).pipe(
 
       tap((arg) => {

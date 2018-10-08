@@ -97,19 +97,13 @@ const {
 
 /**
  * Generate a new error from the infos given.
- * Also attach the pipeline type (audio/manifest...) to the _pipelineType_
- * property of the returned error.
  * @param {string} code
  * @param {Error} error
- * @param {Boolean} [fatal=true] - Whether the error is fatal to the content's
+ * @param {Boolean} fatal - Whether the error is fatal to the content's
  * playback.
  * @returns {Error}
  */
-function errorSelector(
-  code : string,
-  error : Error,
-  fatal : boolean = true
-) : ICustomError {
+function errorSelector(code : string, error : Error, fatal : boolean) : ICustomError {
   if (!isKnownError(error)) {
     if (error instanceof RequestError) {
       return new NetworkError(code, error, fatal);
@@ -129,8 +123,6 @@ export interface IPipelineLoaderOptions<T, U> {
 }
 
 /**
- * TODO All that any casting is ugly
- *
  * Returns function allowing to download the wanted data through a
  * resolver -> loader pipeline.
  *
@@ -162,13 +154,13 @@ export interface IPipelineLoaderOptions<T, U> {
  *
  * This observable will complete after emitting the data.
  *
- * @param {Object} transportPipeline
- * @param {Object} options
- * @returns {Function}
- *
  * Type parameters:
  *   T: Argument given to the Net's loader
  *   U: ResponseType of the request
+ *
+ * @param {Object} transportPipeline
+ * @param {Object} options
+ * @returns {Function}
  */
 export default function createLoader<T, U>(
   transportPipeline : ITransportPipeline,
@@ -207,7 +199,7 @@ export default function createLoader<T, U>(
     return tryCatch<T, T>(resolver, resolverArgument)
       .pipe()
       .pipe(catchError((error : Error) : Observable<never> => {
-        throw errorSelector("PIPELINE_RESOLVE_ERROR", error);
+        throw errorSelector("PIPELINE_RESOLVE_ERROR", error, true);
       }));
   }
 
@@ -217,6 +209,7 @@ export default function createLoader<T, U>(
    *   - call the transport loader - with an exponential backoff - if not
    *
    * @param {Object} loaderArgument - Input given to the loader
+   * @returns {Observable}
    */
   function loadData(
     loaderArgument : T
@@ -233,7 +226,7 @@ export default function createLoader<T, U>(
         backoffOptions
       ).pipe(
         catchError((error : Error) : Observable<never> => {
-          throw errorSelector("PIPELINE_LOAD_ERROR", error);
+          throw errorSelector("PIPELINE_LOAD_ERROR", error, true);
         }),
 
         tap((arg) => {
@@ -265,6 +258,12 @@ export default function createLoader<T, U>(
 
     return startLoaderWithBackoff();
   }
+
+  /**
+   * Load the corresponding data.
+   * @param {Object} pipelineInputData
+   * @returns {Observable}
+   */
   return function startPipeline(
     pipelineInputData : T
   ) : Observable<IPipelineLoaderEvent<T, U>> {
