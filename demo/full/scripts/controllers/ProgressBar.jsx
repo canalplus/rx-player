@@ -137,6 +137,7 @@ class Progressbar extends React.Component {
           minimumPosition={minimumPosition}
           maximumPosition={maximumPosition}
           bufferGap={bufferGap}
+          isContentLoaded={isContentLoaded}
         />
       </div>
     );
