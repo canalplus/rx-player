@@ -74,7 +74,7 @@ export default function createManifestPipeline(
   return function fetchManifest(url : string) {
     const {
       transportPipelines,
-      customRepresentationFilter,
+      representationFilter,
     } = transportPipelineInfos;
     const manifest$ = Pipeline<
       IManifestLoaderArguments, Document|string, IManifestResult
@@ -98,7 +98,7 @@ export default function createManifestPipeline(
           supplementaryTextTracks,
           supplementaryImageTracks,
           warning$,
-          customRepresentationFilter
+          representationFilter
         );
       }),
       share()

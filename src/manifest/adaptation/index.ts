@@ -20,7 +20,7 @@ import { Subject } from "rxjs";
 import { ICustomError } from "../../errors";
 import MediaError from "../../errors/MediaError";
 import log from "../../log";
-import { CustomRepresentationFilter } from "../../net/types";
+import { IRepresentationFilter } from "../../net/types";
 import generateNewId from "../../utils/id";
 import Representation, {
   IRepresentationArguments,
@@ -70,7 +70,7 @@ class Adaptation {
   constructor(
     args : IAdaptationArguments,
     warning$? : Subject<Error|ICustomError>,
-    representationFilter? : CustomRepresentationFilter
+    representationFilter? : IRepresentationFilter
   ) {
     const nId = generateNewId();
     this.id = args.id == null ? nId : "" + args.id;

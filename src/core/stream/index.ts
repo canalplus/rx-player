@@ -37,10 +37,7 @@ import {
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "../../manifest";
-import {
-  CustomRepresentationFilter,
-  ITransportPipelineInfos
-} from "../../net/types";
+import { ITransportPipelineInfos } from "../../net/types";
 import throttle from "../../utils/rx-throttle";
 import ABRManager, {
   IABRMetric,
@@ -124,7 +121,6 @@ export interface IStreamOptions {
   transportPipelineInfos : ITransportPipelineInfos;
   url : string;
   mediaElement : HTMLMediaElement;
-  customRepresentationFilter?: CustomRepresentationFilter;
 }
 
 // Every events emitted by the stream.
