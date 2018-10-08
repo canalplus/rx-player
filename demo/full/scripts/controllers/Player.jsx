@@ -65,9 +65,6 @@ class Player extends React.Component {
       });
 
     this.setState({ player });
-    window.addEventListener("resize", () => {
-      this.onResize(this.videoScreenElement, this.videoElement); 
-    });
     // for DEV mode
     window.playerModule = player;
   }
@@ -80,20 +77,6 @@ class Player extends React.Component {
     }
     if (this._displaySpinnerTimeout) {
       clearTimeout(this._displaySpinnerTimeout);
-    }
-  }
-
-  onResize(videoScreenElement, videoElement) {
-    if (videoScreenElement != null && videoElement != null) {
-      const { offsetWidth } = videoScreenElement;
-      const { videoWidth, videoHeight } = videoElement;
-      const ratio = videoWidth / videoHeight;
-  
-      const width = offsetWidth + "px";
-      const height = (offsetWidth / ratio) + "px";
-      const style = "width:" + width +"; height: " + height +";" 
-  
-      videoElement.style = style;
     }
   }
 
@@ -136,11 +119,6 @@ class Player extends React.Component {
               <div
                 className="video-screen"
                 onClick={() => this.onVideoClick()}
-                ref={
-                  (el) => {
-                    this.videoScreenElement = el;
-                  }
-                }
               >
                 <ErrorDisplayer player={player} />
                 {
