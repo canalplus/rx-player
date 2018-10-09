@@ -66,7 +66,7 @@ export default class Period {
   constructor(
     args : IPeriodArguments,
     warning$: Subject<Error|ICustomError>,
-    customRepresentationFilter? : IRepresentationFilter
+    representationFilter? : IRepresentationFilter
   ) {
     this.id = args.id;
     this.adaptations =
@@ -88,7 +88,7 @@ export default class Period {
                   }
                 })
                 .map((adaptation) => {
-                  return new Adaptation(adaptation, warning$, customRepresentationFilter);
+                  return new Adaptation(adaptation, warning$, representationFilter);
                 })
                 .filter((adaptation) => adaptation.representations.length);
             }
