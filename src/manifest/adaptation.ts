@@ -31,7 +31,18 @@ export type IAdaptationType = "video"|"audio"|"text"|"image";
 export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] =
   ["audio", "video", "text", "image"];
 
-export type IRepresentationFilter = (representation: Representation) => boolean;
+interface IRepresentationInfos {
+  bufferType: IAdaptationType;
+  language?: string;
+  isAudioDescription? : boolean;
+  isClosedCaption? : boolean;
+  normalizedLanguage? : string;
+}
+
+export type IRepresentationFilter = (
+  representation: Representation,
+  adaptationInfos: IRepresentationInfos
+) => boolean;
 
 export interface IAdaptationArguments {
   // -- required
@@ -87,15 +98,6 @@ export default class Adaptation {
       warning$.next(error);
     }
 
-    this.representations = argsRepresentations
-      .map(representation =>
-        new Representation(objectAssign({ rootId: this.id }, representation))
-      )
-      .sort((a, b) => a.bitrate - b.bitrate)
-      .filter(representation =>
-        !representationFilter || representationFilter(representation)
-      );
-
     if (args.language != null) {
       this.language = args.language;
     }
@@ -110,6 +112,23 @@ export default class Adaptation {
     if (args.audioDescription != null) {
       this.isAudioDescription = args.audioDescription;
     }
+
+    const representationInfos = {
+      bufferType: this.type,
+      language: this.language,
+      normalizedLanguage: this.normalizedLanguage,
+      isClosedCaption: this.isClosedCaption,
+      isAudioDescription: this.isAudioDescription,
+    };
+
+    this.representations = argsRepresentations
+      .map(representation =>
+        new Representation(objectAssign({ rootId: this.id }, representation))
+      )
+      .sort((a, b) => a.bitrate - b.bitrate)
+      .filter(representation =>
+        !representationFilter || representationFilter(representation, representationInfos)
+      );
 
     // for manuallyAdded adaptations (not in the manifest)
     this.manuallyAdded = !!args.manuallyAdded;
