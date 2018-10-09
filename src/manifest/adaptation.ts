@@ -16,15 +16,33 @@
 
 import arrayFind from "array-find";
 import objectAssign from "object-assign";
+import { Subject } from "rxjs";
+import { isCodecSupported } from "../compat";
+import { ICustomError } from "../errors";
+import MediaError from "../errors/MediaError";
+import log from "../log";
 import generateNewId from "../utils/id";
 import Representation, {
-  IRepresentationArguments
+  IRepresentationArguments,
 } from "./representation";
 
 export type IAdaptationType = "video"|"audio"|"text"|"image";
 
 export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] =
   ["audio", "video", "text", "image"];
+
+interface IRepresentationInfos {
+  bufferType: IAdaptationType;
+  language?: string;
+  isAudioDescription? : boolean;
+  isClosedCaption? : boolean;
+  normalizedLanguage? : string;
+}
+
+export type IRepresentationFilter = (
+  representation: Representation,
+  adaptationInfos: IRepresentationInfos
+) => boolean;
 
 export interface IAdaptationArguments {
   // -- required
@@ -44,7 +62,7 @@ export interface IAdaptationArguments {
  * Normalized Adaptation structure.
  * @class Adaptation
  */
-class Adaptation {
+export default class Adaptation {
   // required
   public readonly id : string|number;
   public readonly representations : Representation[];
@@ -61,16 +79,24 @@ class Adaptation {
    * @constructor
    * @param {Object} args
    */
-  constructor(args : IAdaptationArguments) {
+  constructor(
+    args : IAdaptationArguments,
+    warning$ : Subject<Error|ICustomError>,
+    representationFilter? : IRepresentationFilter
+  ) {
     const nId = generateNewId();
     this.id = args.id == null ? nId : "" + args.id;
     this.type = args.type;
-    this.representations = Array.isArray(args.representations) ?
-      args.representations
-        .map(representation =>
-          new Representation(objectAssign({ rootId: this.id }, representation))
-        )
-        .sort((a, b) => a.bitrate - b.bitrate) : [];
+
+    const hadRepresentations = !!args.representations.length;
+    const argsRepresentations =
+      filterSupportedRepresentations(args.type, args.representations);
+
+    if (hadRepresentations && argsRepresentations.length === 0) {
+      log.warn("Incompatible codecs for adaptation", args);
+      const error = new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR", null, false);
+      warning$.next(error);
+    }
 
     if (args.language != null) {
       this.language = args.language;
@@ -86,6 +112,24 @@ class Adaptation {
     if (args.audioDescription != null) {
       this.isAudioDescription = args.audioDescription;
     }
+
+    this.representations = argsRepresentations
+      .map(representation =>
+        new Representation(objectAssign({ rootId: this.id }, representation))
+      )
+      .sort((a, b) => a.bitrate - b.bitrate)
+      .filter(representation => {
+        if (representationFilter == null) {
+          return true;
+        }
+        return representationFilter(representation, {
+          bufferType: this.type,
+          language: this.language,
+          normalizedLanguage: this.normalizedLanguage,
+          isClosedCaption: this.isClosedCaption,
+          isAudioDescription: this.isAudioDescription,
+        });
+      });
 
     // for manuallyAdded adaptations (not in the manifest)
     this.manuallyAdded = !!args.manuallyAdded;
@@ -117,4 +161,32 @@ class Adaptation {
   }
 }
 
-export default Adaptation;
+/**
+ * @param {string} adaptationType
+ * @param {Array.<Object>} representations
+ * @returns {Array.<Object>}
+ */
+function filterSupportedRepresentations(
+  adaptationType : string,
+  representations : IRepresentationArguments[]
+) : IRepresentationArguments[] {
+  if (adaptationType === "audio" || adaptationType === "video") {
+    return representations.filter((representation) => {
+      return isCodecSupported(getCodec(representation));
+    });
+  }
+  // TODO for the other types?
+  return representations;
+
+  /**
+   * Construct the codec string from given codecs and mimetype.
+   * @param {Object} representation
+   * @returns {string}
+   */
+  function getCodec(
+    representation : IRepresentationArguments
+  ) : string {
+    const { codecs = "", mimeType = "" } = representation;
+    return `${mimeType};codecs="${codecs}"`;
+  }
+}

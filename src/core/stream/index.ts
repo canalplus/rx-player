@@ -33,11 +33,6 @@ import {
 import config from "../../config";
 import { ICustomError } from "../../errors";
 import log from "../../log";
-import {
-  ISupplementaryImageTrack,
-  ISupplementaryTextTrack,
-} from "../../manifest";
-import { ITransportPipelines } from "../../net";
 import throttle from "../../utils/rx-throttle";
 import ABRManager, {
   IABRMetric,
@@ -46,6 +41,7 @@ import ABRManager, {
 import { IKeySystemOption } from "../eme/types";
 import {
   createManifestPipeline,
+  IManifestTransportInfos,
   IPipelineOptions,
   SegmentPipelinesManager,
 } from "../pipelines";
@@ -109,6 +105,7 @@ export interface IStreamOptions {
   };
   clock$ : Observable<IStreamClockTick>;
   keySystems : IKeySystemOption[];
+  mediaElement : HTMLMediaElement;
   networkConfig: {
     manifestRetry? : number;
     offlineRetry? : number;
@@ -116,12 +113,9 @@ export interface IStreamOptions {
   };
   speed$ : Observable<number>;
   startAt? : IInitialTimeOptions;
-  supplementaryImageTracks : ISupplementaryImageTrack[];
-  supplementaryTextTracks : ISupplementaryTextTrack[];
   textTrackOptions : ITextTrackSourceBufferOptions;
-  transport : ITransportPipelines;
+  transport : IManifestTransportInfos;
   url : string;
-  mediaElement : HTMLMediaElement;
 }
 
 // Every events emitted by the stream.
@@ -152,15 +146,13 @@ export default function Stream({
   bufferOptions,
   clock$,
   keySystems,
+  mediaElement,
   networkConfig,
   speed$,
   startAt,
-  supplementaryImageTracks, // eventual manually added images
-  supplementaryTextTracks, // eventual manually added subtitles
   textTrackOptions,
   transport,
   url,
-  mediaElement,
 } : IStreamOptions) : Observable<IStreamEvent> {
   // Subject through which warnings will be sent
   const warning$ = new Subject<Error|ICustomError>();
@@ -170,9 +162,7 @@ export default function Stream({
   const fetchManifest = throttle(createManifestPipeline(
     transport,
     getManifestPipelineOptions(networkConfig),
-    warning$,
-    supplementaryTextTracks,
-    supplementaryImageTracks
+    warning$
   ));
 
   // Subject through which network metrics will be sent by the segment
@@ -185,7 +175,7 @@ export default function Stream({
 
   // Creates pipelines for downloading segments.
   const segmentPipelinesManager = new SegmentPipelinesManager<any>(
-    transport, requestsInfos$, network$, warning$);
+    transport.pipelines, requestsInfos$, network$, warning$);
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".

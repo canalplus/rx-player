@@ -26,20 +26,29 @@ import {
 } from "rxjs/operators";
 import { ICustomError } from "../../../errors";
 import Manifest, {
+  IRepresentationFilter,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "../../../manifest";
-import createManifest from "../../../manifest/factory";
-import { ITransportPipelines } from "../../../net";
 import {
   IManifestLoaderArguments,
   IManifestResult,
+  ITransportPipelines,
 } from "../../../net/types";
 import Pipeline, {
   IPipelineCache,
   IPipelineData,
   IPipelineOptions,
 } from "../core_pipeline";
+
+export interface IManifestTransportInfos {
+  pipelines : ITransportPipelines;
+  options : {
+    representationFilter? : IRepresentationFilter;
+    supplementaryImageTracks? : ISupplementaryImageTrack[];
+    supplementaryTextTracks? : ISupplementaryTextTrack[];
+  };
+}
 
 type IPipelineManifestResult =
   IPipelineData<IManifestResult> |
@@ -65,16 +74,14 @@ type IPipelineManifestOptions =
  * @returns {Function}
  */
 export default function createManifestPipeline(
-  transport : ITransportPipelines,
+  transport : IManifestTransportInfos,
   pipelineOptions : IPipelineManifestOptions,
-  warning$ : Subject<Error|ICustomError>,
-  supplementaryTextTracks : ISupplementaryTextTrack[] = [],
-  supplementaryImageTracks : ISupplementaryImageTrack[] = []
+  warning$ : Subject<Error|ICustomError>
 ) : (url : string) => Observable<Manifest> {
   return function fetchManifest(url : string) {
     const manifest$ = Pipeline<
       IManifestLoaderArguments, Document|string, IManifestResult
-    >(transport.manifest, pipelineOptions)({ url });
+    >(transport.pipelines.manifest, pipelineOptions)({ url });
 
     return manifest$.pipe(
 
@@ -89,12 +96,7 @@ export default function createManifestPipeline(
       ),
 
       map(({ value }) : Manifest => {
-        return createManifest(
-          value.parsed.manifest,
-          supplementaryTextTracks,
-          supplementaryImageTracks,
-          warning$
-        );
+        return new Manifest(value.parsed.manifest, warning$, transport.options);
       }),
       share()
     );

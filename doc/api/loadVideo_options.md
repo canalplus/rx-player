@@ -380,6 +380,11 @@ considered stable:
   - ``manifestLoader`` (``Function``): defines a custom manifest loader. More
     info on it can be found [here](./plugins.md#manifestLoader).
 
+  - ``representationFilter`` (``Function``): allows to filter out
+    `Representation`s (i.e. media qualities) from the Manifest to avoid playing
+    them.
+    More infos on it can be found [here](./plugins.md#representationFilter).
+
 
 
 <a name="prop-defaultAudioTrack"></a>

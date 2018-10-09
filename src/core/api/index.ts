@@ -730,7 +730,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         throw new Error(`transport "${transport}" not supported`);
       }
 
-      const transportObj = transportFn(transportOptions);
+      const pipelines = transportFn(transportOptions);
+      const { representationFilter } = transportOptions;
 
       // Options used by the ABR Manager.
       const adaptiveOptions = {
@@ -772,10 +773,15 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         networkConfig,
         speed$: this._priv_speed$,
         startAt,
-        supplementaryImageTracks,
-        supplementaryTextTracks,
         textTrackOptions,
-        transport: transportObj,
+        transport: {
+          pipelines,
+          options: {
+            representationFilter,
+            supplementaryImageTracks,
+            supplementaryTextTracks,
+          },
+        },
         url,
       })
         .pipe(takeUntil(closeStream$))
