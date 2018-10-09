@@ -65,17 +65,19 @@ export default function launchTestsForContent(
   } = manifestInfos;
 
   const firstPeriodIndex = isLive ? periodsInfos.length - 1 : 0;
-  const videoBitrates =
+  const videoRepresentationsForFirstPeriod =
     periodsInfos[firstPeriodIndex].adaptations.video &&
     periodsInfos[firstPeriodIndex].adaptations.video.length ?
-      periodsInfos[firstPeriodIndex].adaptations.video[0].representations
-        .map(representation => representation.bitrate) : [];
+      periodsInfos[firstPeriodIndex].adaptations.video[0].representations : [];
+  const videoBitrates = videoRepresentationsForFirstPeriod
+    .map(representation => representation.bitrate);
 
-  const audioBitrates =
-    periodsInfos[firstPeriodIndex].adaptations.audio &&
-    periodsInfos[firstPeriodIndex].adaptations.audio.length ?
-      periodsInfos[firstPeriodIndex].adaptations.audio[0].representations
-        .map(representation => representation.bitrate) : [];
+  const audioRepresentationsForFirstPeriod =
+    periodsInfos[firstPeriodIndex].adaptations.video &&
+    periodsInfos[firstPeriodIndex].adaptations.video.length ?
+      periodsInfos[firstPeriodIndex].adaptations.video[0].representations : [];
+  const audioBitrates = audioRepresentationsForFirstPeriod
+    .map(representation => representation.bitrate);
 
   describe("API tests", () => {
     beforeEach(() => {
