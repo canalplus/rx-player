@@ -202,6 +202,7 @@ if the resolution is lower than HD (1920x1080):
 /**
  * @param {Object} representation - The representation object, as defined in
  * the documentation linked bellow [1]
+ * @returns {boolean}
  */
 const customRepresentationFilter = (representation) => {
   if (representation.width != null && representation.height != null) {
