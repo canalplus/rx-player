@@ -32,6 +32,7 @@ import {
 import { ISegment } from "../../../manifest";
 import {
   ISegmentLoaderArguments,
+  ISegmentParserArguments,
   ISegmentTimingInfos,
   ITransportPipelines,
 } from "../../../net/types";
@@ -91,7 +92,9 @@ export default function createSegmentFetcher<T>(
   options : IPipelineLoaderOptions<ISegmentLoaderArguments, T>
 ) : ISegmentFetcher<T> {
   const segmentLoader = createLoader(transport[bufferType], options);
-  const segmentParser = createParser(transport[bufferType]);
+  const segmentParser = createParser<
+    ISegmentParserArguments<unknown>, IParsedSegment<T>
+  >(transport[bufferType]);
   let request$ : Subject<IABRRequest>|undefined;
   let id : string|undefined;
 
@@ -208,7 +211,7 @@ export default function createSegmentFetcher<T>(
            * @param {Object} [init]
            * @returns {Observable}
            */
-          parse(init? : ISegmentTimingInfos) : any {
+          parse(init? : ISegmentTimingInfos) : Observable<IParsedSegment<T>> {
             return segmentParser(objectAssign(
               { response: response.value, init },
               content
