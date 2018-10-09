@@ -73,9 +73,9 @@ export default function launchTestsForContent(
     .map(representation => representation.bitrate);
 
   const audioRepresentationsForFirstPeriod =
-    periodsInfos[firstPeriodIndex].adaptations.video &&
-    periodsInfos[firstPeriodIndex].adaptations.video.length ?
-      periodsInfos[firstPeriodIndex].adaptations.video[0].representations : [];
+    periodsInfos[firstPeriodIndex].adaptations.audio &&
+    periodsInfos[firstPeriodIndex].adaptations.audio.length ?
+      periodsInfos[firstPeriodIndex].adaptations.audio[0].representations : [];
   const audioBitrates = audioRepresentationsForFirstPeriod
     .map(representation => representation.bitrate);
 
