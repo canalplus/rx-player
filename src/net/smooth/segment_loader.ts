@@ -75,7 +75,6 @@ const generateSegmentLoader = (
   adaptation,
   period,
   manifest,
-  init,
 } : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer|null> => {
   if (segment.isInit) {
     if (!segment.privateInfos || segment.privateInfos.smoothInit == null) {
@@ -132,7 +131,6 @@ const generateSegmentLoader = (
 
     const args = {
       adaptation,
-      init,
       manifest,
       period,
       representation,

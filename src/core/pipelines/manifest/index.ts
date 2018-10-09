@@ -21,6 +21,7 @@ import {
 import {
   filter,
   map,
+  mergeMap,
   share,
   tap,
 } from "rxjs/operators";
@@ -33,27 +34,24 @@ import createManifest from "../../../manifest/factory";
 import { ITransportPipelines } from "../../../net";
 import {
   IManifestLoaderArguments,
+  IManifestParserArguments,
   IManifestResult,
 } from "../../../net/types";
-import Pipeline, {
-  IPipelineCache,
-  IPipelineData,
-  IPipelineOptions,
-} from "../core_pipeline";
-
-type IPipelineManifestResult =
-  IPipelineData<IManifestResult> |
-  IPipelineCache<IManifestResult>;
+import createLoader, {
+  IPipelineLoaderOptions,
+  IPipelineLoaderResponse,
+} from "../create_loader";
+import createParser from "../create_parser";
 
 type IPipelineManifestOptions =
-  IPipelineOptions<IManifestLoaderArguments, Document|string>;
+  IPipelineLoaderOptions<IManifestLoaderArguments, Document|string>;
 
 /**
  * Create function allowing to easily fetch and parse the manifest from its URL.
  *
  * @example
  * ```js
- * const manifestPipeline = createManifestPipeline(transport, warning$);
+ * const manifestPipeline = createManifestPipeline(transport, options, warning$);
  * manifestPipeline(manifestURL)
  *  .subscribe(manifest => console.log("Manifest:", manifest));
  * ```
@@ -71,12 +69,22 @@ export default function createManifestPipeline(
   supplementaryTextTracks : ISupplementaryTextTrack[] = [],
   supplementaryImageTracks : ISupplementaryImageTrack[] = []
 ) : (url : string) => Observable<Manifest> {
-  return function fetchManifest(url : string) {
-    const manifest$ = Pipeline<
-      IManifestLoaderArguments, Document|string, IManifestResult
-    >(transport.manifest, pipelineOptions)({ url });
+  const loader = createLoader<
+  IManifestLoaderArguments, Document|string
+  >(transport.manifest, pipelineOptions);
 
-    return manifest$.pipe(
+  const parser = createParser<
+  IManifestParserArguments<Document|string>,
+  IManifestResult
+  >(transport.manifest);
+
+  /**
+   * Fetch and parse the manifest corresponding to the URL given.
+   * @param {string} url - URL of the manifest
+   * @returns {Observable}
+   */
+  return function fetchManifest(url : string) : Observable<Manifest> {
+    return loader({ url }).pipe(
 
       tap((arg) => {
         if (arg.type === "error") {
@@ -84,13 +92,15 @@ export default function createManifestPipeline(
         }
       }),
 
-      filter((arg) : arg is IPipelineManifestResult =>
-        arg.type === "data" || arg.type === "cache"
+      filter((arg) : arg is IPipelineLoaderResponse<Document|string> =>
+        arg.type === "response"
       ),
 
-      map(({ value }) : Manifest => {
+      mergeMap(({ value }) => parser({ response: value, url })),
+
+      map(({ manifest }) : Manifest => {
         return createManifest(
-          value.parsed.manifest,
+          manifest,
           supplementaryTextTracks,
           supplementaryImageTracks,
           warning$
