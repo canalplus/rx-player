@@ -105,6 +105,7 @@ export interface IStreamOptions {
     wantedBufferAhead$ : Observable<number>;
     maxBufferAhead$ : Observable<number>;
     maxBufferBehind$ : Observable<number>;
+    manualBitrateSwitchingMode : "seamless"|"direct";
   };
   clock$ : Observable<IStreamClockTick>;
   keySystems : IKeySystemOption[];

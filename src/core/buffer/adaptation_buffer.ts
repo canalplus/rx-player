@@ -48,7 +48,9 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import ABRManager from "../abr";
+import ABRManager, {
+  IABREstimation,
+} from "../abr";
 import { IPrioritizedSegmentFetcher } from "../pipelines";
 import { QueuedSourceBuffer } from "../source_buffers";
 import createFakeBuffer from "./create_fake_buffer";
@@ -101,8 +103,10 @@ export default function AdaptationBuffer<T>(
   segmentFetcher : IPrioritizedSegmentFetcher<T>,
   wantedBufferAhead$ : Observable<number>,
   content : { manifest : Manifest; period : Period; adaptation : Adaptation },
-  abrManager : ABRManager
+  abrManager : ABRManager,
+  options : { manualBitrateSwitchingMode : "seamless"|"direct" }
 ) : Observable<IAdaptationBufferEvent<T>> {
+  const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
   const abr$ = getABRForAdaptation(adaptation, abrManager, clock$)
     .pipe(shareReplay());
@@ -112,49 +116,41 @@ export default function AdaptationBuffer<T>(
    * @type {Observable}
    */
   const bitrateEstimate$ = abr$.pipe(
-    filter(({ bitrate } : { bitrate? : number }) => bitrate != null),
-    map(({ bitrate } : { bitrate? : number }) =>
-      EVENTS.bitrateEstimationChange(adaptation.type, bitrate)
-    ));
+    filter(({ bitrate }) => bitrate != null),
+    map(({ bitrate }) => EVENTS.bitrateEstimationChange(adaptation.type, bitrate))
+  );
 
   /**
    * Emit the chosen representation each time it changes.
    * @type {Observable}
    */
-  const representation$ : Observable<Representation> = abr$
-    .pipe(map((abr) : Representation|null => abr.representation))
-    .pipe(
-      distinctUntilChanged((a : Representation|null, b : Representation|null) =>
-        !a || !b || (a.bitrate === b.bitrate && a.id === b.id)
-      )
-    ) as Observable<Representation>;
-
-  /**
-   * Emit each times the RepresentationBuffer should be re-initialized:
-   *   - Each time the Representation change
-   *   - Each time the user seek
-   * @type {Observable}
-   */
-  const shouldSwitchRepresentationBuffer$ : Observable<Representation> =
-    representation$.pipe(
-      distinctUntilChanged((oldRepresentation, newRepresentation) => {
-        return oldRepresentation.id === newRepresentation.id;
-      }));
+  const estimateChanges$ = abr$.pipe(
+    distinctUntilChanged((a, b) =>
+      a.manual === b.manual && a.representation.id === b.representation.id
+    )
+  );
 
   /**
    * @type {Observable}
    */
-  const buffer$ = shouldSwitchRepresentationBuffer$.pipe(
-    switchMap((representation) =>
-      observableConcat(
+  const adaptationBuffer$ = estimateChanges$.pipe(
+    switchMap((estimate, i) : Observable<IAdaptationBufferEvent<T>> => {
+      // Manual switch needs an immediate feedback.
+      // To do that properly, we need to reload the stream
+      if (directManualBitrateSwitching && estimate.manual && i !== 0) {
+        return observableOf(EVENTS.needsStreamReload());
+      }
+      const { representation } = estimate;
+      return observableConcat(
         observableOf(
           EVENTS.representationChange(adaptation.type, period, representation)
         ),
         createRepresentationBuffer(representation)
-      )
-    ));
+      );
+    })
+  );
 
-  return observableMerge(buffer$, bitrateEstimate$);
+  return observableMerge(adaptationBuffer$, bitrateEstimate$);
 
   /**
    * Create and returns a new RepresentationBuffer Observable, linked to the
@@ -215,10 +211,7 @@ function getABRForAdaptation(
   adaptation : Adaptation,
   abrManager : ABRManager,
   abrBaseClock$ : Observable<IAdaptationBufferClockTick>
-) : Observable<{
-  bitrate: undefined|number;
-  representation: Representation|null;
-}> {
+) : Observable<IABREstimation> {
   const representations = adaptation.representations;
 
   /**

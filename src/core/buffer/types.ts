@@ -107,6 +107,7 @@ export interface IRepresentationChangeEvent {
 export type IAdaptationBufferEvent<T> =
   IRepresentationBufferEvent<T> |
   IBitrateEstimationChangeEvent |
+  INeedsStreamReloadEvent |
   IRepresentationChangeEvent;
 
 // The currently-downloaded Adaptation changed.

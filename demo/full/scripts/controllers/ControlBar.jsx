@@ -37,7 +37,7 @@ function ControlBar({
 
   return (
     <div className="controls-bar-container">
-      { <Progressbar player={player} /> }
+      <Progressbar player={player} />
       <div className="controls-bar">
         <PlayPauseButton
           className={"control-button"}
