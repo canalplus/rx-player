@@ -190,29 +190,63 @@ const customManifestLoader = (url, callbacks) => {
 The representationFilter is a function that can be included in the
 ``transportOptions`` of the ``loadVideo`` API call.
 
-A representationFilter allows to define a custom representation filter.
+A representationFilter allows you to filter out `Representation`s (i.e. media
+qualities) based on its attributes.
 
-There may be a need for filtering representations, on specific representation
-attributes (that may be related to media properties).
+The representationFilter will be called each time we load a manifest with two
+arguments:
 
-Here is a representation filter that allow video representation to be played
-if the resolution is lower than HD (1920x1080):
+  - representation ``{Representation}``: The concerned ``Representation``.
+    A `Representation` structure's is described [in the Manifest structure
+    documentation](./manifest.md#representation).
+
+  - representationInfos ``{Object}``: Basic informations about this
+    ``Representation``. Contains the following keys:
+
+      - bufferType ``{string}``: The concerned type of buffer. Can be
+        ``"video"``, ``"audio"``, ``"text"`` (for subtitles) or ``"image"``
+        (for thumbnail).
+
+      - language ``{string|undefined}``: The language the ``Representation``
+        is in, as announced by the manifest.
+
+      - normalizedLanguage ``{string|undefined}``: An attempt to translate the
+        language into an ISO 639-3 code.
+        If the translation attempt fails (no corresponding ISO 639-3 language
+        code is found), it will equal the value of ``language``
+
+      - isClosedCaption ``{Boolean|undefined}``: If true, the ``Representation``
+        links to subtitles with added hints for the hard of hearing.
+
+      - isAudioDescription ``{Boolean|undefined}``: If true, the
+        ``Representation`` links to an audio track with added commentary for
+        the visually impaired.
+
+
+This function should then returns ``true`` if the ``Representation`` should be
+kept or ``false`` if it should be removed.
+
+For example, here is a `representationFilter` that removes video
+`Representation`s with a video resolution higher than HD (1920x1080):
 
 ```js
 /**
  * @param {Object} representation - The representation object, as defined in
  * the documentation linked bellow [1]
+ * @param {Object} infos - supplementary informations about the given
+ * representation.
  * @returns {boolean}
  */
-const customRepresentationFilter = (representation) => {
-  if (representation.width != null && representation.height != null) {
-    return (
-      width <= 1920 &&
-      height <= 1080
-    );
+function representationFilter(representation, infos) {
+  if (infos.bufferType === "video") {
+    // If video representation, allows only those for which the height and width
+    // is known to be below our 1920x1080 limit
+    const { width, height } = representation;
+    return width != null && height != null && width <= 1920 && height <= 1080;
   }
-  // Otherwise, allow all non-video adaptation
-  return representation.mimeType ? !representation.mimeType.startsWith("video") : false;
+
+  // Otherwise, allow all non-video representations
+  return true;
 }
 ```
 
