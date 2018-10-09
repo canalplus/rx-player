@@ -113,22 +113,23 @@ export default class Adaptation {
       this.isAudioDescription = args.audioDescription;
     }
 
-    const representationInfos = {
-      bufferType: this.type,
-      language: this.language,
-      normalizedLanguage: this.normalizedLanguage,
-      isClosedCaption: this.isClosedCaption,
-      isAudioDescription: this.isAudioDescription,
-    };
-
     this.representations = argsRepresentations
       .map(representation =>
         new Representation(objectAssign({ rootId: this.id }, representation))
       )
       .sort((a, b) => a.bitrate - b.bitrate)
-      .filter(representation =>
-        !representationFilter || representationFilter(representation, representationInfos)
-      );
+      .filter(representation => {
+        if (representationFilter == null) {
+          return true;
+        }
+        return representationFilter(representation, {
+          bufferType: this.type,
+          language: this.language,
+          normalizedLanguage: this.normalizedLanguage,
+          isClosedCaption: this.isClosedCaption,
+          isAudioDescription: this.isAudioDescription,
+        });
+      });
 
     // for manuallyAdded adaptations (not in the manifest)
     this.manuallyAdded = !!args.manuallyAdded;
