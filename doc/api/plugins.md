@@ -72,7 +72,7 @@ const customSegmentLoader = (infos, callbacks) => {
     if (200 <= xhr.status && xhr.status < 300) {
       const duration = Date.now() - sentTime;
       const size = r.total;
-      const data = r.responseData;
+      const data = xhr.response;
       callbacks.resolve({ duration, size, data });
     } else {
       const err = new Error("didn't work");
@@ -149,7 +149,6 @@ implementation does the same thing and more):
  * it will be called if and when the request is canceled.
  */
 const customManifestLoader = (url, callbacks) => {
-
   const xhr = new XMLHttpRequest();
   const sentTime = Date.now();
 
@@ -157,7 +156,7 @@ const customManifestLoader = (url, callbacks) => {
     if (200 <= xhr.status && xhr.status < 300) {
       const duration = Date.now() - sentTime;
       const size = r.total;
-      const data = r.targget.response;
+      const data = xhr.response;
       callbacks.resolve({ duration, size, data });
     } else {
       const err = new Error("didn't work");
@@ -172,7 +171,7 @@ const customManifestLoader = (url, callbacks) => {
     callbacks.reject(err);
   };
 
-  xhr.open("GET", infos.url);
+  xhr.open("GET", url);
   xhr.responseType = "document";
 
   xhr.send();
