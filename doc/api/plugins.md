@@ -199,6 +199,10 @@ Here is a representation filter that allow video representation to be played
 if the resolution is lower than HD (1920x1080):
 
 ```js
+/**
+ * @param {Object} representation - The representation object, as defined in
+ * the documentation linked bellow [1]
+ */
 const customRepresentationFilter = (representation) => {
   if (representation.width != null && representation.height != null) {
     return (
@@ -210,3 +214,5 @@ const customRepresentationFilter = (representation) => {
   return representation.mimeType ? !representation.mimeType.startsWith("video") : false;
 }
 ```
+
+[1] [Representation structure](./manifest.md#representation)
