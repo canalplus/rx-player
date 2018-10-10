@@ -1118,40 +1118,6 @@ and limitations under the License.
     /* 6 */
     /***/ , 
     /* 6 */
-    /***/ function(module, __webpack_exports__, __webpack_require__) {
-        "use strict";
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-        /**
- * Initial features object, with no feature activated by default.
- * @type {Object}
- */        
-        /* harmony default export */ __webpack_exports__.a = {
-            transports: {},
-            imageBuffer: null,
-            imageParser: null,
-            nativeTextTracksBuffer: null,
-            nativeTextTracksParsers: {},
-            htmlTextTracksBuffer: null,
-            htmlTextTracksParsers: {},
-            emeManager: null,
-            directfile: null
-        };
-    }, 
-    /* 7 */
     /***/ function(module, exports, __webpack_require__) {
         "use strict";
         /*
@@ -1197,7 +1163,149 @@ object-assign
             return to;
         };
     }, 
+    /* 7 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Subscriber.js
+                var Subscriber = __webpack_require__(9);
+        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/canReportError.js
+        /** PURE_IMPORTS_START _Subscriber PURE_IMPORTS_END */        function canReportError(observer) {
+            for (;observer; ) {
+                var _a = observer, closed_1 = _a.closed, destination = _a.destination, isStopped = _a.isStopped;
+                if (closed_1 || isStopped) return !1;
+                observer = destination && destination instanceof Subscriber.a ? destination : null;
+            }
+            return !0;
+        }
+        //# sourceMappingURL=canReportError.js.map
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/symbol/rxSubscriber.js
+                var rxSubscriber = __webpack_require__(58), Observer = __webpack_require__(63);
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observer.js
+                // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/toSubscriber.js
+        /** PURE_IMPORTS_START _Subscriber,_symbol_rxSubscriber,_Observer PURE_IMPORTS_END */
+        function toSubscriber(nextOrObserver, error, complete) {
+            if (nextOrObserver) {
+                if (nextOrObserver instanceof Subscriber.a) return nextOrObserver;
+                if (nextOrObserver[rxSubscriber.a]) return nextOrObserver[rxSubscriber.a]();
+            }
+            return nextOrObserver || error || complete ? new Subscriber.a(nextOrObserver, error, complete) : new Subscriber.a(Observer.a);
+        }
+        //# sourceMappingURL=toSubscriber.js.map
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/symbol/observable.js
+                var observable = __webpack_require__(44), noop = __webpack_require__(39);
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/noop.js
+                function pipeFromArray(fns) {
+            return fns ? 1 === fns.length ? fns[0] : function piped(input) {
+                return fns.reduce(function(prev, fn) {
+                    return fn(prev);
+                }, input);
+            } : noop.a;
+        }
+        //# sourceMappingURL=pipe.js.map
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/config.js
+                var config = __webpack_require__(37);
+        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return Observable_Observable;
+        });
+        /** PURE_IMPORTS_START _util_canReportError,_util_toSubscriber,_internal_symbol_observable,_util_pipe,_config PURE_IMPORTS_END */
+        var Observable_Observable = /* */ function() {
+            function Observable(subscribe) {
+                this._isScalar = !1, subscribe && (this._subscribe = subscribe);
+            }
+            return Observable.prototype.lift = function(operator) {
+                var observable = new Observable();
+                return observable.source = this, observable.operator = operator, observable;
+            }, Observable.prototype.subscribe = function(observerOrNext, error, complete) {
+                var operator = this.operator, sink = toSubscriber(observerOrNext, error, complete);
+                if (operator ? operator.call(sink, this.source) : sink.add(this.source || config.a.useDeprecatedSynchronousErrorHandling && !sink.syncErrorThrowable ? this._subscribe(sink) : this._trySubscribe(sink)), 
+                config.a.useDeprecatedSynchronousErrorHandling && sink.syncErrorThrowable && (sink.syncErrorThrowable = !1, 
+                sink.syncErrorThrown)) throw sink.syncErrorValue;
+                return sink;
+            }, Observable.prototype._trySubscribe = function(sink) {
+                try {
+                    return this._subscribe(sink);
+                } catch (err) {
+                    config.a.useDeprecatedSynchronousErrorHandling && (sink.syncErrorThrown = !0, sink.syncErrorValue = err), 
+                    canReportError(sink) ? sink.error(err) : console.warn(err);
+                }
+            }, Observable.prototype.forEach = function(next, promiseCtor) {
+                var _this = this;
+                return new (promiseCtor = getPromiseCtor(promiseCtor))(function(resolve, reject) {
+                    var subscription;
+                    subscription = _this.subscribe(function(value) {
+                        try {
+                            next(value);
+                        } catch (err) {
+                            reject(err), subscription && subscription.unsubscribe();
+                        }
+                    }, reject, resolve);
+                });
+            }, Observable.prototype._subscribe = function(subscriber) {
+                var source = this.source;
+                return source && source.subscribe(subscriber);
+            }, Observable.prototype[observable.a] = function() {
+                return this;
+            }, Observable.prototype.pipe = function() {
+                for (var operations = [], _i = 0; _i < arguments.length; _i++) operations[_i] = arguments[_i];
+                return 0 === operations.length ? this : pipeFromArray(operations)(this);
+            }, Observable.prototype.toPromise = function(promiseCtor) {
+                var _this = this;
+                return new (promiseCtor = getPromiseCtor(promiseCtor))(function(resolve, reject) {
+                    var value;
+                    _this.subscribe(function(x) {
+                        return value = x;
+                    }, function(err) {
+                        return reject(err);
+                    }, function() {
+                        return resolve(value);
+                    });
+                });
+            }, Observable.create = function(subscribe) {
+                return new Observable(subscribe);
+            }, Observable;
+        }();
+        function getPromiseCtor(promiseCtor) {
+            if (promiseCtor || (promiseCtor = config.a.Promise || Promise), !promiseCtor) throw new Error("no Promise impl found");
+            return promiseCtor;
+        }
+        //# sourceMappingURL=Observable.js.map
+        /***/    }, 
     /* 8 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        /**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+        /**
+ * Initial features object, with no feature activated by default.
+ * @type {Object}
+ */        
+        /* harmony default export */ __webpack_exports__.a = {
+            transports: {},
+            imageBuffer: null,
+            imageParser: null,
+            nativeTextTracksBuffer: null,
+            nativeTextTracksParsers: {},
+            htmlTextTracksBuffer: null,
+            htmlTextTracksParsers: {},
+            emeManager: null,
+            directfile: null
+        };
+    }, 
+    /* 9 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
@@ -1317,380 +1425,7 @@ object-assign
             }, SafeSubscriber;
         }(Subscriber);
         /* harmony import */    }, 
-    /* 9 */
-    /***/ function(module, __webpack_exports__, __webpack_require__) {
-        "use strict";
-        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
-            return addTextTrack;
-        }), 
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() {
-            return canPlay;
-        }), 
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() {
-            return clearElementSrc;
-        }), 
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() {
-            return hasEMEAPIs;
-        }), 
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() {
-            return hasLoadedMetadata;
-        }), 
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "f", function() {
-            return isCodecSupported;
-        }), 
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "g", function() {
-            return isOffline;
-        }), 
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "h", function() {
-            return isPlaybackStuck;
-        }), 
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "i", function() {
-            return isVTTCue;
-        }), 
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "j", function() {
-            return makeCue;
-        }), 
-        /* unused harmony export onSourceOpen$ */
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "k", function() {
-            return play$;
-        }), 
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "l", function() {
-            return setElementSrc$;
-        }), 
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "m", function() {
-            return shouldRenewMediaKeys;
-        }), 
-        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "n", function() {
-            return shouldUnsetMediaKeys;
-        });
-        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(77), rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(137), rxjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(10), rxjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(135), rxjs_operators__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(144), rxjs_operators__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(138), _log__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(0), _utils_castToObservable__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(18), _utils_eventemitter__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(42), _utils_rx_tryCatch__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(49), _constants__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(26), _events__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(12), _eme__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(132);
-        /* harmony import */        
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-        /**
- * Returns true if the given codec is supported by the browser's MediaSource
- * implementation.
- * @returns {Boolean}
- */
-        function isCodecSupported(codec) {
-            return !!_constants__WEBPACK_IMPORTED_MODULE_10__.c && (
-            /* tslint:disable no-unbound-method */
-            "function" != typeof _constants__WEBPACK_IMPORTED_MODULE_10__.c.isTypeSupported || _constants__WEBPACK_IMPORTED_MODULE_10__.c.isTypeSupported(codec));
-        }
-        function isVTTCue(cue) {
-            return "function" == typeof window.VTTCue && cue instanceof window.VTTCue;
-        }
-        /**
- * Returns true if the browser has the minimum needed EME APIs to decrypt a
- * content.
- * @returns {Boolean}
- */        function hasEMEAPIs() {
-            return "function" == typeof _eme__WEBPACK_IMPORTED_MODULE_12__.b;
-        }
-        /**
- * Returns true if the current target require the media keys to be renewed on
- * each content.
- * @returns {Boolean}
- */        function shouldRenewMediaKeys() {
-            return _constants__WEBPACK_IMPORTED_MODULE_10__.g;
-        }
-        /**
- * Returns true if the mediakeys associated to a media element should be
- * unset once the content is stopped.
- * Depends on the target.
- * @returns {Boolean}
- */        function shouldUnsetMediaKeys() {
-            return _constants__WEBPACK_IMPORTED_MODULE_10__.g;
-        }
-        /**
- * Wait for the MediaSource's sourceopen event and emit. Emit immediatelly if
- * already received.
- * @param {MediaSource} mediaSource
- * @returns {Observable}
- */        
-        /**
- * Returns an observable emitting a single time, as soon as a seek is possible
- * (the metatada are loaded).
- * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
- */
-        function hasLoadedMetadata(mediaElement) {
-            return mediaElement.readyState >= _constants__WEBPACK_IMPORTED_MODULE_10__.d.HAVE_METADATA ? Object(rxjs__WEBPACK_IMPORTED_MODULE_0__.a)(void 0) : _events__WEBPACK_IMPORTED_MODULE_11__.i(mediaElement).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__.a)(1), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__.a)(void 0));
-        }
-        /**
- * Returns ane observable emitting a single time, as soon as a play is possible.
- * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
- */        function canPlay(mediaElement) {
-            return mediaElement.readyState >= _constants__WEBPACK_IMPORTED_MODULE_10__.d.HAVE_ENOUGH_DATA ? Object(rxjs__WEBPACK_IMPORTED_MODULE_0__.a)(void 0) : Object(rxjs__WEBPACK_IMPORTED_MODULE_1__.a)(mediaElement, "canplay").pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__.a)(1), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__.a)(void 0));
-        }
- // old WebKit SourceBuffer implementation,
-        // where a synchronous append is used instead of appendBuffer
-                if (window.WebKitSourceBuffer && !window.WebKitSourceBuffer.prototype.addEventListener) {
-            var sourceBufferWebkitProto = window.WebKitSourceBuffer.prototype;
-            for (var fnName in _utils_eventemitter__WEBPACK_IMPORTED_MODULE_8__.a.prototype) _utils_eventemitter__WEBPACK_IMPORTED_MODULE_8__.a.prototype.hasOwnProperty(fnName) && (sourceBufferWebkitProto[fnName] = _utils_eventemitter__WEBPACK_IMPORTED_MODULE_8__.a.prototype[fnName]);
-            sourceBufferWebkitProto._listeners = [], sourceBufferWebkitProto.__emitUpdate = function(eventName, val) {
-                var _this = this;
-                setTimeout(function() {
-                    /* tslint:disable no-invalid-this */
-                    _this.trigger(eventName, val), _this.updating = !1, _this.trigger("updateend");
-                }, 0);
-            }, sourceBufferWebkitProto.appendBuffer = function(data) {
-                /* tslint:disable no-invalid-this */
-                if (this.updating) throw new Error("updating");
-                this.trigger("updatestart"), this.updating = !0;
-                try {
-                    this.append(data);
-                } catch (error) {
-                    return void this.__emitUpdate("error", error);
-                }
-                this.__emitUpdate("update");
-            };
-        }
-        /**
- * Add text track to the given media element.
- * Returns an object with the following properties:
- *   - track {TextTrack}: the added text track
- *   - trackElement {HTMLElement|undefined}: the added <track> element.
- *     undefined if no trackElement was added.
- * @param {HTMLMediaElement} mediaElement
- * @param {Boolean} hidden
- * @returns {Object}
- */        function addTextTrack(mediaElement, hidden) {
-            var track, trackElement;
-            if (_constants__WEBPACK_IMPORTED_MODULE_10__.g) {
-                var tracksLength = mediaElement.textTracks.length;
-                (track = 0 < tracksLength ? mediaElement.textTracks[tracksLength - 1] : mediaElement.addTextTrack("subtitles")).mode = hidden ? track.HIDDEN : track.SHOWING;
-            } else 
-            // there is no removeTextTrack method... so we need to reuse old
-            // text-tracks objects and clean all its pending cues
-            trackElement = document.createElement("track"), mediaElement.appendChild(trackElement), 
-            track = trackElement.track, trackElement.kind = "subtitles", track.mode = hidden ? "hidden" : "showing";
-            return {
-                track: track,
-                trackElement: trackElement
-            };
-        }
-        /**
- * firefox fix: sometimes the stream can be stalled, even if we are in a
- * buffer.
- *
- * TODO This seems to be about an old Firefox version. Delete it?
- * @param {number} time
- * @param {Object|null} currentRange
- * @param {string} state
- * @param {Boolean} isStalled
- * @returns {Boolean}
- */        function isPlaybackStuck(time, currentRange, state, isStalled) {
-            // freeze threshold in seconds
-            return _constants__WEBPACK_IMPORTED_MODULE_10__.f && isStalled && "timeupdate" === state && !!currentRange && 10 < currentRange.end - time;
-        }
-        /**
- * Clear element's src attribute.
- *
- * On IE11, element.src = "" is not sufficient as it
- * does not clear properly the current MediaKey Session.
- * Microsoft recommended to use element.removeAttr("src").
- * @param {HTMLMediaElement} element
- */        function clearElementSrc(element) {
-            element.src = "", element.removeAttribute("src");
-        }
-        /**
- * Set an URL to the element's src.
- * Emit ``undefined`` when done.
- * Unlink src on unsubscription.
- *
- * @param {HTMLMediaElement} mediaElement
- * @param {string} url
- * @returns {Observable}
- */        function setElementSrc$(mediaElement, url) {
-            return rxjs__WEBPACK_IMPORTED_MODULE_2__.a.create(function(observer) {
-                return _log__WEBPACK_IMPORTED_MODULE_6__.a.info("Setting URL to Element", url, mediaElement), 
-                mediaElement.src = url, observer.next(void 0), function() {
-                    clearElementSrc(mediaElement);
-                };
-            });
-        }
-        /**
- * Some browsers have a builtin API to know if it's connected at least to a
- * LAN network, at most to the internet.
- *
- * /!\ This feature can be dangerous as you can both have false positives and
- * false negatives.
- *
- * False positives:
- *   - you can still play local contents (on localhost) if isOffline == true
- *   - on some browsers isOffline might be true even if we're connected to a LAN
- *     or a router (it would mean we're just not able to connect to the
- *     Internet). So we can eventually play LAN contents if isOffline == true
- *
- * False negatives:
- *   - in some cases, we even might have isOffline at false when we do not have
- *     any connection:
- *       - in browsers that do not support the feature
- *       - in browsers running in some virtualization softwares where the
- *         network adapters are always connected.
- *
- * Use with these cases in mind.
- * @returns {Boolean}
- */        function isOffline() {
-            /* tslint:disable no-boolean-literal-compare */
-            return !1 === navigator.onLine;
-            /* tslint:enable no-boolean-literal-compare */        }
-        /**
- * Creates a cue using the best platform-specific interface available.
- *
- * @param {Number} startTime
- * @param {Number} endTime
- * @param {string} payload
- * @returns {VTTCue|TextTrackCue|null} Text track cue or null if the parameters
- * were invalid.
- */        function makeCue(startTime, endTime, payload) {
-            if (!_constants__WEBPACK_IMPORTED_MODULE_10__.e) throw new Error("VTT cues not supported in your target");
-            return endTime <= startTime ? (
-            // IE/Edge will throw in this case.
-            // See issue #501
-            _log__WEBPACK_IMPORTED_MODULE_6__.a.warn("Invalid cue times: " + startTime + " - " + endTime), 
-            null) : new _constants__WEBPACK_IMPORTED_MODULE_10__.e(startTime, endTime, payload);
-        }
-        /**
- * Call play on the media element on subscription and return the response as an
- * observable.
- * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
- */        function play$(mediaElement) {
-            return Object(rxjs__WEBPACK_IMPORTED_MODULE_3__.a)(function() {
-                // mediaElement.play is not always a Promise. In the improbable case it
-                // throws, I prefer still to catch to return the error wrapped in an
-                // Observable
-                return Object(_utils_rx_tryCatch__WEBPACK_IMPORTED_MODULE_9__.a)(function() {
-                    return Object(_utils_castToObservable__WEBPACK_IMPORTED_MODULE_7__.a)(mediaElement.play()).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__.a)(void 0));
-                });
-            });
-        }
-        /***/    }, 
     /* 10 */
-    /***/ function(module, __webpack_exports__, __webpack_require__) {
-        "use strict";
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Subscriber.js
-                var Subscriber = __webpack_require__(8);
-        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/canReportError.js
-        /** PURE_IMPORTS_START _Subscriber PURE_IMPORTS_END */        function canReportError(observer) {
-            for (;observer; ) {
-                var _a = observer, closed_1 = _a.closed, destination = _a.destination, isStopped = _a.isStopped;
-                if (closed_1 || isStopped) return !1;
-                observer = destination && destination instanceof Subscriber.a ? destination : null;
-            }
-            return !0;
-        }
-        //# sourceMappingURL=canReportError.js.map
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/symbol/rxSubscriber.js
-                var rxSubscriber = __webpack_require__(58), Observer = __webpack_require__(63);
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observer.js
-                // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/toSubscriber.js
-        /** PURE_IMPORTS_START _Subscriber,_symbol_rxSubscriber,_Observer PURE_IMPORTS_END */
-        function toSubscriber(nextOrObserver, error, complete) {
-            if (nextOrObserver) {
-                if (nextOrObserver instanceof Subscriber.a) return nextOrObserver;
-                if (nextOrObserver[rxSubscriber.a]) return nextOrObserver[rxSubscriber.a]();
-            }
-            return nextOrObserver || error || complete ? new Subscriber.a(nextOrObserver, error, complete) : new Subscriber.a(Observer.a);
-        }
-        //# sourceMappingURL=toSubscriber.js.map
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/symbol/observable.js
-                var observable = __webpack_require__(44), noop = __webpack_require__(39);
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/noop.js
-                function pipeFromArray(fns) {
-            return fns ? 1 === fns.length ? fns[0] : function piped(input) {
-                return fns.reduce(function(prev, fn) {
-                    return fn(prev);
-                }, input);
-            } : noop.a;
-        }
-        //# sourceMappingURL=pipe.js.map
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/config.js
-                var config = __webpack_require__(37);
-        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js
-        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
-            return Observable_Observable;
-        });
-        /** PURE_IMPORTS_START _util_canReportError,_util_toSubscriber,_internal_symbol_observable,_util_pipe,_config PURE_IMPORTS_END */
-        var Observable_Observable = /* */ function() {
-            function Observable(subscribe) {
-                this._isScalar = !1, subscribe && (this._subscribe = subscribe);
-            }
-            return Observable.prototype.lift = function(operator) {
-                var observable = new Observable();
-                return observable.source = this, observable.operator = operator, observable;
-            }, Observable.prototype.subscribe = function(observerOrNext, error, complete) {
-                var operator = this.operator, sink = toSubscriber(observerOrNext, error, complete);
-                if (operator ? operator.call(sink, this.source) : sink.add(this.source || config.a.useDeprecatedSynchronousErrorHandling && !sink.syncErrorThrowable ? this._subscribe(sink) : this._trySubscribe(sink)), 
-                config.a.useDeprecatedSynchronousErrorHandling && sink.syncErrorThrowable && (sink.syncErrorThrowable = !1, 
-                sink.syncErrorThrown)) throw sink.syncErrorValue;
-                return sink;
-            }, Observable.prototype._trySubscribe = function(sink) {
-                try {
-                    return this._subscribe(sink);
-                } catch (err) {
-                    config.a.useDeprecatedSynchronousErrorHandling && (sink.syncErrorThrown = !0, sink.syncErrorValue = err), 
-                    canReportError(sink) ? sink.error(err) : console.warn(err);
-                }
-            }, Observable.prototype.forEach = function(next, promiseCtor) {
-                var _this = this;
-                return new (promiseCtor = getPromiseCtor(promiseCtor))(function(resolve, reject) {
-                    var subscription;
-                    subscription = _this.subscribe(function(value) {
-                        try {
-                            next(value);
-                        } catch (err) {
-                            reject(err), subscription && subscription.unsubscribe();
-                        }
-                    }, reject, resolve);
-                });
-            }, Observable.prototype._subscribe = function(subscriber) {
-                var source = this.source;
-                return source && source.subscribe(subscriber);
-            }, Observable.prototype[observable.a] = function() {
-                return this;
-            }, Observable.prototype.pipe = function() {
-                for (var operations = [], _i = 0; _i < arguments.length; _i++) operations[_i] = arguments[_i];
-                return 0 === operations.length ? this : pipeFromArray(operations)(this);
-            }, Observable.prototype.toPromise = function(promiseCtor) {
-                var _this = this;
-                return new (promiseCtor = getPromiseCtor(promiseCtor))(function(resolve, reject) {
-                    var value;
-                    _this.subscribe(function(x) {
-                        return value = x;
-                    }, function(err) {
-                        return reject(err);
-                    }, function() {
-                        return resolve(value);
-                    });
-                });
-            }, Observable.create = function(subscribe) {
-                return new Observable(subscribe);
-            }, Observable;
-        }();
-        function getPromiseCtor(promiseCtor) {
-            if (promiseCtor || (promiseCtor = config.a.Promise || Promise), !promiseCtor) throw new Error("no Promise impl found");
-            return promiseCtor;
-        }
-        //# sourceMappingURL=Observable.js.map
-        /***/    }, 
-    /* 11 */
     /***/ function(module, exports, __webpack_require__) {
         "use strict";
         module.exports = function find(array, predicate, context) {
@@ -1701,15 +1436,15 @@ object-assign
             for (i = 0; i < length; i++) if (predicate.call(context, array[i], i, array)) return array[i];
         };
     }, 
-    /* 12 */
+    /* 11 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/fromEvent.js
-                var fromEvent = __webpack_require__(137), Observable = __webpack_require__(10), noop = __webpack_require__(39), NEVER = /* */ new Observable.a(noop.a);
+                var fromEvent = __webpack_require__(137), Observable = __webpack_require__(7), noop = __webpack_require__(39), NEVER = /* */ new Observable.a(noop.a);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js + 3 modules
                 //# sourceMappingURL=never.js.map
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/merge.js
-        var merge = __webpack_require__(136), interval = __webpack_require__(141), map = __webpack_require__(55), mapTo = __webpack_require__(138), filter = __webpack_require__(139), tslib_es6 = __webpack_require__(3), Subscriber = __webpack_require__(8), scheduler_async = __webpack_require__(41);
+        var merge = __webpack_require__(136), interval = __webpack_require__(141), map = __webpack_require__(55), mapTo = __webpack_require__(138), filter = __webpack_require__(139), tslib_es6 = __webpack_require__(3), Subscriber = __webpack_require__(9), scheduler_async = __webpack_require__(41);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/interval.js
                 // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/operators/debounceTime.js
         /** PURE_IMPORTS_START tslib,_Subscriber,_scheduler_async PURE_IMPORTS_END */
@@ -1928,6 +1663,271 @@ object-assign
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */    }, 
+    /* 12 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return addTextTrack;
+        }), 
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() {
+            return canPlay;
+        }), 
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() {
+            return clearElementSrc;
+        }), 
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() {
+            return hasEMEAPIs;
+        }), 
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() {
+            return hasLoadedMetadata;
+        }), 
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "f", function() {
+            return isCodecSupported;
+        }), 
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "g", function() {
+            return isOffline;
+        }), 
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "h", function() {
+            return isPlaybackStuck;
+        }), 
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "i", function() {
+            return isVTTCue;
+        }), 
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "j", function() {
+            return makeCue;
+        }), 
+        /* unused harmony export onSourceOpen$ */
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "k", function() {
+            return play$;
+        }), 
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "l", function() {
+            return setElementSrc$;
+        }), 
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "m", function() {
+            return shouldRenewMediaKeys;
+        }), 
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "n", function() {
+            return shouldUnsetMediaKeys;
+        });
+        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(77), rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(137), rxjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7), rxjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(135), rxjs_operators__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(144), rxjs_operators__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(138), _log__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(0), _utils_castToObservable__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(18), _utils_eventemitter__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(42), _utils_rx_tryCatch__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(49), _constants__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(26), _events__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(11), _eme__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(132);
+        /* harmony import */        
+        /**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+        /**
+ * Returns true if the given codec is supported by the browser's MediaSource
+ * implementation.
+ * @returns {Boolean}
+ */
+        function isCodecSupported(codec) {
+            return !!_constants__WEBPACK_IMPORTED_MODULE_10__.c && (
+            /* tslint:disable no-unbound-method */
+            "function" != typeof _constants__WEBPACK_IMPORTED_MODULE_10__.c.isTypeSupported || _constants__WEBPACK_IMPORTED_MODULE_10__.c.isTypeSupported(codec));
+        }
+        function isVTTCue(cue) {
+            return "function" == typeof window.VTTCue && cue instanceof window.VTTCue;
+        }
+        /**
+ * Returns true if the browser has the minimum needed EME APIs to decrypt a
+ * content.
+ * @returns {Boolean}
+ */        function hasEMEAPIs() {
+            return "function" == typeof _eme__WEBPACK_IMPORTED_MODULE_12__.b;
+        }
+        /**
+ * Returns true if the current target require the media keys to be renewed on
+ * each content.
+ * @returns {Boolean}
+ */        function shouldRenewMediaKeys() {
+            return _constants__WEBPACK_IMPORTED_MODULE_10__.g;
+        }
+        /**
+ * Returns true if the mediakeys associated to a media element should be
+ * unset once the content is stopped.
+ * Depends on the target.
+ * @returns {Boolean}
+ */        function shouldUnsetMediaKeys() {
+            return _constants__WEBPACK_IMPORTED_MODULE_10__.g;
+        }
+        /**
+ * Wait for the MediaSource's sourceopen event and emit. Emit immediatelly if
+ * already received.
+ * @param {MediaSource} mediaSource
+ * @returns {Observable}
+ */        
+        /**
+ * Returns an observable emitting a single time, as soon as a seek is possible
+ * (the metatada are loaded).
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
+        function hasLoadedMetadata(mediaElement) {
+            return mediaElement.readyState >= _constants__WEBPACK_IMPORTED_MODULE_10__.d.HAVE_METADATA ? Object(rxjs__WEBPACK_IMPORTED_MODULE_0__.a)(void 0) : _events__WEBPACK_IMPORTED_MODULE_11__.i(mediaElement).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__.a)(1), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__.a)(void 0));
+        }
+        /**
+ * Returns ane observable emitting a single time, as soon as a play is possible.
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */        function canPlay(mediaElement) {
+            return mediaElement.readyState >= _constants__WEBPACK_IMPORTED_MODULE_10__.d.HAVE_ENOUGH_DATA ? Object(rxjs__WEBPACK_IMPORTED_MODULE_0__.a)(void 0) : Object(rxjs__WEBPACK_IMPORTED_MODULE_1__.a)(mediaElement, "canplay").pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_4__.a)(1), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__.a)(void 0));
+        }
+ // old WebKit SourceBuffer implementation,
+        // where a synchronous append is used instead of appendBuffer
+                if (window.WebKitSourceBuffer && !window.WebKitSourceBuffer.prototype.addEventListener) {
+            var sourceBufferWebkitProto = window.WebKitSourceBuffer.prototype;
+            for (var fnName in _utils_eventemitter__WEBPACK_IMPORTED_MODULE_8__.a.prototype) _utils_eventemitter__WEBPACK_IMPORTED_MODULE_8__.a.prototype.hasOwnProperty(fnName) && (sourceBufferWebkitProto[fnName] = _utils_eventemitter__WEBPACK_IMPORTED_MODULE_8__.a.prototype[fnName]);
+            sourceBufferWebkitProto._listeners = [], sourceBufferWebkitProto.__emitUpdate = function(eventName, val) {
+                var _this = this;
+                setTimeout(function() {
+                    /* tslint:disable no-invalid-this */
+                    _this.trigger(eventName, val), _this.updating = !1, _this.trigger("updateend");
+                }, 0);
+            }, sourceBufferWebkitProto.appendBuffer = function(data) {
+                /* tslint:disable no-invalid-this */
+                if (this.updating) throw new Error("updating");
+                this.trigger("updatestart"), this.updating = !0;
+                try {
+                    this.append(data);
+                } catch (error) {
+                    return void this.__emitUpdate("error", error);
+                }
+                this.__emitUpdate("update");
+            };
+        }
+        /**
+ * Add text track to the given media element.
+ * Returns an object with the following properties:
+ *   - track {TextTrack}: the added text track
+ *   - trackElement {HTMLElement|undefined}: the added <track> element.
+ *     undefined if no trackElement was added.
+ * @param {HTMLMediaElement} mediaElement
+ * @param {Boolean} hidden
+ * @returns {Object}
+ */        function addTextTrack(mediaElement, hidden) {
+            var track, trackElement;
+            if (_constants__WEBPACK_IMPORTED_MODULE_10__.g) {
+                var tracksLength = mediaElement.textTracks.length;
+                (track = 0 < tracksLength ? mediaElement.textTracks[tracksLength - 1] : mediaElement.addTextTrack("subtitles")).mode = hidden ? track.HIDDEN : track.SHOWING;
+            } else 
+            // there is no removeTextTrack method... so we need to reuse old
+            // text-tracks objects and clean all its pending cues
+            trackElement = document.createElement("track"), mediaElement.appendChild(trackElement), 
+            track = trackElement.track, trackElement.kind = "subtitles", track.mode = hidden ? "hidden" : "showing";
+            return {
+                track: track,
+                trackElement: trackElement
+            };
+        }
+        /**
+ * firefox fix: sometimes the stream can be stalled, even if we are in a
+ * buffer.
+ *
+ * TODO This seems to be about an old Firefox version. Delete it?
+ * @param {number} time
+ * @param {Object|null} currentRange
+ * @param {string} state
+ * @param {Boolean} isStalled
+ * @returns {Boolean}
+ */        function isPlaybackStuck(time, currentRange, state, isStalled) {
+            // freeze threshold in seconds
+            return _constants__WEBPACK_IMPORTED_MODULE_10__.f && isStalled && "timeupdate" === state && !!currentRange && 10 < currentRange.end - time;
+        }
+        /**
+ * Clear element's src attribute.
+ *
+ * On IE11, element.src = "" is not sufficient as it
+ * does not clear properly the current MediaKey Session.
+ * Microsoft recommended to use element.removeAttr("src").
+ * @param {HTMLMediaElement} element
+ */        function clearElementSrc(element) {
+            element.src = "", element.removeAttribute("src");
+        }
+        /**
+ * Set an URL to the element's src.
+ * Emit ``undefined`` when done.
+ * Unlink src on unsubscription.
+ *
+ * @param {HTMLMediaElement} mediaElement
+ * @param {string} url
+ * @returns {Observable}
+ */        function setElementSrc$(mediaElement, url) {
+            return rxjs__WEBPACK_IMPORTED_MODULE_2__.a.create(function(observer) {
+                return _log__WEBPACK_IMPORTED_MODULE_6__.a.info("Setting URL to Element", url, mediaElement), 
+                mediaElement.src = url, observer.next(void 0), function() {
+                    clearElementSrc(mediaElement);
+                };
+            });
+        }
+        /**
+ * Some browsers have a builtin API to know if it's connected at least to a
+ * LAN network, at most to the internet.
+ *
+ * /!\ This feature can be dangerous as you can both have false positives and
+ * false negatives.
+ *
+ * False positives:
+ *   - you can still play local contents (on localhost) if isOffline == true
+ *   - on some browsers isOffline might be true even if we're connected to a LAN
+ *     or a router (it would mean we're just not able to connect to the
+ *     Internet). So we can eventually play LAN contents if isOffline == true
+ *
+ * False negatives:
+ *   - in some cases, we even might have isOffline at false when we do not have
+ *     any connection:
+ *       - in browsers that do not support the feature
+ *       - in browsers running in some virtualization softwares where the
+ *         network adapters are always connected.
+ *
+ * Use with these cases in mind.
+ * @returns {Boolean}
+ */        function isOffline() {
+            /* tslint:disable no-boolean-literal-compare */
+            return !1 === navigator.onLine;
+            /* tslint:enable no-boolean-literal-compare */        }
+        /**
+ * Creates a cue using the best platform-specific interface available.
+ *
+ * @param {Number} startTime
+ * @param {Number} endTime
+ * @param {string} payload
+ * @returns {VTTCue|TextTrackCue|null} Text track cue or null if the parameters
+ * were invalid.
+ */        function makeCue(startTime, endTime, payload) {
+            if (!_constants__WEBPACK_IMPORTED_MODULE_10__.e) throw new Error("VTT cues not supported in your target");
+            return endTime <= startTime ? (
+            // IE/Edge will throw in this case.
+            // See issue #501
+            _log__WEBPACK_IMPORTED_MODULE_6__.a.warn("Invalid cue times: " + startTime + " - " + endTime), 
+            null) : new _constants__WEBPACK_IMPORTED_MODULE_10__.e(startTime, endTime, payload);
+        }
+        /**
+ * Call play on the media element on subscription and return the response as an
+ * observable.
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */        function play$(mediaElement) {
+            return Object(rxjs__WEBPACK_IMPORTED_MODULE_3__.a)(function() {
+                // mediaElement.play is not always a Promise. In the improbable case it
+                // throws, I prefer still to catch to return the error wrapped in an
+                // Observable
+                return Object(_utils_rx_tryCatch__WEBPACK_IMPORTED_MODULE_9__.a)(function() {
+                    return Object(_utils_castToObservable__WEBPACK_IMPORTED_MODULE_7__.a)(mediaElement.play()).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__.a)(void 0));
+                });
+            });
+        }
+        /***/    }, 
     /* 13 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
@@ -2598,7 +2598,7 @@ object-assign
     /* 18 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* harmony import */        var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10), rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(34), rxjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(77);
+        /* harmony import */        var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7), rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(34), rxjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(77);
         /* harmony import */        
         /* harmony default export */ __webpack_exports__.a = 
         /**
@@ -2965,7 +2965,7 @@ object-assign
             }, OuterSubscriber.prototype.notifyComplete = function(innerSub) {
                 this.destination.complete();
             }, OuterSubscriber;
-        }(__webpack_require__(8).a);
+        }(__webpack_require__(9).a);
         /* harmony import */    }, 
     /* 26 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
@@ -3134,7 +3134,7 @@ object-assign
     /* 28 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* harmony import */        var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10), _config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2), _errors__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(19), _errors__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(84), DEFAULT_REQUEST_TIMEOUT = _config__WEBPACK_IMPORTED_MODULE_1__.a.DEFAULT_REQUEST_TIMEOUT;
+        /* harmony import */        var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7), _config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2), _errors__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(19), _errors__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(84), DEFAULT_REQUEST_TIMEOUT = _config__WEBPACK_IMPORTED_MODULE_1__.a.DEFAULT_REQUEST_TIMEOUT;
         /* harmony import */        
         /**
  * @param {string} data
@@ -3221,7 +3221,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return fromArray;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10), _Subscription__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(15), _util_subscribeToArray__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(73);
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7), _Subscription__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(15), _util_subscribeToArray__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(73);
         /* harmony import */        
         /** PURE_IMPORTS_START _Observable,_Subscription,_util_subscribeToArray PURE_IMPORTS_END */
         function fromArray(input, scheduler) {
@@ -3244,7 +3244,7 @@ object-assign
             return empty;
         });
         /* unused harmony export emptyScheduled */
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10), EMPTY = /* */ new _Observable__WEBPACK_IMPORTED_MODULE_0__.a(function(subscriber) {
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7), EMPTY = /* */ new _Observable__WEBPACK_IMPORTED_MODULE_0__.a(function(subscriber) {
             return subscriber.complete();
         });
         /** PURE_IMPORTS_START _Observable PURE_IMPORTS_END */        function empty(scheduler) {
@@ -3484,7 +3484,7 @@ object-assign
             return Subject;
         });
         /* unused harmony export AnonymousSubject */
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Observable__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10), _Subscriber__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(8), _Subscription__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(15), _util_ObjectUnsubscribedError__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(46), _SubjectSubscription__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(79), _internal_symbol_rxSubscriber__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(58), SubjectSubscriber = /* */ function(_super) {
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Observable__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7), _Subscriber__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(9), _Subscription__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(15), _util_ObjectUnsubscribedError__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(46), _SubjectSubscription__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(79), _internal_symbol_rxSubscriber__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(58), SubjectSubscriber = /* */ function(_super) {
             function SubjectSubscriber(destination) {
                 var _this = _super.call(this, destination) || this;
                 return _this.destination = destination, _this;
@@ -3553,7 +3553,7 @@ object-assign
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js + 3 modules
-                var Observable = __webpack_require__(10), isPromise = __webpack_require__(74), isArrayLike = __webpack_require__(72), symbol_observable = __webpack_require__(44);
+                var Observable = __webpack_require__(7), isPromise = __webpack_require__(74), isArrayLike = __webpack_require__(72), symbol_observable = __webpack_require__(44);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/isPromise.js
                 // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/isInteropObservable.js
         /** PURE_IMPORTS_START _symbol_observable PURE_IMPORTS_END */
@@ -3671,7 +3671,7 @@ object-assign
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/array-find/find.js
-                var find = __webpack_require__(11), find_default = /* */ __webpack_require__.n(find), array_includes = __webpack_require__(13);
+                var find = __webpack_require__(10), find_default = /* */ __webpack_require__.n(find), array_includes = __webpack_require__(13);
         // CONCATENATED MODULE: ./src/utils/starts-with.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -4086,7 +4086,7 @@ object-assign
             }, InnerSubscriber.prototype._complete = function() {
                 this.parent.notifyComplete(this), this.unsubscribe();
             }, InnerSubscriber;
-        }(__webpack_require__(8).a);
+        }(__webpack_require__(9).a);
         /* harmony import */    }, 
     /* 46 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
@@ -4705,7 +4705,7 @@ object-assign
             return map;
         });
         /* unused harmony export MapOperator */
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
         function map(project, thisArg) {
@@ -5275,7 +5275,7 @@ object-assign
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/defer.js
-        var defer = __webpack_require__(135), empty = __webpack_require__(30), combineLatest = __webpack_require__(147), merge = __webpack_require__(136), concat = __webpack_require__(109), of = __webpack_require__(77), ignoreElements = __webpack_require__(146), mergeMap = __webpack_require__(59), map = __webpack_require__(55), tap = __webpack_require__(150), filter = __webpack_require__(139), compat = __webpack_require__(9), events = __webpack_require__(12), noop = __webpack_require__(21), mapTo = __webpack_require__(138), castToObservable = __webpack_require__(18), MediaKeys = __webpack_require__(132);
+        var defer = __webpack_require__(135), empty = __webpack_require__(30), combineLatest = __webpack_require__(147), merge = __webpack_require__(136), concat = __webpack_require__(109), of = __webpack_require__(77), ignoreElements = __webpack_require__(146), mergeMap = __webpack_require__(59), map = __webpack_require__(55), tap = __webpack_require__(150), filter = __webpack_require__(139), compat = __webpack_require__(12), events = __webpack_require__(11), noop = __webpack_require__(21), mapTo = __webpack_require__(138), castToObservable = __webpack_require__(18), MediaKeys = __webpack_require__(132);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/empty.js
                 // CONCATENATED MODULE: ./src/compat/eme/setMediaKeys.ts
         /**
@@ -5420,7 +5420,7 @@ object-assign
             });
         }
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js + 3 modules
-                var Observable = __webpack_require__(10), config = __webpack_require__(2), array_includes = __webpack_require__(13), EME_DEFAULT_WIDEVINE_ROBUSTNESSES = config.a.EME_DEFAULT_WIDEVINE_ROBUSTNESSES, EME_KEY_SYSTEMS = config.a.EME_KEY_SYSTEMS;
+                var Observable = __webpack_require__(7), config = __webpack_require__(2), array_includes = __webpack_require__(13), EME_DEFAULT_WIDEVINE_ROBUSTNESSES = config.a.EME_DEFAULT_WIDEVINE_ROBUSTNESSES, EME_KEY_SYSTEMS = config.a.EME_KEY_SYSTEMS;
         // EXTERNAL MODULE: ./src/config.ts
                 /**
  * @param {Array.<Object>} keySystems
@@ -5592,7 +5592,7 @@ object-assign
             });
         }
         // EXTERNAL MODULE: ./node_modules/array-find/find.js
-                var find = __webpack_require__(11), find_default = /* */ __webpack_require__.n(find);
+                var find = __webpack_require__(10), find_default = /* */ __webpack_require__.n(find);
         // CONCATENATED MODULE: ./src/utils/hash_buffer.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -6704,7 +6704,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return subscribeTo;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10), _subscribeToArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(73), _subscribeToPromise__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(75), _subscribeToIterable__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(76), _subscribeToObservable__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(71), _isArrayLike__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(72), _isPromise__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(74), _isObject__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(69), _symbol_iterator__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(53), _symbol_observable__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(44), subscribeTo = function(result) {
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7), _subscribeToArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(73), _subscribeToPromise__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(75), _subscribeToIterable__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(76), _subscribeToObservable__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(71), _isArrayLike__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(72), _isPromise__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(74), _isObject__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(69), _symbol_iterator__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(53), _symbol_observable__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(44), subscribeTo = function(result) {
             if (result instanceof _Observable__WEBPACK_IMPORTED_MODULE_0__.a) return function(subscriber) {
                 return result._isScalar ? (subscriber.next(result.value), void subscriber.complete()) : result.subscribe(subscriber);
             };
@@ -6840,7 +6840,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return scalar;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10);
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
         /** PURE_IMPORTS_START _Observable PURE_IMPORTS_END */        function scalar(value) {
             var result = new _Observable__WEBPACK_IMPORTED_MODULE_0__.a(function(subscriber) {
                 subscriber.next(value), subscriber.complete();
@@ -6879,7 +6879,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return throwError;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10);
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7);
         /** PURE_IMPORTS_START _Observable PURE_IMPORTS_END */        function throwError(error, scheduler) {
             return scheduler ? new _Observable__WEBPACK_IMPORTED_MODULE_0__.a(function(subscriber) {
                 return scheduler.schedule(dispatch, 0, {
@@ -7183,7 +7183,7 @@ object-assign
     /* 85 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* harmony import */        var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10), _utils_request__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(28);
+        /* harmony import */        var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7), _utils_request__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(28);
         /* harmony import */        
         /**
  * Copyright 2015 CANAL+ Group
@@ -7399,7 +7399,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return seekAndLoadOnMediaEvents;
         });
-        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(77), rxjs_operators__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(150), rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(152), rxjs_operators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(59), rxjs_operators__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(138), rxjs_operators__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(148), _compat__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(9), _log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(0);
+        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(77), rxjs_operators__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(150), rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(152), rxjs_operators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(59), rxjs_operators__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(138), rxjs_operators__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(148), _compat__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(12), _log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(0);
         /* harmony import */        
         /**
  * Copyright 2015 CANAL+ Group
@@ -7470,7 +7470,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return createEMEManager;
         });
-        /* harmony import */ var rxjs_operators__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(55), _compat___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9), _compat_events__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(12), _errors__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(82), _features__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6), _log__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(0);
+        /* harmony import */ var rxjs_operators__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(55), _compat___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(12), _compat_events__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(11), _errors__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(82), _features__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(8), _log__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(0);
         /* harmony import */        
         /**
  * Copyright 2015 CANAL+ Group
@@ -7568,7 +7568,7 @@ object-assign
     /* 92 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* harmony import */        var rxjs_operators__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(150), rxjs_operators__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(153), rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(55), rxjs_operators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(142), _compat__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(9), _config__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(2), _log__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(0), _utils_ranges__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(16), DISCONTINUITY_THRESHOLD = _config__WEBPACK_IMPORTED_MODULE_5__.a.DISCONTINUITY_THRESHOLD;
+        /* harmony import */        var rxjs_operators__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(150), rxjs_operators__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(153), rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(55), rxjs_operators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(142), _compat__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(12), _config__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(2), _log__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(0), _utils_ranges__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(16), DISCONTINUITY_THRESHOLD = _config__WEBPACK_IMPORTED_MODULE_5__.a.DISCONTINUITY_THRESHOLD;
         /* harmony import */        
         /* harmony default export */ __webpack_exports__.a = 
         /**
@@ -7610,7 +7610,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return refCount;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
         function refCount() {
@@ -7884,7 +7884,7 @@ object-assign
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-                var tslib_es6 = __webpack_require__(3), Subject = __webpack_require__(33), Observable = __webpack_require__(10), Subscriber = __webpack_require__(8), Subscription = __webpack_require__(15), refCount = __webpack_require__(93), connectableProto = /* */ function(_super) {
+                var tslib_es6 = __webpack_require__(3), Subject = __webpack_require__(33), Observable = __webpack_require__(7), Subscriber = __webpack_require__(9), Subscription = __webpack_require__(15), refCount = __webpack_require__(93), connectableProto = /* */ function(_super) {
             function ConnectableObservable(source, subjectFactory) {
                 var _this = _super.call(this) || this;
                 return _this.source = source, _this.subjectFactory = subjectFactory, _this._refCount = 0, 
@@ -8515,7 +8515,7 @@ object-assign
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/of.js
-                var of = __webpack_require__(77), defer = __webpack_require__(135), tslib_es6 = __webpack_require__(3), Subscriber = __webpack_require__(8);
+                var of = __webpack_require__(77), defer = __webpack_require__(135), tslib_es6 = __webpack_require__(3), Subscriber = __webpack_require__(9);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/defer.js
                 // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/operators/pairwise.js
         /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
@@ -8797,7 +8797,7 @@ object-assign
         /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() {
             return parseVTTStringToVTTCues;
         });
-        /* harmony import */ var _compat_index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9), _utils_array_includes__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(13), _getCueBlocks__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(87), _parseCueBlock__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(102), _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(50);
+        /* harmony import */ var _compat_index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(12), _utils_array_includes__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(13), _getCueBlocks__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(87), _parseCueBlock__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(102), _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(50);
         /* harmony import */        
         /**
  * Copyright 2015 CANAL+ Group
@@ -8893,7 +8893,7 @@ object-assign
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__);
-        /* harmony import */ var array_find__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(11), array_find__WEBPACK_IMPORTED_MODULE_0___default = /* */ __webpack_require__.n(array_find__WEBPACK_IMPORTED_MODULE_0__), object_assign__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7), object_assign__WEBPACK_IMPORTED_MODULE_1___default = /* */ __webpack_require__.n(object_assign__WEBPACK_IMPORTED_MODULE_1__), _compat__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(9), _getParameters__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(88), _getParentElementsByTagName__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(61), _getTimeDelimiters__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(101), _nodes__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(47), _regexps__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(20), _style__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(35), WANTED_STYLE_ATTRIBUTES = [ "extent", "writingMode", "origin", "align" ], TEXT_ALIGN_TO_LIGN_ALIGN = {
+        /* harmony import */ var array_find__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10), array_find__WEBPACK_IMPORTED_MODULE_0___default = /* */ __webpack_require__.n(array_find__WEBPACK_IMPORTED_MODULE_0__), object_assign__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6), object_assign__WEBPACK_IMPORTED_MODULE_1___default = /* */ __webpack_require__.n(object_assign__WEBPACK_IMPORTED_MODULE_1__), _compat__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(12), _getParameters__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(88), _getParentElementsByTagName__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(61), _getTimeDelimiters__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(101), _nodes__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(47), _regexps__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(20), _style__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(35), WANTED_STYLE_ATTRIBUTES = [ "extent", "writingMode", "origin", "align" ], TEXT_ALIGN_TO_LIGN_ALIGN = {
             left: "start",
             center: "center",
             right: "end",
@@ -9056,7 +9056,7 @@ object-assign
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__);
-        /* harmony import */ var _compat__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9), _utils_assert__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(14), HTML_ENTITIES = /&#([0-9]+);/g, BR = /<br>/gi, STYLE = /<style[^>]*>([\s\S]*?)<\/style[^>]*>/i, PARAG = /\s*<p class=([^>]+)>(.*)/i, START = /<sync[^>]+?start="?([0-9]*)"?[^0-9]/i;
+        /* harmony import */ var _compat__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(12), _utils_assert__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(14), HTML_ENTITIES = /&#([0-9]+);/g, BR = /<br>/gi, STYLE = /<style[^>]*>([\s\S]*?)<\/style[^>]*>/i, PARAG = /\s*<p class=([^>]+)>(.*)/i, START = /<sync[^>]+?start="?([0-9]*)"?[^0-9]/i;
         /* harmony import */        
         /**
  * Creates an array of VTTCue/TextTrackCue from a given array of cue objects.
@@ -9148,7 +9148,7 @@ object-assign
         /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() {
             return parseSRTStringToVTTCues;
         });
-        /* harmony import */ var _compat_index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9), _getCueBlocks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(100), _parseCue__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(99);
+        /* harmony import */ var _compat_index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(12), _getCueBlocks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(100), _parseCue__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(99);
         /* harmony import */        
         /**
  * Copyright 2015 CANAL+ Group
@@ -9507,7 +9507,7 @@ object-assign
         /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() {
             return StreamDirectFile;
         });
-        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(77), rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(136), rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(55), rxjs_operators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(59), rxjs_operators__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(146), _compat__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(9), _errors__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(27), _log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(0), _create_eme_manager__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(90), _events_generators__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(22), _initial_seek_and_play__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(89), _media_error_manager__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(91), _speed_manager__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(105), _stalling_manager__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(92);
+        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(77), rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(136), rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(55), rxjs_operators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(59), rxjs_operators__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(146), _compat__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(12), _errors__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(27), _log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(0), _create_eme_manager__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(90), _events_generators__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(22), _initial_seek_and_play__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(89), _media_error_manager__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(91), _speed_manager__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(105), _stalling_manager__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(92);
         /* harmony import */        
         /**
  * Copyright 2015 CANAL+ Group
@@ -9598,7 +9598,7 @@ object-assign
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/deep-equal/index.js
-        var deep_equal = __webpack_require__(106), deep_equal_default = /* */ __webpack_require__.n(deep_equal), object_assign = __webpack_require__(7), object_assign_default = /* */ __webpack_require__.n(object_assign), Subject = __webpack_require__(33), ReplaySubject = __webpack_require__(127), tslib_es6 = __webpack_require__(3), ObjectUnsubscribedError = __webpack_require__(46), BehaviorSubject_BehaviorSubject = /* */ function(_super) {
+        var deep_equal = __webpack_require__(106), deep_equal_default = /* */ __webpack_require__.n(deep_equal), object_assign = __webpack_require__(6), object_assign_default = /* */ __webpack_require__.n(object_assign), Subject = __webpack_require__(33), ReplaySubject = __webpack_require__(127), tslib_es6 = __webpack_require__(3), ObjectUnsubscribedError = __webpack_require__(46), BehaviorSubject_BehaviorSubject = /* */ function(_super) {
             function BehaviorSubject(_value) {
                 var _this = _super.call(this) || this;
                 return _this._value = _value, _this;
@@ -9629,7 +9629,7 @@ object-assign
         }
         //# sourceMappingURL=publish.js.map
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/filter.js
-                var filter = __webpack_require__(139), share = __webpack_require__(153), mapTo = __webpack_require__(138), startWith = __webpack_require__(140), Subscriber = __webpack_require__(8);
+                var filter = __webpack_require__(139), share = __webpack_require__(153), mapTo = __webpack_require__(138), startWith = __webpack_require__(140), Subscriber = __webpack_require__(9);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/share.js
                 // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/operators/skipWhile.js
         /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
@@ -9661,7 +9661,7 @@ object-assign
                     this.destination.error(err);
                 }
             }, SkipWhileSubscriber;
-        }(Subscriber.a), switchMapTo = __webpack_require__(151), mergeMapTo = __webpack_require__(145), catchError = __webpack_require__(148), config = __webpack_require__(2), log = __webpack_require__(0), eventemitter = __webpack_require__(42), noop = __webpack_require__(21), utils_ranges = __webpack_require__(16), warnOnce = __webpack_require__(38), fullscreen = __webpack_require__(57), events = __webpack_require__(12), constants = __webpack_require__(19), features = __webpack_require__(6), eme = __webpack_require__(67), mergeMap = __webpack_require__(59), switchMap = __webpack_require__(118), tap = __webpack_require__(150);
+        }(Subscriber.a), switchMapTo = __webpack_require__(151), mergeMapTo = __webpack_require__(145), catchError = __webpack_require__(148), config = __webpack_require__(2), log = __webpack_require__(0), eventemitter = __webpack_require__(42), noop = __webpack_require__(21), utils_ranges = __webpack_require__(16), warnOnce = __webpack_require__(38), fullscreen = __webpack_require__(57), events = __webpack_require__(11), constants = __webpack_require__(19), features = __webpack_require__(8), eme = __webpack_require__(67), mergeMap = __webpack_require__(59), switchMap = __webpack_require__(118), tap = __webpack_require__(150);
         // CONCATENATED MODULE: ./src/utils/rx-throttle.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -9834,7 +9834,7 @@ object-assign
             return -1 === firstSuperiorBitrate ? representations : representations.slice(0, firstSuperiorBitrate);
         }
         // EXTERNAL MODULE: ./node_modules/array-find/find.js
-                var array_find_find = __webpack_require__(11), find_default = /* */ __webpack_require__.n(array_find_find);
+                var array_find_find = __webpack_require__(10), find_default = /* */ __webpack_require__.n(array_find_find);
         // CONCATENATED MODULE: ./src/core/abr/filterByWidth.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -10380,7 +10380,7 @@ object-assign
                 return this._choosers[bufferType] || (this._choosers[bufferType] = abr_createChooser(bufferType, this._chooserInstanceOptions)), 
                 this._choosers[bufferType];
             }, ABRManager;
-        }(), utils_id = __webpack_require__(23), utils_languages = __webpack_require__(51), compat = __webpack_require__(9), MediaError = __webpack_require__(27), manifest_representation = 
+        }(), utils_id = __webpack_require__(23), utils_languages = __webpack_require__(51), compat = __webpack_require__(12), MediaError = __webpack_require__(27), manifest_representation = 
         /* */
         function() {
             /**
@@ -10837,7 +10837,7 @@ object-assign
                 }, []);
                 newTextAdaptations.length && (this.adaptations.text = this.adaptations.text ? this.adaptations.text.concat(newTextAdaptations) : newTextAdaptations);
             }, Manifest;
-        }(), Observable = __webpack_require__(10), Subscription = __webpack_require__(15);
+        }(), Observable = __webpack_require__(7), Subscription = __webpack_require__(15);
         // CONCATENATED MODULE: ./src/manifest/period.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -11077,7 +11077,9 @@ object-assign
                             }) : empty.a;
                             return Object(concat.a)(metrics, Object(of.a)({
                                 type: "response",
-                                value: arg.value
+                                value: object_assign_default()({}, resolverResponse, {
+                                    responseData: arg.value.responseData
+                                })
                             }));
 
                           default:
@@ -17025,7 +17027,7 @@ object-assign
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/of.js
-        var of = __webpack_require__(77), features = __webpack_require__(6), isobmff = __webpack_require__(32), log = __webpack_require__(0);
+        var of = __webpack_require__(77), features = __webpack_require__(8), isobmff = __webpack_require__(32), log = __webpack_require__(0);
         // EXTERNAL MODULE: ./src/features/index.ts
                 // CONCATENATED MODULE: ./src/parsers/containers/matroska/utils.ts
         /**
@@ -17198,7 +17200,7 @@ object-assign
             return segments;
         }
         // EXTERNAL MODULE: ./node_modules/array-find/find.js
-                var find = __webpack_require__(11), find_default = /* */ __webpack_require__.n(find), config = __webpack_require__(2), array_includes = __webpack_require__(13), utils_id = __webpack_require__(23), languages = __webpack_require__(51), utils_url = __webpack_require__(40), check_manifest_ids = __webpack_require__(83), assert = __webpack_require__(14), iso8601Duration = /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/, rangeRe = /([0-9]+)-([0-9]+)/;
+                var find = __webpack_require__(10), find_default = /* */ __webpack_require__.n(find), config = __webpack_require__(2), array_includes = __webpack_require__(13), utils_id = __webpack_require__(23), languages = __webpack_require__(51), utils_url = __webpack_require__(40), check_manifest_ids = __webpack_require__(83), assert = __webpack_require__(14), iso8601Duration = /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/, rangeRe = /([0-9]+)-([0-9]+)/;
         /**
  * Parse MPD boolean attributes.
  * @param {string} str
@@ -18113,7 +18115,7 @@ object-assign
             };
         }
         // EXTERNAL MODULE: ./node_modules/object-assign/index.js
-                var object_assign = __webpack_require__(7), object_assign_default = /* */ __webpack_require__.n(object_assign);
+                var object_assign = __webpack_require__(6), object_assign_default = /* */ __webpack_require__.n(object_assign);
         // CONCATENATED MODULE: ./src/parsers/manifest/dash/node_parsers/Initialization.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -19392,7 +19394,7 @@ object-assign
                 time: startTime || 0,
                 duration: duration || 0
             };
-        }, Observable = __webpack_require__(10);
+        }, Observable = __webpack_require__(7);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js + 3 modules
                 // CONCATENATED MODULE: ./src/net/dash/utils.ts
         /**
@@ -19821,7 +19823,7 @@ object-assign
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/of.js
-        var of = __webpack_require__(77), map = __webpack_require__(55), features = __webpack_require__(6), object_assign = __webpack_require__(7), object_assign_default = /* */ __webpack_require__.n(object_assign), config = __webpack_require__(2), assert = __webpack_require__(14), utils_id = __webpack_require__(23), languages = __webpack_require__(51), utils_url = __webpack_require__(40), check_manifest_ids = __webpack_require__(83);
+        var of = __webpack_require__(77), map = __webpack_require__(55), features = __webpack_require__(8), object_assign = __webpack_require__(6), object_assign_default = /* */ __webpack_require__.n(object_assign), config = __webpack_require__(2), assert = __webpack_require__(14), utils_id = __webpack_require__(23), languages = __webpack_require__(51), utils_url = __webpack_require__(40), check_manifest_ids = __webpack_require__(83);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/map.js
                 // CONCATENATED MODULE: ./src/parsers/manifest/smooth/get_codecs.ts
         /**
@@ -21147,7 +21149,7 @@ object-assign
                 nextSegments: nextSegments,
                 segmentInfos: segmentInfos
             };
-        }, Observable = __webpack_require__(10), ISM_REG = /(\.isml?)(\?token=\S+)?$/, TOKEN_REG = /\?token=(\S+)/;
+        }, Observable = __webpack_require__(7), ISM_REG = /(\.isml?)(\?token=\S+)?$/, TOKEN_REG = /\?token=(\S+)/;
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js + 3 modules
                 function byteRange(_ref) {
             var start = _ref[0], end = _ref[1];
@@ -21536,7 +21538,7 @@ object-assign
                 return null !== _super && _super.apply(this, arguments) || this;
             }
             return tslib_es6.a(QueueScheduler, _super), QueueScheduler;
-        }(__webpack_require__(104).a))(QueueAction_QueueAction), Subscription = __webpack_require__(15), Subscriber = __webpack_require__(8), empty = __webpack_require__(30), of = __webpack_require__(77), throwError = __webpack_require__(80), Notification_Notification = /* */ function() {
+        }(__webpack_require__(104).a))(QueueAction_QueueAction), Subscription = __webpack_require__(15), Subscriber = __webpack_require__(9), empty = __webpack_require__(30), of = __webpack_require__(77), throwError = __webpack_require__(80), Notification_Notification = /* */ function() {
             function Notification(kind, value, error) {
                 this.kind = kind, this.value = value, this.error = error, this.hasValue = "N" === kind;
             }
@@ -21655,7 +21657,7 @@ object-assign
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/array-find/find.js
-        var find = __webpack_require__(11), find_default = /* */ __webpack_require__.n(find), object_assign = __webpack_require__(7), object_assign_default = /* */ __webpack_require__.n(object_assign), getParameters = __webpack_require__(88), getParentElementsByTagName = __webpack_require__(61), nodes = __webpack_require__(47), ttml_style = __webpack_require__(35), STYLE_ATTRIBUTES = [ "backgroundColor", "color", "direction", "display", "displayAlign", "extent", "fontFamily", "fontSize", "fontStyle", "fontWeight", "lineHeight", "opacity", "origin", "overflow", "padding", "textAlign", "textDecoration", "textOutline", "unicodeBidi", "visibility", "wrapOption", "writingMode" ], getTimeDelimiters = __webpack_require__(101), regexps = __webpack_require__(20), SPAN_LEVEL_ATTRIBUTES = [ "color", "direction", "display", "fontFamily", "fontSize", "fontStyle", "fontWeight", "textDecoration", "textOutline", "unicodeBidi", "visibility", "wrapOption" ];
+        var find = __webpack_require__(10), find_default = /* */ __webpack_require__.n(find), object_assign = __webpack_require__(6), object_assign_default = /* */ __webpack_require__.n(object_assign), getParameters = __webpack_require__(88), getParentElementsByTagName = __webpack_require__(61), nodes = __webpack_require__(47), ttml_style = __webpack_require__(35), STYLE_ATTRIBUTES = [ "backgroundColor", "color", "direction", "display", "displayAlign", "extent", "fontFamily", "fontSize", "fontStyle", "fontWeight", "lineHeight", "opacity", "origin", "overflow", "padding", "textAlign", "textDecoration", "textOutline", "unicodeBidi", "visibility", "wrapOption", "writingMode" ], getTimeDelimiters = __webpack_require__(101), regexps = __webpack_require__(20), SPAN_LEVEL_ATTRIBUTES = [ "color", "direction", "display", "fontFamily", "fontSize", "fontStyle", "fontWeight", "textDecoration", "textOutline", "unicodeBidi", "visibility", "wrapOption" ];
         /**
  * Translate a color indicated in TTML-style to a CSS-style color.
  * @param {string} color
@@ -22373,7 +22375,7 @@ object-assign
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/merge.js
-        var merge = __webpack_require__(136), interval = __webpack_require__(141), concat = __webpack_require__(109), of = __webpack_require__(77), Subject = __webpack_require__(33), mapTo = __webpack_require__(138), startWith = __webpack_require__(140), switchMapTo = __webpack_require__(151), takeUntil = __webpack_require__(143), events = __webpack_require__(12), config = __webpack_require__(2), log = __webpack_require__(0), abstract_source_buffer = __webpack_require__(62), MAX_DELTA_BUFFER_TIME = .2;
+        var merge = __webpack_require__(136), interval = __webpack_require__(141), concat = __webpack_require__(109), of = __webpack_require__(77), Subject = __webpack_require__(33), mapTo = __webpack_require__(138), startWith = __webpack_require__(140), switchMapTo = __webpack_require__(151), takeUntil = __webpack_require__(143), events = __webpack_require__(11), config = __webpack_require__(2), log = __webpack_require__(0), abstract_source_buffer = __webpack_require__(62), MAX_DELTA_BUFFER_TIME = .2;
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/interval.js
                 /**
  * @see MAX_DELTA_BUFFER_TIME
@@ -22620,7 +22622,7 @@ object-assign
                 // These cues should be the last one
                                 cuesBuffer.push(cuesInfosToInsert);
             }, TextBufferManager;
-        }(), features = __webpack_require__(6);
+        }(), features = __webpack_require__(8);
         // EXTERNAL MODULE: ./src/features/index.ts
                 // CONCATENATED MODULE: ./src/core/source_buffers/text/html/parsers.ts
         /**
@@ -22763,7 +22765,7 @@ object-assign
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./src/compat/index.ts
-        var compat = __webpack_require__(9), log = __webpack_require__(0), abstract_source_buffer = __webpack_require__(62), features = __webpack_require__(6);
+        var compat = __webpack_require__(12), log = __webpack_require__(0), abstract_source_buffer = __webpack_require__(62), features = __webpack_require__(8);
         // EXTERNAL MODULE: ./src/log.ts + 1 modules
                 // CONCATENATED MODULE: ./src/core/source_buffers/text/native/parsers.ts
         /**
@@ -22893,7 +22895,7 @@ object-assign
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Subject.js
-                var Subject = __webpack_require__(33), merge = __webpack_require__(136), throwError = __webpack_require__(80), of = __webpack_require__(77), takeUntil = __webpack_require__(143), bytes = __webpack_require__(1), castToObservable = __webpack_require__(18), eventemitter = __webpack_require__(42), constants = __webpack_require__(26), events = __webpack_require__(12);
+                var Subject = __webpack_require__(33), merge = __webpack_require__(136), throwError = __webpack_require__(80), of = __webpack_require__(77), takeUntil = __webpack_require__(143), bytes = __webpack_require__(1), castToObservable = __webpack_require__(18), eventemitter = __webpack_require__(42), constants = __webpack_require__(26), events = __webpack_require__(11);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/merge.js
                 // CONCATENATED MODULE: ./src/compat/eme/keySystemAccess.ts
         function _defineProperties(target, props) {
@@ -23189,7 +23191,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return defer;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10), _from__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(34), _empty__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(30);
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7), _from__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(34), _empty__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(30);
         /* harmony import */        
         /** PURE_IMPORTS_START _Observable,_from,_empty PURE_IMPORTS_END */
         function defer(observableFactory) {
@@ -23211,7 +23213,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return merge;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10), _util_isScheduler__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(31), _operators_mergeAll__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(98), _fromArray__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(29);
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7), _util_isScheduler__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(31), _operators_mergeAll__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(98), _fromArray__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(29);
         /* harmony import */        
         /** PURE_IMPORTS_START _Observable,_util_isScheduler,_operators_mergeAll,_fromArray PURE_IMPORTS_END */
         function merge() {
@@ -23229,7 +23231,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return fromEvent;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10), _util_isArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(43), _util_isFunction__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(48), _operators_map__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(55);
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7), _util_isArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(43), _util_isFunction__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(48), _operators_map__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(55);
         /* harmony import */        Object.prototype.toString;
         function fromEvent(target, eventName, options, resultSelector) {
             return Object(_util_isFunction__WEBPACK_IMPORTED_MODULE_2__.a)(options) && (resultSelector = options, 
@@ -23281,7 +23283,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return mapTo;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
         function mapTo(value) {
@@ -23312,7 +23314,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return filter;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
         function filter(predicate, thisArg) {
@@ -23369,7 +23371,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return interval;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10), _scheduler_async__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(41), _util_isNumeric__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(66);
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7), _scheduler_async__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(41), _util_isNumeric__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(66);
         /* harmony import */        
         /** PURE_IMPORTS_START _Observable,_scheduler_async,_util_isNumeric PURE_IMPORTS_END */
         function interval(period, scheduler) {
@@ -23400,7 +23402,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return distinctUntilChanged;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8), _util_tryCatch__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(64), _util_errorObject__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(36);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9), _util_tryCatch__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(64), _util_errorObject__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(36);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_Subscriber,_util_tryCatch,_util_errorObject PURE_IMPORTS_END */
         function distinctUntilChanged(compare, keySelector) {
@@ -23474,7 +23476,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return take;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8), _util_ArgumentOutOfRangeError__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(81), _observable_empty__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(30);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9), _util_ArgumentOutOfRangeError__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(81), _observable_empty__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(30);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_Subscriber,_util_ArgumentOutOfRangeError,_observable_empty PURE_IMPORTS_END */
         function take(count) {
@@ -23524,7 +23526,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return ignoreElements;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_Subscriber PURE_IMPORTS_END */
         function ignoreElements() {
@@ -23650,7 +23652,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return timer;
         });
-        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10), _scheduler_async__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(41), _util_isNumeric__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(66), _util_isScheduler__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(31);
+        /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7), _scheduler_async__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(41), _util_isNumeric__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(66), _util_isScheduler__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(31);
         /* harmony import */        
         /** PURE_IMPORTS_START _Observable,_scheduler_async,_util_isNumeric,_util_isScheduler PURE_IMPORTS_END */
         function timer(dueTime, periodOrScheduler, scheduler) {
@@ -23682,7 +23684,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return tap;
         });
-        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8), _util_noop__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(39), _util_isFunction__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(48);
+        /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3), _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9), _util_noop__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(39), _util_isFunction__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(48);
         /* harmony import */        
         /** PURE_IMPORTS_START tslib,_Subscriber,_util_noop,_util_isFunction PURE_IMPORTS_END */
         function tap(nextOrObserver, error, complete) {
