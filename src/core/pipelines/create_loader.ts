@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import objectAssign from "object-assign";
 import {
   concat as observableConcat,
   EMPTY,
@@ -291,7 +292,12 @@ export default function createLoader<T, U>(
 
                 return observableConcat(
                   metrics,
-                  observableOf({ type: "response" as "response", value: arg.value })
+                  observableOf({
+                    type: "response" as "response",
+                    value: objectAssign({}, resolverResponse, {
+                      responseData: arg.value.responseData,
+                    }),
+                  })
                 );
               default:
                 return observableOf(arg);
