@@ -109,11 +109,21 @@ were playing before)</p>
 <p><a name="subchapter-The%20RELOADING%20state"></a></p>
 <h3>The RELOADING state</h3>
 <p>This state indicates that the player needs to &#x201C;re-load&#x201D; then content.</p>
-<p>For now, this only happens when you switch the video track for another one, when
-the previous one was currently decoding. We have then to stop and reload the
-content on the browser-side, due to browser limitation.</p>
-<p>This means that if you do not have a &#x201C;video track switching&#x201D; use-case in your
-application, you should never encounter this state.</p>
+<p>This can happen for different reasons:</p>
+<ul>
+<li>
+<p>When you switch the video track for another one, when the previous one was
+currently decoding.</p>
+</li>
+<li>
+<p>When you update manually the audio and video bitrate through respectively
+the <code>setAudioBitrate</code> and <code>setVideoBitrate</code> APIs
+(Only if you set the <code>manualBitrateSwitchingMode</code> loadVideo option to
+<code>&quot;direct&quot;</code>).</p>
+</li>
+</ul>
+<p>In those cases, we need to stop and reload the content on the browser-side, due
+to browser limitation.</p>
 <p>While this state is active, multiple player API are unavailable:</p>
 <ul>
 <li>you cannot play or pause</li>
@@ -126,7 +136,7 @@ application, you should never encounter this state.</p>
 <code>LOADING</code> state (where those APIs - and other - are also not available).</p>
 <p>However, the player won&#x2019;t go to the <code>LOADED</code> state after <code>RELOADING</code>, you will
 instead know that it had finished reloading simply when it goes out of this
-state  (see the &#x201C;Possible state transitions&#x201D; chapter for more informations).</p>
+state (see the &#x201C;Possible state transitions&#x201D; chapter for more informations).</p>
 <p><a name="chapter-Possible%20state%20transitions"></a></p>
 <h2>Possible state transitions</h2>
 <p>The player goes from one state to another during runtime but those changes does
@@ -337,6 +347,34 @@ before reaching the <code>ENDED</code> state.</p>
 <li>You stopped the current through the <a href="index.html#meth-stop">stop</a> method.</li>
 <li>You are loading a new content.</li>
 <li>An error happened which made it impossible to play the content.
+The corresponding <a href="errors.html">error</a> can be found either through the
+<a href="index.html#meth-getError"><code>getError</code> method</a> method or through the
+<a href="player_events.html#events-playerStateChange"><code>playerStateChange</code></a>
+<a href="player_events.html">player event</a>.</li>
+</ul>
+</li>
+</ul>
+<p>From <code>RELOADING</code>:</p>
+<ul>
+<li>
+<p><code>PLAYING</code>: The content finished to reload and was not paused before
+reloading.</p>
+</li>
+<li>
+<p><code>PAUSED</code>: The content finished to reload and was paused before
+reloading.</p>
+</li>
+<li>
+<p><code>ENDED</code>: The content finished to reload and you are at the end of the
+content.
+Calling <a href="index.html#meth-play"><code>play</code></a> will play back from the beginning.</p>
+</li>
+<li>
+<p><code>STOPPED</code>: Either:</p>
+<ul>
+<li>You stopped the current through the <a href="index.html#meth-stop">stop</a> method.</li>
+<li>You are loading a new content.</li>
+<li>An error happened which made it impossible to reload the content.
 The corresponding <a href="errors.html">error</a> can be found either through the
 <a href="index.html#meth-getError"><code>getError</code> method</a> method or through the
 <a href="player_events.html#events-playerStateChange"><code>playerStateChange</code></a>
