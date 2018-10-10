@@ -31,7 +31,7 @@ Its main goals are:
   - To be easy to integrate and use as a library in various codebases.
 
 
-Latest release: ``v3.7.0``
+Latest release: ``v3.8.0``
 
 
 
