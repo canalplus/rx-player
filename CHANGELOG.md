@@ -14,8 +14,12 @@
   - remove export of undeclared ``ICompatVTTCue`` from modular build
 
 ### Other improvements
+
   - buffer: to avoid taking too much memory, regularly clean-up text and image buffer 5 hours ahead/behind the current position (customizable)
   - demo: add HTTPS capabilities on local full demo
+  - rxjs: update rxjs to 6.3.3
+  - typescript: update typescript to 3.1.2
+
 
 # v3.7.0 (2018/09/21)
 

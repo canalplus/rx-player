@@ -348,13 +348,16 @@ function createSmoothStreamingParser(
   function parseFromDocument(doc : Document, url : string) : IParsedManifest {
     const rootURL = normalizeBaseURL(url);
     const root = doc.documentElement;
-    assert(
-      root.nodeName === "SmoothStreamingMedia",
-      "document root should be SmoothStreamingMedia"
-    );
-    assert(/^[2]-[0-2]$/
-      .test(root.getAttribute("MajorVersion") + "-" + root.getAttribute("MinorVersion")),
-      "Version should be 2.0, 2.1 or 2.2");
+    if (!root || root.nodeName !== "SmoothStreamingMedia") {
+      throw new Error("document root should be SmoothStreamingMedia");
+    }
+    if (!
+      /^[2]-[0-2]$/.test(
+        root.getAttribute("MajorVersion") + "-" + root.getAttribute("MinorVersion")
+      )
+    ) {
+      throw new Error("Version should be 2.0, 2.1 or 2.2");
+    }
 
     const timescale = +(root.getAttribute("Timescale") || 10000000);
 

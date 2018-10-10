@@ -54,15 +54,19 @@ interface ICompatDocument extends Document {
   mozFullScreenElement? : HTMLElement;
   mozHidden? : boolean;
   msExitFullscreen? : () => void;
-  msFullscreenElement? : HTMLElement;
+  webkitExitFullscreen : () => void;
+  fullscreenElement : Element|null;
+  msFullscreenElement? : Element|null;
+  webkitFullscreenElement : Element|null;
   msHidden? : boolean;
   webkitHidden? : boolean;
 }
 
 // Element with added optional functions for old browsers
-interface ICompatElement extends Element {
+interface ICompatHTMLMediaElement extends HTMLMediaElement {
   mozRequestFullScreen? : () => void;
   msRequestFullscreen? : () => void;
+  webkitRequestFullscreen : () => void;
 }
 
 // for some reasons, Typescript seem to forget about SessionTypes
@@ -132,7 +136,7 @@ const READY_STATES = {
 export {
   HTMLElement_,
   ICompatDocument,
-  ICompatElement,
+  ICompatHTMLMediaElement,
   ICompatMediaKeySystemAccess,
   ICompatMediaKeySystemConfiguration,
   ICompatMediaKeysConstructor,
