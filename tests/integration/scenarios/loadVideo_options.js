@@ -91,10 +91,10 @@ describe("loadVideo Options", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(player.getPlayerState()).to.equal("LOADED");
-      expect(player.getPosition()).to.equal(0);
+      expect(player.getPosition()).to.be.below(0.1);
       await sleep(200);
       expect(player.getPlayerState()).to.equal("LOADED");
-      expect(player.getPosition()).to.equal(0);
+      expect(player.getPosition()).to.be.below(0.1);
     });
 
     it("should keep state as LOADED (and not play) if autoPlay is false", async () => {
@@ -105,10 +105,10 @@ describe("loadVideo Options", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(player.getPlayerState()).to.equal("LOADED");
-      expect(player.getPosition()).to.equal(0);
+      expect(player.getPosition()).to.be.below(0.1);
       await sleep(200);
       expect(player.getPlayerState()).to.equal("LOADED");
-      expect(player.getPosition()).to.equal(0);
+      expect(player.getPosition()).to.be.below(0.1);
     });
 
     it("should set state as LOADED then to PLAYING (and play) if autoPlay is true", async () => {
@@ -119,9 +119,9 @@ describe("loadVideo Options", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(player.getPlayerState()).to.equal("PLAYING");
-      expect(player.getPosition()).to.equal(0);
-      await sleep(300);
-      expect(player.getPosition()).to.be.above(0.100);
+      expect(player.getPosition()).to.be.below(0.1);
+      await sleep(500);
+      expect(player.getPosition()).to.be.above(0.2);
     });
   });
 
