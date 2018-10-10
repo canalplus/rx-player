@@ -197,13 +197,14 @@ export default function handleSessionEvents(
 
       const getLicense$ = observableDefer(() => {
         const getLicense = keySystem.getLicense(message, messageType);
-        return castToObservable(getLicense).pipe(
-          timeout(10 * 1000),
-          catchError((error : Error) => {
-            throw error instanceof TimeoutError ?
-              new EncryptedMediaError("KEY_LOAD_TIMEOUT", null, false) :
-              error;
-          })
+        return (castToObservable(getLicense) as Observable<TypedArray|ArrayBuffer|null>)
+          .pipe(
+            timeout(10 * 1000),
+            catchError((error : Error) : never => {
+              throw error instanceof TimeoutError ?
+                new EncryptedMediaError("KEY_LOAD_TIMEOUT", null, false) :
+                error;
+            })
         );
       }) as Observable<TypedArray|ArrayBuffer|null>;
 

@@ -16,7 +16,7 @@
 
 import {
   ICompatDocument,
-  ICompatElement,
+  ICompatHTMLMediaElement,
 } from "./constants";
 
 /**
@@ -26,7 +26,7 @@ import {
  */
 function requestFullscreen(element : HTMLMediaElement) : void {
   if (!isFullscreen()) {
-    const elt = element as ICompatElement;
+    const elt = element as ICompatHTMLMediaElement;
     if (elt.requestFullscreen) {
       elt.requestFullscreen();
     } else if (elt.msRequestFullscreen) {

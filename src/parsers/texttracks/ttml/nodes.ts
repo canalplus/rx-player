@@ -26,7 +26,7 @@ function getBodyNode(tt : Element) : Element|null {
  * @param {Element} tt - <tt> node
  * @returns {Array.<Element>}
  */
-function getStyleNodes(tt : Element) : NodeList {
+function getStyleNodes(tt : Element) : HTMLCollectionOf<HTMLStyleElement> {
   return tt.getElementsByTagName("style");
 }
 
@@ -34,7 +34,7 @@ function getStyleNodes(tt : Element) : NodeList {
  * @param {Element} tt - <tt> node
  * @returns {Array.<Element>}
  */
-function getRegionNodes(tt : Element) : NodeList {
+function getRegionNodes(tt : Element) : HTMLCollectionOf<Element> {
   return tt.getElementsByTagName("region");
 }
 
@@ -42,7 +42,7 @@ function getRegionNodes(tt : Element) : NodeList {
  * @param {Element} tt - <tt> node
  * @returns {Array.<Element>}
  */
-function getTextNodes(tt : Element) : NodeList {
+function getTextNodes(tt : Element) : HTMLCollectionOf<HTMLParagraphElement> {
   return tt.getElementsByTagName("p");
 }
 
