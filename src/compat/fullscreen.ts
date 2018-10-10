@@ -28,7 +28,9 @@ function requestFullscreen(element : HTMLMediaElement) : void {
   if (!isFullscreen()) {
     const elt = element as ICompatHTMLMediaElement;
     if (elt.requestFullscreen) {
+      /* tslint:disable no-floating-promises */
       elt.requestFullscreen();
+      /* tslint:enable no-floating-promises */
     } else if (elt.msRequestFullscreen) {
       elt.msRequestFullscreen();
     } else if (elt.mozRequestFullScreen) {
@@ -48,7 +50,9 @@ function exitFullscreen() : void {
   if (isFullscreen()) {
     const doc = document as ICompatDocument;
     if (doc.exitFullscreen) {
+      /* tslint:disable no-floating-promises */
       doc.exitFullscreen();
+      /* tslint:enable no-floating-promises */
     } else if (doc.msExitFullscreen) {
       doc.msExitFullscreen();
     } else if (doc.mozCancelFullScreen) {

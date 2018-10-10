@@ -206,7 +206,7 @@ export default function handleSessionEvents(
                 error;
             })
         );
-      }) as Observable<TypedArray|ArrayBuffer|null>;
+      });
 
       return retryObsWithBackoff(getLicense$, getLicenseRetryOptions)
         .pipe(map((license) => {
