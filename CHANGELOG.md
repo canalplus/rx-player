@@ -1,5 +1,22 @@
 # Changelog
 
+# v3.8.0 (2018/10/10)
+
+### Features
+
+  - api/dash/smooth: add representationFilter API to prevent Representations (i.e. media qualities) from being played
+  - api/buffer: add ``manualBitrateSwitchingMode`` option to allow a direct representation switch when calling ``setVideoBitrate`` and ``setAudioBitrate``
+  - api/buffer: emit a ``MEDIA_TIME_BEFORE_MANIFEST`` warning when the wanted time is before what is announced in the manifest
+  - api/buffer: emit a ``MEDIA_TIME_AFTER_MANIFEST`` warning when the wanted time is after what is announced in the manifest
+
+### Bug fixes
+
+  - remove export of undeclared ``ICompatVTTCue`` from modular build
+
+### Other improvements
+  - buffer: to avoid taking too much memory, regularly clean-up text and image buffer 5 hours ahead/behind the current position (customizable)
+  - demo: add HTTPS capabilities on local full demo
+
 # v3.7.0 (2018/09/21)
 
 ### Features
