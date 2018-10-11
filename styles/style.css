@@ -188,7 +188,7 @@ body {
 }
 
 .video-player-spinner {
-  z-index: 1000;
+  z-index: 1001;
   position: absolute;
   height: 50px;
   width: 50px;
@@ -246,7 +246,7 @@ body {
   height: 100px;
   width: 180px;
   margin-left: -90px;
-  z-index: 100;
+  z-index: 1011;
   transform:scaleY(1);
   animation: fadein 0.6s;
 }
@@ -455,7 +455,7 @@ body {
   opacity: 0;
   transform: scale(0.9);
   transition: opacity 200ms;
-  z-index: 100;
+  z-index: 1010;
   pointer-events:none;
 }
 
@@ -616,7 +616,7 @@ body {
   left: 0px;
   padding: 5px;
   font-size: 12px;
-  z-index: 1000;
+  z-index: 1012;
   transform:scaleY(1);
   animation: fadein 0.6s;
   background-color: #1d1d1d;
