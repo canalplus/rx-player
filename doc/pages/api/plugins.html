@@ -3,6 +3,7 @@
 <li><a href="#chapter-Overview">Overview</a></li>
 <li><a href="#chapter-segmentLoader">segmentLoader</a></li>
 <li><a href="#chapter-manifestLoader">manifestLoader</a></li>
+<li><a href="#chapter-representationFilter">representationFilter</a></li>
 </ul>
 </div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Plugins"></a></p>
 <h1>Plugins</h1>
@@ -69,7 +70,7 @@ no use, as our implementation does the same thing and more):</p>
     <span class="hljs-keyword">if</span> (<span class="hljs-number">200</span> &lt;= xhr.status &amp;&amp; xhr.status &lt; <span class="hljs-number">300</span>) {
       <span class="hljs-keyword">const</span> duration = <span class="hljs-built_in">Date</span>.now() - sentTime;
       <span class="hljs-keyword">const</span> size = r.total;
-      <span class="hljs-keyword">const</span> data = r.responseData;
+      <span class="hljs-keyword">const</span> data = xhr.response;
       callbacks.resolve({ duration, size, data });
     } <span class="hljs-keyword">else</span> {
       <span class="hljs-keyword">const</span> err = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">&quot;didn&apos;t work&quot;</span>);
@@ -135,7 +136,6 @@ implementation does the same thing and more):</p>
  * it will be called if and when the request is canceled.
  */</span>
 <span class="hljs-keyword">const</span> customManifestLoader = <span class="hljs-function">(<span class="hljs-params">url, callbacks</span>) =&gt;</span> {
-
   <span class="hljs-keyword">const</span> xhr = <span class="hljs-keyword">new</span> XMLHttpRequest();
   <span class="hljs-keyword">const</span> sentTime = <span class="hljs-built_in">Date</span>.now();
 
@@ -143,7 +143,7 @@ implementation does the same thing and more):</p>
     <span class="hljs-keyword">if</span> (<span class="hljs-number">200</span> &lt;= xhr.status &amp;&amp; xhr.status &lt; <span class="hljs-number">300</span>) {
       <span class="hljs-keyword">const</span> duration = <span class="hljs-built_in">Date</span>.now() - sentTime;
       <span class="hljs-keyword">const</span> size = r.total;
-      <span class="hljs-keyword">const</span> data = r.targget.response;
+      <span class="hljs-keyword">const</span> data = xhr.response;
       callbacks.resolve({ duration, size, data });
     } <span class="hljs-keyword">else</span> {
       <span class="hljs-keyword">const</span> err = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">&quot;didn&apos;t work&quot;</span>);
@@ -158,7 +158,7 @@ implementation does the same thing and more):</p>
     callbacks.reject(err);
   };
 
-  xhr.open(<span class="hljs-string">&quot;GET&quot;</span>, infos.url);
+  xhr.open(<span class="hljs-string">&quot;GET&quot;</span>, url);
   xhr.responseType = <span class="hljs-string">&quot;document&quot;</span>;
 
   xhr.send();
@@ -168,4 +168,74 @@ implementation does the same thing and more):</p>
   };
 };
 </code></pre>
+<p><a name="representationFilter"></a>
+<a name="chapter-representationFilter"></a></p>
+<h2>representationFilter</h2>
+<p>The representationFilter is a function that can be included in the
+<code>transportOptions</code> of the <code>loadVideo</code> API call.</p>
+<p>A representationFilter allows you to filter out <code>Representation</code>s (i.e. media
+qualities) based on its attributes.</p>
+<p>The representationFilter will be called each time we load a manifest with two
+arguments:</p>
+<ul>
+<li>
+<p>representation <code>{Representation}</code>: The concerned <code>Representation</code>.
+A <code>Representation</code> structure&#x2019;s is described <a href="manifest.html#representation">in the Manifest structure
+documentation</a>.</p>
+</li>
+<li>
+<p>representationInfos <code>{Object}</code>: Basic informations about this
+<code>Representation</code>. Contains the following keys:</p>
+<ul>
+<li>
+<p>bufferType <code>{string}</code>: The concerned type of buffer. Can be
+<code>&quot;video&quot;</code>, <code>&quot;audio&quot;</code>, <code>&quot;text&quot;</code> (for subtitles) or <code>&quot;image&quot;</code>
+(for thumbnail).</p>
+</li>
+<li>
+<p>language <code>{string|undefined}</code>: The language the <code>Representation</code>
+is in, as announced by the manifest.</p>
+</li>
+<li>
+<p>normalizedLanguage <code>{string|undefined}</code>: An attempt to translate the
+language into an ISO 639-3 code.
+If the translation attempt fails (no corresponding ISO 639-3 language
+code is found), it will equal the value of <code>language</code></p>
+</li>
+<li>
+<p>isClosedCaption <code>{Boolean|undefined}</code>: If true, the <code>Representation</code>
+links to subtitles with added hints for the hard of hearing.</p>
+</li>
+<li>
+<p>isAudioDescription <code>{Boolean|undefined}</code>: If true, the
+<code>Representation</code> links to an audio track with added commentary for
+the visually impaired.</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>This function should then returns <code>true</code> if the <code>Representation</code> should be
+kept or <code>false</code> if it should be removed.</p>
+<p>For example, here is a <code>representationFilter</code> that removes video
+<code>Representation</code>s with a video resolution higher than HD (1920x1080):</p>
+<pre><code class="language-js"><span class="hljs-comment">/**
+ * @param {Object} representation - The representation object, as defined in
+ * the documentation linked bellow [1]
+ * @param {Object} infos - supplementary informations about the given
+ * representation.
+ * @returns {boolean}
+ */</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">representationFilter</span>(<span class="hljs-params">representation, infos</span>) </span>{
+  <span class="hljs-keyword">if</span> (infos.bufferType === <span class="hljs-string">&quot;video&quot;</span>) {
+    <span class="hljs-comment">// If video representation, allows only those for which the height and width</span>
+    <span class="hljs-comment">// is known to be below our 1920x1080 limit</span>
+    <span class="hljs-keyword">const</span> { width, height } = representation;
+    <span class="hljs-keyword">return</span> width != <span class="hljs-literal">null</span> &amp;&amp; height != <span class="hljs-literal">null</span> &amp;&amp; width &lt;= <span class="hljs-number">1920</span> &amp;&amp; height &lt;= <span class="hljs-number">1080</span>;
+  }
+
+  <span class="hljs-comment">// Otherwise, allow all non-video representations</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+}
+</code></pre>
+<p>[1] <a href="manifest.html#representation">Representation structure</a></p>
 </body></html></div></div></div></body>

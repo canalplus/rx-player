@@ -182,6 +182,18 @@ your browser and we need to create one.</p>
 <p><code>&quot;MEDIA_STARTING_TIME_NOT_FOUND&quot;</code>: The provided or calculated starting
 time was not found in the corresponding media.</p>
 </li>
+<li>
+<p><code>&quot;MEDIA_TIME_BEFORE_MANIFEST&quot;</code>: The current time in the media is behind
+what is currently declared in the manifest.
+This can lead to stalling indefinitely as the player won&#x2019;t be able to
+download new segments arround the current time.</p>
+</li>
+<li>
+<p><code>&quot;MEDIA_TIME_AFTER_MANIFEST&quot;</code>: The current time in the media is after what
+is currently declared in the manifest.
+This can lead to stalling indefinitely as the player won&#x2019;t be able to
+download new segments arround the current time.</p>
+</li>
 </ul>
 <p><a name="types-encrypted_media_error"></a>
 <a name="subchapter-ENCRYPTED_MEDIA_ERROR"></a></p>
