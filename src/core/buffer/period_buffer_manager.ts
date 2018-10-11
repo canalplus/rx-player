@@ -82,6 +82,8 @@ import {
 export type IPeriodBufferManagerClockTick = IAdaptationBufferClockTick;
 
 const {
+  MAXIMUM_MAX_BUFFER_AHEAD,
+  MAXIMUM_MAX_BUFFER_BEHIND,
   DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
   DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE,
 } = config;
@@ -130,6 +132,7 @@ export default function PeriodBufferManager(
     segmentRetry? : number;
     offlineRetry? : number;
     textTrackOptions? : ITextTrackSourceBufferOptions;
+    manualBitrateSwitchingMode : "seamless"|"direct";
   }
 ) : Observable<IPeriodBufferManagerEvent> {
   const { manifest, initialPeriod } = content;
@@ -146,14 +149,21 @@ export default function PeriodBufferManager(
    * @type {WeakMapMemory}
    */
   const garbageCollectors =
-    new WeakMapMemory((qSourceBuffer : QueuedSourceBuffer<unknown>) =>
-      BufferGarbageCollector({
+    new WeakMapMemory((qSourceBuffer : QueuedSourceBuffer<unknown>) => {
+      const { bufferType } = qSourceBuffer;
+      const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] != null ?
+        MAXIMUM_MAX_BUFFER_BEHIND[bufferType] as number : Infinity;
+      const defaultMaxAhead = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] != null ?
+        MAXIMUM_MAX_BUFFER_AHEAD[bufferType] as number : Infinity;
+      return BufferGarbageCollector({
         queuedSourceBuffer: qSourceBuffer,
         clock$: clock$.pipe(map(tick => tick.currentTime)),
-        maxBufferBehind$,
-        maxBufferAhead$,
-      })
-    );
+        maxBufferBehind$: maxBufferBehind$
+          .pipe(map(val => Math.min(val, defaultMaxBehind))),
+        maxBufferAhead$: maxBufferAhead$
+          .pipe(map(val => Math.min(val, defaultMaxAhead))),
+      });
+    });
 
   /**
    * Keep track of a unique segmentBookkeeper created per
@@ -263,23 +273,34 @@ export default function PeriodBufferManager(
         (last.end || Infinity) < time;
     }
 
-    /**
-     * Destroy the current set of consecutive buffers.
-     * Used when the clocks goes out of the bounds of those, e.g. when the user
-     * seeks.
-     * We can then re-create consecutive buffers, from the new point in time.
-     * @type {Subject}
-     */
+    // Destroy the current set of consecutive buffers.
+    // Used when the clocks goes out of the bounds of those, e.g. when the user
+    // seeks.
+    // We can then re-create consecutive buffers, from the new point in time.
     const destroyCurrentBuffers = new Subject<void>();
 
-    const restartBuffers$ = clock$.pipe(
-
-      filter(({ currentTime, wantedTimeOffset }) => {
-        if (!manifest.getPeriodForTime(wantedTimeOffset + currentTime)) {
-          // TODO Manage out-of-manifest situations
-          return false;
+    // trigger warnings when the wanted time is before or after the manifest's
+    // segments
+    const outOfManifest$ = clock$.pipe(
+      mergeMap(({ currentTime, wantedTimeOffset }) => {
+        const position = wantedTimeOffset + currentTime;
+        if (position < manifest.getMinimumPosition()) {
+          const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST", null, false);
+          return observableOf(EVENTS.warning(warning));
+        } else if (position > manifest.getMaximumPosition()) {
+          const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST", null, false);
+          return observableOf(EVENTS.warning(warning));
         }
-        return isOutOfPeriodList(wantedTimeOffset + currentTime);
+        return EMPTY;
+      })
+    );
+
+    // Restart the current buffer when the wanted time is in another period
+    // than the ones already considered
+    const restartBuffers$ = clock$.pipe(
+      filter(({ currentTime, wantedTimeOffset }) => {
+        return !!manifest.getPeriodForTime(wantedTimeOffset + currentTime) &&
+          isOutOfPeriodList(wantedTimeOffset + currentTime);
       }),
 
       take(1),
@@ -304,21 +325,18 @@ export default function PeriodBufferManager(
     );
 
     const currentBuffers$ = manageConsecutivePeriodBuffers(
-      bufferType,
-      basePeriod,
-      destroyCurrentBuffers
-    ).pipe(
+      bufferType, basePeriod, destroyCurrentBuffers).pipe(
         tap((message) => {
-        if (message.type === "periodBufferReady") {
-          periodList.add(message.value.period);
-        } else if (message.type === "periodBufferCleared") {
-          periodList.removeElement(message.value.period);
-        }
-      }),
-      share() // as always, with side-effects
-    );
+          if (message.type === "periodBufferReady") {
+            periodList.add(message.value.period);
+          } else if (message.type === "periodBufferCleared") {
+            periodList.removeElement(message.value.period);
+          }
+        }),
+        share() // as always, with side-effects
+      );
 
-    return observableMerge(currentBuffers$, restartBuffers$);
+    return observableMerge(currentBuffers$, restartBuffers$, outOfManifest$);
   }
 
   /**
@@ -571,7 +589,8 @@ export default function PeriodBufferManager(
       pipeline,
       wantedBufferAhead$,
       { manifest, period, adaptation },
-      abrManager
+      abrManager,
+      options
     ).pipe(catchError((error : Error) => {
       // non native buffer should not impact the stability of the
       // player. ie: if a text buffer sends an error, we want to

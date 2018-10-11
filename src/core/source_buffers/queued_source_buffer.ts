@@ -25,6 +25,9 @@ import log from "../../log";
 import { ICustomSourceBuffer } from "./abstract_source_buffer";
 import ICustomTimeRanges from "./time_ranges";
 
+// Every QueuedSourceBuffer types
+export type IBufferType = "audio"|"video"|"text"|"image";
+
 enum SourceBufferAction { Append, Remove }
 
 // Item waiting in the queue to append a new segment to the SourceBuffer.
@@ -86,6 +89,12 @@ type IQSBOrders<T> =
  */
 export default class QueuedSourceBuffer<T> {
   /**
+   * "Type" of the buffer.
+   * @type {string}
+   */
+  public readonly bufferType : IBufferType;
+
+  /**
    * SourceBuffer implementation.
    * Type it as ICustomSourceBuffer to allow more permissive custom
    * implementations.
@@ -146,7 +155,8 @@ export default class QueuedSourceBuffer<T> {
    * @constructor
    * @param {SourceBuffer} sourceBuffer
    */
-  constructor(sourceBuffer : ICustomSourceBuffer<T>) {
+  constructor(bufferType : IBufferType, sourceBuffer : ICustomSourceBuffer<T>) {
+    this.bufferType = bufferType;
     this._buffer = sourceBuffer;
     this._queue = [];
     this._flushing = null;

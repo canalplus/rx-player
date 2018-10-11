@@ -21,39 +21,46 @@ import {
 import {
   filter,
   map,
+  mergeMap,
   share,
   tap,
 } from "rxjs/operators";
 import { ICustomError } from "../../../errors";
 import Manifest, {
+  IRepresentationFilter,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "../../../manifest";
-import createManifest from "../../../manifest/factory";
-import { ITransportPipelines } from "../../../net";
 import {
   IManifestLoaderArguments,
+  IManifestParserArguments,
   IManifestResult,
+  ITransportPipelines,
 } from "../../../net/types";
-import Pipeline, {
-  IPipelineCache,
-  IPipelineData,
-  IPipelineOptions,
-} from "../core_pipeline";
+import createLoader, {
+  IPipelineLoaderOptions,
+  IPipelineLoaderResponse,
+} from "../create_loader";
+import createParser from "../create_parser";
 
-type IPipelineManifestResult =
-  IPipelineData<IManifestResult> |
-  IPipelineCache<IManifestResult>;
+export interface IManifestTransportInfos {
+  pipelines : ITransportPipelines;
+  options : {
+    representationFilter? : IRepresentationFilter;
+    supplementaryImageTracks? : ISupplementaryImageTrack[];
+    supplementaryTextTracks? : ISupplementaryTextTrack[];
+  };
+}
 
 type IPipelineManifestOptions =
-  IPipelineOptions<IManifestLoaderArguments, Document|string>;
+  IPipelineLoaderOptions<IManifestLoaderArguments, Document|string>;
 
 /**
  * Create function allowing to easily fetch and parse the manifest from its URL.
  *
  * @example
  * ```js
- * const manifestPipeline = createManifestPipeline(transport, warning$);
+ * const manifestPipeline = createManifestPipeline(transport, options, warning$);
  * manifestPipeline(manifestURL)
  *  .subscribe(manifest => console.log("Manifest:", manifest));
  * ```
@@ -65,18 +72,26 @@ type IPipelineManifestOptions =
  * @returns {Function}
  */
 export default function createManifestPipeline(
-  transport : ITransportPipelines,
+  transport : IManifestTransportInfos,
   pipelineOptions : IPipelineManifestOptions,
-  warning$ : Subject<Error|ICustomError>,
-  supplementaryTextTracks : ISupplementaryTextTrack[] = [],
-  supplementaryImageTracks : ISupplementaryImageTrack[] = []
+  warning$ : Subject<Error|ICustomError>
 ) : (url : string) => Observable<Manifest> {
-  return function fetchManifest(url : string) {
-    const manifest$ = Pipeline<
-      IManifestLoaderArguments, Document|string, IManifestResult
-    >(transport.manifest, pipelineOptions)({ url });
+  const loader = createLoader<
+  IManifestLoaderArguments, Document|string
+  >(transport.pipelines.manifest, pipelineOptions);
 
-    return manifest$.pipe(
+  const parser = createParser<
+  IManifestParserArguments<Document|string>,
+  IManifestResult
+  >(transport.pipelines.manifest);
+
+  /**
+   * Fetch and parse the manifest corresponding to the URL given.
+   * @param {string} url - URL of the manifest
+   * @returns {Observable}
+   */
+  return function fetchManifest(url : string) : Observable<Manifest> {
+    return loader({ url }).pipe(
 
       tap((arg) => {
         if (arg.type === "error") {
@@ -84,17 +99,14 @@ export default function createManifestPipeline(
         }
       }),
 
-      filter((arg) : arg is IPipelineManifestResult =>
-        arg.type === "data" || arg.type === "cache"
+      filter((arg) : arg is IPipelineLoaderResponse<Document|string> =>
+        arg.type === "response"
       ),
 
-      map(({ value }) : Manifest => {
-        return createManifest(
-          value.parsed.manifest,
-          supplementaryTextTracks,
-          supplementaryImageTracks,
-          warning$
-        );
+      mergeMap(({ value }) => parser({ response: value, url })),
+
+      map(({ manifest }) : Manifest => {
+        return new Manifest(manifest, warning$, transport.options);
       }),
       share()
     );

@@ -75,6 +75,7 @@ export interface IStreamLoaderArgument {
     offlineRetry? : number;
     segmentRetry? : number;
     textTrackOptions : ITextTrackSourceBufferOptions;
+    manualBitrateSwitchingMode : "seamless"|"direct";
   };
 }
 

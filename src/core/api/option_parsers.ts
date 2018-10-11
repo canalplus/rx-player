@@ -22,6 +22,7 @@
 import objectAssign from "object-assign";
 import config from "../../config";
 import log from "../../log";
+import { IRepresentationFilter } from "../../manifest";
 import {
   CustomManifestLoader,
   CustomSegmentLoader,
@@ -36,6 +37,7 @@ const {
   DEFAULT_AUTO_PLAY,
   DEFAULT_INITIAL_BITRATES,
   DEFAULT_LIMIT_VIDEO_WIDTH,
+  DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
   DEFAULT_MAX_BITRATES,
   DEFAULT_MAX_BUFFER_AHEAD,
   DEFAULT_MAX_BUFFER_BEHIND,
@@ -50,6 +52,7 @@ export { IKeySystemOption };
 export interface ITransportOptions {
   manifestLoader? : CustomManifestLoader;
   segmentLoader? : CustomSegmentLoader;
+  representationFilter? : IRepresentationFilter;
 }
 
 export interface ISupplementaryTextTrackOption {
@@ -145,6 +148,7 @@ export interface ILoadVideoOptions {
   textTrackMode? : "native"|"html";
   hideNativeSubtitle? : boolean;
   textTrackElement? : HTMLElement;
+  manualBitrateSwitchingMode : "seamless"|"direct";
 }
 
 interface IParsedLoadVideoOptionsBase {
@@ -153,12 +157,13 @@ interface IParsedLoadVideoOptionsBase {
   autoPlay : boolean;
   keySystems : IKeySystemOption[];
   networkConfig: INetworkConfigOption;
-  transportOptions : ITransportOptions|undefined;
+  transportOptions : ITransportOptions;
   supplementaryTextTracks : ISupplementaryTextTrackOption[];
   supplementaryImageTracks : ISupplementaryImageTrackOption[];
   defaultAudioTrack : IDefaultAudioTrackOption|null|undefined;
   defaultTextTrack : IDefaultTextTrackOption|null|undefined;
   startAt : IParsedStartAtOption|undefined;
+  manualBitrateSwitchingMode : "seamless"|"direct";
 }
 
 interface IParsedLoadVideoOptionsNative extends IParsedLoadVideoOptionsBase {
@@ -326,16 +331,11 @@ function parseLoadVideoOptions(
 ) : IParsedLoadVideoOptions {
   let url : string;
   let transport : string;
-  let autoPlay : boolean;
   let keySystems : IKeySystemOption[];
-  let transportOptions : ITransportOptions|undefined;
   let supplementaryTextTracks : ISupplementaryTextTrackOption[];
   let supplementaryImageTracks : ISupplementaryImageTrackOption[];
   let textTrackMode : "native"|"html";
   let textTrackElement : HTMLElement|undefined;
-  let defaultAudioTrack : IDefaultAudioTrackOption|null|undefined;
-  let defaultTextTrack : IDefaultTextTrackOption|null|undefined;
-  let hideNativeSubtitle : boolean;
   let startAt : IParsedStartAtOption|undefined;
 
   if (!options || options.url == null) {
@@ -350,7 +350,7 @@ function parseLoadVideoOptions(
     transport = String(options.transport);
   }
 
-  autoPlay = options.autoPlay == null ?
+  const autoPlay = options.autoPlay == null ?
     DEFAULT_AUTO_PLAY : !!options.autoPlay;
 
   if (options.keySystems == null) {
@@ -369,7 +369,7 @@ function parseLoadVideoOptions(
     }
   }
 
-  transportOptions = options.transportOptions;
+  const transportOptions = options.transportOptions || {};
 
   if (options.supplementaryTextTracks == null) {
     supplementaryTextTracks = [];
@@ -423,10 +423,14 @@ function parseLoadVideoOptions(
     textTrackMode = options.textTrackMode;
   }
 
-  defaultAudioTrack = normalizeAudioTrack(options.defaultAudioTrack);
-  defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
-  hideNativeSubtitle = (options as any).hideNativeSubtitle == null ?
+  const defaultAudioTrack = normalizeAudioTrack(options.defaultAudioTrack);
+  const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
+  const hideNativeSubtitle = (options as any).hidenativeSubtitle == null ?
     !DEFAULT_SHOW_NATIVE_SUBTITLE : !!(options as any).hideNativeSubtitle;
+  const manualBitrateSwitchingMode =
+    (options as any).manualBitrateSwitchingMode == null ?
+      !DEFAULT_MANUAL_BITRATE_SWITCHING_MODE :
+      (options as any).manualBitrateSwitchingMode;
 
   if (textTrackMode === "html") {
     // TODO Better way to express that in TypeScript?
@@ -473,6 +477,7 @@ function parseLoadVideoOptions(
     defaultTextTrack,
     hideNativeSubtitle,
     keySystems,
+    manualBitrateSwitchingMode,
     networkConfig,
     startAt,
     supplementaryImageTracks,

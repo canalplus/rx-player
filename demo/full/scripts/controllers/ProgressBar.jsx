@@ -81,6 +81,7 @@ class Progressbar extends React.Component {
       currentTime,
       minimumPosition,
       maximumPosition,
+      isContentLoaded,
       bufferGap,
       player,
     } = this.props;
@@ -98,6 +99,14 @@ class Progressbar extends React.Component {
 
     const tipsOffset = this.wrapperElement ?
       this.wrapperElement.getBoundingClientRect().left : 0;
+
+    if (!isContentLoaded) {
+      return (
+        <div className="progress-bar-parent" ref={el => this.wrapperElement = el}>
+          <div className="progress-bar-wrapper" />
+        </div>
+      );
+    }
 
     return (
       <div
@@ -139,6 +148,7 @@ export default withModulesState({
     bufferGap: "bufferGap",
     currentTime: "currentTime",
     images: "images",
+    isContentLoaded: "isContentLoaded",
     minimumPosition: "minimumPosition",
     maximumPosition: "maximumPosition",
   },

@@ -65,17 +65,19 @@ export default function launchTestsForContent(
   } = manifestInfos;
 
   const firstPeriodIndex = isLive ? periodsInfos.length - 1 : 0;
-  const videoBitrates =
+  const videoRepresentationsForFirstPeriod =
     periodsInfos[firstPeriodIndex].adaptations.video &&
     periodsInfos[firstPeriodIndex].adaptations.video.length ?
-      periodsInfos[firstPeriodIndex].adaptations.video[0].representations
-        .map(representation => representation.bitrate) : [];
+      periodsInfos[firstPeriodIndex].adaptations.video[0].representations : [];
+  const videoBitrates = videoRepresentationsForFirstPeriod
+    .map(representation => representation.bitrate);
 
-  const audioBitrates =
+  const audioRepresentationsForFirstPeriod =
     periodsInfos[firstPeriodIndex].adaptations.audio &&
     periodsInfos[firstPeriodIndex].adaptations.audio.length ?
-      periodsInfos[firstPeriodIndex].adaptations.audio[0].representations
-        .map(representation => representation.bitrate) : [];
+      periodsInfos[firstPeriodIndex].adaptations.audio[0].representations : [];
+  const audioBitrates = audioRepresentationsForFirstPeriod
+    .map(representation => representation.bitrate);
 
   describe("API tests", () => {
     beforeEach(() => {
@@ -1170,7 +1172,7 @@ export default function launchTestsForContent(
           autoPlay: true,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition()).to.be.below(0.01);
+        expect(player.getPosition()).to.be.below(0.1);
         player.seekTo(50);
         expect(player.getPosition()).to.be.closeTo(50, 0.5);
       });

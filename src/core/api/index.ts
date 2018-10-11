@@ -21,6 +21,7 @@
  */
 
 import deepEqual from "deep-equal";
+import objectAssign from "object-assign";
 import {
   BehaviorSubject,
   combineLatest as observableCombineLatest,
@@ -171,7 +172,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Current version of the RxPlayer.
    * @type {string}
    */
-  public static version = /*PLAYER_VERSION*/"3.7.0";
+  public static version = /*PLAYER_VERSION*/"3.8.0";
 
   /**
    * Current version of the RxPlayer.
@@ -519,7 +520,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.7.0";
+    this.version = /*PLAYER_VERSION*/"3.8.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -674,6 +675,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       defaultAudioTrack,
       defaultTextTrack,
       keySystems,
+      manualBitrateSwitchingMode,
       networkConfig,
       startAt,
       supplementaryImageTracks,
@@ -713,9 +715,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     const videoElement = this.videoElement;
 
     // Global clock used for the whole application.
-    const clock$ = createClock(videoElement, {
-      withMediaSource: !isDirectFile,
-    });
+    const clock$ = createClock(videoElement, { withMediaSource: !isDirectFile });
 
     const closeStream$ = observableMerge(
       this._priv_stopCurrentContent$,
@@ -730,7 +730,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         throw new Error(`transport "${transport}" not supported`);
       }
 
-      const transportObj = transportFn(transportOptions);
+      const pipelines = transportFn(transportOptions);
+      const { representationFilter } = transportOptions;
 
       // Options used by the ABR Manager.
       const adaptiveOptions = {
@@ -763,17 +764,24 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       stream = Stream({
         adaptiveOptions,
         autoPlay,
-        bufferOptions: this._priv_bufferOptions,
+        bufferOptions: objectAssign({
+          manualBitrateSwitchingMode,
+        }, this._priv_bufferOptions),
         clock$,
         keySystems,
         mediaElement: videoElement,
         networkConfig,
         speed$: this._priv_speed$,
         startAt,
-        supplementaryImageTracks,
-        supplementaryTextTracks,
         textTrackOptions,
-        transport: transportObj,
+        transport: {
+          pipelines,
+          options: {
+            representationFilter,
+            supplementaryImageTracks,
+            supplementaryTextTracks,
+          },
+        },
         url,
       })
         .pipe(takeUntil(closeStream$))
@@ -863,13 +871,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       )
     ).pipe(distinctUntilChanged());
 
-    /**
-     * Emit true each time the player goes into a "play" state.
-     * @type {Observable.<Boolean>}
-     */
-    const videoPlays$ = onPlayPause$(videoElement)
-      .pipe(map(evt => evt.type === "play"));
-
     let streamDisposable : Subscription|undefined;
     this._priv_stopCurrentContent$
       .pipe(take(1))
@@ -879,9 +880,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         }
       });
 
-    videoPlays$
+    onPlayPause$(videoElement)
       .pipe(takeUntil(this._priv_stopCurrentContent$))
-      .subscribe(x => this._priv_onPlayPauseNext(x), noop);
+      .subscribe(e => this._priv_onPlayPauseNext(e.type === "play"), noop);
 
     clock$
       .pipe(takeUntil(this._priv_stopCurrentContent$))

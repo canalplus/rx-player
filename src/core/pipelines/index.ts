@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-import createManifestPipeline from "./manifest";
+import createManifestPipeline, {
+  IManifestTransportInfos,
+} from "./manifest";
 import SegmentPipelinesManager, {
+  IFetchedSegment,
   IPipelineOptions,
   IPrioritizedSegmentFetcher,
-  ISegmentResponse,
 } from "./segment";
 
 export {
   createManifestPipeline,
+  IManifestTransportInfos,
+  IFetchedSegment,
   IPipelineOptions,
   SegmentPipelinesManager,
   IPrioritizedSegmentFetcher,
-  ISegmentResponse,
 };

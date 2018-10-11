@@ -46,6 +46,14 @@ const {
   OUT_OF_STARVATION_GAP,
 } = config;
 
+// Adaptive BitRate estimation object
+export interface IABREstimation {
+  bitrate: undefined|number; // If defined, the currently calculated bitrate
+  manual: boolean; // True if the representation choice was manually dictated
+                   // by the user
+  representation: Representation; // The chosen representation
+}
+
 interface IRepresentationChooserClockTick {
   bitrate : number|undefined; // currently set bitrate, in bit per seconds
   bufferGap : number; // time to the end of the buffer, in seconds
@@ -118,16 +126,14 @@ interface IRepresentationChooserOptions {
 function setManualRepresentation(
   representations : Representation[],
   bitrate : number
-) : Observable<{
-  bitrate: undefined;
-  representation: Representation;
-}> {
+) : Observable<IABREstimation> {
   const chosenRepresentation =
     fromBitrateCeil(representations, bitrate) ||
     representations[0];
 
   return observableOf({
     bitrate: undefined, // Bitrate estimation is deactivated here
+    manual: true,
     representation: chosenRepresentation,
   });
 }
@@ -347,17 +353,16 @@ export default class RepresentationChooser {
   public get$(
     clock$ : Observable<IRepresentationChooserClockTick>,
     representations : Representation[]
-  ) : Observable<{
-    bitrate: undefined|number; // bitrate estimation
-    representation: Representation|null; // chosen representation
-  }> {
-    if (representations.length < 2) {
+  ) : Observable<IABREstimation> {
+    if (!representations.length) {
+      throw new Error("ABRManager: no representation choice given");
+    }
+    if (representations.length === 1) {
       return observableOf({
         bitrate: undefined, // Bitrate estimation is deactivated here
-        representation: representations.length ?
-          representations[0] : null,
-      })
-        .pipe(takeUntil(this._dispose$));
+        manual: false,
+        representation: representations[0],
+      }).pipe(takeUntil(this._dispose$));
     }
 
     const {
@@ -467,6 +472,7 @@ export default class RepresentationChooser {
 
             return {
               bitrate: bandwidthEstimate,
+              manual: false,
               representation: fromBitrateCeil(_representations, nextBitrate) ||
               representations[0],
             };

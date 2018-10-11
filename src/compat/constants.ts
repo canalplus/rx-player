@@ -24,7 +24,11 @@ interface ICompatMediaKeysConstructor {
 
 // Regular VTTCue as present in most browsers
 // TODO open TypeScript issue about it?
-declare class ICompatVTTCue {
+interface ICompatVTTCueConstructor {
+  new(start : number, end : number, cueText : string) : ICompatVTTCue;
+}
+
+interface ICompatVTTCue {
   align : string;
   endTime : number;
   id : string;
@@ -36,7 +40,6 @@ declare class ICompatVTTCue {
   snapToLines : boolean;
   startTime : number;
   vertical : string;
-  constructor(start : number, end : number, cueText : string);
 }
 
 // surcharge TextTrack to allow adding ICompatVTTCue to it
@@ -51,15 +54,19 @@ interface ICompatDocument extends Document {
   mozFullScreenElement? : HTMLElement;
   mozHidden? : boolean;
   msExitFullscreen? : () => void;
-  msFullscreenElement? : HTMLElement;
+  webkitExitFullscreen : () => void;
+  fullscreenElement : Element|null;
+  msFullscreenElement? : Element|null;
+  webkitFullscreenElement : Element|null;
   msHidden? : boolean;
   webkitHidden? : boolean;
 }
 
 // Element with added optional functions for old browsers
-interface ICompatElement extends Element {
+interface ICompatHTMLMediaElement extends HTMLMediaElement {
   mozRequestFullScreen? : () => void;
   msRequestFullscreen? : () => void;
+  webkitRequestFullscreen : () => void;
 }
 
 // for some reasons, Typescript seem to forget about SessionTypes
@@ -79,7 +86,7 @@ interface ICompatMediaKeySystemConfiguration {
 
 const win = window as any;
 const HTMLElement_ : typeof HTMLElement = win.HTMLElement;
-const VTTCue_ : typeof ICompatVTTCue|undefined =
+const VTTCue_ : ICompatVTTCueConstructor|undefined =
   win.VTTCue ||
   win.TextTrackCue;
 
@@ -129,12 +136,13 @@ const READY_STATES = {
 export {
   HTMLElement_,
   ICompatDocument,
-  ICompatElement,
+  ICompatHTMLMediaElement,
   ICompatMediaKeySystemAccess,
   ICompatMediaKeySystemConfiguration,
   ICompatMediaKeysConstructor,
   ICompatTextTrack,
   ICompatVTTCue,
+  ICompatVTTCueConstructor,
   MediaKeys_,
   MediaSource_,
   READY_STATES,

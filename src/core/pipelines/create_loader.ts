@@ -39,10 +39,8 @@ import {
   RequestError,
 } from "../../errors";
 import {
-  // ILoaderData,
   ILoaderEvent,
   ILoaderProgress,
-  ILoaderResponse,
   ILoaderResponseValue,
   ITransportPipeline,
 } from "../../net/types";
@@ -55,12 +53,12 @@ interface IPipelineLoaderCache<T> {
   value : ILoaderResponseValue<T>;
 }
 
-export interface IPipelineError {
+export interface IPipelineLoaderError {
   type : "error";
   value : Error|ICustomError;
 }
 
-export interface IPipelineMetrics {
+export interface IPipelineLoaderMetrics {
   type : "metrics";
   value : {
     size? : number;
@@ -68,39 +66,30 @@ export interface IPipelineMetrics {
   };
 }
 
-export interface IPipelineData<T> {
-  type : "data";
-  value : {
-    parsed : T;
-  };
-}
-
-export interface IPipelineCache<T> {
-  type : "cache";
-  value : {
-    parsed : T;
-  };
-}
-
-export interface IPipelineRequest<T> {
+export interface IPipelineLoaderRequest<T> {
   type : "request";
   value : T;
+}
+
+export interface IPipelineLoaderResponse<T> {
+  type : "response";
+  value : {
+    responseData : T;
+    url? : string;
+  };
 }
 
 /**
  * Type parameters:
  *   T: Argument given to the loader
  *   U: ResponseType of the request
- *   V: Response given by the parser
  */
-export type ICorePipelineEvent<T, U, V> =
-  IPipelineRequest<T> |
-  ILoaderResponse<U> |
+export type IPipelineLoaderEvent<T, U> =
+  IPipelineLoaderRequest<T> |
+  IPipelineLoaderResponse<U> |
   ILoaderProgress |
-  IPipelineError |
-  IPipelineCache<V> |
-  IPipelineData<V> |
-  IPipelineMetrics;
+  IPipelineLoaderError |
+  IPipelineLoaderMetrics;
 
 const {
   MAX_BACKOFF_DELAY_BASE,
@@ -109,19 +98,13 @@ const {
 
 /**
  * Generate a new error from the infos given.
- * Also attach the pipeline type (audio/manifest...) to the _pipelineType_
- * property of the returned error.
  * @param {string} code
  * @param {Error} error
- * @param {Boolean} [fatal=true] - Whether the error is fatal to the content's
+ * @param {Boolean} fatal - Whether the error is fatal to the content's
  * playback.
  * @returns {Error}
  */
-function errorSelector(
-  code : string,
-  error : Error,
-  fatal : boolean = true
-) : ICustomError {
+function errorSelector(code : string, error : Error, fatal : boolean) : ICustomError {
   if (!isKnownError(error)) {
     if (error instanceof RequestError) {
       return new NetworkError(code, error, fatal);
@@ -131,24 +114,21 @@ function errorSelector(
   return error;
 }
 
-export interface IPipelineOptions<T, U> {
+export interface IPipelineLoaderOptions<T, U> {
   cache? : {
     add : (obj : T, arg : ILoaderResponseValue<U>) => void;
     get : (obj : T) => ILoaderResponseValue<U>;
   };
-
   maxRetry : number;
   maxRetryOffline : number;
 }
 
 /**
- * TODO All that any casting is ugly
+ * Returns function allowing to download the wanted data through a
+ * resolver -> loader pipeline.
  *
- * Returns function allowing to download the wanted transport object through
- * the resolver -> loader -> parser pipeline.
- *
- * (A transport object can be for example: the manifest, audio and video
- * segments, text, images...)
+ * (The data can be for example: the manifest, audio and video segments, text,
+ * images...)
  *
  * The function returned takes the initial data in arguments and returns an
  * Observable which will emit:
@@ -165,7 +145,7 @@ export interface IPipelineOptions<T, U> {
  *   - each time a minor request error is encountered (type "error").
  *     With the error as a value.
  *
- *   - Lastly, with the obtained data (type "data" or "cache).
+ *   - Lastly, with the fetched data (type "response").
  *
  *
  * Each of these but "error" can be emitted at most one time.
@@ -175,43 +155,29 @@ export interface IPipelineOptions<T, U> {
  *
  * This observable will complete after emitting the data.
  *
- * @param {Object} transportObject
- * @param {Object} options
- * @returns {Function}
- *
  * Type parameters:
  *   T: Argument given to the Net's loader
  *   U: ResponseType of the request
- *   V: Response given by the Net's parser
+ *
+ * @param {Object} transportPipeline
+ * @param {Object} options
+ * @returns {Function}
  */
-export default function createPipeline<T, U, V>(
+export default function createLoader<T, U>(
   transportPipeline : ITransportPipeline,
-  options : IPipelineOptions<T, U>
-) : (x : T) => Observable<ICorePipelineEvent<T, U, V>> {
-  const {
-    cache,
-    maxRetry,
-    maxRetryOffline,
-  } = options;
-
-  const {
-    loader,
-    parser,
-  } = transportPipeline;
+  options : IPipelineLoaderOptions<T, U>
+) : (x : T) => Observable<IPipelineLoaderEvent<T, U>> {
+  const { cache, maxRetry, maxRetryOffline } = options;
+  const { loader } = transportPipeline;
 
   // TODO Remove the resolver completely
   const resolver = (transportPipeline as any).resolver != null ?
     (transportPipeline as any).resolver : observableOf.bind(Observable);
 
-  /**
-   * Subject that will emit non-fatal errors.
-   */
+  // Subject that will emit non-fatal errors.
   const retryErrorSubject : Subject<Error> = new Subject();
 
-  /**
-   * Backoff options given to the backoff retry done with the loader function.
-   * @see retryWithBackoff
-   */
+  // Backoff options given to the backoff retry done with the loader function.
   const backoffOptions = {
     baseDelay: INITIAL_BACKOFF_DELAY_BASE,
     maxDelay: MAX_BACKOFF_DELAY_BASE,
@@ -234,7 +200,7 @@ export default function createPipeline<T, U, V>(
     return tryCatch<T, T>(resolver, resolverArgument)
       .pipe()
       .pipe(catchError((error : Error) : Observable<never> => {
-        throw errorSelector("PIPELINE_RESOLVE_ERROR", error);
+        throw errorSelector("PIPELINE_RESOLVE_ERROR", error, true);
       }));
   }
 
@@ -244,24 +210,24 @@ export default function createPipeline<T, U, V>(
    *   - call the transport loader - with an exponential backoff - if not
    *
    * @param {Object} loaderArgument - Input given to the loader
+   * @returns {Observable}
    */
   function loadData(
     loaderArgument : T
-  ) : Observable<ILoaderEvent<U>|IPipelineRequest<T>|IPipelineLoaderCache<U>> {
+  ) : Observable<ILoaderEvent<U>|IPipelineLoaderRequest<T>|IPipelineLoaderCache<U>> {
 
     /**
      * Call the Pipeline's loader with an exponential Backoff.
      * @returns {Observable}
      */
     function startLoaderWithBackoff(
-    ) : Observable<ILoaderEvent<U>|IPipelineRequest<T>> {
+    ) : Observable<ILoaderEvent<U>|IPipelineLoaderRequest<T>> {
       const request$ = downloadingBackoff<ILoaderEvent<U>>(
         tryCatch<T, ILoaderEvent<U>>(loader as any, loaderArgument),
         backoffOptions
       ).pipe(
-
         catchError((error : Error) : Observable<never> => {
-          throw errorSelector("PIPELINE_LOAD_ERROR", error);
+          throw errorSelector("PIPELINE_LOAD_ERROR", error, true);
         }),
 
         tap((arg) => {
@@ -295,27 +261,17 @@ export default function createPipeline<T, U, V>(
   }
 
   /**
-   * Call the transport's parser with the given data.
-   *
-   * Throws with the right error if it fails.
-   * @param {Object} parserArgument
+   * Load the corresponding data.
+   * @param {Object} pipelineInputData
    * @returns {Observable}
    */
-  function callParser<Y>(parserArgument : Y) : Observable<V> {
-    return tryCatch<Y, V>(parser as any, parserArgument)
-      .pipe()
-      .pipe(catchError((error) : Observable<never> => {
-        throw errorSelector("PIPELINE_PARSING_ERROR", error);
-      }));
-  }
-
   return function startPipeline(
     pipelineInputData : T
-  ) : Observable<ICorePipelineEvent<T, U, V>> {
+  ) : Observable<IPipelineLoaderEvent<T, U>> {
     const pipeline$ = callResolver(pipelineInputData).pipe(
       mergeMap((resolverResponse : T) => {
         return loadData(resolverResponse).pipe(
-          mergeMap((arg) : Observable<ICorePipelineEvent<T, U, V>> => {
+          mergeMap((arg) : Observable<IPipelineLoaderEvent<T, U>> => {
             // "cache": data taken from cache by the pipeline
             // "data": the data is available but no request has been done
             // "response": data received through a request
@@ -323,12 +279,8 @@ export default function createPipeline<T, U, V>(
               case "cache":
               case "data":
               case "response":
-                const loaderResponse = arg.value;
-                const loadedDataInfos =
-                  objectAssign({ response: loaderResponse }, resolverResponse);
-
                 // add metrics if a request was made
-                const metrics : Observable<IPipelineMetrics> =
+                const metrics : Observable<IPipelineLoaderMetrics> =
                   arg.type === "response" ?
                     observableOf({
                       type: "metrics" as "metrics",
@@ -340,15 +292,12 @@ export default function createPipeline<T, U, V>(
 
                 return observableConcat(
                   metrics,
-                  callParser(loadedDataInfos)
-                    .pipe(map(parserResponse => {
-                      return {
-                        type: "data" as "data",
-                        value: objectAssign({
-                          parsed: parserResponse,
-                        }, loadedDataInfos),
-                      };
-                    }))
+                  observableOf({
+                    type: "response" as "response",
+                    value: objectAssign({}, resolverResponse, {
+                      responseData: arg.value.responseData,
+                    }),
+                  })
                 );
               default:
                 return observableOf(arg);
@@ -358,11 +307,8 @@ export default function createPipeline<T, U, V>(
       finalize(() => { retryErrorSubject.complete(); })
     );
 
-    const retryError$ : Observable<IPipelineError> = retryErrorSubject
-      .pipe(map(error => ({
-        type: "error" as "error",
-        value: error,
-      })));
+    const retryError$ : Observable<IPipelineLoaderError> = retryErrorSubject
+      .pipe(map(error => ({ type: "error" as "error", value: error })));
 
     return observableMerge(pipeline$, retryError$);
   };

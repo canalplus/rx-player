@@ -91,10 +91,10 @@ describe("loadVideo Options", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(player.getPlayerState()).to.equal("LOADED");
-      expect(player.getPosition()).to.equal(0);
+      expect(player.getPosition()).to.be.below(0.1);
       await sleep(200);
       expect(player.getPlayerState()).to.equal("LOADED");
-      expect(player.getPosition()).to.equal(0);
+      expect(player.getPosition()).to.be.below(0.1);
     });
 
     it("should keep state as LOADED (and not play) if autoPlay is false", async () => {
@@ -105,10 +105,10 @@ describe("loadVideo Options", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(player.getPlayerState()).to.equal("LOADED");
-      expect(player.getPosition()).to.equal(0);
+      expect(player.getPosition()).to.be.below(0.1);
       await sleep(200);
       expect(player.getPlayerState()).to.equal("LOADED");
-      expect(player.getPosition()).to.equal(0);
+      expect(player.getPosition()).to.be.below(0.1);
     });
 
     it("should set state as LOADED then to PLAYING (and play) if autoPlay is true", async () => {
@@ -119,9 +119,9 @@ describe("loadVideo Options", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(player.getPlayerState()).to.equal("PLAYING");
-      expect(player.getPosition()).to.equal(0);
-      await sleep(300);
-      expect(player.getPosition()).to.be.above(0.100);
+      expect(player.getPosition()).to.be.below(0.1);
+      await sleep(500);
+      expect(player.getPosition()).to.be.above(0.2);
     });
   });
 
@@ -289,6 +289,184 @@ describe("loadVideo Options", () => {
           .closeTo(player.getMaximumPosition() * 0.3, 0.5);
         await sleep(500);
         expect(player.getPosition()).to.be.above(initialPosition);
+      });
+    });
+  });
+
+  describe("transportOptions", () => {
+    describe("representationFilter", () => {
+      it("should filter out Representations", async () => {
+        const videoRepresentations = manifestInfos
+          .periods[0].adaptations.video[0].representations;
+        const initialNumberOfRepresentations = videoRepresentations.length;
+        expect(initialNumberOfRepresentations).to.be.above(1);
+        const representationInTheMiddle = videoRepresentations[
+          Math.floor(initialNumberOfRepresentations / 2)
+        ];
+
+        let numberOfTimeRepresentationFilterIsCalledForVideo = 0;
+        player.loadVideo({
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
+          transportOptions: {
+            representationFilter(representation, infos) {
+              if (infos.bufferType === "video") {
+                numberOfTimeRepresentationFilterIsCalledForVideo++;
+                return representation.bitrate <
+                  representationInTheMiddle.bitrate;
+              }
+              return true;
+            },
+          },
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+
+        expect(numberOfTimeRepresentationFilterIsCalledForVideo)
+          .to.equal(initialNumberOfRepresentations);
+
+        const currentVideoRepresentations =
+          player.getCurrentAdaptations().video.representations;
+        expect(currentVideoRepresentations.length).to.equal(
+          Math.floor(initialNumberOfRepresentations / 2)
+        );
+      });
+    });
+
+    describe("segmentLoader", () => {
+      let numberOfTimeCustomSegmentLoaderWasCalled = 0;
+      let numberOfTimeCustomSegmentLoaderWentThrough = 0;
+
+      beforeEach(() => {
+        numberOfTimeCustomSegmentLoaderWasCalled = 0;
+        numberOfTimeCustomSegmentLoaderWentThrough = 0;
+      });
+
+      const customSegmentLoader = (infos, callbacks) => {
+        numberOfTimeCustomSegmentLoaderWasCalled++;
+
+        // we will only use this custom loader for videos segments.
+        if (infos.adaptation.type !== "video") {
+          callbacks.fallback();
+          return;
+        }
+
+        numberOfTimeCustomSegmentLoaderWentThrough++;
+        const xhr = new XMLHttpRequest();
+        const sentTime = Date.now();
+
+        xhr.onload = (r) => {
+          if (200 <= xhr.status && xhr.status < 300) {
+            const duration = Date.now() - sentTime;
+            const size = r.total;
+            const data = xhr.response;
+            callbacks.resolve({ duration, size, data });
+          } else {
+            const err = new Error("didn't work");
+            err.xhr = xhr;
+            callbacks.reject(err);
+          }
+        };
+
+        xhr.onerror = () => {
+          const err = new Error("didn't work");
+          err.xhr = xhr;
+          callbacks.reject(err);
+        };
+
+        xhr.open("GET", infos.url);
+        xhr.responseType = "arraybuffer";
+
+        const range = infos.segment.range;
+        if (range) {
+          if (range[1] && range[1] !== Infinity) {
+            xhr.setRequestHeader("Range", `bytes=${range[0]}-${range[1]}`);
+          } else {
+            xhr.setRequestHeader("Range", `bytes=${range[0]}-`);
+          }
+        }
+
+        xhr.send();
+
+        return () => {
+          xhr.abort();
+        };
+      };
+
+      it("should pass through the custom segmentLoader for segment requests", async () => {
+        player.loadVideo({
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
+          transportOptions: { segmentLoader: customSegmentLoader },
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+
+        // should be every one of the requests done minus the manifest request
+        expect(numberOfTimeCustomSegmentLoaderWasCalled)
+          .to.equal(fakeServer.requests.length - 1);
+        expect(numberOfTimeCustomSegmentLoaderWasCalled)
+          .to.be.above(1);
+
+        const videoSegmentRequests = fakeServer.requests
+          .filter(r => r.url && r.url.includes("ateam-video"));
+
+        expect(numberOfTimeCustomSegmentLoaderWentThrough)
+          .to.equal(videoSegmentRequests.length);
+        expect(numberOfTimeCustomSegmentLoaderWentThrough)
+          .to.be.above(0);
+      });
+    });
+
+    describe("manifestLoader", () => {
+      let numberOfTimeCustomManifestLoaderWasCalled = 0;
+
+      beforeEach(() => {
+        numberOfTimeCustomManifestLoaderWasCalled = 0;
+      });
+
+      const customManifestLoader = (url, callbacks) => {
+        numberOfTimeCustomManifestLoaderWasCalled++;
+        const xhr = new XMLHttpRequest();
+        const sentTime = Date.now();
+
+        xhr.onload = (r) => {
+          if (200 <= xhr.status && xhr.status < 300) {
+            const duration = Date.now() - sentTime;
+            const size = r.total;
+            const data = xhr.response;
+            callbacks.resolve({ duration, size, data });
+          } else {
+            const err = new Error("didn't work");
+            err.xhr = xhr;
+            callbacks.reject(err);
+          }
+        };
+
+        xhr.onerror = () => {
+          const err = new Error("didn't work");
+          err.xhr = xhr;
+          callbacks.reject(err);
+        };
+
+        xhr.open("GET", url);
+        xhr.responseType = "document";
+
+        xhr.send();
+
+        return () => {
+          xhr.abort();
+        };
+      };
+
+      it("should pass through the custom segmentLoader for segment requests", async () => {
+        player.loadVideo({
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
+          transportOptions: { manifestLoader: customManifestLoader },
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+
+        expect(numberOfTimeCustomManifestLoaderWasCalled)
+          .to.equal(1);
       });
     });
   });

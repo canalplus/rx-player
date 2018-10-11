@@ -17,19 +17,21 @@
 import { Subject } from "rxjs";
 import { ICustomError } from "../../../errors";
 import { ITransportPipelines } from "../../../net";
-import { ISegmentLoaderArguments } from "../../../net/types";
+import {
+  ISegmentLoaderArguments,
+} from "../../../net/types";
 import {
   IABRMetric,
   IABRRequest
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
-import { IPipelineOptions } from "../core_pipeline";
+import { IPipelineLoaderOptions } from "../create_loader";
 import applyPrioritizerToSegmentFetcher, {
   IPrioritizedSegmentFetcher,
 } from "./prioritized_segment_fetcher";
 import ObservablePrioritizer from "./prioritizer";
 import createSegmentFetcher, {
-  ISegmentResponse,
+  IFetchedSegment,
 } from "./segment_fetcher";
 
 /**
@@ -61,8 +63,13 @@ import createSegmentFetcher, {
  *   maxRetryOffline: Infinity,
  * });
  *
- * // 3 - request a content with a given priority
+ * // 3 - load a segment with a given priority
  * pipeline.createRequest(myContent, 1)
+ *
+ *   // 4 - parse it
+ *   .pipe(mergeMap(fetchedSegment => fetchedSegment.parse()))
+ *
+ *   // 5 - use it
  *   .subscribe((res) => console.log("audio segment downloaded:", res));
  * ```
  */
@@ -71,7 +78,7 @@ export default class SegmentPipelinesManager<T> {
   private readonly _requestsInfos$ : Subject<Subject<IABRRequest>>;
   private readonly _warning$ : Subject<Error | ICustomError>;
   private readonly _transport : ITransportPipelines;
-  private readonly _prioritizer : ObservablePrioritizer<ISegmentResponse<T>>;
+  private readonly _prioritizer : ObservablePrioritizer<IFetchedSegment<T>>;
 
   /**
    * @param {Object} transport
@@ -94,13 +101,14 @@ export default class SegmentPipelinesManager<T> {
   }
 
   /**
+   * Create a segment pipeline, allowing to easily perform segment requests.
    * @param {string} bufferType
    * @param {Object} options
-   * @returns {Function}
+   * @returns {Object}
    */
   createPipeline(
     bufferType : IBufferType,
-    options : IPipelineOptions<ISegmentLoaderArguments, ISegmentResponse<T>>
+    options : IPipelineLoaderOptions<ISegmentLoaderArguments, T>
   ) {
     const segmentFetcher = createSegmentFetcher<T>(
       bufferType,
@@ -111,15 +119,12 @@ export default class SegmentPipelinesManager<T> {
       options
     );
 
-    return applyPrioritizerToSegmentFetcher<T>(
-      this._prioritizer,
-      segmentFetcher
-    );
+    return applyPrioritizerToSegmentFetcher<T>(this._prioritizer, segmentFetcher);
   }
 }
 
 export {
-  IPipelineOptions,
+  IPipelineLoaderOptions as IPipelineOptions,
   IPrioritizedSegmentFetcher,
-  ISegmentResponse,
+  IFetchedSegment,
 };

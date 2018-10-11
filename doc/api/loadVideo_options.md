@@ -15,6 +15,7 @@
     - [defaultTextTrack](#prop-defaultTextTrack)
     - [textTrackMode](#prop-textTrackMode)
     - [textTrackElement](#prop-textTrackElement)
+    - [manualBitrateSwitchingMode](#prop-manualBitrateSwitchingMode)
     - [supplementaryTextTracks](#prop-supplementaryTextTracks)
     - [supplementaryImageTracks](#prop-supplementaryImageTracks)
     - [hideNativeSubtitle](#prop-hideNativeSubtitle)
@@ -379,6 +380,11 @@ considered stable:
   - ``manifestLoader`` (``Function``): defines a custom manifest loader. More
     info on it can be found [here](./plugins.md#manifestLoader).
 
+  - ``representationFilter`` (``Function``): allows to filter out
+    `Representation`s (i.e. media qualities) from the Manifest to avoid playing
+    them.
+    More infos on it can be found [here](./plugins.md#representationFilter).
+
 
 
 <a name="prop-defaultAudioTrack"></a>
@@ -510,6 +516,49 @@ than the media element it applies to (this allows us to properly place the
 subtitles position without polling where the video is in your UI).
 You can however re-size or update the style of it as you wish, to better suit
 your UI needs.
+
+
+<a name="prop-manualBitrateSwitchingMode"></a>
+### manualBitrateSwitchingMode #################################################
+
+_type_: ``string``
+
+_defaults_: ``"seamless"``
+
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+Strategy you want to adopt when updating "manually" the video and audio quality
+through respectively the ``setVideoBitrate`` and ``setAudioBitrate`` API while
+the content is playing.
+
+There is two possible values:
+
+  - ``"seamless"``: Manual quality updates will be only visible after a little
+    time. This gives the advantage of a very smooth "seamless" transition.
+
+    In this mode, you will have the following behavior:
+      - there will be no visual "cut" between the previous and new quality
+      - parts of the content with a better (or the same) quality won't be
+        replaced.
+      - parts of the content with a lower quality will be only replaced when the
+        better quality is downloaded.
+
+  - ``"direct"``: Manual quality updates will be visible more directly, but with
+    a complete reload of the current content. You might encounter a black screen
+    while the player go through the ``"RELOADING"`` state [1].
+
+    In this mode, you will have the following behavior:
+      - there will be a black screen between the previous and new quality
+      - the previous content will be entirely removed
+      - you will only have content with the new quality
+
+    [1] More informations about the ``"RELOADING"`` state can be found in [the
+    player states documentation](./states).
 
 
 <a name="prop-supplementaryTextTracks"></a>

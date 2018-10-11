@@ -19,10 +19,9 @@ import features from "../../features";
 import log from "../../log";
 import { ICustomSourceBuffer } from "./abstract_source_buffer";
 import BufferGarbageCollector from "./garbage_collector";
-import QueuedSourceBuffer from "./queued_source_buffer";
-
-// Every SourceBuffer types managed here
-export type IBufferType = "audio"|"video"|"text"|"image";
+import QueuedSourceBuffer, {
+  IBufferType,
+} from "./queued_source_buffer";
 
 type TypedArray =
   Int8Array |
@@ -200,7 +199,8 @@ export default class SourceBufferManager {
         return memorizedSourceBuffer.sourceBuffer;
       }
       log.info("adding native SourceBuffer with codec", codec);
-      const nativeSourceBuffer = createNativeQueuedSourceBuffer(this._mediaSource, codec);
+      const nativeSourceBuffer =
+        createNativeQueuedSourceBuffer(bufferType, this._mediaSource, codec);
       this._initializedNativeSourceBuffers[bufferType] = {
         codec,
         sourceBuffer: nativeSourceBuffer,
@@ -234,7 +234,7 @@ export default class SourceBufferManager {
           .nativeTextTracksBuffer(this._mediaElement, !!options.hideNativeSubtitle);
       }
 
-      const queuedSourceBuffer = new QueuedSourceBuffer<unknown>(sourceBuffer);
+      const queuedSourceBuffer = new QueuedSourceBuffer<unknown>("text", sourceBuffer);
 
       this._initializedCustomSourceBuffers.text = {
         codec,
@@ -247,7 +247,7 @@ export default class SourceBufferManager {
       }
       log.info("creating a new image SourceBuffer with codec", codec);
       const sourceBuffer = new features.imageBuffer();
-      const queuedSourceBuffer = new QueuedSourceBuffer<unknown>(sourceBuffer);
+      const queuedSourceBuffer = new QueuedSourceBuffer<unknown>("image", sourceBuffer);
       this._initializedCustomSourceBuffers.image = {
         codec,
         sourceBuffer: queuedSourceBuffer,
@@ -322,11 +322,12 @@ export default class SourceBufferManager {
  * @returns {SourceBuffer}
  */
 function createNativeQueuedSourceBuffer(
+  bufferType : IBufferType,
   mediaSource : MediaSource,
   codec : string
 ) : QueuedSourceBuffer<ArrayBuffer|ArrayBufferView|TypedArray|DataView|null> {
   const sourceBuffer = mediaSource.addSourceBuffer(codec);
-  return new QueuedSourceBuffer(sourceBuffer);
+  return new QueuedSourceBuffer(bufferType, sourceBuffer);
 }
 
 /**
@@ -343,5 +344,6 @@ function shouldHaveNativeSourceBuffer(
 
 export {
   BufferGarbageCollector,
+  IBufferType,
   QueuedSourceBuffer,
 };
