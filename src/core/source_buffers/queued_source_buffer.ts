@@ -143,6 +143,15 @@ export default class QueuedSourceBuffer<T> {
   private readonly __flush : () => void;
 
   /**
+   * Lock status.
+   * When the QueuedSourceBuffer is locked, no queued action is performed until
+   * it is unlocked.
+   * @private
+   * @type {Boolean}
+   */
+  private _isLocked : boolean;
+
+  /**
    * Queue of awaited buffer actions.
    *
    * The last element in this array will be the first action to perform.
@@ -187,16 +196,62 @@ export default class QueuedSourceBuffer<T> {
     this._buffer = sourceBuffer;
     this._queue = [];
     this._flushing = null;
+    this._isLocked = false;
     this._lastInitSegment = null;
     this._currentCodec = codec;
 
     this.__onUpdate = this._onUpdate.bind(this);
     this.__onError = this._onError.bind(this);
-    this.__flush = this._flush.bind(this);
+    this.__flush = () => {
+      if (!this.isLocked()) {
+        this._performNextQueuedAction();
+      }
+    };
 
     this._buffer.addEventListener("update", this.__onUpdate);
     this._buffer.addEventListener("error", this.__onError);
     this._buffer.addEventListener("updateend", this.__flush);
+  }
+
+  /**
+   * Lock the QueuedSourceBuffer.
+   * No queued action will be performed until the QueuedSourceBuffer is
+   * unlocked.
+   */
+  lock() : void {
+    this._isLocked = true;
+  }
+
+  /**
+   * Returns true if the QueuedSourceBuffer is currently in the locked state.
+   * @see lock
+   * @see unlock
+   * @returns {Boolean}
+   */
+  isLocked() : boolean {
+    return this._isLocked;
+  }
+
+  /**
+   * Unlock the QueuedSourceBuffer.
+   * The actions taken will depends on the value of the boolean given in
+   * argument:
+   *
+   *   - if true, the current queue of actions will be flushed without
+   *     any one of them taking place.
+   *
+   *   - if false, every actions will be done sequentially.
+   *
+   * @param {Boolean} flushCurrentQueue
+   */
+  unlock(flushCurrentQueue : boolean) : void {
+    this._isLocked = false;
+
+    if (flushCurrentQueue) {
+      this._emptyQueue();
+    } else {
+      this._performNextQueuedAction();
+    }
   }
 
   /**
@@ -317,7 +372,7 @@ export default class QueuedSourceBuffer<T> {
    * advancement.
    */
   private _addToQueue(action : IQSBOrders<T>) : Observable<void> {
-    const shouldFlush = !this._queue.length;
+    const shouldPushDirectly = !this.isLocked() && !this._queue.length;
     const subject = new Subject<Event>();
 
     if (action.type === SourceBufferAction.Append) {
@@ -369,8 +424,8 @@ export default class QueuedSourceBuffer<T> {
       throw new Error("QueuedSourceBuffer: unrecognized action");
     }
 
-    if (shouldFlush) {
-      this._flush();
+    if (shouldPushDirectly) {
+      this._performNextQueuedAction();
     }
 
     return subject.pipe(mapTo(undefined));
@@ -380,7 +435,7 @@ export default class QueuedSourceBuffer<T> {
    * Perform next queued action if one and none are pending.
    * @private
    */
-  private _flush() : void {
+  private _performNextQueuedAction() : void {
     if (this._flushing || this._queue.length === 0 || this._buffer.updating) {
       return;
     }
@@ -420,6 +475,19 @@ export default class QueuedSourceBuffer<T> {
       }
     } catch (e) {
       this._onError(e);
+    }
+  }
+
+  /**
+   * Empty the current queue of actions without performing any of them.
+   * All related subjects will be completed immediately.
+   */
+  private _emptyQueue() : void {
+    while (this._queue.length) {
+      const item = this._queue.pop();
+      if (item != null && item.subject != null) {
+        item.subject.complete();
+      }
     }
   }
 }
