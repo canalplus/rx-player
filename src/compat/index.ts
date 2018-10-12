@@ -402,12 +402,34 @@ function play$(mediaElement : HTMLMediaElement) : Observable<void> {
   );
 }
 
+type IWebkitFrameCountsHTMLVideoElement = HTMLVideoElement & {
+  webkitDroppedFrameCount: number;
+  webkitDecodedFrameCount: number;
+  getVideoPlaybackQuality: () => IVideoPlaybackQuality;
+};
+
 interface IVideoPlaybackQuality {
   readonly creationTime: number;
   readonly totalVideoFrames: number;
   readonly droppedVideoFrames: number;
   readonly corruptedVideoFrames?: number;
   readonly totalFrameDelay?: number;
+}
+
+/**
+ * Check if HTMLVideoElement has frame associated
+ * webkit informations.
+ * @param {HTMLVideoElement} videoElement
+ */
+function hasWebkitFrameCounts(
+  videoElement: HTMLVideoElement
+): videoElement is IWebkitFrameCountsHTMLVideoElement {
+  return (
+    (videoElement as IWebkitFrameCountsHTMLVideoElement)
+      .webkitDroppedFrameCount != null &&
+    (videoElement as IWebkitFrameCountsHTMLVideoElement)
+      .webkitDecodedFrameCount != null
+  );
 }
 
 /**
@@ -420,10 +442,7 @@ function getVideoPlaybackQuality(videoElement: HTMLVideoElement): IVideoPlayback
   if (videoElement.getVideoPlaybackQuality) {
     return videoElement.getVideoPlaybackQuality();
   }
-  else if (
-    videoElement.webkitDroppedFrameCount &&
-    videoElement.webkitDecodedFrameCount
-  ) {
+  else if (hasWebkitFrameCounts(videoElement)) {
     return {
       droppedVideoFrames: videoElement.webkitDroppedFrameCount,
       totalVideoFrames: videoElement.webkitDroppedFrameCount
