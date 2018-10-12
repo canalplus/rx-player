@@ -133,17 +133,21 @@ export default function EMEManager(
           },
         })));
 
-      return observableMerge(
-        serverCertificate != null ?
-          observableConcat(
-            setServerCertificate(mediaKeys, serverCertificate),
-            session$
-          ) : session$,
-        i === 0 ? /* attach MediaKeys if we're handling the first event */
-          attachMediaKeys(mediaKeysInfos, mediaElement, attachedMediaKeysInfos)
-            .pipe(ignoreElements()) :
-          EMPTY
-      );
+      if (i === 0) { // first encrypted event for the current content
+        return observableMerge(
+          serverCertificate != null ?
+
+            observableConcat(
+              setServerCertificate(mediaKeys, serverCertificate),
+              session$
+            ) : session$,
+
+            attachMediaKeys(mediaKeysInfos, mediaElement, attachedMediaKeysInfos)
+              .pipe(ignoreElements())
+        );
+      }
+
+      return session$;
     }),
 
     /* Trigger license request and manage MediaKeySession events */
