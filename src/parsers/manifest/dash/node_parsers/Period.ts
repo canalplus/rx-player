@@ -82,12 +82,8 @@ function createIntermediatePeriod(root: Element) {
     for (let i = 0; i < rootChildren.length; i++) {
       if (rootChildren[i].nodeType === Node.ELEMENT_NODE) {
         const currentNode = rootChildren[i] as Element;
-        switch (currentNode.nodeName) {
-          case "Period":
-            const period =
-            createPeriodIntermediateRepresentation(currentNode);
-            periods.push(period);
-            break;
+        if (currentNode.nodeName === "Period") {
+          periods.push(createPeriodIntermediateRepresentation(currentNode));
         }
       }
     }
