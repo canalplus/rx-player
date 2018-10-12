@@ -86,6 +86,8 @@ export interface IParsedPeriod {
   adaptations : IParsedAdaptations;
 
   // optional
+  linkURL? : string;
+  resolveAtLoad? : boolean;
   duration? : number;
   bitstreamSwitching? : boolean;
 }

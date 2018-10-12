@@ -15,14 +15,36 @@
  */
 
 import parseMPD from "../../../parsers/manifest/dash/node_parsers";
-import { IParsedManifest } from "../types";
+import { parsePeriods } from "../../../parsers/manifest/dash/node_parsers/Period";
+import {
+  IParsedManifest,
+  IParsedPeriod,
+} from "../types";
+
+/**
+ * Parse periods from text.
+ * @param {String} str
+ * @param {Object} prevPeriodInfos
+ * @param {Object} nextPeriodInfos
+ * @returns {Object} - parsed periods
+ */
+export function dashPeriodParser(
+  text: string,
+  prevPeriodInfos: { start?: number; duration?: number }|undefined,
+  nextPeriodInfos: { start?: number }|undefined
+): IParsedPeriod[] {
+  const domParser = new DOMParser();
+  const textWithRoot = "<div>" + text + "</div>"; // ugly way ...
+  const document = domParser.parseFromString(textWithRoot, "text/xml");
+  return parsePeriods(document, prevPeriodInfos, nextPeriodInfos);
+}
 
 /**
  * @param {Document} manifest - Original manifest as returned by the server
  * @param {string} uri
  * @returns {Object} - parsed manifest
  */
-export default function parseFromDocument(
+export function dashManifestParser(
   document: Document,
   uri : string
 ) : IParsedManifest {

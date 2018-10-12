@@ -29,9 +29,13 @@ import {
   getSegmentsFromCues,
   getTimeCodeScale,
 } from "../../parsers/containers/matroska";
-import dashManifestParser from "../../parsers/manifest/dash";
+import {
+  dashManifestParser,
+  dashPeriodParser,
+} from "../../parsers/manifest/dash";
 import request from "../../utils/request";
 import generateManifestLoader from "../utils/manifest_loader";
+import periodLoader from "../utils/period_loader";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 import generateSegmentLoader from "./segment_loader";
 import {
@@ -48,6 +52,8 @@ import {
   IManifestLoaderArguments,
   IManifestParserArguments,
   IManifestParserObservable,
+  IPeriodLoaderArguments,
+  IPeriodParserArguments,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
   ITransportPipelines,
@@ -88,6 +94,22 @@ export default function(
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
       return observableOf({ manifest: dashManifestParser(data, url), url });
+    },
+  };
+
+  const periodPipeline = {
+    loader({ url } : IPeriodLoaderArguments): ILoaderObservable<string> {
+      return periodLoader(url);
+    },
+    parser({
+        response,
+        prevPeriodInfos,
+        nextPeriodInfos,
+      } : IPeriodParserArguments) {
+      const data = response.responseData;
+      return observableOf({
+        periods: dashPeriodParser(data, prevPeriodInfos, nextPeriodInfos),
+      });
     },
   };
 
@@ -215,6 +237,7 @@ export default function(
 
   return {
     manifest: manifestPipeline,
+    period: periodPipeline,
     audio: segmentPipeline,
     video: segmentPipeline,
     text: textTrackPipeline,

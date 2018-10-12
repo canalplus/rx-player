@@ -31,6 +31,7 @@ import Manifest, {
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "../../../manifest";
+import getPresentationLiveGap from "../../../manifest/utils/get_presentation_live_gap";
 import {
   IManifestLoaderArguments,
   IManifestParserArguments,
@@ -42,6 +43,7 @@ import createLoader, {
   IPipelineLoaderResponse,
 } from "../create_loader";
 import createParser from "../create_parser";
+import loadPeriodFromLink from "./load_period_from_link";
 
 export interface IManifestTransportInfos {
   pipelines : ITransportPipelines;
@@ -82,7 +84,7 @@ export default function createManifestPipeline(
   warning$ : Subject<Error|ICustomError>
 ) : (url : string) => Observable<IFetchManifestResult> {
   const loader = createLoader<
-  IManifestLoaderArguments, Document|string
+    IManifestLoaderArguments, Document|string
   >(transport.pipelines.manifest, pipelineOptions);
 
   const parser = createParser<
@@ -107,13 +109,35 @@ export default function createManifestPipeline(
       filter((arg) : arg is IPipelineLoaderResponse<Document|string> =>
         arg.type === "response"
       ),
-
       mergeMap(({ value }) => {
         const { sendingTime } = value;
         return parser({ response: value, url }).pipe(
-          map(({ manifest: parsedManifest }) => {
-            const manifest = new Manifest(parsedManifest, warning$, transport.options);
-            return { manifest, sendingTime };
+          mergeMap(({ manifest: _manifest }) : Observable<IFetchManifestResult> => {
+            const periodPipelineOptions = {
+              // no cache
+              maxRetry: pipelineOptions.maxRetry,
+              maxRetryOffline: pipelineOptions.maxRetryOffline,
+            };
+
+            return loadPeriodFromLink(
+              transport.pipelines,
+              periodPipelineOptions,
+              _manifest
+            ).pipe(
+                map((loadedPeriods) => {
+                  _manifest.periods = loadedPeriods;
+                  if (_manifest.isLive) {
+                    _manifest.presentationLiveGap =
+                      getPresentationLiveGap(_manifest);
+                  }
+                  const manifest =
+                    new Manifest(_manifest, warning$, transport.options);
+                  return {
+                    manifest,
+                    sendingTime,
+                  };
+                })
+            );
           })
         );
       }),

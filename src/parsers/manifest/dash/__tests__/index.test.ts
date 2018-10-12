@@ -17,7 +17,7 @@
 import { expect } from "chai";
 // import sinon from "sinon";
 
-import parseFromDocument from "../index";
+import { dashManifestParser } from "../index";
 
 // const mpd = require("raw!test/fixtures/dash-seg-list.mpd");
 // const mpd = require("raw!test/fixtures/dash-seg-template.mpd");
@@ -32,7 +32,7 @@ describe("dash parser", function() {
       const doc = setDocumentFromString("<foo></foo>");
 
       expect(function() {
-        parseFromDocument(doc, "");
+        dashManifestParser(doc, "");
       }).to.throw("document root should be MPD");
     });
   });
