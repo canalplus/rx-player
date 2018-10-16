@@ -154,7 +154,7 @@ export default function createSegmentFetcher<T>(
                 value: {
                   duration,
                   time,
-                  requestTimestamp: Date.now(),
+                  requestTimestamp: performance.now(),
                   id,
                 },
               });
@@ -177,7 +177,7 @@ export default function createSegmentFetcher<T>(
                   duration: value.duration,
                   size: value.size,
                   totalSize: value.totalSize,
-                  timestamp: Date.now(),
+                  timestamp: performance.now(),
                   id,
                 },
               });

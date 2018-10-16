@@ -251,7 +251,7 @@ function estimateStarvationModeBitrate(
 
   const currentBitrate = clock.bitrate;
   const chunkDuration = concernedRequest.duration;
-  const now = Date.now();
+  const now = performance.now();
   const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
   const lastProgressEvent = concernedRequest.progress ?
     concernedRequest.progress[concernedRequest.progress.length - 1] :
