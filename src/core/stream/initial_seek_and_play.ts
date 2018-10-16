@@ -17,12 +17,14 @@
 import {
   Observable,
   of as observableOf,
+  ReplaySubject,
 } from "rxjs";
 import {
   catchError,
   mapTo,
   mergeMap,
-  shareReplay,
+  multicast,
+  refCount,
   tap,
 } from "rxjs/operators";
 import {
@@ -55,8 +57,12 @@ function doInitialSeek(
         mediaElement.currentTime = typeof startTime === "function" ?
           startTime() : startTime;
       }),
-      shareReplay() // we don't want to repeat the side-effect on each
-                    // subscription of this very same observable
+
+      // equivalent to a sane shareReplay:
+      // https://github.com/ReactiveX/rxjs/issues/3336
+      // TODO Replace it when that issue is resolved
+      multicast(() => new ReplaySubject(1)),
+      refCount()
     );
 }
 
@@ -110,7 +116,11 @@ export default function seekAndLoadOnMediaEvents(
       return observableOf("loaded" as "loaded");
     }),
 
-    shareReplay()
+    // equivalent to a sane shareReplay:
+    // https://github.com/ReactiveX/rxjs/issues/3336
+    // TODO Replace it when that issue is resolved
+    multicast(() => new ReplaySubject(1)),
+    refCount()
   );
 
   return { seek$, load$ };

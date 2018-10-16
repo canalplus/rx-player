@@ -24,7 +24,6 @@ import {
 } from "rxjs";
 import {
   map,
-  shareReplay,
   switchMap,
   takeUntil,
   tap,
@@ -362,7 +361,7 @@ export default class RepresentationChooser {
         bitrate: undefined, // Bitrate estimation is deactivated here
         manual: false,
         representation: representations[0],
-      }).pipe(takeUntil(this._dispose$));
+      });
     }
 
     const {
@@ -486,7 +485,7 @@ export default class RepresentationChooser {
             }
           }),
 
-          shareReplay()
+          takeUntil(this._dispose$)
         );
     }));
   }

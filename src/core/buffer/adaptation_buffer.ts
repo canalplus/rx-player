@@ -29,6 +29,7 @@ import {
   merge as observableMerge,
   Observable,
   of as observableOf,
+  ReplaySubject,
   timer as observableTimer,
 } from "rxjs";
 import {
@@ -37,7 +38,8 @@ import {
   filter,
   map,
   mergeMap,
-  shareReplay,
+  multicast,
+  refCount,
   switchMap,
   tap,
 } from "rxjs/operators";
@@ -108,8 +110,13 @@ export default function AdaptationBuffer<T>(
 ) : Observable<IAdaptationBufferEvent<T>> {
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
-  const abr$ = getABRForAdaptation(adaptation, abrManager, clock$)
-    .pipe(shareReplay());
+  const abr$ = getABRForAdaptation(adaptation, abrManager, clock$).pipe(
+    // equivalent to a sane shareReplay:
+    // https://github.com/ReactiveX/rxjs/issues/3336
+    // TODO Replace it when that issue is resolved
+    multicast(() => new ReplaySubject(1)),
+    refCount()
+  );
 
   /**
    * Emit at each bitrate estimate done by the ABRManager
