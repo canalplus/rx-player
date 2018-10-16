@@ -338,11 +338,12 @@ export default {
    * Minimum number of bytes sampled before we trust the estimate.
    * If we have not sampled much data, our estimate may not be accurate
    * enough to trust.
-   * If bytesSampled_ is less than minTotalBytes_, we use defaultEstimate_.
-   * This specific value is based on experimentation.
+   * If the total of bytes sampled is less than this value, we use a
+   * default estimate.
+   * This specific value is based on experimentations.
    * @type {Number}
    */
-  ABR_MINIMUM_TOTAL_BYTES: 350e3,
+  ABR_MINIMUM_TOTAL_BYTES: 150e3,
 
   /**
    * Minimum number of bytes, under which samples are discarded.
