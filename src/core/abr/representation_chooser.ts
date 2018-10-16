@@ -436,7 +436,7 @@ export default class RepresentationChooser {
 
               if (bandwidthEstimate != null) {
                 log.info("ABR - starvation mode emergency estimate:", bandwidthEstimate);
-                this.resetEstimate();
+                this.estimator.reset();
                 const currentBitrate = clock.bitrate;
                 nextBitrate = currentBitrate == null ?
                   Math.min(bandwidthEstimate, maxAutoBitrate) :
@@ -505,14 +505,6 @@ export default class RepresentationChooser {
   }
 
   /**
-   * Reset all the estimates done until now.
-   * Useful when the network situation changed completely.
-   */
-  public resetEstimate() : void {
-    this.estimator.reset();
-  }
-
-  /**
    * Add informations about a new pending request.
    * This can be useful if the network bandwidth drastically changes to infer
    * a new bandwidth through this single request.
@@ -569,13 +561,6 @@ export default class RepresentationChooser {
       log.warn("ABR: can't remove unknown request");
     }
     delete this._currentRequests[id];
-  }
-
-  /**
-   * Remove informations about all pending requests.
-   */
-  public resetRequests() : void {
-    this._currentRequests = {};
   }
 
   /**
