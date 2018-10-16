@@ -279,26 +279,21 @@ export default function createLoader<T, U>(
               case "cache":
               case "data":
               case "response":
-                // add metrics if a request was made
-                const metrics : Observable<IPipelineLoaderMetrics> =
-                  arg.type === "response" ?
-                    observableOf({
-                      type: "metrics" as "metrics",
-                      value: {
-                        size: arg.value.size,
-                        duration: arg.value.duration,
-                      },
-                    }) : EMPTY;
-
-                return observableConcat(
-                  metrics,
-                  observableOf({
-                    type: "response" as "response",
-                    value: objectAssign({}, resolverResponse, {
-                      responseData: arg.value.responseData,
-                    }),
-                  })
-                );
+                const response$ = observableOf({
+                  type: "response" as "response",
+                  value: objectAssign({}, resolverResponse, {
+                    responseData: arg.value.responseData,
+                  }),
+                });
+                const metrics$ = arg.type !== "response" ?
+                  EMPTY : observableOf({
+                    type: "metrics" as "metrics",
+                    value: {
+                      size: arg.value.size,
+                      duration: arg.value.duration,
+                    },
+                  });
+                return observableConcat(response$, metrics$);
               default:
                 return observableOf(arg);
             }
