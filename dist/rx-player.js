@@ -909,7 +909,7 @@
                     low: 1
                 },
                 video: {
-                    high: 8,
+                    high: 3,
                     low: 2
                 },
                 other: {
