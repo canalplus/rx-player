@@ -556,7 +556,7 @@ export default {
       low: 1,
     }, // only "audio" segments
     video: {
-      high: 8,
+      high: 3,
       low: 2,
     }, // only "video" segments
     other: {
