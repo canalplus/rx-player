@@ -83,7 +83,6 @@ type IBufferDownloadQueueState =
 // Item emitted by the Buffer's clock$
 export interface IRepresentationBufferClockTick {
   currentTime : number;
-  readyState : number;
   wantedTimeOffset : number;
   stalled : object|null;
   liveGap? : number;

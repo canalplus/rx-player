@@ -75,6 +75,7 @@ export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTi
   isLive : boolean;
   speed : number;
   bufferGap : number;
+  readyState : number;
 }
 
 /**
