@@ -1502,7 +1502,7 @@ export default function launchTestsForContent(
         }
       });
 
-      xit("should set the maximum bitrate if set to Infinity", async () => {
+      it("should set the maximum bitrate if set to Infinity", async () => {
         mockRequests(fakeServer, URLs);
         fakeServer.autoRespond = true;
 

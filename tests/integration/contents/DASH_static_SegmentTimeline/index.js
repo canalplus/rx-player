@@ -46,7 +46,7 @@ const videoQualities = flatMap(
     // initialization segment
     segments.push({
       url: baseURL + `dash/ateam-video=${quality}.dash`,
-      data: require("arraybuffer-loader!./media/ateam-video=400000.dash"),
+      data: require(`arraybuffer-loader!./media/ateam-video=${quality}.dash`),
       contentType: "video/mp4",
     });
 
