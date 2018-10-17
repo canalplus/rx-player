@@ -10,6 +10,7 @@
 ## Other improvements
 
  - buffer: lower the "paddings" applied to the video buffer when raising the quality
+ - abr: when pratical, avoid relying on the "Content-Length" header to protect against miscalculations when downloading from misconfigured servers
  - abr: lower the minimum number of bytes we wait to download before we evaluate the bandwidth
  - abr: use performance.now instead of Date.now for better precision
  - module: move express from the dependencies to the devDependencies
