@@ -114,7 +114,7 @@ mv $tmpDemoFile bundle.js
 if [ -n "$(git status --porcelain demo/full)" ]; then
   echo "-- Current Status on gh-pages: --"
   echo ""
-  git status rx-player.js bundle.js styles fonts assets index.html
+  git status lib.js bundle.js styles fonts assets index.html
 
   while : ; do
     echo ""
@@ -136,21 +136,21 @@ if [ -n "$(git status --porcelain demo/full)" ]; then
       echo "| h: see this help                                       |"
       echo "+--------------------------------------------------------+"
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-      git add rx-player.js bundle.js styles fonts assets index.html
+      git add lib.js bundle.js styles fonts assets index.html
       git commit -m "update demo" -S
       git push origin gh-pages
       break
     elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
-      git diff rx-player.js bundle.js styles fonts assets index.html || true # ignore when return 1
+      git diff lib.js bundle.js styles fonts assets index.html || true # ignore when return 1
     elif [[ $REPLY =~ ^[Ss](tatus)?$ ]]; then
-      git status rx-player.js bundle.js styles fonts assets index.html
+      git status lib.js bundle.js styles fonts assets index.html
     elif [[ $REPLY =~ ^[Aa](bort)?$ ]]; then
       echo "exiting"
       exit 0
     elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
-      git checkout rx-player.js bundle.js styles fonts assets index.html
+      git checkout lib.js bundle.js styles fonts assets index.html
     elif [[ $REPLY =~ ^([Tt]|([Ss]tash))?$ ]]; then
-      git stash -u push rx-player.js bundle.js styles fonts assets index.html
+      git stash -u push lib.js bundle.js styles fonts assets index.html
       break
     fi
   done
