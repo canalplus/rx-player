@@ -7,7 +7,7 @@
   - abr: fix memory leak in ABR Management
   - eme: avoid re-attaching a server certificate at each encrypted event
 
-## Other improvements
+### Other improvements
 
  - buffer: lower the "paddings" applied to the video buffer when raising the quality
  - abr: when pratical, avoid relying on the "Content-Length" header to protect against miscalculations when downloading from misconfigured servers
