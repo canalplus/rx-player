@@ -172,7 +172,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Current version of the RxPlayer.
    * @type {string}
    */
-  public static version = /*PLAYER_VERSION*/"3.8.0";
+  public static version = /*PLAYER_VERSION*/"3.8.1";
 
   /**
    * Current version of the RxPlayer.
@@ -520,7 +520,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.8.0";
+    this.version = /*PLAYER_VERSION*/"3.8.1";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;

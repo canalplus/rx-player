@@ -276,7 +276,7 @@ function getStalledStatus(
     }
     return {
       reason,
-      timestamp: Date.now(),
+      timestamp: performance.now(),
     };
   }
   else if (shouldUnstall) {

@@ -577,7 +577,7 @@ export default function launchTestsForContent(
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        await sleep(200);
+        await sleep(500);
 
         let bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(9.5);
@@ -585,20 +585,20 @@ export default function launchTestsForContent(
 
         player.setWantedBufferAhead(20);
         expect(player.getWantedBufferAhead()).to.equal(20);
-        await sleep(200);
+        await sleep(500);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(19.5);
         expect(bufferGap).to.be.at.most(20 + 10);
 
         player.seekTo(10);
-        await sleep(200);
+        await sleep(500);
         expect(player.getWantedBufferAhead()).to.equal(20);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(19.5);
         expect(bufferGap).to.be.at.most(20 + 10);
 
         player.seekTo(10 + 30);
-        await sleep(200);
+        await sleep(500);
         expect(player.getWantedBufferAhead()).to.equal(20);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(19.5);
@@ -1502,7 +1502,7 @@ export default function launchTestsForContent(
         }
       });
 
-      xit("should set the maximum bitrate if set to Infinity", async () => {
+      it("should set the maximum bitrate if set to Infinity", async () => {
         mockRequests(fakeServer, URLs);
         fakeServer.autoRespond = true;
 

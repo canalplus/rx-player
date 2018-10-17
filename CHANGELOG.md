@@ -1,6 +1,23 @@
 # Changelog
 
-# v3.8.0 (2018/10/11)
+## v3.8.1 (2018/10/17)
+
+### Bug fixes
+
+  - abr: fix memory leak in ABR Management
+  - eme: avoid re-attaching a server certificate at each encrypted event
+
+### Other improvements
+
+ - buffer: lower the "paddings" applied to the video buffer when raising the quality
+ - abr: when pratical, avoid relying on the "Content-Length" header to protect against miscalculations when downloading from misconfigured servers
+ - abr: lower the minimum number of bytes we wait to download before we evaluate the bandwidth
+ - abr: use performance.now instead of Date.now for better precision
+ - module: move express from the dependencies to the devDependencies
+ - demo: fix standalone demo and add possibility to launch it via HTTPS
+
+
+## v3.8.0 (2018/10/11)
 
 ### Features
 
@@ -21,7 +38,7 @@
   - typescript: update typescript to 3.1.2
 
 
-# v3.7.0 (2018/09/21)
+## v3.7.0 (2018/09/21)
 
 ### Features
 

@@ -227,7 +227,7 @@ function request<T>(
       }
     }
 
-    const sentTime = Date.now();
+    const sentTime = performance.now();
 
     xhr.onerror = function onXHRError() {
       const errorCode = RequestErrorTypes.ERROR_EVENT;
@@ -241,7 +241,7 @@ function request<T>(
 
     if (!options.ignoreProgressEvents) {
       xhr.onprogress = function onXHRProgress(event) {
-        const currentTime = Date.now();
+        const currentTime = performance.now();
         obs.next({
           type: "progress",
           value: {
@@ -259,8 +259,9 @@ function request<T>(
     xhr.onload = function onXHRLoad(event : ProgressEvent) {
       if (xhr.readyState === 4) {
         if (xhr.status >= 200 && xhr.status < 300) {
-          const receivedTime = Date.now();
-          const totalSize = event.total;
+          const receivedTime = performance.now();
+          const totalSize = xhr.response instanceof ArrayBuffer ?
+           xhr.response.byteLength : event.total;
           const status = xhr.status;
           const loadedResponseType = xhr.responseType;
           const _url = xhr.responseURL || url;
