@@ -260,7 +260,8 @@ function request<T>(
       if (xhr.readyState === 4) {
         if (xhr.status >= 200 && xhr.status < 300) {
           const receivedTime = performance.now();
-          const totalSize = event.total;
+          const totalSize = xhr.response instanceof ArrayBuffer ?
+           xhr.response.byteLength : event.total;
           const status = xhr.status;
           const loadedResponseType = xhr.responseType;
           const _url = xhr.responseURL || url;
