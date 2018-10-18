@@ -148,7 +148,7 @@ export interface ILoadVideoOptions {
   textTrackMode? : "native"|"html";
   hideNativeSubtitle? : boolean;
   textTrackElement? : HTMLElement;
-  manualBitrateSwitchingMode : "seamless"|"direct";
+  manualBitrateSwitchingMode? : "seamless"|"direct";
 }
 
 interface IParsedLoadVideoOptionsBase {
