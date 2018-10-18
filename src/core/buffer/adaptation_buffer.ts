@@ -17,15 +17,17 @@
 /**
  * This file allows to create AdaptationBuffers.
  *
- * An AdaptationBuffer downloads and push segment for a single Adaptation.
+ * An AdaptationBuffer downloads and push segment for a single Adaptation (e.g.
+ * a single audio or text track).
  * It chooses which Representation to download mainly thanks to the
- * ABRManager, and orchestrate the various RepresentationBuffer, which will
+ * ABRManager, and orchestrates the various RepresentationBuffer, which will
  * download and push segments for a single Representation.
  */
 
 import objectAssign from "object-assign";
 import {
   concat as observableConcat,
+  defer as observableDefer,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -41,7 +43,6 @@ import {
   multicast,
   refCount,
   switchMap,
-  tap,
 } from "rxjs/operators";
 import { ErrorTypes } from "../../errors";
 import log from "../../log";
@@ -50,9 +51,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import ABRManager, {
-  IABREstimation,
-} from "../abr";
+import ABRManager from "../abr";
 import { IPrioritizedSegmentFetcher } from "../pipelines";
 import { QueuedSourceBuffer } from "../source_buffers";
 import createFakeBuffer from "./create_fake_buffer";
@@ -111,50 +110,49 @@ export default function AdaptationBuffer<T>(
 ) : Observable<IAdaptationBufferEvent<T>> {
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
-  const abr$ = getABRForAdaptation(adaptation, abrManager, clock$).pipe(
-    // equivalent to a sane shareReplay:
-    // https://github.com/ReactiveX/rxjs/issues/3336
-    // TODO Replace it when that issue is resolved
-    multicast(() => new ReplaySubject(1)),
-    refCount()
-  );
 
-  /**
-   * Emit at each bitrate estimate done by the ABRManager
-   * @type {Observable}
-   */
+  // Keep track of the currently considered representation to add informations
+  // to the ABR clock.
+  let currentRepresentation : Representation|null = null;
+
+  const abrClock$ = clock$.pipe(map((tick) => {
+    const downloadBitrate = currentRepresentation ?
+      currentRepresentation.bitrate : undefined;
+    return objectAssign({ downloadBitrate }, tick);
+  }));
+
+  const abr$ = abrManager.get$(adaptation.type, abrClock$, adaptation.representations)
+    .pipe(
+      // equivalent to a sane shareReplay:
+      // https://github.com/ReactiveX/rxjs/issues/3336
+      // TODO Replace it when that issue is resolved
+      multicast(() => new ReplaySubject(1)),
+      refCount()
+    );
+
+  // Emit at each bitrate estimate done by the ABRManager
   const bitrateEstimate$ = abr$.pipe(
     filter(({ bitrate }) => bitrate != null),
     map(({ bitrate }) => EVENTS.bitrateEstimationChange(adaptation.type, bitrate))
   );
 
-  /**
-   * Emit the chosen representation each time it changes.
-   * @type {Observable}
-   */
-  const estimateChanges$ = abr$.pipe(
+  const adaptationBuffer$ = abr$.pipe(
     distinctUntilChanged((a, b) =>
       a.manual === b.manual && a.representation.id === b.representation.id
-    )
-  );
-
-  /**
-   * @type {Observable}
-   */
-  const adaptationBuffer$ = estimateChanges$.pipe(
+    ),
     switchMap((estimate, i) : Observable<IAdaptationBufferEvent<T>> => {
+      const { representation } = estimate;
+      currentRepresentation = representation;
+
       // Manual switch needs an immediate feedback.
       // To do that properly, we need to reload the stream
       if (directManualBitrateSwitching && estimate.manual && i !== 0) {
         return observableOf(EVENTS.needsStreamReload());
       }
-      const { representation } = estimate;
-      return observableConcat(
-        observableOf(
-          EVENTS.representationChange(adaptation.type, period, representation)
-        ),
-        createRepresentationBuffer(representation)
-      );
+      const representationChange$ = observableOf(
+        EVENTS.representationChange(adaptation.type, period, representation));
+      const representationBuffer$ = createRepresentationBuffer(representation);
+      return observableConcat(representationChange$, representationBuffer$);
     })
   );
 
@@ -169,78 +167,44 @@ export default function AdaptationBuffer<T>(
   function createRepresentationBuffer(
     representation : Representation
   ) : Observable<IRepresentationBufferEvent<T>> {
+    return observableDefer(() => {
+      log.info("changing representation", adaptation.type, representation);
+      return RepresentationBuffer({
+        clock$,
+        content: {
+          representation,
+          adaptation,
+          period,
+          manifest,
+        },
+        queuedSourceBuffer,
+        segmentBookkeeper,
+        segmentFetcher,
+        wantedBufferAhead$,
+      }).pipe(
+        catchError((error) => {
+          // TODO only for smooth/to Delete? Do it in the stream?
+          // for live adaptations, handle 412 errors as precondition-
+          // failed errors, ie: we are requesting for segments before they
+          // exist
+          // (In case of smooth streaming, 412 errors are requests that are
+          // performed to early).
+          if (
+            !manifest.isLive ||
+            error.type !== ErrorTypes.NETWORK_ERROR ||
+            !error.isHttpError(412)
+          ) {
+            throw error;
+          }
 
-    log.info("changing representation", adaptation.type, representation);
-    return RepresentationBuffer({
-      clock$,
-      content: {
-        representation,
-        adaptation,
-        period,
-        manifest,
-      },
-      queuedSourceBuffer,
-      segmentBookkeeper,
-      segmentFetcher,
-      wantedBufferAhead$,
-    }).pipe(
-    catchError((error) => {
-      // TODO only for smooth/to Delete? Do it in the stream?
-      // for live adaptations, handle 412 errors as precondition-
-      // failed errors, ie: we are requesting for segments before they
-      // exist
-      // (In case of smooth streaming, 412 errors are requests that are
-      // performed to early).
-      if (
-        !manifest.isLive ||
-        error.type !== ErrorTypes.NETWORK_ERROR ||
-        !error.isHttpError(412)
-      ) {
-        throw error;
-      }
+          manifest.updateLiveGap(1); // go back 1s for now
+          log.warn("precondition failed", manifest.presentationLiveGap);
 
-      manifest.updateLiveGap(1); // go back 1s for now
-      log.warn("precondition failed", manifest.presentationLiveGap);
-
-      return observableTimer(2000).pipe(
-        mergeMap(() => createRepresentationBuffer(representation)));
-    }));
+          return observableTimer(2000).pipe(
+            mergeMap(() => createRepresentationBuffer(representation)));
+        }));
+    });
   }
-}
-
-/**
- * Returns ABR Observable.
- * @param {Object} adaptation
- * @param {Object} abrManager
- * @param {Observable} abrBaseClock$
- * @returns {Observable}
- */
-function getABRForAdaptation(
-  adaptation : Adaptation,
-  abrManager : ABRManager,
-  abrBaseClock$ : Observable<IAdaptationBufferClockTick>
-) : Observable<IABREstimation> {
-  const representations = adaptation.representations;
-
-  /**
-   * Keep track of the current representation to add informations to the
-   * ABR clock.
-   * TODO isn't that a little bit ugly?
-   * @type {Object|null}
-   */
-  let currentRepresentation : Representation|null = null;
-
-  const abrClock$ = abrBaseClock$.pipe(
-    map((tick) => {
-      const bitrate = currentRepresentation ?
-        currentRepresentation.bitrate : undefined;
-      return objectAssign({ bitrate }, tick);
-    }));
-
-  return abrManager.get$(adaptation.type, abrClock$, representations).pipe(
-    tap(({ representation }) => {
-      currentRepresentation = representation;
-    }));
 }
 
 // Re-export RepresentationBuffer events used by the AdaptationBufferManager
