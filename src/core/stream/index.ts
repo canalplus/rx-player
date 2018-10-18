@@ -201,7 +201,7 @@ export default function Stream({
       speed$,
       abrManager,
       segmentPipelinesManager,
-      refreshManifest: fetchManifest,
+      fetchManifest,
       bufferOptions: objectAssign({
         textTrackOptions,
         offlineRetry: networkConfig.offlineRetry,

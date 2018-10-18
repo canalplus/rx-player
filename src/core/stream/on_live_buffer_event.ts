@@ -15,48 +15,15 @@
  */
 
 import {
-  EMPTY,
   Observable,
   of as observableOf,
 } from "rxjs";
-import {
-  mapTo,
-  share,
-  tap,
-} from "rxjs/operators";
 import log from "../../log";
 import Manifest from "../../manifest";
 import { IPeriodBufferManagerEvent } from "../buffer";
 import SourceBufferManager from "../source_buffers";
-import EVENTS from "./events_generators";
+import refreshManifest from "./refresh_manifest";
 import { IManifestUpdateEvent } from "./types";
-
-/**
- * Re-fetch the manifest and merge it with the previous version.
- *
- * /!\ Mutates the given manifest
- * @param {Function} manifestPipeline - download the manifest
- * @param {Object} currentManifest
- * @returns {Observable}
- */
-function refreshManifest(
-  manifestPipeline : (url : string) => Observable<Manifest>,
-  currentManifest : Manifest
-) : Observable<IManifestUpdateEvent> {
-  const refreshURL = currentManifest.getUrl();
-  if (!refreshURL) {
-    log.warn("Stream: Cannot refresh the manifest: no url");
-    return EMPTY;
-  }
-
-  return manifestPipeline(refreshURL).pipe(
-    tap((parsed) => {
-      currentManifest.update(parsed);
-    }),
-    share(), // share the previous side effect
-    mapTo(EVENTS.manifestUpdate(currentManifest))
-  );
-}
 
 export type ILiveEventsHandlerEvent =
   IManifestUpdateEvent |

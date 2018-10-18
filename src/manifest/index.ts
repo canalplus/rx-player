@@ -56,6 +56,7 @@ interface IManifestArguments {
   duration : number;
   isLive : boolean;
   minimumTime? : number;
+  minimumUpdatePeriod? : number;
   id : string;
   periods : IPeriodArguments[];
   presentationLiveGap? : number;
@@ -83,6 +84,7 @@ export default class Manifest {
   public readonly isLive : boolean;
   public uris : string[];
   public suggestedPresentationDelay? : number;
+  public minimumUpdatePeriod? : number;
   public availabilityStartTime? : number;
   public minimumTime? : number;
   public presentationLiveGap? : number;
@@ -122,6 +124,7 @@ export default class Manifest {
     this.isLive = args.isLive;
     this.uris = args.uris;
 
+    this.minimumUpdatePeriod = args.minimumUpdatePeriod;
     this.suggestedPresentationDelay = args.suggestedPresentationDelay;
     this.availabilityStartTime = args.availabilityStartTime;
     this.presentationLiveGap = args.presentationLiveGap;
@@ -256,6 +259,7 @@ export default class Manifest {
    */
   update(newManifest : Manifest) : void {
     this._duration = newManifest.getDuration();
+    this.minimumUpdatePeriod = newManifest.minimumUpdatePeriod;
     this.timeShiftBufferDepth = newManifest.timeShiftBufferDepth;
     this.availabilityStartTime = newManifest.availabilityStartTime;
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
