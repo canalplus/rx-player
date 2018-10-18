@@ -51,10 +51,16 @@ export interface IABREstimation {
   manual: boolean; // True if the representation choice was manually dictated
                    // by the user
   representation: Representation; // The chosen representation
+  urgent : boolean; // True if current downloads should be canceled to
+                    // download the one of the chosen Representation
+                    // immediately
+                    // False if we can chose to wait for the current
+                    // download(s) to finish before switching.
 }
 
 interface IRepresentationChooserClockTick {
-  bitrate : number|undefined; // currently set bitrate, in bit per seconds
+  downloadBitrate : number|undefined; // bitrate of the currently downloaded
+                                      // segments, in bit per seconds
   bufferGap : number; // time to the end of the buffer, in seconds
   currentTime : number; // current position, in seconds
   speed : number; // current playback rate
@@ -132,8 +138,9 @@ function setManualRepresentation(
 
   return observableOf({
     bitrate: undefined, // Bitrate estimation is deactivated here
-    manual: true,
     representation: chosenRepresentation,
+    manual: true,
+    urgent: true, // a manual bitrate switch should happen immediately
   });
 }
 
@@ -232,23 +239,23 @@ function estimateRemainingTime(
  * Check if the request for the most needed segment is too slow.
  * If that's the case, re-calculate the bandwidth urgently based on
  * this single request.
- * @param {Object} requests - Current pending requests.
+ * @param {Object} pendingRequests - Current pending requests.
  * @param {Object} clock - Informations on the current playback.
  * @param {Number} lastEstimatedBitrate - Last bitrate estimation emitted.
  * @returns {Number|undefined}
  */
 function estimateStarvationModeBitrate(
-  requests : Partial<Record<string, IRequestInfo>>,
+  pendingRequests : Partial<Record<string, IRequestInfo>>,
   clock : IRepresentationChooserClockTick,
   lastEstimatedBitrate : number|undefined
 ) : number|undefined {
   const nextNeededPosition = clock.currentTime + clock.bufferGap;
-  const concernedRequest = getConcernedRequest(requests, nextNeededPosition);
+  const concernedRequest = getConcernedRequest(pendingRequests, nextNeededPosition);
   if (!concernedRequest) {
     return undefined;
   }
 
-  const currentBitrate = clock.bitrate;
+  const currentBitrate = clock.downloadBitrate;
   const chunkDuration = concernedRequest.duration;
   const now = performance.now();
   const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
@@ -359,8 +366,9 @@ export default class RepresentationChooser {
     if (representations.length === 1) {
       return observableOf({
         bitrate: undefined, // Bitrate estimation is deactivated here
-        manual: false,
         representation: representations[0],
+        manual: false,
+        urgent: true,
       });
     }
 
@@ -424,7 +432,7 @@ export default class RepresentationChooser {
               if (bandwidthEstimate != null) {
                 log.info("ABR - starvation mode emergency estimate:", bandwidthEstimate);
                 this.estimator.reset();
-                const currentBitrate = clock.bitrate;
+                const currentBitrate = clock.downloadBitrate;
                 nextBitrate = currentBitrate == null ?
                   Math.min(bandwidthEstimate, maxAutoBitrate) :
                   Math.min(bandwidthEstimate, maxAutoBitrate, currentBitrate);
@@ -457,11 +465,22 @@ export default class RepresentationChooser {
             const _representations =
               getFilteredRepresentations(representations, deviceEvents);
 
+            const chosenRepresentation =
+              fromBitrateCeil(_representations, nextBitrate) || representations[0];
+
+            const urgent = (() => {
+              if (clock.downloadBitrate == null) {
+                return true;
+              } else if (chosenRepresentation.bitrate >= clock.downloadBitrate) {
+                return !inStarvationMode;
+              }
+              return inStarvationMode;
+            })();
             return {
               bitrate: bandwidthEstimate,
+              representation: chosenRepresentation,
               manual: false,
-              representation: fromBitrateCeil(_representations, nextBitrate) ||
-              representations[0],
+              urgent,
             };
 
           }),
