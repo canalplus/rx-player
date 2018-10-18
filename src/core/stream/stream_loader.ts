@@ -17,6 +17,7 @@
 import {
   EMPTY,
   merge as observableMerge,
+  interval as observableInterval,
   Observable,
   of as observableOf,
   Subject,
@@ -46,6 +47,7 @@ import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
 import onLiveBufferEvent from "./on_live_buffer_event";
+import refreshManifest from "./refresh_manifest";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
 import {
@@ -67,7 +69,7 @@ export interface IStreamLoaderArgument {
                                // /!\ Should replay the last value on subscription.
   abrManager : ABRManager;
   segmentPipelinesManager : SegmentPipelinesManager<any>;
-  refreshManifest : (url : string) => Observable<Manifest>;
+  fetchManifest : (url : string) => Observable<Manifest>;
   bufferOptions : { // Buffer-related options
     wantedBufferAhead$ : Observable<number>;
     maxBufferAhead$ : Observable<number>;
@@ -102,7 +104,7 @@ export default function StreamLoader({
   bufferOptions,
   abrManager,
   segmentPipelinesManager,
-  refreshManifest,
+  fetchManifest,
 } : IStreamLoaderArgument) : (
   mediaSource : MediaSource,
   position : number,
@@ -155,7 +157,7 @@ export default function StreamLoader({
     // Will be used to process the events of the buffer
     const onBufferEvent =
       manifest.isLive ?
-      onLiveBufferEvent(mediaElement, manifest, refreshManifest) :
+      onLiveBufferEvent(mediaElement, manifest, fetchManifest) :
 
       /* tslint:disable no-unnecessary-callback-wrapper */ // needed for TS :/
       (evt : IPeriodBufferManagerEvent) => observableOf(evt);
@@ -194,6 +196,16 @@ export default function StreamLoader({
     const stallingManager$ = StallingManager(mediaElement, clock$)
       .pipe(map(EVENTS.stalled));
 
+    // Creates an observable which will refresh the manifest every
+    // minimumUpdatePeriod.
+    const updatePeriod$ =
+      (manifest.minimumUpdatePeriod !== undefined && manifest.minimumUpdatePeriod > 0) ?
+      observableInterval(manifest.minimumUpdatePeriod * 1000).pipe(
+        mergeMap(() => refreshManifest(fetchManifest, manifest))
+      ) :
+      EMPTY;
+
+
     const loadedEvent$ = load$
       .pipe(mergeMap((evt) => {
         if (evt === "autoplay-blocked") {
@@ -204,6 +216,7 @@ export default function StreamLoader({
       }));
 
     return observableMerge(
+      updatePeriod$,
       loadedEvent$,
       buffers$,
       speedManager$,
