@@ -83,6 +83,7 @@ export default class Manifest {
   public readonly periods : Period[];
   public readonly isLive : boolean;
   public uris : string[];
+  public loadedAt : number;
   public suggestedPresentationDelay? : number;
   public minimumUpdatePeriod? : number;
   public availabilityStartTime? : number;
@@ -101,6 +102,7 @@ export default class Manifest {
     warning$ : Subject<Error|ICustomError>,
     options : IManifestParsingOptions
   ) {
+    this.loadedAt = Date.now() / 1000;
     const {
       supplementaryTextTracks = [],
       supplementaryImageTracks = [],
