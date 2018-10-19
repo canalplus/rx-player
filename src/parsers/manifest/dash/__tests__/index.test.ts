@@ -17,7 +17,7 @@
 import { expect } from "chai";
 // import sinon from "sinon";
 
-import { dashManifestParser } from "../index";
+import dashManifestParser from "../index";
 
 // const mpd = require("raw!test/fixtures/dash-seg-list.mpd");
 // const mpd = require("raw!test/fixtures/dash-seg-template.mpd");

@@ -44,7 +44,7 @@ export function dashPeriodParser(
  * @param {string} uri
  * @returns {Object} - parsed manifest
  */
-export function dashManifestParser(
+export default function dashManifestParser(
   document: Document,
   uri : string
 ) : IParsedManifest {

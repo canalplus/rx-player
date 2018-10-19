@@ -29,8 +29,7 @@ import {
   getSegmentsFromCues,
   getTimeCodeScale,
 } from "../../parsers/containers/matroska";
-import {
-  dashManifestParser,
+import dashManifestParser, {
   dashPeriodParser,
 } from "../../parsers/manifest/dash";
 import request from "../../utils/request";
