@@ -78,7 +78,7 @@ export default [
     "transport": "dash",
   },
   {
-    "name": "DASH-if xLinks (onLoad)",
+    "name": "DASH-IF XLinks (onLoad)",
     "url": "http://vm2.dashif.org/livesim-dev/periods_60/xlink_30/insertad_2/testpic_2s/Manifest.mpd",
     "transport": "dash",
     "live": true,
