@@ -32,17 +32,20 @@ import {
   Observable,
   of as observableOf,
   ReplaySubject,
+  Subject,
   timer as observableTimer,
 } from "rxjs";
 import {
   catchError,
+  concatMap,
   distinctUntilChanged,
   filter,
   map,
   mergeMap,
   multicast,
   refCount,
-  switchMap,
+  takeUntil,
+  tap,
 } from "rxjs/operators";
 import { ErrorTypes } from "../../errors";
 import log from "../../log";
@@ -51,7 +54,9 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import ABRManager from "../abr";
+import ABRManager, {
+  IABREstimation,
+} from "../abr";
 import { IPrioritizedSegmentFetcher } from "../pipelines";
 import { QueuedSourceBuffer } from "../source_buffers";
 import createFakeBuffer from "./create_fake_buffer";
@@ -121,14 +126,20 @@ export default function AdaptationBuffer<T>(
     return objectAssign({ downloadBitrate }, tick);
   }));
 
-  const abr$ = abrManager.get$(adaptation.type, abrClock$, adaptation.representations)
-    .pipe(
+  const abr$ : Observable<IABREstimation> =
+    abrManager.get$(adaptation.type, abrClock$, adaptation.representations).pipe(
       // equivalent to a sane shareReplay:
       // https://github.com/ReactiveX/rxjs/issues/3336
       // TODO Replace it when that issue is resolved
       multicast(() => new ReplaySubject(1)),
       refCount()
     );
+
+  // emit when the current RepresentationBuffer should be stopped right now
+  const killCurrentBuffer$ = new Subject<void>();
+
+  // emit when the current RepresentationBuffer should stop making new downloads
+  const terminateCurrentBuffer$ = new Subject<void>();
 
   // Emit at each bitrate estimate done by the ABRManager
   const bitrateEstimate$ = abr$.pipe(
@@ -140,7 +151,16 @@ export default function AdaptationBuffer<T>(
     distinctUntilChanged((a, b) =>
       a.manual === b.manual && a.representation.id === b.representation.id
     ),
-    switchMap((estimate, i) : Observable<IAdaptationBufferEvent<T>> => {
+
+    tap((estimation) => {
+      if (estimation.urgent) {
+        killCurrentBuffer$.next();
+      } else {
+        terminateCurrentBuffer$.next();
+      }
+    }),
+
+    concatMap((estimate, i) : Observable<IAdaptationBufferEvent<T>> => {
       const { representation } = estimate;
       currentRepresentation = representation;
 
@@ -151,7 +171,8 @@ export default function AdaptationBuffer<T>(
       }
       const representationChange$ = observableOf(
         EVENTS.representationChange(adaptation.type, period, representation));
-      const representationBuffer$ = createRepresentationBuffer(representation);
+      const representationBuffer$ = createRepresentationBuffer(representation)
+        .pipe(takeUntil(killCurrentBuffer$));
       return observableConcat(representationChange$, representationBuffer$);
     })
   );
@@ -180,6 +201,7 @@ export default function AdaptationBuffer<T>(
         queuedSourceBuffer,
         segmentBookkeeper,
         segmentFetcher,
+        terminate$: terminateCurrentBuffer$,
         wantedBufferAhead$,
       }).pipe(
         catchError((error) => {
