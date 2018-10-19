@@ -20,6 +20,7 @@
  */
 
 import { of as observableOf } from "rxjs";
+import { tap } from "rxjs/operators";
 import features from "../../features";
 import {
   getMDHDTimescale,
@@ -29,20 +30,8 @@ import {
   getSegmentsFromCues,
   getTimeCodeScale,
 } from "../../parsers/containers/matroska";
-import dashManifestParser, {
-  dashPeriodParser,
-} from "../../parsers/manifest/dash";
+import dashManifestParser from "../../parsers/manifest/dash";
 import request from "../../utils/request";
-import generateManifestLoader from "../utils/manifest_loader";
-import periodLoader from "../utils/period_loader";
-import getISOBMFFTimingInfos from "./isobmff_timing_infos";
-import generateSegmentLoader from "./segment_loader";
-import {
-  loader as TextTrackLoader,
-  parser as TextTrackParser,
-} from "./texttracks";
-import { addNextSegments } from "./utils";
-
 import {
   CustomManifestLoader,
   CustomSegmentLoader,
@@ -51,13 +40,22 @@ import {
   IManifestLoaderArguments,
   IManifestParserArguments,
   IManifestParserObservable,
-  IPeriodLoaderArguments,
-  IPeriodParserArguments,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
   ITransportPipelines,
   SegmentParserObservable,
 } from "../types";
+import generateManifestLoader from "../utils/manifest_loader";
+import getISOBMFFTimingInfos from "./isobmff_timing_infos";
+import updateManifestWithParsedLinkedPeriods from "./linked_periods";
+import generateSegmentLoader from "./segment_loader";
+import {
+  loader as TextTrackLoader,
+  parser as TextTrackParser,
+} from "./texttracks";
+import { addNextSegments } from "./utils";
+
+import getPresentationLiveGap from "./get_presentation_live_gap";
 
 interface IDASHOptions {
   manifestLoader? : CustomManifestLoader;
@@ -80,35 +78,71 @@ export default function(
 
   const manifestPipeline = {
     loader(
-      { url } : IManifestLoaderArguments
+      { url, partialManifest } : IManifestLoaderArguments
     ) : ILoaderObservable<Document|string> {
-      return manifestLoader(url);
+      if (partialManifest && partialManifest.linkedPeriods) {
+        // Manifest exists, supplementary content must be downloaded.
+        const partialContentUrl = partialManifest.linkedPeriods[0].linkURL || "";
+        return manifestLoader(partialContentUrl, "text");
+      } else { // regular manifest loader, from scratch
+        return manifestLoader(url, "Document");
+      }
     },
 
     parser(
-      { response, url: reqURL } : IManifestParserArguments<Document|string>
+      { response, url: reqURL, partialManifest } :
+        IManifestParserArguments<Document|string>
     ) : IManifestParserObservable {
       const url = response.url == null ? reqURL : response.url;
-      const data = typeof response.responseData === "string" ?
-        new DOMParser().parseFromString(response.responseData, "text/xml") :
-        response.responseData;
-      return observableOf({ manifest: dashManifestParser(data, url), url });
-    },
-  };
+      let manifestObservable;
 
-  const periodPipeline = {
-    loader({ url } : IPeriodLoaderArguments): ILoaderObservable<string> {
-      return periodLoader(url);
-    },
-    parser({
-        response,
-        prevPeriodInfos,
-        nextPeriodInfos,
-      } : IPeriodParserArguments) {
-      const data = response.responseData;
-      return observableOf({
-        periods: dashPeriodParser(data, prevPeriodInfos, nextPeriodInfos),
-      });
+      if (partialManifest && partialManifest.linkedPeriods) {
+        // "response" is data from loaded partial content.
+        // Manifest is updated with parsed partial content.
+        const { responseData } = response;
+        if (typeof responseData !== "string") {
+          throw new Error("Response from period loader should be a string.");
+        }
+
+        const linkedPeriodData = {
+          rawText: responseData,
+          xlink: partialManifest.linkedPeriods[0],
+        };
+
+        const updatedManifest = updateManifestWithParsedLinkedPeriods(
+          partialManifest,
+          linkedPeriodData
+        );
+
+        manifestObservable = observableOf({
+          manifest: updatedManifest,
+          url,
+          isComplete: (updatedManifest.linkedPeriods || []).length === 0,
+        });
+      } else {
+        // No partial manifest has been loaded/parsed.
+        // "response" is the result from the first loaded manifest.
+        const data = typeof response.responseData === "string" ?
+          new DOMParser().parseFromString(response.responseData, "text/xml") :
+          response.responseData;
+
+        const manifest = dashManifestParser(data, url);
+
+        manifestObservable = observableOf({
+          manifest:  dashManifestParser(data, url),
+          url,
+          isComplete: (manifest.linkedPeriods || []).length === 0,
+        });
+      }
+
+      return manifestObservable.pipe(
+        tap(({ manifest }) => {
+          if (manifest.isLive) {
+            manifest.presentationLiveGap =
+              getPresentationLiveGap(manifest);
+          }
+        })
+      );
     },
   };
 
@@ -236,7 +270,6 @@ export default function(
 
   return {
     manifest: manifestPipeline,
-    period: periodPipeline,
     audio: segmentPipeline,
     video: segmentPipeline,
     text: textTrackPipeline,

@@ -25,10 +25,7 @@ import Manifest, {
   Representation,
 } from "../manifest";
 import { IBifThumbnail } from "../parsers/images/bif";
-import {
-  IParsedManifest,
-  IParsedPeriod,
-} from "../parsers/manifest/types";
+import { IParsedManifest } from "../parsers/manifest/types";
 
 // Contains timings informations on a single segment.
 // Those variables expose the best guess we have on the effective duration and
@@ -58,10 +55,9 @@ export interface INextSegmentsInfos {
 
 // loader argument for the manifest pipeline
 export interface IManifestLoaderArguments {
-  url : string; // URL of the concerned manifest
+  url : string; // URL of the concerned manifest;
+  partialManifest? : IParsedManifest;
 }
-
-export type IPeriodLoaderArguments = IManifestLoaderArguments;
 
 // loader argument for every other pipelines
 export interface ISegmentLoaderArguments {
@@ -120,12 +116,7 @@ export type ILoaderObservable<T> = Observable<ILoaderEvent<T>>;
 export interface IManifestParserArguments<T> {
   response : ILoaderResponseValue<T>;
   url : string;
-}
-
-export interface IPeriodParserArguments {
-  response : ILoaderResponseValue<string>;
-  prevPeriodInfos? : { start?: number; duration?: number };
-  nextPeriodInfos? : { start?: number };
+  partialManifest? : IParsedManifest;
 }
 
 export interface ISegmentParserArguments<T> {
@@ -143,16 +134,11 @@ export interface ISegmentParserArguments<T> {
 export interface IManifestResult {
   manifest: IParsedManifest; // the manifest itself
   url? : string; // final URL of the manifest
-}
-
-export interface IPeriodResult {
-  periods: IParsedPeriod[]; // the manifest itself
-  url? : string; // final URL of the manifest
+  isComplete?: boolean; // is parsed manifest complete
+  sendingTime?: number;
 }
 
 export type IManifestParserObservable = Observable<IManifestResult>;
-
-export type IPeriodParserObservable = Observable<IPeriodResult>;
 
 export type SegmentParserObservable = Observable<{
   segmentData : Uint8Array|ArrayBuffer|null; // Data to decode
@@ -215,13 +201,6 @@ interface ITransportManifestPipeline {
     IManifestParserObservable;
 }
 
-interface ITransportPeriodPipeline {
-  loader: (x: IPeriodLoaderArguments) =>
-    ILoaderObservable<string>;
-  parser: (x: IPeriodParserArguments) =>
-    IPeriodParserObservable;
-}
-
 interface ITransportSegmentPipelineBase<T> {
   loader : (x : ISegmentLoaderArguments) => ILoaderObservable<T>;
   parser: (x : ISegmentParserArguments<T>) => SegmentParserObservable;
@@ -257,12 +236,10 @@ export type ITransportSegmentPipeline =
 
 export type ITransportPipeline =
   ITransportManifestPipeline |
-  ITransportSegmentPipeline |
-  ITransportPeriodPipeline;
+  ITransportSegmentPipeline;
 
 export interface ITransportPipelines {
   manifest : ITransportManifestPipeline;
-  period? : ITransportPeriodPipeline;
   audio : ITransportAudioSegmentPipeline;
   video : ITransportVideoSegmentPipeline;
   text : ITransportTextSegmentPipeline;

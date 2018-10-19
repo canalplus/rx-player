@@ -36,19 +36,13 @@ const getLastLiveTimeReference = (
   adaptation: IParsedAdaptation
 ): number | undefined => {
   // Here's how we do, for each possibility:
-  //  1. only the adaptation has an index (no representation has):
-  //    - returns the index last time reference
-  //
-  //  2. every representations have an index:
+  //  1. every representations have an index:
   //    - returns minimum for every representations
   //
-  //  3. not all representations have an index but the adaptation has
-  //    - returns minimum between all representations and the adaptation
-  //
-  //  4. no index for 1+ representation(s) and no adaptation index:
+  //  2. no index for 1+ representation(s) and no adaptation index:
   //    - returns undefined
   //
-  //  5. Invalid index found somewhere:
+  //  3. Invalid index found somewhere:
   //    - returns undefined
   if (!adaptation) {
     return undefined;

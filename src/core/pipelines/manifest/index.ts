@@ -16,13 +16,13 @@
 
 import {
   Observable,
+  of as observableOf,
   Subject,
 } from "rxjs";
 import {
   filter,
   map,
   mergeMap,
-  share,
   tap,
 } from "rxjs/operators";
 import { ICustomError } from "../../../errors";
@@ -31,19 +31,18 @@ import Manifest, {
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 } from "../../../manifest";
-import getPresentationLiveGap from "../../../manifest/utils/get_presentation_live_gap";
 import {
   IManifestLoaderArguments,
   IManifestParserArguments,
   IManifestResult,
   ITransportPipelines,
 } from "../../../net/types";
+import { IParsedManifest } from "../../../parsers/manifest/types";
 import createLoader, {
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
 } from "../create_loader";
 import createParser from "../create_parser";
-import loadPeriodFromLink from "./load_period_from_link";
 
 export interface IManifestTransportInfos {
   pipelines : ITransportPipelines;
@@ -88,9 +87,48 @@ export default function createManifestPipeline(
   >(transport.pipelines.manifest, pipelineOptions);
 
   const parser = createParser<
-  IManifestParserArguments<Document|string>,
-  IManifestResult
+    IManifestParserArguments<Document|string>,
+    IManifestResult
   >(transport.pipelines.manifest);
+
+  /**
+   * Recursive loade and parse a manifest object, until all
+   * linked contents are loaded and parsed.
+   * @param {string} manifestUrl
+   * @param {Object|undefined} partialManifest
+   * @returns {Observable}
+   */
+  function loadCompleteManifest(
+    manifestUrl: string, partialManifest?: IParsedManifest
+  ): Observable<IManifestResult> {
+    return loader({ url: manifestUrl, partialManifest }).pipe(
+      tap((arg) => {
+        if (arg.type === "error") {
+          warning$.next(arg.value);
+        }
+      }),
+      filter((arg) : arg is IPipelineLoaderResponse<Document|string> =>
+        arg.type === "response"
+      ),
+      mergeMap(({ value }) => {
+        const { sendingTime } = value;
+        return parser({
+          response: value,
+          url: manifestUrl,
+          partialManifest,
+        }).pipe(
+          mergeMap((manifestResult) => {
+            if (!manifestResult.isComplete) {
+              return loadCompleteManifest(manifestUrl, manifestResult.manifest);
+            } else {
+              manifestResult.sendingTime = sendingTime;
+              return observableOf(manifestResult);
+            }
+          })
+        );
+      })
+    );
+  }
 
   /**
    * Fetch and parse the manifest corresponding to the URL given.
@@ -98,50 +136,14 @@ export default function createManifestPipeline(
    * @returns {Observable}
    */
   return function fetchManifest(url : string) : Observable<IFetchManifestResult> {
-    return loader({ url }).pipe(
-
-      tap((arg) => {
-        if (arg.type === "error") {
-          warning$.next(arg.value);
-        }
-      }),
-
-      filter((arg) : arg is IPipelineLoaderResponse<Document|string> =>
-        arg.type === "response"
-      ),
-      mergeMap(({ value }) => {
-        const { sendingTime } = value;
-        return parser({ response: value, url }).pipe(
-          mergeMap(({ manifest: _manifest }) : Observable<IFetchManifestResult> => {
-            const periodPipelineOptions = {
-              // no cache
-              maxRetry: pipelineOptions.maxRetry,
-              maxRetryOffline: pipelineOptions.maxRetryOffline,
-            };
-
-            return loadPeriodFromLink(
-              transport.pipelines,
-              periodPipelineOptions,
-              _manifest
-            ).pipe(
-                map((loadedPeriods) => {
-                  _manifest.periods = loadedPeriods;
-                  if (_manifest.isLive) {
-                    _manifest.presentationLiveGap =
-                      getPresentationLiveGap(_manifest);
-                  }
-                  const manifest =
-                    new Manifest(_manifest, warning$, transport.options);
-                  return {
-                    manifest,
-                    sendingTime,
-                  };
-                })
-            );
-          })
-        );
-      }),
-      share()
+    return loadCompleteManifest(url).pipe(
+      map(({ manifest: _manifest, sendingTime }) => {
+        const manifest = new Manifest(_manifest, warning$, transport.options);
+        return {
+          manifest,
+          sendingTime,
+        };
+      })
     );
   };
 }

@@ -29,12 +29,12 @@ import {
  * @returns {Object} - parsed periods
  */
 export function dashPeriodParser(
-  text: string,
+  data: string,
   prevPeriodInfos: { start?: number; duration?: number }|undefined,
   nextPeriodInfos: { start?: number }|undefined
 ): IParsedPeriod[] {
   const domParser = new DOMParser();
-  const textWithRoot = "<root>" + text + "</root>";
+  const textWithRoot = "<root>" + data + "</root>";
   const document = domParser.parseFromString(textWithRoot, "text/xml");
   return parsePeriods(document, prevPeriodInfos, nextPeriodInfos);
 }

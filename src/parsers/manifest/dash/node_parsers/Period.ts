@@ -22,6 +22,7 @@ import { normalize as normalizeLang } from "../../../../utils/languages";
 import { resolveURL } from "../../../../utils/url";
 import {
   IContentProtection,
+  ILinkedPeriod,
   IParsedAdaptation,
   IParsedAdaptations,
   IParsedPeriod,
@@ -113,12 +114,16 @@ export function getPeriodsFromIntermediate(
     nextPeriodInfos?: { start?: number };
   },
   mpdRootURL?: string
-): IParsedPeriod[] {
+): {
+  parsedPeriods: IParsedPeriod[];
+  linkedPeriods: ILinkedPeriod[];
+} {
   const {
     manifestAttributes,
     prevPeriodInfos,
     nextPeriodInfos,
   } = manifestInfos;
+  const linkedPeriods : ILinkedPeriod[] = [];
   const parsedPeriods : IParsedPeriod[] = [];
   for (let i = 0; i < rootPeriods.length; i++) {
     const period = rootPeriods[i];
@@ -522,6 +527,7 @@ export function getPeriodsFromIntermediate(
           videoMainAdaptation: acc.videoMainAdaptation,
         };
       }, { videoMainAdaptation: null, adaptations: {} });
+
       const parsedPeriod : IParsedPeriod = {
         id: periodID,
         start: periodStart,
@@ -530,12 +536,19 @@ export function getPeriodsFromIntermediate(
         linkURL: period.attributes.linkURL,
         resolveAtLoad: period.attributes.resolveAtLoad,
       };
+
       if (period.attributes.bitstreamSwitching != null) {
         parsedPeriod.bitstreamSwitching = period.attributes.bitstreamSwitching;
       }
       parsedPeriods.push(parsedPeriod);
     }
-  return parsedPeriods;
+  parsedPeriods.forEach((parsedPeriod, i) => {
+    if (parsedPeriod.linkURL != null && parsedPeriod.resolveAtLoad != null) {
+      parsedPeriods.splice(i, 1);
+      linkedPeriods.push(parsedPeriod as ILinkedPeriod);
+    }
+  });
+  return { parsedPeriods, linkedPeriods };
 }
 
 /**
@@ -561,10 +574,11 @@ export function parsePeriods(
     nextPeriodInfos,
   };
 
-  return getPeriodsFromIntermediate(
+  const { parsedPeriods } = getPeriodsFromIntermediate(
     intermediatePeriods,
     manifestInfos
   );
+  return parsedPeriods;
 }
 
 /**

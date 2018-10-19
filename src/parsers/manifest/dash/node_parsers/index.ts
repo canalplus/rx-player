@@ -39,7 +39,7 @@ export default function parseManifest(
 
   const mpdRootURL = resolveURL(normalizeBaseURL(uri), rootChildren.baseURL);
 
-  const parsedPeriods = getPeriodsFromIntermediate(
+  const { parsedPeriods, linkedPeriods } = getPeriodsFromIntermediate(
     rootChildren.periods,
     { manifestAttributes: rootAttributes },
     mpdRootURL
@@ -73,6 +73,7 @@ export default function parseManifest(
     id: rootAttributes.id != null ?
       rootAttributes.id : "gen-dash-manifest-" + generateNewId(),
     periods: parsedPeriods,
+    linkedPeriods,
     transportType: "dash",
     isLive,
     uris: [uri, ...rootChildren.locations],

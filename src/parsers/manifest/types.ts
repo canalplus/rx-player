@@ -78,6 +78,16 @@ export interface IParsedAdaptation {
   subsegmentAlignment?: number|boolean;
 }
 
+export interface ILinkedPeriod {
+  // required
+  id : string;
+  start : number;
+  linkURL: string;
+  resolveAtLoad : boolean;
+  end? : number;
+  duration? : number;
+}
+
 export interface IParsedPeriod {
   // required
   id : string;
@@ -98,6 +108,7 @@ export interface IParsedManifest {
   duration: number;
   id: string;
   periods: IParsedPeriod[];
+  linkedPeriods?: ILinkedPeriod[];
   transportType: string; // "smooth", "dash" etc.
   isLive : boolean;
   uris: string[]; // uris where the manifest can be refreshed
