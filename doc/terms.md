@@ -59,8 +59,8 @@ In the RxPlayer, a bitrate of a [Representation](#representation) indicates the
 number of bits per second of content described by that Representation.
 
 For example, a video [Adaptation](#adaptation) could have two Representation:
-  1. one with a bitrate: ``1.000.000``
-  2. the other with the bitrate: ``500.000``
+  1. one with a bitrate: ``1,000,000``
+  2. the other with the bitrate: ``500,000``
 
 The first representation here will be considered to encode each second of
 content by a million bits (or 1Mb).
