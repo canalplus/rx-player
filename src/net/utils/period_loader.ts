@@ -22,13 +22,12 @@ import request from "../../utils/request";
  * @param {boolean} ignoreProgressEvents
  */
 function regularPeriodLoader(
-  url: string,
-  ignoreProgressEvents?: true
+  url: string
 ) {
   return request({
     url,
     responseType: "text",
-    ignoreProgressEvents,
+    ignoreProgressEvents: true,
   });
 }
 
