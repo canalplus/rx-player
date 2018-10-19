@@ -79,10 +79,11 @@ quality.
 
 RxPlayer's Buffer can describe two things, depending on the context:
 
-  - the part of a code downloading [media segments](#segment) and doing what is
-    needed to play them.
+  - modules in the RxPlayer downloading [media segments](#segment) and doing
+    what is needed to play them.
 
-  - The content downloaded (and thus "bufferized") itself.
+  - The part in the browser storing the segments downloaded, waiting for it to
+    be decoded.
 
 
 
@@ -98,14 +99,13 @@ Example of such types are:
   - "image": the thumbnail tracks.
 
 Those are called buffer types here (or simply "types") as each type will have a
-single, uncorellated [Buffer](#buffer).
+single, uncorellated [Buffer](#buffer) in the RxPlayer.
 
 
 <a name="chunk"></a>
 ### Chunk ######################################################################
 
 Synonymous to [Media Segment](#segment).
-
 
 
 <a name="init-segment"></a>
@@ -165,31 +165,31 @@ content a single time.
 A Period is an element of the [Manifest](#manifest) which describes the media
 to play at a certain points in time.
 
-They are directly a DASH' concept, called... _Period_.
+They are directly a DASH' concept, also called _Period_.
 
 Simply put, it allows to set various types of content successively in the same
 manifest.
 
 For example, let's take a manifest describing a live content with
 chronologically:
- 1. an english TV Show
- 2. an old italian film with subtitles
- 3. an American film with closed captions.
+  1. an english TV Show
+  2. an old italian film with subtitles
+  3. an American blockbuster with closed captions.
 
 Those contents are drastically different (they have different languages, the
-american film might have more available bitrates than the old italian one).
+american blockbuster might have more available bitrates than the old italian
+one).
 
-Moreover, even a library user might want to be able to know when the italian
-film is finished, to report about it immediately in a graphical interface.
-
-As such, they have to be considered separately - in a different Period:
-
+As such, they have to be considered separately in the Manifest.
+This can be done by putting each in a different Period:
 ```
         Period 1                Period 2                Period 3
-08h05              09h00                       10h30                now
-  |==================|===========================|===================|
-        TV Show               Italian Film            American film
+08h05              09h00                       10h30                 now
+  |==================|===========================|====================|
+        TV Show               Italian Film        American Blockbuster
 ```
+
+Each of these Periods will be linked to different audio, video and text tracks.
 
 
 <a name="representation"></a>
