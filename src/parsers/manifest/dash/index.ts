@@ -34,7 +34,7 @@ export function dashPeriodParser(
   nextPeriodInfos: { start?: number }|undefined
 ): IParsedPeriod[] {
   const domParser = new DOMParser();
-  const textWithRoot = "<div>" + text + "</div>"; // ugly way ...
+  const textWithRoot = "<root>" + text + "</root>";
   const document = domParser.parseFromString(textWithRoot, "text/xml");
   return parsePeriods(document, prevPeriodInfos, nextPeriodInfos);
 }
