@@ -122,29 +122,6 @@ interface IRepresentationChooserOptions {
 }
 
 /**
- * Returns an observable emitting only the representation concerned by the
- * bitrate ceil given.
- * @param {Array.<Representation>} representations
- * @param {number} bitrate
- * @returns {Observable}
- */
-function setManualRepresentation(
-  representations : Representation[],
-  bitrate : number
-) : Observable<IABREstimation> {
-  const chosenRepresentation =
-    fromBitrateCeil(representations, bitrate) ||
-    representations[0];
-
-  return observableOf({
-    bitrate: undefined, // Bitrate estimation is deactivated here
-    representation: chosenRepresentation,
-    manual: true,
-    urgent: true, // a manual bitrate switch should happen immediately
-  });
-}
-
-/**
  * Get the pending request starting with the asked segment position.
  * @param {Object} requests
  * @param {number} position
@@ -401,7 +378,13 @@ export default class RepresentationChooser {
     return manualBitrate$.pipe(switchMap(manualBitrate => {
       if (manualBitrate >= 0) {
         // -- MANUAL mode --
-        return setManualRepresentation(representations, manualBitrate);
+        return observableOf({
+          bitrate: undefined, // Bitrate estimation is deactivated here
+          representation: fromBitrateCeil(representations, manualBitrate) ||
+            representations[0],
+          manual: true,
+          urgent: true, // a manual bitrate switch should happen immediately
+        });
       }
 
       // -- AUTO mode --
