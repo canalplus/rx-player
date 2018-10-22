@@ -274,7 +274,6 @@ function estimateStarvationModeBitrate(
  *   - the current user's bandwidth
  *   - the max bitrate authorized
  *   - the size of the video element
- *   - etc.
  *
  * Those parameters can be set through different subjects and methods.
  * The subjects (undocumented here are):
@@ -392,7 +391,7 @@ export default class RepresentationChooser {
       return observableCombineLatest(clock$, maxAutoBitrate$, deviceEvents$)
         .pipe(
           map(([ clock, maxAutoBitrate, deviceEvents ]) => {
-            let nextBitrate;
+            let newBitrateCeil; // bitrate ceil for the chosen Representation
             let bandwidthEstimate;
             const { bufferGap } = clock;
 
@@ -416,14 +415,14 @@ export default class RepresentationChooser {
                 log.info("ABR - starvation mode emergency estimate:", bandwidthEstimate);
                 this.estimator.reset();
                 const currentBitrate = clock.downloadBitrate;
-                nextBitrate = currentBitrate == null ?
+                newBitrateCeil = currentBitrate == null ?
                   Math.min(bandwidthEstimate, maxAutoBitrate) :
                   Math.min(bandwidthEstimate, maxAutoBitrate, currentBitrate);
               }
             }
 
-            // if nextBitrate is not yet defined, do the normal estimation
-            if (nextBitrate == null) {
+            // if newBitrateCeil is not yet defined, do the normal estimation
+            if (newBitrateCeil == null) {
               bandwidthEstimate = this.estimator.getEstimate();
 
               let nextEstimate;
@@ -438,18 +437,18 @@ export default class RepresentationChooser {
               } else {
                 nextEstimate = _initialBitrate;
               }
-              nextBitrate = Math.min(nextEstimate, maxAutoBitrate);
+              newBitrateCeil = Math.min(nextEstimate, maxAutoBitrate);
             }
 
             if (clock.speed > 1) {
-              nextBitrate /= clock.speed;
+              newBitrateCeil /= clock.speed;
             }
 
             const _representations =
               getFilteredRepresentations(representations, deviceEvents);
 
             const chosenRepresentation =
-              fromBitrateCeil(_representations, nextBitrate) || representations[0];
+              fromBitrateCeil(_representations, newBitrateCeil) || representations[0];
 
             const urgent = (() => {
               if (clock.downloadBitrate == null) {
