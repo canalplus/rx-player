@@ -154,8 +154,10 @@ export default function AdaptationBuffer<T>(
 
     tap((estimation) => {
       if (estimation.urgent) {
+        log.info("AdaptationBuffer: urgent Representation switch");
         killCurrentBuffer$.next();
       } else {
+        log.info("AdaptationBuffer: non-urgent Representation switch");
         terminateCurrentBuffer$.next();
       }
     }),
