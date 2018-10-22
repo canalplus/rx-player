@@ -219,7 +219,7 @@ export default function StreamLoader({
       .pipe(map(EVENTS.stalled));
 
     // Creates an observable which will refresh the manifest after
-    // minimum update period as elapsed.
+    // the update period has elapsed.
     const updateManifest$ = refreshMinimumUpdatePeriod$.pipe(
       switchMap((updatePeriod) => {
         return observableTimer(updatePeriod * 1000).pipe(
