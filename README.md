@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/canalplus/rx-player.svg?branch=master)](https://travis-ci.org/canalplus/rx-player)
 [![npm version](https://badge.fury.io/js/rx-player.svg)](https://badge.fury.io/js/rx-player)
 [![Gitter](https://img.shields.io/gitter/room/canalplus/rx-player.svg)](https://gitter.im/canalplus/rx-player)
+[![rx-player latest release](https://img.shields.io/badge/dynamic/json.svg?label=Latest%20release&url=https://api.github.com/repos/canalplus/rx-player/releases/latest&query=$.tag_name&colorB=blue)](https://github.com/canalplus/rx-player/releases)
 
 
 The Rx-player is a library implementing a [DASH](https://en.wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP)
@@ -29,10 +30,6 @@ Its main goals are:
     integration...)
 
   - To be easy to integrate and use as a library in various codebases.
-
-
-Latest release: ``v3.8.1``
-
 
 
 ## API #########################################################################
