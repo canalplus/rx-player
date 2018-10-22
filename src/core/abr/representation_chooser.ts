@@ -129,20 +129,18 @@ interface IRepresentationChooserOptions {
  */
 function getConcernedRequest(
   requests : Partial<Record<string, IRequestInfo>>,
-  position : number
+  neededPosition : number
 ) : IRequestInfo|undefined {
   const currentRequestIds = Object.keys(requests);
   const len = currentRequestIds.length;
 
   for (let i = 0; i < len; i++) {
     const request = requests[currentRequestIds[i]];
-
-    // We check that this chunk has a high probability of being the one we want
-    if (
-      request != null &&
-      Math.abs(request.time - position) < request.duration * 0.3
-    ) {
-      return request;
+    if (request != null && request.duration > 0) {
+      const segmentEnd = request.time + request.duration;
+      if (segmentEnd > neededPosition && neededPosition - request.time > -0.3) {
+        return request;
+      }
     }
   }
 }
