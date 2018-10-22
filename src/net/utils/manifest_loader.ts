@@ -30,11 +30,11 @@ import {
 function regularManifestLoader(
   url: string,
   ignoreProgressEvents?: true,
-  responseType?: string
+  responseType?: "text"|"document"
 ) {
-  return request({
+  return request<Document|string>({
     url,
-    responseType: (responseType as any) || "document",
+    responseType,
     ignoreProgressEvents,
   });
 }
@@ -48,7 +48,9 @@ const manifestPreLoader = (
   options: {
     customManifestLoader?: CustomManifestLoader;
     ignoreProgressEvents?: true;
-  }) => (url: string, responseType?: string) : ILoaderObservable<Document|string> => {
+  }) => (
+    url: string, responseType?: "text"|"document"
+  ) : ILoaderObservable<Document|string> => {
     const { customManifestLoader, ignoreProgressEvents } = options;
     if (!customManifestLoader) {
       return regularManifestLoader(url, ignoreProgressEvents, responseType);
