@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import arrayFind from "array-find";
 import objectAssign from "object-assign";
 import {
   BehaviorSubject,
@@ -230,10 +231,8 @@ function estimateStarvationModeBitrate(
     return undefined;
   }
 
-  const currentBitrate = clock.downloadBitrate;
   const chunkDuration = concernedRequest.duration;
   const now = performance.now();
-  const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
   const lastProgressEvent = concernedRequest.progress ?
     concernedRequest.progress[concernedRequest.progress.length - 1] :
     null;
@@ -253,6 +252,8 @@ function estimateStarvationModeBitrate(
     }
   }
 
+  const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
+  const currentBitrate = clock.downloadBitrate;
   if (
     currentBitrate == null ||
     requestElapsedTime <= ((chunkDuration * 1.5 + 1) / clock.speed)
@@ -265,6 +266,51 @@ function estimateStarvationModeBitrate(
   if (lastEstimatedBitrate == null || reducedBitrate < lastEstimatedBitrate) {
     return reducedBitrate;
   }
+}
+
+/**
+ * Returns true if, based on the current requests, it seems that the ABR should
+ * switch immediately if a lower bitrate is more adapted.
+ * Returns false if it estimates that you have time before switching to a lower
+ * bitrate.
+ * @param {Object} pendingRequests
+ * @param {Object} clock
+ */
+function shouldDirectlySwitchToLowBitrate(
+  pendingRequests : Partial<Record<string, IRequestInfo>>,
+  clock : IRepresentationChooserClockTick
+) : boolean {
+  const nextNeededPosition = clock.currentTime + clock.bufferGap;
+  const requests = Object.values(pendingRequests)
+    .filter((a) : a is IRequestInfo => !!a)
+    .sort((a, b) => a.time - b.time);
+
+  const nextNeededRequest = arrayFind(requests, (r) =>
+    (r.time + r.duration) > nextNeededPosition
+  );
+  if (!nextNeededRequest) {
+    return true;
+  }
+
+  const now = performance.now();
+  const lastProgressEvent = nextNeededRequest.progress ?
+    nextNeededRequest.progress[nextNeededRequest.progress.length - 1] :
+    null;
+
+  // first, try to do a quick estimate from progress events
+  const bandwidthEstimate = estimateRequestBandwidth(nextNeededRequest);
+  if (lastProgressEvent == null || bandwidthEstimate == null) {
+    return true;
+  }
+
+  const remainingTime = estimateRemainingTime(lastProgressEvent, bandwidthEstimate);
+  if (
+    (now - lastProgressEvent.timestamp) / 1000 <= remainingTime &&
+    remainingTime > ((clock.bufferGap / clock.speed) + ABR_STARVATION_GAP)
+  ) {
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -454,7 +500,7 @@ export default class RepresentationChooser {
               } else if (chosenRepresentation.bitrate >= clock.downloadBitrate) {
                 return !inStarvationMode;
               }
-              return inStarvationMode;
+              return shouldDirectlySwitchToLowBitrate(this._currentRequests, clock);
             })();
             return {
               bitrate: bandwidthEstimate,
