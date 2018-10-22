@@ -284,7 +284,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(Math.round(player.getVideoElement().buffered.start(0))).to.equal(4);
   });
 
-  it("should be in SEEKING state when seeking to a buffered part when playing", async function() {
+  xit("should be in SEEKING state when seeking to a buffered part when playing", async function() {
     player.setWantedBufferAhead(30);
     player.loadVideo({
       transport: manifestInfos.transport,
