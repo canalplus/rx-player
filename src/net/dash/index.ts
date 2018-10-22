@@ -81,11 +81,11 @@ export default function(
       { url, partialManifest } : IManifestLoaderArguments
     ) : ILoaderObservable<Document|string> {
       if (partialManifest && partialManifest.linkedPeriods) {
-        // Manifest exists, supplementary content must be downloaded.
-        const partialContentUrl = partialManifest.linkedPeriods[0].linkURL || "";
-        return manifestLoader(partialContentUrl, "text");
+        // Manifest exists, first supplementary content must be downloaded.
+        const firstPartialContentUrl = partialManifest.linkedPeriods[0].linkURL || "";
+        return manifestLoader(firstPartialContentUrl, "text");
       } else { // regular manifest loader, from scratch
-        return manifestLoader(url, "Document");
+        return manifestLoader(url, "document");
       }
     },
 
@@ -104,14 +104,14 @@ export default function(
           throw new Error("Response from period loader should be a string.");
         }
 
-        const linkedPeriodData = {
+        const firstLinkedPeriodData = {
           rawText: responseData,
           xlink: partialManifest.linkedPeriods[0],
         };
 
         const updatedManifest = updateManifestWithParsedLinkedPeriods(
           partialManifest,
-          linkedPeriodData
+          firstLinkedPeriodData
         );
 
         manifestObservable = observableOf({
