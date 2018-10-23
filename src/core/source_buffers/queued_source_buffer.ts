@@ -21,8 +21,11 @@ import {
   Subject,
 } from "rxjs";
 import { mapTo } from "rxjs/operators";
+import {
+  ICustomSourceBuffer,
+  tryToChangeSourceBufferType,
+} from "../../compat";
 import log from "../../log";
-import { ICustomSourceBuffer } from "./abstract_source_buffer";
 import ICustomTimeRanges from "./time_ranges";
 
 // Every QueuedSourceBuffer types
@@ -36,6 +39,7 @@ interface IAppendQueueItem<T> {
   type : SourceBufferAction.Append;
   args : {
     segment : T;
+    codec : string;
     timestampOffset? : number;
   };
   subject : Subject<Event>|null;
@@ -60,6 +64,7 @@ type IQSBQueueItems<T> =
 // Order created by the QueuedSourceBuffer to append a Segment.
 interface IAppendOrder<T> {
   type : SourceBufferAction.Append;
+  codec : string;
   segment : T|null;
   initSegment: T|null;
   timestampOffset? : number;
@@ -151,16 +156,23 @@ export default class QueuedSourceBuffer<T> {
    */
   private _lastInitSegment : T|null;
 
+  private _currentCodec : string;
+
   /**
    * @constructor
    * @param {SourceBuffer} sourceBuffer
    */
-  constructor(bufferType : IBufferType, sourceBuffer : ICustomSourceBuffer<T>) {
+  constructor(
+    bufferType : IBufferType,
+    codec : string,
+    sourceBuffer : ICustomSourceBuffer<T>
+  ) {
     this.bufferType = bufferType;
     this._buffer = sourceBuffer;
     this._queue = [];
     this._flushing = null;
     this._lastInitSegment = null;
+    this._currentCodec = codec;
 
     this.__onUpdate = this._onUpdate.bind(this);
     this.__onError = this._onError.bind(this);
@@ -187,12 +199,14 @@ export default class QueuedSourceBuffer<T> {
    *
    * You can also only push an initialization segment by setting the segment
    * argument to null.
+   * @param {string} codec
    * @param {*|null} initSegment
    * @param {*|null} segment
    * @param {number|undefined} timestampOffset
    * @returns {Observable}
    */
   public appendBuffer(
+    codec : string,
     initSegment : T|null,
     segment : T|null,
     timestampOffset? : number
@@ -200,6 +214,7 @@ export default class QueuedSourceBuffer<T> {
     return observableDefer(() =>
       this._addToQueue({
         type: SourceBufferAction.Append,
+        codec,
         segment,
         initSegment,
         timestampOffset,
@@ -306,7 +321,7 @@ export default class QueuedSourceBuffer<T> {
     const subject = new Subject<Event>();
 
     if (action.type === SourceBufferAction.Append) {
-      const { segment, initSegment, timestampOffset } = action;
+      const { segment, initSegment, timestampOffset, codec } = action;
 
       if (initSegment === null && segment === null) {
         log.warn("QSB: no segment appended.", this.bufferType);
@@ -316,7 +331,7 @@ export default class QueuedSourceBuffer<T> {
       if (initSegment === null) {
         this._queue.unshift({
           type: SourceBufferAction.Append,
-          args: { segment: segment as T, timestampOffset },
+          args: { segment: segment as T, timestampOffset, codec },
           subject,
         });
       } else if (segment === null) {
@@ -325,20 +340,20 @@ export default class QueuedSourceBuffer<T> {
         }
         this._queue.unshift({
           type: SourceBufferAction.Append,
-          args: { segment: initSegment, timestampOffset },
+          args: { segment: initSegment, timestampOffset, codec },
           subject,
         });
       } else {
         if (this._lastInitSegment !== initSegment) {
           this._queue.unshift({
             type: SourceBufferAction.Append,
-            args: { segment: initSegment, timestampOffset },
+            args: { segment: initSegment, timestampOffset, codec },
             subject: null,
           });
         }
         this._queue.unshift({
           type: SourceBufferAction.Append,
-          args: { segment, timestampOffset },
+          args: { segment, timestampOffset, codec },
           subject,
         });
       }
@@ -380,7 +395,11 @@ export default class QueuedSourceBuffer<T> {
     try {
       switch (queueItem.type) {
         case SourceBufferAction.Append:
-          const { segment, timestampOffset = 0 } = queueItem.args;
+          const { segment, timestampOffset = 0, codec } = queueItem.args;
+          if (this._currentCodec !== codec) {
+            tryToChangeSourceBufferType(this._buffer, codec);
+            this._currentCodec = codec;
+          }
           if (this._buffer.timestampOffset !== timestampOffset) {
             const newTimestampOffset = timestampOffset || 0;
             log.debug("QSB: updating timestampOffset",

@@ -35,6 +35,7 @@ export interface IAppendedSegmentInfos<T> {
   segment : ISegment;
   initSegmentData : T|null;
   segmentData : T;
+  codec : string;
   segmentOffset : number;
 }
 
@@ -49,18 +50,24 @@ export interface IAppendedSegmentInfos<T> {
  */
 function appendDataToSourceBuffer<T>(
   queuedSourceBuffer : QueuedSourceBuffer<T>,
-  { segment, initSegmentData, segmentData, segmentOffset } : IAppendedSegmentInfos<T>
+  {
+    segment,
+    initSegmentData,
+    segmentData,
+    segmentOffset,
+    codec,
+  } : IAppendedSegmentInfos<T>
 ) : Observable<void> {
 
   let append$ : Observable<void>;
   if (segment.isInit) {
     append$ = initSegmentData == null ?
       observableOf(undefined) :
-      queuedSourceBuffer.appendBuffer(initSegmentData, null, segmentOffset);
+      queuedSourceBuffer.appendBuffer(codec, initSegmentData, null, segmentOffset);
   } else {
     append$ = segmentData == null ?
       observableOf(undefined) :
-      queuedSourceBuffer.appendBuffer(initSegmentData, segmentData, segmentOffset);
+      queuedSourceBuffer.appendBuffer(codec, initSegmentData, segmentData, segmentOffset);
   }
   return append$;
 }

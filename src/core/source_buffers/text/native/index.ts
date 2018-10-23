@@ -22,11 +22,10 @@
 import {
   addTextTrack,
   ICompatTextTrack,
+  ICustomSourceBuffer,
 } from "../../../../compat";
 import log from "../../../../log";
-import AbstractSourceBuffer, {
-  ICustomSourceBuffer,
-} from "../../abstract_source_buffer";
+import AbstractSourceBuffer from "../../abstract_source_buffer";
 import parseTextTrackToCues from "./parsers";
 
 export interface INativeTextTrackData {
