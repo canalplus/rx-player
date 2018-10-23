@@ -19,23 +19,10 @@ import {
   Observable,
   of as observableOf,
 } from "rxjs";
+import { ICustomSourceBuffer } from "../../compat";
 import EventEmitter from "../../utils/eventemitter";
 import tryCatch from "../../utils/rx-tryCatch";
 import ManualTimeRanges from "./time_ranges";
-
-export interface ICustomSourceBuffer<T> {
-  addEventListener : (eventName : string, cb : (arg : any) => void) => void;
-  removeEventListener : (
-    eventName : string,
-    callback : (arg : any) => void
-  ) => void;
-  buffered : TimeRanges;
-  updating : boolean;
-  timestampOffset : number;
-  appendBuffer(data : T) : void;
-  remove(from : number, to : number) : void;
-  abort() : void;
-}
 
 /**
  * Abstract class for a custom SourceBuffer implementation.

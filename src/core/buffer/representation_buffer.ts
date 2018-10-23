@@ -161,6 +161,7 @@ export default function RepresentationBuffer<T>({
 } : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent<T>> {
   // unwrap components of the content
   const { manifest, period, adaptation, representation } = content;
+  const codec = representation.getMimeTypeString();
   const bufferType = adaptation.type;
   const initSegment = representation.index.getInitSegment();
 
@@ -393,9 +394,13 @@ export default function RepresentationBuffer<T>({
         return EMPTY;
       }
 
-      const initSegmentData = initSegmentObject && initSegmentObject.segmentData;
-      const dataToAppend = { initSegmentData, segmentData, segment, segmentOffset };
-      const append$ = appendDataInSourceBuffer(clock$, queuedSourceBuffer, dataToAppend);
+      const append$ = appendDataInSourceBuffer(clock$, queuedSourceBuffer, {
+        initSegmentData: initSegmentObject && initSegmentObject.segmentData,
+        segmentData,
+        segment,
+        segmentOffset,
+        codec,
+      });
 
       sourceBufferWaitingQueue.add(segment.id);
 

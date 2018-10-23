@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+import { ICustomSourceBuffer } from "../../compat";
 import MediaError from "../../errors/MediaError";
 import features from "../../features";
 import log from "../../log";
-import { ICustomSourceBuffer } from "./abstract_source_buffer";
 import BufferGarbageCollector from "./garbage_collector";
 import QueuedSourceBuffer, {
   IBufferType,
@@ -214,7 +214,8 @@ export default class SourceBufferManager {
           .nativeTextTracksBuffer(this._mediaElement, !!options.hideNativeSubtitle);
       }
 
-      const queuedSourceBuffer = new QueuedSourceBuffer<unknown>("text", sourceBuffer);
+      const queuedSourceBuffer =
+        new QueuedSourceBuffer<unknown>("text", codec, sourceBuffer);
 
       this._initializedSourceBuffers.text = {
         codec,
@@ -227,7 +228,8 @@ export default class SourceBufferManager {
       }
       log.info("SB: Creating a new image SourceBuffer with codec", codec);
       const sourceBuffer = new features.imageBuffer();
-      const queuedSourceBuffer = new QueuedSourceBuffer<unknown>("image", sourceBuffer);
+      const queuedSourceBuffer =
+        new QueuedSourceBuffer<unknown>("image", codec, sourceBuffer);
       this._initializedSourceBuffers.image = {
         codec,
         sourceBuffer: queuedSourceBuffer,
@@ -286,7 +288,7 @@ function createNativeQueuedSourceBuffer(
   codec : string
 ) : QueuedSourceBuffer<ArrayBuffer|ArrayBufferView|TypedArray|DataView|null> {
   const sourceBuffer = mediaSource.addSourceBuffer(codec);
-  return new QueuedSourceBuffer(bufferType, sourceBuffer);
+  return new QueuedSourceBuffer(bufferType, codec, sourceBuffer);
 }
 
 /**
