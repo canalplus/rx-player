@@ -28,7 +28,6 @@ import {
   ignoreElements,
   map,
   mergeMap,
-  switchMap,
   takeUntil,
   tap,
 } from "rxjs/operators";
@@ -55,6 +54,7 @@ import refreshManifest from "./refresh_manifest";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
 import {
+  IFetchManifestResult,
   IManifestUpdateEvent,
   ISpeedChangedEvent,
   IStalledEvent,
@@ -68,12 +68,13 @@ export interface IStreamLoaderArgument {
   mediaElement : HTMLMediaElement; // Media Element on which the content will be
                                    // streamed
   manifest : Manifest; // Manifest of the content we want to stream
+  manifestFetchingDuration? : number;
   clock$ : Observable<IStreamClockTick>; // Emit position informations
   speed$ : Observable<number>; // Emit the speed.
                                // /!\ Should replay the last value on subscription.
   abrManager : ABRManager;
   segmentPipelinesManager : SegmentPipelinesManager<any>;
-  fetchManifest : (url : string) => Observable<Manifest>;
+  fetchManifest : (url : string) => Observable<IFetchManifestResult>;
   bufferOptions : { // Buffer-related options
     wantedBufferAhead$ : Observable<number>;
     maxBufferAhead$ : Observable<number>;
@@ -103,6 +104,7 @@ export type IStreamLoaderEvent =
 export default function StreamLoader({
   mediaElement,
   manifest,
+  manifestFetchingDuration,
   clock$,
   speed$,
   bufferOptions,
@@ -170,7 +172,9 @@ export default function StreamLoader({
     // Refresh manifest update period after refreshing manifest.
     const refreshMinimumUpdatePeriod$ = new ReplaySubject<number>(1);
     if (manifest.minimumUpdatePeriod && manifest.minimumUpdatePeriod > 0) {
-      refreshMinimumUpdatePeriod$.next(manifest.minimumUpdatePeriod);
+      const updatePeriod = manifest.minimumUpdatePeriod -
+        ((manifestFetchingDuration || 0) / 1000);
+      refreshMinimumUpdatePeriod$.next(updatePeriod);
     }
 
     // Creates Observable which will manage every Buffer for the given Content.
@@ -221,14 +225,16 @@ export default function StreamLoader({
     // Creates an observable which will refresh the manifest after
     // the update period has elapsed.
     const updateManifest$ = refreshMinimumUpdatePeriod$.pipe(
-      switchMap((updatePeriod) => {
-        return observableTimer(updatePeriod * 1000).pipe(
+      mergeMap((lastUpdatePeriod) => {
+        return observableTimer(lastUpdatePeriod * 1000).pipe(
           mergeMap(() => {
             return refreshManifest(fetchManifest, manifest).pipe(
-              finalize(() => {
+              tap(({ value }) => {
                 const { minimumUpdatePeriod } = manifest;
                 if (minimumUpdatePeriod) {
-                  refreshMinimumUpdatePeriod$.next(minimumUpdatePeriod);
+                  const updatePeriod =  minimumUpdatePeriod -
+                    (value.manifestFetchingDuration || 0) / 1000;
+                  refreshMinimumUpdatePeriod$.next(updatePeriod);
                 }
               })
             );

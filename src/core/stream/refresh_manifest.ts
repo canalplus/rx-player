@@ -19,14 +19,16 @@ import {
   Observable,
 } from "rxjs";
 import {
-  mapTo,
+  map,
   share,
-  tap,
 } from "rxjs/operators";
 import log from "../../log";
 import Manifest from "../../manifest";
 import EVENTS from "./events_generators";
-import { IManifestUpdateEvent } from "./types";
+import {
+  IFetchManifestResult,
+  IManifestUpdateEvent
+} from "./types";
 
 /**
  * Re-fetch the manifest and merge it with the previous version.
@@ -37,7 +39,8 @@ import { IManifestUpdateEvent } from "./types";
  * @returns {Observable}
  */
 export default function refreshManifest(
-  manifestPipeline : (url : string) => Observable<Manifest>,
+  manifestPipeline : (url : string) =>
+    Observable<IFetchManifestResult>,
   currentManifest : Manifest
 ) : Observable<IManifestUpdateEvent> {
   const refreshURL = currentManifest.getUrl();
@@ -47,10 +50,10 @@ export default function refreshManifest(
   }
 
   return manifestPipeline(refreshURL).pipe(
-    tap((parsed) => {
-      currentManifest.update(parsed);
+    map(({ manifest, manifestFetchingDuration }) => {
+      currentManifest.update(manifest);
+      return EVENTS.manifestUpdate(currentManifest, manifestFetchingDuration);
     }),
-    share(), // share the previous side effect
-    mapTo(EVENTS.manifestUpdate(currentManifest))
+    share() // share the previous side effect
   );
 }

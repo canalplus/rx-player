@@ -37,6 +37,7 @@ import {
   IManifestResult,
   ITransportPipelines,
 } from "../../../net/types";
+import { IFetchManifestResult } from "../../stream/types";
 import createLoader, {
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
@@ -75,7 +76,7 @@ export default function createManifestPipeline(
   transport : IManifestTransportInfos,
   pipelineOptions : IPipelineManifestOptions,
   warning$ : Subject<Error|ICustomError>
-) : (url : string) => Observable<Manifest> {
+) : (url : string) => Observable<IFetchManifestResult> {
   const loader = createLoader<
   IManifestLoaderArguments, Document|string
   >(transport.pipelines.manifest, pipelineOptions);
@@ -90,7 +91,7 @@ export default function createManifestPipeline(
    * @param {string} url - URL of the manifest
    * @returns {Observable}
    */
-  return function fetchManifest(url : string) : Observable<Manifest> {
+  return function fetchManifest(url : string) : Observable<IFetchManifestResult> {
     return loader({ url }).pipe(
 
       tap((arg) => {
@@ -103,10 +104,20 @@ export default function createManifestPipeline(
         arg.type === "response"
       ),
 
-      mergeMap(({ value }) => parser({ response: value, url })),
-
-      map(({ manifest }) : Manifest => {
-        return new Manifest(manifest, warning$, transport.options);
+      mergeMap(({ value }) => {
+        const { sentTime } = value;
+        return parser({ response: value, url }).pipe(
+          map(({ manifest: parsedManifest }) => {
+            const manifest = new Manifest(parsedManifest, warning$, transport.options);
+            const manifestFetchingDuration = sentTime ?
+              performance.now() - sentTime :
+              undefined;
+            return {
+              manifest,
+              manifestFetchingDuration,
+            };
+          })
+        );
       }),
       share()
     );

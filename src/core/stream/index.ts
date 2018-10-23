@@ -193,10 +193,11 @@ export default function Stream({
   const stream$ = observableCombineLatest(
     openMediaSource(mediaElement),
     fetchManifest(url)
-  ).pipe(mergeMap(([ mediaSource, manifest ]) => {
+  ).pipe(mergeMap(([ mediaSource, { manifest, manifestFetchingDuration } ]) => {
     const loadStream = StreamLoader({ // Behold!
       mediaElement,
       manifest,
+      manifestFetchingDuration,
       clock$,
       speed$,
       abrManager,
