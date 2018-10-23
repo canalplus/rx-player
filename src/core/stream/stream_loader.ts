@@ -49,7 +49,6 @@ import { setDurationToMediaSource } from "./create_media_source";
 import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
-import onLiveBufferEvent from "./on_live_buffer_event";
 import refreshManifest from "./refresh_manifest";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
@@ -160,15 +159,6 @@ export default function StreamLoader({
     // Will be used to cancel any endOfStream tries when the contents resume
     const cancelEndOfStream$ = new Subject<null>();
 
-    // Will be used to process the events of the buffer
-    const onBufferEvent =
-      manifest.isLive ?
-      onLiveBufferEvent(mediaElement, manifest, fetchManifest) :
-
-      /* tslint:disable no-unnecessary-callback-wrapper */ // needed for TS :/
-      (evt : IPeriodBufferManagerEvent) => observableOf(evt);
-    /* tslint:enable no-unnecessary-callback-wrapper */
-
     // Refresh manifest update period after refreshing manifest.
     const refreshMinimumUpdatePeriod$ = new ReplaySubject<number>(1);
     if (manifest.minimumUpdatePeriod && manifest.minimumUpdatePeriod > 0) {
@@ -196,16 +186,26 @@ export default function StreamLoader({
             log.debug("Stream: cancel endOfStream");
             cancelEndOfStream$.next(null);
             return EMPTY;
+          case "discontinuity-encountered":
+            if (SourceBufferManager.isNative(evt.value.bufferType)) {
+              log.warn("Stream: Explicit discontinuity seek", evt.value.nextTime);
+              mediaElement.currentTime = evt.value.nextTime;
+            }
+            return EMPTY;
+          case "needs-manifest-refresh":
+            log.debug("Stream: Needs manifest to be refreshed");
+            // out-of-index messages require a complete reloading of the
+            // manifest to refresh the current index
+            return refreshManifest(fetchManifest, manifest).pipe(
+              tap((manifestUpdateEvt: IManifestUpdateEvent) => {
+                const { minimumUpdatePeriod } = manifestUpdateEvt.value.manifest;
+                if (minimumUpdatePeriod && minimumUpdatePeriod > 0) {
+                  refreshMinimumUpdatePeriod$.next(minimumUpdatePeriod);
+                }
+              })
+            );
           default:
-            return onBufferEvent(evt);
-        }
-      }),
-      tap((evt) => {
-        if (evt.type === "manifestUpdate") {
-          const { minimumUpdatePeriod } = evt.value.manifest;
-          if (minimumUpdatePeriod && minimumUpdatePeriod > 0) {
-            refreshMinimumUpdatePeriod$.next(minimumUpdatePeriod);
-          }
+            return observableOf(evt);
         }
       })
     );
