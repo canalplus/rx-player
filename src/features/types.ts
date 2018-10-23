@@ -15,9 +15,9 @@
  */
 
 import { Observable } from "rxjs";
+import { ICustomSourceBuffer } from "../compat";
 import { IEMEManagerEvent } from "../core/eme";
 import { IKeySystemOption } from "../core/eme/types";
-import { ICustomSourceBuffer } from "../core/source_buffers/abstract_source_buffer";
 import {
   IDirectfileEvent,
   IDirectFileStreamOptions,
