@@ -33,21 +33,17 @@ import {
   of as observableOf,
   ReplaySubject,
   Subject,
-  timer as observableTimer,
 } from "rxjs";
 import {
-  catchError,
   concatMap,
   distinctUntilChanged,
   filter,
   map,
-  mergeMap,
   multicast,
   refCount,
   takeUntil,
   tap,
 } from "rxjs/operators";
-import { ErrorTypes } from "../../errors";
 import log from "../../log";
 import Manifest, {
   Adaptation,
@@ -210,28 +206,7 @@ export default function AdaptationBuffer<T>(
         segmentFetcher,
         terminate$: terminateCurrentBuffer$,
         wantedBufferAhead$,
-      }).pipe(
-        catchError((error) => {
-          // TODO only for smooth/to Delete? Do it in the stream?
-          // for live adaptations, handle 412 errors as precondition-
-          // failed errors, ie: we are requesting for segments before they
-          // exist
-          // (In case of smooth streaming, 412 errors are requests that are
-          // performed to early).
-          if (
-            !manifest.isLive ||
-            error.type !== ErrorTypes.NETWORK_ERROR ||
-            !error.isHttpError(412)
-          ) {
-            throw error;
-          }
-
-          manifest.updateLiveGap(1); // go back 1s for now
-          log.warn("Buffer: precondition failed", manifest.presentationLiveGap);
-
-          return observableTimer(2000).pipe(
-            mergeMap(() => createRepresentationBuffer(representation)));
-        }));
+      });
     });
   }
 }
