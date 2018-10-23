@@ -23,7 +23,10 @@ import Manifest from "../../manifest";
 import { IPeriodBufferManagerEvent } from "../buffer";
 import SourceBufferManager from "../source_buffers";
 import refreshManifest from "./refresh_manifest";
-import { IManifestUpdateEvent } from "./types";
+import {
+  IFetchManifestResult,
+  IManifestUpdateEvent,
+} from "./types";
 
 export type ILiveEventsHandlerEvent =
   IManifestUpdateEvent |
@@ -39,7 +42,8 @@ export type ILiveEventsHandlerEvent =
 export default function liveEventsHandler(
   mediaElement : HTMLMediaElement,
   manifest : Manifest,
-  fetchManifest : (url : string) => Observable<Manifest>
+  fetchManifest : (url : string) =>
+    Observable<IFetchManifestResult>
 ) : (message : IPeriodBufferManagerEvent) => Observable<ILiveEventsHandlerEvent> {
   return function handleLiveEvents(message) {
     switch (message.type) {

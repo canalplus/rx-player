@@ -74,6 +74,7 @@ export interface ILoaderResponseValue<T> {
   duration? : number;
   size? : number;
   url? : string;
+  sentTime? : number;
 }
 
 export interface ILoaderResponse<T> {
