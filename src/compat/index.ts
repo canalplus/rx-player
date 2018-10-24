@@ -419,8 +419,8 @@ function play$(mediaElement : HTMLMediaElement) : Observable<void> {
 
 /**
  * If the changeType MSE API is implemented, update the current codec of the
- * SourceBuffer and return true.
- * Else, return false.
+ * SourceBuffer and return true if it succeeded.
+ * In any other cases, return false.
  * @param {Object} sourceBuffer
  * @param {string} codec
  * @returns {boolean}
@@ -430,7 +430,12 @@ function tryToChangeSourceBufferType(
   codec : string
 ) : boolean {
   if (typeof sourceBuffer.changeType === "function") {
-    sourceBuffer.changeType(codec);
+    try {
+      sourceBuffer.changeType(codec);
+    } catch (e) {
+      log.warn("Could not call 'changeType' on the given SourceBuffer:", e);
+      return false;
+    }
     return true;
   }
   return false;
