@@ -395,10 +395,9 @@ export default function RepresentationBuffer<T>({
       }
 
       const append$ = appendDataInSourceBuffer(clock$, queuedSourceBuffer, {
-        initSegmentData: initSegmentObject && initSegmentObject.segmentData,
-        segmentData,
-        segment,
-        segmentOffset,
+        initSegment: initSegmentObject && initSegmentObject.segmentData,
+        segment: segment.isInit ? null : segmentData,
+        timestampOffset: segmentOffset,
         codec,
       });
 

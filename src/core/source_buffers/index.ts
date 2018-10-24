@@ -20,6 +20,7 @@ import features from "../../features";
 import log from "../../log";
 import BufferGarbageCollector from "./garbage_collector";
 import QueuedSourceBuffer, {
+  IAppendBufferInfos,
   IBufferType,
 } from "./queued_source_buffer";
 
@@ -305,6 +306,7 @@ function shouldHaveNativeSourceBuffer(
 
 export {
   BufferGarbageCollector,
+  IAppendBufferInfos,
   IBufferType,
   QueuedSourceBuffer,
 };
