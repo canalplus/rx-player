@@ -231,7 +231,7 @@ export default class ABRManager {
     type : IBufferType,
     clock$: Observable<IABRClockTick>,
     representations: Representation[] = [],
-    smoothnessInfos?: Observable<ISmoothnessInfos>
+    smoothnessInfos: Observable<ISmoothnessInfos>
   ) : Observable<IABREstimation> {
     return this._lazilyCreateChooser(type).get$(
       clock$, representations, smoothnessInfos);

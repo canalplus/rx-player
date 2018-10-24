@@ -28,14 +28,13 @@ import {
   Observable,
 } from "rxjs";
 import {
-  filter,
   map,
-  mapTo,
   pairwise,
   startWith,
 } from "rxjs/operators";
 
 import {  getVideoPlaybackQuality } from "../../compat";
+import { Representation } from "../../manifest";
 import MapMemory from "../../utils/map_memory";
 import EWMA from "../abr/ewma";
 import SegmentBookkeeper from "./segment_bookkeeper";
@@ -44,6 +43,14 @@ interface IBufferedRepresentation {
   bufferedStart: number;
   bufferedEnd: number;
   representationId: number|string;
+}
+
+interface IEWMAS {
+  addSample: (weight: number, ratio: number) => void;
+  getEstimates: () => {
+    fast: number;
+    slow: number;
+  };
 }
 
 export type ISmoothnessInfos = Partial<Record<string|number, boolean>>;
@@ -110,19 +117,34 @@ function getBufferedRepresentations(
  */
 export default function getSmoothnessInfos(
   segmentBookkeeper: SegmentBookkeeper,
-  videoElement: HTMLVideoElement
+  videoElement: HTMLVideoElement,
+  representations: Representation[]
 ): Observable<ISmoothnessInfos> {
   let totalDecodedFrames = 0;
   let totalDroppedFrames = 0;
 
-  const ids: Array<number|string> = [];
+  const ratiosEwmaMap = new MapMemory<string|number, IEWMAS>(() => {
+    const fastEWMA = new EWMA(10);
+    const slowEWMA = new EWMA(60);
+    function addSample(weight: number, ratio: number) {
+      fastEWMA.addSample(weight, ratio);
+      slowEWMA.addSample(weight, ratio);
+    }
+    function getEstimates() {
+      return {
+        fast: fastEWMA.getEstimate(),
+        slow: slowEWMA.getEstimate(),
+      };
+    }
 
-  const ratiosEWMA = new MapMemory<string|number, EWMA>(() => {
-    return new EWMA(10);
+    return {
+      addSample,
+      getEstimates,
+    };
   });
 
   return interval(1000).pipe(
-    mapTo(videoElement.currentTime),
+    map(() => videoElement.currentTime),
     pairwise(),
     map(([oldCurrentTime, currentTime]) => {
       const sampleDuration = currentTime - oldCurrentTime;
@@ -142,28 +164,32 @@ export default function getSmoothnessInfos(
       totalDecodedFrames = totalVideoFrames;
       totalDroppedFrames = droppedVideoFrames;
 
-      if (bufferedRepresentations.length === 1) {
-        const { representationId } = bufferedRepresentations[0];
-        const ratioEWMA = ratiosEWMA.get(representationId);
+      const playedRepresentation = bufferedRepresentations.length === 1 ?
+        bufferedRepresentations[0] :
+        undefined;
+
+      return representations.reduce((acc: ISmoothnessInfos, { id }) => {
+        const ratiosEWMA = ratiosEwmaMap.get(id);
         const ratio = deltaDroppedFrames / deltaDecodedFrames;
-        if (!isNaN(ratio)) {
-          ratioEWMA.addSample(1, ratio);
-          if (!(ids.find((id) => id === representationId))) {
-            ids.push(representationId);
-          }
+        if (
+          playedRepresentation &&
+          playedRepresentation.representationId === id &&
+          !isNaN(ratio)
+        ) {
+          ratiosEWMA.addSample(1, ratio);
+        } else {
+          ratiosEWMA.addSample(1, 0);
         }
-      }
-      return bufferedRepresentations.length === 1;
-    }),
-    filter((hasBeenUpdated) => !!hasBeenUpdated),
-    map(() => {
-      const smoothnessInfos: ISmoothnessInfos = {};
-      ids.forEach((id) => {
-        const ratioEWMA = ratiosEWMA.get(id);
-        const isSmooth = ratioEWMA.getEstimate() < 0.1;
-        smoothnessInfos[id] = isSmooth;
-      });
-      return smoothnessInfos;
+
+        const isAlreadySmooth = acc[id] === true;
+        const { fast, slow } = ratiosEWMA.getEstimates();
+        const isSmooth = isAlreadySmooth ?
+          (fast < 0.1 || slow < 0.1) :
+          (fast < 0.1 && slow < 0.1);
+
+        acc[id] = isSmooth;
+        return acc;
+      }, {});
     }),
     startWith({})
   );

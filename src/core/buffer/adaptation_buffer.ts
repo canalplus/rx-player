@@ -132,16 +132,15 @@ export default function AdaptationBuffer<T>(
       return objectAssign({ downloadBitrate }, tick);
     }));
 
-  let smoothnessInfos;
-
-  if (videoElement instanceof HTMLVideoElement) {
-    smoothnessInfos = adaptation.type === "video" ?
-      getSmoothnessInfos(segmentBookkeeper, videoElement) :
-      undefined;
-  }
+  const smoothnessInfos$ = (
+    adaptation.type === "video" &&
+    videoElement instanceof HTMLVideoElement
+  ) ?
+    getSmoothnessInfos(segmentBookkeeper, videoElement, adaptation.representations) :
+    observableOf({});
 
   const abr$ = abrManager.get$(
-    adaptation.type, abrClock$, adaptation.representations, smoothnessInfos).pipe(
+    adaptation.type, abrClock$, adaptation.representations, smoothnessInfos$).pipe(
     tap(({ representation }) => {
       currentRepresentation = representation;
     }),
