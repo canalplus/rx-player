@@ -23,15 +23,20 @@ import {
   takeUntil,
 } from "rxjs/operators";
 import log from "../../log";
-import { Representation } from "../../manifest";
+import {
+  Adaptation,
+  Period,
+} from "../../manifest";
+import SegmentBookkeeper from "../buffer/segment_bookkeeper";
 import { IBufferType } from "../source_buffers";
+import PlaybackQualityManager, {
+  IPlaybackQualityManager
+} from "./playback_quality_manager";
 import RepresentationChooser, {
   IABREstimation,
   IRepresentationChooserClockTick,
   IRequest,
 } from "./representation_chooser";
-
-import { ISmoothnessInfos } from "../buffer/get_smoothness_infos";
 
 interface IMetricValue {
   duration: number;
@@ -93,6 +98,7 @@ export default class ABRManager {
 
   private _choosers:  Partial<Record<IBufferType, RepresentationChooser>>;
   private _chooserInstanceOptions: IRepresentationChoosersOptions;
+  private _playbackQualityManager: IPlaybackQualityManager;
 
   /**
    * @param {Observable} requests$ - Emit requests infos as they begin, progress
@@ -158,8 +164,11 @@ export default class ABRManager {
   constructor(
     requests$: Observable<Observable<IRequest>>,
     metrics$: Observable<IMetric>,
-    options : IRepresentationChoosersOptions = defaultChooserOptions
+    options : IRepresentationChoosersOptions = defaultChooserOptions,
+    mediaElement : HTMLMediaElement
   ) {
+    this._playbackQualityManager = PlaybackQualityManager(mediaElement);
+
     // Subject emitting and completing on dispose.
     // Used to clean up every created observables.
     this._dispose$ = new Subject();
@@ -228,13 +237,17 @@ export default class ABRManager {
    * @returns {Observable}
    */
   public get$(
-    type : IBufferType,
+    content: { period : Period; adaptation : Adaptation },
     clock$: Observable<IABRClockTick>,
-    representations: Representation[] = [],
-    smoothnessInfos: Observable<ISmoothnessInfos>
+    segmentBookkeeper : SegmentBookkeeper
   ) : Observable<IABREstimation> {
+    const { type, representations } = content.adaptation;
+
+    const playbackQualities$ =
+      this._playbackQualityManager.getQualities$(content, segmentBookkeeper, clock$);
+
     return this._lazilyCreateChooser(type).get$(
-      clock$, representations, smoothnessInfos);
+      clock$, representations, playbackQualities$);
   }
 
   /**

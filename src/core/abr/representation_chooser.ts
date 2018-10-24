@@ -39,8 +39,7 @@ import EWMA from "./ewma";
 import filterByBitrate from "./filterByBitrate";
 import filterByWidth from "./filterByWidth";
 import fromBitrateCeil from "./fromBitrateCeil";
-
-import { ISmoothnessInfos } from "../buffer/get_smoothness_infos";
+import { IPlaybackQualities } from "./playback_quality_manager";
 
 const {
   ABR_REGULAR_FACTOR,
@@ -382,7 +381,7 @@ export default class RepresentationChooser {
   public get$(
     clock$ : Observable<IRepresentationChooserClockTick>,
     representations : Representation[],
-    smoothnessInfos$ : Observable<ISmoothnessInfos>
+    playbackQualities$ : Observable<IPlaybackQualities|null>
   ) : Observable<IABREstimation> {
     if (!representations.length) {
       throw new Error("ABRManager: no representation choice given");
@@ -440,14 +439,14 @@ export default class RepresentationChooser {
 
       return observableCombineLatest(clock$, maxAutoBitrate$, deviceEvents$)
         .pipe(
-          withLatestFrom(smoothnessInfos$),
-          map(([ [clock, maxAutoBitrate, deviceEvents], smoothnessInfos ]) => {
-            console.log(smoothnessInfos);
-            const smoothRepresentations = smoothnessInfos ?
+          withLatestFrom(playbackQualities$),
+          map(([ [clock, maxAutoBitrate, deviceEvents], playbackQualities ]) => {
+            const smoothRepresentations = playbackQualities != null ?
               representations.filter((representation) => {
                 const repId = representation.id;
-                const isSmooth = smoothnessInfos[repId];
-                return isSmooth != null ? isSmooth : true;
+                const playbackQuality =
+                  playbackQualities[repId] || 1;
+                return playbackQuality > 0.9;
               }) :
               representations;
 

@@ -179,7 +179,8 @@ export default function Stream({
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".
-  const abrManager = new ABRManager(requestsInfos$, network$, adaptiveOptions);
+  const abrManager =
+    new ABRManager(requestsInfos$, network$, adaptiveOptions, mediaElement);
 
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
