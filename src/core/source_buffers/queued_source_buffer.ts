@@ -232,19 +232,6 @@ export default class QueuedSourceBuffer<T> {
   }
 
   /**
-   * Abort the linked SourceBuffer and dispose of the ressources used by this
-   * QueuedSourceBuffer.
-   *
-   * /!\ You won't be able to use the QueuedSourceBuffer after calling this
-   * function.
-   * @private
-   */
-  public abort() : void {
-    this.dispose();
-    this._buffer.abort();
-  }
-
-  /**
    * Returns the currently buffered data, in a TimeRanges object.
    * @returns {TimeRanges}
    */
@@ -253,17 +240,20 @@ export default class QueuedSourceBuffer<T> {
   }
 
   /**
-   * Free up ressources used by this class.
+   * Abort the linked SourceBuffer and dispose of the ressources used by this
+   * QueuedSourceBuffer.
    *
    * /!\ You won't be able to use the QueuedSourceBuffer after calling this
    * function.
+   * @private
    */
-  public dispose() : void {
+  public abort() : void {
     this._buffer.removeEventListener("update", this.__onUpdate);
     this._buffer.removeEventListener("error", this.__onError);
     this._buffer.removeEventListener("updateend", this.__flush);
     this._queue.length = 0;
     this._flushing = null;
+    this._buffer.abort();
   }
 
   /**
