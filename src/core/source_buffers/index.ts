@@ -113,12 +113,9 @@ export default class SourceBufferManager {
   private readonly _mediaElement : HTMLMediaElement;
   private readonly _mediaSource : MediaSource;
 
-  private _initializedNativeSourceBuffers : {
+  private _initializedSourceBuffers : {
     audio? : ICreatedNativeSourceBuffer;
     video? : ICreatedNativeSourceBuffer;
-  };
-
-  private _initializedCustomSourceBuffers : {
     text? : ICreatedSourceBuffer<unknown>;
     image? : ICreatedSourceBuffer<unknown>;
   };
@@ -131,8 +128,7 @@ export default class SourceBufferManager {
   constructor(mediaElement : HTMLMediaElement, mediaSource : MediaSource) {
     this._mediaElement = mediaElement;
     this._mediaSource = mediaSource;
-    this._initializedNativeSourceBuffers = {};
-    this._initializedCustomSourceBuffers = {};
+    this._initializedSourceBuffers = {};
   }
 
   /**
@@ -142,10 +138,7 @@ export default class SourceBufferManager {
    * @returns {Boolean}
    */
   public has(bufferType : IBufferType) : boolean {
-    if (shouldHaveNativeSourceBuffer(bufferType)) {
-      return !!this._initializedNativeSourceBuffers[bufferType];
-    }
-    return !!this._initializedCustomSourceBuffers[bufferType];
+    return !!this._initializedSourceBuffers[bufferType];
   }
 
   /**
@@ -156,25 +149,17 @@ export default class SourceBufferManager {
    * @returns {QueuedSourceBuffer}
    */
   public get(bufferType : IBufferType) : QueuedSourceBuffer<any> {
-    if (shouldHaveNativeSourceBuffer(bufferType)) {
-      const sourceBufferInfos = this._initializedNativeSourceBuffers[bufferType];
-      if (!sourceBufferInfos) {
-        throw new Error(`SourceBufferManager: no ${bufferType} initialized yet`);
-      }
-      return sourceBufferInfos.sourceBuffer;
-    } else {
-      const sourceBufferInfos = this._initializedCustomSourceBuffers[bufferType];
-      if (!sourceBufferInfos) {
-        throw new Error(`SourceBufferManager: no ${bufferType} initialized yet`);
-      }
-      return sourceBufferInfos.sourceBuffer;
+    const sourceBufferInfos = this._initializedSourceBuffers[bufferType];
+    if (!sourceBufferInfos) {
+      throw new Error(`SourceBufferManager: no ${bufferType} initialized yet`);
     }
+    return sourceBufferInfos.sourceBuffer;
   }
 
   /**
    * Creates a new QueuedSourceBuffer for the given buffer type.
    * Reuse an already created one if a QueuedSourceBuffer for the given type
-   * already exists. TODO Throw or abort old one instead?
+   * already exists.
    * @param {string} bufferType
    * @param {string} codec
    * @param {Object|undefined} options
@@ -185,8 +170,8 @@ export default class SourceBufferManager {
     codec : string,
     options : ISourceBufferOptions = {}
   ) : QueuedSourceBuffer<any> {
+    const memorizedSourceBuffer = this._initializedSourceBuffers[bufferType];
     if (shouldHaveNativeSourceBuffer(bufferType)) {
-      const memorizedSourceBuffer = this._initializedNativeSourceBuffers[bufferType];
       if (memorizedSourceBuffer) {
         if (memorizedSourceBuffer.codec !== codec) {
           log.warn(
@@ -201,19 +186,16 @@ export default class SourceBufferManager {
       log.info("adding native SourceBuffer with codec", codec);
       const nativeSourceBuffer =
         createNativeQueuedSourceBuffer(bufferType, this._mediaSource, codec);
-      this._initializedNativeSourceBuffers[bufferType] = {
+      this._initializedSourceBuffers[bufferType] = {
         codec,
         sourceBuffer: nativeSourceBuffer,
       };
       return nativeSourceBuffer;
     }
 
-    const memorizedCustomSourceBuffer = this
-      ._initializedCustomSourceBuffers[bufferType];
-
-    if (memorizedCustomSourceBuffer) {
+    if (memorizedSourceBuffer) {
       log.info("reusing a previous custom SourceBuffer for the type", bufferType);
-      return memorizedCustomSourceBuffer.sourceBuffer;
+      return memorizedSourceBuffer.sourceBuffer;
     }
 
     if (bufferType === "text") {
@@ -236,7 +218,7 @@ export default class SourceBufferManager {
 
       const queuedSourceBuffer = new QueuedSourceBuffer<unknown>("text", sourceBuffer);
 
-      this._initializedCustomSourceBuffers.text = {
+      this._initializedSourceBuffers.text = {
         codec,
         sourceBuffer: queuedSourceBuffer,
       };
@@ -248,7 +230,7 @@ export default class SourceBufferManager {
       log.info("creating a new image SourceBuffer with codec", codec);
       const sourceBuffer = new features.imageBuffer();
       const queuedSourceBuffer = new QueuedSourceBuffer<unknown>("image", sourceBuffer);
-      this._initializedCustomSourceBuffers.image = {
+      this._initializedSourceBuffers.image = {
         codec,
         sourceBuffer: queuedSourceBuffer,
       };
@@ -264,43 +246,22 @@ export default class SourceBufferManager {
    * @param {string} bufferType
    */
   public disposeSourceBuffer(bufferType : IBufferType) : void {
-    if (shouldHaveNativeSourceBuffer(bufferType)) {
-      const memorizedNativeSourceBuffer = this
-        ._initializedNativeSourceBuffers[bufferType];
-
-      if (memorizedNativeSourceBuffer == null) {
-        return;
-      }
-
-      log.info("aborting native source buffer", bufferType);
-      if (this._mediaSource.readyState === "open") {
-        try {
-          memorizedNativeSourceBuffer.sourceBuffer.abort();
-        } catch (e) {
-          log.warn("failed to abort a SourceBuffer:", e);
-        }
-      }
-      delete this._initializedNativeSourceBuffers[bufferType];
+    const memorizedSourceBuffer = this._initializedSourceBuffers[bufferType];
+    if (memorizedSourceBuffer == null) {
       return;
-    } else if (bufferType === "text" || bufferType === "image") {
-      const memorizedSourceBuffer = this
-        ._initializedCustomSourceBuffers[bufferType];
-
-      if (memorizedSourceBuffer == null) {
-        return;
-      }
-
-      log.info("aborting custom source buffer", bufferType);
+    }
+    log.info("aborting source buffer", bufferType);
+    if (
+      !shouldHaveNativeSourceBuffer(bufferType) ||
+      this._mediaSource.readyState === "open"
+    ) {
       try {
         memorizedSourceBuffer.sourceBuffer.abort();
       } catch (e) {
-        log.warn("failed to abort a SourceBuffer:", e);
+        log.warn(`failed to abort a ${bufferType} SourceBuffer:`, e);
       }
-      delete this._initializedCustomSourceBuffers[bufferType];
-      return;
     }
-
-    log.error("cannot dispose an unknown buffer type", bufferType);
+    delete this._initializedSourceBuffers[bufferType];
   }
 
   /**
