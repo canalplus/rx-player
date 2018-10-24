@@ -33,6 +33,13 @@ export type IBufferType = "audio"|"video"|"text"|"image";
 
 enum SourceBufferAction { Append, Remove }
 
+export interface IAppendBufferInfos<T> {
+  initSegment : T|null;
+  segment : T|null;
+  codec : string;
+  timestampOffset : number;
+}
+
 // Item waiting in the queue to append a new segment to the SourceBuffer.
 // T is the type of the segment pushed.
 interface IAppendQueueItem<T> {
@@ -64,10 +71,7 @@ type IQSBQueueItems<T> =
 // Order created by the QueuedSourceBuffer to append a Segment.
 interface IAppendOrder<T> {
   type : SourceBufferAction.Append;
-  codec : string;
-  segment : T|null;
-  initSegment: T|null;
-  timestampOffset? : number;
+  value : IAppendBufferInfos<T>;
 }
 
 // Order created by the QueuedSourceBuffer to remove Segment(s).
@@ -205,20 +209,9 @@ export default class QueuedSourceBuffer<T> {
    * @param {number|undefined} timestampOffset
    * @returns {Observable}
    */
-  public appendBuffer(
-    codec : string,
-    initSegment : T|null,
-    segment : T|null,
-    timestampOffset? : number
-  ) : Observable<void> {
+  public appendBuffer(infos : IAppendBufferInfos<T>) : Observable<void> {
     return observableDefer(() =>
-      this._addToQueue({
-        type: SourceBufferAction.Append,
-        codec,
-        segment,
-        initSegment,
-        timestampOffset,
-      })
+      this._addToQueue({ type: SourceBufferAction.Append, value: infos })
     );
   }
 
@@ -321,7 +314,7 @@ export default class QueuedSourceBuffer<T> {
     const subject = new Subject<Event>();
 
     if (action.type === SourceBufferAction.Append) {
-      const { segment, initSegment, timestampOffset, codec } = action;
+      const { segment, initSegment, timestampOffset, codec } = action.value;
 
       if (initSegment === null && segment === null) {
         log.warn("QSB: no segment appended.", this.bufferType);

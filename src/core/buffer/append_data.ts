@@ -18,59 +18,17 @@
  * This file allows any Buffer to push data to a QueuedSourceBuffer.
  */
 
-import {
-  Observable,
-  of as observableOf,
-} from "rxjs";
+import { Observable } from "rxjs";
 import {
   catchError,
   mergeMapTo,
 } from "rxjs/operators";
 import { MediaError } from "../../errors";
-import { ISegment } from "../../manifest";
-import { QueuedSourceBuffer } from "../source_buffers";
+import {
+  IAppendBufferInfos,
+  QueuedSourceBuffer,
+} from "../source_buffers";
 import forceGarbageCollection from "./force_garbage_collection";
-
-export interface IAppendedSegmentInfos<T> {
-  segment : ISegment;
-  initSegmentData : T|null;
-  segmentData : T;
-  codec : string;
-  segmentOffset : number;
-}
-
-/**
- * Append buffer to the queuedSourceBuffer.
- * If it leads to a QuotaExceededError, try to run our custom range
- * _garbage collector_.
- *
- * @param {Object} queuedSourceBuffer
- * @param {Object} appendedSegmentInfos
- * @returns {Observable}
- */
-function appendDataToSourceBuffer<T>(
-  queuedSourceBuffer : QueuedSourceBuffer<T>,
-  {
-    segment,
-    initSegmentData,
-    segmentData,
-    segmentOffset,
-    codec,
-  } : IAppendedSegmentInfos<T>
-) : Observable<void> {
-
-  let append$ : Observable<void>;
-  if (segment.isInit) {
-    append$ = initSegmentData == null ?
-      observableOf(undefined) :
-      queuedSourceBuffer.appendBuffer(codec, initSegmentData, null, segmentOffset);
-  } else {
-    append$ = segmentData == null ?
-      observableOf(undefined) :
-      queuedSourceBuffer.appendBuffer(codec, initSegmentData, segmentData, segmentOffset);
-  }
-  return append$;
-}
 
 /**
  * Append buffer to the queuedSourceBuffer.
@@ -85,9 +43,9 @@ function appendDataToSourceBuffer<T>(
 export default function appendDataToSourceBufferWithRetries<T>(
   clock$ : Observable<{ currentTime : number }>,
   queuedSourceBuffer : QueuedSourceBuffer<T>,
-  dataInfos : IAppendedSegmentInfos<T>
+  dataInfos : IAppendBufferInfos<T>
 ) : Observable<void> {
-  const append$ = appendDataToSourceBuffer(queuedSourceBuffer, dataInfos);
+  const append$ = queuedSourceBuffer.appendBuffer(dataInfos);
 
   return append$.pipe(
     catchError((appendError : Error) : Observable<void> => {
