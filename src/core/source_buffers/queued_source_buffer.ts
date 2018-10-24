@@ -33,11 +33,15 @@ export type IBufferType = "audio"|"video"|"text"|"image";
 
 enum SourceBufferAction { Append, Remove }
 
+// Informations to give when appending a new segment.
 export interface IAppendBufferInfos<T> {
-  initSegment : T|null;
-  segment : T|null;
-  codec : string;
-  timestampOffset : number;
+  initSegment : T|null; // initialization segment related to the segment.
+                        // null if none.
+  segment : T|null; // Segment you want to push
+                    // null if you just want to push the initialization segment.
+  codec : string; // string corresponding to the mime-type + codec to set the
+                  // underlying SourceBuffer to.
+  timestampOffset : number; // time offset in seconds to apply to this segment.
 }
 
 // Item waiting in the queue to append a new segment to the SourceBuffer.
@@ -77,8 +81,10 @@ interface IAppendOrder<T> {
 // Order created by the QueuedSourceBuffer to remove Segment(s).
 interface IRemoveOrder {
   type : SourceBufferAction.Remove;
-  start : number;
-  end : number;
+  value : {
+    start : number;
+    end : number;
+  };
 }
 
 // Orders understood by the QueuedSourceBuffer
@@ -160,6 +166,12 @@ export default class QueuedSourceBuffer<T> {
    */
   private _lastInitSegment : T|null;
 
+  /**
+   * Current `type` of the underlying SourceBuffer.
+   * Might be changed for codec-switching purposes.
+   * @private
+   * @type {string}
+   */
   private _currentCodec : string;
 
   /**
@@ -199,14 +211,13 @@ export default class QueuedSourceBuffer<T> {
    * initSegment argument given share the same reference.
    *
    * You can deactivate the usage of initialization segment by setting the
-   * initSegment argument to null.
+   * infos.initSegment argument to null.
    *
-   * You can also only push an initialization segment by setting the segment
-   * argument to null.
+   * You can also only push an initialization segment by setting the
+   * infos.segment argument to null.
+   *
    * @param {string} codec
-   * @param {*|null} initSegment
-   * @param {*|null} segment
-   * @param {number|undefined} timestampOffset
+   * @param {Object} infos
    * @returns {Observable}
    */
   public appendBuffer(infos : IAppendBufferInfos<T>) : Observable<void> {
@@ -223,11 +234,7 @@ export default class QueuedSourceBuffer<T> {
    */
   public removeBuffer(start : number, end : number) : Observable<void> {
     return observableDefer(() =>
-      this._addToQueue({
-        type: SourceBufferAction.Remove,
-        start,
-        end,
-      })
+      this._addToQueue({ type: SourceBufferAction.Remove, value: { start, end } })
     );
   }
 
@@ -283,7 +290,7 @@ export default class QueuedSourceBuffer<T> {
    * caller.
    *
    * @private
-   * @param {Error} error
+   * @param {Event} error
    */
   private _onError(error : Event) : void {
     if (this._flushing) {
@@ -297,7 +304,8 @@ export default class QueuedSourceBuffer<T> {
    * Begin flushing if no action were previously in the queue.
    * @private
    * @param {Object} action
-   * @returns {Subject} - Can be used to follow the buffer action advancement.
+   * @returns {Observable} - Can be used to follow the buffer action
+   * advancement.
    */
   private _addToQueue(action : IQSBOrders<T>) : Observable<void> {
     const shouldFlush = !this._queue.length;
@@ -345,10 +353,7 @@ export default class QueuedSourceBuffer<T> {
     } else if (action.type === SourceBufferAction.Remove) {
       this._queue.unshift({
         type: SourceBufferAction.Remove,
-        args: {
-          start: action.start,
-          end: action.end,
-        },
+        args: action.value,
         subject,
       });
     } else {
