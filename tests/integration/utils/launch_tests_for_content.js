@@ -837,11 +837,11 @@ export default function launchTestsForContent(
         const initialPosition = player.getPosition();
         expect(initialPosition).to.be.closeTo(0.900, 0.150);
 
-        player.setPlaybackRate(10);
-        await sleep(1000);
+        player.setPlaybackRate(3);
+        await sleep(2000);
         const secondPosition = player.getPosition();
         expect(secondPosition).to.be
-          .closeTo(initialPosition + 10 * 1, 4);
+          .closeTo(initialPosition + 3 * 2, 1.5);
       });
     });
 
