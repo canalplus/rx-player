@@ -23,6 +23,7 @@
  * position and what is currently buffered.
  */
 
+import nextTick from "next-tick";
 import objectAssign from "object-assign";
 import {
   combineLatest as observableCombineLatest,
@@ -177,6 +178,9 @@ export default function RepresentationBuffer<T>({
   // Segments queued for download in the BufferQueue.
   let downloadQueue : IQueuedSegment[] = [];
 
+  // Emit when the current queue of download is finished
+  const finishedDownloadQueue$ = new Subject<void>();
+
   // Keep track of the informations about the pending Segment request.
   // null if no request is pending.
   let currentSegmentRequest : ISegmentRequestObject<T>|null = null;
@@ -184,9 +188,6 @@ export default function RepresentationBuffer<T>({
   // Keep track of downloaded segments currently awaiting to be appended to the
   // SourceBuffer.
   const sourceBufferWaitingQueue = new SimpleSet();
-
-  // Emit when the current queue of download is finished
-  const finishedDownloadQueue$ = new Subject<void>();
 
   const status$ = observableCombineLatest(
     clock$,
@@ -331,15 +332,18 @@ export default function RepresentationBuffer<T>({
   /**
    * Request every Segment in the ``downloadQueue`` on subscription.
    * Emit the data of a segment when a request succeeded.
+   *
+   * Important side-effects:
+   *   - Mutates `currentSegmentRequest` when doing and finishing a request.
+   *   - Will emit from finishedDownloadQueue$ Subject after it's done.
    * @returns {Observable}
    */
   function loadSegmentsFromQueue() : Observable<ILoadedSegmentObject<T>> {
     const requestNextSegment$ : Observable<ILoadedSegmentObject<T>> =
       observableDefer(() => {
-        currentSegmentRequest = null;
         const currentNeededSegment = downloadQueue.shift();
-        if (currentNeededSegment == null) { // queue finished
-          finishedDownloadQueue$.next();
+        if (currentNeededSegment == null) {
+          nextTick(() => { finishedDownloadQueue$.next(); });
           return EMPTY;
         }
 
@@ -350,6 +354,7 @@ export default function RepresentationBuffer<T>({
         currentSegmentRequest = { segment, priority, request$ };
         const response$ = request$.pipe(
           mergeMap((fetchedSegment) => {
+            currentSegmentRequest = null;
             const initInfos = initSegmentObject &&
               initSegmentObject.segmentInfos || undefined;
             return fetchedSegment.parse(initInfos);
@@ -360,9 +365,8 @@ export default function RepresentationBuffer<T>({
         return observableConcat(response$, requestNextSegment$);
       });
 
-    return requestNextSegment$.pipe(finalize(() => {
-      currentSegmentRequest = null;
-    }));
+    return requestNextSegment$
+      .pipe(finalize(() => { currentSegmentRequest = null; }));
   }
 
   /**
