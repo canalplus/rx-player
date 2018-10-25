@@ -156,7 +156,7 @@ export default function RepresentationBuffer<T>({
   queuedSourceBuffer, // allows to interact with the SourceBuffer
   segmentBookkeeper, // keep track of what segments already are in the SourceBuffer
   segmentFetcher, // allows to download new segments
-  terminate$, // signal the representationBuffer that it should terminate
+  terminate$, // signal the RepresentationBuffer that it should terminate
   wantedBufferAhead$, // emit the buffer goal
 } : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent<T>> {
   // unwrap components of the content
@@ -250,12 +250,14 @@ export default function RepresentationBuffer<T>({
       if (status.terminate) {
         downloadQueue = [];
         if (currentSegmentRequest == null) {
+          log.debug("Buffer: no request, terminate.", bufferType);
           startQueue$.complete(); // complete the downloading queue
           return observableOf({ type: "terminated" as "terminated" });
         } else if (
           mostNeededSegment == null ||
           currentSegmentRequest.segment.id !== mostNeededSegment.segment.id
         ) {
+          log.debug("Buffer: cancel request and terminate.", bufferType);
           startQueue$.next(); // interrupt the current request
           startQueue$.complete(); // complete the downloading queue
           return observableOf({ type: "terminated" as "terminated" });
@@ -263,6 +265,7 @@ export default function RepresentationBuffer<T>({
           const { request$ } = currentSegmentRequest;
           segmentFetcher.updatePriority(request$, mostNeededSegment.priority);
         }
+        log.debug("Buffer: terminate after request.", bufferType);
         return EMPTY;
       }
 
@@ -277,7 +280,7 @@ export default function RepresentationBuffer<T>({
 
       if (mostNeededSegment == null) {
         if (currentSegmentRequest) {
-          log.debug("interrupting segment request.");
+          log.debug("Buffer: interrupt segment request.", bufferType);
         }
         downloadQueue = [];
         startQueue$.next(); // (re-)start with an empty queue
@@ -289,20 +292,19 @@ export default function RepresentationBuffer<T>({
       }
 
       if (!currentSegmentRequest) {
-        log.debug("starting downloading queue", adaptation.type);
+        log.debug("Buffer: start downloading queue.", bufferType);
         downloadQueue = neededSegments;
         startQueue$.next(); // restart the queue
       } else if (currentSegmentRequest.segment.id !== mostNeededSegment.segment.id) {
-        log.debug("canceling old downloading queue and starting a new one",
-          adaptation.type);
+        log.debug("Buffer: restart download queue.", bufferType);
         downloadQueue = neededSegments;
         startQueue$.next(); // restart the queue
       } else if (currentSegmentRequest.priority !== mostNeededSegment.priority) {
-        log.debug("updating pending request priority", adaptation.type);
+        log.debug("Buffer: update request priority.", bufferType);
         const { request$ } = currentSegmentRequest;
         segmentFetcher.updatePriority(request$, mostNeededSegment.priority);
       } else {
-        log.debug("updating downloading queue", adaptation.type);
+        log.debug("Buffer: update downloading queue", bufferType);
 
         // Update the previous queue to be all needed segments but the first one,
         // for which a request is already pending
