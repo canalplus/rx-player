@@ -99,7 +99,7 @@ export default abstract class AbstractSourceBuffer<T>
    * @param {Function} func
    */
   private _lock(func : () => void) : void {
-    if (!this.updating) {
+    if (this.updating) {
       throw new Error("SourceBuffer: SourceBuffer already updating.");
     }
     this.updating = true;
