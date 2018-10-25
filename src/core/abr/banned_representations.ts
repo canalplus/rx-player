@@ -36,11 +36,19 @@ export default function banRepresentation(
   bannedRepresentations: Representation[],
   quality: number
 ): void {
-  const duration = getBanDurationFromStreamQuality(quality);
-  const idx = bannedRepresentations.length;
-  bannedRepresentations.push(representation);
+  const representationIsAlreadyBanned = bannedRepresentations.some((banned) => {
+    return banned.id === representation.id;
+  });
 
-  setTimeout(() => {
-    bannedRepresentations.splice(idx, 1);
-  }, duration);
+  if (!representationIsAlreadyBanned) {
+    const duration = getBanDurationFromStreamQuality(quality);
+    bannedRepresentations.push(representation);
+
+    setTimeout(() => {
+      const idx = bannedRepresentations.findIndex((banned) => {
+        return banned.id === representation.id;
+      });
+      bannedRepresentations.splice(idx, 1);
+    }, duration);
+  }
 }
