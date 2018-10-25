@@ -65,7 +65,7 @@ function loadPersistentSession(
   session: MediaKeySession|ICustomMediaKeySession
 ) : Observable<boolean> {
   return observableDefer(() => {
-    log.debug("eme: load persisted session", sessionId);
+    log.debug("EME: Load persisted session", sessionId);
     return castToObservable(session.load(sessionId));
   });
 }
@@ -109,7 +109,7 @@ export default function createSession(
       keySystemOptions.persistentLicense ?
       "persistent-license" : "temporary";
 
-    log.debug(`eme: create a new ${sessionType} session`);
+    log.debug(`EME: Create a new ${sessionType} session`);
 
     const session = sessionsStore.createSession(initData, initDataType, sessionType);
 
@@ -141,7 +141,7 @@ export default function createSession(
      * @returns {Observable}
      */
     const recreatePersistentSession = () : Observable<INewSessionCreatedEvent> => {
-      log.info("eme: removing previous persistent session.");
+      log.info("EME: Removing previous persistent session.");
       if (sessionStorage.get(initData, initDataType) !== null) {
         sessionStorage.delete(initData, initDataType);
       }
@@ -159,7 +159,7 @@ export default function createSession(
     return loadPersistentSession(storedEntry.sessionId, session).pipe(
       mergeMap((hasLoadedSession) : Observable<ICreateSessionEvent> => {
         if (!hasLoadedSession) {
-          log.warn("eme: no data stored for the loaded session");
+          log.warn("EME: No data stored for the loaded session");
           sessionStorage.delete(initData, initDataType);
           return observableOf({
             type: "created-session" as "created-session",
@@ -169,7 +169,7 @@ export default function createSession(
 
         if (hasLoadedSession && isSessionUsable(session)) {
           sessionStorage.add(initData, initDataType, session);
-          log.info("eme: succeeded to load persistent session.");
+          log.info("EME: Succeeded to load persistent session.");
           return observableOf({
             type: "loaded-persistent-session" as "loaded-persistent-session",
             value: { mediaKeySession: session, sessionType },
@@ -177,11 +177,11 @@ export default function createSession(
         }
 
         // Unusable persistent session: recreate a new session from scratch.
-        log.warn("eme: previous persistent session not usable anymore.");
+        log.warn("EME: Previous persistent session not usable anymore.");
         return recreatePersistentSession();
       }),
       catchError(() : Observable<INewSessionCreatedEvent> => {
-        log.warn("eme: unable to load persistent session.");
+        log.warn("EME: Unable to load persistent session.");
         return recreatePersistentSession();
       })
     );

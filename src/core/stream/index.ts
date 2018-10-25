@@ -209,9 +209,9 @@ export default function Stream({
       }, bufferOptions),
     });
 
-    log.debug("calculating initial time");
+    log.debug("Stream: Calculating initial time");
     const initialTime = getInitialTime(manifest, startAt);
-    log.debug("initial time calculated:", initialTime);
+    log.debug("Stream: Initial time calculated:", initialTime);
 
     const reloadStreamSubject$ = new Subject<void>();
     const onStreamLoaderEvent = streamLoaderEventProcessor(reloadStreamSubject$);

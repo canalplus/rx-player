@@ -24,6 +24,7 @@ import {
 } from "rxjs/operators";
 import { ICustomMediaKeySession } from "../../compat";
 import { EncryptedMediaError } from "../../errors";
+import log from "../../log";
 import castToObservable from "../../utils/castToObservable";
 
 /**
@@ -40,6 +41,7 @@ export default function generateKeyRequest(
   initDataType: string|undefined
 ) : Observable<null> {
   return observableDefer(() => {
+    log.debug("EME: Calling generateRequest on the MediaKeySession");
     return castToObservable(
       session.generateRequest(initDataType || "", initData)
     ).pipe(

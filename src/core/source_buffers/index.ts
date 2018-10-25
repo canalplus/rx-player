@@ -174,16 +174,14 @@ export default class SourceBufferManager {
     if (shouldHaveNativeSourceBuffer(bufferType)) {
       if (memorizedSourceBuffer) {
         if (memorizedSourceBuffer.codec !== codec) {
-          log.warn(
-            "reusing native SourceBuffer with codec", memorizedSourceBuffer.codec,
-            "for codec", codec
-          );
+          log.warn("SB: Reusing native SourceBuffer with codec",
+            memorizedSourceBuffer.codec, "for codec", codec);
         } else {
-          log.info("reusing native SourceBuffer with codec", codec);
+          log.info("SB: Reusing native SourceBuffer with codec", codec);
         }
         return memorizedSourceBuffer.sourceBuffer;
       }
-      log.info("adding native SourceBuffer with codec", codec);
+      log.info("SB: Adding native SourceBuffer with codec", codec);
       const nativeSourceBuffer =
         createNativeQueuedSourceBuffer(bufferType, this._mediaSource, codec);
       this._initializedSourceBuffers[bufferType] = {
@@ -194,12 +192,12 @@ export default class SourceBufferManager {
     }
 
     if (memorizedSourceBuffer) {
-      log.info("reusing a previous custom SourceBuffer for the type", bufferType);
+      log.info("SB: Reusing a previous custom SourceBuffer for the type", bufferType);
       return memorizedSourceBuffer.sourceBuffer;
     }
 
     if (bufferType === "text") {
-      log.info("creating a new text SourceBuffer with codec", codec);
+      log.info("SB: Creating a new text SourceBuffer with codec", codec);
 
       let sourceBuffer : ICustomSourceBuffer<unknown>;
       if (options.textTrackMode === "html") {
@@ -227,7 +225,7 @@ export default class SourceBufferManager {
       if (features.imageBuffer == null) {
         throw new Error("Image buffer feature not activated");
       }
-      log.info("creating a new image SourceBuffer with codec", codec);
+      log.info("SB: Creating a new image SourceBuffer with codec", codec);
       const sourceBuffer = new features.imageBuffer();
       const queuedSourceBuffer = new QueuedSourceBuffer<unknown>("image", sourceBuffer);
       this._initializedSourceBuffers.image = {
@@ -237,7 +235,7 @@ export default class SourceBufferManager {
       return queuedSourceBuffer;
     }
 
-    log.error("unknown buffer type:", bufferType);
+    log.error("SB: Unknown buffer type:", bufferType);
     throw new MediaError("BUFFER_TYPE_UNKNOWN", null, true);
   }
 
@@ -250,7 +248,7 @@ export default class SourceBufferManager {
     if (memorizedSourceBuffer == null) {
       return;
     }
-    log.info("aborting source buffer", bufferType);
+    log.info("SB: Aborting source buffer", bufferType);
     if (
       !shouldHaveNativeSourceBuffer(bufferType) ||
       this._mediaSource.readyState === "open"
@@ -258,7 +256,7 @@ export default class SourceBufferManager {
       try {
         memorizedSourceBuffer.sourceBuffer.abort();
       } catch (e) {
-        log.warn(`failed to abort a ${bufferType} SourceBuffer:`, e);
+        log.warn(`SB: Failed to abort a ${bufferType} SourceBuffer:`, e);
       }
     }
     delete this._initializedSourceBuffers[bufferType];

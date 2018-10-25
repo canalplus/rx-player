@@ -32,6 +32,7 @@ import {
   refCount,
 } from "rxjs/operators";
 import config from "../../config";
+import log from "../../log";
 import { getLeftSizeOfRange, getRange } from "../../utils/ranges";
 
 export type IMediaInfosState =
@@ -334,6 +335,7 @@ function createClock(
       lastTimings = objectAssign(mediaTimings,
         { stalled: stalledState }
       );
+      log.debug("API: new clock tick", lastTimings);
       obs.next(lastTimings);
     }
 

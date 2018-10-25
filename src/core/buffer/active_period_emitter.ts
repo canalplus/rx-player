@@ -109,7 +109,7 @@ export default function ActivePeriodEmitter(
       }
 
       if (periodItem.buffers.has(type)) {
-        log.warn(`Buffer type ${type} already added to the period`);
+        log.warn(`ActivePeriodEmitter: Buffer type ${type} already added to the period`);
       }
       periodItem.buffers.add(type);
     }));
@@ -117,13 +117,13 @@ export default function ActivePeriodEmitter(
   const onItemRemove$ = removePeriodBuffer$
     .pipe(tap(({ period, type }) => {
       if (!periodsList || periodsList.length() === 0) {
-        log.error("ActivePeriodStore: cannot remove, no period is active.");
+        log.error("ActivePeriodEmitter: cannot remove, no period is active.");
         return ;
       }
 
       const periodItem = periodsList.find(p => p.period === period);
       if (!periodItem) {
-        log.error("ActivePeriodStore: cannot remove, unknown period.");
+        log.error("ActivePeriodEmitter: cannot remove, unknown period.");
         return ;
       }
 
