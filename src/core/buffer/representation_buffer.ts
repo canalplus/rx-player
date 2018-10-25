@@ -335,6 +335,7 @@ export default function RepresentationBuffer<T>({
   function loadSegmentsFromQueue() : Observable<ILoadedSegmentObject<T>> {
     const requestNextSegment$ : Observable<ILoadedSegmentObject<T>> =
       observableDefer(() => {
+        currentSegmentRequest = null;
         const currentNeededSegment = downloadQueue.shift();
         if (currentNeededSegment == null) { // queue finished
           finishedQueue$.next();
