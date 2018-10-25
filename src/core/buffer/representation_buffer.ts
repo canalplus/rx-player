@@ -185,6 +185,7 @@ export default function RepresentationBuffer<T>({
   // SourceBuffer.
   const sourceBufferWaitingQueue = new SimpleSet();
 
+  // Emit when the current queue of download is finished
   const finishedQueue$ = new Subject<void>();
 
   const status$ = observableCombineLatest(
