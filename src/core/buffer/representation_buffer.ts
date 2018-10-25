@@ -245,10 +245,10 @@ export default function RepresentationBuffer<T>({
         if (currentSegmentRequest != null) {
           if (
             mostNeededSegment == null ||
-            currentSegmentRequest.segment.id === mostNeededSegment.segment.id
+            currentSegmentRequest.segment.id !== mostNeededSegment.segment.id
           ) {
             startQueue$.next(); // interrupt the current request
-          } else if (currentSegmentRequest.priority === mostNeededSegment.priority) {
+          } else if (currentSegmentRequest.priority !== mostNeededSegment.priority) {
             const { request$ } = currentSegmentRequest;
             segmentFetcher.updatePriority(request$, mostNeededSegment.priority);
           }
