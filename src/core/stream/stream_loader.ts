@@ -29,6 +29,7 @@ import {
   takeUntil,
 } from "rxjs/operators";
 import { MediaError } from "../../errors";
+import log from "../../log";
 import Manifest, {
   Period,
 } from "../../manifest";
@@ -172,9 +173,11 @@ export default function StreamLoader({
     ).pipe(mergeMap((evt) : Observable<IStreamLoaderEvent> => {
       switch (evt.type) {
         case "end-of-stream":
+          log.debug("Stream: call endOfStream");
           return maintainEndOfStream(mediaSource)
             .pipe(ignoreElements(), takeUntil(cancelEndOfStream$));
         case "resume-stream":
+          log.debug("Stream: cancel endOfStream");
           cancelEndOfStream$.next(null);
           return EMPTY;
         default:
@@ -200,6 +203,7 @@ export default function StreamLoader({
           const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
           return observableOf(EVENTS.warning(error), EVENTS.loaded());
         }
+        log.debug("Stream: Stream is loaded.");
         return observableOf(EVENTS.loaded());
       }));
 

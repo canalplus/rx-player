@@ -118,7 +118,7 @@ export default function handleSessionEvents(
   session: MediaKeySession|ICustomMediaKeySession,
   keySystem: IKeySystemOption
 ) : Observable<IMediaKeySessionHandledEvents|IEMEWarningEvent> {
-  log.debug("eme: handle message events", session);
+  log.debug("EME: Handle message events", session);
 
   const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
   const getLicenseRetryOptions = {
@@ -140,7 +140,7 @@ export default function handleSessionEvents(
   const keyStatusesChanges : Observable<IMediaKeySessionEvents|IEMEWarningEvent> =
     onKeyStatusesChange$(session)
       .pipe(mergeMap((keyStatusesEvent: Event) => {
-        log.debug("eme: keystatuseschange event", session, keyStatusesEvent);
+        log.debug("EME: keystatuseschange event", session, keyStatusesEvent);
 
         // find out possible errors associated with this event
         const warnings : IEMEWarningEvent[] = [];
@@ -189,11 +189,7 @@ export default function handleSessionEvents(
       const message = new Uint8Array(messageEvent.message);
       const messageType = messageEvent.messageType || "license-request";
 
-      log.debug(
-        `eme: event message type ${messageType}`,
-        session,
-        messageEvent
-      );
+      log.debug(`EME: Event message type ${messageType}`, session, messageEvent);
 
       const getLicense$ = observableDefer(() => {
         const getLicense = keySystem.getLicense(message, messageType);
@@ -228,11 +224,11 @@ export default function handleSessionEvents(
           const license = evt.value.license;
 
           if (license == null) {
-            log.info("EME: no license given, skipping session.update");
+            log.info("EME: No license given, skipping session.update");
             return EMPTY;
           }
 
-          log.debug("eme: update session", evt);
+          log.debug("EME: Update session", evt);
           return castToObservable((session as any).update(license)).pipe(
             catchError((error) => {
               throw new EncryptedMediaError("KEY_UPDATE_ERROR", error, true);

@@ -37,6 +37,7 @@ import {
 } from "rxjs/operators";
 import { shouldUnsetMediaKeys } from "../../compat/";
 import { onEncrypted$ } from "../../compat/events";
+import log from "../../log";
 import { assertInterface } from "../../utils/assert";
 import noop from "../../utils/noop";
 import attachMediaKeys from "./attach_media_keys";
@@ -117,6 +118,8 @@ export default function EMEManager(
 
     /* Attach server certificate and create/reuse MediaKeySession */
     mergeMap(([encryptedEvent, mediaKeysInfos], i) => {
+      log.debug("EME: encrypted event received", encryptedEvent);
+
       const { keySystemOptions, mediaKeys } = mediaKeysInfos;
       const { serverCertificate } = keySystemOptions;
 

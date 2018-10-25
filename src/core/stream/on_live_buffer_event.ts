@@ -45,7 +45,7 @@ function refreshManifest(
 ) : Observable<IManifestUpdateEvent> {
   const refreshURL = currentManifest.getUrl();
   if (!refreshURL) {
-    log.warn("Cannot refresh the manifest: no url");
+    log.warn("Stream: Cannot refresh the manifest: no url");
     return EMPTY;
   }
 
@@ -78,13 +78,13 @@ export default function liveEventsHandler(
     switch (message.type) {
       case "discontinuity-encountered":
         if (SourceBufferManager.isNative(message.value.bufferType)) {
-          log.warn("explicit discontinuity seek", message.value.nextTime);
+          log.warn("Stream: Explicit discontinuity seek", message.value.nextTime);
           mediaElement.currentTime = message.value.nextTime;
         }
         break;
 
       case "needs-manifest-refresh":
-        log.debug("needs manifest to be refreshed");
+        log.debug("Stream: Needs manifest to be refreshed");
 
         // out-of-index messages require a complete reloading of the
         // manifest to refresh the current index
