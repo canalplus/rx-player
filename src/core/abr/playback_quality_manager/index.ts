@@ -19,8 +19,8 @@ import {
   of as observableOf
 } from "rxjs";
 import {
+  distinctUntilChanged,
   map,
-  startWith,
   tap,
 } from "rxjs/operators";
 import log from "../../../log";
@@ -37,7 +37,8 @@ import getBufferedStreams from "./get_buffered_streams";
 import getStreamId from "./get_stream_id";
 
 interface IQualityMeans {
-  addSample: (weight: number, ratio: number) => void;
+  addSampleOnPlayback: (weight: number, ratio: number) => void;
+  addSampleOnPending: () => void;
   getMeans: () => {
     fast: number;
     slow: number;
@@ -67,13 +68,30 @@ export type IPlaybackQualities = Partial<Record<string|number, number>>;
  *
  * Playback condition may evolve through time depending on CPU / GPU
  * loads and device energy conditions.
- * We calculate two quality means:
- * - The "fast" relies on few lasts samples.
- * - The "slow" relies on samples from a larger period.
+ * We calculate two quality means for each stream :
+ * - The "fast", suplied when playing, relies on few lasts samples :
+ * It notifies about estimated current frame loss.
+ * - The "slow" relies on samples from a larger period. When the stream
+ * is not playing, the slow is still fed with virtual "good quality" ratios.
  *
- * A poor quality stream may become qualitative again. As a trick, when a stream is
- * not played, we still add virtual playback samples where there are no dropped
- * frames.
+ * The effective stream quality is the minimum value between both of them. As a
+ * consequence, when a stream is "banned" from playback, it may be considered again
+ * playable when the slow mean has grown (the fast being equal to 1).
+ *
+ * Example:
+ *
+ * |- 1 --- 2 --- 3 --- 4 --- 5 --- 6 --- 7 --- 8 --- 9 --- 10 ----> (time in seconds)
+ *
+ * |             str 1               |      str 2      | str 1  |--> playing stream
+ *
+ * |     1     | /!\ 0.4 |    0.8    |    no data      |   0.4  |--> (framedrop for str 1)
+ *
+ * |          1          | 0.5 | 0.6 |    1 (reset)    |   0.5  |--> (fast mean for str 1)
+ *
+ * |          1          | 0.5 | 0.6 |  0.8   |   0.9  |  0.75  |--> (slow mean for str 1)
+ *
+ * |          1          | 0.5 | 0.6 |  0.8   |   0.9  |   0.5  |--> (estimated quality)
+ *
  *
  * [1] It is useless to make this operation if more than one representation has been
  * played, as we can't associate frames to a specific stream.
@@ -86,14 +104,25 @@ export default function PlaybackQualityManager(
 ): IPlaybackQualityManager {
   const playbackQualitiesMemory: IPlaybackQualities = {};
 
-  const qualityMeansForStream = new MapMemory<string|number, IQualityMeans>(() => {
-    const fastEWMA = new EWMA(10);
-    const slowEWMA = new EWMA(120);
+  const meansForStream = new MapMemory<string|number, IQualityMeans>(() => {
+    let fastEWMA: EWMA = new EWMA(10);
+    const slowEWMA: EWMA = new EWMA(120);
+    const weights: number[] = [0];
 
     return {
-      addSample: (weight: number, ratio: number) => {
+      addSampleOnPlayback: (weight: number, ratio: number) => {
+        weights.push(weight);
         fastEWMA.addSample(weight, ratio);
         slowEWMA.addSample(weight, ratio);
+      },
+      addSampleOnPending: () => {
+        const meanWeight = weights.reduce((acc, value) => {
+          return acc + value;
+        }) / weights.length;
+
+        fastEWMA = new EWMA(10); // reset fast EWMA when no playback
+        fastEWMA.addSample(meanWeight, 1);
+        slowEWMA.addSample(meanWeight, 1);
       },
       getMeans: () => {
         return {
@@ -130,15 +159,17 @@ export default function PlaybackQualityManager(
           const { lastCurrentTime } = lastPlaybackInfos;
           lastPlaybackInfos.lastCurrentTime = currentTime;
 
-          const streamQuality =
-            (1 - getFrameLossFromLastPosition(mediaElement, lastPlaybackInfos));
+          const frameLoss =
+            getFrameLossFromLastPosition(mediaElement, lastPlaybackInfos);
+          log.debug("ABR - current frame loss", frameLoss);
+
+          const localStreamQuality = 1 - frameLoss;
 
           const bufferedStreams = getBufferedStreams(segmentBookkeeper, {
               start: lastCurrentTime || currentTime,
               end: currentTime,
             });
-
-          const playedStream = bufferedStreams.length === 0 ?
+          const playedStream = bufferedStreams.length === 1 ?
             bufferedStreams[0] :
             undefined;
 
@@ -149,33 +180,43 @@ export default function PlaybackQualityManager(
           ) => {
             /* 1 - get quality means for a specific stream, and update them */
             const streamId = getStreamId(period, adaptation, representation);
-            const qualityEwmas = qualityMeansForStream.get(streamId);
+            const means = meansForStream.get(streamId);
 
             const meanWeight = currentTime - (lastCurrentTime || currentTime);
-
             if (
               playedStream &&
               playedStream.streamId === streamId &&
-              !isNaN(streamQuality)
+              !isNaN(localStreamQuality)
             ) {
-              qualityEwmas.addSample(meanWeight, streamQuality);
+              means.addSampleOnPlayback(meanWeight, localStreamQuality);
             } else {
-              qualityEwmas.addSample(meanWeight, 1);
+              means.addSampleOnPending();
             }
 
             /* 2 - from means, assign a new quality to playbackQualitiesMemory */
-            const { fast, slow } = qualityEwmas.getMeans();
-            playbackQualitiesMemory[streamId] = Math.min(fast, slow);
+            const { fast, slow } = means.getMeans();
+            const streamQuality = Math.round(
+              Math.min(fast, slow) * 100
+            ) / 100;
 
+            playbackQualitiesMemory[streamId] = !isNaN(streamQuality) ?
+              streamQuality : undefined;
             representationPlaybackQualities[representation.id] =
               playbackQualitiesMemory[streamId];
-
             return representationPlaybackQualities;
           }, {});
         }),
-        startWith({}),
+        distinctUntilChanged((a, b) => {
+          if (a.length !== b.length) {
+            return false;
+          }
+          const oldKeys = Object.keys(a);
+          return oldKeys.reduce((acc, key) => {
+            return acc && (a[key] === b[key]);
+          }, true);
+        }),
         tap((playbackQualities) => {
-          log.debug("abr: playback qualities", playbackQualities);
+          log.debug("ABR - playback qualities", playbackQualities);
         })
       );
     },
