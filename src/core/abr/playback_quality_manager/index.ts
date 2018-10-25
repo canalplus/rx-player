@@ -74,9 +74,8 @@ export type IPlaybackQualities = Partial<Record<string|number, number>>;
  * - The "slow" relies on samples from a larger period. When the stream
  * is not playing, the slow is still fed with virtual "good quality" ratios.
  *
- * The effective stream quality is the minimum value between both of them. As a
- * consequence, when a stream is "banned" from playback, it may be considered again
- * playable when the slow mean has grown (the fast being equal to 1).
+ * The effective stream quality is the minimum value between both of them, so
+ * that stream quality doesn't grow up too fast.
  *
  * Example:
  *
