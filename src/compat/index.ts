@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import nextTick from "next-tick";
 import {
   defer as observableDefer,
   fromEvent as observableFromEvent,
@@ -195,13 +196,13 @@ if (
 
   sourceBufferWebkitProto.__emitUpdate =
     function(eventName : string, val : any) {
-      setTimeout(() => {
+      nextTick(() => {
         /* tslint:disable no-invalid-this */
         this.trigger(eventName, val);
         this.updating = false;
         this.trigger("updateend");
         /* tslint:enable no-invalid-this */
-      }, 0);
+      });
     };
 
   sourceBufferWebkitProto.appendBuffer =
