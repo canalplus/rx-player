@@ -82,14 +82,14 @@ const speedManager = (
     .pipe(switchMap(shouldForcePause => {
       if (shouldForcePause) {
         return observableDefer(() => {
-          log.info("pause playback to build buffer");
+          log.info("SpeedManager: Pause playback to build buffer");
           mediaElement.playbackRate = 0;
           return observableOf(0);
         });
       }
       return speed$
         .pipe(tap((speed) => {
-          log.info("resume playback speed", speed);
+          log.info("SpeedManager: Resume playback speed", speed);
           mediaElement.playbackRate = speed;
         }));
     }));

@@ -184,7 +184,7 @@ export default function PeriodBufferManager(
     ActivePeriodEmitter(bufferTypes, addPeriodBuffer$, removePeriodBuffer$).pipe(
       filter((period) : period is Period => !!period),
       map(period => {
-        log.info("new active period", period);
+        log.info("Buffer: New active period", period);
         return EVENTS.activePeriodChanged(period);
       })
     );
@@ -263,7 +263,7 @@ export default function PeriodBufferManager(
       take(1),
 
       tap(({ currentTime, wantedTimeOffset }) => {
-        log.info("Current position out of the bounds of the active periods," +
+        log.info("Buffer: Current position out of the bounds of the active periods," +
           "re-creating buffers.", bufferType, currentTime + wantedTimeOffset);
         destroyCurrentBuffers.next();
       }),
@@ -333,7 +333,7 @@ export default function PeriodBufferManager(
     basePeriod : Period,
     destroy$ : Observable<void>
   ) : Observable<IMultiplePeriodBuffersEvent> {
-    log.info("creating new Buffer for", bufferType, basePeriod);
+    log.info("Buffer: Creating new Buffer for", bufferType, basePeriod);
 
     // Emits the chosen adaptation for the current type.
     const adaptation$ = new ReplaySubject<Adaptation|null>(1);
@@ -407,7 +407,7 @@ export default function PeriodBufferManager(
         periodBuffer$.pipe(takeUntil(killCurrentBuffer$)),
         observableOf(EVENTS.periodBufferCleared(bufferType, basePeriod))
           .pipe(tap(() => {
-            log.info("destroying buffer for", bufferType, basePeriod);
+            log.info("Buffer: Destroying buffer for", bufferType, basePeriod);
           }))
         );
 
@@ -442,11 +442,11 @@ export default function PeriodBufferManager(
   ) : Observable<IPeriodBufferEvent> {
     return adaptation$.pipe(switchMap((adaptation) => {
       if (adaptation == null) {
-        log.info(`set no ${bufferType} Adaptation`, period);
+        log.info(`Buffer: Set no ${bufferType} Adaptation`, period);
         let cleanBuffer$ : Observable<null>;
 
         if (sourceBufferManager.has(bufferType)) {
-          log.info(`clearing previous ${bufferType} SourceBuffer`);
+          log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
           const _qSourceBuffer = sourceBufferManager.get(bufferType);
           cleanBuffer$ = _qSourceBuffer
             .removeBuffer(period.start, period.end || Infinity)
@@ -461,7 +461,7 @@ export default function PeriodBufferManager(
         );
       }
 
-      log.info(`updating ${bufferType} adaptation`, adaptation, period);
+      log.info(`Buffer: Updating ${bufferType} adaptation`, adaptation, period);
 
       const newBuffer$ = clock$.pipe(
         take(1),
@@ -507,7 +507,7 @@ export default function PeriodBufferManager(
     adaptation : Adaptation
   ) : QueuedSourceBuffer<T> {
     if (sourceBufferManager.has(bufferType)) {
-      log.info("reusing a previous SourceBuffer for the type", bufferType);
+      log.info("Buffer: Reusing a previous SourceBuffer for the type", bufferType);
       return sourceBufferManager.get(bufferType);
     }
     const codec = getFirstDeclaredMimeType(adaptation);
@@ -547,14 +547,14 @@ export default function PeriodBufferManager(
       // player. ie: if a text buffer sends an error, we want to
       // continue streaming without any subtitles
       if (!SourceBufferManager.isNative(bufferType)) {
-        log.error("custom buffer: ", bufferType, "has crashed. Aborting it.", error);
+        log.error(`Buffer: Custom ${bufferType} buffer crashed. Aborting it.`, error);
         sourceBufferManager.disposeSourceBuffer(bufferType);
         return observableConcat<IAdaptationBufferEvent<T>|IBufferWarningEvent>(
           observableOf(EVENTS.warning(error)),
           createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { manifest, period })
         );
       }
-      log.error(`native ${bufferType} buffer has crashed. Stopping playback.`, error);
+      log.error(`Buffer: Native ${bufferType} buffer crashed. Stopping playback.`, error);
       throw error;
     }));
   }

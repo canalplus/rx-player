@@ -67,7 +67,7 @@ export default function attachMediaKeys(
         return observableOf(null);
       }
 
-      log.debug("eme: set mediakeys");
+      log.debug("EME: Setting MediaKeys");
       return setMediaKeys(mediaElement, mediaKeys);
     }));
   });

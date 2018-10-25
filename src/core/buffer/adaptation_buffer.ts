@@ -154,10 +154,10 @@ export default function AdaptationBuffer<T>(
 
     tap((estimation) => {
       if (estimation.urgent) {
-        log.info("AdaptationBuffer: urgent Representation switch");
+        log.info("Buffer: urgent Representation switch", adaptation.type);
         killCurrentBuffer$.next();
       } else {
-        log.info("AdaptationBuffer: non-urgent Representation switch");
+        log.info("Buffer: slow Representation switch", adaptation.type);
         terminateCurrentBuffer$.next();
       }
     }),
@@ -191,7 +191,7 @@ export default function AdaptationBuffer<T>(
     representation : Representation
   ) : Observable<IRepresentationBufferEvent<T>> {
     return observableDefer(() => {
-      log.info("changing representation", adaptation.type, representation);
+      log.info("Buffer: changing representation", adaptation.type, representation);
       return RepresentationBuffer({
         clock$,
         content: {
@@ -222,7 +222,7 @@ export default function AdaptationBuffer<T>(
           }
 
           manifest.updateLiveGap(1); // go back 1s for now
-          log.warn("precondition failed", manifest.presentationLiveGap);
+          log.warn("Buffer: precondition failed", manifest.presentationLiveGap);
 
           return observableTimer(2000).pipe(
             mergeMap(() => createRepresentationBuffer(representation)));

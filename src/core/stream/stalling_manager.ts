@@ -70,11 +70,12 @@ function StallingManager(
           !!timing.stalled
         )
       ) {
-        log.warn("after freeze seek", currentTime, timing.currentRange);
+        log.warn("StallingManager: After freeze seek", currentTime, timing.currentRange);
         mediaElement.currentTime = currentTime;
       } else if (nextRangeGap < DISCONTINUITY_THRESHOLD) {
         const seekTo = (currentTime + nextRangeGap + 1 / 60);
-        log.warn("discontinuity seek", currentTime, nextRangeGap, seekTo);
+        log.warn("StallingManager: Discontinuity seek",
+          currentTime, nextRangeGap, seekTo);
         mediaElement.currentTime = seekTo;
       }
     }),

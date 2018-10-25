@@ -75,7 +75,7 @@ export default function getSession(
     } = getInitData(encryptedEvent);
 
     if (handledInitData.has(initData, initDataType)) {
-      log.debug("init data already received. Skipping it.");
+      log.debug("EME: Init data already received. Skipping it.");
       return EMPTY; // Already handled, quit
     }
     handledInitData.add(initData, initDataType);
@@ -87,7 +87,7 @@ export default function getSession(
     if (entry != null) {
       previousLoadedSession = entry.session;
       if (isSessionUsable(previousLoadedSession)) {
-        log.debug("eme: reuse loaded session", previousLoadedSession.sessionId);
+        log.debug("EME: Reuse loaded session", previousLoadedSession.sessionId);
         return observableOf({
           type: "loaded-open-session" as "loaded-open-session",
           value: {

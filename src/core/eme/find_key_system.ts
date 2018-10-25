@@ -267,7 +267,7 @@ export default function getMediaKeySystemAccess(
         currentState.keySystemOptions
       );
       if (cachedKeySystemAccess) {
-        log.debug("eme: found cached compatible keySystem", cachedKeySystemAccess);
+        log.debug("EME: Found cached compatible keySystem", cachedKeySystemAccess);
         return observableOf({
           type: "reuse-media-key-system-access" as "reuse-media-key-system-access",
           value: {
@@ -334,11 +334,8 @@ export default function getMediaKeySystemAccess(
         const keySystemConfigurations =
         buildKeySystemConfigurations(keyName, keySystemOptions);
 
-        log.debug(
-          `eme: request keysystem access ${keyType},` +
-          `${index + 1} of ${keySystemsType.length}`,
-          keySystemConfigurations
-        );
+        log.debug(`EME: Request keysystem access ${keyType},` +
+          `${index + 1} of ${keySystemsType.length}`, keySystemConfigurations);
 
         if (requestMediaKeySystemAccess == null) {
           throw new Error(
@@ -349,7 +346,7 @@ export default function getMediaKeySystemAccess(
         sub = requestMediaKeySystemAccess(keyType, keySystemConfigurations)
         .subscribe(
           (keySystemAccess) => {
-            log.info("eme: found compatible keysystem", keyType, keySystemConfigurations);
+            log.info("EME: Found compatible keysystem", keyType, keySystemConfigurations);
             obs.next({
               type: "create-media-key-system-access",
               value: {
@@ -360,10 +357,8 @@ export default function getMediaKeySystemAccess(
             obs.complete();
           },
           () => {
-            log.debug(
-              "eme: rejected access to keysystem",
-              keyType,
-              keySystemConfigurations);
+            log.debug("EME: Rejected access to keysystem",
+              keyType, keySystemConfigurations);
             sub = null;
             testKeySystem(index + 1);
           }

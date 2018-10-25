@@ -60,7 +60,7 @@ export default class NativeTextTrackSourceBuffer
     videoElement : HTMLMediaElement,
     hideNativeSubtitle : boolean
   ) {
-    log.debug("creating native text track source buffer");
+    log.debug("NTTSB: Creating native text track source buffer");
     super();
     const {
       track,
@@ -77,7 +77,7 @@ export default class NativeTextTrackSourceBuffer
    * @param {Object} data
    */
   _append(data : INativeTextTrackData) : void {
-    log.debug("appending new native text tracks", data);
+    log.debug("NTTSB: Appending new native text tracks", data);
     const {
       timescale, // timescale for the start and end
       start: timescaledStart, // exact beginning to which the track applies
@@ -88,7 +88,7 @@ export default class NativeTextTrackSourceBuffer
     } = data;
     if (timescaledEnd != null && timescaledEnd - timescaledStart <= 0) {
       // this is accepted for error resilience, just skip that case.
-      log.warn("Invalid subtitles appended");
+      log.warn("NTTSB: Invalid subtitles appended");
       return;
     }
 
@@ -128,7 +128,7 @@ export default class NativeTextTrackSourceBuffer
    * @param {Number} to
    */
   _remove(from : number, to : number) : void {
-    log.debug("removing native text track data", from, to);
+    log.debug("NTTSB: Removing native text track data", from, to);
     const track = this._track;
     const cues = track.cues;
     for (let i = cues.length - 1; i >= 0; i--) {
@@ -142,7 +142,7 @@ export default class NativeTextTrackSourceBuffer
   }
 
   _abort() : void {
-    log.debug("aborting native text track source buffer");
+    log.debug("NTTSB: Aborting native text track source buffer");
     const {
       _trackElement,
       _videoElement,
@@ -155,7 +155,7 @@ export default class NativeTextTrackSourceBuffer
       try {
         _videoElement.removeChild(_trackElement);
       } catch (e) {
-        log.warn("Can't remove track element from the video");
+        log.warn("NTTSB: Can't remove track element from the video");
       }
     }
 
