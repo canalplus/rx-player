@@ -322,7 +322,7 @@ export default function RepresentationBuffer<T>({
   //   - download every segments queued sequentially
   //   - append them to the SourceBuffer
   const bufferQueue$ = startQueue$.pipe(
-    switchMap(loadSegmentsFromQueue),
+    switchMap(() => downloadQueue.length ? loadSegmentsFromQueue() : EMPTY),
     mergeMap(appendSegment)
   );
 
