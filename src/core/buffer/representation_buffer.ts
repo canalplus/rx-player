@@ -186,13 +186,13 @@ export default function RepresentationBuffer<T>({
   const sourceBufferWaitingQueue = new SimpleSet();
 
   // Emit when the current queue of download is finished
-  const finishedQueue$ = new Subject<void>();
+  const finishedDownloadQueue$ = new Subject<void>();
 
   const status$ = observableCombineLatest(
     clock$,
     wantedBufferAhead$,
     terminate$.pipe(take(1), mapTo(true), startWith(false)),
-    finishedQueue$.pipe(startWith(undefined))
+    finishedDownloadQueue$.pipe(startWith(undefined))
   ).pipe(
     map(function getCurrentStatus([timing, bufferGoal, terminate]) : {
       discontinuity : number;
@@ -339,7 +339,7 @@ export default function RepresentationBuffer<T>({
         currentSegmentRequest = null;
         const currentNeededSegment = downloadQueue.shift();
         if (currentNeededSegment == null) { // queue finished
-          finishedQueue$.next();
+          finishedDownloadQueue$.next();
           return EMPTY;
         }
 
