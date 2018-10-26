@@ -433,6 +433,31 @@ export default {
   ABR_QUALITY_MANAGER_SLOW_EWMA: 20,
 
   /**
+   */
+  ABR_BAN_TIME_STEPS: [
+    {
+      time: 2 * 60 * 1000,
+      minimumQuality: 0.9,
+    },
+    {
+      time: 30 * 60 * 1000,
+      minimumQuality: 0.8,
+    },
+    {
+      time: 60 * 60 * 1000,
+      minimumQuality: 0.7,
+    },
+    {
+      time: 180 * 60 * 1000,
+      minimumQuality: 0.5,
+    },
+    {
+      time: 320 * 60 * 1000,
+      minimumQuality: 0,
+    },
+  ] as Array<{ time: number; minimumQuality: number }>,
+
+  /**
    * Number of seconds ahead in the buffer after which playback will resume when
    * seeking on an unbuffered part of the stream.
    * @type {Number}

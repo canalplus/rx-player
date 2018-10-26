@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
+import config from "../../config";
 import log from "../../log";
 import { Representation } from "../../manifest";
+
+const { ABR_BAN_TIME_STEPS } = config;
 
 /**
  * From a given quality, return the ban duration.
@@ -23,7 +26,13 @@ import { Representation } from "../../manifest";
  * @returns {number} - ban duration
  */
 function getBanDurationFromStreamQuality(playbackQuality: number): number {
-  return ((60 * 5) / Math.pow(playbackQuality, 6)) * 1000;
+  const steps = ABR_BAN_TIME_STEPS.sort((a, b) => a.minimumQuality - b.minimumQuality);
+  return steps.reduce((acc, step) => {
+    if (playbackQuality >= step.minimumQuality) {
+      return step.time;
+    }
+    return acc;
+  }, steps[0].time);
 }
 
 /**
