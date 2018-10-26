@@ -98,7 +98,7 @@ export default function PlaybackQualityManager(
             return null;
           }
 
-          const localStreamQuality = frameLoss ? (1 - frameLoss) : null;
+          const localStreamQuality = frameLoss != null ? (1 - frameLoss) : null;
 
           const bufferedStreams = getBufferedStreams(segmentBookkeeper, {
               start: lastCurrentTime || currentTime,
