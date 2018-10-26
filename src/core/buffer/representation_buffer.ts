@@ -23,6 +23,7 @@
  * position and what is currently buffered.
  */
 
+import nextTick from "next-tick";
 import objectAssign from "object-assign";
 import {
   combineLatest as observableCombineLatest,
@@ -33,6 +34,7 @@ import {
   Observable,
   of as observableOf,
   ReplaySubject,
+  Subject,
 } from "rxjs";
 import {
   finalize,
@@ -42,6 +44,7 @@ import {
   share,
   startWith,
   switchMap,
+  take,
   takeWhile,
   tap,
 } from "rxjs/operators";
@@ -153,7 +156,7 @@ export default function RepresentationBuffer<T>({
   queuedSourceBuffer, // allows to interact with the SourceBuffer
   segmentBookkeeper, // keep track of what segments already are in the SourceBuffer
   segmentFetcher, // allows to download new segments
-  terminate$, // signal the representationBuffer that it should terminate
+  terminate$, // signal the RepresentationBuffer that it should terminate
   wantedBufferAhead$, // emit the buffer goal
 } : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent<T>> {
   // unwrap components of the content
@@ -175,6 +178,9 @@ export default function RepresentationBuffer<T>({
   // Segments queued for download in the BufferQueue.
   let downloadQueue : IQueuedSegment[] = [];
 
+  // Emit when the current queue of download is finished
+  const finishedDownloadQueue$ = new Subject<void>();
+
   // Keep track of the informations about the pending Segment request.
   // null if no request is pending.
   let currentSegmentRequest : ISegmentRequestObject<T>|null = null;
@@ -186,7 +192,8 @@ export default function RepresentationBuffer<T>({
   const status$ = observableCombineLatest(
     clock$,
     wantedBufferAhead$,
-    terminate$.pipe(mapTo(true), startWith(false))
+    terminate$.pipe(take(1), mapTo(true), startWith(false)),
+    finishedDownloadQueue$.pipe(startWith(undefined))
   ).pipe(
     map(function getCurrentStatus([timing, bufferGoal, terminate]) : {
       discontinuity : number;
@@ -240,21 +247,26 @@ export default function RepresentationBuffer<T>({
       const neededSegments = status.neededSegments;
       const mostNeededSegment = neededSegments[0];
 
-      if (status.terminate) { // complete the RepresentationBuffer when done
+      if (status.terminate) {
         downloadQueue = [];
-        if (currentSegmentRequest != null) {
-          if (
-            mostNeededSegment == null ||
-            currentSegmentRequest.segment.id !== mostNeededSegment.segment.id
-          ) {
-            startQueue$.next(); // interrupt the current request
-          } else if (currentSegmentRequest.priority !== mostNeededSegment.priority) {
-            const { request$ } = currentSegmentRequest;
-            segmentFetcher.updatePriority(request$, mostNeededSegment.priority);
-          }
+        if (currentSegmentRequest == null) {
+          log.debug("Buffer: no request, terminate.", bufferType);
+          startQueue$.complete(); // complete the downloading queue
+          return observableOf({ type: "terminated" as "terminated" });
+        } else if (
+          mostNeededSegment == null ||
+          currentSegmentRequest.segment.id !== mostNeededSegment.segment.id
+        ) {
+          log.debug("Buffer: cancel request and terminate.", bufferType);
+          startQueue$.next(); // interrupt the current request
+          startQueue$.complete(); // complete the downloading queue
+          return observableOf({ type: "terminated" as "terminated" });
+        } else if (currentSegmentRequest.priority !== mostNeededSegment.priority) {
+          const { request$ } = currentSegmentRequest;
+          segmentFetcher.updatePriority(request$, mostNeededSegment.priority);
         }
-        startQueue$.complete(); // complete the downloading queue
-        return observableOf({ type: "terminated" as "terminated" });
+        log.debug("Buffer: terminate after request.", bufferType);
+        return EMPTY;
       }
 
       const neededActions : IBufferNeededActions[] = [];
@@ -268,7 +280,7 @@ export default function RepresentationBuffer<T>({
 
       if (mostNeededSegment == null) {
         if (currentSegmentRequest) {
-          log.debug("interrupting segment request.");
+          log.debug("Buffer: interrupt segment request.", bufferType);
         }
         downloadQueue = [];
         startQueue$.next(); // (re-)start with an empty queue
@@ -280,20 +292,19 @@ export default function RepresentationBuffer<T>({
       }
 
       if (!currentSegmentRequest) {
-        log.debug("starting downloading queue", adaptation.type);
+        log.debug("Buffer: start downloading queue.", bufferType);
         downloadQueue = neededSegments;
         startQueue$.next(); // restart the queue
       } else if (currentSegmentRequest.segment.id !== mostNeededSegment.segment.id) {
-        log.debug("canceling old downloading queue and starting a new one",
-          adaptation.type);
+        log.debug("Buffer: restart download queue.", bufferType);
         downloadQueue = neededSegments;
         startQueue$.next(); // restart the queue
       } else if (currentSegmentRequest.priority !== mostNeededSegment.priority) {
-        log.debug("updating pending request priority", adaptation.type);
+        log.debug("Buffer: update request priority.", bufferType);
         const { request$ } = currentSegmentRequest;
         segmentFetcher.updatePriority(request$, mostNeededSegment.priority);
       } else {
-        log.debug("updating downloading queue", adaptation.type);
+        log.debug("Buffer: update downloading queue", bufferType);
 
         // Update the previous queue to be all needed segments but the first one,
         // for which a request is already pending
@@ -314,7 +325,7 @@ export default function RepresentationBuffer<T>({
   //   - download every segments queued sequentially
   //   - append them to the SourceBuffer
   const bufferQueue$ = startQueue$.pipe(
-    switchMap(loadSegmentsFromQueue),
+    switchMap(() => downloadQueue.length ? loadSegmentsFromQueue() : EMPTY),
     mergeMap(appendSegment)
   );
 
@@ -323,13 +334,18 @@ export default function RepresentationBuffer<T>({
   /**
    * Request every Segment in the ``downloadQueue`` on subscription.
    * Emit the data of a segment when a request succeeded.
+   *
+   * Important side-effects:
+   *   - Mutates `currentSegmentRequest` when doing and finishing a request.
+   *   - Will emit from finishedDownloadQueue$ Subject after it's done.
    * @returns {Observable}
    */
   function loadSegmentsFromQueue() : Observable<ILoadedSegmentObject<T>> {
     const requestNextSegment$ : Observable<ILoadedSegmentObject<T>> =
       observableDefer(() => {
         const currentNeededSegment = downloadQueue.shift();
-        if (currentNeededSegment == null) { // queue finished
+        if (currentNeededSegment == null) {
+          nextTick(() => { finishedDownloadQueue$.next(); });
           return EMPTY;
         }
 
@@ -340,6 +356,7 @@ export default function RepresentationBuffer<T>({
         currentSegmentRequest = { segment, priority, request$ };
         const response$ = request$.pipe(
           mergeMap((fetchedSegment) => {
+            currentSegmentRequest = null;
             const initInfos = initSegmentObject &&
               initSegmentObject.segmentInfos || undefined;
             return fetchedSegment.parse(initInfos);
@@ -350,9 +367,8 @@ export default function RepresentationBuffer<T>({
         return observableConcat(response$, requestNextSegment$);
       });
 
-    return requestNextSegment$.pipe(finalize(() => {
-      currentSegmentRequest = null;
-    }));
+    return requestNextSegment$
+      .pipe(finalize(() => { currentSegmentRequest = null; }));
   }
 
   /**
