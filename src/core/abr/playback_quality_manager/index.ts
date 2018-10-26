@@ -25,7 +25,6 @@ import {
   startWith,
   tap,
 } from "rxjs/operators";
-import config from "../../../config";
 import log from "../../../log";
 import {
   Adaptation,
@@ -33,20 +32,11 @@ import {
   Representation,
 } from "../../../manifest";
 import MapMemory from "../../../utils/map_memory";
-import EWMA from "../../abr/ewma";
 import SegmentBookkeeper from "../../buffer/segment_bookkeeper";
 import getFrameLossFromLastPosition from "./frame_loss";
 import getBufferedStreams from "./get_buffered_streams";
 import getStreamId from "./get_stream_id";
-
-interface IQualityMeans {
-  addSampleOnPlayback: (weight: number, ratio: number) => void;
-  reset: () => void;
-  getMeans: () => {
-    fast: number;
-    slow: number;
-  };
-}
+import VideoQualityEstimator from "./video_quality_estimator";
 
 export interface IPlaybackQualityManager {
   getQualities$: (
@@ -57,11 +47,6 @@ export interface IPlaybackQualityManager {
 }
 
 export type IPlaybackQualities = Partial<Record<string|number, number>>;
-
-const {
-  ABR_QUALITY_MANAGER_FAST_EWMA,
-  ABR_QUALITY_MANAGER_SLOW_EWMA,
-} = config;
 
 /**
  * From a media element, monitor playback informations and evaluate playback quality
@@ -95,27 +80,10 @@ export default function PlaybackQualityManager(
 ): IPlaybackQualityManager {
   const playbackQualitiesMemory: IPlaybackQualities = {};
 
-  const meansForStream = new MapMemory<string|number, IQualityMeans>(() => {
-    let fastEWMA: EWMA = new EWMA(ABR_QUALITY_MANAGER_FAST_EWMA);
-    let slowEWMA: EWMA = new EWMA(ABR_QUALITY_MANAGER_SLOW_EWMA);
-
-    return {
-      addSampleOnPlayback: (sampleWeight: number, ratio: number) => {
-        fastEWMA.addSample(sampleWeight, ratio);
-        slowEWMA.addSample(sampleWeight, ratio);
-      },
-      reset: () => {
-        fastEWMA = new EWMA(ABR_QUALITY_MANAGER_FAST_EWMA);
-        slowEWMA = new EWMA(ABR_QUALITY_MANAGER_SLOW_EWMA);
-      },
-      getMeans: () => {
-        return {
-          fast: fastEWMA.getEstimate(),
-          slow: slowEWMA.getEstimate(),
-        };
-      },
-    };
-  });
+  const videoQualitiesEstimations =
+    new MapMemory<string|number, VideoQualityEstimator>(() => {
+      return new VideoQualityEstimator();
+    });
 
   return {
     getQualities$: (
@@ -141,17 +109,15 @@ export default function PlaybackQualityManager(
       return clock$.pipe(
         map(({ currentTime }) => {
           const { lastCurrentTime } = lastPlaybackInfos;
-          lastPlaybackInfos.lastCurrentTime = currentTime;
           const sampleDuration = currentTime - (lastCurrentTime || currentTime);
+          lastPlaybackInfos.lastCurrentTime = currentTime;
 
-          if (sampleDuration <= 0) {
+          const frameLoss = getFrameLossFromLastPosition(mediaElement, lastPlaybackInfos);
+          log.debug("ABR - current frame loss", frameLoss);
+
+          if (sampleDuration === 0 || frameLoss == null) {
             return null;
           }
-
-          const frameLoss =
-            getFrameLossFromLastPosition(mediaElement, lastPlaybackInfos);
-
-          log.debug("ABR - current frame loss", frameLoss);
 
           const localStreamQuality = frameLoss ? (1 - frameLoss) : null;
 
@@ -170,26 +136,22 @@ export default function PlaybackQualityManager(
           ) => {
             /* 1 - get quality means for a specific stream, and update them */
             const currentStreamId = getStreamId(period, adaptation, representation);
-            const means = meansForStream.get(currentStreamId);
+            const videoQualityEstimator =
+              videoQualitiesEstimations.get(currentStreamId);
 
             if (
               playedStream &&
               playedStream.streamId === currentStreamId &&
               localStreamQuality != null
             ) {
-              means.addSampleOnPlayback(sampleDuration, localStreamQuality);
-              /* 2 - from means, assign a new quality to playbackQualitiesMemory */
-              const { fast, slow } = means.getMeans();
-              const streamQuality = Math.round(
-                Math.min(fast, slow) * 100
-              ) / 100;
+              videoQualityEstimator.addSample(sampleDuration, localStreamQuality);
 
-              playbackQualitiesMemory[currentStreamId] = !isNaN(streamQuality) ?
-                streamQuality : undefined;
+              const videoQuality = videoQualityEstimator.getEstimate();
+              playbackQualitiesMemory[currentStreamId] = videoQuality;
             } else if (// Current stream shouldn't be played anymore.
               !bufferedStreams.some(({ streamId }) => streamId === currentStreamId)
             ) {
-              means.reset();
+              videoQualityEstimator.reset();
               playbackQualitiesMemory[currentStreamId] = undefined;
             }
 
