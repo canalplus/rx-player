@@ -265,6 +265,7 @@ export default function RepresentationBuffer<T>({
         } else if (currentSegmentRequest.priority !== mostNeededSegment.priority) {
           const { request$ } = currentSegmentRequest;
           segmentFetcher.updatePriority(request$, mostNeededSegment.priority);
+          currentSegmentRequest.priority = mostNeededSegment.priority;
         }
         log.debug("Buffer: terminate after request.", bufferType);
         return EMPTY;
@@ -304,6 +305,7 @@ export default function RepresentationBuffer<T>({
         log.debug("Buffer: update request priority.", bufferType);
         const { request$ } = currentSegmentRequest;
         segmentFetcher.updatePriority(request$, mostNeededSegment.priority);
+        currentSegmentRequest.priority = mostNeededSegment.priority;
       } else {
         log.debug("Buffer: update downloading queue", bufferType);
 
