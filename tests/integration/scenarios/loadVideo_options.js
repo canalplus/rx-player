@@ -22,12 +22,12 @@ import RxPlayer from "../../../src";
 import {
   manifestInfos,
   URLs,
-} from "../contents/DASH_static_SegmentTimeline";
-import sleep from "../utils/sleep.js";
-import mockRequests from "../utils/mock_requests";
+} from "../../contents/DASH_static_SegmentTimeline";
+import sleep from "../../utils/sleep.js";
+import mockRequests from "../../utils/mock_requests";
 import /* waitForState, */ {
   waitForLoadedStateAfterLoadVideo,
-} from "../utils/waitForPlayerState";
+} from "../../utils/waitForPlayerState";
 
 describe("loadVideo Options", () => {
   let player;

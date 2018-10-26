@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import sinon from "sinon";
 
-import RxPlayer from "../../../src";
+import RxPlayer from "../../src";
 
-import mockRequests from "./mock_requests.js";
-import sleep from "./sleep.js";
-import { waitForLoadedStateAfterLoadVideo } from "./waitForPlayerState";
+import mockRequests from "../utils/mock_requests.js";
+import sleep from "../utils/sleep.js";
+import { waitForLoadedStateAfterLoadVideo } from "../utils/waitForPlayerState";
 
 /**
  * Performs a serie of basic tests on a content.

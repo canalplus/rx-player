@@ -1,14 +1,12 @@
 import { expect } from "chai";
 import sinon from "sinon";
-
 import RxPlayer from "../../../src";
-
 import {
   manifestInfos,
   URLs,
-} from "../contents/DASH_dynamic_SegmentTimeline";
-import mockRequests from "../utils/mock_requests.js";
-import sleep from "../utils/sleep.js";
+} from "../../contents/DASH_dynamic_SegmentTimeline";
+import mockRequests from "../../utils/mock_requests.js";
+import sleep from "../../utils/sleep.js";
 
 describe("DASH live content (SegmentTimeline)", function () {
   let player;
