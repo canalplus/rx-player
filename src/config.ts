@@ -431,6 +431,7 @@ export default {
    * average.
    */
   ABR_QUALITY_MANAGER_SLOW_EWMA: 60,
+
   /**
    * Number of seconds ahead in the buffer after which playback will resume when
    * seeking on an unbuffered part of the stream.
