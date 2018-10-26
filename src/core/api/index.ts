@@ -668,7 +668,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   loadVideo(opts : ILoadVideoOptions) : void {
     const options = parseLoadVideoOptions(opts);
-    log.info("loadvideo", options);
+    log.info("API: Calling loadvideo", options);
 
     const {
       autoPlay,
@@ -1932,7 +1932,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         break;
       case "added-segment":
         if (!this._priv_contentInfos) {
-          log.error("Added segment while no content is loaded");
+          log.error("API: Added segment while no content is loaded");
           return;
         }
 
@@ -1966,7 +1966,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this._priv_stopCurrentContent$.next();
     this._priv_cleanUpCurrentContentState();
     this._priv_currentError = error;
-    log.error("the player stopped because of an error:", error);
+    log.error("API: The player stopped because of an error:", error);
     this._priv_setPlayerState(PLAYER_STATES.STOPPED);
 
     // TODO This condition is here because the eventual callback called when the
@@ -2014,7 +2014,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     manifest : Manifest;
   }) : void {
     if (!this._priv_contentInfos) {
-      log.error("The manifest is loaded but no content is.");
+      log.error("API: The manifest is loaded but no content is.");
       return;
     }
     const { manifest, abrManager } = value;
@@ -2043,7 +2043,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   private _priv_onActivePeriodChanged({ period } : { period : Period }) : void {
     if (!this._priv_contentInfos) {
-      log.error("The active period changed but no content is loaded");
+      log.error("API: The active period changed but no content is loaded");
       return;
     }
     this._priv_contentInfos.currentPeriod = period;
@@ -2101,7 +2101,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
       case "video":
         if (!this._priv_trackManager) {
-          log.error("TrackManager not instanciated for a new video period");
+          log.error("API: TrackManager not instanciated for a new video period");
           adaptation$.next(null);
         } else {
           this._priv_trackManager.addPeriod(type, period, adaptation$);
@@ -2111,7 +2111,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
       case "audio":
         if (!this._priv_trackManager) {
-          log.error(`TrackManager not instanciated for a new ${type} period`);
+          log.error(`API: TrackManager not instanciated for a new ${type} period`);
           adaptation$.next(null);
         } else {
           this._priv_trackManager.addPeriod(type, period, adaptation$);
@@ -2121,7 +2121,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
       case "text":
         if (!this._priv_trackManager) {
-          log.error(`TrackManager not instanciated for a new ${type} period`);
+          log.error(`API: TrackManager not instanciated for a new ${type} period`);
           adaptation$.next(null);
         } else {
           this._priv_trackManager.addPeriod(type, period, adaptation$);
@@ -2181,7 +2181,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   private _priv_onManifestUpdate(value : { manifest : Manifest }) : void {
     if (!this._priv_contentInfos) {
-      log.error("The manifest is updated but no content is loaded.");
+      log.error("API: The manifest is updated but no content is loaded.");
       return;
     }
     const { manifest } = value;
@@ -2213,7 +2213,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     period : Period;
   }) : void {
     if (!this._priv_contentInfos) {
-      log.error("The adaptations changed but no content is loaded");
+      log.error("API: The adaptations changed but no content is loaded");
       return;
     }
 
@@ -2270,7 +2270,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     representation : Representation|null;
   }) : void {
     if (!this._priv_contentInfos) {
-      log.error("The representations changed but no content is loaded");
+      log.error("API: The representations changed but no content is loaded");
       return;
     }
 
@@ -2366,7 +2366,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   private _priv_setPlayerState(newState : string) : void {
     if (this.state !== newState) {
       this.state = newState;
-      log.info("playerStateChange", newState);
+      log.info("API: playerStateChange event", newState);
       this.trigger("playerStateChange", newState);
     }
   }
@@ -2381,7 +2381,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   private _priv_triggerTimeChange(clockTick : IClockTick) : void {
     if (!this._priv_contentInfos) {
-      log.warn("Cannot perform time update: no content loaded.");
+      log.warn("API: Cannot perform time update: no content loaded.");
       return;
     }
 

@@ -63,7 +63,7 @@ export default class PersistedSessionsStore {
       this._entries = this._storage.load();
       assert(Array.isArray(this._entries));
     } catch (e) {
-      log.warn("eme-persistent-store: could not get entries from license storage", e);
+      log.warn("EME-PSS: Could not get entries from license storage", e);
       this.dispose();
     }
   }
@@ -109,7 +109,7 @@ export default class PersistedSessionsStore {
       this.delete(initData, initDataType);
     }
 
-    log.info("eme-persistent-store: add new session", sessionId, session);
+    log.info("EME-PSS: Add new session", sessionId, session);
     this._entries.push({
       sessionId,
       initData: hashBuffer(initData),
@@ -134,7 +134,7 @@ export default class PersistedSessionsStore {
       e.initDataType === initDataType
     );
     if (entry) {
-      log.warn("eme-persistent-store: delete session from store", entry);
+      log.warn("EME-PSS: Delete session from store", entry);
 
       const idx = this._entries.indexOf(entry);
       this._entries.splice(idx, 1);
@@ -157,7 +157,7 @@ export default class PersistedSessionsStore {
     try {
       this._storage.save(this._entries);
     } catch (e) {
-      log.warn("eme-persistent-store: could not save licenses in localStorage");
+      log.warn("EME-PSS: Could not save licenses in localStorage");
     }
   }
 }

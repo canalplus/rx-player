@@ -54,7 +54,7 @@ function createSessionStorage(
     throw new EncryptedMediaError("INVALID_KEY_SYSTEM", error, true);
   }
 
-  log.info("set the given license storage");
+  log.info("EME: Set the given license storage");
   return new PersistedSessionsStore(licenseStorage);
 }
 
@@ -83,6 +83,7 @@ export default function getMediaKeysInfos(
         });
       }
 
+      log.debug("EME: Calling createMediaKeys on the MediaKeySystemAccess");
       return castToObservable(mediaKeySystemAccess.createMediaKeys())
         .pipe(map((mediaKeys) => ({
           mediaKeys,

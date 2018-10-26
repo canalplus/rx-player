@@ -441,10 +441,10 @@ export default class RepresentationChooser {
 
             // check if should get in/out of starvation mode
             if (!inStarvationMode && bufferGap <= ABR_STARVATION_GAP) {
-              log.info("ABR - enter starvation mode.");
+              log.info("ABR: enter starvation mode.");
               inStarvationMode = true;
             } else if (inStarvationMode && bufferGap >= OUT_OF_STARVATION_GAP) {
-              log.info("ABR - exit starvation mode.");
+              log.info("ABR: exit starvation mode.");
               inStarvationMode = false;
             }
 
@@ -456,7 +456,7 @@ export default class RepresentationChooser {
                 this._currentRequests, clock, lastEstimatedBitrate);
 
               if (bandwidthEstimate != null) {
-                log.info("ABR - starvation mode emergency estimate:", bandwidthEstimate);
+                log.info("ABR: starvation mode emergency estimate:", bandwidthEstimate);
                 this.estimator.reset();
                 const currentBitrate = clock.downloadBitrate;
                 newBitrateCeil = currentBitrate == null ?
@@ -513,7 +513,7 @@ export default class RepresentationChooser {
 
           tap(({ bitrate }) => {
             if (bitrate != null) {
-              log.debug("ABR - calculated bitrate:", bitrate);
+              log.debug("ABR: calculated bitrate:", bitrate);
               lastEstimatedBitrate = bitrate;
             }
           }),

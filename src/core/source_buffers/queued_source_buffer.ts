@@ -309,7 +309,7 @@ export default class QueuedSourceBuffer<T> {
       const { segment, initSegment, timestampOffset } = action;
 
       if (initSegment === null && segment === null) {
-        log.warn("QueuedSourceBuffer: no segment appended.");
+        log.warn("QSB: no segment appended.", this.bufferType);
         return observableOf(undefined);
       }
 
@@ -383,17 +383,17 @@ export default class QueuedSourceBuffer<T> {
           const { segment, timestampOffset = 0 } = queueItem.args;
           if (this._buffer.timestampOffset !== timestampOffset) {
             const newTimestampOffset = timestampOffset || 0;
-            log.debug("updating timestampOffset",
-              this._buffer.timestampOffset, newTimestampOffset);
+            log.debug("QSB: updating timestampOffset",
+              this.bufferType, this._buffer.timestampOffset, newTimestampOffset);
             this._buffer.timestampOffset = newTimestampOffset;
           }
 
-          log.debug("pushing data to source buffer", queueItem.args);
+          log.debug("QSB: pushing new data to source buffer", this.bufferType);
           this._buffer.appendBuffer(segment);
           break;
         case SourceBufferAction.Remove:
           const { start, end } = queueItem.args;
-          log.debug("removing data from source buffer", start, end);
+          log.debug("QSB: removing data from source buffer", this.bufferType, start, end);
           this._buffer.remove(start, end);
           break;
       }

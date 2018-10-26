@@ -132,10 +132,10 @@ export default function StreamDirectFile({
 } : IDirectFileStreamOptions) : Observable<IDirectfileEvent> {
   clearElementSrc(mediaElement);
 
-  log.debug("calculating initial time");
+  log.debug("Stream: Calculating initial time");
   const initialTime = () =>
     getDirectFileInitialTime(mediaElement, startAt);
-  log.debug("initial time calculated:", initialTime);
+  log.debug("Stream: Initial time calculated:", initialTime);
 
   const {
     seek$,
