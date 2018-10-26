@@ -38,7 +38,7 @@ import getStreamId from "./get_stream_id";
 
 interface IQualityMeans {
   addSampleOnPlayback: (weight: number, ratio: number) => void;
-  addSampleOnPending: () => void;
+  reset: () => void;
   getMeans: () => {
     fast: number;
     slow: number;
@@ -71,26 +71,10 @@ export type IPlaybackQualities = Partial<Record<string|number, number>>;
  * We calculate two quality means for each stream :
  * - The "fast", suplied when playing, relies on few lasts samples :
  * It notifies about estimated current frame loss.
- * - The "slow" relies on samples from a larger period. When the stream
- * is not playing, the slow is still fed with virtual "good quality" ratios.
+ * - The "slow" relies on samples from a larger period.
  *
  * The effective stream quality is the minimum value between both of them, so
  * that stream quality doesn't grow up too fast.
- *
- * Example:
- *
- * |- 1 --- 2 --- 3 --- 4 --- 5 --- 6 --- 7 --- 8 --- 9 --- 10 ----> (time in seconds)
- *
- * |             str 1               |      str 2      | str 1  |--> playing stream
- *
- * |     1     | /!\ 0.4 |    0.8    |    no data      |   0.4  |--> (framedrop for str 1)
- *
- * |          1          | 0.5 | 0.6 |    1 (reset)    |   0.5  |--> (fast mean for str 1)
- *
- * |          1          | 0.5 | 0.6 |  0.8   |   0.9  |  0.75  |--> (slow mean for str 1)
- *
- * |          1          | 0.5 | 0.6 |  0.8   |   0.9  |   0.5  |--> (estimated quality)
- *
  *
  * [1] It is useless to make this operation if more than one representation has been
  * played, as we can't associate frames to a specific stream.
@@ -105,23 +89,16 @@ export default function PlaybackQualityManager(
 
   const meansForStream = new MapMemory<string|number, IQualityMeans>(() => {
     let fastEWMA: EWMA = new EWMA(10);
-    const slowEWMA: EWMA = new EWMA(120);
-    const weights: number[] = [0];
+    let slowEWMA: EWMA = new EWMA(60);
 
     return {
       addSampleOnPlayback: (weight: number, ratio: number) => {
-        weights.push(weight);
         fastEWMA.addSample(weight, ratio);
         slowEWMA.addSample(weight, ratio);
       },
-      addSampleOnPending: () => {
-        const meanWeight = weights.reduce((acc, value) => {
-          return acc + value;
-        }) / weights.length;
-
-        fastEWMA = new EWMA(10); // reset fast EWMA when no playback
-        fastEWMA.addSample(meanWeight, 1);
-        slowEWMA.addSample(meanWeight, 1);
+      reset: () => {
+        fastEWMA = new EWMA(10);
+        slowEWMA = new EWMA(60);
       },
       getMeans: () => {
         return {
@@ -188,18 +165,19 @@ export default function PlaybackQualityManager(
               !isNaN(localStreamQuality)
             ) {
               means.addSampleOnPlayback(meanWeight, localStreamQuality);
+              /* 2 - from means, assign a new quality to playbackQualitiesMemory */
+              const { fast, slow } = means.getMeans();
+              const streamQuality = Math.round(
+                Math.min(fast, slow) * 100
+              ) / 100;
+
+              playbackQualitiesMemory[streamId] = !isNaN(streamQuality) ?
+                streamQuality : undefined;
             } else {
-              means.addSampleOnPending();
+              means.reset();
+              playbackQualitiesMemory[streamId] = undefined;
             }
 
-            /* 2 - from means, assign a new quality to playbackQualitiesMemory */
-            const { fast, slow } = means.getMeans();
-            const streamQuality = Math.round(
-              Math.min(fast, slow) * 100
-            ) / 100;
-
-            playbackQualitiesMemory[streamId] = !isNaN(streamQuality) ?
-              streamQuality : undefined;
             representationPlaybackQualities[representation.id] =
               playbackQualitiesMemory[streamId];
             return representationPlaybackQualities;
