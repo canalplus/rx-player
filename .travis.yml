@@ -38,6 +38,7 @@ script:
   - npm run lint
   - npm run lint:demo
   - npm run test
+  - npm run test:memory
   - sonar-scanner
 
 addons:

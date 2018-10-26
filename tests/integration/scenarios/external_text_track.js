@@ -4,9 +4,9 @@ import sinon from "sinon";
 import {
   manifestInfos,
   URLs,
-} from "../contents/DASH_static_SegmentTimeline";
-import mockRequests from "../utils/mock_requests.js";
-import sleep from "../utils/sleep.js";
+} from "../../contents/DASH_static_SegmentTimeline";
+import mockRequests from "../../utils/mock_requests.js";
+import sleep from "../../utils/sleep.js";
 import RxPlayer from "../../../src";
 
 /**

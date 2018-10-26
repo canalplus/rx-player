@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import sleep from "../utils/sleep.js";
+import sleep from "../../utils/sleep.js";
 import sinon from "sinon";
 
 import RxPlayer from "../../../src";
@@ -7,7 +7,7 @@ import RxPlayer from "../../../src";
 import {
   manifestInfos,
   Manifest_URL,
-} from "../contents/DASH_dynamic_SegmentTimeline";
+} from "../../contents/DASH_dynamic_SegmentTimeline";
 
 /**
  *  Workaround to provide a "real" sleep function, which does not depend on
