@@ -308,7 +308,11 @@ export default function(
 
       if (isMP4) {
         const lcCodec = codec.toLowerCase();
-        if (mimeType === "application/ttml+xml+mp4" || lcCodec === "stpp") {
+        if (
+          mimeType === "application/ttml+xml+mp4" ||
+          lcCodec === "stpp" ||
+          lcCodec === "stpp.ttml.im1t"
+        ) {
           _sdType = "ttml";
         } else if (lcCodec === "wvtt") {
           _sdType = "vtt";
