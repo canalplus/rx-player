@@ -99,7 +99,6 @@ export default function PlaybackQualityManager(
           }
 
           const localStreamQuality = frameLoss != null ? (1 - frameLoss) : null;
-
           const bufferedStreams = getBufferedStreams(segmentBookkeeper, {
               start: lastCurrentTime || currentTime,
               end: currentTime,
@@ -141,9 +140,7 @@ export default function PlaybackQualityManager(
         }),
         filter((evt): evt is IPlaybackQualities => evt != null),
         distinctUntilChanged((a, b) => {
-          if (
-            a.length !== b.length
-          ) {
+          if (a.length !== b.length) {
             return false;
           }
           const oldKeys = Object.keys(a);

@@ -117,22 +117,16 @@ export default function AdaptationBuffer<T>(
   /**
    * Keep track of the current representation to add informations to the
    * ABR clock.
-   * TODO isn't that a little bit ugly?
-   * @type {Object|null}
    */
   let currentRepresentation : Representation|null = null;
 
-  const abrClock$ = clock$.pipe(
-    map((tick) => {
-      const downloadBitrate = currentRepresentation ?
-        currentRepresentation.bitrate : undefined;
-      return objectAssign({ downloadBitrate }, tick);
-    }));
+  const abrClock$ = clock$.pipe(map((tick) => {
+    const downloadBitrate = currentRepresentation ?
+      currentRepresentation.bitrate : undefined;
+    return objectAssign({ downloadBitrate }, tick);
+  }));
 
   const abr$ = abrManager.get$(content, abrClock$, segmentBookkeeper).pipe(
-    tap(({ representation }) => {
-      currentRepresentation = representation;
-    }),
     // equivalent to a sane shareReplay:
     // https://github.com/ReactiveX/rxjs/issues/3336
     multicast(() => new ReplaySubject(1)),

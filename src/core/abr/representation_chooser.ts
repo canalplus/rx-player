@@ -388,7 +388,6 @@ export default class RepresentationChooser {
     if (!representations.length) {
       throw new Error("ABRManager: no representation choice given");
     }
-
     if (representations.length === 1) {
       return observableOf({
         bitrate: undefined, // Bitrate estimation is deactivated here
@@ -399,7 +398,6 @@ export default class RepresentationChooser {
     }
 
     const bannedRepresentations: Representation[] = [];
-
     const { manualBitrate$, maxAutoBitrate$, _initialBitrate }  = this;
     const _deviceEventsArray : Array<Observable<IFilters>> = [];
 
@@ -447,16 +445,16 @@ export default class RepresentationChooser {
           map(([ [clock, maxAutoBitrate, deviceEvents], playbackQualities ]) => {
             const playableRepresentations = (() => {
               const qualitativeRepresentations = playbackQualities != null ?
-              representations.filter((representation) => {
-                const repId = representation.id;
-                const playbackQuality = playbackQualities[repId];
-                if (playbackQuality && playbackQuality < ABR_BAN_THRESHOLD) {
-                  banRepresentationFromPlayback(
-                    representation, bannedRepresentations, playbackQuality);
-                }
-                return !bannedRepresentations.some((banned) =>
-                  banned.id === representation.id);
-              }) : representations;
+                representations.filter((representation) => {
+                  const repId = representation.id;
+                  const playbackQuality = playbackQualities[repId];
+                  if (playbackQuality && playbackQuality < ABR_BAN_THRESHOLD) {
+                    banRepresentationFromPlayback(
+                      representation, bannedRepresentations, playbackQuality);
+                  }
+                  return !bannedRepresentations.some((banned) =>
+                    banned.id === representation.id);
+                }) : representations;
 
               if (qualitativeRepresentations.length === 0) {
                 log.warn("ABR - not considering stream qualities \

@@ -18,12 +18,12 @@ import { getVideoPlaybackQuality } from "../../../compat";
 
 /**
  * @param {HTMLVideoElement} mediaElement
- * @param {Object} lastPlaybackInfos
+ * @param {Object} lastInfos
  * @returns {number}
  */
 export default function getFrameLossFromLastPosition(
   mediaElement: HTMLVideoElement,
-  lastPlaybackInfos: {
+  lastFrameCounts: {
     lastTotalDecodedFrames: number;
     lastTotalDroppedFrames: number;
   }
@@ -32,16 +32,12 @@ export default function getFrameLossFromLastPosition(
     totalVideoFrames: totalDecodedFrames,
     droppedVideoFrames: totalDroppedFrames,
   } = getVideoPlaybackQuality(mediaElement);
+  const sampleDecodedFrames = totalDecodedFrames - lastFrameCounts.lastTotalDecodedFrames;
+  const sampleDroppedFrames = totalDroppedFrames - lastFrameCounts.lastTotalDroppedFrames;
 
-  const decodedFramesInSample = totalDecodedFrames -
-    lastPlaybackInfos.lastTotalDecodedFrames;
-  const droppedFramesInSample = totalDroppedFrames -
-    lastPlaybackInfos.lastTotalDroppedFrames;
+  lastFrameCounts.lastTotalDecodedFrames = totalDecodedFrames;
+  lastFrameCounts.lastTotalDroppedFrames = totalDroppedFrames;
 
-  lastPlaybackInfos.lastTotalDecodedFrames = totalDecodedFrames;
-  lastPlaybackInfos.lastTotalDroppedFrames = totalDroppedFrames;
-
-  const ratio = droppedFramesInSample /
-    (droppedFramesInSample + decodedFramesInSample);
+  const ratio = sampleDroppedFrames / (sampleDroppedFrames + sampleDecodedFrames);
   return !isNaN(ratio) ? ratio : null;
 }

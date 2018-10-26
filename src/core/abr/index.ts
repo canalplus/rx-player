@@ -242,7 +242,6 @@ export default class ABRManager {
     segmentBookkeeper : SegmentBookkeeper
   ) : Observable<IABREstimation> {
     const { type, representations } = content.adaptation;
-
     const playbackQualities$ =
       this._playbackQualityManager.getQualities$(content, segmentBookkeeper, clock$);
 

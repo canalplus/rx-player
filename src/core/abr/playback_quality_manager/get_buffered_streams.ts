@@ -43,11 +43,9 @@ export default function getBufferedStreams(
     const lastElement = acc[acc.length - 1];
     const { period, adaptation, representation } = value.infos;
     const streamId = getStreamId(period, adaptation, representation);
+
     if (value.bufferedStart != null && value.bufferedEnd != null) {
-      if (
-        lastElement &&
-        streamId === lastElement.streamId
-      ) {
+      if (lastElement && streamId === lastElement.streamId) {
         lastElement.bufferedEnd = value.bufferedEnd;
       } else {
         acc.push({
