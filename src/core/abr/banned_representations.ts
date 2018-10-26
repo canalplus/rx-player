@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../log";
 import { Representation } from "../../manifest";
 
 /**
@@ -31,7 +32,7 @@ function getBanDurationFromStreamQuality(playbackQuality: number): number {
  * @param {Array.<Object>} bannedRepresentations
  * @param {number} duration
  */
-export default function banRepresentation(
+export default function banRepresentationFromPlayback(
   representation: Representation,
   bannedRepresentations: Representation[],
   quality: number
@@ -41,6 +42,7 @@ export default function banRepresentation(
   });
 
   if (!representationIsAlreadyBanned) {
+    log.info("ABR - banned representation", representation);
     const duration = getBanDurationFromStreamQuality(quality);
     bannedRepresentations.push(representation);
 
