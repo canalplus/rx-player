@@ -26,6 +26,26 @@ const {
  * Calculate a mean quality based on the samples frame drop ratios and the sample
  * duration.
  *
+ * Playback informations are decomposed through samples:
+ * At each clock tick, if only one representation [1] has been
+ * played since last clock tick :
+ * - Get dropped frames and decoded frames on that period.
+ * - Calculate quality from dropped/decoded ratio.
+ *
+ * Playback condition may evolve through time depending on CPU / GPU
+ * loads and device energy conditions.
+ * We calculate two quality means for each stream :
+ * - The "fast", suplied when playing, relies on few lasts samples :
+ * It notifies about estimated current frame loss.
+ * - The "slow" relies on samples from a larger period.
+ *
+ * The effective stream quality is the minimum value between both of them, so
+ * that stream quality doesn't grow up too fast.
+ *
+ * [1] It is useless to make this operation if more than one representation has been
+ * played, as we can't associate frames to a specific stream.
+ * Multi-representation samples represents 5% of all recorded samples.
+ *
  * Heavily "inspired" from the Shaka-Player's "ewma bandwidth estimator".
  * @class VideoQualityEstimator
  */
@@ -48,11 +68,10 @@ export default class VideoQualityEstimator {
   }
 
   /**
-   * Takes a bandwidth sample.
-   * @param {number} durationMs - The amount of time, in milliseconds, for a
-   *   particular request.
-   * @param {number} numBytes - The total number of bytes transferred in that
-   *   request.
+   * Takes a quality sample.
+   * @param {number} sampleDuration - The amount of time, in milliseconds, for a
+   *   particular sample.
+   * @param {number} currentQuality - The quality of that sample
    */
   public addSample(sampleDuration : number, currentQuality : number) : void {
     this._fast.addSample(sampleDuration, currentQuality);
@@ -60,12 +79,11 @@ export default class VideoQualityEstimator {
   }
 
   /**
-   * Get estimate of the bandwidth, in bits per seconds.
+   * Get estimate of the quality.
    * @returns {Number|undefined}
    */
   public getEstimate() : number|undefined {
-    // Take the minimum of these two estimates.  This should have the effect of
-    // adapting down quickly, but up more slowly.
+    // Take the minimum of these two estimates.
     return Math.min(this._fast.getEstimate(), this._slow.getEstimate());
   }
 
