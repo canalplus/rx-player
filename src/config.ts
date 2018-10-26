@@ -413,6 +413,25 @@ export default {
   ABR_SLOW_EMA: 10,
 
   /**
+   * The quality of a stream may be over this value to be considered
+   * as playable. Beyond this threshold, the stream will be banned for a certain
+   * amount of time.
+   */
+  ABR_BAN_THRESHOLD: 0.92,
+
+  /**
+   * Half-life, in seconds for a fastly-evolving exponential weighted moving
+   * average.
+   * @type {Number}
+   */
+  ABR_QUALITY_MANAGER_FAST_EWMA: 10,
+
+  /**
+   * Half-life, in seconds for a slowly-evolving exponential weighted moving
+   * average.
+   */
+  ABR_QUALITY_MANAGER_SLOW_EWMA: 60,
+  /**
    * Number of seconds ahead in the buffer after which playback will resume when
    * seeking on an unbuffered part of the stream.
    * @type {Number}

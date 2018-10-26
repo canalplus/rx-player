@@ -27,7 +27,7 @@ export default function getFrameLossFromLastPosition(
     lastTotalDecodedFrames: number;
     lastTotalDroppedFrames: number;
   }
-): number {
+): number|null {
   const {
     totalVideoFrames: totalDecodedFrames,
     droppedVideoFrames: totalDroppedFrames,
@@ -41,6 +41,7 @@ export default function getFrameLossFromLastPosition(
   lastPlaybackInfos.lastTotalDecodedFrames = totalDecodedFrames;
   lastPlaybackInfos.lastTotalDroppedFrames = totalDroppedFrames;
 
-  return droppedFramesInSample /
+  const ratio = droppedFramesInSample /
     (droppedFramesInSample + decodedFramesInSample);
+  return !isNaN(ratio) ? ratio : null;
 }

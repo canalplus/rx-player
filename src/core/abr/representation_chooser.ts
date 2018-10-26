@@ -43,6 +43,7 @@ import fromBitrateCeil from "./fromBitrateCeil";
 import { IPlaybackQualities } from "./playback_quality_manager";
 
 const {
+  ABR_BAN_THRESHOLD,
   ABR_REGULAR_FACTOR,
   ABR_STARVATION_FACTOR,
   ABR_STARVATION_GAP,
@@ -449,7 +450,7 @@ export default class RepresentationChooser {
               representations.filter((representation) => {
                 const repId = representation.id;
                 const playbackQuality = playbackQualities[repId];
-                if (playbackQuality && playbackQuality < 0.92) {
+                if (playbackQuality && playbackQuality < ABR_BAN_THRESHOLD) {
                   banRepresentationFromPlayback(
                     representation, bannedRepresentations, playbackQuality);
                 }

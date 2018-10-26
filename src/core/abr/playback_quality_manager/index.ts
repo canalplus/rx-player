@@ -20,9 +20,12 @@ import {
 } from "rxjs";
 import {
   distinctUntilChanged,
+  filter,
   map,
+  startWith,
   tap,
 } from "rxjs/operators";
+import config from "../../../config";
 import log from "../../../log";
 import {
   Adaptation,
@@ -54,6 +57,11 @@ export interface IPlaybackQualityManager {
 }
 
 export type IPlaybackQualities = Partial<Record<string|number, number>>;
+
+const {
+  ABR_QUALITY_MANAGER_FAST_EWMA,
+  ABR_QUALITY_MANAGER_SLOW_EWMA,
+} = config;
 
 /**
  * From a media element, monitor playback informations and evaluate playback quality
@@ -88,17 +96,17 @@ export default function PlaybackQualityManager(
   const playbackQualitiesMemory: IPlaybackQualities = {};
 
   const meansForStream = new MapMemory<string|number, IQualityMeans>(() => {
-    let fastEWMA: EWMA = new EWMA(10);
-    let slowEWMA: EWMA = new EWMA(60);
+    let fastEWMA: EWMA = new EWMA(ABR_QUALITY_MANAGER_FAST_EWMA);
+    let slowEWMA: EWMA = new EWMA(ABR_QUALITY_MANAGER_SLOW_EWMA);
 
     return {
-      addSampleOnPlayback: (weight: number, ratio: number) => {
-        fastEWMA.addSample(weight, ratio);
-        slowEWMA.addSample(weight, ratio);
+      addSampleOnPlayback: (sampleWeight: number, ratio: number) => {
+        fastEWMA.addSample(sampleWeight, ratio);
+        slowEWMA.addSample(sampleWeight, ratio);
       },
       reset: () => {
-        fastEWMA = new EWMA(10);
-        slowEWMA = new EWMA(60);
+        fastEWMA = new EWMA(ABR_QUALITY_MANAGER_FAST_EWMA);
+        slowEWMA = new EWMA(ABR_QUALITY_MANAGER_SLOW_EWMA);
       },
       getMeans: () => {
         return {
@@ -134,12 +142,18 @@ export default function PlaybackQualityManager(
         map(({ currentTime }) => {
           const { lastCurrentTime } = lastPlaybackInfos;
           lastPlaybackInfos.lastCurrentTime = currentTime;
+          const sampleDuration = currentTime - (lastCurrentTime || currentTime);
+
+          if (sampleDuration <= 0) {
+            return null;
+          }
 
           const frameLoss =
             getFrameLossFromLastPosition(mediaElement, lastPlaybackInfos);
+
           log.debug("ABR - current frame loss", frameLoss);
 
-          const localStreamQuality = 1 - frameLoss;
+          const localStreamQuality = frameLoss ? (1 - frameLoss) : null;
 
           const bufferedStreams = getBufferedStreams(segmentBookkeeper, {
               start: lastCurrentTime || currentTime,
@@ -155,36 +169,40 @@ export default function PlaybackQualityManager(
             representation: Representation
           ) => {
             /* 1 - get quality means for a specific stream, and update them */
-            const streamId = getStreamId(period, adaptation, representation);
-            const means = meansForStream.get(streamId);
+            const currentStreamId = getStreamId(period, adaptation, representation);
+            const means = meansForStream.get(currentStreamId);
 
-            const meanWeight = currentTime - (lastCurrentTime || currentTime);
             if (
               playedStream &&
-              playedStream.streamId === streamId &&
-              !isNaN(localStreamQuality)
+              playedStream.streamId === currentStreamId &&
+              localStreamQuality != null
             ) {
-              means.addSampleOnPlayback(meanWeight, localStreamQuality);
+              means.addSampleOnPlayback(sampleDuration, localStreamQuality);
               /* 2 - from means, assign a new quality to playbackQualitiesMemory */
               const { fast, slow } = means.getMeans();
               const streamQuality = Math.round(
                 Math.min(fast, slow) * 100
               ) / 100;
 
-              playbackQualitiesMemory[streamId] = !isNaN(streamQuality) ?
+              playbackQualitiesMemory[currentStreamId] = !isNaN(streamQuality) ?
                 streamQuality : undefined;
-            } else {
+            } else if (// Current stream shouldn't be played anymore.
+              !bufferedStreams.some(({ streamId }) => streamId === currentStreamId)
+            ) {
               means.reset();
-              playbackQualitiesMemory[streamId] = undefined;
+              playbackQualitiesMemory[currentStreamId] = undefined;
             }
 
             representationPlaybackQualities[representation.id] =
-              playbackQualitiesMemory[streamId];
+              playbackQualitiesMemory[currentStreamId];
             return representationPlaybackQualities;
           }, {});
         }),
+        filter((evt): evt is IPlaybackQualities => evt != null),
         distinctUntilChanged((a, b) => {
-          if (a.length !== b.length) {
+          if (
+            a.length !== b.length
+          ) {
             return false;
           }
           const oldKeys = Object.keys(a);
@@ -192,6 +210,7 @@ export default function PlaybackQualityManager(
             return acc && (a[key] === b[key]);
           }, true);
         }),
+        startWith(null),
         tap((playbackQualities) => {
           log.debug("ABR - playback qualities", playbackQualities);
         })
