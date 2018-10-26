@@ -178,6 +178,7 @@ function TextTrackParser({
 
       switch (codec.toLowerCase()) {
         case "stpp": // stpp === TTML in MP4
+        case "stpp.ttml.im1t":
           type = "ttml";
           break;
         case "wvtt": // wvtt === WebVTT in MP4
@@ -186,7 +187,7 @@ function TextTrackParser({
 
       if (!type) {
         throw new Error(
-          "The codec used for the subtitle is not managed yet.");
+          `The codec used for the subtitles, "${codec}", is not managed yet.`);
       }
 
       segmentData = objectAssign({
