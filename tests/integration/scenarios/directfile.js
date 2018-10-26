@@ -18,10 +18,10 @@ import { expect } from "chai";
 
 import RxPlayer from "../../../src";
 
-import sleep from "../utils/sleep.js";
-import { waitForLoadedStateAfterLoadVideo } from "../utils/waitForPlayerState";
+import sleep from "../../utils/sleep.js";
+import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 
-const WebMFile = require("arraybuffer-loader!../contents/DirectFile.webm");
+const WebMFile = require("arraybuffer-loader!../../contents/DirectFile.webm");
 
 describe("basic playback use cases: direct file", function () {
   let player;
