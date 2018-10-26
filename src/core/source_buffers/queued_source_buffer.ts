@@ -385,9 +385,12 @@ export default class QueuedSourceBuffer<T> {
         case SourceBufferAction.Append:
           const { segment, timestampOffset = 0, codec } = queueItem.args;
           if (this._currentCodec !== codec) {
+            log.debug("QSB: updating codec");
             const couldUpdateType = tryToChangeSourceBufferType(this._buffer, codec);
             if (couldUpdateType) {
               this._currentCodec = codec;
+            } else {
+              log.warn("QSB: could not update codec", codec, this._currentCodec);
             }
           }
           if (this._buffer.timestampOffset !== timestampOffset) {
