@@ -424,13 +424,13 @@ export default {
    * average.
    * @type {Number}
    */
-  ABR_QUALITY_MANAGER_FAST_EWMA: 10,
+  ABR_QUALITY_MANAGER_FAST_EWMA: 5,
 
   /**
    * Half-life, in seconds for a slowly-evolving exponential weighted moving
    * average.
    */
-  ABR_QUALITY_MANAGER_SLOW_EWMA: 60,
+  ABR_QUALITY_MANAGER_SLOW_EWMA: 20,
 
   /**
    * Number of seconds ahead in the buffer after which playback will resume when
