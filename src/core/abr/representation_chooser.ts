@@ -457,8 +457,8 @@ export default class RepresentationChooser {
                 }) : representations;
 
               if (qualitativeRepresentations.length === 0) {
-                log.warn("ABR - not considering stream qualities \
-                  - no satisfactory quality found.");
+                log.warn("ABR - not considering stream qualities" +
+                  " - no satisfactory quality found.");
                 return representations;
               }
               return qualitativeRepresentations;
