@@ -77,10 +77,7 @@ function manifestUpdate(
 ) : IManifestUpdateEvent {
   return {
     type: "manifestUpdate",
-    value: {
-      manifest,
-      sentTime,
-    },
+    value: { manifest, sentTime },
   };
 }
 

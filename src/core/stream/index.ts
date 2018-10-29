@@ -75,11 +75,6 @@ import {
   IStreamWarningEvent,
 } from "./types";
 
-interface IManifestLoadedInfos {
-  manifest : Manifest;
-  sentTime? : number;
-}
-
 /**
  * Returns pipeline options based on the global config and the user config.
  * @param {Object} networkConfig
@@ -202,7 +197,10 @@ export default function Stream({
   const mediaErrorManager$ = createMediaErrorManager(mediaElement);
 
   // Emit each time the manifest is updated.
-  const updatedManifest$ = new ReplaySubject<IManifestLoadedInfos>(1);
+  const updatedManifest$ = new ReplaySubject<{
+    manifest : Manifest;
+    sentTime? : number;
+  }>(1);
 
   // Start the whole Stream.
   const stream$ = observableCombineLatest(
@@ -270,6 +268,7 @@ export default function Stream({
       )
     );
 
+    // Emit when the manifest should be updated due to its lifetime being expired
     const manifestUpdateTimeout$ : Observable<unknown> = updatedManifest$.pipe(
       startWith({ manifest, sentTime }),
       switchMap(({ manifest: newManifest, sentTime: newSentTime }) => {
@@ -300,6 +299,7 @@ export default function Stream({
 /**
  * Generate function reacting to StreamLoader events.
  * @param {Subject} reloadStreamSubject$
+ * @param {Function} refreshManifest
  * @returns {Function}
  */
 function streamLoaderEventProcessor(
