@@ -37,4 +37,6 @@ export {
   getSegmentsFromSidx,
   ISidxSegment,
   patchPssh,
+  parseEmsg,
+  IEMSG,
 } from "./utils";

@@ -15,6 +15,7 @@
  */
 
 import RepresentationBuffer, {
+  IBufferInbandStreamEvent,
   IRepresentationBufferArguments,
   IRepresentationBufferClockTick,
 } from "./representation_buffer";
@@ -23,4 +24,5 @@ export default RepresentationBuffer;
 export {
   IRepresentationBufferArguments,
   IRepresentationBufferClockTick,
+  IBufferInbandStreamEvent,
 };

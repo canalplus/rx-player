@@ -29,6 +29,7 @@ import Manifest from "../../manifest";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
+  parseEmsg,
 } from "../../parsers/containers/isobmff";
 import {
   getSegmentsFromCues,
@@ -170,6 +171,7 @@ export default function(
         getSegmentsFromSidx(segmentData, indexRange ? indexRange[0] : 0);
 
       if (!segment.isInit) {
+        const initSegmentEvent = parseEmsg(segmentData);
         const segmentInfos = isWEBM ?
           {
             time: segment.time,
@@ -178,7 +180,12 @@ export default function(
           } :
           getISOBMFFTimingInfos(segment, segmentData, nextSegments, init);
         const segmentOffset = segment.timestampOffset || 0;
-        return observableOf({ segmentData, segmentInfos, segmentOffset });
+        return observableOf({
+          segmentData,
+          segmentInfos,
+          segmentOffset,
+          segmentEvent: initSegmentEvent,
+        });
       }
 
       if (nextSegments) {
@@ -187,11 +194,13 @@ export default function(
       const timescale = isWEBM ?
         getTimeCodeScale(segmentData, 0) :
         getMDHDTimescale(segmentData);
+      const segmentEvent = parseEmsg(segmentData);
       return observableOf({
         segmentData,
         segmentInfos: timescale && timescale > 0 ?
           { time: -1, duration: 0, timescale } : null,
         segmentOffset: segment.timestampOffset || 0,
+        segmentEvent,
       });
     },
   };

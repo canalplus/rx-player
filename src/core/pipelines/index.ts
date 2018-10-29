@@ -19,6 +19,7 @@ import createManifestPipeline, {
 } from "./manifest";
 import SegmentPipelinesManager, {
   IFetchedSegment,
+  IInbandStreamEvent,
   IPipelineOptions,
   IPrioritizedSegmentFetcher,
 } from "./segment";
@@ -30,4 +31,5 @@ export {
   IPipelineOptions,
   SegmentPipelinesManager,
   IPrioritizedSegmentFetcher,
+  IInbandStreamEvent,
 };

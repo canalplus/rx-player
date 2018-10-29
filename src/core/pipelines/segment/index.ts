@@ -17,7 +17,10 @@
 import {
   IPrioritizedSegmentFetcher,
 } from "./prioritized_segment_fetcher";
-import { IFetchedSegment } from "./segment_fetcher";
+import {
+  IFetchedSegment,
+  IInbandStreamEvent
+} from "./segment_fetcher";
 import SegmentPipelinesManager, {
   IPipelineOptions,
 } from "./segment_pipelines_manager";
@@ -25,6 +28,7 @@ import SegmentPipelinesManager, {
 export default SegmentPipelinesManager;
 export {
   IFetchedSegment,
+  IInbandStreamEvent,
   IPipelineOptions,
   IPrioritizedSegmentFetcher,
 };

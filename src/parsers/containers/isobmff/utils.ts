@@ -34,7 +34,7 @@ import {
   getTRAF,
 } from "./read";
 
-interface IEMSG {
+export interface IEMSG {
   schemeId: string;
   value: string;
   timescale: number;

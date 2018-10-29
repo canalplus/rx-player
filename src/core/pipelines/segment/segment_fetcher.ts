@@ -57,6 +57,17 @@ interface IParsedSegment<T> {
     timescale : number;
   };
   segmentOffset : number;
+  segmentEvent? : IInbandStreamEvent;
+}
+
+export interface IInbandStreamEvent {
+  schemeId: string;
+  value: string;
+  timescale: number;
+  presentationTimeDelta: number;
+  eventDuration: number;
+  id: number;
+  messageData: Uint8Array;
 }
 
 export interface IFetchedSegment<T> {
