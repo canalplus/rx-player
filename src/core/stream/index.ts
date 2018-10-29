@@ -319,7 +319,6 @@ function streamLoaderEventProcessor(
 
       case "needs-manifest-refresh":
         return refreshManifest();
-        break;
     }
     return observableOf(evt);
   };
