@@ -46,11 +46,9 @@ import { setDurationToMediaSource } from "./create_media_source";
 import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
-import refreshManifest from "./refresh_manifest";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
 import {
-  IFetchManifestResult,
   IManifestUpdateEvent,
   ISpeedChangedEvent,
   IStalledEvent,
@@ -69,7 +67,6 @@ export interface IStreamLoaderArgument {
                                // /!\ Should replay the last value on subscription.
   abrManager : ABRManager;
   segmentPipelinesManager : SegmentPipelinesManager<any>;
-  fetchManifest : (url : string) => Observable<IFetchManifestResult>;
   bufferOptions : { // Buffer-related options
     wantedBufferAhead$ : Observable<number>;
     maxBufferAhead$ : Observable<number>;
@@ -104,7 +101,6 @@ export default function StreamLoader({
   bufferOptions,
   abrManager,
   segmentPipelinesManager,
-  fetchManifest,
 } : IStreamLoaderArgument) : (
   mediaSource : MediaSource,
   position : number,
@@ -179,9 +175,6 @@ export default function StreamLoader({
               mediaElement.currentTime = evt.value.nextTime;
             }
             return EMPTY;
-          case "needs-manifest-refresh":
-            log.debug("Stream: Needs manifest to be refreshed");
-            return refreshManifest(fetchManifest, manifest);
           default:
             return observableOf(evt);
         }
