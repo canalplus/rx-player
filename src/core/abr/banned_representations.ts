@@ -26,7 +26,9 @@ const { ABR_BAN_TIME_STEPS } = config;
  * @returns {number} - ban duration
  */
 function getBanDurationFromStreamQuality(playbackQuality: number): number {
-  const steps = ABR_BAN_TIME_STEPS.sort((a, b) => a.minimumQuality - b.minimumQuality);
+  // de-structure array to avoid sorting original ABR_BAN_TIME_STEPS
+  const steps = [...ABR_BAN_TIME_STEPS]
+    .sort((a, b) => a.minimumQuality - b.minimumQuality);
   return steps.reduce((acc, step) => {
     if (playbackQuality >= step.minimumQuality) {
       return step.time;
