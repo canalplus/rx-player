@@ -37,7 +37,6 @@ import {
   IManifestResult,
   ITransportPipelines,
 } from "../../../net/types";
-import { IFetchManifestResult } from "../../stream/types";
 import createLoader, {
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
@@ -55,6 +54,11 @@ export interface IManifestTransportInfos {
 
 type IPipelineManifestOptions =
   IPipelineLoaderOptions<IManifestLoaderArguments, Document|string>;
+
+export interface IFetchManifestResult {
+  manifest : Manifest;
+  sendingTime? : number;
+}
 
 /**
  * Create function allowing to easily fetch and parse the manifest from its URL.

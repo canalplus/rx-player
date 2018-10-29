@@ -20,11 +20,6 @@ import ABRManager from "../abr";
 import { IRepresentationChangeEvent } from "../buffer/types";
 import { IStallingItem } from "./stalling_manager";
 
-export interface IFetchManifestResult {
-  manifest : Manifest;
-  sendingTime? : number;
-}
-
 // Object emitted when the stream's clock tick
 export interface IStreamClockTick {
   currentTime : number;
@@ -63,7 +58,10 @@ export interface IStreamWarningEvent {
 // The Manifest was just refreshed.
 export interface IManifestUpdateEvent {
   type : "manifestUpdate";
-  value : IFetchManifestResult;
+  value : {
+    manifest : Manifest;
+    sendingTime? : number;
+  };
 }
 
 export interface IReloadingStreamEvent {
