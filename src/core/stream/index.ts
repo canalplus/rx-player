@@ -211,7 +211,6 @@ export default function Stream({
       speed$,
       abrManager,
       segmentPipelinesManager,
-      fetchManifest,
       bufferOptions: objectAssign({
         textTrackOptions,
         offlineRetry: networkConfig.offlineRetry,
@@ -265,16 +264,20 @@ export default function Stream({
       })
     );
 
-    const loads$ = observableMerge(initialLoad$, reloadStream$).pipe(
-      tap((evt) => {
-        if (evt.type === "manifestUpdate") {
-          updatedManifest$.next(evt);
+    const loadEvents$ = observableMerge(initialLoad$, reloadStream$).pipe(
+      mergeMap((evt) => {
+        if (evt.type === "needs-manifest-refresh") {
+          log.debug("Stream: Needs manifest to be refreshed");
+          return refreshManifest(fetchManifest, manifest).pipe(
+            tap((_) => updatedManifest$.next(_))
+          );
         }
+        return observableOf(evt);
       })
     );
 
     return observableMerge(
-      loads$,
+      loadEvents$,
       updateManifest$
     );
   }));
