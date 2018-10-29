@@ -19,9 +19,7 @@ import {
   merge as observableMerge,
   Observable,
   of as observableOf,
-  ReplaySubject,
   Subject,
-  timer as observableTimer,
 } from "rxjs";
 import {
   finalize,
@@ -29,7 +27,6 @@ import {
   map,
   mergeMap,
   takeUntil,
-  tap,
 } from "rxjs/operators";
 import { MediaError } from "../../errors";
 import log from "../../log";
@@ -67,7 +64,6 @@ export interface IStreamLoaderArgument {
   mediaElement : HTMLMediaElement; // Media Element on which the content will be
                                    // streamed
   manifest : Manifest; // Manifest of the content we want to stream
-  manifestSentTime? : number;
   clock$ : Observable<IStreamClockTick>; // Emit position informations
   speed$ : Observable<number>; // Emit the speed.
                                // /!\ Should replay the last value on subscription.
@@ -103,7 +99,6 @@ export type IStreamLoaderEvent =
 export default function StreamLoader({
   mediaElement,
   manifest,
-  manifestSentTime,
   clock$,
   speed$,
   bufferOptions,
@@ -159,22 +154,6 @@ export default function StreamLoader({
     // Will be used to cancel any endOfStream tries when the contents resume
     const cancelEndOfStream$ = new Subject<null>();
 
-    // Refresh manifest update period after refreshing manifest.
-    const refreshManifestUpdatePeriod$ = new ReplaySubject<{
-      minimumUpdatePeriod: number;
-      manifestSentTime: number;
-    }>(1);
-
-    if (
-      manifest.minimumUpdatePeriod &&
-      manifest.minimumUpdatePeriod > 0
-    ) {
-      refreshManifestUpdatePeriod$.next({
-        minimumUpdatePeriod: manifest.minimumUpdatePeriod,
-        manifestSentTime: manifestSentTime || 0,
-      });
-    }
-
     // Creates Observable which will manage every Buffer for the given Content.
     const buffers$ = PeriodBufferManager(
       { manifest, initialPeriod },
@@ -202,20 +181,7 @@ export default function StreamLoader({
             return EMPTY;
           case "needs-manifest-refresh":
             log.debug("Stream: Needs manifest to be refreshed");
-            return refreshManifest(fetchManifest, manifest).pipe(
-              tap(({ value }: IManifestUpdateEvent) => {
-                const { minimumUpdatePeriod } = value.manifest;
-                if (
-                  minimumUpdatePeriod &&
-                  minimumUpdatePeriod > 0
-                ) {
-                  refreshManifestUpdatePeriod$.next({
-                    minimumUpdatePeriod,
-                    manifestSentTime: value.manifestSentTime || 0,
-                  });
-                }
-              })
-            );
+            return refreshManifest(fetchManifest, manifest);
           default:
             return observableOf(evt);
         }
@@ -234,32 +200,6 @@ export default function StreamLoader({
     const stallingManager$ = StallingManager(mediaElement, clock$)
       .pipe(map(EVENTS.stalled));
 
-    // Creates an observable which will refresh the manifest after
-    // the update period has elapsed.
-    const updateManifest$ = refreshManifestUpdatePeriod$.pipe(
-      mergeMap(({ minimumUpdatePeriod, manifestSentTime: newManifestSentTime }) => {
-        const updatePeriod = minimumUpdatePeriod -
-          (performance.now() - newManifestSentTime) / 1000;
-        return observableTimer(updatePeriod * 1000).pipe(
-          mergeMap(() => {
-            return refreshManifest(fetchManifest, manifest).pipe(
-              tap(({ value }) => {
-                if (
-                  value.manifest.minimumUpdatePeriod &&
-                  value.manifest.minimumUpdatePeriod > 0
-                ) {
-                  refreshManifestUpdatePeriod$.next({
-                    minimumUpdatePeriod: value.manifest.minimumUpdatePeriod,
-                    manifestSentTime: value.manifestSentTime || 0,
-                  });
-                }
-              })
-            );
-          })
-        );
-      })
-    );
-
     const loadedEvent$ = load$
       .pipe(mergeMap((evt) => {
         if (evt === "autoplay-blocked") {
@@ -271,7 +211,6 @@ export default function StreamLoader({
       }));
 
     return observableMerge(
-      updateManifest$,
       loadedEvent$,
       buffers$,
       speedManager$,

@@ -21,7 +21,9 @@ import {
   merge as observableMerge,
   Observable,
   of as observableOf,
+  ReplaySubject,
   Subject,
+  timer as observableTimer,
 } from "rxjs";
 import {
   map,
@@ -29,6 +31,7 @@ import {
   startWith,
   switchMap,
   takeUntil,
+  tap,
 } from "rxjs/operators";
 import config from "../../config";
 import { ICustomError } from "../../errors";
@@ -58,6 +61,7 @@ import getInitialTime, {
   IInitialTimeOptions,
 } from "./get_initial_time";
 import createMediaErrorManager from "./media_error_manager";
+import refreshManifest from "./refresh_manifest";
 import StreamLoader, {
   IStreamLoaderEvent,
 } from "./stream_loader";
@@ -189,15 +193,31 @@ export default function Stream({
   // through a throwing Observable.
   const mediaErrorManager$ = createMediaErrorManager(mediaElement);
 
+  // Refresh manifest update period after refreshing manifest.
+  const refreshManifestUpdatePeriod$ = new ReplaySubject<{
+    minimumUpdatePeriod: number;
+    sentTime: number;
+  }>(1);
+
   // Start the whole Stream.
   const stream$ = observableCombineLatest(
     openMediaSource(mediaElement),
     fetchManifest(url)
-  ).pipe(mergeMap(([ mediaSource, { manifest, sentTime: manifestSentTime } ]) => {
+  ).pipe(mergeMap(([ mediaSource, { manifest, sentTime } ]) => {
+
+    if (
+      manifest.minimumUpdatePeriod &&
+      manifest.minimumUpdatePeriod > 0
+    ) {
+      refreshManifestUpdatePeriod$.next({
+        minimumUpdatePeriod: manifest.minimumUpdatePeriod,
+        sentTime: sentTime || 0,
+      });
+    }
+
     const loadStream = StreamLoader({ // Behold!
       mediaElement,
       manifest,
-      manifestSentTime,
       clock$,
       speed$,
       abrManager,
@@ -236,7 +256,57 @@ export default function Stream({
       )
     );
 
-    return observableMerge(initialLoad$, reloadStream$);
+    // Creates an observable which will refresh the manifest after
+    // the update period has elapsed.
+    const updateManifest$ = refreshManifestUpdatePeriod$.pipe(
+      mergeMap(({ minimumUpdatePeriod, sentTime }) => {
+        const updatePeriod = minimumUpdatePeriod -
+          (performance.now() - sentTime) / 1000;
+        return observableTimer(updatePeriod * 1000).pipe(
+          mergeMap(() => {
+            return refreshManifest(fetchManifest, manifest).pipe(
+              tap(({ value }) => {
+                if (
+                  value.manifest.minimumUpdatePeriod &&
+                  value.manifest.minimumUpdatePeriod > 0
+                ) {
+                  refreshManifestUpdatePeriod$.next({
+                    minimumUpdatePeriod: value.manifest.minimumUpdatePeriod,
+                    sentTime: value.sentTime || 0,
+                  });
+                }
+              })
+            );
+          })
+        );
+      })
+    );
+
+    const loads$ = observableMerge(
+      initialLoad$,
+      reloadStream$
+    ).pipe(
+      tap((evt) => {
+        if (evt.type === "manifestUpdate") {
+          const { value } = evt;
+          const { minimumUpdatePeriod } = value.manifest;
+          if (
+            minimumUpdatePeriod &&
+            minimumUpdatePeriod > 0
+          ) {
+            refreshManifestUpdatePeriod$.next({
+              minimumUpdatePeriod,
+              sentTime: value.sentTime || 0,
+            });
+          }
+        }
+      })
+    );
+
+    return observableMerge(
+      loads$,
+      updateManifest$
+    );
   }));
 
   return observableMerge(
