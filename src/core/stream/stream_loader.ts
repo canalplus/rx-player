@@ -67,7 +67,7 @@ export interface IStreamLoaderArgument {
   mediaElement : HTMLMediaElement; // Media Element on which the content will be
                                    // streamed
   manifest : Manifest; // Manifest of the content we want to stream
-  manifestFetchingDuration? : number;
+  manifestSentTime? : number;
   clock$ : Observable<IStreamClockTick>; // Emit position informations
   speed$ : Observable<number>; // Emit the speed.
                                // /!\ Should replay the last value on subscription.
@@ -103,7 +103,7 @@ export type IStreamLoaderEvent =
 export default function StreamLoader({
   mediaElement,
   manifest,
-  manifestFetchingDuration,
+  manifestSentTime,
   clock$,
   speed$,
   bufferOptions,
@@ -160,11 +160,19 @@ export default function StreamLoader({
     const cancelEndOfStream$ = new Subject<null>();
 
     // Refresh manifest update period after refreshing manifest.
-    const refreshMinimumUpdatePeriod$ = new ReplaySubject<number>(1);
-    if (manifest.minimumUpdatePeriod && manifest.minimumUpdatePeriod > 0) {
-      const updatePeriod = manifest.minimumUpdatePeriod -
-        ((manifestFetchingDuration || 0) / 1000);
-      refreshMinimumUpdatePeriod$.next(updatePeriod);
+    const refreshManifestUpdatePeriod$ = new ReplaySubject<{
+      minimumUpdatePeriod: number;
+      manifestSentTime: number;
+    }>(1);
+
+    if (
+      manifest.minimumUpdatePeriod &&
+      manifest.minimumUpdatePeriod > 0
+    ) {
+      refreshManifestUpdatePeriod$.next({
+        minimumUpdatePeriod: manifest.minimumUpdatePeriod,
+        manifestSentTime: manifestSentTime || 0,
+      });
     }
 
     // Creates Observable which will manage every Buffer for the given Content.
@@ -194,13 +202,17 @@ export default function StreamLoader({
             return EMPTY;
           case "needs-manifest-refresh":
             log.debug("Stream: Needs manifest to be refreshed");
-            // out-of-index messages require a complete reloading of the
-            // manifest to refresh the current index
             return refreshManifest(fetchManifest, manifest).pipe(
-              tap((manifestUpdateEvt: IManifestUpdateEvent) => {
-                const { minimumUpdatePeriod } = manifestUpdateEvt.value.manifest;
-                if (minimumUpdatePeriod && minimumUpdatePeriod > 0) {
-                  refreshMinimumUpdatePeriod$.next(minimumUpdatePeriod);
+              tap(({ value }: IManifestUpdateEvent) => {
+                const { minimumUpdatePeriod } = value.manifest;
+                if (
+                  minimumUpdatePeriod &&
+                  minimumUpdatePeriod > 0
+                ) {
+                  refreshManifestUpdatePeriod$.next({
+                    minimumUpdatePeriod,
+                    manifestSentTime: value.manifestSentTime || 0,
+                  });
                 }
               })
             );
@@ -224,17 +236,22 @@ export default function StreamLoader({
 
     // Creates an observable which will refresh the manifest after
     // the update period has elapsed.
-    const updateManifest$ = refreshMinimumUpdatePeriod$.pipe(
-      mergeMap((lastUpdatePeriod) => {
-        return observableTimer(lastUpdatePeriod * 1000).pipe(
+    const updateManifest$ = refreshManifestUpdatePeriod$.pipe(
+      mergeMap(({ minimumUpdatePeriod, manifestSentTime: newManifestSentTime }) => {
+        const updatePeriod = minimumUpdatePeriod -
+          (performance.now() - newManifestSentTime) / 1000;
+        return observableTimer(updatePeriod * 1000).pipe(
           mergeMap(() => {
             return refreshManifest(fetchManifest, manifest).pipe(
               tap(({ value }) => {
-                const { minimumUpdatePeriod } = manifest;
-                if (minimumUpdatePeriod) {
-                  const updatePeriod =  minimumUpdatePeriod -
-                    (value.manifestFetchingDuration || 0) / 1000;
-                  refreshMinimumUpdatePeriod$.next(updatePeriod);
+                if (
+                  value.manifest.minimumUpdatePeriod &&
+                  value.manifest.minimumUpdatePeriod > 0
+                ) {
+                  refreshManifestUpdatePeriod$.next({
+                    minimumUpdatePeriod: value.manifest.minimumUpdatePeriod,
+                    manifestSentTime: value.manifestSentTime || 0,
+                  });
                 }
               })
             );
