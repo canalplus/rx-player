@@ -252,14 +252,11 @@ export default function Stream({
       mergeMap(({ value }) => {
         const { manifest: { lifetime }, sentTime: _sentTime } = value;
         if (lifetime) {
-          const updatePeriod = lifetime -
-            (performance.now() - (_sentTime || 0)) / 1000;
+          const updatePeriod = lifetime - (performance.now() - (_sentTime || 0)) / 1000;
           return observableTimer(updatePeriod * 1000).pipe(
             mergeMap(() => {
               return refreshManifest(fetchManifest, manifest).pipe(
-                tap((evt) => {
-                  updatedManifest$.next(evt);
-                })
+                tap((evt) => updatedManifest$.next(evt))
               );
             })
           );
@@ -268,10 +265,7 @@ export default function Stream({
       })
     );
 
-    const loads$ = observableMerge(
-      initialLoad$,
-      reloadStream$
-    ).pipe(
+    const loads$ = observableMerge(initialLoad$, reloadStream$).pipe(
       tap((evt) => {
         if (evt.type === "manifestUpdate") {
           updatedManifest$.next(evt);
