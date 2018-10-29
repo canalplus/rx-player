@@ -746,9 +746,6 @@ export default function parseManifest(
   if (rootAttributes.duration != null) {
     parsedMPD.duration = rootAttributes.duration;
   }
-  if (rootAttributes.minimumUpdatePeriod != null) {
-    parsedMPD.minimumUpdatePeriod = rootAttributes.minimumUpdatePeriod;
-  }
   if (rootAttributes.minBufferTime != null) {
     parsedMPD.minBufferTime = rootAttributes.minBufferTime;
   }
@@ -760,6 +757,13 @@ export default function parseManifest(
   }
   if (rootAttributes.maxSubsegmentDuration != null) {
     parsedMPD.maxSubsegmentDuration = rootAttributes.maxSubsegmentDuration;
+  }
+
+  if (
+    rootAttributes.minimumUpdatePeriod != null &&
+    rootAttributes.minimumUpdatePeriod > 0
+  ) {
+    parsedMPD.lifetime = rootAttributes.minimumUpdatePeriod;
   }
 
   if (parsedMPD.isLive) {
