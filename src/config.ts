@@ -100,7 +100,6 @@ export default {
    * @type {Object}
    */
   MAXIMUM_MAX_BUFFER_AHEAD: {
-    image: 5 * 60 * 60,
     text: 5 * 60 * 60,
   } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
   /* tslint:enable no-object-literal-type-assertion */
@@ -113,7 +112,6 @@ export default {
    * @type {Object}
    */
   MAXIMUM_MAX_BUFFER_BEHIND: {
-    image: 5 * 60 * 60,
     text: 5 * 60 * 60,
   } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
   /* tslint:enable no-object-literal-type-assertion */
