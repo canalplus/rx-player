@@ -109,12 +109,9 @@ export default function createManifestPipeline(
         return parser({ response: value, url }).pipe(
           map(({ manifest: parsedManifest }) => {
             const manifest = new Manifest(parsedManifest, warning$, transport.options);
-            const manifestFetchingDuration = sentTime ?
-              performance.now() - sentTime :
-              undefined;
             return {
               manifest,
-              manifestFetchingDuration,
+              sentTime,
             };
           })
         );

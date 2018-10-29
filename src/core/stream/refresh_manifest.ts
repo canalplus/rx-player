@@ -50,9 +50,9 @@ export default function refreshManifest(
   }
 
   return manifestPipeline(refreshURL).pipe(
-    map(({ manifest, manifestFetchingDuration }) => {
+    map(({ manifest, sentTime }) => {
       currentManifest.update(manifest);
-      return EVENTS.manifestUpdate(currentManifest, manifestFetchingDuration);
+      return EVENTS.manifestUpdate(currentManifest, sentTime);
     }),
     share() // share the previous side effect
   );
