@@ -58,6 +58,21 @@ import {
   setMediaKeys,
 } from "./eme";
 
+export interface ICustomSourceBuffer<T> {
+  addEventListener : (eventName : string, cb : (arg : any) => void) => void;
+  removeEventListener : (
+    eventName : string,
+    callback : (arg : any) => void
+  ) => void;
+  buffered : TimeRanges;
+  changeType? : (type: string) => void;
+  updating : boolean;
+  timestampOffset : number;
+  appendBuffer(data : T) : void;
+  remove(from : number, to : number) : void;
+  abort() : void;
+}
+
 /**
  * Returns true if the given codec is supported by the browser's MediaSource
  * implementation.
@@ -402,6 +417,30 @@ function play$(mediaElement : HTMLMediaElement) : Observable<void> {
   );
 }
 
+/**
+ * If the changeType MSE API is implemented, update the current codec of the
+ * SourceBuffer and return true if it succeeded.
+ * In any other cases, return false.
+ * @param {Object} sourceBuffer
+ * @param {string} codec
+ * @returns {boolean}
+ */
+function tryToChangeSourceBufferType(
+  sourceBuffer : ICustomSourceBuffer<unknown>,
+  codec : string
+) : boolean {
+  if (typeof sourceBuffer.changeType === "function") {
+    try {
+      sourceBuffer.changeType(codec);
+    } catch (e) {
+      log.warn("Could not call 'changeType' on the given SourceBuffer:", e);
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+
 export {
   CustomMediaKeySystemAccess,
   ICompatMediaKeySystemAccess,
@@ -437,4 +476,5 @@ export {
   setMediaKeys,
   shouldRenewMediaKeys,
   shouldUnsetMediaKeys,
+  tryToChangeSourceBufferType,
 };
