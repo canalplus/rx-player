@@ -95,8 +95,8 @@ describe("Memory tests", () => {
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize -
       initialMemory.usedJSHeapSize;
-    // eslint-disable-next-line no-console
 
+    // eslint-disable-next-line no-console
     console.log(`
       ===========================================================
       | Current heap usage (B) | ${newMemory.usedJSHeapSize}
