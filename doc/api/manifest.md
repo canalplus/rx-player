@@ -122,7 +122,6 @@ or ``smooth``.
 
 
 
-
 <a name="period"></a>
 ## Structure of a Period Object ################################################
 
