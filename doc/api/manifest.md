@@ -120,12 +120,6 @@ _type_: ``string``
 The type of transport used. For now, this can only be equal to either ``dash``
 or ``smooth``.
 
-#### lifetime
-
-_type_: ``number``
-
-Defines the time to which the manifest is up-to-date, from the request date. After this
-time has elapsed, the manifest is considered expired and should be updated.
 
 
 
