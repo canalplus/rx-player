@@ -68,18 +68,18 @@ function manifestReady(
 /**
  * Construct a "manifestUpdate" event.
  * @param {Object} manifest
- * @param {number|undefined} manifestFetchingDuration
+ * @param {number|undefined} sentTime
  * @returns {Object}
  */
 function manifestUpdate(
   manifest : Manifest,
-  manifestFetchingDuration? : number
+  manifestSentTime? : number
 ) : IManifestUpdateEvent {
   return {
     type: "manifestUpdate",
     value: {
       manifest,
-      manifestFetchingDuration,
+      manifestSentTime,
     },
   };
 }
