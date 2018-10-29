@@ -73,13 +73,13 @@ function manifestReady(
  */
 function manifestUpdate(
   manifest : Manifest,
-  manifestSentTime? : number
+  sentTime? : number
 ) : IManifestUpdateEvent {
   return {
     type: "manifestUpdate",
     value: {
       manifest,
-      manifestSentTime,
+      sentTime,
     },
   };
 }
