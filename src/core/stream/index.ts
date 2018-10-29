@@ -18,6 +18,7 @@ import objectAssign from "object-assign";
 import {
   combineLatest as observableCombineLatest,
   concat as observableConcat,
+  EMPTY,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -67,6 +68,7 @@ import StreamLoader, {
 } from "./stream_loader";
 import {
   IManifestReadyEvent,
+  IManifestUpdateEvent,
   IReloadingStreamEvent,
   IStreamClockTick,
   IStreamWarningEvent,
@@ -193,27 +195,14 @@ export default function Stream({
   // through a throwing Observable.
   const mediaErrorManager$ = createMediaErrorManager(mediaElement);
 
-  // Refresh manifest update period after refreshing manifest.
-  const refreshManifestUpdatePeriod$ = new ReplaySubject<{
-    minimumUpdatePeriod: number;
-    sentTime: number;
-  }>(1);
+  // Emit each time the manifest is updated.
+  const updatedManifest$ = new ReplaySubject<IManifestUpdateEvent>(1);
 
   // Start the whole Stream.
   const stream$ = observableCombineLatest(
     openMediaSource(mediaElement),
     fetchManifest(url)
   ).pipe(mergeMap(([ mediaSource, { manifest, sentTime } ]) => {
-
-    if (
-      manifest.minimumUpdatePeriod &&
-      manifest.minimumUpdatePeriod > 0
-    ) {
-      refreshManifestUpdatePeriod$.next({
-        minimumUpdatePeriod: manifest.minimumUpdatePeriod,
-        sentTime: sentTime || 0,
-      });
-    }
 
     const loadStream = StreamLoader({ // Behold!
       mediaElement,
@@ -258,27 +247,24 @@ export default function Stream({
 
     // Creates an observable which will refresh the manifest after
     // the update period has elapsed.
-    const updateManifest$ = refreshManifestUpdatePeriod$.pipe(
-      mergeMap(({ minimumUpdatePeriod, sentTime }) => {
-        const updatePeriod = minimumUpdatePeriod -
-          (performance.now() - sentTime) / 1000;
-        return observableTimer(updatePeriod * 1000).pipe(
-          mergeMap(() => {
-            return refreshManifest(fetchManifest, manifest).pipe(
-              tap(({ value }) => {
-                if (
-                  value.manifest.minimumUpdatePeriod &&
-                  value.manifest.minimumUpdatePeriod > 0
-                ) {
-                  refreshManifestUpdatePeriod$.next({
-                    minimumUpdatePeriod: value.manifest.minimumUpdatePeriod,
-                    sentTime: value.sentTime || 0,
-                  });
-                }
-              })
-            );
-          })
-        );
+    const updateManifest$ = updatedManifest$.pipe(
+      startWith({ value: { manifest, sentTime } }),
+      mergeMap(({ value }) => {
+        const { manifest: _manifest, sentTime: _sentTime } = value;
+        if (_manifest.minimumUpdatePeriod) {
+          const updatePeriod = _manifest.minimumUpdatePeriod -
+            (performance.now() - (_sentTime || 0)) / 1000;
+          return observableTimer(updatePeriod * 1000).pipe(
+            mergeMap(() => {
+              return refreshManifest(fetchManifest, manifest).pipe(
+                tap((evt) => {
+                  updatedManifest$.next(evt);
+                })
+              );
+            })
+          );
+        }
+        return EMPTY;
       })
     );
 
@@ -288,17 +274,7 @@ export default function Stream({
     ).pipe(
       tap((evt) => {
         if (evt.type === "manifestUpdate") {
-          const { value } = evt;
-          const { minimumUpdatePeriod } = value.manifest;
-          if (
-            minimumUpdatePeriod &&
-            minimumUpdatePeriod > 0
-          ) {
-            refreshManifestUpdatePeriod$.next({
-              minimumUpdatePeriod,
-              sentTime: value.sentTime || 0,
-            });
-          }
+          updatedManifest$.next(evt);
         }
       })
     );
