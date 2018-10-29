@@ -38,6 +38,12 @@ export default [
     "live": true,
   },
   {
+    "name": "DASH-IF - Live stream with inband stream events",
+    "url": "http://vm2.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd",
+    "transport": "dash",
+    "live": true,
+  },
+  {
     "name": "BBC - presentationTimeOffset on audio and video",
     "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-pto_both-events.mpd",
     "transport": "dash",
