@@ -60,6 +60,7 @@ export interface IManifestUpdateEvent {
   type : "manifestUpdate";
   value : {
     manifest : Manifest;
+    sendingTime? : number;
   };
 }
 
