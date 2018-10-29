@@ -55,8 +55,12 @@ class ImageSourceBuffer
    * @param {Number} to
    */
   _remove(from : number, to : number) : void {
-    log.debug("ImageSourceBuffer: removing image data", from, to);
-    this.buffered.remove(from, to);
+    log.info("ImageSourceBuffer: ignored image data remove order", from, to);
+
+    // TODO once a better strategy for image cleaning has been set (surely done
+    // when we will work for live thumbnails), restore this implementation.
+    // log.debug("ImageSourceBuffer: removing image data", from, to);
+    // this.buffered.remove(from, to);
   }
 
   _abort() {
