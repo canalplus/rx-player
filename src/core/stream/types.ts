@@ -22,7 +22,7 @@ import { IStallingItem } from "./stalling_manager";
 
 export interface IFetchManifestResult {
   manifest : Manifest;
-  sentTime? : number;
+  sendingTime? : number;
 }
 
 // Object emitted when the stream's clock tick

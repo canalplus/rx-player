@@ -199,14 +199,14 @@ export default function Stream({
   // Emit each time the manifest is updated.
   const updatedManifest$ = new ReplaySubject<{
     manifest : Manifest;
-    sentTime? : number;
+    sendingTime? : number;
   }>(1);
 
   // Start the whole Stream.
   const stream$ = observableCombineLatest(
     openMediaSource(mediaElement),
     fetchManifest(url)
-  ).pipe(mergeMap(([ mediaSource, { manifest, sentTime } ]) => {
+  ).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
     /**
      * @returns {Observable}
      */
@@ -218,9 +218,9 @@ export default function Stream({
       }
 
       return fetchManifest(refreshURL).pipe(
-        map(({ manifest: newManifest, sentTime: newSentTime }) => {
+        map(({ manifest: newManifest, sendingTime: newSendingTime }) => {
           manifest.update(newManifest);
-          return EVENTS.manifestUpdate(manifest, newSentTime);
+          return EVENTS.manifestUpdate(manifest, newSendingTime);
         }),
         tap((evt) => updatedManifest$.next(evt.value)),
         share() // share the previous sideeceffect
@@ -270,10 +270,10 @@ export default function Stream({
 
     // Emit when the manifest should be updated due to its lifetime being expired
     const manifestUpdateTimeout$ : Observable<unknown> = updatedManifest$.pipe(
-      startWith({ manifest, sentTime }),
-      switchMap(({ manifest: newManifest, sentTime: newSentTime }) => {
+      startWith({ manifest, sendingTime }),
+      switchMap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
         if (newManifest.lifetime) {
-          const timeSinceRequest = performance.now() - (newSentTime || 0);
+          const timeSinceRequest = performance.now() - (newSendingTime || 0);
           const updateTimeout = newManifest.lifetime * 1000 - timeSinceRequest;
           return observableTimer(updateTimeout);
         }

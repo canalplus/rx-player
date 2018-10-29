@@ -105,11 +105,11 @@ export default function createManifestPipeline(
       ),
 
       mergeMap(({ value }) => {
-        const { sentTime } = value;
+        const { sendingTime } = value;
         return parser({ response: value, url }).pipe(
           map(({ manifest: parsedManifest }) => {
             const manifest = new Manifest(parsedManifest, warning$, transport.options);
-            return { manifest, sentTime };
+            return { manifest, sendingTime };
           })
         );
       }),

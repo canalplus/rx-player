@@ -66,11 +66,11 @@ const customSegmentLoader = (infos, callbacks) => {
   }
 
   const xhr = new XMLHttpRequest();
-  const sentTime = Date.now();
+  const sendingTime = Date.now();
 
   xhr.onload = (r) => {
     if (200 <= xhr.status && xhr.status < 300) {
-      const duration = Date.now() - sentTime;
+      const duration = Date.now() - sendingTime;
       const size = r.total;
       const data = xhr.response;
       callbacks.resolve({ duration, size, data });
@@ -150,11 +150,11 @@ implementation does the same thing and more):
  */
 const customManifestLoader = (url, callbacks) => {
   const xhr = new XMLHttpRequest();
-  const sentTime = Date.now();
+  const sendingTime = Date.now();
 
   xhr.onload = (r) => {
     if (200 <= xhr.status && xhr.status < 300) {
-      const duration = Date.now() - sentTime;
+      const duration = Date.now() - sendingTime;
       const size = r.total;
       const data = xhr.response;
       callbacks.resolve({ duration, size, data });

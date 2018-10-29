@@ -68,16 +68,16 @@ function manifestReady(
 /**
  * Construct a "manifestUpdate" event.
  * @param {Object} manifest
- * @param {number|undefined} sentTime
+ * @param {number|undefined} sendingTime
  * @returns {Object}
  */
 function manifestUpdate(
   manifest : Manifest,
-  sentTime? : number
+  sendingTime? : number
 ) : IManifestUpdateEvent {
   return {
     type: "manifestUpdate",
-    value: { manifest, sentTime },
+    value: { manifest, sendingTime },
   };
 }
 
