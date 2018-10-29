@@ -63,10 +63,7 @@ export interface IStreamWarningEvent {
 // The Manifest was just refreshed.
 export interface IManifestUpdateEvent {
   type : "manifestUpdate";
-  value : {
-    manifest : Manifest;
-    sentTime? : number;
-  };
+  value : IFetchManifestResult;
 }
 
 export interface IReloadingStreamEvent {
