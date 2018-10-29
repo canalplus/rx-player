@@ -106,7 +106,7 @@ export interface IParsedManifest {
   maxSubsegmentDuration?: number;
   minBufferTime?: number;
   minimumTime? : number;
-  minimumUpdatePeriod?: number;
+  lifetime?: number;
   presentationLiveGap?: number;
   profiles?: string;
   publishTime?: number;
