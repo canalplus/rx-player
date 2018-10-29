@@ -250,9 +250,9 @@ export default function Stream({
     const updateManifest$ = updatedManifest$.pipe(
       startWith({ value: { manifest, sentTime } }),
       mergeMap(({ value }) => {
-        const { manifest: _manifest, sentTime: _sentTime } = value;
-        if (_manifest.minimumUpdatePeriod) {
-          const updatePeriod = _manifest.minimumUpdatePeriod -
+        const { manifest: { lifetime }, sentTime: _sentTime } = value;
+        if (lifetime) {
+          const updatePeriod = lifetime -
             (performance.now() - (_sentTime || 0)) / 1000;
           return observableTimer(updatePeriod * 1000).pipe(
             mergeMap(() => {
