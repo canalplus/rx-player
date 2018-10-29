@@ -117,11 +117,11 @@ interface IFilters {
 }
 
 interface IRepresentationChooserOptions {
-  limitWidth$?: Observable<number>;
-  throttle$?: Observable<number>;
-  initialBitrate?: number;
-  manualBitrate?: number;
-  maxAutoBitrate?: number;
+  limitWidth$?: Observable<number>; // Emit maximum useful width
+  throttle$?: Observable<number>; // Emit temporary bandwidth throttle
+  initialBitrate?: number; // The initial wanted bitrate
+  manualBitrate?: number; // A bitrate set manually
+  maxAutoBitrate?: number; // The maximum bitrate we should set in adaptive mode
 }
 
 /**
