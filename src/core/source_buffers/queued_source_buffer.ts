@@ -15,12 +15,10 @@
  */
 
 import {
-  defer as observableDefer,
   Observable,
-  of as observableOf,
+  Observer,
   Subject,
 } from "rxjs";
-import { mapTo } from "rxjs/operators";
 import {
   ICustomSourceBuffer,
   tryToChangeSourceBufferType,
@@ -48,23 +46,24 @@ export interface IAppendBufferInfos<T> {
 // T is the type of the segment pushed.
 interface IAppendQueueItem<T> {
   type : SourceBufferAction.Append;
-  args : {
-    segment : T;
+  value : {
+    initSegment : T|null;
+    segment : T|null;
     codec : string;
     timestampOffset? : number;
   };
-  subject : Subject<Event>|null;
+  subject : Subject<unknown>;
 }
 
 // Item waiting in the queue to remove segment(s) from the SourceBuffer.
 // T is the type of the segment pushed.
 interface IRemoveQueueItem {
   type : SourceBufferAction.Remove;
-  args : {
+  value : {
     start : number;
     end : number;
   };
-  subject : Subject<Event>;
+  subject : Subject<unknown>;
 }
 
 // Item waiting in a queue to perform updates on a SourceBuffer.
@@ -80,6 +79,24 @@ interface IAppendOrder<T> {
 
 // Order created by the QueuedSourceBuffer to remove Segment(s).
 interface IRemoveOrder {
+  type : SourceBufferAction.Remove;
+  value : {
+    start : number;
+    end : number;
+  };
+}
+
+interface IAppendAction<T> {
+  type : SourceBufferAction.Append;
+  value : {
+    segment : T;
+    isInit : boolean;
+    codec : string;
+    timestampOffset? : number;
+  };
+}
+
+interface IRemoveAction {
   type : SourceBufferAction.Remove;
   value : {
     start : number;
@@ -105,46 +122,27 @@ type IQSBOrders<T> =
 export default class QueuedSourceBuffer<T> {
   /**
    * "Type" of the buffer.
+   * e.g. "audio", "video", "text", "image"
    * @type {string}
    */
   public readonly bufferType : IBufferType;
 
   /**
    * SourceBuffer implementation.
-   * Type it as ICustomSourceBuffer to allow more permissive custom
-   * implementations.
    * @private
    * @type {Object}
    */
-  private readonly _buffer : ICustomSourceBuffer<T>;
+  private readonly _sourceBuffer : ICustomSourceBuffer<T>;
 
-  /**
-   * Binded reference to the _onUpdate private method.
-   * Used for binding/removing an event listener.
-   * @private
-   * @type {Function}
-   */
+  // Binded references to corresponding private methods.
+  // Used for binding/removing an event listener.
   private readonly __onUpdate : (x: Event) => void;
-
-  /**
-   * Binded reference to the _onError private method.
-   * Used for binding/removing an event listener.
-   * @private
-   * @type {Function}
-   */
   private readonly __onError : (x : Event) => void;
-
-  /**
-   * Binded reference to the _flush private method.
-   * Used for binding/removing an event listener.
-   * @private
-   * @type {Function}
-   */
-  private readonly __flush : () => void;
+  private readonly __onUpdateEnd : (x : Event) => void;
 
   /**
    * Lock status.
-   * When the QueuedSourceBuffer is locked, no queued action is performed until
+   * When the QueuedSourceBuffer is locked, no queued order is performed until
    * it is unlocked.
    * @private
    * @type {Boolean}
@@ -152,24 +150,28 @@ export default class QueuedSourceBuffer<T> {
   private _isLocked : boolean;
 
   /**
-   * Queue of awaited buffer actions.
-   *
-   * The last element in this array will be the first action to perform.
-   * See IQSBQueueItems for more infos on those actions.
+   * Queue of awaited buffer orders.
+   * The first element in this array will be the first performed.
    * @private
    * @type {Array.<Object>}
    */
   private _queue : Array<IQSBQueueItems<T>>;
 
   /**
-   * Subject linked to the current buffer action.
+   * Informations about the current order processed by the QueuedSourceBuffer.
+   * If equal to null, it means that no order from the queue is currently
+   * being processed.
    * @private
-   * @type {Subject}
+   * @type {Object|null}
    */
-  private _flushing : Subject<Event>|null;
+  private _currentOrder : {
+    tasks : Array<IAppendAction<T>|IRemoveAction>; // remaining tasks to perform
+                                                   // to complete this order
+    subject : Subject<unknown>; // the corresponding order's Subject
+  }|null;
 
   /**
-   * Keep track of the latest init segment pushed in the current queue.
+   * Keep track of the latest init segment pushed in the linked SourceBuffer.
    * @private
    * @type {*}
    */
@@ -193,24 +195,19 @@ export default class QueuedSourceBuffer<T> {
     sourceBuffer : ICustomSourceBuffer<T>
   ) {
     this.bufferType = bufferType;
-    this._buffer = sourceBuffer;
+    this._sourceBuffer = sourceBuffer;
     this._queue = [];
-    this._flushing = null;
+    this._currentOrder = null;
     this._isLocked = false;
     this._lastInitSegment = null;
     this._currentCodec = codec;
 
     this.__onUpdate = this._onUpdate.bind(this);
     this.__onError = this._onError.bind(this);
-    this.__flush = () => {
-      if (!this.isLocked()) {
-        this._performNextQueuedAction();
-      }
-    };
-
-    this._buffer.addEventListener("update", this.__onUpdate);
-    this._buffer.addEventListener("error", this.__onError);
-    this._buffer.addEventListener("updateend", this.__flush);
+    this.__onUpdateEnd = this._onUpdate.bind(this);
+    this._sourceBuffer.addEventListener("update", this.__onUpdate);
+    this._sourceBuffer.addEventListener("error", this.__onError);
+    this._sourceBuffer.addEventListener("updateend", this.__onUpdateEnd);
   }
 
   /**
@@ -238,7 +235,7 @@ export default class QueuedSourceBuffer<T> {
    */
   unlock() : void {
     this._isLocked = false;
-    this._performNextQueuedAction();
+    this._flush();
   }
 
   /**
@@ -262,10 +259,8 @@ export default class QueuedSourceBuffer<T> {
    * @param {Object} infos
    * @returns {Observable}
    */
-  public appendBuffer(infos : IAppendBufferInfos<T>) : Observable<void> {
-    return observableDefer(() =>
-      this._addToQueue({ type: SourceBufferAction.Append, value: infos })
-    );
+  public appendBuffer(infos : IAppendBufferInfos<T>) : Observable<unknown> {
+    return this._addToQueue({ type: SourceBufferAction.Append, value: infos });
   }
 
   /**
@@ -274,10 +269,8 @@ export default class QueuedSourceBuffer<T> {
    * @param {number} end - end position, in seconds
    * @returns {Observable}
    */
-  public removeBuffer(start : number, end : number) : Observable<void> {
-    return observableDefer(() =>
-      this._addToQueue({ type: SourceBufferAction.Remove, value: { start, end } })
-    );
+  public removeBuffer(start : number, end : number) : Observable<unknown> {
+    return this._addToQueue({ type: SourceBufferAction.Remove, value: { start, end } });
   }
 
   /**
@@ -285,21 +278,7 @@ export default class QueuedSourceBuffer<T> {
    * @returns {TimeRanges}
    */
   public getBuffered() : TimeRanges|ICustomTimeRanges {
-    return this._buffer.buffered;
-  }
-
-  /**
-   * Empty the current queue of actions without performing any of them.
-   * All related subjects will be completed immediately.
-   */
-  public emptyQueue() : void {
-    log.info(`QueuedSourceBuffer: emptying ${this.bufferType} queue.`);
-    while (this._queue.length) {
-      const item = this._queue.pop();
-      if (item != null && item.subject != null) {
-        item.subject.complete();
-      }
-    }
+    return this._sourceBuffer.buffered;
   }
 
   /**
@@ -310,11 +289,21 @@ export default class QueuedSourceBuffer<T> {
    * @private
    */
   public dispose() : void {
-    this._buffer.removeEventListener("update", this.__onUpdate);
-    this._buffer.removeEventListener("error", this.__onError);
-    this._buffer.removeEventListener("updateend", this.__flush);
-    this._queue.length = 0;
-    this._flushing = null;
+    this._sourceBuffer.removeEventListener("update", this.__onUpdate);
+    this._sourceBuffer.removeEventListener("error", this.__onError);
+    this._sourceBuffer.removeEventListener("updateend", this.__onUpdateEnd);
+
+    if (this._currentOrder != null) {
+      this._currentOrder.subject.complete();
+      this._currentOrder = null;
+    }
+
+    while (this._queue.length) {
+      const nextElement = this._queue.shift();
+      if (nextElement != null) {
+        nextElement.subject.complete();
+      }
+    }
   }
 
   /**
@@ -325,153 +314,181 @@ export default class QueuedSourceBuffer<T> {
    * @private
    */
   public abort() {
-    this._buffer.abort();
+    this._sourceBuffer.abort();
   }
 
   /**
    * Callback used for the 'update' event, as a segment has been added/removed.
-   *
-   * Emit and complete the corresponding subject to inform the action caller
-   * of completion.
-   *
    * @private
    */
   private _onUpdate() : void {
-    if (this._flushing) {
-      this._flushing.next(undefined);
-
-      // security against side-effects from the previous `next` instruction
-      if (this._flushing) {
-        this._flushing.complete();
-        this._flushing = null;
-      }
+    if (!this.isLocked()) {
+      this._flush();
     }
   }
 
   /**
    * Callback used for the 'error' event from the SourceBuffer.
-   *
-   * Emit the error through the corresponding subject to inform the action
-   * caller.
-   *
    * @private
    * @param {Event} error
    */
   private _onError(error : Event) : void {
-    if (this._flushing) {
-      this._flushing.error(error);
-      this._flushing = null;
+    if (this._currentOrder != null) {
+      this._currentOrder.subject.error(error);
     }
   }
 
   /**
-   * Queue a new action.
-   * Begin flushing if no action were previously in the queue.
+   * When the returned observable is subscribed:
+   *   1. Add your order to the queue.
+   *   2. Begin the queue if not pending and not locked
+   *
+   * Cancel queued order on unsubscription.
    * @private
-   * @param {Object} action
-   * @returns {Observable} - Can be used to follow the buffer action
-   * advancement.
+   * @param {Object} order
+   * @returns {Observable}
    */
-  private _addToQueue(action : IQSBOrders<T>) : Observable<void> {
-    const shouldPushDirectly = !this.isLocked() && !this._queue.length;
-    const subject = new Subject<Event>();
+  private _addToQueue(order : IQSBOrders<T>) : Observable<unknown> {
+    return Observable.create((obs : Observer<unknown>) => {
+      let queueItem : IQSBQueueItems<T>;
+      const subject = new Subject<unknown>();
 
-    if (action.type === SourceBufferAction.Append) {
-      const { segment, initSegment, timestampOffset, codec } = action.value;
-
-      if (initSegment === null && segment === null) {
-        log.warn("QSB: no segment appended.", this.bufferType);
-        return observableOf(undefined);
-      }
-
-      if (initSegment === null) {
-        this._queue.unshift({
-          type: SourceBufferAction.Append,
-          args: { segment: segment as T, timestampOffset, codec },
-          subject,
-        });
-      } else if (segment === null) {
-        if (this._lastInitSegment === initSegment) {
-          return observableOf(undefined);
+      if (order.type === SourceBufferAction.Append) {
+        const { segment, initSegment, timestampOffset, codec } = order.value;
+        if (initSegment === null && segment === null) {
+          log.warn("QSB: no segment to append.", this.bufferType);
+          obs.next(null);
+          obs.complete();
+          return;
         }
-        this._queue.unshift({
+        queueItem = {
           type: SourceBufferAction.Append,
-          args: { segment: initSegment, timestampOffset, codec },
+          value: { initSegment, segment, timestampOffset, codec },
           subject,
-        });
+        };
+      } else if (order.type === SourceBufferAction.Remove) {
+        queueItem = {
+          type: SourceBufferAction.Remove,
+          value: order.value,
+          subject,
+        };
       } else {
-        if (this._lastInitSegment !== initSegment) {
-          this._queue.unshift({
-            type: SourceBufferAction.Append,
-            args: { segment: initSegment, timestampOffset, codec },
-            subject: null,
-          });
-        }
-        this._queue.unshift({
-          type: SourceBufferAction.Append,
-          args: { segment, timestampOffset, codec },
-          subject,
-        });
+        throw new Error("QSB: unrecognized order");
       }
 
-      this._lastInitSegment = initSegment;
-    } else if (action.type === SourceBufferAction.Remove) {
-      this._queue.unshift({
-        type: SourceBufferAction.Remove,
-        args: action.value,
-        subject,
-      });
-    } else {
-      throw new Error("QueuedSourceBuffer: unrecognized action");
-    }
+      this._queue.push(queueItem);
 
-    if (shouldPushDirectly) {
-      this._performNextQueuedAction();
-    }
-
-    return subject.pipe(mapTo(undefined));
+      const subscription = subject.subscribe(obs);
+      if (!this.isLocked() && this._currentOrder == null) {
+        this._flush();
+      }
+      return () => {
+        subscription.unsubscribe();
+        const index = this._queue.indexOf(queueItem);
+        if (index >= 0) {
+          this._queue.splice(index, 1);
+        }
+      };
+    });
   }
 
   /**
-   * Perform next queued action if one and none are pending.
+   * Perform next task if one.
    * @private
    */
-  private _performNextQueuedAction() : void {
-    if (this._flushing || this._queue.length === 0 || this._buffer.updating) {
+  private _flush() : void {
+    if (this._sourceBuffer.updating) {
       return;
     }
 
-    // TODO TypeScrypt do not get the previous length check? Find solution /
-    // open issue
-    const queueItem = this._queue.pop() as IQSBQueueItems<T>;
-    this._flushing = queueItem.subject;
+    if (this._currentOrder == null) {
+      if (this._queue.length === 0) {
+        return;
+      }
+
+      // TODO TypeScrypt do not get the previous length check? Find solution /
+      // open issue
+      const newQueueItem = this._queue.shift() as IQSBQueueItems<T>;
+
+      const tasks : Array<IAppendAction<T>|IRemoveAction> = [];
+      if (newQueueItem.type === SourceBufferAction.Append) {
+        if (newQueueItem.value.initSegment !== null) {
+          tasks.push({
+            type: SourceBufferAction.Append,
+            value: {
+              isInit: true,
+              segment: newQueueItem.value.initSegment,
+              codec: newQueueItem.value.codec,
+              timestampOffset: newQueueItem.value.timestampOffset,
+            },
+          });
+        } else if (newQueueItem.value.segment === null) {
+          newQueueItem.subject.next();
+          newQueueItem.subject.complete();
+        }
+        if (newQueueItem.value.segment !== null) {
+          tasks.push({
+            type: SourceBufferAction.Append,
+            value: {
+              segment: newQueueItem.value.segment,
+              isInit: false,
+              codec: newQueueItem.value.codec,
+              timestampOffset: newQueueItem.value.timestampOffset,
+            },
+          });
+        }
+      } else {
+        tasks.push({ type: SourceBufferAction.Remove, value: newQueueItem.value });
+      }
+      this._currentOrder = { tasks, subject: newQueueItem.subject };
+    }
+
+    const task = this._currentOrder.tasks.shift();
+    if (task == null) {
+      const { subject } = this._currentOrder;
+      this._currentOrder = null;
+      subject.next();
+      subject.complete();
+
+      if (this._queue.length > 0) {
+        this._flush();
+      }
+      return;
+    }
     try {
-      switch (queueItem.type) {
+      switch (task.type) {
         case SourceBufferAction.Append:
-          const { segment, timestampOffset = 0, codec } = queueItem.args;
+          const { segment, isInit, timestampOffset = 0, codec } = task.value;
+          if (isInit && this._lastInitSegment === segment) {
+            this._flush(); // nothing to do
+            return;
+          }
+
           if (this._currentCodec !== codec) {
             log.debug("QSB: updating codec");
-            const couldUpdateType = tryToChangeSourceBufferType(this._buffer, codec);
+            const couldUpdateType =
+              tryToChangeSourceBufferType(this._sourceBuffer, codec);
             if (couldUpdateType) {
               this._currentCodec = codec;
             } else {
               log.warn("QSB: could not update codec", codec, this._currentCodec);
             }
           }
-          if (this._buffer.timestampOffset !== timestampOffset) {
+
+          if (this._sourceBuffer.timestampOffset !== timestampOffset) {
             const newTimestampOffset = timestampOffset || 0;
             log.debug("QSB: updating timestampOffset",
-              this.bufferType, this._buffer.timestampOffset, newTimestampOffset);
-            this._buffer.timestampOffset = newTimestampOffset;
+              this.bufferType, this._sourceBuffer.timestampOffset, newTimestampOffset);
+            this._sourceBuffer.timestampOffset = newTimestampOffset;
           }
 
           log.debug("QSB: pushing new data to source buffer", this.bufferType);
-          this._buffer.appendBuffer(segment);
+          this._sourceBuffer.appendBuffer(segment);
           break;
         case SourceBufferAction.Remove:
-          const { start, end } = queueItem.args;
+          const { start, end } = task.value;
           log.debug("QSB: removing data from source buffer", this.bufferType, start, end);
-          this._buffer.remove(start, end);
+          this._sourceBuffer.remove(start, end);
           break;
       }
     } catch (e) {
