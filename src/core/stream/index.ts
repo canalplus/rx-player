@@ -309,7 +309,7 @@ function streamLoaderEventProcessor(
   /**
    * React to StreamLoader events.
    * @param {Object} evt
-   * @returns {Object}
+   * @returns {Observable}
    */
   return function onStreamLoaderEvent(evt : IStreamLoaderEvent) {
     switch (evt.type) {
