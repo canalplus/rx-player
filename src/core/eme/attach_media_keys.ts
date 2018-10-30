@@ -41,7 +41,7 @@ export default function attachMediaKeys(
   mediaKeysInfos: IMediaKeysInfos,
   mediaElement : HTMLMediaElement,
   currentMediaKeysInfos: MediaKeysInfosStore
-) : Observable<null> {
+) : Observable<unknown> {
   return observableDefer(() => {
     const previousState = currentMediaKeysInfos.getState(mediaElement);
     const {

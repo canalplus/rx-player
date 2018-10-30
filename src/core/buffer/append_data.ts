@@ -44,18 +44,18 @@ export default function appendDataToSourceBufferWithRetries<T>(
   clock$ : Observable<{ currentTime : number }>,
   queuedSourceBuffer : QueuedSourceBuffer<T>,
   dataInfos : IAppendBufferInfos<T>
-) : Observable<void> {
+) : Observable<unknown> {
   const append$ = queuedSourceBuffer.appendBuffer(dataInfos);
 
   return append$.pipe(
-    catchError((appendError : Error) : Observable<void> => {
+    catchError((appendError : Error) => {
       if (!appendError || appendError.name !== "QuotaExceededError") {
         throw new MediaError("BUFFER_APPEND_ERROR", appendError, true);
       }
 
       return forceGarbageCollection(clock$, queuedSourceBuffer).pipe(
         mergeMapTo(append$),
-        catchError((forcedGCError : Error) : never|Observable<void> => {
+        catchError((forcedGCError : Error) => {
           // (weird Typing either due to TypeScript or RxJS bug)
           throw new MediaError("BUFFER_FULL_ERROR", forcedGCError, true);
         }));

@@ -822,12 +822,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     );
 
     // Emit when the media element emits an "ended" event.
-    const endedEvent$ = onEnded$(videoElement)
-      .pipe(mapTo(null));
+    const endedEvent$ = onEnded$(videoElement);
 
     // Emit when the media element emits a "seeking" event.
-    const seekingEvent$ = onSeeking$(videoElement)
-      .pipe(mapTo(null));
+    const seekingEvent$ = onSeeking$(videoElement);
 
     // State updates when the content is considered "loaded"
     const loadedStateUpdates$ = observableCombineLatest(
