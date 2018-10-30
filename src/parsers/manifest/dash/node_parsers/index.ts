@@ -20,17 +20,41 @@ import {
   normalizeBaseURL,
   resolveURL,
 } from "../../../../utils/url";
-import { IParsedManifest } from "../../types";
 import checkManifestIDs from "../../utils/check_manifest_ids";
 import { getPeriodsFromIntermediate } from "../node_parsers/Period";
 import {
   createMPDIntermediateRepresentation,
 } from "./MPD";
+import { IParsedDASHPeriod } from "./Period";
+
+export interface IParsedDASHManifest {
+  // required
+  availabilityStartTime : number;
+  duration: number;
+  id: string;
+  periods: IParsedDASHPeriod[];
+  isLive : boolean;
+  uris: string[]; // uris where the manifest can be refreshed
+  transportType: "dash";
+
+  // optional
+  availabilityEndTime?: number;
+  maxSegmentDuration?: number;
+  maxSubsegmentDuration?: number;
+  minBufferTime?: number;
+  minimumTime? : number;
+  minimumUpdatePeriod?: number;
+  presentationLiveGap?: number;
+  profiles?: string;
+  publishTime?: number;
+  suggestedPresentationDelay?: number;
+  timeShiftBufferDepth?: number;
+}
 
 export default function parseManifest(
   root: Element,
   uri : string
-) : IParsedManifest {
+) : IParsedDASHManifest {
   // Transform whole MPD into a parsed JS object representation
   const {
     children: rootChildren,
@@ -39,7 +63,7 @@ export default function parseManifest(
 
   const mpdRootURL = resolveURL(normalizeBaseURL(uri), rootChildren.baseURL);
 
-  const { parsedPeriods, linkedPeriods } = getPeriodsFromIntermediate(
+  const parsedPeriods = getPeriodsFromIntermediate(
     rootChildren.periods,
     { manifestAttributes: rootAttributes },
     mpdRootURL
@@ -64,7 +88,7 @@ export default function parseManifest(
     return Infinity;
   })();
 
-  const parsedMPD : IParsedManifest = {
+  const parsedMPD : IParsedDASHManifest = {
     availabilityStartTime: (
         rootAttributes.type === "static" ||
         rootAttributes.availabilityStartTime == null
@@ -73,7 +97,6 @@ export default function parseManifest(
     id: rootAttributes.id != null ?
       rootAttributes.id : "gen-dash-manifest-" + generateNewId(),
     periods: parsedPeriods,
-    linkedPeriods,
     transportType: "dash",
     isLive,
     uris: [uri, ...rootChildren.locations],

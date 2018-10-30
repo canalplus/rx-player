@@ -16,7 +16,7 @@
 
 import log from "../../../log";
 import arrayIncludes from "../../../utils/array-includes";
-import { IParsedManifest } from "../types";
+import { IParsedAdaptations } from "../types";
 
 /**
  * Ensure that no two periods, adaptations from the same period and
@@ -27,7 +27,7 @@ import { IParsedManifest } from "../types";
  * @param {Object} manifest
  */
 export default function checkManifestIDs(
-  manifest : IParsedManifest
+  manifest : { periods: Array<{ adaptations: IParsedAdaptations }> }
 ) : void {
   const periodIDS : string[] = [];
   manifest.periods.forEach((period) => {

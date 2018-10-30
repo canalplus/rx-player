@@ -22,7 +22,6 @@ import { normalize as normalizeLang } from "../../../../utils/languages";
 import { resolveURL } from "../../../../utils/url";
 import {
   IContentProtection,
-  ILinkedPeriod,
   IParsedAdaptation,
   IParsedAdaptations,
   IParsedPeriod,
@@ -48,6 +47,10 @@ import BaseRepresentationIndex from "../indexes/base";
 import ListRepresentationIndex from "../indexes/list";
 import TemplateRepresentationIndex from "../indexes/template";
 import TimelineRepresentationIndex from "../indexes/timeline";
+
+export type IParsedDASHPeriod = IParsedPeriod & {
+  linkURL? : string;
+};
 
 export interface IPeriodIntermediateRepresentation {
   children : IPeriodChildren;
@@ -114,17 +117,13 @@ export function getPeriodsFromIntermediate(
     nextPeriodInfos?: { start?: number };
   },
   mpdRootURL?: string
-): {
-  parsedPeriods: IParsedPeriod[];
-  linkedPeriods: ILinkedPeriod[];
-} {
+): IParsedDASHPeriod[] {
   const {
     manifestAttributes,
     prevPeriodInfos,
     nextPeriodInfos,
   } = manifestInfos;
-  const linkedPeriods : ILinkedPeriod[] = [];
-  const parsedPeriods : IParsedPeriod[] = [];
+  const parsedPeriods : IParsedDASHPeriod[] = [];
   for (let i = 0; i < rootPeriods.length; i++) {
     const period = rootPeriods[i];
     // 1. Construct partial URL for contents
@@ -528,13 +527,14 @@ export function getPeriodsFromIntermediate(
         };
       }, { videoMainAdaptation: null, adaptations: {} });
 
-      const parsedPeriod : IParsedPeriod = {
+      const { resolveAtLoad } = period.attributes;
+
+      const parsedPeriod : IParsedDASHPeriod = {
         id: periodID,
         start: periodStart,
         duration: periodDuration,
         adaptations,
-        linkURL: period.attributes.linkURL,
-        resolveAtLoad: period.attributes.resolveAtLoad,
+        linkURL: !!resolveAtLoad ? period.attributes.linkURL : undefined,
       };
 
       if (period.attributes.bitstreamSwitching != null) {
@@ -542,13 +542,7 @@ export function getPeriodsFromIntermediate(
       }
       parsedPeriods.push(parsedPeriod);
     }
-  parsedPeriods.forEach((parsedPeriod, i) => {
-    if (parsedPeriod.linkURL != null && parsedPeriod.resolveAtLoad != null) {
-      parsedPeriods.splice(i, 1);
-      linkedPeriods.push(parsedPeriod as ILinkedPeriod);
-    }
-  });
-  return { parsedPeriods, linkedPeriods };
+  return parsedPeriods;
 }
 
 /**
@@ -562,7 +556,7 @@ export function parsePeriods(
   documents: Document,
   prevPeriodInfos: { start?: number; duration?: number}|undefined,
   nextPeriodInfos: { start?: number }|undefined
-): IParsedPeriod[] {
+): IParsedDASHPeriod[] {
   const root = documents.children[0];
   if (root == null || root.nodeType !== 1) {
     throw new Error("Period text format is not valid.");
@@ -574,11 +568,10 @@ export function parsePeriods(
     nextPeriodInfos,
   };
 
-  const { parsedPeriods } = getPeriodsFromIntermediate(
+  return getPeriodsFromIntermediate(
     intermediatePeriods,
     manifestInfos
   );
-  return parsedPeriods;
 }
 
 /**

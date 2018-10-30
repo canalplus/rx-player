@@ -15,11 +15,11 @@
  */
 
 import parseMPD from "../../../parsers/manifest/dash/node_parsers";
-import { parsePeriods } from "../../../parsers/manifest/dash/node_parsers/Period";
 import {
-  IParsedManifest,
-  IParsedPeriod,
-} from "../types";
+  IParsedDASHPeriod,
+  parsePeriods,
+} from "../../../parsers/manifest/dash/node_parsers/Period";
+import { IParsedDASHManifest } from "./node_parsers";
 
 /**
  * Parse periods from text.
@@ -32,7 +32,7 @@ export function dashPeriodParser(
   data: string,
   prevPeriodInfos: { start?: number; duration?: number }|undefined,
   nextPeriodInfos: { start?: number }|undefined
-): IParsedPeriod[] {
+): IParsedDASHPeriod[] {
   const domParser = new DOMParser();
   const textWithRoot = "<root>" + data + "</root>";
   const document = domParser.parseFromString(textWithRoot, "text/xml");
@@ -47,7 +47,7 @@ export function dashPeriodParser(
 export default function dashManifestParser(
   document: Document,
   uri : string
-) : IParsedManifest {
+) : IParsedDASHManifest {
   const root = document.documentElement;
   if (!root || root.nodeName !== "MPD") {
     throw new Error("document root should be MPD");

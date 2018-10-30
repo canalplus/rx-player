@@ -16,7 +16,6 @@
 
 import {
   Observable,
-  of as observableOf,
   Subject,
 } from "rxjs";
 import {
@@ -37,7 +36,6 @@ import {
   IManifestResult,
   ITransportPipelines,
 } from "../../../net/types";
-import { IParsedManifest } from "../../../parsers/manifest/types";
 import createLoader, {
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
@@ -92,57 +90,42 @@ export default function createManifestPipeline(
   >(transport.pipelines.manifest);
 
   /**
-   * Recursive loade and parse a manifest object, until all
-   * linked contents are loaded and parsed.
-   * @param {string} manifestUrl
-   * @param {Object|undefined} partialManifest
-   * @returns {Observable}
-   */
-  function loadCompleteManifest(
-    manifestUrl: string, partialManifest?: IParsedManifest
-  ): Observable<IManifestResult> {
-    return loader({ url: manifestUrl, partialManifest }).pipe(
-      tap((arg) => {
-        if (arg.type === "error") {
-          warning$.next(arg.value);
-        }
-      }),
-      filter((arg) : arg is IPipelineLoaderResponse<Document|string> =>
-        arg.type === "response"
-      ),
-      mergeMap(({ value }) => {
-        const { sendingTime } = value;
-        return parser({
-          response: value,
-          url: manifestUrl,
-          partialManifest,
-        }).pipe(
-          mergeMap((manifestResult) => {
-            if (!manifestResult.isComplete) {
-              return loadCompleteManifest(manifestUrl, manifestResult.manifest);
-            } else {
-              manifestResult.sendingTime = sendingTime;
-              return observableOf(manifestResult);
-            }
-          })
-        );
-      })
-    );
-  }
-
-  /**
    * Fetch and parse the manifest corresponding to the URL given.
    * @param {string} url - URL of the manifest
    * @returns {Observable}
    */
   return function fetchManifest(url : string) : Observable<IFetchManifestResult> {
-    return loadCompleteManifest(url).pipe(
-      map(({ manifest: _manifest, sendingTime }) => {
-        const manifest = new Manifest(_manifest, warning$, transport.options);
-        return {
-          manifest,
-          sendingTime,
-        };
+    function responseLoader<T extends string|Document>(
+      _url: string, _contentType?: "text"|"document"
+    ) {
+      return loader({ url: _url, contentType: _contentType}).pipe(
+        tap((arg) => {
+          if (arg.type === "error") {
+            warning$.next(arg.value);
+          }
+        }),
+        filter((arg) : arg is IPipelineLoaderResponse<T> =>
+          arg.type === "response"
+        )
+      );
+    }
+
+    return responseLoader(url, "document").pipe(
+      mergeMap(({ value }) => {
+        const { sendingTime } = value;
+        return parser({
+          response: value,
+          url,
+          load: responseLoader,
+        }).pipe(
+          map(({ manifest: _manifest }) => {
+            const manifest = new Manifest(_manifest, warning$, transport.options);
+            return {
+              manifest,
+              sendingTime,
+            };
+          })
+        );
       })
     );
   };

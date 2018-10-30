@@ -96,8 +96,6 @@ export interface IParsedPeriod {
   adaptations : IParsedAdaptations;
 
   // optional
-  linkURL? : string;
-  resolveAtLoad? : boolean;
   duration? : number;
   bitstreamSwitching? : boolean;
 }
@@ -108,7 +106,6 @@ export interface IParsedManifest {
   duration: number;
   id: string;
   periods: IParsedPeriod[];
-  linkedPeriods?: ILinkedPeriod[];
   transportType: string; // "smooth", "dash" etc.
   isLive : boolean;
   uris: string[]; // uris where the manifest can be refreshed

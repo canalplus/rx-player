@@ -19,8 +19,15 @@
  * It always should be imported through the `features` object.
  */
 
-import { of as observableOf } from "rxjs";
-import { tap } from "rxjs/operators";
+import {
+  combineLatest,
+  Observable,
+  of as observableOf,
+} from "rxjs";
+import {
+  map,
+  mergeMap,
+} from "rxjs/operators";
 import features from "../../features";
 import {
   getMDHDTimescale,
@@ -30,7 +37,9 @@ import {
   getSegmentsFromCues,
   getTimeCodeScale,
 } from "../../parsers/containers/matroska";
-import dashManifestParser from "../../parsers/manifest/dash";
+import dashManifestParser, {
+  dashPeriodParser
+} from "../../parsers/manifest/dash";
 import request from "../../utils/request";
 import {
   CustomManifestLoader,
@@ -46,8 +55,8 @@ import {
   SegmentParserObservable,
 } from "../types";
 import generateManifestLoader from "../utils/manifest_loader";
+import getPresentationLiveGap from "./get_presentation_live_gap";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
-import updateManifestWithParsedLinkedPeriods from "./linked_periods";
 import generateSegmentLoader from "./segment_loader";
 import {
   loader as TextTrackLoader,
@@ -55,7 +64,12 @@ import {
 } from "./texttracks";
 import { addNextSegments } from "./utils";
 
-import getPresentationLiveGap from "./get_presentation_live_gap";
+import { IParsedDASHPeriod } from "../../parsers/manifest/dash/node_parsers/Period";
+
+interface IDASHPeriodResult {
+  periods: IParsedDASHPeriod[];
+  isComplete: boolean;
+}
 
 interface IDASHOptions {
   manifestLoader? : CustomManifestLoader;
@@ -78,69 +92,80 @@ export default function(
 
   const manifestPipeline = {
     loader(
-      { url, partialManifest } : IManifestLoaderArguments
+      { url, contentType } : IManifestLoaderArguments
     ) : ILoaderObservable<Document|string> {
-      if (partialManifest && partialManifest.linkedPeriods) {
-        // Manifest exists, first supplementary content must be downloaded.
-        const firstPartialContentUrl = partialManifest.linkedPeriods[0].linkURL || "";
-        return manifestLoader(firstPartialContentUrl, "text");
-      } else { // regular manifest loader, from scratch
-        return manifestLoader(url, "document");
-      }
+      return manifestLoader(url, contentType);
     },
 
     parser(
-      { response, url: reqURL, partialManifest } :
+      { response, url, load } :
         IManifestParserArguments<Document|string>
     ) : IManifestParserObservable {
-      const url = response.url == null ? reqURL : response.url;
-      let manifestObservable;
+      const data = typeof response.responseData === "string" ?
+        new DOMParser().parseFromString(response.responseData, "text/xml") :
+        response.responseData;
 
-      if (partialManifest && partialManifest.linkedPeriods) {
-        // "response" is data from loaded partial content.
-        // Manifest is updated with parsed partial content.
-        const { responseData } = response;
-        if (typeof responseData !== "string") {
-          throw new Error("Response from period loader should be a string.");
-        }
+      const manifest = dashManifestParser(data, url);
 
-        const firstLinkedPeriodData = {
-          rawText: responseData,
-          xlink: partialManifest.linkedPeriods[0],
-        };
+      /**
+       * Load and parse unloaded periods from their link URL.
+       * @param {Array.<Object>} periods
+       * @returns {Observable}
+       */
+      function getPeriods$(
+        periods: IParsedDASHPeriod[]
+      ): Observable<IParsedDASHPeriod[]> {
+        const periods$: Array<Observable<IParsedDASHPeriod|IParsedDASHPeriod[]>> =
+          periods.map((period, i) => {
+            const { linkURL } = period;
+            if (linkURL && load) {
+              return load<string>(linkURL, "text").pipe(
+                map(({ value: { responseData } }) => {
+                  const prevPeriodInfos = periods[i - 1];
+                  const nextPeriodInfos = periods[i + 1];
+                  return dashPeriodParser(responseData, prevPeriodInfos, nextPeriodInfos);
+                })
+              );
+            } else {
+              return observableOf(period);
+            }
+          });
 
-        const updatedManifest = updateManifestWithParsedLinkedPeriods(
-          partialManifest,
-          firstLinkedPeriodData
+        return combineLatest(periods$).pipe(
+          map((_periods) => {
+            return _periods.reduce((result: IDASHPeriodResult, value) => {
+              if (value instanceof Array) {
+                value.forEach((period) => result.periods.push(period));
+              } else {
+                result.periods.push(value);
+              }
+              if (result.periods[result.periods.length - 1].linkURL) {
+                result.isComplete = false;
+              }
+              return result;
+            }, { periods: [], isComplete: true });
+          }),
+
+          mergeMap(({ periods: __periods, isComplete }) => {
+            if (isComplete) {
+              return observableOf(__periods);
+            } else {
+              // In the case where there are still unloaded periods,
+              // recursively get periods.
+              return getPeriods$(__periods);
+            }
+          })
         );
-
-        manifestObservable = observableOf({
-          manifest: updatedManifest,
-          url,
-          isComplete: (updatedManifest.linkedPeriods || []).length === 0,
-        });
-      } else {
-        // No partial manifest has been loaded/parsed.
-        // "response" is the result from the first loaded manifest.
-        const data = typeof response.responseData === "string" ?
-          new DOMParser().parseFromString(response.responseData, "text/xml") :
-          response.responseData;
-
-        const manifest = dashManifestParser(data, url);
-
-        manifestObservable = observableOf({
-          manifest:  dashManifestParser(data, url),
-          url,
-          isComplete: (manifest.linkedPeriods || []).length === 0,
-        });
       }
 
-      return manifestObservable.pipe(
-        tap(({ manifest }) => {
+      return getPeriods$(manifest.periods).pipe(
+        map((periods) => {
+          delete manifest.periods;
+          manifest.periods = periods;
           if (manifest.isLive) {
-            manifest.presentationLiveGap =
-              getPresentationLiveGap(manifest);
+            manifest.presentationLiveGap = getPresentationLiveGap(manifest);
           }
+          return { manifest };
         })
       );
     },

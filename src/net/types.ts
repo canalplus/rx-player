@@ -56,7 +56,7 @@ export interface INextSegmentsInfos {
 // loader argument for the manifest pipeline
 export interface IManifestLoaderArguments {
   url : string; // URL of the concerned manifest;
-  partialManifest? : IParsedManifest;
+  contentType?: "text"|"document";
 }
 
 // loader argument for every other pipelines
@@ -113,10 +113,14 @@ export type ILoaderObservable<T> = Observable<ILoaderEvent<T>>;
 
 // -- arguments
 
+type ISupplementalLoader = <T extends string|Document>(
+  url: string, contentType?: "text"|"document"
+) => Observable<ILoaderResponse<T>>;
+
 export interface IManifestParserArguments<T> {
   response : ILoaderResponseValue<T>;
   url : string;
-  partialManifest? : IParsedManifest;
+  load? : ISupplementalLoader;
 }
 
 export interface ISegmentParserArguments<T> {
@@ -134,8 +138,6 @@ export interface ISegmentParserArguments<T> {
 export interface IManifestResult {
   manifest: IParsedManifest; // the manifest itself
   url? : string; // final URL of the manifest
-  isComplete?: boolean; // is parsed manifest complete
-  sendingTime?: number;
 }
 
 export type IManifestParserObservable = Observable<IManifestResult>;

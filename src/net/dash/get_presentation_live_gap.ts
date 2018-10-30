@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  IParsedAdaptation,
-  IParsedManifest,
-} from "../../parsers/manifest/types";
+import { IParsedDASHManifest } from "../../parsers/manifest/dash/node_parsers";
+import { IParsedAdaptation } from "../../parsers/manifest/types";
 
 /**
  * Returns "last time of reference" from the adaptation given, considering a
@@ -70,7 +68,7 @@ const getLastLiveTimeReference = (
  * @param {Object} manifest
  * @returns {number}
  */
-export default function getPresentationLiveGap(manifest: IParsedManifest) {
+export default function getPresentationLiveGap(manifest: IParsedDASHManifest) {
   const lastPeriodAdaptations = manifest.periods[
     manifest.periods.length - 1
   ].adaptations;
