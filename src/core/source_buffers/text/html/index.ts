@@ -63,13 +63,13 @@ const {
  * @returns {Observable}
  */
 function generateClock(videoElement : HTMLMediaElement) : Observable<boolean> {
-  const seeking$ = onSeeking$(videoElement).pipe(mapTo(null));
-  const seeked$ = onSeeked$(videoElement).pipe(mapTo(null));
-  const ended$ = onEnded$(videoElement).pipe(mapTo(null));
+  const seeking$ = onSeeking$(videoElement);
+  const seeked$ = onSeeked$(videoElement);
+  const ended$ = onEnded$(videoElement);
 
   const manualRefresh$ = observableMerge(seeked$, ended$);
   const autoRefresh$ = observableInterval(MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL)
-    .pipe(mapTo(null), startWith(null));
+    .pipe(startWith(null));
 
   return manualRefresh$.pipe(
     startWith(null),

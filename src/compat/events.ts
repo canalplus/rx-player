@@ -31,7 +31,6 @@ import {
   distinctUntilChanged,
   filter,
   map,
-  mapTo,
   startWith,
 } from "rxjs/operators";
 import config from "../config";
@@ -176,9 +175,8 @@ function visibilityChange() : Observable<boolean> {
 /**
  * @returns {Observable}
  */
-function videoSizeChange() : Observable<null> {
-  return observableFromEvent(window, "resize")
-    .pipe(mapTo(null));
+function videoSizeChange() : Observable<unknown> {
+  return observableFromEvent(window, "resize");
 }
 
 const isVisible$ = visibilityChange()
@@ -205,7 +203,7 @@ function isInBackground$() {
  */
 function videoWidth$(mediaElement : HTMLMediaElement) : Observable<number> {
   return observableMerge(
-    observableInterval(20000).pipe(mapTo(null)),
+    observableInterval(20000),
     videoSizeChange().pipe(debounceTime(500))
   )
     .pipe(

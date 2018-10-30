@@ -25,7 +25,6 @@ import {
 import {
   catchError,
   ignoreElements,
-  mapTo,
 } from "rxjs/operators";
 import {
   ICustomMediaKeys,
@@ -147,16 +146,12 @@ export default class MediaKeySessionsStore {
    */
   public deleteAndCloseSession(
     session : MediaKeySession|ICustomMediaKeySession
-  ) : Observable<null> {
+  ) : Observable<unknown> {
     return observableDefer(() => {
       this._delete(session);
       log.debug("EME-MKSS: Close session", session);
-      return castToObservable(session.close()).pipe(
-        mapTo(null),
-        catchError(() => {
-          return observableOf(null);
-        })
-      );
+      return castToObservable(session.close())
+        .pipe(catchError(() => observableOf(null)));
     });
   }
 

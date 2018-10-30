@@ -106,7 +106,7 @@ export default function getSession(
       sessionsStore.deleteAndCloseSession(previousLoadedSession) :
       observableOf(null)
     ).pipe(mergeMap(() => {
-      const cleaningOldSessions$ : Array<Observable<null>> = [];
+      const cleaningOldSessions$ : Array<Observable<unknown>> = [];
       const entries = sessionsStore.getAll().slice();
       if (MAX_SESSIONS > 0 && MAX_SESSIONS <= entries.length) {
         for (let i = 0; i < (MAX_SESSIONS - entries.length + 1); i++) {

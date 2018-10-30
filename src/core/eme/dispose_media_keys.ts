@@ -31,7 +31,7 @@ import MediaKeysInfosStore from "./media_keys_infos_store";
 export default function disposeMediaKeys(
   mediaElement : HTMLMediaElement,
   mediaKeysInfos : MediaKeysInfosStore
-) : Observable<null> {
+) : Observable<unknown> {
   return observableDefer(() => {
     const currentState = mediaKeysInfos.getState(mediaElement);
     if (!currentState) {
