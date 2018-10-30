@@ -40,6 +40,7 @@ import {
 import dashManifestParser, {
   dashPeriodParser
 } from "../../parsers/manifest/dash";
+import { IParsedDASHPeriod } from "../../parsers/manifest/dash/node_parsers/Period";
 import request from "../../utils/request";
 import {
   CustomManifestLoader,
@@ -63,8 +64,6 @@ import {
   parser as TextTrackParser,
 } from "./texttracks";
 import { addNextSegments } from "./utils";
-
-import { IParsedDASHPeriod } from "../../parsers/manifest/dash/node_parsers/Period";
 
 interface IDASHPeriodResult {
   periods: IParsedDASHPeriod[];

@@ -113,14 +113,12 @@ export type ILoaderObservable<T> = Observable<ILoaderEvent<T>>;
 
 // -- arguments
 
-type ISupplementalLoader = <T extends string|Document>(
-  url: string, contentType?: "text"|"document"
-) => Observable<ILoaderResponse<T>>;
-
 export interface IManifestParserArguments<T> {
   response : ILoaderResponseValue<T>;
   url : string;
-  load? : ISupplementalLoader;
+  load? : <U extends string|Document>(
+    url: string, contentType?: "text"|"document"
+  ) => Observable<ILoaderResponse<U>>;
 }
 
 export interface ISegmentParserArguments<T> {
