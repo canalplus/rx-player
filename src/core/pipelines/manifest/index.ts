@@ -95,10 +95,18 @@ export default function createManifestPipeline(
    * @returns {Observable}
    */
   return function fetchManifest(url : string) : Observable<IFetchManifestResult> {
-    function responseLoader<T extends string|Document>(
-      _url: string, _contentType?: "text"|"document"
+    /**
+     * Request content for URL, and a given content type.
+     * Return the response.
+     * @param {string} _url
+     * @param {string} contentType
+     * @returns {Observable}
+     */
+    function loadContent<T extends string|Document>(
+      _url: string,
+      contentType?: "text"|"document"
     ) {
-      return loader({ url: _url, contentType: _contentType}).pipe(
+      return loader({ url: _url, contentType }).pipe(
         tap((arg) => {
           if (arg.type === "error") {
             warning$.next(arg.value);
@@ -110,14 +118,10 @@ export default function createManifestPipeline(
       );
     }
 
-    return responseLoader(url, "document").pipe(
+    return loadContent(url, "document").pipe(
       mergeMap(({ value }) => {
-        const { sendingTime } = value;
-        return parser({
-          response: value,
-          url,
-          load: responseLoader,
-        }).pipe(
+        const { sendingTime } = value;
+        return parser({ response: value, url, load: loadContent }).pipe(
           map(({ manifest: _manifest }) => {
             const manifest = new Manifest(_manifest, warning$, transport.options);
             return {
