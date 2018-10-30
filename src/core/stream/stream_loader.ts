@@ -140,10 +140,8 @@ export default function StreamLoader({
     //    does not support adding more tracks during playback.
     createNativeSourceBuffersForPeriod(sourceBufferManager, initialPeriod);
 
-    const {
-      seek$,
-      load$,
-    } = seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
+    const { seek$, load$ } =
+      seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
 
     const bufferClock$ = createBufferClock(manifest, clock$, seek$, speed$, initialTime);
 
