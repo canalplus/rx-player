@@ -164,7 +164,7 @@ export default function(
           if (manifest.isLive) {
             manifest.presentationLiveGap = getPresentationLiveGap(manifest);
           }
-          return { manifest };
+          return { manifest, url };
         })
       );
     },
