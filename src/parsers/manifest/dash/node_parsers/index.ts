@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import objectAssign from "object-assign";
 import config from "../../../../config";
 import generateNewId from "../../../../utils/id";
 import {
@@ -65,8 +66,7 @@ export default function parseManifest(
 
   const parsedPeriods = getPeriodsFromIntermediate(
     rootChildren.periods,
-    { manifestAttributes: rootAttributes },
-    mpdRootURL
+    objectAssign(rootAttributes, { mpdRootURL })
   );
 
   const isLive : boolean = rootAttributes.type === "dynamic";

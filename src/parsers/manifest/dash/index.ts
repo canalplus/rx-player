@@ -36,7 +36,15 @@ export function dashPeriodParser(
   const domParser = new DOMParser();
   const textWithRoot = "<root>" + data + "</root>";
   const document = domParser.parseFromString(textWithRoot, "text/xml");
-  return parsePeriods(document, prevPeriodInfos, nextPeriodInfos);
+
+  const periodsStart =
+    prevPeriodInfos && prevPeriodInfos.start && prevPeriodInfos.duration ?
+      prevPeriodInfos.start + prevPeriodInfos.duration :
+      undefined;
+
+  const periodsEnd = nextPeriodInfos ? nextPeriodInfos.start : undefined;
+
+  return parsePeriods(document, periodsStart, periodsEnd);
 }
 
 /**

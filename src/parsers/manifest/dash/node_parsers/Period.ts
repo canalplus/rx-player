@@ -48,6 +48,14 @@ import ListRepresentationIndex from "../indexes/list";
 import TemplateRepresentationIndex from "../indexes/template";
 import TimelineRepresentationIndex from "../indexes/timeline";
 
+interface IManifestInfos {
+  type? : string;
+  availabilityStartTime? : number;
+  duration? : number;
+  mpdRootURL? : string;
+  timeBounds? : { start?: number; end?: number };
+}
+
 export type IParsedDASHPeriod = IParsedPeriod & {
   linkURL? : string;
 };
@@ -106,28 +114,16 @@ function createIntermediatePeriod(root: Element) {
  * @returns {Array.<Object>}
  */
 export function getPeriodsFromIntermediate(
-  rootPeriods: IPeriodIntermediateRepresentation[],
-  manifestInfos: {
-    manifestAttributes?: {
-      type?: string;
-      availabilityStartTime?: number;
-      duration?: number;
-    };
-    prevPeriodInfos?: { start?: number; duration?: number};
-    nextPeriodInfos?: { start?: number };
-  },
-  mpdRootURL?: string
+  rootPeriods : IPeriodIntermediateRepresentation[],
+  manifestInfos : IManifestInfos
 ): IParsedDASHPeriod[] {
-  const {
-    manifestAttributes,
-    prevPeriodInfos,
-    nextPeriodInfos,
-  } = manifestInfos;
+  const { timeBounds, mpdRootURL } = manifestInfos;
   const parsedPeriods : IParsedDASHPeriod[] = [];
   for (let i = 0; i < rootPeriods.length; i++) {
     const period = rootPeriods[i];
     // 1. Construct partial URL for contents
-    const periodRootURL = resolveURL(mpdRootURL, period.children.baseURL);
+    const periodRootURL =
+      resolveURL(mpdRootURL, period.children.baseURL);
     // 2. Generate ID
     let periodID : string;
     if (period.attributes.id == null) {
@@ -141,18 +137,25 @@ export function getPeriodsFromIntermediate(
   if (period.attributes.start != null) {
     periodStart = period.attributes.start;
   } else {
-    if (manifestAttributes != null && i === 0) {
+    if (timeBounds && timeBounds.start) {
+      periodStart = timeBounds.start;
+    } else if (
+      manifestInfos.type != null &&
+      i === 0
+    ) {
       periodStart = (
-        manifestAttributes.type === "static" ||
-        manifestAttributes.availabilityStartTime == null
-      ) ?  0 : manifestAttributes.availabilityStartTime;
-    } else {
-      const prevPeriod = parsedPeriods[i - 1] || prevPeriodInfos;
-      if (prevPeriod && prevPeriod.duration != null && prevPeriod.start != null) {
+        manifestInfos.type === "static" ||
+        manifestInfos.availabilityStartTime == null
+      ) ?  0 : manifestInfos.availabilityStartTime;
+    } else if (parsedPeriods[i - 1]) {
+      const prevPeriod = parsedPeriods[i - 1];
+      if (prevPeriod.duration != null && prevPeriod.start != null) {
         periodStart = prevPeriod.start + prevPeriod.duration;
       } else {
         throw new Error("Missing start time when parsing periods.");
       }
+    } else {
+      throw new Error("Missing start time when parsing periods.");
     }
   }
 
@@ -161,19 +164,18 @@ export function getPeriodsFromIntermediate(
       periodDuration = period.attributes.duration;
     } else {
       if (
-        nextPeriodInfos &&
-        nextPeriodInfos.start != null &&
+        timeBounds != null &&
+        timeBounds.end != null &&
         periodStart != null &&
         rootPeriods.length === 1
       ) {
-        periodDuration = nextPeriodInfos.start - periodStart;
+        periodDuration = timeBounds.end - periodStart;
       } else if (
         i === 0 &&
-        manifestAttributes != null &&
-        manifestAttributes.duration &&
-        !nextPeriodInfos
+        manifestInfos != null &&
+        manifestInfos.duration
       ) {
-        periodDuration = manifestAttributes.duration;
+        periodDuration = manifestInfos.duration;
       }
     }
     // 4. Construct underlying adaptations
@@ -554,8 +556,8 @@ export function getPeriodsFromIntermediate(
  */
 export function parsePeriods(
   documents: Document,
-  prevPeriodInfos: { start?: number; duration?: number}|undefined,
-  nextPeriodInfos: { start?: number }|undefined
+  periodsStart: number|undefined,
+  periodsEnd: number|undefined
 ): IParsedDASHPeriod[] {
   const root = documents.children[0];
   if (root == null || root.nodeType !== 1) {
@@ -563,15 +565,8 @@ export function parsePeriods(
   }
   const intermediatePeriods = createIntermediatePeriod(root);
 
-  const manifestInfos = {
-    prevPeriodInfos,
-    nextPeriodInfos,
-  };
-
-  return getPeriodsFromIntermediate(
-    intermediatePeriods,
-    manifestInfos
-  );
+  const timeBounds = { start: periodsStart, end: periodsEnd };
+  return getPeriodsFromIntermediate(intermediatePeriods, { timeBounds });
 }
 
 /**
