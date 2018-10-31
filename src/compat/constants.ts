@@ -81,7 +81,7 @@ interface ICompatMediaKeySystemConfiguration {
   initDataTypes?: string[];
   persistentState?: MediaKeysRequirement;
   videoCapabilities?: MediaKeySystemMediaCapability[];
-  sessionTypes: string[];
+  sessionTypes?: string[];
 }
 
 const win = window as any;
