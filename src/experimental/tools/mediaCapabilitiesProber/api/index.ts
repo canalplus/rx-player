@@ -19,6 +19,7 @@ import {
   ICompatibleKeySystem,
   IDisplayConfiguration,
   IMediaConfiguration,
+  IMediaKeySystemConfiguration,
 } from "../types";
 import probeMediaConfiguration, { IBrowserAPIS } from "./probeMediaConfiguration";
 
@@ -121,7 +122,7 @@ const mediaCapabilitiesProber = {
   getCompatibleDRMConfigurations(
     configurations: Array<{
       type: string;
-      configuration: MediaKeySystemConfiguration;
+      configuration: IMediaKeySystemConfiguration;
     }>
   ) : Promise<ICompatibleKeySystem[]> {
     const promises: Array<Promise<any>> = [];

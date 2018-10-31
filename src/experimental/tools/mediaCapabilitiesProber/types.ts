@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+export interface IMediaKeySystemConfiguration {
+  audioCapabilities?: MediaKeySystemMediaCapability[];
+  distinctiveIdentifier?: MediaKeysRequirement;
+  initDataTypes?: string[];
+  persistentState?: MediaKeysRequirement;
+  videoCapabilities?: MediaKeySystemMediaCapability[];
+  sessionTypes?: string[];
+}
+
 export interface IVideoConfiguration {
   contentType?: string;
   width?: number;
@@ -32,7 +41,7 @@ export interface IAudioConfiguration {
 
 export interface IKeySystem {
   type?: string;
-  configuration?: MediaKeySystemConfiguration;
+  configuration?: IMediaKeySystemConfiguration;
 }
 
 export interface IOutputProtectionConfiguration {
