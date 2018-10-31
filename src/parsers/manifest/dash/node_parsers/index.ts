@@ -229,7 +229,6 @@ const getLastLiveTimeReference = (
 export default function parseManifest(
   root: Element,
   uri : string
-  // contentProtectionParser?: IContentProtectionParser
 ) : IParsedManifest {
   // Transform whole MPD into a parsed JS object representation
   const {
