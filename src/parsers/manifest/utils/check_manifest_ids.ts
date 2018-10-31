@@ -19,8 +19,8 @@ import arrayIncludes from "../../../utils/array-includes";
 import { IParsedManifest } from "../types";
 
 /**
- * Ensure that no two adaptations have the same ID and that no two
- * representations from a same adaptation neither.
+ * Ensure that no two periods, adaptations from the same period and
+ * representations from the same adaptation, have the same ID.
  *
  * Log and mutate their ID if not until this is verified.
  *
@@ -29,7 +29,19 @@ import { IParsedManifest } from "../types";
 export default function checkManifestIDs(
   manifest : IParsedManifest
 ) : void {
-  manifest.periods.forEach(({ adaptations }) => {
+  const periodIDS : string[] = [];
+  manifest.periods.forEach((period) => {
+    const periodID = period.id;
+    if (arrayIncludes(periodIDS, periodID)) {
+      log.warn("Two periods with the same ID found. Updating.");
+      const newID = periodID + "-dup";
+      period.id = newID;
+      checkManifestIDs(manifest);
+      periodIDS.push(newID);
+    } else {
+      periodIDS.push(periodID);
+    }
+    const { adaptations } = period;
     const adaptationIDs : string[] = [];
     Object.keys(adaptations).forEach((type) => {
       (adaptations[type] || []).forEach(adaptation => {
