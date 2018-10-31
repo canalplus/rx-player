@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { requestMediaKeySystemAccess } from "../../../../../compat/eme/MediaKeys";
 import { IMediaConfiguration } from "../../types";
 
 export interface IPolicy {
@@ -30,60 +31,51 @@ export type IMediaKeyStatus =
   "internal-error";
 
 /**
- * @returns {Promise}
- */
-function isHDCPAPIAvailable(): Promise<void> {
-  return new Promise<void>((resolve) => {
-    if (!("requestMediaKeySystemAccess" in navigator)) {
-      throw new Error("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
-        "API not available");
-    }
-    resolve();
-  }).then(() => {
-    if (!("MediaKeys" in window)) {
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "MediaKeys API not available");
-    }
-    if (!("getStatusForPolicy" in (window as any).MediaKeys as any)) {
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "getStatusForPolicy API not available");
-    }
-  });
-}
-
-/**
  * @param {Object} config
  * @returns {Promise}
  */
 export default function probeHDCPPolicy(config: IMediaConfiguration): Promise<[number]> {
-  return isHDCPAPIAvailable().then(() => {
-    if (config.hdcp) {
-      const hdcp = "hdcp-" + config.hdcp;
-      const object = { minHdcpVersion: hdcp };
-
-      const keySystem = "w3.org.clearkey";
-      const drmConfig = {
-        initDataTypes: ["cenc"],
-        videoCapabilities: [],
-        audioCapabilities: [],
-        distinctiveIdentifier: "optional",
-        persistentState: "optional",
-        sessionTypes: ["temporary"],
-      };
-        return (window as any).requestMediaKeySystemAccess(keySystem, drmConfig)
-          .then((mediaKeys: MediaKeys) => {
-            (mediaKeys as any).getStatusForPolicy(object)
-              .then((result: IMediaKeyStatus) => {
-                if (result === "usable") {
-                  return [2];
-                } else {
-                  return [0];
-                }
-              });
-          });
-    }
-
+  if (requestMediaKeySystemAccess == null) {
+    throw new Error("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
+      "API not available");
+  }
+  if (!("MediaKeys" in window)) {
     throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-      "Not enough arguments for calling getStatusForPolicy.");
-  });
+      "MediaKeys API not available");
+  }
+  if (!("getStatusForPolicy" in (window as any).MediaKeys as any)) {
+    throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+      "getStatusForPolicy API not available");
+  }
+  if (config.hdcp) {
+    const hdcp = "hdcp-" + config.hdcp;
+    const object = { minHdcpVersion: hdcp };
+
+    const keySystem = "w3.org.clearkey";
+    const drmConfig = {
+      initDataTypes: ["cenc"],
+      videoCapabilities: [],
+      audioCapabilities: [],
+      distinctiveIdentifier: "optional" as "optional",
+      persistentState: "optional" as "optional",
+      sessionTypes: ["temporary"],
+    };
+    return requestMediaKeySystemAccess(keySystem, [drmConfig]).toPromise()
+      .then((mediaKeys) => {
+        return (mediaKeys as any).getStatusForPolicy(object)
+          .then((result: IMediaKeyStatus) => {
+            if (result === "usable") {
+              return [2];
+            } else {
+              return [0];
+            }
+          })
+          .catch(() => {
+            return [0];
+          });
+      });
+  }
+
+  throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+    "Not enough arguments for calling getStatusForPolicy.");
 }
