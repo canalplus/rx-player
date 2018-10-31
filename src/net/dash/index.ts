@@ -40,6 +40,7 @@ import {
 import dashManifestParser, {
   dashPeriodParser
 } from "../../parsers/manifest/dash";
+import { IParsedDASHManifest } from "../../parsers/manifest/dash/node_parsers";
 import { IParsedDASHPeriod } from "../../parsers/manifest/dash/node_parsers/Period";
 import request from "../../utils/request";
 import {
@@ -118,20 +119,20 @@ export default function(
 
       /**
        * Load and parse unloaded periods from their link URL.
-       * @param {Array.<Object>} periods
+       * @param {Object} manifest
        * @returns {Observable}
        */
-      function getPeriods$(
-        periods: IParsedDASHPeriod[]
-      ): Observable<IParsedDASHPeriod[]> {
+      function getPeriodsForManifest$(
+        _manifest: IParsedDASHManifest
+      ): Observable<IParsedDASHManifest> {
         const periods$: Array<Observable<IParsedDASHPeriod|IParsedDASHPeriod[]>> =
-          periods.map((period, i) => {
+          _manifest.periods.map((period, i) => {
             const { linkURL } = period;
             if (linkURL && load) {
               return load(linkURL).pipe(
                 map(({ value: { responseData } }) => {
-                  const prevPeriodInfos = periods[i - 1];
-                  const nextPeriodInfos = periods[i + 1];
+                  const prevPeriodInfos = _manifest.periods[i - 1];
+                  const nextPeriodInfos = _manifest.periods[i + 1];
                   return dashPeriodParser(responseData, prevPeriodInfos, nextPeriodInfos);
                 })
               );
@@ -157,24 +158,23 @@ export default function(
 
           mergeMap(({ periods: __periods, isComplete }) => {
             if (isComplete) {
-              return observableOf(__periods);
+              _manifest.periods = __periods;
+              return observableOf(_manifest);
             } else {
               // In the case where there are still unloaded periods,
               // recursively get periods.
-              return getPeriods$(__periods);
+              return getPeriodsForManifest$(_manifest);
             }
           })
         );
       }
 
-      return getPeriods$(manifest.periods).pipe(
-        map((periods) => {
-          delete manifest.periods;
-          manifest.periods = periods;
-          if (manifest.isLive) {
-            manifest.presentationLiveGap = getPresentationLiveGap(manifest);
+      return getPeriodsForManifest$(manifest).pipe(
+        map((newManifest) => {
+          if (newManifest.isLive) {
+            newManifest.presentationLiveGap = getPresentationLiveGap(manifest);
           }
-          return { manifest, url };
+          return { manifest: newManifest, url };
         })
       );
     },
