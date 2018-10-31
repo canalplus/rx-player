@@ -22,6 +22,7 @@ import {
   filter,
   map,
   mergeMap,
+  share,
   tap,
 } from "rxjs/operators";
 import { ICustomError } from "../../../errors";
@@ -123,14 +124,14 @@ export default function createManifestPipeline(
         const { sendingTime } = value;
         return parser({ response: value, url, load: loadContent }).pipe(
           map(({ manifest: _manifest }) => {
-            const manifest = new Manifest(_manifest, warning$, transport.options);
             return {
-              manifest,
+              manifest: new Manifest(_manifest, warning$, transport.options),
               sendingTime,
             };
           })
         );
-      })
+      }),
+      share()
     );
   };
 }
