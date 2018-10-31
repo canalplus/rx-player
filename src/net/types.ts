@@ -116,7 +116,7 @@ export type ILoaderObservable<T> = Observable<ILoaderEvent<T>>;
 export interface IManifestParserArguments<T> {
   response : ILoaderResponseValue<T>;
   url : string;
-  load? : <U extends string|Document>(
+  load : <U extends string|Document>(
     url: string, contentType?: "text"|"document"
   ) => Observable<ILoaderResponse<U>>;
 }
