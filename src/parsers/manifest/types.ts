@@ -78,16 +78,6 @@ export interface IParsedAdaptation {
   subsegmentAlignment?: number|boolean;
 }
 
-export interface ILinkedPeriod {
-  // required
-  id : string;
-  start : number;
-  linkURL: string;
-  resolveAtLoad : boolean;
-  end? : number;
-  duration? : number;
-}
-
 export interface IParsedPeriod {
   // required
   id : string;
