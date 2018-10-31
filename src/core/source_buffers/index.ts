@@ -251,7 +251,9 @@ export default class SourceBufferManager {
     if (memorizedSourceBuffer == null) {
       return;
     }
+
     log.info("SB: Aborting source buffer", bufferType);
+    memorizedSourceBuffer.sourceBuffer.dispose();
     if (
       !shouldHaveNativeSourceBuffer(bufferType) ||
       this._mediaSource.readyState === "open"

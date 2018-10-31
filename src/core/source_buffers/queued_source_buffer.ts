@@ -247,19 +247,28 @@ export default class QueuedSourceBuffer<T> {
   }
 
   /**
-   * Abort the linked SourceBuffer and dispose of the ressources used by this
-   * QueuedSourceBuffer.
+   * Dispose of the resources used by this QueuedSourceBuffer.
    *
    * /!\ You won't be able to use the QueuedSourceBuffer after calling this
    * function.
    * @private
    */
-  public abort() : void {
+  public dispose() : void {
     this._buffer.removeEventListener("update", this.__onUpdate);
     this._buffer.removeEventListener("error", this.__onError);
     this._buffer.removeEventListener("updateend", this.__flush);
     this._queue.length = 0;
     this._flushing = null;
+  }
+
+  /**
+   * Abort the linked SourceBuffer.
+   *
+   * /!\ You won't be able to use the QueuedSourceBuffer after calling this
+   * function.
+   * @private
+   */
+  public abort() {
     this._buffer.abort();
   }
 
