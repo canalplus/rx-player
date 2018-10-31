@@ -71,7 +71,7 @@ export default function probeHDCPPolicy(config: IMediaConfiguration): Promise<[n
             }
           })
           .catch(() => {
-            return [0];
+            return [1];
           });
       });
   }
