@@ -57,7 +57,6 @@ import {
 interface IDASHOptions {
   manifestLoader? : CustomManifestLoader;
   segmentLoader? : CustomSegmentLoader;
-  // contentProtectionParser? : IContentProtectionParser;
 }
 
 /**
@@ -73,7 +72,6 @@ export default function(
     customManifestLoader: options.manifestLoader,
   });
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
-  // const { contentProtectionParser } = options;
 
   const manifestPipeline = {
     loader(
