@@ -42,6 +42,7 @@ import {
   ILoaderEvent,
   ILoaderProgress,
   ILoaderResponseValue,
+  ITransportManifestPipeline,
   ITransportPipeline,
 } from "../../net/types";
 import castToObservable from "../../utils/castToObservable";
@@ -122,6 +123,7 @@ export interface IPipelineLoaderOptions<T, U> {
   };
   maxRetry : number;
   maxRetryOffline : number;
+  loadingSubpartContent? : boolean;
 }
 
 /**
@@ -168,8 +170,18 @@ export default function createLoader<T, U>(
   transportPipeline : ITransportPipeline,
   options : IPipelineLoaderOptions<T, U>
 ) : (x : T) => Observable<IPipelineLoaderEvent<T, U>> {
-  const { cache, maxRetry, maxRetryOffline } = options;
-  const { loader } = transportPipeline;
+  const { cache, maxRetry, maxRetryOffline, loadingSubpartContent } = options;
+
+  const loader = (() => {
+    if (loadingSubpartContent) {
+      if ((transportPipeline as ITransportManifestPipeline).subpartLoader) {
+        return (transportPipeline as ITransportManifestPipeline).subpartLoader;
+      } else {
+        throw new Error("Can't load subpart of this content for type.");
+      }
+    }
+    return transportPipeline.loader;
+  })();
 
   // TODO Remove the resolver completely
   const resolver = (transportPipeline as any).resolver != null ?

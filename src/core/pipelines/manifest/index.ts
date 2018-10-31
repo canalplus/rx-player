@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import objectAssign from "object-assign";
 import {
   Observable,
   Subject,
@@ -90,6 +91,14 @@ export default function createManifestPipeline(
     IManifestResult
   >(transport.pipelines.manifest);
 
+  const subpartPipelineOptions = objectAssign({}, pipelineOptions, {
+    loadingSubpartContent: true,
+  });
+
+  const subpartLoader = createLoader<
+    IManifestLoaderArguments, Document|string
+  >(transport.pipelines.manifest, subpartPipelineOptions);
+
   /**
    * Fetch and parse the manifest corresponding to the URL given.
    * @param {string} url - URL of the manifest
@@ -103,11 +112,8 @@ export default function createManifestPipeline(
      * @param {string} contentType
      * @returns {Observable}
      */
-    function loadContent<T extends string|Document>(
-      _url: string,
-      contentType?: "text"|"document"
-    ) {
-      return loader({ url: _url, contentType }).pipe(
+    function loadContent<T extends string|Document>(_url: string) {
+      return loader({ url: _url }).pipe(
         tap((arg) => {
           if (arg.type === "error") {
             warning$.next(arg.value);
@@ -119,10 +125,23 @@ export default function createManifestPipeline(
       );
     }
 
-    return loadContent(url, "document").pipe(
+    function loadSubpartContent(_url: string) {
+      return subpartLoader({ url: _url }).pipe(
+        tap((arg) => {
+          if (arg.type === "error") {
+            warning$.next(arg.value);
+          }
+        }),
+        filter((arg) : arg is IPipelineLoaderResponse<string> =>
+          arg.type === "response"
+        )
+      );
+    }
+
+    return loadContent(url).pipe(
       mergeMap(({ value }) => {
         const { sendingTime } = value;
-        return parser({ response: value, url, load: loadContent }).pipe(
+        return parser({ response: value, url, load: loadSubpartContent }).pipe(
           map(({ manifest: _manifest }) => {
             return {
               manifest: new Manifest(_manifest, warning$, transport.options),

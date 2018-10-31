@@ -55,7 +55,7 @@ import {
   ITransportPipelines,
   SegmentParserObservable,
 } from "../types";
-import generateManifestLoader from "../utils/manifest_loader";
+import generateManifestLoader, { generateSubpartLoader } from "../utils/manifest_loader";
 import getPresentationLiveGap from "./get_presentation_live_gap";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 import generateSegmentLoader from "./segment_loader";
@@ -87,13 +87,23 @@ export default function(
   const manifestLoader = generateManifestLoader({
     customManifestLoader: options.manifestLoader,
   });
+  const periodLoader = generateSubpartLoader(
+    { customManifestLoader: options.manifestLoader },
+    "text"
+  );
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
 
   const manifestPipeline = {
     loader(
-      { url, contentType } : IManifestLoaderArguments
+      { url } : IManifestLoaderArguments
     ) : ILoaderObservable<Document|string> {
-      return manifestLoader(url, contentType);
+      return manifestLoader(url);
+    },
+
+    subpartLoader(
+      { url } : IManifestLoaderArguments
+    ) : ILoaderObservable<string> {
+      return periodLoader(url);
     },
 
     parser(
@@ -118,7 +128,7 @@ export default function(
           periods.map((period, i) => {
             const { linkURL } = period;
             if (linkURL && load) {
-              return load<string>(linkURL, "text").pipe(
+              return load(linkURL).pipe(
                 map(({ value: { responseData } }) => {
                   const prevPeriodInfos = periods[i - 1];
                   const nextPeriodInfos = periods[i + 1];

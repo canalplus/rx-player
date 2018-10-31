@@ -29,13 +29,19 @@ import { IParsedDASHManifest } from "./node_parsers";
  * @returns {Object} - parsed periods
  */
 export function dashPeriodParser(
-  data: string,
+  data: string|Document,
   prevPeriodInfos: { start?: number; duration?: number }|undefined,
   nextPeriodInfos: { start?: number }|undefined
 ): IParsedDASHPeriod[] {
-  const domParser = new DOMParser();
-  const textWithRoot = "<root>" + data + "</root>";
-  const document = domParser.parseFromString(textWithRoot, "text/xml");
+  const document = (() => {
+    if (typeof data === "object") {
+      return data;
+    } else {
+      const domParser = new DOMParser();
+      const textWithRoot = "<root>" + data + "</root>";
+      return domParser.parseFromString(textWithRoot, "text/xml");
+    }
+  })();
 
   const periodsStart =
     prevPeriodInfos && prevPeriodInfos.start && prevPeriodInfos.duration ?

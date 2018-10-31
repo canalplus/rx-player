@@ -56,7 +56,6 @@ export interface INextSegmentsInfos {
 // loader argument for the manifest pipeline
 export interface IManifestLoaderArguments {
   url : string; // URL of the concerned manifest;
-  contentType?: "text"|"document";
 }
 
 // loader argument for every other pipelines
@@ -116,9 +115,7 @@ export type ILoaderObservable<T> = Observable<ILoaderEvent<T>>;
 export interface IManifestParserArguments<T> {
   response : ILoaderResponseValue<T>;
   url : string;
-  load : <U extends string|Document>(
-    url: string, contentType?: "text"|"document"
-  ) => Observable<ILoaderResponse<U>>;
+  load : (url: string) => Observable<ILoaderResponse<string|Document>>;
 }
 
 export interface ISegmentParserArguments<T> {
@@ -191,11 +188,13 @@ export type ImageParserObservable = Observable<{
                           // "real" wanted effective times.
 }>;
 
-interface ITransportManifestPipeline {
+export interface ITransportManifestPipeline {
   // TODO Remove resolver
   resolver?: (x : IManifestLoaderArguments) =>
     Observable<IManifestLoaderArguments>;
   loader: (x : IManifestLoaderArguments) =>
+    ILoaderObservable<Document|string>;
+  subpartLoader?: (x : IManifestLoaderArguments) =>
     ILoaderObservable<Document|string>;
   parser: (x : IManifestParserArguments<Document|string>) =>
     IManifestParserObservable;

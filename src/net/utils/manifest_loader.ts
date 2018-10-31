@@ -17,6 +17,7 @@
 import { Observable } from "rxjs";
 import request from "../../utils/request";
 
+import log from "../../log";
 import {
   CustomManifestLoader,
   ILoaderObservable,
@@ -27,17 +28,35 @@ import {
  * Manifest loader triggered if there was no custom-defined one in the API.
  * @param {string} url
  */
-function regularManifestLoader(
+function regularManifestLoader<T extends string|Document>(
   url: string,
-  ignoreProgressEvents?: true,
-  responseType?: "text"|"document"
+  responseType: "text"|"document",
+  ignoreProgressEvents?: true
 ) {
-  return request<Document|string>({
+  return request<T>({
     url,
     responseType,
     ignoreProgressEvents,
   });
 }
+
+/**
+ * Generate a subpart loader for the application.
+ */
+export const generateSubpartLoader = (
+  options: {
+    ignoreProgressEvents?: true;
+    customManifestLoader?: CustomManifestLoader;
+  },
+  responseType: "text"|"document"
+) => {
+  const { ignoreProgressEvents, customManifestLoader } = options;
+  if (customManifestLoader) {
+    log.warn("Can't use custom manifest loader to load manifest subparts.");
+  }
+  return (url: string) =>
+    regularManifestLoader<string>(url, responseType, ignoreProgressEvents);
+};
 
 /**
  * Generate a manifest loader for the application
@@ -48,12 +67,10 @@ const manifestPreLoader = (
   options: {
     customManifestLoader?: CustomManifestLoader;
     ignoreProgressEvents?: true;
-  }) => (
-    url: string, responseType?: "text"|"document"
-  ) : ILoaderObservable<Document|string> => {
+  }) => (url: string) : ILoaderObservable<Document|string> => {
     const { customManifestLoader, ignoreProgressEvents } = options;
     if (!customManifestLoader) {
-      return regularManifestLoader(url, ignoreProgressEvents, responseType);
+      return regularManifestLoader(url, "document", ignoreProgressEvents);
     }
 
     return Observable.create((obs: ILoaderObserver<Document|string>) => {
@@ -103,7 +120,7 @@ const manifestPreLoader = (
        */
       const fallback = () => {
         hasFallbacked = true;
-        regularManifestLoader(url).subscribe(obs);
+        regularManifestLoader(url, "document").subscribe(obs);
       };
 
       const callbacks = { reject, resolve, fallback };
