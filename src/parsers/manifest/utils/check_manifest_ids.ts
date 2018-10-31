@@ -27,7 +27,7 @@ import { IParsedAdaptations } from "../types";
  * @param {Object} manifest
  */
 export default function checkManifestIDs(
-  manifest : { periods: Array<{ adaptations: IParsedAdaptations }> }
+  manifest : { periods: Array<{ id: string; adaptations: IParsedAdaptations }> }
 ) : void {
   const periodIDS : string[] = [];
   manifest.periods.forEach((period) => {

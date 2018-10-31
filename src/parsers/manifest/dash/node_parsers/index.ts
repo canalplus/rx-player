@@ -21,35 +21,14 @@ import {
   normalizeBaseURL,
   resolveURL,
 } from "../../../../utils/url";
+import { IParsedManifest } from "../../types";
 import checkManifestIDs from "../../utils/check_manifest_ids";
 import { getPeriodsFromIntermediate } from "../node_parsers/Period";
-import {
-  createMPDIntermediateRepresentation,
-} from "./MPD";
+import { createMPDIntermediateRepresentation } from "./MPD";
 import { IParsedDASHPeriod } from "./Period";
 
-export interface IParsedDASHManifest {
-  // required
-  availabilityStartTime : number;
-  duration: number;
-  id: string;
+export interface IParsedDASHManifest extends IParsedManifest {
   periods: IParsedDASHPeriod[];
-  isLive : boolean;
-  uris: string[]; // uris where the manifest can be refreshed
-  transportType: "dash";
-
-  // optional
-  availabilityEndTime?: number;
-  maxSegmentDuration?: number;
-  maxSubsegmentDuration?: number;
-  minBufferTime?: number;
-  minimumTime? : number;
-  minimumUpdatePeriod?: number;
-  presentationLiveGap?: number;
-  profiles?: string;
-  publishTime?: number;
-  suggestedPresentationDelay?: number;
-  timeShiftBufferDepth?: number;
 }
 
 export default function parseManifest(
