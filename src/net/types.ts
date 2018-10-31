@@ -257,9 +257,6 @@ export interface ITransportOptions {
   referenceDateTime? : number;
   minRepresentationBitrate? : number;
   keySystems? : (hex? : Uint8Array) => IParsedKeySystem[];
-
-  // dash only
-  // contentProtectionParser? : IContentProtectionParser;
 }
 
 export type ITransportFunction = (options? : ITransportOptions) =>
