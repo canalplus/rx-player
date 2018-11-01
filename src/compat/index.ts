@@ -34,12 +34,16 @@ import {
   ICompatMediaKeySystemConfiguration,
   ICompatTextTrack,
   ICompatVTTCue,
-  isFirefox,
-  isIE,
   MediaSource_,
   READY_STATES,
   VTTCue_,
 } from "./constants";
+import {
+  isFirefox,
+  isIE,
+  isSamsungBrowser,
+  getFirefoxMajorVersion,
+} from "./userAgents";
 import * as events from "./events";
 import {
   exitFullscreen,
@@ -417,6 +421,7 @@ export {
   clearElementSrc,
   events,
   exitFullscreen,
+  getFirefoxMajorVersion,
   getInitData,
   hasEMEAPIs,
   hasLoadedMetadata,
@@ -424,6 +429,7 @@ export {
   isFirefox,
   isFullscreen,
   isIE,
+  isSamsungBrowser,
   isOffline,
   isPlaybackStuck,
   isVTTCue,

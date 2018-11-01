@@ -66,6 +66,9 @@ import {
   exitFullscreen,
   isFullscreen,
   requestFullscreen,
+  isFirefox,
+  getFirefoxMajorVersion,
+  isSamsungBrowser
 } from "../../compat";
 import {
   isInBackground$,
@@ -516,10 +519,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       stopAtEnd,
     } = parseConstructorOptions(options);
 
-    // Workaround to support Firefox autoplay on FF 42.
-    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
-    videoElement.preload = "auto";
-
     this.version = /*PLAYER_VERSION*/"3.8.1";
     this.log = log;
     this.state = "STOPPED";
@@ -694,6 +693,19 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this.stop();
 
     const isDirectFile = transport === "directfile";
+
+    // Workaround to support Firefox autoplay on FF 42.
+    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
+    const firefoxMajorVersion = getFirefoxMajorVersion();
+    if (isFirefox && firefoxMajorVersion !== null && firefoxMajorVersion <= 44) {
+      this.videoElement.preload = "auto";
+    }
+    // Samsung Internet does not follow the preload hint, and will always
+    // prevent preload. However, if preload is not strictly set to "none",
+    // it will falsly emit loadedmetadata and canplay.
+    else if(isDirectFile && isSamsungBrowser) {
+      this.videoElement.preload = "none";
+    }
 
     this._priv_currentError = null;
     this._priv_contentInfos = {
