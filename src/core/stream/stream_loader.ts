@@ -162,11 +162,11 @@ export default function StreamLoader({
       mergeMap((evt) : Observable<IStreamLoaderEvent> => {
         switch (evt.type) {
           case "end-of-stream":
-            log.debug("Stream: call endOfStream");
+            log.debug("Stream: end-of-stream order received.");
             return maintainEndOfStream(mediaSource)
               .pipe(ignoreElements(), takeUntil(cancelEndOfStream$));
           case "resume-stream":
-            log.debug("Stream: cancel endOfStream");
+            log.debug("Stream: resume-stream order received.");
             cancelEndOfStream$.next(null);
             return EMPTY;
           case "discontinuity-encountered":
