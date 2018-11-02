@@ -36,6 +36,7 @@ tmpStylesDir=$(mktemp -d)
 tmpDemoFile=$(mktemp)
 tmpRxPlayerFile=$(mktemp)
 tmpIndexFile=$(mktemp)
+tmpFaviconFile=$(mktemp)
 
 # Generate demo
 npm run demo:min
@@ -44,6 +45,7 @@ cp -r demo/full/assets $tmpAssetsDir -v
 cp -r demo/full/styles $tmpStylesDir -v
 cp demo/full/bundle.js $tmpDemoFile -v
 cp demo/full/index.html $tmpIndexFile -v
+cp demo/full/favicon.ico $tmpFaviconFile -v
 cp dist/rx-player.min.js $tmpRxPlayerFile -v
 
 if [ -n "$(git status --porcelain demo/full)" ]; then
@@ -76,6 +78,7 @@ if [ -n "$(git status --porcelain demo/full)" ]; then
       rm -r $tmpAssetsDir
       rm -r $tmpStylesDir
       rm $tmpIndexFile
+      rm $tmpFaviconFile
       rm $tmpRxPlayerFile $tmpDemoFile
       exit 0
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
@@ -108,6 +111,7 @@ mv $tmpFontsDir/fonts .
 mv $tmpAssetsDir/assets .
 mv $tmpStylesDir/styles .
 mv $tmpIndexFile index.html
+mv $tmpFaviconFile favicon.ico
 mv $tmpRxPlayerFile lib.js
 mv $tmpDemoFile bundle.js
 
