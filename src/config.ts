@@ -397,6 +397,17 @@ export default {
   OUT_OF_STARVATION_GAP: 7,
 
   /**
+   * This is a security to avoid going into starvation mode when the content is
+   * ending (@see ABR_STARVATION_GAP).
+   * Basically, we subtract that value from the global duration of the content
+   * and we never enter "starvation mode" if the currently available buffer
+   * (which equals to the current position + the available buffer ahead of it)
+   * is equal or higher than this value.
+   * @type {Number}
+   */
+  ABR_STARVATION_DURATION_DELTA: 0.1,
+
+  /**
    * Half-life, in seconds for a fastly-evolving exponential weighted moving
    * average.
    * The lower it is, the faster the ABR logic will react to the bandwidth

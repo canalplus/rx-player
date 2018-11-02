@@ -41,6 +41,7 @@ import fromBitrateCeil from "./fromBitrateCeil";
 
 const {
   ABR_REGULAR_FACTOR,
+  ABR_STARVATION_DURATION_DELTA,
   ABR_STARVATION_FACTOR,
   ABR_STARVATION_GAP,
   OUT_OF_STARVATION_GAP,
@@ -65,6 +66,7 @@ interface IRepresentationChooserClockTick {
   bufferGap : number; // time to the end of the buffer, in seconds
   currentTime : number; // current position, in seconds
   speed : number; // current playback rate
+  duration : number; // whole duration of the content
 }
 
 interface IProgressEventValue {
@@ -437,13 +439,18 @@ export default class RepresentationChooser {
           map(([ clock, maxAutoBitrate, deviceEvents ]) => {
             let newBitrateCeil; // bitrate ceil for the chosen Representation
             let bandwidthEstimate;
-            const { bufferGap } = clock;
+            const { bufferGap, currentTime, duration } = clock;
 
             // check if should get in/out of starvation mode
-            if (!inStarvationMode && bufferGap <= ABR_STARVATION_GAP) {
-              log.info("ABR: enter starvation mode.");
-              inStarvationMode = true;
-            } else if (inStarvationMode && bufferGap >= OUT_OF_STARVATION_GAP) {
+            if (bufferGap + currentTime < duration - ABR_STARVATION_DURATION_DELTA) {
+              if (!inStarvationMode && bufferGap <= ABR_STARVATION_GAP) {
+                log.info("ABR: enter starvation mode.");
+                inStarvationMode = true;
+              } else if (inStarvationMode && bufferGap >= OUT_OF_STARVATION_GAP) {
+                log.info("ABR: exit starvation mode.");
+                inStarvationMode = false;
+              }
+            } else if (inStarvationMode) {
               log.info("ABR: exit starvation mode.");
               inStarvationMode = false;
             }
