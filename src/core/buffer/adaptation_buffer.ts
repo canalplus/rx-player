@@ -80,6 +80,7 @@ export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTi
   speed : number;
   bufferGap : number;
   readyState : number;
+  duration : number;
 }
 
 /**
