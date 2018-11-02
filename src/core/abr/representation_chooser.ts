@@ -513,7 +513,6 @@ export default class RepresentationChooser {
 
           tap(({ bitrate }) => {
             if (bitrate != null) {
-              log.debug("ABR: calculated bitrate:", bitrate);
               lastEstimatedBitrate = bitrate;
             }
           }),

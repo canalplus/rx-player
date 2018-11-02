@@ -144,7 +144,11 @@ export default function AdaptationBuffer<T>(
   // Emit at each bitrate estimate done by the ABRManager
   const bitrateEstimate$ = abr$.pipe(
     filter(({ bitrate }) => bitrate != null),
-    map(({ bitrate }) => EVENTS.bitrateEstimationChange(adaptation.type, bitrate))
+    distinctUntilChanged((old, current) => old.bitrate === current.bitrate),
+    map(({ bitrate }) => {
+      log.debug(`Buffer: new ${adaptation.type} bitrate estimation`, bitrate);
+      return EVENTS.bitrateEstimationChange(adaptation.type, bitrate);
+    })
   );
 
   const adaptationBuffer$ = abr$.pipe(
