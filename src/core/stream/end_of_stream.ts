@@ -15,7 +15,6 @@
  */
 
 import {
-  concat as observableConcat,
   defer as observableDefer,
   merge as observableMerge,
   Observable,
@@ -23,8 +22,9 @@ import {
   race as observableRace,
 } from "rxjs";
 import {
-  concatMapTo,
   mergeMap,
+  startWith,
+  switchMap,
   take,
   takeLast,
 } from "rxjs/operators";
@@ -67,8 +67,9 @@ export default function triggerEndOfStream(
   mediaSource : MediaSource
 ) : Observable<null> {
   return observableDefer(() => {
+    log.debug("Stream: Trying to call endOfStream");
     if (mediaSource.readyState !== "open") {
-      // already done, exit
+      log.debug("Stream: MediaSource not open, cancel endOfStream");
       return observableOf(null);
     }
 
@@ -81,15 +82,13 @@ export default function triggerEndOfStream(
       return observableOf(null);
     }
 
+    log.debug("Stream: Waiting SourceBuffers to be updated before calling endOfStream.");
     const updatedSourceBuffers$ = updatingSourceBuffers
-      .map(onUpdate$);
+      .map((sourceBuffer) => onUpdate$(sourceBuffer).pipe(take(1)));
 
     return observableRace(
-      observableMerge(...updatedSourceBuffers$)
-        .pipe(takeLast(1)),
-
-      onRemoveSourceBuffers$(sourceBuffers)
-        .pipe(take(1))
+      observableMerge(...updatedSourceBuffers$).pipe(takeLast(1)),
+      onRemoveSourceBuffers$(sourceBuffers).pipe(take(1))
     ).pipe(mergeMap(() => {
       return triggerEndOfStream(mediaSource);
     }));
@@ -103,9 +102,8 @@ export default function triggerEndOfStream(
  * @returns {Observable}
  */
 export function maintainEndOfStream(mediaSource : MediaSource) : Observable<null> {
-  return observableConcat(
-    triggerEndOfStream(mediaSource),
-    onSourceOpen$(mediaSource)
-      .pipe(concatMapTo(triggerEndOfStream(mediaSource)))
+  return onSourceOpen$(mediaSource).pipe(
+    startWith(null),
+    switchMap(() => triggerEndOfStream(mediaSource))
   );
 }
