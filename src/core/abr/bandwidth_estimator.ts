@@ -18,11 +18,15 @@ import config from "../../config";
 import EWMA from "./ewma";
 
 const {
-  ABR_MINIMUM_TOTAL_BYTES,
   ABR_MINIMUM_CHUNK_SIZE,
   ABR_FAST_EMA,
   ABR_SLOW_EMA,
 } = config;
+
+export interface IBandwidthEstimatorEstimate {
+  bitrate : number|undefined; // The calculated bitrate
+  bytesSampled : number; // the number of bytes at the basis of this estimate
+}
 
 /**
  * Calculate a mean bandwidth based on the bytes downloaded and the amount
@@ -81,14 +85,21 @@ export default class BandwidthEstimator {
    * Get estimate of the bandwidth, in bits per seconds.
    * @returns {Number|undefined}
    */
-  public getEstimate() : number|undefined {
-    if (this._bytesSampled < ABR_MINIMUM_TOTAL_BYTES) {
-      return undefined;
+  public getEstimate() : IBandwidthEstimatorEstimate {
+    const fastEstimate = this._fastEWMA.getEstimate();
+    if (fastEstimate == null) {
+      return { bitrate: undefined, bytesSampled: this._bytesSampled };
+    }
+
+    const slowEstimate = this._slowEWMA.getEstimate();
+    if (slowEstimate == null) {
+      return { bitrate: undefined, bytesSampled: this._bytesSampled };
     }
 
     // Take the minimum of these two estimates.  This should have the effect of
     // adapting down quickly, but up more slowly.
-    return Math.min(this._fastEWMA.getEstimate(), this._slowEWMA.getEstimate());
+    const bitrate = Math.min(fastEstimate, slowEstimate);
+    return { bitrate, bytesSampled: this._bytesSampled };
   }
 
   /**

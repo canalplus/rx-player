@@ -667,6 +667,13 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @throws Error - throws if the asked transport does not exist
    */
   loadVideo(opts : ILoadVideoOptions) : void {
+    console.time("loadVideo");
+    this.addEventListener("playerStateChange", (state) => {
+      if (state === "LOADED") {
+        console.timeEnd("loadVideo");
+        console.timeEnd("manifest");
+      }
+    });
     const options = parseLoadVideoOptions(opts);
     log.info("API: Calling loadvideo", options);
 

@@ -50,8 +50,8 @@ export default class EWMA {
   /**
    * @returns {number} value
    */
-  public getEstimate() : number {
+  public getEstimate() : number|undefined {
     const zeroFactor = 1 - Math.pow(this._alpha, this._totalWeight);
-    return this._lastEstimate / zeroFactor;
+    return zeroFactor ? this._lastEstimate / zeroFactor : undefined;
   }
 }

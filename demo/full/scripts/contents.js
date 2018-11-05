@@ -1,11 +1,5 @@
 export default [
   {
-    "name": "DASH-IF - SegmentTimeline live stream",
-    "url": "https://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
-    "transport": "dash",
-    "live": true,
-  },
-  {
     "name": "Tears of Steal (clear)",
     "url": "https://www.bok.net/dash/tears_of_steel/cleartext/stream.mpd",
     "transport": "dash",

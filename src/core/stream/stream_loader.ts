@@ -117,6 +117,7 @@ export default function StreamLoader({
     initialTime : number,
     autoPlay : boolean
   ) {
+    console.time("manifest");
     setDurationToMediaSource(mediaSource, manifest.getDuration());
 
     const initialPeriod = manifest.getPeriodForTime(initialTime);
@@ -173,9 +174,22 @@ export default function StreamLoader({
               mediaElement.currentTime = evt.value.nextTime;
             }
             return EMPTY;
-          default:
-            return observableOf(evt);
+
+            case "bitrateEstimationChange": {
+              const { type } = evt.value;
+              if (!sourceBufferManager.has(type)) {
+                log.error("StreamLoader: representationChange event received" +
+                  " but no SourceBuffer of that type was found.");
+              } else {
+                const qsb = sourceBufferManager.get(type);
+                if (qsb.isLocked()) {
+                  qsb.unlock();
+                }
+              }
+              break;
+            }
         }
+        return observableOf(evt);
       })
     );
 
@@ -211,31 +225,50 @@ export default function StreamLoader({
       sourceBufferManager.disposeAll();
     }));
   };
+}
 
-  /**
-   * Create all native SourceBuffers needed for a given Period.
-   *
-   * Native Buffers have the particulary to need to be created at the beginning of
-   * the content.
-   * Custom source buffers (entirely managed in JS) can generally be created and
-   * disposed at will during the lifecycle of the content.
-   * @param {SourceBufferManager} sourceBufferManager
-   * @param {Period} period
-   */
-  function createNativeSourceBuffersForPeriod(
-    sourceBufferManager : SourceBufferManager,
-    period : Period
-  ) : void {
-    Object.keys(period.adaptations).forEach(bufferType => {
-      if (SourceBufferManager.isNative(bufferType)) {
-        const adaptations = period.adaptations[bufferType] || [];
-        const representations = adaptations ?
-          adaptations[0].representations : [];
-        if (representations.length) {
-          const codec = representations[0].getMimeTypeString();
+/**
+ * Create all native SourceBuffers needed for a given Period.
+ *
+ * Native Buffers have the particulary to need to be created at the beginning of
+ * the content.
+ * Custom source buffers (entirely managed in JS) can generally be created and
+ * disposed at will during the lifecycle of the content.
+ * @param {SourceBufferManager} sourceBufferManager
+ * @param {Period} period
+ */
+function createNativeSourceBuffersForPeriod(
+  sourceBufferManager : SourceBufferManager,
+  // XXX TODO
+  // shouldLock,
+  period : Period
+) : void {
+  Object.keys(period.adaptations).forEach(bufferType => {
+    if (SourceBufferManager.isNative(bufferType)) {
+      const adaptations = period.adaptations[bufferType] || [];
+      const representations = adaptations ?
+        adaptations[0].representations : [];
+      if (representations.length) {
+        const codec = representations[0].getMimeTypeString();
+        // sourceBufferManager.createSourceBuffer(bufferType, codec);
+        // XXX TODO
+        const queuedSourceBuffer =
           sourceBufferManager.createSourceBuffer(bufferType, codec);
+        if (bufferType === "video") {
+          queuedSourceBuffer.lock();
         }
+        // if (shouldLock) {
+        //   queuedSourceBuffer.lock();
+        // }
       }
-    });
-  }
+    }
+  });
+
+  // window.ooops =  function() {
+  //   Object.keys(period.adaptations).forEach(bufferType => {
+  //     if (SourceBufferManager.isNative(bufferType)) {
+  //       sourceBufferManager.get(bufferType).unlock();
+  //     }
+  //   });
+  // };
 }
