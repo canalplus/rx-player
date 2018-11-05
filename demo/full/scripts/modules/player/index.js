@@ -39,7 +39,6 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
     images: [],
     isBuffering: false,
     isContentLoaded: false,
-    isFullscreen: player.isFullscreen(),
     isLive: false,
     isLoading: false,
     isPaused: false,
@@ -114,14 +113,6 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
 
     UNMUTE: () => {
       player.unMute();
-    },
-
-    SET_FULL_SCREEN: () => {
-      player.setFullscreen(true);
-    },
-
-    EXIT_FULL_SCREEN: () => {
-      player.setFullscreen(false);
     },
 
     SET_AUDIO_BITRATE: (bitrate) => {
