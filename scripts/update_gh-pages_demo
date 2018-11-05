@@ -45,7 +45,7 @@ cp -r demo/full/assets $tmpAssetsDir -v
 cp -r demo/full/styles $tmpStylesDir -v
 cp demo/full/bundle.js $tmpDemoFile -v
 cp demo/full/index.html $tmpIndexFile -v
-cp demo/full/favicon.ico $tmpFaviconFile -v
+cp demo/full/plus.ico $tmpFaviconFile -v
 cp dist/rx-player.min.js $tmpRxPlayerFile -v
 
 if [ -n "$(git status --porcelain demo/full)" ]; then
@@ -111,7 +111,7 @@ mv $tmpFontsDir/fonts .
 mv $tmpAssetsDir/assets .
 mv $tmpStylesDir/styles .
 mv $tmpIndexFile index.html
-mv $tmpFaviconFile favicon.ico
+mv $tmpFaviconFile plus.ico
 mv $tmpRxPlayerFile lib.js
 mv $tmpDemoFile bundle.js
 
