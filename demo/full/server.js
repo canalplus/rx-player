@@ -140,6 +140,13 @@ Promise.all([
       /* eslint-enable no-console */
     });
   }
+}, (err) => {
+  if (err.code === "ENOENT") {
+    console.warn("Not launching the demo in HTTPS: certificate not generated.");
+    console.info("You can run `npm run certificate` to generate a certificate.")
+  } else {
+    console.error(err);
+  }
 });
 
 function getHumanReadableHours() {
