@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-import { requestMediaKeySystemAccess } from "../../../../../compat/eme/MediaKeys";
+import { requestMediaKeySystemAccess } from "../../../../../compat";
 import { IMediaConfiguration } from "../../types";
-
-export interface IPolicy {
-  minHdcpVersion: string;
-}
 
 export type IMediaKeyStatus =
   "usable" |
@@ -47,35 +43,36 @@ export default function probeHDCPPolicy(config: IMediaConfiguration): Promise<[n
     throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
       "getStatusForPolicy API not available");
   }
-  if (config.hdcp) {
-    const hdcp = "hdcp-" + config.hdcp;
-    const object = { minHdcpVersion: hdcp };
 
-    const keySystem = "w3.org.clearkey";
-    const drmConfig = {
-      initDataTypes: ["cenc"],
-      videoCapabilities: [],
-      audioCapabilities: [],
-      distinctiveIdentifier: "optional" as "optional",
-      persistentState: "optional" as "optional",
-      sessionTypes: ["temporary"],
-    };
-    return requestMediaKeySystemAccess(keySystem, [drmConfig]).toPromise()
-      .then((mediaKeys) => {
-        return (mediaKeys as any).getStatusForPolicy(object)
-          .then((result: IMediaKeyStatus) => {
-            if (result === "usable") {
-              return [2];
-            } else {
-              return [0];
-            }
-          })
-          .catch(() => {
-            return [1];
-          });
-      });
+  if (config.hdcp == null) {
+    throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+      "Missing policy argument for calling getStatusForPolicy.");
   }
 
-  throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-    "Not enough arguments for calling getStatusForPolicy.");
+  const hdcp = "hdcp-" + config.hdcp;
+  const policy = { minHdcpVersion: hdcp };
+
+  const keySystem = "w3.org.clearkey";
+  const drmConfig = {
+    initDataTypes: ["cenc"],
+    videoCapabilities: [],
+    audioCapabilities: [],
+    distinctiveIdentifier: "optional" as "optional",
+    persistentState: "optional" as "optional",
+    sessionTypes: ["temporary"],
+  };
+  return requestMediaKeySystemAccess(keySystem, [drmConfig]).toPromise()
+  .then((mediaKeys) => {
+    return (mediaKeys as any).getStatusForPolicy(policy)
+      .then((result: IMediaKeyStatus) => {
+        if (result === "usable") {
+          return [2];
+        } else {
+          return [0];
+        }
+      })
+      .catch(() => {
+        return [1];
+      });
+  });
 }
