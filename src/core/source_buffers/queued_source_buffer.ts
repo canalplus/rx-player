@@ -140,6 +140,15 @@ export default class QueuedSourceBuffer<T> {
   private readonly __onUpdateEnd : (x : Event) => void;
 
   /**
+   * Lock status.
+   * When the QueuedSourceBuffer is locked, no queued order is performed until
+   * it is unlocked.
+   * @private
+   * @type {Boolean}
+   */
+  private _isLocked : boolean;
+
+  /**
    * Queue of awaited buffer orders.
    * The first element in this array will be the first performed.
    * @private
@@ -188,6 +197,7 @@ export default class QueuedSourceBuffer<T> {
     this._sourceBuffer = sourceBuffer;
     this._queue = [];
     this._currentOrder = null;
+    this._isLocked = false;
     this._lastInitSegment = null;
     this._currentCodec = codec;
 
@@ -195,6 +205,32 @@ export default class QueuedSourceBuffer<T> {
     this.__onUpdateEnd = this._onUpdateEnd.bind(this);
     this._sourceBuffer.addEventListener("error", this.__onError);
     this._sourceBuffer.addEventListener("updateend", this.__onUpdateEnd);
+  }
+
+  /**
+   * Lock the QueuedSourceBuffer.
+   * No queued action will be performed until the QueuedSourceBuffer is
+   * unlocked.
+   */
+  lock() : void {
+    this._isLocked = true;
+  }
+  /**
+   * Returns true if the QueuedSourceBuffer is currently in the locked state.
+   * @see lock
+   * @see unlock
+   * @returns {Boolean}
+   */
+  isLocked() : boolean {
+    return this._isLocked;
+  }
+  /**
+   * Unlock the QueuedSourceBuffer.
+   * Every actions in Queue will be done sequentially.
+   */
+  unlock() : void {
+    this._isLocked = false;
+    this._flush();
   }
 
   /**
@@ -280,7 +316,9 @@ export default class QueuedSourceBuffer<T> {
    * @private
    */
   private _onUpdateEnd() : void {
-    this._flush();
+    if (!this.isLocked()) {
+      this._flush();
+    }
   }
 
   /**
@@ -297,7 +335,7 @@ export default class QueuedSourceBuffer<T> {
   /**
    * When the returned observable is subscribed:
    *   1. Add your order to the queue.
-   *   2. Begin the queue if not pending.
+   *   2. Begin the queue if not pending and not locked.
    *
    * Cancel queued order on unsubscription.
    * @private
@@ -306,7 +344,8 @@ export default class QueuedSourceBuffer<T> {
    */
   private _addToQueue(order : IQSBOrders<T>) : Observable<unknown> {
     return Observable.create((obs : Observer<unknown>) => {
-      const shouldRestartQueue = this._queue.length === 0 && this._currentOrder == null;
+      const shouldRestartQueue = !this.isLocked() &&
+        this._queue.length === 0 && this._currentOrder == null;
       let queueItem : IQSBQueueItems<T>;
       const subject = new Subject<unknown>();
 
@@ -355,7 +394,7 @@ export default class QueuedSourceBuffer<T> {
    * @private
    */
   private _flush() : void {
-    if (this._sourceBuffer.updating) {
+    if (this.isLocked() || this._sourceBuffer.updating) {
       return;
     }
 
