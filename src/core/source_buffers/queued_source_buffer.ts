@@ -136,7 +136,6 @@ export default class QueuedSourceBuffer<T> {
 
   // Binded references to corresponding private methods.
   // Used for binding/removing an event listener.
-  private readonly __onUpdate : (x: Event) => void;
   private readonly __onError : (x : Event) => void;
   private readonly __onUpdateEnd : (x : Event) => void;
 
@@ -192,10 +191,8 @@ export default class QueuedSourceBuffer<T> {
     this._lastInitSegment = null;
     this._currentCodec = codec;
 
-    this.__onUpdate = this._onUpdate.bind(this);
     this.__onError = this._onError.bind(this);
-    this.__onUpdateEnd = this._onUpdate.bind(this);
-    this._sourceBuffer.addEventListener("update", this.__onUpdate);
+    this.__onUpdateEnd = this._onUpdateEnd.bind(this);
     this._sourceBuffer.addEventListener("error", this.__onError);
     this._sourceBuffer.addEventListener("updateend", this.__onUpdateEnd);
   }
@@ -251,7 +248,6 @@ export default class QueuedSourceBuffer<T> {
    * @private
    */
   public dispose() : void {
-    this._sourceBuffer.removeEventListener("update", this.__onUpdate);
     this._sourceBuffer.removeEventListener("error", this.__onError);
     this._sourceBuffer.removeEventListener("updateend", this.__onUpdateEnd);
 
@@ -280,10 +276,10 @@ export default class QueuedSourceBuffer<T> {
   }
 
   /**
-   * Callback used for the 'update' event, as a segment has been added/removed.
+   * Callback used for the 'updateend' event, as a segment has been added/removed.
    * @private
    */
-  private _onUpdate() : void {
+  private _onUpdateEnd() : void {
     this._flush();
   }
 
