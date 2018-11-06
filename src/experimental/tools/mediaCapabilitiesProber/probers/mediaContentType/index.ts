@@ -32,7 +32,7 @@ export default function probeContentType(
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "MediaSource API not available");
     }
-    if (typeof MediaSource_.isTypeSupported !== "string") {
+    if (typeof MediaSource_.isTypeSupported !== "function") {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "isTypeSupported not available");
     }
