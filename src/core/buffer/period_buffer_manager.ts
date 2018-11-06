@@ -443,14 +443,13 @@ export default function PeriodBufferManager(
     return adaptation$.pipe(switchMap((adaptation) => {
       if (adaptation == null) {
         log.info(`Buffer: Set no ${bufferType} Adaptation`, period);
-        let cleanBuffer$ : Observable<null>;
+        let cleanBuffer$ : Observable<unknown>;
 
         if (sourceBufferManager.has(bufferType)) {
           log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
           const _qSourceBuffer = sourceBufferManager.get(bufferType);
           cleanBuffer$ = _qSourceBuffer
-            .removeBuffer(period.start, period.end || Infinity)
-            .pipe(mapTo(null));
+            .removeBuffer(period.start, period.end || Infinity);
         } else {
           cleanBuffer$ = observableOf(null);
         }

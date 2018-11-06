@@ -23,7 +23,6 @@ import {
 import {
   catchError,
   ignoreElements,
-  mapTo,
 } from "rxjs/operators";
 import { ICustomMediaKeys } from "../../compat";
 import {
@@ -61,7 +60,7 @@ type TypedArray =
 function setServerCertificate(
   mediaKeys : ICustomMediaKeys|MediaKeys,
   serverCertificate : ArrayBuffer|TypedArray
-) : Observable<null> {
+) : Observable<unknown> {
   return observableDefer(() => {
     return castToObservable(
       (mediaKeys as MediaKeys).setServerCertificate(serverCertificate)
@@ -69,7 +68,7 @@ function setServerCertificate(
       log.warn("EME: mediaKeys.setServerCertificate returned an error", error);
       throw new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", error, true);
     }));
-  }).pipe(mapTo(null));
+  });
 }
 
 /**
