@@ -18,7 +18,8 @@ import { requestMediaKeySystemAccess } from "../../../../../compat";
 import log from "../../log";
 import {
   ICompatibleKeySystem,
-  IMediaConfiguration
+  IMediaConfiguration,
+  ProberStatus,
 } from "../../types";
 
 export interface IMediaKeySystemInfos {
@@ -32,14 +33,14 @@ export interface IMediaKeySystemInfos {
  */
 export default function probeDRMInfos(
   mediaConfig: IMediaConfiguration
-): Promise<[number, ICompatibleKeySystem?]> {
+): Promise<[ProberStatus, ICompatibleKeySystem?]> {
   return new Promise((resolve) => {
     if (requestMediaKeySystemAccess == null) {
       log.warn("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
         "Your browser has no API to request a media key system access.");
       // In that case, the API lack means that no EME workflow may be started.
       // So, the DRM configuration is not supported.
-      resolve([0]);
+      resolve([ProberStatus.NotSupported]);
       return;
     }
 
@@ -58,11 +59,11 @@ export default function probeDRMInfos(
           configuration,
           compatibleConfiguration: keySystemAccess.getConfiguration(),
         };
-        resolve([2, result]);
+        resolve([ProberStatus.Supported, result]);
       })
       .catch(() => {
         const result = { type, configuration };
-        resolve([0, result]);
+        resolve([ProberStatus.NotSupported, result]);
       });
   });
 }
