@@ -70,7 +70,5 @@ export default function setMediaKeys$(
   elt : HTMLMediaElement,
   mediaKeys : MediaKeys|ICustomMediaKeys|null
 ) : Observable<unknown> {
-  return observableDefer(() =>
-    castToObservable(_setMediaKeys(elt, mediaKeys))
-  );
+  return observableDefer(() => castToObservable(_setMediaKeys(elt, mediaKeys)));
 }
