@@ -15,7 +15,10 @@
  */
 
 import { requestMediaKeySystemAccess } from "../../../../../compat";
-import { IMediaConfiguration } from "../../types";
+import {
+  IMediaConfiguration,
+  ProberStatus,
+} from "../../types";
 
 export type IMediaKeyStatus =
   "usable" |
@@ -30,7 +33,9 @@ export type IMediaKeyStatus =
  * @param {Object} config
  * @returns {Promise}
  */
-export default function probeHDCPPolicy(config: IMediaConfiguration): Promise<[number]> {
+export default function probeHDCPPolicy(
+  config: IMediaConfiguration
+): Promise<[ProberStatus]> {
   if (requestMediaKeySystemAccess == null) {
     throw new Error("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
       "API not available");
@@ -66,13 +71,13 @@ export default function probeHDCPPolicy(config: IMediaConfiguration): Promise<[n
     return (mediaKeys as any).getStatusForPolicy(policy)
       .then((result: IMediaKeyStatus) => {
         if (result === "usable") {
-          return [2];
+          return [ProberStatus.Supported];
         } else {
-          return [0];
+          return [ProberStatus.NotSupported];
         }
       })
       .catch(() => {
-        return [1];
+        return [ProberStatus.Unknown];
       });
   });
 }

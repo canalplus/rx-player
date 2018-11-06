@@ -14,26 +14,17 @@
  * limitations under the License.
  */
 
-import {
-  IAudioConfiguration,
-  IDisplayConfiguration,
-  IVideoConfiguration,
-} from "../../types";
+import { IMediaConfiguration } from "../../types";
 import { findDefaultVideoCodec } from "../defaultCodecsFinder";
 
 /**
- * @param {Object} [video]
- * @param {Object} [outputProtection]
- * @param {Object} [audio]
- * @param {Object} [display]
+ * @param {Object} config
  * @returns {string|null}
  */
 export default function formatTypeSupportedWithFeaturesConfigForAPI(
-  video?: IVideoConfiguration,
-  outputHdcp?: string,
-  audio?: IAudioConfiguration,
-  display?: IDisplayConfiguration
+  config : IMediaConfiguration
 ): string|null {
+  const { video, audio, hdcp: outputHdcp, display } = config;
   let str: string|null = null;
   const defaultVideoCodec = findDefaultVideoCodec();
   const contentType = video ?

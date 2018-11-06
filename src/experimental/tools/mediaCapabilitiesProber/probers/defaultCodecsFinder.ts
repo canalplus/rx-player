@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { MediaSource_ } from "../../../../compat";
+
  /**
   * Check if one of given video codecs are supported for decode.
   * These video codecs are chose for their wide proven compatibility and
@@ -21,17 +23,19 @@
   * @returns {string}
   */
 export function findDefaultVideoCodec(): string {
-  const videoCodecs =
-    ["video/mp4; codecs=\"avc1.4D401E\"", "video/webm; codecs=\"vp09.00.10.08\""];
-  if (!(window as any).MediaSource || !(window as any).MediaSource.isTypeSupported) {
-    throw new Error();
+  const videoCodecs = [
+    "video/mp4; codecs=\"avc1.4D401E\"",
+    "video/webm; codecs=\"vp09.00.10.08\"",
+  ];
+  if (MediaSource_ == null || typeof MediaSource_.isTypeSupported !== "function") {
+    throw new Error("Cannot check video codec support: No API available.");
   }
   for (const codec of videoCodecs) {
-    if ((window as any).MediaSource.isTypeSupported(codec)) {
+    if (MediaSource_.isTypeSupported(codec)) {
       return codec;
     }
   }
-  throw new Error();
+  throw new Error("No default video codec found.");
 }
 
 /**
@@ -41,14 +45,17 @@ export function findDefaultVideoCodec(): string {
  * @returns {string}
  */
 export function findDefaultAudioCodec(): string {
-  const audioCodecs = ["audio/webm; codecs=opus", "audio/mp4; codecs=\"mp4a.40.2\""];
-  if (!(window as any).MediaSource || !(window as any).MediaSource.isTypeSupported) {
-    throw new Error();
+  const audioCodecs = [
+    "audio/webm; codecs=opus",
+    "audio/mp4; codecs=\"mp4a.40.2\"",
+  ];
+  if (MediaSource_ == null || typeof MediaSource_.isTypeSupported !== "function") {
+    throw new Error("Cannot check audio codec support: No API available.");
   }
   for (const codec of audioCodecs) {
-    if ((window as any).MediaSource.isTypeSupported(codec)) {
+    if (MediaSource_.isTypeSupported(codec)) {
       return codec;
     }
   }
-  throw new Error();
+  throw new Error("No default audio codec found.");
 }
