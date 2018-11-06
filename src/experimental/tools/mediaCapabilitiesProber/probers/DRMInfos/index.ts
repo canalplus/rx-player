@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { requestMediaKeySystemAccess } from "../../../../../compat/eme/MediaKeys";
+import { requestMediaKeySystemAccess } from "../../../../../compat";
 import log from "../../log";
 import {
   ICompatibleKeySystem,
@@ -36,37 +36,33 @@ export default function probeDRMInfos(
   return new Promise((resolve) => {
     if (requestMediaKeySystemAccess == null) {
       log.warn("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
-        "No API to get media key system acces.");
+        "Your browser has no API to request a media key system access.");
       // In that case, the API lack means that no EME workflow may be started.
       // So, the DRM configuration is not supported.
       resolve([0]);
-    } else {
-      const keySystem = mediaConfig.keySystem;
-      if (keySystem) {
-        if (keySystem.type) {
-          const type = keySystem.type;
-          const configuration = keySystem.configuration || {};
-          return requestMediaKeySystemAccess(type, [configuration]).toPromise()
-            .then((keySystemAccess) => {
-              const keySystemConfiguration = keySystemAccess.getConfiguration();
-              const result: ICompatibleKeySystem = {
-                type,
-                configuration,
-                compatibleConfiguration: keySystemConfiguration,
-              };
-              resolve([2, result]);
-            })
-            .catch(() => {
-              const result = {
-                type,
-                configuration,
-              };
-              resolve([0, result]);
-            });
-        }
-      }
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "Not enough arguments for calling requestMediaKeySystemAccess.");
+      return;
     }
+
+    const keySystem = mediaConfig.keySystem;
+    if (keySystem == null || keySystem.type == null) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "Missing a type argument to request a media key system access.");
+    }
+
+    const type = keySystem.type;
+    const configuration = keySystem.configuration || {};
+    return requestMediaKeySystemAccess(type, [configuration]).toPromise()
+      .then((keySystemAccess) => {
+        const result: ICompatibleKeySystem = {
+          type,
+          configuration,
+          compatibleConfiguration: keySystemAccess.getConfiguration(),
+        };
+        resolve([2, result]);
+      })
+      .catch(() => {
+        const result = { type, configuration };
+        resolve([0, result]);
+      });
   });
 }
