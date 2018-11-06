@@ -97,6 +97,17 @@ Promise.all([
       /* eslint-enable no-console */
     });
   }
+}, (err) => {
+  if (err.code === "ENOENT") {
+    /* eslint-disable no-console */
+    console.warn("Not launching the demo in HTTPS: certificate not generated.");
+    console.info("You can run `npm run certificate` to generate a certificate.");
+    /* eslint-enable no-console */
+  } else {
+    /* eslint-disable no-console */
+    console.error(err);
+    /* eslint-enable no-console */
+  }
 });
 
 function getHumanReadableHours() {
