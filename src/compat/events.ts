@@ -205,12 +205,11 @@ function videoWidth$(mediaElement : HTMLMediaElement) : Observable<number> {
   return observableMerge(
     observableInterval(20000),
     videoSizeChange().pipe(debounceTime(500))
-  )
-    .pipe(
-      startWith(null), // emit on subscription
-      map(() => mediaElement.clientWidth * pixelRatio),
-      distinctUntilChanged()
-    );
+  ).pipe(
+    startWith(null), // emit on subscription
+    map(() => mediaElement.clientWidth * pixelRatio),
+    distinctUntilChanged()
+  );
 }
 
 /**
