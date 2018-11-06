@@ -316,9 +316,7 @@ export default class QueuedSourceBuffer<T> {
    * @private
    */
   private _onUpdateEnd() : void {
-    if (!this.isLocked()) {
-      this._flush();
-    }
+    this._flush();
   }
 
   /**
@@ -344,8 +342,7 @@ export default class QueuedSourceBuffer<T> {
    */
   private _addToQueue(order : IQSBOrders<T>) : Observable<unknown> {
     return Observable.create((obs : Observer<unknown>) => {
-      const shouldRestartQueue = !this.isLocked() &&
-        this._queue.length === 0 && this._currentOrder == null;
+      const shouldRestartQueue = this._queue.length === 0 && this._currentOrder == null;
       let queueItem : IQSBQueueItems<T>;
       const subject = new Subject<unknown>();
 
