@@ -306,6 +306,7 @@ export default class QueuedSourceBuffer<T> {
    */
   private _addToQueue(order : IQSBOrders<T>) : Observable<unknown> {
     return Observable.create((obs : Observer<unknown>) => {
+      const shouldRestartQueue = this._queue.length === 0 && this._currentOrder == null;
       let queueItem : IQSBQueueItems<T>;
       const subject = new Subject<unknown>();
 
@@ -335,9 +336,10 @@ export default class QueuedSourceBuffer<T> {
       this._queue.push(queueItem);
 
       const subscription = subject.subscribe(obs);
-      if (this._currentOrder == null) {
+      if (shouldRestartQueue) {
         this._flush();
       }
+
       return () => {
         subscription.unsubscribe();
         const index = this._queue.indexOf(queueItem);
