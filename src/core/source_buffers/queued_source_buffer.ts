@@ -359,7 +359,7 @@ export default class QueuedSourceBuffer<T> {
           log.warn("QSB: no segment to append.", this.bufferType);
           obs.next(null);
           obs.complete();
-          return;
+          return undefined;
         }
         queueItem = {
           type: SourceBufferAction.Append,
