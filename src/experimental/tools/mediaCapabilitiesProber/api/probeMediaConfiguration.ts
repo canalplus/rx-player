@@ -72,15 +72,27 @@ async function probeMediaConfiguration(
       promises.push(probeWithBrowser(config).then(([currentStatus, result]) => {
         resultsFromAPIS.push({ APIName: browserAPI, result });
 
-        // /!\ This code might be too smart. But it should work.
-        if (
-          globalStatus !== ProberStatus.NotSupported && (
-            currentStatus === ProberStatus.NotSupported ||
-            currentStatus === ProberStatus.Unknown ||
-            globalStatus == null
-          )
-        ) {
+        if (globalStatus == null) {
           globalStatus = currentStatus;
+        } else {
+          switch (currentStatus) {
+            // Here, globalStatus can't be null. Hence, if the new current status is
+            // 'worse' than global status, then re-assign the latter.
+            case ProberStatus.NotSupported:
+              // `NotSupported` is either worse or equal.
+              globalStatus = ProberStatus.NotSupported;
+              break;
+            case ProberStatus.Unknown:
+              // `Unknown` is worse than 'Supported' only.
+              if (globalStatus === ProberStatus.Supported) {
+                globalStatus = ProberStatus.Unknown;
+              }
+              break;
+            default:
+              // new status is either 'Supported' or unknonw status. Global status
+              // shouldn't be changed.
+              break;
+          }
         }
       }).catch((err) => {
         switch (wantedLogLevel) {
