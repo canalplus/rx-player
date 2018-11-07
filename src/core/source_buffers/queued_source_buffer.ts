@@ -297,6 +297,7 @@ export default class QueuedSourceBuffer<T> {
    * @param {Event} error
    */
   private _onError(error : Event) : void {
+    this._lastInitSegment = null; // initialize init segment as a security
     if (this._currentOrder != null) {
       this._currentOrder.subject.error(error);
     }
@@ -449,6 +450,9 @@ export default class QueuedSourceBuffer<T> {
           }
 
           log.debug("QSB: pushing new data to source buffer", this.bufferType);
+          if (isInit) {
+            this._lastInitSegment = segment;
+          }
           this._sourceBuffer.appendBuffer(segment);
           break;
         case SourceBufferAction.Remove:
