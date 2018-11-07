@@ -106,9 +106,8 @@ async function probeMediaConfiguration(
 
   await Promise.all(promises);
 
-  // XXX TODO This was roughly the old behavior. Is that wanted?
   if (globalStatus == null) {
-    globalStatus = ProberStatus.NotSupported;
+    globalStatus = ProberStatus.Unknown;
   }
 
   const probedCapabilities =
@@ -116,10 +115,7 @@ async function probeMediaConfiguration(
   const areUnprobedCapabilities =
     JSON.stringify(probedCapabilities).length !== JSON.stringify(config).length;
 
-  if (
-    areUnprobedCapabilities && (
-      globalStatus == null || globalStatus === ProberStatus.Supported)
-  ) {
+  if (areUnprobedCapabilities && globalStatus === ProberStatus.Supported) {
     globalStatus = ProberStatus.Unknown;
   }
 
