@@ -60,7 +60,7 @@ function doInitialSeek(
 
       // equivalent to a sane shareReplay:
       // https://github.com/ReactiveX/rxjs/issues/3336
-      // TODO Replace it when that issue is resolved
+      // XXX TODO Replace it when that issue is resolved
       multicast(() => new ReplaySubject(1)),
       refCount()
     );
@@ -118,7 +118,7 @@ export default function seekAndLoadOnMediaEvents(
 
     // equivalent to a sane shareReplay:
     // https://github.com/ReactiveX/rxjs/issues/3336
-    // TODO Replace it when that issue is resolved
+    // XXX TODO Replace it when that issue is resolved
     multicast(() => new ReplaySubject(1)),
     refCount()
   );
