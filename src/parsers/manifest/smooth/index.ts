@@ -526,7 +526,7 @@ function createSmoothStreamingParser(
       uris: [url],
       minimumTime,
       periods: [{
-        id: "gen-smooth-period-0",
+        id: "gen-smooth-period-" + generateNewId(),
         duration,
         adaptations,
         start: 0,
