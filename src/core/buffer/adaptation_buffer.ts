@@ -131,7 +131,7 @@ export default function AdaptationBuffer<T>(
     abrManager.get$(adaptation.type, abrClock$, adaptation.representations).pipe(
       // equivalent to a sane shareReplay:
       // https://github.com/ReactiveX/rxjs/issues/3336
-      // TODO Replace it when that issue is resolved
+      // XXX TODO Replace it when that issue is resolved
       multicast(() => new ReplaySubject(1)),
       refCount()
     );
