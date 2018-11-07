@@ -27,7 +27,7 @@ import {
 export default function probeContentType(
   config: IMediaConfiguration
 ): Promise<[ProberStatus]> {
-  return new Promise(() => {
+  return new Promise((resolve) => {
     if (MediaSource_ == null) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "MediaSource API not available");
@@ -49,9 +49,9 @@ export default function probeContentType(
     }
     for (let i = 0; i < contentTypes.length; i++) {
       if (!MediaSource_.isTypeSupported(contentTypes[i])) {
-        return [ProberStatus.NotSupported];
+        resolve([ProberStatus.NotSupported]);
       }
     }
-    return [ProberStatus.Supported];
+    return resolve([ProberStatus.Supported]);
   });
 }
