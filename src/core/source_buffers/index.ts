@@ -75,14 +75,6 @@ export type ISourceBufferOptions =
 // Types of "native" SourceBuffers
 type INativeSourceBufferType = "audio" | "video";
 
-interface ICreatedSourceBuffer<T> {
-  codec : string;
-  sourceBuffer : QueuedSourceBuffer<T>;
-}
-
-type ICreatedNativeSourceBuffer =
-  ICreatedSourceBuffer<ArrayBuffer|ArrayBufferView|TypedArray|DataView|null>;
-
 /**
  * Allows to easily create and dispose SourceBuffers.
  *
@@ -115,10 +107,10 @@ export default class SourceBufferManager {
   private readonly _mediaSource : MediaSource;
 
   private _initializedSourceBuffers : {
-    audio? : ICreatedNativeSourceBuffer;
-    video? : ICreatedNativeSourceBuffer;
-    text? : ICreatedSourceBuffer<unknown>;
-    image? : ICreatedSourceBuffer<unknown>;
+    audio? : QueuedSourceBuffer<ArrayBuffer|ArrayBufferView|TypedArray|DataView|null>;
+    video? : QueuedSourceBuffer<ArrayBuffer|ArrayBufferView|TypedArray|DataView|null>;
+    text? : QueuedSourceBuffer<unknown>;
+    image? : QueuedSourceBuffer<unknown>;
   };
 
   /**
@@ -150,11 +142,11 @@ export default class SourceBufferManager {
    * @returns {QueuedSourceBuffer}
    */
   public get(bufferType : IBufferType) : QueuedSourceBuffer<any> {
-    const sourceBufferInfos = this._initializedSourceBuffers[bufferType];
-    if (!sourceBufferInfos) {
+    const sourceBuffer = this._initializedSourceBuffers[bufferType];
+    if (!sourceBuffer) {
       throw new Error(`SourceBufferManager: no ${bufferType} initialized yet`);
     }
-    return sourceBufferInfos.sourceBuffer;
+    return sourceBuffer;
   }
 
   /**
@@ -180,21 +172,18 @@ export default class SourceBufferManager {
         } else {
           log.info("SB: Reusing native SourceBuffer with codec", codec);
         }
-        return memorizedSourceBuffer.sourceBuffer;
+        return memorizedSourceBuffer;
       }
       log.info("SB: Adding native SourceBuffer with codec", codec);
       const nativeSourceBuffer =
         createNativeQueuedSourceBuffer(bufferType, this._mediaSource, codec);
-      this._initializedSourceBuffers[bufferType] = {
-        codec,
-        sourceBuffer: nativeSourceBuffer,
-      };
+      this._initializedSourceBuffers[bufferType] = nativeSourceBuffer;
       return nativeSourceBuffer;
     }
 
     if (memorizedSourceBuffer) {
       log.info("SB: Reusing a previous custom SourceBuffer for the type", bufferType);
-      return memorizedSourceBuffer.sourceBuffer;
+      return memorizedSourceBuffer;
     }
 
     if (bufferType === "text") {
@@ -217,11 +206,7 @@ export default class SourceBufferManager {
 
       const queuedSourceBuffer =
         new QueuedSourceBuffer<unknown>("text", codec, sourceBuffer);
-
-      this._initializedSourceBuffers.text = {
-        codec,
-        sourceBuffer: queuedSourceBuffer,
-      };
+      this._initializedSourceBuffers.text = queuedSourceBuffer;
       return queuedSourceBuffer;
     } else if (bufferType === "image") {
       if (features.imageBuffer == null) {
@@ -231,10 +216,7 @@ export default class SourceBufferManager {
       const sourceBuffer = new features.imageBuffer();
       const queuedSourceBuffer =
         new QueuedSourceBuffer<unknown>("image", codec, sourceBuffer);
-      this._initializedSourceBuffers.image = {
-        codec,
-        sourceBuffer: queuedSourceBuffer,
-      };
+      this._initializedSourceBuffers.image = queuedSourceBuffer;
       return queuedSourceBuffer;
     }
 
@@ -253,13 +235,13 @@ export default class SourceBufferManager {
     }
 
     log.info("SB: Aborting source buffer", bufferType);
-    memorizedSourceBuffer.sourceBuffer.dispose();
+    memorizedSourceBuffer.dispose();
     if (
       !shouldHaveNativeSourceBuffer(bufferType) ||
       this._mediaSource.readyState === "open"
     ) {
       try {
-        memorizedSourceBuffer.sourceBuffer.abort();
+        memorizedSourceBuffer.abort();
       } catch (e) {
         log.warn(`SB: Failed to abort a ${bufferType} SourceBuffer:`, e);
       }

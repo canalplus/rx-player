@@ -176,6 +176,14 @@ export default class QueuedSourceBuffer<T> {
   private _currentCodec : string;
 
   /**
+   * Public access to the SourceBuffer's current codec.
+   * @returns {string}
+   */
+  public get codec() : string {
+    return this._currentCodec;
+  }
+
+  /**
    * @constructor
    * @param {SourceBuffer} sourceBuffer
    */
