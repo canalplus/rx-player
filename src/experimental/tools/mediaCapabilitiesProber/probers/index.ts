@@ -30,15 +30,15 @@ import {
 export type IResultsFromAPI = ICompatibleKeySystem;
 
 const probers: {
-  [id: string]: [(config: IMediaConfiguration) =>
-    Promise<[ProberStatus, IResultsFromAPI?]>, string];
+  [id: string]: (config: IMediaConfiguration) =>
+    Promise<[ProberStatus, IResultsFromAPI?]>;
 } = {
-  isTypeSupported: [probeFromMediaContentType, "warn"],
-  isTypeSupportedWithFeatures: [probeFromMediaContentTypeWithFeatures, "debug"],
-  matchMedia: [probeFromMediaDisplayInfos, "warn"],
-  decodingInfos: [probeFromDecodingConfig, "warn"],
-  requestMediaKeySystemAccess: [probeFromDRMInfos, "warn"],
-  getStatusForPolicy: [probeFromHDCPPolicy, "warn"],
+  isTypeSupported: probeFromMediaContentType,
+  isTypeSupportedWithFeatures: probeFromMediaContentTypeWithFeatures,
+  matchMedia: probeFromMediaDisplayInfos,
+  decodingInfos: probeFromDecodingConfig,
+  requestMediaKeySystemAccess: probeFromDRMInfos,
+  getStatusForPolicy: probeFromHDCPPolicy,
 };
 
 export default probers;

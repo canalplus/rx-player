@@ -66,8 +66,7 @@ async function probeMediaConfiguration(
   }> = [];
   const promises = [];
   for (const browserAPI of browserAPIS) {
-    const probeWithBrowser = probers[browserAPI][0];
-    const wantedLogLevel = probers[browserAPI][1];
+    const probeWithBrowser = probers[browserAPI];
     if (probeWithBrowser) {
       promises.push(probeWithBrowser(config).then(([currentStatus, result]) => {
         resultsFromAPIS.push({ APIName: browserAPI, result });
@@ -95,23 +94,7 @@ async function probeMediaConfiguration(
           }
         }
       }).catch((err) => {
-        switch (wantedLogLevel) {
-          case "warn":
-            log.warn(err);
-            break;
-          case "debug":
-            log.debug(err);
-            break;
-          case "info":
-            log.info(err);
-            break;
-          case "error":
-            log.error(err);
-            break;
-          default:
-            log.debug(err);
-            break;
-        }
+        log.warn(err);
       }));
     }
   }
@@ -134,7 +117,7 @@ async function probeMediaConfiguration(
   if (areUnprobedCapabilities) {
     log.warn("MediaCapabilitiesProber >>> PROBER: Some capabilities could not " +
       "be probed, due to the incompatibility of browser APIs, or the lack of arguments " +
-      "to call them. (See DEBUG logs for details)");
+      "to call them.");
   }
 
   log.info("MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",
