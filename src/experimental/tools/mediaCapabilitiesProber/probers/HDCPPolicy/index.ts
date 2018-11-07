@@ -46,7 +46,7 @@ export default function probeHDCPPolicy(
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "MediaKeys API not available");
     }
-    if (!("getStatusForPolicy" in (window as any).MediaKeys as any)) {
+    if (!("getStatusForPolicy" in ((window as any).MediaKeys as any).prototype)) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "getStatusForPolicy API not available");
     }
@@ -59,29 +59,35 @@ export default function probeHDCPPolicy(
     const hdcp = "hdcp-" + config.hdcp;
     const policy = { minHdcpVersion: hdcp };
 
-    const keySystem = "w3.org.clearkey";
+    const keySystem = "org.w3.clearkey";
     const drmConfig = {
       initDataTypes: ["cenc"],
-      videoCapabilities: [],
-      audioCapabilities: [],
-      distinctiveIdentifier: "optional" as "optional",
-      persistentState: "optional" as "optional",
-      sessionTypes: ["temporary"],
+      audioCapabilities: [{
+        contentType: "audio/mp4;codecs=\"mp4a.40.2\"",
+      }],
+      videoCapabilities: [{
+        contentType: "video/mp4;codecs=\"avc1.42E01E\"",
+      }],
     };
 
     requestMediaKeySystemAccess(keySystem, [drmConfig]).toPromise()
-      .then((mediaKeys) => {
-        return (mediaKeys as any).getStatusForPolicy(policy)
-          .then((result: IMediaKeyStatus) => {
-            if (result === "usable") {
-              resolve([ProberStatus.Supported]);
-            } else {
-              resolve([ProberStatus.NotSupported]);
-            }
-          })
-          .catch(() => {
-            resolve([ProberStatus.Unknown]);
-          });
+      .then((mediaKeysSystemAccess) => {
+        mediaKeysSystemAccess.createMediaKeys().then((mediaKeys) => {
+          return (mediaKeys as any).getStatusForPolicy(policy)
+            .then((result: IMediaKeyStatus) => {
+              if (result === "usable") {
+                resolve([ProberStatus.Supported]);
+              } else {
+                resolve([ProberStatus.NotSupported]);
+              }
+            })
+            .catch(() => {
+              resolve([ProberStatus.Unknown]);
+            });
+        })
+        .catch(() => {
+          resolve([ProberStatus.Unknown]);
+        });
       });
   });
 }
