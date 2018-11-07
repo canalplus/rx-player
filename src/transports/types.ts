@@ -212,7 +212,7 @@ export interface ITransportManifestPipeline {
     Observable<IManifestLoaderArguments>;
   loader : (x : IManifestLoaderArguments) =>
     ILoaderObservable<Document|string>;
-  parser : (x : IManifestParserArguments<Document|string, string>) =>
+  parser : (x : IManifestParserArguments<Document|string, any>) =>
     IManifestParserObservable;
 }
 
