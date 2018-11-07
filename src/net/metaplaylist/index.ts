@@ -283,25 +283,22 @@ export default function(options?: ITransportOptions): ITransportPipelines {
           const parserArgs = getParserBaseArguments(segment, args, offset);
 
           return segmentParser(parserArgs)
-            .pipe(
-              map(({ segmentData, segmentInfos }) => {
-                if (segmentData == null) {
-                  return { segmentData: null, segmentInfos: null, segmentOffset: 0 };
-                }
-                const responseData = segmentData instanceof Uint8Array ?
-                  segmentData :
-                  new Uint8Array(segmentData);
+            .pipe(map(({ segmentData, segmentInfos }) => {
+              if (segmentData == null) {
+                return { segmentData: null, segmentInfos: null, segmentOffset: 0 };
+              }
+              const responseData = segmentData instanceof Uint8Array ?
+                segmentData : new Uint8Array(segmentData);
 
-                if (segmentInfos && segmentInfos.time > -1) {
-                  segmentInfos.time += offset;
-                }
-                return {
-                  segmentData: responseData,
-                  segmentInfos,
-                  segmentOffset: offset / segment.timescale,
-                };
-              })
-            );
+              if (segmentInfos && segmentInfos.time > -1) {
+                segmentInfos.time += offset;
+              }
+              return {
+                segmentData: responseData,
+                segmentInfos,
+                segmentOffset: offset / segment.timescale,
+              };
+            }));
         },
       };
 
@@ -317,18 +314,12 @@ export default function(options?: ITransportOptions): ITransportPipelines {
         const offset = args.period.start;
         const parserArgs = getParserBaseArguments(args.segment, args, offset);
         return transport.text.parser(parserArgs)
-          .pipe(
-            map((parsed) => {
-              if (parsed.segmentInfos && parsed.segmentInfos.time > -1) {
-                parsed.segmentInfos.time += offset;
-              }
-              return {
-                segmentData: parsed.segmentData,
-                segmentInfos: parsed.segmentInfos,
-                segmentOffset: offset,
-              };
-            })
-          );
+          .pipe(map(({ segmentInfos, segmentData }) => {
+            if (segmentInfos && segmentInfos.time > -1) {
+              segmentInfos.time += offset;
+            }
+            return { segmentData, segmentInfos, segmentOffset: offset };
+          }));
       },
     };
 
@@ -347,18 +338,12 @@ export default function(options?: ITransportOptions): ITransportPipelines {
         const offset = args.period.start;
         const parserArgs = getParserBaseArguments(args.segment, args, offset);
         return transport.image.parser(parserArgs)
-          .pipe(
-            map((parsed) => {
-              if (parsed.segmentInfos && parsed.segmentInfos.time > -1) {
-                parsed.segmentInfos.time += offset;
-              }
-              return {
-                segmentData: parsed.segmentData,
-                segmentInfos: parsed.segmentInfos,
-                segmentOffset: offset,
-              };
-            })
-          );
+          .pipe(map(({ segmentInfos, segmentData }) => {
+            if (segmentInfos && segmentInfos.time > -1) {
+              segmentInfos.time += offset;
+            }
+            return { segmentData, segmentInfos, segmentOffset: offset };
+          }));
       },
     };
 
