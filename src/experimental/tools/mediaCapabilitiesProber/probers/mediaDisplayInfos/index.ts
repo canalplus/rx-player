@@ -26,7 +26,7 @@ import {
 export default function probeMatchMedia(
   config: IMediaConfiguration
 ): Promise<[ProberStatus]> {
-  return new Promise(() => {
+  return new Promise((resolve) => {
     if (typeof window.matchMedia !== "function") {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "matchMedia not available");
@@ -45,6 +45,6 @@ export default function probeMatchMedia(
     const result : [ProberStatus] = [
       match.matches ? ProberStatus.Supported : ProberStatus.NotSupported,
     ];
-    return  result;
+    resolve(result);
   });
 }
