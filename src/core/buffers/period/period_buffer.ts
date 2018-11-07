@@ -50,6 +50,7 @@ import {
 } from "../../pipelines";
 import SourceBuffersManager, {
   IBufferType,
+  IOverlaySourceBufferOptions,
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
 } from "../../source_buffers";
@@ -90,10 +91,13 @@ export interface IPeriodBufferArguments {
   segmentBookkeepers : WeakMapMemory<QueuedSourceBuffer<unknown>, SegmentBookkeeper>;
   segmentPipelinesManager : SegmentPipelinesManager<any>;
   sourceBuffersManager : SourceBuffersManager;
-  options: { manualBitrateSwitchingMode : "seamless" | "direct";
-             offlineRetry? : number;
-             segmentRetry? : number;
-             textTrackOptions? : ITextTrackSourceBufferOptions; };
+  options: {
+    manualBitrateSwitchingMode : "seamless" | "direct";
+    offlineRetry? : number;
+    segmentRetry? : number;
+    overlayOptions? : IOverlaySourceBufferOptions;
+    textTrackOptions? : ITextTrackSourceBufferOptions;
+  };
   wantedBufferAhead$ : Observable<number>;
 }
 
@@ -239,7 +243,10 @@ function createOrReuseQueuedSourceBuffer<T>(
   sourceBuffersManager : SourceBuffersManager,
   bufferType : IBufferType,
   adaptation : Adaptation,
-  options: { textTrackOptions? : ITextTrackSourceBufferOptions }
+  options: {
+    overlayOptions? : IOverlaySourceBufferOptions;
+    textTrackOptions? : ITextTrackSourceBufferOptions;
+  }
 ) : QueuedSourceBuffer<T> {
   const currentQSourceBuffer = sourceBuffersManager.get(bufferType);
   if (currentQSourceBuffer != null) {
@@ -247,7 +254,14 @@ function createOrReuseQueuedSourceBuffer<T>(
     return currentQSourceBuffer;
   }
   const codec = getFirstDeclaredMimeType(adaptation);
-  const sbOptions = bufferType === "text" ?  options.textTrackOptions : undefined;
+  const sbOptions = (() => {
+      if (bufferType === "text") {
+        return options.textTrackOptions;
+      }
+      if (bufferType === "overlay") {
+        return options.overlayOptions;
+      }
+    })();
   return sourceBuffersManager.createSourceBuffer(bufferType, codec, sbOptions);
 }
 
