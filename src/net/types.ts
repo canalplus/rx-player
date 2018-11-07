@@ -122,6 +122,7 @@ export interface ISegmentParserArguments<T> {
   init? : ISegmentTimingInfos; // Infos about the initialization segment of the
                                // corresponding Representation
   manifest : Manifest;
+  period : Period;
   adaptation : Adaptation;
   representation : Representation;
   segment : ISegment;
