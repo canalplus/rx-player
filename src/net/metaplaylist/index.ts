@@ -256,19 +256,20 @@ export default function(options?: ITransportOptions): ITransportPipelines {
     };
 
     const segmentPipeline = {
-      loader(args : ISegmentLoaderArguments) :
-        ILoaderObservable<Uint8Array|ArrayBuffer|null>
-      {
+      loader(
+        args : ISegmentLoaderArguments
+      ) : ILoaderObservable<Uint8Array|ArrayBuffer|null> {
         const {
           segment,
-          period,
-          init,
+          // period,
+          // init, // XXX TODO
         } = args;
         const transport = getTransportPipelinesFromSegment(segment, transports);
         const segmentLoader = transport.video.loader;
-        const offset = (period.start || 0) *
-          (init ? (init.timescale || segment.timescale) :  segment.timescale);
-        const parserArgs = getParserBaseArguments(segment, args, offset);
+        // XXX TODO
+        // const offset = (period.start || 0) *
+        //   (init ? (init.timescale || segment.timescale) :  segment.timescale);
+        const parserArgs = getParserBaseArguments(segment, args /*, offset */);
         return segmentLoader(parserArgs);
       },
 

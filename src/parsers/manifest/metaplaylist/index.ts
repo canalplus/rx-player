@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { Subject } from "rxjs";
 import config from "../../../config";
 import Manifest, {
   Adaptation,
@@ -86,7 +87,11 @@ export default function parseMetaManifest(
   const contentEnding = contents[contents.length - 1].endTime;
 
   for (let j = 0; j < parsedPeriods.length; j++) {
-    const baseManifest = new Manifest(contents[j].manifest as IManifestArguments);
+    const baseManifest = new Manifest(
+      contents[j].manifest as IManifestArguments,
+      new Subject(), // TODO Warn about problems?
+      {}
+    );
     const parsedPeriod = parsedPeriods[j];
     parsedPeriod.start = contents[j].startTime;
     parsedPeriod.end =
