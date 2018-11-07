@@ -519,7 +519,14 @@ export default function PeriodBufferManager(
       return currentQSourceBuffer;
     }
     const codec = getFirstDeclaredMimeType(adaptation);
-    const sbOptions = bufferType === "text" ?  options.textTrackOptions : undefined;
+    const sbOptions = (() => {
+      if (bufferType === "text") {
+        return options.textTrackOptions;
+      }
+      if (bufferType === "overlay") {
+        return options.overlayOptions;
+      }
+    })();
     return sourceBufferManager.createSourceBuffer(bufferType, codec, sbOptions);
   }
 
