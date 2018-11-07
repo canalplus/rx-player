@@ -338,6 +338,8 @@ export default function loadBXF({
   textTrackElement,
   overlayElement,
   textTrackMode,
+  networkConfig,
+  manualBitrateSwitchingMode,
   beginning,
 }) {
   return parseBXF(bxfURL, BXFParser, "text").then(async ({ contents: parsedContents }) => {
@@ -654,6 +656,8 @@ export default function loadBXF({
             textTrackElement,
             textTrackMode,
             overlayElement,
+            networkConfig,
+            manualBitrateSwitchingMode,
             keySystems: [
               {
                 type: "widevine",
