@@ -443,12 +443,12 @@ export default function PeriodBufferManager(
     return adaptation$.pipe(switchMap((adaptation) => {
       if (adaptation == null) {
         log.info(`Buffer: Set no ${bufferType} Adaptation`, period);
+        const previousQSourceBuffer = sourceBufferManager.get(bufferType);
         let cleanBuffer$ : Observable<unknown>;
 
-        if (sourceBufferManager.has(bufferType)) {
+        if (previousQSourceBuffer != null) {
           log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
-          const _qSourceBuffer = sourceBufferManager.get(bufferType);
-          cleanBuffer$ = _qSourceBuffer
+          cleanBuffer$ = previousQSourceBuffer
             .removeBuffer(period.start, period.end || Infinity);
         } else {
           cleanBuffer$ = observableOf(null);
@@ -505,9 +505,10 @@ export default function PeriodBufferManager(
     bufferType : IBufferType,
     adaptation : Adaptation
   ) : QueuedSourceBuffer<T> {
-    if (sourceBufferManager.has(bufferType)) {
+    const currentQSourceBuffer = sourceBufferManager.get(bufferType);
+    if (currentQSourceBuffer != null) {
       log.info("Buffer: Reusing a previous SourceBuffer for the type", bufferType);
-      return sourceBufferManager.get(bufferType);
+      return currentQSourceBuffer;
     }
     const codec = getFirstDeclaredMimeType(adaptation);
     const sbOptions = bufferType === "text" ?  options.textTrackOptions : undefined;
