@@ -125,28 +125,14 @@ export default class SourceBufferManager {
   }
 
   /**
-   * Returns true if a SourceBuffer with the type given has been created with
-   * this instance of the SourceBufferManager.
-   * @param {string} bufferType
-   * @returns {Boolean}
-   */
-  public has(bufferType : IBufferType) : boolean {
-    return !!this._initializedSourceBuffers[bufferType];
-  }
-
-  /**
    * Returns the created QueuedSourceBuffer for the given type.
-   * Throws if no QueuedSourceBuffer were created for the given type.
+   * Returns null if no QueuedSourceBuffer were created for the given type.
    *
    * @param {string} bufferType
-   * @returns {QueuedSourceBuffer}
+   * @returns {QueuedSourceBuffer|null}
    */
-  public get(bufferType : IBufferType) : QueuedSourceBuffer<any> {
-    const sourceBuffer = this._initializedSourceBuffers[bufferType];
-    if (!sourceBuffer) {
-      throw new Error(`SourceBufferManager: no ${bufferType} initialized yet`);
-    }
-    return sourceBuffer;
+  public get(bufferType : IBufferType) : QueuedSourceBuffer<any>|null {
+    return this._initializedSourceBuffers[bufferType] || null;
   }
 
   /**
@@ -231,6 +217,7 @@ export default class SourceBufferManager {
   public disposeSourceBuffer(bufferType : IBufferType) : void {
     const memorizedSourceBuffer = this._initializedSourceBuffers[bufferType];
     if (memorizedSourceBuffer == null) {
+      log.warn("SB: Trying to dispose a SourceBuffer that does not exist");
       return;
     }
 
@@ -254,7 +241,7 @@ export default class SourceBufferManager {
    */
   public disposeAll() {
     POSSIBLE_BUFFER_TYPES.forEach((bufferType : IBufferType) => {
-      if (this.has(bufferType)) {
+      if (this.get(bufferType) != null) {
         this.disposeSourceBuffer(bufferType);
       }
     });
