@@ -36,48 +36,52 @@ export type IMediaKeyStatus =
 export default function probeHDCPPolicy(
   config: IMediaConfiguration
 ): Promise<[ProberStatus]> {
-  if (requestMediaKeySystemAccess == null) {
-    throw new Error("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
-      "API not available");
-  }
-  if (!("MediaKeys" in window)) {
-    throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-      "MediaKeys API not available");
-  }
-  if (!("getStatusForPolicy" in (window as any).MediaKeys as any)) {
-    throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-      "getStatusForPolicy API not available");
-  }
 
-  if (config.hdcp == null) {
-    throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-      "Missing policy argument for calling getStatusForPolicy.");
-  }
+  return new Promise((resolve) => {
+    if (requestMediaKeySystemAccess == null) {
+      throw new Error("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
+        "API not available");
+    }
+    if (!("MediaKeys" in window)) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "MediaKeys API not available");
+    }
+    if (!("getStatusForPolicy" in (window as any).MediaKeys as any)) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "getStatusForPolicy API not available");
+    }
 
-  const hdcp = "hdcp-" + config.hdcp;
-  const policy = { minHdcpVersion: hdcp };
+    if (config.hdcp == null) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "Missing policy argument for calling getStatusForPolicy.");
+    }
 
-  const keySystem = "w3.org.clearkey";
-  const drmConfig = {
-    initDataTypes: ["cenc"],
-    videoCapabilities: [],
-    audioCapabilities: [],
-    distinctiveIdentifier: "optional" as "optional",
-    persistentState: "optional" as "optional",
-    sessionTypes: ["temporary"],
-  };
-  return requestMediaKeySystemAccess(keySystem, [drmConfig]).toPromise()
-  .then((mediaKeys) => {
-    return (mediaKeys as any).getStatusForPolicy(policy)
-      .then((result: IMediaKeyStatus) => {
-        if (result === "usable") {
-          return [ProberStatus.Supported];
-        } else {
-          return [ProberStatus.NotSupported];
-        }
-      })
-      .catch(() => {
-        return [ProberStatus.Unknown];
+    const hdcp = "hdcp-" + config.hdcp;
+    const policy = { minHdcpVersion: hdcp };
+
+    const keySystem = "w3.org.clearkey";
+    const drmConfig = {
+      initDataTypes: ["cenc"],
+      videoCapabilities: [],
+      audioCapabilities: [],
+      distinctiveIdentifier: "optional" as "optional",
+      persistentState: "optional" as "optional",
+      sessionTypes: ["temporary"],
+    };
+
+    requestMediaKeySystemAccess(keySystem, [drmConfig]).toPromise()
+      .then((mediaKeys) => {
+        return (mediaKeys as any).getStatusForPolicy(policy)
+          .then((result: IMediaKeyStatus) => {
+            if (result === "usable") {
+              resolve([ProberStatus.Supported]);
+            } else {
+              resolve([ProberStatus.NotSupported]);
+            }
+          })
+          .catch(() => {
+            resolve([ProberStatus.Unknown]);
+          });
       });
   });
 }
