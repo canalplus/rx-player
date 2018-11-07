@@ -597,5 +597,6 @@ export {
   ISegment,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
+  StaticRepresentationIndex,
   SUPPORTED_ADAPTATIONS_TYPE,
 };
