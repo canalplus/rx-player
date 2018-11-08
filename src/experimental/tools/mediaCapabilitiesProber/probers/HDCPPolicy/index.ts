@@ -42,15 +42,6 @@ export default function probeHDCPPolicy(
       throw new Error("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
         "API not available");
     }
-    if (!("MediaKeys" in window)) {
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "MediaKeys API not available");
-    }
-    if (!("getStatusForPolicy" in ((window as any).MediaKeys as any).prototype)) {
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "getStatusForPolicy API not available");
-    }
-
     if (config.hdcp == null) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "Missing policy argument for calling getStatusForPolicy.");
@@ -72,22 +63,29 @@ export default function probeHDCPPolicy(
 
     requestMediaKeySystemAccess(keySystem, [drmConfig]).toPromise()
       .then((mediaKeysSystemAccess) => {
-        mediaKeysSystemAccess.createMediaKeys().then((mediaKeys) => {
-          return (mediaKeys as any).getStatusForPolicy(policy)
-            .then((result: IMediaKeyStatus) => {
-              if (result === "usable") {
-                resolve([ProberStatus.Supported]);
-              } else {
-                resolve([ProberStatus.NotSupported]);
-              }
-            })
-            .catch(() => {
-              resolve([ProberStatus.Unknown]);
-            });
-        })
-        .catch(() => {
-          resolve([ProberStatus.Unknown]);
-        });
+        mediaKeysSystemAccess.createMediaKeys()
+          .then((mediaKeys) => {
+            if (!("getStatusForPolicy" in mediaKeys)) {
+              // do the check here, as mediaKeys can be either be native MediaKeys or
+              // custom MediaKeys from compat.
+              throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+                "getStatusForPolicy API not available");
+            }
+            return (mediaKeys as any).getStatusForPolicy(policy)
+              .then((result: IMediaKeyStatus) => {
+                if (result === "usable") {
+                  resolve([ProberStatus.Supported]);
+                } else {
+                  resolve([ProberStatus.NotSupported]);
+                }
+              })
+              .catch(() => {
+                resolve([ProberStatus.Unknown]);
+              });
+          })
+          .catch(() => {
+            resolve([ProberStatus.Unknown]);
+          });
       });
   });
 }
