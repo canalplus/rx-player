@@ -25,6 +25,7 @@ import {
 } from "rxjs";
 import {
   map,
+  startWith,
   switchMap,
   takeUntil,
   tap,
@@ -346,6 +347,7 @@ export default class RepresentationChooser {
   private readonly _throttle$ : Observable<number>|undefined;
   private readonly estimator : BandwidthEstimator;
   private readonly _initialBitrate : number;
+  private readonly _reEstimate$ : Subject<void>;
   private _currentRequests : Partial<Record<string, IRequestInfo>>;
 
   /**
@@ -371,6 +373,7 @@ export default class RepresentationChooser {
 
     this._limitWidth$ = options.limitWidth$;
     this._throttle$ = options.throttle$;
+    this._reEstimate$ = new Subject<void>();
   }
 
   /**
@@ -434,7 +437,12 @@ export default class RepresentationChooser {
 
       // -- AUTO mode --
       let inStarvationMode = false; // == buffer gap too low == panic mode
-      return observableCombineLatest(clock$, maxAutoBitrate$, deviceEvents$)
+      return observableCombineLatest(
+        clock$,
+        maxAutoBitrate$,
+        deviceEvents$,
+        this._reEstimate$.pipe(startWith(null))
+      )
         .pipe(
           map(([ clock, maxAutoBitrate, deviceEvents ]) => {
             let newBitrateCeil; // bitrate ceil for the chosen Representation
@@ -539,6 +547,7 @@ export default class RepresentationChooser {
   public addEstimate(duration : number, size : number) : void {
     if (duration != null && size != null) {
       this.estimator.addSample(duration, size);
+      this._reEstimate$.next();
     }
   }
 
@@ -607,6 +616,8 @@ export default class RepresentationChooser {
   public dispose() : void {
     this._dispose$.next();
     this._dispose$.complete();
+    this._reEstimate$.next();
+    this._reEstimate$.complete();
     this.manualBitrate$.complete();
     this.maxAutoBitrate$.complete();
   }
