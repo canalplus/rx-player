@@ -32,7 +32,9 @@ export default function probeContentType(
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "MediaSource API not available");
     }
+    /* tslint:disable no-unbound-method */
     if (typeof MediaSource_.isTypeSupported !== "function") {
+    /* tslint:enable no-unbound-method */
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "isTypeSupported not available");
     }
