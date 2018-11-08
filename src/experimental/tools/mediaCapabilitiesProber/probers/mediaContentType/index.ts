@@ -50,6 +50,7 @@ export default function probeContentType(
     for (let i = 0; i < contentTypes.length; i++) {
       if (!MediaSource_.isTypeSupported(contentTypes[i])) {
         resolve([ProberStatus.NotSupported]);
+        return;
       }
     }
     resolve([ProberStatus.Supported]);
