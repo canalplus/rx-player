@@ -606,6 +606,7 @@ export default class RepresentationChooser {
    */
   public dispose() : void {
     this._dispose$.next();
+    this._dispose$.complete();
     this.manualBitrate$.complete();
     this.maxAutoBitrate$.complete();
   }
