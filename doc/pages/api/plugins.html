@@ -64,11 +64,11 @@ no use, as our implementation does the same thing and more):</p>
   }
 
   <span class="hljs-keyword">const</span> xhr = <span class="hljs-keyword">new</span> XMLHttpRequest();
-  <span class="hljs-keyword">const</span> sentTime = <span class="hljs-built_in">Date</span>.now();
+  <span class="hljs-keyword">const</span> sendingTime = <span class="hljs-built_in">Date</span>.now();
 
   xhr.onload = <span class="hljs-function">(<span class="hljs-params">r</span>) =&gt;</span> {
     <span class="hljs-keyword">if</span> (<span class="hljs-number">200</span> &lt;= xhr.status &amp;&amp; xhr.status &lt; <span class="hljs-number">300</span>) {
-      <span class="hljs-keyword">const</span> duration = <span class="hljs-built_in">Date</span>.now() - sentTime;
+      <span class="hljs-keyword">const</span> duration = <span class="hljs-built_in">Date</span>.now() - sendingTime;
       <span class="hljs-keyword">const</span> size = r.total;
       <span class="hljs-keyword">const</span> data = xhr.response;
       callbacks.resolve({ duration, size, data });
@@ -137,11 +137,11 @@ implementation does the same thing and more):</p>
  */</span>
 <span class="hljs-keyword">const</span> customManifestLoader = <span class="hljs-function">(<span class="hljs-params">url, callbacks</span>) =&gt;</span> {
   <span class="hljs-keyword">const</span> xhr = <span class="hljs-keyword">new</span> XMLHttpRequest();
-  <span class="hljs-keyword">const</span> sentTime = <span class="hljs-built_in">Date</span>.now();
+  <span class="hljs-keyword">const</span> sendingTime = <span class="hljs-built_in">Date</span>.now();
 
   xhr.onload = <span class="hljs-function">(<span class="hljs-params">r</span>) =&gt;</span> {
     <span class="hljs-keyword">if</span> (<span class="hljs-number">200</span> &lt;= xhr.status &amp;&amp; xhr.status &lt; <span class="hljs-number">300</span>) {
-      <span class="hljs-keyword">const</span> duration = <span class="hljs-built_in">Date</span>.now() - sentTime;
+      <span class="hljs-keyword">const</span> duration = <span class="hljs-built_in">Date</span>.now() - sendingTime;
       <span class="hljs-keyword">const</span> size = r.total;
       <span class="hljs-keyword">const</span> data = xhr.response;
       callbacks.resolve({ duration, size, data });
