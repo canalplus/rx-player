@@ -70,6 +70,11 @@ export default function probeDecodingInfos(
       config.audio.samplerate
     );
 
+    if (!hasVideoConfig && !hasAudioConfig) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+      "Not enough arguments for calling mediaCapabilites.");
+    }
+
     if (hasVideoConfig || hasAudioConfig) {
       return (navigator as any).mediaCapabilities.decodingInfo(config)
         .then((result: IDecodingInfos) => {
@@ -80,7 +85,5 @@ export default function probeDecodingInfos(
           return [ProberStatus.NotSupported];
         });
     }
-    throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-      "Not enough arguments for calling mediaCapabilites.");
   });
 }
