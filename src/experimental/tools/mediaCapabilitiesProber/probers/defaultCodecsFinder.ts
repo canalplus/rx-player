@@ -27,7 +27,9 @@ export function findDefaultVideoCodec(): string {
     "video/mp4; codecs=\"avc1.4D401E\"",
     "video/webm; codecs=\"vp09.00.10.08\"",
   ];
+  /* tslint:disable no-unbound-method */
   if (MediaSource_ == null || typeof MediaSource_.isTypeSupported !== "function") {
+  /* tslint:enable no-unbound-method */
     throw new Error("Cannot check video codec support: No API available.");
   }
   for (const codec of videoCodecs) {
@@ -49,7 +51,9 @@ export function findDefaultAudioCodec(): string {
     "audio/webm; codecs=opus",
     "audio/mp4; codecs=\"mp4a.40.2\"",
   ];
+  /* tslint:disable no-unbound-method */
   if (MediaSource_ == null || typeof MediaSource_.isTypeSupported !== "function") {
+  /* tslint:enable no-unbound-method */
     throw new Error("Cannot check audio codec support: No API available.");
   }
   for (const codec of audioCodecs) {
