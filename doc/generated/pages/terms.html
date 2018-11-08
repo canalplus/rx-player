@@ -55,8 +55,8 @@ an Adaptation is equivalent to:</p>
 number of bits per second of content described by that Representation.</p>
 <p>For example, a video <a href="#adaptation">Adaptation</a> could have two Representation:</p>
 <ol>
-<li>one with a bitrate: <code>1.000.000</code></li>
-<li>the other with the bitrate: <code>500.000</code></li>
+<li>one with a bitrate: <code>1,000,000</code></li>
+<li>the other with the bitrate: <code>500,000</code></li>
 </ol>
 <p>The first representation here will be considered to encode each second of
 content by a million bits (or 1Mb).</p>
@@ -72,11 +72,12 @@ quality.</p>
 <p>RxPlayer&#x2019;s Buffer can describe two things, depending on the context:</p>
 <ul>
 <li>
-<p>the part of a code downloading <a href="#segment">media segments</a> and doing what is
-needed to play them.</p>
+<p>modules in the RxPlayer downloading <a href="#segment">media segments</a> and doing
+what is needed to play them.</p>
 </li>
 <li>
-<p>The content downloaded (and thus &#x201C;bufferized&#x201D;) itself.</p>
+<p>The part in the browser storing the segments downloaded, waiting for it to
+be decoded.</p>
 </li>
 </ul>
 <p><a name="type"></a>
@@ -91,7 +92,7 @@ needed to play them.</p>
 <li>&#x201C;image&#x201D;: the thumbnail tracks.</li>
 </ul>
 <p>Those are called buffer types here (or simply &#x201C;types&#x201D;) as each type will have a
-single, uncorellated <a href="#buffer">Buffer</a>.</p>
+single, uncorellated <a href="#buffer">Buffer</a> in the RxPlayer.</p>
 <p><a name="chunk"></a>
 <a name="subchapter-Chunk"></a></p>
 <h3>Chunk</h3>
@@ -142,7 +143,7 @@ content a single time.</p>
 <h3>Period</h3>
 <p>A Period is an element of the <a href="#manifest">Manifest</a> which describes the media
 to play at a certain points in time.</p>
-<p>They are directly a DASH&#x2019; concept, called&#x2026; <em>Period</em>.</p>
+<p>They are directly a DASH&#x2019; concept, also called <em>Period</em>.</p>
 <p>Simply put, it allows to set various types of content successively in the same
 manifest.</p>
 <p>For example, let&#x2019;s take a manifest describing a live content with
@@ -150,18 +151,19 @@ chronologically:</p>
 <ol>
 <li>an english TV Show</li>
 <li>an old italian film with subtitles</li>
-<li>an American film with closed captions.</li>
+<li>an American blockbuster with closed captions.</li>
 </ol>
 <p>Those contents are drastically different (they have different languages, the
-american film might have more available bitrates than the old italian one).</p>
-<p>Moreover, even a library user might want to be able to know when the italian
-film is finished, to report about it immediately in a graphical interface.</p>
-<p>As such, they have to be considered separately - in a different Period:</p>
+american blockbuster might have more available bitrates than the old italian
+one).</p>
+<p>As such, they have to be considered separately in the Manifest.
+This can be done by putting each in a different Period:</p>
 <pre><code>        Period 1                Period 2                Period 3
-08h05              09h00                       10h30                now
-  |==================|===========================|===================|
-        TV Show               Italian Film            American film
+08h05              09h00                       10h30                 now
+  |==================|===========================|====================|
+        TV Show               Italian Film        American Blockbuster
 </code></pre>
+<p>Each of these Periods will be linked to different audio, video and text tracks.</p>
 <p><a name="representation"></a>
 <a name="subchapter-Representation"></a></p>
 <h3>Representation</h3>
