@@ -52,6 +52,6 @@ export default function probeContentType(
         resolve([ProberStatus.NotSupported]);
       }
     }
-    return resolve([ProberStatus.Supported]);
+    resolve([ProberStatus.Supported]);
   });
 }
