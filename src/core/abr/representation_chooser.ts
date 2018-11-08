@@ -308,8 +308,8 @@ function shouldDirectlySwitchToLowBitrate(
 
   const remainingTime = estimateRemainingTime(lastProgressEvent, bandwidthEstimate);
   if (
-    (now - lastProgressEvent.timestamp) / 1000 <= remainingTime &&
-    remainingTime > ((clock.bufferGap / clock.speed) + ABR_STARVATION_GAP)
+    (now - lastProgressEvent.timestamp) / 1000 <= (remainingTime * 1.2) &&
+    remainingTime < ((clock.bufferGap / clock.speed) + ABR_STARVATION_GAP)
   ) {
     return false;
   }
