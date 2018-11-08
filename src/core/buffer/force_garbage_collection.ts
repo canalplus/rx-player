@@ -44,12 +44,12 @@ const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
 export default function forceGarbageCollection(
   timings$ : Observable<{ currentTime: number }>,
   bufferingQueue : QueuedSourceBuffer<unknown>
-) : Observable<void> {
+) : Observable<unknown> {
   // wait for next timing event
   return timings$.pipe(
     take(1),
     mergeMap((timing) => {
-      log.warn("buffer: running garbage collector");
+      log.warn("Buffer: Running garbage collector");
       const buffered = bufferingQueue.getBuffered();
       let cleanedupRanges =
         selectGCedRanges(timing.currentTime, buffered, GC_GAP_CALM);
@@ -60,7 +60,7 @@ export default function forceGarbageCollection(
           selectGCedRanges(timing.currentTime, buffered, GC_GAP_BEEFY);
       }
 
-      log.debug("buffer: gc cleaning", cleanedupRanges);
+      log.debug("Buffer: GC cleaning", cleanedupRanges);
       return observableFrom(
         cleanedupRanges.map(({ start, end }) => bufferingQueue.removeBuffer(start, end))
       ).pipe(concatAll());
@@ -114,7 +114,7 @@ function selectGCedRanges(
 
   // try to clean up some space in the current range
   if (innerRange) {
-    log.debug("buffer: gc removing part of inner range", cleanedupRanges);
+    log.debug("Buffer: GC removing part of inner range", cleanedupRanges);
     if (currentTime - gcGap > innerRange.start) {
       cleanedupRanges.push({
         start: innerRange.start,

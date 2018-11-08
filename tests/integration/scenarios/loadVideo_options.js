@@ -22,12 +22,12 @@ import RxPlayer from "../../../src";
 import {
   manifestInfos,
   URLs,
-} from "../contents/DASH_static_SegmentTimeline";
-import sleep from "../utils/sleep.js";
-import mockRequests from "../utils/mock_requests";
+} from "../../contents/DASH_static_SegmentTimeline";
+import sleep from "../../utils/sleep.js";
+import mockRequests from "../../utils/mock_requests";
 import /* waitForState, */ {
   waitForLoadedStateAfterLoadVideo,
-} from "../utils/waitForPlayerState";
+} from "../../utils/waitForPlayerState";
 
 describe("loadVideo Options", () => {
   let player;
@@ -352,11 +352,11 @@ describe("loadVideo Options", () => {
 
         numberOfTimeCustomSegmentLoaderWentThrough++;
         const xhr = new XMLHttpRequest();
-        const sentTime = Date.now();
+        const sendingTime = Date.now();
 
         xhr.onload = (r) => {
           if (200 <= xhr.status && xhr.status < 300) {
-            const duration = Date.now() - sentTime;
+            const duration = Date.now() - sendingTime;
             const size = r.total;
             const data = xhr.response;
             callbacks.resolve({ duration, size, data });
@@ -426,11 +426,11 @@ describe("loadVideo Options", () => {
       const customManifestLoader = (url, callbacks) => {
         numberOfTimeCustomManifestLoaderWasCalled++;
         const xhr = new XMLHttpRequest();
-        const sentTime = Date.now();
+        const sendingTime = Date.now();
 
         xhr.onload = (r) => {
           if (200 <= xhr.status && xhr.status < 300) {
-            const duration = Date.now() - sentTime;
+            const duration = Date.now() - sendingTime;
             const size = r.total;
             const data = xhr.response;
             callbacks.resolve({ duration, size, data });

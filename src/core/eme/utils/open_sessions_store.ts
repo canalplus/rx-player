@@ -25,7 +25,6 @@ import {
 import {
   catchError,
   ignoreElements,
-  mapTo,
 } from "rxjs/operators";
 import {
   ICustomMediaKeys,
@@ -132,10 +131,10 @@ export default class MediaKeySessionsStore {
           this._delete(session);
         })
         .catch((e : Error) => {
-          log.warn(`session.closed rejected: ${e}`);
+          log.warn(`EME-MKSS: session.closed rejected: ${e}`);
         });
     }
-    log.debug("eme-mem-store: add session", entry);
+    log.debug("EME-MKSS: Add session", entry);
     this._entries.push(entry);
     return session;
   }
@@ -147,16 +146,12 @@ export default class MediaKeySessionsStore {
    */
   public deleteAndCloseSession(
     session : MediaKeySession|ICustomMediaKeySession
-  ) : Observable<null> {
+  ) : Observable<unknown> {
     return observableDefer(() => {
       this._delete(session);
-      log.debug("eme-mem-store: close session", session);
-      return castToObservable(session.close()).pipe(
-        mapTo(null),
-        catchError(() => {
-          return observableOf(null);
-        })
-      );
+      log.debug("EME-MKSS: Close session", session);
+      return castToObservable(session.close())
+        .pipe(catchError(() => observableOf(null)));
     });
   }
 
@@ -192,7 +187,7 @@ export default class MediaKeySessionsStore {
       return -1;
     }
 
-    log.debug("eme-mem-store: delete session", entry);
+    log.debug("EME-MKSS: delete session", entry);
     const idx = this._entries.indexOf(entry);
     this._entries.splice(idx, 1);
     return idx;

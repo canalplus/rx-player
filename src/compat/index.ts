@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import nextTick from "next-tick";
 import {
   defer as observableDefer,
   fromEvent as observableFromEvent,
@@ -21,10 +22,7 @@ import {
   Observer,
   of as observableOf,
 } from "rxjs";
-import {
-  mapTo,
-  take,
-} from "rxjs/operators";
+import { take } from "rxjs/operators";
 import log from "../log";
 import castToObservable from "../utils/castToObservable";
 import EventEmitter from "../utils/eventemitter";
@@ -56,6 +54,21 @@ import {
   requestMediaKeySystemAccess,
   setMediaKeys,
 } from "./eme";
+
+export interface ICustomSourceBuffer<T> {
+  addEventListener : (eventName : string, cb : (arg : any) => void) => void;
+  removeEventListener : (
+    eventName : string,
+    callback : (arg : any) => void
+  ) => void;
+  buffered : TimeRanges;
+  changeType? : (type: string) => void;
+  updating : boolean;
+  timestampOffset : number;
+  appendBuffer(data : T) : void;
+  remove(from : number, to : number) : void;
+  abort() : void;
+}
 
 /**
  * Returns true if the given codec is supported by the browser's MediaSource
@@ -134,15 +147,12 @@ function onSourceOpen$(
  */
 function hasLoadedMetadata(
   mediaElement : HTMLMediaElement
-) : Observable<void> {
+) : Observable<unknown> {
   if (mediaElement.readyState >= READY_STATES.HAVE_METADATA) {
-    return observableOf(undefined);
+    return observableOf(null);
   } else {
     return events.onLoadedMetadata$(mediaElement)
-      .pipe(
-        take(1),
-        mapTo(undefined)
-      );
+      .pipe(take(1));
   }
 }
 
@@ -153,15 +163,12 @@ function hasLoadedMetadata(
  */
 function canPlay(
   mediaElement : HTMLMediaElement
-) : Observable<void> {
+) : Observable<unknown> {
   if (mediaElement.readyState >= READY_STATES.HAVE_ENOUGH_DATA) {
-    return observableOf(undefined);
+    return observableOf(null);
   } else {
     return observableFromEvent(mediaElement, "canplay")
-      .pipe(
-        take(1),
-        mapTo(undefined)
-      );
+      .pipe(take(1));
   }
 }
 
@@ -195,13 +202,13 @@ if (
 
   sourceBufferWebkitProto.__emitUpdate =
     function(eventName : string, val : any) {
-      setTimeout(() => {
+      nextTick(() => {
         /* tslint:disable no-invalid-this */
         this.trigger(eventName, val);
         this.updating = false;
         this.trigger("updateend");
         /* tslint:enable no-invalid-this */
-      }, 0);
+      });
     };
 
   sourceBufferWebkitProto.appendBuffer =
@@ -389,16 +396,37 @@ function makeCue(
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
-function play$(mediaElement : HTMLMediaElement) : Observable<void> {
+function play$(mediaElement : HTMLMediaElement) : Observable<unknown> {
   return observableDefer(() =>
     // mediaElement.play is not always a Promise. In the improbable case it
     // throws, I prefer still to catch to return the error wrapped in an
     // Observable
-    tryCatch(() =>
-      castToObservable(mediaElement.play())
-        .pipe(mapTo(undefined))
-    )
+    tryCatch(() => castToObservable(mediaElement.play()))
   );
+}
+
+/**
+ * If the changeType MSE API is implemented, update the current codec of the
+ * SourceBuffer and return true if it succeeded.
+ * In any other cases, return false.
+ * @param {Object} sourceBuffer
+ * @param {string} codec
+ * @returns {boolean}
+ */
+function tryToChangeSourceBufferType(
+  sourceBuffer : ICustomSourceBuffer<unknown>,
+  codec : string
+) : boolean {
+  if (typeof sourceBuffer.changeType === "function") {
+    try {
+      sourceBuffer.changeType(codec);
+    } catch (e) {
+      log.warn("Could not call 'changeType' on the given SourceBuffer:", e);
+      return false;
+    }
+    return true;
+  }
+  return false;
 }
 
 export {
@@ -436,4 +464,5 @@ export {
   setMediaKeys,
   shouldRenewMediaKeys,
   shouldUnsetMediaKeys,
+  tryToChangeSourceBufferType,
 };

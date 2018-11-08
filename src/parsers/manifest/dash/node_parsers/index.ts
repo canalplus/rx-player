@@ -229,7 +229,6 @@ const getLastLiveTimeReference = (
 export default function parseManifest(
   root: Element,
   uri : string
-  // contentProtectionParser?: IContentProtectionParser
 ) : IParsedManifest {
   // Transform whole MPD into a parsed JS object representation
   const {
@@ -696,17 +695,36 @@ export default function parseManifest(
       parsedPeriods.push(parsedPeriod);
     }
 
+  const isLive : boolean = rootAttributes.type === "dynamic";
+  const duration : number = (() => {
+    if (rootAttributes.duration != null) {
+      return rootAttributes.duration;
+    }
+    if (isLive) {
+      return Infinity;
+    }
+    if (parsedPeriods.length) {
+      const lastPeriod = parsedPeriods[parsedPeriods.length - 1];
+      if (lastPeriod.end != null) {
+        return lastPeriod.end;
+      } else if (lastPeriod.duration != null) {
+        return lastPeriod.start + lastPeriod.duration;
+      }
+    }
+    return Infinity;
+  })();
+
   const parsedMPD : IParsedManifest = {
     availabilityStartTime: (
         rootAttributes.type === "static" ||
         rootAttributes.availabilityStartTime == null
       ) ?  0 : rootAttributes.availabilityStartTime,
-    duration: rootAttributes.duration == null ? Infinity : rootAttributes.duration,
+    duration,
     id: rootAttributes.id != null ?
       rootAttributes.id : "gen-dash-manifest-" + generateNewId(),
     periods: parsedPeriods,
     transportType: "dash",
-    isLive: rootAttributes.type === "dynamic",
+    isLive,
     uris: [uri, ...rootChildren.locations],
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay != null ?
       rootAttributes.suggestedPresentationDelay :
@@ -727,9 +745,6 @@ export default function parseManifest(
   if (rootAttributes.duration != null) {
     parsedMPD.duration = rootAttributes.duration;
   }
-  if (rootAttributes.minimumUpdatePeriod != null) {
-    parsedMPD.minimumUpdatePeriod = rootAttributes.minimumUpdatePeriod;
-  }
   if (rootAttributes.minBufferTime != null) {
     parsedMPD.minBufferTime = rootAttributes.minBufferTime;
   }
@@ -741,6 +756,13 @@ export default function parseManifest(
   }
   if (rootAttributes.maxSubsegmentDuration != null) {
     parsedMPD.maxSubsegmentDuration = rootAttributes.maxSubsegmentDuration;
+  }
+
+  if (
+    rootAttributes.minimumUpdatePeriod != null &&
+    rootAttributes.minimumUpdatePeriod > 0
+  ) {
+    parsedMPD.lifetime = rootAttributes.minimumUpdatePeriod;
   }
 
   if (parsedMPD.isLive) {

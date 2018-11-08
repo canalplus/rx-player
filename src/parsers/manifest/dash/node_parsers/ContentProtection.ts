@@ -23,7 +23,6 @@ export interface IParsedContentProtection {
 /**
  * Parse the "ContentProtection" node of a MPD.
  * @param {Element} root
- * @param {Function} [contentProtectionParser]
  * @returns {Object}
  */
 export default function parseContentProtection(

@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { IMediaConfiguration } from "../../types";
+import {
+  IMediaConfiguration,
+  ProberStatus,
+} from "../../types";
 
 import formatConfig from "./format";
 
@@ -48,35 +51,29 @@ function isTypeSupportedWithFeaturesAPIAvailable(): Promise<void> {
  */
 export default function probeTypeWithFeatures(
   config: IMediaConfiguration
-) : Promise<[number]> {
+) : Promise<[ProberStatus]> {
   return isTypeSupportedWithFeaturesAPIAvailable().then(() => {
     const keySystem = config.keySystem;
     const type = keySystem ? (keySystem.type || "org.w3.clearkey") : "org.w3.clearkey";
-    const hdcp = config.hdcp;
-
-    const video = config.video;
-    const audio = config.audio;
-    const display = config.display;
-
-    const features = formatConfig(video, hdcp, audio, display);
+    const features = formatConfig(config);
 
     const result =
       (window as any).MSMediaKeys.isTypeSupportedWithFeatures(type, features);
 
-    function formatSupport(support: ISupportWithFeatures): [number] {
+    function formatSupport(support: ISupportWithFeatures): [ProberStatus] {
       if (support === "") {
         throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
           "Bad arguments for calling isTypeSupportedWithFeatures");
       } else {
         switch (support) {
           case "Not Supported":
-            return [0];
+            return [ProberStatus.NotSupported];
           case "Maybe":
-            return [1];
+            return [ProberStatus.Unknown];
           case "Probably":
-            return [2];
+            return [ProberStatus.Supported];
           default:
-            return [1];
+            return [ProberStatus.Unknown];
         }
       }
     }

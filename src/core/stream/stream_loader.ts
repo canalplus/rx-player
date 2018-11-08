@@ -29,6 +29,7 @@ import {
   takeUntil,
 } from "rxjs/operators";
 import { MediaError } from "../../errors";
+import log from "../../log";
 import Manifest, {
   Period,
 } from "../../manifest";
@@ -45,7 +46,6 @@ import { setDurationToMediaSource } from "./create_media_source";
 import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
-import onLiveBufferEvent from "./on_live_buffer_event";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
 import {
@@ -67,7 +67,6 @@ export interface IStreamLoaderArgument {
                                // /!\ Should replay the last value on subscription.
   abrManager : ABRManager;
   segmentPipelinesManager : SegmentPipelinesManager<any>;
-  refreshManifest : (url : string) => Observable<Manifest>;
   bufferOptions : { // Buffer-related options
     wantedBufferAhead$ : Observable<number>;
     maxBufferAhead$ : Observable<number>;
@@ -102,7 +101,6 @@ export default function StreamLoader({
   bufferOptions,
   abrManager,
   segmentPipelinesManager,
-  refreshManifest,
 } : IStreamLoaderArgument) : (
   mediaSource : MediaSource,
   position : number,
@@ -142,24 +140,13 @@ export default function StreamLoader({
     //    does not support adding more tracks during playback.
     createNativeSourceBuffersForPeriod(sourceBufferManager, initialPeriod);
 
-    const {
-      seek$,
-      load$,
-    } = seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
+    const { seek$, load$ } =
+      seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
 
     const bufferClock$ = createBufferClock(manifest, clock$, seek$, speed$, initialTime);
 
     // Will be used to cancel any endOfStream tries when the contents resume
     const cancelEndOfStream$ = new Subject<null>();
-
-    // Will be used to process the events of the buffer
-    const onBufferEvent =
-      manifest.isLive ?
-      onLiveBufferEvent(mediaElement, manifest, refreshManifest) :
-
-      /* tslint:disable no-unnecessary-callback-wrapper */ // needed for TS :/
-      (evt : IPeriodBufferManagerEvent) => observableOf(evt);
-    /* tslint:enable no-unnecessary-callback-wrapper */
 
     // Creates Observable which will manage every Buffer for the given Content.
     const buffers$ = PeriodBufferManager(
@@ -169,18 +156,28 @@ export default function StreamLoader({
       sourceBufferManager,
       segmentPipelinesManager,
       bufferOptions
-    ).pipe(mergeMap((evt) : Observable<IStreamLoaderEvent> => {
-      switch (evt.type) {
-        case "end-of-stream":
-          return maintainEndOfStream(mediaSource)
-            .pipe(ignoreElements(), takeUntil(cancelEndOfStream$));
-        case "resume-stream":
-          cancelEndOfStream$.next(null);
-          return EMPTY;
-        default:
-          return onBufferEvent(evt);
-      }
-    }));
+    ).pipe(
+      mergeMap((evt) : Observable<IStreamLoaderEvent> => {
+        switch (evt.type) {
+          case "end-of-stream":
+            log.debug("Stream: end-of-stream order received.");
+            return maintainEndOfStream(mediaSource)
+              .pipe(ignoreElements(), takeUntil(cancelEndOfStream$));
+          case "resume-stream":
+            log.debug("Stream: resume-stream order received.");
+            cancelEndOfStream$.next(null);
+            return EMPTY;
+          case "discontinuity-encountered":
+            if (SourceBufferManager.isNative(evt.value.bufferType)) {
+              log.warn("Stream: Explicit discontinuity seek", evt.value.nextTime);
+              mediaElement.currentTime = evt.value.nextTime;
+            }
+            return EMPTY;
+          default:
+            return observableOf(evt);
+        }
+      })
+    );
 
     // Create Speed Manager, an observable which will set the speed set by the
     // user on the media element while pausing a little longer while the buffer
@@ -200,6 +197,7 @@ export default function StreamLoader({
           const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
           return observableOf(EVENTS.warning(error), EVENTS.loaded());
         }
+        log.debug("Stream: Stream is loaded.");
         return observableOf(EVENTS.loaded());
       }));
 

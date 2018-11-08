@@ -20,10 +20,10 @@ import {
 } from "rxjs";
 import {
   catchError,
-  mapTo,
 } from "rxjs/operators";
 import { ICustomMediaKeySession } from "../../compat";
 import { EncryptedMediaError } from "../../errors";
+import log from "../../log";
 import castToObservable from "../../utils/castToObservable";
 
 /**
@@ -38,15 +38,13 @@ export default function generateKeyRequest(
   session: MediaKeySession|ICustomMediaKeySession,
   initData: Uint8Array,
   initDataType: string|undefined
-) : Observable<null> {
+) : Observable<unknown> {
   return observableDefer(() => {
+    log.debug("EME: Calling generateRequest on the MediaKeySession");
     return castToObservable(
       session.generateRequest(initDataType || "", initData)
-    ).pipe(
-      catchError((error) => {
-        throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR", error, false);
-      }),
-      mapTo(null)
-    );
+    ).pipe(catchError((error) => {
+      throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR", error, false);
+    }));
   });
 }

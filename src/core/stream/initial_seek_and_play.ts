@@ -49,7 +49,7 @@ function doInitialSeek(
   return hasLoadedMetadata(mediaElement)
     .pipe(
       tap(() => {
-        log.info("set initial time", startTime);
+        log.info("Stream: Set initial time", startTime);
 
         // reset playbackRate to 1 in case we were at 0 (from a stalled
         // retry for instance)
@@ -60,7 +60,7 @@ function doInitialSeek(
 
       // equivalent to a sane shareReplay:
       // https://github.com/ReactiveX/rxjs/issues/3336
-      // TODO Replace it when that issue is resolved
+      // XXX TODO Replace it when that issue is resolved
       multicast(() => new ReplaySubject(1)),
       refCount()
     );
@@ -95,7 +95,7 @@ export default function seekAndLoadOnMediaEvents(
 
   const load$ = canPlay(mediaElement).pipe(
 
-    tap(() => log.info("canplay event")),
+    tap(() => log.info("Stream: canplay event")),
 
     mergeMap(() => {
       if (mustAutoPlay) {
@@ -104,7 +104,7 @@ export default function seekAndLoadOnMediaEvents(
           catchError((error) => {
             if (error.name === "NotAllowedError") {
               // auto-play was probably prevented.
-              log.warn("Media element can't play." +
+              log.warn("Stream: Media element can't play." +
                 " It may be due to browser auto-play policies.");
               return observableOf("autoplay-blocked" as "autoplay-blocked");
             } else {
@@ -118,7 +118,7 @@ export default function seekAndLoadOnMediaEvents(
 
     // equivalent to a sane shareReplay:
     // https://github.com/ReactiveX/rxjs/issues/3336
-    // TODO Replace it when that issue is resolved
+    // XXX TODO Replace it when that issue is resolved
     multicast(() => new ReplaySubject(1)),
     refCount()
   );

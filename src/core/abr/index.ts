@@ -22,6 +22,7 @@ import {
   mergeMap,
   takeUntil,
 } from "rxjs/operators";
+import log from "../../log";
 import { Representation } from "../../manifest";
 import { IBufferType } from "../source_buffers";
 import RepresentationChooser, {
@@ -245,6 +246,7 @@ export default class ABRManager {
    * @param {number} bitrate
    */
   public setManualBitrate(type : IBufferType, bitrate : number) : void {
+    log.info("ABR: Setting manual bitrate");
     const chooser = this._choosers[type];
     if (!chooser) {
       // if no chooser yet, store as a chooser option for when it will be
@@ -263,6 +265,7 @@ export default class ABRManager {
    * @param {number} bitrate
    */
   public setMaxAutoBitrate(type : IBufferType, bitrate : number) : void {
+    log.info("ABR: Setting maximum auto bitrate");
     const chooser = this._choosers[type];
     if (!chooser) {
       // if no chooser yet, store as a chooser option for when it will be
@@ -302,6 +305,7 @@ export default class ABRManager {
    * The ABRManager is unusable after calling this method.
    */
   public dispose() : void {
+    log.debug("ABR: Freeing up ressources");
     Object.keys(this._choosers).forEach(type => {
       (this._choosers[type as IBufferType] as RepresentationChooser).dispose();
     });
@@ -319,6 +323,7 @@ export default class ABRManager {
    */
   private _lazilyCreateChooser(bufferType : IBufferType) : RepresentationChooser {
     if (!this._choosers[bufferType]) {
+      log.debug("ABR: Creating new buffer for ", bufferType);
       this._choosers[bufferType] =
         createChooser(bufferType, this._chooserInstanceOptions);
     }

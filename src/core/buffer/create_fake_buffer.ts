@@ -22,6 +22,7 @@ import {
   filter,
   map,
 } from "rxjs/operators";
+import log from "../../log";
 import Manifest, {
   Period,
 } from "../../manifest";
@@ -53,6 +54,7 @@ export default function createFakeAdaptationBuffer(
       period.end != null && clockTick.currentTime + wantedBufferAhead >= period.end
     ),
     map(() => {
+      log.debug("Buffer: full FakeBuffer", bufferType);
       return {
         type: "full-buffer" as "full-buffer",
         value: { bufferType },

@@ -49,7 +49,13 @@ export default {
   DEFAULT_TEXT_TRACK_MODE: "native" as "native"|"html",
 
   /**
-   * Strategy to adopt when manually switching the current bitrate.
+   * Strategy to adopt when manually setting the current bitrate.
+   * Can be either:
+   *   - "seamless": transitions are very smooth but not immediate.
+   *   - "direct": the quality switch happens immediately but to achieve that,
+   *     the player will need to set a new MediaSource on the media element in
+   *     some cases. This often leads to a black screen + unavailable APIs
+   *     during a short moment.
    * @type {string}
    */
   DEFAULT_MANUAL_BITRATE_SWITCHING_MODE: "seamless" as "seamless"|"direct",
@@ -100,7 +106,6 @@ export default {
    * @type {Object}
    */
   MAXIMUM_MAX_BUFFER_AHEAD: {
-    image: 5 * 60 * 60,
     text: 5 * 60 * 60,
   } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
   /* tslint:enable no-object-literal-type-assertion */
@@ -113,7 +118,6 @@ export default {
    * @type {Object}
    */
   MAXIMUM_MAX_BUFFER_BEHIND: {
-    image: 5 * 60 * 60,
     text: 5 * 60 * 60,
   } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
   /* tslint:enable no-object-literal-type-assertion */
@@ -391,6 +395,17 @@ export default {
    */
   ABR_STARVATION_GAP: 5,
   OUT_OF_STARVATION_GAP: 7,
+
+  /**
+   * This is a security to avoid going into starvation mode when the content is
+   * ending (@see ABR_STARVATION_GAP).
+   * Basically, we subtract that value from the global duration of the content
+   * and we never enter "starvation mode" if the currently available buffer
+   * (which equals to the current position + the available buffer ahead of it)
+   * is equal or higher than this value.
+   * @type {Number}
+   */
+  ABR_STARVATION_DURATION_DELTA: 0.1,
 
   /**
    * Half-life, in seconds for a fastly-evolving exponential weighted moving

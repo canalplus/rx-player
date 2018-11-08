@@ -48,7 +48,7 @@ export default function isSessionUsable(
       !arrayIncludes(keyStatuses, "internal-error")
     )
   ) {
-    log.debug("eme: reuse loaded session", loadedSession.sessionId);
+    log.debug("EME: Reuse loaded session", loadedSession.sessionId);
     return true;
   }
   return false;

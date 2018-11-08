@@ -29,7 +29,7 @@ a single directory or subdirectory, in alphabetical order.
   - [src/core/pipelines/: The networking pipelines](#core-pipelines)
   - [src/core/source_buffers/: SourceBuffers definitions](#core-sb)
   - [src/core/stream/: Media streaming logic](#core-stream)
-- [tests/: Test strategies and integration tests](#tests)
+- [tests/: Test strategies, integration and memory tests](#tests)
 
 
 <a name="demo"></a>
@@ -269,13 +269,17 @@ instanciate the Buffer and link together many subparts of the player.
 
 
 <a name="tests"></a>
-## The tests/ directory: Test strategies and integration tests #################
+## The tests/ directory: Test strategies, integration and memory tests #########
 
-The rx-player contains both integration (test the whole player) and unit (test
-parts of the code) tests.
+The rx-player contains integration tests (test the whole player), unit tests
+(test specific parts of the code) and memory tests (tests the memory usage of
+the player).
 
 Integration tests are entirely written in the ``tests/integration``
 subdirectory.
+
+Memory tests are entirely written in the ``tests/memory`` subdirectory.
+
 As for unit tests, they are written alongside the code, in ``__tests__``
 directories, the ``tests/unit`` directory only contains the configuration files
 to launch them.

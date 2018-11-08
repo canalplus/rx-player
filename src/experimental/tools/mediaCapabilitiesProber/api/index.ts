@@ -19,6 +19,8 @@ import {
   ICompatibleKeySystem,
   IDisplayConfiguration,
   IMediaConfiguration,
+  IMediaKeySystemConfiguration,
+  ProberStatus,
 } from "../types";
 import probeMediaConfiguration, { IBrowserAPIS } from "./probeMediaConfiguration";
 
@@ -32,18 +34,16 @@ function getStatusFromConfiguration(
   config: IMediaConfiguration,
   browserAPIS: IBrowserAPIS[]
 ): Promise<string> {
-  return probeMediaConfiguration(config, browserAPIS).then(({ globalStatusNumber }) => {
-    switch (globalStatusNumber) {
-      case 0:
-        return "NotSupported";
-      case 1:
-        return "Unknown";
-      case 2:
-        return "Supported";
-      default:
-        return "NotSupported";
-    }
-  });
+  return probeMediaConfiguration(config, browserAPIS)
+    .then(({ globalStatus }) => {
+      switch (globalStatus) {
+        case ProberStatus.Unknown:
+          return "Unknown";
+        case ProberStatus.Supported:
+          return "Supported";
+      }
+      return "NotSupported";
+    });
 }
 
 /**
@@ -121,7 +121,7 @@ const mediaCapabilitiesProber = {
   getCompatibleDRMConfigurations(
     configurations: Array<{
       type: string;
-      configuration: MediaKeySystemConfiguration;
+      configuration: IMediaKeySystemConfiguration;
     }>
   ) : Promise<ICompatibleKeySystem[]> {
     const promises: Array<Promise<any>> = [];
@@ -131,29 +131,26 @@ const mediaCapabilitiesProber = {
       };
       const browserAPIS: IBrowserAPIS[] = ["requestMediaKeySystemAccess"];
       promises.push(probeMediaConfiguration(globalConfig, browserAPIS)
-        .then(({ globalStatusNumber, resultsFromAPIS }) => {
+        .then(({ globalStatus, resultsFromAPIS }) => {
           const requestMediaKeySystemAccessResults = resultsFromAPIS
             .find((result) => result.APIName === "requestMediaKeySystemAccess");
 
           return {
             // As only one API is called, global status is
             // requestMediaKeySystemAccess status.
-            globalStatusNumber,
+            globalStatus,
             result: requestMediaKeySystemAccessResults ?
               requestMediaKeySystemAccessResults.result : undefined,
           };
         })
         .catch(() => { // API couln't be called.
-          return {
-            globalStatusNumber: 0,
-          };
+          return { globalStatus: ProberStatus.NotSupported };
         })
       );
     });
     return Promise.all(promises)
       .then((supportedConfigs) => {
-        return supportedConfigs
-          .map(({ result }) => result);
+        return supportedConfigs.map(({ result }) => result);
       });
   },
 

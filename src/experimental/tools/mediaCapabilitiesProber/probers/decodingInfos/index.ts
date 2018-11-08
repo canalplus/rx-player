@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { IMediaConfiguration } from "../../types";
+import {
+  IMediaConfiguration,
+  ProberStatus,
+} from "../../types";
 
 export interface IDecodingInfos {
   supported: boolean;
@@ -46,7 +49,7 @@ function isMediaCapabilitiesAPIAvailable(): Promise<void> {
  */
 export default function probeDecodingInfos(
   config: IMediaConfiguration
-): Promise<[number]> {
+): Promise<[ProberStatus]> {
   return isMediaCapabilitiesAPIAvailable().then(() => {
     const hasVideoConfig = (
       config.type &&
@@ -67,15 +70,20 @@ export default function probeDecodingInfos(
       config.audio.samplerate
     );
 
+    if (!hasVideoConfig && !hasAudioConfig) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+      "Not enough arguments for calling mediaCapabilites.");
+    }
+
     if (hasVideoConfig || hasAudioConfig) {
       return (navigator as any).mediaCapabilities.decodingInfo(config)
         .then((result: IDecodingInfos) => {
-          return [result.supported ? 2 : 0];
+          return [
+            result.supported ? ProberStatus.Supported : ProberStatus.NotSupported,
+          ];
         }).catch(() => {
-          return [0];
+          return [ProberStatus.NotSupported];
         });
     }
-    throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-      "Not enough arguments for calling mediaCapabilites.");
   });
 }

@@ -74,6 +74,7 @@ export interface ILoaderResponseValue<T> {
   duration? : number;
   size? : number;
   url? : string;
+  sendingTime? : number;
 }
 
 export interface ILoaderResponse<T> {
@@ -121,6 +122,7 @@ export interface ISegmentParserArguments<T> {
   init? : ISegmentTimingInfos; // Infos about the initialization segment of the
                                // corresponding Representation
   manifest : Manifest;
+  period : Period;
   adaptation : Adaptation;
   representation : Representation;
   segment : ISegment;
@@ -256,9 +258,6 @@ export interface ITransportOptions {
   referenceDateTime? : number;
   minRepresentationBitrate? : number;
   keySystems? : (hex? : Uint8Array) => IParsedKeySystem[];
-
-  // dash only
-  // contentProtectionParser? : IContentProtectionParser;
 }
 
 export type ITransportFunction = (options? : ITransportOptions) =>

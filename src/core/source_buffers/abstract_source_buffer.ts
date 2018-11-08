@@ -14,28 +14,15 @@
  * limitations under the License.
  */
 
+import nextTick from "next-tick";
 import {
   Observable,
   of as observableOf,
 } from "rxjs";
-import assert from "../../utils/assert";
+import { ICustomSourceBuffer } from "../../compat";
 import EventEmitter from "../../utils/eventemitter";
 import tryCatch from "../../utils/rx-tryCatch";
 import ManualTimeRanges from "./time_ranges";
-
-export interface ICustomSourceBuffer<T> {
-  addEventListener : (eventName : string, cb : (arg : any) => void) => void;
-  removeEventListener : (
-    eventName : string,
-    callback : (arg : any) => void
-  ) => void;
-  buffered : TimeRanges;
-  updating : boolean;
-  timestampOffset : number;
-  appendBuffer(data : T) : void;
-  remove(from : number, to : number) : void;
-  abort() : void;
-}
 
 /**
  * Abstract class for a custom SourceBuffer implementation.
@@ -60,7 +47,8 @@ export default abstract class AbstractSourceBuffer<T>
   }
 
   /**
-   * Mimic the SourceBuffer _appendBuffer_ method: Append segment.
+   * Mimic the SourceBuffer _appendBuffer_ method: Append a segment to the
+   * buffer.
    * @param {*} data
    */
   appendBuffer(data : T) : void {
@@ -68,7 +56,7 @@ export default abstract class AbstractSourceBuffer<T>
   }
 
   /**
-   * Mimic the SourceBuffer _remove_ method: remove segment.
+   * Mimic the SourceBuffer _remove_ method: remove buffered segments.
    * @param {Number} from
    * @param {Number} to
    */
@@ -98,7 +86,9 @@ export default abstract class AbstractSourceBuffer<T>
    * @param {Function} func
    */
   private _lock(func : () => void) : void {
-    assert(!this.updating, "updating");
+    if (this.updating) {
+      throw new Error("SourceBuffer: SourceBuffer already updating.");
+    }
     this.updating = true;
     this.trigger("updatestart", undefined);
     const result : Observable<void> = tryCatch(() => {
@@ -106,19 +96,16 @@ export default abstract class AbstractSourceBuffer<T>
       return observableOf(undefined);
     });
     result.subscribe(
-      ()  => setTimeout(() => { this._unlock("update"); }, 0),
-      (e) => setTimeout(() => { this._unlock("error", e); }, 0)
+      ()  => nextTick(() => {
+        this.updating = false;
+        this.trigger("update", undefined);
+        this.trigger("updateend", undefined);
+      }),
+      (e) => nextTick(() => {
+        this.updating = false;
+        this.trigger("error", e);
+        this.trigger("updateend", undefined);
+      })
     );
-  }
-
-  /**
-   * Free the lock and trigger the right events.
-   * @param {string} eventName
-   * @param {*} value - value sent with the given event.
-   */
-  private _unlock(eventName : string, value? : unknown) : void {
-    this.updating = false;
-    this.trigger(eventName, value);
-    this.trigger("updateend", undefined);
   }
 }

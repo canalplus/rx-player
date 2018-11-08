@@ -40,7 +40,6 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
   linkPlayerEventToState("videoBitrateChange", "videoBitrate");
   linkPlayerEventToState("audioBitrateChange", "audioBitrate");
   linkPlayerEventToState("error", "error");
-  linkPlayerEventToState("fullscreenChange", "isFullscreen");
   linkPlayerEventToState("volumeChange", "volume");
 
   fromPlayerEvent("imageTrackUpdate").pipe(

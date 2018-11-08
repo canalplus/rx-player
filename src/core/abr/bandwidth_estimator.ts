@@ -32,8 +32,8 @@ const {
  * @class BandwidthEstimator
  */
 export default class BandwidthEstimator {
-  private _fast : EWMA;
-  private _slow : EWMA;
+  private _fastEWMA : EWMA;
+  private _slowEWMA : EWMA;
   private _bytesSampled : number;
 
   constructor() {
@@ -41,13 +41,13 @@ export default class BandwidthEstimator {
      * A fast-moving average.
      * @private
      */
-    this._fast = new EWMA(ABR_FAST_EMA);
+    this._fastEWMA = new EWMA(ABR_FAST_EMA);
 
     /**
      * A slow-moving average.
      * @private
      */
-    this._slow = new EWMA(ABR_SLOW_EMA);
+    this._slowEWMA = new EWMA(ABR_SLOW_EMA);
 
     /**
      * Number of bytes sampled.
@@ -73,8 +73,8 @@ export default class BandwidthEstimator {
     const weight = durationInMs / 1000;
     this._bytesSampled += numberOfBytes;
 
-    this._fast.addSample(weight, bandwidth);
-    this._slow.addSample(weight, bandwidth);
+    this._fastEWMA.addSample(weight, bandwidth);
+    this._slowEWMA.addSample(weight, bandwidth);
   }
 
   /**
@@ -88,15 +88,15 @@ export default class BandwidthEstimator {
 
     // Take the minimum of these two estimates.  This should have the effect of
     // adapting down quickly, but up more slowly.
-    return Math.min(this._fast.getEstimate(), this._slow.getEstimate());
+    return Math.min(this._fastEWMA.getEstimate(), this._slowEWMA.getEstimate());
   }
 
   /**
    * Reset the bandwidth estimation.
    */
   public reset() : void {
-    this._fast = new EWMA(ABR_FAST_EMA);
-    this._slow = new EWMA(ABR_SLOW_EMA);
+    this._fastEWMA = new EWMA(ABR_FAST_EMA);
+    this._slowEWMA = new EWMA(ABR_SLOW_EMA);
     this._bytesSampled = 0;
   }
 }

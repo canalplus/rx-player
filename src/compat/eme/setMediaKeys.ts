@@ -18,7 +18,6 @@ import {
   defer as observableDefer,
   Observable
 } from "rxjs";
-import { mapTo } from "rxjs/operators";
 import castToObservable from "../../utils/castToObservable";
 import {
   ICustomMediaKeys,
@@ -70,9 +69,6 @@ function _setMediaKeys(
 export default function setMediaKeys$(
   elt : HTMLMediaElement,
   mediaKeys : MediaKeys|ICustomMediaKeys|null
-) : Observable<null> {
-  return observableDefer(() =>
-    castToObservable(_setMediaKeys(elt, mediaKeys))
-      .pipe(mapTo(null))
-  );
+) : Observable<unknown> {
+  return observableDefer(() => castToObservable(_setMediaKeys(elt, mediaKeys)));
 }

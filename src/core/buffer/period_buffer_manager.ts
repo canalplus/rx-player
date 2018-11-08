@@ -115,9 +115,6 @@ const {
  *
  * TODO Special case for image Buffer, where we want data for EVERY active
  * periods.
- *
- * TODO Special garbage collection for text and image buffers, as we want to
- * clean it for potentially very long sessions.
  */
 export default function PeriodBufferManager(
   content : { manifest : Manifest; initialPeriod : Period },
@@ -136,18 +133,10 @@ export default function PeriodBufferManager(
   }
 ) : Observable<IPeriodBufferManagerEvent> {
   const { manifest, initialPeriod } = content;
+  const { wantedBufferAhead$, maxBufferAhead$, maxBufferBehind$ } = options;
 
-  const {
-    wantedBufferAhead$,
-    maxBufferAhead$,
-    maxBufferBehind$,
-  } = options;
-
-  /**
-   * Keep track of a unique BufferGarbageCollector created per
-   * QueuedSourceBuffer.
-   * @type {WeakMapMemory}
-   */
+  // Keep track of a unique BufferGarbageCollector created per
+  // QueuedSourceBuffer.
   const garbageCollectors =
     new WeakMapMemory((qSourceBuffer : QueuedSourceBuffer<unknown>) => {
       const { bufferType } = qSourceBuffer;
@@ -165,11 +154,8 @@ export default function PeriodBufferManager(
       });
     });
 
-  /**
-   * Keep track of a unique segmentBookkeeper created per
-   * QueuedSourceBuffer.
-   * @type {WeakMapMemory}
-   */
+  // Keep track of a unique segmentBookkeeper created per
+  // QueuedSourceBuffer.
   const segmentBookkeepers =
     new WeakMapMemory<QueuedSourceBuffer<unknown>, SegmentBookkeeper>(() =>
       new SegmentBookkeeper()
@@ -177,61 +163,39 @@ export default function PeriodBufferManager(
 
   const addPeriodBuffer$ = new Subject<IPeriodBufferInfos>();
   const removePeriodBuffer$ = new Subject<IPeriodBufferInfos>();
-
   const bufferTypes = getBufferTypes();
 
-  /**
-   * Every PeriodBuffers for every possible types
-   * @type {Array.<Observable>}
-   */
-  const buffersArray = bufferTypes
-    .map((bufferType) => {
-      return manageEveryBuffers(bufferType, initialPeriod)
-        .pipe(
-          tap((evt) => {
-            if (evt.type === "periodBufferReady") {
-              addPeriodBuffer$.next(evt.value);
-            } else if (evt.type === "periodBufferCleared") {
-              removePeriodBuffer$.next(evt.value);
-            }
-          }),
-          share()
-        );
-    });
-
-  /**
-   * Emits the active Period every time it changes
-   * @type {Observable}
-   */
-  const activePeriod$ : Observable<Period> =
-    ActivePeriodEmitter(bufferTypes, addPeriodBuffer$, removePeriodBuffer$)
-      .pipe(filter((period) : period is Period => !!period));
-  /**
-   * Emits the activePeriodChanged events every time the active Period changes.
-   * @type {Observable}
-   */
-  const activePeriodChanged$ = activePeriod$
-    .pipe(
-      tap((period : Period) => {
-        log.info("new active period", period);
+  // Every PeriodBuffers for every possible types
+  const buffersArray = bufferTypes.map((bufferType) => {
+    return manageEveryBuffers(bufferType, initialPeriod).pipe(
+      tap((evt) => {
+        if (evt.type === "periodBufferReady") {
+          addPeriodBuffer$.next(evt.value);
+        } else if (evt.type === "periodBufferCleared") {
+          removePeriodBuffer$.next(evt.value);
+        }
       }),
-      map(period => EVENTS.activePeriodChanged(period))
+      share()
+    );
+  });
+
+  // Emits the activePeriodChanged events every time the active Period changes.
+  const activePeriodChanged$ =
+    ActivePeriodEmitter(bufferTypes, addPeriodBuffer$, removePeriodBuffer$).pipe(
+      filter((period) : period is Period => !!period),
+      map(period => {
+        log.info("Buffer: New active period", period);
+        return EVENTS.activePeriodChanged(period);
+      })
     );
 
-  /**
-   * Emits an "end-of-stream" event once every PeriodBuffer are complete.
-   * @type {Observable}
-   */
+  // Emits an "end-of-stream" event once every PeriodBuffer are complete.
   const streamHasEnded$ = areBuffersComplete(...buffersArray)
     .pipe(map((areComplete) =>
       areComplete ? EVENTS.endOfStream() : EVENTS.resumeStream()
     ));
 
-  return observableMerge(
-    activePeriodChanged$,
-    ...buffersArray,
-    streamHasEnded$
-  );
+  return observableMerge(activePeriodChanged$, ...buffersArray, streamHasEnded$);
 
   /**
    * Manage creation and removal of Buffers for every Periods.
@@ -247,13 +211,7 @@ export default function PeriodBufferManager(
     bufferType : IBufferType,
     basePeriod : Period
   ) : Observable<IMultiplePeriodBuffersEvent> {
-    /**
-     * Keep a SortedList for cases such as seeking ahead/before the buffers
-     * already created.
-     * When that happens, interrupt the previous buffers and create one back
-     * from the new initial period.
-     * @type {SortedList}
-     */
+    // Each Period currently considered, chronologically
     const periodList = new SortedList<Period>((a, b) => a.start - b.start);
 
     /**
@@ -269,8 +227,7 @@ export default function PeriodBufferManager(
       if (head == null || last == null) { // if no period
         return true;
       }
-      return head.start > time ||
-        (last.end || Infinity) < time;
+      return head.start > time || (last.end || Infinity) < time;
     }
 
     // Destroy the current set of consecutive buffers.
@@ -306,7 +263,7 @@ export default function PeriodBufferManager(
       take(1),
 
       tap(({ currentTime, wantedTimeOffset }) => {
-        log.info("Current position out of the bounds of the active periods," +
+        log.info("Buffer: Current position out of the bounds of the active periods," +
           "re-creating buffers.", bufferType, currentTime + wantedTimeOffset);
         destroyCurrentBuffers.next();
       }),
@@ -376,7 +333,7 @@ export default function PeriodBufferManager(
     basePeriod : Period,
     destroy$ : Observable<void>
   ) : Observable<IMultiplePeriodBuffersEvent> {
-    log.info("creating new Buffer for", bufferType, basePeriod);
+    log.info("Buffer: Creating new Buffer for", bufferType, basePeriod);
 
     // Emits the chosen adaptation for the current type.
     const adaptation$ = new ReplaySubject<Adaptation|null>(1);
@@ -427,14 +384,8 @@ export default function PeriodBufferManager(
       ) : Observable<IMultiplePeriodBuffersEvent> => {
         const { type } = evt;
         if (type === "full-buffer") {
-          /**
-           * The Period coming just after the current one.
-           * @type {Period|undefined}
-           */
           const nextPeriod = manifest.getPeriodAfter(basePeriod);
-
           if (nextPeriod == null) {
-            // no more period, emits  event
             return observableOf(EVENTS.bufferComplete(bufferType));
           } else {
             // current buffer is full, create the next one if not
@@ -456,7 +407,7 @@ export default function PeriodBufferManager(
         periodBuffer$.pipe(takeUntil(killCurrentBuffer$)),
         observableOf(EVENTS.periodBufferCleared(bufferType, basePeriod))
           .pipe(tap(() => {
-            log.info("destroying buffer for", bufferType, basePeriod);
+            log.info("Buffer: Destroying buffer for", bufferType, basePeriod);
           }))
         );
 
@@ -491,15 +442,14 @@ export default function PeriodBufferManager(
   ) : Observable<IPeriodBufferEvent> {
     return adaptation$.pipe(switchMap((adaptation) => {
       if (adaptation == null) {
-        log.info(`set no ${bufferType} Adaptation`, period);
-        let cleanBuffer$ : Observable<null>;
+        log.info(`Buffer: Set no ${bufferType} Adaptation`, period);
+        const previousQSourceBuffer = sourceBufferManager.get(bufferType);
+        let cleanBuffer$ : Observable<unknown>;
 
-        if (sourceBufferManager.has(bufferType)) {
-          log.info(`clearing previous ${bufferType} SourceBuffer`);
-          const _qSourceBuffer = sourceBufferManager.get(bufferType);
-          cleanBuffer$ = _qSourceBuffer
-            .removeBuffer(period.start, period.end || Infinity)
-            .pipe(mapTo(null));
+        if (previousQSourceBuffer != null) {
+          log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
+          cleanBuffer$ = previousQSourceBuffer
+            .removeBuffer(period.start, period.end || Infinity);
         } else {
           cleanBuffer$ = observableOf(null);
         }
@@ -510,7 +460,7 @@ export default function PeriodBufferManager(
         );
       }
 
-      log.info(`updating ${bufferType} adaptation`, adaptation, period);
+      log.info(`Buffer: Updating ${bufferType} adaptation`, adaptation, period);
 
       const newBuffer$ = clock$.pipe(
         take(1),
@@ -555,9 +505,10 @@ export default function PeriodBufferManager(
     bufferType : IBufferType,
     adaptation : Adaptation
   ) : QueuedSourceBuffer<T> {
-    if (sourceBufferManager.has(bufferType)) {
-      log.info("reusing a previous SourceBuffer for the type", bufferType);
-      return sourceBufferManager.get(bufferType);
+    const currentQSourceBuffer = sourceBufferManager.get(bufferType);
+    if (currentQSourceBuffer != null) {
+      log.info("Buffer: Reusing a previous SourceBuffer for the type", bufferType);
+      return currentQSourceBuffer;
     }
     const codec = getFirstDeclaredMimeType(adaptation);
     const sbOptions = bufferType === "text" ?  options.textTrackOptions : undefined;
@@ -596,14 +547,14 @@ export default function PeriodBufferManager(
       // player. ie: if a text buffer sends an error, we want to
       // continue streaming without any subtitles
       if (!SourceBufferManager.isNative(bufferType)) {
-        log.error("custom buffer: ", bufferType, "has crashed. Aborting it.", error);
+        log.error(`Buffer: Custom ${bufferType} buffer crashed. Aborting it.`, error);
         sourceBufferManager.disposeSourceBuffer(bufferType);
         return observableConcat<IAdaptationBufferEvent<T>|IBufferWarningEvent>(
           observableOf(EVENTS.warning(error)),
           createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { manifest, period })
         );
       }
-      log.error(`native ${bufferType} buffer has crashed. Stopping playback.`, error);
+      log.error(`Buffer: Native ${bufferType} buffer crashed. Stopping playback.`, error);
       throw error;
     }));
   }
@@ -636,11 +587,7 @@ function getPipelineOptions(
   maxRetryOffline = offlineRetry != null ?
     offlineRetry : DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE;
 
-  return {
-    cache,
-    maxRetry,
-    maxRetryOffline,
-  };
+  return { cache, maxRetry, maxRetryOffline };
 }
 
 /**
@@ -651,7 +598,5 @@ function getPipelineOptions(
  */
 function getFirstDeclaredMimeType(adaptation : Adaptation) : string {
   const { representations } = adaptation;
-  return (
-    representations[0] && representations[0].getMimeTypeString()
-  ) || "";
+  return (representations[0] && representations[0].getMimeTypeString()) || "";
 }

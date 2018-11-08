@@ -55,6 +55,11 @@ export interface IManifestTransportInfos {
 type IPipelineManifestOptions =
   IPipelineLoaderOptions<IManifestLoaderArguments, Document|string>;
 
+export interface IFetchManifestResult {
+  manifest : Manifest;
+  sendingTime? : number;
+}
+
 /**
  * Create function allowing to easily fetch and parse the manifest from its URL.
  *
@@ -75,7 +80,7 @@ export default function createManifestPipeline(
   transport : IManifestTransportInfos,
   pipelineOptions : IPipelineManifestOptions,
   warning$ : Subject<Error|ICustomError>
-) : (url : string) => Observable<Manifest> {
+) : (url : string) => Observable<IFetchManifestResult> {
   const loader = createLoader<
   IManifestLoaderArguments, Document|string
   >(transport.pipelines.manifest, pipelineOptions);
@@ -90,7 +95,7 @@ export default function createManifestPipeline(
    * @param {string} url - URL of the manifest
    * @returns {Observable}
    */
-  return function fetchManifest(url : string) : Observable<Manifest> {
+  return function fetchManifest(url : string) : Observable<IFetchManifestResult> {
     return loader({ url }).pipe(
 
       tap((arg) => {
@@ -103,10 +108,14 @@ export default function createManifestPipeline(
         arg.type === "response"
       ),
 
-      mergeMap(({ value }) => parser({ response: value, url })),
-
-      map(({ manifest }) : Manifest => {
-        return new Manifest(manifest, warning$, transport.options);
+      mergeMap(({ value }) => {
+        const { sendingTime } = value;
+        return parser({ response: value, url }).pipe(
+          map(({ manifest: parsedManifest }) => {
+            const manifest = new Manifest(parsedManifest, warning$, transport.options);
+            return { manifest, sendingTime };
+          })
+        );
       }),
       share()
     );

@@ -16,8 +16,13 @@
 
 import getProbedConfiguration, { ICapabilitiesTypes } from "../capabilities";
 import log from "../log";
-import probers, { IResultsFromAPI } from "../probers";
-import { IMediaConfiguration } from "../types";
+import probers, {
+  IResultsFromAPI,
+} from "../probers";
+import {
+  IMediaConfiguration,
+  ProberStatus,
+} from "../types";
 
 export type IBrowserAPIS =
   "isTypeSupported" |
@@ -28,23 +33,18 @@ export type IBrowserAPIS =
   "getStatusForPolicy";
 
 /**
- * Probe media capabilities, evaluating capabilities with available browsers API.
+ * Probe media capabilities, evaluating capabilities with available browsers
+ * API.
  *
  * Probe every given features with configuration.
- * If the browser API is not available OR we can't call browser API with enough arguments,
- * do nothing but warn user (e.g. HDCP is not specified for calling "getStatusForPolicy"
- * API, "mediaCapabilites" API is not available.).
+ * If the browser API is not available OR we can't call browser API with enough
+ * arguments, do nothing but warn the user (e.g. HDCP is not specified for
+ * calling "getStatusForPolicy" API, "mediaCapabilites" API is not available.).
  *
- * if we call the browser API, we get from it a number which means:
- * - 0 : Probably
- * - 1 : Maybe
- * - 2 : Not Supported
+ * From all API results, we return the worst state (e.g. if one API returns a
+ * "Not Supported" status among other "Probably" statuses, we return
+ * "Not Supported").
  *
- * From all API results, we return worst of states (e.g. if one API returns
- * "Not Supported" among "Probably" statuses, return "Not Supported").
- *
- * If no API was called or some capabilites could not be probed and status is "Probably",
- * return "Maybe".
  * @param {Object} config
  * @param {Array.<Object>} browserAPIs
  * @returns {Promise}
@@ -53,69 +53,77 @@ async function probeMediaConfiguration(
   config: IMediaConfiguration,
   browserAPIS: IBrowserAPIS[]
 ): Promise<{
-  globalStatusNumber: number;
+  globalStatus: ProberStatus;
   resultsFromAPIS: Array<{
     APIName: ICapabilitiesTypes;
     result?: IResultsFromAPI;
   }>;
 }> {
-
-  let globalStatusNumber = Infinity;
-
+  let globalStatus : ProberStatus|undefined;
   const resultsFromAPIS: Array<{
     APIName: ICapabilitiesTypes;
     result?: IResultsFromAPI;
   }> = [];
   const promises = [];
   for (const browserAPI of browserAPIS) {
-    const probeWithBrowser = probers[browserAPI][0];
-    const wantedLogLevel = probers[browserAPI][1];
+    const probeWithBrowser = probers[browserAPI];
     if (probeWithBrowser) {
-      promises.push(probeWithBrowser(config).then(([statusNumber, result]) => {
+      promises.push(probeWithBrowser(config).then(([currentStatus, result]) => {
         resultsFromAPIS.push({ APIName: browserAPI, result });
-        globalStatusNumber = Math.min(globalStatusNumber, statusNumber);
-      }).catch((err) => {
-        switch (wantedLogLevel) {
-          case "warn":
-            log.warn(err);
-            break;
-          case "debug":
-            log.debug(err);
-            break;
-          case "info":
-            log.info(err);
-            break;
-          case "error":
-            log.error(err);
-            break;
-          default:
-            log.debug(err);
-            break;
+
+        if (globalStatus == null) {
+          globalStatus = currentStatus;
+        } else {
+          switch (currentStatus) {
+            // Here, globalStatus can't be null. Hence, if the new current status is
+            // 'worse' than global status, then re-assign the latter.
+            case ProberStatus.NotSupported:
+              // `NotSupported` is either worse or equal.
+              globalStatus = ProberStatus.NotSupported;
+              break;
+            case ProberStatus.Unknown:
+              // `Unknown` is worse than 'Supported' only.
+              if (globalStatus === ProberStatus.Supported) {
+                globalStatus = ProberStatus.Unknown;
+              }
+              break;
+            default:
+              // new status is either `Supported` or unknown status. Global status
+              // shouldn't be changed.
+              break;
+          }
         }
+      }).catch((err) => {
+        log.warn(err);
       }));
     }
   }
 
   await Promise.all(promises);
 
+  if (globalStatus == null) {
+    globalStatus = ProberStatus.Unknown;
+  }
+
   const probedCapabilities =
     getProbedConfiguration(config, resultsFromAPIS.map((a) => a.APIName));
   const areUnprobedCapabilities =
     JSON.stringify(probedCapabilities).length !== JSON.stringify(config).length;
 
-    globalStatusNumber =
-      Math.min((areUnprobedCapabilities ? 1 : Infinity), globalStatusNumber);
+  if (areUnprobedCapabilities && globalStatus === ProberStatus.Supported) {
+    globalStatus = ProberStatus.Unknown;
+  }
 
   if (areUnprobedCapabilities) {
     log.warn("MediaCapabilitiesProber >>> PROBER: Some capabilities could not " +
       "be probed, due to the incompatibility of browser APIs, or the lack of arguments " +
-      "to call them. (See DEBUG logs for details)");
+      "to call them.");
   }
 
   log.info("MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",
     probedCapabilities);
 
-  return { globalStatusNumber, resultsFromAPIS };
+  return { globalStatus, resultsFromAPIS };
 }
 
 export default probeMediaConfiguration;

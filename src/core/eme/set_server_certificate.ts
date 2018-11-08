@@ -23,12 +23,12 @@ import {
 import {
   catchError,
   ignoreElements,
-  mapTo,
 } from "rxjs/operators";
 import { ICustomMediaKeys } from "../../compat";
 import {
   EncryptedMediaError,
 } from "../../errors";
+import log from "../../log";
 import castToObservable from "../../utils/castToObservable";
 import { IEMEWarningEvent } from "./types";
 
@@ -60,15 +60,15 @@ type TypedArray =
 function setServerCertificate(
   mediaKeys : ICustomMediaKeys|MediaKeys,
   serverCertificate : ArrayBuffer|TypedArray
-) : Observable<null> {
+) : Observable<unknown> {
   return observableDefer(() => {
     return castToObservable(
       (mediaKeys as MediaKeys).setServerCertificate(serverCertificate)
     ).pipe(catchError((error) => {
-      throw new
-      EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", error, true);
+      log.warn("EME: mediaKeys.setServerCertificate returned an error", error);
+      throw new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", error, true);
     }));
-  }).pipe(mapTo(null));
+  });
 }
 
 /**
@@ -82,15 +82,18 @@ export default function trySettingServerCertificate(
   mediaKeys : ICustomMediaKeys|MediaKeys,
   serverCertificate : ArrayBuffer|TypedArray
 ) : Observable<IEMEWarningEvent> {
-  return typeof mediaKeys.setServerCertificate === "function" ?
-    setServerCertificate(mediaKeys, serverCertificate)
-      .pipe(
-        ignoreElements(),
-        catchError(error => {
-          error.fatal = false;
-          return observableOf({ type: "warning" as "warning", value: error });
-        })) :
-    EMPTY;
+  if (typeof mediaKeys.setServerCertificate === "function") {
+    log.debug("EME: Setting server certificate on the MediaKeys");
+    return setServerCertificate(mediaKeys, serverCertificate).pipe(
+      ignoreElements(),
+      catchError(error => {
+        error.fatal = false;
+        return observableOf({ type: "warning" as "warning", value: error });
+      }));
+  }
+  log.warn("EME: Could not set the server certificate." +
+    " mediaKeys.setServerCertificate is not a function");
+  return EMPTY;
 }
 
 export {

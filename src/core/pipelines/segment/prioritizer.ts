@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
+import arrayFindIndex from "array-find-index";
 import {
   defer as observableDefer,
   Observable,
@@ -138,22 +138,19 @@ export default class ObservablePrioritizer<T> {
    * @returns {Observable}
    */
   public create(obs : Observable<T>, priority : number) : Observable<T> {
-    return observableDefer(() => {
+    const pObs$ = observableDefer(() => {
       if (this._pendingPriority == null || this._pendingPriority >= priority) {
         // Update the priority and start immediately the Observable
         this._pendingPriority = priority;
         return this._startObservable(obs);
       } else {
         const trigger = new Subject<void>();
-        this._queue.push({
-          observable: obs,
-          priority,
-          trigger,
-        });
+        this._queue.push({ observable: pObs$, priority, trigger });
         return trigger
           .pipe(mergeMap(() => this._startObservable(obs)));
       }
     });
+    return pObs$;
   }
 
   /**
@@ -170,16 +167,23 @@ export default class ObservablePrioritizer<T> {
    * @param {number} priority
    */
   public updatePriority(obs : Observable<T>, priority : number) : void {
-    const queueElement = arrayFind(
+    const index = arrayFindIndex(
       this._queue,
       (elt) => elt.observable === obs
     );
 
-    if (!queueElement) {
+    if (index < 0) {
       return;
     }
 
+    const queueElement = this._queue[index];
     queueElement.priority = priority;
+
+    if (this._pendingPriority == null || this._pendingPriority >= priority) {
+      this._queue.splice(index, 1);
+      queueElement.trigger.next();
+      queueElement.trigger.complete();
+    }
   }
 
   private _startObservable(obs : Observable<T>) : Observable<T> {

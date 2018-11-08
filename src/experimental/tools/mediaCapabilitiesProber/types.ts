@@ -14,7 +14,16 @@
  * limitations under the License.
  */
 
-export interface IVideoConfiguration {
+export interface IMediaKeySystemConfiguration {
+  audioCapabilities?: MediaKeySystemMediaCapability[];
+  distinctiveIdentifier?: MediaKeysRequirement;
+  initDataTypes?: string[];
+  persistentState?: MediaKeysRequirement;
+  videoCapabilities?: MediaKeySystemMediaCapability[];
+  sessionTypes?: string[];
+}
+
+interface IVideoConfiguration {
   contentType?: string;
   width?: number;
   height?: number;
@@ -23,20 +32,16 @@ export interface IVideoConfiguration {
   bitsPerComponent?: number;
 }
 
-export interface IAudioConfiguration {
+interface IAudioConfiguration {
   contentType?: string;
   channels?: string;
   bitrate?: number;
   samplerate?: number;
 }
 
-export interface IKeySystem {
+interface IKeySystem {
   type?: string;
-  configuration?: MediaKeySystemConfiguration;
-}
-
-export interface IOutputProtectionConfiguration {
-  hdcp?: string;
+  configuration?: IMediaKeySystemConfiguration;
 }
 
 export interface IDisplayConfiguration {
@@ -59,4 +64,10 @@ export interface ICompatibleKeySystem {
   type: string;
   configuration: MediaKeySystemConfiguration;
   compatibleConfiguration?: MediaKeySystemConfiguration;
+}
+
+export enum ProberStatus {
+  NotSupported,
+  Unknown,
+  Supported,
 }

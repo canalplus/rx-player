@@ -29,7 +29,7 @@
 <li><a href="#subchapter-src/core/stream/:%20Media%20streaming%20logic">src/core/stream/: Media streaming logic</a></li>
 </ul>
 </li>
-<li><a href="#chapter-The%20tests/%20directory:%20Test%20strategies%20and%20integration%20tests">The tests/ directory: Test strategies and integration tests</a></li>
+<li><a href="#chapter-The%20tests/%20directory:%20Test%20strategies,%20integration%20and%20memory%20tests">The tests/ directory: Test strategies, integration and memory tests</a></li>
 </ul>
 </div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-File%20architecture"></a></p>
 <h1>File architecture</h1>
@@ -223,13 +223,15 @@ of content (text, images etc.).</p>
 <p>This is the central part which download manifests, initialize MSE and EME APIs,
 instanciate the Buffer and link together many subparts of the player.</p>
 <p><a name="tests"></a>
-<a name="chapter-The%20tests/%20directory:%20Test%20strategies%20and%20integration%20tests"></a></p>
-<h2>The tests/ directory: Test strategies and integration tests</h2>
-<p>The rx-player contains both integration (test the whole player) and unit (test
-parts of the code) tests.</p>
+<a name="chapter-The%20tests/%20directory:%20Test%20strategies,%20integration%20and%20memory%20tests"></a></p>
+<h2>The tests/ directory: Test strategies, integration and memory tests</h2>
+<p>The rx-player contains integration tests (test the whole player), unit tests
+(test specific parts of the code) and memory tests (tests the memory usage of
+the player).</p>
 <p>Integration tests are entirely written in the <code>tests/integration</code>
-subdirectory.
-As for unit tests, they are written alongside the code, in <code>__tests__</code>
+subdirectory.</p>
+<p>Memory tests are entirely written in the <code>tests/memory</code> subdirectory.</p>
+<p>As for unit tests, they are written alongside the code, in <code>__tests__</code>
 directories, the <code>tests/unit</code> directory only contains the configuration files
 to launch them.</p>
 </body></html></div></div></div></body>

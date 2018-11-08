@@ -75,7 +75,7 @@ export default function getSession(
     } = getInitData(encryptedEvent);
 
     if (handledInitData.has(initData, initDataType)) {
-      log.debug("init data already received. Skipping it.");
+      log.debug("EME: Init data already received. Skipping it.");
       return EMPTY; // Already handled, quit
     }
     handledInitData.add(initData, initDataType);
@@ -87,7 +87,7 @@ export default function getSession(
     if (entry != null) {
       previousLoadedSession = entry.session;
       if (isSessionUsable(previousLoadedSession)) {
-        log.debug("eme: reuse loaded session", previousLoadedSession.sessionId);
+        log.debug("EME: Reuse loaded session", previousLoadedSession.sessionId);
         return observableOf({
           type: "loaded-open-session" as "loaded-open-session",
           value: {
@@ -106,7 +106,7 @@ export default function getSession(
       sessionsStore.deleteAndCloseSession(previousLoadedSession) :
       observableOf(null)
     ).pipe(mergeMap(() => {
-      const cleaningOldSessions$ : Array<Observable<null>> = [];
+      const cleaningOldSessions$ : Array<Observable<unknown>> = [];
       const entries = sessionsStore.getAll().slice();
       if (MAX_SESSIONS > 0 && MAX_SESSIONS <= entries.length) {
         for (let i = 0; i < (MAX_SESSIONS - entries.length + 1); i++) {

@@ -14,52 +14,47 @@
  * limitations under the License.
  */
 
-import { IMediaConfiguration } from "../../types";
-
-/**
- * @returns {Promise}
- */
-function isContentTypeAPISupported(): Promise<void> {
-  return new Promise((resolve) => {
-    if (!("MediaSource" in window)) {
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "MediaSource API not available");
-    }
-    if (!("isTypeSupported" in (window as any).MediaSource)) {
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "isTypeSupported not available");
-    }
-    resolve();
-  });
-}
+import { MediaSource_ } from "../../../../../compat";
+import {
+  IMediaConfiguration,
+  ProberStatus,
+} from "../../types";
 
 /**
  * @param {Object} config
  * @returns {Promise}
  */
-export default function probeContentType(config: IMediaConfiguration): Promise<[number]> {
-  return isContentTypeAPISupported().then(() => {
+export default function probeContentType(
+  config: IMediaConfiguration
+): Promise<[ProberStatus]> {
+  return new Promise((resolve) => {
+    if (MediaSource_ == null) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "MediaSource API not available");
+    }
+    /* tslint:disable no-unbound-method */
+    if (typeof MediaSource_.isTypeSupported !== "function") {
+    /* tslint:enable no-unbound-method */
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "isTypeSupported not available");
+    }
     const contentTypes: string[] = [];
-    if (
-      config.video &&
-      config.video.contentType
-    ) {
+    if (config.video && config.video.contentType) {
       contentTypes.push(config.video.contentType);
     }
-    if (
-      config.audio &&
-      config.audio.contentType
-    ) {
+    if (config.audio && config.audio.contentType) {
       contentTypes.push(config.audio.contentType);
     }
-      if (contentTypes === null || !contentTypes.length) {
-        throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-          "Not enough arguments for calling isTypeSupported.");
+    if (contentTypes.length === 0) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "Not enough arguments for calling isTypeSupported.");
+    }
+    for (let i = 0; i < contentTypes.length; i++) {
+      if (!MediaSource_.isTypeSupported(contentTypes[i])) {
+        resolve([ProberStatus.NotSupported]);
+        return;
       }
-      const result: [number] = [contentTypes.reduce((acc, val) => {
-        const support = (window as any).MediaSource.isTypeSupported(val) ? 2 : 0;
-        return Math.min(acc, support);
-      }, 3)];
-      return result;
-    });
+    }
+    resolve([ProberStatus.Supported]);
+  });
 }

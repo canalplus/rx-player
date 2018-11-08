@@ -208,7 +208,15 @@ function filterConfigurationWithProbedCapabilities(
       const [ key, value ] = Object.entries(capability)[0];
       const subProbedConfig = filterConfigurationWithProbedCapabilities(
         value, (configuration as {[id: string]: IMediaConfiguration})[key] || {});
-      if (Object.entries(subProbedConfig).length > 0) {
+      if (
+        Object.keys(subProbedConfig).length > 0 ||
+        (
+          (configuration as {[id: string]: IMediaConfiguration})[key] != null &&
+          Object.keys(
+            (configuration as {[id: string]: IMediaConfiguration})[key]
+          ).length === 0
+        )
+      ) {
         (probedConfig as {[id: string]: IMediaConfiguration})[key] = subProbedConfig;
       }
     }

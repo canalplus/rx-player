@@ -21,6 +21,7 @@ import {
 } from "rxjs";
 import { mergeMapTo } from "rxjs/operators";
 import { setMediaKeys } from "../../compat";
+import log from "../../log";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 
 /**
@@ -30,13 +31,14 @@ import MediaKeysInfosStore from "./media_keys_infos_store";
 export default function disposeMediaKeys(
   mediaElement : HTMLMediaElement,
   mediaKeysInfos : MediaKeysInfosStore
-) : Observable<null> {
+) : Observable<unknown> {
   return observableDefer(() => {
     const currentState = mediaKeysInfos.getState(mediaElement);
     if (!currentState) {
       return observableOf(null);
     }
 
+    log.debug("EME: Disposing of the current MediaKeys");
     const { sessionsStore } = currentState;
     mediaKeysInfos.clearState(mediaElement);
     return sessionsStore.closeAllSessions()

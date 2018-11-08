@@ -479,7 +479,7 @@ function createSmoothStreamingParser(
 
       if (manifestDuration != null && +manifestDuration !== 0) {
         duration = lastTimeReference == null ?
-          (+manifestDuration + (firstTimeReference || 0)) / timescale :
+          (+manifestDuration / timescale) + (firstTimeReference || 0) :
           lastTimeReference;
       } else {
         duration = Infinity;
@@ -488,7 +488,7 @@ function createSmoothStreamingParser(
     }
 
     const minimumTime = firstTimeReference != null ?
-      firstTimeReference / timescale : undefined;
+      firstTimeReference : undefined;
 
     const manifest = {
       id: "gen-smooth-manifest-" + generateNewId(),

@@ -148,7 +148,7 @@ export interface ILoadVideoOptions {
   textTrackMode? : "native"|"html";
   hideNativeSubtitle? : boolean;
   textTrackElement? : HTMLElement;
-  manualBitrateSwitchingMode : "seamless"|"direct";
+  manualBitrateSwitchingMode? : "seamless"|"direct";
 }
 
 interface IParsedLoadVideoOptionsBase {
@@ -445,7 +445,7 @@ function parseLoadVideoOptions(
     }
   } else if ((options as any).textTrackElement != null) {
     /* tslint:disable:max-line-length */
-    log.warn("You have set a textTrackElement without being in an \"html\" textTrackMode. It will be ignored.");
+    log.warn("API: You have set a textTrackElement without being in an \"html\" textTrackMode. It will be ignored.");
     /* tslint:enable:max-line-length */
   }
 

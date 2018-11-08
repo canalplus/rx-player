@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { IMediaConfiguration } from "../../types";
-
-export interface IPolicy {
-  minHdcpVersion: string;
-}
+import { requestMediaKeySystemAccess } from "../../../../../compat";
+import {
+  IMediaConfiguration,
+  ProberStatus,
+} from "../../types";
 
 export type IMediaKeyStatus =
   "usable" |
@@ -30,60 +30,58 @@ export type IMediaKeyStatus =
   "internal-error";
 
 /**
- * @returns {Promise}
- */
-function isHDCPAPIAvailable(): Promise<void> {
-  return new Promise<void>((resolve) => {
-    if (!("requestMediaKeySystemAccess" in navigator)) {
-      throw new Error("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
-        "API not available");
-    }
-    resolve();
-  }).then(() => {
-    if (!("MediaKeys" in window)) {
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "MediaKeys API not available");
-    }
-    if (!("getStatusForPolicy" in (window as any).MediaKeys as any)) {
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "getStatusForPolicy API not available");
-    }
-  });
-}
-
-/**
  * @param {Object} config
  * @returns {Promise}
  */
-export default function probeHDCPPolicy(config: IMediaConfiguration): Promise<[number]> {
-  return isHDCPAPIAvailable().then(() => {
-    if (config.hdcp) {
-      const hdcp = "hdcp-" + config.hdcp;
-      const object = { minHdcpVersion: hdcp };
+export default function probeHDCPPolicy(
+  config: IMediaConfiguration
+): Promise<[ProberStatus]> {
 
-      const keySystem = "w3.org.clearkey";
-      const drmConfig = {
-        initDataTypes: ["cenc"],
-        videoCapabilities: [],
-        audioCapabilities: [],
-        distinctiveIdentifier: "optional",
-        persistentState: "optional",
-        sessionTypes: ["temporary"],
-      };
-        return (window as any).requestMediaKeySystemAccess(keySystem, drmConfig)
-          .then((mediaKeys: MediaKeys) => {
-            (mediaKeys as any).getStatusForPolicy(object)
-              .then((result: IMediaKeyStatus) => {
-                if (result === "usable") {
-                  return [2];
-                } else {
-                  return [0];
-                }
-              });
-          });
+  return new Promise((resolve) => {
+    if (requestMediaKeySystemAccess == null) {
+      throw new Error("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
+        "API not available");
+    }
+    if (config.hdcp == null) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "Missing policy argument for calling getStatusForPolicy.");
     }
 
-    throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-      "Not enough arguments for calling getStatusForPolicy.");
+    const hdcp = "hdcp-" + config.hdcp;
+    const policy = { minHdcpVersion: hdcp };
+
+    const keySystem = "org.w3.clearkey";
+    const drmConfig = {
+      initDataTypes: ["cenc"],
+      audioCapabilities: [{
+        contentType: "audio/mp4;codecs=\"mp4a.40.2\"",
+      }],
+      videoCapabilities: [{
+        contentType: "video/mp4;codecs=\"avc1.42E01E\"",
+      }],
+    };
+
+    return requestMediaKeySystemAccess(keySystem, [drmConfig]).toPromise()
+      .then((mediaKeysSystemAccess) => {
+        mediaKeysSystemAccess.createMediaKeys().then((mediaKeys) => {
+          if (!("getStatusForPolicy" in mediaKeys)) {
+            // do the check here, as mediaKeys can be either be native MediaKeys or
+            // custom MediaKeys from compat.
+            throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+              "getStatusForPolicy API not available");
+          }
+          return (mediaKeys as any).getStatusForPolicy(policy)
+            .then((result: IMediaKeyStatus) => {
+              if (result === "usable") {
+                resolve([ProberStatus.Supported]);
+              } else {
+                resolve([ProberStatus.NotSupported]);
+              }
+            });
+        })
+        .catch(() => {
+          resolve([ProberStatus.Unknown]);
+        });
+      });
   });
 }

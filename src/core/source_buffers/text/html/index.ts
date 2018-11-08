@@ -63,13 +63,13 @@ const {
  * @returns {Observable}
  */
 function generateClock(videoElement : HTMLMediaElement) : Observable<boolean> {
-  const seeking$ = onSeeking$(videoElement).pipe(mapTo(null));
-  const seeked$ = onSeeked$(videoElement).pipe(mapTo(null));
-  const ended$ = onEnded$(videoElement).pipe(mapTo(null));
+  const seeking$ = onSeeking$(videoElement);
+  const seeked$ = onSeeked$(videoElement);
+  const ended$ = onEnded$(videoElement);
 
   const manualRefresh$ = observableMerge(seeked$, ended$);
   const autoRefresh$ = observableInterval(MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL)
-    .pipe(mapTo(null), startWith(null));
+    .pipe(startWith(null));
 
   return manualRefresh$.pipe(
     startWith(null),
@@ -92,7 +92,7 @@ function safelyRemoveChild(element : Element, child : Element|null) {
     try {
       element.removeChild(child);
     } catch (e) {
-      log.warn("Can't remove text track: not in the element.");
+      log.warn("HTTSB: Can't remove text track: not in the element.");
     }
   }
 }
@@ -119,7 +119,7 @@ export default class HTMLTextTrackSourceBuffer
     videoElement : HTMLMediaElement,
     textTrackElement : HTMLElement
   ) {
-    log.debug("creating html text track source buffer");
+    log.debug("HTTSB: Creating html text track source buffer");
     super();
     this._videoElement = videoElement;
     this._textTrackElement = textTrackElement;
@@ -160,7 +160,7 @@ export default class HTMLTextTrackSourceBuffer
    * @param {Object} data
    */
   _append(data : IHTMLTextTrackData) : void {
-    log.debug("appending new html text tracks", data);
+    log.debug("HTTSB: Appending new html text tracks", data);
     const {
       timescale, // timescale for the start and end
       start: timescaledStart, // exact beginning to which the track applies
@@ -172,7 +172,7 @@ export default class HTMLTextTrackSourceBuffer
     if (timescaledEnd && timescaledEnd - timescaledStart <= 0) {
       // this is accepted for error resilience, just skip that case.
       /* tslint:disable:max-line-length */
-      log.warn("Invalid text track appended: the start time is inferior or equal to the end time.");
+      log.warn("HTTSB: Invalid text track appended: the start time is inferior or equal to the end time.");
       /* tslint:enable:max-line-length */
       return;
     }
@@ -194,7 +194,7 @@ export default class HTMLTextTrackSourceBuffer
    * @param {Number} to
    */
   _remove(from : number, to : number) : void {
-    log.debug("removing html text track data", from, to);
+    log.debug("HTTSB: Removing html text track data", from, to);
     this._buffer.remove(from, to);
     this.buffered.remove(from, to);
   }
@@ -203,7 +203,7 @@ export default class HTMLTextTrackSourceBuffer
    * Free up ressources from this sourceBuffer
    */
   _abort() : void {
-    log.debug("aborting html text track source buffer");
+    log.debug("HTTSB: Aborting html text track source buffer");
     this._destroy$.next();
     this._destroy$.complete();
     safelyRemoveChild(this._textTrackElement, this._currentElement);

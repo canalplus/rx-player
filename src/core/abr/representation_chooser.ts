@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import arrayFind from "array-find";
 import objectAssign from "object-assign";
 import {
   BehaviorSubject,
@@ -24,6 +25,7 @@ import {
 } from "rxjs";
 import {
   map,
+  startWith,
   switchMap,
   takeUntil,
   tap,
@@ -40,6 +42,7 @@ import fromBitrateCeil from "./fromBitrateCeil";
 
 const {
   ABR_REGULAR_FACTOR,
+  ABR_STARVATION_DURATION_DELTA,
   ABR_STARVATION_FACTOR,
   ABR_STARVATION_GAP,
   OUT_OF_STARVATION_GAP,
@@ -51,13 +54,20 @@ export interface IABREstimation {
   manual: boolean; // True if the representation choice was manually dictated
                    // by the user
   representation: Representation; // The chosen representation
+  urgent : boolean; // True if current downloads should be canceled to
+                    // download the one of the chosen Representation
+                    // immediately
+                    // False if we can chose to wait for the current
+                    // download(s) to finish before switching.
 }
 
 interface IRepresentationChooserClockTick {
-  bitrate : number|undefined; // currently set bitrate, in bit per seconds
+  downloadBitrate : number|undefined; // bitrate of the currently downloaded
+                                      // segments, in bit per seconds
   bufferGap : number; // time to the end of the buffer, in seconds
   currentTime : number; // current position, in seconds
   speed : number; // current playback rate
+  duration : number; // whole duration of the content
 }
 
 interface IProgressEventValue {
@@ -108,33 +118,11 @@ interface IFilters {
 }
 
 interface IRepresentationChooserOptions {
-  limitWidth$?: Observable<number>;
-  throttle$?: Observable<number>;
-  initialBitrate?: number;
-  manualBitrate?: number;
-  maxAutoBitrate?: number;
-}
-
-/**
- * Returns an observable emitting only the representation concerned by the
- * bitrate ceil given.
- * @param {Array.<Representation>} representations
- * @param {number} bitrate
- * @returns {Observable}
- */
-function setManualRepresentation(
-  representations : Representation[],
-  bitrate : number
-) : Observable<IABREstimation> {
-  const chosenRepresentation =
-    fromBitrateCeil(representations, bitrate) ||
-    representations[0];
-
-  return observableOf({
-    bitrate: undefined, // Bitrate estimation is deactivated here
-    manual: true,
-    representation: chosenRepresentation,
-  });
+  limitWidth$?: Observable<number>; // Emit maximum useful width
+  throttle$?: Observable<number>; // Emit temporary bandwidth throttle
+  initialBitrate?: number; // The initial wanted bitrate
+  manualBitrate?: number; // A bitrate set manually
+  maxAutoBitrate?: number; // The maximum bitrate we should set in adaptive mode
 }
 
 /**
@@ -145,20 +133,18 @@ function setManualRepresentation(
  */
 function getConcernedRequest(
   requests : Partial<Record<string, IRequestInfo>>,
-  position : number
+  neededPosition : number
 ) : IRequestInfo|undefined {
   const currentRequestIds = Object.keys(requests);
   const len = currentRequestIds.length;
 
   for (let i = 0; i < len; i++) {
     const request = requests[currentRequestIds[i]];
-
-    // We check that this chunk has a high probability of being the one we want
-    if (
-      request != null &&
-      Math.abs(request.time - position) < request.duration * 0.3
-    ) {
-      return request;
+    if (request != null && request.duration > 0) {
+      const segmentEnd = request.time + request.duration;
+      if (segmentEnd > neededPosition && neededPosition - request.time > -0.3) {
+        return request;
+      }
     }
   }
 }
@@ -232,26 +218,24 @@ function estimateRemainingTime(
  * Check if the request for the most needed segment is too slow.
  * If that's the case, re-calculate the bandwidth urgently based on
  * this single request.
- * @param {Object} requests - Current pending requests.
+ * @param {Object} pendingRequests - Current pending requests.
  * @param {Object} clock - Informations on the current playback.
  * @param {Number} lastEstimatedBitrate - Last bitrate estimation emitted.
  * @returns {Number|undefined}
  */
 function estimateStarvationModeBitrate(
-  requests : Partial<Record<string, IRequestInfo>>,
+  pendingRequests : Partial<Record<string, IRequestInfo>>,
   clock : IRepresentationChooserClockTick,
   lastEstimatedBitrate : number|undefined
 ) : number|undefined {
   const nextNeededPosition = clock.currentTime + clock.bufferGap;
-  const concernedRequest = getConcernedRequest(requests, nextNeededPosition);
+  const concernedRequest = getConcernedRequest(pendingRequests, nextNeededPosition);
   if (!concernedRequest) {
     return undefined;
   }
 
-  const currentBitrate = clock.bitrate;
   const chunkDuration = concernedRequest.duration;
   const now = performance.now();
-  const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
   const lastProgressEvent = concernedRequest.progress ?
     concernedRequest.progress[concernedRequest.progress.length - 1] :
     null;
@@ -271,6 +255,8 @@ function estimateStarvationModeBitrate(
     }
   }
 
+  const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
+  const currentBitrate = clock.downloadBitrate;
   if (
     currentBitrate == null ||
     requestElapsedTime <= ((chunkDuration * 1.5 + 1) / clock.speed)
@@ -286,11 +272,55 @@ function estimateStarvationModeBitrate(
 }
 
 /**
+ * Returns true if, based on the current requests, it seems that the ABR should
+ * switch immediately if a lower bitrate is more adapted.
+ * Returns false if it estimates that you have time before switching to a lower
+ * bitrate.
+ * @param {Object} pendingRequests
+ * @param {Object} clock
+ */
+function shouldDirectlySwitchToLowBitrate(
+  pendingRequests : Partial<Record<string, IRequestInfo>>,
+  clock : IRepresentationChooserClockTick
+) : boolean {
+  const nextNeededPosition = clock.currentTime + clock.bufferGap;
+  const requests = Object.values(pendingRequests)
+    .filter((a) : a is IRequestInfo => !!a)
+    .sort((a, b) => a.time - b.time);
+
+  const nextNeededRequest = arrayFind(requests, (r) =>
+    (r.time + r.duration) > nextNeededPosition
+  );
+  if (!nextNeededRequest) {
+    return true;
+  }
+
+  const now = performance.now();
+  const lastProgressEvent = nextNeededRequest.progress ?
+    nextNeededRequest.progress[nextNeededRequest.progress.length - 1] :
+    null;
+
+  // first, try to do a quick estimate from progress events
+  const bandwidthEstimate = estimateRequestBandwidth(nextNeededRequest);
+  if (lastProgressEvent == null || bandwidthEstimate == null) {
+    return true;
+  }
+
+  const remainingTime = estimateRemainingTime(lastProgressEvent, bandwidthEstimate);
+  if (
+    (now - lastProgressEvent.timestamp) / 1000 <= (remainingTime * 1.2) &&
+    remainingTime < ((clock.bufferGap / clock.speed) + ABR_STARVATION_GAP)
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * Choose the right representation based on multiple parameters given, such as:
  *   - the current user's bandwidth
  *   - the max bitrate authorized
  *   - the size of the video element
- *   - etc.
  *
  * Those parameters can be set through different subjects and methods.
  * The subjects (undocumented here are):
@@ -317,6 +347,7 @@ export default class RepresentationChooser {
   private readonly _throttle$ : Observable<number>|undefined;
   private readonly estimator : BandwidthEstimator;
   private readonly _initialBitrate : number;
+  private readonly _reEstimate$ : Subject<void>;
   private _currentRequests : Partial<Record<string, IRequestInfo>>;
 
   /**
@@ -342,6 +373,7 @@ export default class RepresentationChooser {
 
     this._limitWidth$ = options.limitWidth$;
     this._throttle$ = options.throttle$;
+    this._reEstimate$ = new Subject<void>();
   }
 
   /**
@@ -359,8 +391,9 @@ export default class RepresentationChooser {
     if (representations.length === 1) {
       return observableOf({
         bitrate: undefined, // Bitrate estimation is deactivated here
-        manual: false,
         representation: representations[0],
+        manual: false,
+        urgent: true,
       });
     }
 
@@ -393,88 +426,113 @@ export default class RepresentationChooser {
     return manualBitrate$.pipe(switchMap(manualBitrate => {
       if (manualBitrate >= 0) {
         // -- MANUAL mode --
-        return setManualRepresentation(representations, manualBitrate);
+        return observableOf({
+          bitrate: undefined, // Bitrate estimation is deactivated here
+          representation: fromBitrateCeil(representations, manualBitrate) ||
+            representations[0],
+          manual: true,
+          urgent: true, // a manual bitrate switch should happen immediately
+        });
       }
 
       // -- AUTO mode --
       let inStarvationMode = false; // == buffer gap too low == panic mode
-      return observableCombineLatest(clock$, maxAutoBitrate$, deviceEvents$)
-        .pipe(
-          map(([ clock, maxAutoBitrate, deviceEvents ]) => {
-            let nextBitrate;
-            let bandwidthEstimate;
-            const { bufferGap } = clock;
+      return observableCombineLatest(
+        clock$,
+        maxAutoBitrate$,
+        deviceEvents$,
+        this._reEstimate$.pipe(startWith(null))
+      ).pipe(
+        map(([ clock, maxAutoBitrate, deviceEvents ]) => {
+          let newBitrateCeil; // bitrate ceil for the chosen Representation
+          let bandwidthEstimate;
+          const { bufferGap, currentTime, duration } = clock;
 
-            // check if should get in/out of starvation mode
+          // check if should get in/out of starvation mode
+          if (bufferGap + currentTime < duration - ABR_STARVATION_DURATION_DELTA) {
             if (!inStarvationMode && bufferGap <= ABR_STARVATION_GAP) {
-              log.info("ABR - enter starvation mode.");
+              log.info("ABR: enter starvation mode.");
               inStarvationMode = true;
             } else if (inStarvationMode && bufferGap >= OUT_OF_STARVATION_GAP) {
-              log.info("ABR - exit starvation mode.");
+              log.info("ABR: exit starvation mode.");
               inStarvationMode = false;
             }
+          } else if (inStarvationMode) {
+            log.info("ABR: exit starvation mode.");
+            inStarvationMode = false;
+          }
 
-            // If in starvation mode, check if a quick new estimate can be done
-            // from the last requests.
-            // If so, cancel previous estimations and replace it by the new one
-            if (inStarvationMode) {
-              bandwidthEstimate = estimateStarvationModeBitrate(
-                this._currentRequests, clock, lastEstimatedBitrate);
+          // If in starvation mode, check if a quick new estimate can be done
+          // from the last requests.
+          // If so, cancel previous estimations and replace it by the new one
+          if (inStarvationMode) {
+            bandwidthEstimate = estimateStarvationModeBitrate(
+              this._currentRequests, clock, lastEstimatedBitrate);
 
-              if (bandwidthEstimate != null) {
-                log.info("ABR - starvation mode emergency estimate:", bandwidthEstimate);
-                this.estimator.reset();
-                const currentBitrate = clock.bitrate;
-                nextBitrate = currentBitrate == null ?
-                  Math.min(bandwidthEstimate, maxAutoBitrate) :
-                  Math.min(bandwidthEstimate, maxAutoBitrate, currentBitrate);
-              }
+            if (bandwidthEstimate != null) {
+              log.info("ABR: starvation mode emergency estimate:", bandwidthEstimate);
+              this.estimator.reset();
+              const currentBitrate = clock.downloadBitrate;
+              newBitrateCeil = currentBitrate == null ?
+                Math.min(bandwidthEstimate, maxAutoBitrate) :
+                Math.min(bandwidthEstimate, maxAutoBitrate, currentBitrate);
             }
+          }
 
-            // if nextBitrate is not yet defined, do the normal estimation
-            if (nextBitrate == null) {
-              bandwidthEstimate = this.estimator.getEstimate();
+          // if newBitrateCeil is not yet defined, do the normal estimation
+          if (newBitrateCeil == null) {
+            bandwidthEstimate = this.estimator.getEstimate();
 
-              let nextEstimate;
-              if (bandwidthEstimate != null) {
-                nextEstimate = inStarvationMode ?
-                  bandwidthEstimate * ABR_STARVATION_FACTOR :
-                  bandwidthEstimate * ABR_REGULAR_FACTOR;
-              } else if (lastEstimatedBitrate != null) {
-                nextEstimate = inStarvationMode ?
-                  lastEstimatedBitrate * ABR_STARVATION_FACTOR :
-                  lastEstimatedBitrate * ABR_REGULAR_FACTOR;
-              } else {
-                nextEstimate = _initialBitrate;
-              }
-              nextBitrate = Math.min(nextEstimate, maxAutoBitrate);
+            let nextEstimate;
+            if (bandwidthEstimate != null) {
+              nextEstimate = inStarvationMode ?
+                bandwidthEstimate * ABR_STARVATION_FACTOR :
+                bandwidthEstimate * ABR_REGULAR_FACTOR;
+            } else if (lastEstimatedBitrate != null) {
+              nextEstimate = inStarvationMode ?
+                lastEstimatedBitrate * ABR_STARVATION_FACTOR :
+                lastEstimatedBitrate * ABR_REGULAR_FACTOR;
+            } else {
+              nextEstimate = _initialBitrate;
             }
+            newBitrateCeil = Math.min(nextEstimate, maxAutoBitrate);
+          }
 
-            if (clock.speed > 1) {
-              nextBitrate /= clock.speed;
+          if (clock.speed > 1) {
+            newBitrateCeil /= clock.speed;
+          }
+
+          const _representations =
+            getFilteredRepresentations(representations, deviceEvents);
+
+          const chosenRepresentation =
+            fromBitrateCeil(_representations, newBitrateCeil) || representations[0];
+
+          const urgent = (() => {
+            if (clock.downloadBitrate == null) {
+              return true;
+            } else if (chosenRepresentation.bitrate >= clock.downloadBitrate) {
+              return !inStarvationMode;
             }
+            return shouldDirectlySwitchToLowBitrate(this._currentRequests, clock);
+          })();
+          return {
+            bitrate: bandwidthEstimate,
+            representation: chosenRepresentation,
+            manual: false,
+            urgent,
+          };
 
-            const _representations =
-              getFilteredRepresentations(representations, deviceEvents);
+        }),
 
-            return {
-              bitrate: bandwidthEstimate,
-              manual: false,
-              representation: fromBitrateCeil(_representations, nextBitrate) ||
-              representations[0],
-            };
+        tap(({ bitrate }) => {
+          if (bitrate != null) {
+            lastEstimatedBitrate = bitrate;
+          }
+        }),
 
-          }),
-
-          tap(({ bitrate }) => {
-            if (bitrate != null) {
-              log.debug("ABR - calculated bitrate:", bitrate);
-              lastEstimatedBitrate = bitrate;
-            }
-          }),
-
-          takeUntil(this._dispose$)
-        );
+        takeUntil(this._dispose$)
+      );
     }));
   }
 
@@ -488,6 +546,7 @@ export default class RepresentationChooser {
   public addEstimate(duration : number, size : number) : void {
     if (duration != null && size != null) {
       this.estimator.addSample(duration, size);
+      this._reEstimate$.next();
     }
   }
 
@@ -555,6 +614,9 @@ export default class RepresentationChooser {
    */
   public dispose() : void {
     this._dispose$.next();
+    this._dispose$.complete();
+    this._reEstimate$.next();
+    this._reEstimate$.complete();
     this.manualBitrate$.complete();
     this.maxAutoBitrate$.complete();
   }

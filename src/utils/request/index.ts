@@ -29,7 +29,7 @@ export interface IRequestProgress {
     currentTime : number;
     duration : number;
     size : number;
-    sentTime : number;
+    sendingTime : number;
     url : string;
     totalSize? : number;
   };
@@ -43,7 +43,7 @@ export interface IRequestResponse<T, U> {
     receivedTime : number;
     responseData : T;
     responseType : U;
-    sentTime : number;
+    sendingTime : number;
     size : number;
     status : number;
     url : string;
@@ -102,7 +102,7 @@ function toJSONForIE(data : string) : unknown|null {
  * ```
  *   {
  *     url {string}: url on which the request is being done
- *     sentTime {Number}: timestamp at which the request was sent.
+ *     sendingTime {Number}: timestamp at which the request was sent.
  *     currentTime {Number}: timestamp at which the progress event was
  *                           triggered
  *     size {Number}: current size downloaded, in bytes (without
@@ -119,7 +119,7 @@ function toJSONForIE(data : string) : unknown|null {
  *     url {string}: url on which the request was done
  *     responseType {string}: the responseType of the request
  *                            (e.g. "json", "document"...)
- *     sentTime {Number}: timestamp at which the request was sent.
+ *     sendingTime {Number}: timestamp at which the request was sent.
  *     receivedTime {Number}: timestamp at which the response was received.
  *     size {Number}: size of the received data, in bytes
  *     responseData {*}: Data in the response. Format depends on the
@@ -227,7 +227,7 @@ function request<T>(
       }
     }
 
-    const sentTime = performance.now();
+    const sendingTime = performance.now();
 
     xhr.onerror = function onXHRError() {
       const errorCode = RequestErrorTypes.ERROR_EVENT;
@@ -246,8 +246,8 @@ function request<T>(
           type: "progress",
           value: {
             url,
-            duration: currentTime - sentTime,
-            sentTime,
+            duration: currentTime - sendingTime,
+            sendingTime,
             currentTime,
             size: event.loaded,
             totalSize: event.total,
@@ -287,9 +287,9 @@ function request<T>(
               status,
               url: _url,
               responseType: loadedResponseType,
-              sentTime,
+              sendingTime,
               receivedTime,
-              duration: receivedTime - sentTime,
+              duration: receivedTime - sendingTime,
               size: totalSize,
               responseData,
             },

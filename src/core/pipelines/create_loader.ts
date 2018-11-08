@@ -76,6 +76,7 @@ export interface IPipelineLoaderResponse<T> {
   value : {
     responseData : T;
     url? : string;
+    sendingTime? : number;
   };
 }
 
@@ -283,6 +284,8 @@ export default function createLoader<T, U>(
                   type: "response" as "response",
                   value: objectAssign({}, resolverResponse, {
                     responseData: arg.value.responseData,
+                    sendingTime: arg.type === "response" ?
+                      arg.value.sendingTime : undefined,
                   }),
                 });
                 const metrics$ = arg.type !== "response" ?
