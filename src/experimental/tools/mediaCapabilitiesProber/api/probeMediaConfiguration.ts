@@ -88,7 +88,7 @@ async function probeMediaConfiguration(
               }
               break;
             default:
-              // new status is either `Supported` or unknonw status. Global status
+              // new status is either `Supported` or unknown status. Global status
               // shouldn't be changed.
               break;
           }
