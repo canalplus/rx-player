@@ -1,5 +1,33 @@
 # Changelog
 
+# v3.9.0 (2018/11/08)
+
+## Features
+
+ - dash: consider ``minimumUpdatePeriod`` attribute in MPDs
+ - buffer: add codec-switching for browsers supporting the `SourceBuffer.prototype.changeType` API
+ - dash/smooth: accept and parse segments with a "stpp.ttml.im1t" codec (TTML IMSC1 in MP4)
+
+## Bug fixes
+
+  - smooth: fix calculations of the initial time, duration and minimum position for HSS VOD contents not starting at a '0' time
+  - buffer: fix priority updates for segment requests
+  - dash: calculate VOD duration from the last period if undefined in the MPD's root
+  - dash: remove possibility of obtaining two periods with the same id
+  - typings: make `manualBitrateSwitchingMode` ``loadVideo`` option an optional TypeScript typing (thanks @fnatte again!)
+
+## Other improvements
+
+  - abr: do not always cancel pending requests when switching to a new bitrate
+  - abr: re-estimate the bandwidth immediately after each request
+  - buffer: remove automatic garbage-collection of the "image" source-buffer (its rules should be more complex than those in place)
+  - tools/mediaCapabilitiesProber: Make ``getCompatibleDRMConfigurations`` work under IE11 and old webkit versions
+  - tools/mediaCapabilitiesProber: Add a multitude of bug fixes to the experimental mediaCapabilitiesProber
+  - package: divide by more than 2 the size of our package published in `npm` (thanks @necccc)
+  - tests: add memory tests to detect memory leaks
+  - demo: add 'favicon' to the demo page
+
+
 ## v3.8.1 (2018/10/17)
 
 ### Bug fixes
