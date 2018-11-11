@@ -447,7 +447,7 @@ export default class SmoothRepresentationIndex
         lastSegmentInCurrentTimeline.start + repeat *
           lastSegmentInCurrentTimeline.duration;
 
-      return up > startOfLastSegmentInCurrentTimeline;
+      return (up * timescale) > startOfLastSegmentInCurrentTimeline;
     }
 
     /**
