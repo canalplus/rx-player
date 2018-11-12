@@ -406,7 +406,13 @@ function createSmoothStreamingParser(
     const adaptations: IParsedAdaptations = adaptationNodes
       .map((node: Element) => {
         return parseAdaptation(
-          node, rootURL, timescale, protections,timeShiftBufferDepth, manifestReceivedTime);
+          node,
+          rootURL,
+          timescale,
+          protections,
+          timeShiftBufferDepth,
+          manifestReceivedTime
+        );
       })
       .filter((adaptation) : adaptation is IParsedAdaptation => adaptation != null)
       .reduce((acc: IParsedAdaptations, adaptation) => {
