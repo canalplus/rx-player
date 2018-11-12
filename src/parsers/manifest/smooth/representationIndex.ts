@@ -285,6 +285,7 @@ export default class SmoothRepresentationIndex
     private _packetSize? : number;
     private _samplingRate? : number;
     private _initialLastPosition : number;
+    private _manifestReceivedTime : number;
     private _protection? : {
       keyId : string;
       keySystems: Array<{
@@ -297,6 +298,7 @@ export default class SmoothRepresentationIndex
 
     constructor(index : ITimelineIndex, infos : ISmoothInitSegmentPrivateInfos) {
       this._index = index;
+      this._manifestReceivedTime = index.manifestReceivedTime || performance.now();
       const { start, duration } = index.timeline[index.timeline.length - 1];
       this._initialLastPosition = (start + duration) / index.timescale;
       this._bitsPerSample = infos.bitsPerSample;
@@ -545,18 +547,16 @@ export default class SmoothRepresentationIndex
       }
 
       // clean segments before time shift buffer depth
-      if (this._index.manifestReceivedTime != null) {
-        const { timeShiftBufferDepth } = this._index;
-        const lastPositionEstimate =
-          (performance.now() - this._index.manifestReceivedTime) / 1000 +
-          this._initialLastPosition;
+      const { timeShiftBufferDepth } = this._index;
+      const lastPositionEstimate =
+        (performance.now() - this._manifestReceivedTime) / 1000 +
+        this._initialLastPosition;
 
-        if (timeShiftBufferDepth != null) {
-          const threshold =
-            (lastPositionEstimate - timeShiftBufferDepth) * this._index.timescale;
-          this._index.timeline = this._index.timeline
-            .filter((segment) => segment.start >= threshold);
-        }
+      if (timeShiftBufferDepth != null) {
+        const threshold =
+          (lastPositionEstimate - timeShiftBufferDepth) * this._index.timescale;
+        this._index.timeline = this._index.timeline
+          .filter((segment) => (segment.start + segment.duration) >= threshold);
       }
     }
 }
