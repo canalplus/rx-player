@@ -78,12 +78,12 @@ function addNextSegments(
   nextSegments : INextSegmentsInfos[],
   dlSegment? : ISegmentTimingInfos
 ) : void {
+  log.debug("Smooth Parser: update segments informations.");
   const representations = adaptation.representations;
   for (let i = 0; i < representations.length; i++) {
     const representation = representations[i];
     representation.index._addSegments(nextSegments, dlSegment);
   }
-  log.debug("Smooth Parser: update segments informations.");
 }
 
 export default function(
