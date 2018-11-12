@@ -543,10 +543,9 @@ export default class SmoothRepresentationIndex
       for (let i = 0; i < nextSegments.length; i++) {
         _addSegmentInfos(this._index, nextSegments[i], currentSegment);
       }
-      log.debug("SMOOTH: Added segments in timeline.", nextSegments);
 
       // clean segments before time shift buffer depth
-      if (this._index.manifestReceivedTime) {
+      if (this._index.manifestReceivedTime != null) {
         const { timeShiftBufferDepth } = this._index;
         const lastPositionEstimate =
           (performance.now() - this._index.manifestReceivedTime) / 1000 *
@@ -554,26 +553,9 @@ export default class SmoothRepresentationIndex
 
         if (timeShiftBufferDepth != null) {
           const threshold =
-            lastPositionEstimate - (timeShiftBufferDepth * this._index.timescale);
-          const { newTimeline, removedSegments } = this._index.timeline
-          .reduce((
-            acc: {
-              newTimeline: IIndexSegment[];
-              removedSegments: IIndexSegment[];
-            }, segment
-          ) => {
-            if (segment.start >= threshold) {
-              acc.newTimeline.push(segment);
-            } else {
-              acc.removedSegments.push(segment);
-            }
-            return acc;
-          }, { newTimeline: [], removedSegments: [] });
-          this._index.timeline = newTimeline;
-
-          if (removedSegments.length > 0) {
-            log.debug("SMOOTH: Removed segments from timeline.", removedSegments);
-          }
+            lastPositionEstimate - (timeShiftBufferDepth / 1000 * this._index.timescale);
+          this._index.timeline = this._index.timeline
+            .filter((segment) => segment.start >= threshold);
         }
       }
     }

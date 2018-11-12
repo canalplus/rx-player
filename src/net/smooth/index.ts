@@ -25,6 +25,7 @@ import {
 } from "rxjs";
 import { map } from "rxjs/operators";
 import features from "../../features";
+import log from "../../log";
 import {
   Adaptation,
   Representation,
@@ -80,8 +81,9 @@ function addNextSegments(
   const representations = adaptation.representations;
   for (let i = 0; i < representations.length; i++) {
     const representation = representations[i];
-      representation.index._addSegments(nextSegments, dlSegment);
-    }
+    representation.index._addSegments(nextSegments, dlSegment);
+  }
+  log.debug("Smooth Parser: update segments informations.");
 }
 
 export default function(
