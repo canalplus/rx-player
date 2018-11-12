@@ -94,7 +94,11 @@ interface ISmoothParsedQualityLevel {
  */
 function createSmoothStreamingParser(
   parserOptions : IHSSParserConfiguration = {}
-) : (manifest : Document, url : string) => IParsedManifest {
+) : (
+  manifest : Document,
+  url : string,
+  manifestReceivedTime? : number
+) => IParsedManifest {
 
   const SUGGESTED_PERSENTATION_DELAY =
     parserOptions.suggestedPresentationDelay == null ?
@@ -199,7 +203,8 @@ function createSmoothStreamingParser(
     rootURL : string,
     timescale : number,
     protections : IContentProtectionSmooth[],
-    timeShiftBufferDepth? : number
+    timeShiftBufferDepth? : number,
+    manifestReceivedTime? : number
   ) : IParsedAdaptation|null {
     const _timescale = root.hasAttribute("Timescale") ?
       +(root.getAttribute("Timescale") || 0) : timescale;
@@ -277,6 +282,7 @@ function createSmoothStreamingParser(
         timescale: index.timescale,
         media: replaceRepresentationSmoothTokens(path, qualityLevel.bitrate),
         timeShiftBufferDepth,
+        manifestReceivedTime,
       };
       const mimeType = qualityLevel.mimeType || DEFAULT_MIME_TYPES[adaptationType];
       const codecs = qualityLevel.codecs || DEFAULT_CODECS[adaptationType];
@@ -347,7 +353,11 @@ function createSmoothStreamingParser(
     return parsedAdaptation;
   }
 
-  function parseFromDocument(doc : Document, url : string) : IParsedManifest {
+  function parseFromDocument(
+    doc : Document,
+    url : string,
+    manifestReceivedTime? : number
+  ) : IParsedManifest {
     const rootURL = normalizeBaseURL(url);
     const root = doc.documentElement;
     if (!root || root.nodeName !== "SmoothStreamingMedia") {
@@ -396,7 +406,7 @@ function createSmoothStreamingParser(
     const adaptations: IParsedAdaptations = adaptationNodes
       .map((node: Element) => {
         return parseAdaptation(
-          node, rootURL, timescale, protections, timeShiftBufferDepth);
+          node, rootURL, timescale, protections,timeShiftBufferDepth, manifestReceivedTime);
       })
       .filter((adaptation) : adaptation is IParsedAdaptation => adaptation != null)
       .reduce((acc: IParsedAdaptations, adaptation) => {

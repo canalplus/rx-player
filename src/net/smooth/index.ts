@@ -143,7 +143,8 @@ export default function(
       const data = typeof response.responseData === "string" ?
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
-      const manifest = smoothManifestParser(data, url);
+      const { receivedTime: manifestReceivedTime } = response;
+      const manifest = smoothManifestParser(data, url, manifestReceivedTime);
       return observableOf({ manifest, url });
     },
   };
