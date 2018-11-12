@@ -5,6 +5,7 @@
 ### Bug fixes
 
   - smooth: fix issue preventing manifest updates in some cases
+  - dash: fix timeout for minimumUpdatePeriod in cases where the time at which the manifest was last requested is not known (like when setting a customManifestLoader argument)
 
 ### Other improvements
 
