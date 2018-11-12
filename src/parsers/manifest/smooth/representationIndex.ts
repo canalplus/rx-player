@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../../log";
 import {
   IRepresentationIndex,
   ISegment,
@@ -447,7 +448,7 @@ export default class SmoothRepresentationIndex
         lastSegmentInCurrentTimeline.start + repeat *
           lastSegmentInCurrentTimeline.duration;
 
-      return up > startOfLastSegmentInCurrentTimeline;
+      return (up * timescale) > startOfLastSegmentInCurrentTimeline;
     }
 
     /**
@@ -523,8 +524,65 @@ export default class SmoothRepresentationIndex
       return -1;
     }
 
+    /**
+     * Update this RepresentationIndex by a newly downloaded one.
+     * Check if the old index had more informations about new segments and
+     * re-add them if that's the case.
+     * @param {Object} newIndex
+     */
     _update(newIndex : SmoothRepresentationIndex) : void {
+      const oldTimeline = this._index.timeline;
+      const newTimeline = newIndex._index.timeline;
+      const oldTimescale = this._index.timescale;
+      const newTimescale = newIndex._index.timescale;
       this._index = newIndex._index;
+
+      if (!oldTimeline.length || !newTimeline.length || oldTimescale !== newTimescale) {
+        return; // don't take risk, if something is off, take the new one
+      }
+
+      const lastOldTimelineElement = oldTimeline[oldTimeline.length - 1];
+      const lastNewTimelineElement = newTimeline[newTimeline.length - 1];
+      const newEnd = getTimelineRangeEnd(lastNewTimelineElement);
+      if (getTimelineRangeEnd(lastOldTimelineElement) <= newEnd) {
+        return;
+      }
+
+      for (let i = 0; i < oldTimeline.length; i++) {
+        const oldTimelineRange = oldTimeline[i];
+        const oldEnd = getTimelineRangeEnd(oldTimelineRange);
+        if (oldEnd === newEnd) { // just add the supplementary segments
+          this._index.timeline = this._index.timeline.concat(oldTimeline.slice(i + 1));
+          return;
+        }
+
+        if (oldEnd > newEnd) { // adjust repeatCount + add supplementary segments
+          if (oldTimelineRange.duration !== lastNewTimelineElement.duration) {
+            return;
+          }
+
+          const rangeDuration = newEnd - oldTimelineRange.start;
+          if (rangeDuration === 0) {
+            log.warn("Smooth Parser: a discontinuity detected in the previous manifest" +
+              " has been resolved.");
+            this._index.timeline = this._index.timeline.concat(oldTimeline.slice(i));
+            return;
+          }
+          if (rangeDuration < 0 || rangeDuration % oldTimelineRange.duration !== 0) {
+            return;
+          }
+
+          const repeatWithOld = (rangeDuration / oldTimelineRange.duration) - 1;
+          const relativeRepeat = oldTimelineRange.repeatCount - repeatWithOld;
+          if (relativeRepeat < 0) {
+            return;
+          }
+          lastNewTimelineElement.repeatCount += relativeRepeat;
+          const supplementarySegments = oldTimeline.slice(i + 1);
+          this._index.timeline = this._index.timeline.concat(supplementarySegments);
+          return;
+        }
+      }
     }
 
     _addSegments(
