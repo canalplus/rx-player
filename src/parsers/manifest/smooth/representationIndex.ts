@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../../log";
 import {
   IRepresentationIndex,
   ISegment,
@@ -283,6 +284,8 @@ export default class SmoothRepresentationIndex
     private _channels? : number;
     private _packetSize? : number;
     private _samplingRate? : number;
+    private _initialLastPosition : number;
+    private _createdAt : number;
     private _protection? : {
       keyId : string;
       keySystems: Array<{
@@ -295,6 +298,8 @@ export default class SmoothRepresentationIndex
 
     constructor(index : ITimelineIndex, infos : ISmoothInitSegmentPrivateInfos) {
       this._index = index;
+      this._initialLastPosition = index.timeline[index.timeline.length - 1].start;
+      this._createdAt = performance.now() / 1000;
       this._bitsPerSample = infos.bitsPerSample;
       this._channels = infos.channels;
       this._codecPrivateData = infos.codecPrivateData;
@@ -539,14 +544,36 @@ export default class SmoothRepresentationIndex
       for (let i = 0; i < nextSegments.length; i++) {
         _addSegmentInfos(this._index, nextSegments[i], currentSegment);
       }
+      log.debug("SMOOTH: Added segments in timeline.", nextSegments);
 
       // clean segments before time shift buffer depth
       const { timeShiftBufferDepth } = this._index;
-      const lastPosition = this.getLastPosition();
-      if (timeShiftBufferDepth != null && lastPosition) {
-        const threshold = (lastPosition - timeShiftBufferDepth) * this._index.timescale;
-        this._index.timeline = this._index.timeline
-          .filter((segment) => segment.start >= threshold);
+      const lastPositionEstimate =
+        (performance.now() / 1000 - this._createdAt) * this._index.timescale +
+        this._initialLastPosition;
+
+      if (timeShiftBufferDepth != null && lastPositionEstimate) {
+        const threshold =
+          lastPositionEstimate - (timeShiftBufferDepth * this._index.timescale);
+        const { newTimeline, removedSegments } = this._index.timeline
+        .reduce((
+          acc: {
+            newTimeline: IIndexSegment[];
+            removedSegments: IIndexSegment[];
+          }, segment
+        ) => {
+          if (segment.start >= threshold) {
+            acc.newTimeline.push(segment);
+          } else {
+            acc.removedSegments.push(segment);
+          }
+          return acc;
+        }, { newTimeline: [], removedSegments: [] });
+        this._index.timeline = newTimeline;
+
+        if (removedSegments.length > 0) {
+          log.debug("SMOOTH: Removed segments from timeline.", removedSegments);
+        }
       }
     }
 }
