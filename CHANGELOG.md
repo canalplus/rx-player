@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.9.1 (2018/11/12)
+
+### Bug fixes
+
+  - smooth: fix issue preventing manifest updates in some cases
+
+### Other improvements
+
+  - smooth: keep supplementary segment informations when updating the manifest
+  - smooth: perform garbage-collection of unnaccessible segments information when updating them
+
+
 ## v3.9.0 (2018/11/08)
 
 ### Features
