@@ -297,7 +297,8 @@ export default class SmoothRepresentationIndex
 
     constructor(index : ITimelineIndex, infos : ISmoothInitSegmentPrivateInfos) {
       this._index = index;
-      this._initialLastPosition = index.timeline[index.timeline.length - 1].start;
+      const { start, duration } = index.timeline[index.timeline.length - 1];
+      this._initialLastPosition = (start + duration) / index.timescale;
       this._bitsPerSample = infos.bitsPerSample;
       this._channels = infos.channels;
       this._codecPrivateData = infos.codecPrivateData;
@@ -547,12 +548,12 @@ export default class SmoothRepresentationIndex
       if (this._index.manifestReceivedTime != null) {
         const { timeShiftBufferDepth } = this._index;
         const lastPositionEstimate =
-          (performance.now() - this._index.manifestReceivedTime) / 1000 *
-          this._index.timescale + this._initialLastPosition;
+          (performance.now() - this._index.manifestReceivedTime) / 1000 +
+          this._initialLastPosition;
 
         if (timeShiftBufferDepth != null) {
           const threshold =
-            lastPositionEstimate - (timeShiftBufferDepth / 1000 * this._index.timescale);
+            (lastPositionEstimate - timeShiftBufferDepth / 1000) * this._index.timescale;
           this._index.timeline = this._index.timeline
             .filter((segment) => segment.start >= threshold);
         }
