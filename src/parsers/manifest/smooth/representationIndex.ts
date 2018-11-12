@@ -32,6 +32,7 @@ interface ITimelineIndex {
   media : string;
   timeline : IIndexSegment[];
   startNumber? : number;
+  timeShiftBufferDepth? : number;
 }
 
 /**
@@ -537,6 +538,15 @@ export default class SmoothRepresentationIndex
     ) : void {
       for (let i = 0; i < nextSegments.length; i++) {
         _addSegmentInfos(this._index, nextSegments[i], currentSegment);
+      }
+
+      // clean segments before time shift buffer depth
+      const { timeShiftBufferDepth } = this._index;
+      const lastPosition = this.getLastPosition();
+      if (timeShiftBufferDepth != null && lastPosition) {
+        const threshold = (lastPosition - timeShiftBufferDepth) * this._index.timescale;
+        this._index.timeline = this._index.timeline
+          .filter((segment) => segment.start >= threshold);
       }
     }
 }

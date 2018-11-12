@@ -198,7 +198,8 @@ function createSmoothStreamingParser(
     root : Element,
     rootURL : string,
     timescale : number,
-    protections : IContentProtectionSmooth[]
+    protections : IContentProtectionSmooth[],
+    timeShiftBufferDepth? : number
   ) : IParsedAdaptation|null {
     const _timescale = root.hasAttribute("Timescale") ?
       +(root.getAttribute("Timescale") || 0) : timescale;
@@ -275,6 +276,7 @@ function createSmoothStreamingParser(
         timeline: index.timeline,
         timescale: index.timescale,
         media: replaceRepresentationSmoothTokens(path, qualityLevel.bitrate),
+        timeShiftBufferDepth,
       };
       const mimeType = qualityLevel.mimeType || DEFAULT_MIME_TYPES[adaptationType];
       const codecs = qualityLevel.codecs || DEFAULT_CODECS[adaptationType];
@@ -385,9 +387,16 @@ function createSmoothStreamingParser(
 
     const initialAdaptations: IParsedAdaptations = {};
 
+    const isLive = parseBoolean(root.getAttribute("IsLive"));
+
+    const timeShiftBufferDepth = isLive ?
+      +(root.getAttribute("DVRWindowLength") || 0) / timescale :
+      undefined;
+
     const adaptations: IParsedAdaptations = adaptationNodes
       .map((node: Element) => {
-        return parseAdaptation(node, rootURL, timescale, protections);
+        return parseAdaptation(
+          node, rootURL, timescale, protections, timeShiftBufferDepth);
       })
       .filter((adaptation) : adaptation is IParsedAdaptation => adaptation != null)
       .reduce((acc: IParsedAdaptations, adaptation) => {
@@ -402,7 +411,6 @@ function createSmoothStreamingParser(
 
     let suggestedPresentationDelay : number|undefined;
     let presentationLiveGap : number|undefined;
-    let timeShiftBufferDepth : number|undefined;
     let availabilityStartTime : number|undefined;
     let duration : number;
 
@@ -460,11 +468,8 @@ function createSmoothStreamingParser(
       }
     }
 
-    const isLive = parseBoolean(root.getAttribute("IsLive"));
     if (isLive) {
       suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
-      timeShiftBufferDepth =
-        +(root.getAttribute("DVRWindowLength") || 0) / timescale;
       availabilityStartTime = REFERENCE_DATE_TIME;
       presentationLiveGap = Date.now() / 1000 -
         (lastTimeReference != null ?
