@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../../log";
 import {
   IRepresentationIndex,
   ISegment,
@@ -551,14 +552,23 @@ export default class SmoothRepresentationIndex
         const oldTimelineRange = oldTimeline[i];
         const oldEnd = getTimelineRangeEnd(oldTimelineRange);
         if (oldEnd === newEnd) { // just add the supplementary segments
-          const supplementarySegments = oldTimeline.slice(i + 1);
-          this._index.timeline = this._index.timeline.concat(supplementarySegments);
+          this._index.timeline = this._index.timeline.concat(oldTimeline.slice(i + 1));
           return;
         }
 
         if (oldEnd > newEnd) { // adjust repeatCount + add supplementary segments
+          if (oldTimelineRange.duration !== lastNewTimelineElement.duration) {
+            return;
+          }
+
           const rangeDuration = newEnd - oldTimelineRange.start;
-          if (rangeDuration === 0 || rangeDuration % oldTimelineRange.duration !== 0) {
+          if (rangeDuration === 0) {
+            log.warn("Smooth Parser: a discontinuity detected in the previous manifest" +
+              " has been resolved.");
+            this._index.timeline = this._index.timeline.concat(oldTimeline.slice(i));
+            return;
+          }
+          if (rangeDuration < 0 || rangeDuration % oldTimelineRange.duration !== 0) {
             return;
           }
 
