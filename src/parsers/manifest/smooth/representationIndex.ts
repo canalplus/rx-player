@@ -615,6 +615,7 @@ export default class SmoothRepresentationIndex
       for (let i = 0; i < nextSegments.length; i++) {
         _addSegmentInfos(this._index, nextSegments[i], currentSegment);
       }
+      log.debug("SMOOTH: Added segments in timeline.", nextSegments);
 
       // clean segments before time shift buffer depth
       if (this._initialLastPosition != null) {
