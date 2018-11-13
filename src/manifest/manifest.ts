@@ -25,6 +25,8 @@ import Adaptation, {
   IRepresentationFilter,
 } from "./adaptation";
 import Period, {
+  IFetchedPeriod,
+  IPartialPeriod,
   IPeriodArguments,
 } from "./period";
 import { StaticRepresentationIndex } from "./representation_index";
@@ -269,7 +271,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     warnOnce("manifest.getAdaptations() is deprecated." +
              " Please use manifest.period[].getAdaptations() instead");
     const firstPeriod = this.periods[0];
-    if (!firstPeriod) {
+    if (!firstPeriod || !firstPeriod.isFetched()) {
       return [];
     }
     const adaptationsByType = firstPeriod.adaptations;
@@ -292,7 +294,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     warnOnce("manifest.getAdaptationsForType(type) is deprecated." +
              " Please use manifest.period[].getAdaptationsForType(type) instead");
     const firstPeriod = this.periods[0];
-    if (!firstPeriod) {
+    if (!firstPeriod || !firstPeriod.isFetched()) {
       return [];
     }
     return firstPeriod.adaptations[adaptationType] || [];
@@ -443,10 +445,14 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     });
 
     if (newImageTracks.length && this.periods.length) {
-      const { adaptations } = this.periods[0];
-      adaptations.image =
-        adaptations.image ? adaptations.image.concat(newImageTracks) :
-                            newImageTracks;
+      const firstPeriod = this.periods[0];
+      if (firstPeriod.adaptations == null) {
+        firstPeriod.adaptations = {};
+      }
+      const { adaptations } = firstPeriod;
+      adaptations.image = adaptations.image ? adaptations.image
+                                                         .concat(newImageTracks) :
+                                              newImageTracks;
     }
   }
 
@@ -492,17 +498,23 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     }, []);
 
     if (newTextAdaptations.length && this.periods.length) {
-      const { adaptations } = this.periods[0];
-      adaptations.text =
-        adaptations.text ? adaptations.text.concat(newTextAdaptations) :
-                           newTextAdaptations;
+      const firstPeriod = this.periods[0];
+      if (firstPeriod.adaptations == null) {
+        firstPeriod.adaptations = {};
+      }
+      const { adaptations } = firstPeriod;
+      adaptations.text = adaptations.text ? adaptations.text
+                                                       .concat(newTextAdaptations) :
+                                            newTextAdaptations;
     }
   }
 }
 
 export {
+  IFetchedPeriod,
   IManifestArguments,
   IManifestParsingOptions,
+  IPartialPeriod,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
 };

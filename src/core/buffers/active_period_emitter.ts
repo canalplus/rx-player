@@ -32,19 +32,19 @@ import {
   tap,
 } from "rxjs/operators";
 import log from "../../log";
-import { Period } from "../../manifest";
+import { IFetchedPeriod } from "../../manifest";
 import SortedList from "../../utils/sorted_list";
 import {
   IBufferType,
 } from "../source_buffers";
 
 // PeriodBuffer informations emitted to the ActivePeriodEmitted
-export interface IPeriodBufferInfos { period: Period;
+export interface IPeriodBufferInfos { period: IFetchedPeriod;
                                       type: IBufferType; }
 
 // structure used internally to keep track of which Period has which
 // PeriodBuffer
-interface IPeriodItem { period: Period;
+interface IPeriodItem { period: IFetchedPeriod;
                         buffers: Set<IBufferType>; }
 
 /**
@@ -88,7 +88,7 @@ export default function ActivePeriodEmitter(
   bufferTypes: IBufferType[],
   addPeriodBuffer$ : Observable<IPeriodBufferInfos>,
   removePeriodBuffer$ : Observable<IPeriodBufferInfos>
-) : Observable<Period|null> {
+) : Observable<IFetchedPeriod|null> {
   const periodsList : SortedList<IPeriodItem> =
     new SortedList((a, b) => a.period.start - b.period.start);
 
@@ -129,7 +129,7 @@ export default function ActivePeriodEmitter(
     }));
 
   return observableMerge(onItemAdd$, onItemRemove$).pipe(
-    map(() : Period|null => {
+    map(() : IFetchedPeriod|null => {
       const head = periodsList.head();
       if (!head) {
         return null;

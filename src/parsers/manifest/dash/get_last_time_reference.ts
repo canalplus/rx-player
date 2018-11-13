@@ -73,6 +73,11 @@ export default function getLastTimeReference(
   }
   const lastPeriodAdaptations =
     manifest.periods[manifest.periods.length - 1].adaptations;
+
+  if (lastPeriodAdaptations == null) {
+    // XXX TODO?
+    throw new Error("DASH Parser: the last period is not fetched for a live content.");
+  }
   const firstAdaptationsFromLastPeriod =
     lastPeriodAdaptations.video || lastPeriodAdaptations.audio;
   if (!firstAdaptationsFromLastPeriod || !firstAdaptationsFromLastPeriod.length) {

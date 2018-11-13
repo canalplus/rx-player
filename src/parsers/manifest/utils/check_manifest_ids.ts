@@ -42,6 +42,9 @@ export default function checkManifestIDs(
       periodIDS.push(periodID);
     }
     const { adaptations } = period;
+    if (adaptations == null) {
+      return;
+    }
     const adaptationIDs : string[] = [];
     Object.keys(adaptations).forEach((type) => {
       (adaptations[type] || []).forEach(adaptation => {

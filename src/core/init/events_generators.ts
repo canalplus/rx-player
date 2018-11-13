@@ -16,7 +16,7 @@
 
 import { ICustomError } from "../../errors";
 import Manifest, {
-  Period,
+  IFetchedPeriod,
 } from "../../manifest";
 import ABRManager from "../abr";
 import { IRepresentationChangeEvent } from "../buffers";
@@ -79,7 +79,7 @@ function speedChanged(speed : number) : ISpeedChangedEvent {
  */
 function nullRepresentation(
   type : IBufferType,
-  period : Period
+  period : IFetchedPeriod
 ) : IRepresentationChangeEvent {
   return { type: "representationChange",
            value: { type,

@@ -37,7 +37,7 @@ import config from "../../../config";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
-  Period,
+  IFetchedPeriod,
 } from "../../../manifest";
 import arrayIncludes from "../../../utils/array_includes";
 import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
@@ -85,7 +85,7 @@ export interface IPeriodBufferArguments {
   bufferType : IBufferType;
   clock$ : Observable<IPeriodBufferClockTick>;
   content : { manifest : Manifest;
-              period : Period; };
+              period : IFetchedPeriod; };
   garbageCollectors : WeakMapMemory<QueuedSourceBuffer<unknown>, Observable<never>>;
   segmentBookkeepers : WeakMapMemory<QueuedSourceBuffer<unknown>, SegmentBookkeeper>;
   segmentPipelinesManager : SegmentPipelinesManager<any>;

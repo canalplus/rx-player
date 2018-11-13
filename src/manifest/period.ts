@@ -38,12 +38,29 @@ export type IAdaptationsArguments =
 export interface IPeriodArguments {
   // required
   id : string; // unique ID for that Period.
-  adaptations : IAdaptationsArguments; // "Tracks" in that Period.
   start : number; // start time of the Period, in seconds.
 
   // optional
   duration? : number; // duration of the Period, in seconds.
                       // Can be undefined for a still-running one.
+  adaptations? : IAdaptationsArguments; // "Tracks" in that Period.
+}
+
+export interface IPartialPeriod {
+  id : string;
+  parsingErrors : Array<Error|ICustomError>;
+  start : number;
+  duration? : number;
+  end? : number;
+  getAdaptation(wantedId : number|string) : Adaptation|undefined;
+  getAdaptations() : Adaptation[];
+  getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[];
+  isFetched() : boolean;
+}
+
+export interface IFetchedPeriod extends IPartialPeriod {
+  adaptations : IManifestAdaptations;
+  isFetched() : true;
 }
 
 /**
@@ -52,12 +69,12 @@ export interface IPeriodArguments {
  * specific period in time.
  * @class Period
  */
-export default class Period {
+export default class Period implements IPartialPeriod {
   // ID uniquely identifying the Period in the Manifest.
   public readonly id : string;
 
   // Every 'Adaptation' in that Period, per type of Adaptation.
-  public adaptations : IManifestAdaptations;
+  public adaptations? : IManifestAdaptations;
 
   // Duration of this Period, in seconds.
   // `undefined` for still-running Periods.
@@ -82,52 +99,53 @@ export default class Period {
   constructor(args : IPeriodArguments, representationFilter? : IRepresentationFilter) {
     this.parsingErrors = [];
     this.id = args.id;
-    this.adaptations = (Object.keys(args.adaptations) as IAdaptationType[])
-      .reduce<IManifestAdaptations>((acc, type) => {
-        const adaptationsForType = args.adaptations[type];
-        if (!adaptationsForType) {
-          return acc;
-        }
-        const filteredAdaptations = adaptationsForType
-          .filter((adaptation) => {
-            if (!arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, adaptation.type)) {
-              log.info("not supported adaptation type", adaptation.type);
-              const error = new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE",
-                                           "An Adaptation has an unknown and " +
-                                           "unsupported type: " +
-                                           adaptation.type,
-                                           false);
-              this.parsingErrors.push(error);
-              return false;
-            } else {
-              return true;
-            }
-          })
-          .map((adaptation) => {
-            const newAdaptation = new Adaptation(adaptation, representationFilter);
-            this.parsingErrors.push(...newAdaptation.parsingErrors);
-            return newAdaptation;
-          })
-          .filter((adaptation) => adaptation.representations.length);
-        if (filteredAdaptations.length === 0 &&
+
+    const { adaptations } = args;
+    if (adaptations != null) {
+      this.adaptations = (Object.keys(adaptations) as IAdaptationType[])
+        .reduce<IManifestAdaptations>((acc, type) => {
+          const adaptationsForType = adaptations[type];
+          if (!adaptationsForType) {
+            return acc;
+          }
+          const filteredAdaptations = adaptationsForType
+            .filter((adaptation) => {
+              if (!arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, adaptation.type)) {
+                log.info("not supported adaptation type", adaptation.type);
+                const error = new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE",
+                  "An Adaptation has an unknown and unsupported type: " +
+                  adaptation.type, false);
+                this.parsingErrors.push(error);
+                return false;
+              } else {
+                return true;
+              }
+            })
+            .map((adaptation) => {
+              const newAdaptation = new Adaptation(adaptation, representationFilter);
+              this.parsingErrors.push(...newAdaptation.parsingErrors);
+              return newAdaptation;
+            })
+            .filter((adaptation) => adaptation.representations.length);
+          if (
+            filteredAdaptations.length === 0 &&
             adaptationsForType.length > 0 &&
             (type === "video" || type === "audio")
-        ) {
-          throw new MediaError("MANIFEST_PARSE_ERROR",
-                               "No supported " + type + " adaptations",
-                               true);
-        }
+          ) {
+            throw new MediaError("MANIFEST_PARSE_ERROR",
+              "No supported " + type + " adaptations", true);
+          }
 
-        if (filteredAdaptations.length) {
-          acc[type] = filteredAdaptations;
-        }
-        return acc;
-      }, {});
+          if (filteredAdaptations.length) {
+            acc[type] = filteredAdaptations;
+          }
+          return acc;
+        }, {});
 
-    if (!this.adaptations.video && !this.adaptations.audio) {
-      throw new MediaError("MANIFEST_PARSE_ERROR",
-                           "No supported audio and video tracks.",
-                           true);
+      if (!this.adaptations.video && !this.adaptations.audio) {
+        throw new MediaError("MANIFEST_PARSE_ERROR",
+          "No supported audio and video tracks.", true);
+      }
     }
 
     this.duration = args.duration;
@@ -139,11 +157,21 @@ export default class Period {
   }
 
   /**
+   * @returns {Boolean}
+   */
+  isFetched() : this is IFetchedPeriod {
+    return this.adaptations != null;
+  }
+
+  /**
    * Returns every `Adaptations` (or `tracks`) linked to that Period, in an
    * Array.
    * @returns {Array.<Object>}
    */
   getAdaptations() : Adaptation[] {
+    if (!this.isFetched()) {
+      return [];
+    }
     const adaptationsByType = this.adaptations;
     return objectValues(adaptationsByType)
       .reduce<Adaptation[]>((acc, adaptations) =>
@@ -161,6 +189,9 @@ export default class Period {
    * @returns {Array.<Object>}
    */
   getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
+    if (!this.isFetched()) {
+      return [];
+    }
     return this.adaptations[adaptationType] || [];
   }
 

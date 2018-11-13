@@ -46,7 +46,7 @@ import {
 import log from "../../../log";
 import Manifest, {
   Adaptation,
-  Period,
+  IFetchedPeriod,
   Representation,
 } from "../../../manifest";
 import concatMapLatest from "../../../utils/concat_map_latest";
@@ -107,7 +107,8 @@ export default function AdaptationBuffer<T>(
   segmentFetcher : IPrioritizedSegmentFetcher<T>,
   wantedBufferAhead$ : Observable<number>,
   content : { manifest : Manifest;
-              period : Period; adaptation : Adaptation; },
+              period : IFetchedPeriod;
+              adaptation : Adaptation; },
   abrManager : ABRManager,
   options : { manualBitrateSwitchingMode : "seamless" | "direct" }
 ) : Observable<IAdaptationBufferEvent<T>> {
