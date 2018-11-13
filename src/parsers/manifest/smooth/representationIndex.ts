@@ -557,8 +557,14 @@ export default class SmoothRepresentationIndex
       if (timeShiftBufferDepth != null) {
         const threshold =
           (lastPositionEstimate - timeShiftBufferDepth) * this._index.timescale;
-        this._index.timeline = this._index.timeline
-          .filter((segment) => (segment.start + segment.duration) >= threshold);
+        for (let i = 0; i < this._index.timeline.length; i++) {
+          const segment = this._index.timeline[i];
+          if (segment.start + segment.duration >= threshold) {
+            this._index.timeline =
+              this._index.timeline.slice(i, this._index.timeline.length);
+            break;
+          }
+        }
       }
     }
 }
