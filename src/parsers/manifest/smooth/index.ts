@@ -45,6 +45,15 @@ import parseBoolean from "./utils/parseBoolean";
 import reduceChildren from "./utils/reduceChildren";
 import { replaceRepresentationSmoothTokens } from "./utils/tokens";
 
+interface IAdaptationParserArguments {
+  root : Element;
+  rootURL : string;
+  timescale : number;
+  protections : IContentProtectionSmooth[];
+  timeShiftBufferDepth? : number;
+  manifestReceivedTime? : number;
+}
+
 const DEFAULT_MIME_TYPES: Partial<Record<string, string>> = {
   audio: "audio/mp4",
   video: "video/mp4",
@@ -94,7 +103,11 @@ interface ISmoothParsedQualityLevel {
  */
 function createSmoothStreamingParser(
   parserOptions : IHSSParserConfiguration = {}
-) : (manifest : Document, url : string) => IParsedManifest {
+) : (
+  manifest : Document,
+  url : string,
+  manifestReceivedTime? : number
+) => IParsedManifest {
 
   const SUGGESTED_PERSENTATION_DELAY =
     parserOptions.suggestedPresentationDelay == null ?
@@ -189,17 +202,13 @@ function createSmoothStreamingParser(
    * representations (<QualityLevels>) and timestamp indexes (<c>).
    * Indexes can be quite huge, and this function needs to
    * to be optimized.
-   * @param {Element} root
-   * @param {string} rootURL
-   * @param {Number} timescale
+   * @param {Object} args
    * @returns {Object}
    */
-  function parseAdaptation(
-    root : Element,
-    rootURL : string,
-    timescale : number,
-    protections : IContentProtectionSmooth[]
-  ) : IParsedAdaptation|null {
+  function parseAdaptation(args: IAdaptationParserArguments) : IParsedAdaptation|null {
+    const {
+      root, timescale, rootURL, protections, timeShiftBufferDepth, manifestReceivedTime,
+    } = args;
     const _timescale = root.hasAttribute("Timescale") ?
       +(root.getAttribute("Timescale") || 0) : timescale;
 
@@ -275,6 +284,8 @@ function createSmoothStreamingParser(
         timeline: index.timeline,
         timescale: index.timescale,
         media: replaceRepresentationSmoothTokens(path, qualityLevel.bitrate),
+        timeShiftBufferDepth,
+        manifestReceivedTime,
       };
       const mimeType = qualityLevel.mimeType || DEFAULT_MIME_TYPES[adaptationType];
       const codecs = qualityLevel.codecs || DEFAULT_CODECS[adaptationType];
@@ -345,7 +356,11 @@ function createSmoothStreamingParser(
     return parsedAdaptation;
   }
 
-  function parseFromDocument(doc : Document, url : string) : IParsedManifest {
+  function parseFromDocument(
+    doc : Document,
+    url : string,
+    manifestReceivedTime? : number
+  ) : IParsedManifest {
     const rootURL = normalizeBaseURL(url);
     const root = doc.documentElement;
     if (!root || root.nodeName !== "SmoothStreamingMedia") {
@@ -385,9 +400,22 @@ function createSmoothStreamingParser(
 
     const initialAdaptations: IParsedAdaptations = {};
 
+    const isLive = parseBoolean(root.getAttribute("IsLive"));
+
+    const timeShiftBufferDepth = isLive ?
+      +(root.getAttribute("DVRWindowLength") || 0) / timescale :
+      undefined;
+
     const adaptations: IParsedAdaptations = adaptationNodes
       .map((node: Element) => {
-        return parseAdaptation(node, rootURL, timescale, protections);
+        return parseAdaptation({
+          root: node,
+          rootURL,
+          timescale,
+          protections,
+          timeShiftBufferDepth,
+          manifestReceivedTime,
+        });
       })
       .filter((adaptation) : adaptation is IParsedAdaptation => adaptation != null)
       .reduce((acc: IParsedAdaptations, adaptation) => {
@@ -402,7 +430,6 @@ function createSmoothStreamingParser(
 
     let suggestedPresentationDelay : number|undefined;
     let presentationLiveGap : number|undefined;
-    let timeShiftBufferDepth : number|undefined;
     let availabilityStartTime : number|undefined;
     let duration : number;
 
@@ -460,11 +487,8 @@ function createSmoothStreamingParser(
       }
     }
 
-    const isLive = parseBoolean(root.getAttribute("IsLive"));
     if (isLive) {
       suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
-      timeShiftBufferDepth =
-        +(root.getAttribute("DVRWindowLength") || 0) / timescale;
       availabilityStartTime = REFERENCE_DATE_TIME;
       presentationLiveGap = Date.now() / 1000 -
         (lastTimeReference != null ?

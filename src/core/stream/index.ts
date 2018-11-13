@@ -273,7 +273,8 @@ export default function Stream({
       startWith({ manifest, sendingTime }),
       switchMap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
         if (newManifest.lifetime) {
-          const timeSinceRequest = performance.now() - (newSendingTime || 0);
+          const timeSinceRequest = newSendingTime == null ?
+            0 : performance.now() - newSendingTime;
           const updateTimeout = newManifest.lifetime * 1000 - timeSinceRequest;
           return observableTimer(updateTimeout);
         }

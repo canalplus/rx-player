@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../../log";
 import {
   IRepresentationIndex,
   ISegment,
@@ -32,6 +33,8 @@ interface ITimelineIndex {
   media : string;
   timeline : IIndexSegment[];
   startNumber? : number;
+  timeShiftBufferDepth? : number;
+  manifestReceivedTime? : number;
 }
 
 /**
@@ -282,6 +285,14 @@ export default class SmoothRepresentationIndex
     private _channels? : number;
     private _packetSize? : number;
     private _samplingRate? : number;
+    // Defines the end of the latest available segment when this index was known to
+    // be valid.
+    private _initialLastPosition : number;
+    // Defines the earliest time when this index was known to be valid (that is, when
+    // all segments declared in it are available). This means either:
+    //   - the manifest downloading time, if known
+    //   - else, the time of creation of this RepresentationIndex, as the best guess
+    private _indexValidityTime : number;
     private _protection? : {
       keyId : string;
       keySystems: Array<{
@@ -294,6 +305,9 @@ export default class SmoothRepresentationIndex
 
     constructor(index : ITimelineIndex, infos : ISmoothInitSegmentPrivateInfos) {
       this._index = index;
+      this._indexValidityTime = index.manifestReceivedTime || performance.now();
+      const { start, duration } = index.timeline[index.timeline.length - 1];
+      this._initialLastPosition = (start + duration) / index.timescale;
       this._bitsPerSample = infos.bitsPerSample;
       this._channels = infos.channels;
       this._codecPrivateData = infos.codecPrivateData;
@@ -447,7 +461,7 @@ export default class SmoothRepresentationIndex
         lastSegmentInCurrentTimeline.start + repeat *
           lastSegmentInCurrentTimeline.duration;
 
-      return up > startOfLastSegmentInCurrentTimeline;
+      return (up * timescale) > startOfLastSegmentInCurrentTimeline;
     }
 
     /**
@@ -523,8 +537,65 @@ export default class SmoothRepresentationIndex
       return -1;
     }
 
+    /**
+     * Update this RepresentationIndex by a newly downloaded one.
+     * Check if the old index had more informations about new segments and
+     * re-add them if that's the case.
+     * @param {Object} newIndex
+     */
     _update(newIndex : SmoothRepresentationIndex) : void {
+      const oldTimeline = this._index.timeline;
+      const newTimeline = newIndex._index.timeline;
+      const oldTimescale = this._index.timescale;
+      const newTimescale = newIndex._index.timescale;
       this._index = newIndex._index;
+
+      if (!oldTimeline.length || !newTimeline.length || oldTimescale !== newTimescale) {
+        return; // don't take risk, if something is off, take the new one
+      }
+
+      const lastOldTimelineElement = oldTimeline[oldTimeline.length - 1];
+      const lastNewTimelineElement = newTimeline[newTimeline.length - 1];
+      const newEnd = getTimelineRangeEnd(lastNewTimelineElement);
+      if (getTimelineRangeEnd(lastOldTimelineElement) <= newEnd) {
+        return;
+      }
+
+      for (let i = 0; i < oldTimeline.length; i++) {
+        const oldTimelineRange = oldTimeline[i];
+        const oldEnd = getTimelineRangeEnd(oldTimelineRange);
+        if (oldEnd === newEnd) { // just add the supplementary segments
+          this._index.timeline = this._index.timeline.concat(oldTimeline.slice(i + 1));
+          return;
+        }
+
+        if (oldEnd > newEnd) { // adjust repeatCount + add supplementary segments
+          if (oldTimelineRange.duration !== lastNewTimelineElement.duration) {
+            return;
+          }
+
+          const rangeDuration = newEnd - oldTimelineRange.start;
+          if (rangeDuration === 0) {
+            log.warn("Smooth Parser: a discontinuity detected in the previous manifest" +
+              " has been resolved.");
+            this._index.timeline = this._index.timeline.concat(oldTimeline.slice(i));
+            return;
+          }
+          if (rangeDuration < 0 || rangeDuration % oldTimelineRange.duration !== 0) {
+            return;
+          }
+
+          const repeatWithOld = (rangeDuration / oldTimelineRange.duration) - 1;
+          const relativeRepeat = oldTimelineRange.repeatCount - repeatWithOld;
+          if (relativeRepeat < 0) {
+            return;
+          }
+          lastNewTimelineElement.repeatCount += relativeRepeat;
+          const supplementarySegments = oldTimeline.slice(i + 1);
+          this._index.timeline = this._index.timeline.concat(supplementarySegments);
+          return;
+        }
+      }
     }
 
     _addSegments(
@@ -537,6 +608,25 @@ export default class SmoothRepresentationIndex
     ) : void {
       for (let i = 0; i < nextSegments.length; i++) {
         _addSegmentInfos(this._index, nextSegments[i], currentSegment);
+      }
+
+      // clean segments before time shift buffer depth
+      const { timeShiftBufferDepth } = this._index;
+      const lastPositionEstimate =
+        (performance.now() - this._indexValidityTime) / 1000 +
+        this._initialLastPosition;
+
+      if (timeShiftBufferDepth != null) {
+        const threshold =
+          (lastPositionEstimate - timeShiftBufferDepth) * this._index.timescale;
+        for (let i = 0; i < this._index.timeline.length; i++) {
+          const segment = this._index.timeline[i];
+          if (segment.start + segment.duration >= threshold) {
+            this._index.timeline =
+              this._index.timeline.slice(i, this._index.timeline.length);
+            break;
+          }
+        }
       }
     }
 }

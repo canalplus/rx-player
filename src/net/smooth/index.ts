@@ -25,6 +25,7 @@ import {
 } from "rxjs";
 import { map } from "rxjs/operators";
 import features from "../../features";
+import log from "../../log";
 import {
   Adaptation,
   Representation,
@@ -77,11 +78,12 @@ function addNextSegments(
   nextSegments : INextSegmentsInfos[],
   dlSegment? : ISegmentTimingInfos
 ) : void {
+  log.debug("Smooth Parser: update segments informations.");
   const representations = adaptation.representations;
   for (let i = 0; i < representations.length; i++) {
     const representation = representations[i];
-      representation.index._addSegments(nextSegments, dlSegment);
-    }
+    representation.index._addSegments(nextSegments, dlSegment);
+  }
 }
 
 export default function(
@@ -143,7 +145,8 @@ export default function(
       const data = typeof response.responseData === "string" ?
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
-      const manifest = smoothManifestParser(data, url);
+      const { receivedTime: manifestReceivedTime } = response;
+      const manifest = smoothManifestParser(data, url, manifestReceivedTime);
       return observableOf({ manifest, url });
     },
   };

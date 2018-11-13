@@ -11152,7 +11152,8 @@ object-assign
                                 type: "response",
                                 value: object_assign_default()({}, resolverResponse, {
                                     responseData: arg.value.responseData,
-                                    sendingTime: "response" === arg.type ? arg.value.sendingTime : void 0
+                                    sendingTime: "response" === arg.type ? arg.value.sendingTime : void 0,
+                                    receivedTime: "response" === arg.type ? arg.value.receivedTime : void 0
                                 })
                             }), metrics$ = "response" !== arg.type ? empty.a : Object(of.a)({
                                 type: "metrics",
@@ -14661,7 +14662,7 @@ object-assign
                 }), Object(switchMap.a)(function(_ref4) {
                     var newManifest = _ref4.manifest, newSendingTime = _ref4.sendingTime;
                     if (newManifest.lifetime) {
-                        var timeSinceRequest = performance.now() - (newSendingTime || 0), updateTimeout = 1e3 * newManifest.lifetime - timeSinceRequest;
+                        var timeSinceRequest = null == newSendingTime ? 0 : performance.now() - newSendingTime, updateTimeout = 1e3 * newManifest.lifetime - timeSinceRequest;
                         return Object(timer.a)(updateTimeout);
                     }
                     return empty.a;
@@ -15744,7 +15745,7 @@ object-assign
                 // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
                                 return videoElement.preload = "auto", _this.version = 
                 /*PLAYER_VERSION*/
-                "3.9.0", _this.log = log.a, _this.state = "STOPPED", _this.videoElement = videoElement, 
+                "3.9.1", _this.log = log.a, _this.state = "STOPPED", _this.videoElement = videoElement, 
                 _this._priv_destroy$ = new Subject.a(), 
                 /** @deprecated */
                 Object(events.d)(videoElement).pipe(Object(takeUntil.a)(_this._priv_destroy$))
@@ -16967,7 +16968,7 @@ object-assign
  * Current version of the RxPlayer.
  * @type {string}
  */
-        api_Player.version = "3.9.0";
+        api_Player.version = "3.9.1";
         /* harmony default export */ var api = api_Player;
         // CONCATENATED MODULE: ./src/features/initialize_features.ts
         /**
@@ -19834,7 +19835,7 @@ object-assign
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/of.js
-        var of = __webpack_require__(64), map = __webpack_require__(42), features = __webpack_require__(10), object_assign = __webpack_require__(6), object_assign_default = /* */ __webpack_require__.n(object_assign), config = __webpack_require__(2), assert = __webpack_require__(14), utils_id = __webpack_require__(21), languages = __webpack_require__(84), utils_url = __webpack_require__(39), check_manifest_ids = __webpack_require__(81);
+        var of = __webpack_require__(64), map = __webpack_require__(42), features = __webpack_require__(10), log = __webpack_require__(0), object_assign = __webpack_require__(6), object_assign_default = /* */ __webpack_require__.n(object_assign), config = __webpack_require__(2), assert = __webpack_require__(14), utils_id = __webpack_require__(21), languages = __webpack_require__(84), utils_url = __webpack_require__(39), check_manifest_ids = __webpack_require__(81);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/map.js
                 // CONCATENATED MODULE: ./src/parsers/manifest/smooth/get_codecs.ts
         /**
@@ -20150,9 +20151,11 @@ object-assign
         /* */
         function() {
             function SmoothRepresentationIndex(index, infos) {
-                this._index = index, this._bitsPerSample = infos.bitsPerSample, this._channels = infos.channels, 
-                this._codecPrivateData = infos.codecPrivateData, this._packetSize = infos.packetSize, 
-                this._samplingRate = infos.samplingRate, this._protection = infos.protection;
+                this._index = index, this._indexValidityTime = index.manifestReceivedTime || performance.now();
+                var _index$timeline = index.timeline[index.timeline.length - 1], start = _index$timeline.start, duration = _index$timeline.duration;
+                this._initialLastPosition = (start + duration) / index.timescale, this._bitsPerSample = infos.bitsPerSample, 
+                this._channels = infos.channels, this._codecPrivateData = infos.codecPrivateData, 
+                this._packetSize = infos.packetSize, this._samplingRate = infos.samplingRate, this._protection = infos.protection;
             }
             /**
    * Construct init Segment compatible with a Smooth Manifest.
@@ -20235,7 +20238,7 @@ object-assign
                 var _this$_index = this._index, timeline = _this$_index.timeline, timescale = _this$_index.timescale, lastSegmentInCurrentTimeline = timeline[timeline.length - 1];
                 if (!lastSegmentInCurrentTimeline) return !1;
                 var repeat = lastSegmentInCurrentTimeline.repeatCount || 0, endOfLastSegmentInCurrentTimeline = lastSegmentInCurrentTimeline.start + (repeat + 1) * lastSegmentInCurrentTimeline.duration;
-                return !(to * timescale < endOfLastSegmentInCurrentTimeline) && (endOfLastSegmentInCurrentTimeline <= up * timescale || lastSegmentInCurrentTimeline.start + repeat * lastSegmentInCurrentTimeline.duration < up);
+                return !(to * timescale < endOfLastSegmentInCurrentTimeline) && (endOfLastSegmentInCurrentTimeline <= up * timescale || lastSegmentInCurrentTimeline.start + repeat * lastSegmentInCurrentTimeline.duration < up * timescale);
             }, 
             /**
    * Returns first position in the index.
@@ -20277,10 +20280,48 @@ object-assign
                 // when we are actually inside the found range and this range has
                 // an explicit discontinuity with the next one
                 return rangeTo !== nextRange.start && rangeUp <= time && time <= rangeTo && rangeTo - time < timescale ? nextRange.start / timescale : -1;
-            }, _proto._update = function _update(newIndex) {
-                this._index = newIndex._index;
+            }, 
+            /**
+   * Update this RepresentationIndex by a newly downloaded one.
+   * Check if the old index had more informations about new segments and
+   * re-add them if that's the case.
+   * @param {Object} newIndex
+   */
+            _proto._update = function _update(newIndex) {
+                var oldTimeline = this._index.timeline, newTimeline = newIndex._index.timeline, oldTimescale = this._index.timescale, newTimescale = newIndex._index.timescale;
+                if (this._index = newIndex._index, oldTimeline.length && newTimeline.length && oldTimescale === newTimescale) {
+                    var lastOldTimelineElement = oldTimeline[oldTimeline.length - 1], lastNewTimelineElement = newTimeline[newTimeline.length - 1], newEnd = getTimelineRangeEnd(lastNewTimelineElement);
+                    if (!(getTimelineRangeEnd(lastOldTimelineElement) <= newEnd)) for (var i = 0; i < oldTimeline.length; i++) {
+                        var oldTimelineRange = oldTimeline[i], oldEnd = getTimelineRangeEnd(oldTimelineRange);
+                        if (oldEnd === newEnd) 
+                        // just add the supplementary segments
+                        return void (this._index.timeline = this._index.timeline.concat(oldTimeline.slice(i + 1)));
+                        if (newEnd < oldEnd) {
+                            // adjust repeatCount + add supplementary segments
+                            if (oldTimelineRange.duration !== lastNewTimelineElement.duration) return;
+                            var rangeDuration = newEnd - oldTimelineRange.start;
+                            if (0 === rangeDuration) return log.a.warn("Smooth Parser: a discontinuity detected in the previous manifest has been resolved."), 
+                            void (this._index.timeline = this._index.timeline.concat(oldTimeline.slice(i)));
+                            if (rangeDuration < 0 || rangeDuration % oldTimelineRange.duration != 0) return;
+                            var repeatWithOld = rangeDuration / oldTimelineRange.duration - 1, relativeRepeat = oldTimelineRange.repeatCount - repeatWithOld;
+                            if (relativeRepeat < 0) return;
+                            lastNewTimelineElement.repeatCount += relativeRepeat;
+                            var supplementarySegments = oldTimeline.slice(i + 1);
+                            return void (this._index.timeline = this._index.timeline.concat(supplementarySegments));
+                        }
+                    }
+                }
             }, _proto._addSegments = function _addSegments(nextSegments, currentSegment) {
                 for (var i = 0; i < nextSegments.length; i++) _addSegmentInfos(this._index, nextSegments[i], currentSegment);
+ // clean segments before time shift buffer depth
+                                var timeShiftBufferDepth = this._index.timeShiftBufferDepth, lastPositionEstimate = (performance.now() - this._indexValidityTime) / 1e3 + this._initialLastPosition;
+                if (null != timeShiftBufferDepth) for (var threshold = (lastPositionEstimate - timeShiftBufferDepth) * this._index.timescale, _i = 0; _i < this._index.timeline.length; _i++) {
+                    var segment = this._index.timeline[_i];
+                    if (segment.start + segment.duration >= threshold) {
+                        this._index.timeline = this._index.timeline.slice(_i, this._index.timeline.length);
+                        break;
+                    }
+                }
             }, SmoothRepresentationIndex;
         }();
         // CONCATENATED MODULE: ./src/parsers/manifest/smooth/utils/parseBoolean.ts
@@ -20424,12 +20465,10 @@ object-assign
    * representations (<QualityLevels>) and timestamp indexes (<c>).
    * Indexes can be quite huge, and this function needs to
    * to be optimized.
-   * @param {Element} root
-   * @param {string} rootURL
-   * @param {Number} timescale
+   * @param {Object} args
    * @returns {Object}
-   */            function parseAdaptation(root, rootURL, timescale, protections) {
-                var _timescale = root.hasAttribute("Timescale") ? +(root.getAttribute("Timescale") || 0) : timescale, adaptationType = root.getAttribute("Type");
+   */            function parseAdaptation(args) {
+                var root = args.root, timescale = args.timescale, rootURL = args.rootURL, protections = args.protections, timeShiftBufferDepth = args.timeShiftBufferDepth, manifestReceivedTime = args.manifestReceivedTime, _timescale = root.hasAttribute("Timescale") ? +(root.getAttribute("Timescale") || 0) : timescale, adaptationType = root.getAttribute("Type");
                 if (null == adaptationType) throw new Error("StreamIndex without type.");
                 var subType = root.getAttribute("Subtype"), name = root.getAttribute("Name"), language = root.getAttribute("Language"), normalizedLanguage = null == language ? language : Object(languages.a)(language), baseURL = root.getAttribute("Url") || "", _reduceChildren = reduceChildren(root, function(res, _name, node) {
                     switch (_name) {
@@ -20461,7 +20500,9 @@ object-assign
                     var firstProtection, path = Object(utils_url.b)(rootURL, baseURL), repIndex = {
                         timeline: index.timeline,
                         timescale: index.timescale,
-                        media: replaceRepresentationSmoothTokens(path, qualityLevel.bitrate)
+                        media: replaceRepresentationSmoothTokens(path, qualityLevel.bitrate),
+                        timeShiftBufferDepth: timeShiftBufferDepth,
+                        manifestReceivedTime: manifestReceivedTime
                     }, mimeType = qualityLevel.mimeType || DEFAULT_MIME_TYPES[adaptationType], codecs = qualityLevel.codecs || DEFAULT_CODECS[adaptationType], id = adaptationID + "_" + adaptationType + "-" + mimeType + "-" + codecs + "-" + qualityLevel.bitrate, contentProtections = [];
                     protections.length && (firstProtection = protections[0], protections.forEach(function(protection) {
                         var keyId = protection.keyId;
@@ -20505,11 +20546,11 @@ object-assign
                 return "text" === adaptationType && "DESC" === subType && (parsedAdaptation.closedCaption = !0), 
                 parsedAdaptation;
             }
-            return function parseFromDocument(doc, url) {
+            return function parseFromDocument(doc, url, manifestReceivedTime) {
                 var rootURL = Object(utils_url.a)(url), root = doc.documentElement;
                 if (!root || "SmoothStreamingMedia" !== root.nodeName) throw new Error("document root should be SmoothStreamingMedia");
                 if (!/^[2]-[0-2]$/.test(root.getAttribute("MajorVersion") + "-" + root.getAttribute("MinorVersion"))) throw new Error("Version should be 2.0, 2.1 or 2.2");
-                var suggestedPresentationDelay, presentationLiveGap, timeShiftBufferDepth, availabilityStartTime, duration, firstTimeReference, lastTimeReference, timescale = +(root.getAttribute("Timescale") || 1e7), _reduceChildren2 = reduceChildren(root, function(res, name, node) {
+                var suggestedPresentationDelay, presentationLiveGap, availabilityStartTime, duration, firstTimeReference, lastTimeReference, timescale = +(root.getAttribute("Timescale") || 1e7), _reduceChildren2 = reduceChildren(root, function(res, name, node) {
                     switch (name) {
                       case "Protection":
                         res.protections.push(parseProtectionNode(node, parserOptions.keySystems));
@@ -20522,8 +20563,15 @@ object-assign
                 }, {
                     adaptationNodes: [],
                     protections: []
-                }), protections = _reduceChildren2.protections, adaptations = _reduceChildren2.adaptationNodes.map(function(node) {
-                    return parseAdaptation(node, rootURL, timescale, protections);
+                }), protections = _reduceChildren2.protections, adaptationNodes = _reduceChildren2.adaptationNodes, isLive = parseBoolean(root.getAttribute("IsLive")), timeShiftBufferDepth = isLive ? +(root.getAttribute("DVRWindowLength") || 0) / timescale : void 0, adaptations = adaptationNodes.map(function(node) {
+                    return parseAdaptation({
+                        root: node,
+                        rootURL: rootURL,
+                        timescale: timescale,
+                        protections: protections,
+                        timeShiftBufferDepth: timeShiftBufferDepth,
+                        manifestReceivedTime: manifestReceivedTime
+                    });
                 }).filter(function(adaptation) {
                     return null != adaptation;
                 }).reduce(function(acc, adaptation) {
@@ -20552,10 +20600,9 @@ object-assign
                     firstTimeReferences.length && (firstTimeReference = Math.max.apply(Math, firstTimeReferences)), 
                     lastTimeReferences.length && (lastTimeReference = Math.max.apply(Math, lastTimeReferences));
                 }
-                var isLive = parseBoolean(root.getAttribute("IsLive"));
                 if (isLive) {
-                    suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY, timeShiftBufferDepth = +(root.getAttribute("DVRWindowLength") || 0) / timescale, 
-                    availabilityStartTime = REFERENCE_DATE_TIME, presentationLiveGap = Date.now() / 1e3 - (null != lastTimeReference ? lastTimeReference + availabilityStartTime : 10);
+                    suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY, availabilityStartTime = REFERENCE_DATE_TIME, 
+                    presentationLiveGap = Date.now() / 1e3 - (null != lastTimeReference ? lastTimeReference + availabilityStartTime : 10);
                     var manifestDuration = root.getAttribute("Duration");
                     duration = null != manifestDuration && 0 != +manifestDuration ? +manifestDuration / timescale : Infinity;
                 } else {
@@ -20584,7 +20631,7 @@ object-assign
                 };
                 return Object(check_manifest_ids.a)(manifest), manifest;
             };
-        }, request = __webpack_require__(25), strings = __webpack_require__(88), warnOnce = __webpack_require__(45), manifest_loader = __webpack_require__(87), log = __webpack_require__(0), isobmff = __webpack_require__(32), constants = __webpack_require__(24), read = __webpack_require__(38), SAMPLING_FREQUENCIES = [ 96e3, 88200, 64e3, 48e3, 44100, 32e3, 24e3, 22050, 16e3, 12e3, 11025, 8e3, 7350 ], boxNamesMem = {};
+        }, request = __webpack_require__(25), strings = __webpack_require__(88), warnOnce = __webpack_require__(45), manifest_loader = __webpack_require__(87), isobmff = __webpack_require__(32), constants = __webpack_require__(24), read = __webpack_require__(38), SAMPLING_FREQUENCIES = [ 96e3, 88200, 64e3, 48e3, 44100, 32e3, 24e3, 22050, 16e3, 12e3, 11025, 8e3, 7350 ], boxNamesMem = {};
         // EXTERNAL MODULE: ./src/utils/request/index.ts
                 /**
  * Convert the string name of an ISOBMFF box into the corresponding bytes.
@@ -21304,6 +21351,7 @@ object-assign
  * @param {Object} nextSegments
  */
         function addNextSegments(adaptation, nextSegments, dlSegment) {
+            log.a.debug("Smooth Parser: update segments informations.");
             for (var representations = adaptation.representations, i = 0; i < representations.length; i++) {
                 representations[i].index._addSegments(nextSegments, dlSegment);
             }
@@ -21379,7 +21427,7 @@ object-assign
                         return manifestLoader(url);
                     },
                     parser: function parser(_ref4) {
-                        var response = _ref4.response, reqURL = _ref4.url, url = null == response.url ? reqURL : response.url, data = "string" == typeof response.responseData ? new DOMParser().parseFromString(response.responseData, "text/xml") : response.responseData, manifest = smoothManifestParser(data, url);
+                        var response = _ref4.response, reqURL = _ref4.url, url = null == response.url ? reqURL : response.url, data = "string" == typeof response.responseData ? new DOMParser().parseFromString(response.responseData, "text/xml") : response.responseData, manifestReceivedTime = response.receivedTime, manifest = smoothManifestParser(data, url, manifestReceivedTime);
                         return Object(of.a)({
                             manifest: manifest,
                             url: url

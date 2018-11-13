@@ -1,5 +1,18 @@
 # Changelog
 
+## v3.9.1 (2018/11/13)
+
+### Bug fixes
+
+  - smooth: fix issue preventing emergency manifest updates
+  - dash: fix timeout for minimumUpdatePeriod in cases where the time at which the manifest was last requested is not known (like when setting a customManifestLoader argument)
+
+### Other improvements
+
+  - smooth: keep supplementary segment informations when updating the manifest
+  - smooth: when updating segment informations, perform garbage-collection of those concerning unreachable segments
+
+
 ## v3.9.0 (2018/11/08)
 
 ### Features
