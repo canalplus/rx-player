@@ -284,9 +284,13 @@ export default class SmoothRepresentationIndex
     private _channels? : number;
     private _packetSize? : number;
     private _samplingRate? : number;
+    // Defines the end of the latest available segment when this index was known to
+    // be valid.
     private _initialLastPosition : number;
-    // Defines the time were this index was loaded, that is all segments in the
-    // index were available.
+    // Defines the earliest time when this index was known to be valid (that is, when
+    // all segments declared in it are available). This means either:
+    //   - the manifest downloading time, if known
+    //   - else, the time of creation of this RepresentationIndex, as the best guess
     private _indexValidityTime : number;
     private _protection? : {
       keyId : string;
