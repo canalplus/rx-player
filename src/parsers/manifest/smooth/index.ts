@@ -45,6 +45,15 @@ import parseBoolean from "./utils/parseBoolean";
 import reduceChildren from "./utils/reduceChildren";
 import { replaceRepresentationSmoothTokens } from "./utils/tokens";
 
+interface IAdaptationParserArguments {
+  root : Element;
+  rootURL : string;
+  timescale : number;
+  protections : IContentProtectionSmooth[];
+  timeShiftBufferDepth? : number;
+  manifestReceivedTime? : number;
+}
+
 const DEFAULT_MIME_TYPES: Partial<Record<string, string>> = {
   audio: "audio/mp4",
   video: "video/mp4",
@@ -193,19 +202,13 @@ function createSmoothStreamingParser(
    * representations (<QualityLevels>) and timestamp indexes (<c>).
    * Indexes can be quite huge, and this function needs to
    * to be optimized.
-   * @param {Element} root
-   * @param {string} rootURL
-   * @param {Number} timescale
+   * @param {Object} args
    * @returns {Object}
    */
-  function parseAdaptation(
-    root : Element,
-    rootURL : string,
-    timescale : number,
-    protections : IContentProtectionSmooth[],
-    timeShiftBufferDepth? : number,
-    manifestReceivedTime? : number
-  ) : IParsedAdaptation|null {
+  function parseAdaptation(args: IAdaptationParserArguments) : IParsedAdaptation|null {
+    const {
+      root, timescale, rootURL, protections, timeShiftBufferDepth, manifestReceivedTime,
+    } = args;
     const _timescale = root.hasAttribute("Timescale") ?
       +(root.getAttribute("Timescale") || 0) : timescale;
 
@@ -405,14 +408,14 @@ function createSmoothStreamingParser(
 
     const adaptations: IParsedAdaptations = adaptationNodes
       .map((node: Element) => {
-        return parseAdaptation(
-          node,
+        return parseAdaptation({
+          root: node,
           rootURL,
           timescale,
           protections,
           timeShiftBufferDepth,
-          manifestReceivedTime
-        );
+          manifestReceivedTime,
+        });
       })
       .filter((adaptation) : adaptation is IParsedAdaptation => adaptation != null)
       .reduce((acc: IParsedAdaptations, adaptation) => {
