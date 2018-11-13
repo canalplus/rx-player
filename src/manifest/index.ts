@@ -118,7 +118,7 @@ export default class Manifest {
      * @deprecated It is here to ensure compatibility with the way the
      * v3.x.x manages adaptations at the Manifest level
      */
-    this.adaptations = (this.periods[0] && this.periods[0].adaptations) || [];
+    this.adaptations = (this.periods[0] && this.periods[0].adaptations) || {};
 
     this.minimumTime = args.minimumTime;
     this.isLive = args.isLive;
