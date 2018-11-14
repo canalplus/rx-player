@@ -52,6 +52,7 @@ export interface IPartialPeriod {
   start : number;
   duration? : number;
   end? : number;
+  url? : string;
   getAdaptation(wantedId : number|string) : Adaptation|undefined;
   getAdaptations() : Adaptation[];
   getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[];
