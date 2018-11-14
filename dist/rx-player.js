@@ -10711,7 +10711,7 @@ object-assign
      * @deprecated It is here to ensure compatibility with the way the
      * v3.x.x manages adaptations at the Manifest level
      */
-                this.adaptations = this.periods[0] && this.periods[0].adaptations || [], this.minimumTime = args.minimumTime, 
+                this.adaptations = this.periods[0] && this.periods[0].adaptations || {}, this.minimumTime = args.minimumTime, 
                 this.isLive = args.isLive, this.uris = args.uris, this.lifetime = args.lifetime, 
                 this.suggestedPresentationDelay = args.suggestedPresentationDelay, this.availabilityStartTime = args.availabilityStartTime, 
                 this.presentationLiveGap = args.presentationLiveGap, this.timeShiftBufferDepth = args.timeShiftBufferDepth, 
@@ -15745,7 +15745,7 @@ object-assign
                 // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
                                 return videoElement.preload = "auto", _this.version = 
                 /*PLAYER_VERSION*/
-                "3.9.1", _this.log = log.a, _this.state = "STOPPED", _this.videoElement = videoElement, 
+                "3.9.2", _this.log = log.a, _this.state = "STOPPED", _this.videoElement = videoElement, 
                 _this._priv_destroy$ = new Subject.a(), 
                 /** @deprecated */
                 Object(events.d)(videoElement).pipe(Object(takeUntil.a)(_this._priv_destroy$))
@@ -16968,7 +16968,7 @@ object-assign
  * Current version of the RxPlayer.
  * @type {string}
  */
-        api_Player.version = "3.9.1";
+        api_Player.version = "3.9.2";
         /* harmony default export */ var api = api_Player;
         // CONCATENATED MODULE: ./src/features/initialize_features.ts
         /**
@@ -20151,11 +20151,13 @@ object-assign
         /* */
         function() {
             function SmoothRepresentationIndex(index, infos) {
-                this._index = index, this._indexValidityTime = index.manifestReceivedTime || performance.now();
-                var _index$timeline = index.timeline[index.timeline.length - 1], start = _index$timeline.start, duration = _index$timeline.duration;
-                this._initialLastPosition = (start + duration) / index.timescale, this._bitsPerSample = infos.bitsPerSample, 
-                this._channels = infos.channels, this._codecPrivateData = infos.codecPrivateData, 
-                this._packetSize = infos.packetSize, this._samplingRate = infos.samplingRate, this._protection = infos.protection;
+                if (this._index = index, this._indexValidityTime = index.manifestReceivedTime || performance.now(), 
+                this._bitsPerSample = infos.bitsPerSample, this._channels = infos.channels, this._codecPrivateData = infos.codecPrivateData, 
+                this._packetSize = infos.packetSize, this._samplingRate = infos.samplingRate, this._protection = infos.protection, 
+                index.timeline.length) {
+                    var _index$timeline = index.timeline[index.timeline.length - 1], start = _index$timeline.start, duration = _index$timeline.duration;
+                    this._initialLastPosition = (start + duration) / index.timescale;
+                }
             }
             /**
    * Construct init Segment compatible with a Smooth Manifest.
@@ -20289,7 +20291,8 @@ object-assign
    */
             _proto._update = function _update(newIndex) {
                 var oldTimeline = this._index.timeline, newTimeline = newIndex._index.timeline, oldTimescale = this._index.timescale, newTimescale = newIndex._index.timescale;
-                if (this._index = newIndex._index, oldTimeline.length && newTimeline.length && oldTimescale === newTimescale) {
+                if (this._index = newIndex._index, this._initialLastPosition = newIndex._initialLastPosition, 
+                this._indexValidityTime = newIndex._indexValidityTime, oldTimeline.length && newTimeline.length && oldTimescale === newTimescale) {
                     var lastOldTimelineElement = oldTimeline[oldTimeline.length - 1], lastNewTimelineElement = newTimeline[newTimeline.length - 1], newEnd = getTimelineRangeEnd(lastNewTimelineElement);
                     if (!(getTimelineRangeEnd(lastOldTimelineElement) <= newEnd)) for (var i = 0; i < oldTimeline.length; i++) {
                         var oldTimelineRange = oldTimeline[i], oldEnd = getTimelineRangeEnd(oldTimelineRange);
@@ -20314,12 +20317,14 @@ object-assign
             }, _proto._addSegments = function _addSegments(nextSegments, currentSegment) {
                 for (var i = 0; i < nextSegments.length; i++) _addSegmentInfos(this._index, nextSegments[i], currentSegment);
  // clean segments before time shift buffer depth
-                                var timeShiftBufferDepth = this._index.timeShiftBufferDepth, lastPositionEstimate = (performance.now() - this._indexValidityTime) / 1e3 + this._initialLastPosition;
-                if (null != timeShiftBufferDepth) for (var threshold = (lastPositionEstimate - timeShiftBufferDepth) * this._index.timescale, _i = 0; _i < this._index.timeline.length; _i++) {
-                    var segment = this._index.timeline[_i];
-                    if (segment.start + segment.duration >= threshold) {
-                        this._index.timeline = this._index.timeline.slice(_i, this._index.timeline.length);
-                        break;
+                                if (null != this._initialLastPosition) {
+                    var timeShiftBufferDepth = this._index.timeShiftBufferDepth, lastPositionEstimate = (performance.now() - this._indexValidityTime) / 1e3 + this._initialLastPosition;
+                    if (null != timeShiftBufferDepth) for (var threshold = (lastPositionEstimate - timeShiftBufferDepth) * this._index.timescale, _i = 0; _i < this._index.timeline.length; _i++) {
+                        var segment = this._index.timeline[_i];
+                        if (segment.start + segment.duration >= threshold) {
+                            this._index.timeline = this._index.timeline.slice(_i, this._index.timeline.length);
+                            break;
+                        }
                     }
                 }
             }, SmoothRepresentationIndex;
