@@ -287,7 +287,7 @@ export default class SmoothRepresentationIndex
     private _samplingRate? : number;
     // Defines the end of the latest available segment when this index was known to
     // be valid.
-    private _initialLastPosition : number;
+    private _initialLastPosition? : number;
     // Defines the earliest time when this index was known to be valid (that is, when
     // all segments declared in it are available). This means either:
     //   - the manifest downloading time, if known
@@ -306,14 +306,17 @@ export default class SmoothRepresentationIndex
     constructor(index : ITimelineIndex, infos : ISmoothInitSegmentPrivateInfos) {
       this._index = index;
       this._indexValidityTime = index.manifestReceivedTime || performance.now();
-      const { start, duration } = index.timeline[index.timeline.length - 1];
-      this._initialLastPosition = (start + duration) / index.timescale;
       this._bitsPerSample = infos.bitsPerSample;
       this._channels = infos.channels;
       this._codecPrivateData = infos.codecPrivateData;
       this._packetSize = infos.packetSize;
       this._samplingRate = infos.samplingRate;
       this._protection = infos.protection;
+
+      if (index.timeline.length) {
+        const { start, duration } = index.timeline[index.timeline.length - 1];
+        this._initialLastPosition = (start + duration) / index.timescale;
+      }
     }
 
     /**
@@ -548,7 +551,10 @@ export default class SmoothRepresentationIndex
       const newTimeline = newIndex._index.timeline;
       const oldTimescale = this._index.timescale;
       const newTimescale = newIndex._index.timescale;
+
       this._index = newIndex._index;
+      this._initialLastPosition = newIndex._initialLastPosition;
+      this._indexValidityTime = newIndex._indexValidityTime;
 
       if (!oldTimeline.length || !newTimeline.length || oldTimescale !== newTimescale) {
         return; // don't take risk, if something is off, take the new one
@@ -611,20 +617,22 @@ export default class SmoothRepresentationIndex
       }
 
       // clean segments before time shift buffer depth
-      const { timeShiftBufferDepth } = this._index;
-      const lastPositionEstimate =
-        (performance.now() - this._indexValidityTime) / 1000 +
-        this._initialLastPosition;
+      if (this._initialLastPosition != null) {
+        const { timeShiftBufferDepth } = this._index;
+        const lastPositionEstimate =
+          (performance.now() - this._indexValidityTime) / 1000 +
+          this._initialLastPosition;
 
-      if (timeShiftBufferDepth != null) {
-        const threshold =
-          (lastPositionEstimate - timeShiftBufferDepth) * this._index.timescale;
-        for (let i = 0; i < this._index.timeline.length; i++) {
-          const segment = this._index.timeline[i];
-          if (segment.start + segment.duration >= threshold) {
-            this._index.timeline =
-              this._index.timeline.slice(i, this._index.timeline.length);
-            break;
+        if (timeShiftBufferDepth != null) {
+          const threshold =
+            (lastPositionEstimate - timeShiftBufferDepth) * this._index.timescale;
+          for (let i = 0; i < this._index.timeline.length; i++) {
+            const segment = this._index.timeline[i];
+            if (segment.start + segment.duration >= threshold) {
+              this._index.timeline =
+                this._index.timeline.slice(i, this._index.timeline.length);
+              break;
+            }
           }
         }
       }
