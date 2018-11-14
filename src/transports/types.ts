@@ -57,12 +57,18 @@ export interface INextSegmentsInfos {
 
 // -- arguments
 
-// Arguments for the loader of the manifest pipeline
+// Arguments for the loader of the Manifest pipeline
 export interface IManifestLoaderArguments {
   url : string; // URL of the concerned manifest
 }
 
-// Argument for the loader of the segment pipelines
+// Arguments for the loader of the Period pipeline
+export interface IPeriodLoaderArguments {
+  period : Period;
+  manifest : Manifest;
+}
+
+// Arguments for the loader of the Segment pipeline
 export interface ISegmentLoaderArguments {
   manifest : Manifest; // Manifest related to this segment
   period : Period; // Period related to this segment
@@ -103,6 +109,8 @@ export interface ILoaderProgress { type : "progress";
 export type IManifestLoaderObservable<T> = Observable<ILoaderDataLoaded<T>>;
 export type IManifestLoaderObserver<T> = Observer<ILoaderDataLoaded<T>>;
 
+export type IPeriodLoaderObservable<T> = Observable<ILoaderDataLoaded<T>>;
+
 export type ISegmentLoaderEvent<T> =  ILoaderProgress |
                                       ILoaderDataLoaded<T> |
                                       ILoaderDataCreated<T>;
@@ -129,6 +137,8 @@ export interface IManifestParserArguments<T, U> {
   scheduleRequest : (request : () => Observable<U>) => Observable<U>;
 }
 
+export type IPeriodParserArguments<T, U> = IManifestParserArguments<T, U>;
+
 export interface ISegmentParserArguments<T> {
   response : ILoaderDataLoadedValue<T>; // Response from the loader
   init? : ISegmentTimingInfos; // Infos about the initialization segment of the
@@ -149,6 +159,14 @@ export interface IManifestParserResponse {
 }
 
 export type IManifestParserObservable = Observable<IManifestParserResponse>;
+
+// Response object returned by the Period's parser
+export interface IPeriodParserResponse {
+  periods : Period[]; // The parsed Period(s)
+  urls : Array<string|undefined>; // URLs at which they have been requested
+}
+
+export type IPeriodParserObservable = Observable<IPeriodParserResponse>;
 
 export interface ISegmentParserResponse<T> {
   segmentData : T; // Data to decode
@@ -223,6 +241,16 @@ export interface ITransportManifestPipeline { resolver? : IManifestResolverFunct
                                               loader : IManifestLoaderFunction;
                                               parser : IManifestParserFunction; }
 
+export type IPeriodLoaderFunction =
+  (x : IPeriodLoaderArguments) => IPeriodLoaderObservable< Document | string >;
+
+export type IPeriodParserFunction =
+  (x : IPeriodParserArguments< Document | string,
+                                 string>) => IPeriodParserObservable;
+
+interface ITransportPeriodPipeline { loader : IPeriodLoaderFunction;
+                                     parser : IPeriodParserFunction; }
+
 export interface ITransportVideoSegmentPipeline {
   loader : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
                                                                       ArrayBuffer |
@@ -268,9 +296,11 @@ export type ITransportSegmentPipeline = ITransportAudioSegmentPipeline |
                                         ITransportImageSegmentPipeline;
 
 export type ITransportPipeline = ITransportManifestPipeline |
+                                 ITransportPeriodPipeline |
                                  ITransportSegmentPipeline;
 
 export interface ITransportPipelines { manifest : ITransportManifestPipeline;
+                                       period? : ITransportPeriodPipeline;
                                        audio : ITransportAudioSegmentPipeline;
                                        video : ITransportVideoSegmentPipeline;
                                        text : ITransportTextSegmentPipeline;
