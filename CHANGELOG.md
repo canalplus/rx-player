@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.9.2 (2018/11/14)
+
+### Bug fixes
+
+  - smooth: authorize empty tracks ("StreamIndex") in Smooth manifests
+
+
 ## v3.9.1 (2018/11/13)
 
 ### Bug fixes
