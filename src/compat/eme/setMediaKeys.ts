@@ -35,27 +35,35 @@ function _setMediaKeys(
   mediaKeys : MediaKeys|ICustomMediaKeys|null
 ) : any {
   if (mediaKeys instanceof MockMediaKeys) {
-    return mediaKeys._setVideo(elt);
+    if (typeof mediaKeys._setVideo === "function") {
+      return mediaKeys._setVideo(elt);
+    } else if (typeof mediaKeys._getNativeMediaKeys === "function") {
+      const nativeMediaKeys = mediaKeys._getNativeMediaKeys();
+      return elt.setMediaKeys(nativeMediaKeys);
+    }
   }
 
-  if (elt.setMediaKeys) {
-    return elt.setMediaKeys(mediaKeys);
+  // don't get why TS doesn't get it here ...
+  if (!(mediaKeys instanceof MockMediaKeys)) {
+    if (elt.setMediaKeys) {
+      return elt.setMediaKeys(mediaKeys);
+    }
+
+    if ((elt as any).WebkitSetMediaKeys) {
+      return (elt as any).WebkitSetMediaKeys(mediaKeys);
+    }
+
+    if ((elt as any).mozSetMediaKeys) {
+      return (elt as any).mozSetMediaKeys(mediaKeys);
+    }
+
+    if ((elt as any).msSetMediaKeys) {
+      return (elt as any).msSetMediaKeys(mediaKeys);
+    }
   }
 
   if (mediaKeys === null) {
     return;
-  }
-
-  if ((elt as any).WebkitSetMediaKeys) {
-    return (elt as any).WebkitSetMediaKeys(mediaKeys);
-  }
-
-  if ((elt as any).mozSetMediaKeys) {
-    return (elt as any).mozSetMediaKeys(mediaKeys);
-  }
-
-  if ((elt as any).msSetMediaKeys) {
-    return (elt as any).msSetMediaKeys(mediaKeys);
   }
 }
 
