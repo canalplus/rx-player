@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-declare module "object-values" {
-  function objectValues<T>(o : { [s: string] : T } | ArrayLike<T>) : T[];
-  export default objectValues;
-}
+export default typeof Object.values === "function" ?
+  Object.values :
+  function objectValues<T>(o : { [s: string] : T } | ArrayLike<T>) : T[] {
+    return Object.keys(o).map((k) => (o as any)[k]);
+  };

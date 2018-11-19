@@ -16,7 +16,6 @@
 
 import arrayFind from "array-find";
 import objectAssign from "object-assign";
-import objectValues from "object-values";
 import {
   BehaviorSubject,
   combineLatest as observableCombineLatest,
@@ -34,6 +33,7 @@ import {
 import config from "../../config";
 import log from "../../log";
 import { Representation } from "../../manifest";
+import objectValues from "../../utils/object-values";
 import { IBufferType } from "../source_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
 import EWMA from "./ewma";
