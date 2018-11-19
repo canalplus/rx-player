@@ -16,6 +16,7 @@
 
 import arrayFind from "array-find";
 import objectAssign from "object-assign";
+import objectValues from "object-values";
 import {
   BehaviorSubject,
   combineLatest as observableCombineLatest,
@@ -284,7 +285,7 @@ function shouldDirectlySwitchToLowBitrate(
   clock : IRepresentationChooserClockTick
 ) : boolean {
   const nextNeededPosition = clock.currentTime + clock.bufferGap;
-  const requests = Object.values(pendingRequests)
+  const requests = objectValues(pendingRequests)
     .filter((a) : a is IRequestInfo => !!a)
     .sort((a, b) => a.time - b.time);
 
