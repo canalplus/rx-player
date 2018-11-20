@@ -80,7 +80,7 @@ export default class SortedList<T> {
    * @param {Function} fn
    * @returns {*}
    */
-  find(fn : (element : T) => boolean) : T | undefined {
+  findFirst(fn : (element : T) => boolean) : T | undefined {
     return arrayFind(this._array, fn);
   }
 
