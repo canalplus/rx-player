@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import arrayFind from "array-find";
 import log from "../log";
 import {
   ICompatibleKeySystem,
@@ -132,8 +133,8 @@ const mediaCapabilitiesProber = {
       const browserAPIS: IBrowserAPIS[] = ["requestMediaKeySystemAccess"];
       promises.push(probeMediaConfiguration(globalConfig, browserAPIS)
         .then(({ globalStatus, resultsFromAPIS }) => {
-          const requestMediaKeySystemAccessResults = resultsFromAPIS
-            .find((result) => result.APIName === "requestMediaKeySystemAccess");
+          const requestMediaKeySystemAccessResults = arrayFind(resultsFromAPIS,
+            (result) => result.APIName === "requestMediaKeySystemAccess");
 
           return {
             // As only one API is called, global status is
