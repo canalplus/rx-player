@@ -59,7 +59,9 @@ export default function arrayIncludes<T>(
   /* tslint:disable no-unbound-method */
   if (typeof Array.prototype.includes === "function") {
   /* tslint:enable no-unbound-method */
+    /* tslint:disable ban */
     return arr.includes(searchElement, fromIndex);
+    /* tslint:enable ban */
   }
 
   const len = arr.length >>> 0;
