@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unbound-method */
 export default typeof Object.values === "function" ?
   Object.values :
+/* tslint:enable no-unbound-method */
   function objectValues<T>(o : { [s: string] : T } | ArrayLike<T>) : T[] {
     return Object.keys(o).map((k) => (o as any)[k]);
   };
