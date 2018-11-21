@@ -473,7 +473,6 @@ if (navigator.requestMediaKeySystemAccess) {
 
     // on IE11, each created session needs to be created on a new
     // MediaKeys object
-    MediaKeys_.prototype.alwaysRenew = true;
     MediaKeys_.prototype.memCreateSession = MediaKeys_.prototype.createSession;
     MediaKeys_.prototype.createSession = function() : IE11MediaKeySession {
       /* tslint:disable no-invalid-this */

@@ -110,7 +110,7 @@ function hasEMEAPIs() : boolean {
  * @returns {Boolean}
  */
 function shouldRenewMediaKeys() : boolean {
-  return isIE;
+  return isIE11;
 }
 
 /**
@@ -120,7 +120,7 @@ function shouldRenewMediaKeys() : boolean {
  * @returns {Boolean}
  */
 function shouldUnsetMediaKeys() : boolean {
-  return isIE;
+  return isIE11;
 }
 
 /**
