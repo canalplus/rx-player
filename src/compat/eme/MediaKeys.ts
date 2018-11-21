@@ -36,6 +36,7 @@ import {
   ICompatMediaKeySystemAccess,
   ICompatMediaKeySystemConfiguration,
 
+  isIE11,
   MediaKeys_,
 } from "../constants";
 import * as events from "../events";
@@ -126,8 +127,7 @@ export interface ICustomMediaKeySession
 }
 
 export interface ICustomMediaKeys {
-  _setVideo? : (vid : HTMLMediaElement) => void;
-  _getNativeMediaKeys? : () => MediaKeys;
+  _setVideo : (vid : HTMLMediaElement) => void;
   createSession(sessionType? : MediaKeySessionType) : ICustomMediaKeySession;
   setServerCertificate(setServerCertificate : ArrayBuffer|TypedArray) : Promise<void>;
 }
@@ -386,6 +386,7 @@ if (navigator.requestMediaKeySystemAccess) {
 
   // This is for IE11
   else if (
+    isIE11 &&
     MediaKeys_ &&
     MediaKeys_.prototype &&
     typeof MediaKeys_.prototype.createSession === "function" &&
@@ -470,60 +471,22 @@ if (navigator.requestMediaKeySystemAccess) {
       }
     }
 
-    const IE11CustomMediaKeys = class implements ICustomMediaKeys {
-      static isTypeSupported = (keyType: string) => {
-        if (
-          !MediaKeys_ ||
-          !MediaKeys_.isTypeSupported
-        ) {
-          throw new Error("MediaKeys is not implemented in your browser");
-        }
-        return MediaKeys_.isTypeSupported(keyType);
-      }
-      public readonly alwaysRenew = true;
-      public readonly keySystem : string;
-      private _nmk : MediaKeys;
-
-      constructor(ks : string, nmk : MediaKeys) {
-        this.keySystem = ks;
-        this._nmk = nmk;
-      }
-
-      memCreateSession(/* sessionType */) {
-        if (!MediaKeys_) {
-          throw new Error("MediaKeys is not implemented in your browser");
-        }
-        return MediaKeys_.prototype.createSession(arguments);
-      }
-
-      _getNativeMediaKeys() {
-        return this._nmk;
-      }
-
-      createSession(/* sessionType */) : IE11MediaKeySession {
-        if (!MediaKeys_) {
-          throw new Error("MediaKeys is not implemented in your browser");
-        }
-        /* tslint:disable no-invalid-this */
-        return new IE11MediaKeySession(this);
-        /* tslint:enable no-invalid-this */
-      }
-
-      setServerCertificate(/* arguments */) : Promise<void> {
-        if (!MediaKeys_) {
-          throw new Error("MediaKeys is not implemented in your browser");
-        }
-        return MediaKeys_.prototype.setServerCertificate(arguments);
-      }
+    // on IE11, each created session needs to be created on a new
+    // MediaKeys object
+    MediaKeys_.prototype.alwaysRenew = true;
+    MediaKeys_.prototype.memCreateSession = MediaKeys_.prototype.createSession;
+    MediaKeys_.prototype.createSession = function() : IE11MediaKeySession {
+      /* tslint:disable no-invalid-this */
+      return new IE11MediaKeySession(this);
+      /* tslint:enable no-invalid-this */
     };
-
-    const { isTypeSupported } = MediaKeys_;
 
     requestMediaKeySystemAccess = function(
       keyType : string,
       keySystemConfigurations : ICompatMediaKeySystemConfiguration[]
     ) : Observable<ICompatMediaKeySystemAccess|CustomMediaKeySystemAccess> {
-      if (!isTypeSupported(keyType)) {
+      // TODO Why TS Do not understand that isTypeSupported exists here?
+      if (!(MediaKeys_ as any).isTypeSupported(keyType)) {
         return observableThrow(undefined);
       }
 
@@ -551,15 +514,10 @@ if (navigator.requestMediaKeySystemAccess) {
             sessionTypes: ["temporary", "persistent-license"],
           };
 
-          if (!MediaKeys_) {
-            throw new Error("MediaKeys is not implemented in your browser");
-          }
-          const nativeMediaKeys = new MediaKeys_();
-
           return observableOf(
             new CustomMediaKeySystemAccess(
               keyType,
-              new IE11CustomMediaKeys(keyType, nativeMediaKeys),
+              new (MediaKeys_ as any)(keyType),
               keySystemConfigurationResponse
             )
           );
