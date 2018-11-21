@@ -5,7 +5,6 @@ import {
   URLs,
 } from "../../contents/Smooth_static_bif";
 
-// TODO investigate weird test clean-up bug
-xdescribe("Smooth non-linear content", function () {
+describe.only("Smooth non-linear content", function () {
   launchTestsForContent(URLs, manifestInfos);
 });
