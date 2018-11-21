@@ -471,7 +471,9 @@ if (navigator.requestMediaKeySystemAccess) {
       }
     }
 
-    // on IE11, each created session needs to be created on a new
+    // TODO these two seem to be the last side-effects we do at evaluation time.
+    // Should be removed for a better solution.
+    // On IE11, each created session needs to be created on a new
     // MediaKeys object
     MediaKeys_.prototype.memCreateSession = MediaKeys_.prototype.createSession;
     MediaKeys_.prototype.createSession = function() : IE11MediaKeySession {
