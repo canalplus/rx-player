@@ -117,15 +117,15 @@ const MediaKeys_ : ICompatMediaKeysConstructor|undefined =
     }
   };
 
-// true for IE / Edge
-const isIE : boolean =
-  navigator.appName === "Microsoft Internet Explorer" ||
-  navigator.appName === "Netscape" && /(Trident|Edge)\//.test(navigator.userAgent);
-
 // true on IE11
 // false on Edge and other IEs/browsers.
 const isIE11 : boolean =
   !!(window as any).MSInputMethodContext && !!(document as any).documentMode;
+
+// true for IE / Edge
+const isIEOrEdge : boolean =
+  navigator.appName === "Microsoft Internet Explorer" ||
+  navigator.appName === "Netscape" && /(Trident|Edge)\//.test(navigator.userAgent);
 
 const isFirefox : boolean =
   navigator.userAgent.toLowerCase().indexOf("firefox") !== -1;
@@ -153,6 +153,6 @@ export {
   READY_STATES,
   VTTCue_,
   isFirefox,
-  isIE,
   isIE11,
+  isIEOrEdge,
 };

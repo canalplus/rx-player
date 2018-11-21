@@ -33,8 +33,8 @@ import {
   ICompatTextTrack,
   ICompatVTTCue,
   isFirefox,
-  isIE,
   isIE11,
+  isIEOrEdge,
   MediaSource_,
   READY_STATES,
   VTTCue_,
@@ -252,7 +252,7 @@ function addTextTrack(
   let trackElement;
 
   const kind = "subtitles";
-  if (isIE) {
+  if (isIEOrEdge) {
     const tracksLength = mediaElement.textTracks.length;
     track = tracksLength > 0 ?
       mediaElement.textTracks[tracksLength - 1] : mediaElement.addTextTrack(kind);
@@ -452,8 +452,8 @@ export {
   isCodecSupported,
   isFirefox,
   isFullscreen,
-  isIE,
   isIE11,
+  isIEOrEdge,
   isOffline,
   isPlaybackStuck,
   isVTTCue,
