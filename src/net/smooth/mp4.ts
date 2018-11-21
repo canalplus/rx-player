@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { isIE11 } from "../../compat";
+import { canPatchISOBMFFSegment } from "../../compat";
 import {
   getMDAT,
   getTRAF,
@@ -1071,7 +1071,7 @@ export default {
     const trunoffset = mfhdlen + 8 + 8 + tfhdlen + tfdtlen;
     // TODO(pierre): fix patchSegmentInPlace to work with IE11. Maybe
     // try to put free atom inside traf children
-    if (isIE11) {
+    if (canPatchISOBMFFSegment()) {
       return createNewSegment(segment, newmoof, oldmoof, trunoffset);
     } else {
       if (oldmoof.length - newmoof.length >= 8 /* minimum "free" atom size */) {

@@ -105,6 +105,21 @@ function hasEMEAPIs() : boolean {
 }
 
 /**
+ * TODO(pierre): fix patchSegmentInPlace to work with IE11. Maybe
+ * try to put free atom inside traf children
+ *
+ * Returns true if the current target is tolerant enough for us to
+ * simply be able to "patch" an ISOBMFF segment or if we have to create a
+ * new one from scratch instead.
+ *
+ * TODO understand what the fudge Pierre meant here
+ * @returns {Boolean}
+ */
+function canPatchISOBMFFSegment() {
+  return !isIE11;
+}
+
+/**
  * Returns true if the current target require the media keys to be renewed on
  * each content.
  * @returns {Boolean}
@@ -442,6 +457,7 @@ export {
   MediaSource_,
   VTTCue_,
   addTextTrack,
+  canPatchISOBMFFSegment,
   canPlay,
   clearElementSrc,
   events,
@@ -450,10 +466,7 @@ export {
   hasEMEAPIs,
   hasLoadedMetadata,
   isCodecSupported,
-  isFirefox,
   isFullscreen,
-  isIE11,
-  isIEOrEdge,
   isOffline,
   isPlaybackStuck,
   isVTTCue,
