@@ -20,14 +20,19 @@
  */
 
 import {
+  concat as observableConcat,
+  EMPTY,
   merge as observableMerge,
   Observable,
   of as observableOf,
+  ReplaySubject,
 } from "rxjs";
 import {
-  ignoreElements,
   map,
   mergeMap,
+  multicast,
+  refCount,
+  share,
 } from "rxjs/operators";
 import {
   clearElementSrc,
@@ -50,6 +55,8 @@ import {
   IStalledEvent,
   IStreamClockTick,
   IStreamLoadedEvent,
+  IStreamPausedEvent,
+  IStreamPlayingEvent,
   IStreamWarningEvent,
 } from "./types";
 
@@ -114,6 +121,8 @@ export type IDirectfileEvent =
   ISpeedChangedEvent |
   IStalledEvent |
   IStreamLoadedEvent |
+  IStreamPlayingEvent |
+  IStreamPausedEvent |
   IStreamWarningEvent;
 
 /**
@@ -137,10 +146,7 @@ export default function StreamDirectFile({
     getDirectFileInitialTime(mediaElement, startAt);
   log.debug("Stream: Initial time calculated:", initialTime);
 
-  const {
-    seek$,
-    load$,
-  } = seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
+  const { load$ } = seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
 
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
@@ -162,28 +168,39 @@ export default function StreamDirectFile({
   const stallingManager$ = StallingManager(mediaElement, clock$)
     .pipe(map(EVENTS.stalled));
 
-  // Manage "loaded" event and warn if autoplay is blocked on the current browser
-  const loadedEvent$ = load$
-    .pipe(mergeMap((evt) => {
-      if (evt === "autoplay-blocked") {
-        const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
-        return observableOf(EVENTS.warning(error), EVENTS.loaded());
-      }
-      return observableOf(EVENTS.loaded());
-    }));
-
   // Start everything! (Just put the URL in the element's src).
-  const linkURL$ = setElementSrc$(mediaElement, url).pipe(ignoreElements());
+  const linkURL$ = setElementSrc$(mediaElement, url).pipe(share());
 
-  const initialSeek$ = seek$.pipe(ignoreElements());
+  // Manage "loaded" event and warn if autoplay is blocked on the current browser
+  const playbackEvents$ = linkURL$.pipe(
+    mergeMap(() => {
+      return load$
+        .pipe(
+          mergeMap(({ evt, playPauseEvents$ }) => {
+            const autoPlayBlockedEvent$ = evt === "autoplay-blocked" ?
+              observableOf(EVENTS.warning(
+                new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false))) :
+              EMPTY;
+            return observableConcat(
+              autoPlayBlockedEvent$,
+              observableOf(EVENTS.loaded()),
+              playPauseEvents$.pipe(map((x)  => x ? EVENTS.playing() : EVENTS.paused()))
+            );
+          })
+        );
+    }),
+    // equivalent to a sane shareReplay:
+    // https://github.com/ReactiveX/rxjs/issues/3336
+    // XXX TODO Replace it when that issue is resolved
+    multicast(() => new ReplaySubject(1)),
+    refCount()
+  );
 
   return observableMerge(
-    loadedEvent$,
-    initialSeek$,
     emeManager$,
     errorManager$,
     speedManager$,
     stallingManager$,
-    linkURL$
+    playbackEvents$
   );
 }

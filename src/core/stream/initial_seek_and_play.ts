@@ -15,16 +15,22 @@
  */
 
 import {
+  concat as observableConcat,
+  merge as observableMerge,
   Observable,
   of as observableOf,
   ReplaySubject,
 } from "rxjs";
 import {
   catchError,
+  filter,
+  ignoreElements,
+  map,
   mapTo,
   mergeMap,
   multicast,
   refCount,
+  take,
   tap,
 } from "rxjs/operators";
 import {
@@ -32,6 +38,8 @@ import {
   hasLoadedMetadata,
   play$,
 } from "../../compat";
+import { onDurationChange$ } from "../../compat/events";
+import { onPlayPause } from "../../compat/stream";
 import log from "../../log";
 
 /**
@@ -66,6 +74,48 @@ function doInitialSeek(
     );
 }
 
+function handlePlayError(error: Error) {
+  if (error.name === "NotAllowedError") {
+    // auto-play was probably prevented.
+    log.warn("Stream: Media element can't play." +
+      " It may be due to browser auto-play policies.");
+    return observableOf("autoplay-blocked" as "autoplay-blocked");
+  } else {
+    throw error;
+  }
+}
+
+/**
+ * Try to play on mediaElement, and wait for his duration to be
+ * striclty positive.
+ * @param {HTMLMediaElement} _mediaElement
+ * @returns {Observable}
+ */
+function playAndCheckMediaDuration$(
+  _mediaElement: HTMLMediaElement
+): Observable<"autoplay-blocked"|"loaded"> {
+  return play$(_mediaElement).pipe(
+    catchError(handlePlayError),
+    mergeMap((status) => {
+      if (status !== "autoplay-blocked") {
+        if (_mediaElement.duration > 0) {
+          return observableOf("loaded" as "loaded");
+        } else {
+          return onDurationChange$(_mediaElement).pipe(
+            filter((evt: any) => {
+              return (evt != null && evt.target != null && evt.target.duration > 0);
+            }),
+            take(1),
+            mapTo("loaded" as "loaded")
+          );
+        }
+      }
+      return observableOf(status as "autoplay-blocked");
+    }),
+    take(1)
+  );
+}
+
 /**
  * Returns two Observables:
  *
@@ -89,33 +139,58 @@ export default function seekAndLoadOnMediaEvents(
   mustAutoPlay : boolean
 ) : {
   seek$ : Observable<void>;
-  load$ : Observable<"autoplay-blocked"|"autoplay"|"loaded">;
+  load$ : Observable<{
+    evt: "autoplay-blocked"|"autoplay"|"loaded";
+    playPauseEvents$: Observable<boolean>;
+  }>;
 } {
+  let playPauseEvents$: Observable<boolean> = onPlayPause(mediaElement, mustAutoPlay);
   const seek$ = doInitialSeek(mediaElement, startTime);
-
-  const load$ = canPlay(mediaElement).pipe(
+  const load$ = observableConcat(
+    seek$.pipe(ignoreElements()),
+    canPlay(mediaElement)
+  ).pipe(
 
     tap(() => log.info("Stream: canplay event")),
 
     mergeMap(() => {
-      if (mustAutoPlay) {
+
+      const initialMediaDuration = mediaElement.duration;
+      if (initialMediaDuration === 0) {
+        playPauseEvents$ = onPlayPause(
+          mediaElement,
+          mustAutoPlay,
+          {
+            initialMediaDuration,
+            hasLoadedMetadata: true,
+          }
+        );
+        const prevVolume = mediaElement.volume;
+        mediaElement.volume = 0;
+        return observableMerge(
+          playPauseEvents$.pipe(ignoreElements()),
+          playAndCheckMediaDuration$(mediaElement).pipe(
+            mergeMap((status) => {
+              mediaElement.volume = prevVolume;
+              if (!mustAutoPlay || status !== "loaded") {
+                mediaElement.pause();
+              }
+              return observableOf("loaded" as "loaded");
+            })
+          )
+        );
+      } else if (mustAutoPlay) {
         return play$(mediaElement).pipe(
           mapTo("autoplay" as "autoplay"),
-          catchError((error) => {
-            if (error.name === "NotAllowedError") {
-              // auto-play was probably prevented.
-              log.warn("Stream: Media element can't play." +
-                " It may be due to browser auto-play policies.");
-              return observableOf("autoplay-blocked" as "autoplay-blocked");
-            } else {
-              throw error;
-            }
-          })
+          catchError(handlePlayError)
         );
       }
       return observableOf("loaded" as "loaded");
     }),
-
+    map((evt) => ({
+      evt,
+      playPauseEvents$,
+    })),
     // equivalent to a sane shareReplay:
     // https://github.com/ReactiveX/rxjs/issues/3336
     // XXX TODO Replace it when that issue is resolved

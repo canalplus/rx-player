@@ -72,6 +72,8 @@ import {
   IManifestUpdateEvent,
   IReloadingStreamEvent,
   IStreamClockTick,
+  IStreamPausedEvent,
+  IStreamPlayingEvent,
   IStreamWarningEvent,
 } from "./types";
 
@@ -129,6 +131,8 @@ export interface IStreamOptions {
 export type IStreamEvent =
   IManifestReadyEvent |
   IStreamLoaderEvent |
+  IStreamPlayingEvent |
+  IStreamPausedEvent |
   IEMEManagerEvent |
   IReloadingStreamEvent |
   IStreamWarningEvent;

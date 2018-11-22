@@ -30,7 +30,6 @@ import {
   EMPTY,
   merge as observableMerge,
   of as observableOf,
-  ReplaySubject,
   Subject,
   Subscription,
 } from "rxjs";
@@ -71,7 +70,6 @@ import {
   isInBackground$,
   onEnded$,
   onFullscreenChange$,
-  onPlayPause$,
   onSeeking$,
   onTextTrackChanges$,
   videoWidth$,
@@ -101,6 +99,8 @@ import {
   IReloadingStreamEvent,
   IStalledEvent,
   IStreamLoadedEvent,
+  IStreamPausedEvent,
+  IStreamPlayingEvent,
 } from "../stream/types";
 import createClock, {
   IClockTick
@@ -221,17 +221,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @type {BehaviorSubject}
    */
   private readonly _priv_streamLock$ : BehaviorSubject<boolean>;
-
-  /**
-   * Changes on "play" and "pause" events from the media elements.
-   * Switches to ``true`` whent the "play" event was the last received.
-   * Switches to ``false`` whent the "pause" event was the last received.
-   *
-   * ``false`` if no such event was received for the current loaded content.
-   * @private
-   * @type {ReplaySubject}
-   */
-  private readonly _priv_playing$ : ReplaySubject<boolean>;
 
   /**
    * Last speed set by the user.
@@ -566,7 +555,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       )
       .subscribe((x : TextTrack[]) => this._priv_onNativeTextTracksNext(x));
 
-    this._priv_playing$ = new ReplaySubject(1);
     this._priv_speed$ = new BehaviorSubject(videoElement.playbackRate);
     this._priv_stopCurrentContent$ = new Subject();
     this._priv_streamLock$ = new BehaviorSubject(false);
@@ -646,7 +634,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     // Complete all subjects
     this._priv_stopCurrentContent$.complete();
-    this._priv_playing$.complete();
     this._priv_speed$.complete();
     this._priv_streamLock$.complete();
     this._priv_bufferOptions.wantedBufferAhead$.complete();
@@ -707,9 +694,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       initialAudioTrack: defaultAudioTrack,
       initialTextTrack: defaultTextTrack,
     };
-
-    // inilialize to false
-    this._priv_playing$.next(false);
 
     // get every properties used from context for clarity
     const videoElement = this.videoElement;
@@ -815,6 +799,23 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       share()
     );
 
+    // Emit when the Stream is considered "playing".
+    const playing$ = stream.pipe(
+      filter((evt) : evt is IStreamPlayingEvent => evt.type === "playing"),
+      share()
+    );
+
+    // Emit when the Stream is considered "paused".
+    const paused$ = stream.pipe(
+      filter((evt) : evt is IStreamPausedEvent => evt.type === "paused"),
+      share()
+    );
+
+    const isPlaying$ = observableMerge(
+      playing$.pipe(mapTo(true)),
+      paused$.pipe(mapTo(false))
+    );
+
     // Emit when the Stream "reloads" the MediaSource
     const reloading$ = stream.pipe(
       filter((evt) : evt is IReloadingStreamEvent => evt.type === "reloading-stream"),
@@ -829,7 +830,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     // State updates when the content is considered "loaded"
     const loadedStateUpdates$ = observableCombineLatest(
-      this._priv_playing$,
+      isPlaying$,
       stalled$.pipe(startWith(null)),
       endedEvent$.pipe(startWith(null)),
       seekingEvent$.pipe(startWith(null))
@@ -877,10 +878,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           streamDisposable.unsubscribe();
         }
       });
-
-    onPlayPause$(videoElement)
-      .pipe(takeUntil(this._priv_stopCurrentContent$))
-      .subscribe(e => this._priv_onPlayPauseNext(e.type === "play"), noop);
 
     clock$
       .pipe(takeUntil(this._priv_stopCurrentContent$))
@@ -2323,22 +2320,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       assert(bitrate != null);
     }
     this._priv_triggerContentEvent("bitrateEstimation", { type, bitrate });
-  }
-
-  /**
-   * Triggered each time the videoElement alternates between play and pause.
-   *
-   * Emit the info through the right Subject.
-   *
-   * @param {Boolean} isPlaying
-   * @private
-   */
-  private _priv_onPlayPauseNext(isPlaying : boolean) : void {
-    if (!this.videoElement) {
-      throw new Error("Disposed player");
-    }
-
-    this._priv_playing$.next(isPlaying);
   }
 
   /**

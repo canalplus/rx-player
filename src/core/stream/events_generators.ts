@@ -29,6 +29,8 @@ import {
   ISpeedChangedEvent,
   IStalledEvent,
   IStreamLoadedEvent,
+  IStreamPausedEvent,
+  IStreamPlayingEvent,
   IStreamWarningEvent,
 } from "./types";
 
@@ -38,6 +40,22 @@ import {
  */
 function loaded() : IStreamLoadedEvent {
   return { type: "loaded", value: true };
+}
+
+/**
+ * Construct a "playing" event.
+ * @returns {Object}
+ */
+function playing() : IStreamPlayingEvent {
+  return { type: "playing", value: true };
+}
+
+/**
+ * Construct a "paused" event.
+ * @returns {Object}
+ */
+function paused() : IStreamPausedEvent {
+  return { type: "paused", value: true };
 }
 
 /**
@@ -131,6 +149,8 @@ const STREAM_EVENTS = {
   reloadingStream,
   speedChanged,
   stalled,
+  playing,
+  paused,
   warning,
 };
 

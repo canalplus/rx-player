@@ -192,7 +192,7 @@ export default function StreamLoader({
       .pipe(map(EVENTS.stalled));
 
     const loadedEvent$ = load$
-      .pipe(mergeMap((evt) => {
+      .pipe(mergeMap(({ evt }) => {
         if (evt === "autoplay-blocked") {
           const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
           return observableOf(EVENTS.warning(error), EVENTS.loaded());

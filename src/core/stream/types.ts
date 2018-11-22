@@ -88,5 +88,14 @@ export interface IStreamLoadedEvent {
   type : "loaded";
   value : true;
 }
+export interface IStreamPlayingEvent {
+  type : "playing";
+  value : true;
+}
+
+export interface IStreamPausedEvent {
+  type: "paused";
+  value: true;
+}
 
 export { IRepresentationChangeEvent };

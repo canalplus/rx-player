@@ -243,6 +243,12 @@ const onEnded$ = compatibleListener(["ended"]);
 const onTimeUpdate$ = compatibleListener(["timeupdate"]);
 
 /**
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
+const onDurationChange$ = compatibleListener(["durationchange"]);
+
+/**
  * @param {HTMLElement} element
  * @returns {Observable}
  */
@@ -325,6 +331,7 @@ const onKeyStatusesChange$ = compatibleListener(["keystatuseschange"]);
 export {
   isInBackground$,
   videoWidth$,
+  onDurationChange$,
   onPlayPause$,
   onTextTrackChanges$,
   onLoadedMetadata$,
