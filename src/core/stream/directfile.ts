@@ -177,6 +177,9 @@ export default function StreamDirectFile({
       return load$
         .pipe(
           mergeMap(({ evt, playPauseEvents$ }) => {
+            if (mediaElement.duration === 0) {
+              throw new MediaError("MEDIA_ERR_UNLOADED_METADATA", null, true);
+            }
             const autoPlayBlockedEvent$ = evt === "autoplay-blocked" ?
               observableOf(EVENTS.warning(
                 new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false))) :
