@@ -41,8 +41,7 @@ export function onPlayPause(
     initialMediaDuration : number;
   }
 ): Observable<boolean> {
-  let obs$;
-  obs$ = onPlayPause$(mediaElement).pipe(
+  return onPlayPause$(mediaElement).pipe(
     filter((x, i) => {
       if (
         onPlayPauseOptions &&
@@ -55,9 +54,7 @@ export function onPlayPause(
       }
       return true;
     }),
-    map((x) => (x && x.type === "play") ? true : false)
-  );
-  return obs$.pipe(
+    map((x) => (x && x.type === "play") ? true : false),
     // equivalent to a sane shareReplay:
     // https://github.com/ReactiveX/rxjs/issues/3336
     // XXX TODO Replace it when that issue is resolved
