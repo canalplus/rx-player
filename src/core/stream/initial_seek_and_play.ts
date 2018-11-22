@@ -175,7 +175,7 @@ export default function seekAndLoadOnMediaEvents(
               if (!mustAutoPlay || status !== "loaded") {
                 mediaElement.pause();
               }
-              return observableOf("loaded" as "loaded");
+              return observableOf(status);
             })
           )
         );
