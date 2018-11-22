@@ -310,8 +310,8 @@ describe("DASH live content (SegmentTimeline)", function () {
               expect(textTrack.language).to.equal(adaptation.language || "");
               expect(textTrack.normalized).to
                 .equal(adaptation.normalizedLanguage || "");
-              expect(textTrack.textDescription)
-                .to.equal(!!adaptation.isTextDescription);
+              expect(textTrack.closedCaption)
+                .to.equal(!!adaptation.isClosedCaption);
 
               const activeTextTrack = player.getTextTrack();
               expect(textTrack.active).to
