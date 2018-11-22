@@ -16,10 +16,11 @@ const audioSegments = [
   580053333, 600106666, 620160000, 640000000, 660053333, 680106666, 700160000,
   720000000, 740053333,
 ].map(time => {
+  const data = require(`arraybuffer-loader!./media/Fragments(audio_und=${time}).mp4`);
   return {
     // TODO Open Sinon issue with malformed RegExp from strings
     url: baseURL + `QualityLevels96000/Fragmentsaudio_und=${time}`,
-    data: require(`arraybuffer-loader!./media/Fragments(audio_und=${time}).mp4`),
+    data: () => data.slice(),
     contentType: "video/mp4",
   };
 });
@@ -35,10 +36,12 @@ const videoSegments = flatMap(
       500000000, 520000000, 540000000, 560000000, 580000000, 600000000,
       620000000, 640000000, 660000000, 680000000, 700000000, 720000000,
     ].map(time => {
+      const data =
+        require(`arraybuffer-loader!./media/${quality}-Fragments(video=0).mp4`);
       return {
         // TODO Open Sinon issue with malformed RegExp from strings
         url: baseURL + `QualityLevels${quality}/Fragmentsvideo=${time}`,
-        data: require(`arraybuffer-loader!./media/${quality}-Fragments(video=0).mp4`),
+        data: () => data.slice(),
         contentType: "video/mp4",
       };
     });
