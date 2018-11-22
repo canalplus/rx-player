@@ -172,6 +172,7 @@ export default function launchTestsForContent(
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getError()).to.equal(null);
       });
     });
 
