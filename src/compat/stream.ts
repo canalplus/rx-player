@@ -23,6 +23,7 @@ import {
   multicast,
   refCount
 } from "rxjs/operators";
+import { isSamsungInternet } from "./constants";
 import { onPlayPause$ } from "./events";
 
 /**
@@ -46,7 +47,8 @@ export function onPlayPause(
       if (
         onPlayPauseOptions &&
         onPlayPauseOptions.initialMediaDuration === 0 &&
-        onPlayPauseOptions.hasLoadedMetadata
+        onPlayPauseOptions.hasLoadedMetadata &&
+        isSamsungInternet
       ) {
         // On samsung, we play a first time, even when autoPlay is false.
         // We should filter on it

@@ -130,6 +130,9 @@ const isIEOrEdge : boolean =
 const isFirefox : boolean =
   navigator.userAgent.toLowerCase().indexOf("firefox") !== -1;
 
+const isSamsungInternet : boolean =
+  navigator.userAgent.toLowerCase().indexOf("SamsungBro") !== -1;
+
 const READY_STATES = {
   HAVE_NOTHING: 0,
   HAVE_METADATA: 1,
@@ -155,4 +158,5 @@ export {
   isFirefox,
   isIE11,
   isIEOrEdge,
+  isSamsungInternet
 };
