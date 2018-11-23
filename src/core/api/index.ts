@@ -830,7 +830,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     // State updates when the content is considered "loaded"
     const loadedStateUpdates$ = observableCombineLatest(
-      isPlaying$,
+      isPlaying$.pipe(startWith(false)),
       stalled$.pipe(startWith(null)),
       endedEvent$.pipe(startWith(null)),
       seekingEvent$.pipe(startWith(null))
