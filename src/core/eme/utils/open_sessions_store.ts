@@ -119,7 +119,7 @@ export default class MediaKeySessionsStore {
       throw new EncryptedMediaError("MULTIPLE_SESSIONS_SAME_INIT_DATA", error, true);
     }
 
-    const session = createSession(this._mediaKeys, sessionType, initData);
+    const session = createSession(this._mediaKeys, sessionType);
     const entry = {
       session,
       sessionType,
