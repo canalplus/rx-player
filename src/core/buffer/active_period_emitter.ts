@@ -99,7 +99,7 @@ export default function ActivePeriodEmitter(
   const onItemAdd$ = addPeriodBuffer$
     .pipe(tap(({ period, type }) => {
       // add or update the periodItem
-      let periodItem = periodsList.find(p => p.period === period);
+      let periodItem = periodsList.findFirst(p => p.period === period);
       if (!periodItem) {
         periodItem = {
           period,
@@ -121,7 +121,7 @@ export default function ActivePeriodEmitter(
         return ;
       }
 
-      const periodItem = periodsList.find(p => p.period === period);
+      const periodItem = periodsList.findFirst(p => p.period === period);
       if (!periodItem) {
         log.error("ActivePeriodEmitter: cannot remove, unknown period.");
         return ;
@@ -141,7 +141,7 @@ export default function ActivePeriodEmitter(
         return null;
       }
 
-      const periodItem = periodsList.find(p =>
+      const periodItem = periodsList.findFirst(p =>
         isBufferListFull(bufferTypes, p.buffers)
       );
       return periodItem != null ? periodItem.period : null;

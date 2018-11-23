@@ -13,6 +13,15 @@
     "arrow-parens": false,
     "arrow-return-shorthand": false,
     "await-promise": true,
+    "ban": [
+      true,
+      ["Object", "values"],
+      ["Object", "assign"],
+      ["*", "includes"],
+      ["*", "find"],
+      ["*", "findIndex"],
+      ["*", "startsWith"]
+    ],
     "ban-comma-operator": true,
     "binary-expression-operand-order": true,
     "callable-types": true,

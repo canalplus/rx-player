@@ -32,7 +32,9 @@ export default function startsWith(
   /* tslint:disable no-unbound-method */
   if (typeof String.prototype.startsWith === "function") {
   /* tslint:enable no-unbound-method */
+    /* tslint:disable ban */
     return completeString.startsWith(searchString, position);
+    /* tslint:enable ban */
   }
   return completeString
     .substr(position || 0, searchString.length) === searchString;

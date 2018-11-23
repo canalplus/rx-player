@@ -36,6 +36,7 @@ import {
   ICompatMediaKeySystemAccess,
   ICompatMediaKeySystemConfiguration,
 
+  isIE11,
   MediaKeys_,
 } from "../constants";
 import * as events from "../events";
@@ -45,7 +46,17 @@ let requestMediaKeySystemAccess :
 (
   (keyType : string, config : ICompatMediaKeySystemConfiguration[]) =>
     Observable<ICompatMediaKeySystemAccess|CustomMediaKeySystemAccess>
-) | null;
+) | null = null;
+
+let createSession : (
+  mediaKeys : MediaKeys|ICustomMediaKeys,
+  sessionType : MediaKeySessionType
+) => MediaKeySession|ICustomMediaKeySession = function createMediaKeysSession(
+    mediaKeys: MediaKeys | ICustomMediaKeys,
+    sessionType: MediaKeySessionType
+  ): MediaKeySession | ICustomMediaKeySession {
+    return mediaKeys.createSession(sessionType);
+  };
 
 type TypedArray =
   Int8Array |
@@ -381,38 +392,28 @@ if (navigator.requestMediaKeySystemAccess) {
 
       return observableThrow(undefined);
     };
-  }
-
-  // This is for IE11
-  else if (
+  } else if (
+    isIE11 &&
     MediaKeys_ &&
     MediaKeys_.prototype &&
     typeof MediaKeys_.prototype.createSession === "function" &&
     typeof MediaKeys_.isTypeSupported === "function"
   ) {
-    interface IIE11MediaKeys {
-      memCreateSession(codec : string, initData : ArrayBuffer) : MediaKeySession;
-    }
-
-    // TODO implement MediaKeySession completely
     class IE11MediaKeySession
-    extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
-      implements ICustomMediaKeySession
-    {
-      public readonly update : (
-        license : ArrayBuffer,
-        sessionId? : string
+      extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent | Event>
+      implements ICustomMediaKeySession {
+      public readonly update: (
+        license: ArrayBuffer,
+        sessionId?: string
       ) => Promise<void>;
       public readonly closed: Promise<void>;
       public expiration: number;
       public keyStatuses: ICustomMediaKeyStatusMap;
-      public sessionId : string;
-
-      private readonly _mk : IIE11MediaKeys;
-      private readonly _closeSession$ : Subject<void>;
-      private _ss? : MediaKeySession;
-
-      constructor(mk : IIE11MediaKeys) {
+      public sessionId: string;
+      private readonly _mk: MediaKeys|ICustomMediaKeys;
+      private readonly _closeSession$: Subject<void>;
+      private _ss?: MediaKeySession;
+      constructor(mk: MediaKeys|ICustomMediaKeys) {
         super();
         this.sessionId = "";
         this.expiration = NaN;
@@ -422,7 +423,6 @@ if (navigator.requestMediaKeySystemAccess) {
         this.closed = new Promise((resolve) => {
           this._closeSession$.subscribe(resolve);
         });
-
         this.update = wrapUpdate((license, sessionId) => {
           if (!this._ss) {
             throw new Error("MediaKeySession not set");
@@ -431,22 +431,21 @@ if (navigator.requestMediaKeySystemAccess) {
           this.sessionId = sessionId;
         });
       }
-
-      generateRequest(_initDataType : string, initData : ArrayBuffer) : Promise<void> {
+      generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
         return new Promise((resolve) => {
-          this._ss = this._mk.memCreateSession("video/mp4", initData);
+          this._ss = (this._mk as any)
+            .createSession("video/mp4", initData) as MediaKeySession;
           observableMerge(
             events.onKeyMessage$(this._ss),
             events.onKeyAdded$(this._ss),
             events.onKeyError$(this._ss)
           )
             .pipe(takeUntil(this._closeSession$))
-            .subscribe((evt : Event) => this.trigger(evt.type, evt));
+            .subscribe((evt: Event) => this.trigger(evt.type, evt));
           resolve();
         });
       }
-
-      close() : Promise<void> {
+      close(): Promise<void> {
         return new Promise((resolve) => {
           if (this._ss) {
             /* tslint:disable no-floating-promises */
@@ -459,25 +458,13 @@ if (navigator.requestMediaKeySystemAccess) {
           resolve();
         });
       }
-
-      load() : Promise<boolean> {
+      load(): Promise<boolean> {
         return Promise.resolve(false);
       }
-
-      remove() : Promise<void> {
+      remove(): Promise<void> {
         return Promise.resolve();
       }
     }
-
-    // on IE11, each created session needs to be created on a new
-    // MediaKeys object
-    MediaKeys_.prototype.alwaysRenew = true;
-    MediaKeys_.prototype.memCreateSession = MediaKeys_.prototype.createSession;
-    MediaKeys_.prototype.createSession = function() : IE11MediaKeySession {
-      /* tslint:disable no-invalid-this */
-      return new IE11MediaKeySession(this);
-      /* tslint:enable no-invalid-this */
-    };
 
     requestMediaKeySystemAccess = function(
       keyType : string,
@@ -524,12 +511,16 @@ if (navigator.requestMediaKeySystemAccess) {
 
       return observableThrow(undefined);
     };
-  } else {
-    requestMediaKeySystemAccess = null;
+    createSession = function createIE11MediaKeySession(
+      mediaKeys : MediaKeys|ICustomMediaKeys
+      ) : ICustomMediaKeySession {
+      return new IE11MediaKeySession(mediaKeys);
+    };
   }
 }
 
 export {
+  createSession,
   MockMediaKeys,
   requestMediaKeySystemAccess,
 };

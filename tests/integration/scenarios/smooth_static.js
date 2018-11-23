@@ -1,11 +1,29 @@
 import launchTestsForContent from "../launch_tests_for_content.js";
 
 import {
-  manifestInfos,
-  URLs,
-} from "../../contents/Smooth_static_bif";
+  EmptyTextTrack,
+  NotStartingAt0,
+  Regular,
+} from "../../contents/Smooth_static";
 
-// TODO investigate weird test clean-up bug
-xdescribe("Smooth non-linear content", function () {
-  launchTestsForContent(URLs, manifestInfos);
+const {
+  manifestInfos: emptyTextTrackManifestInfos,
+  URLs: emptyTextTrackURLs,
+} = EmptyTextTrack;
+const {
+  manifestInfos: NotStartingAt0ManifestInfos,
+  URLs: NotStartingAt0URLs,
+} = NotStartingAt0;
+const { manifestInfos: regularManifestInfos, URLs: regularURLs } = Regular;
+
+describe("Smooth non-linear regular content", function () {
+  launchTestsForContent(regularURLs, regularManifestInfos);
+});
+
+describe("Smooth non-linear with empty text track", function () {
+  launchTestsForContent(emptyTextTrackURLs, emptyTextTrackManifestInfos);
+});
+
+describe("Smooth non-linear not starting at `0`", function () {
+  launchTestsForContent(NotStartingAt0URLs, NotStartingAt0ManifestInfos);
 });

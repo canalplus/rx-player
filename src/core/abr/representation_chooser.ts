@@ -33,6 +33,7 @@ import {
 import config from "../../config";
 import log from "../../log";
 import { Representation } from "../../manifest";
+import objectValues from "../../utils/object-values";
 import { IBufferType } from "../source_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
 import EWMA from "./ewma";
@@ -284,7 +285,7 @@ function shouldDirectlySwitchToLowBitrate(
   clock : IRepresentationChooserClockTick
 ) : boolean {
   const nextNeededPosition = clock.currentTime + clock.bufferGap;
-  const requests = Object.values(pendingRequests)
+  const requests = objectValues(pendingRequests)
     .filter((a) : a is IRequestInfo => !!a)
     .sort((a, b) => a.time - b.time);
 

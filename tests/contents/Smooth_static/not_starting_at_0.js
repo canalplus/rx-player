@@ -16,10 +16,11 @@ const audioSegments = [
   580053333, 600106666, 620160000, 640000000, 660053333, 680106666, 700160000,
   720000000, 740053333,
 ].map(time => {
+  const data = require(`arraybuffer-loader!./media/Fragments(audio_und=${time}).mp4`);
   return {
     // TODO Open Sinon issue with malformed RegExp from strings
-    url: baseURL + `QualityLevels96000/Fragmentsaudio_und=${time}`,
-    data: require(`arraybuffer-loader!./media/Fragments(audio_und=${time}).mp4`),
+    url: baseURL + `QualityLevels96000/Fragmentsaudio_und=${time + 90000000}`,
+    data: () => data.slice(),
     contentType: "video/mp4",
   };
 });
@@ -35,10 +36,12 @@ const videoSegments = flatMap(
       500000000, 520000000, 540000000, 560000000, 580000000, 600000000,
       620000000, 640000000, 660000000, 680000000, 700000000, 720000000,
     ].map(time => {
+      const data =
+        require(`arraybuffer-loader!./media/${quality}-Fragments(video=0).mp4`);
       return {
         // TODO Open Sinon issue with malformed RegExp from strings
-        url: baseURL + `QualityLevels${quality}/Fragmentsvideo=${time}`,
-        data: require(`arraybuffer-loader!./media/${quality}-Fragments(video=0).mp4`),
+        url: baseURL + `QualityLevels${quality}/Fragmentsvideo=${time + 90000000}`,
+        data: () => data.slice(),
         contentType: "video/mp4",
       };
     });
@@ -56,7 +59,7 @@ const videoSegments = flatMap(
 const URLs = [
   {
     url: baseURL + "Manifest",
-    data: require("raw-loader!./media/Manifest.xml"),
+    data: require("raw-loader!./media/Manifest_Not_Starting_at_0.xml"),
     contentType: "text/xml",
   },
   ...audioSegments,
@@ -67,13 +70,14 @@ const manifestInfos = {
   url: baseURL + "Manifest",
   transport: "smooth",
   isLive: false,
-  duration: 75.0079999,
+  duration: 75.0079999 + 9,
   timeShiftBufferDepth: undefined,
   availabilityStartTime: 0,
+  minimumTime: 9,
   periods: [
     {
       start: 0,
-      duration: 75.0079999,
+      duration: 75.0079999 + 9,
       adaptations: {
         audio: [
           {
@@ -89,10 +93,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 0,
+                      time: 90000000,
                       timescale: 10000000,
                       duration: 20053333,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels96000/Fragmentsaudio_und=0",
+                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels96000/Fragmentsaudio_und=90000000",
                     },
                   ],
                   // ...
@@ -116,10 +120,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 0,
+                      time: 90000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels300000/Fragmentsvideo=0",
+                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels300000/Fragmentsvideo=90000000",
                     },
                     // ...
                   ],
@@ -135,10 +139,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 0,
+                      time: 90000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels750000/Fragmentsvideo=0",
+                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels750000/Fragmentsvideo=90000000",
                     },
                     // ...
                   ],
@@ -154,10 +158,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 0,
+                      time: 90000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels1100000/Fragmentsvideo=0",
+                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels1100000/Fragmentsvideo=90000000",
                     },
                     // ...
                   ],
@@ -173,10 +177,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 0,
+                      time: 90000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels1500000/Fragmentsvideo=0",
+                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels1500000/Fragmentsvideo=90000000",
                     },
                     // ...
                   ],
@@ -192,10 +196,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 0,
+                      time: 90000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels2100000/Fragmentsvideo=0",
+                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels2100000/Fragmentsvideo=90000000",
                     },
                     // ...
                   ],
@@ -211,10 +215,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 0,
+                      time: 90000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels3400000/Fragmentsvideo=0",
+                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels3400000/Fragmentsvideo=90000000",
                     },
                     // ...
                   ],
@@ -230,10 +234,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 0,
+                      time: 90000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels4000000/Fragmentsvideo=0",
+                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels4000000/Fragmentsvideo=90000000",
                     },
                     // ...
                   ],
@@ -249,10 +253,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 0,
+                      time: 90000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels5000000/Fragmentsvideo=0",
+                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels5000000/Fragmentsvideo=90000000",
                     },
                     // ...
                   ],

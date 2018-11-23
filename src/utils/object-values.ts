@@ -14,25 +14,10 @@
  * limitations under the License.
  */
 
-import getInitData from "./get_init_data";
-import CustomMediaKeySystemAccess, {
-  ICustomMediaKeySystemAccess,
-} from "./keySystemAccess";
-import {
-  createSession,
-  ICustomMediaKeys,
-  ICustomMediaKeySession,
-  requestMediaKeySystemAccess,
-} from "./MediaKeys";
-import setMediaKeys from "./setMediaKeys";
-
-export {
-  ICustomMediaKeySession,
-  ICustomMediaKeySystemAccess,
-  ICustomMediaKeys,
-  CustomMediaKeySystemAccess,
-  createSession,
-  getInitData,
-  requestMediaKeySystemAccess,
-  setMediaKeys,
-};
+/* tslint:disable no-unbound-method */
+export default typeof Object.values === "function" ?
+  Object.values :
+/* tslint:enable no-unbound-method */
+  function objectValues<T>(o : { [s: string] : T } | ArrayLike<T>) : T[] {
+    return Object.keys(o).map((k) => (o as any)[k]);
+  };

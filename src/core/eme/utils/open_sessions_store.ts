@@ -27,6 +27,7 @@ import {
   ignoreElements,
 } from "rxjs/operators";
 import {
+  createSession,
   ICustomMediaKeys,
   ICustomMediaKeySession,
 } from "../../../compat";
@@ -118,7 +119,7 @@ export default class MediaKeySessionsStore {
       throw new EncryptedMediaError("MULTIPLE_SESSIONS_SAME_INIT_DATA", error, true);
     }
 
-    const session = (this._mediaKeys as any /* TS bug */).createSession(sessionType);
+    const session = createSession(this._mediaKeys, sessionType);
     const entry = {
       session,
       sessionType,
