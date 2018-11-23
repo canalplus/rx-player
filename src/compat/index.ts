@@ -47,6 +47,7 @@ import {
 } from "./fullscreen";
 
 import {
+  createSession,
   CustomMediaKeySystemAccess,
   getInitData,
   ICustomMediaKeys,
@@ -446,6 +447,7 @@ function tryToChangeSourceBufferType(
 }
 
 export {
+  createSession,
   CustomMediaKeySystemAccess,
   ICompatMediaKeySystemAccess,
   ICompatMediaKeySystemConfiguration,

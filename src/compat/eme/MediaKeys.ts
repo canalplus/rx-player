@@ -36,6 +36,7 @@ import {
   ICompatMediaKeySystemAccess,
   ICompatMediaKeySystemConfiguration,
 
+  isIE11,
   MediaKeys_,
 } from "../constants";
 import * as events from "../events";
@@ -437,7 +438,23 @@ if (navigator.requestMediaKeySystemAccess) {
   }
 }
 
+interface IE11MediaKeys extends MediaKeys {
+  createSession(sessionType: MediaKeySessionType, initData: TypedArray):
+    MediaKeySession;
+}
+
+function createSession(
+  mediaKeys : MediaKeys|ICustomMediaKeys,
+  sessionType : MediaKeySessionType,
+  initData : TypedArray
+) : MediaKeySession|ICustomMediaKeySession {
+  return isIE11 ?
+   (mediaKeys as IE11MediaKeys).createSession(sessionType, initData) :
+   mediaKeys.createSession(sessionType);
+}
+
 export {
+  createSession,
   MockMediaKeys,
   requestMediaKeySystemAccess,
 };

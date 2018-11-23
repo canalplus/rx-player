@@ -19,6 +19,7 @@ import CustomMediaKeySystemAccess, {
   ICustomMediaKeySystemAccess,
 } from "./keySystemAccess";
 import {
+  createSession,
   ICustomMediaKeys,
   ICustomMediaKeySession,
   requestMediaKeySystemAccess,
@@ -30,6 +31,7 @@ export {
   ICustomMediaKeySystemAccess,
   ICustomMediaKeys,
   CustomMediaKeySystemAccess,
+  createSession,
   getInitData,
   requestMediaKeySystemAccess,
   setMediaKeys,
