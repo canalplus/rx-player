@@ -38,8 +38,10 @@ import {
   hasLoadedMetadata,
   play$,
 } from "../../compat";
-import { onDurationChange$ } from "../../compat/events";
-import { onPlayPause } from "../../compat/stream";
+import {
+  onDurationChange$,
+  onPlayPause$,
+} from "../../compat/events";
 import log from "../../log";
 
 /**
@@ -157,11 +159,18 @@ export default function seekAndLoadOnMediaEvents(
 
       const initialMediaDuration = mediaElement.duration;
 
-      playPauseEvents$ = onPlayPause(mediaElement).pipe(
+      playPauseEvents$ = onPlayPause$(mediaElement).pipe(
+        map((x) => (x && x.type === "play") ? true : false),
+        // equivalent to a sane shareReplay:
+        // https://github.com/ReactiveX/rxjs/issues/3336
+        // XXX TODO Replace it when that issue is resolved
         filter((_, i) => {
           return i > 0 || initialMediaDuration > 0;
-        })
+        }),
+        multicast(() => new ReplaySubject(1)),
+        refCount()
       );
+
       playPauseEvents$.subscribe();
 
       if (initialMediaDuration === 0) {
