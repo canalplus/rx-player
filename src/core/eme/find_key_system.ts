@@ -91,8 +91,6 @@ function checkCachedMediaKeySystemAccess(
 } {
   const mksConfiguration = currentKeySystemAccess.getConfiguration();
 
-  // NOTE(pierre): alwaysRenew flag is used for IE11 which require the
-  // creation of a new MediaKeys instance for each session creation
   if (shouldRenewMediaKeys() || !mksConfiguration) {
     return null;
   }

@@ -36,6 +36,7 @@ import {
   ICompatMediaKeySystemAccess,
   ICompatMediaKeySystemConfiguration,
 
+  isIE11,
   MediaKeys_,
 } from "../constants";
 import * as events from "../events";
@@ -385,6 +386,7 @@ if (navigator.requestMediaKeySystemAccess) {
 
   // This is for IE11
   else if (
+    isIE11 &&
     MediaKeys_ &&
     MediaKeys_.prototype &&
     typeof MediaKeys_.prototype.createSession === "function" &&
@@ -469,9 +471,10 @@ if (navigator.requestMediaKeySystemAccess) {
       }
     }
 
-    // on IE11, each created session needs to be created on a new
+    // TODO these two seem to be the last side-effects we do at evaluation time.
+    // Should be removed for a better solution.
+    // On IE11, each created session needs to be created on a new
     // MediaKeys object
-    MediaKeys_.prototype.alwaysRenew = true;
     MediaKeys_.prototype.memCreateSession = MediaKeys_.prototype.createSession;
     MediaKeys_.prototype.createSession = function() : IE11MediaKeySession {
       /* tslint:disable no-invalid-this */
