@@ -36,7 +36,6 @@ import {
   ICompatMediaKeySystemAccess,
   ICompatMediaKeySystemConfiguration,
 
-  isIE11,
   MediaKeys_,
 } from "../constants";
 import * as events from "../events";
@@ -382,106 +381,12 @@ if (navigator.requestMediaKeySystemAccess) {
 
       return observableThrow(undefined);
     };
-  }
-
-  // This is for IE11
-  else if (
-    isIE11 &&
+  } else if (
     MediaKeys_ &&
     MediaKeys_.prototype &&
     typeof MediaKeys_.prototype.createSession === "function" &&
     typeof MediaKeys_.isTypeSupported === "function"
   ) {
-    interface IIE11MediaKeys {
-      memCreateSession(codec : string, initData : ArrayBuffer) : MediaKeySession;
-    }
-
-    // TODO implement MediaKeySession completely
-    class IE11MediaKeySession
-    extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
-      implements ICustomMediaKeySession
-    {
-      public readonly update : (
-        license : ArrayBuffer,
-        sessionId? : string
-      ) => Promise<void>;
-      public readonly closed: Promise<void>;
-      public expiration: number;
-      public keyStatuses: ICustomMediaKeyStatusMap;
-      public sessionId : string;
-
-      private readonly _mk : IIE11MediaKeys;
-      private readonly _closeSession$ : Subject<void>;
-      private _ss? : MediaKeySession;
-
-      constructor(mk : IIE11MediaKeys) {
-        super();
-        this.sessionId = "";
-        this.expiration = NaN;
-        this.keyStatuses = new Map();
-        this._mk = mk;
-        this._closeSession$ = new Subject();
-        this.closed = new Promise((resolve) => {
-          this._closeSession$.subscribe(resolve);
-        });
-
-        this.update = wrapUpdate((license, sessionId) => {
-          if (!this._ss) {
-            throw new Error("MediaKeySession not set");
-          }
-          (this._ss as any).update(license, sessionId);
-          this.sessionId = sessionId;
-        });
-      }
-
-      generateRequest(_initDataType : string, initData : ArrayBuffer) : Promise<void> {
-        return new Promise((resolve) => {
-          this._ss = this._mk.memCreateSession("video/mp4", initData);
-          observableMerge(
-            events.onKeyMessage$(this._ss),
-            events.onKeyAdded$(this._ss),
-            events.onKeyError$(this._ss)
-          )
-            .pipe(takeUntil(this._closeSession$))
-            .subscribe((evt : Event) => this.trigger(evt.type, evt));
-          resolve();
-        });
-      }
-
-      close() : Promise<void> {
-        return new Promise((resolve) => {
-          if (this._ss) {
-            /* tslint:disable no-floating-promises */
-            this._ss.close();
-            /* tslint:enable no-floating-promises */
-            this._ss = undefined;
-          }
-          this._closeSession$.next();
-          this._closeSession$.complete();
-          resolve();
-        });
-      }
-
-      load() : Promise<boolean> {
-        return Promise.resolve(false);
-      }
-
-      remove() : Promise<void> {
-        return Promise.resolve();
-      }
-    }
-
-    // TODO these two seem to be the last side-effects we do at evaluation time.
-    // Should be removed for a better solution.
-    // On IE11, each created session needs to be created on a new
-    // MediaKeys object
-    MediaKeys_.prototype.memCreateSession = MediaKeys_.prototype.createSession;
-    MediaKeys_.prototype.createSession = function() : IE11MediaKeySession {
-      /* tslint:disable no-invalid-this */
-      return new IE11MediaKeySession(this);
-      /* tslint:enable no-invalid-this */
-    };
-
     requestMediaKeySystemAccess = function(
       keyType : string,
       keySystemConfigurations : ICompatMediaKeySystemConfiguration[]
