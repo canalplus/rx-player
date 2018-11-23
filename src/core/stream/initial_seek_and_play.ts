@@ -160,6 +160,7 @@ export default function seekAndLoadOnMediaEvents(
     mergeMap(() => {
 
       const initialMediaDuration = mediaElement.duration;
+      let autoPlayBlocked = false;
 
       playPauseEvents$ = onPlayPause$(mediaElement).pipe(
         map((x) => (x && x.type === "play") ? true : false),
@@ -167,7 +168,7 @@ export default function seekAndLoadOnMediaEvents(
         // https://github.com/ReactiveX/rxjs/issues/3336
         // XXX TODO Replace it when that issue is resolved
         filter((_, i) => {
-          return i > 0 || initialMediaDuration > 0;
+          return (i > 0 || initialMediaDuration > 0 || autoPlayBlocked);
         }),
         multicast(() => new ReplaySubject(1)),
         refCount()
@@ -195,7 +196,9 @@ export default function seekAndLoadOnMediaEvents(
             mergeMap((status) => {
               mediaElement.volume = lastVolume;
               mediaElement.pause();
-              if (mustAutoPlay && status !== "autoplay-blocked") {
+              autoPlayBlocked = status === "autoplay-blocked";
+
+              if (mustAutoPlay && !autoPlayBlocked) {
                 /* tslint:disable no-floating-promises */
                 mediaElement.play();
                 /* tslint:enable no-floating-promises */
