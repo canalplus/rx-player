@@ -1,5 +1,20 @@
 # Changelog
 
+## v3.9.3 (2018/11/23)
+
+### Bug fixes
+
+  - compat: fix `undefined Object.values function` issue happening in some older browsers (mainly encountered in IE11 and old webkit versions)
+  - compat: remove side-effects relative to DRM on Safari
+  - tools: fix issue about an undefined Array.prototype.find method in some older browsers when calling mediaCapabilitiesProber.getCompatibleDRMConfigurations (mainly encountered in IE11)
+
+### Other improvements
+
+  - eme: activate MediaKeys caching on Edge
+  - compat: add in our validation process a ban of methods and functions unavailable in older browsers
+  - tests/smooth: reinforce our Smooth Streaming integration tests to ensure the last HSS regressions won't happen again
+
+
 ## v3.9.2 (2018/11/14)
 
 ### Bug fixes
