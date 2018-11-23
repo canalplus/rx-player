@@ -144,7 +144,7 @@ export default function seekAndLoadOnMediaEvents(
     playPauseEvents$: Observable<boolean>;
   }>;
 } {
-  let playPauseEvents$: Observable<boolean> = onPlayPause(mediaElement, mustAutoPlay);
+  let playPauseEvents$: Observable<boolean>;
   const seek$ = doInitialSeek(mediaElement, startTime);
   const load$ = observableConcat(
     seek$.pipe(ignoreElements()),
@@ -156,24 +156,26 @@ export default function seekAndLoadOnMediaEvents(
     mergeMap(() => {
 
       const initialMediaDuration = mediaElement.duration;
+
+      playPauseEvents$ = onPlayPause(mediaElement).pipe(
+        filter((_, i) => {
+          return i > 0 || initialMediaDuration > 0;
+        })
+      );
+      playPauseEvents$.subscribe();
+
       if (initialMediaDuration === 0) {
-        playPauseEvents$ = onPlayPause(
-          mediaElement,
-          mustAutoPlay,
-          {
-            initialMediaDuration,
-            hasLoadedMetadata: true,
-          }
-        );
         const prevVolume = mediaElement.volume;
         mediaElement.volume = 0;
         return observableMerge(
-          playPauseEvents$.pipe(ignoreElements()),
           playAndCheckMediaDuration$(mediaElement).pipe(
             mergeMap((status) => {
               mediaElement.volume = prevVolume;
-              if (!mustAutoPlay || status !== "loaded") {
-                mediaElement.pause();
+              mediaElement.pause();
+              if (mustAutoPlay && status !== "autoplay-blocked") {
+                /* tslint:disable no-floating-promises */
+                mediaElement.play();
+                /* tslint:enable no-floating-promises */
               }
               return observableOf(status);
             })

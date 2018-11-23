@@ -155,7 +155,10 @@ A MediaError can have the following codes (``code`` property):
     This code is always a warning and it never causes playback interruption.
 
   - ``"MEDIA_ERR_UNLOADED_METADATA"``: The browser does not permit to get
-    loaded metadatas from stream or directfile. As a consequence, the rx-player throws.
+    loaded metadatas from stream or directfile. As a consequence, the rx-player stays in
+    a loading state. It can happen in rare occasions where you need to play content
+    to get metadata, and autoPlay is blocked. Then, the user's play action may trigger
+    loading and playing.
 
   - ``"MEDIA_ERR_DECODE"``: A pushed segment/media could not be decoded by the
     browser. This happens most-of-all with malformed segments.

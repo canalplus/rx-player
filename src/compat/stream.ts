@@ -18,12 +18,10 @@ import {
   ReplaySubject,
 } from "rxjs";
 import {
-  filter,
   map,
   multicast,
   refCount
 } from "rxjs/operators";
-import { isSamsungInternet } from "./constants";
 import { onPlayPause$ } from "./events";
 
 /**
@@ -35,27 +33,9 @@ import { onPlayPause$ } from "./events";
  * @returns {Observable}
  */
 export function onPlayPause(
-  mediaElement : HTMLMediaElement,
-  autoPlay : boolean,
-  onPlayPauseOptions? : {
-    hasLoadedMetadata: boolean;
-    initialMediaDuration : number;
-  }
+  mediaElement : HTMLMediaElement
 ): Observable<boolean> {
   return onPlayPause$(mediaElement).pipe(
-    filter((x, i) => {
-      if (
-        onPlayPauseOptions &&
-        onPlayPauseOptions.initialMediaDuration === 0 &&
-        onPlayPauseOptions.hasLoadedMetadata &&
-        isSamsungInternet
-      ) {
-        // On samsung, we play a first time, even when autoPlay is false.
-        // We should filter on it
-        return !(i === 0 && !autoPlay && x.type === "play");
-      }
-      return true;
-    }),
     map((x) => (x && x.type === "play") ? true : false),
     // equivalent to a sane shareReplay:
     // https://github.com/ReactiveX/rxjs/issues/3336
