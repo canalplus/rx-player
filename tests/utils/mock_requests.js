@@ -6,7 +6,7 @@
 function mockRequest(fakeServer, { url, data, contentType }) {
   if (typeof data === "function") {
     fakeServer.respondWith("GET", url, (xhr) => {
-      const res = data();
+      const res = data(xhr.requestHeaders);
       xhr.respond(200, { "Content-Type": contentType }, res);
     });
   } else {
