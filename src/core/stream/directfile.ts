@@ -174,50 +174,49 @@ export default function StreamDirectFile({
   // Manage "loaded" event and warn if autoplay is blocked on the current browser
   const playbackEvents$ = linkURL$.pipe(
     mergeMap(() => {
-      return load$
-        .pipe(
-          mergeMap(({ evt, playPauseEvents$ }) => {
-            const hasLoadedMetadata = mediaElement.duration > 0;
+      return load$.pipe(
+        mergeMap(({ evt, playPauseEvents$ }) => {
+          const hasLoadedMetadata = mediaElement.duration > 0;
 
-            const autoPlayBlockedEvent$ = (() => {
-              if (evt === "autoplay-blocked") {
-                return observableConcat(
-                  observableOf(EVENTS.warning(
-                    new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false))),
-                  !hasLoadedMetadata ? observableOf(EVENTS.warning(
-                    new MediaError("MEDIA_ERR_UNLOADED_METADATA", null, false))) :
-                    EMPTY
-                );
-              }
-              return EMPTY;
-            })();
+          const autoPlayBlockedEvent$ = (() => {
+            if (evt === "autoplay-blocked") {
+              return observableConcat(
+                observableOf(EVENTS.warning(
+                  new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false))),
+                !hasLoadedMetadata ? observableOf(EVENTS.warning(
+                  new MediaError("MEDIA_ERR_UNLOADED_METADATA", null, false))) :
+                  EMPTY
+              );
+            }
+            return EMPTY;
+          })();
 
-            const loadedPlayPauseEvents$ = (() => {
-              if (hasLoadedMetadata) {
-                return observableConcat(
-                  observableOf(EVENTS.loaded()),
-                  playPauseEvents$.pipe(
-                    map((x)  => x ? EVENTS.playing() : EVENTS.paused()))
-                );
-              } else {
-                return playPauseEvents$.pipe(
-                  mergeMap((x, i): Observable<IDirectfileEvent> => {
-                    if (i === 0 && x) {
-                      return observableOf(EVENTS.loaded(), EVENTS.playing());
-                    }
-                    return x ? observableOf(EVENTS.playing()) :
-                      observableOf(EVENTS.paused());
-                  })
-                );
-              }
-            })();
+          const loadedPlayPauseEvents$ = (() => {
+            if (hasLoadedMetadata) {
+              return observableConcat(
+                observableOf(EVENTS.loaded()),
+                playPauseEvents$.pipe(
+                  map((x)  => x ? EVENTS.playing() : EVENTS.paused()))
+              );
+            } else {
+              return playPauseEvents$.pipe(
+                mergeMap((x, i): Observable<IDirectfileEvent> => {
+                  if (i === 0 && x) {
+                    return observableOf(EVENTS.loaded(), EVENTS.playing());
+                  }
+                  return x ? observableOf(EVENTS.playing()) :
+                    observableOf(EVENTS.paused());
+                })
+              );
+            }
+          })();
 
-            return observableConcat(
-              autoPlayBlockedEvent$,
-              loadedPlayPauseEvents$
-            );
-          })
-        );
+          return observableConcat(
+            autoPlayBlockedEvent$,
+            loadedPlayPauseEvents$
+          );
+        })
+      );
     }),
     // equivalent to a sane shareReplay:
     // https://github.com/ReactiveX/rxjs/issues/3336
