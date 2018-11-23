@@ -249,6 +249,12 @@ const onTimeUpdate$ = compatibleListener(["timeupdate"]);
 const onDurationChange$ = compatibleListener(["durationchange"]);
 
 /**
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
+const onVolumeChange$ = compatibleListener(["volumechange"]);
+
+/**
  * @param {HTMLElement} element
  * @returns {Observable}
  */
@@ -348,4 +354,5 @@ export {
   onKeyAdded$,
   onKeyError$,
   onKeyStatusesChange$,
+  onVolumeChange$,
 };

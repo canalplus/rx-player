@@ -32,6 +32,7 @@ import {
   refCount,
   take,
   tap,
+  takeUntil,
 } from "rxjs/operators";
 import {
   canPlay,
@@ -41,6 +42,7 @@ import {
 import {
   onDurationChange$,
   onPlayPause$,
+  onVolumeChange$,
 } from "../../compat/events";
 import log from "../../log";
 
@@ -174,12 +176,24 @@ export default function seekAndLoadOnMediaEvents(
       playPauseEvents$.subscribe();
 
       if (initialMediaDuration === 0) {
-        const prevVolume = mediaElement.volume;
+        let lastVolume = mediaElement.volume;
+        const volumeChange$ = onVolumeChange$(mediaElement).pipe(
+          tap((evt) => {
+            if (evt && evt.target instanceof HTMLMediaElement) {
+              const { volume } = evt.target;
+              lastVolume = volume;
+            }
+          })
+        );
+
         mediaElement.volume = 0;
+        const mediaDurationChecked$ = playAndCheckMediaDuration$(mediaElement);
+
         return observableMerge(
-          playAndCheckMediaDuration$(mediaElement).pipe(
+          volumeChange$.pipe(ignoreElements(), takeUntil(mediaDurationChecked$)),
+          mediaDurationChecked$.pipe(
             mergeMap((status) => {
-              mediaElement.volume = prevVolume;
+              mediaElement.volume = lastVolume;
               mediaElement.pause();
               if (mustAutoPlay && status !== "autoplay-blocked") {
                 /* tslint:disable no-floating-promises */
