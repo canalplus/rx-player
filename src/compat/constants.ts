@@ -155,5 +155,4 @@ export {
   isFirefox,
   isIE11,
   isIEOrEdge,
-  isSamsungInternet
 };
