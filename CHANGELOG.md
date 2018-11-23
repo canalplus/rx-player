@@ -12,7 +12,7 @@
 
   - eme: activate MediaKeys caching on Edge
   - compat: add in our validation process a ban of methods and functions unavailable in older browsers
-  - tests/smooth: reinforce our Smooth Streaming integration tests to ensure the last HSS regressions won't happen again
+  - tests/smooth: reinforce our Smooth Streaming integration tests
 
 
 ## v3.9.2 (2018/11/14)
