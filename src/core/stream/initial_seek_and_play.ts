@@ -163,7 +163,7 @@ export default function seekAndLoadOnMediaEvents(
       let autoPlayBlocked = false;
 
       playPauseEvents$ = onPlayPause$(mediaElement).pipe(
-        map((x) => (x && x.type === "play") ? true : false),
+        map((x) => (x && x.type === "play")),
         // equivalent to a sane shareReplay:
         // https://github.com/ReactiveX/rxjs/issues/3336
         // XXX TODO Replace it when that issue is resolved
