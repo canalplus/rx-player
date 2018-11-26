@@ -31,8 +31,8 @@ import {
   multicast,
   refCount,
   take,
-  tap,
   takeUntil,
+  tap,
 } from "rxjs/operators";
 import {
   canPlay,
