@@ -20,7 +20,7 @@
  * It also starts the different sub-parts of the player on various API calls.
  */
 
-import deepEqual from "deep-equal";
+import deepEqual from "fast-deep-equal";
 import objectAssign from "object-assign";
 import {
   BehaviorSubject,
