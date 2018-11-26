@@ -137,10 +137,8 @@ export default function StreamDirectFile({
     getDirectFileInitialTime(mediaElement, startAt);
   log.debug("Stream: Initial time calculated:", initialTime);
 
-  const {
-    seek$,
-    load$,
-  } = seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
+  const { seek$, load$ } =
+    seekAndLoadOnMediaEvents(clock$, mediaElement, initialTime, autoPlay);
 
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
