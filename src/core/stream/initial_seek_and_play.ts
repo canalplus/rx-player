@@ -30,6 +30,7 @@ import {
   mergeMap,
   multicast,
   refCount,
+  skip,
   take,
   takeUntil,
   tap,
@@ -178,7 +179,10 @@ export default function seekAndLoadOnMediaEvents(
 
       if (initialMediaDuration === 0) {
         let lastVolume = mediaElement.volume;
+        mediaElement.volume = 0;
+
         const volumeChange$ = onVolumeChange$(mediaElement).pipe(
+          skip(1), // Skip the first (programmatical) volume change.
           tap((evt) => {
             if (evt && evt.target instanceof HTMLMediaElement) {
               const { volume } = evt.target;
@@ -187,15 +191,14 @@ export default function seekAndLoadOnMediaEvents(
           })
         );
 
-        mediaElement.volume = 0;
         const mediaDurationChecked$ = playAndCheckMediaDuration$(mediaElement);
 
         return observableMerge(
           volumeChange$.pipe(ignoreElements(), takeUntil(mediaDurationChecked$)),
           mediaDurationChecked$.pipe(
             mergeMap((status) => {
-              mediaElement.volume = lastVolume;
               mediaElement.pause();
+              mediaElement.volume = lastVolume;
               autoPlayBlocked = status === "autoplay-blocked";
 
               if (mustAutoPlay && !autoPlayBlocked) {
