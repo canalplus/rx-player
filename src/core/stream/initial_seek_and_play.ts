@@ -198,7 +198,10 @@ export default function seekAndLoadOnMediaEvents(
           mediaDurationChecked$.pipe(
             mergeMap((status) => {
               mediaElement.pause();
-              mediaElement.volume = lastVolume;
+              setTimeout(() => {
+                // wait for browser to pause media element
+                mediaElement.volume = lastVolume;
+              }, 0);
               autoPlayBlocked = status === "autoplay-blocked";
 
               if (mustAutoPlay && !autoPlayBlocked) {
