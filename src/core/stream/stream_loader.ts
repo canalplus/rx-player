@@ -141,7 +141,7 @@ export default function StreamLoader({
     createNativeSourceBuffersForPeriod(sourceBufferManager, initialPeriod);
 
     const { seek$, load$ } =
-      seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
+      seekAndLoadOnMediaEvents(clock$, mediaElement, initialTime, autoPlay);
 
     const bufferClock$ = createBufferClock(manifest, clock$, seek$, speed$, initialTime);
 

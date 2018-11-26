@@ -21,18 +21,20 @@ import {
 } from "rxjs";
 import {
   catchError,
+  filter,
   mapTo,
   mergeMap,
   multicast,
   refCount,
+  take,
   tap,
 } from "rxjs/operators";
 import {
-  canPlay,
   hasLoadedMetadata,
   play$,
 } from "../../compat";
 import log from "../../log";
+import { IStreamClockTick } from "./types";
 
 /**
  * Set the initial time given as soon as possible on the media element.
@@ -67,6 +69,19 @@ function doInitialSeek(
 }
 
 /**
+ * Emit a single time as soon as the clock$ anounce that the content can begin
+ * to be played.
+ * @param {Observable} clock$
+ * @returns {Observable}
+ */
+function canPlay(clock$ : Observable<IStreamClockTick>) {
+  return clock$.pipe(filter(tick => {
+    return tick.seeking !== true && tick.stalled == null &&
+      (tick.readyState === 4 || tick.readyState === 3 && tick.currentRange != null);
+  }), take(1));
+}
+
+/**
  * Returns two Observables:
  *
  *   - seek$: when subscribed, will seek to the wanted started time as soon as
@@ -84,6 +99,7 @@ function doInitialSeek(
  * @returns {object}
  */
 export default function seekAndLoadOnMediaEvents(
+  clock$ : Observable<IStreamClockTick>,
   mediaElement : HTMLMediaElement,
   startTime : number|(() => number),
   mustAutoPlay : boolean
@@ -92,11 +108,9 @@ export default function seekAndLoadOnMediaEvents(
   load$ : Observable<"autoplay-blocked"|"autoplay"|"loaded">;
 } {
   const seek$ = doInitialSeek(mediaElement, startTime);
-
-  const load$ = canPlay(mediaElement).pipe(
-
-    tap(() => log.info("Stream: canplay event")),
-
+  const load$ = seek$.pipe(
+    mergeMap(() => canPlay(clock$)),
+    tap(() => log.info("Stream: Can begin to play content")),
     mergeMap(() => {
       if (mustAutoPlay) {
         return play$(mediaElement).pipe(

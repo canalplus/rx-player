@@ -17,7 +17,6 @@
 import nextTick from "next-tick";
 import {
   defer as observableDefer,
-  fromEvent as observableFromEvent,
   Observable,
   Observer,
   of as observableOf,
@@ -169,22 +168,6 @@ function hasLoadedMetadata(
     return observableOf(null);
   } else {
     return events.onLoadedMetadata$(mediaElement)
-      .pipe(take(1));
-  }
-}
-
-/**
- * Returns ane observable emitting a single time, as soon as a play is possible.
- * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
- */
-function canPlay(
-  mediaElement : HTMLMediaElement
-) : Observable<unknown> {
-  if (mediaElement.readyState >= READY_STATES.HAVE_ENOUGH_DATA) {
-    return observableOf(null);
-  } else {
-    return observableFromEvent(mediaElement, "canplay")
       .pipe(take(1));
   }
 }
@@ -460,7 +443,6 @@ export {
   VTTCue_,
   addTextTrack,
   canPatchISOBMFFSegment,
-  canPlay,
   clearElementSrc,
   events,
   exitFullscreen,
