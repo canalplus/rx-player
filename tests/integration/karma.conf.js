@@ -8,24 +8,26 @@ const karmaConf = {
   basePath: ".",
 
   browsers: [
-    // "Chrome",
-    // "ChromeHeadless",
-    // "ChromeCanary",
-    "FirefoxHeadless",
-    "ChromeHeadlessAutoPlay",
+    "FirefoxAutoPlay",
+    "ChromeAutoPlay",
   ],
 
   customLaunchers: {
-    FirefoxHeadless: {
+    FirefoxAutoPlay: {
       base: "Firefox",
-      flags: [ "-headless" ],
+      prefs: {
+        "media.autoplay.default": 0,
+        "media.autoplay.enabled.user-gestures-needed": false,
+        "media.autoplay.block-webaudio": false,
+        "media.autoplay.ask-permission": false,
+        "media.autoplay.block-event.enabled": false,
+        "media.block-autoplay-until-in-foreground": false,
+      },
     },
 
-    ChromeHeadlessAutoPlay: {
-      base: "ChromeHeadless",
-      flags: [
-        "--autoplay-policy=no-user-gesture-required",
-      ],
+    ChromeAutoPlay: {
+      base: "Chrome",
+      flags: [ "--autoplay-policy=no-user-gesture-required" ],
     },
   },
 

@@ -7,20 +7,14 @@ const singleRun = !process.env.RXP_TESTS_WATCH;
 const karmaConf = {
   basePath: ".",
 
-  browserNoActivityTimeout: 5 * 60 * 1000,
-
   browsers: [
-    "ChromeHeadlessMemory",
+    "ChromeHeadlessAutoPlay",
   ],
 
   customLaunchers: {
-    ChromeHeadlessMemory: {
+    ChromeHeadlessAutoPlay: {
       base: "ChromeHeadless",
-      flags: [
-        "--autoplay-policy=no-user-gesture-required",
-        "--enable-precise-memory-info",
-        "--js-flags=\"--expose-gc\"",
-      ],
+      flags: [ "--autoplay-policy=no-user-gesture-required" ],
     },
   },
 
