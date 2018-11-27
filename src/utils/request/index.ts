@@ -53,12 +53,10 @@ export interface IRequestResponse<T, U> {
 // Arguments for the "request" utils
 export interface IRequestOptions<T, U> {
   url : string;
-  method? : string;
   headers? : { [ header: string ] : string }|null;
   responseType? : T;
   timeout? : number;
   ignoreProgressEvents? : U;
-  body? : any;
 }
 
 /**
@@ -184,10 +182,7 @@ function request<T>(
 > {
   const requestOptions = {
     url: options.url,
-    body: options.body,
     headers: options.headers,
-    method: options.method == null ?
-      "GET" : options.method,
     responseType: options.responseType == null ?
       DEFAULT_RESPONSE_TYPE : options.responseType,
     timeout: options.timeout == null ?
@@ -200,13 +195,11 @@ function request<T>(
     const {
       url,
       headers,
-      method,
       responseType,
       timeout,
-      body,
     } = requestOptions;
     const xhr = new XMLHttpRequest();
-    xhr.open(method, url, true);
+    xhr.open("GET", url, true);
 
     if (timeout >= 0) {
       xhr.timeout = timeout;
@@ -303,12 +296,7 @@ function request<T>(
       }
     };
 
-    if (body !== undefined) {
-      xhr.send(body);
-    } else {
-      xhr.send();
-    }
-
+    xhr.send();
     return () => {
       if (xhr && xhr.readyState !== 4) {
         xhr.abort();
