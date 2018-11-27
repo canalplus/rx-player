@@ -75,10 +75,13 @@ function doInitialSeek(
  * @returns {Observable}
  */
 function canPlay(clock$ : Observable<IStreamClockTick>) {
-  return clock$.pipe(filter(tick => {
-    return !tick.seeking && tick.stalled == null &&
-      (tick.readyState === 4 || tick.readyState === 3 && tick.currentRange != null);
-  }), take(1));
+  return clock$.pipe(
+    filter((tick) => {
+      return !tick.seeking && tick.stalled == null &&
+        (tick.readyState === 4 || tick.readyState === 3 && tick.currentRange != null);
+    }),
+    take(1)
+  );
 }
 
 /**
