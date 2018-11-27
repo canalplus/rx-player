@@ -229,7 +229,7 @@ equal to `smooth`.
 
 ### NetworkError ###############################################################
 
-The `xhr` property coming of a `NetworkError` is deprecated.
+The `xhr` property from a `NetworkError` is deprecated.
 
 This is to prepare the support of low-latency streaming, with
 [CMAF](https://mpeg.chiariglione.org/standards/mpeg-a/common-media-application-format),
