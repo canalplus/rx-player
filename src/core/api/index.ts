@@ -1996,6 +1996,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @private
    */
   private _priv_onStreamWarning(error : Error) : void {
+    log.warn("API: Sending warning:", error);
     this.trigger("warning", error);
   }
 
