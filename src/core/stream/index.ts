@@ -28,6 +28,7 @@ import {
   timer as observableTimer,
 } from "rxjs";
 import {
+  ignoreElements,
   map,
   mergeMap,
   share,
@@ -70,7 +71,6 @@ import StreamLoader, {
 } from "./stream_loader";
 import {
   IManifestReadyEvent,
-  IManifestUpdateEvent,
   IReloadingStreamEvent,
   IStreamClockTick,
   IStreamWarningEvent,
@@ -211,9 +211,10 @@ export default function Stream({
     const manifest$ = new BehaviorSubject(manifest);
 
     /**
+     * Refresh the manifest on subscription.
      * @returns {Observable}
      */
-    function refreshManifest() : Observable<IManifestUpdateEvent> {
+    function refreshManifest() : Observable<never> {
       const refreshURL = manifest.getUrl();
       if (!refreshURL) {
         log.warn("Stream: Cannot refresh the manifest: no url");
@@ -221,13 +222,16 @@ export default function Stream({
       }
 
       return fetchManifest(refreshURL).pipe(
-        map(({ manifest: newManifest, sendingTime: newSendingTime }) => {
+        tap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
           manifest.update(newManifest);
           manifest$.next(manifest);
-          return EVENTS.manifestUpdate(manifest, newSendingTime);
+          updatedManifest$.next({
+            manifest: manifest$.getValue(),
+            sendingTime: newSendingTime,
+          });
         }),
-        tap((evt) => updatedManifest$.next(evt.value)),
-        share() // share the previous sideeceffect
+        ignoreElements(),
+        share() // share the previous side-effect
       );
     }
 
@@ -265,7 +269,7 @@ export default function Stream({
     );
 
     const initialLoad$ = observableConcat(
-      observableOf(EVENTS.manifestReady(abrManager, manifest)),
+      observableOf(EVENTS.manifestReady(abrManager, manifest$)),
       loadStream(mediaSource, initialTime, autoPlay).pipe(
         takeUntil(reloadStreamSubject$),
         mergeMap(onStreamLoaderEvent)
@@ -309,7 +313,7 @@ export default function Stream({
  */
 function streamLoaderEventProcessor(
   reloadStreamSubject$ : Subject<void>,
-  refreshManifest : () => Observable<IManifestUpdateEvent>
+  refreshManifest : () => Observable<never>
 ) : (evt : IStreamLoaderEvent) => Observable<IStreamEvent> {
   /**
    * React to StreamLoader events.

@@ -43,6 +43,7 @@ import {
   mergeMapTo,
   publish,
   share,
+  skip,
   skipWhile,
   startWith,
   switchMapTo,
@@ -158,7 +159,6 @@ type PLAYER_EVENT_STRINGS =
   "error" |
   "warning" |
   "nativeTextTracksChange" |
-  "manifestChange" |
   "manifestUpdate" |
   "periodChange";
 
@@ -349,7 +349,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
      * not yet loaded.
      * @type {Object|null}
      */
-    manifest : Manifest|null;
+    manifest$ : BehaviorSubject<Manifest>|null;
 
     /**
      * Current Period being played.
@@ -700,7 +700,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       url,
       isDirectFile,
       thumbnails: null,
-      manifest: null,
+      manifest$: null,
       currentPeriod: null,
       activeAdaptations: null,
       activeRepresentations: null,
@@ -923,7 +923,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Manifest|null}
    */
   getManifest() : Manifest|null {
-    return this._priv_contentInfos && this._priv_contentInfos.manifest;
+    return this._priv_contentInfos &&
+      this._priv_contentInfos.manifest$ &&
+      this._priv_contentInfos.manifest$.getValue();
   }
 
   /**
@@ -1014,14 +1016,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (!this._priv_contentInfos) {
       return false;
     }
-    const {
-      isDirectFile,
-      manifest,
-    } = this._priv_contentInfos;
-    if (isDirectFile || !manifest) {
+    const { isDirectFile, manifest$ } = this._priv_contentInfos;
+    if (isDirectFile || !manifest$) {
       return false;
     }
-    return manifest.isLive;
+    return manifest$.getValue().isLive;
   }
 
   /**
@@ -1032,16 +1031,12 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (!this._priv_contentInfos) {
       return undefined;
     }
-    const {
-      isDirectFile,
-      manifest,
-      url,
-    } = this._priv_contentInfos;
+    const { isDirectFile, manifest$, url } = this._priv_contentInfos;
     if (isDirectFile) {
       return url;
     }
-    if (manifest) {
-      return manifest.getUrl();
+    if (manifest$) {
+      return manifest$.getValue().getUrl();
     }
     return undefined;
   }
@@ -1122,17 +1117,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return this.videoElement.currentTime;
     }
 
-    const {
-      isDirectFile,
-      manifest,
-    } = this._priv_contentInfos;
+    const { isDirectFile, manifest$ } = this._priv_contentInfos;
     if (isDirectFile) {
       return this.videoElement.currentTime;
     }
-    if (manifest) {
+    if (manifest$) {
       const currentTime = this.videoElement.currentTime;
       return this.isLive() ?
-        (currentTime + (manifest.availabilityStartTime || 0)) :
+        (currentTime + (manifest$.getValue().availabilityStartTime || 0)) :
         currentTime;
     }
     return 0;
@@ -1322,11 +1314,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       throw new Error("player: no content loaded");
     }
 
-    const {
-      isDirectFile,
-      manifest,
-    } = this._priv_contentInfos;
-    if (!isDirectFile && !manifest) {
+    const { isDirectFile, manifest$ } = this._priv_contentInfos;
+    if (!isDirectFile && !manifest$) {
       throw new Error("player: the content did not load yet");
     }
 
@@ -1346,7 +1335,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           (time as { wallClockTime : number }).wallClockTime :
           fromWallClockTime(
             (time as { wallClockTime : number }).wallClockTime * 1000,
-            manifest as Manifest // is TS or I dumb here?
+            (manifest$ as BehaviorSubject<Manifest>).getValue() // is TS or I dumb here?
           );
       } else {
         throw new Error("invalid time object. You must set one of the " +
@@ -1762,9 +1751,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return 0;
     }
 
-    const { manifest } = this._priv_contentInfos;
-    if (manifest) {
-      return manifest.getMinimumPosition();
+    const { manifest$ } = this._priv_contentInfos;
+    if (manifest$) {
+      return manifest$.getValue().getMinimumPosition();
     }
     return null;
   }
@@ -1778,10 +1767,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return null;
     }
 
-    const {
-      isDirectFile,
-      manifest,
-    } = this._priv_contentInfos;
+    const { isDirectFile, manifest$ } = this._priv_contentInfos;
 
     if (isDirectFile) {
       if (!this.videoElement) {
@@ -1790,8 +1776,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return this.videoElement.duration;
     }
 
-    if (manifest) {
-      return manifest.getMaximumPosition();
+    if (manifest$) {
+      return manifest$.getValue().getMaximumPosition();
     }
     return null;
   }
@@ -1916,9 +1902,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       case "adaptationChange":
         this._priv_onAdaptationChange(streamInfos.value);
         break;
-      case "manifestUpdate":
-        this._priv_onManifestUpdate(streamInfos.value);
-        break;
       case "bitrateEstimationChange":
         this._priv_onBitrateEstimationChange(streamInfos.value);
         break;
@@ -2010,27 +1993,32 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   private _priv_onManifestReady(value : {
     abrManager : ABRManager;
-    manifest : Manifest;
+    manifest$ : BehaviorSubject<Manifest>;
   }) : void {
     if (!this._priv_contentInfos) {
       log.error("API: The manifest is loaded but no content is.");
       return;
     }
-    const { manifest, abrManager } = value;
-    this._priv_contentInfos.manifest = manifest;
+    const { manifest$, abrManager } = value;
+    this._priv_contentInfos.manifest$ = manifest$;
     this._priv_abrManager = abrManager;
 
-    const {
-      initialAudioTrack,
-      initialTextTrack,
-    } = this._priv_contentInfos;
+    const { initialAudioTrack, initialTextTrack } = this._priv_contentInfos;
     this._priv_trackManager = new TrackManager({
       preferredAudioTracks: initialAudioTrack === undefined ?
         undefined : [initialAudioTrack],
       preferredTextTracks: initialTextTrack === undefined ?
         undefined : [initialTextTrack],
     });
-    this.trigger("manifestChange", manifest);
+
+    manifest$
+      .pipe(skip(1), takeUntil(this._priv_stopCurrentContent$))
+      .subscribe(() => {
+        // Update the tracks chosen if it changed
+        if (this._priv_trackManager) {
+          this._priv_trackManager.update();
+        }
+      });
   }
 
   /**
@@ -2168,30 +2156,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (this._priv_trackManager) {
       this._priv_trackManager.resetPeriods();
     }
-  }
-
-  /**
-   * Triggered each times the Manifest is updated.
-   *
-   * Update the TrackManager and emit events.
-   *
-   * @param {Object} value
-   * @private
-   */
-  private _priv_onManifestUpdate(value : { manifest : Manifest }) : void {
-    if (!this._priv_contentInfos) {
-      log.error("API: The manifest is updated but no content is loaded.");
-      return;
-    }
-    const { manifest } = value;
-    this._priv_contentInfos.manifest = manifest;
-
-    // Update the tracks chosen if it changed
-    if (this._priv_trackManager) {
-      this._priv_trackManager.update();
-    }
-
-    this.trigger("manifestUpdate", manifest);
   }
 
   /**
@@ -2388,11 +2352,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return;
     }
 
-    const {
-      isDirectFile,
-      manifest,
-    } = this._priv_contentInfos;
-    if ((!isDirectFile && !manifest) || !clockTick) {
+    const { isDirectFile, manifest$ } = this._priv_contentInfos;
+    if ((!isDirectFile && !manifest$) || !clockTick) {
       return;
     }
 
@@ -2406,14 +2367,15 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     };
 
     if (
-      manifest &&
-      manifest.isLive &&
+      manifest$ &&
+      manifest$.getValue().isLive &&
       clockTick.currentTime > 0
     ) {
+      const currentManifest = manifest$.getValue();
       positionData.wallClockTime =
-        clockTick.currentTime + (manifest.availabilityStartTime || 0);
+        clockTick.currentTime + (currentManifest.availabilityStartTime || 0);
       positionData.liveGap =
-        manifest.getMaximumPosition() - clockTick.currentTime;
+        currentManifest.getMaximumPosition() - clockTick.currentTime;
     }
 
     this.trigger("positionUpdate", positionData);

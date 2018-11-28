@@ -50,7 +50,6 @@ import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
 import {
-  IManifestUpdateEvent,
   ISpeedChangedEvent,
   IStalledEvent,
   IStreamClockTick,
@@ -82,7 +81,6 @@ export interface IStreamLoaderArgument {
 
 // Events emitted by the StreamLoader
 export type IStreamLoaderEvent =
-  IManifestUpdateEvent |
   IStalledEvent |
   ISpeedChangedEvent |
   IStreamLoadedEvent |
