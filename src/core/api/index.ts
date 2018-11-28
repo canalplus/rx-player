@@ -124,6 +124,7 @@ import TrackManager, {
   ITMVideoTrack,
   ITMVideoTrackListItem
 } from "./track_manager";
+import uniq from "../../utils/uniq";
 
 const {
   DEFAULT_UNMUTED_VOLUME,
@@ -1193,8 +1194,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return [];
     }
 
-    return videoAdaptation.representations
+    const bitrates = videoAdaptation.representations
       .map(({ bitrate }) => bitrate);
+    return uniq(bitrates);
   }
 
   /**
@@ -1218,8 +1220,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return [];
     }
 
-    return audioAdaptation.representations
+    const bitrates = audioAdaptation.representations
       .map(({ bitrate }) => bitrate);
+    return uniq(bitrates);
   }
 
   /**
