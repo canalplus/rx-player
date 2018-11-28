@@ -2242,10 +2242,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       this._priv_contentInfos.activeRepresentations = new Map();
     }
 
-    const {
-      activeRepresentations,
-      currentPeriod,
-    } = this._priv_contentInfos;
+    const { activeRepresentations, currentPeriod } = this._priv_contentInfos;
 
     const activePeriodRepresentations = activeRepresentations.get(period);
     if (!activePeriodRepresentations) {
@@ -2259,7 +2256,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       this._priv_bitrateInfos.lastBitrates[type] = bitrate;
     }
 
-    if (period != null && currentPeriod === period) {
+    if (period != null && currentPeriod != null && currentPeriod.id === period.id) {
       if (type === "video") {
         this._priv_triggerContentEvent("videoBitrate", bitrate != null ? bitrate : -1);
       } else if (type === "audio") {
