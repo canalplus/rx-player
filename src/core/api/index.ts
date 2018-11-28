@@ -362,7 +362,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
      * Store currently considered adaptations, per active period.
      *
      * null if no adaptation is active
-     * @type {Map}
+     * @type {Object}
      */
     activeAdaptations : {
       [periodId : string] : Partial<Record<IBufferType, Adaptation|null>>;
@@ -372,7 +372,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
      * Store currently considered representations, per active period.
      *
      * null if no representation is active
-     * @type {Map}
+     * @type {Object}
      */
     activeRepresentations : {
       [periodId : string] : Partial<Record<IBufferType, Representation|null>>;
