@@ -364,11 +364,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
      * null if no adaptation is active
      * @type {Map}
      */
-    activeAdaptations :
-      Map<
-        Period,
-        Partial<Record<IBufferType, Adaptation|null>>
-      > | null;
+    activeAdaptations : {
+      [periodId : string] : Partial<Record<IBufferType, Adaptation|null>>;
+    } | null;
 
     /**
      * Store currently considered representations, per active period.
@@ -376,11 +374,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
      * null if no representation is active
      * @type {Map}
      */
-    activeRepresentations :
-      Map<
-        Period,
-        Partial<Record<IBufferType, Representation|null>>
-      > | null;
+    activeRepresentations : {
+      [periodId : string] : Partial<Record<IBufferType, Representation|null>>;
+    } | null;
 
     /**
      * Store starting audio track if one.
@@ -938,14 +934,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (!this._priv_contentInfos) {
       return null;
     }
-    const {
-      currentPeriod,
-      activeAdaptations,
-    } = this._priv_contentInfos;
+    const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
     if (!currentPeriod || !activeAdaptations) {
       return null;
     }
-    return activeAdaptations.get(currentPeriod) || null;
+    return activeAdaptations[currentPeriod.id] || null;
   }
 
   /**
@@ -958,14 +951,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (!this._priv_contentInfos) {
       return null;
     }
-    const {
-      currentPeriod,
-      activeRepresentations,
-    } = this._priv_contentInfos;
+    const { currentPeriod, activeRepresentations } = this._priv_contentInfos;
     if (!currentPeriod || !activeRepresentations) {
       return null;
     }
-    return activeRepresentations.get(currentPeriod) || null;
+    return activeRepresentations[currentPeriod.id] || null;
   }
 
   /**
@@ -1172,14 +1162,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (!this._priv_contentInfos) {
       return [];
     }
-    const {
-      currentPeriod,
-      activeAdaptations,
-    } = this._priv_contentInfos;
+    const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
     if (!currentPeriod || !activeAdaptations) {
       return [];
     }
-    const adaptations = activeAdaptations.get(currentPeriod);
+    const adaptations = activeAdaptations[currentPeriod.id];
     const videoAdaptation = adaptations && adaptations.video;
     if (!videoAdaptation) {
       return [];
@@ -1197,14 +1184,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (!this._priv_contentInfos) {
       return [];
     }
-    const {
-      currentPeriod,
-      activeAdaptations,
-    } = this._priv_contentInfos;
+    const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
     if (!currentPeriod || !activeAdaptations) {
       return [];
     }
-    const adaptations = activeAdaptations.get(currentPeriod);
+    const adaptations = activeAdaptations[currentPeriod.id];
     const audioAdaptation = adaptations && adaptations.audio;
     if (!audioAdaptation) {
       return [];
@@ -2128,10 +2112,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   }
 
   /**
-   * Triggered each times the Stream "removes" a Period.
-   *
-   * Update the TrackManager to remove the corresponding Period.
-   *
+   * Triggered each times the Stream "removes" a PeriodBuffer.
    * @param {Object} value
    * @private
    */
@@ -2141,6 +2122,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   }) : void {
     const { type, period } = value;
 
+    // Clean-up track choice from TrackManager
     switch (type) {
       case "audio":
       case "text":
@@ -2149,6 +2131,19 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           this._priv_trackManager.removePeriod(type, period);
         }
         break;
+    }
+
+    // Clean-up stored Representation and Adaptation information
+    if (this._priv_contentInfos == null) {
+      return ;
+    }
+    const { activeAdaptations, activeRepresentations } = this._priv_contentInfos;
+    if (activeAdaptations && activeAdaptations[period.id]) {
+      delete activeAdaptations[period.id];
+    }
+
+    if (activeRepresentations && activeRepresentations[period.id]) {
+      delete activeRepresentations[period.id];
     }
   }
 
@@ -2182,17 +2177,13 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     // lazily create this._priv_contentInfos.activeAdaptations
     if (!this._priv_contentInfos.activeAdaptations) {
-      this._priv_contentInfos.activeAdaptations = new Map();
+      this._priv_contentInfos.activeAdaptations = {};
     }
 
-    const {
-      activeAdaptations,
-      currentPeriod,
-    } = this._priv_contentInfos;
-
-    const activePeriodAdaptations = activeAdaptations.get(period);
+    const { activeAdaptations, currentPeriod } = this._priv_contentInfos;
+    const activePeriodAdaptations = activeAdaptations[period.id];
     if (!activePeriodAdaptations) {
-      activeAdaptations.set(period, { [type]: adaptation });
+      activeAdaptations[period.id] = { [type]: adaptation };
     } else {
       activePeriodAdaptations[type] = adaptation;
     }
@@ -2239,14 +2230,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     // lazily create this._priv_contentInfos.activeRepresentations
     if (!this._priv_contentInfos.activeRepresentations) {
-      this._priv_contentInfos.activeRepresentations = new Map();
+      this._priv_contentInfos.activeRepresentations = {};
     }
 
     const { activeRepresentations, currentPeriod } = this._priv_contentInfos;
 
-    const activePeriodRepresentations = activeRepresentations.get(period);
+    const activePeriodRepresentations = activeRepresentations[period.id];
     if (!activePeriodRepresentations) {
-      activeRepresentations.set(period, { [type]: representation });
+      activeRepresentations[period.id] = { [type]: representation };
     } else {
       activePeriodRepresentations[type] = representation;
     }
