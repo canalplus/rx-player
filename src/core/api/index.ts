@@ -87,6 +87,7 @@ import Manifest, {
   Representation,
 } from "../../manifest";
 import { IBifThumbnail } from "../../parsers/images/bif";
+import uniq from "../../utils/uniq";
 import ABRManager from "../abr";
 import {
   clearEMESession,
@@ -124,7 +125,6 @@ import TrackManager, {
   ITMVideoTrack,
   ITMVideoTrackListItem
 } from "./track_manager";
-import uniq from "../../utils/uniq";
 
 const {
   DEFAULT_UNMUTED_VOLUME,
