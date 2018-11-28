@@ -15,6 +15,7 @@
  */
 
 import {
+  BehaviorSubject,
   EMPTY,
   merge as observableMerge,
   Observable,
@@ -61,7 +62,8 @@ import {
 export interface IStreamLoaderArgument {
   mediaElement : HTMLMediaElement; // Media Element on which the content will be
                                    // streamed
-  manifest : Manifest; // Manifest of the content we want to stream
+  manifest$ : BehaviorSubject<Manifest>; // Manifest of the content we want to
+                                         // stream
   clock$ : Observable<IStreamClockTick>; // Emit position informations
   speed$ : Observable<number>; // Emit the speed.
                                // /!\ Should replay the last value on subscription.
@@ -95,7 +97,7 @@ export type IStreamLoaderEvent =
  */
 export default function StreamLoader({
   mediaElement,
-  manifest,
+  manifest$,
   clock$,
   speed$,
   bufferOptions,
@@ -117,6 +119,9 @@ export default function StreamLoader({
     initialTime : number,
     autoPlay : boolean
   ) {
+    const manifest = manifest$.getValue();
+
+    // TODO Update the duration if it evolves?
     setDurationToMediaSource(mediaSource, manifest.getDuration());
 
     const initialPeriod = manifest.getPeriodForTime(initialTime);
@@ -143,14 +148,14 @@ export default function StreamLoader({
     const { seek$, load$ } =
       seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
 
-    const bufferClock$ = createBufferClock(manifest, clock$, seek$, speed$, initialTime);
+    const bufferClock$ = createBufferClock(manifest$, clock$, seek$, speed$, initialTime);
 
     // Will be used to cancel any endOfStream tries when the contents resume
     const cancelEndOfStream$ = new Subject<null>();
 
     // Creates Observable which will manage every Buffer for the given Content.
     const buffers$ = PeriodBufferManager(
-      { manifest, initialPeriod },
+      { manifest$, initialPeriod },
       bufferClock$,
       abrManager,
       sourceBufferManager,

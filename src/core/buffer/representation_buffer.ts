@@ -24,8 +24,8 @@
  */
 
 import nextTick from "next-tick";
-import objectAssign from "object-assign";
 import {
+  BehaviorSubject,
   combineLatest as observableCombineLatest,
   concat as observableConcat,
   defer as observableDefer,
@@ -94,7 +94,7 @@ export interface IRepresentationBufferArguments<T> {
     representation : Representation;
     adaptation : Adaptation;
     period : Period;
-    manifest : Manifest;
+    manifest$ : BehaviorSubject<Manifest>;
   };
   queuedSourceBuffer : QueuedSourceBuffer<T>;
   segmentBookkeeper : SegmentBookkeeper;
@@ -160,7 +160,7 @@ export default function RepresentationBuffer<T>({
   wantedBufferAhead$, // emit the buffer goal
 } : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent<T>> {
   // unwrap components of the content
-  const { manifest, period, adaptation, representation } = content;
+  const { manifest$, period, adaptation, representation } = content;
   const codec = representation.getMimeTypeString();
   const bufferType = adaptation.type;
   const initSegment = representation.index.getInitSegment();
@@ -208,7 +208,7 @@ export default function RepresentationBuffer<T>({
 
       const neededRange =
         getWantedRange(period, buffered, timing, bufferGoal, paddings);
-      const discontinuity = !timing.stalled || !manifest.isLive ?
+      const discontinuity = !timing.stalled || !manifest$.getValue().isLive ?
         -1 : representation.index.checkDiscontinuity(timing.currentTime);
       const shouldRefreshManifest = representation.index
         .shouldRefresh(neededRange.start, neededRange.end);
@@ -353,8 +353,15 @@ export default function RepresentationBuffer<T>({
         }
 
         const { segment, priority } = currentNeededSegment;
+        const context = {
+          manifest: manifest$.getValue(),
+          period,
+          adaptation,
+          representation,
+          segment,
+        };
         const request$ = segmentFetcher
-          .createRequest(objectAssign({ segment }, content), priority);
+          .createRequest(context, priority);
 
         currentSegmentRequest = { segment, priority, request$ };
         const response$ = request$.pipe(

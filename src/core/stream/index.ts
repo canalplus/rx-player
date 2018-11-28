@@ -16,6 +16,7 @@
 
 import objectAssign from "object-assign";
 import {
+  BehaviorSubject,
   combineLatest as observableCombineLatest,
   concat as observableConcat,
   EMPTY,
@@ -207,6 +208,8 @@ export default function Stream({
     openMediaSource(mediaElement),
     fetchManifest(url)
   ).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
+    const manifest$ = new BehaviorSubject(manifest);
+
     /**
      * @returns {Observable}
      */
@@ -220,6 +223,7 @@ export default function Stream({
       return fetchManifest(refreshURL).pipe(
         map(({ manifest: newManifest, sendingTime: newSendingTime }) => {
           manifest.update(newManifest);
+          manifest$.next(manifest);
           return EVENTS.manifestUpdate(manifest, newSendingTime);
         }),
         tap((evt) => updatedManifest$.next(evt.value)),
@@ -229,7 +233,7 @@ export default function Stream({
 
     const loadStream = StreamLoader({ // Behold!
       mediaElement,
-      manifest,
+      manifest$,
       clock$,
       speed$,
       abrManager,
