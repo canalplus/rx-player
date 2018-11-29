@@ -60,7 +60,6 @@ import {
   getPlayedSizeOfRange,
   getSizeOfRange,
 } from "../../utils/ranges";
-import uniq from "../../utils/uniq";
 import warnOnce from "../../utils/warnOnce";
 
 import {
@@ -1194,9 +1193,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return [];
     }
 
-    const bitrates = videoAdaptation.representations
-      .map(({ bitrate }) => bitrate);
-    return uniq(bitrates);
+    return videoAdaptation.getAvailableBitrates();
   }
 
   /**
@@ -1220,9 +1217,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return [];
     }
 
-    const bitrates = audioAdaptation.representations
-      .map(({ bitrate }) => bitrate);
-    return uniq(bitrates);
+    return audioAdaptation.getAvailableBitrates();
   }
 
   /**

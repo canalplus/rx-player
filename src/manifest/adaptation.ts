@@ -22,6 +22,7 @@ import { ICustomError } from "../errors";
 import MediaError from "../errors/MediaError";
 import log from "../log";
 import generateNewId from "../utils/id";
+import uniq from "../utils/uniq";
 import Representation, {
   IRepresentationArguments,
 } from "./representation";
@@ -139,8 +140,9 @@ export default class Adaptation {
    * @returns {Array.<Number>}
    */
   getAvailableBitrates() : number[] {
-    return this.representations
+    const bitrates = this.representations
       .map(representation => representation.bitrate);
+    return uniq(bitrates);
   }
 
   /**
