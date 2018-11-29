@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { BehaviorSubject } from "rxjs";
 import { ICustomError } from "../../errors";
 import Manifest from "../../manifest";
 import ABRManager from "../abr";
@@ -45,7 +46,7 @@ export interface IManifestReadyEvent {
   type : "manifestReady";
   value : {
     abrManager : ABRManager;
-    manifest : Manifest;
+    manifest$ : BehaviorSubject<Manifest>;
   };
 }
 
@@ -53,15 +54,6 @@ export interface IManifestReadyEvent {
 export interface IStreamWarningEvent {
   type : "warning";
   value : Error|ICustomError;
-}
-
-// The Manifest was just refreshed.
-export interface IManifestUpdateEvent {
-  type : "manifestUpdate";
-  value : {
-    manifest : Manifest;
-    sendingTime? : number;
-  };
 }
 
 export interface IReloadingStreamEvent {

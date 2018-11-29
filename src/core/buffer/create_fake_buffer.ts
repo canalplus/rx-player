@@ -23,9 +23,7 @@ import {
   map,
 } from "rxjs/operators";
 import log from "../../log";
-import Manifest, {
-  Period,
-} from "../../manifest";
+import { Period } from "../../manifest";
 import { IBufferType } from "../source_buffers";
 import { IAdaptationBufferClockTick } from "./adaptation_buffer";
 import { IBufferStateFull } from "./types";
@@ -46,7 +44,7 @@ export default function createFakeAdaptationBuffer(
   bufferClock$ : Observable<IAdaptationBufferClockTick>,
   wantedBufferAhead$ : Observable<number>,
   bufferType : IBufferType,
-  content : { manifest : Manifest; period : Period }
+  content : { period : Period }
 ) : Observable<IBufferStateFull> {
   const { period } = content;
   return observableCombineLatest(bufferClock$, wantedBufferAhead$).pipe(

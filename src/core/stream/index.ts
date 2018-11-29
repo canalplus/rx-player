@@ -16,6 +16,7 @@
 
 import objectAssign from "object-assign";
 import {
+  BehaviorSubject,
   combineLatest as observableCombineLatest,
   concat as observableConcat,
   EMPTY,
@@ -27,6 +28,7 @@ import {
   timer as observableTimer,
 } from "rxjs";
 import {
+  ignoreElements,
   map,
   mergeMap,
   share,
@@ -69,7 +71,6 @@ import StreamLoader, {
 } from "./stream_loader";
 import {
   IManifestReadyEvent,
-  IManifestUpdateEvent,
   IReloadingStreamEvent,
   IStreamClockTick,
   IStreamWarningEvent,
@@ -196,8 +197,8 @@ export default function Stream({
   // through a throwing Observable.
   const mediaErrorManager$ = createMediaErrorManager(mediaElement);
 
-  // Emit each time the manifest is updated.
-  const updatedManifest$ = new ReplaySubject<{
+  // Emit each time the manifest is refreshed.
+  const manifestRefreshed$ = new ReplaySubject<{
     manifest : Manifest;
     sendingTime? : number;
   }>(1);
@@ -207,10 +208,13 @@ export default function Stream({
     openMediaSource(mediaElement),
     fetchManifest(url)
   ).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
+    const manifest$ = new BehaviorSubject(manifest);
+
     /**
+     * Refresh the manifest on subscription.
      * @returns {Observable}
      */
-    function refreshManifest() : Observable<IManifestUpdateEvent> {
+    function refreshManifest() : Observable<never> {
       const refreshURL = manifest.getUrl();
       if (!refreshURL) {
         log.warn("Stream: Cannot refresh the manifest: no url");
@@ -218,18 +222,22 @@ export default function Stream({
       }
 
       return fetchManifest(refreshURL).pipe(
-        map(({ manifest: newManifest, sendingTime: newSendingTime }) => {
-          manifest.update(newManifest);
-          return EVENTS.manifestUpdate(manifest, newSendingTime);
+        tap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
+          const updatedManifest = manifest.update(newManifest);
+          manifest$.next(updatedManifest);
+          manifestRefreshed$.next({
+            manifest: updatedManifest,
+            sendingTime: newSendingTime,
+          });
         }),
-        tap((evt) => updatedManifest$.next(evt.value)),
-        share() // share the previous sideeceffect
+        ignoreElements(),
+        share() // share the previous side-effect
       );
     }
 
     const loadStream = StreamLoader({ // Behold!
       mediaElement,
-      manifest,
+      manifest$,
       clock$,
       speed$,
       abrManager,
@@ -261,15 +269,15 @@ export default function Stream({
     );
 
     const initialLoad$ = observableConcat(
-      observableOf(EVENTS.manifestReady(abrManager, manifest)),
+      observableOf(EVENTS.manifestReady(abrManager, manifest$)),
       loadStream(mediaSource, initialTime, autoPlay).pipe(
         takeUntil(reloadStreamSubject$),
         mergeMap(onStreamLoaderEvent)
       )
     );
 
-    // Emit when the manifest should be updated due to its lifetime being expired
-    const manifestUpdateTimeout$ : Observable<unknown> = updatedManifest$.pipe(
+    // Emit when the manifest should be refreshed due to its lifetime being expired
+    const manifestUpdateTimeout$ : Observable<unknown> = manifestRefreshed$.pipe(
       startWith({ manifest, sendingTime }),
       switchMap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
         if (newManifest.lifetime) {
@@ -305,7 +313,7 @@ export default function Stream({
  */
 function streamLoaderEventProcessor(
   reloadStreamSubject$ : Subject<void>,
-  refreshManifest : () => Observable<IManifestUpdateEvent>
+  refreshManifest : () => Observable<never>
 ) : (evt : IStreamLoaderEvent) => Observable<IStreamEvent> {
   /**
    * React to StreamLoader events.

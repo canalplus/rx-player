@@ -15,6 +15,7 @@
  */
 
 import {
+  BehaviorSubject,
   concat as observableConcat,
   EMPTY,
   merge as observableMerge,
@@ -117,7 +118,10 @@ const {
  * periods.
  */
 export default function PeriodBufferManager(
-  content : { manifest : Manifest; initialPeriod : Period },
+  content : {
+    manifest$ : BehaviorSubject<Manifest>;
+    initialPeriod : Period;
+  },
   clock$ : Observable<IPeriodBufferManagerClockTick>,
   abrManager : ABRManager,
   sourceBufferManager : SourceBufferManager,
@@ -132,7 +136,7 @@ export default function PeriodBufferManager(
     manualBitrateSwitchingMode : "seamless"|"direct";
   }
 ) : Observable<IPeriodBufferManagerEvent> {
-  const { manifest, initialPeriod } = content;
+  const { manifest$, initialPeriod } = content;
   const { wantedBufferAhead$, maxBufferAhead$, maxBufferBehind$ } = options;
 
   // Keep track of a unique BufferGarbageCollector created per
@@ -241,10 +245,11 @@ export default function PeriodBufferManager(
     const outOfManifest$ = clock$.pipe(
       mergeMap(({ currentTime, wantedTimeOffset }) => {
         const position = wantedTimeOffset + currentTime;
-        if (position < manifest.getMinimumPosition()) {
+        const currentManifest = manifest$.getValue();
+        if (position < currentManifest.getMinimumPosition()) {
           const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST", null, false);
           return observableOf(EVENTS.warning(warning));
-        } else if (position > manifest.getMaximumPosition()) {
+        } else if (position > currentManifest.getMaximumPosition()) {
           const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST", null, false);
           return observableOf(EVENTS.warning(warning));
         }
@@ -256,7 +261,8 @@ export default function PeriodBufferManager(
     // than the ones already considered
     const restartBuffers$ = clock$.pipe(
       filter(({ currentTime, wantedTimeOffset }) => {
-        return !!manifest.getPeriodForTime(wantedTimeOffset + currentTime) &&
+        const currentManifest = manifest$.getValue();
+        return !!currentManifest.getPeriodForTime(wantedTimeOffset + currentTime) &&
           isOutOfPeriodList(wantedTimeOffset + currentTime);
       }),
 
@@ -269,7 +275,7 @@ export default function PeriodBufferManager(
       }),
 
       mergeMap(({ currentTime, wantedTimeOffset }) => {
-        const newInitialPeriod = manifest
+        const newInitialPeriod = manifest$.getValue()
           .getPeriodForTime(currentTime + wantedTimeOffset);
         if (newInitialPeriod == null) {
           throw new MediaError("MEDIA_TIME_NOT_FOUND", null, true);
@@ -384,7 +390,7 @@ export default function PeriodBufferManager(
       ) : Observable<IMultiplePeriodBuffersEvent> => {
         const { type } = evt;
         if (type === "full-buffer") {
-          const nextPeriod = manifest.getPeriodAfter(basePeriod);
+          const nextPeriod = manifest$.getValue().getPeriodAfter(basePeriod);
           if (nextPeriod == null) {
             return observableOf(EVENTS.bufferComplete(bufferType));
           } else {
@@ -456,7 +462,7 @@ export default function PeriodBufferManager(
 
         return observableConcat<IPeriodBufferEvent>(
           cleanBuffer$.pipe(mapTo(EVENTS.adaptationChange(bufferType, null, period))),
-          createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { manifest, period })
+          createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { period })
         );
       }
 
@@ -539,7 +545,7 @@ export default function PeriodBufferManager(
       segmentBookkeeper,
       pipeline,
       wantedBufferAhead$,
-      { manifest, period, adaptation },
+      { manifest$, period, adaptation },
       abrManager,
       options
     ).pipe(catchError((error : Error) => {
@@ -551,7 +557,7 @@ export default function PeriodBufferManager(
         sourceBufferManager.disposeSourceBuffer(bufferType);
         return observableConcat<IAdaptationBufferEvent<T>|IBufferWarningEvent>(
           observableOf(EVENTS.warning(error)),
-          createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { manifest, period })
+          createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { period })
         );
       }
       log.error(`Buffer: Native ${bufferType} buffer crashed. Stopping playback.`, error);
