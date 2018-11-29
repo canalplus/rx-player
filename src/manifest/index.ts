@@ -257,7 +257,7 @@ export default class Manifest {
    * Update the current manifest properties
    * @param {Object} Manifest
    */
-  update(newManifest : Manifest) : void {
+  update(newManifest : Manifest) : Manifest {
     this._duration = newManifest.getDuration();
     this.lifetime = newManifest.lifetime;
     this.timeShiftBufferDepth = newManifest.timeShiftBufferDepth;
@@ -337,6 +337,7 @@ export default class Manifest {
         }
       }
     }
+    return this;
   }
 
   /**

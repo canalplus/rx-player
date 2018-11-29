@@ -197,8 +197,8 @@ export default function Stream({
   // through a throwing Observable.
   const mediaErrorManager$ = createMediaErrorManager(mediaElement);
 
-  // Emit each time the manifest is updated.
-  const updatedManifest$ = new ReplaySubject<{
+  // Emit each time the manifest is refreshed.
+  const manifestRefreshed$ = new ReplaySubject<{
     manifest : Manifest;
     sendingTime? : number;
   }>(1);
@@ -223,10 +223,10 @@ export default function Stream({
 
       return fetchManifest(refreshURL).pipe(
         tap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
-          manifest.update(newManifest);
-          manifest$.next(manifest);
-          updatedManifest$.next({
-            manifest: manifest$.getValue(),
+          const updatedManifest = manifest.update(newManifest);
+          manifest$.next(updatedManifest);
+          manifestRefreshed$.next({
+            manifest: updatedManifest,
             sendingTime: newSendingTime,
           });
         }),
@@ -276,8 +276,8 @@ export default function Stream({
       )
     );
 
-    // Emit when the manifest should be updated due to its lifetime being expired
-    const manifestUpdateTimeout$ : Observable<unknown> = updatedManifest$.pipe(
+    // Emit when the manifest should be refreshed due to its lifetime being expired
+    const manifestUpdateTimeout$ : Observable<unknown> = manifestRefreshed$.pipe(
       startWith({ manifest, sendingTime }),
       switchMap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
         if (newManifest.lifetime) {
