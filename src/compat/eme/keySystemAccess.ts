@@ -16,7 +16,7 @@
 
 // XXX TODO remove when the issue is resolved
 // https://github.com/Microsoft/TypeScript/issues/19189
-import PPromise from "pinkie-promise";
+import PPromise from "../../utils/promise";
 import { ICompatMediaKeySystemConfiguration } from "../constants";
 
 import { ICustomMediaKeys } from "./MediaKeys";

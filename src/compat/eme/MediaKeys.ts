@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie-promise";
 import {
   merge as observableMerge,
   Observable,
@@ -31,6 +30,7 @@ import castToObservable from "../../utils/castToObservable";
 import EventEmitter, {
   IEventEmitter,
 } from "../../utils/eventemitter";
+import PPromise from "../../utils/promise";
 import {
   // XXX TODO remove when the issue is resolved
   // https://github.com/Microsoft/TypeScript/issues/19189

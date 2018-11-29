@@ -111,7 +111,7 @@
     "deep-equal": "^1.0.1",
     "next-tick": "^1.0.0",
     "object-assign": "^4.1.1",
-    "pinkie-promise": "^2.0.1",
+    "pinkie": "^2.0.4",
     "rxjs": "^6.3.3"
   },
   "devDependencies": {

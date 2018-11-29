@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-declare module "pinkie-promise" {
+declare module "pinkie" {
   export default Promise;
 }
