@@ -21,5 +21,9 @@
  * @returns {Array.<*>}
  */
 export default function uniq<T>(arr: T[]) {
-  return arr.filter((val, i, self) => self.indexOf(val) === i);
+  if (typeof (window as any).Set === "function") {
+    return Array.from(new Set(arr));
+  } else {
+    return arr.filter((val, i, self) => self.indexOf(val) === i);
+  }
 }
