@@ -2188,7 +2188,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       activePeriodAdaptations[type] = adaptation;
     }
 
-    if (this._priv_trackManager && period != null && period === currentPeriod) {
+    if (
+      this._priv_trackManager &&
+      currentPeriod != null && period != null &&
+      period.id === currentPeriod.id
+    ) {
       switch (type) {
         case "audio":
           const audioTrack = this._priv_trackManager.getChosenAudioTrack(currentPeriod);
