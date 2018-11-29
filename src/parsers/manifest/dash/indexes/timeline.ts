@@ -57,6 +57,7 @@ export interface ITimelineIndex {
   timescale : number; // timescale to convert a time given here into seconds.
                       // This is done by this simple operation:
                       // ``timeInSeconds = timeInIndex * timescale``
+  isDynamic : boolean; // Whether this index can change with time.
 }
 
 // `index` Argument for a SegmentTimeline RepresentationIndex
@@ -90,6 +91,7 @@ export interface ITimelineIndexIndexArgument {
 export interface ITimelineIndexContextArgument {
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
+  isDynamic : boolean; // Whether the corresponding Manifest is dynamic
   representationURL : string; // Base URL for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
@@ -229,6 +231,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     context : ITimelineIndexContextArgument
   ) {
     const {
+      isDynamic,
       representationURL,
       representationId,
       representationBitrate,
@@ -241,6 +244,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const indexTimeOffset = presentationTimeOffset - periodStart * index.timescale;
 
     this._index = {
+      isDynamic,
       duration: index.duration,
       indexTimeOffset,
       indexRange: index.indexRange,
@@ -290,6 +294,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * @returns {Boolean}
    */
   shouldRefresh(_start : number, end : number) : boolean {
+    if (!this._index.isDynamic) {
+      return false;
+    }
     const { timeline } = this._index;
     const scaledTo = toIndexTime(this._index, end);
 

@@ -237,6 +237,7 @@ export default function parseManifest(
   } = createMPDIntermediateRepresentation(root);
 
   const mpdRootURL = resolveURL(normalizeBaseURL(uri), rootChildren.baseURL);
+  const isLive : boolean = rootAttributes.type === "dynamic";
 
   const parsedPeriods : IParsedPeriod[] = [];
   for (let i = 0; i < rootChildren.periods.length; i++) {
@@ -335,6 +336,7 @@ export default function parseManifest(
                 representationURL,
                 representationId: repId,
                 representationBitrate: repBitrate,
+                isDynamic: isLive,
               }) :
               new TemplateRepresentationIndex(segmentTemplate, {
                 periodStart,
@@ -402,6 +404,7 @@ export default function parseManifest(
                   representationURL,
                   representationId: repId,
                   representationBitrate: repBitrate,
+                  isDynamic: isLive,
                 }) :
                 new TemplateRepresentationIndex(segmentTemplate, {
                   periodStart,
@@ -695,7 +698,6 @@ export default function parseManifest(
       parsedPeriods.push(parsedPeriod);
     }
 
-  const isLive : boolean = rootAttributes.type === "dynamic";
   const duration : number = (() => {
     if (rootAttributes.duration != null) {
       return rootAttributes.duration;
