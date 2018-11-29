@@ -60,6 +60,7 @@ import {
   getPlayedSizeOfRange,
   getSizeOfRange,
 } from "../../utils/ranges";
+import uniq from "../../utils/uniq";
 import warnOnce from "../../utils/warnOnce";
 
 import {
@@ -87,7 +88,6 @@ import Manifest, {
   Representation,
 } from "../../manifest";
 import { IBifThumbnail } from "../../parsers/images/bif";
-import uniq from "../../utils/uniq";
 import ABRManager from "../abr";
 import {
   clearEMESession,
