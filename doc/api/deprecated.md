@@ -235,5 +235,5 @@ This is to prepare the support of low-latency streaming, with
 [CMAF](https://mpeg.chiariglione.org/standards/mpeg-a/common-media-application-format),
 where the ``fetch`` API has to be used instead of an `XMLHttpRequest`.
 
-We recomment to not rely on this property anymore. You still should have access
+We recommend to not rely on this property anymore. You still should have access
 to the `status` and `url` properties.
