@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+import PPromise from "../../../../utils/promise";
 import getProbedConfiguration, { ICapabilitiesTypes } from "../capabilities";
 import log from "../log";
 import probers, {
@@ -99,7 +99,7 @@ async function probeMediaConfiguration(
     }
   }
 
-  await Promise.all(promises);
+  await PPromise.all(promises);
 
   if (globalStatus == null) {
     globalStatus = ProberStatus.Unknown;
