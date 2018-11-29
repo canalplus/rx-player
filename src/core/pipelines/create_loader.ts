@@ -283,6 +283,7 @@ export default function createLoader<T, U>(
                 const response$ = observableOf({
                   type: "response" as "response",
                   value: objectAssign({}, resolverResponse, {
+                    url: arg.type === "response" ? arg.value.url : undefined,
                     responseData: arg.value.responseData,
                     sendingTime: arg.type === "response" ?
                       arg.value.sendingTime : undefined,
