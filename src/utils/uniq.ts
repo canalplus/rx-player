@@ -17,13 +17,19 @@
 /**
  * Returns the input array without duplicates values.
  * All values are unique.
- * @param {Array.<*>} arr
- * @returns {Array.<*>}
  */
-export default function uniq<T>(arr: T[]) {
-  if (typeof (window as any).Set === "function") {
+export default typeof (window as any).Set === "function" ?
+  /**
+   * @param {Array.<*>} arr
+   * @returns {Array.<*>}
+   */
+  function uniqFromSet<T>(arr: T[]) {
     return Array.from(new Set(arr));
-  } else {
+  } :
+  /**
+   * @param {Array.<*>} arr
+   * @returns {Array.<*>}
+   */
+  function uniqFromFilter<T>(arr: T[]) {
     return arr.filter((val, i, self) => self.indexOf(val) === i);
-  }
-}
+  };
