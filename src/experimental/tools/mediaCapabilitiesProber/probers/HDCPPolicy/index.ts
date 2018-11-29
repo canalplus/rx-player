@@ -62,7 +62,7 @@ export default function probeHDCPPolicy(
       }],
     };
 
-    return requestMediaKeySystemAccess(keySystem, [drmConfig]).toPromise()
+    return requestMediaKeySystemAccess(keySystem, [drmConfig]).toPromise(PPromise)
       .then((mediaKeysSystemAccess) => {
         mediaKeysSystemAccess.createMediaKeys().then((mediaKeys) => {
           if (!("getStatusForPolicy" in mediaKeys)) {

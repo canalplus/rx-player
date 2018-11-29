@@ -53,7 +53,7 @@ export default function probeDRMInfos(
 
     const type = keySystem.type;
     const configuration = keySystem.configuration || {};
-    return requestMediaKeySystemAccess(type, [configuration]).toPromise()
+    return requestMediaKeySystemAccess(type, [configuration]).toPromise(PPromise)
       .then((keySystemAccess) => {
         const result: ICompatibleKeySystem = {
           type,
