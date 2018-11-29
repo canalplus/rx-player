@@ -360,8 +360,7 @@ export default function RepresentationBuffer<T>({
           representation,
           segment,
         };
-        const request$ = segmentFetcher
-          .createRequest(context, priority);
+        const request$ = segmentFetcher.createRequest(context, priority);
 
         currentSegmentRequest = { segment, priority, request$ };
         const response$ = request$.pipe(
