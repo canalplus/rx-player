@@ -1172,8 +1172,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return [];
     }
 
-    return videoAdaptation.representations
-      .map(({ bitrate }) => bitrate);
+    return videoAdaptation.getAvailableBitrates();
   }
 
   /**
@@ -1194,8 +1193,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return [];
     }
 
-    return audioAdaptation.representations
-      .map(({ bitrate }) => bitrate);
+    return audioAdaptation.getAvailableBitrates();
   }
 
   /**
