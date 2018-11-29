@@ -122,12 +122,12 @@ function createSmoothStreamingParser(
 
   /**
    * @param {Element} q
-   * @param {string} type
+   * @param {string} streamType
    * @return {Object}
    */
   function parseQualityLevel(
     q : Element,
-    type : string
+    streamType : string
   ) : ISmoothParsedQualityLevel {
     /**
      * @param {string} name
@@ -138,7 +138,7 @@ function createSmoothStreamingParser(
       return attr == null ? undefined : attr;
     }
 
-    switch (type) {
+    switch (streamType) {
 
       case "audio": {
         const audiotag = getAttribute("AudioTag");
@@ -194,7 +194,7 @@ function createSmoothStreamingParser(
       }
 
       default:
-        throw new Error("Unrecognized StreamIndex type: " + type);
+        throw new Error("Unrecognized StreamIndex type: " + streamType);
     }
   }
 
