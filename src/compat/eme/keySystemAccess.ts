@@ -16,6 +16,7 @@
 
 // XXX TODO remove when the issue is resolved
 // https://github.com/Microsoft/TypeScript/issues/19189
+import PPromise from "pinkie-promise";
 import { ICompatMediaKeySystemConfiguration } from "../constants";
 
 import { ICustomMediaKeys } from "./MediaKeys";
@@ -55,7 +56,7 @@ export default class CustomMediaKeySystemAccess implements ICustomMediaKeySystem
    * @returns {Promise}
    */
   public createMediaKeys() : Promise<ICustomMediaKeys|MediaKeys> {
-    return new Promise((res) => res(this._mediaKeys));
+    return new PPromise((res) => res(this._mediaKeys));
   }
 
   /**
