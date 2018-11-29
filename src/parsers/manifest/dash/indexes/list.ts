@@ -75,7 +75,7 @@ export interface IListIndexIndexArgument {
 export interface IListIndexContextArgument {
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
-  representationURL : string; // Base URL for the Representation concerned
+  representationBaseURL : string; // Base URL for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
 }
@@ -95,7 +95,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   constructor(index : IListIndexIndexArgument, context : IListIndexContextArgument) {
     const {
       periodStart,
-      representationURL,
+      representationBaseURL,
       representationId,
       representationBitrate,
     } = context;
@@ -108,7 +108,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     this._index = {
       list: index.list.map((lItem) => ({
         mediaURL: createIndexURL(
-          representationURL,
+          representationBaseURL,
           lItem.media,
           representationId,
           representationBitrate
@@ -121,7 +121,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
       indexRange: index.indexRange,
       initialization: index.initialization && {
         mediaURL: createIndexURL(
-          representationURL,
+          representationBaseURL,
           index.initialization.media,
           representationId,
           representationBitrate

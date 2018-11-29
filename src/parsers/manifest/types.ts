@@ -102,6 +102,7 @@ export interface IParsedManifest {
 
   // optional
   availabilityEndTime?: number;
+  baseURL? : string;
   maxSegmentDuration?: number;
   maxSubsegmentDuration?: number;
   minBufferTime?: number;

@@ -92,7 +92,7 @@ export interface ITimelineIndexContextArgument {
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
   isDynamic : boolean; // Whether the corresponding Manifest is dynamic
-  representationURL : string; // Base URL for the Representation concerned
+  representationBaseURL : string; // Base URL for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
 }
@@ -232,7 +232,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   ) {
     const {
       isDynamic,
-      representationURL,
+      representationBaseURL,
       representationId,
       representationBitrate,
       periodStart,
@@ -250,7 +250,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       indexRange: index.indexRange,
       initialization: index.initialization && {
         mediaURL: createIndexURL(
-          representationURL,
+          representationBaseURL,
           index.initialization.media,
           representationId,
           representationBitrate
@@ -258,7 +258,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
         range: index.initialization.range,
       },
       mediaURL: createIndexURL(
-        representationURL,
+        representationBaseURL,
         index.media,
         representationId,
         representationBitrate

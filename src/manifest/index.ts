@@ -53,6 +53,7 @@ interface ISupplementaryTextTrack {
 
 interface IManifestArguments {
   availabilityStartTime? : number;
+  baseURL? : string;
   duration : number;
   isLive : boolean;
   minimumTime? : number;
@@ -127,6 +128,12 @@ export default class Manifest {
    * @type {number|undefined}
    */
   public suggestedPresentationDelay? : number;
+
+  /**
+   * Base URL from which relative segment's URLs will be relative to.
+   * @param {string}
+   */
+  public baseURL? : string;
 
   /**
    * Amount of time, in seconds, this Manifest is valid from its fetching time.
@@ -214,6 +221,7 @@ export default class Manifest {
     this.availabilityStartTime = args.availabilityStartTime;
     this.presentationLiveGap = args.presentationLiveGap;
     this.timeShiftBufferDepth = args.timeShiftBufferDepth;
+    this.baseURL = args.baseURL;
 
     // --------- private data
     this._duration = args.duration;
