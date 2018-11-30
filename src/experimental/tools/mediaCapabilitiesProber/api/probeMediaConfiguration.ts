@@ -32,6 +32,14 @@ export type IBrowserAPIS =
   "requestMediaKeySystemAccess" |
   "getStatusForPolicy";
 
+interface IProbedMediaConfiguration {
+  globalStatus: ProberStatus;
+  resultsFromAPIS: Array<{
+    APIName: ICapabilitiesTypes;
+    result?: IResultsFromAPI;
+  }>;
+}
+
 /**
  * Probe media capabilities, evaluating capabilities with available browsers
  * API.
@@ -49,16 +57,9 @@ export type IBrowserAPIS =
  * @param {Array.<Object>} browserAPIs
  * @returns {Promise}
  */
-async function probeMediaConfiguration(
-  config: IMediaConfiguration,
-  browserAPIS: IBrowserAPIS[]
-): Promise<{
-  globalStatus: ProberStatus;
-  resultsFromAPIS: Array<{
-    APIName: ICapabilitiesTypes;
-    result?: IResultsFromAPI;
-  }>;
-}> {
+function probeMediaConfiguration(
+  config: IMediaConfiguration, browserAPIS: IBrowserAPIS[]
+): Promise<IProbedMediaConfiguration> {
   let globalStatus : ProberStatus|undefined;
   const resultsFromAPIS: Array<{
     APIName: ICapabilitiesTypes;
@@ -99,31 +100,31 @@ async function probeMediaConfiguration(
     }
   }
 
-  await PPromise.all(promises);
+  return PPromise.all(promises).then(() => {
+      if (globalStatus == null) {
+        globalStatus = ProberStatus.Unknown;
+      }
 
-  if (globalStatus == null) {
-    globalStatus = ProberStatus.Unknown;
-  }
+      const probedCapabilities =
+        getProbedConfiguration(config, resultsFromAPIS.map((a) => a.APIName));
+      const areUnprobedCapabilities =
+        JSON.stringify(probedCapabilities).length !== JSON.stringify(config).length;
 
-  const probedCapabilities =
-    getProbedConfiguration(config, resultsFromAPIS.map((a) => a.APIName));
-  const areUnprobedCapabilities =
-    JSON.stringify(probedCapabilities).length !== JSON.stringify(config).length;
+      if (areUnprobedCapabilities && globalStatus === ProberStatus.Supported) {
+        globalStatus = ProberStatus.Unknown;
+      }
 
-  if (areUnprobedCapabilities && globalStatus === ProberStatus.Supported) {
-    globalStatus = ProberStatus.Unknown;
-  }
+      if (areUnprobedCapabilities) {
+        log.warn("MediaCapabilitiesProber >>> PROBER: Some capabilities " +
+          "could not be probed, due to the incompatibility of browser APIs, or the " +
+          "lack of arguments to call them.");
+      }
 
-  if (areUnprobedCapabilities) {
-    log.warn("MediaCapabilitiesProber >>> PROBER: Some capabilities could not " +
-      "be probed, due to the incompatibility of browser APIs, or the lack of arguments " +
-      "to call them.");
-  }
+      log.info("MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",
+        probedCapabilities);
 
-  log.info("MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",
-    probedCapabilities);
-
-  return { globalStatus, resultsFromAPIS };
+      return { globalStatus, resultsFromAPIS };
+  });
 }
 
 export default probeMediaConfiguration;
