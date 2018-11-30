@@ -1270,7 +1270,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     }
 
     const playPromise = this.videoElement.play();
-    if (playPromise == null || (playPromise as any).then !== "function") {
+    if (playPromise == null || (playPromise as any).catch !== "function") {
       return PPromise.resolve();
     }
 
