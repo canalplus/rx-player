@@ -110,7 +110,7 @@ function inferAdaptationType(
   }
 
   function fromCodecs(codecs : string) {
-    switch (codecs.substr(0, 3)) {
+    switch (codecs.substring(0, 3)) {
       case "avc":
       case "hev":
       case "hvc":
@@ -124,7 +124,7 @@ function inferAdaptationType(
         return "image";
     }
 
-    switch (codecs.substr(0, 4)) {
+    switch (codecs.substring(0, 4)) {
       case "mp4a":
         return "audio";
       case "wvtt":

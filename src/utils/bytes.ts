@@ -78,7 +78,7 @@ function hexToBytes(str : string) : Uint8Array {
   const len = str.length;
   const arr = new Uint8Array(len / 2);
   for (let i = 0, j = 0; i < len; i += 2, j++) {
-    arr[j] = parseInt(str.substr(i, 2), 16) & 0xFF;
+    arr[j] = parseInt(str.substring(i, i + 2), 16) & 0xFF;
   }
   return arr;
 }
