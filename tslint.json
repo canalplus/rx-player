@@ -21,6 +21,7 @@
       ["*", "find"],
       ["*", "findIndex"],
       ["*", "startsWith"],
+      ["*", "substr"],
       ["Promise"],
       ["Promise", "reject"],
       ["Promise", "resolve"]

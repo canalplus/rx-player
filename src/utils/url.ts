@@ -75,12 +75,12 @@ function resolveURL(...args : Array<string|undefined>) : string {
     else {
       // trim if begins with "/"
       if (part[0] === "/") {
-        part = part.substr(1);
+        part = part.substring(1);
       }
 
       // trim if ends with "/"
       if (base[base.length - 1] === "/") {
-        base = base.substr(0, base.length - 1);
+        base = base.substring(0, base.length - 1);
       }
 
       base = base + "/" + part;
