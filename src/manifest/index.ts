@@ -201,7 +201,9 @@ export default class Manifest {
      * @deprecated It is here to ensure compatibility with the way the
      * v3.x.x manages adaptations at the Manifest level
      */
+    /* tslint:disable:deprecation */
     this.adaptations = (this.periods[0] && this.periods[0].adaptations) || {};
+    /* tslint:enable:deprecation */
 
     this.minimumTime = args.minimumTime;
     this.isLive = args.isLive;
@@ -506,9 +508,10 @@ export default class Manifest {
       }, warning$);
     });
 
-    if (newImageTracks.length) {
-      this.adaptations.image = this.adaptations.image ?
-        this.adaptations.image.concat(newImageTracks) : newImageTracks;
+    if (newImageTracks.length && this.periods.length) {
+      const { adaptations } = this.periods[0];
+      adaptations.image = adaptations.image ?
+        adaptations.image.concat(newImageTracks) : newImageTracks;
     }
   }
 
@@ -553,9 +556,10 @@ export default class Manifest {
       }));
     }, []);
 
-    if (newTextAdaptations.length) {
-      this.adaptations.text = this.adaptations.text ?
-        this.adaptations.text.concat(newTextAdaptations) : newTextAdaptations;
+    if (newTextAdaptations.length && this.periods.length) {
+      const { adaptations } = this.periods[0];
+      adaptations.text = adaptations.text ?
+        adaptations.text.concat(newTextAdaptations) : newTextAdaptations;
     }
   }
 }
