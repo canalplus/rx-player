@@ -15,6 +15,7 @@
  */
 
 import { requestMediaKeySystemAccess } from "../../../../../compat";
+import PPromise from "../../../../../utils/promise";
 import log from "../../log";
 import {
   ICompatibleKeySystem,
@@ -34,7 +35,7 @@ export interface IMediaKeySystemInfos {
 export default function probeDRMInfos(
   mediaConfig: IMediaConfiguration
 ): Promise<[ProberStatus, ICompatibleKeySystem?]> {
-  return new Promise((resolve) => {
+  return new PPromise((resolve) => {
     if (requestMediaKeySystemAccess == null) {
       log.warn("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
         "Your browser has no API to request a media key system access.");
@@ -52,7 +53,7 @@ export default function probeDRMInfos(
 
     const type = keySystem.type;
     const configuration = keySystem.configuration || {};
-    return requestMediaKeySystemAccess(type, [configuration]).toPromise()
+    return requestMediaKeySystemAccess(type, [configuration]).toPromise(PPromise)
       .then((keySystemAccess) => {
         const result: ICompatibleKeySystem = {
           type,

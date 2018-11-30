@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import PPromise from "../../../../../utils/promise";
 import {
   IMediaConfiguration,
   ProberStatus,
@@ -30,7 +31,7 @@ export interface IDecodingInfos {
  * @returns {Promise}
  */
 function isMediaCapabilitiesAPIAvailable(): Promise<void> {
-  return new Promise((resolve) => {
+  return new PPromise((resolve) => {
     if (!("mediaCapabilities" in navigator)) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "MediaCapabilities API not available");

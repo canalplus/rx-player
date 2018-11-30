@@ -30,6 +30,7 @@ import castToObservable from "../../utils/castToObservable";
 import EventEmitter, {
   IEventEmitter,
 } from "../../utils/eventemitter";
+import PPromise from "../../utils/promise";
 import {
   // XXX TODO remove when the issue is resolved
   // https://github.com/Microsoft/TypeScript/issues/19189
@@ -182,7 +183,7 @@ if (navigator.requestMediaKeySystemAccess) {
       license : ArrayBuffer,
       sessionId? : string
     ) : Promise<void> {
-      return new Promise((resolve, reject) => {
+      return new PPromise((resolve, reject) => {
         try {
           memUpdate.call(this, license, sessionId);
           resolve();
@@ -245,7 +246,7 @@ if (navigator.requestMediaKeySystemAccess) {
         this._key = keySystem;
 
         this.sessionId = "";
-        this.closed = new Promise((resolve) => {
+        this.closed = new PPromise((resolve) => {
           this._closeSession$.subscribe(resolve);
         });
         this.keyStatuses = new Map();
@@ -275,7 +276,7 @@ if (navigator.requestMediaKeySystemAccess) {
       }
 
       generateRequest(_initDataType : string, initData : ArrayBuffer) : Promise<void> {
-        return new Promise((resolve) => {
+        return new PPromise((resolve) => {
           if (!isOldWebkitMediaElement(this._vid)) {
             throw new Error("impossible to generate a key request");
           }
@@ -285,7 +286,7 @@ if (navigator.requestMediaKeySystemAccess) {
       }
 
       close() : Promise<void> {
-        return new Promise((resolve) => {
+        return new PPromise((resolve) => {
           this._closeSession$.next();
           this._closeSession$.complete();
           resolve();
@@ -293,11 +294,11 @@ if (navigator.requestMediaKeySystemAccess) {
       }
 
       load() : Promise<boolean> {
-        return Promise.resolve(false);
+        return PPromise.resolve(false);
       }
 
       remove() : Promise<void> {
-        return Promise.resolve();
+        return PPromise.resolve();
       }
     }
 
@@ -420,7 +421,7 @@ if (navigator.requestMediaKeySystemAccess) {
         this.keyStatuses = new Map();
         this._mk = mk;
         this._closeSession$ = new Subject();
-        this.closed = new Promise((resolve) => {
+        this.closed = new PPromise((resolve) => {
           this._closeSession$.subscribe(resolve);
         });
         this.update = wrapUpdate((license, sessionId) => {
@@ -432,7 +433,7 @@ if (navigator.requestMediaKeySystemAccess) {
         });
       }
       generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
-        return new Promise((resolve) => {
+        return new PPromise((resolve) => {
           this._ss = (this._mk as any)
             .createSession("video/mp4", initData) as MediaKeySession;
           observableMerge(
@@ -446,7 +447,7 @@ if (navigator.requestMediaKeySystemAccess) {
         });
       }
       close(): Promise<void> {
-        return new Promise((resolve) => {
+        return new PPromise((resolve) => {
           if (this._ss) {
             /* tslint:disable no-floating-promises */
             this._ss.close();
@@ -459,10 +460,10 @@ if (navigator.requestMediaKeySystemAccess) {
         });
       }
       load(): Promise<boolean> {
-        return Promise.resolve(false);
+        return PPromise.resolve(false);
       }
       remove(): Promise<void> {
-        return Promise.resolve();
+        return PPromise.resolve();
       }
     }
 

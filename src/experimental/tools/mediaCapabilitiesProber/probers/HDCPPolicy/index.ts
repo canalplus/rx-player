@@ -15,6 +15,7 @@
  */
 
 import { requestMediaKeySystemAccess } from "../../../../../compat";
+import PPromise from "../../../../../utils/promise";
 import {
   IMediaConfiguration,
   ProberStatus,
@@ -37,7 +38,7 @@ export default function probeHDCPPolicy(
   config: IMediaConfiguration
 ): Promise<[ProberStatus]> {
 
-  return new Promise((resolve) => {
+  return new PPromise((resolve) => {
     if (requestMediaKeySystemAccess == null) {
       throw new Error("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
         "API not available");
@@ -61,7 +62,7 @@ export default function probeHDCPPolicy(
       }],
     };
 
-    return requestMediaKeySystemAccess(keySystem, [drmConfig]).toPromise()
+    return requestMediaKeySystemAccess(keySystem, [drmConfig]).toPromise(PPromise)
       .then((mediaKeysSystemAccess) => {
         mediaKeysSystemAccess.createMediaKeys().then((mediaKeys) => {
           if (!("getStatusForPolicy" in mediaKeys)) {
