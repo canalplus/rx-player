@@ -40,7 +40,7 @@ The reason why it ends up so big is mainly because of the following reasons:
     given moment (for example, the current bitrate), which internally is only
     sent as an event by some module.
     It is thus the role of the API to store that information when it receives
-    this event to then communicating it back to the user.
+    this event to then communicate it back to the user.
 
 
  A huge part of what is defined in that file is actually the entire API, as
@@ -53,14 +53,14 @@ The reason why it ends up so big is mainly because of the following reasons:
 
  Still, we did some efforts to reduce the size of that file. For example, some
  long argument-parsing code has been moved out of this file, into
- `core/api/option_parsers`. We might find other way to reduce that size in the
- feature, but that's not a main concern for now.
+ `core/api/option_parsers`. We might find other ways to reduce that size in the
+ future, but that's not a main concern for now.
 
 
 
 ## Subparts ####################################################################
 
-To facilitate those actions, the API rely on multiple building blocks:
+To facilitate those actions, the API relies on multiple building blocks:
 
   - __the Clock__
 
