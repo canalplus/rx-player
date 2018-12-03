@@ -103,7 +103,7 @@ give some controls to the user.
 
 For example, as available audio languages are only known after the manifest has
 been downloaded and parsed, and as it is most of all a user preference, the
-Stream can emit to the API RxJS Subjects allowing the API to "choose" at any
+Stream can emit to the API, RxJS Subjects allowing the API to "choose" at any
 time the wanted language.
 
 
