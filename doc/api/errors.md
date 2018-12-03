@@ -154,6 +154,14 @@ A MediaError can have the following codes (``code`` property):
     in a ``"LOADED"`` state.
     This code is always a warning and it never causes playback interruption.
 
+  - ``"MEDIA_ERR_PLAY_NOT_ALLOWED"``: A `play` call on our API (coming from you)
+    failed because the current browser does not allow it.
+    The content should still be in a paused state.
+    This is in almost any case due a browser policy which prevents a content to
+    play without any user interaction.
+    In those cases, we recommend to display a UI element on your page inviting
+    the final user to manually play the content.
+
   - ``"MEDIA_ERR_DECODE"``: A pushed segment/media could not be decoded by the
     browser. This happens most-of-all with malformed segments.
 

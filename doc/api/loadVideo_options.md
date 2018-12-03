@@ -242,6 +242,14 @@ _defaults_: ``false``
 
 If set to ``true``, the video will play immediately after being loaded.
 
+Note: On some browsers, auto-playing a media without user interaction is blocked
+due to the browser's policy.
+In that case, the player won't be able to play (it will stay in a `"LOADED"`
+state) and you will receive a [warning event](./errors.md) containing a
+`MEDIA_ERROR` with the code: `MEDIA_ERR_BLOCKED_AUTOPLAY`.
+A solution in that case would be to propose to your users an UI element to
+trigger the play with an interaction.
+
 
 <a name="prop-startAt"></a>
 ### startAt ####################################################################

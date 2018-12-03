@@ -56,6 +56,7 @@ import assert from "../../utils/assert";
 import EventEmitter from "../../utils/eventemitter";
 import Logger from "../../utils/logger";
 import noop from "../../utils/noop";
+import PPromise from "../../utils/promise";
 import {
   getLeftSizeOfRange,
   getPlayedSizeOfRange,
@@ -80,6 +81,7 @@ import {
 import {
   ErrorCodes,
   ErrorTypes,
+  MediaError,
 } from "../../errors";
 import features from "../../features";
 import Manifest, {
@@ -1260,14 +1262,25 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
   /**
    * Play/Resume the current video.
+   * @returns {Promise}
    */
-  play() : void {
+  play() : Promise<void> {
     if (!this.videoElement) {
       throw new Error("Disposed player");
     }
-    /* tslint:disable no-floating-promises */
-    this.videoElement.play();
-    /* tslint:enable no-floating-promises */
+
+    const playPromise = this.videoElement.play();
+    if (playPromise == null || (playPromise as any).catch !== "function") {
+      return PPromise.resolve();
+    }
+
+    return playPromise.catch(error => {
+      if (error.name === "NotAllowedError") {
+        const warning = new MediaError("MEDIA_ERR_PLAY_NOT_ALLOWED", null, false);
+        this.trigger("warning", warning);
+      }
+      throw error;
+    });
   }
 
   /**

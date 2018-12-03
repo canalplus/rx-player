@@ -208,15 +208,15 @@ describe("initial idle state", () => {
     });
 
     describe("play/pause", () => {
-      it("should allow play by default", () => {
-        expect(player.play()).to.equal(undefined);
+      it("should allow play by default", async () => {
+        await player.play();
       });
 
-      it("should allow to pause and play by default", () => {
-        expect(player.play()).to.equal(undefined);
+      it("should allow to pause and play by default", async () => {
+        await player.play();
         expect(player.pause()).to.equal(undefined);
         expect(player.getVideoElement().paused).to.equal(true);
-        expect(player.play()).to.equal(undefined);
+        await player.play();
         expect(player.getVideoElement().paused).to.equal(false);
       });
     });
