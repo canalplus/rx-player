@@ -50,6 +50,7 @@ interface IAdaptationParserArguments {
   rootURL : string;
   timescale : number;
   protections : IContentProtectionSmooth[];
+  isLive : boolean;
   timeShiftBufferDepth? : number;
   manifestReceivedTime? : number;
 }
@@ -121,12 +122,12 @@ function createSmoothStreamingParser(
 
   /**
    * @param {Element} q
-   * @param {string} type
+   * @param {string} streamType
    * @return {Object}
    */
   function parseQualityLevel(
     q : Element,
-    type : string
+    streamType : string
   ) : ISmoothParsedQualityLevel {
     /**
      * @param {string} name
@@ -137,7 +138,7 @@ function createSmoothStreamingParser(
       return attr == null ? undefined : attr;
     }
 
-    switch (type) {
+    switch (streamType) {
 
       case "audio": {
         const audiotag = getAttribute("AudioTag");
@@ -193,7 +194,7 @@ function createSmoothStreamingParser(
       }
 
       default:
-        throw new Error("Unrecognized StreamIndex type: " + type);
+        throw new Error("Unrecognized StreamIndex type: " + streamType);
     }
   }
 
@@ -207,7 +208,13 @@ function createSmoothStreamingParser(
    */
   function parseAdaptation(args: IAdaptationParserArguments) : IParsedAdaptation|null {
     const {
-      root, timescale, rootURL, protections, timeShiftBufferDepth, manifestReceivedTime,
+      root,
+      timescale,
+      rootURL,
+      protections,
+      timeShiftBufferDepth,
+      manifestReceivedTime,
+      isLive,
     } = args;
     const _timescale = root.hasAttribute("Timescale") ?
       +(root.getAttribute("Timescale") || 0) : timescale;
@@ -284,6 +291,7 @@ function createSmoothStreamingParser(
         timeline: index.timeline,
         timescale: index.timescale,
         media: replaceRepresentationSmoothTokens(path, qualityLevel.bitrate),
+        isLive,
         timeShiftBufferDepth,
         manifestReceivedTime,
       };
@@ -413,6 +421,7 @@ function createSmoothStreamingParser(
           rootURL,
           timescale,
           protections,
+          isLive,
           timeShiftBufferDepth,
           manifestReceivedTime,
         });

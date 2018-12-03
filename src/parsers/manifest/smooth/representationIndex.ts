@@ -33,6 +33,7 @@ interface ITimelineIndex {
   media : string;
   timeline : IIndexSegment[];
   startNumber? : number;
+  isLive : boolean;
   timeShiftBufferDepth? : number;
   manifestReceivedTime? : number;
 }
@@ -435,10 +436,10 @@ export default class SmoothRepresentationIndex
      * @returns {Boolean}
      */
     shouldRefresh(up : number, to : number) : boolean {
-      const {
-        timeline,
-        timescale,
-      } = this._index;
+      if (!this._index.isLive) {
+        return false;
+      }
+      const { timeline, timescale } = this._index;
 
       const lastSegmentInCurrentTimeline = timeline[timeline.length - 1];
       if (!lastSegmentInCurrentTimeline) {
