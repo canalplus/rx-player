@@ -5,13 +5,6 @@
   font-style: normal;
 }
 
-@font-face {
-  font-family: "Roboto";
-  src: url("../fonts/Roboto-Regular.otf");
-  font-weight: normal;
-  font-style: normal;
-}
-
 body {
   margin: 0px;
   font-family: "CanalDemiRomain", "Open Sans", sans-serif;
