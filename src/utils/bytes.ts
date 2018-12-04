@@ -49,7 +49,8 @@ function strToBytes(str : string) : Uint8Array {
  * @returns {string}
  */
 function bytesToStr(bytes : TypedArray) : string {
-  return String.fromCharCode(...bytes);
+  // NOTE: ugly I know, but TS is problematic here (you can try)
+  return (String.fromCharCode as any).apply(null, bytes);
 }
 
 /**
