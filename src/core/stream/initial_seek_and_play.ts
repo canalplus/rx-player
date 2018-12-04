@@ -64,11 +64,20 @@ function doInitialSeek(
  * @param {Observable} clock$
  * @returns {Observable}
  */
-function canPlay(clock$ : Observable<IStreamClockTick>) {
-  return clock$.pipe(filter(tick => {
-    return !tick.seeking && tick.stalled == null &&
-      (tick.readyState === 4 || tick.readyState === 3 && tick.currentRange != null);
-  }), take(1));
+function canPlay(
+  clock$ : Observable<IStreamClockTick>,
+  mediaDuration : HTMLMediaElement
+) : Observable<IStreamClockTick> {
+  return clock$.pipe(
+    filter((tick) => {
+      return !tick.seeking &&
+        tick.stalled == null &&
+        (tick.readyState === 4 || tick.readyState === 3 && tick.currentRange != null) &&
+        mediaDuration.duration > 0;
+    }),
+    take(1)
+  );
+}
 
 /**
  * Try to play content then handle autoplay errors.
