@@ -166,6 +166,9 @@ export default function StreamDirectFile({
       if (evt === "autoplay-blocked") {
         const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
         return observableOf(EVENTS.warning(error), EVENTS.loaded());
+      } else if (evt === "not-loaded-metadata") {
+        const error = new MediaError("MEDIA_ERR_NON_LOADED_METADATA", null, false);
+        return observableOf(EVENTS.warning(error));
       }
       return observableOf(EVENTS.loaded());
     }));

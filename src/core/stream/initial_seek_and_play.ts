@@ -15,6 +15,7 @@
  */
 
 import {
+  concat as observableConcat,
   Observable,
   Observer,
   of as observableOf,
@@ -30,12 +31,15 @@ import {
   take,
   tap,
 } from "rxjs/operators";
-import { play$ } from "../../compat";
+import {
+  play$,
+  shouldValidateMetadata
+} from "../../compat";
 import { onLoadedMetadata$ } from "../../compat/events";
 import log from "../../log";
 import { IStreamClockTick } from "./types";
 
-type ILoadEvents = "autoplay-blocked"|"autoplay"|"loaded";
+type ILoadEvents = "not-loaded-metadata"|"autoplay-blocked"|"autoplay"|"loaded";
 
 /**
  * On Subscription, set the initial time given on the media element.
@@ -59,23 +63,43 @@ function doInitialSeek(
 }
 
 /**
- * Emit a single time as soon as the clock$ anounce that the content can begin
- * to be played.
+ * Emit once a "canplay" message as soon as the clock$ anounce that the content
+ * can begin to be played. Warn about not loaded metadata by emitting a
+ * "not-loaded-metadata" message.
  * @param {Observable} clock$
  * @returns {Observable}
  */
 function canPlay(
   clock$ : Observable<IStreamClockTick>,
-  mediaDuration : HTMLMediaElement
-) : Observable<IStreamClockTick> {
+  mediaElement : HTMLMediaElement
+) : Observable<"canplay"|"not-loaded-metadata"> {
+  if (shouldValidateMetadata()) {
+    if (mediaElement.duration === 0) {
+      return observableConcat(
+        observableOf("not-loaded-metadata" as "not-loaded-metadata"),
+        clock$.pipe(
+          filter((tick) => {
+            const { seeking, stalled, readyState, currentRange } = tick;
+            return !seeking &&
+              stalled == null &&
+              (readyState === 4 || readyState === 3 && currentRange != null) &&
+              mediaElement.duration > 0;
+          }),
+          take(1),
+          mapTo("canplay" as "canplay")
+        )
+      );
+    }
+  }
   return clock$.pipe(
     filter((tick) => {
-      return !tick.seeking &&
-        tick.stalled == null &&
-        (tick.readyState === 4 || tick.readyState === 3 && tick.currentRange != null) &&
-        mediaDuration.duration > 0;
+      const { seeking, stalled, readyState, currentRange } = tick;
+      return !seeking &&
+        stalled == null &&
+        (readyState === 4 || readyState === 3 && currentRange != null);
     }),
-    take(1)
+    take(1),
+    mapTo("canplay" as "canplay")
   );
 }
 
@@ -138,11 +162,14 @@ export default function seekAndLoadOnMediaEvents(
     mergeMap(() => {
       return canPlay(clock$, mediaElement).pipe(
         tap(() => log.info("Stream: Can begin to play content")),
-        mergeMap(() => {
-          if (!mustAutoPlay) {
-            return observableOf("loaded");
+        mergeMap((evt) => {
+          if (evt === "canplay") {
+            if (!mustAutoPlay) {
+              return observableOf("loaded");
+            }
+            return autoPlay$(mediaElement);
           }
-          return autoPlay$(mediaElement);
+          return observableOf(evt);
         })
       );
     }),

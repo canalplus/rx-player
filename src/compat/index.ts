@@ -34,6 +34,7 @@ import {
   isFirefox,
   isIE11,
   isIEOrEdge,
+  isSamsungBrowser,
   MediaSource_,
   READY_STATES,
   VTTCue_,
@@ -295,6 +296,10 @@ function isPlaybackStuck(
   );
 }
 
+function shouldValidateMetadata() {
+  return isSamsungBrowser;
+}
+
 /**
  * Clear element's src attribute.
  *
@@ -463,5 +468,6 @@ export {
   setMediaKeys,
   shouldRenewMediaKeys,
   shouldUnsetMediaKeys,
+  shouldValidateMetadata,
   tryToChangeSourceBufferType,
 };
