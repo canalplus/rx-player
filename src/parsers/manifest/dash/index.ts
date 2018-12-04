@@ -14,8 +14,18 @@
  * limitations under the License.
  */
 
-import { IParsedManifest } from "../types";
+import {
+  IParsedManifest,
+  IParsedPeriod,
+} from "../types";
+import {
+  createPeriodIntermediateRepresentation,
+  IPeriodIntermediateRepresentation,
+} from "./node_parsers/Period";
 import parseMPD from "./parseMPD";
+import parsePeriods, {
+  IManifestInfos,
+} from "./parsePeriods";
 
 /**
  * @param {Document} manifest - Original manifest as returned by the server
@@ -32,3 +42,28 @@ export default function parseFromDocument(
   }
   return parseMPD(root, uri);
 }
+
+/**
+ * Parse Xlinks response as an array of Periods.
+ * @param {string} xlinkData
+ * @param {Object} manifestInfos
+ * @returns {Array.<Object>}
+ */
+export function parseDownloadedXLinks(
+  xlinkData : string,
+  manifestInfos : IManifestInfos
+) : IParsedPeriod[] {
+  const wrappedData = "<root>" + xlinkData + "</root>";
+  const dataAsXML = new DOMParser().parseFromString(wrappedData, "text/xml");
+  const periods = dataAsXML.children;
+  const periodsIR : IPeriodIntermediateRepresentation[] = [];
+  for (let i = 0; i < periods.length; i++) {
+    if (periods[i].nodeType === Node.ELEMENT_NODE) {
+      const period = periods[i];
+      periodsIR.push(createPeriodIntermediateRepresentation(period));
+    }
+  }
+  return parsePeriods(periodsIR, manifestInfos);
+}
+
+export { IManifestInfos };
