@@ -117,7 +117,7 @@ function hasEMEAPIs() : boolean {
  * @returns {Boolean}
  */
 function canPatchISOBMFFSegment() {
-  return !isIE11;
+  return !isIEOrEdge;
 }
 
 /**
