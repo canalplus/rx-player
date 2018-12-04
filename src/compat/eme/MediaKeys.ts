@@ -170,13 +170,13 @@ if (navigator.requestMediaKeySystemAccess) {
 
   type wrapUpdateFn =
     (license : ArrayBuffer, sessionId? : string) => Promise<void>;
-  type memUpdateFn =
-    (license : Uint8Array, sessionId : string) => void;
+  type IUpdateFunction =
+    (license : TypedArray|ArrayBuffer, sessionId : string) => void;
 
   // Wrap "MediaKeys.prototype.update" form an event based system to a
   // Promise based function.
   const wrapUpdate = (
-    memUpdate : memUpdateFn
+    memUpdate : IUpdateFunction
   ) : wrapUpdateFn => {
     return function(
       this : ICustomMediaKeySession,
@@ -185,7 +185,7 @@ if (navigator.requestMediaKeySystemAccess) {
     ) : Promise<void> {
       return new PPromise((resolve, reject) => {
         try {
-          memUpdate.call(this, license, sessionId);
+          memUpdate.call(this, license, sessionId || "");
           resolve();
         } catch (e) {
           reject(e);
@@ -264,7 +264,9 @@ if (navigator.requestMediaKeySystemAccess) {
             throw new Error("impossible to add a new key");
           }
           if (this._key.indexOf("clearkey") >= 0) {
-            const json = JSON.parse(bytesToStr(license));
+            const licenseTypedArray = license instanceof ArrayBuffer ?
+              new Uint8Array(license) : license;
+            const json = JSON.parse(bytesToStr(licenseTypedArray));
             const key = strToBytes(atob(json.keys[0].k));
             const kid = strToBytes(atob(json.keys[0].kid));
             this._vid.webkitAddKey(this._key, key, kid, sessionId);
