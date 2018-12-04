@@ -22,7 +22,7 @@ For a shortcut, here are some other quick links you might want to check:
   - [Player options](./api/player_options.md)
   - [loadVideo options](./api/loadVideo_options.md)
   - [Player Errors](./api/errors.md)
-  - [Player Events](./api/events.md)
+  - [Player Events](./api/player_events.md)
   - [Text track handling](./api/text_tracks.md)
   - [Import a minimal version of the Player](./api/minimal_player.md)
 
