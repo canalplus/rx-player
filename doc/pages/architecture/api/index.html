@@ -44,7 +44,7 @@ a class with methods. Here most modules are functions which send events.</p>
 given moment (for example, the current bitrate), which internally is only
 sent as an event by some module.
 It is thus the role of the API to store that information when it receives
-this event to then communicating it back to the user.</p>
+this event to then communicate it back to the user.</p>
 </li>
 </ul>
 <p>A huge part of what is defined in that file is actually the entire API, as
@@ -55,11 +55,11 @@ to see those state mutations in a single file allows us to better think about
 how it all works.</p>
 <p>Still, we did some efforts to reduce the size of that file. For example, some
 long argument-parsing code has been moved out of this file, into
-<code>core/api/option_parsers</code>. We might find other way to reduce that size in the
-feature, but that&#x2019;s not a main concern for now.</p>
+<code>core/api/option_parsers</code>. We might find other ways to reduce that size in the
+future, but that&#x2019;s not a main concern for now.</p>
 <p><a name="chapter-Subparts"></a></p>
 <h2>Subparts</h2>
-<p>To facilitate those actions, the API rely on multiple building blocks:</p>
+<p>To facilitate those actions, the API relies on multiple building blocks:</p>
 <ul>
 <li>
 <p><strong>the Clock</strong></p>
