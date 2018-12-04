@@ -139,7 +139,7 @@ export default function(
     },
 
     parser(
-      { response, url: reqURL } : IManifestParserArguments<Document|string>
+      { response, url: reqURL } : IManifestParserArguments<Document|string, string>
     ) : IManifestParserObservable {
       const url = response.url == null ? reqURL : response.url;
       const data = typeof response.responseData === "string" ?

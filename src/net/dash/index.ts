@@ -19,7 +19,16 @@
  * It always should be imported through the `features` object.
  */
 
-import { of as observableOf } from "rxjs";
+import {
+  combineLatest as observableCombineLatest,
+  Observable,
+  of as observableOf,
+} from "rxjs";
+import {
+  filter,
+  map,
+  mergeMap,
+} from "rxjs/operators";
 import features from "../../features";
 import {
   getMDHDTimescale,
@@ -29,7 +38,9 @@ import {
   getSegmentsFromCues,
   getTimeCodeScale,
 } from "../../parsers/containers/matroska";
-import dashManifestParser from "../../parsers/manifest/dash";
+import dashManifestParser, {
+  IMPDParserResponse,
+} from "../../parsers/manifest/dash";
 import request from "../../utils/request";
 import generateManifestLoader from "../utils/manifest_loader";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
@@ -60,6 +71,22 @@ interface IDASHOptions {
 }
 
 /**
+ * Request external "xlink" ressource from a MPD.
+ * @param {string} xlinkURL
+ * @returns {Observable}
+ */
+function requestXLink(xlinkURL : string) : Observable<string> {
+  return request({
+    url: xlinkURL,
+    responseType: "text",
+    ignoreProgressEvents: true,
+  }).pipe(
+    filter((e) => e.type === "response"),
+    map((e) => e.value.responseData)
+  );
+}
+
+/**
  * Returns pipelines used for DASH streaming.
  * @param {Object} options
  * implementation. Used for each generated http request.
@@ -81,13 +108,32 @@ export default function(
     },
 
     parser(
-      { response, url: reqURL } : IManifestParserArguments<Document|string>
+      { response, url: loaderURL, scheduleRequest } :
+      IManifestParserArguments<Document|string, string>
     ) : IManifestParserObservable {
-      const url = response.url == null ? reqURL : response.url;
+      const url = response.url == null ? loaderURL : response.url;
       const data = typeof response.responseData === "string" ?
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
-      return observableOf({ manifest: dashManifestParser(data, url), url });
+      const parsedManifest = dashManifestParser(data, url);
+
+      function loadExternalRessources(
+        parserResponse : IMPDParserResponse
+      ) : IManifestParserObservable {
+        if (parserResponse.type === "done") {
+          return observableOf({ manifest: parserResponse.value, url });
+        }
+
+        const { ressources, continue: continueParsing } = parserResponse.value;
+        const externalXlinks$ = ressources.map(ressourceURL =>
+          scheduleRequest(() => requestXLink(ressourceURL))
+        );
+        return observableCombineLatest(externalXlinks$)
+          .pipe(mergeMap(loadedRessources =>
+            loadExternalRessources(continueParsing(loadedRessources))
+          ));
+      }
+      return loadExternalRessources(parsedManifest);
     },
   };
 
