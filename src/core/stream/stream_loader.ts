@@ -144,7 +144,7 @@ export default function StreamLoader({
     createNativeSourceBuffersForPeriod(sourceBufferManager, initialPeriod);
 
     const { seek$, load$ } =
-      seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
+      seekAndLoadOnMediaEvents(clock$, mediaElement, initialTime, autoPlay);
 
     const bufferClock$ = createBufferClock(manifest$, clock$, seek$, speed$, initialTime);
 
@@ -199,6 +199,9 @@ export default function StreamLoader({
         if (evt === "autoplay-blocked") {
           const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
           return observableOf(EVENTS.warning(error), EVENTS.loaded());
+        } else if (evt === "not-loaded-metadata") {
+          const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA", null, false);
+          return observableOf(EVENTS.warning(error));
         }
         log.debug("Stream: Stream is loaded.");
         return observableOf(EVENTS.loaded());

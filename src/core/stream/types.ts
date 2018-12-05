@@ -39,6 +39,7 @@ export interface IStreamClockTick {
     reason : "seeking" | "not-ready" | "buffering";
     timestamp : number;
   } | null;
+  seeking : boolean;
 }
 
 // The manifest has been downloaded and parsed for the first time

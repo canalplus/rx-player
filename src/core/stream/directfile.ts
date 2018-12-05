@@ -137,10 +137,8 @@ export default function StreamDirectFile({
     getDirectFileInitialTime(mediaElement, startAt);
   log.debug("Stream: Initial time calculated:", initialTime);
 
-  const {
-    seek$,
-    load$,
-  } = seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
+  const { seek$, load$ } =
+    seekAndLoadOnMediaEvents(clock$, mediaElement, initialTime, autoPlay);
 
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
@@ -168,6 +166,9 @@ export default function StreamDirectFile({
       if (evt === "autoplay-blocked") {
         const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
         return observableOf(EVENTS.warning(error), EVENTS.loaded());
+      } else if (evt === "not-loaded-metadata") {
+        const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA", null, false);
+        return observableOf(EVENTS.warning(error));
       }
       return observableOf(EVENTS.loaded());
     }));
