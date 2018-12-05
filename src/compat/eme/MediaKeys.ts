@@ -168,16 +168,14 @@ if (navigator.requestMediaKeySystemAccess) {
     );
 } else {
 
-  type wrapUpdateFn =
+  type IWrappedUpdateFunction =
     (license : ArrayBuffer, sessionId? : string) => Promise<void>;
   type IUpdateFunction =
     (license : TypedArray|ArrayBuffer, sessionId : string) => void;
 
   // Wrap "MediaKeys.prototype.update" form an event based system to a
   // Promise based function.
-  const wrapUpdate = (
-    memUpdate : IUpdateFunction
-  ) : wrapUpdateFn => {
+  const wrapUpdate = (memUpdate : IUpdateFunction) : IWrappedUpdateFunction => {
     return function(
       this : ICustomMediaKeySession,
       license : ArrayBuffer,
