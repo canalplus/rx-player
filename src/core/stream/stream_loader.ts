@@ -200,7 +200,7 @@ export default function StreamLoader({
           const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
           return observableOf(EVENTS.warning(error), EVENTS.loaded());
         } else if (evt === "not-loaded-metadata") {
-          const error = new MediaError("MEDIA_ERR_NON_LOADED_METADATA", null, false);
+          const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA", null, false);
           return observableOf(EVENTS.warning(error));
         }
         log.debug("Stream: Stream is loaded.");

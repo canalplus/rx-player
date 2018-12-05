@@ -21,7 +21,7 @@ const PlayPauseButton = ({
   isContentLoaded,
   hasEnded,
 }) => {
-  const disabled = !isContentLoaded;
+  const disabled = !isContentLoaded && !cannotLoadMetadata;
   const displayPause = !isPaused && isContentLoaded &&
     !hasEnded;
 
