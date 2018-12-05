@@ -15,6 +15,7 @@ import withModulesState from "../lib/withModulesState.jsx";
  * @returns {Object}
  */
 const PlayPauseButton = ({
+  cannotLoadMetadata,
   className = "",
   player,
   isPaused,
@@ -44,6 +45,7 @@ const PlayPauseButton = ({
 
 export default withModulesState({
   player: {
+    cannotLoadMetadata: "cannotLoadMetadata",
     isPaused: "isPaused",
     isContentLoaded: "isContentLoaded",
     hasEnded: "hasEnded",

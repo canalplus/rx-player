@@ -72,6 +72,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
     takeUntil($destroy)
   ).subscribe((arg) => {
     const stateUpdates = {
+      cannotLoadMetadata: false,
       hasEnded: arg === "ENDED",
       hasCurrentContent: !["STOPPED", "LOADING"].includes(arg),
       isContentLoaded: !["STOPPED", "LOADING", "RELOADING"].includes(arg),
@@ -139,6 +140,14 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         availableVideoBitrates: player.getAvailableVideoBitrates(),
       });
     });
+
+  fromPlayerEvent("warning").pipe(
+    takeUntil($destroy)
+  ).subscribe(warning => {
+    if (warning && warning.code === "MEDIA_ERR_NOT_LOADED_METADATA") {
+      state.set({ cannotLoadMetadata: true });
+    }
+  });
 };
 
 export {
