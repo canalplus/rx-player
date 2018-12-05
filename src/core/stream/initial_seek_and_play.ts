@@ -38,7 +38,11 @@ import { onLoadedMetadata$ } from "../../compat/events";
 import log from "../../log";
 import { IStreamClockTick } from "./types";
 
-type ILoadEvents = "not-loaded-metadata"|"autoplay-blocked"|"autoplay"|"loaded";
+type ILoadEvents =
+  "not-loaded-metadata" | // metadata are not loaded. Manual action required
+  "autoplay-blocked" | // loaded but autoplay is blocked by the browser
+  "autoplay" | // loaded and autoplayed succesfully
+  "loaded"; // loaded without autoplay enabled
 
 /**
  * Emit once a "can-play" message as soon as the clock$ anounce that the content
