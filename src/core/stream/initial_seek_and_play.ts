@@ -17,7 +17,6 @@
 import {
   concat as observableConcat,
   Observable,
-  Observer,
   of as observableOf,
   ReplaySubject,
 } from "rxjs";
@@ -42,65 +41,38 @@ import { IStreamClockTick } from "./types";
 type ILoadEvents = "not-loaded-metadata"|"autoplay-blocked"|"autoplay"|"loaded";
 
 /**
- * On Subscription, set the initial time given on the media element.
- * Emit when done.
- * @param {HMTLMediaElement} mediaElement
- * @param {number|Function} startTime - Initial starting position. As seconds
- * or as a function returning seconds.
- * @returns {Observable}
- */
-function doInitialSeek(
-  mediaElement : HTMLMediaElement,
-  startTime : number|(() => number)
-) : Observable<void> {
-  return Observable.create((obs: Observer<void>) => {
-    log.info("Stream: Set initial time", startTime);
-    mediaElement.currentTime = typeof startTime === "function" ?
-      startTime() : startTime;
-    obs.next(undefined);
-    obs.complete();
-  });
-}
-
-/**
- * Emit once a "canplay" message as soon as the clock$ anounce that the content
- * can begin to be played. Warn about not loaded metadata by emitting a
- * "not-loaded-metadata" message.
+ * Emit once a "can-play" message as soon as the clock$ anounce that the content
+ * can begin to be played.
+ *
+ * Warn you if the metadata is not yet loaded metadata by emitting a
+ * "not-loaded-metadata" message first.
  * @param {Observable} clock$
  * @returns {Observable}
  */
 function canPlay(
   clock$ : Observable<IStreamClockTick>,
   mediaElement : HTMLMediaElement
-) : Observable<"canplay"|"not-loaded-metadata"> {
-  if (shouldValidateMetadata()) {
-    if (mediaElement.duration === 0) {
-      return observableConcat(
-        observableOf("not-loaded-metadata" as "not-loaded-metadata"),
-        clock$.pipe(
-          filter((tick) => {
-            const { seeking, stalled, readyState, currentRange } = tick;
-            return !seeking &&
-              stalled == null &&
-              (readyState === 4 || readyState === 3 && currentRange != null) &&
-              mediaElement.duration > 0;
-          }),
-          take(1),
-          mapTo("canplay" as "canplay")
-        )
-      );
-    }
-  }
-  return clock$.pipe(
+) : Observable<"can-play"|"not-loaded-metadata"> {
+  const isLoaded$ = clock$.pipe(
     filter((tick) => {
       const { seeking, stalled, readyState, currentRange } = tick;
       return !seeking &&
         stalled == null &&
-        (readyState === 4 || readyState === 3 && currentRange != null);
+        (readyState === 4 || readyState === 3 && currentRange != null) &&
+        !shouldValidateMetadata() || mediaElement.duration > 0;
     }),
     take(1),
-    mapTo("canplay" as "canplay")
+    mapTo("can-play" as "can-play")
   );
+
+  if (shouldValidateMetadata() && mediaElement.duration === 0) {
+    return observableConcat(
+      observableOf("not-loaded-metadata" as "not-loaded-metadata"),
+      isLoaded$
+    );
+  }
+
+  return isLoaded$;
 }
 
 /**
@@ -148,9 +120,14 @@ export default function seekAndLoadOnMediaEvents(
   mediaElement : HTMLMediaElement,
   startTime : number|(() => number),
   mustAutoPlay : boolean
-) : { seek$ : Observable<void>; load$ : Observable<ILoadEvents> } {
+) : { seek$ : Observable<unknown>; load$ : Observable<ILoadEvents> } {
   const seek$ = onLoadedMetadata$(mediaElement).pipe(
-    mergeMap(() => doInitialSeek(mediaElement, startTime)),
+    tap(() => {
+      log.info("Stream: Set initial time", startTime);
+      mediaElement.currentTime = typeof startTime === "function" ?
+        startTime() : startTime;
+    }),
+
     // equivalent to a sane shareReplay:
     // https://github.com/ReactiveX/rxjs/issues/3336
     // XXX TODO Replace it when that issue is resolved
@@ -163,9 +140,9 @@ export default function seekAndLoadOnMediaEvents(
       return canPlay(clock$, mediaElement).pipe(
         tap(() => log.info("Stream: Can begin to play content")),
         mergeMap((evt) => {
-          if (evt === "canplay") {
+          if (evt === "can-play") {
             if (!mustAutoPlay) {
-              return observableOf("loaded");
+              return observableOf("loaded" as "loaded");
             }
             return autoPlay$(mediaElement);
           }

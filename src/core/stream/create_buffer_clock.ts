@@ -42,7 +42,7 @@ import { IStreamClockTick } from "./types";
 export default function createBufferClock(
   manifest$ : BehaviorSubject<Manifest>,
   streamClock$ : Observable<IStreamClockTick>,
-  initialSeek$ : Observable<void>,
+  initialSeek$ : Observable<unknown>,
   speed$ : Observable<number>,
   startTime : number
 ) : Observable<IPeriodBufferManagerClockTick> {
