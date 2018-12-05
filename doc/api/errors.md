@@ -162,6 +162,14 @@ A MediaError can have the following codes (``code`` property):
     In those cases, we recommend to display a UI element on your page inviting
     the final user to manually play the content.
 
+  - ``"MEDIA_ERR_NOT_LOADED_METADATA"``: The current browser falsely announce
+    having loaded the content's metadata.
+    In that case, we cannot switch to the ``LOADED`` state directly (we will
+    be blocked in either a ``LOADING`` or a ``RELOADING`` state) and you're
+    encouraged to call ``play`` manually when you want to play the content.
+    This is a case only encountered in the Samsung browser (as found in
+    Android) when loading a content in "directfile" mode.
+
   - ``"MEDIA_ERR_DECODE"``: A pushed segment/media could not be decoded by the
     browser. This happens most-of-all with malformed segments.
 
