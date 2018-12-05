@@ -63,7 +63,7 @@ function canPlay(
       return !seeking &&
         stalled == null &&
         (readyState === 4 || readyState === 3 && currentRange != null) &&
-        !shouldValidateMetadata() || mediaElement.duration > 0;
+        (!shouldValidateMetadata() || mediaElement.duration > 0);
     }),
     take(1),
     mapTo("can-play" as "can-play")
