@@ -47,7 +47,7 @@ function getLastLiveTimeReference(adaptation: IParsedAdaptation) : number | unde
   const lastLiveTimeReferences: Array<number | undefined> = representations
     .map(representation => {
       const lastPosition = representation.index.getLastPosition();
-      return lastPosition != null ? lastPosition - 10 : undefined; // XXX TODO what?
+      return lastPosition != null ? lastPosition : undefined;
     });
 
   if (lastLiveTimeReferences.some((x) => x == null)) {
