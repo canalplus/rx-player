@@ -1270,10 +1270,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     }
 
     const playPromise = this.videoElement.play();
+    /* tslint:disable no-unbound-method */
     if (playPromise == null || typeof playPromise.catch !== "function") {
+    /* tslint:enable no-unbound-method */
       return PPromise.resolve();
     }
-
     return playPromise.catch(error => {
       if (error.name === "NotAllowedError") {
         const warning = new MediaError("MEDIA_ERR_PLAY_NOT_ALLOWED", error, false);
