@@ -57,6 +57,7 @@ export interface IAdaptationSetChildren {
   contentComponent? : IParsedContentComponent;
   contentProtections? : IParsedContentProtection[];
   roles? : IScheme[];
+  supplementalProperties? : IScheme[];
 
   segmentBase? : IParsedSegmentBase;
   segmentList? : IParsedSegmentList;
@@ -132,6 +133,14 @@ function parseAdaptationSetChildren(
             children.roles = [parseScheme(currentElement)];
           } else {
             children.roles.push(parseScheme(currentElement));
+          }
+          break;
+
+        case "SupplementalProperty":
+          if (children.supplementalProperties == null) {
+            children.supplementalProperties = [parseScheme(currentElement)];
+          } else {
+            children.supplementalProperties.push(parseScheme(currentElement));
           }
           break;
 
