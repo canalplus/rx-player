@@ -10,23 +10,12 @@ const karmaConf = {
   browserNoActivityTimeout: 5 * 60 * 1000,
 
   browsers: [
-    // "Chrome",
-    // "ChromeHeadless",
-    // "ChromeCanary",
     "ChromeHeadlessMemory",
   ],
 
   customLaunchers: {
     ChromeHeadlessMemory: {
       base: "ChromeHeadless",
-      flags: [
-        "--autoplay-policy=no-user-gesture-required",
-        "--enable-precise-memory-info",
-        "--js-flags=\"--expose-gc\"",
-      ],
-    },
-    ChromeMemory: {
-      base: "Chrome",
       flags: [
         "--autoplay-policy=no-user-gesture-required",
         "--enable-precise-memory-info",

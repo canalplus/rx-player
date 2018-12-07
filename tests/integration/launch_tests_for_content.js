@@ -1651,9 +1651,8 @@ export default function launchTestsForContent(
         if (audioAdaptations) {
           for (let i = 0; i < audioAdaptations.length; i++) {
             const adaptation = audioAdaptations[i];
-
+            let found = false;
             for (let j = 0; j < audioTracks.length; j++) {
-              let found = false;
               const audioTrack = audioTracks[j];
               if (audioTrack.id === adaptation.id) {
                 found = true;
@@ -1668,8 +1667,8 @@ export default function launchTestsForContent(
                   .equal(activeAudioTrack ?
                     activeAudioTrack.id === audioTrack.id : false);
               }
-              expect(found).to.equal(true);
             }
+            expect(found).to.equal(true);
           }
         }
       });
@@ -1700,9 +1699,8 @@ export default function launchTestsForContent(
         if (textAdaptations) {
           for (let i = 0; i < textAdaptations.length; i++) {
             const adaptation = textAdaptations[i];
-
+            let found = false;
             for (let j = 0; j < textTracks.length; j++) {
-              let found = false;
               const textTrack = textTracks[j];
               if (textTrack.id === adaptation.id) {
                 found = true;
@@ -1717,8 +1715,8 @@ export default function launchTestsForContent(
                   .equal(activeTextTrack ?
                     activeTextTrack.id === textTrack.id : false);
               }
-              expect(found).to.equal(true);
             }
+            expect(found).to.equal(true);
           }
         }
       });
@@ -1749,9 +1747,8 @@ export default function launchTestsForContent(
         if (videoAdaptations) {
           for (let i = 0; i < videoAdaptations.length; i++) {
             const adaptation = videoAdaptations[i];
-
+            let found = false;
             for (let j = 0; j < videoTracks.length; j++) {
-              let found = false;
               const videoTrack = videoTracks[j];
               if (videoTrack.id === adaptation.id) {
                 found = true;
@@ -1777,8 +1774,8 @@ export default function launchTestsForContent(
                   .equal(activeVideoTrack ?
                     activeVideoTrack.id === videoTrack.id : false);
               }
-              expect(found).to.equal(true);
             }
+            expect(found).to.equal(true);
           }
         }
       });
@@ -1830,7 +1827,10 @@ export default function launchTestsForContent(
         expect(buffered.start(0)).to.equal(minimumTime);
         endOfCurrentRange = buffered.end(0);
         expect(endOfCurrentRange).to.be
-          .at.least(minimumTime + 10 + 19.7);
+          .at.least(Math.min(
+            minimumTime + 10 + 19.7,
+            player.getMaximumPosition() - 0.1
+          ));
         expect(endOfCurrentRange).to.be
           .at.most(minimumTime + 10 + 20 + 10);
 
@@ -1843,7 +1843,10 @@ export default function launchTestsForContent(
           .at.most(minimumTime + 10 + 20 + 10 + 10);
         endOfCurrentRange = buffered.end(1);
         expect(endOfCurrentRange).to.be
-          .at.least(minimumTime + 10 + 20 + 10 +10 + 19.4);
+          .at.least(Math.min(
+            minimumTime + 10 + 20 + 10 +10 + 19.4,
+            player.getMaximumPosition() - 0.1
+          ));
         expect(endOfCurrentRange).to.be
           .at.most(minimumTime + 10 + 20 + 10 +10 + 20 + 10);
 
