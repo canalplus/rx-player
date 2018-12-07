@@ -136,6 +136,10 @@ export default function parsePeriods(
       }
     }
 
+    if (i > 0 && parsedPeriods[i - 1].duration === undefined) {
+      parsedPeriods[i - 1].duration = periodStart - parsedPeriods[i - 1].start;
+    }
+
     let periodDuration : number|undefined;
     if (period.attributes.duration != null) {
       periodDuration = period.attributes.duration;
