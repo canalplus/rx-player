@@ -203,6 +203,7 @@ describe("DASH live content (SegmentTimeline)", function () {
     const requestsDone = [
       fakeServer.requests[1].url,
       fakeServer.requests[2].url,
+      fakeServer.requests[3].url,
     ];
 
     expect(requestsDone)
