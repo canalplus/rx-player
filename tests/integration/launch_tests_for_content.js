@@ -129,7 +129,7 @@ export default function launchTestsForContent(
             (audioRepresentationInfos && audioRepresentationInfos.index.init) &&
             (videoRepresentationInfos && videoRepresentationInfos.index.init)
           ) {
-            expect(fakeServer.requests.length).to.equal(3);
+            expect(fakeServer.requests.length).to.be.at.least(3);
             const requestsDone = [
               fakeServer.requests[1].url,
               fakeServer.requests[2].url,
