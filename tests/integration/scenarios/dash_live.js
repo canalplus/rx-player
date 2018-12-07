@@ -22,7 +22,7 @@ describe("DASH live content (SegmentTimeline)", function () {
     fakeServer.restore();
   });
 
-  it("should fetch and parse the manifest", async function () {
+  it.only("should fetch and parse the manifest", async function () {
     mockRequests(fakeServer, URLs);
 
     player.loadVideo({
@@ -200,6 +200,8 @@ describe("DASH live content (SegmentTimeline)", function () {
     ).to.equal(50);
 
     expect(fakeServer.requests.length).to.be.at.least(3);
+    console.log("LOOOOOOOOOOOOOOK HERE");
+    console.log(JSON.stringify(fakeServer.requests));
     const requestsDone = [
       fakeServer.requests[1].url,
       fakeServer.requests[2].url,

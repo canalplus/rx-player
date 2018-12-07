@@ -3,7 +3,6 @@ dist: xenial
 
 language:
   - node_js
-  - java
 
 node_js:
   - "8"
@@ -35,8 +34,7 @@ build:
   - npm run build
 
 script:
-  - npm run check:travis
-  - sonar-scanner
+  - npm run test:integration:travis
 
 addons:
   sonarcloud:
