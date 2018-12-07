@@ -207,20 +207,6 @@ describe("initial idle state", () => {
       });
     });
 
-    describe("play/pause", () => {
-      it("should allow play by default", async () => {
-        await player.play();
-      });
-
-      it("should allow to pause and play by default", async () => {
-        await player.play();
-        expect(player.pause()).to.equal(undefined);
-        expect(player.getVideoElement().paused).to.equal(true);
-        await player.play();
-        expect(player.getVideoElement().paused).to.equal(false);
-      });
-    });
-
     describe("getPlaybackRate/setPlaybackRate", () => {
       it("should allow to change the playback rate through setPlaybackRate", () => {
         expect(player.setPlaybackRate(4)).to.equal(undefined);
