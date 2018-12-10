@@ -60,27 +60,38 @@ export interface IManifestLoaderArguments {
 
 // loader argument for every other pipelines
 export interface ISegmentLoaderArguments {
-  manifest : Manifest;
-  period : Period;
-  adaptation : Adaptation;
-  representation : Representation;
-  segment : ISegment;
+  manifest : Manifest; // Manifest related to this segment
+  period : Period; // Period related to this segment
+  adaptation : Adaptation; // Adaptation related to this segment
+  representation : Representation; // Representation related to this segment
+  segment : ISegment; // Segment we want to load
 }
 
 // -- response
 
 export interface ILoaderResponseValue<T> {
-  responseData : T;
-  duration? : number;
-  size? : number;
-  url? : string;
-  sendingTime? : number;
-  receivedTime? : number;
+  responseData : T; // The response for the request
+  duration? : number; // time in seconds it took to load this content
+  size? : number; // size in bytes of this content
+  url? : string; // real URL (post-redirection) used to download this content
+  sendingTime? : number; // time at which the request was sent (since the time
+                         // origin), in ms
+  receivedTime? : number; // time at which the request was received (since the
+                          // time origin), in ms
 }
 
+// A loader gave a response after a request
 export interface ILoaderResponse<T> {
   type : "response";
   value : ILoaderResponseValue<T>;
+}
+
+// A loader gave a response without doing any request
+interface ILoaderData<T> {
+  type : "data";
+  value : {
+    responseData: T;
+  };
 }
 
 // items emitted by net/ pipelines' loaders on xhr progress events
@@ -113,20 +124,23 @@ export type ILoaderObservable<T> = Observable<ILoaderEvent<T>>;
 
 // -- arguments
 
-export interface IManifestParserArguments<T> {
-  response : ILoaderResponseValue<T>;
-  url : string;
+export interface IManifestParserArguments<T, U> {
+  response : ILoaderResponseValue<T>; // Response from the loader
+  url : string; // URL originally requested
+
+  // allow the parser to load supplementary ressources (of type U)
+  scheduleRequest: (request: () => Observable<U>) => Observable<U>;
 }
 
 export interface ISegmentParserArguments<T> {
-  response : ILoaderResponseValue<T>;
+  response : ILoaderResponseValue<T>; // Response from the loader
   init? : ISegmentTimingInfos; // Infos about the initialization segment of the
                                // corresponding Representation
-  manifest : Manifest;
-  period : Period;
-  adaptation : Adaptation;
-  representation : Representation;
-  segment : ISegment;
+  manifest : Manifest; // Manifest related to this segment
+  period : Period; // Period related to this segment
+  adaptation : Adaptation; // Adaptation related to this segment
+  representation : Representation; // Representation related to this segment
+  segment : ISegment; // The segment we want to parse
 }
 
 // -- response
@@ -189,13 +203,13 @@ export type ImageParserObservable = Observable<{
                           // "real" wanted effective times.
 }>;
 
-interface ITransportManifestPipeline {
+export interface ITransportManifestPipeline {
   // TODO Remove resolver
   resolver?: (x : IManifestLoaderArguments) =>
     Observable<IManifestLoaderArguments>;
   loader: (x : IManifestLoaderArguments) =>
     ILoaderObservable<Document|string>;
-  parser: (x : IManifestParserArguments<Document|string>) =>
+  parser: (x : IManifestParserArguments<Document|string, string>) =>
     IManifestParserObservable;
 }
 
@@ -237,7 +251,7 @@ export type ITransportPipeline =
   ITransportSegmentPipeline;
 
 export interface ITransportPipelines {
-  manifest: ITransportManifestPipeline;
+  manifest : ITransportManifestPipeline;
   audio : ITransportAudioSegmentPipeline;
   video : ITransportVideoSegmentPipeline;
   text : ITransportTextSegmentPipeline;

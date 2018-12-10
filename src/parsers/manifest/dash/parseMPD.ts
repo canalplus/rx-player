@@ -23,8 +23,28 @@ import {
 import { IParsedManifest } from "../types";
 import checkManifestIDs from "../utils/check_manifest_ids";
 import getPresentationLiveGap from "./get_presentation_live_gap";
-import { createMPDIntermediateRepresentation } from "./node_parsers/MPD";
+import {
+  createMPDIntermediateRepresentation,
+  IMPDIntermediateRepresentation,
+} from "./node_parsers/MPD";
+import {
+  createPeriodIntermediateRepresentation,
+  IPeriodIntermediateRepresentation,
+} from "./node_parsers/Period";
 import parsePeriods from "./parsePeriods";
+
+export type IParserResponse<T> =
+  {
+    type : "needs-ressources";
+    value : {
+      ressources : string[];
+      continue : (loadedRessources : string[]) => IParserResponse<T>;
+    };
+  } |
+  {
+    type : "done";
+    value : T;
+  };
 
 /**
  * @param {Element} root - The MPD root.
@@ -34,12 +54,85 @@ import parsePeriods from "./parsePeriods";
 export default function parseMPD(
   root : Element,
   uri : string
-) : IParsedManifest {
+) : IParserResponse<IParsedManifest> {
   // Transform whole MPD into a parsed JS object representation
+  const mpdIR = createMPDIntermediateRepresentation(root);
+  return loadExternalRessourcesAndParse(mpdIR, uri);
+}
+
+/**
+ * Checks if xlinks needs to be loaded before actually parsing the manifest.
+ * @param {Object} mpdIR
+ * @param {string} uri
+ * @returns {Object}
+ */
+function loadExternalRessourcesAndParse(
+  mpdIR : IMPDIntermediateRepresentation,
+  uri : string
+) : IParserResponse<IParsedManifest> {
+  const xlinksToLoad : Array<{ index : number; ressource : string }> = [];
+  for (let i = 0; i < mpdIR.children.periods.length; i++) {
+    const { xlinkHref, xlinkActuate } = mpdIR.children.periods[i].attributes;
+    if (xlinkHref != null && xlinkActuate === "onLoad") {
+      xlinksToLoad.push({ index: i, ressource: xlinkHref });
+    }
+  }
+
+  if (xlinksToLoad.length === 0) {
+    const parsedManifest = parseCompleteIntermediateRepresentation(mpdIR, uri);
+    return { type: "done", value: parsedManifest };
+  }
+
+  return {
+    type: "needs-ressources",
+    value: {
+      ressources: xlinksToLoad.map(({ ressource }) => ressource),
+      continue: function continueParsingMPD(loadedRessources : string[]) {
+        if (loadedRessources.length !== xlinksToLoad.length) {
+          throw new Error("DASH parser: wrong number of loaded ressources.");
+        }
+
+        // Note: It is important to go from the last index to the first index in
+        // the resulting array, as we will potentially add elements to the array
+        for (let i = loadedRessources.length - 1; i >= 0; i--) {
+          const index = xlinksToLoad[i].index;
+          const xlinkData = loadedRessources[i];
+          const wrappedData = "<root>" + xlinkData + "</root>";
+          const dataAsXML = new DOMParser().parseFromString(wrappedData, "text/xml");
+          if (!dataAsXML || dataAsXML.children.length === 0) {
+            throw new Error("DASH parser: Invalid external ressources");
+          }
+          const periods = dataAsXML.children[0].children;
+          const periodsIR : IPeriodIntermediateRepresentation[] = [];
+          for (let j = 0; j < periods.length; j++) {
+            if (periods[j].nodeType === Node.ELEMENT_NODE) {
+              periodsIR.push(createPeriodIntermediateRepresentation(periods[j]));
+            }
+          }
+
+          // replace original "xlinked" periods by the real deal
+          mpdIR.children.periods.splice(index, 1, ...periodsIR);
+        }
+        return loadExternalRessourcesAndParse(mpdIR, uri);
+      },
+    },
+  };
+}
+
+/**
+ * Parse the MPD intermediate representation into a regular Manifest.
+ * @param {Object} mpdIR
+ * @param {string} uri
+ * @returns {Object}
+ */
+function parseCompleteIntermediateRepresentation(
+  mpdIR : IMPDIntermediateRepresentation,
+  uri : string
+) : IParsedManifest {
   const {
     children: rootChildren,
     attributes: rootAttributes,
-  } = createMPDIntermediateRepresentation(root);
+  } = mpdIR;
 
   const baseURL = resolveURL(normalizeBaseURL(uri), rootChildren.baseURL);
 
@@ -48,6 +141,7 @@ export default function parseMPD(
     rootAttributes.type === "static" ||
     rootAttributes.availabilityStartTime == null
   ) ?  0 : rootAttributes.availabilityStartTime;
+
   const parsedPeriods = parsePeriods(rootChildren.periods, {
     availabilityStartTime,
     duration: rootAttributes.duration,
