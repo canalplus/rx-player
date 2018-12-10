@@ -200,12 +200,7 @@ describe("DASH live content (SegmentTimeline)", function () {
     ).to.equal(50);
 
     expect(fakeServer.requests.length).to.be.at.least(3);
-    const requestsDone = [
-      fakeServer.requests[1].url,
-      fakeServer.requests[2].url,
-      fakeServer.requests[3].url,
-    ];
-
+    const requestsDone = fakeServer.requests.map(r => r.url);
     expect(requestsDone)
       .to.include(videoRepresentationIndexInfos.init.mediaURL);
     expect(requestsDone)
