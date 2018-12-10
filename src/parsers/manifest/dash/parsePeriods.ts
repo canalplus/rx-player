@@ -29,6 +29,53 @@ export interface IManifestInfos {
 }
 
 /**
+ * Avoid periods to overlap.
+ *
+ * According to DASH guidelines, if a period has media duration longer than
+ * the distance between the start of this period and the start of the next period,
+ * use of start times implies that the client will start the playout of the next
+ * period at the time stated, rather than finishing the playout of the last period.
+ *
+ * Even if that case if defined when period last(s) segment(s) is/are a bit longer,
+ * it can be meaningful when two periods are overlapping. We will always shorten
+ * the first period, and even erase it if its duration is equal to zero.
+ *
+ * Example (Periods are numbered under their manifest order) :
+ *
+ * [ Period 1 ][ Period 2 ]       ------>  [ Period 1 ][ Period 3 ]
+ *             [ Period 3 ]
+ *
+ * [ Period 1 ][ Period 2 ]       ------>  [ Period 1 ][  2  ][ Period 3 ]
+ *                  [ Period 3 ]
+ *
+ * [ Period 1 ][ Period 2 ]       ------>  [  1  ][      Period 3     ]
+ *        [      Period 3     ]
+ *
+ * @param {Array.<Object>} parsedPeriods
+ * @return {Array.<Object>}
+ */
+function flattenOverlappingPeriods(parsedPeriods: IParsedPeriod[]): IParsedPeriod[] {
+  return parsedPeriods.reduce((periods: IParsedPeriod[], parsedPeriod) => {
+    for (let i = periods.length - 1; i >= 0; i--) {
+      const period = periods[i];
+      if (
+        (period != null && period.duration != null) &&
+        (period.start + period.duration) > parsedPeriod.start
+      ) {
+        log.warn("DASH: Updating overlapping Periods.", period, parsedPeriod);
+        period.duration = parsedPeriod.start - period.start;
+        period.end = parsedPeriod.start;
+        if (period.duration <= 0) {
+          periods.splice(i, 1);
+        }
+      }
+    }
+    periods.push(parsedPeriod);
+    return periods;
+  }, []);
+}
+
+/**
  * Process intermediate periods to create final parsed periods.
  * @param {Array.<Object>} periodsIR
  * @param {Object} manifestInfos
@@ -98,5 +145,5 @@ export default function parsePeriods(
     }
     parsedPeriods.push(parsedPeriod);
   }
-  return parsedPeriods;
+  return flattenOverlappingPeriods(parsedPeriods);
 }
