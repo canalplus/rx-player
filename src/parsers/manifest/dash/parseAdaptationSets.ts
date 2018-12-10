@@ -20,6 +20,7 @@ import { resolveURL } from "../../../utils/url";
 import {
   IParsedAdaptation,
   IParsedAdaptations,
+  IParsedRepresentation,
 } from "../types";
 import inferAdaptationType from "../utils/infer_adaptation_type";
 import {
@@ -31,10 +32,57 @@ import {
 } from "./node_parsers/AdaptationSet";
 import parseRepresentations from "./parseRepresentations";
 
+// Supplementary context about the current Period
 export interface IPeriodInfos {
-  isDynamic : boolean;
-  start : number;
-  baseURL? : string;
+  isDynamic : boolean; // Whether the Manifest can evolve with time
+  start : number; // Start time of the current period, in seconds
+  baseURL? : string; // Eventual URL from which every relative URL will be based
+                     // on
+}
+
+/**
+ * Contruct Adaptation ID from the informations we have.
+ * @param {Object} adaptation
+ * @param {Array.<Object>} representations
+ * @param {Object} infos
+ * @retunrs {string}
+ */
+function getAdaptationID(
+  adaptation : IAdaptationSetIntermediateRepresentation,
+  representations : IParsedRepresentation[],
+  infos : { isClosedCaption? : boolean; isAudioDescription? : boolean; type : string }
+) : string {
+  if (adaptation.attributes.id) {
+    return adaptation.attributes.id;
+  }
+
+  let idString = infos.type;
+  if (adaptation.attributes.language) {
+    idString += `-${adaptation.attributes.language}`;
+  }
+  if (infos.isClosedCaption) {
+    idString += "-cc";
+  }
+  if (infos.isAudioDescription) {
+    idString += "-ad";
+  }
+  if (adaptation.attributes.contentType) {
+    idString += `-${adaptation.attributes.contentType}`;
+  }
+  if (adaptation.attributes.codecs) {
+    idString += `-${adaptation.attributes.codecs}`;
+  }
+  if (adaptation.attributes.mimeType) {
+    idString += `-${adaptation.attributes.mimeType}`;
+  }
+  if (adaptation.attributes.frameRate) {
+    idString += `-${adaptation.attributes.frameRate}`;
+  }
+  if (idString.length === infos.type.length) {
+    idString += representations.length ?
+      ("-" + representations[0].id) : "-empty";
+  }
+  return "adaptation-" + idString;
 }
 
 /**
@@ -54,7 +102,6 @@ export default function parseAdaptationSets(
     }>((acc, adaptation) => {
       const adaptationChildren = adaptation.children;
       const parsedAdaptations = acc.adaptations;
-
       const representationsIR = adaptation.children.representations;
       const representations = parseRepresentations(representationsIR, adaptation, {
         isDynamic: periodInfos.isDynamic,
@@ -84,54 +131,13 @@ export default function parseAdaptationSets(
       if (type === "video" && videoMainAdaptation !== null && isMainAdaptation) {
         videoMainAdaptation.representations.push(...representations);
       } else {
-        let closedCaption : boolean|undefined;
-        let audioDescription : boolean|undefined;
-        if (
-          type === "text" &&
+        const isClosedCaption = type === "text" && adaptationChildren.accessibility &&
+          isHardOfHearing(adaptationChildren.accessibility) ? true : undefined;
+        const isAudioDescription = type === "audio" &&
           adaptationChildren.accessibility &&
-          isHardOfHearing(adaptationChildren.accessibility)
-        ) {
-          closedCaption = true;
-        }
-        if (
-          type === "audio" &&
-          adaptationChildren.accessibility &&
-          isVisuallyImpaired(adaptationChildren.accessibility)
-        ) {
-          audioDescription = true;
-        }
-        let adaptationID : string;
-        if (adaptation.attributes.id != null) {
-          adaptationID = adaptation.attributes.id;
-        } else {
-          let idString = type;
-          if (adaptation.attributes.language) {
-            idString += `-${adaptation.attributes.language}`;
-          }
-          if (closedCaption) {
-            idString += "-cc";
-          }
-          if (audioDescription) {
-            idString += "-ad";
-          }
-          if (adaptation.attributes.contentType) {
-            idString += `-${adaptation.attributes.contentType}`;
-          }
-          if (adaptation.attributes.codecs) {
-            idString += `-${adaptation.attributes.codecs}`;
-          }
-          if (adaptation.attributes.mimeType) {
-            idString += `-${adaptation.attributes.mimeType}`;
-          }
-          if (adaptation.attributes.frameRate) {
-            idString += `-${adaptation.attributes.frameRate}`;
-          }
-          if (idString.length === type.length) {
-            idString += representations.length ?
-              ("-" + representations[0].id) : "-empty";
-          }
-          adaptationID = "adaptation-" + idString;
-        }
+          isVisuallyImpaired(adaptationChildren.accessibility) ? true : undefined;
+        const adaptationID = getAdaptationID(adaptation, representations,
+          { isClosedCaption, isAudioDescription, type });
         const parsedAdaptationSet : IParsedAdaptation = {
           id: adaptationID,
           representations,
@@ -142,11 +148,11 @@ export default function parseAdaptationSets(
           parsedAdaptationSet.normalizedLanguage =
             normalizeLang(adaptation.attributes.language);
         }
-        if (closedCaption != null) {
-          parsedAdaptationSet.closedCaption = closedCaption;
+        if (isClosedCaption != null) {
+          parsedAdaptationSet.closedCaption = isClosedCaption;
         }
-        if (audioDescription != null) {
-          parsedAdaptationSet.audioDescription = audioDescription;
+        if (isAudioDescription != null) {
+          parsedAdaptationSet.audioDescription = isAudioDescription;
         }
 
         const parsedAdaptation = parsedAdaptations[type];
@@ -167,5 +173,5 @@ export default function parseAdaptationSets(
         adaptations: parsedAdaptations,
         videoMainAdaptation: acc.videoMainAdaptation,
       };
-    }, { videoMainAdaptation: null, adaptations: {} }).adaptations;
+    }, { adaptations: {}, videoMainAdaptation: null }).adaptations;
 }

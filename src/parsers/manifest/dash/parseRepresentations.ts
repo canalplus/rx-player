@@ -32,10 +32,12 @@ import {
   IRepresentationIntermediateRepresentation,
 } from "./node_parsers/Representation";
 
+// Supplementary context about the current AdaptationSet
 export interface IAdaptationInfos {
-  isDynamic : boolean;
-  start : number;
-  baseURL? : string;
+  isDynamic : boolean; // Whether the Manifest can evolve with time
+  start : number; // Start time of the current period, in seconds
+  baseURL? : string; // Eventual URL from which every relative URL will be based
+                     // on
 }
 
 // base context given to the various indexes
@@ -45,7 +47,7 @@ interface IIndexContext {
   representationBaseURL : string; // Base URL for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
-  isDynamic : boolean;
+  isDynamic : boolean; // Whether the Manifest can evolve with time
 }
 
 /**
