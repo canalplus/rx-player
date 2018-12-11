@@ -15,6 +15,8 @@
  */
 
 import arrayFind from "array-find";
+import log from "../../../log";
+import arrayIncludes from "../../../utils/array-includes";
 import { normalize as normalizeLang } from "../../../utils/languages";
 import { resolveURL } from "../../../utils/url";
 import {
@@ -38,6 +40,16 @@ export interface IPeriodInfos {
   start : number; // Start time of the current period, in seconds
   baseURL? : string; // Eventual URL from which every relative URL will be based
                      // on
+}
+
+// Supplementary informations for "switchable" AdaptationSets of the same Period
+interface IAdaptationSwitchingInfos  {
+  [originalID : string] : { // ID as announced in the MPD
+    newID : string; // ID in the currently parsed Manifest
+    adaptationSetSwitchingIDs : string[]; // IDs (as announced in the MPD),
+                                          // this AdaptationSet can be
+                                          // seamlessly switched to
+  };
 }
 
 /**
@@ -86,6 +98,32 @@ function getAdaptationID(
 }
 
 /**
+ * Returns a list of ID this adaptation can be seamlessly switched to
+ * @param {Object} adaptation
+ * @returns {Array.<string>}
+ */
+function getAdaptationSetSwitchingIDs(
+  adaptation : IAdaptationSetIntermediateRepresentation
+) : string[] {
+  if (adaptation.children.supplementalProperties != null) {
+    const { supplementalProperties } = adaptation.children;
+    for (let j = 0; j < supplementalProperties.length; j++) {
+      const supplementalProperty = supplementalProperties[j];
+      if (
+        supplementalProperty.schemeIdUri ===
+        "urn:mpeg:dash:adaptation-set-switching:2016" &&
+        supplementalProperty.value != null
+      ) {
+        return supplementalProperty.value.split(",")
+          .map(id => id.trim())
+          .filter(id => id);
+      }
+    }
+  }
+  return [];
+}
+
+/**
  * Process intermediate periods to create final parsed periods.
  * @param {Array.<Object>} periodsIR
  * @param {Object} manifestInfos
@@ -98,6 +136,7 @@ export default function parseAdaptationSets(
   return adaptationsIR
     .reduce<{
       adaptations : IParsedAdaptations;
+      adaptationSwitchingInfos : IAdaptationSwitchingInfos;
       videoMainAdaptation : IParsedAdaptation|null;
     }>((acc, adaptation) => {
       const adaptationChildren = adaptation.children;
@@ -123,6 +162,12 @@ export default function parseAdaptationSets(
         representationCodecs,
         adaptationChildren.roles || null
       );
+
+      const originalID = adaptation.attributes.id;
+      let newID : string;
+      const adaptationSetSwitchingIDs = getAdaptationSetSwitchingIDs(adaptation);
+
+      // TODO remove "main" video track management
       const { roles } = adaptationChildren;
       const isMainAdaptation = !!roles &&
         !!arrayFind(roles, (role) => role.value === "main") &&
@@ -130,13 +175,14 @@ export default function parseAdaptationSets(
       const videoMainAdaptation = acc.videoMainAdaptation;
       if (type === "video" && videoMainAdaptation !== null && isMainAdaptation) {
         videoMainAdaptation.representations.push(...representations);
+        newID = videoMainAdaptation.id;
       } else {
         const isClosedCaption = type === "text" && adaptationChildren.accessibility &&
           isHardOfHearing(adaptationChildren.accessibility) ? true : undefined;
         const isAudioDescription = type === "audio" &&
           adaptationChildren.accessibility &&
           isVisuallyImpaired(adaptationChildren.accessibility) ? true : undefined;
-        const adaptationID = getAdaptationID(adaptation, representations,
+        const adaptationID = newID = getAdaptationID(adaptation, representations,
           { isClosedCaption, isAudioDescription, type });
         const parsedAdaptationSet : IParsedAdaptation = {
           id: adaptationID,
@@ -155,23 +201,76 @@ export default function parseAdaptationSets(
           parsedAdaptationSet.audioDescription = isAudioDescription;
         }
 
-        const parsedAdaptation = parsedAdaptations[type];
-        if (!parsedAdaptation) {
+        const adaptationsOfTheSameType = parsedAdaptations[type];
+        if (!adaptationsOfTheSameType) {
           parsedAdaptations[type] = [parsedAdaptationSet];
           if (isMainAdaptation && type === "video") {
             acc.videoMainAdaptation = parsedAdaptationSet;
           }
-        } else if (isMainAdaptation && type === "video") {
-          // put "main" adaptation as the first
-          parsedAdaptation.unshift(parsedAdaptationSet);
-          acc.videoMainAdaptation = parsedAdaptationSet;
         } else {
-          parsedAdaptation.push(parsedAdaptationSet);
+          let mergedInto : IParsedAdaptation|null = null;
+
+          // look if we have to merge this into another Adaptation
+          for (let k = 0; k < adaptationSetSwitchingIDs.length; k++) {
+            const id : string = adaptationSetSwitchingIDs[k];
+            const switchingInfos = acc.adaptationSwitchingInfos[id];
+            if (
+              switchingInfos != null && switchingInfos.newID !== newID &&
+              arrayIncludes(switchingInfos.adaptationSetSwitchingIDs, originalID)
+            ) {
+              const adaptationToMergeInto =
+                arrayFind(adaptationsOfTheSameType, (a) => a.id === id);
+              if (
+                adaptationToMergeInto != null &&
+                adaptationToMergeInto.audioDescription ===
+                  parsedAdaptationSet.audioDescription &&
+                adaptationToMergeInto.closedCaption ===
+                  parsedAdaptationSet.closedCaption &&
+                adaptationToMergeInto.language === parsedAdaptationSet.language
+              ) {
+                log.info("DASH Parser: merging \"switchable\" AdaptationSets",
+                  originalID, id);
+                adaptationToMergeInto.representations
+                  .push(...parsedAdaptationSet.representations);
+                mergedInto = adaptationToMergeInto;
+              }
+            }
+          }
+
+          if (isMainAdaptation && type === "video") {
+            if (mergedInto == null) {
+              // put "main" adaptation as the first
+              adaptationsOfTheSameType.unshift(parsedAdaptationSet);
+              acc.videoMainAdaptation = parsedAdaptationSet;
+            } else {
+              // put the resulting adaptation first instead
+              const indexOf = adaptationsOfTheSameType.indexOf(mergedInto);
+              if (indexOf < 0) {
+                adaptationsOfTheSameType.unshift(parsedAdaptationSet);
+              } else if (indexOf !== 0) {
+                adaptationsOfTheSameType.splice(indexOf, 1);
+                adaptationsOfTheSameType.unshift(mergedInto);
+              }
+              acc.videoMainAdaptation = mergedInto;
+            }
+          } else if (mergedInto === null) {
+            adaptationsOfTheSameType.push(parsedAdaptationSet);
+          }
         }
       }
+
+      if (originalID != null && acc.adaptationSwitchingInfos[originalID] == null) {
+        acc.adaptationSwitchingInfos[originalID] = { newID, adaptationSetSwitchingIDs };
+      }
+
       return {
         adaptations: parsedAdaptations,
+        adaptationSwitchingInfos: acc.adaptationSwitchingInfos,
         videoMainAdaptation: acc.videoMainAdaptation,
       };
-    }, { adaptations: {}, videoMainAdaptation: null }).adaptations;
+    }, {
+      adaptations: {},
+      videoMainAdaptation: null,
+      adaptationSwitchingInfos: {},
+    }).adaptations;
 }
