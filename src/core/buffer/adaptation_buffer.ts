@@ -26,6 +26,7 @@
 
 import objectAssign from "object-assign";
 import {
+  BehaviorSubject,
   concat as observableConcat,
   defer as observableDefer,
   merge as observableMerge,
@@ -110,12 +111,15 @@ export default function AdaptationBuffer<T>(
   segmentBookkeeper : SegmentBookkeeper,
   segmentFetcher : IPrioritizedSegmentFetcher<T>,
   wantedBufferAhead$ : Observable<number>,
-  content : { manifest : Manifest; period : Period; adaptation : Adaptation },
+  content : {
+    manifest$ : BehaviorSubject<Manifest>;
+    period : Period; adaptation : Adaptation;
+  },
   abrManager : ABRManager,
   options : { manualBitrateSwitchingMode : "seamless"|"direct" }
 ) : Observable<IAdaptationBufferEvent<T>> {
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
-  const { manifest, period, adaptation } = content;
+  const { manifest$, period, adaptation } = content;
 
   // Keep track of the currently considered representation to add informations
   // to the ABR clock.
@@ -203,7 +207,7 @@ export default function AdaptationBuffer<T>(
           representation,
           adaptation,
           period,
-          manifest,
+          manifest$,
         },
         queuedSourceBuffer,
         segmentBookkeeper,
@@ -218,6 +222,7 @@ export default function AdaptationBuffer<T>(
           // exist
           // (In case of smooth streaming, 412 errors are requests that are
           // performed to early).
+          const manifest = manifest$.getValue();
           if (
             !manifest.isLive ||
             error.type !== ErrorTypes.NETWORK_ERROR ||

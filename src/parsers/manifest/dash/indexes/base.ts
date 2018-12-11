@@ -90,7 +90,7 @@ export interface IBaseIndexIndexArgument {
 export interface IBaseIndexContextArgument {
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
-  representationURL : string; // Base URL for the Representation concerned
+  representationBaseURL : string; // Base URL for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
 }
@@ -146,7 +146,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   constructor(index : IBaseIndexIndexArgument, context : IBaseIndexContextArgument) {
     const {
       periodStart,
-      representationURL,
+      representationBaseURL,
       representationId,
       representationBitrate,
     } = context;
@@ -159,7 +159,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
     this._index = {
       mediaURL: createIndexURL(
-        representationURL,
+        representationBaseURL,
         index.media,
         representationId,
         representationBitrate
@@ -172,7 +172,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
       startNumber: index.startNumber,
       initialization: index.initialization && {
         mediaURL: createIndexURL(
-          representationURL,
+          representationBaseURL,
           index.initialization.media,
           representationId,
           representationBitrate

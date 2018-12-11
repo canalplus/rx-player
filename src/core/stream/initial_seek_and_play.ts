@@ -15,55 +15,91 @@
  */
 
 import {
+  concat as observableConcat,
   Observable,
   of as observableOf,
   ReplaySubject,
 } from "rxjs";
 import {
   catchError,
+  filter,
   mapTo,
   mergeMap,
   multicast,
   refCount,
+  take,
   tap,
 } from "rxjs/operators";
 import {
-  canPlay,
-  hasLoadedMetadata,
   play$,
+  shouldValidateMetadata
 } from "../../compat";
+import { onLoadedMetadata$ } from "../../compat/events";
 import log from "../../log";
+import { IStreamClockTick } from "./types";
+
+type ILoadEvents =
+  "not-loaded-metadata" | // metadata are not loaded. Manual action required
+  "autoplay-blocked" | // loaded but autoplay is blocked by the browser
+  "autoplay" | // loaded and autoplayed succesfully
+  "loaded"; // loaded without autoplay enabled
 
 /**
- * Set the initial time given as soon as possible on the media element.
- * Emit when done.
- * @param {HMTLMediaElement} mediaElement
- * @param {number|Function} startTime - Initial starting position. As seconds
- * or as a function returning seconds.
+ * Emit once a "can-play" message as soon as the clock$ anounce that the content
+ * can begin to be played.
+ *
+ * Warn you if the metadata is not yet loaded metadata by emitting a
+ * "not-loaded-metadata" message first.
+ * @param {Observable} clock$
  * @returns {Observable}
  */
-function doInitialSeek(
-  mediaElement : HTMLMediaElement,
-  startTime : number|(() => number)
-) : Observable<void> {
-  return hasLoadedMetadata(mediaElement)
-    .pipe(
-      tap(() => {
-        log.info("Stream: Set initial time", startTime);
+function canPlay(
+  clock$ : Observable<IStreamClockTick>,
+  mediaElement : HTMLMediaElement
+) : Observable<"can-play"|"not-loaded-metadata"> {
+  const isLoaded$ = clock$.pipe(
+    filter((tick) => {
+      const { seeking, stalled, readyState, currentRange } = tick;
+      return !seeking &&
+        stalled == null &&
+        (readyState === 4 || readyState === 3 && currentRange != null) &&
+        (!shouldValidateMetadata() || mediaElement.duration > 0);
+    }),
+    take(1),
+    mapTo("can-play" as "can-play")
+  );
 
-        // reset playbackRate to 1 in case we were at 0 (from a stalled
-        // retry for instance)
-        mediaElement.playbackRate = 1;
-        mediaElement.currentTime = typeof startTime === "function" ?
-          startTime() : startTime;
-      }),
-
-      // equivalent to a sane shareReplay:
-      // https://github.com/ReactiveX/rxjs/issues/3336
-      // XXX TODO Replace it when that issue is resolved
-      multicast(() => new ReplaySubject(1)),
-      refCount()
+  if (shouldValidateMetadata() && mediaElement.duration === 0) {
+    return observableConcat(
+      observableOf("not-loaded-metadata" as "not-loaded-metadata"),
+      isLoaded$
     );
+  }
+
+  return isLoaded$;
+}
+
+/**
+ * Try to play content then handle autoplay errors.
+ * @param {HTMLMediaElement} - mediaElement
+ * @returns {Observable}
+ */
+function autoPlay$(
+  mediaElement: HTMLMediaElement
+): Observable<"autoplay"|"autoplay-blocked"> {
+  return play$(mediaElement).pipe(
+    mapTo("autoplay" as "autoplay"),
+    catchError((error) => {
+      if (error.name === "NotAllowedError") {
+        // auto-play was probably prevented.
+        log.warn("Stream: Media element can't play." +
+          " It may be due to browser auto-play policies.");
+        return observableOf("autoplay-blocked" as "autoplay-blocked");
+      } else {
+        throw error;
+      }
+    })
+  );
 }
 
 /**
@@ -84,36 +120,39 @@ function doInitialSeek(
  * @returns {object}
  */
 export default function seekAndLoadOnMediaEvents(
+  clock$ : Observable<IStreamClockTick>,
   mediaElement : HTMLMediaElement,
   startTime : number|(() => number),
   mustAutoPlay : boolean
-) : {
-  seek$ : Observable<void>;
-  load$ : Observable<"autoplay-blocked"|"autoplay"|"loaded">;
-} {
-  const seek$ = doInitialSeek(mediaElement, startTime);
+) : { seek$ : Observable<unknown>; load$ : Observable<ILoadEvents> } {
+  const seek$ = onLoadedMetadata$(mediaElement).pipe(
+    tap(() => {
+      log.info("Stream: Set initial time", startTime);
+      mediaElement.currentTime = typeof startTime === "function" ?
+        startTime() : startTime;
+    }),
 
-  const load$ = canPlay(mediaElement).pipe(
+    // equivalent to a sane shareReplay:
+    // https://github.com/ReactiveX/rxjs/issues/3336
+    // XXX TODO Replace it when that issue is resolved
+    multicast(() => new ReplaySubject(1)),
+    refCount()
+  );
 
-    tap(() => log.info("Stream: canplay event")),
-
+  const load$ = seek$.pipe(
     mergeMap(() => {
-      if (mustAutoPlay) {
-        return play$(mediaElement).pipe(
-          mapTo("autoplay" as "autoplay"),
-          catchError((error) => {
-            if (error.name === "NotAllowedError") {
-              // auto-play was probably prevented.
-              log.warn("Stream: Media element can't play." +
-                " It may be due to browser auto-play policies.");
-              return observableOf("autoplay-blocked" as "autoplay-blocked");
-            } else {
-              throw error;
+      return canPlay(clock$, mediaElement).pipe(
+        tap(() => log.info("Stream: Can begin to play content")),
+        mergeMap((evt) => {
+          if (evt === "can-play") {
+            if (!mustAutoPlay) {
+              return observableOf("loaded" as "loaded");
             }
-          })
-        );
-      }
-      return observableOf("loaded" as "loaded");
+            return autoPlay$(mediaElement);
+          }
+          return observableOf(evt);
+        })
+      );
     }),
 
     // equivalent to a sane shareReplay:

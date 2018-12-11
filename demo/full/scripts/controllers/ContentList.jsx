@@ -5,8 +5,25 @@ import TextInput from "../components/Input.jsx";
 import Select from "../components/Select.jsx";
 import contentsDatabase from "../contents.js";
 
+const MediaKeys_ =
+  window.MediaKeys ||
+  window.MozMediaKeys ||
+  window.WebKitMediaKeys ||
+  window.MSMediaKeys ||
+  null;
+
+const HAS_EME_APIs = (
+  typeof navigator.requestMediaKeySystemAccess === "function" ||
+  (
+    MediaKeys_ != null &&
+    MediaKeys_.prototype &&
+    typeof MediaKeys_.isTypeSupported === "function"
+  ) ||
+  typeof HTMLVideoElement.prototype.webkitGenerateKeyRequest === "function"
+);
+
+
 const IS_HTTPS = window.location.protocol.startsWith("https");
-const HAS_EME_APIs = typeof navigator.requestMediaKeySystemAccess === "function";
 const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile"];
 const DRM_TYPES = ["Widevine", "Playready", "Clearkey"];
 

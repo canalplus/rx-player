@@ -23,8 +23,12 @@
 <a name="overview"></a>
 ## Overview ####################################################################
 
-A manifest Object and its sub-parts are data structures returned by multiple
+A Manifest Object and its sub-parts are data structures returned by multiple
 APIs of the player.
+
+Its data represents the corresponding streaming protocol's
+[Manifest](../terms.md#manifest) equivalent (MPD for DASH, Manifest for
+Microsoft Smooth Streaming etc.).
 
 Basically, the structure of a Manifest file has the following hierarchy:
 ```
@@ -54,7 +58,8 @@ enough.
 <a name="manifest"></a>
 ## Structure of a Manifest Object ##############################################
 
-The Manifest Object represents the manifest file of the content loaded.
+The manifest Object represents the [Manifest file](../terms.md#manifest) of the
+content loaded.
 
 
 <a name="manifest-props"></a>
@@ -66,9 +71,9 @@ The manifest Object has the following properties.
 
 _type_: ``Array.<Period>``
 
-A single Manifest instance can contain multiple Periods, which are periods of
-time for which the list of available type of contents (audio tracks, subtitles,
-video tracks...) can be different.
+A single Manifest instance can contain multiple [Periods](../terms.md#period),
+which are periods of time for which the list of available type of contents
+(audio tracks, subtitles, video tracks...) can be different.
 
 Such example of Periods could be multiple Programs of a live contents, which can
 be each in different languages, for example.
@@ -111,7 +116,7 @@ _type_: ``Boolean``
 
 _type_: ``Array.<string>``
 
-The list of uris that can be used to refer to the manifest file.
+The list of uris that can be used to refer to the Manifest file.
 
 #### transport
 
@@ -125,13 +130,13 @@ or ``smooth``.
 <a name="period"></a>
 ## Structure of a Period Object ################################################
 
-A period is an object describing what to play during a certain time periods.
+A Period is an object describing what to play during a certain time periods.
 
-A manifest can have a single period, which means that the played content do not
+A Manifest can have a single Period, which means that the played content do not
 change its characteristics (same languages, same bitrates etc.) or multiple
 ones.
 
-A good example of a content with multiple periods would be a live channel
+A good example of a content with multiple Periods would be a live channel
 broadcasting multiple foreign films. Each film, being in a different language,
 will need to be part of a new Period.
 
@@ -143,8 +148,8 @@ will need to be part of a new Period.
 
 _type_: ``string``
 
-The id of an adaptation should be a string unique to that Period. It serves
-identifications purpose, when updating the manifest for example.
+This id should be a string unique to that Period. It serves identifications
+purpose, when updating the Manifest for example.
 
 #### start
 
@@ -159,33 +164,33 @@ _type_: ``Number|undefined``
 End time at which the Period ends in the whole content, in seconds.
 
 If not set or set to undefined, it means that the end is unknown, in which case
-it is the current last content of the current manifest.
+it is the current last content of the current Manifest.
 
 #### adaptations
 
 _type_: ``Object``
 
-The adaptations (tracks if you want) for the current content, per-type
-(audio/video/text/image).
+The [Adaptations](../terms.md#adaptation) (tracks if you want) for the current
+content, per-type (audio/video/text/image).
 
 See [the Adaptation chapter](#adaptation) for more info about an Adaptation's
 structure.
 
-The adaptation object _can_ contain any of the following keys:
-  - audio (``Array.<Adaptation>``): The audio adaptation(s) available.
-  - video (``Array.<Adaptation>``): The video adaptation(s) available.
-  - text (``Array.<Adaptation>``): The text adaptation(s) available.
-  - image (``Array.<Adaptation>``): The image adaptation(s) available.
+The Adaptation object _can_ contain any of the following keys:
+  - audio (``Array.<Adaptation>``): The audio Adaptation(s) available.
+  - video (``Array.<Adaptation>``): The video Adaptation(s) available.
+  - text (``Array.<Adaptation>``): The text Adaptation(s) available.
+  - image (``Array.<Adaptation>``): The image Adaptation(s) available.
 
 
 
 <a name="adaptation"></a>
 ## Structure of an Adaptation Object ###########################################
 
-An adaptation is a set of streams representing the exact same contents in
-multiple forms (different sizes, different bitrates...). Concretely, a frequent
-usecase is to have a single video adaptation and multiple audio ones, one for
-each language available.
+An [Adaptation](../terms.md#adaptation) is a set of streams representing the
+exact same contents in multiple forms (different sizes, different bitrates...).
+Concretely, a frequent usecase is to have a single video Adaptation and multiple
+audio ones, one for each language available.
 
 As such, it is also often called in the API a ``track``.
 
@@ -197,8 +202,8 @@ As such, it is also often called in the API a ``track``.
 
 _type_: ``string``
 
-The id of an adaptation should be a string unique to that adaptation. It serves
-identifications purpose, when updating the manifest for example.
+This id should be a string unique to that Adaptation. It serves
+identifications purpose, when updating the Manifest for example.
 
 #### type
 
@@ -214,8 +219,8 @@ The type of the Adaptation. The possible types are:
 
 _type_: ``string|undefined``
 
-The language of the adaptation. This is particularly useful for audio and text
-adaptations.
+The language of the Adaptation. This is particularly useful for audio and text
+Adaptations.
 
 Note that this property is not always present in an Adaptation.
 
@@ -223,7 +228,7 @@ Note that this property is not always present in an Adaptation.
 
 _type_: ``string|undefined``
 
-An attempt to translate the language of the adaptation into an ISO 639-3 code.
+An attempt to translate the language of the Adaptation into an ISO 639-3 code.
 If the translation attempt fails (no corresponding ISO 639-3 language code is
 found), it will equal the value of ``language``
 
@@ -233,21 +238,21 @@ Note that this property is not always present in an Adaptation.
 
 _type_: ``Boolean|undefined``
 
-This property only makes sense for audio adaptations. In this case, if ``true``
+This property only makes sense for audio Adaptations. In this case, if ``true``
 it means that the audio track has added commentaries for the visually impaired.
 
 #### isClosedCaption
 
 _type_: ``Boolean|undefined``
 
-This property only makes sense for text adaptations. In this case, if ``true``
+This property only makes sense for text Adaptations. In this case, if ``true``
 it means that the text track has added hints for the hard of hearing.
 
 #### representations
 
 _type_: ``Array.<Representation>``
 
-The represesentations for this adaptation.
+The [Represesentations](../terms.md#representation) for this Adaptation.
 
 See [the Representation chapter](#representation) for more info about a
 Representation's structure.
@@ -260,14 +265,15 @@ Representation's structure.
 
 _return value_: ``Array.<Number>``
 
-Returns every bitrates available for this adaptation.
+Returns every bitrates available for this Adaptation.
 
 
 
 <a name="representation"></a>
 ## Structure of a Representation Object ########################################
 
-A representation is an adaptation encoded in a certain way. It is defined by
+A [Representation](../terms.md#representation) is an
+[Adaptation](../terms.md#adaptation) encoded in a certain way. It is defined by
 multiple values (a codec, a bitrate). Only some of them are documented here (as
 stated before, open an issue if you would like to access other properties).
 
@@ -279,55 +285,55 @@ stated before, open an issue if you would like to access other properties).
 
 _type_: ``string``
 
-The id of a representation should be a string unique to that representation.
+This id should be a string unique to that Representation.
 
 #### bitrate
 
 _type_: ``Number``
 
-The bitrate of the representation.
+The bitrate of the Representation.
 
 #### codec
 
 _type_: ``string|undefined``
 
-The codec of the representation
+The codec of the Representation.
 
 #### height
 
 _type_: ``Number|undefined``
 
-This property makes the most sense for video representations.
+This property makes the most sense for video Representations.
 It defines the height of the video, in pixels.
 
 #### width
 
 _type_: ``Number|undefined``
 
-This property makes the most sense for video representations.
+This property makes the most sense for video Representations.
 It defines the width of the video, in pixels.
 
 #### index
 
 _type_: ``RepresentationIndex``
 
-The represesentation index for this adaptation.
+The represesentation index for this Representation.
 
 See [the RepresentationIndex chapter](#representation-index) for more info about
-a Representation's structure.
+a RepresentationIndex's structure.
 
 #### frameRate
 
 _type_: ``string|undefined``
 
-The represesentation frame rate for this adaptation. It defines either the number of frames
-per second as an integer (24), or as a ratio (24000 / 1000).
+The represesentation frame rate for this Representation. It defines either the
+number of frames per second as an integer (24), or as a ratio (24000 / 1000).
 
 <a name="representation-index"></a>
 ## Structure of a RepresentationIndex Object ###################################
 
-A RepresentationIndex is a uniform representation of the segment index in the
-manifest.
+A RepresentationIndex is an uniform way of declaring the segment index in any
+[Manifest](../terms.md#manifest).
 
 That's the part that calculates which segments will be needed. Because the index
 can be different depending on the type of contents/transport most interactions
@@ -348,7 +354,7 @@ _arguments_:
 
 _return value_: ``Array.<Segment>``
 
-Returns the needed segments as defined by the current manifest during an asked
+Returns the needed segments as defined by the current Manifest during an asked
 timeframe.
 
 See [the Segment chapter](#segment) for more info about a Segment's structure.
@@ -371,7 +377,7 @@ described here.
 
 _type_: ``string``
 
-The id of an adaptation should be a string unique to that segment.
+This id should be a string unique to that segment.
 
 #### timescale
 

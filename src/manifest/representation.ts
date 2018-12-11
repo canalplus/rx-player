@@ -42,17 +42,41 @@ export interface IRepresentationArguments {
  * @class Representation
  */
 class Representation {
-  // required
+  /**
+   * ID uniquely identifying the Representation in the Adaptation.
+   * TODO unique for the whole manifest?
+   * @type {string}
+   */
   public readonly id : string|number;
+
+  /**
+   * Interface allowing to request segments for specific times.
+   * @type {Object}
+   */
   public index : IRepresentationIndex;
+
+  /**
+   * Bitrate this Representation is in, in bits per seconds.
+   * @type {number}
+   */
   public bitrate : number;
 
-  // opt readonly onal
+  /**
+   * Frame-rate, when it can be applied, of this Representation, in any textual
+   * indication possible (often under a ratio form).
+   * @type {string}
+   */
   public frameRate? : string;
+
   public codec? : string;
-  public height? : number;
   public mimeType? : string;
   public width? : number;
+  public height? : number;
+
+  /**
+   * DRM Informations for this Representation.
+   * @type {Array.<Object>}
+   */
   public contentProtections? : IContentProtection[];
 
   /**
@@ -60,8 +84,7 @@ class Representation {
    * @param {Object} args
    */
   constructor(args : IRepresentationArguments) {
-    const nId = generateNewId();
-    this.id = (args.id == null ? nId : args.id);
+    this.id = (args.id == null ? generateNewId() : args.id);
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
 
@@ -89,6 +112,8 @@ class Representation {
   }
 
   /**
+   * Returns "mime-type string" which includes both the mime-type and the codec,
+   * which is often needed when interacting with the browser's APIs.
    * @returns {string}
    */
   getMimeTypeString() : string {

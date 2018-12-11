@@ -43,6 +43,7 @@ import {
   mergeMapTo,
   publish,
   share,
+  skip,
   skipWhile,
   startWith,
   switchMapTo,
@@ -55,6 +56,7 @@ import assert from "../../utils/assert";
 import EventEmitter from "../../utils/eventemitter";
 import Logger from "../../utils/logger";
 import noop from "../../utils/noop";
+import PPromise from "../../utils/promise";
 import {
   getLeftSizeOfRange,
   getPlayedSizeOfRange,
@@ -79,6 +81,7 @@ import {
 import {
   ErrorCodes,
   ErrorTypes,
+  MediaError,
 } from "../../errors";
 import features from "../../features";
 import Manifest, {
@@ -158,7 +161,6 @@ type PLAYER_EVENT_STRINGS =
   "error" |
   "warning" |
   "nativeTextTracksChange" |
-  "manifestChange" |
   "manifestUpdate" |
   "periodChange";
 
@@ -172,7 +174,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Current version of the RxPlayer.
    * @type {string}
    */
-  public static version = /*PLAYER_VERSION*/"3.9.3";
+  public static version = /*PLAYER_VERSION*/"3.10.0";
 
   /**
    * Current version of the RxPlayer.
@@ -349,7 +351,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
      * not yet loaded.
      * @type {Object|null}
      */
-    manifest : Manifest|null;
+    manifest$ : BehaviorSubject<Manifest>|null;
 
     /**
      * Current Period being played.
@@ -362,25 +364,21 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
      * Store currently considered adaptations, per active period.
      *
      * null if no adaptation is active
-     * @type {Map}
+     * @type {Object}
      */
-    activeAdaptations :
-      Map<
-        Period,
-        Partial<Record<IBufferType, Adaptation|null>>
-      > | null;
+    activeAdaptations : {
+      [periodId : string] : Partial<Record<IBufferType, Adaptation|null>>;
+    } | null;
 
     /**
      * Store currently considered representations, per active period.
      *
      * null if no representation is active
-     * @type {Map}
+     * @type {Object}
      */
-    activeRepresentations :
-      Map<
-        Period,
-        Partial<Record<IBufferType, Representation|null>>
-      > | null;
+    activeRepresentations : {
+      [periodId : string] : Partial<Record<IBufferType, Representation|null>>;
+    } | null;
 
     /**
      * Store starting audio track if one.
@@ -520,7 +518,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.9.3";
+    this.version = /*PLAYER_VERSION*/"3.10.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -700,7 +698,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       url,
       isDirectFile,
       thumbnails: null,
-      manifest: null,
+      manifest$: null,
       currentPeriod: null,
       activeAdaptations: null,
       activeRepresentations: null,
@@ -923,7 +921,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @returns {Manifest|null}
    */
   getManifest() : Manifest|null {
-    return this._priv_contentInfos && this._priv_contentInfos.manifest;
+    return this._priv_contentInfos &&
+      this._priv_contentInfos.manifest$ &&
+      this._priv_contentInfos.manifest$.getValue();
   }
 
   /**
@@ -936,14 +936,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (!this._priv_contentInfos) {
       return null;
     }
-    const {
-      currentPeriod,
-      activeAdaptations,
-    } = this._priv_contentInfos;
+    const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
     if (!currentPeriod || !activeAdaptations) {
       return null;
     }
-    return activeAdaptations.get(currentPeriod) || null;
+    return activeAdaptations[currentPeriod.id] || null;
   }
 
   /**
@@ -956,14 +953,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (!this._priv_contentInfos) {
       return null;
     }
-    const {
-      currentPeriod,
-      activeRepresentations,
-    } = this._priv_contentInfos;
+    const { currentPeriod, activeRepresentations } = this._priv_contentInfos;
     if (!currentPeriod || !activeRepresentations) {
       return null;
     }
-    return activeRepresentations.get(currentPeriod) || null;
+    return activeRepresentations[currentPeriod.id] || null;
   }
 
   /**
@@ -1014,14 +1008,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (!this._priv_contentInfos) {
       return false;
     }
-    const {
-      isDirectFile,
-      manifest,
-    } = this._priv_contentInfos;
-    if (isDirectFile || !manifest) {
+    const { isDirectFile, manifest$ } = this._priv_contentInfos;
+    if (isDirectFile || !manifest$) {
       return false;
     }
-    return manifest.isLive;
+    return manifest$.getValue().isLive;
   }
 
   /**
@@ -1032,16 +1023,12 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (!this._priv_contentInfos) {
       return undefined;
     }
-    const {
-      isDirectFile,
-      manifest,
-      url,
-    } = this._priv_contentInfos;
+    const { isDirectFile, manifest$, url } = this._priv_contentInfos;
     if (isDirectFile) {
       return url;
     }
-    if (manifest) {
-      return manifest.getUrl();
+    if (manifest$) {
+      return manifest$.getValue().getUrl();
     }
     return undefined;
   }
@@ -1122,17 +1109,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return this.videoElement.currentTime;
     }
 
-    const {
-      isDirectFile,
-      manifest,
-    } = this._priv_contentInfos;
+    const { isDirectFile, manifest$ } = this._priv_contentInfos;
     if (isDirectFile) {
       return this.videoElement.currentTime;
     }
-    if (manifest) {
+    if (manifest$) {
       const currentTime = this.videoElement.currentTime;
       return this.isLive() ?
-        (currentTime + (manifest.availabilityStartTime || 0)) :
+        (currentTime + (manifest$.getValue().availabilityStartTime || 0)) :
         currentTime;
     }
     return 0;
@@ -1180,21 +1164,17 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (!this._priv_contentInfos) {
       return [];
     }
-    const {
-      currentPeriod,
-      activeAdaptations,
-    } = this._priv_contentInfos;
+    const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
     if (!currentPeriod || !activeAdaptations) {
       return [];
     }
-    const adaptations = activeAdaptations.get(currentPeriod);
+    const adaptations = activeAdaptations[currentPeriod.id];
     const videoAdaptation = adaptations && adaptations.video;
     if (!videoAdaptation) {
       return [];
     }
 
-    return videoAdaptation.representations
-      .map(({ bitrate }) => bitrate);
+    return videoAdaptation.getAvailableBitrates();
   }
 
   /**
@@ -1205,21 +1185,17 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     if (!this._priv_contentInfos) {
       return [];
     }
-    const {
-      currentPeriod,
-      activeAdaptations,
-    } = this._priv_contentInfos;
+    const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
     if (!currentPeriod || !activeAdaptations) {
       return [];
     }
-    const adaptations = activeAdaptations.get(currentPeriod);
+    const adaptations = activeAdaptations[currentPeriod.id];
     const audioAdaptation = adaptations && adaptations.audio;
     if (!audioAdaptation) {
       return [];
     }
 
-    return audioAdaptation.representations
-      .map(({ bitrate }) => bitrate);
+    return audioAdaptation.getAvailableBitrates();
   }
 
   /**
@@ -1286,14 +1262,26 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
   /**
    * Play/Resume the current video.
+   * @returns {Promise}
    */
-  play() : void {
+  play() : Promise<void> {
     if (!this.videoElement) {
       throw new Error("Disposed player");
     }
-    /* tslint:disable no-floating-promises */
-    this.videoElement.play();
-    /* tslint:enable no-floating-promises */
+
+    const playPromise = this.videoElement.play();
+    /* tslint:disable no-unbound-method */
+    if (playPromise == null || typeof playPromise.catch !== "function") {
+    /* tslint:enable no-unbound-method */
+      return PPromise.resolve();
+    }
+    return playPromise.catch(error => {
+      if (error.name === "NotAllowedError") {
+        const warning = new MediaError("MEDIA_ERR_PLAY_NOT_ALLOWED", error, false);
+        this.trigger("warning", warning);
+      }
+      throw error;
+    });
   }
 
   /**
@@ -1322,11 +1310,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       throw new Error("player: no content loaded");
     }
 
-    const {
-      isDirectFile,
-      manifest,
-    } = this._priv_contentInfos;
-    if (!isDirectFile && !manifest) {
+    const { isDirectFile, manifest$ } = this._priv_contentInfos;
+    if (!isDirectFile && !manifest$) {
       throw new Error("player: the content did not load yet");
     }
 
@@ -1346,7 +1331,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
           (time as { wallClockTime : number }).wallClockTime :
           fromWallClockTime(
             (time as { wallClockTime : number }).wallClockTime * 1000,
-            manifest as Manifest // is TS or I dumb here?
+            (manifest$ as BehaviorSubject<Manifest>).getValue() // is TS or I dumb here?
           );
       } else {
         throw new Error("invalid time object. You must set one of the " +
@@ -1762,9 +1747,9 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return 0;
     }
 
-    const { manifest } = this._priv_contentInfos;
-    if (manifest) {
-      return manifest.getMinimumPosition();
+    const { manifest$ } = this._priv_contentInfos;
+    if (manifest$) {
+      return manifest$.getValue().getMinimumPosition();
     }
     return null;
   }
@@ -1778,10 +1763,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return null;
     }
 
-    const {
-      isDirectFile,
-      manifest,
-    } = this._priv_contentInfos;
+    const { isDirectFile, manifest$ } = this._priv_contentInfos;
 
     if (isDirectFile) {
       if (!this.videoElement) {
@@ -1790,8 +1772,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return this.videoElement.duration;
     }
 
-    if (manifest) {
-      return manifest.getMaximumPosition();
+    if (manifest$) {
+      return manifest$.getValue().getMaximumPosition();
     }
     return null;
   }
@@ -1916,9 +1898,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       case "adaptationChange":
         this._priv_onAdaptationChange(streamInfos.value);
         break;
-      case "manifestUpdate":
-        this._priv_onManifestUpdate(streamInfos.value);
-        break;
       case "bitrateEstimationChange":
         this._priv_onBitrateEstimationChange(streamInfos.value);
         break;
@@ -1996,6 +1975,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @private
    */
   private _priv_onStreamWarning(error : Error) : void {
+    log.warn("API: Sending warning:", error);
     this.trigger("warning", error);
   }
 
@@ -2009,27 +1989,32 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    */
   private _priv_onManifestReady(value : {
     abrManager : ABRManager;
-    manifest : Manifest;
+    manifest$ : BehaviorSubject<Manifest>;
   }) : void {
     if (!this._priv_contentInfos) {
       log.error("API: The manifest is loaded but no content is.");
       return;
     }
-    const { manifest, abrManager } = value;
-    this._priv_contentInfos.manifest = manifest;
+    const { manifest$, abrManager } = value;
+    this._priv_contentInfos.manifest$ = manifest$;
     this._priv_abrManager = abrManager;
 
-    const {
-      initialAudioTrack,
-      initialTextTrack,
-    } = this._priv_contentInfos;
+    const { initialAudioTrack, initialTextTrack } = this._priv_contentInfos;
     this._priv_trackManager = new TrackManager({
       preferredAudioTracks: initialAudioTrack === undefined ?
         undefined : [initialAudioTrack],
       preferredTextTracks: initialTextTrack === undefined ?
         undefined : [initialTextTrack],
     });
-    this.trigger("manifestChange", manifest);
+
+    manifest$
+      .pipe(skip(1), takeUntil(this._priv_stopCurrentContent$))
+      .subscribe(() => {
+        // Update the tracks chosen if it changed
+        if (this._priv_trackManager) {
+          this._priv_trackManager.update();
+        }
+      });
   }
 
   /**
@@ -2139,10 +2124,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   }
 
   /**
-   * Triggered each times the Stream "removes" a Period.
-   *
-   * Update the TrackManager to remove the corresponding Period.
-   *
+   * Triggered each times the Stream "removes" a PeriodBuffer.
    * @param {Object} value
    * @private
    */
@@ -2152,6 +2134,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   }) : void {
     const { type, period } = value;
 
+    // Clean-up track choice from TrackManager
     switch (type) {
       case "audio":
       case "text":
@@ -2161,36 +2144,25 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         }
         break;
     }
+
+    // Clean-up stored Representation and Adaptation information
+    if (this._priv_contentInfos == null) {
+      return ;
+    }
+    const { activeAdaptations, activeRepresentations } = this._priv_contentInfos;
+    if (activeAdaptations && activeAdaptations[period.id]) {
+      delete activeAdaptations[period.id];
+    }
+
+    if (activeRepresentations && activeRepresentations[period.id]) {
+      delete activeRepresentations[period.id];
+    }
   }
 
   private _priv_onStreamReload() {
     if (this._priv_trackManager) {
       this._priv_trackManager.resetPeriods();
     }
-  }
-
-  /**
-   * Triggered each times the Manifest is updated.
-   *
-   * Update the TrackManager and emit events.
-   *
-   * @param {Object} value
-   * @private
-   */
-  private _priv_onManifestUpdate(value : { manifest : Manifest }) : void {
-    if (!this._priv_contentInfos) {
-      log.error("API: The manifest is updated but no content is loaded.");
-      return;
-    }
-    const { manifest } = value;
-    this._priv_contentInfos.manifest = manifest;
-
-    // Update the tracks chosen if it changed
-    if (this._priv_trackManager) {
-      this._priv_trackManager.update();
-    }
-
-    this.trigger("manifestUpdate", manifest);
   }
 
   /**
@@ -2217,22 +2189,22 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     // lazily create this._priv_contentInfos.activeAdaptations
     if (!this._priv_contentInfos.activeAdaptations) {
-      this._priv_contentInfos.activeAdaptations = new Map();
+      this._priv_contentInfos.activeAdaptations = {};
     }
 
-    const {
-      activeAdaptations,
-      currentPeriod,
-    } = this._priv_contentInfos;
-
-    const activePeriodAdaptations = activeAdaptations.get(period);
+    const { activeAdaptations, currentPeriod } = this._priv_contentInfos;
+    const activePeriodAdaptations = activeAdaptations[period.id];
     if (!activePeriodAdaptations) {
-      activeAdaptations.set(period, { [type]: adaptation });
+      activeAdaptations[period.id] = { [type]: adaptation };
     } else {
       activePeriodAdaptations[type] = adaptation;
     }
 
-    if (this._priv_trackManager && period != null && period === currentPeriod) {
+    if (
+      this._priv_trackManager &&
+      currentPeriod != null && period != null &&
+      period.id === currentPeriod.id
+    ) {
       switch (type) {
         case "audio":
           const audioTrack = this._priv_trackManager.getChosenAudioTrack(currentPeriod);
@@ -2274,17 +2246,14 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     // lazily create this._priv_contentInfos.activeRepresentations
     if (!this._priv_contentInfos.activeRepresentations) {
-      this._priv_contentInfos.activeRepresentations = new Map();
+      this._priv_contentInfos.activeRepresentations = {};
     }
 
-    const {
-      activeRepresentations,
-      currentPeriod,
-    } = this._priv_contentInfos;
+    const { activeRepresentations, currentPeriod } = this._priv_contentInfos;
 
-    const activePeriodRepresentations = activeRepresentations.get(period);
+    const activePeriodRepresentations = activeRepresentations[period.id];
     if (!activePeriodRepresentations) {
-      activeRepresentations.set(period, { [type]: representation });
+      activeRepresentations[period.id] = { [type]: representation };
     } else {
       activePeriodRepresentations[type] = representation;
     }
@@ -2294,7 +2263,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       this._priv_bitrateInfos.lastBitrates[type] = bitrate;
     }
 
-    if (period != null && currentPeriod === period) {
+    if (period != null && currentPeriod != null && currentPeriod.id === period.id) {
       if (type === "video") {
         this._priv_triggerContentEvent("videoBitrate", bitrate != null ? bitrate : -1);
       } else if (type === "audio") {
@@ -2387,11 +2356,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return;
     }
 
-    const {
-      isDirectFile,
-      manifest,
-    } = this._priv_contentInfos;
-    if ((!isDirectFile && !manifest) || !clockTick) {
+    const { isDirectFile, manifest$ } = this._priv_contentInfos;
+    if ((!isDirectFile && !manifest$) || !clockTick) {
       return;
     }
 
@@ -2405,14 +2371,15 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     };
 
     if (
-      manifest &&
-      manifest.isLive &&
+      manifest$ &&
+      manifest$.getValue().isLive &&
       clockTick.currentTime > 0
     ) {
+      const currentManifest = manifest$.getValue();
       positionData.wallClockTime =
-        clockTick.currentTime + (manifest.availabilityStartTime || 0);
+        clockTick.currentTime + (currentManifest.availabilityStartTime || 0);
       positionData.liveGap =
-        manifest.getMaximumPosition() - clockTick.currentTime;
+        currentManifest.getMaximumPosition() - clockTick.currentTime;
     }
 
     this.trigger("positionUpdate", positionData);

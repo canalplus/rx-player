@@ -84,7 +84,8 @@ all have a <code>type</code> property equal to <code>&quot;NETWORK_ERROR&quot;</
 <h4>codes</h4>
 <p>A NetworkError can only have the following code (<code>code</code> property):</p>
 <ul>
-<li><code>&quot;PIPELINE_LOAD_ERROR&quot;</code>: the manifest or segment request failed.</li>
+<li><code>&quot;PIPELINE_LOAD_ERROR&quot;</code>: the <a href="../terms.html#manifest">Manifest</a> or segment
+request failed.</li>
 </ul>
 <h4>more informations</h4>
 <p>A NetworkError provide much more infos than this code.</p>
@@ -115,7 +116,8 @@ the 2xx range.</li>
 <a name="subchapter-MEDIA_ERROR"></a></p>
 <h3>MEDIA_ERROR</h3>
 <p>Error related to the media itself. It can both come from the player itself
-(manifest parsing) or from the browser itself (content playback).</p>
+(<a href="../terms.html#manifest">Manifest</a> parsing) or from the browser itself (content
+playback).</p>
 <p>They all have a <code>type</code> property equal to <code>&quot;MEDIA_ERROR&quot;</code>.</p>
 <h4>codes</h4>
 <p>A MediaError can have the following codes (<code>code</code> property):</p>
@@ -133,18 +135,19 @@ because the SourceBuffer was full.</p>
 &#x201C;video&#x201D; / &#x201C;text&#x201D;) has no SourceBuffer implementation in your build.</p>
 </li>
 <li>
-<p><code>&quot;MANIFEST_INCOMPATIBLE_CODECS_ERROR&quot;</code>: An &#x201C;Adaptation&#x201D; (DASH&#x2019;s
-AdaptationSet or Smooth&#x2019;s StreamIndex) has none of its &#x201C;Representations&#x201D;
-(read quality) in a supported codec.</p>
+<p><code>&quot;MANIFEST_INCOMPATIBLE_CODECS_ERROR&quot;</code>: An
+<a href="../terms.html#adaptation">Adaptation</a> (or track) has none of its
+<a href="../terms.html#representation">Representations</a> (read quality) in a supported
+codec.</p>
 </li>
 <li>
-<p><code>&quot;MANIFEST_PARSE_ERROR&quot;</code>: Generic error to signal than the Manifest could
-not be parsed.</p>
+<p><code>&quot;MANIFEST_PARSE_ERROR&quot;</code>: Generic error to signal than the
+<a href="../terms.html#manifest">Manifest</a> could not be parsed.</p>
 </li>
 <li>
-<p><code>&quot;MANIFEST_UNSUPPORTED_ADAPTATION_TYPE&quot;</code>: One of the &#x201C;Adaptation&#x201D; (DASH&#x2019;s
-AdaptationSet or Smooth&#x2019;s StreamIndex) has a type (e.g. &#x201C;audio&#x201D;, &#x201C;text&#x201D; or
-&#x201C;video&#x201D; which is not understood by the RxPlayer).</p>
+<p><code>&quot;MANIFEST_UNSUPPORTED_ADAPTATION_TYPE&quot;</code>: One of the
+<a href="../terms.html#adaptation">Adaptation</a> has a type (e.g. &#x201C;audio&#x201D;, &#x201C;text&#x201D; or
+&#x201C;video&#x201D; which is not managed by the RxPlayer).</p>
 </li>
 <li>
 <p><code>&quot;MEDIA_ERR_ABORTED&quot;</code>: A crucial browser-side fetching operation was
@@ -155,6 +158,24 @@ aborted.</p>
 forbids us to autoPlay the content. As a consequence, the rx-player stays
 in a <code>&quot;LOADED&quot;</code> state.
 This code is always a warning and it never causes playback interruption.</p>
+</li>
+<li>
+<p><code>&quot;MEDIA_ERR_PLAY_NOT_ALLOWED&quot;</code>: A <code>play</code> call on our API (coming from you)
+failed because the current browser does not allow it.
+The content should still be in a paused state.
+This is in almost any case due a browser policy which prevents a content to
+play without any user interaction.
+In those cases, we recommend to display a UI element on your page inviting
+the final user to manually play the content.</p>
+</li>
+<li>
+<p><code>&quot;MEDIA_ERR_NOT_LOADED_METADATA&quot;</code>: The current browser falsely announce
+having loaded the content&#x2019;s metadata.
+In that case, we cannot switch to the <code>LOADED</code> state directly (we will
+be blocked in either a <code>LOADING</code> or a <code>RELOADING</code> state) and you&#x2019;re
+encouraged to call <code>play</code> manually when you want to play the content.
+This is a case only encountered in the Samsung browser (as found in
+Android) when loading a content in &#x201C;directfile&#x201D; mode.</p>
 </li>
 <li>
 <p><code>&quot;MEDIA_ERR_DECODE&quot;</code>: A pushed segment/media could not be decoded by the
@@ -184,13 +205,13 @@ time was not found in the corresponding media.</p>
 </li>
 <li>
 <p><code>&quot;MEDIA_TIME_BEFORE_MANIFEST&quot;</code>: The current time in the media is behind
-what is currently declared in the manifest.
+what is currently declared in the <a href="../terms.html#manifest">Manifest</a>.
 This can lead to stalling indefinitely as the player won&#x2019;t be able to
 download new segments arround the current time.</p>
 </li>
 <li>
 <p><code>&quot;MEDIA_TIME_AFTER_MANIFEST&quot;</code>: The current time in the media is after what
-is currently declared in the manifest.
+is currently declared in the <a href="../terms.html#manifest">Manifest</a>.
 This can lead to stalling indefinitely as the player won&#x2019;t be able to
 download new segments arround the current time.</p>
 </li>
@@ -258,13 +279,14 @@ was given to the RxPlayer&#x2019;s APIs.</p>
 <p>An OtherError can have the following codes (<code>code</code> property):</p>
 <ul>
 <li>
-<p><code>&quot;PIPELINE_LOAD_ERROR&quot;</code>: The manifest or segment request failed and the
-request has been done through a given callback (i.e. not the RxPlayer&#x2019;s
-XMLHttpRequest implementation).</p>
+<p><code>&quot;PIPELINE_LOAD_ERROR&quot;</code>: The <a href="../terms.html#manifest">Manifest</a> or segment
+request failed and the request has been done through a given callback (i.e.
+not the RxPlayer&#x2019;s XMLHttpRequest implementation).</p>
 </li>
 <li>
-<p><code>&quot;PIPELINE_PARSE_ERROR&quot;</code>: The RxPlayer&#x2019;s manifest or segment parsing logic
-failed. This is most likely due to a malformed manifest or segment.</p>
+<p><code>&quot;PIPELINE_PARSE_ERROR&quot;</code>: The RxPlayer&#x2019;s <a href="../terms.html#manifest">Manifest</a>
+or segment parsing logic failed. This is most likely due to a malformed
+Manifest or segment.</p>
 </li>
 <li>
 <p><code>&quot;NONE&quot;</code>: The error cannot be characterized.</p>

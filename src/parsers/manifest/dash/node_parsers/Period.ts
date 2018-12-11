@@ -43,6 +43,8 @@ export interface IPeriodAttributes {
   start? : number;
   duration? : number;
   bitstreamSwitching? : boolean;
+  xlinkHref? : string;
+  xlinkActuate? : string;
 }
 
 /**
@@ -110,6 +112,13 @@ function parsePeriodAttributes(periodElement : Element) : IPeriodAttributes {
         res.bitstreamSwitching = parseBoolean(attribute.value);
         break;
 
+      case "xlink:href":
+        res.xlinkHref = attribute.value;
+        break;
+
+      case "xlink:actuate":
+        res.xlinkActuate = attribute.value;
+        break;
     }
   }
   return res;

@@ -51,6 +51,11 @@ an Adaptation is equivalent to:
   - DASH's _AdaptationSet_
   - Microsoft Smooth Streaming's _StreamIndex_
 
+Note: There is minor differences between the RxPlayer's `Adaptation` and DASH'
+``AdaptationSet``. Namely multiple `AdaptationSet`s can be merged into a single
+`Adaptation` in very specific cases.
+You can find more infos on it [here](./dash_rxplayer_adaptation_difference.md).
+
 
 <a name="bitrate"></a>
 ### Bitrate #####################################################################

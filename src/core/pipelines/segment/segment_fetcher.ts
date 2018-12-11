@@ -20,6 +20,7 @@ import {
   Subject,
 } from "rxjs";
 import {
+  catchError,
   filter,
   finalize,
   map,
@@ -28,11 +29,12 @@ import {
 } from "rxjs/operators";
 import {
   ICustomError,
+  isKnownError,
+  OtherError,
 } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
   ISegmentLoaderArguments,
-  ISegmentParserArguments,
   ISegmentTimingInfos,
   ITransportPipelines,
 } from "../../../net/types";
@@ -46,7 +48,6 @@ import createLoader, {
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
 } from "../create_loader";
-import createParser from "../create_parser";
 
 interface IParsedSegment<T> {
   segmentData : T;
@@ -92,9 +93,7 @@ export default function createSegmentFetcher<T>(
   options : IPipelineLoaderOptions<ISegmentLoaderArguments, T>
 ) : ISegmentFetcher<T> {
   const segmentLoader = createLoader(transport[bufferType], options);
-  const segmentParser = createParser<
-    ISegmentParserArguments<unknown>, IParsedSegment<T>
-  >(transport[bufferType]);
+  const segmentParser = transport[bufferType].parser as any; // deal with it
   let request$ : Subject<IABRRequest>|undefined;
   let id : string|undefined;
 
@@ -212,10 +211,13 @@ export default function createSegmentFetcher<T>(
            * @returns {Observable}
            */
           parse(init? : ISegmentTimingInfos) : Observable<IParsedSegment<T>> {
-            return segmentParser(objectAssign(
-              { response: response.value, init },
-              content
-            ));
+            const parserArg = objectAssign({ response: response.value, init }, content);
+            return segmentParser(parserArg)
+              .pipe(catchError((error) => {
+                const formattedError = isKnownError(error) ?
+                  error : new OtherError("PIPELINE_PARSING_ERROR", error, true);
+                  throw formattedError;
+              }));
           },
         };
       }),

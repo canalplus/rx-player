@@ -23,7 +23,7 @@ captions - directly over your content:
 content](./assets/text_track_example.png "Example of a textrack")
 
 Adding text tracks to contents can be done by two means:
-  - by using a manifest declaring those text tracks
+  - by using a [Manifest](../terms.md#manifest) declaring those text tracks
   - by manually adding text track(s) when you call the ``loadVideo`` API
 
 You can then choose the right track through the different text track-related
@@ -47,8 +47,8 @@ The rx-player supports the following formats:
 <a name="manifest"></a>
 ## Text tracks indicated in a manifest #########################################
 
-Each streaming technology supported by the manifest defines a way to add text
-track directly in their manifests files.
+Each streaming technology supported by the Manifest defines a way to add text
+track directly in their Manifests files.
 
 This chapter explains what is supported by the RxPlayer.
 
@@ -121,7 +121,7 @@ attributes:
 <a name="manifest-smooth"></a>
 ### In Microsoft Smooth Streaming ##############################################
 
-In Smooth manifests, a ``StreamIndex`` is inferred to be for a text track if its
+In Smooth Manifests, a ``StreamIndex`` is inferred to be for a text track if its
 ``Type`` attribute is equal to ``text``.
 
 ----

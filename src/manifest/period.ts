@@ -26,42 +26,65 @@ import Adaptation, {
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "./adaptation";
 
+// Structure listing every `Adaptation` in a Period.
 export type IManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
 
 export type IAdaptationsArguments =
   Partial<Record<IAdaptationType, IAdaptationArguments[]>>;
 
-export interface ISupplementaryImageTrack {
-  mimeType : string;
-  url : string;
-}
-
-export interface ISupplementaryTextTrack {
-  mimeType : string;
-  codecs? : string;
-  url : string;
-  language? : string;
-  languages? : string[];
-  closedCaption : boolean;
-}
-
+// Arguments constitutive of a new Period.
 export interface IPeriodArguments {
-  id: string;
-  adaptations: IAdaptationsArguments;
-  start: number;
-  duration?: number;
+  id : string; // unique ID for that Period.
+  adaptations : IAdaptationsArguments; // "Tracks" in that Period.
+  start : number; // start time of the Period, in seconds.
+  duration? : number; // duration of the Period, in seconds.
+                      // Can be undefined for a still-running one.
 }
 
+/**
+ * Class representing a single `Period` of the Manifest.
+ * A Period contains every informations about the content available for a
+ * specific period in time.
+ * @class Period
+ */
 export default class Period {
+  /**
+   * ID uniquely identifying the Period in the Manifest.
+   * @type {string}
+   */
   public readonly id : string;
-  public readonly adaptations : IManifestAdaptations;
+
+  /**
+   * Every 'Adaptation' in that Period, per type of Adaptation.
+   * @type {Object}
+   */
+  public adaptations : IManifestAdaptations;
+
+  /**
+   * Duration of this Period, in seconds.
+   * `undefined` for still-running Periods.
+   * @type {number|undefined}
+   */
   public duration? : number;
+
+  /**
+   * Absolute start time of the Period, in seconds.
+   * @type {number}
+   */
   public start : number;
+
+  /**
+   * Absolute end time of the Period, in seconds.
+   * `undefined` for still-running Periods.
+   * @type {number|undefined}
+   */
   public end? : number;
 
   /**
    * @constructor
    * @param {Object} args
+   * @param {Subject} warning$
+   * @param {function|undefined} [representationFilter]
    */
   constructor(
     args : IPeriodArguments,
@@ -112,14 +135,12 @@ export default class Period {
   }
 
   /**
+   * Returns every `Adaptations` (or `tracks`) linked to that Period, in an
+   * Array.
    * @returns {Array.<Object>}
    */
   getAdaptations() : Adaptation[] {
     const adaptationsByType = this.adaptations;
-    if (!adaptationsByType) {
-      return [];
-    }
-
     const adaptationsList : Adaptation[] = [];
     for (const adaptationType in adaptationsByType) {
       if (adaptationsByType.hasOwnProperty(adaptationType)) {
@@ -132,15 +153,17 @@ export default class Period {
   }
 
   /**
+   * Returns every `Adaptations` (or `tracks`) linked to that Period for a
+   * given type.
    * @param {string} adaptationType
    * @returns {Array.<Object>}
    */
   getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
-    const adaptations = this.adaptations[adaptationType];
-    return adaptations || [];
+    return this.adaptations[adaptationType] || [];
   }
 
   /**
+   * Returns the Adaptation linked to the given ID.
    * @param {number|string} wantedId
    * @returns {Object|undefined}
    */

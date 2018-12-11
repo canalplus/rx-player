@@ -15,6 +15,7 @@
  */
 
 import arrayFind from "array-find";
+import PPromise from "../../../../utils/promise";
 import log from "../log";
 import {
   ICompatibleKeySystem,
@@ -78,7 +79,7 @@ const mediaCapabilitiesProber = {
    */
   getStatusForHDCP(hdcp: string) : Promise<string> {
     if (!hdcp) {
-      return Promise.reject("MediaCapabilitiesProbers >>> Bad Arguments: " +
+      return PPromise.reject("MediaCapabilitiesProbers >>> Bad Arguments: " +
         "No HDCP Policy specified.");
     }
     const config = {
@@ -149,7 +150,7 @@ const mediaCapabilitiesProber = {
         })
       );
     });
-    return Promise.all(promises)
+    return PPromise.all(promises)
       .then((supportedConfigs) => {
         return supportedConfigs.map(({ result }) => result);
       });

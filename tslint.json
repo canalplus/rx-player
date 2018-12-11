@@ -20,7 +20,11 @@
       ["*", "includes"],
       ["*", "find"],
       ["*", "findIndex"],
-      ["*", "startsWith"]
+      ["*", "startsWith"],
+      ["*", "substr"],
+      ["Promise"],
+      ["Promise", "reject"],
+      ["Promise", "resolve"]
     ],
     "ban-comma-operator": true,
     "binary-expression-operand-order": true,

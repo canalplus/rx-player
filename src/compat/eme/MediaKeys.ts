@@ -30,6 +30,7 @@ import castToObservable from "../../utils/castToObservable";
 import EventEmitter, {
   IEventEmitter,
 } from "../../utils/eventemitter";
+import PPromise from "../../utils/promise";
 import {
   // XXX TODO remove when the issue is resolved
   // https://github.com/Microsoft/TypeScript/issues/19189
@@ -167,24 +168,22 @@ if (navigator.requestMediaKeySystemAccess) {
     );
 } else {
 
-  type wrapUpdateFn =
+  type IWrappedUpdateFunction =
     (license : ArrayBuffer, sessionId? : string) => Promise<void>;
-  type memUpdateFn =
-    (license : Uint8Array, sessionId : string) => void;
+  type IUpdateFunction =
+    (license : TypedArray|ArrayBuffer, sessionId : string) => void;
 
   // Wrap "MediaKeys.prototype.update" form an event based system to a
   // Promise based function.
-  const wrapUpdate = (
-    memUpdate : memUpdateFn
-  ) : wrapUpdateFn => {
+  const wrapUpdate = (memUpdate : IUpdateFunction) : IWrappedUpdateFunction => {
     return function(
       this : ICustomMediaKeySession,
       license : ArrayBuffer,
       sessionId? : string
     ) : Promise<void> {
-      return new Promise((resolve, reject) => {
+      return new PPromise((resolve, reject) => {
         try {
-          memUpdate.call(this, license, sessionId);
+          memUpdate.call(this, license, sessionId || "");
           resolve();
         } catch (e) {
           reject(e);
@@ -245,7 +244,7 @@ if (navigator.requestMediaKeySystemAccess) {
         this._key = keySystem;
 
         this.sessionId = "";
-        this.closed = new Promise((resolve) => {
+        this.closed = new PPromise((resolve) => {
           this._closeSession$.subscribe(resolve);
         });
         this.keyStatuses = new Map();
@@ -263,7 +262,9 @@ if (navigator.requestMediaKeySystemAccess) {
             throw new Error("impossible to add a new key");
           }
           if (this._key.indexOf("clearkey") >= 0) {
-            const json = JSON.parse(bytesToStr(license));
+            const licenseTypedArray = license instanceof ArrayBuffer ?
+              new Uint8Array(license) : license;
+            const json = JSON.parse(bytesToStr(licenseTypedArray));
             const key = strToBytes(atob(json.keys[0].k));
             const kid = strToBytes(atob(json.keys[0].kid));
             this._vid.webkitAddKey(this._key, key, kid, sessionId);
@@ -275,7 +276,7 @@ if (navigator.requestMediaKeySystemAccess) {
       }
 
       generateRequest(_initDataType : string, initData : ArrayBuffer) : Promise<void> {
-        return new Promise((resolve) => {
+        return new PPromise((resolve) => {
           if (!isOldWebkitMediaElement(this._vid)) {
             throw new Error("impossible to generate a key request");
           }
@@ -285,7 +286,7 @@ if (navigator.requestMediaKeySystemAccess) {
       }
 
       close() : Promise<void> {
-        return new Promise((resolve) => {
+        return new PPromise((resolve) => {
           this._closeSession$.next();
           this._closeSession$.complete();
           resolve();
@@ -293,11 +294,11 @@ if (navigator.requestMediaKeySystemAccess) {
       }
 
       load() : Promise<boolean> {
-        return Promise.resolve(false);
+        return PPromise.resolve(false);
       }
 
       remove() : Promise<void> {
-        return Promise.resolve();
+        return PPromise.resolve();
       }
     }
 
@@ -393,78 +394,10 @@ if (navigator.requestMediaKeySystemAccess) {
       return observableThrow(undefined);
     };
   } else if (
-    isIE11 &&
     MediaKeys_ &&
     MediaKeys_.prototype &&
-    typeof MediaKeys_.prototype.createSession === "function" &&
     typeof MediaKeys_.isTypeSupported === "function"
   ) {
-    class IE11MediaKeySession
-      extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent | Event>
-      implements ICustomMediaKeySession {
-      public readonly update: (
-        license: ArrayBuffer,
-        sessionId?: string
-      ) => Promise<void>;
-      public readonly closed: Promise<void>;
-      public expiration: number;
-      public keyStatuses: ICustomMediaKeyStatusMap;
-      public sessionId: string;
-      private readonly _mk: MediaKeys|ICustomMediaKeys;
-      private readonly _closeSession$: Subject<void>;
-      private _ss?: MediaKeySession;
-      constructor(mk: MediaKeys|ICustomMediaKeys) {
-        super();
-        this.sessionId = "";
-        this.expiration = NaN;
-        this.keyStatuses = new Map();
-        this._mk = mk;
-        this._closeSession$ = new Subject();
-        this.closed = new Promise((resolve) => {
-          this._closeSession$.subscribe(resolve);
-        });
-        this.update = wrapUpdate((license, sessionId) => {
-          if (!this._ss) {
-            throw new Error("MediaKeySession not set");
-          }
-          (this._ss as any).update(license, sessionId);
-          this.sessionId = sessionId;
-        });
-      }
-      generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
-        return new Promise((resolve) => {
-          this._ss = (this._mk as any)
-            .createSession("video/mp4", initData) as MediaKeySession;
-          observableMerge(
-            events.onKeyMessage$(this._ss),
-            events.onKeyAdded$(this._ss),
-            events.onKeyError$(this._ss)
-          )
-            .pipe(takeUntil(this._closeSession$))
-            .subscribe((evt: Event) => this.trigger(evt.type, evt));
-          resolve();
-        });
-      }
-      close(): Promise<void> {
-        return new Promise((resolve) => {
-          if (this._ss) {
-            /* tslint:disable no-floating-promises */
-            this._ss.close();
-            /* tslint:enable no-floating-promises */
-            this._ss = undefined;
-          }
-          this._closeSession$.next();
-          this._closeSession$.complete();
-          resolve();
-        });
-      }
-      load(): Promise<boolean> {
-        return Promise.resolve(false);
-      }
-      remove(): Promise<void> {
-        return Promise.resolve();
-      }
-    }
 
     requestMediaKeySystemAccess = function(
       keyType : string,
@@ -511,11 +444,84 @@ if (navigator.requestMediaKeySystemAccess) {
 
       return observableThrow(undefined);
     };
-    createSession = function createIE11MediaKeySession(
-      mediaKeys : MediaKeys|ICustomMediaKeys
-      ) : ICustomMediaKeySession {
-      return new IE11MediaKeySession(mediaKeys);
-    };
+
+    if (
+      isIE11 &&
+      typeof MediaKeys_.prototype.createSession === "function"
+    ) {
+      class IE11MediaKeySession
+      extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent | Event>
+      implements ICustomMediaKeySession {
+        public readonly update: (
+          license: ArrayBuffer,
+          sessionId?: string
+        ) => Promise<void>;
+        public readonly closed: Promise<void>;
+        public expiration: number;
+        public keyStatuses: ICustomMediaKeyStatusMap;
+        public sessionId: string;
+        private readonly _mk: MediaKeys|ICustomMediaKeys;
+        private readonly _closeSession$: Subject<void>;
+        private _ss?: MediaKeySession;
+        constructor(mk: MediaKeys|ICustomMediaKeys) {
+          super();
+          this.sessionId = "";
+          this.expiration = NaN;
+          this.keyStatuses = new Map();
+          this._mk = mk;
+          this._closeSession$ = new Subject();
+          this.closed = new PPromise((resolve) => {
+            this._closeSession$.subscribe(resolve);
+          });
+          this.update = wrapUpdate((license, sessionId) => {
+            if (!this._ss) {
+              throw new Error("MediaKeySession not set");
+            }
+            (this._ss as any).update(license, sessionId);
+            this.sessionId = sessionId;
+          });
+        }
+        generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
+          return new PPromise((resolve) => {
+            this._ss = (this._mk as any)
+              .createSession("video/mp4", initData) as MediaKeySession;
+            observableMerge(
+              events.onKeyMessage$(this._ss),
+              events.onKeyAdded$(this._ss),
+              events.onKeyError$(this._ss)
+            )
+              .pipe(takeUntil(this._closeSession$))
+              .subscribe((evt: Event) => this.trigger(evt.type, evt));
+            resolve();
+          });
+        }
+        close(): Promise<void> {
+          return new PPromise((resolve) => {
+            if (this._ss) {
+              /* tslint:disable no-floating-promises */
+              this._ss.close();
+              /* tslint:enable no-floating-promises */
+              this._ss = undefined;
+            }
+            this._closeSession$.next();
+            this._closeSession$.complete();
+            resolve();
+          });
+        }
+        load(): Promise<boolean> {
+          return PPromise.resolve(false);
+        }
+        remove(): Promise<void> {
+          return PPromise.resolve();
+        }
+      }
+
+      createSession = function createIE11MediaKeySession(
+        mediaKeys : MediaKeys|ICustomMediaKeys
+        ) : ICustomMediaKeySession {
+        return new IE11MediaKeySession(mediaKeys);
+      };
+    }
   }
 }
 

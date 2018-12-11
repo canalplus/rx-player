@@ -31,6 +31,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
     availableVideoTracks: [],
     availableSubtitles: [],
     bufferGap: undefined,
+    cannotLoadMetadata: false,
     currentTime: undefined,
     duration: undefined,
     error: null,

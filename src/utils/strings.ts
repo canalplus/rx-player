@@ -25,7 +25,9 @@ function stringFromCharCode(args : Uint8Array) : string {
   let ret = "";
   for (let i = 0; i < args.length; i += max) {
     const subArray = args.subarray(i, i + max);
-    ret += String.fromCharCode.apply(null, subArray);
+
+    // NOTE: ugly I know, but TS is problematic here (you can try)
+    ret += (String.fromCharCode as any).apply(null, subArray);
   }
   return ret;
 }

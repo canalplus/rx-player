@@ -372,7 +372,27 @@ player.removeEventListener("playerStateChange", listenerCallback);
 <a name="meth-play"></a>
 ### play #######################################################################
 
+_return value_: ``Promise.<void>``
+
 Play/resume the current video. Equivalent to a video element's play method.
+
+The returned Promise informs you on the result:
+
+  - if playback succeeds, the Promise is fulfilled
+
+  - if playback fails, the Promise is rejected along with an error message
+    explaining the failure - coming directly from the browser.
+
+    Such failure can for example be due to your browser's policy, which may
+    forbid to call play on a media element without any user interaction.
+    Please note that in that case, you will also receive a
+    [warning event](./errors.md) containing a `MEDIA_ERROR` with the code:
+    `MEDIA_ERR_PLAY_NOT_ALLOWED`.
+
+Note: On browsers which do not support Promises natively (such as Internet
+Explorer 11), a JavaScript implementation is provided instead. This
+implementation has the exact same implementation than [ES2015
+Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
 
 #### Example
 ```js
@@ -579,7 +599,7 @@ if (player.isLive()) {
 
 _return value_: ``string|undefined``
 
-Returns the URL of the downloaded manifest.
+Returns the URL of the downloaded [Manifest](../terms.md#manifest).
 
 In _DirectFile_ mode (see [loadVideo
 options](./loadVideo_options.md#prop-transport)), returns the URL of the content
@@ -624,8 +644,8 @@ if (player.isFullscreen()) {
 
 _return value_: ``Array.<Number>``
 
-The different bitrates available for the current video adaptation, in bits per
-seconds.
+The different bitrates available for the current video
+[Adaptation](../terms.md#adaptation), in bits per seconds.
 
 In _DirectFile_ mode (see [loadVideo
 options](./loadVideo_options.md#prop-transport)), returns an empty Array.
@@ -647,8 +667,8 @@ if (videoBitrates.length) {
 
 _return value_: ``Array.<Number>``
 
-The different bitrates available for the current audio adaptation, in bits per
-seconds.
+The different bitrates available for the current audio
+[Adaptation](../terms.md#adaptation), in bits per seconds.
 
 In _DirectFile_ mode (see [loadVideo
 options](./loadVideo_options.md#prop-transport)), returns an empty Array.
@@ -724,23 +744,24 @@ _arguments_: ``Number``
 
 Force the current video track to be of a certain bitrate.
 
-If a video representation is found with the exact same bitrate, this
-representation will be set.
+If an video [Representation](../terms.md#representation) (in the current video
+[Adaptation](../terms.md#adaptation)) is found with the exact same bitrate, this
+Representation will be set.
 
-If no video representation is found with the exact same bitrate, either:
+If no video Representation is found with the exact same bitrate, either:
 
-  - the video representation immediately inferior to it will be chosen instead
+  - the video Representation immediately inferior to it will be chosen instead
     (the closest inferior)
 
-  - if no video representation has a bitrate lower than that value, the video
-    representation with the lowest bitrate will be chosen instead.
+  - if no video Representation has a bitrate lower than that value, the video
+    Representation with the lowest bitrate will be chosen instead.
 
 
 Set to ``-1`` to deactivate (and thus re-activate adaptive streaming for video
 tracks).
 
 When active (called with a positive value), adaptive streaming for video tracks
-will be disabled to stay in the chosen representation.
+will be disabled to stay in the chosen Representation.
 
 You can use ``getAvailableVideoBitrates`` to get the list of available bitrates
 you can set on the current content.
@@ -764,23 +785,24 @@ _arguments_: ``Number``
 
 Force the current audio track to be of a certain bitrate.
 
-If an audio representation (in the current audio adaptation) is found with the
-exact same bitrate, this representation will be set.
+If an audio [Representation](../terms.md#representation) (in the current audio
+[Adaptation](../terms.md#adaptation)) is found with the exact same bitrate, this
+Representation will be set.
 
-If no audio representation is found with the exact same bitrate, either:
+If no audio Representation is found with the exact same bitrate, either:
 
-  - the audio representation immediately inferior to it will be chosen instead
+  - the audio Representation immediately inferior to it will be chosen instead
     (the closest inferior)
 
-  - if no audio representation has a bitrate lower than that value, the audio
-    representation with the lowest bitrate will be chosen instead.
+  - if no audio Representation has a bitrate lower than that value, the audio
+    Representation with the lowest bitrate will be chosen instead.
 
 
 Set to ``-1`` to deactivate (and thus re-activate adaptive streaming for audio
 tracks).
 
 When active (called with a positive value), adaptive streaming for audio tracks
-will be disabled to stay in the chosen representation.
+will be disabled to stay in the chosen Representation.
 
 You can use ``getAvailableAudioBitrates`` to get the list of available bitrates
 you can set on the current content.
@@ -833,7 +855,8 @@ This value can be different than the one returned by ``getAudioBitrate``:
 _arguments_: ``Number``
 
 Set the maximum video bitrate reachable through adaptive streaming. The player
-will never automatically switch to a video representation with a higher bitrate.
+will never automatically switch to a video
+[Representation](../terms.md#representation) with a higher bitrate.
 
 This limit can be removed by setting it to ``Infinity``:
 ```js
@@ -858,7 +881,8 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 _arguments_: ``Number``
 
 Set the maximum audio bitrate reachable through adaptive streaming. The player
-will never automatically switch to a audio representation with a higher bitrate.
+will never automatically switch to a audio
+[Representation](../terms.md#representation) with a higher bitrate.
 
 This limit can be removed by setting it to ``Infinity``:
 ```js
@@ -1055,7 +1079,7 @@ Each of the objects in the returned array have the following properties:
     setting the track via ``setAudioTrack``.
 
   - ``language`` (``string``): The language the audio track is in, as set in
-    the manifest.
+    the [Manifest](../terms.md#manifest).
 
   - ``normalized`` (``string``): An attempt to translate the ``language``
     property into an ISO 639-3 language code (for now only support translations
@@ -1087,7 +1111,7 @@ Each of the objects in the returned array have the following properties:
     setting the track via ``setTextTrack``.
 
   - ``language`` (``string``): The language the text track is in, as set in the
-    manifest.
+    [Manifest](../terms.md#manifest).
 
   - ``normalized`` (``string``): An attempt to translate the ``language``
     property into an ISO 639-3 language code (for now only support translations
@@ -1121,8 +1145,9 @@ Each of the objects in the returned array have the following properties:
   - ``active`` (``Boolean``): Whether this track is the one currently
     active or not.
 
-  - ``representations`` (``Array.<Object>``): Representations of this video
-    track, with attributes:
+  - ``representations`` (``Array.<Object>``):
+    [Representations](../terms.md#representation) of this video track, with
+    attributes:
 
     - ``id`` (``string``): The id used to identify this Representation.
 
@@ -1157,7 +1182,7 @@ The track is an object with the following properties:
     setting the track via ``setAudioTrack``.
 
   - ``language`` (``string``): The language the audio track is in, as set in the
-    manifest.
+    [Manifest](../terms.md#manifest).
 
   - ``normalized`` (``string``): An attempt to translate the ``language``
     property into an ISO 639-3 language code (for now only support translations
@@ -1189,7 +1214,7 @@ The track is an object with the following properties:
     setting the track via ``setTextTrack``.
 
   - ``language`` (``string``): The language the text track is in, as set in the
-    manifest.
+    [Manifest](../terms.md#manifest).
 
   - ``normalized`` (``string``): An attempt to translate the ``language``
     property into an ISO 639-3 language code (for now only support translations
@@ -1221,8 +1246,9 @@ The track is an object with the following properties:
     the track via ``setVideoTrack``.
 
 
-  - ``representations`` (``Array.<Object>``): Representations of this video
-    track, with attributes:
+  - ``representations`` (``Array.<Object>``):
+    [Representations](../terms.md#representation) of this video track, with
+    attributes:
 
     - ``id`` (``string``): The id used to identify this Representation.
 
@@ -1297,7 +1323,7 @@ Set a new video track from its id, recuperated from ``getAvailableVideoTracks``.
 Setting a new video track when a previous one was already playing can lead the
 rx-player to "reload" this content.
 
-During this period:
+During this period of time:
   - the player will have the state ``RELOADING``
   - Multiple APIs linked to the current content might not work.
     Most notably:
@@ -1328,16 +1354,16 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 
 _return value_: ``Manifest|null``
 
-Returns the current loaded Manifest if one. A manifest object structure is
-relatively complex and is described in the [Manifest Object structure
-page](./manifest.md).
+Returns the current loaded [Manifest](../terms.md#manifest) if one.
+The Manifest object structure is relatively complex and is described in the
+[Manifest Object structure page](./manifest.md).
 
 ``null`` if the player is either stopped or not loaded.
 
 ``null`` in _DirectFile_ mode (see [loadVideo
 options](./loadVideo_options.md#prop-transport)).
 
-The manifest will be available before the player reaches the ``"LOADED"`` state.
+The Manifest will be available before the player reaches the ``"LOADED"`` state.
 
 
 <a name="meth-getCurrentAdaptations"></a>
@@ -1345,11 +1371,12 @@ The manifest will be available before the player reaches the ``"LOADED"`` state.
 
 _return value_: ``Object|null``
 
-Returns the Adaptations being loaded per type if a manifest is loaded. The
-returned object will have at most a key for each type ("video", "audio", "text"
-and "image") which will each contain an array of Adaptation Objects.
+Returns the [Adaptations](../terms.md#adaptation) being loaded per type if a
+[Manifest](../terms.md#manifest) is loaded. The returned object will have at
+most a key for each type ("video", "audio", "text" and "image") which will each
+contain an array of Adaptation Objects.
 
-An Adaptation object structure is relatively complex and is described in the
+The Adaptation object structure is relatively complex and is described in the
 [Manifest Object structure page](./manifest.md#adaptation).
 
 ``null`` if the current Adaptations are not known yet.
@@ -1363,9 +1390,10 @@ options](./loadVideo_options.md#prop-transport)).
 
 _return value_: ``Object|null``
 
-Returns the Representations being loaded per type if a manifest is loaded. The
-returned object will have at most a key for each type ("video", "audio", "text"
-and "image") which will each contain an array of Representation Objects.
+Returns the [Representations](../terms.md#representation) being loaded per type
+if a [Manifest](../terms.md#manifest) is loaded. The returned object will have
+at most a key for each type ("video", "audio", "text" and "image") which will
+each contain an array of Representation Objects.
 
 An Representation object structure is relatively complex and is described in the
 [Manifest Object structure page](./manifest.md#representation).

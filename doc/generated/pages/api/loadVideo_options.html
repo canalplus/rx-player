@@ -68,7 +68,7 @@ event in the API.</p>
 <a name="subchapter-url"></a></p>
 <h3>url</h3>
 <p><em>type</em>: <code>string|undefined</code></p>
-<p>For Smooth or DASH contents, the URL to the manifest.</p>
+<p>For Smooth or DASH contents, the URL to the <a href="../terms.html#manifest">Manifest</a>.</p>
 <p>For <em>DirectFile</em> mode contents, the URL of the content (the supported contents
 depends on the current browser).</p>
 <p>This property is mandatory.</p>
@@ -229,6 +229,13 @@ same content needs to be re-decrypted.</p>
 <p><em>type</em>: <code>Boolean|undefined</code></p>
 <p><em>defaults</em>: <code>false</code></p>
 <p>If set to <code>true</code>, the video will play immediately after being loaded.</p>
+<p>Note: On some browsers, auto-playing a media without user interaction is blocked
+due to the browser&#x2019;s policy.
+In that case, the player won&#x2019;t be able to play (it will stay in a <code>&quot;LOADED&quot;</code>
+state) and you will receive a <a href="errors.html">warning event</a> containing a
+<code>MEDIA_ERROR</code> with the code: <code>MEDIA_ERR_BLOCKED_AUTOPLAY</code>.
+A solution in that case would be to propose to your users an UI element to
+trigger the play with an interaction.</p>
 <p><a name="prop-startAt"></a>
 <a name="subchapter-startAt"></a></p>
 <h3>startAt</h3>
@@ -246,10 +253,11 @@ can be either:</p>
 </li>
 <li>
 <p><code>wallClockTime</code> (<code>Number|Date</code>): The starting wall-clock time (re-scaled
-position from manifest informations to obtain a timestamp on live contents),
-in seconds. Useful to use the type of time returned by the
-<code>getWallClockTime</code> API for live contents. If a Date object is given, it
-will automatically be converted into seconds.</p>
+position from <a href="../terms.html#manifest">Manifest</a> informations to obtain a
+timestamp on live contents), in seconds.
+Useful to use the type of time returned by the <code>getWallClockTime</code> API for
+live contents. If a Date object is given, it will automatically be converted
+into seconds.</p>
 </li>
 <li>
 <p><code>fromFirstPosition</code> (<code>Number</code>): relative position from the minimum
@@ -257,7 +265,7 @@ possible one, in seconds.
 That is:</p>
 <ul>
 <li>for live contents, from the beginning of the buffer depth (as defined
-by the manifest).</li>
+by the Manifest).</li>
 <li>for non-live contents, from the position <code>0</code> (this option should be
 equivalent to <code>position</code>)</li>
 </ul>
@@ -288,22 +296,22 @@ possible position, the maximum will be used instead as well.</p>
 <p>For live contents, <code>startAt</code> could work not as expected:</p>
 <ul>
 <li>
-<p>Depending on the type of manifest, it will be more or less precize to guess
+<p>Depending on the type of Manifest, it will be more or less precize to guess
 the live edge of the content. This will mostly affect the
 <code>fromLastPosition</code> option.</p>
 </li>
 <li>
-<p>If the manifest does not allow to go far enough in the past (not enough
+<p>If the Manifest does not allow to go far enough in the past (not enough
 buffer, server-side) to respect the position wanted, the maximum buffer
 depth will be used as a starting time instead.</p>
 </li>
 <li>
-<p>If the manifest does not allow to go far enough in the future (live edge
+<p>If the Manifest does not allow to go far enough in the future (live edge
 sooner) to respect the position wanted, the live edge will be used to define
 the starting time instead.</p>
 </li>
 </ul>
-<p>If <code>startAt</code> is not set on live contents, the time suggested by the manifest
+<p>If <code>startAt</code> is not set on live contents, the time suggested by the Manifest
 will be considered. If it is also not set, the initial position will be based on
 the real live edge.</p>
 <h4>Example</h4>
@@ -352,8 +360,8 @@ option</a>).</p>
 <p>Options concerning the &#x201C;transport&#x201D;.</p>
 <p>That is, the part of the code:</p>
 <ul>
-<li>performing manifest and segment requests</li>
-<li>parsing the manifest</li>
+<li>performing <a href="../terms.html#manifest">Manifest</a> and segment requests</li>
+<li>parsing the Manifest</li>
 <li>parsing/updating/creating segments</li>
 </ul>
 <p>This Object can contain multiple properties. Only those documented here are
@@ -364,7 +372,7 @@ considered stable:</p>
 on it can be found <a href="plugins.html#segmentLoader">here</a>.</p>
 </li>
 <li>
-<p><code>manifestLoader</code> (<code>Function</code>): defines a custom manifest loader. More
+<p><code>manifestLoader</code> (<code>Function</code>): defines a custom Manifest loader. More
 info on it can be found <a href="plugins.html#manifestLoader">here</a>.</p>
 </li>
 <li>
@@ -518,7 +526,8 @@ player states documentation</a>.</p>
 option</a>).</p>
 <hr>
 <p>This option allows to specify informations about supplementary text tracks you
-might want to add to those already declared in the manifest.</p>
+might want to add to those already declared in the
+<a href="../terms.html#manifest">Manifest</a>.</p>
 <p>This only work under the following conditions:</p>
 <ul>
 <li>
@@ -575,7 +584,8 @@ the <a href="text_tracks.html">text track documentation</a>.</p>
 option</a>).</p>
 <hr>
 <p>This option allows to specify informations about supplementary image tracks you
-might want to add to those already declared in the manifest.</p>
+might want to add to those already declared in the
+<a href="../terms.html#manifest">Manifest</a>.</p>
 <p>This only work under the following conditions:</p>
 <ul>
 <li>
@@ -632,8 +642,8 @@ option</a>)</p>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
 option</a>).</p>
 <hr>
-<p>Configuration linked to manifest and segment requests. This object can take the
-following properties (all are optional):</p>
+<p>Configuration linked to <a href="../terms.html#manifest">Manifest</a> and segment requests.
+This object can take the following properties (all are optional):</p>
 <ul>
 <li>
 <p><code>segmentRetry</code> (<code>Number</code>): Maximum number of times a segment request
@@ -644,7 +654,7 @@ error.</p>
 <p>Defaults to <code>4</code>.</p>
 </li>
 <li>
-<p><code>manifestRetry</code> (<code>Number</code>): Maximum number of times a manifest request
+<p><code>manifestRetry</code> (<code>Number</code>): Maximum number of times a Manifest request
 will be retried when a request error happen - only on some condition [1].
 Defaults to <code>4</code>.</p>
 <p>Those retry will be done with a progressive delay, to avoid overloading a

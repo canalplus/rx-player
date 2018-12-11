@@ -36,6 +36,7 @@ export default function startsWith(
     return completeString.startsWith(searchString, position);
     /* tslint:enable ban */
   }
+  const initialPosition = typeof position === "number" ? Math.max(position, 0) : 0;
   return completeString
-    .substr(position || 0, searchString.length) === searchString;
+    .substring(initialPosition, initialPosition + searchString.length) === searchString;
 }

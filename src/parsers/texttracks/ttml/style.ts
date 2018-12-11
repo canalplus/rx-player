@@ -64,7 +64,7 @@ export function getStylingAttributes(
           } else if (name === "region") {
             regionID = attribute.value;
           } else {
-            const nameWithoutTTS = name.substr(4);
+            const nameWithoutTTS = name.substring(4);
             if (arrayIncludes(leftAttributes, nameWithoutTTS)) {
               currentStyle[nameWithoutTTS] = attribute.value;
               leftAttributes.splice(j, 1);
@@ -137,7 +137,7 @@ export function getStylingFromElement(node : Node) : IStyleList {
   for (let i = 0; i <= element.attributes.length - 1; i++) {
     const styleAttribute = element.attributes[i];
     if (startsWith(styleAttribute.name, "tts")) {
-      const nameWithoutTTS = styleAttribute.name.substr(4);
+      const nameWithoutTTS = styleAttribute.name.substring(4);
       currentStyle[nameWithoutTTS] = styleAttribute.value;
     }
   }

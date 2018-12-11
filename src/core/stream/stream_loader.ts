@@ -15,6 +15,7 @@
  */
 
 import {
+  BehaviorSubject,
   EMPTY,
   merge as observableMerge,
   Observable,
@@ -49,7 +50,6 @@ import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
 import {
-  IManifestUpdateEvent,
   ISpeedChangedEvent,
   IStalledEvent,
   IStreamClockTick,
@@ -61,7 +61,8 @@ import {
 export interface IStreamLoaderArgument {
   mediaElement : HTMLMediaElement; // Media Element on which the content will be
                                    // streamed
-  manifest : Manifest; // Manifest of the content we want to stream
+  manifest$ : BehaviorSubject<Manifest>; // Manifest of the content we want to
+                                         // stream
   clock$ : Observable<IStreamClockTick>; // Emit position informations
   speed$ : Observable<number>; // Emit the speed.
                                // /!\ Should replay the last value on subscription.
@@ -80,7 +81,6 @@ export interface IStreamLoaderArgument {
 
 // Events emitted by the StreamLoader
 export type IStreamLoaderEvent =
-  IManifestUpdateEvent |
   IStalledEvent |
   ISpeedChangedEvent |
   IStreamLoadedEvent |
@@ -95,7 +95,7 @@ export type IStreamLoaderEvent =
  */
 export default function StreamLoader({
   mediaElement,
-  manifest,
+  manifest$,
   clock$,
   speed$,
   bufferOptions,
@@ -117,6 +117,9 @@ export default function StreamLoader({
     initialTime : number,
     autoPlay : boolean
   ) {
+    const manifest = manifest$.getValue();
+
+    // TODO Update the duration if it evolves?
     setDurationToMediaSource(mediaSource, manifest.getDuration());
 
     const initialPeriod = manifest.getPeriodForTime(initialTime);
@@ -141,16 +144,16 @@ export default function StreamLoader({
     createNativeSourceBuffersForPeriod(sourceBufferManager, initialPeriod);
 
     const { seek$, load$ } =
-      seekAndLoadOnMediaEvents(mediaElement, initialTime, autoPlay);
+      seekAndLoadOnMediaEvents(clock$, mediaElement, initialTime, autoPlay);
 
-    const bufferClock$ = createBufferClock(manifest, clock$, seek$, speed$, initialTime);
+    const bufferClock$ = createBufferClock(manifest$, clock$, seek$, speed$, initialTime);
 
     // Will be used to cancel any endOfStream tries when the contents resume
     const cancelEndOfStream$ = new Subject<null>();
 
     // Creates Observable which will manage every Buffer for the given Content.
     const buffers$ = PeriodBufferManager(
-      { manifest, initialPeriod },
+      { manifest$, initialPeriod },
       bufferClock$,
       abrManager,
       sourceBufferManager,
@@ -196,6 +199,9 @@ export default function StreamLoader({
         if (evt === "autoplay-blocked") {
           const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
           return observableOf(EVENTS.warning(error), EVENTS.loaded());
+        } else if (evt === "not-loaded-metadata") {
+          const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA", null, false);
+          return observableOf(EVENTS.warning(error));
         }
         log.debug("Stream: Stream is loaded.");
         return observableOf(EVENTS.loaded());

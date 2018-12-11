@@ -28,7 +28,7 @@ export function getAudioCodecs(
     mpProfile = 5; // High Efficiency AAC Profile
   } else {
     mpProfile = codecPrivateData ?
-      (parseInt(codecPrivateData.substr(0, 2), 16) & 0xF8) >> 3 : 2;
+      (parseInt(codecPrivateData.substring(0, 2), 16) & 0xF8) >> 3 : 2;
   }
   return mpProfile ? ("mp4a.40." + mpProfile) : "";
 }

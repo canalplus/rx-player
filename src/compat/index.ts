@@ -17,7 +17,6 @@
 import nextTick from "next-tick";
 import {
   defer as observableDefer,
-  fromEvent as observableFromEvent,
   Observable,
   Observer,
   of as observableOf,
@@ -35,6 +34,7 @@ import {
   isFirefox,
   isIE11,
   isIEOrEdge,
+  isSamsungBrowser,
   MediaSource_,
   READY_STATES,
   VTTCue_,
@@ -117,7 +117,7 @@ function hasEMEAPIs() : boolean {
  * @returns {Boolean}
  */
 function canPatchISOBMFFSegment() {
-  return !isIE11;
+  return !isIEOrEdge;
 }
 
 /**
@@ -169,22 +169,6 @@ function hasLoadedMetadata(
     return observableOf(null);
   } else {
     return events.onLoadedMetadata$(mediaElement)
-      .pipe(take(1));
-  }
-}
-
-/**
- * Returns ane observable emitting a single time, as soon as a play is possible.
- * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
- */
-function canPlay(
-  mediaElement : HTMLMediaElement
-) : Observable<unknown> {
-  if (mediaElement.readyState >= READY_STATES.HAVE_ENOUGH_DATA) {
-    return observableOf(null);
-  } else {
-    return observableFromEvent(mediaElement, "canplay")
       .pipe(take(1));
   }
 }
@@ -310,6 +294,10 @@ function isPlaybackStuck(
     isFirefox && isStalled && state === "timeupdate" &&
     !!currentRange && currentRange.end - time > FREEZE_THRESHOLD
   );
+}
+
+function shouldValidateMetadata() {
+  return isSamsungBrowser;
 }
 
 /**
@@ -460,7 +448,6 @@ export {
   VTTCue_,
   addTextTrack,
   canPatchISOBMFFSegment,
-  canPlay,
   clearElementSrc,
   events,
   exitFullscreen,
@@ -481,5 +468,6 @@ export {
   setMediaKeys,
   shouldRenewMediaKeys,
   shouldUnsetMediaKeys,
+  shouldValidateMetadata,
   tryToChangeSourceBufferType,
 };

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { BehaviorSubject } from "rxjs";
 import { ICustomError } from "../../errors";
 import Manifest, {
   Period,
@@ -24,7 +25,6 @@ import { IBufferType } from "../source_buffers";
 import { IStallingItem } from "./stalling_manager";
 import {
   IManifestReadyEvent,
-  IManifestUpdateEvent,
   IReloadingStreamEvent,
   ISpeedChangedEvent,
   IStalledEvent,
@@ -57,27 +57,11 @@ function stalled(stalling : IStallingItem|null) : IStalledEvent {
  */
 function manifestReady(
   abrManager : ABRManager,
-  manifest : Manifest
+  manifest$ : BehaviorSubject<Manifest>
 ) : IManifestReadyEvent {
   return {
     type: "manifestReady",
-    value: { abrManager, manifest },
-  };
-}
-
-/**
- * Construct a "manifestUpdate" event.
- * @param {Object} manifest
- * @param {number|undefined} sendingTime
- * @returns {Object}
- */
-function manifestUpdate(
-  manifest : Manifest,
-  sendingTime? : number
-) : IManifestUpdateEvent {
-  return {
-    type: "manifestUpdate",
-    value: { manifest, sendingTime },
+    value: { abrManager, manifest$ },
   };
 }
 
@@ -126,7 +110,6 @@ function reloadingStream() : IReloadingStreamEvent {
 const STREAM_EVENTS = {
   loaded,
   manifestReady,
-  manifestUpdate,
   nullRepresentation,
   reloadingStream,
   speedChanged,

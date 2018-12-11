@@ -15,6 +15,7 @@
  */
 
 import { MediaSource_ } from "../../../../../compat";
+import PPromise from "../../../../../utils/promise";
 import {
   IMediaConfiguration,
   ProberStatus,
@@ -27,7 +28,7 @@ import {
 export default function probeContentType(
   config: IMediaConfiguration
 ): Promise<[ProberStatus]> {
-  return new Promise((resolve) => {
+  return new PPromise((resolve) => {
     if (MediaSource_ == null) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "MediaSource API not available");

@@ -53,12 +53,10 @@ export interface IRequestResponse<T, U> {
 // Arguments for the "request" utils
 export interface IRequestOptions<T, U> {
   url : string;
-  method? : string;
   headers? : { [ header: string ] : string }|null;
   responseType? : T;
   timeout? : number;
   ignoreProgressEvents? : U;
-  body? : any;
 }
 
 /**
@@ -76,13 +74,17 @@ function toJSONForIE(data : string) : unknown|null {
 /**
  * # request function
  *
- * Translate AJAX Requests into Rx.js Observables.
+ * Translate GET requests into Rx.js Observables.
  *
  * ## Overview
  *
- * Perform the request on subscription, the Rx.js way.
- * Emit progress and response. Throw if an error happened or if the status code
- * is not in the 200 range. Complete after emitting the response.
+ * Perform the request on subscription.
+ * Emit zero, one or more progress event(s) and then the response if the request
+ * was successful.
+ *
+ * Throw if an error happened or if the status code is not in the 200 range at
+ * the time of the response.
+ * Complete after emitting the response.
  * Abort the xhr on unsubscription.
  *
  * ## Emitted Objects
@@ -116,28 +118,37 @@ function toJSONForIE(data : string) : unknown|null {
  * ```
  *   {
  *     status {Number}: xhr status code
- *     url {string}: url on which the request was done
+ *     url {string}: URL on which the request was done (can be different than
+ *                   the one given in arguments when we go through
+ *                   redirections).
  *     responseType {string}: the responseType of the request
- *                            (e.g. "json", "document"...)
- *     sendingTime {Number}: timestamp at which the request was sent.
- *     receivedTime {Number}: timestamp at which the response was received.
- *     size {Number}: size of the received data, in bytes
+ *                            (e.g. "json", "document"...).
+ *     sendingTime {Number}: time at which the request was sent, in ms.
+ *     receivedTime {Number}: timest at which the response was received, in ms.
+ *     size {Number}: size of the received data, in bytes.
  *     responseData {*}: Data in the response. Format depends on the
  *                       responseType.
  *   }
  * ```
  *
- * For any succesful request you should have 0+ "progress" events and 1
+ * For any successful request you should have 0+ "progress" events and 1
  * "response" event.
+ *
+ * For failing request, you should have 0+ "progress" events and 0 "response"
+ * event (the Observable will throw before).
  *
  * ## Errors
  *
  * Several errors can be emitted (the Rx.js way). Namely:
- *   - timeout error (code RequestErrorTypes.TIMEOUT_ERROR)
- *   - parse error (code RequestErrorTypes.PARSE_ERROR)
- *   - http code error (RequestErrorTypes.ERROR_HTTP_CODE)
- *   - error from the xhr's "error" event (RequestErrorTypes.ERROR_EVENT)
- *
+ *   - RequestErrorTypes.TIMEOUT_ERROR: the request timeouted (took too long to
+ *     respond).
+ *   - RequestErrorTypes.PARSE_ERROR: the browser APIs used to parse the
+ *                                    response failed.
+ *   - RequestErrorTypes.ERROR_HTTP_CODE: the HTTP code at the time of reception
+ *                                        was not in the 200-299 (included)
+ *                                        range.
+ *   - RequestErrorTypes.ERROR_EVENT: The XHR had an error event before the
+ *                                    response could be fetched.
  * @param {Object} options
  * @returns {Observable}
  */
@@ -184,10 +195,7 @@ function request<T>(
 > {
   const requestOptions = {
     url: options.url,
-    body: options.body,
     headers: options.headers,
-    method: options.method == null ?
-      "GET" : options.method,
     responseType: options.responseType == null ?
       DEFAULT_RESPONSE_TYPE : options.responseType,
     timeout: options.timeout == null ?
@@ -200,13 +208,11 @@ function request<T>(
     const {
       url,
       headers,
-      method,
       responseType,
       timeout,
-      body,
     } = requestOptions;
     const xhr = new XMLHttpRequest();
-    xhr.open(method, url, true);
+    xhr.open("GET", url, true);
 
     if (timeout >= 0) {
       xhr.timeout = timeout;
@@ -303,12 +309,7 @@ function request<T>(
       }
     };
 
-    if (body !== undefined) {
-      xhr.send(body);
-    } else {
-      xhr.send();
-    }
-
+    xhr.send();
     return () => {
       if (xhr && xhr.readyState !== 4) {
         xhr.abort();

@@ -53,6 +53,7 @@ interface ISupplementaryTextTrack {
 
 interface IManifestArguments {
   availabilityStartTime? : number;
+  baseURL? : string;
   duration : number;
   isLive : boolean;
   minimumTime? : number;
@@ -77,19 +78,108 @@ interface IManifestParsingOptions {
  * @class Manifest
  */
 export default class Manifest {
+  /**
+   * ID uniquely identifying this Manifest.
+   * @type {string}
+   */
   public readonly id : string;
+
+  /**
+   * Type of transport used by this Manifest (e.g. `"dash"` or `"smooth`".
+   * @type {string}
+   */
   public readonly transport : string;
+
+  /**
+   * Every `Adaptations` for the first `Period` of the Manifest.
+   * @deprecated
+   * @type {Object}
+   */
   public readonly adaptations : ManifestAdaptations;
+
+  /**
+   * List every `Period` in that Manifest chronologically (from its start time).
+   * A `Period` contains content informations about the content available for
+   * a specific period in time.
+   * @type {Array.<Object>}
+   */
   public readonly periods : Period[];
+
+  /**
+   * If true, this Manifest describes a content still running live.
+   * If false, this Manifest describes a finished content.
+   * At the moment this specificity cannot change with time.
+   * TODO Handle that case?
+   * @type {Boolean}
+   */
   public readonly isLive : boolean;
+
+  /**
+   * Every URI linking to that Manifest, used for refreshing it.
+   * Listed from the most important to the least important.
+   * @type {Array.<string>}
+   */
   public uris : string[];
+
+  /**
+   * Suggested delay from the "live edge" the content is suggested to start
+   * from.
+   * This only applies for live contents.
+   * @type {number|undefined}
+   */
   public suggestedPresentationDelay? : number;
+
+  /**
+   * Base URL from which relative segment's URLs will be relative to.
+   * @param {string}
+   */
+  public baseURL? : string;
+
+  /**
+   * Amount of time, in seconds, this Manifest is valid from its fetching time.
+   * If not valid, you will need to refresh and update this Manifest (the latter
+   * can be done through the `update` method).
+   * If no lifetime is set, this Manifest does not become invalid after an
+   * amount of time.
+   * @type {number|undefined}
+   */
   public lifetime? : number;
+
+  /**
+   * Minimum time, in seconds, at which the segment defined in the Manifest
+   * begins.
+   * @type {number|undefined}
+   */
   public availabilityStartTime? : number;
+
+  /**
+   * Minimum time in this Manifest we can seek to, in seconds.
+   * @type {number|undefined}
+   */
   public minimumTime? : number;
+
+  /**
+   * Estimated difference between Date.now() and the real live edge of the
+   * content.
+   * Note: this is sometimes really hard to estimate.
+   * @type {number|undefined}
+   */
   public presentationLiveGap? : number;
+
+  /**
+   * Time - relative to the last available position - in seconds from when
+   * the first segment is available.
+   * Every segments before that time can be considered as unavailable.
+   * This is also sometimes called the `TimeShift window`.
+   * @type {number|undefined}
+   */
   public timeShiftBufferDepth? : number;
 
+  /**
+   * Whole duration anounced in the Manifest.
+   * @private
+   * @type {number}
+   */
   private _duration : number;
 
   /**
@@ -118,7 +208,9 @@ export default class Manifest {
      * @deprecated It is here to ensure compatibility with the way the
      * v3.x.x manages adaptations at the Manifest level
      */
+    /* tslint:disable:deprecation */
     this.adaptations = (this.periods[0] && this.periods[0].adaptations) || {};
+    /* tslint:enable:deprecation */
 
     this.minimumTime = args.minimumTime;
     this.isLive = args.isLive;
@@ -129,6 +221,7 @@ export default class Manifest {
     this.availabilityStartTime = args.availabilityStartTime;
     this.presentationLiveGap = args.presentationLiveGap;
     this.timeShiftBufferDepth = args.timeShiftBufferDepth;
+    this.baseURL = args.baseURL;
 
     // --------- private data
     this._duration = args.duration;
@@ -178,6 +271,7 @@ export default class Manifest {
   }
 
   /**
+   * Returns the duration of the whole content described by that Manifest.
    * @returns {Number}
    */
   getDuration() : number {
@@ -185,6 +279,7 @@ export default class Manifest {
   }
 
   /**
+   * Returns the most important URL from which the Manifest can be refreshed.
    * @returns {string|undefined}
    */
   getUrl() : string|undefined {
@@ -257,7 +352,7 @@ export default class Manifest {
    * Update the current manifest properties
    * @param {Object} Manifest
    */
-  update(newManifest : Manifest) : void {
+  update(newManifest : Manifest) : Manifest {
     this._duration = newManifest.getDuration();
     this.lifetime = newManifest.lifetime;
     this.timeShiftBufferDepth = newManifest.timeShiftBufferDepth;
@@ -337,10 +432,11 @@ export default class Manifest {
         }
       }
     }
+    return this;
   }
 
   /**
-   * Get minimum position currently defined by the Manifest.
+   * Get minimum position currently defined by the Manifest, in seconds.
    * @returns {number}
    */
   public getMinimumPosition() : number {
@@ -350,7 +446,7 @@ export default class Manifest {
   }
 
   /**
-   * Get maximum position currently defined by the Manifest.
+   * Get maximum position currently defined by the Manifest, in seconds.
    * @returns {number}
    */
   public getMaximumPosition() : number {
@@ -364,7 +460,8 @@ export default class Manifest {
   }
 
   /**
-   * Get minimum AND maximum positions currently defined by the manifest.
+   * Get minimum AND maximum positions currently defined by the manifest, in
+   * seconds.
    * @returns {Array.<number>}
    */
   public getCurrentPositionLimits() : [number, number] {
@@ -395,6 +492,7 @@ export default class Manifest {
 
   /**
    * Add supplementary image Adaptation(s) to the manifest.
+   * @private
    * @param {Object|Array.<Object>} imageTracks
    */
   private addSupplementaryImageAdaptations(
@@ -418,14 +516,16 @@ export default class Manifest {
       }, warning$);
     });
 
-    if (newImageTracks.length) {
-      this.adaptations.image = this.adaptations.image ?
-        this.adaptations.image.concat(newImageTracks) : newImageTracks;
+    if (newImageTracks.length && this.periods.length) {
+      const { adaptations } = this.periods[0];
+      adaptations.image = adaptations.image ?
+        adaptations.image.concat(newImageTracks) : newImageTracks;
     }
   }
 
   /**
    * Add supplementary text Adaptation(s) to the manifest.
+   * @private
    * @param {Object|Array.<Object>} textTracks
    */
   private addSupplementaryTextAdaptations(
@@ -464,9 +564,10 @@ export default class Manifest {
       }));
     }, []);
 
-    if (newTextAdaptations.length) {
-      this.adaptations.text = this.adaptations.text ?
-        this.adaptations.text.concat(newTextAdaptations) : newTextAdaptations;
+    if (newTextAdaptations.length && this.periods.length) {
+      const { adaptations } = this.periods[0];
+      adaptations.text = adaptations.text ?
+        adaptations.text.concat(newTextAdaptations) : newTextAdaptations;
     }
   }
 }

@@ -225,3 +225,15 @@ content.
 
 We recommend to only set a Manifest URL in that property when the transport is
 equal to `smooth`.
+
+
+### NetworkError ###############################################################
+
+The `xhr` property from a `NetworkError` is deprecated.
+
+This is to prepare the support of low-latency streaming, with
+[CMAF](https://mpeg.chiariglione.org/standards/mpeg-a/common-media-application-format),
+where the ``fetch`` API has to be used instead of an `XMLHttpRequest`.
+
+We recommend to not rely on this property anymore. You still should have access
+to the `status` and `url` properties.

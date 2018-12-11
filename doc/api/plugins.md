@@ -30,10 +30,10 @@ no use, as our implementation does the same thing and more):
 /**
  * @param {Object} infos - infos about the segment to download
  * @param {string} infos.url - the url the segment request should normally be on
- * @param {Object} infos.adaptation - the adaptation containing the segment.
+ * @param {Object} infos.adaptation - the Adaptation containing the segment.
  * More information on its structure can be found on the documentation linked
  * below [1]
- * @param {Object} infos.representation - the representation containing the
+ * @param {Object} infos.representation - the Representation containing the
  * segment.
  * More information on its structure can be found on the documentation linked
  * below [2]
@@ -121,22 +121,23 @@ const customSegmentLoader = (infos, callbacks) => {
 The manifestLoader is a function that can be included in the
 ``transportOptions`` of the ``loadVideo`` API call.
 
-A manifestLoader allows to define a custom manifest loader.
+A manifestLoader allows to define a custom [Manifest](../terms.md#manifest)
+loader.
 
-The manifest loader is the part performing the manifest request.
+The Manifest loader is the part performing the Manifest request.
 
-Here is a manifest loader which uses an XHR (it has no use, as our
+Here is a Manifest loader which uses an XHR (it has no use, as our
 implementation does the same thing and more):
 
 ```js
 /**
- * @param {string} url - the url the manifest request should normally be on
+ * @param {string} url - the url the Manifest request should normally be on
 
  * @param {Object} callbacks
  * @param {Function} callbacks.resolve - Callback to call when the request is
  * finished with success. It should be called with an object with at least 3
  * properties:
- *   - data {Document|String} - the manifest data
+ *   - data {Document|String} - the Manifest data
  *   - duration {Number} - the duration of the request, in ms
  *   - size {Number} - size, in bytes, of the total downloaded response.
  * @param {Function} callbacks.reject - Callback to call when an error is
@@ -189,11 +190,12 @@ const customManifestLoader = (url, callbacks) => {
 The representationFilter is a function that can be included in the
 ``transportOptions`` of the ``loadVideo`` API call.
 
-A representationFilter allows you to filter out `Representation`s (i.e. media
-qualities) based on its attributes.
+A representationFilter allows you to filter out
+[Representations](../terms.md#representation) (i.e. media qualities) based on
+its attributes.
 
-The representationFilter will be called each time we load a manifest with two
-arguments:
+The representationFilter will be called each time we load a
+[Manifest](../terms.md#manifest) with two arguments:
 
   - representation ``{Representation}``: The concerned ``Representation``.
     A `Representation` structure's is described [in the Manifest structure
@@ -207,7 +209,7 @@ arguments:
         (for thumbnail).
 
       - language ``{string|undefined}``: The language the ``Representation``
-        is in, as announced by the manifest.
+        is in, as announced by the Manifest.
 
       - normalizedLanguage ``{string|undefined}``: An attempt to translate the
         language into an ISO 639-3 code.
@@ -230,10 +232,10 @@ For example, here is a `representationFilter` that removes video
 
 ```js
 /**
- * @param {Object} representation - The representation object, as defined in
+ * @param {Object} representation - The Representation object, as defined in
  * the documentation linked bellow [1]
  * @param {Object} infos - supplementary informations about the given
- * representation.
+ * Representation.
  * @returns {boolean}
  */
 function representationFilter(representation, infos) {

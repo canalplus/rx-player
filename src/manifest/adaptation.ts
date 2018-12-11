@@ -22,6 +22,7 @@ import { ICustomError } from "../errors";
 import MediaError from "../errors/MediaError";
 import log from "../log";
 import generateNewId from "../utils/id";
+import uniq from "../utils/uniq";
 import Representation, {
   IRepresentationArguments,
 } from "./representation";
@@ -60,24 +61,70 @@ export interface IAdaptationArguments {
 
 /**
  * Normalized Adaptation structure.
+ * An Adaptation describes a single `Track`. For example a specific audio
+ * track (in a given language) or a specific video track.
+ * It istelf can be represented in different qualities, which we call here
+ * `Representation`.
  * @class Adaptation
  */
 export default class Adaptation {
-  // required
+
+  /**
+   * ID uniquely identifying the Adaptation in the Period.
+   * TODO in the Manifest instead?
+   * @type {string}
+   */
   public readonly id : string|number;
+
+  /**
+   * Different `Representations` (e.g. qualities) this Adaptation is available
+   * in.
+   * @type {Array.<Object>}
+   */
   public readonly representations : Representation[];
+
+  /**
+   * Type of this Adaptation.
+   * @type {string}
+   */
   public readonly type : IAdaptationType;
 
-  // optional
+  /**
+   * Whether this track contains an audio description for the visually impaired.
+   * @type {Boolean}
+   */
   public isAudioDescription? : boolean;
+
+  /**
+   * Whether this Adaptation contains closed captions for the hard-of-hearing.
+   * @type {Boolean}
+   */
   public isClosedCaption? : boolean;
+
+  /**
+   * Language this Adaptation is in, as announced in the original Manifest.
+   * @type {string|undefined}
+   */
   public language? : string;
-  public manuallyAdded? : boolean;
+
+  /**
+   * Language this Adaptation is in, when translated into an ISO639-3 code.
+   * @type {string|undefined}
+   */
   public normalizedLanguage? : string;
+
+  /**
+   * `true` if this Adaptation was not present in the original Manifest, but was
+   * manually added after through the corresponding APIs.
+   * @type {boolean|undefined}
+   */
+  public manuallyAdded? : boolean;
 
   /**
    * @constructor
    * @param {Object} args
+   * @param {Subject} warning$
+   * @param {Function|undefined} [representationFilter]
    */
   constructor(
     args : IAdaptationArguments,
@@ -136,24 +183,28 @@ export default class Adaptation {
   }
 
   /**
+   * Returns unique bitrate for every Representation in this Adaptation.
    * @returns {Array.<Number>}
    */
   getAvailableBitrates() : number[] {
-    return this.representations
+    const bitrates = this.representations
       .map(representation => representation.bitrate);
+    return uniq(bitrates);
   }
 
   /**
-   * @param {Number|string} wantedId
-   * @returns {Representation}
+   * Returns the Representation linked to the given ID.
+   * @param {number|string} wantedId
+   * @returns {Object|undefined}
    */
   getRepresentation(wantedId : number|string) : Representation|undefined {
     return arrayFind(this.representations, ({ id }) => wantedId === id);
   }
 
   /**
+   * Returns the Representations linked to the given bitrate.
    * @param {Number} bitrate
-   * @returns {Array.<Representations>|null}
+   * @returns {Array.<Object>|null}
    */
   getRepresentationsForBitrate(bitrate : number) : Representation[]|null {
     return this.representations.filter(representation =>
@@ -162,6 +213,7 @@ export default class Adaptation {
 }
 
 /**
+ * Only keep Representations for which the codec is currently supported.
  * @param {string} adaptationType
  * @param {Array.<Object>} representations
  * @returns {Array.<Object>}

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import PPromise from "../../../../../utils/promise";
 import {
   IMediaConfiguration,
   ProberStatus,
@@ -26,7 +27,7 @@ import {
 export default function probeMatchMedia(
   config: IMediaConfiguration
 ): Promise<[ProberStatus]> {
-  return new Promise((resolve) => {
+  return new PPromise((resolve) => {
     /* tslint:disable no-unbound-method */
     if (typeof window.matchMedia !== "function") {
     /* tslint:enable no-unbound-method */

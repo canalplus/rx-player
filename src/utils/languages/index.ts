@@ -54,9 +54,9 @@ function normalize(_language : string) : string {
   const base = fields[0];
   const normalizedBase = normalizeBase(base);
   if (normalizedBase) {
-    fields[0] = normalizedBase;
+    return normalizedBase;
   }
-  return fields.join("-");
+  return _language;
 }
 
 /**

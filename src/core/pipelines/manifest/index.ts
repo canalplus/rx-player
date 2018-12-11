@@ -19,13 +19,21 @@ import {
   Subject,
 } from "rxjs";
 import {
+  catchError,
   filter,
   map,
   mergeMap,
   share,
   tap,
 } from "rxjs/operators";
-import { ICustomError } from "../../../errors";
+import config from "../../../config";
+import {
+  ICustomError,
+  isKnownError,
+  NetworkError,
+  OtherError,
+  RequestError,
+} from "../../../errors";
 import Manifest, {
   IRepresentationFilter,
   ISupplementaryImageTrack,
@@ -33,15 +41,24 @@ import Manifest, {
 } from "../../../manifest";
 import {
   IManifestLoaderArguments,
-  IManifestParserArguments,
-  IManifestResult,
   ITransportPipelines,
 } from "../../../net/types";
+import tryCatch from "../../../utils/rx-tryCatch";
+import downloadingBackoff from "../backoff";
 import createLoader, {
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
 } from "../create_loader";
-import createParser from "../create_parser";
+
+const {
+  MAX_BACKOFF_DELAY_BASE,
+  INITIAL_BACKOFF_DELAY_BASE,
+} = config;
+
+export interface IRequestSchedulerOptions {
+  maxRetry : number;
+  maxRetryOffline : number;
+}
 
 export interface IManifestTransportInfos {
   pipelines : ITransportPipelines;
@@ -58,6 +75,24 @@ type IPipelineManifestOptions =
 export interface IFetchManifestResult {
   manifest : Manifest;
   sendingTime? : number;
+}
+
+/**
+ * Generate a new error from the infos given.
+ * @param {string} code
+ * @param {Error} error
+ * @param {Boolean} fatal - Whether the error is fatal to the content's
+ * playback.
+ * @returns {Error}
+ */
+function errorSelector(code : string, error : Error, fatal : boolean) : ICustomError {
+  if (!isKnownError(error)) {
+    if (error instanceof RequestError) {
+      return new NetworkError(code, error, fatal);
+    }
+    return new OtherError(code, error, fatal);
+  }
+  return error;
 }
 
 /**
@@ -82,13 +117,33 @@ export default function createManifestPipeline(
   warning$ : Subject<Error|ICustomError>
 ) : (url : string) => Observable<IFetchManifestResult> {
   const loader = createLoader<
-  IManifestLoaderArguments, Document|string
+    IManifestLoaderArguments, Document|string
   >(transport.pipelines.manifest, pipelineOptions);
+  const { parser } = transport.pipelines.manifest;
 
-  const parser = createParser<
-  IManifestParserArguments<Document|string>,
-  IManifestResult
-  >(transport.pipelines.manifest);
+  /**
+   * Allow the parser to schedule a new request.
+   * @param {Object} transportPipeline
+   * @param {Object} options
+   * @returns {Function}
+   */
+  function scheduleRequest<T>(request : () => Observable<T>) : Observable<T> {
+    const { maxRetry, maxRetryOffline } = pipelineOptions;
+
+    const backoffOptions = {
+      baseDelay: INITIAL_BACKOFF_DELAY_BASE,
+      maxDelay: MAX_BACKOFF_DELAY_BASE,
+      maxRetryRegular: maxRetry,
+      maxRetryOffline,
+      onRetry: (error : Error) => {
+        warning$.next(errorSelector("PIPELINE_LOAD_ERROR", error, false));
+      },
+    };
+    return downloadingBackoff(tryCatch(request), backoffOptions).pipe(
+      catchError((error : Error) : Observable<never> => {
+        throw errorSelector("PIPELINE_LOAD_ERROR", error, true);
+      }));
+  }
 
   /**
    * Fetch and parse the manifest corresponding to the URL given.
@@ -110,7 +165,12 @@ export default function createManifestPipeline(
 
       mergeMap(({ value }) => {
         const { sendingTime } = value;
-        return parser({ response: value, url }).pipe(
+        return parser({ response: value, url, scheduleRequest }).pipe(
+          catchError((error) => {
+            const formattedError = isKnownError(error) ?
+              error : new OtherError("PIPELINE_PARSING_ERROR", error, true);
+            throw formattedError;
+          }),
           map(({ manifest: parsedManifest }) => {
             const manifest = new Manifest(parsedManifest, warning$, transport.options);
             return { manifest, sendingTime };

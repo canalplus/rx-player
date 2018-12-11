@@ -165,8 +165,9 @@ properties:
     the track via ``setVideoTrack``.
 
 
-  - ``representations`` (``Array.<Object>``): Representations of this video
-    track, with attributes:
+  - ``representations`` (``Array.<Object>``):
+    [Representations](../terms.md#representation) of this video track, with
+    attributes:
 
     - ``id`` (``string``): The id used to identify this Representation.
 
@@ -270,8 +271,8 @@ Information about the last bitrate estimation performed, by type of buffer
 (``audio``, ``video`` etc.).
 
 Note that this event is sent only if the corresponding buffer type has multiple
-representation for the given content (as bitrate estimations are only useful in
-that case).
+[Representations](../terms.md#representation) for the given content (as bitrate
+estimations are only useful in that case).
 
 The payload is an object with the following properties:
 
@@ -344,7 +345,7 @@ options](./loadVideo_options.md#prop-transport)).
 
 ---
 
-Triggered when the current Period being seen changes.
+Triggered when the current [Period](../terms.md#period) being seen changes.
 
 The payload is the corresponding Period. See [the Manifest
 documentation](./manifest.md#period) for more informations.

@@ -199,12 +199,8 @@ describe("DASH live content (SegmentTimeline)", function () {
       videoRepresentationIndex.getSegments(1527507762, 300000000000).length
     ).to.equal(50);
 
-    expect(fakeServer.requests.length).to.equal(3);
-    const requestsDone = [
-      fakeServer.requests[1].url,
-      fakeServer.requests[2].url,
-    ];
-
+    expect(fakeServer.requests.length).to.be.at.least(3);
+    const requestsDone = fakeServer.requests.map(r => r.url);
     expect(requestsDone)
       .to.include(videoRepresentationIndexInfos.init.mediaURL);
     expect(requestsDone)

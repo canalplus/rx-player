@@ -76,7 +76,7 @@ This property is mandatory.
 
 _type_: ``string|undefined``
 
-For Smooth or DASH contents, the URL to the manifest.
+For Smooth or DASH contents, the URL to the [Manifest](../terms.md#manifest).
 
 For _DirectFile_ mode contents, the URL of the content (the supported contents
 depends on the current browser).
@@ -242,6 +242,14 @@ _defaults_: ``false``
 
 If set to ``true``, the video will play immediately after being loaded.
 
+Note: On some browsers, auto-playing a media without user interaction is blocked
+due to the browser's policy.
+In that case, the player won't be able to play (it will stay in a `"LOADED"`
+state) and you will receive a [warning event](./errors.md) containing a
+`MEDIA_ERROR` with the code: `MEDIA_ERR_BLOCKED_AUTOPLAY`.
+A solution in that case would be to propose to your users an UI element to
+trigger the play with an interaction.
+
 
 <a name="prop-startAt"></a>
 ### startAt ####################################################################
@@ -261,16 +269,17 @@ can be either:
   - ``position`` (``Number``): The starting position, in seconds.
 
   - ``wallClockTime`` (``Number|Date``): The starting wall-clock time (re-scaled
-    position from manifest informations to obtain a timestamp on live contents),
-    in seconds. Useful to use the type of time returned by the
-    ``getWallClockTime`` API for live contents. If a Date object is given, it
-    will automatically be converted into seconds.
+    position from [Manifest](../terms.md#manifest) informations to obtain a
+    timestamp on live contents), in seconds.
+    Useful to use the type of time returned by the ``getWallClockTime`` API for
+    live contents. If a Date object is given, it will automatically be converted
+    into seconds.
 
   - ``fromFirstPosition`` (``Number``): relative position from the minimum
     possible one, in seconds.
     That is:
       - for live contents, from the beginning of the buffer depth (as defined
-        by the manifest).
+        by the Manifest).
       - for non-live contents, from the position ``0`` (this option should be
         equivalent to ``position``)
 
@@ -297,20 +306,20 @@ possible position, the maximum will be used instead as well.
 #### Notes for live contents
 For live contents, ``startAt`` could work not as expected:
 
-  - Depending on the type of manifest, it will be more or less precize to guess
+  - Depending on the type of Manifest, it will be more or less precize to guess
     the live edge of the content. This will mostly affect the
     ``fromLastPosition`` option.
 
-  - If the manifest does not allow to go far enough in the past (not enough
+  - If the Manifest does not allow to go far enough in the past (not enough
     buffer, server-side) to respect the position wanted, the maximum buffer
     depth will be used as a starting time instead.
 
-  - If the manifest does not allow to go far enough in the future (live edge
+  - If the Manifest does not allow to go far enough in the future (live edge
     sooner) to respect the position wanted, the live edge will be used to define
     the starting time instead.
 
 
-If ``startAt`` is not set on live contents, the time suggested by the manifest
+If ``startAt`` is not set on live contents, the time suggested by the Manifest
 will be considered. If it is also not set, the initial position will be based on
 the real live edge.
 
@@ -367,8 +376,8 @@ option](#prop-transport)).
 Options concerning the "transport".
 
 That is, the part of the code:
-  - performing manifest and segment requests
-  - parsing the manifest
+  - performing [Manifest](../terms.md#manifest) and segment requests
+  - parsing the Manifest
   - parsing/updating/creating segments
 
 This Object can contain multiple properties. Only those documented here are
@@ -377,7 +386,7 @@ considered stable:
   - ``segmentLoader`` (``Function``): defines a custom segment loader. More info
     on it can be found [here](./plugins.md#segmentLoader).
 
-  - ``manifestLoader`` (``Function``): defines a custom manifest loader. More
+  - ``manifestLoader`` (``Function``): defines a custom Manifest loader. More
     info on it can be found [here](./plugins.md#manifestLoader).
 
   - ``representationFilter`` (``Function``): allows to filter out
@@ -575,7 +584,8 @@ option](#prop-transport)).
 ---
 
 This option allows to specify informations about supplementary text tracks you
-might want to add to those already declared in the manifest.
+might want to add to those already declared in the
+[Manifest](../terms.md#manifest).
 
 This only work under the following conditions:
 
@@ -637,7 +647,8 @@ option](#prop-transport)).
 ---
 
 This option allows to specify informations about supplementary image tracks you
-might want to add to those already declared in the manifest.
+might want to add to those already declared in the
+[Manifest](../terms.md#manifest).
 
 This only work under the following conditions:
 
@@ -704,8 +715,8 @@ option](#prop-transport)).
 
 ---
 
-Configuration linked to manifest and segment requests. This object can take the
-following properties (all are optional):
+Configuration linked to [Manifest](../terms.md#manifest) and segment requests.
+This object can take the following properties (all are optional):
 
   - ``segmentRetry`` (``Number``): Maximum number of times a segment request
     will be retried when an error happen - only on some condition [1].
@@ -716,7 +727,7 @@ following properties (all are optional):
 
     Defaults to ``4``.
 
-  - ``manifestRetry`` (``Number``): Maximum number of times a manifest request
+  - ``manifestRetry`` (``Number``): Maximum number of times a Manifest request
     will be retried when a request error happen - only on some condition [1].
     Defaults to ``4``.
 
