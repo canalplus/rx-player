@@ -339,7 +339,27 @@ most usecase.</p>
 <p><a name="meth-play"></a>
 <a name="subchapter-play"></a></p>
 <h3>play</h3>
+<p><em>return value</em>: <code>Promise.&lt;void&gt;</code></p>
 <p>Play/resume the current video. Equivalent to a video element&#x2019;s play method.</p>
+<p>The returned Promise informs you on the result:</p>
+<ul>
+<li>
+<p>if playback succeeds, the Promise is fulfilled</p>
+</li>
+<li>
+<p>if playback fails, the Promise is rejected along with an error message
+explaining the failure - coming directly from the browser.</p>
+<p>Such failure can for example be due to your browser&#x2019;s policy, which may
+forbid to call play on a media element without any user interaction.
+Please note that in that case, you will also receive a
+<a href="errors.html">warning event</a> containing a <code>MEDIA_ERROR</code> with the code:
+<code>MEDIA_ERR_PLAY_NOT_ALLOWED</code>.</p>
+</li>
+</ul>
+<p>Note: On browsers which do not support Promises natively (such as Internet
+Explorer 11), a JavaScript implementation is provided instead. This
+implementation has the exact same implementation than <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">ES2015
+Promises</a>.</p>
 <h4>Example</h4>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> resumeContent = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
   player.play();

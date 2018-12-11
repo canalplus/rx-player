@@ -157,6 +157,24 @@ in a <code>&quot;LOADED&quot;</code> state.
 This code is always a warning and it never causes playback interruption.</p>
 </li>
 <li>
+<p><code>&quot;MEDIA_ERR_PLAY_NOT_ALLOWED&quot;</code>: A <code>play</code> call on our API (coming from you)
+failed because the current browser does not allow it.
+The content should still be in a paused state.
+This is in almost any case due a browser policy which prevents a content to
+play without any user interaction.
+In those cases, we recommend to display a UI element on your page inviting
+the final user to manually play the content.</p>
+</li>
+<li>
+<p><code>&quot;MEDIA_ERR_NOT_LOADED_METADATA&quot;</code>: The current browser falsely announce
+having loaded the content&#x2019;s metadata.
+In that case, we cannot switch to the <code>LOADED</code> state directly (we will
+be blocked in either a <code>LOADING</code> or a <code>RELOADING</code> state) and you&#x2019;re
+encouraged to call <code>play</code> manually when you want to play the content.
+This is a case only encountered in the Samsung browser (as found in
+Android) when loading a content in &#x201C;directfile&#x201D; mode.</p>
+</li>
+<li>
 <p><code>&quot;MEDIA_ERR_DECODE&quot;</code>: A pushed segment/media could not be decoded by the
 browser. This happens most-of-all with malformed segments.</p>
 </li>

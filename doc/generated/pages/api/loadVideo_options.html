@@ -229,6 +229,13 @@ same content needs to be re-decrypted.</p>
 <p><em>type</em>: <code>Boolean|undefined</code></p>
 <p><em>defaults</em>: <code>false</code></p>
 <p>If set to <code>true</code>, the video will play immediately after being loaded.</p>
+<p>Note: On some browsers, auto-playing a media without user interaction is blocked
+due to the browser&#x2019;s policy.
+In that case, the player won&#x2019;t be able to play (it will stay in a <code>&quot;LOADED&quot;</code>
+state) and you will receive a <a href="errors.html">warning event</a> containing a
+<code>MEDIA_ERROR</code> with the code: <code>MEDIA_ERR_BLOCKED_AUTOPLAY</code>.
+A solution in that case would be to propose to your users an UI element to
+trigger the play with an interaction.</p>
 <p><a name="prop-startAt"></a>
 <a name="subchapter-startAt"></a></p>
 <h3>startAt</h3>

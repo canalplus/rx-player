@@ -19,6 +19,7 @@
 <ul>
 <li><a href="#subchapter-Manifest">Manifest</a></li>
 <li><a href="#subchapter-Smooth">Smooth</a></li>
+<li><a href="#subchapter-NetworkError">NetworkError</a></li>
 </ul>
 </li>
 </ul>
@@ -202,4 +203,12 @@ replace:</p>
 content.</p>
 <p>We recommend to only set a Manifest URL in that property when the transport is
 equal to <code>smooth</code>.</p>
+<p><a name="subchapter-NetworkError"></a></p>
+<h3>NetworkError</h3>
+<p>The <code>xhr</code> property from a <code>NetworkError</code> is deprecated.</p>
+<p>This is to prepare the support of low-latency streaming, with
+<a href="https://mpeg.chiariglione.org/standards/mpeg-a/common-media-application-format">CMAF</a>,
+where the <code>fetch</code> API has to be used instead of an <code>XMLHttpRequest</code>.</p>
+<p>We recommend to not rely on this property anymore. You still should have access
+to the <code>status</code> and <code>url</code> properties.</p>
 </body></html></div></div></div></body>
