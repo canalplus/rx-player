@@ -1,4 +1,4 @@
-# Rx-player ####################################################################
+# RxPlayer ####################################################################$
 
 [![rx-player latest release](https://img.shields.io/badge/dynamic/json.svg?label=Latest%20release&url=https://api.github.com/repos/canalplus/rx-player/releases/latest&query=$.tag_name&colorB=blue)](https://github.com/canalplus/rx-player/releases)
 [![Build Status](https://travis-ci.org/canalplus/rx-player.svg?branch=master)](https://travis-ci.org/canalplus/rx-player)
@@ -6,7 +6,7 @@
 
 [![NPM](https://nodei.co/npm/rx-player.png?compact=true)](https://nodei.co/npm/rx-player/)
 
-The Rx-player is a library implementing a [DASH](https://en.wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP)
+The RxPlayer is a library implementing a [DASH](https://en.wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP)
 and [Microsoft Smooth Streaming](https://www.iis.net/downloads/microsoft/smooth-streaming)
 video player directly on the browser, without plugins.
 It relies on HTML5 [Media Source Extensions](https://en.wikipedia.org/wiki/Media_Source_Extensions)
