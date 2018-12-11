@@ -32,7 +32,7 @@
   - dash: better manage overlapping Periods by giving more importance to the last chronological one
   - memory: clean-up ``Adaptation`` and ``Representation`` informations on Periods which are not considered anymore
   - log: warn through our logs every time a warning event is sent by the API
-  - demo: authorize DRMs in IE11 or Safari when in HTTP
+  - demo: authorize DRMs in IE11 or Safari when in HTTP in the demo page
 
 
 ## v3.9.3 (2018/11/23)
