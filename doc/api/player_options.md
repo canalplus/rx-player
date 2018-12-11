@@ -66,7 +66,8 @@ _defaults_: ``0``
 
 This is a ceil value for the initial video bitrate chosen.
 
-That is, the first video representation chosen will be:
+That is, the first video [Representation](../terms.md#representation) chosen
+will be:
 
   - inferior to this value.
 
@@ -74,7 +75,7 @@ That is, the first video representation chosen will be:
     superior, ones)
 
 
-If no representation is found to respect those rules, the representation with
+If no Representation is found to respect those rules, the Representation with
 the lowest bitrate will be chosen instead. Thus, the default value - ``0`` -
 will lead to the lowest bitrate being chosen at first.
 
@@ -103,7 +104,8 @@ _defaults_: ``0``
 
 This is a ceil value for the initial audio bitrate chosen.
 
-That is, the first audio representation chosen will be:
+That is, the first audio [Representation](../terms.md#representation) chosen
+will be:
 
   - inferior to this value.
 
@@ -111,7 +113,7 @@ That is, the first audio representation chosen will be:
     superior, ones)
 
 
-If no representation is found to respect those rules, the representation with
+If no Representation is found to respect those rules, the Representation with
 the lowest bitrate will be chosen instead. Thus, the default value - ``0`` -
 will lead to the lowest bitrate being chosen at first.
 
@@ -139,7 +141,8 @@ _type_: ``Number|undefined``
 _defaults_: ``Infinity``
 
 The maximum video bitrate reachable through adaptive streaming. The player will
-never automatically switch to a video representation with a higher bitrate.
+never automatically switch to a video
+[Representation](../terms.md#representation) with a higher bitrate.
 
 ```js
 // limit automatic adaptive streaming for the video track to up to 1 Mb/s
@@ -170,7 +173,8 @@ _type_: ``Number|undefined``
 _defaults_: ``Infinity``
 
 The maximum audio bitrate reachable through adaptive streaming. The player will
-never automatically switch to an audio representation with a higher bitrate.
+never automatically switch to an audio
+[Representation](../terms.md#representation) with a higher bitrate.
 
 ```js
 // limit automatic adaptive streaming for the audio track to up to 100 kb/s
@@ -272,12 +276,13 @@ _type_: ``Boolean``
 
 _defaults_: ``false``
 
-With this feature, the possible video representations considered are filtered by
-width:
+With this feature, the possible video
+[Representations](../terms.md#representation) considered are filtered by width:
+
 The maximum width considered is the closest superior or equal to the video
 element's width.
 
-This is done because the other, "superior" representations will not have any
+This is done because the other, "superior" Representations will not have any
 difference in terms of pixels (as in most case, the display limits the maximum
 resolution displayable). It thus save bandwidth with no visible difference.
 
@@ -336,8 +341,8 @@ By default, the player automatically _unload_ the content once it reaches its
 end (the player goes to the ``"ENDED"`` state).
 
 In that case, the only way to play the content again is to (re-)call the
-``loadVideo`` API, which will trigger another download of the manifest and
-segments.
+``loadVideo`` API, which will trigger another download of the
+[Manifest](../terms.md#manifest) and segments.
 
 If you want to be able to seek back in the content after it ended, you may want
 to deactivate this behavior. To do so, set ``stopAtEnd`` to ``false``.

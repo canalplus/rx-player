@@ -5,8 +5,8 @@ which follow as close as possible the concept of the `AdaptationSet` in
 the DASH protocol.
 
 However, to answer practically to some of the features allowed by DASH while
-still respecting the [DASH-IF "IOP"](TODO LINK), we had to take some (minor)
-freedom with our interpretation of it.
+still respecting the [DASH-IF "IOP"](https://dashif.org/guidelines/), we had to
+take some (minor) freedom with our interpretation of it.
 
 
 

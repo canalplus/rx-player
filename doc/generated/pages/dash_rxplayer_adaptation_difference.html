@@ -1,4 +1,4 @@
-<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Differences between DASH' AdaptationSets and the rx-player "Adaptation" - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Differences%20between%20DASH'%20AdaptationSets%20and%20the%20rx-player%20%22Adaptation%22">Differences between DASH’ AdaptationSets and the rx-player “Adaptation”</a></p>
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../styles/style.css"/><link rel="stylesheet" href="../styles/code.css"/><title>Differences between DASH' AdaptationSets and the rx-player "Adaptation" - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Differences%20between%20DASH'%20AdaptationSets%20and%20the%20rx-player%20%22Adaptation%22">Differences between DASH’ AdaptationSets and the rx-player “Adaptation”</a></p>
 <ul>
 <li><a href="#chapter-Merging%20of%20multiple%20AdaptationSets%20into%20a%20single%20Adaptation">Merging of multiple AdaptationSets into a single Adaptation</a>
 <ul>
@@ -7,14 +7,14 @@
 </ul>
 </li>
 </ul>
-</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Differences%20between%20DASH&apos;%20AdaptationSets%20and%20the%20rx-player%20%22Adaptation%22"></a></p>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Differences%20between%20DASH&apos;%20AdaptationSets%20and%20the%20rx-player%20%22Adaptation%22"></a></p>
 <h1>Differences between DASH&#x2019; AdaptationSets and the rx-player &#x201C;Adaptation&#x201D;</h1>
 <p>The RxPlayer defines an <code>Adaptation</code> object (also sometimes called <code>Track</code>)
 which follow as close as possible the concept of the <code>AdaptationSet</code> in
 the DASH protocol.</p>
 <p>However, to answer practically to some of the features allowed by DASH while
-still respecting the [DASH-IF &#x201C;IOP&#x201D;](TODO LINK), we had to take some (minor)
-freedom with our interpretation of it.</p>
+still respecting the <a href="https://dashif.org/guidelines/">DASH-IF &#x201C;IOP&#x201D;</a>, we had to
+take some (minor) freedom with our interpretation of it.</p>
 <p><a name="chapter-Merging%20of%20multiple%20AdaptationSets%20into%20a%20single%20Adaptation"></a></p>
 <h2>Merging of multiple AdaptationSets into a single Adaptation</h2>
 <p>The main difference is that all similar <code>AdaptationSet</code> which are marked as

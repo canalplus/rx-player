@@ -89,7 +89,8 @@ all have a ``type`` property equal to ``"NETWORK_ERROR"``.
 
 A NetworkError can only have the following code (``code`` property):
 
-  - ``"PIPELINE_LOAD_ERROR"``: the manifest or segment request failed.
+  - ``"PIPELINE_LOAD_ERROR"``: the [Manifest](../terms.md#manifest) or segment
+    request failed.
 
 #### more informations #########################################################
 
@@ -118,7 +119,8 @@ Among its properties, you have:
 ### MEDIA_ERROR ################################################################
 
 Error related to the media itself. It can both come from the player itself
-(manifest parsing) or from the browser itself (content playback).
+([Manifest](../terms.md#manifest) parsing) or from the browser itself (content
+playback).
 
 They all have a ``type`` property equal to ``"MEDIA_ERROR"``.
 
@@ -135,16 +137,17 @@ A MediaError can have the following codes (``code`` property):
   - ``"BUFFER_TYPE_UNKNOWN"``: The type of buffer considered (e.g. "audio" /
     "video" / "text") has no SourceBuffer implementation in your build.
 
-  - ``"MANIFEST_INCOMPATIBLE_CODECS_ERROR"``: An "Adaptation" (DASH's
-    AdaptationSet or Smooth's StreamIndex) has none of its "Representations"
-    (read quality) in a supported codec.
+  - ``"MANIFEST_INCOMPATIBLE_CODECS_ERROR"``: An
+    [Adaptation](../terms.md#adaptation) (or track) has none of its
+    [Representations](../terms.md#representation) (read quality) in a supported
+    codec.
 
-  - ``"MANIFEST_PARSE_ERROR"``: Generic error to signal than the Manifest could
-    not be parsed.
+  - ``"MANIFEST_PARSE_ERROR"``: Generic error to signal than the
+    [Manifest](../terms.md#manifest) could not be parsed.
 
-  - ``"MANIFEST_UNSUPPORTED_ADAPTATION_TYPE"``: One of the "Adaptation" (DASH's
-    AdaptationSet or Smooth's StreamIndex) has a type (e.g. "audio", "text" or
-    "video" which is not understood by the RxPlayer).
+  - ``"MANIFEST_UNSUPPORTED_ADAPTATION_TYPE"``: One of the
+    [Adaptation](../terms.md#adaptation) has a type (e.g. "audio", "text" or
+    "video" which is not managed by the RxPlayer).
 
   - ``"MEDIA_ERR_ABORTED"``: A crucial browser-side fetching operation was
     aborted.
@@ -190,12 +193,12 @@ A MediaError can have the following codes (``code`` property):
     time was not found in the corresponding media.
 
   - ``"MEDIA_TIME_BEFORE_MANIFEST"``: The current time in the media is behind
-    what is currently declared in the manifest.
+    what is currently declared in the [Manifest](../terms.md#manifest).
     This can lead to stalling indefinitely as the player won't be able to
     download new segments arround the current time.
 
   - ``"MEDIA_TIME_AFTER_MANIFEST"``: The current time in the media is after what
-    is currently declared in the manifest.
+    is currently declared in the [Manifest](../terms.md#manifest).
     This can lead to stalling indefinitely as the player won't be able to
     download new segments arround the current time.
 
@@ -259,11 +262,12 @@ They all have a ``type`` property equal to ``"OTHER_ERROR"``.
 
 An OtherError can have the following codes (``code`` property):
 
-  - ``"PIPELINE_LOAD_ERROR"``: The manifest or segment request failed and the
-    request has been done through a given callback (i.e. not the RxPlayer's
-    XMLHttpRequest implementation).
+  - ``"PIPELINE_LOAD_ERROR"``: The [Manifest](../terms.md#manifest) or segment
+    request failed and the request has been done through a given callback (i.e.
+    not the RxPlayer's XMLHttpRequest implementation).
 
-  - ``"PIPELINE_PARSE_ERROR"``: The RxPlayer's manifest or segment parsing logic
-    failed. This is most likely due to a malformed manifest or segment.
+  - ``"PIPELINE_PARSE_ERROR"``: The RxPlayer's [Manifest](../terms.md#manifest)
+    or segment parsing logic failed. This is most likely due to a malformed
+    Manifest or segment.
 
   - ``"NONE"``: The error cannot be characterized.
