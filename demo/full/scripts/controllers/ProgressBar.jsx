@@ -17,12 +17,24 @@ class Progressbar extends React.Component {
     };
   }
 
-  showTimeIndicator(wallClockTime, clientX) {
-    const date = new Date(wallClockTime * 1000);
-    const hours = date.getHours().toString().padStart(2, "0");
-    const minutes = date.getMinutes().toString().padStart(2, "0");
-    const seconds = date.getSeconds().toString().padStart(2, "0");
-    const currentReadableTime =  hours + ":" + minutes + ":" + seconds;
+  showTimeIndicator(wallClockTime, clientX, isLive) {
+    let hours,
+        minutes,
+        seconds;
+    if (isLive) {
+      const date = new Date(wallClockTime * 1000);
+      hours = date.getHours();
+      minutes = date.getMinutes();
+      seconds = date.getSeconds();
+    } else {
+      hours = Math.floor(wallClockTime / 3600);
+      minutes = Math.floor((wallClockTime - (hours * 3600)) / 60);
+      seconds = Math.floor(wallClockTime - ((minutes * 60) + (hours * 3600)));
+    }
+    const currentReadableTime = hours.toString().padStart(2, "0") + ":" +
+      minutes.toString().padStart(2, "0") + ":" +
+      seconds.toString().padStart(2, "0");
+
     this.setState({
       timeIndicatorVisible: true,
       timeIndicatorPosition: clientX,
@@ -82,6 +94,7 @@ class Progressbar extends React.Component {
       minimumPosition,
       maximumPosition,
       isContentLoaded,
+      isLive,
       bufferGap,
       player,
     } = this.props;
@@ -93,7 +106,7 @@ class Progressbar extends React.Component {
     const onMouseMove = (position, event) => {
       const wallClockDiff = player.get("wallClockDiff");
       const wallClockTime = position + wallClockDiff;
-      this.showTimeIndicator(wallClockTime, event.clientX);
+      this.showTimeIndicator(wallClockTime, event.clientX, isLive);
       this.showImageTip(position, event.clientX);
     };
 
@@ -149,6 +162,7 @@ export default withModulesState({
     currentTime: "currentTime",
     images: "images",
     isContentLoaded: "isContentLoaded",
+    isLive: "isLive",
     minimumPosition: "minimumPosition",
     maximumPosition: "maximumPosition",
   },
