@@ -33,6 +33,7 @@
   - memory: clean-up ``Adaptation`` and ``Representation`` informations on Periods which are not considered anymore
   - log: warn through our logs every time a warning event is sent by the API
   - demo: authorize DRMs in IE11 or Safari when in HTTP in the demo page
+  - demo: fix time indication for non-live contents
 
 
 ## v3.9.3 (2018/11/23)
