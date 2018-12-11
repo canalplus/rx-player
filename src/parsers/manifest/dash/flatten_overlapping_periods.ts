@@ -46,23 +46,26 @@ import { IParsedPeriod } from "../types";
 export default function flattenOverlappingPeriods(
   parsedPeriods: IParsedPeriod[]
 ): IParsedPeriod[] {
-  return parsedPeriods.reduce((flattenPeriods: IParsedPeriod[], parsedPeriod) => {
-    let lastFlattenPeriod = flattenPeriods[flattenPeriods.length - 1];
+  if (parsedPeriods.length === 0) {
+    return [];
+  }
+  const flattenedPeriods : IParsedPeriod[] = [parsedPeriods[0]];
+  for (let i = 1; i < parsedPeriods.length; i++) {
+    const parsedPeriod = parsedPeriods[i];
+    let lastFlattenedPeriod = flattenedPeriods[flattenedPeriods.length - 1];
     while (
-      lastFlattenPeriod && (
-        lastFlattenPeriod.duration == null ||
-        (lastFlattenPeriod.start + lastFlattenPeriod.duration) > parsedPeriod.start
-      )
+      lastFlattenedPeriod.duration == null ||
+      (lastFlattenedPeriod.start + lastFlattenedPeriod.duration) > parsedPeriod.start
     ) {
-      log.warn("DASH: Updating overlapping Periods.", lastFlattenPeriod, parsedPeriod);
-      lastFlattenPeriod.duration = parsedPeriod.start - lastFlattenPeriod.start;
-      lastFlattenPeriod.end = parsedPeriod.start;
-      if (lastFlattenPeriod.duration <= 0) {
-        flattenPeriods.pop();
-        lastFlattenPeriod = flattenPeriods[flattenPeriods.length - 1];
+      log.warn("DASH: Updating overlapping Periods.", lastFlattenedPeriod, parsedPeriod);
+      lastFlattenedPeriod.duration = parsedPeriod.start - lastFlattenedPeriod.start;
+      lastFlattenedPeriod.end = parsedPeriod.start;
+      if (lastFlattenedPeriod.duration <= 0) {
+        flattenedPeriods.pop();
+        lastFlattenedPeriod = flattenedPeriods[flattenedPeriods.length - 1];
       }
     }
-    flattenPeriods.push(parsedPeriod);
-    return flattenPeriods;
-  }, []);
+    flattenedPeriods.push(parsedPeriod);
+  }
+  return flattenedPeriods;
 }
