@@ -1,5 +1,40 @@
 # Changelog
 
+## v3.10.0 (2018/12/11)
+
+### Features
+
+  - dash: Manage xlinks in "onLoad" resolution model
+  - dash: Implement AdaptationSet switching by merging similar and switchable AdaptationSet into a single track
+  - compat: add ``MEDIA_ERR_METADATA_NOT_LOADED`` warning, triggered when the browser has issues with loading the initial data (only seen on the Samsung mobile browser in directfile mode)
+  - compat: add ``MEDIA_ERR_PLAY_NOT_ALLOWED`` warning, triggered when the application tries to ``play`` but the current browser doesn't allow it (often due to autoplay policy)
+  - api: the ``play`` API now returns a Promise, mirroring the original browser's ``play`` API
+
+### Deprecated
+
+  - api: The ``xhr`` property from a `NetworkError` is now deprecated
+
+### Bug fixes
+
+  - compat/smooth: fix fatal error `BUFFER_APPEND_ERROR` happening on some HSS contents with Edge
+  - dash/smooth: never refresh the manifest if its content is not dynamic
+  - dash/smooth: use new URL if the initial manifest request is redirected (again :/ - thanks @fnatte)
+  - api: do not go out of the ``LOADING`` state if the metadata could not be fetched (even if the browser tells us otherwise) - to work around Samsung Browser bug
+  - api: avoid going out of the ``LOADED`` state until the initial seek is done and metadata is fetched
+  - compat: use Promise ponyfill to improve IE11 compatibility with the MediaCapabilitiesProber and some EME functionalities
+  - api: translate most IETF language tags into  corresponding ISO639-3 codes for the `normalizedLanguage` property -  given from APIs such as `getAvailableAudioTracks`
+  - tools: fix ``mediaCapabilitiesProber.getCompatibleDRMConfigurations`` experimental tool on Safari
+  - api: filter out duplicates in ``getAvailableVideoBitrates`` and ``getAvailableAudioBitrates``
+
+### Other improvements
+
+  - dash: better infer unknown Period durations
+  - dash: better manage overlapping Periods by giving more importance to the last chronological one
+  - memory: clean-up ``Adaptation`` and ``Representation`` informations on Periods which are not considered anymore
+  - log: warn through our logs every time a warning event is sent by the API
+  - demo: authorize DRMs in IE11 or Safari when in HTTP
+
+
 ## v3.9.3 (2018/11/23)
 
 ### Bug fixes
