@@ -339,7 +339,27 @@ most usecase.</p>
 <p><a name="meth-play"></a>
 <a name="subchapter-play"></a></p>
 <h3>play</h3>
+<p><em>return value</em>: <code>Promise.&lt;void&gt;</code></p>
 <p>Play/resume the current video. Equivalent to a video element&#x2019;s play method.</p>
+<p>The returned Promise informs you on the result:</p>
+<ul>
+<li>
+<p>if playback succeeds, the Promise is fulfilled</p>
+</li>
+<li>
+<p>if playback fails, the Promise is rejected along with an error message
+explaining the failure - coming directly from the browser.</p>
+<p>Such failure can for example be due to your browser&#x2019;s policy, which may
+forbid to call play on a media element without any user interaction.
+Please note that in that case, you will also receive a
+<a href="errors.html">warning event</a> containing a <code>MEDIA_ERROR</code> with the code:
+<code>MEDIA_ERR_PLAY_NOT_ALLOWED</code>.</p>
+</li>
+</ul>
+<p>Note: On browsers which do not support Promises natively (such as Internet
+Explorer 11), a JavaScript implementation is provided instead. This
+implementation has the exact same implementation than <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">ES2015
+Promises</a>.</p>
 <h4>Example</h4>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> resumeContent = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
   player.play();
@@ -497,7 +517,7 @@ player.seekTo({ <span class="hljs-attr">wallClockTime</span>: <span class="hljs-
 <a name="subchapter-getUrl"></a></p>
 <h3>getUrl</h3>
 <p><em>return value</em>: <code>string|undefined</code></p>
-<p>Returns the URL of the downloaded manifest.</p>
+<p>Returns the URL of the downloaded <a href="../terms.html#manifest">Manifest</a>.</p>
 <p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
 options</a>), returns the URL of the content
 being played.</p>
@@ -527,8 +547,8 @@ otherwise.</p>
 <a name="subchapter-getAvailableVideoBitrates"></a></p>
 <h3>getAvailableVideoBitrates</h3>
 <p><em>return value</em>: <code>Array.&lt;Number&gt;</code></p>
-<p>The different bitrates available for the current video adaptation, in bits per
-seconds.</p>
+<p>The different bitrates available for the current video
+<a href="../terms.html#adaptation">Adaptation</a>, in bits per seconds.</p>
 <p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
 options</a>), returns an empty Array.</p>
 <h4>Example</h4>
@@ -544,8 +564,8 @@ options</a>), returns an empty Array.</p>
 <a name="subchapter-getAvailableAudioBitrates"></a></p>
 <h3>getAvailableAudioBitrates</h3>
 <p><em>return value</em>: <code>Array.&lt;Number&gt;</code></p>
-<p>The different bitrates available for the current audio adaptation, in bits per
-seconds.</p>
+<p>The different bitrates available for the current audio
+<a href="../terms.html#adaptation">Adaptation</a>, in bits per seconds.</p>
 <p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
 options</a>), returns an empty Array.</p>
 <h4>Example</h4>
@@ -596,23 +616,24 @@ per seconds.</p>
 <h3>setVideoBitrate</h3>
 <p><em>arguments</em>: <code>Number</code></p>
 <p>Force the current video track to be of a certain bitrate.</p>
-<p>If a video representation is found with the exact same bitrate, this
-representation will be set.</p>
-<p>If no video representation is found with the exact same bitrate, either:</p>
+<p>If an video <a href="../terms.html#representation">Representation</a> (in the current video
+<a href="../terms.html#adaptation">Adaptation</a>) is found with the exact same bitrate, this
+Representation will be set.</p>
+<p>If no video Representation is found with the exact same bitrate, either:</p>
 <ul>
 <li>
-<p>the video representation immediately inferior to it will be chosen instead
+<p>the video Representation immediately inferior to it will be chosen instead
 (the closest inferior)</p>
 </li>
 <li>
-<p>if no video representation has a bitrate lower than that value, the video
-representation with the lowest bitrate will be chosen instead.</p>
+<p>if no video Representation has a bitrate lower than that value, the video
+Representation with the lowest bitrate will be chosen instead.</p>
 </li>
 </ul>
 <p>Set to <code>-1</code> to deactivate (and thus re-activate adaptive streaming for video
 tracks).</p>
 <p>When active (called with a positive value), adaptive streaming for video tracks
-will be disabled to stay in the chosen representation.</p>
+will be disabled to stay in the chosen Representation.</p>
 <p>You can use <code>getAvailableVideoBitrates</code> to get the list of available bitrates
 you can set on the current content.</p>
 <p>Note that the value set is persistent between <code>loadVideo</code> calls.
@@ -627,23 +648,24 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 <h3>setAudioBitrate</h3>
 <p><em>arguments</em>: <code>Number</code></p>
 <p>Force the current audio track to be of a certain bitrate.</p>
-<p>If an audio representation (in the current audio adaptation) is found with the
-exact same bitrate, this representation will be set.</p>
-<p>If no audio representation is found with the exact same bitrate, either:</p>
+<p>If an audio <a href="../terms.html#representation">Representation</a> (in the current audio
+<a href="../terms.html#adaptation">Adaptation</a>) is found with the exact same bitrate, this
+Representation will be set.</p>
+<p>If no audio Representation is found with the exact same bitrate, either:</p>
 <ul>
 <li>
-<p>the audio representation immediately inferior to it will be chosen instead
+<p>the audio Representation immediately inferior to it will be chosen instead
 (the closest inferior)</p>
 </li>
 <li>
-<p>if no audio representation has a bitrate lower than that value, the audio
-representation with the lowest bitrate will be chosen instead.</p>
+<p>if no audio Representation has a bitrate lower than that value, the audio
+Representation with the lowest bitrate will be chosen instead.</p>
 </li>
 </ul>
 <p>Set to <code>-1</code> to deactivate (and thus re-activate adaptive streaming for audio
 tracks).</p>
 <p>When active (called with a positive value), adaptive streaming for audio tracks
-will be disabled to stay in the chosen representation.</p>
+will be disabled to stay in the chosen Representation.</p>
 <p>You can use <code>getAvailableAudioBitrates</code> to get the list of available bitrates
 you can set on the current content.</p>
 <p>Note that the value set is persistent between <code>loadVideo</code> calls.
@@ -682,7 +704,8 @@ the <code>initialAudioBitrate</code> constructor option.</p>
 <h3>setMaxVideoBitrate</h3>
 <p><em>arguments</em>: <code>Number</code></p>
 <p>Set the maximum video bitrate reachable through adaptive streaming. The player
-will never automatically switch to a video representation with a higher bitrate.</p>
+will never automatically switch to a video
+<a href="../terms.html#representation">Representation</a> with a higher bitrate.</p>
 <p>This limit can be removed by setting it to <code>Infinity</code>:</p>
 <pre><code class="language-js"><span class="hljs-comment">// remove video bitrate limit</span>
 player.setMaxVideoBitrate(<span class="hljs-literal">Infinity</span>);
@@ -698,7 +721,8 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 <h3>setMaxAudioBitrate</h3>
 <p><em>arguments</em>: <code>Number</code></p>
 <p>Set the maximum audio bitrate reachable through adaptive streaming. The player
-will never automatically switch to a audio representation with a higher bitrate.</p>
+will never automatically switch to a audio
+<a href="../terms.html#representation">Representation</a> with a higher bitrate.</p>
 <p>This limit can be removed by setting it to <code>Infinity</code>:</p>
 <pre><code class="language-js"><span class="hljs-comment">// remove audio bitrate limit</span>
 player.setMaxAudioBitrate(<span class="hljs-literal">Infinity</span>);
@@ -840,7 +864,7 @@ setting the track via <code>setAudioTrack</code>.</p>
 </li>
 <li>
 <p><code>language</code> (<code>string</code>): The language the audio track is in, as set in
-the manifest.</p>
+the <a href="../terms.html#manifest">Manifest</a>.</p>
 </li>
 <li>
 <p><code>normalized</code> (<code>string</code>): An attempt to translate the <code>language</code>
@@ -873,7 +897,7 @@ setting the track via <code>setTextTrack</code>.</p>
 </li>
 <li>
 <p><code>language</code> (<code>string</code>): The language the text track is in, as set in the
-manifest.</p>
+<a href="../terms.html#manifest">Manifest</a>.</p>
 </li>
 <li>
 <p><code>normalized</code> (<code>string</code>): An attempt to translate the <code>language</code>
@@ -909,8 +933,9 @@ setting the track via <code>setVideoTrack</code>.</p>
 active or not.</p>
 </li>
 <li>
-<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>): Representations of this video
-track, with attributes:</p>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>):
+<a href="../terms.html#representation">Representations</a> of this video track, with
+attributes:</p>
 <ul>
 <li>
 <p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
@@ -951,7 +976,7 @@ setting the track via <code>setAudioTrack</code>.</p>
 </li>
 <li>
 <p><code>language</code> (<code>string</code>): The language the audio track is in, as set in the
-manifest.</p>
+<a href="../terms.html#manifest">Manifest</a>.</p>
 </li>
 <li>
 <p><code>normalized</code> (<code>string</code>): An attempt to translate the <code>language</code>
@@ -982,7 +1007,7 @@ setting the track via <code>setTextTrack</code>.</p>
 </li>
 <li>
 <p><code>language</code> (<code>string</code>): The language the text track is in, as set in the
-manifest.</p>
+<a href="../terms.html#manifest">Manifest</a>.</p>
 </li>
 <li>
 <p><code>normalized</code> (<code>string</code>): An attempt to translate the <code>language</code>
@@ -1012,8 +1037,9 @@ now.</p>
 the track via <code>setVideoTrack</code>.</p>
 </li>
 <li>
-<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>): Representations of this video
-track, with attributes:</p>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>):
+<a href="../terms.html#representation">Representations</a> of this video track, with
+attributes:</p>
 <ul>
 <li>
 <p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
@@ -1074,7 +1100,7 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 <p>Set a new video track from its id, recuperated from <code>getAvailableVideoTracks</code>.</p>
 <p>Setting a new video track when a previous one was already playing can lead the
 rx-player to &#x201C;reload&#x201D; this content.</p>
-<p>During this period:</p>
+<p>During this period of time:</p>
 <ul>
 <li>the player will have the state <code>RELOADING</code></li>
 <li>Multiple APIs linked to the current content might not work.
@@ -1104,21 +1130,22 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 <a name="subchapter-getManifest"></a></p>
 <h3>getManifest</h3>
 <p><em>return value</em>: <code>Manifest|null</code></p>
-<p>Returns the current loaded Manifest if one. A manifest object structure is
-relatively complex and is described in the <a href="manifest.html">Manifest Object structure
-page</a>.</p>
+<p>Returns the current loaded <a href="../terms.html#manifest">Manifest</a> if one.
+The Manifest object structure is relatively complex and is described in the
+<a href="manifest.html">Manifest Object structure page</a>.</p>
 <p><code>null</code> if the player is either stopped or not loaded.</p>
 <p><code>null</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
 options</a>).</p>
-<p>The manifest will be available before the player reaches the <code>&quot;LOADED&quot;</code> state.</p>
+<p>The Manifest will be available before the player reaches the <code>&quot;LOADED&quot;</code> state.</p>
 <p><a name="meth-getCurrentAdaptations"></a>
 <a name="subchapter-getCurrentAdaptations"></a></p>
 <h3>getCurrentAdaptations</h3>
 <p><em>return value</em>: <code>Object|null</code></p>
-<p>Returns the Adaptations being loaded per type if a manifest is loaded. The
-returned object will have at most a key for each type (&#x201C;video&#x201D;, &#x201C;audio&#x201D;, &#x201C;text&#x201D;
-and &#x201C;image&#x201D;) which will each contain an array of Adaptation Objects.</p>
-<p>An Adaptation object structure is relatively complex and is described in the
+<p>Returns the <a href="../terms.html#adaptation">Adaptations</a> being loaded per type if a
+<a href="../terms.html#manifest">Manifest</a> is loaded. The returned object will have at
+most a key for each type (&#x201C;video&#x201D;, &#x201C;audio&#x201D;, &#x201C;text&#x201D; and &#x201C;image&#x201D;) which will each
+contain an array of Adaptation Objects.</p>
+<p>The Adaptation object structure is relatively complex and is described in the
 <a href="manifest.html#adaptation">Manifest Object structure page</a>.</p>
 <p><code>null</code> if the current Adaptations are not known yet.</p>
 <p><code>null</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
@@ -1127,9 +1154,10 @@ options</a>).</p>
 <a name="subchapter-getCurrentRepresentations"></a></p>
 <h3>getCurrentRepresentations</h3>
 <p><em>return value</em>: <code>Object|null</code></p>
-<p>Returns the Representations being loaded per type if a manifest is loaded. The
-returned object will have at most a key for each type (&#x201C;video&#x201D;, &#x201C;audio&#x201D;, &#x201C;text&#x201D;
-and &#x201C;image&#x201D;) which will each contain an array of Representation Objects.</p>
+<p>Returns the <a href="../terms.html#representation">Representations</a> being loaded per type
+if a <a href="../terms.html#manifest">Manifest</a> is loaded. The returned object will have
+at most a key for each type (&#x201C;video&#x201D;, &#x201C;audio&#x201D;, &#x201C;text&#x201D; and &#x201C;image&#x201D;) which will
+each contain an array of Representation Objects.</p>
 <p>An Representation object structure is relatively complex and is described in the
 <a href="manifest.html#representation">Manifest Object structure page</a>.</p>
 <p><code>null</code> if the current Representations are not known yet.</p>

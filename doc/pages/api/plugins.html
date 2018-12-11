@@ -28,10 +28,10 @@ no use, as our implementation does the same thing and more):</p>
 <pre><code class="language-js"><span class="hljs-comment">/**
  * @param {Object} infos - infos about the segment to download
  * @param {string} infos.url - the url the segment request should normally be on
- * @param {Object} infos.adaptation - the adaptation containing the segment.
+ * @param {Object} infos.adaptation - the Adaptation containing the segment.
  * More information on its structure can be found on the documentation linked
  * below [1]
- * @param {Object} infos.representation - the representation containing the
+ * @param {Object} infos.representation - the Representation containing the
  * segment.
  * More information on its structure can be found on the documentation linked
  * below [2]
@@ -112,18 +112,19 @@ no use, as our implementation does the same thing and more):</p>
 <h2>manifestLoader</h2>
 <p>The manifestLoader is a function that can be included in the
 <code>transportOptions</code> of the <code>loadVideo</code> API call.</p>
-<p>A manifestLoader allows to define a custom manifest loader.</p>
-<p>The manifest loader is the part performing the manifest request.</p>
-<p>Here is a manifest loader which uses an XHR (it has no use, as our
+<p>A manifestLoader allows to define a custom <a href="../terms.html#manifest">Manifest</a>
+loader.</p>
+<p>The Manifest loader is the part performing the Manifest request.</p>
+<p>Here is a Manifest loader which uses an XHR (it has no use, as our
 implementation does the same thing and more):</p>
 <pre><code class="language-js"><span class="hljs-comment">/**
- * @param {string} url - the url the manifest request should normally be on
+ * @param {string} url - the url the Manifest request should normally be on
 
  * @param {Object} callbacks
  * @param {Function} callbacks.resolve - Callback to call when the request is
  * finished with success. It should be called with an object with at least 3
  * properties:
- *   - data {Document|String} - the manifest data
+ *   - data {Document|String} - the Manifest data
  *   - duration {Number} - the duration of the request, in ms
  *   - size {Number} - size, in bytes, of the total downloaded response.
  * @param {Function} callbacks.reject - Callback to call when an error is
@@ -173,10 +174,11 @@ implementation does the same thing and more):</p>
 <h2>representationFilter</h2>
 <p>The representationFilter is a function that can be included in the
 <code>transportOptions</code> of the <code>loadVideo</code> API call.</p>
-<p>A representationFilter allows you to filter out <code>Representation</code>s (i.e. media
-qualities) based on its attributes.</p>
-<p>The representationFilter will be called each time we load a manifest with two
-arguments:</p>
+<p>A representationFilter allows you to filter out
+<a href="../terms.html#representation">Representations</a> (i.e. media qualities) based on
+its attributes.</p>
+<p>The representationFilter will be called each time we load a
+<a href="../terms.html#manifest">Manifest</a> with two arguments:</p>
 <ul>
 <li>
 <p>representation <code>{Representation}</code>: The concerned <code>Representation</code>.
@@ -194,7 +196,7 @@ documentation</a>.</p>
 </li>
 <li>
 <p>language <code>{string|undefined}</code>: The language the <code>Representation</code>
-is in, as announced by the manifest.</p>
+is in, as announced by the Manifest.</p>
 </li>
 <li>
 <p>normalizedLanguage <code>{string|undefined}</code>: An attempt to translate the
@@ -219,10 +221,10 @@ kept or <code>false</code> if it should be removed.</p>
 <p>For example, here is a <code>representationFilter</code> that removes video
 <code>Representation</code>s with a video resolution higher than HD (1920x1080):</p>
 <pre><code class="language-js"><span class="hljs-comment">/**
- * @param {Object} representation - The representation object, as defined in
+ * @param {Object} representation - The Representation object, as defined in
  * the documentation linked bellow [1]
  * @param {Object} infos - supplementary informations about the given
- * representation.
+ * Representation.
  * @returns {boolean}
  */</span>
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">representationFilter</span>(<span class="hljs-params">representation, infos</span>) </span>{

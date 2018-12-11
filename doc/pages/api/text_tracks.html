@@ -21,7 +21,7 @@ captions - directly over your content:</p>
 <p><img src="./assets/text_track_example.png" alt="Example of a textrack on acontent" title="Example of a textrack"></p>
 <p>Adding text tracks to contents can be done by two means:</p>
 <ul>
-<li>by using a manifest declaring those text tracks</li>
+<li>by using a <a href="../terms.html#manifest">Manifest</a> declaring those text tracks</li>
 <li>by manually adding text track(s) when you call the <code>loadVideo</code> API</li>
 </ul>
 <p>You can then choose the right track through the different text track-related
@@ -41,8 +41,8 @@ API, all documented in the <a href="index.html">general API documentation</a>.</
 <p><a name="manifest"></a>
 <a name="chapter-Text%20tracks%20indicated%20in%20a%20manifest"></a></p>
 <h2>Text tracks indicated in a manifest</h2>
-<p>Each streaming technology supported by the manifest defines a way to add text
-track directly in their manifests files.</p>
+<p>Each streaming technology supported by the Manifest defines a way to add text
+track directly in their Manifests files.</p>
 <p>This chapter explains what is supported by the RxPlayer.</p>
 <p><a name="manifest-dash"></a>
 <a name="subchapter-In%20DASH"></a></p>
@@ -103,7 +103,7 @@ attributes:</p>
 <p><a name="manifest-smooth"></a>
 <a name="subchapter-In%20Microsoft%20Smooth%20Streaming"></a></p>
 <h3>In Microsoft Smooth Streaming</h3>
-<p>In Smooth manifests, a <code>StreamIndex</code> is inferred to be for a text track if its
+<p>In Smooth Manifests, a <code>StreamIndex</code> is inferred to be for a text track if its
 <code>Type</code> attribute is equal to <code>text</code>.</p>
 <hr>
 <p>The <code>FourCC</code> attribute is used to infer the format of the text track. Only

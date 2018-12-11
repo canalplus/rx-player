@@ -53,7 +53,8 @@ method:</p>
 <p><em>type</em>: <code>Number|undefined</code></p>
 <p><em>defaults</em>: <code>0</code></p>
 <p>This is a ceil value for the initial video bitrate chosen.</p>
-<p>That is, the first video representation chosen will be:</p>
+<p>That is, the first video <a href="../terms.html#representation">Representation</a> chosen
+will be:</p>
 <ul>
 <li>
 <p>inferior to this value.</p>
@@ -63,7 +64,7 @@ method:</p>
 superior, ones)</p>
 </li>
 </ul>
-<p>If no representation is found to respect those rules, the representation with
+<p>If no Representation is found to respect those rules, the Representation with
 the lowest bitrate will be chosen instead. Thus, the default value - <code>0</code> -
 will lead to the lowest bitrate being chosen at first.</p>
 <pre><code class="language-js"><span class="hljs-comment">// Begin either by the video bitrate just below or equal to 700000 bps if found</span>
@@ -82,7 +83,8 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 <p><em>type</em>: <code>Number|undefined</code></p>
 <p><em>defaults</em>: <code>0</code></p>
 <p>This is a ceil value for the initial audio bitrate chosen.</p>
-<p>That is, the first audio representation chosen will be:</p>
+<p>That is, the first audio <a href="../terms.html#representation">Representation</a> chosen
+will be:</p>
 <ul>
 <li>
 <p>inferior to this value.</p>
@@ -92,7 +94,7 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 superior, ones)</p>
 </li>
 </ul>
-<p>If no representation is found to respect those rules, the representation with
+<p>If no Representation is found to respect those rules, the Representation with
 the lowest bitrate will be chosen instead. Thus, the default value - <code>0</code> -
 will lead to the lowest bitrate being chosen at first.</p>
 <pre><code class="language-js"><span class="hljs-comment">// Begin either by the audio bitrate just below or equal to 5000 bps if found</span>
@@ -111,7 +113,8 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 <p><em>type</em>: <code>Number|undefined</code></p>
 <p><em>defaults</em>: <code>Infinity</code></p>
 <p>The maximum video bitrate reachable through adaptive streaming. The player will
-never automatically switch to a video representation with a higher bitrate.</p>
+never automatically switch to a video
+<a href="../terms.html#representation">Representation</a> with a higher bitrate.</p>
 <pre><code class="language-js"><span class="hljs-comment">// limit automatic adaptive streaming for the video track to up to 1 Mb/s</span>
 <span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> Player({
   <span class="hljs-attr">maxVideoBitrate</span>: <span class="hljs-number">1e6</span>
@@ -131,7 +134,8 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 <p><em>type</em>: <code>Number|undefined</code></p>
 <p><em>defaults</em>: <code>Infinity</code></p>
 <p>The maximum audio bitrate reachable through adaptive streaming. The player will
-never automatically switch to an audio representation with a higher bitrate.</p>
+never automatically switch to an audio
+<a href="../terms.html#representation">Representation</a> with a higher bitrate.</p>
 <pre><code class="language-js"><span class="hljs-comment">// limit automatic adaptive streaming for the audio track to up to 100 kb/s</span>
 <span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> Player({
   <span class="hljs-attr">maxAudioBitrate</span>: <span class="hljs-number">1e5</span>
@@ -197,11 +201,11 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 <h3>limitVideoWidth</h3>
 <p><em>type</em>: <code>Boolean</code></p>
 <p><em>defaults</em>: <code>false</code></p>
-<p>With this feature, the possible video representations considered are filtered by
-width:
-The maximum width considered is the closest superior or equal to the video
+<p>With this feature, the possible video
+<a href="../terms.html#representation">Representations</a> considered are filtered by width:</p>
+<p>The maximum width considered is the closest superior or equal to the video
 element&#x2019;s width.</p>
-<p>This is done because the other, &#x201C;superior&#x201D; representations will not have any
+<p>This is done because the other, &#x201C;superior&#x201D; Representations will not have any
 difference in terms of pixels (as in most case, the display limits the maximum
 resolution displayable). It thus save bandwidth with no visible difference.</p>
 <p>To activate this feature, set it to <code>true</code>.</p>
@@ -240,8 +244,8 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 <p>By default, the player automatically <em>unload</em> the content once it reaches its
 end (the player goes to the <code>&quot;ENDED&quot;</code> state).</p>
 <p>In that case, the only way to play the content again is to (re-)call the
-<code>loadVideo</code> API, which will trigger another download of the manifest and
-segments.</p>
+<code>loadVideo</code> API, which will trigger another download of the
+<a href="../terms.html#manifest">Manifest</a> and segments.</p>
 <p>If you want to be able to seek back in the content after it ended, you may want
 to deactivate this behavior. To do so, set <code>stopAtEnd</code> to <code>false</code>.</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> player = Player({
