@@ -60,22 +60,9 @@ export interface IParsedAdaptation {
 
   // optional
   audioDescription? : boolean;
-  bitstreamSwitching?: boolean;
   closedCaption? : boolean;
   language?: string;
-  maxBitrate?: number;
-  maxFrameRate?: number;
-  maxHeight?: number;
-  maxWidth?: number;
-  minBitrate?: number;
-  minFrameRate?: number;
-  minHeight?: number;
-  minWidth?: number;
-  name? : string;
   normalizedLanguage? : string;
-  par?: string;
-  segmentAlignment?: number|boolean;
-  subsegmentAlignment?: number|boolean;
 }
 
 export interface IParsedPeriod {
@@ -87,7 +74,6 @@ export interface IParsedPeriod {
 
   // optional
   duration? : number;
-  bitstreamSwitching? : boolean;
 }
 
 export interface IParsedManifest {

@@ -94,9 +94,6 @@ export default function parsePeriods(
       duration: periodDuration,
       adaptations,
     };
-    if (period.attributes.bitstreamSwitching != null) {
-      parsedPeriod.bitstreamSwitching = period.attributes.bitstreamSwitching;
-    }
     parsedPeriods.push(parsedPeriod);
   }
   return flattenOverlappingPeriods(parsedPeriods);

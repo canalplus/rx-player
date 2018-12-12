@@ -225,7 +225,6 @@ function createSmoothStreamingParser(
     }
 
     const subType = root.getAttribute("Subtype");
-    const name = root.getAttribute("Name");
     const language = root.getAttribute("Language");
     const normalizedLanguage = language == null ?
       language : normalizeLang(language);
@@ -350,7 +349,6 @@ function createSmoothStreamingParser(
       id: adaptationID,
       type: adaptationType,
       representations,
-      name: name == null ? undefined : name,
       language: language == null ?
         undefined : language,
       normalizedLanguage: normalizedLanguage == null ?
