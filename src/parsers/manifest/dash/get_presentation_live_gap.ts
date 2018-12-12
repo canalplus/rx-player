@@ -63,13 +63,18 @@ function getLastLiveTimeReference(adaptation: IParsedAdaptation) : number | unde
  * @param {Object} manifest
  * @returns {number}
  */
-export default function getPresentationLiveGap(manifest: IParsedManifest) {
+export default function getPresentationLiveGap(
+  manifest: IParsedManifest
+) : number {
+  if (manifest.periods.length === 0) {
+    throw new Error("DASH Parser: no period available for a live content");
+  }
   const lastPeriodAdaptations =
     manifest.periods[manifest.periods.length - 1].adaptations;
   const firstAdaptationsFromLastPeriod =
     lastPeriodAdaptations.video || lastPeriodAdaptations.audio;
   if (!firstAdaptationsFromLastPeriod || !firstAdaptationsFromLastPeriod.length) {
-    throw new Error("Can't find first adaptation from last period");
+    throw new Error("DASH Parser: Can't find first adaptation from last period");
   }
   const firstAdaptationFromLastPeriod = firstAdaptationsFromLastPeriod[0];
   const lastRef = getLastLiveTimeReference(firstAdaptationFromLastPeriod);
