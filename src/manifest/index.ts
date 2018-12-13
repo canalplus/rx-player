@@ -25,6 +25,7 @@ import warnOnce from "../utils/warnOnce";
 import Adaptation, {
   IAdaptationType,
   IRepresentationFilter,
+  SUPPORTED_ADAPTATIONS_TYPE,
 } from "./adaptation";
 import Period, {
   IPeriodArguments,
@@ -579,6 +580,7 @@ export {
   Representation,
 
   // types
+  IAdaptationType,
   IManifestArguments,
   IManifestParsingOptions,
   IRepresentationFilter,
@@ -586,4 +588,5 @@ export {
   ISegment,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
+  SUPPORTED_ADAPTATIONS_TYPE,
 };
