@@ -74,7 +74,7 @@ export default class Adaptation {
    * TODO in the Manifest instead?
    * @type {string}
    */
-  public readonly id : string|number;
+  public readonly id : string;
 
   /**
    * Different `Representations` (e.g. qualities) this Adaptation is available
