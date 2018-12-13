@@ -96,7 +96,6 @@ import {
   disposeEME,
   getCurrentKeySystem,
 } from "../eme";
-import { IBufferType } from "../source_buffers";
 import initializeMediaSourcePlayback, {
   IInitEvent,
 } from "../init";
@@ -105,6 +104,7 @@ import {
   IReloadingMediaSourceEvent,
   IStalledEvent,
 } from "../init/types";
+import { IBufferType } from "../source_buffers";
 import createClock, {
   IClockTick
 } from "./clock";
