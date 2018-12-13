@@ -65,9 +65,9 @@ import EVENTS from "./events_generators";
 import getInitialTime, {
   IInitialTimeOptions,
 } from "./get_initial_time";
-import StreamLoader, {
-  IStreamLoaderEvent,
-} from "./stream_loader";
+import createMediaSourceLoader, {
+  IMediaSourceLoaderEvent,
+} from "./load_on_media_source";
 import throwOnMediaError from "./throw_on_media_error";
 import {
   IManifestReadyEvent,
@@ -129,7 +129,7 @@ export interface IStreamOptions {
 // Every events emitted by the stream.
 export type IStreamEvent =
   IManifestReadyEvent |
-  IStreamLoaderEvent |
+  IMediaSourceLoaderEvent |
   IEMEManagerEvent |
   IReloadingStreamEvent |
   IStreamWarningEvent;
@@ -235,7 +235,7 @@ export default function Stream({
       );
     }
 
-    const loadStream = StreamLoader({ // Behold!
+    const loadOnMediaSource = createMediaSourceLoader({ // Behold!
       mediaElement,
       manifest$,
       clock$,
@@ -254,15 +254,15 @@ export default function Stream({
     log.debug("Stream: Initial time calculated:", initialTime);
 
     const reloadStreamSubject$ = new Subject<void>();
-    const onStreamLoaderEvent =
-      streamLoaderEventProcessor(reloadStreamSubject$, refreshManifest);
+    const onEvent =
+      createEventListener(reloadStreamSubject$, refreshManifest);
     const reloadStream$ : Observable<IStreamEvent> = reloadStreamSubject$.pipe(
       switchMap(() => {
         const currentPosition = mediaElement.currentTime;
         const isPaused = mediaElement.paused;
         return openMediaSource(mediaElement).pipe(
-          mergeMap(newMS => loadStream(newMS, currentPosition, !isPaused)),
-          mergeMap(onStreamLoaderEvent),
+          mergeMap(newMS => loadOnMediaSource(newMS, currentPosition, !isPaused)),
+          mergeMap(onEvent),
           startWith(EVENTS.reloadingStream())
         );
       })
@@ -270,9 +270,9 @@ export default function Stream({
 
     const initialLoad$ = observableConcat(
       observableOf(EVENTS.manifestReady(abrManager, manifest$)),
-      loadStream(mediaSource, initialTime, autoPlay).pipe(
+      loadOnMediaSource(mediaSource, initialTime, autoPlay).pipe(
         takeUntil(reloadStreamSubject$),
-        mergeMap(onStreamLoaderEvent)
+        mergeMap(onEvent)
       )
     );
 
@@ -306,21 +306,21 @@ export default function Stream({
 }
 
 /**
- * Generate function reacting to StreamLoader events.
+ * Generate function reacting to playback events.
  * @param {Subject} reloadStreamSubject$
  * @param {Function} refreshManifest
  * @returns {Function}
  */
-function streamLoaderEventProcessor(
+function createEventListener(
   reloadStreamSubject$ : Subject<void>,
   refreshManifest : () => Observable<never>
-) : (evt : IStreamLoaderEvent) => Observable<IStreamEvent> {
+) : (evt : IMediaSourceLoaderEvent) => Observable<IStreamEvent> {
   /**
-   * React to StreamLoader events.
+   * React to playback events.
    * @param {Object} evt
    * @returns {Observable}
    */
-  return function onStreamLoaderEvent(evt : IStreamLoaderEvent) {
+  return function onEvent(evt : IMediaSourceLoaderEvent) {
     switch (evt.type) {
       case "needs-stream-reload":
         reloadStreamSubject$.next();

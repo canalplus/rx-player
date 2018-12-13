@@ -57,12 +57,12 @@ import {
 } from "./types";
 import updatePlaybackRate from "./update_playback_rate";
 
-// Arguments for the StreamLoader
-export interface IStreamLoaderArgument {
+// Arguments needed by createMediaSourceLoader
+export interface IMediaSourceLoaderArguments {
   mediaElement : HTMLMediaElement; // Media Element on which the content will be
-                                   // streamed
+                                   // played
   manifest$ : BehaviorSubject<Manifest>; // Manifest of the content we want to
-                                         // stream
+                                         // play
   clock$ : Observable<IStreamClockTick>; // Emit position informations
   speed$ : Observable<number>; // Emit the speed.
                                // /!\ Should replay the last value on subscription.
@@ -79,8 +79,8 @@ export interface IStreamLoaderArgument {
   };
 }
 
-// Events emitted by the StreamLoader
-export type IStreamLoaderEvent =
+// Events emitted when loading content in the MediaSource
+export type IMediaSourceLoaderEvent =
   IStalledEvent |
   ISpeedChangedEvent |
   IStreamLoadedEvent |
@@ -90,10 +90,10 @@ export type IStreamLoaderEvent =
 /**
  * Returns a function allowing to load or reload the content in arguments into
  * a single or multiple MediaSources.
- * @param {Object} loadStreamArguments
+ * @param {Object} args
  * @returns {Observable}
  */
-export default function StreamLoader({
+export default function createMediaSourceLoader({
   mediaElement,
   manifest$,
   clock$,
@@ -101,11 +101,11 @@ export default function StreamLoader({
   bufferOptions,
   abrManager,
   segmentPipelinesManager,
-} : IStreamLoaderArgument) : (
+} : IMediaSourceLoaderArguments) : (
   mediaSource : MediaSource,
   position : number,
   autoPlay : boolean
-) => Observable<IStreamLoaderEvent> {
+) => Observable<IMediaSourceLoaderEvent> {
   /**
    * Load the content on the given MediaSource.
    * @param {MediaSource} mediaSource
@@ -160,7 +160,7 @@ export default function StreamLoader({
       segmentPipelinesManager,
       bufferOptions
     ).pipe(
-      mergeMap((evt) : Observable<IStreamLoaderEvent> => {
+      mergeMap((evt) : Observable<IMediaSourceLoaderEvent> => {
         switch (evt.type) {
           case "end-of-stream":
             log.debug("Stream: end-of-stream order received.");
