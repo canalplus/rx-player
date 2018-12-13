@@ -97,7 +97,7 @@ import {
   getCurrentKeySystem,
 } from "../eme";
 import { IBufferType } from "../source_buffers";
-import Stream, {
+import initializeMediaSourcePlayback, {
   IStreamEvent,
 } from "../stream";
 import {
@@ -222,7 +222,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @private
    * @type {BehaviorSubject}
    */
-  private readonly _priv_streamLock$ : BehaviorSubject<boolean>;
+  private readonly _priv_contentLock$ : BehaviorSubject<boolean>;
 
   /**
    * Changes on "play" and "pause" events from the media elements.
@@ -244,7 +244,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   private readonly _priv_speed$ : BehaviorSubject<number>;
 
   /**
-   * Store buffer-related infos and options used when calling the Stream.
+   * Store buffer-related options used needed when initializing a content.
    * @private
    * @type {Object}
    */
@@ -567,7 +567,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this._priv_playing$ = new ReplaySubject(1);
     this._priv_speed$ = new BehaviorSubject(videoElement.playbackRate);
     this._priv_stopCurrentContent$ = new Subject();
-    this._priv_streamLock$ = new BehaviorSubject(false);
+    this._priv_contentLock$ = new BehaviorSubject(false);
 
     this._priv_bufferOptions = {
       wantedBufferAhead$: new BehaviorSubject(wantedBufferAhead),
@@ -646,7 +646,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this._priv_stopCurrentContent$.complete();
     this._priv_playing$.complete();
     this._priv_speed$.complete();
-    this._priv_streamLock$.complete();
+    this._priv_contentLock$.complete();
     this._priv_bufferOptions.wantedBufferAhead$.complete();
     this._priv_bufferOptions.maxBufferAhead$.complete();
     this._priv_bufferOptions.maxBufferBehind$.complete();
@@ -715,12 +715,12 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // Global clock used for the whole application.
     const clock$ = createClock(videoElement, { withMediaSource: !isDirectFile });
 
-    const closeStream$ = observableMerge(
+    const contentIsStopped$ = observableMerge(
       this._priv_stopCurrentContent$,
       this._priv_stopAtEnd ? onEnded$(videoElement) : EMPTY
     ).pipe(take(1));
 
-    let stream : ConnectableObservable<IStreamEvent>;
+    let playback$ : ConnectableObservable<IStreamEvent>;
 
     if (!isDirectFile) {
       const transportFn = features.transports[transport];
@@ -758,8 +758,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         textTrackElement: options.textTrackElement,
       };
 
-      // Stream Observable, through which the content will be launched.
-      stream = Stream({
+      // playback$ Observable, through which the content will be launched.
+      playback$ = initializeMediaSourcePlayback({
         adaptiveOptions,
         autoPlay,
         bufferOptions: objectAssign({
@@ -782,13 +782,13 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         },
         url,
       })
-        .pipe(takeUntil(closeStream$))
+        .pipe(takeUntil(contentIsStopped$))
         .pipe(publish()) as ConnectableObservable<IStreamEvent>;
     } else {
       if (features.directfile == null) {
         throw new Error("DirectFile feature not activated in your build.");
       }
-      stream = features.directfile({
+      playback$ = features.directfile({
         autoPlay,
         clock$,
         keySystems,
@@ -797,24 +797,24 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         startAt,
         url,
       })
-        .pipe(takeUntil(closeStream$))
+        .pipe(takeUntil(contentIsStopped$))
         .pipe(publish()) as ConnectableObservable<IStreamEvent>;
     }
 
     // Emit an object when the player stalls and null when it unstall
-    const stalled$ = stream.pipe(
+    const stalled$ = playback$.pipe(
       filter((evt) : evt is IStalledEvent => evt.type === "stalled"),
       map(x => x.value)
     );
 
-    // Emit when the Stream is considered "loaded".
-    const loaded$ = stream.pipe(
+    // Emit when the content is considered "loaded".
+    const loaded$ = playback$.pipe(
       filter((evt) : evt is IStreamLoadedEvent => evt.type === "loaded"),
       share()
     );
 
-    // Emit when the Stream "reloads" the MediaSource
-    const reloading$ = stream.pipe(
+    // Emit when we "reload" the MediaSource
+    const reloading$ = playback$.pipe(
       filter((evt) : evt is IReloadingStreamEvent => evt.type === "reloading-stream"),
       share()
     );
@@ -843,7 +843,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     const playerState$ = observableConcat(
       observableOf(PLAYER_STATES.LOADING), // Begin with LOADING
 
-      // LOADED as soon as the first "loaded" event is sent from the Stream
+      // LOADED as soon as the first "loaded" event is sent
       loaded$.pipe(take(1), mapTo(PLAYER_STATES.LOADED)),
 
       observableMerge(
@@ -858,7 +858,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         reloading$.pipe(
           switchMapTo(
             loaded$.pipe(
-              take(1), // wait for the next loaded Stream event
+              take(1), // wait for the next loaded event
               mergeMapTo(loadedStateUpdates$), // to update the state as usual
               startWith(PLAYER_STATES.RELOADING) // Starts with "RELOADING" state
             )
@@ -867,12 +867,12 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       )
     ).pipe(distinctUntilChanged());
 
-    let streamDisposable : Subscription|undefined;
+    let playbackSubscription : Subscription|undefined;
     this._priv_stopCurrentContent$
       .pipe(take(1))
       .subscribe(() => {
-        if (streamDisposable) {
-          streamDisposable.unsubscribe();
+        if (playbackSubscription) {
+          playbackSubscription.unsubscribe();
         }
       });
 
@@ -888,21 +888,21 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       .pipe(takeUntil(this._priv_stopCurrentContent$))
       .subscribe(x => this._priv_setPlayerState(x), noop);
 
-    stream.subscribe(
-      (x) => this._priv_onStreamNext(x),
-      (err : Error) => this._priv_onStreamError(err),
-      () => this._priv_onStreamComplete()
+    playback$.subscribe(
+      (x) => this._priv_onPlaybackEvent(x),
+      (err : Error) => this._priv_onPlaybackError(err),
+      () => this._priv_onPlaybackFinished()
     );
 
-    // connect the stream when the lock is inactive
-    this._priv_streamLock$
+    // initialize the content only when the lock is inactive
+    this._priv_contentLock$
       .pipe(
         filter((isLocked) => !isLocked),
         take(1),
         takeUntil(this._priv_stopCurrentContent$)
       )
       .subscribe(() => {
-        streamDisposable = stream.connect();
+        playbackSubscription = playback$.connect();
       });
   }
 
@@ -1783,8 +1783,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @private
    */
   private _priv_cleanUpCurrentContentState() : void {
-    // lock creation of new streams while cleaning up is pending
-    this._priv_streamLock$.next(true);
+    // lock playback of new contents while cleaning up is pending
+    this._priv_contentLock$.next(true);
 
     this._priv_contentInfos = null;
     this._priv_trackManager = null;
@@ -1805,16 +1805,16 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     };
 
     // EME cleaning
-    const freeUpStreamLock = () => {
-      this._priv_streamLock$.next(false);
+    const freeUpContentLock = () => {
+      this._priv_contentLock$.next(false);
     };
 
     if (this.videoElement) {
       clearEMESession(this.videoElement)
         .pipe(catchError(() => EMPTY))
-        .subscribe(noop, freeUpStreamLock, freeUpStreamLock);
+        .subscribe(noop, freeUpContentLock, freeUpContentLock);
     } else {
-      freeUpStreamLock();
+      freeUpContentLock();
     }
   }
 
@@ -1871,41 +1871,41 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   }
 
   /**
-   * Triggered each time the Stream Observable emits.
+   * Triggered each time the playback Observable emits.
    *
    * React to various events.
    *
-   * @param {Object} streamInfos - payload emitted
+   * @param {Object} event - payload emitted
    * @private
    */
-  private _priv_onStreamNext(streamInfos : IStreamEvent) : void {
-    switch (streamInfos.type) {
+  private _priv_onPlaybackEvent(event : IStreamEvent) : void {
+    switch (event.type) {
       case "activePeriodChanged":
-        this._priv_onActivePeriodChanged(streamInfos.value);
+        this._priv_onActivePeriodChanged(event.value);
         break;
       case "periodBufferReady":
-        this._priv_onPeriodBufferReady(streamInfos.value);
+        this._priv_onPeriodBufferReady(event.value);
         break;
       case "periodBufferCleared":
-        this._priv_onPeriodBufferCleared(streamInfos.value);
+        this._priv_onPeriodBufferCleared(event.value);
         break;
       case "reloading-stream":
-        this._priv_onStreamReload();
+        this._priv_onReloadingMediaSource();
         break;
       case "representationChange":
-        this._priv_onRepresentationChange(streamInfos.value);
+        this._priv_onRepresentationChange(event.value);
         break;
       case "adaptationChange":
-        this._priv_onAdaptationChange(streamInfos.value);
+        this._priv_onAdaptationChange(event.value);
         break;
       case "bitrateEstimationChange":
-        this._priv_onBitrateEstimationChange(streamInfos.value);
+        this._priv_onBitrateEstimationChange(event.value);
         break;
       case "manifestReady":
-        this._priv_onManifestReady(streamInfos.value);
+        this._priv_onManifestReady(event.value);
         break;
       case "warning":
-        this._priv_onStreamWarning(streamInfos.value);
+        this._priv_onPlaybackWarning(event.value);
         break;
       case "added-segment":
         if (!this._priv_contentInfos) {
@@ -1916,7 +1916,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         // Manage image tracks
         // TODO Better way? Perhaps linked to an ImageSourceBuffer
         // implementation
-        const { bufferType, segmentData } = streamInfos.value;
+        const { bufferType, segmentData } = event.value;
         if (bufferType === "image") {
           if (segmentData != null && (segmentData as { type : string }).type === "bif") {
             const imageData = (segmentData as { data : IBifThumbnail[] }).data;
@@ -1932,14 +1932,12 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   }
 
   /**
-   * Triggered when the Stream throws (fatal errors).
-   *
+   * Triggered when we received a fatal error.
    * Clean-up ressources and signal that the content has stopped on error.
-   *
    * @param {Error} error
    * @private
    */
-  private _priv_onStreamError(error : Error) : void {
+  private _priv_onPlaybackError(error : Error) : void {
     this._priv_stopCurrentContent$.next();
     this._priv_cleanUpCurrentContentState();
     this._priv_currentError = error;
@@ -1956,34 +1954,30 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   }
 
   /**
-   * Triggered when the Stream instance ends.
-   *
+   * Triggered when the playback Observable completes.
    * Clean-up ressources and signal that the content has ended.
    * @private
    */
-  private _priv_onStreamComplete() : void {
+  private _priv_onPlaybackFinished() : void {
     this._priv_stopCurrentContent$.next();
     this._priv_cleanUpCurrentContentState();
     this._priv_setPlayerState(PLAYER_STATES.ENDED);
   }
 
   /**
-   * Triggered when the Stream emits a warning.
-   *
-   * Trigger the right Player event.
-   * @param {Object} streamInfos
+   * Triggered when we received a warning event during playback.
+   * Trigger the right API event.
+   * @param {Error} error
    * @private
    */
-  private _priv_onStreamWarning(error : Error) : void {
+  private _priv_onPlaybackWarning(error : Error) : void {
     log.warn("API: Sending warning:", error);
     this.trigger("warning", error);
   }
 
   /**
-   * Triggered when the stream starts.
-   *
+   * Triggered when the Manifest has been loaded for the current content.
    * Initialize various private properties and emit initial event.
-   *
    * @param {Object} value
    * @private
    */
@@ -2065,11 +2059,8 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   }
 
   /**
-   * Triggered each times the Stream "prepares" a new Period, and
-   * needs the API to send it its chosen Adaptation.
-   *
+   * Triggered each times a new "PeriodBuffer" is ready.
    * Choose the right Adaptation for the Period and emit it.
-   *
    * @param {Object} value
    * @private
    */
@@ -2124,7 +2115,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   }
 
   /**
-   * Triggered each times the Stream "removes" a PeriodBuffer.
+   * Triggered each times the we "remove" a PeriodBuffer.
    * @param {Object} value
    * @private
    */
@@ -2159,17 +2150,19 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     }
   }
 
-  private _priv_onStreamReload() {
+  /**
+   * Triggered each time the content is re-loaded on the MediaSource.
+   */
+  private _priv_onReloadingMediaSource() {
     if (this._priv_trackManager) {
       this._priv_trackManager.resetPeriods();
     }
   }
 
   /**
-   * Triggered each times a new Adaptation is considered by the Stream.
-   *
+   * Triggered each times a new Adaptation is considered for the current
+   * content.
    * Store given Adaptation and emit it if from the current Period.
-   *
    * @param {Object} value
    * @private
    */
@@ -2223,7 +2216,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
   }
 
   /**
-   * Triggered each times a new Representation is considered by the Stream.
+   * Triggered each times a new Representation is considered during playback.
    *
    * Store given Representation and emit it if from the current Period.
    *

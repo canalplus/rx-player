@@ -94,7 +94,7 @@ type INativeSourceBufferType = "audio" | "video";
 export default class SourceBufferManager {
   /**
    * Returns true if the source buffer is "native" (has to be attached to the
-   * mediaSource at the beginning of the stream.
+   * mediaSource before playback).
    * @static
    * @param {string} bufferType
    * @returns {Boolean}
