@@ -270,9 +270,7 @@ function addTextTrack(
 }
 
 /**
- * firefox fix: sometimes the stream can be stalled, even if we are in a
- * buffer.
- *
+ * firefox fix: sometimes playback can be stalled, even if we are in a buffer.
  * TODO This seems to be about an old Firefox version. Delete it?
  * @param {number} time
  * @param {Object|null} currentRange
