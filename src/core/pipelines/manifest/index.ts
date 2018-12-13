@@ -44,11 +44,11 @@ import {
   ITransportPipelines,
 } from "../../../net/types";
 import tryCatch from "../../../utils/rx-tryCatch";
-import downloadingBackoff from "../backoff";
+import downloadingBackoff from "../utils/backoff";
 import createLoader, {
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
-} from "../create_loader";
+} from "../utils/create_loader";
 
 const {
   MAX_BACKOFF_DELAY_BASE,

@@ -25,7 +25,7 @@ import {
   IABRRequest
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
-import { IPipelineLoaderOptions } from "../create_loader";
+import { IPipelineLoaderOptions } from "../utils/create_loader";
 import applyPrioritizerToSegmentFetcher, {
   IPrioritizedSegmentFetcher,
 } from "./prioritized_segment_fetcher";

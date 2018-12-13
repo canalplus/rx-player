@@ -47,7 +47,7 @@ import { IBufferType } from "../../source_buffers";
 import createLoader, {
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
-} from "../create_loader";
+} from "../utils/create_loader";
 
 interface IParsedSegment<T> {
   segmentData : T;
