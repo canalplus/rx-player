@@ -109,6 +109,7 @@ export default function(
       const data = typeof response.responseData === "string" ?
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
+
       const parsedManifest = dashManifestParser(data, url);
       return loadExternalRessources(parsedManifest);
 

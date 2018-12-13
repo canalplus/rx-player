@@ -121,8 +121,7 @@ export default function createMediaSourceLoader({
 
     // TODO Update the duration if it evolves?
     const duration = manifest.getDuration();
-    setDurationToMediaSource(mediaSource,
-      duration == null ?  Infinity : duration);
+    setDurationToMediaSource(mediaSource, duration == null ?  Infinity : duration);
 
     const initialPeriod = manifest.getPeriodForTime(initialTime);
     if (initialPeriod == null) {
