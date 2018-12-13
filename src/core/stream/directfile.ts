@@ -42,9 +42,9 @@ import createEMEManager from "./create_eme_manager";
 import EVENTS from "./events_generators";
 import { IInitialTimeOptions } from "./get_initial_time";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
-import createMediaErrorManager from "./media_error_manager";
 import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
+import throwOnMediaError from "./throw_on_media_error";
 import {
   ISpeedChangedEvent,
   IStalledEvent,
@@ -146,7 +146,7 @@ export default function StreamDirectFile({
 
   // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.
-  const errorManager$ = createMediaErrorManager(mediaElement);
+  const mediaError$ = throwOnMediaError(mediaElement);
 
   // Create Speed Manager, an observable which will set the speed set by the
   // user on the media element while pausing a little longer while the buffer
@@ -182,7 +182,7 @@ export default function StreamDirectFile({
     loadedEvent$,
     initialSeek$,
     emeManager$,
-    errorManager$,
+    mediaError$,
     speedManager$,
     stallingManager$,
     linkURL$

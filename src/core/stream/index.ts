@@ -65,10 +65,10 @@ import EVENTS from "./events_generators";
 import getInitialTime, {
   IInitialTimeOptions,
 } from "./get_initial_time";
-import createMediaErrorManager from "./media_error_manager";
 import StreamLoader, {
   IStreamLoaderEvent,
 } from "./stream_loader";
+import throwOnMediaError from "./throw_on_media_error";
 import {
   IManifestReadyEvent,
   IReloadingStreamEvent,
@@ -195,7 +195,7 @@ export default function Stream({
 
   // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.
-  const mediaErrorManager$ = createMediaErrorManager(mediaElement);
+  const mediaError$ = throwOnMediaError(mediaElement);
 
   // Emit each time the manifest is refreshed.
   const manifestRefreshed$ = new ReplaySubject<{
@@ -299,7 +299,7 @@ export default function Stream({
 
   return observableMerge(
     stream$,
-    mediaErrorManager$,
+    mediaError$,
     emeManager$,
     warning$.pipe(map(EVENTS.warning))
   );
