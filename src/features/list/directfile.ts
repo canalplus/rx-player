@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import directfile from "../../core/stream/initialize_directfile";
+import directfile from "../../core/init/initialize_directfile";
 import { IFeaturesObject } from "../types";
 
 /**

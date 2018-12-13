@@ -32,8 +32,7 @@ Such events tells us when:
   - The Manifest should be refreshed to allow the RepresentationBuffer to
     download future-needed segments.
 
-  - A discontinuity is currently encountered in the Stream (TODO this might not
-    be the job of the RepresentationBuffer)
+  - A discontinuity is currently encountered
 
 
 

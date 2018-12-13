@@ -45,11 +45,11 @@ import getStalledEvents from "./get_stalled_events";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
 import throwOnMediaError from "./throw_on_media_error";
 import {
+  IInitClockTick,
+  ILoadedEvent,
   ISpeedChangedEvent,
   IStalledEvent,
-  IStreamClockTick,
-  IStreamLoadedEvent,
-  IStreamWarningEvent,
+  IWarningEvent,
 } from "./types";
 import updatePlaybackRate from "./update_playback_rate";
 
@@ -98,10 +98,10 @@ function getDirectFileInitialTime(
   return 0;
 }
 
-// Argument used by `StreamDirectFile`
-export interface IDirectFileStreamOptions {
+// Argument used by `initializeDirectfileContent`
+export interface IDirectFileOptions {
   autoPlay : boolean;
-  clock$ : Observable<IStreamClockTick>;
+  clock$ : Observable<IInitClockTick>;
   keySystems : IKeySystemOption[];
   mediaElement : HTMLMediaElement;
   speed$ : Observable<number>;
@@ -109,19 +109,19 @@ export interface IDirectFileStreamOptions {
   url : string;
 }
 
-// Events emitted by `StreamDirectFile`
+// Events emitted by `initializeDirectfileContent`
 export type IDirectfileEvent =
   ISpeedChangedEvent |
   IStalledEvent |
-  IStreamLoadedEvent |
-  IStreamWarningEvent;
+  ILoadedEvent |
+  IWarningEvent;
 
 /**
- * Launch a Stream in "Directfile mode".
+ * Launch a content in "Directfile mode".
  * @param {Object} directfileOptions
  * @returns {Observable}
  */
-export default function StreamDirectFile({
+export default function initializeDirectfileContent({
   autoPlay,
   clock$,
   keySystems,
@@ -129,13 +129,13 @@ export default function StreamDirectFile({
   speed$,
   startAt,
   url,
-} : IDirectFileStreamOptions) : Observable<IDirectfileEvent> {
+} : IDirectFileOptions) : Observable<IDirectfileEvent> {
   clearElementSrc(mediaElement);
 
-  log.debug("Stream: Calculating initial time");
+  log.debug("Init: Calculating initial time");
   const initialTime = () =>
     getDirectFileInitialTime(mediaElement, startAt);
-  log.debug("Stream: Initial time calculated:", initialTime);
+  log.debug("Init: Initial time calculated:", initialTime);
 
   const { seek$, load$ } =
     seekAndLoadOnMediaEvents(clock$, mediaElement, initialTime, autoPlay);

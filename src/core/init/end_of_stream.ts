@@ -67,9 +67,9 @@ export default function triggerEndOfStream(
   mediaSource : MediaSource
 ) : Observable<null> {
   return observableDefer(() => {
-    log.debug("Stream: Trying to call endOfStream");
+    log.debug("Init: Trying to call endOfStream");
     if (mediaSource.readyState !== "open") {
-      log.debug("Stream: MediaSource not open, cancel endOfStream");
+      log.debug("Init: MediaSource not open, cancel endOfStream");
       return observableOf(null);
     }
 
@@ -77,12 +77,12 @@ export default function triggerEndOfStream(
     const updatingSourceBuffers = getUpdatingSourceBuffers(sourceBuffers);
 
     if (!updatingSourceBuffers.length) {
-      log.info("Stream: Triggering end of stream");
+      log.info("Init: Triggering end of stream");
       mediaSource.endOfStream();
       return observableOf(null);
     }
 
-    log.debug("Stream: Waiting SourceBuffers to be updated before calling endOfStream.");
+    log.debug("Init: Waiting SourceBuffers to be updated before calling endOfStream.");
     const updatedSourceBuffers$ = updatingSourceBuffers
       .map((sourceBuffer) => onUpdate$(sourceBuffer).pipe(take(1)));
 

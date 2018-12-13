@@ -37,26 +37,26 @@ export default function createEMEManager(
 ) : Observable<IEMEManagerEvent> {
   if (features.emeManager == null) {
     return onEncrypted$(mediaElement).pipe(map(() => {
-      log.error("Stream: Encrypted event but EME feature not activated");
+      log.error("Init: Encrypted event but EME feature not activated");
       throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
     }));
   }
 
   if (!keySystems || !keySystems.length) {
     return onEncrypted$(mediaElement).pipe(map(() => {
-      log.error("Stream: Ciphered media and no keySystem passed");
+      log.error("Init: Ciphered media and no keySystem passed");
       throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
     }));
   }
 
   if (!hasEMEAPIs()) {
     return onEncrypted$(mediaElement).pipe(map(() => {
-      log.error("Stream: Encrypted event but no EME API available");
+      log.error("Init: Encrypted event but no EME API available");
       throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
     }));
   }
 
-  log.debug("Stream: Creating EMEManager");
+  log.debug("Init: Creating EMEManager");
   return features.emeManager(mediaElement, keySystems);
 }
 

@@ -36,7 +36,7 @@ import {
 } from "../../compat";
 import { onLoadedMetadata$ } from "../../compat/events";
 import log from "../../log";
-import { IStreamClockTick } from "./types";
+import { IInitClockTick } from "./types";
 
 type ILoadEvents =
   "not-loaded-metadata" | // metadata are not loaded. Manual action required
@@ -54,7 +54,7 @@ type ILoadEvents =
  * @returns {Observable}
  */
 function canPlay(
-  clock$ : Observable<IStreamClockTick>,
+  clock$ : Observable<IInitClockTick>,
   mediaElement : HTMLMediaElement
 ) : Observable<"can-play"|"not-loaded-metadata"> {
   const isLoaded$ = clock$.pipe(
@@ -92,7 +92,7 @@ function autoPlay$(
     catchError((error) => {
       if (error.name === "NotAllowedError") {
         // auto-play was probably prevented.
-        log.warn("Stream: Media element can't play." +
+        log.warn("Init: Media element can't play." +
           " It may be due to browser auto-play policies.");
         return observableOf("autoplay-blocked" as "autoplay-blocked");
       } else {
@@ -120,14 +120,14 @@ function autoPlay$(
  * @returns {object}
  */
 export default function seekAndLoadOnMediaEvents(
-  clock$ : Observable<IStreamClockTick>,
+  clock$ : Observable<IInitClockTick>,
   mediaElement : HTMLMediaElement,
   startTime : number|(() => number),
   mustAutoPlay : boolean
 ) : { seek$ : Observable<unknown>; load$ : Observable<ILoadEvents> } {
   const seek$ = onLoadedMetadata$(mediaElement).pipe(
     tap(() => {
-      log.info("Stream: Set initial time", startTime);
+      log.info("Init: Set initial time", startTime);
       mediaElement.currentTime = typeof startTime === "function" ?
         startTime() : startTime;
     }),
@@ -142,7 +142,7 @@ export default function seekAndLoadOnMediaEvents(
   const load$ = seek$.pipe(
     mergeMap(() => {
       return canPlay(clock$, mediaElement).pipe(
-        tap(() => log.info("Stream: Can begin to play content")),
+        tap(() => log.info("Init: Can begin to play content")),
         mergeMap((evt) => {
           if (evt === "can-play") {
             if (!mustAutoPlay) {

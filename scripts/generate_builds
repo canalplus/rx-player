@@ -48,7 +48,7 @@ for f in "$files"; do
   sed -i -E "s/\b__RELATIVE_PATH__\.HTML_SRT\b/\"..\/parsers\/texttracks\/srt\/html.js\"/g" $f
   sed -i -E "s/\b__RELATIVE_PATH__\.HTML_TTML\b/\"..\/parsers\/texttracks\/ttml\/html\/index.js\"/g" $f
   sed -i -E "s/\b__RELATIVE_PATH__\.HTML_SAMI\b/\"..\/parsers\/texttracks\/sami\/html.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.DIRECTFILE\b/\"..\/core\/stream\/directfile.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.DIRECTFILE\b/\"..\/core\/init\/directfile.js\"/g" $f
 done
 
 echo "processed modular build succesfully created!"

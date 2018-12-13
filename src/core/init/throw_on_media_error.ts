@@ -54,7 +54,7 @@ export default function throwOnMediaError(
           errorDetail = "MEDIA_ERR_UNKNOWN";
           break;
       }
-      log.error(`Stream: Media element MEDIA_ERR(${errorDetail})`);
+      log.error(`Init: Media element MEDIA_ERR(${errorDetail})`);
       throw new MediaError(errorDetail, null, true);
     }));
 }

@@ -520,10 +520,10 @@ player.loadVideo({
 <h3>timeFragment parameter</h3>
 <h4>What changed</h4>
 <p>The <code>timeFragment</code> parameter has been completely removed.</p>
-<p>If you want to start at a precize point in the stream, you can use the
+<p>If you want to start at a precize point in the content, you can use the
 <code>startAt</code> parameter instead, documented
 <a href="./loadVideo_options.md#prop-startAt">here</a>.</p>
-<p>If you want to end at a precize point in the stream, this has not been
+<p>If you want to end at a precize point in the content, this has not been
 re-implemented as I do not know for now any usecase for that. Please open an
 issue if you need that feature.</p>
 <a name="load-manifests">
@@ -958,7 +958,7 @@ track = player.getTextTrack();
 <h4>What Changed</h4>
 <p><code>goToStart</code> is removed from the API and not replaced. You might want to use
 both <code>getMinimumPosition</code> and <code>seekTo</code> to seek to the earliest part of the
-stream.</p>
+content.</p>
 <h4>Replacement example</h4>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
 player.goToStart();

@@ -596,11 +596,11 @@ player.loadVideo({
 
 The ``timeFragment`` parameter has been completely removed.
 
-If you want to start at a precize point in the stream, you can use the
+If you want to start at a precize point in the content, you can use the
 ``startAt`` parameter instead, documented
 [here](./loadVideo_options.md#prop-startAt).
 
-If you want to end at a precize point in the stream, this has not been
+If you want to end at a precize point in the content, this has not been
 re-implemented as I do not know for now any usecase for that. Please open an
 issue if you need that feature.
 
@@ -1129,7 +1129,7 @@ if (track) {
 
 ``goToStart`` is removed from the API and not replaced. You might want to use
 both ``getMinimumPosition`` and ``seekTo`` to seek to the earliest part of the
-stream.
+content.
 
 #### Replacement example
 

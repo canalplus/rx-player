@@ -34,7 +34,7 @@ Such modules are (with link to their respective documentation, if one):
     implementing it.
 
 
-  - __the [Stream](./stream/index.md)__
+  - __the [Init](./init/index.md)__
 
     Initialize the content and connects the different modules between one
     another to allow continuous playback.
@@ -56,7 +56,7 @@ Such modules are (with link to their respective documentation, if one):
     Choose which media segments to download and push them to SourceBuffers to
     then be able to decode them.
 
-    Various files documenting the Stream architecture should be available in the
+    Various files documenting the Buffer architecture should be available in the
     ``doc/architecture/buffer`` directory.
 
 
@@ -127,20 +127,18 @@ To better understand the player's architecture, you can find below a
    Download and parse             |                    |     Handle encrypted
    the manifest                   |                    |             contents
                       +---------- |                    |
-                      |  +------> |       Stream       |
-                      v  |        |                    |
- +----------------------------+   |                    |
- | SegmentPipelineManager (1) |   |                    |
- +----------------------------+   |                    |
-  Factory creating segment        |                    | <---------------+
-  `pipelines` to download         +--------------------+ ------------+   |
-  segments                         ^ |    |  ^  Initialize           V   |
-                                   | |    |  |  a content     +----------------+
-+---------------------+ -----------+ |    |  |  and connect   | ABRManager (1) |
-|                     | <------------+    |  |  everything    +----------------+
-| SourceBufferManager |                   |  |                     Find the best
-|         (1)         |                   |  |                           bitrate
-|                     |                   |  |
+                      |  +------> |        Init        | <---------------+
+                      v  |        |                    | ------------+   |
+ +----------------------------+   |                    |             V   |
+ | SegmentPipelineManager (1) |   |                    |      +----------------+
+ +----------------------------+   |                    |      | ABRManager (1) |
+  Factory creating segment        |                    |      +----------------+
+  `pipelines` to download         +--------------------+           Find the best
+  segments                         ^ |    |  ^  Initialize               bitrate
+                                   | |    |  |  a content
++---------------------+ -----------+ |    |  |  and connect
+| SourceBufferManager | <------------+    |  |  everything
+|         (1)         |                   |  |
 +---------------------+                   |  |
  Create and handle                        |  |
  SourceBuffers                            |  |
@@ -172,5 +170,5 @@ To better understand the player's architecture, you can find below a
                                                                         Buffers
 
 (1) The SourceBufferManager, SegmentPipelineManager and ABRManager are actually
-initialized by the Stream but are then mainly used by the Buffers.
+initialized by the Init but are then mainly used by the Buffers.
 ```

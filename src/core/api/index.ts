@@ -98,13 +98,13 @@ import {
 } from "../eme";
 import { IBufferType } from "../source_buffers";
 import initializeMediaSourcePlayback, {
-  IStreamEvent,
-} from "../stream";
+  IInitEvent,
+} from "../init";
 import {
-  IReloadingStreamEvent,
+  ILoadedEvent,
+  IReloadingMediaSourceEvent,
   IStalledEvent,
-  IStreamLoadedEvent,
-} from "../stream/types";
+} from "../init/types";
 import createClock, {
   IClockTick
 } from "./clock";
@@ -720,7 +720,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       this._priv_stopAtEnd ? onEnded$(videoElement) : EMPTY
     ).pipe(take(1));
 
-    let playback$ : ConnectableObservable<IStreamEvent>;
+    let playback$ : ConnectableObservable<IInitEvent>;
 
     if (!isDirectFile) {
       const transportFn = features.transports[transport];
@@ -783,7 +783,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         url,
       })
         .pipe(takeUntil(contentIsStopped$))
-        .pipe(publish()) as ConnectableObservable<IStreamEvent>;
+        .pipe(publish()) as ConnectableObservable<IInitEvent>;
     } else {
       if (features.directfile == null) {
         throw new Error("DirectFile feature not activated in your build.");
@@ -798,7 +798,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
         url,
       })
         .pipe(takeUntil(contentIsStopped$))
-        .pipe(publish()) as ConnectableObservable<IStreamEvent>;
+        .pipe(publish()) as ConnectableObservable<IInitEvent>;
     }
 
     // Emit an object when the player stalls and null when it unstall
@@ -809,13 +809,15 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     // Emit when the content is considered "loaded".
     const loaded$ = playback$.pipe(
-      filter((evt) : evt is IStreamLoadedEvent => evt.type === "loaded"),
+      filter((evt) : evt is ILoadedEvent => evt.type === "loaded"),
       share()
     );
 
     // Emit when we "reload" the MediaSource
-    const reloading$ = playback$.pipe(
-      filter((evt) : evt is IReloadingStreamEvent => evt.type === "reloading-stream"),
+    const reloading$ = playback$
+      .pipe(filter((evt) : evt is IReloadingMediaSourceEvent =>
+        evt.type === "reloading-media-source"
+      ),
       share()
     );
 
@@ -1878,7 +1880,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Object} event - payload emitted
    * @private
    */
-  private _priv_onPlaybackEvent(event : IStreamEvent) : void {
+  private _priv_onPlaybackEvent(event : IInitEvent) : void {
     switch (event.type) {
       case "activePeriodChanged":
         this._priv_onActivePeriodChanged(event.value);
@@ -1889,7 +1891,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       case "periodBufferCleared":
         this._priv_onPeriodBufferCleared(event.value);
         break;
-      case "reloading-stream":
+      case "reloading-media-source":
         this._priv_onReloadingMediaSource();
         break;
       case "representationChange":

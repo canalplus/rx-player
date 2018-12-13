@@ -49,11 +49,11 @@ import EVENTS from "./events_generators";
 import getStalledEvents from "./get_stalled_events";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
 import {
+  IInitClockTick,
+  ILoadedEvent,
   ISpeedChangedEvent,
   IStalledEvent,
-  IStreamClockTick,
-  IStreamLoadedEvent,
-  IStreamWarningEvent,
+  IWarningEvent,
 } from "./types";
 import updatePlaybackRate from "./update_playback_rate";
 
@@ -63,7 +63,7 @@ export interface IMediaSourceLoaderArguments {
                                    // played
   manifest$ : BehaviorSubject<Manifest>; // Manifest of the content we want to
                                          // play
-  clock$ : Observable<IStreamClockTick>; // Emit position informations
+  clock$ : Observable<IInitClockTick>; // Emit position informations
   speed$ : Observable<number>; // Emit the speed.
                                // /!\ Should replay the last value on subscription.
   abrManager : ABRManager;
@@ -83,8 +83,8 @@ export interface IMediaSourceLoaderArguments {
 export type IMediaSourceLoaderEvent =
   IStalledEvent |
   ISpeedChangedEvent |
-  IStreamLoadedEvent |
-  IStreamWarningEvent |
+  ILoadedEvent |
+  IWarningEvent |
   IPeriodBufferManagerEvent;
 
 /**
@@ -112,7 +112,7 @@ export default function createMediaSourceLoader({
    * @param {number} initialTime
    * @param {boolean} autoPlay
    */
-  return function loadStreamOnMediaSource(
+  return function loadContentOnMediaSource(
     mediaSource : MediaSource,
     initialTime : number,
     autoPlay : boolean
@@ -163,16 +163,16 @@ export default function createMediaSourceLoader({
       mergeMap((evt) : Observable<IMediaSourceLoaderEvent> => {
         switch (evt.type) {
           case "end-of-stream":
-            log.debug("Stream: end-of-stream order received.");
+            log.debug("Init: end-of-stream order received.");
             return maintainEndOfStream(mediaSource)
               .pipe(ignoreElements(), takeUntil(cancelEndOfStream$));
           case "resume-stream":
-            log.debug("Stream: resume-stream order received.");
+            log.debug("Init: resume-stream order received.");
             cancelEndOfStream$.next(null);
             return EMPTY;
           case "discontinuity-encountered":
             if (SourceBufferManager.isNative(evt.value.bufferType)) {
-              log.warn("Stream: Explicit discontinuity seek", evt.value.nextTime);
+              log.warn("Init: Explicit discontinuity seek", evt.value.nextTime);
               mediaElement.currentTime = evt.value.nextTime;
             }
             return EMPTY;
@@ -202,7 +202,7 @@ export default function createMediaSourceLoader({
           const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA", null, false);
           return observableOf(EVENTS.warning(error));
         }
-        log.debug("Stream: Stream is loaded.");
+        log.debug("Init: The current content is loaded.");
         return observableOf(EVENTS.loaded());
       }));
 

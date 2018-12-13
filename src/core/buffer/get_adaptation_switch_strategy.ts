@@ -29,7 +29,7 @@ const { ADAPTATION_SWITCH_BUFFER_PADDINGS } = config;
 export type IAdaptationSwitchStrategy =
   { type: "continue"; value: undefined } |
   { type: "clean-buffer"; value: Array<{ start: number; end: number }> } |
-  { type: "reload-stream"; value: undefined };
+  { type: "needs-reload"; value: undefined };
 
 /**
  * Find out what to do when switching adaptation, based on the current
@@ -63,7 +63,7 @@ export default function getAdaptationSwitchStrategy(
     clockTick.readyState > 1 &&
     isTimeInRange({ start, end }, currentTime)
   ) {
-    return { type: "reload-stream", value: undefined };
+    return { type: "needs-reload", value: undefined };
   }
 
   const paddingBefore = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].before || 0;

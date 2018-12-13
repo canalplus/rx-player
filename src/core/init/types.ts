@@ -21,8 +21,8 @@ import ABRManager from "../abr";
 import { IRepresentationChangeEvent } from "../buffer/types";
 import { IStallingItem } from "./get_stalled_events";
 
-// Object emitted when the stream's clock tick
-export interface IStreamClockTick {
+// Object emitted when the clock ticks
+export interface IInitClockTick {
   currentTime : number;
   buffered : TimeRanges;
   duration : number;
@@ -52,13 +52,13 @@ export interface IManifestReadyEvent {
 }
 
 // A minor error happened
-export interface IStreamWarningEvent {
+export interface IWarningEvent {
   type : "warning";
   value : Error|ICustomError;
 }
 
-export interface IReloadingStreamEvent {
-  type: "reloading-stream";
+export interface IReloadingMediaSourceEvent {
+  type: "reloading-media-source";
   value: undefined;
 }
 
@@ -77,7 +77,7 @@ export interface IStalledEvent {
 }
 
 // The content loaded
-export interface IStreamLoadedEvent {
+export interface ILoadedEvent {
   type : "loaded";
   value : true;
 }

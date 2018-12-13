@@ -88,7 +88,7 @@ const plugins = [
       HTML_SRT: JSON.stringify("../parsers/texttracks/srt/html.ts"),
       HTML_TTML: JSON.stringify("../parsers/texttracks/ttml/html/index.ts"),
       HTML_SAMI: JSON.stringify("../parsers/texttracks/sami/html.ts"),
-      DIRECTFILE: JSON.stringify("../core/stream/initialize_directfile.ts"),
+      DIRECTFILE: JSON.stringify("../core/init/initialize_directfile.ts"),
     },
     __DEV__: isDevMode,
     __LOGGER_LEVEL__: isDevMode ? "\"INFO\"" : "\"DEBUG\"",

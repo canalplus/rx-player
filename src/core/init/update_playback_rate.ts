@@ -28,7 +28,7 @@ import {
   tap,
 } from "rxjs/operators";
 import log from "../../log";
-import { IStreamClockTick } from "./types";
+import { IInitClockTick } from "./types";
 
 export interface IPlaybackRateOptions {
   pauseWhenStalled? : boolean;
@@ -50,7 +50,7 @@ export interface IPlaybackRateOptions {
 export default function updatePlaybackRate(
   mediaElement : HTMLMediaElement,
   speed$ : Observable<number>,
-  clock$ : Observable<IStreamClockTick>,
+  clock$ : Observable<IInitClockTick>,
   { pauseWhenStalled = true } : IPlaybackRateOptions
 ) : Observable<number> {
   let forcePause$ : Observable<boolean>;
@@ -58,7 +58,7 @@ export default function updatePlaybackRate(
   if (!pauseWhenStalled) {
     forcePause$ = observableOf(false);
   } else {
-    const lastTwoTicks$ : Observable<[IStreamClockTick, IStreamClockTick]> =
+    const lastTwoTicks$ : Observable<[IInitClockTick, IInitClockTick]> =
       clock$.pipe(pairwise());
 
     forcePause$ = lastTwoTicks$
@@ -82,14 +82,14 @@ export default function updatePlaybackRate(
     .pipe(switchMap(shouldForcePause => {
       if (shouldForcePause) {
         return observableDefer(() => {
-          log.info("Stream: Pause playback to build buffer");
+          log.info("Init: Pause playback to build buffer");
           mediaElement.playbackRate = 0;
           return observableOf(0);
         });
       }
       return speed$
         .pipe(tap((speed) => {
-          log.info("Stream: Resume playback speed", speed);
+          log.info("Init: Resume playback speed", speed);
           mediaElement.playbackRate = speed;
         }));
     }));

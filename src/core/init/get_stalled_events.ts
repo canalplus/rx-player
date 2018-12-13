@@ -25,7 +25,7 @@ import { isPlaybackStuck } from "../../compat";
 import config from "../../config";
 import log from "../../log";
 import { getNextRangeGap } from "../../utils/ranges";
-import { IStreamClockTick } from "./types";
+import { IInitClockTick } from "./types";
 
 const { DISCONTINUITY_THRESHOLD } = config;
 
@@ -43,7 +43,7 @@ export interface IStallingItem {
  */
 export default function getStalledEvents(
   mediaElement : HTMLMediaElement,
-  clock$ : Observable<IStreamClockTick>
+  clock$ : Observable<IInitClockTick>
 ) : Observable<IStallingItem|null> {
   return clock$.pipe(
     tap((tick) => {
@@ -61,21 +61,15 @@ export default function getStalledEvents(
       // Discontinuity check in case we are close a buffer but still
       // calculate a stalled state. This is useful for some
       // implementation that might drop an injected segment, or in
-      // case of small discontinuity in the stream.
+      // case of small discontinuity in the content.
       if (
-        isPlaybackStuck(
-          tick.currentTime,
-          tick.currentRange,
-          tick.state,
-          !!tick.stalled
-        )
+        isPlaybackStuck(tick.currentTime, tick.currentRange, tick.state, !!tick.stalled)
       ) {
-        log.warn("Stream: After freeze seek", currentTime, tick.currentRange);
+        log.warn("Init: After freeze seek", currentTime, tick.currentRange);
         mediaElement.currentTime = currentTime;
       } else if (nextRangeGap < DISCONTINUITY_THRESHOLD) {
         const seekTo = (currentTime + nextRangeGap + 1 / 60);
-        log.warn("Stream: Discontinuity seek",
-          currentTime, nextRangeGap, seekTo);
+        log.warn("Init: Discontinuity seek", currentTime, nextRangeGap, seekTo);
         mediaElement.currentTime = seekTo;
       }
     }),
