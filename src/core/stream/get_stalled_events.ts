@@ -38,16 +38,16 @@ export interface IStallingItem {
  * Receive "stalling" events from the clock, try to get out of it, and re-emit
  * them for the player if the stalling status changed.
  * @param {HTMLMediaElement} mediaElement
- * @param {Observable} timings$
+ * @param {Observable} clock$
  * @returns {Observable}
  */
-function StallingManager(
+export default function getStalledEvents(
   mediaElement : HTMLMediaElement,
-  timings$ : Observable<IStreamClockTick>
+  clock$ : Observable<IStreamClockTick>
 ) : Observable<IStallingItem|null> {
-  return timings$.pipe(
-    tap((timing) => {
-      if (!timing.stalled) {
+  return clock$.pipe(
+    tap((tick) => {
+      if (!tick.stalled) {
         return;
       }
 
@@ -55,7 +55,7 @@ function StallingManager(
       //   1. is it a browser bug? -> force seek at the same current time
       //   2. is it a short discontinuity? -> Seek at the beginning of the
       //                                      next range
-      const { buffered, currentTime } = timing;
+      const { buffered, currentTime } = tick;
       const nextRangeGap = getNextRangeGap(buffered, currentTime);
 
       // Discontinuity check in case we are close a buffer but still
@@ -64,28 +64,26 @@ function StallingManager(
       // case of small discontinuity in the stream.
       if (
         isPlaybackStuck(
-          timing.currentTime,
-          timing.currentRange,
-          timing.state,
-          !!timing.stalled
+          tick.currentTime,
+          tick.currentRange,
+          tick.state,
+          !!tick.stalled
         )
       ) {
-        log.warn("StallingManager: After freeze seek", currentTime, timing.currentRange);
+        log.warn("Stream: After freeze seek", currentTime, tick.currentRange);
         mediaElement.currentTime = currentTime;
       } else if (nextRangeGap < DISCONTINUITY_THRESHOLD) {
         const seekTo = (currentTime + nextRangeGap + 1 / 60);
-        log.warn("StallingManager: Discontinuity seek",
+        log.warn("Stream: Discontinuity seek",
           currentTime, nextRangeGap, seekTo);
         mediaElement.currentTime = seekTo;
       }
     }),
     share(),
-    map(timing => timing.stalled),
+    map(tick => tick.stalled),
     distinctUntilChanged((wasStalled, isStalled) => {
       return !wasStalled && !isStalled ||
         (!!wasStalled && !!isStalled && wasStalled.reason === isStalled.reason);
     })
   );
 }
-
-export default StallingManager;

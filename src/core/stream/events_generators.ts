@@ -22,7 +22,7 @@ import Manifest, {
 import ABRManager from "../abr";
 import { IRepresentationChangeEvent } from "../buffer/types";
 import { IBufferType } from "../source_buffers";
-import { IStallingItem } from "./stalling_manager";
+import { IStallingItem } from "./get_stalled_events";
 import {
   IManifestReadyEvent,
   IReloadingStreamEvent,

@@ -19,7 +19,7 @@ import { ICustomError } from "../../errors";
 import Manifest from "../../manifest";
 import ABRManager from "../abr";
 import { IRepresentationChangeEvent } from "../buffer/types";
-import { IStallingItem } from "./stalling_manager";
+import { IStallingItem } from "./get_stalled_events";
 
 // Object emitted when the stream's clock tick
 export interface IStreamClockTick {

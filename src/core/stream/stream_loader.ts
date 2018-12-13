@@ -46,8 +46,8 @@ import createBufferClock from "./create_buffer_clock";
 import { setDurationToMediaSource } from "./create_media_source";
 import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
+import getStalledEvents from "./get_stalled_events";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
-import StallingManager from "./stalling_manager";
 import {
   ISpeedChangedEvent,
   IStalledEvent,
@@ -190,7 +190,7 @@ export default function StreamLoader({
 
     // Create Stalling Manager, an observable which will try to get out of
     // various infinite stalling issues
-    const stallingManager$ = StallingManager(mediaElement, clock$)
+    const stalled$ = getStalledEvents(mediaElement, clock$)
       .pipe(map(EVENTS.stalled));
 
     const loadedEvent$ = load$
@@ -206,15 +206,11 @@ export default function StreamLoader({
         return observableOf(EVENTS.loaded());
       }));
 
-    return observableMerge(
-      loadedEvent$,
-      buffers$,
-      playbackRate$,
-      stallingManager$
-    ).pipe(finalize(() => {
-      // clean-up every created SourceBuffers
-      sourceBufferManager.disposeAll();
-    }));
+    return observableMerge(loadedEvent$, playbackRate$, stalled$, buffers$)
+      .pipe(finalize(() => {
+        // clean-up every created SourceBuffers
+        sourceBufferManager.disposeAll();
+      }));
   };
 
   /**

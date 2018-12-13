@@ -108,15 +108,6 @@ time the wanted language.
 
 
 
-### The StallingManager ########################################################
-
-The StallingManager listens to various browser events and properties to detect
-when the player is "stalled" (i.e. stuck on the current position).
-
-It then try to adopt a strategy to easily get out of this situation if it can.
-
-
-
 ### Playback rate management ###################################################
 
 The playback rate (or speed) is updated by the stream.
