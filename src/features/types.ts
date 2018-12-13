@@ -21,7 +21,7 @@ import { IKeySystemOption } from "../core/eme/types";
 import {
   IDirectfileEvent,
   IDirectFileStreamOptions,
-} from "../core/stream/directfile";
+} from "../core/stream/stream_directfile";
 import { ITransportFunction } from "../net/types";
 import {
   IHTMLTextTracksParserFn,
