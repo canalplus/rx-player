@@ -26,7 +26,7 @@ import {
 import { map } from "rxjs/operators";
 import features from "../../features";
 import log from "../../log";
-import {
+import Manifest, {
   Adaptation,
   Representation,
 } from "../../manifest";
@@ -146,7 +146,12 @@ export default function(
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
       const { receivedTime: manifestReceivedTime } = response;
-      const manifest = smoothManifestParser(data, url, manifestReceivedTime);
+      const parserResult = smoothManifestParser(data, url, manifestReceivedTime);
+      const manifest = new Manifest(parserResult, {
+        representationFilter: options.representationFilter,
+        supplementaryImageTracks: options.supplementaryImageTracks,
+        supplementaryTextTracks: options.supplementaryTextTracks,
+      });
       return observableOf({ manifest, url });
     },
   };

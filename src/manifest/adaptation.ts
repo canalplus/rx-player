@@ -16,7 +16,6 @@
 
 import arrayFind from "array-find";
 import objectAssign from "object-assign";
-import { Subject } from "rxjs";
 import { isCodecSupported } from "../compat";
 import { ICustomError } from "../errors";
 import MediaError from "../errors/MediaError";
@@ -121,16 +120,22 @@ export default class Adaptation {
   public manuallyAdded? : boolean;
 
   /**
+   * Array containing every errors that happened when the Adaptation has been
+   * created, in the order they have happened.
+   * @type {Array.<Error>}
+   */
+  public readonly parsingErrors : Array<Error|ICustomError>;
+
+  /**
    * @constructor
    * @param {Object} args
-   * @param {Subject} warning$
    * @param {Function|undefined} [representationFilter]
    */
   constructor(
     args : IAdaptationArguments,
-    warning$ : Subject<Error|ICustomError>,
     representationFilter? : IRepresentationFilter
   ) {
+    this.parsingErrors = [];
     const nId = generateNewId();
     this.id = args.id == null ? nId : "" + args.id;
     this.type = args.type;
@@ -142,7 +147,7 @@ export default class Adaptation {
     if (hadRepresentations && argsRepresentations.length === 0) {
       log.warn("Incompatible codecs for adaptation", args);
       const error = new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR", null, false);
-      warning$.next(error);
+      this.parsingErrors.push(error);
     }
 
     if (args.language != null) {

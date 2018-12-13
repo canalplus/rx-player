@@ -34,11 +34,7 @@ import {
   OtherError,
   RequestError,
 } from "../../../errors";
-import Manifest, {
-  IRepresentationFilter,
-  ISupplementaryImageTrack,
-  ISupplementaryTextTrack,
-} from "../../../manifest";
+import Manifest from "../../../manifest";
 import {
   IManifestLoaderArguments,
   ITransportPipelines,
@@ -58,15 +54,6 @@ const {
 export interface IRequestSchedulerOptions {
   maxRetry : number;
   maxRetryOffline : number;
-}
-
-export interface IManifestTransportInfos {
-  pipelines : ITransportPipelines;
-  options : {
-    representationFilter? : IRepresentationFilter;
-    supplementaryImageTracks? : ISupplementaryImageTrack[];
-    supplementaryTextTracks? : ISupplementaryTextTrack[];
-  };
 }
 
 type IPipelineManifestOptions =
@@ -112,14 +99,14 @@ function errorSelector(code : string, error : Error, fatal : boolean) : ICustomE
  * @returns {Function}
  */
 export default function createManifestPipeline(
-  transport : IManifestTransportInfos,
+  pipelines : ITransportPipelines,
   pipelineOptions : IPipelineManifestOptions,
   warning$ : Subject<Error|ICustomError>
 ) : (url : string) => Observable<IFetchManifestResult> {
   const loader = createLoader<
     IManifestLoaderArguments, Document|string
-  >(transport.pipelines.manifest, pipelineOptions);
-  const { parser } = transport.pipelines.manifest;
+  >(pipelines.manifest, pipelineOptions);
+  const { parser } = pipelines.manifest;
 
   /**
    * Allow the parser to schedule a new request.
@@ -171,8 +158,11 @@ export default function createManifestPipeline(
               error : new OtherError("PIPELINE_PARSING_ERROR", error, true);
             throw formattedError;
           }),
-          map(({ manifest: parsedManifest }) => {
-            const manifest = new Manifest(parsedManifest, warning$, transport.options);
+          map(({ manifest }) => {
+            const warnings = manifest.parsingErrors;
+            for (let i = 0; i < warnings.length; i++) {
+              warning$.next(warnings[i]); // TODO not through warning$
+            }
             return { manifest, sendingTime };
           })
         );
