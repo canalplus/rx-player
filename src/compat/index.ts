@@ -158,7 +158,7 @@ function onSourceOpen$(
 
 /**
  * Returns an observable emitting a single time, as soon as a seek is possible
- * (the metatada are loaded).
+ * (the metadata are loaded).
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
