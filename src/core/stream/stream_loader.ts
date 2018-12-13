@@ -47,7 +47,6 @@ import { setDurationToMediaSource } from "./create_media_source";
 import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
-import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
 import {
   ISpeedChangedEvent,
@@ -56,6 +55,7 @@ import {
   IStreamLoadedEvent,
   IStreamWarningEvent,
 } from "./types";
+import updatePlaybackRate from "./update_playback_rate";
 
 // Arguments for the StreamLoader
 export interface IStreamLoaderArgument {
@@ -182,10 +182,9 @@ export default function StreamLoader({
       })
     );
 
-    // Create Speed Manager, an observable which will set the speed set by the
-    // user on the media element while pausing a little longer while the buffer
-    // is stalled.
-    const speedManager$ = SpeedManager(mediaElement, speed$, clock$, {
+    // update the speed set by the user on the media element while pausing a
+    // little longer while the buffer is stalled.
+    const playbackRate$ = updatePlaybackRate(mediaElement, speed$, clock$, {
       pauseWhenStalled: true,
     }).pipe(map(EVENTS.speedChanged));
 
@@ -210,7 +209,7 @@ export default function StreamLoader({
     return observableMerge(
       loadedEvent$,
       buffers$,
-      speedManager$,
+      playbackRate$,
       stallingManager$
     ).pipe(finalize(() => {
       // clean-up every created SourceBuffers

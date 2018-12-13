@@ -127,11 +127,11 @@ To better understand the player's architecture, you can find below a
    Download and parse             |                    |     Handle encrypted
    the manifest                   |                    |             contents
                       +---------- |                    |
-                      |  +------> |       Stream       | ----> +--------------+
-                      v  |        |                    | <---- | SpeedManager |
- +----------------------------+   |                    |       +--------------+
- | SegmentPipelineManager (1) |   |                    |       Manage playback
- +----------------------------+   |                    |                  rate
+                      |  +------> |       Stream       |
+                      v  |        |                    |
+ +----------------------------+   |                    |
+ | SegmentPipelineManager (1) |   |                    |
+ +----------------------------+   |                    |
   Factory creating segment        |                    | <---------------+
   `pipelines` to download         +--------------------+ ------------+   |
   segments                         ^ |    |  ^  Initialize           V   |

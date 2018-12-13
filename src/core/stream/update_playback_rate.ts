@@ -30,7 +30,7 @@ import {
 import log from "../../log";
 import { IStreamClockTick } from "./types";
 
-export interface ISpeedManagerOptions {
+export interface IPlaybackRateOptions {
   pauseWhenStalled? : boolean;
 }
 
@@ -47,12 +47,12 @@ export interface ISpeedManagerOptions {
  *     stalling should lead to a pause until it un-stalls. True by default.
  * @returns {Observable}
  */
-const speedManager = (
+export default function updatePlaybackRate(
   mediaElement : HTMLMediaElement,
   speed$ : Observable<number>,
   clock$ : Observable<IStreamClockTick>,
-  { pauseWhenStalled = true } : ISpeedManagerOptions
-) : Observable<number> => {
+  { pauseWhenStalled = true } : IPlaybackRateOptions
+) : Observable<number> {
   let forcePause$ : Observable<boolean>;
 
   if (!pauseWhenStalled) {
@@ -82,17 +82,15 @@ const speedManager = (
     .pipe(switchMap(shouldForcePause => {
       if (shouldForcePause) {
         return observableDefer(() => {
-          log.info("SpeedManager: Pause playback to build buffer");
+          log.info("Stream: Pause playback to build buffer");
           mediaElement.playbackRate = 0;
           return observableOf(0);
         });
       }
       return speed$
         .pipe(tap((speed) => {
-          log.info("SpeedManager: Resume playback speed", speed);
+          log.info("Stream: Resume playback speed", speed);
           mediaElement.playbackRate = speed;
         }));
     }));
-};
-
-export default speedManager;
+}

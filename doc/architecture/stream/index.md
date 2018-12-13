@@ -108,12 +108,20 @@ time the wanted language.
 
 
 
-## The SpeedManager ############################################################
+### The StallingManager ########################################################
 
-The SpeedManager is the part of the Stream updating the playback speed of the
-content.
+The StallingManager listens to various browser events and properties to detect
+when the player is "stalled" (i.e. stuck on the current position).
 
-Playback speed can be updated on two occasions:
+It then try to adopt a strategy to easily get out of this situation if it can.
+
+
+
+### Playback rate management ###################################################
+
+The playback rate (or speed) is updated by the stream.
+
+There can be three occasions for these updates:
 
   - the API set a new Speed (``speed$`` Observable).
 
@@ -121,13 +129,6 @@ Playback speed can be updated on two occasions:
 
     In which case, the playback speed will be set to 0 (paused) even if the
     API set another speed.
-    The regular speed will be set when enough buffer is available.
 
-
-
-### The StallingManager ########################################################
-
-The StallingManager listens to various browser events and properties to detect
-when the player is "stalled" (i.e. stuck on the current position).
-
-It then try to adopt a strategy to easily get out of this situation if it can.
+  - the content has built enough buffer to un-pause.
+    The regular speed set by the user will be set.

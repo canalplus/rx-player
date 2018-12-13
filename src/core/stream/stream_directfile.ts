@@ -42,7 +42,6 @@ import createEMEManager from "./create_eme_manager";
 import EVENTS from "./events_generators";
 import { IInitialTimeOptions } from "./get_initial_time";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
-import SpeedManager from "./speed_manager";
 import StallingManager from "./stalling_manager";
 import throwOnMediaError from "./throw_on_media_error";
 import {
@@ -52,6 +51,7 @@ import {
   IStreamLoadedEvent,
   IStreamWarningEvent,
 } from "./types";
+import updatePlaybackRate from "./update_playback_rate";
 
 /**
  * calculate initial time as a position in seconds.
@@ -148,10 +148,9 @@ export default function StreamDirectFile({
   // through a throwing Observable.
   const mediaError$ = throwOnMediaError(mediaElement);
 
-  // Create Speed Manager, an observable which will set the speed set by the
-  // user on the media element while pausing a little longer while the buffer
-  // is stalled.
-  const speedManager$ = SpeedManager(mediaElement, speed$, clock$, {
+  // Set the speed set by the user on the media element while pausing a
+  // little longer while the buffer is stalled.
+  const playbackRate$ = updatePlaybackRate(mediaElement, speed$, clock$, {
     pauseWhenStalled: true,
   }).pipe(map(EVENTS.speedChanged));
 
@@ -183,7 +182,7 @@ export default function StreamDirectFile({
     initialSeek$,
     emeManager$,
     mediaError$,
-    speedManager$,
+    playbackRate$,
     stallingManager$,
     linkURL$
   );

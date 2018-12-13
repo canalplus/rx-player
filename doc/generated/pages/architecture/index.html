@@ -111,11 +111,11 @@ modules.</p>
    Download and parse             |                    |     Handle encrypted
    the manifest                   |                    |             contents
                       +---------- |                    |
-                      |  +------&gt; |       Stream       | ----&gt; +--------------+
-                      v  |        |                    | &lt;---- | SpeedManager |
- +----------------------------+   |                    |       +--------------+
- | SegmentPipelineManager (1) |   |                    |       Manage playback
- +----------------------------+   |                    |                  rate
+                      |  +------&gt; |       Stream       |
+                      v  |        |                    |
+ +----------------------------+   |                    |
+ | SegmentPipelineManager (1) |   |                    |
+ +----------------------------+   |                    |
   Factory creating segment        |                    | &lt;---------------+
   `pipelines` to download         +--------------------+ ------------+   |
   segments                         ^ |    |  ^  Initialize           V   |
