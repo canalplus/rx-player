@@ -472,10 +472,11 @@ export default class Manifest {
     // TODO use RTT for the manifest request? (+ 3 or something)
     const BUFFER_DEPTH_SECURITY = 5;
 
+    const minimumTime = this.minimumTime != null ? this.minimumTime : 0;
     if (!this.isLive) {
       const duration = this.getDuration();
-      return duration == null ?
-        [minimumTime, Infinity] : [minimumTime, duration];
+      const maximumTime = duration == null ? Infinity : duration;
+      return [minimumTime, maximumTime];
     }
 
     const ast = this.availabilityStartTime || 0;
@@ -487,10 +488,7 @@ export default class Manifest {
     return [
       Math.min(
         max,
-        Math.max(
-          this.minimumTime != null ? this.minimumTime : 0,
-          max - tsbd + BUFFER_DEPTH_SECURITY
-        )
+        Math.max(minimumTime, max - tsbd + BUFFER_DEPTH_SECURITY)
       ),
       max,
     ];
