@@ -184,26 +184,11 @@ function parseCompleteIntermediateRepresentation(
 
   // -- add optional fields --
 
-  if (rootAttributes.profiles != null) {
-    parsedMPD.profiles = rootAttributes.profiles;
-  }
   if (rootAttributes.type !== "static" && rootAttributes.availabilityEndTime != null) {
     parsedMPD.availabilityEndTime = rootAttributes.availabilityEndTime;
   }
-  if (rootAttributes.publishTime != null) {
-    parsedMPD.publishTime = rootAttributes.publishTime;
-  }
-  if (rootAttributes.minBufferTime != null) {
-    parsedMPD.minBufferTime = rootAttributes.minBufferTime;
-  }
   if (rootAttributes.timeShiftBufferDepth != null) {
     parsedMPD.timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
-  }
-  if (rootAttributes.maxSegmentDuration != null) {
-    parsedMPD.maxSegmentDuration = rootAttributes.maxSegmentDuration;
-  }
-  if (rootAttributes.maxSubsegmentDuration != null) {
-    parsedMPD.maxSubsegmentDuration = rootAttributes.maxSubsegmentDuration;
   }
 
   checkManifestIDs(parsedMPD);

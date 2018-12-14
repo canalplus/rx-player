@@ -29,12 +29,12 @@ export interface IRepresentationArguments {
   index : IRepresentationIndex;
 
   // -- optional
-  frameRate? : string;
   codecs? : string;
+  contentProtections? : IContentProtection[];
+  frameRate? : string;
   height? : number;
   mimeType? : string;
   width? : number;
-  contentProtections? : IContentProtection[];
 }
 
 /**

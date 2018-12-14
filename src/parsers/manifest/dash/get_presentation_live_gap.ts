@@ -78,7 +78,6 @@ export default function getPresentationLiveGap(
   }
   const firstAdaptationFromLastPeriod = firstAdaptationsFromLastPeriod[0];
   const lastRef = getLastLiveTimeReference(firstAdaptationFromLastPeriod);
-  return lastRef != null ?
-    Date.now() / 1000 - (lastRef + manifest.availabilityStartTime) :
-    10;
+  const ast = manifest.availabilityStartTime || 0;
+  return lastRef != null ? Date.now() / 1000 - (lastRef + ast) : 10;
 }
