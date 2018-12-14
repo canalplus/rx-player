@@ -18,7 +18,6 @@ import objectAssign from "object-assign";
 import config from "../../../config";
 import assert from "../../../utils/assert";
 import generateNewId from "../../../utils/id";
-import { normalize as normalizeLang } from "../../../utils/languages";
 import {
   normalizeBaseURL,
   resolveURL,
@@ -226,8 +225,6 @@ function createSmoothStreamingParser(
 
     const subType = root.getAttribute("Subtype");
     const language = root.getAttribute("Language");
-    const normalizedLanguage = language == null ?
-      language : normalizeLang(language);
     const baseURL = root.getAttribute("Url") || "";
     if (__DEV__) {
       assert(baseURL !== "");
@@ -349,10 +346,7 @@ function createSmoothStreamingParser(
       id: adaptationID,
       type: adaptationType,
       representations,
-      language: language == null ?
-        undefined : language,
-      normalizedLanguage: normalizedLanguage == null ?
-        undefined : normalizedLanguage,
+      language: language == null ?  undefined : language,
     };
 
     if (adaptationType === "text" && subType === "DESC") {

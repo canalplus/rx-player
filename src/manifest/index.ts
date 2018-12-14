@@ -20,7 +20,6 @@ import { ICustomError } from "../errors";
 import log from "../log";
 import assert from "../utils/assert";
 import generateNewId from "../utils/id";
-import { normalize as normalizeLang } from "../utils/languages";
 import warnOnce from "../utils/warnOnce";
 import Adaptation, {
   IAdaptationType,
@@ -557,7 +556,6 @@ export default class Manifest {
           id: adaptationID,
           type: "text",
           language: _language,
-          normalizedLanguage: normalizeLang(_language),
           closedCaption,
           manuallyAdded: true,
           representations: [{
