@@ -47,13 +47,13 @@ export type IRepresentationFilter = (
 
 export interface IAdaptationArguments {
   // -- required
+  id : string;
   representations : IRepresentationArguments[];
   type : IAdaptationType;
 
   // -- optional
   audioDescription? : boolean;
   closedCaption? : boolean;
-  id? : number|string;
   language? : string;
   manuallyAdded? : boolean;
   normalizedLanguage? : string;

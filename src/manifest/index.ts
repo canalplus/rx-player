@@ -53,19 +53,22 @@ interface ISupplementaryTextTrack {
 }
 
 interface IManifestArguments {
+  // required
+  id : string;
+  isLive : boolean;
+  periods : IPeriodArguments[];
+  transportType : string;
+
+  // optional
   availabilityStartTime? : number;
   baseURL? : string;
   duration? : number;
-  isLive : boolean;
-  minimumTime? : number;
   lifetime? : number;
-  id : string;
-  periods : IPeriodArguments[];
+  minimumTime? : number;
   presentationLiveGap? : number;
   suggestedPresentationDelay? : number;
   timeShiftBufferDepth? : number;
-  transportType : string;
-  uris : string[];
+  uris? : string[];
 }
 
 interface IManifestParsingOptions {
@@ -215,7 +218,7 @@ export default class Manifest {
 
     this.minimumTime = args.minimumTime;
     this.isLive = args.isLive;
-    this.uris = args.uris;
+    this.uris = args.uris || [];
 
     this.lifetime = args.lifetime;
     this.suggestedPresentationDelay = args.suggestedPresentationDelay;

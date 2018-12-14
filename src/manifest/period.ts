@@ -34,9 +34,12 @@ export type IAdaptationsArguments =
 
 // Arguments constitutive of a new Period.
 export interface IPeriodArguments {
+  // required
   id : string; // unique ID for that Period.
   adaptations : IAdaptationsArguments; // "Tracks" in that Period.
   start : number; // start time of the Period, in seconds.
+
+  // optional
   duration? : number; // duration of the Period, in seconds.
                       // Can be undefined for a still-running one.
 }
