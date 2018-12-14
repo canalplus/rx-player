@@ -94,7 +94,7 @@ interface ILoaderData<T> {
   };
 }
 
-// items emitted by net/ pipelines' loaders on xhr progress events
+// items emitted by loaders on xhr progress events
 export interface ILoaderProgress {
   type : "progress";
   value : {
@@ -105,7 +105,7 @@ export interface ILoaderProgress {
   };
 }
 
-// items emitted by net/ pipelines' loaders on xhr response events
+// items emitted by loaders on xhr response events
 interface ILoaderData<T> {
   type : "data";
   value : {

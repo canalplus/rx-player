@@ -42,7 +42,7 @@ import Manifest, {
 import {
   IManifestLoaderArguments,
   ITransportPipelines,
-} from "../../../net/types";
+} from "../../../transports/types";
 import tryCatch from "../../../utils/rx-tryCatch";
 import downloadingBackoff from "../utils/backoff";
 import createLoader, {

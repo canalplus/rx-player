@@ -61,17 +61,17 @@ browser (for audio and video segments), but also define custom ones for
 media managed entirely by the RxPlayer (example: subtitles and thumbnails).</p>
 </li>
 <li>
-<p><strong>the <a href="net/index.html">Networking code</a></strong></p>
+<p><strong>the <a href="./transports/index.md">transports code</a></strong></p>
 <p>Perform manifest/segment requests, and parse them.
-&#x201C;<em>Net</em>&#x201D; in essence abstracts the transport protocol used (example:
-HSS/DASH) to provide an unified definition of a segment or manifest to
-the other modules.
+<code>transports</code> in essence abstracts the transport protocol used (example:
+Smooth Streaming/DASH) to provide an unified definition of a segment or
+manifest to the other modules.
 In theory, it should be the only directory to update when adding /
 modifying / deleting a transport protocol</p>
 </li>
 <li>
 <p><strong>the <a href="pipelines/index.html">Pipelines</a></strong></p>
-<p>Link the <em>Net</em> module with the rest of the code, to download segments,
+<p>Link the <code>transport</code> module with the rest of the code, to download segments,
 download/refresh the manifest and collect data (such as the user&#x2019;s
 bandwidth) for the other modules.</p>
 </li>

@@ -17,7 +17,7 @@ a single directory or subdirectory, in alphabetical order.
   - [src/experimental/: Experimental features](#src-experimental)
   - [src/features/: Feature switching](#src-features)
   - [src/manifest/: The Manifest class](#src-manifest)
-  - [src/net/: The networking files](#src-net)
+  - [src/transports/: The transport protocols](#src-transports)
   - [src/parsers/: The parsing files](#src-parsers)
   - [src/typings/: Typescript typings](#src-typings)
   - [src/utils/: The utils](#src-utils)
@@ -156,8 +156,8 @@ Defines a common manifest class, regardless of the streaming technology (DASH,
 HSS...).
 
 
-<a name="src-net"></a>
-### src/net/: The networking and files #########################################
+<a name="src-transports"></a>
+### src/transports/: The transport protocols ###################################
 
 Defines a common interface for multiple streaming technologies (DASH, HSS).
 
@@ -243,7 +243,7 @@ Defines functions allowing to handle encrypted contents through the EME APIs.
 ### src/core/pipelines/: The networking pipelines ##############################
 
 Handle the segment downloading pipelines (load and parse) as defined in the
-``src/net/`` directory.
+``src/transports/`` directory.
 
 This is the layer directly interacting with the transport part (HSS, DASH).
 It facilitates the role of loading manifest and new segments for the rest of the

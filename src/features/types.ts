@@ -22,11 +22,11 @@ import {
   IDirectfileEvent,
   IDirectFileOptions,
 } from "../core/init/initialize_directfile";
-import { ITransportFunction } from "../net/types";
 import {
   IHTMLTextTracksParserFn,
   INativeTextTracksParserFn,
 } from "../parsers/texttracks/types";
+import { ITransportFunction } from "../transports/types";
 
 export type IDirectFileInit =
   (args : IDirectFileOptions) => Observable<IDirectfileEvent>;

@@ -4,7 +4,7 @@
 ## Overview ####################################################################
 
 The Pipelines is the part of the code interacting with the transport protocol,
-defined in _Net_, to download and parse:
+defined in `transports`, to download and parse:
   - the Manifest
   - media Segments
 
@@ -22,8 +22,8 @@ Each of those task is performed by a discrete component of the Pipeline:
 The Manifest Pipeline allows to download and parse the Manifest/Playlist of the
 current transport protocol to return an unified Manifest object.
 
-This is the part of the code that interacts with _Net_ to perform the request
-and parsing  of the Manifest file.
+This is the part of the code that interacts with `transports` to perform the
+request and parsing  of the Manifest file.
 
 It can also add multiple supplementary Image or Text tracks to a given Manifest.
 
@@ -34,7 +34,7 @@ It can also add multiple supplementary Image or Text tracks to a given Manifest.
 The SegmentPipelineManager allows to easily perform Segment downloads for the
 rest of the code.
 This is the part of the code that interacts with the transport protocols -
-defined in _Net_ - to load and parse media segments.
+defined in `transports` - to load and parse media segments.
 
 To do so, the SegmentPipelineManager creates Pipelines of different types
 (example: a video or audio Pipeline) when you ask for it.
