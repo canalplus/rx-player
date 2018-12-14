@@ -149,12 +149,12 @@ function parseCompleteIntermediateRepresentation(
     baseURL,
   });
 
-  const duration : number = (() => {
+  const duration : number|undefined = (() => {
     if (rootAttributes.duration != null) {
       return rootAttributes.duration;
     }
     if (isDynamic) {
-      return Infinity;
+      return undefined;
     }
     if (parsedPeriods.length) {
       const lastPeriod = parsedPeriods[parsedPeriods.length - 1];
@@ -164,7 +164,7 @@ function parseCompleteIntermediateRepresentation(
         return lastPeriod.start + lastPeriod.duration;
       }
     }
-    return Infinity;
+    return undefined;
   })();
 
   const parsedMPD : IParsedManifest = {
@@ -192,9 +192,6 @@ function parseCompleteIntermediateRepresentation(
   }
   if (rootAttributes.publishTime != null) {
     parsedMPD.publishTime = rootAttributes.publishTime;
-  }
-  if (rootAttributes.duration != null) {
-    parsedMPD.duration = rootAttributes.duration;
   }
   if (rootAttributes.minBufferTime != null) {
     parsedMPD.minBufferTime = rootAttributes.minBufferTime;
