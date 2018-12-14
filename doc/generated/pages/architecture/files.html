@@ -12,7 +12,7 @@
 <li><a href="#subchapter-src/experimental/:%20Experimental%20features">src/experimental/: Experimental features</a></li>
 <li><a href="#subchapter-src/features/:%20Feature%20switching">src/features/: Feature switching</a></li>
 <li><a href="#subchapter-src/manifest/:%20The%20Manifest%20class">src/manifest/: The Manifest class</a></li>
-<li><a href="#subchapter-src/net/:%20The%20networking%20and%20files">src/net/: The networking and files</a></li>
+<li><a href="#subchapter-src/transports/:%20The%20transport%20protocols">src/transports/: The transport protocols</a></li>
 <li><a href="#subchapter-src/parsers/:%20The%20parsing%20files">src/parsers/: The parsing files</a></li>
 <li><a href="#subchapter-src/typings/:%20Typescript%20typings">src/typings/: Typescript typings</a></li>
 <li><a href="#subchapter-src/utils/:%20The%20utils">src/utils/: The utils</a></li>
@@ -140,9 +140,9 @@ to initialize and update them.</p>
 <h3>src/manifest/: The Manifest class</h3>
 <p>Defines a common manifest class, regardless of the streaming technology (DASH,
 HSS&#x2026;).</p>
-<p><a name="src-net"></a>
-<a name="subchapter-src/net/:%20The%20networking%20and%20files"></a></p>
-<h3>src/net/: The networking and files</h3>
+<p><a name="src-transports"></a>
+<a name="subchapter-src/transports/:%20The%20transport%20protocols"></a></p>
+<h3>src/transports/: The transport protocols</h3>
 <p>Defines a common interface for multiple streaming technologies (DASH, HSS).</p>
 <p>What is exported there are functions to load and parse:</p>
 <ul>
@@ -205,7 +205,7 @@ download and push the segments into the sourceBuffers.</p>
 <a name="subchapter-src/core/pipelines/:%20The%20networking%20pipelines"></a></p>
 <h3>src/core/pipelines/: The networking pipelines</h3>
 <p>Handle the segment downloading pipelines (load and parse) as defined in the
-<code>src/net/</code> directory.</p>
+<code>src/transports/</code> directory.</p>
 <p>This is the layer directly interacting with the transport part (HSS, DASH).
 It facilitates the role of loading manifest and new segments for the rest of the
 core.</p>

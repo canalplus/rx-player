@@ -227,14 +227,14 @@ it, in the RxPlayer?</p>
 </ul>
 </li>
 </ul>
-<p>The <code>manifest</code> group is then only used in the <code>networking</code> code of the
+<p>The <code>manifest</code> group is then only used in the <code>transports</code> code of the
 RxPlayer.
 Meanwhile, the <code>real time</code> group is used everywhere else.</p>
-<p>It&#x2019;s actually the <code>networking</code> group that does most of the conversion for
-the rest of the code (removing the offset when requesting new segments,
-re-adding it once the segment is downloaded.</p>
+<p>It&#x2019;s actually the <code>transports</code> code that does most of the conversion for the
+rest of the code (removing the offset when requesting new segments, re-adding it
+once the segment is downloaded.</p>
 <p>To be able to offset those segments in the source buffer, those are still
-informed of course of the <code>timestampOffset</code> by the <code>networking</code> code.
+informed of course of the <code>timestampOffset</code> by the <code>transports</code> code.
 Then, this <code>timestampOffset</code> will be exploited only by the final decoding
 code.</p>
 </body></html></div></div></div></body>

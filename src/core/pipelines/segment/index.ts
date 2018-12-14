@@ -16,10 +16,10 @@
 
 import { Subject } from "rxjs";
 import { ICustomError } from "../../../errors";
-import { ITransportPipelines } from "../../../net";
 import {
   ISegmentLoaderArguments,
-} from "../../../net/types";
+  ITransportPipelines,
+} from "../../../transports/types";
 import {
   IABRMetric,
   IABRRequest

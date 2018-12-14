@@ -69,19 +69,19 @@ Such modules are (with link to their respective documentation, if one):
     media managed entirely by the RxPlayer (example: subtitles and thumbnails).
 
 
-  - __the [Networking code](./net/index.md)__
+  - __the [transports code](./transports/index.md)__
 
     Perform manifest/segment requests, and parse them.
-    "_Net_" in essence abstracts the transport protocol used (example:
-    HSS/DASH) to provide an unified definition of a segment or manifest to
-    the other modules.
+    `transports` in essence abstracts the transport protocol used (example:
+    Smooth Streaming/DASH) to provide an unified definition of a segment or
+    manifest to the other modules.
     In theory, it should be the only directory to update when adding /
     modifying / deleting a transport protocol
 
 
   - __the [Pipelines](./pipelines/index.md)__
 
-    Link the _Net_ module with the rest of the code, to download segments,
+    Link the `transport` module with the rest of the code, to download segments,
     download/refresh the manifest and collect data (such as the user's
     bandwidth) for the other modules.
 

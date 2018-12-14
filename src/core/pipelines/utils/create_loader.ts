@@ -43,7 +43,7 @@ import {
   ILoaderProgress,
   ILoaderResponseValue,
   ITransportPipeline,
-} from "../../../net/types";
+} from "../../../transports/types";
 import castToObservable from "../../../utils/castToObservable";
 import tryCatch from "../../../utils/rx-tryCatch";
 import downloadingBackoff from "./backoff";
@@ -157,7 +157,7 @@ export interface IPipelineLoaderOptions<T, U> {
  * This observable will complete after emitting the data.
  *
  * Type parameters:
- *   T: Argument given to the Net's loader
+ *   T: Argument given to the loader
  *   U: ResponseType of the request
  *
  * @param {Object} transportPipeline

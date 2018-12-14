@@ -26,7 +26,7 @@ import { IRepresentationFilter } from "../../manifest";
 import {
   CustomManifestLoader,
   CustomSegmentLoader,
-} from "../../net/types";
+} from "../../transports/types";
 import {
   normalizeAudioTrack,
   normalizeTextTrack,

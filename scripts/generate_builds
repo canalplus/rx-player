@@ -36,8 +36,8 @@ for f in "$files"; do
   sed -i -E "s/\b__RELATIVE_PATH__\.EME_MANAGER\b/\"..\/core\/eme\/index.js\"/g" $f
   sed -i -E "s/\b__RELATIVE_PATH__\.IMAGE_BUFFER\b/\"..\/core\/source_buffers\/image\/index.js\"/g" $f
   sed -i -E "s/\b__RELATIVE_PATH__\.BIF_PARSER\b/\"..\/parsers\/images\/bif.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.SMOOTH\b/\"..\/net\/smooth\/index.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.DASH\b/\"..\/net\/dash\/index.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.SMOOTH\b/\"..\/transports\/smooth\/index.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.DASH\b/\"..\/transports\/dash\/index.js\"/g" $f
   sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_TEXT_BUFFER\b/\"..\/core\/source_buffers\/text\/native\/index.js\"/g" $f
   sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_VTT\b/\"..\/parsers\/texttracks\/webvtt\/native.js\"/g" $f
   sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_SRT\b/\"..\/parsers\/texttracks\/srt\/native.js\"/g" $f

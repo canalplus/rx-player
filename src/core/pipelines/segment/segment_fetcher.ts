@@ -37,7 +37,7 @@ import {
   ISegmentLoaderArguments,
   ISegmentTimingInfos,
   ITransportPipelines,
-} from "../../../net/types";
+} from "../../../transports/types";
 import generateID from "../../../utils/id";
 import {
   IABRMetric,

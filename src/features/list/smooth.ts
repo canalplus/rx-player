@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import smooth from "../../net/smooth";
+import smooth from "../../transports/smooth";
 import { IFeaturesObject } from "../types";
 
 /**
