@@ -79,7 +79,7 @@ export interface IParsedPeriod {
 export interface IParsedManifest {
   // required
   availabilityStartTime : number;
-  duration: number;
+  duration? : number;
   id: string;
   periods: IParsedPeriod[];
   transportType: string; // "smooth", "dash" etc.

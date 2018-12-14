@@ -55,7 +55,7 @@ interface ISupplementaryTextTrack {
 interface IManifestArguments {
   availabilityStartTime? : number;
   baseURL? : string;
-  duration : number;
+  duration? : number;
   isLive : boolean;
   minimumTime? : number;
   lifetime? : number;
@@ -181,7 +181,7 @@ export default class Manifest {
    * @private
    * @type {number}
    */
-  private _duration : number;
+  private _duration : number|undefined;
 
   /**
    * @constructor
@@ -224,7 +224,9 @@ export default class Manifest {
     this.timeShiftBufferDepth = args.timeShiftBufferDepth;
     this.baseURL = args.baseURL;
 
-    // --------- private data
+    if (args.isLive && args.duration == null) {
+      log.warn("Manifest: non live content and duration is null.");
+    }
     this._duration = args.duration;
 
     if (__DEV__ && this.isLive) {
@@ -273,7 +275,7 @@ export default class Manifest {
    * Returns the duration of the whole content described by that Manifest.
    * @returns {Number}
    */
-  getDuration() : number {
+  getDuration() : number|undefined {
     return this._duration;
   }
 
@@ -450,7 +452,8 @@ export default class Manifest {
    */
   public getMaximumPosition() : number {
     if (!this.isLive) {
-      return this.getDuration();
+      const duration = this.getDuration();
+      return duration == null ? Infinity : duration;
     }
     const ast = this.availabilityStartTime || 0;
     const plg = this.presentationLiveGap || 0;
@@ -468,7 +471,9 @@ export default class Manifest {
     const BUFFER_DEPTH_SECURITY = 5;
 
     if (!this.isLive) {
-      return [this.minimumTime || 0, this.getDuration()];
+      const duration = this.getDuration();
+      return duration == null ?
+        [minimumTime, Infinity] : [minimumTime, duration];
     }
 
     const ast = this.availabilityStartTime || 0;
