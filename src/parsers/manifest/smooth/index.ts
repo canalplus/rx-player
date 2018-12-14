@@ -438,7 +438,6 @@ function createSmoothStreamingParser(
     let suggestedPresentationDelay : number|undefined;
     let presentationLiveGap : number|undefined;
     let availabilityStartTime : number|undefined;
-    let duration : number;
 
     const firstVideoAdaptation = adaptations.video ? adaptations.video[0] : undefined;
     const firstAudioAdaptation = adaptations.audio ? adaptations.audio[0] : undefined;
@@ -494,6 +493,7 @@ function createSmoothStreamingParser(
       }
     }
 
+    let duration : number|undefined;
     if (isLive) {
       suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
       availabilityStartTime = REFERENCE_DATE_TIME;
@@ -502,7 +502,7 @@ function createSmoothStreamingParser(
           (lastTimeReference + availabilityStartTime) : 10);
       const manifestDuration = root.getAttribute("Duration");
       duration = (manifestDuration != null && +manifestDuration !== 0) ?
-        (+manifestDuration / timescale) : Infinity;
+        (+manifestDuration / timescale) : undefined;
     } else {
       // if non-live and first time reference different than 0. Add first time reference
       // to duration
@@ -513,7 +513,7 @@ function createSmoothStreamingParser(
           (+manifestDuration / timescale) + (firstTimeReference || 0) :
           lastTimeReference;
       } else {
-        duration = Infinity;
+        duration = undefined;
       }
 
     }
