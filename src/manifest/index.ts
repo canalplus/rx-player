@@ -228,9 +228,7 @@ export default class Manifest {
     this._duration = args.duration;
 
     if (__DEV__ && this.isLive) {
-      assert(this.suggestedPresentationDelay != null);
       assert(this.availabilityStartTime != null);
-      assert(this.presentationLiveGap != null);
       assert(this.timeShiftBufferDepth != null);
     }
 
