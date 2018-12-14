@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../../log";
 import assert from "../../../utils/assert";
 import {
   be2toi,
@@ -38,38 +39,36 @@ interface IISOBMFFKeySystem {
 }
 
 /**
- * Find the right atom (box) in an isobmff file from its hexa-encoded name.
- * @param {Uint8Array} buf - the isobmff structure
- * @param {Number} atomName - the 'name' of the box (e.g. 'sidx' or 'moov'),
- * hexa encoded
- * @returns {Number} - offset where the corresponding box is (starting with its
- * size), 0 if not found.
+ * Find the right box in an isobmff.
+ * @param {Uint8Array} buf - the isobmff
+ * @param {Number} wantedName
+ * @returns {Number} - Offset where the box begins. -1 if not found.
  */
-function findAtom(buf : Uint8Array, atomName : number) : number {
-  const l = buf.length;
+function findBox(buf : Uint8Array, wantedName : number) {
+  const len = buf.length;
   let i = 0;
-
-  let name : number;
-  let size = 0;
-  while (i + 8 < l) {
-    size = be4toi(buf, i);
-    name = be4toi(buf, i + 4);
-    assert(size > 0, "out of range size");
-    if (name === atomName) {
-      break;
-    } else {
-      i += size;
+  while (i + 8 < len) {
+    const size = be4toi(buf, i);
+    if (size <= 0) {
+      log.error("ISOBMFF: size out of range");
+      return - 1;
     }
-  }
 
-  if (i >= l) {
-    return -1;
-  }
+    const name = be4toi(buf, i + 4);
+    if (name === wantedName) {
+      if (i + size <= len) {
+        return i;
+      }
+      log.error("ISOBMFF: box out of range");
+      return -1;
+    }
 
-  assert(i + size <= l, "atom out of range");
-  return i;
+    i += size;
+  }
+  return -1;
 }
 
+// Segment information returned from a parsed sidx
 export interface ISidxSegment {
   time : number;
   duration : number;
@@ -99,7 +98,7 @@ function getSegmentsFromSidx(
   buf : Uint8Array,
   initialOffset : number
 ) : ISidxSegment[]|null {
-  const index = findAtom(buf, 0x73696478 /* "sidx" */);
+  const index = findBox(buf, 0x73696478 /* "sidx" */);
   if (index === -1) {
     return null;
   }
@@ -192,7 +191,7 @@ function getTrackFragmentDecodeTime(buffer : Uint8Array) : number {
     return -1;
   }
 
-  const index = findAtom(traf, 0x74666474 /* tfdt */);
+  const index = findBox(traf, 0x74666474 /* tfdt */);
   if (index === -1) {
     return -1;
   }
@@ -211,7 +210,7 @@ function getTrackFragmentDecodeTime(buffer : Uint8Array) : number {
  * @returns {number}
  */
 function getDefaultDurationFromTFHDInTRAF(traf : Uint8Array) : number {
-  const index = findAtom(traf, 0x74666864 /* tfhd */);
+  const index = findBox(traf, 0x74666864 /* tfhd */);
   if (index === -1) {
     return -1;
   }
@@ -253,7 +252,7 @@ function getDurationFromTrun(buffer : Uint8Array) : number {
     return -1;
   }
 
-  const index = findAtom(traf, 0x7472756e /* tfdt */);
+  const index = findBox(traf, 0x7472756e /* tfdt */);
   if (index === -1) {
     return -1;
   }
@@ -328,7 +327,7 @@ function getMDHDTimescale(buffer : Uint8Array) : number {
     return -1;
   }
 
-  const index = findAtom(mdia, 0x6d646864  /* "mdhd" */);
+  const index = findBox(mdia, 0x6d646864  /* "mdhd" */);
   if (index === -1) {
     return -1;
   }
@@ -348,17 +347,17 @@ function getMDHDTimescale(buffer : Uint8Array) : number {
 }
 
 /**
- * Create a new _Atom_ (isobmff box).
+ * Create a new ISOBMFF box.
  * @param {string} name - The box name (e.g. sidx, moov, pssh etc.)
  * @param {Uint8Array} buff - The box's content
  */
-function Atom(name : string, buff : Uint8Array) : Uint8Array {
+function createBox(name : string, buff : Uint8Array) : Uint8Array {
   const len = buff.length + 8;
   return concat(itobe4(len), strToBytes(name), buff);
 }
 
 /**
- * Returns a PSSH Atom from a systemId and private data.
+ * Returns a PSSH box from a systemId and private data.
  * @param {Array.<Object>} pssList - The content protections under the form of
  * object containing two properties:
  *   - systemId {string}: The uuid code. Should only contain 32 hexadecimal
@@ -370,7 +369,7 @@ function createPssh({ systemId, privateData } : IISOBMFFKeySystem) : Uint8Array 
   const _systemId = systemId.replace(/-/g, "");
 
   assert(_systemId.length === 32);
-  return Atom("pssh", concat(
+  return createBox("pssh", concat(
     4, // 4 initial zeroed bytes
     hexToBytes(_systemId),
     itobe4(privateData.length),
@@ -394,7 +393,7 @@ function patchPssh(buf : Uint8Array, pssList : IISOBMFFKeySystem[]) : Uint8Array
     return buf;
   }
 
-  const pos = findAtom(buf, 0x6d6f6f76 /* = "moov" */);
+  const pos = findBox(buf, 0x6d6f6f76 /* = "moov" */);
   if (pos === -1) {
     return buf;
   }
