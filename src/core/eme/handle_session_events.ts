@@ -111,7 +111,6 @@ function licenseErrorSelector(
  * selected keySystem.
  * @param {MediaKeySession} session
  * @param {Object} keySystem
- * @param {Subject} errorStream
  * @returns {Observable}
  */
 export default function handleSessionEvents(

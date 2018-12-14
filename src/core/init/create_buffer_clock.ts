@@ -29,19 +29,19 @@ import {
 } from "rxjs/operators";
 import Manifest from "../../manifest";
 import { IPeriodBufferManagerClockTick } from "../buffer";
-import { IStreamClockTick } from "./types";
+import { IInitClockTick } from "./types";
 
 /**
  * Create clock Observable for the Buffer.
  * @param {Object} manifest
- * @param {Observable} streamClock$
+ * @param {Observable} initClock$
  * @param {Observable} initialSeek$
  * @param {Number} startTime
  * @returns {Observable}
  */
 export default function createBufferClock(
   manifest$ : BehaviorSubject<Manifest>,
-  streamClock$ : Observable<IStreamClockTick>,
+  initClock$ : Observable<IInitClockTick>,
   initialSeek$ : Observable<unknown>,
   speed$ : Observable<number>,
   startTime : number
@@ -63,7 +63,7 @@ export default function createBufferClock(
   );
 
   const clock$ : Observable<IPeriodBufferManagerClockTick> =
-    observableCombineLatest(streamClock$, speed$)
+    observableCombineLatest(initClock$, speed$)
       .pipe(map(([tick, speed]) => {
         const manifest = manifest$.getValue();
         return objectAssign({

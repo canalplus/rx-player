@@ -429,7 +429,7 @@ export default {
 
   /**
    * Number of seconds ahead in the buffer after which playback will resume when
-   * seeking on an unbuffered part of the stream.
+   * seeking on an unbuffered part of the content.
    * @type {Number}
    */
   RESUME_GAP_AFTER_SEEKING: 1.5,

@@ -44,7 +44,7 @@ export function setDurationToMediaSource(
     Number.MAX_VALUE : duration;
 
   if (mediaSource.duration !== newDuration) {
-    log.info("Stream: Setting duration", newDuration);
+    log.info("Init: Setting duration", newDuration);
     mediaSource.duration = newDuration;
   }
 }
@@ -69,18 +69,18 @@ function resetMediaSource(
       const sourceBuffer = sourceBuffers[i];
       try {
         if (readyState === "open") {
-          log.info("Stream: Removing SourceBuffer from mediaSource", sourceBuffer);
+          log.info("Init: Removing SourceBuffer from mediaSource", sourceBuffer);
           sourceBuffer.abort();
         }
 
         mediaSource.removeSourceBuffer(sourceBuffer);
       }
       catch (e) {
-        log.warn("Stream: Error while disposing SourceBuffer", e);
+        log.warn("Init: Error while disposing SourceBuffer", e);
       }
     }
     if (sourceBuffers.length) {
-      log.warn("Stream: Not all SourceBuffers could have been removed.");
+      log.warn("Init: Not all SourceBuffers could have been removed.");
     }
   }
 
@@ -88,10 +88,10 @@ function resetMediaSource(
 
   if (mediaSourceURL) {
     try {
-      log.debug("Stream: Revoking previous URL");
+      log.debug("Init: Revoking previous URL");
       URL.revokeObjectURL(mediaSourceURL);
     } catch (e) {
-      log.warn("Stream: Error while revoking the media source URL", e);
+      log.warn("Init: Error while revoking the media source URL", e);
     }
   }
 }
@@ -122,11 +122,11 @@ function createMediaSource(
     // make sure the media has been correctly reset
     resetMediaSource(mediaElement, null, mediaElement.src || null);
 
-    log.info("Stream: Creating MediaSource");
+    log.info("Init: Creating MediaSource");
     const mediaSource = new MediaSource_();
     const objectURL = URL.createObjectURL(mediaSource);
 
-    log.info("Stream: Attaching MediaSource URL to the media element", objectURL);
+    log.info("Init: Attaching MediaSource URL to the media element", objectURL);
     mediaElement.src = objectURL;
 
     observer.next(mediaSource);

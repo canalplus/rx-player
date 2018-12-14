@@ -176,9 +176,9 @@ export default function AdaptationBuffer<T>(
       currentRepresentation = representation;
 
       // Manual switch needs an immediate feedback.
-      // To do that properly, we need to reload the stream
+      // To do that properly, we need to reload the MediaSource
       if (directManualBitrateSwitching && estimate.manual && i !== 0) {
-        return observableOf(EVENTS.needsStreamReload());
+        return observableOf(EVENTS.needsMediaSourceReload());
       }
       const representationChange$ = observableOf(
         EVENTS.representationChange(adaptation.type, period, representation));
@@ -216,7 +216,7 @@ export default function AdaptationBuffer<T>(
         wantedBufferAhead$,
       }).pipe(
         catchError((error) => {
-          // TODO only for smooth/to Delete? Do it in the stream?
+          // TODO only for smooth/to Delete? Do it elsewhere?
           // for live adaptations, handle 412 errors as precondition-
           // failed errors, ie: we are requesting for segments before they
           // exist

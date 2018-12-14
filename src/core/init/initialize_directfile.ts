@@ -41,17 +41,17 @@ import { IKeySystemOption } from "../eme/types";
 import createEMEManager from "./create_eme_manager";
 import EVENTS from "./events_generators";
 import { IInitialTimeOptions } from "./get_initial_time";
+import getStalledEvents from "./get_stalled_events";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
-import createMediaErrorManager from "./media_error_manager";
-import SpeedManager from "./speed_manager";
-import StallingManager from "./stalling_manager";
+import throwOnMediaError from "./throw_on_media_error";
 import {
+  IInitClockTick,
+  ILoadedEvent,
   ISpeedChangedEvent,
   IStalledEvent,
-  IStreamClockTick,
-  IStreamLoadedEvent,
-  IStreamWarningEvent,
+  IWarningEvent,
 } from "./types";
+import updatePlaybackRate from "./update_playback_rate";
 
 /**
  * calculate initial time as a position in seconds.
@@ -98,10 +98,10 @@ function getDirectFileInitialTime(
   return 0;
 }
 
-// Argument used by `StreamDirectFile`
-export interface IDirectFileStreamOptions {
+// Argument used by `initializeDirectfileContent`
+export interface IDirectFileOptions {
   autoPlay : boolean;
-  clock$ : Observable<IStreamClockTick>;
+  clock$ : Observable<IInitClockTick>;
   keySystems : IKeySystemOption[];
   mediaElement : HTMLMediaElement;
   speed$ : Observable<number>;
@@ -109,19 +109,19 @@ export interface IDirectFileStreamOptions {
   url : string;
 }
 
-// Events emitted by `StreamDirectFile`
+// Events emitted by `initializeDirectfileContent`
 export type IDirectfileEvent =
   ISpeedChangedEvent |
   IStalledEvent |
-  IStreamLoadedEvent |
-  IStreamWarningEvent;
+  ILoadedEvent |
+  IWarningEvent;
 
 /**
- * Launch a Stream in "Directfile mode".
+ * Launch a content in "Directfile mode".
  * @param {Object} directfileOptions
  * @returns {Observable}
  */
-export default function StreamDirectFile({
+export default function initializeDirectfileContent({
   autoPlay,
   clock$,
   keySystems,
@@ -129,13 +129,13 @@ export default function StreamDirectFile({
   speed$,
   startAt,
   url,
-} : IDirectFileStreamOptions) : Observable<IDirectfileEvent> {
+} : IDirectFileOptions) : Observable<IDirectfileEvent> {
   clearElementSrc(mediaElement);
 
-  log.debug("Stream: Calculating initial time");
+  log.debug("Init: Calculating initial time");
   const initialTime = () =>
     getDirectFileInitialTime(mediaElement, startAt);
-  log.debug("Stream: Initial time calculated:", initialTime);
+  log.debug("Init: Initial time calculated:", initialTime);
 
   const { seek$, load$ } =
     seekAndLoadOnMediaEvents(clock$, mediaElement, initialTime, autoPlay);
@@ -146,18 +146,17 @@ export default function StreamDirectFile({
 
   // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.
-  const errorManager$ = createMediaErrorManager(mediaElement);
+  const mediaError$ = throwOnMediaError(mediaElement);
 
-  // Create Speed Manager, an observable which will set the speed set by the
-  // user on the media element while pausing a little longer while the buffer
-  // is stalled.
-  const speedManager$ = SpeedManager(mediaElement, speed$, clock$, {
+  // Set the speed set by the user on the media element while pausing a
+  // little longer while the buffer is stalled.
+  const playbackRate$ = updatePlaybackRate(mediaElement, speed$, clock$, {
     pauseWhenStalled: true,
   }).pipe(map(EVENTS.speedChanged));
 
   // Create Stalling Manager, an observable which will try to get out of
   // various infinite stalling issues
-  const stallingManager$ = StallingManager(mediaElement, clock$)
+  const stalled$ = getStalledEvents(mediaElement, clock$)
     .pipe(map(EVENTS.stalled));
 
   // Manage "loaded" event and warn if autoplay is blocked on the current browser
@@ -182,9 +181,9 @@ export default function StreamDirectFile({
     loadedEvent$,
     initialSeek$,
     emeManager$,
-    errorManager$,
-    speedManager$,
-    stallingManager$,
+    mediaError$,
+    playbackRate$,
+    stalled$,
     linkURL$
   );
 }

@@ -30,22 +30,22 @@ import {
   mergeMap,
   tap,
 } from "rxjs/operators";
-import config from "../../config";
+import config from "../../../config";
 import {
   ICustomError,
   isKnownError,
   NetworkError,
   OtherError,
   RequestError,
-} from "../../errors";
+} from "../../../errors";
 import {
   ILoaderEvent,
   ILoaderProgress,
   ILoaderResponseValue,
   ITransportPipeline,
-} from "../../net/types";
-import castToObservable from "../../utils/castToObservable";
-import tryCatch from "../../utils/rx-tryCatch";
+} from "../../../net/types";
+import castToObservable from "../../../utils/castToObservable";
+import tryCatch from "../../../utils/rx-tryCatch";
 import downloadingBackoff from "./backoff";
 
 interface IPipelineLoaderCache<T> {

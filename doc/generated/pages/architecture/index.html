@@ -32,7 +32,7 @@ one by one to a module in the code.</p>
 implementing it.</p>
 </li>
 <li>
-<p><strong>the <a href="stream/index.html">Stream</a></strong></p>
+<p><strong>the <a href="init/index.html">Init</a></strong></p>
 <p>Initialize the content and connects the different modules between one
 another to allow continuous playback.</p>
 </li>
@@ -49,7 +49,7 @@ current network, user settings and viewing conditions.</p>
 <p><strong>the <a href="buffer/index.html">Buffer</a></strong></p>
 <p>Choose which media segments to download and push them to SourceBuffers to
 then be able to decode them.</p>
-<p>Various files documenting the Stream architecture should be available in the
+<p>Various files documenting the Buffer architecture should be available in the
 <code>doc/architecture/buffer</code> directory.</p>
 </li>
 <li>
@@ -111,20 +111,18 @@ modules.</p>
    Download and parse             |                    |     Handle encrypted
    the manifest                   |                    |             contents
                       +---------- |                    |
-                      |  +------&gt; |       Stream       | ----&gt; +--------------+
-                      v  |        |                    | &lt;---- | SpeedManager |
- +----------------------------+   |                    |       +--------------+
- | SegmentPipelineManager (1) |   |                    |       Manage playback
- +----------------------------+   |                    |                  rate
-  Factory creating segment        |                    | &lt;---------------+
-  `pipelines` to download         +--------------------+ ------------+   |
-  segments                         ^ |    |  ^  Initialize           V   |
-                                   | |    |  |  a content     +----------------+
-+---------------------+ -----------+ |    |  |  and connect   | ABRManager (1) |
-|                     | &lt;------------+    |  |  everything    +----------------+
-| SourceBufferManager |                   |  |                     Find the best
-|         (1)         |                   |  |                           bitrate
-|                     |                   |  |
+                      |  +------&gt; |        Init        | &lt;---------------+
+                      v  |        |                    | ------------+   |
+ +----------------------------+   |                    |             V   |
+ | SegmentPipelineManager (1) |   |                    |      +----------------+
+ +----------------------------+   |                    |      | ABRManager (1) |
+  Factory creating segment        |                    |      +----------------+
+  `pipelines` to download         +--------------------+           Find the best
+  segments                         ^ |    |  ^  Initialize               bitrate
+                                   | |    |  |  a content
++---------------------+ -----------+ |    |  |  and connect
+| SourceBufferManager | &lt;------------+    |  |  everything
+|         (1)         |                   |  |
 +---------------------+                   |  |
  Create and handle                        |  |
  SourceBuffers                            |  |
@@ -156,6 +154,6 @@ modules.</p>
                                                                         Buffers
 
 (1) The SourceBufferManager, SegmentPipelineManager and ABRManager are actually
-initialized by the Stream but are then mainly used by the Buffers.
+initialized by the Init but are then mainly used by the Buffers.
 </code></pre>
 </body></html></div></div></div></body>

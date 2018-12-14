@@ -56,9 +56,9 @@ The transport protocol used for this content.
 
 Can be either:
 
-  - ``"dash"`` - for DASH streams
+  - ``"dash"`` - for DASH contents
 
-  - ``"smooth"`` - for Microsoft Smooth Streaming streams
+  - ``"smooth"`` - for Microsoft Smooth Streaming contents
 
   - ``"directfile"`` - for loading a video in _DirectFile_ mode, which allows to
     directly play media files (example: ``.mp4`` or ``.webm`` files) without
@@ -131,7 +131,7 @@ This property is an array of objects with the following properties (only
   - ``serverCertificate`` (``BufferSource|undefined``): Eventual certificate
     used to encrypt messages to the license server.
     If set, we will try to set this certificate on the CDM. If it fails, we will
-    still continue to try deciphering the stream (albeit a
+    still continue to try deciphering the content (albeit a
     [warning](./errors.md) will be emitted in that case with the code
     ``"LICENSE_SERVER_CERTIFICATE_ERROR"``).
 

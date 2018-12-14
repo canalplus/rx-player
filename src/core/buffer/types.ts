@@ -107,7 +107,7 @@ export interface IRepresentationChangeEvent {
 export type IAdaptationBufferEvent<T> =
   IRepresentationBufferEvent<T> |
   IBitrateEstimationChangeEvent |
-  INeedsStreamReloadEvent |
+  INeedsMediaSourceReload |
   IRepresentationChangeEvent;
 
 // The currently-downloaded Adaptation changed.
@@ -168,9 +168,9 @@ export interface ICompletedBufferEvent {
   };
 }
 
-// The current stream needs to be re-loaded
-export interface INeedsStreamReloadEvent {
-  type: "needs-stream-reload";
+// The MediaSource needs to be reloaded to continue
+export interface INeedsMediaSourceReload {
+  type: "needs-media-source-reload";
   value: undefined;
 }
 
@@ -178,7 +178,7 @@ export interface INeedsStreamReloadEvent {
 export type IPeriodBufferEvent =
   IAdaptationBufferEvent<unknown> |
   IBufferWarningEvent |
-  INeedsStreamReloadEvent |
+  INeedsMediaSourceReload |
   IAdaptationChangeEvent;
 
 // Events coming from function(s) managing multiple PeriodBuffers.

@@ -22,12 +22,12 @@ import {
   catchError,
   mergeMap,
 } from "rxjs/operators";
-import { isOffline } from "../../compat";
+import { isOffline } from "../../../compat";
 import {
   RequestError,
   RequestErrorTypes,
-} from "../../errors";
-import { getFuzzedDelay } from "../../utils/backoff";
+} from "../../../errors";
+import { getFuzzedDelay } from "../../../utils/backoff";
 
 /**
  * Called on a pipeline's loader error.

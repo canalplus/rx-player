@@ -28,7 +28,7 @@ a single directory or subdirectory, in alphabetical order.
   - [src/core/eme/: Encryption management](#core-eme)
   - [src/core/pipelines/: The networking pipelines](#core-pipelines)
   - [src/core/source_buffers/: SourceBuffers definitions](#core-sb)
-  - [src/core/stream/: Media streaming logic](#core-stream)
+  - [src/core/init/: Media streaming logic](#core-init)
 - [tests/: Test strategies, integration and memory tests](#tests)
 
 
@@ -261,8 +261,8 @@ Audio and Video SourceBuffers) and SourceBuffer implementations for other types
 of content (text, images etc.).
 
 
-<a name="core-stream"></a>
-### src/core/stream/: Media streaming logic ####################################
+<a name="core-init"></a>
+### src/core/init/: Content initialization #####################################
 
 This is the central part which download manifests, initialize MSE and EME APIs,
 instanciate the Buffer and link together many subparts of the player.

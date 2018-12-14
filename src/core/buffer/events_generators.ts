@@ -35,7 +35,7 @@ import {
   IBufferWarningEvent,
   ICompletedBufferEvent,
   IEndOfStreamEvent,
-  INeedsStreamReloadEvent,
+  INeedsMediaSourceReload,
   IPeriodBufferClearedEvent,
   IPeriodBufferReadyEvent,
   IRepresentationChangeEvent,
@@ -138,8 +138,8 @@ const EVENTS = {
     };
   },
 
-  needsStreamReload() : INeedsStreamReloadEvent {
-    return { type: "needs-stream-reload", value: undefined };
+  needsMediaSourceReload() : INeedsMediaSourceReload {
+    return { type: "needs-media-source-reload", value: undefined };
   },
 
   periodBufferReady(

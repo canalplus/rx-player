@@ -291,14 +291,14 @@ function getStalledStatus(
 /**
  * Timings observable.
  *
- * This streams samples snapshots of player's current state:
+ * This Observable samples snapshots of player's current state:
  *   * time position
  *   * playback rate
  *   * current buffered range
  *   * gap with current buffered range ending
  *   * media duration
  *
- * In addition to sampling, this stream also reacts to "seeking" and "play"
+ * In addition to sampling, this Observable also reacts to "seeking" and "play"
  * events.
  *
  * Observable is shared for performance reason: reduces the number of event

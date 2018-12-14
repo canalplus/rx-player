@@ -199,9 +199,8 @@ Thus, multiple _PeriodBuffers_ might be active at the same time:
 
 ### Multi-Period management ####################################################
 
-The creation/destruction of _PeriodBuffers_ by the Stream is actually done in a
-very precize and optimal way, which gives a higher priority to immediate
-content.
+The creation/destruction of _PeriodBuffers_ is actually done in a very precize
+and optimal way, which gives a higher priority to immediate content.
 
 To better grasp how it works, let's imagine a regular use-case, with two periods
 for a single type of buffer:
@@ -343,7 +342,7 @@ At the end, we should only have _PeriodBuffer[s]_ for consecutive Period[s]:
 
 ### Communication with the API #################################################
 
-The Stream communicates to the API about creations and destructions of
+The Buffer communicates to the API about creations and destructions of
 _PeriodBuffers_ respectively through ``"periodBufferReady"`` and
 ``"periodBufferCleared"`` events.
 

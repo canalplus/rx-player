@@ -46,24 +46,24 @@ import createBufferClock from "./create_buffer_clock";
 import { setDurationToMediaSource } from "./create_media_source";
 import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
+import getStalledEvents from "./get_stalled_events";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
-import SpeedManager from "./speed_manager";
-import StallingManager from "./stalling_manager";
 import {
+  IInitClockTick,
+  ILoadedEvent,
   ISpeedChangedEvent,
   IStalledEvent,
-  IStreamClockTick,
-  IStreamLoadedEvent,
-  IStreamWarningEvent,
+  IWarningEvent,
 } from "./types";
+import updatePlaybackRate from "./update_playback_rate";
 
-// Arguments for the StreamLoader
-export interface IStreamLoaderArgument {
+// Arguments needed by createMediaSourceLoader
+export interface IMediaSourceLoaderArguments {
   mediaElement : HTMLMediaElement; // Media Element on which the content will be
-                                   // streamed
+                                   // played
   manifest$ : BehaviorSubject<Manifest>; // Manifest of the content we want to
-                                         // stream
-  clock$ : Observable<IStreamClockTick>; // Emit position informations
+                                         // play
+  clock$ : Observable<IInitClockTick>; // Emit position informations
   speed$ : Observable<number>; // Emit the speed.
                                // /!\ Should replay the last value on subscription.
   abrManager : ABRManager;
@@ -79,21 +79,21 @@ export interface IStreamLoaderArgument {
   };
 }
 
-// Events emitted by the StreamLoader
-export type IStreamLoaderEvent =
+// Events emitted when loading content in the MediaSource
+export type IMediaSourceLoaderEvent =
   IStalledEvent |
   ISpeedChangedEvent |
-  IStreamLoadedEvent |
-  IStreamWarningEvent |
+  ILoadedEvent |
+  IWarningEvent |
   IPeriodBufferManagerEvent;
 
 /**
  * Returns a function allowing to load or reload the content in arguments into
  * a single or multiple MediaSources.
- * @param {Object} loadStreamArguments
+ * @param {Object} args
  * @returns {Observable}
  */
-export default function StreamLoader({
+export default function createMediaSourceLoader({
   mediaElement,
   manifest$,
   clock$,
@@ -101,18 +101,18 @@ export default function StreamLoader({
   bufferOptions,
   abrManager,
   segmentPipelinesManager,
-} : IStreamLoaderArgument) : (
+} : IMediaSourceLoaderArguments) : (
   mediaSource : MediaSource,
   position : number,
   autoPlay : boolean
-) => Observable<IStreamLoaderEvent> {
+) => Observable<IMediaSourceLoaderEvent> {
   /**
    * Load the content on the given MediaSource.
    * @param {MediaSource} mediaSource
    * @param {number} initialTime
    * @param {boolean} autoPlay
    */
-  return function loadStreamOnMediaSource(
+  return function loadContentOnMediaSource(
     mediaSource : MediaSource,
     initialTime : number,
     autoPlay : boolean
@@ -160,19 +160,19 @@ export default function StreamLoader({
       segmentPipelinesManager,
       bufferOptions
     ).pipe(
-      mergeMap((evt) : Observable<IStreamLoaderEvent> => {
+      mergeMap((evt) : Observable<IMediaSourceLoaderEvent> => {
         switch (evt.type) {
           case "end-of-stream":
-            log.debug("Stream: end-of-stream order received.");
+            log.debug("Init: end-of-stream order received.");
             return maintainEndOfStream(mediaSource)
               .pipe(ignoreElements(), takeUntil(cancelEndOfStream$));
           case "resume-stream":
-            log.debug("Stream: resume-stream order received.");
+            log.debug("Init: resume-stream order received.");
             cancelEndOfStream$.next(null);
             return EMPTY;
           case "discontinuity-encountered":
             if (SourceBufferManager.isNative(evt.value.bufferType)) {
-              log.warn("Stream: Explicit discontinuity seek", evt.value.nextTime);
+              log.warn("Init: Explicit discontinuity seek", evt.value.nextTime);
               mediaElement.currentTime = evt.value.nextTime;
             }
             return EMPTY;
@@ -182,16 +182,15 @@ export default function StreamLoader({
       })
     );
 
-    // Create Speed Manager, an observable which will set the speed set by the
-    // user on the media element while pausing a little longer while the buffer
-    // is stalled.
-    const speedManager$ = SpeedManager(mediaElement, speed$, clock$, {
+    // update the speed set by the user on the media element while pausing a
+    // little longer while the buffer is stalled.
+    const playbackRate$ = updatePlaybackRate(mediaElement, speed$, clock$, {
       pauseWhenStalled: true,
     }).pipe(map(EVENTS.speedChanged));
 
     // Create Stalling Manager, an observable which will try to get out of
     // various infinite stalling issues
-    const stallingManager$ = StallingManager(mediaElement, clock$)
+    const stalled$ = getStalledEvents(mediaElement, clock$)
       .pipe(map(EVENTS.stalled));
 
     const loadedEvent$ = load$
@@ -203,19 +202,15 @@ export default function StreamLoader({
           const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA", null, false);
           return observableOf(EVENTS.warning(error));
         }
-        log.debug("Stream: Stream is loaded.");
+        log.debug("Init: The current content is loaded.");
         return observableOf(EVENTS.loaded());
       }));
 
-    return observableMerge(
-      loadedEvent$,
-      buffers$,
-      speedManager$,
-      stallingManager$
-    ).pipe(finalize(() => {
-      // clean-up every created SourceBuffers
-      sourceBufferManager.disposeAll();
-    }));
+    return observableMerge(loadedEvent$, playbackRate$, stalled$, buffers$)
+      .pipe(finalize(() => {
+        // clean-up every created SourceBuffers
+        sourceBufferManager.disposeAll();
+      }));
   };
 
   /**

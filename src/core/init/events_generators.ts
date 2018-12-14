@@ -22,21 +22,21 @@ import Manifest, {
 import ABRManager from "../abr";
 import { IRepresentationChangeEvent } from "../buffer/types";
 import { IBufferType } from "../source_buffers";
-import { IStallingItem } from "./stalling_manager";
+import { IStallingItem } from "./get_stalled_events";
 import {
+  ILoadedEvent,
   IManifestReadyEvent,
-  IReloadingStreamEvent,
+  IReloadingMediaSourceEvent,
   ISpeedChangedEvent,
   IStalledEvent,
-  IStreamLoadedEvent,
-  IStreamWarningEvent,
+  IWarningEvent,
 } from "./types";
 
 /**
  * Construct a "loaded" event.
  * @returns {Object}
  */
-function loaded() : IStreamLoadedEvent {
+function loaded() : ILoadedEvent {
   return { type: "loaded", value: true };
 }
 
@@ -99,22 +99,22 @@ function nullRepresentation(
  * @param {Error} value
  * @returns {Object}
  */
-function warning(value : Error | ICustomError) : IStreamWarningEvent {
+function warning(value : Error | ICustomError) : IWarningEvent {
   return { type: "warning", value };
 }
 
-function reloadingStream() : IReloadingStreamEvent {
-  return { type: "reloading-stream", value: undefined };
+function reloadingMediaSource() : IReloadingMediaSourceEvent {
+  return { type: "reloading-media-source", value: undefined };
 }
 
-const STREAM_EVENTS = {
+const INIT_EVENTS = {
   loaded,
   manifestReady,
   nullRepresentation,
-  reloadingStream,
+  reloadingMediaSource,
   speedChanged,
   stalled,
   warning,
 };
 
-export default STREAM_EVENTS;
+export default INIT_EVENTS;

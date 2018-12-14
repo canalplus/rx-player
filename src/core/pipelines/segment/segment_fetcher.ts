@@ -47,7 +47,7 @@ import { IBufferType } from "../../source_buffers";
 import createLoader, {
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
-} from "../create_loader";
+} from "../utils/create_loader";
 
 interface IParsedSegment<T> {
   segmentData : T;
@@ -98,7 +98,7 @@ export default function createSegmentFetcher<T>(
   let id : string|undefined;
 
   /**
-   * Process a pipeline observable to adapt it to the Stream way:
+   * Process a pipeline observable to adapt it to the the rest of the code:
    *   - use the network$ subject for network metrics (bandwitdh mesure)
    *   - use the requests subject for network requests and their progress
    *   - use the warning$ subject for retries' error messages

@@ -65,15 +65,15 @@ import EVENTS from "./events_generators";
 import getInitialTime, {
   IInitialTimeOptions,
 } from "./get_initial_time";
-import createMediaErrorManager from "./media_error_manager";
-import StreamLoader, {
-  IStreamLoaderEvent,
-} from "./stream_loader";
+import createMediaSourceLoader, {
+  IMediaSourceLoaderEvent,
+} from "./load_on_media_source";
+import throwOnMediaError from "./throw_on_media_error";
 import {
+  IInitClockTick,
   IManifestReadyEvent,
-  IReloadingStreamEvent,
-  IStreamClockTick,
-  IStreamWarningEvent,
+  IReloadingMediaSourceEvent,
+  IWarningEvent,
 } from "./types";
 
 /**
@@ -95,8 +95,8 @@ function getManifestPipelineOptions(
   };
 }
 
-// Arguments to give to the Stream
-export interface IStreamOptions {
+// Arguments to give to the `initialize` function
+export interface IInitializeOptions {
   adaptiveOptions: {
     initialBitrates : Partial<Record<IBufferType, number>>;
     manualBitrates : Partial<Record<IBufferType, number>>;
@@ -111,7 +111,7 @@ export interface IStreamOptions {
     maxBufferBehind$ : Observable<number>;
     manualBitrateSwitchingMode : "seamless"|"direct";
   };
-  clock$ : Observable<IStreamClockTick>;
+  clock$ : Observable<IInitClockTick>;
   keySystems : IKeySystemOption[];
   mediaElement : HTMLMediaElement;
   networkConfig: {
@@ -126,17 +126,18 @@ export interface IStreamOptions {
   url : string;
 }
 
-// Every events emitted by the stream.
-export type IStreamEvent =
+// Every events emitted by Init.
+export type IInitEvent =
   IManifestReadyEvent |
-  IStreamLoaderEvent |
+  IMediaSourceLoaderEvent |
   IEMEManagerEvent |
-  IReloadingStreamEvent |
-  IStreamWarningEvent;
+  IReloadingMediaSourceEvent |
+  IWarningEvent;
 
 /**
- * Central part of the player. Play a given stream described by the given
- * manifest with given options.
+ * Central part of the player.
+ *
+ * Play a content described by the given Manifest.
  *
  * On subscription:
  *  - Creates the MediaSource and attached sourceBuffers instances.
@@ -144,11 +145,11 @@ export type IStreamEvent =
  *  - Perform EME management if needed
  *  - get Buffers for each active adaptations.
  *  - give choice of the adaptation to the caller (e.g. to choose a language)
- *  - returns Observable emitting notifications about the stream lifecycle.
+ *  - returns Observable emitting notifications about the content lifecycle.
  * @param {Object} args
  * @returns {Observable}
  */
-export default function Stream({
+export default function Initialize({
   adaptiveOptions,
   autoPlay,
   bufferOptions,
@@ -161,7 +162,7 @@ export default function Stream({
   textTrackOptions,
   transport,
   url,
-} : IStreamOptions) : Observable<IStreamEvent> {
+} : IInitializeOptions) : Observable<IInitEvent> {
   // Subject through which warnings will be sent
   const warning$ = new Subject<Error|ICustomError>();
 
@@ -195,7 +196,7 @@ export default function Stream({
 
   // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.
-  const mediaErrorManager$ = createMediaErrorManager(mediaElement);
+  const mediaError$ = throwOnMediaError(mediaElement);
 
   // Emit each time the manifest is refreshed.
   const manifestRefreshed$ = new ReplaySubject<{
@@ -203,8 +204,7 @@ export default function Stream({
     sendingTime? : number;
   }>(1);
 
-  // Start the whole Stream.
-  const stream$ = observableCombineLatest(
+  const loadContent$ = observableCombineLatest(
     openMediaSource(mediaElement),
     fetchManifest(url)
   ).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
@@ -217,7 +217,7 @@ export default function Stream({
     function refreshManifest() : Observable<never> {
       const refreshURL = manifest.getUrl();
       if (!refreshURL) {
-        log.warn("Stream: Cannot refresh the manifest: no url");
+        log.warn("Init: Cannot refresh the manifest: no url");
         return EMPTY;
       }
 
@@ -235,7 +235,7 @@ export default function Stream({
       );
     }
 
-    const loadStream = StreamLoader({ // Behold!
+    const loadOnMediaSource = createMediaSourceLoader({ // Behold!
       mediaElement,
       manifest$,
       clock$,
@@ -249,35 +249,35 @@ export default function Stream({
       }, bufferOptions),
     });
 
-    log.debug("Stream: Calculating initial time");
+    log.debug("Init: Calculating initial time");
     const initialTime = getInitialTime(manifest, startAt);
-    log.debug("Stream: Initial time calculated:", initialTime);
+    log.debug("Init: Initial time calculated:", initialTime);
 
-    const reloadStreamSubject$ = new Subject<void>();
-    const onStreamLoaderEvent =
-      streamLoaderEventProcessor(reloadStreamSubject$, refreshManifest);
-    const reloadStream$ : Observable<IStreamEvent> = reloadStreamSubject$.pipe(
+    const reloadMediaSource$ = new Subject<void>();
+    const onEvent =
+      createEventListener(reloadMediaSource$, refreshManifest);
+    const handleReloads$ : Observable<IInitEvent> = reloadMediaSource$.pipe(
       switchMap(() => {
         const currentPosition = mediaElement.currentTime;
         const isPaused = mediaElement.paused;
         return openMediaSource(mediaElement).pipe(
-          mergeMap(newMS => loadStream(newMS, currentPosition, !isPaused)),
-          mergeMap(onStreamLoaderEvent),
-          startWith(EVENTS.reloadingStream())
+          mergeMap(newMS => loadOnMediaSource(newMS, currentPosition, !isPaused)),
+          mergeMap(onEvent),
+          startWith(EVENTS.reloadingMediaSource())
         );
       })
     );
 
-    const initialLoad$ = observableConcat(
+    const loadOnMediaSource$ = observableConcat(
       observableOf(EVENTS.manifestReady(abrManager, manifest$)),
-      loadStream(mediaSource, initialTime, autoPlay).pipe(
-        takeUntil(reloadStreamSubject$),
-        mergeMap(onStreamLoaderEvent)
+      loadOnMediaSource(mediaSource, initialTime, autoPlay).pipe(
+        takeUntil(reloadMediaSource$),
+        mergeMap(onEvent)
       )
     );
 
     // Emit when the manifest should be refreshed due to its lifetime being expired
-    const manifestUpdateTimeout$ : Observable<unknown> = manifestRefreshed$.pipe(
+    const manifestAutoRefresh$ = manifestRefreshed$.pipe(
       startWith({ manifest, sendingTime }),
       switchMap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
         if (newManifest.lifetime) {
@@ -288,42 +288,38 @@ export default function Stream({
         }
         return EMPTY;
       })
-    );
+    ).pipe(mergeMap(refreshManifest));
 
-    return observableMerge(
-      initialLoad$,
-      reloadStream$,
-      manifestUpdateTimeout$.pipe(mergeMap(refreshManifest))
-    );
+    return observableMerge(loadOnMediaSource$, handleReloads$, manifestAutoRefresh$);
   }));
 
   return observableMerge(
-    stream$,
-    mediaErrorManager$,
+    loadContent$,
+    mediaError$,
     emeManager$,
     warning$.pipe(map(EVENTS.warning))
   );
 }
 
 /**
- * Generate function reacting to StreamLoader events.
- * @param {Subject} reloadStreamSubject$
+ * Generate function reacting to playback events.
+ * @param {Subject} reloadMediaSource$
  * @param {Function} refreshManifest
  * @returns {Function}
  */
-function streamLoaderEventProcessor(
-  reloadStreamSubject$ : Subject<void>,
+function createEventListener(
+  reloadMediaSource$ : Subject<void>,
   refreshManifest : () => Observable<never>
-) : (evt : IStreamLoaderEvent) => Observable<IStreamEvent> {
+) : (evt : IMediaSourceLoaderEvent) => Observable<IInitEvent> {
   /**
-   * React to StreamLoader events.
+   * React to playback events.
    * @param {Object} evt
    * @returns {Observable}
    */
-  return function onStreamLoaderEvent(evt : IStreamLoaderEvent) {
+  return function onEvent(evt : IMediaSourceLoaderEvent) {
     switch (evt.type) {
-      case "needs-stream-reload":
-        reloadStreamSubject$.next();
+      case "needs-media-source-reload":
+        reloadMediaSource$.next();
         break;
 
       case "needs-manifest-refresh":

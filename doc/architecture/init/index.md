@@ -1,19 +1,19 @@
-# The Stream ###################################################################
+# The Init #####################################################################
 
 
 ## Overview ####################################################################
 
-Even if the API is the front-facing block of code in the Rx-player, the Stream
+Even if the API is the front-facing block of code in the Rx-player, the Init
 is the part of the code actually starting the logic behind playing a content.
 
-Its code is written in the ``src/core/stream`` directory. More specifically,
+Its code is written in the ``src/core/init`` directory. More specifically,
 all code needed in the rest of the code should be exported by its "index file"
-``src/core/stream/index.ts``.
+``src/core/init/index.ts``.
 
-Every time you're calling the API to load a new video, the Stream function is
-called by it with a handful of arguments.
+Every time you're calling the API to load a new video, the init is called by it
+with a handful of arguments.
 
-The Stream does then the major part of the job and communicate back its progress
+The Init does then the major part of the job and communicate back its progress
 to the API through events.
 
 ```
@@ -25,12 +25,12 @@ to the API through events.
                        ^                          v
                        |                    +--------------+
                        |   3. EMIT EVENTS   |              |
-                       +------------------- |    STREAM    |
+                       +------------------- |     Init     |
                                             |              |
                                             +--------------+
 ```
 
-Basically, the job of the Stream is to:
+Basically, the job of the Init is to:
 
   - initialize the content (creating the MediaSource, downloading the manifest)
 
@@ -40,7 +40,7 @@ Basically, the job of the Stream is to:
   - Call with the right argument the PeriodBufferManager, which will download
     and push segment to be decoded by the browser.
 
-As such, during the various events happening on content playback, the Stream
+As such, during the various events happening on content playback, the Init
 will create / destroy / update various player blocks. Such example of blocks
 are:
 
@@ -58,7 +58,7 @@ are:
 
 ## Usage #######################################################################
 
-Concretely, the Stream is a function which returns an Observable.
+Concretely, the Init is a function which returns an Observable.
 This Observable:
 
   - will automatically load the described content on subscription
@@ -71,49 +71,48 @@ This Observable:
   - throw in the case of a fatal error (i.e. an error interrupting playback)
 
 
-### Communication between the API and the Stream ###############################
+### Communication between the API and the Init #################################
 
-Objects emitted by the Observable is the only way the Stream should be able to
+Objects emitted by the Observable is the only way the Init should be able to
 communicate with the API.
 
-The API is then able to communicate back to the Stream, either:
+The API is then able to communicate back to the Init, either:
 
-  - by Observable provided by the API as arguments when the Stream function was
+  - by Observable provided by the API as arguments when the Init function was
     called
 
-  - by emitting through Subject provided by the Stream, as a payload of one of
+  - by emitting through Subject provided by the Init, as a payload of one of
     its event
 
-Thus, there is three ways the API and Stream can communicate:
+Thus, there is three ways the API and Init can communicate:
 
-  - API -> Stream: When the Stream function is called (so a single time)
+  - API -> Init: When the Init function is called (so a single time)
 
-  - Stream -> API: Through events emitted by the returned Observable
+  - Init -> API: Through events emitted by the returned Observable
 
-  - API -> Stream: Through Observables/Subjects the Stream is in possession of.
+  - API -> Init: Through Observables/Subjects the Init is in possession of.
 
 
 ### Emitted Events #############################################################
 
-Events allows the Stream to reports milestones of the content playback, such as
+Events allows the Init to reports milestones of the content playback, such as
 when the content is ready to play.
 
-It's also a way for the Stream to communicate informations about the content and
+It's also a way for the Init to communicate informations about the content and
 give some controls to the user.
 
 For example, as available audio languages are only known after the manifest has
 been downloaded and parsed, and as it is most of all a user preference, the
-Stream can emit to the API, RxJS Subjects allowing the API to "choose" at any
+Init can emit to the API, RxJS Subjects allowing the API to "choose" at any
 time the wanted language.
 
 
 
-## The SpeedManager ############################################################
+### Playback rate management ###################################################
 
-The SpeedManager is the part of the Stream updating the playback speed of the
-content.
+The playback rate (or speed) is updated by the Init.
 
-Playback speed can be updated on two occasions:
+There can be three occasions for these updates:
 
   - the API set a new Speed (``speed$`` Observable).
 
@@ -121,13 +120,6 @@ Playback speed can be updated on two occasions:
 
     In which case, the playback speed will be set to 0 (paused) even if the
     API set another speed.
-    The regular speed will be set when enough buffer is available.
 
-
-
-### The StallingManager ########################################################
-
-The StallingManager listens to various browser events and properties to detect
-when the player is "stalled" (i.e. stuck on the current position).
-
-It then try to adopt a strategy to easily get out of this situation if it can.
+  - the content has built enough buffer to un-pause.
+    The regular speed set by the user will be set.

@@ -196,9 +196,8 @@ Thus, multiple <em>PeriodBuffers</em> might be active at the same time:</p>
 </code></pre>
 <p><a name="subchapter-Multi-Period%20management"></a></p>
 <h3>Multi-Period management</h3>
-<p>The creation/destruction of <em>PeriodBuffers</em> by the Stream is actually done in a
-very precize and optimal way, which gives a higher priority to immediate
-content.</p>
+<p>The creation/destruction of <em>PeriodBuffers</em> is actually done in a very precize
+and optimal way, which gives a higher priority to immediate content.</p>
 <p>To better grasp how it works, let&#x2019;s imagine a regular use-case, with two periods
 for a single type of buffer:</p>
 <hr>
@@ -294,7 +293,7 @@ influence a <em>video</em> one:</p>
 </ul>
 <p><a name="subchapter-Communication%20with%20the%20API"></a></p>
 <h3>Communication with the API</h3>
-<p>The Stream communicates to the API about creations and destructions of
+<p>The Buffer communicates to the API about creations and destructions of
 <em>PeriodBuffers</em> respectively through <code>&quot;periodBufferReady&quot;</code> and
 <code>&quot;periodBufferCleared&quot;</code> events.</p>
 <p>When the currently seen Period changes, an <code>activePeriodChanged</code> event is

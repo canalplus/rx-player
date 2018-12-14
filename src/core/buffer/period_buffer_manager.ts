@@ -91,7 +91,7 @@ const {
 
 /**
  * Create and manage the various Buffer Observables needed for the content to
- * stream:
+ * play:
  *
  *   - Create or dispose SourceBuffers depending on the chosen adaptations.
  *
@@ -194,12 +194,13 @@ export default function PeriodBufferManager(
     );
 
   // Emits an "end-of-stream" event once every PeriodBuffer are complete.
-  const streamHasEnded$ = areBuffersComplete(...buffersArray)
+  // Emits a 'resume-stream" when it's not
+  const endOfStream$ = areBuffersComplete(...buffersArray)
     .pipe(map((areComplete) =>
       areComplete ? EVENTS.endOfStream() : EVENTS.resumeStream()
     ));
 
-  return observableMerge(activePeriodChanged$, ...buffersArray, streamHasEnded$);
+  return observableMerge(activePeriodChanged$, ...buffersArray, endOfStream$);
 
   /**
    * Manage creation and removal of Buffers for every Periods.
@@ -475,8 +476,8 @@ export default function PeriodBufferManager(
           const strategy = getAdaptationSwitchStrategy(
             qSourceBuffer.getBuffered(), period, bufferType, tick);
 
-          if (strategy.type === "reload-stream") {
-            return observableOf(EVENTS.needsStreamReload());
+          if (strategy.type === "needs-reload") {
+            return observableOf(EVENTS.needsMediaSourceReload());
           }
 
           const cleanBuffer$ = strategy.type === "clean-buffer" ?
@@ -551,7 +552,7 @@ export default function PeriodBufferManager(
     ).pipe(catchError((error : Error) => {
       // non native buffer should not impact the stability of the
       // player. ie: if a text buffer sends an error, we want to
-      // continue streaming without any subtitles
+      // continue playing without any subtitles
       if (!SourceBufferManager.isNative(bufferType)) {
         log.error(`Buffer: Custom ${bufferType} buffer crashed. Aborting it.`, error);
         sourceBufferManager.disposeSourceBuffer(bufferType);

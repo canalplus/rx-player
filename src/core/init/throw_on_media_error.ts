@@ -29,7 +29,7 @@ import log from "../../log";
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
-export default function MediaErrorManager(
+export default function throwOnMediaError(
   mediaElement : HTMLMediaElement
 ) : Observable<never> {
   return observableFromEvent(mediaElement, "error")
@@ -54,7 +54,7 @@ export default function MediaErrorManager(
           errorDetail = "MEDIA_ERR_UNKNOWN";
           break;
       }
-      log.error(`Stream: Media element MEDIA_ERR(${errorDetail})`);
+      log.error(`Init: Media element MEDIA_ERR(${errorDetail})`);
       throw new MediaError(errorDetail, null, true);
     }));
 }

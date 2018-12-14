@@ -20,16 +20,16 @@ import { IEMEManagerEvent } from "../core/eme";
 import { IKeySystemOption } from "../core/eme/types";
 import {
   IDirectfileEvent,
-  IDirectFileStreamOptions,
-} from "../core/stream/directfile";
+  IDirectFileOptions,
+} from "../core/init/initialize_directfile";
 import { ITransportFunction } from "../net/types";
 import {
   IHTMLTextTracksParserFn,
   INativeTextTracksParserFn,
 } from "../parsers/texttracks/types";
 
-export type IDirectFileStream =
-  (args : IDirectFileStreamOptions) => Observable<IDirectfileEvent>;
+export type IDirectFileInit =
+  (args : IDirectFileOptions) => Observable<IDirectfileEvent>;
 
 export type IEMEManager = (
   mediaElement : HTMLMediaElement,
@@ -94,7 +94,7 @@ export interface IFeaturesObject {
   htmlTextTracksBuffer : IHTMLTextTracksBuffer|null;
   htmlTextTracksParsers : Partial<Record<string, IHTMLTextTracksParserFn>>;
   emeManager : IEMEManager|null;
-  directfile : IDirectFileStream|null;
+  directfile : IDirectFileInit|null;
 }
 
 export type IFeatureFunction = (features : IFeaturesObject) => void;
