@@ -109,7 +109,6 @@ export default function(
       const data = typeof response.responseData === "string" ?
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
-
       const parsedManifest = dashManifestParser(data, url);
       return loadExternalRessources(parsedManifest);
 
@@ -117,11 +116,7 @@ export default function(
         parserResponse : IMPDParserResponse
       ) : IManifestParserObservable {
         if (parserResponse.type === "done") {
-          const manifest = new Manifest(parserResponse.value, {
-            representationFilter: options.representationFilter,
-            supplementaryImageTracks: options.supplementaryImageTracks,
-            supplementaryTextTracks: options.supplementaryTextTracks,
-          });
+          const manifest = new Manifest(parserResponse.value, options);
           return observableOf({ manifest, url });
         }
 
