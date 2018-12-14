@@ -57,7 +57,7 @@ interface IAdaptationSwitchingInfos  {
  * @param {Object} adaptation
  * @param {Array.<Object>} representations
  * @param {Object} infos
- * @retunrs {string}
+ * @returns {string}
  */
 function getAdaptationID(
   adaptation : IAdaptationSetIntermediateRepresentation,
