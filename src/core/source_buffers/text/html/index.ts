@@ -98,7 +98,7 @@ function safelyRemoveChild(element : Element, child : Element|null) {
 }
 
 /**
- * Source buffer to display TextTracks in the given HTML element.
+ * SourceBuffer to display TextTracks in the given HTML element.
  * @class HTMLTextTrackSourceBuffer
  */
 export default class HTMLTextTrackSourceBuffer
@@ -119,7 +119,7 @@ export default class HTMLTextTrackSourceBuffer
     videoElement : HTMLMediaElement,
     textTrackElement : HTMLElement
   ) {
-    log.debug("HTTSB: Creating html text track source buffer");
+    log.debug("HTTSB: Creating html text track SourceBuffer");
     super();
     this._videoElement = videoElement;
     this._textTrackElement = textTrackElement;
@@ -203,7 +203,7 @@ export default class HTMLTextTrackSourceBuffer
    * Free up ressources from this sourceBuffer
    */
   _abort() : void {
-    log.debug("HTTSB: Aborting html text track source buffer");
+    log.debug("HTTSB: Aborting html text track SourceBuffer");
     this._destroy$.next();
     this._destroy$.complete();
     safelyRemoveChild(this._textTrackElement, this._currentElement);

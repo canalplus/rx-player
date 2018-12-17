@@ -32,7 +32,7 @@ import { IPeriodBufferManagerClockTick } from "../buffer";
 import { IInitClockTick } from "./types";
 
 /**
- * Create clock Observable for the Buffer.
+ * Create clock Observable for the Buffers part of the code.
  * @param {Object} manifest
  * @param {Observable} initClock$
  * @param {Observable} initialSeek$

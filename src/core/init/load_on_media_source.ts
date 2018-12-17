@@ -68,7 +68,7 @@ export interface IMediaSourceLoaderArguments {
                                // /!\ Should replay the last value on subscription.
   abrManager : ABRManager;
   segmentPipelinesManager : SegmentPipelinesManager<any>;
-  bufferOptions : { // Buffer-related options
+  bufferOptions : { // Buffers-related options
     wantedBufferAhead$ : Observable<number>;
     maxBufferAhead$ : Observable<number>;
     maxBufferBehind$ : Observable<number>;
@@ -184,7 +184,7 @@ export default function createMediaSourceLoader({
     );
 
     // update the speed set by the user on the media element while pausing a
-    // little longer while the buffer is stalled.
+    // little longer while the buffer is empty.
     const playbackRate$ = updatePlaybackRate(mediaElement, speed$, clock$, {
       pauseWhenStalled: true,
     }).pipe(map(EVENTS.speedChanged));

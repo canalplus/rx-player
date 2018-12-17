@@ -315,7 +315,7 @@ export default function PeriodBufferManager(
    * TODO The code here can surely be greatly simplified.
    * @param {string} bufferType - e.g. "audio" or "video"
    * @param {Period} basePeriod - Initial Period downloaded.
-   * @param {Observable} destroy$ - Emit when/if all created Buffer from this
+   * @param {Observable} destroy$ - Emit when/if all created Buffers from this
    * point should be destroyed.
    * @returns {Observable}
    */

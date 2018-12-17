@@ -58,7 +58,7 @@ export default function getStalledEvents(
       const { buffered, currentTime } = tick;
       const nextRangeGap = getNextRangeGap(buffered, currentTime);
 
-      // Discontinuity check in case we are close a buffer but still
+      // Discontinuity check in case we are close a buffered range but still
       // calculate a stalled state. This is useful for some
       // implementation that might drop an injected segment, or in
       // case of small discontinuity in the content.
