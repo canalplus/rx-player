@@ -21,19 +21,15 @@ import {
   merge as observableMerge,
   Observable,
   of as observableOf,
-  ReplaySubject,
   Subject,
 } from "rxjs";
 import {
-  catchError,
   exhaustMap,
   filter,
   ignoreElements,
   map,
-  mapTo,
   mergeMap,
   share,
-  switchMap,
   take,
   takeUntil,
   tap,
@@ -42,18 +38,12 @@ import config from "../../config";
 import { MediaError } from "../../errors";
 import log from "../../log";
 import Manifest, {
-  Adaptation,
   Period,
 } from "../../manifest";
-import arrayIncludes from "../../utils/array-includes";
-import InitializationSegmentCache from "../../utils/initialization_segment_cache";
 import SortedList from "../../utils/sorted_list";
 import WeakMapMemory from "../../utils/weak_map_memory";
 import ABRManager from "../abr";
-import {
-  IPipelineOptions,
-  SegmentPipelinesManager,
-} from "../pipelines";
+import { SegmentPipelinesManager } from "../pipelines";
 import SourceBufferManager, {
   BufferGarbageCollector,
   getBufferTypes,
@@ -64,29 +54,21 @@ import SourceBufferManager, {
 import ActivePeriodEmitter, {
   IPeriodBufferInfos,
 } from "./active_period_emitter";
-import AdaptationBuffer, {
-  IAdaptationBufferClockTick,
-} from "./adaptation_buffer";
 import areBuffersComplete from "./are_buffers_complete";
-import createFakeBuffer from "./create_fake_buffer";
 import EVENTS from "./events_generators";
-import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
+import PeriodBuffer, {
+  IPeriodBufferClockTick,
+} from "./period_buffer";
 import SegmentBookkeeper from "./segment_bookkeeper";
 import {
-  IAdaptationBufferEvent,
-  IBufferWarningEvent,
   IMultiplePeriodBuffersEvent,
   IPeriodBufferEvent,
   IPeriodBufferManagerEvent,
 } from "./types";
 
-export type IPeriodBufferManagerClockTick = IAdaptationBufferClockTick;
-
 const {
   MAXIMUM_MAX_BUFFER_AHEAD,
   MAXIMUM_MAX_BUFFER_BEHIND,
-  DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
-  DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE,
 } = config;
 
 /**
@@ -122,7 +104,7 @@ export default function PeriodBufferManager(
     manifest$ : BehaviorSubject<Manifest>;
     initialPeriod : Period;
   },
-  clock$ : Observable<IPeriodBufferManagerClockTick>,
+  clock$ : Observable<IPeriodBufferClockTick>,
   abrManager : ABRManager,
   sourceBufferManager : SourceBufferManager,
   segmentPipelinesManager : SegmentPipelinesManager<any>,
@@ -137,7 +119,7 @@ export default function PeriodBufferManager(
   }
 ) : Observable<IPeriodBufferManagerEvent> {
   const { manifest$, initialPeriod } = content;
-  const { wantedBufferAhead$, maxBufferAhead$, maxBufferBehind$ } = options;
+  const { maxBufferAhead$, maxBufferBehind$ } = options;
 
   // Keep track of a unique BufferGarbageCollector created per
   // QueuedSourceBuffer.
@@ -342,9 +324,6 @@ export default function PeriodBufferManager(
   ) : Observable<IMultiplePeriodBuffersEvent> {
     log.info("Buffer: Creating new Buffer for", bufferType, basePeriod);
 
-    // Emits the chosen adaptation for the current type.
-    const adaptation$ = new ReplaySubject<Adaptation|null>(1);
-
     // Emits the Period of the next Period Buffer when it can be created.
     const createNextPeriodBuffer$ = new Subject<Period>();
 
@@ -384,7 +363,17 @@ export default function PeriodBufferManager(
     // Will emit when the current buffer should be destroyed.
     const killCurrentBuffer$ = observableMerge(endOfCurrentBuffer$, destroyAll$);
 
-    const periodBuffer$ = createPeriodBuffer(bufferType, basePeriod, adaptation$).pipe(
+    const periodBuffer$ = PeriodBuffer({
+      abrManager,
+      bufferType,
+      clock$,
+      content: { manifest$, period: basePeriod },
+      garbageCollectors,
+      segmentBookkeepers,
+      segmentPipelinesManager,
+      sourceBufferManager,
+      options,
+    }).pipe(
       mergeMap((
         evt : IPeriodBufferEvent
       ) : Observable<IMultiplePeriodBuffersEvent> => {
@@ -409,7 +398,6 @@ export default function PeriodBufferManager(
     // Buffer for the current Period.
     const currentBuffer$ : Observable<IMultiplePeriodBuffersEvent> =
       observableConcat(
-        observableOf(EVENTS.periodBufferReady(bufferType, basePeriod, adaptation$)),
         periodBuffer$.pipe(takeUntil(killCurrentBuffer$)),
         observableOf(EVENTS.periodBufferCleared(bufferType, basePeriod))
           .pipe(tap(() => {
@@ -423,186 +411,4 @@ export default function PeriodBufferManager(
       destroyAll$.pipe(ignoreElements())
     );
   }
-
-  /**
-   * Create single PeriodBuffer Observable:
-   *   - Lazily create (or reuse) a SourceBuffer for the given type.
-   *   - Create a Buffer linked to an Adaptation each time it changes, to
-   *     download and append the corresponding Segments in the SourceBuffer.
-   *   - Announce when the Buffer is full or is awaiting new Segments through
-   *     events
-   *
-   * /!\ This Observable has multiple side-effects (creation of SourceBuffers,
-   * downloading and appending of Segments etc.) on subscription.
-   *
-   * @param {string} bufferType
-   * @param {Period} period - The period concerned
-   * @param {Observable} adaptation$ - Emit the chosen adaptation.
-   * Emit null to deactivate a type of adaptation
-   * @returns {Observable}
-   */
-  function createPeriodBuffer(
-    bufferType : IBufferType,
-    period: Period,
-    adaptation$ : Observable<Adaptation|null>
-  ) : Observable<IPeriodBufferEvent> {
-    return adaptation$.pipe(switchMap((adaptation) => {
-      if (adaptation == null) {
-        log.info(`Buffer: Set no ${bufferType} Adaptation`, period);
-        const previousQSourceBuffer = sourceBufferManager.get(bufferType);
-        let cleanBuffer$ : Observable<unknown>;
-
-        if (previousQSourceBuffer != null) {
-          log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
-          cleanBuffer$ = previousQSourceBuffer
-            .removeBuffer(period.start, period.end || Infinity);
-        } else {
-          cleanBuffer$ = observableOf(null);
-        }
-
-        return observableConcat<IPeriodBufferEvent>(
-          cleanBuffer$.pipe(mapTo(EVENTS.adaptationChange(bufferType, null, period))),
-          createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { period })
-        );
-      }
-
-      log.info(`Buffer: Updating ${bufferType} adaptation`, adaptation, period);
-
-      const newBuffer$ = clock$.pipe(
-        take(1),
-        mergeMap<IPeriodBufferManagerClockTick, IPeriodBufferEvent>((tick) => {
-          const qSourceBuffer = createOrReuseQueuedSourceBuffer(bufferType, adaptation);
-          const strategy = getAdaptationSwitchStrategy(
-            qSourceBuffer.getBuffered(), period, bufferType, tick);
-
-          if (strategy.type === "needs-reload") {
-            return observableOf(EVENTS.needsMediaSourceReload());
-          }
-
-          const cleanBuffer$ = strategy.type === "clean-buffer" ?
-            observableConcat(
-              ...strategy.value.map(({ start, end }) =>
-                qSourceBuffer.removeBuffer(start, end)
-              )).pipe(ignoreElements()) : EMPTY;
-
-          const bufferGarbageCollector$ = garbageCollectors.get(qSourceBuffer);
-          const adaptationBuffer$ = createAdaptationBuffer(
-            bufferType, period, adaptation, qSourceBuffer);
-
-          return observableConcat(
-            cleanBuffer$,
-            observableMerge(adaptationBuffer$, bufferGarbageCollector$)
-          );
-        }));
-
-      return observableConcat<IPeriodBufferEvent>(
-        observableOf(EVENTS.adaptationChange(bufferType, adaptation, period)),
-        newBuffer$
-      );
-    }));
-  }
-
-  /**
-   * @param {string} bufferType
-   * @param {Object} adaptation
-   * @returns {Object}
-   */
-  function createOrReuseQueuedSourceBuffer<T>(
-    bufferType : IBufferType,
-    adaptation : Adaptation
-  ) : QueuedSourceBuffer<T> {
-    const currentQSourceBuffer = sourceBufferManager.get(bufferType);
-    if (currentQSourceBuffer != null) {
-      log.info("Buffer: Reusing a previous SourceBuffer for the type", bufferType);
-      return currentQSourceBuffer;
-    }
-    const codec = getFirstDeclaredMimeType(adaptation);
-    const sbOptions = bufferType === "text" ?  options.textTrackOptions : undefined;
-    return sourceBufferManager.createSourceBuffer(bufferType, codec, sbOptions);
-  }
-
-  /**
-   * @param {string} bufferType
-   * @param {Object} period
-   * @param {Object} adaptation
-   * @param {Object} qSourceBuffer
-   * @returns {Observable}
-   */
-  function createAdaptationBuffer<T>(
-    bufferType : IBufferType,
-    period: Period,
-    adaptation : Adaptation,
-    qSourceBuffer : QueuedSourceBuffer<T>
-  ) : Observable<IAdaptationBufferEvent<T>|IBufferWarningEvent> {
-    const segmentBookkeeper = segmentBookkeepers.get(qSourceBuffer);
-    const pipelineOptions = getPipelineOptions(
-      bufferType, options.segmentRetry, options.offlineRetry);
-    const pipeline = segmentPipelinesManager
-      .createPipeline(bufferType, pipelineOptions);
-    return AdaptationBuffer(
-      clock$,
-      qSourceBuffer,
-      segmentBookkeeper,
-      pipeline,
-      wantedBufferAhead$,
-      { manifest$, period, adaptation },
-      abrManager,
-      options
-    ).pipe(catchError((error : Error) => {
-      // non native buffer should not impact the stability of the
-      // player. ie: if a text buffer sends an error, we want to
-      // continue playing without any subtitles
-      if (!SourceBufferManager.isNative(bufferType)) {
-        log.error(`Buffer: Custom ${bufferType} buffer crashed. Aborting it.`, error);
-        sourceBufferManager.disposeSourceBuffer(bufferType);
-        return observableConcat<IAdaptationBufferEvent<T>|IBufferWarningEvent>(
-          observableOf(EVENTS.warning(error)),
-          createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { period })
-        );
-      }
-      log.error(`Buffer: Native ${bufferType} buffer crashed. Stopping playback.`, error);
-      throw error;
-    }));
-  }
-}
-
-/**
- * @param {string} bufferType
- * @param {number|undefined} retry
- * @param {number|undefined} offlineRetry
- * @returns {Object} - Options to give to the Pipeline
- */
-function getPipelineOptions(
-  bufferType : string,
-  retry? : number,
-  offlineRetry? : number
-) : IPipelineOptions<any, any> {
-  const cache = arrayIncludes(["audio", "video"], bufferType) ?
-    new InitializationSegmentCache<any>() : undefined;
-
-  let maxRetry : number;
-  let maxRetryOffline : number;
-
-  if (bufferType === "image") {
-    maxRetry = 0; // Deactivate BIF fetching if it fails
-  } else {
-    maxRetry = retry != null ?
-      retry : DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR;
-  }
-
-  maxRetryOffline = offlineRetry != null ?
-    offlineRetry : DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE;
-
-  return { cache, maxRetry, maxRetryOffline };
-}
-
-/**
- * Get mimetype string of the first representation declared in the given
- * adaptation.
- * @param {Adaptation} adaptation
- * @returns {string}
- */
-function getFirstDeclaredMimeType(adaptation : Adaptation) : string {
-  const { representations } = adaptation;
-  return (representations[0] && representations[0].getMimeTypeString()) || "";
 }

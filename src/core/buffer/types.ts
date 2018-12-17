@@ -176,6 +176,7 @@ export interface INeedsMediaSourceReload {
 
 // Events coming from single PeriodBuffer
 export type IPeriodBufferEvent =
+  IPeriodBufferReadyEvent |
   IAdaptationBufferEvent<unknown> |
   IBufferWarningEvent |
   INeedsMediaSourceReload |
@@ -184,7 +185,6 @@ export type IPeriodBufferEvent =
 // Events coming from function(s) managing multiple PeriodBuffers.
 export type IMultiplePeriodBuffersEvent =
   IPeriodBufferEvent |
-  IPeriodBufferReadyEvent |
   IPeriodBufferClearedEvent |
   ICompletedBufferEvent;
 
