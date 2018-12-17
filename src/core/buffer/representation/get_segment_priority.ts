@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import config from "../../config";
-import { ISegment } from "../../manifest";
+import config from "../../../config";
+import { ISegment } from "../../../manifest";
 
 const { SEGMENT_PRIORITIES_STEPS } = config;
 

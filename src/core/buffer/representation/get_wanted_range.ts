@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getLeftSizeOfRange } from "../../utils/ranges";
+import { getLeftSizeOfRange } from "../../../utils/ranges";
 
 export interface ITimingData {
   currentTime : number;

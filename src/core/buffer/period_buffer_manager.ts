@@ -58,13 +58,15 @@ import areBuffersComplete from "./are_buffers_complete";
 import EVENTS from "./events_generators";
 import PeriodBuffer, {
   IPeriodBufferClockTick,
-} from "./period_buffer";
+} from "./period";
 import SegmentBookkeeper from "./segment_bookkeeper";
 import {
   IMultiplePeriodBuffersEvent,
   IPeriodBufferEvent,
   IPeriodBufferManagerEvent,
 } from "./types";
+
+export type IPeriodBufferManagerClockTick = IPeriodBufferClockTick;
 
 const {
   MAXIMUM_MAX_BUFFER_AHEAD,

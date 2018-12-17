@@ -22,7 +22,6 @@ import {
   keepRangeIntersection,
 } from "../../utils/ranges";
 import { IBufferType } from "../source_buffers";
-import { IAdaptationBufferClockTick } from "./adaptation_buffer";
 
 const { ADAPTATION_SWITCH_BUFFER_PADDINGS } = config;
 
@@ -44,7 +43,7 @@ export default function getAdaptationSwitchStrategy(
   buffered : TimeRanges,
   period : Period,
   bufferType : IBufferType,
-  clockTick : IAdaptationBufferClockTick
+  clockTick : { currentTime : number; readyState : number }
 ) : IAdaptationSwitchStrategy {
   if (!buffered.length) {
     return { type: "continue", value: undefined };

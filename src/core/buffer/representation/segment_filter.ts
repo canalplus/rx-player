@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import config from "../../config";
+import config from "../../../config";
 import {
   Adaptation,
   ISegment,
   Period,
   Representation,
-} from "../../manifest";
-import SimpleSet from "../../utils/simple_set";
-import SegmentBookkeeper from "./segment_bookkeeper";
+} from "../../../manifest";
+import SimpleSet from "../../../utils/simple_set";
+import SegmentBookkeeper from "../segment_bookkeeper";
 
 const {
   BITRATE_REBUFFERING_RATIO,

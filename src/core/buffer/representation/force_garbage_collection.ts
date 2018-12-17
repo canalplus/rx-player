@@ -23,10 +23,10 @@ import {
   mergeMap,
   take,
 } from "rxjs/operators";
-import config from "../../config";
-import log from "../../log";
-import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
-import { QueuedSourceBuffer } from "../source_buffers";
+import config from "../../../config";
+import log from "../../../log";
+import { getInnerAndOuterTimeRanges } from "../../../utils/ranges";
+import { QueuedSourceBuffer } from "../../source_buffers";
 
 const GC_GAP_CALM = config.BUFFER_GC_GAPS.CALM;
 const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;

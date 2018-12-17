@@ -32,37 +32,37 @@ import {
   switchMap,
   take,
 } from "rxjs/operators";
-import config from "../../config";
-import log from "../../log";
+import config from "../../../config";
+import log from "../../../log";
 import Manifest, {
   Adaptation,
   Period,
-} from "../../manifest";
-import arrayIncludes from "../../utils/array-includes";
-import InitializationSegmentCache from "../../utils/initialization_segment_cache";
-import WeakMapMemory from "../../utils/weak_map_memory";
-import ABRManager from "../abr";
+} from "../../../manifest";
+import arrayIncludes from "../../../utils/array-includes";
+import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
+import WeakMapMemory from "../../../utils/weak_map_memory";
+import ABRManager from "../../abr";
 import {
   IPipelineOptions,
   SegmentPipelinesManager,
-} from "../pipelines";
+} from "../../pipelines";
 import SourceBufferManager, {
   IBufferType,
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
-} from "../source_buffers";
+} from "../../source_buffers";
 import AdaptationBuffer, {
   IAdaptationBufferClockTick,
-} from "./adaptation_buffer";
-import createFakeBuffer from "./create_fake_buffer";
-import EVENTS from "./events_generators";
-import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
-import SegmentBookkeeper from "./segment_bookkeeper";
+} from "../adaptation";
+import EVENTS from "../events_generators";
+import SegmentBookkeeper from "../segment_bookkeeper";
 import {
   IAdaptationBufferEvent,
   IBufferWarningEvent,
   IPeriodBufferEvent,
-} from "./types";
+} from "../types";
+import createFakeBuffer from "./create_fake_buffer";
+import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
 
 const {
   DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
