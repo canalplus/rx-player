@@ -87,7 +87,6 @@ export interface IAdaptationSetAttributes {
   minFrameRate? : string;
   minHeight? : number;
   minWidth? : number;
-  normalizedLanguage? : string;
   par? : string;
   profiles? : string;
   segmentAlignment? : number|boolean;

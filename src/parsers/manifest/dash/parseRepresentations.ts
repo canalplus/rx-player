@@ -172,20 +172,6 @@ export default function parseRepresentations(
       codecs = codecs === "mp4a.40.02" ? "mp4a.40.2" : codecs;
       parsedRepresentation.codecs = codecs;
     }
-    if (representation.attributes.audioSamplingRate != null) {
-      parsedRepresentation.audioSamplingRate =
-        representation.attributes.audioSamplingRate;
-    } else if (adaptation.attributes.audioSamplingRate != null) {
-      parsedRepresentation.audioSamplingRate =
-        adaptation.attributes.audioSamplingRate;
-    }
-    if (representation.attributes.codingDependency != null) {
-      parsedRepresentation.codingDependency =
-        representation.attributes.codingDependency;
-    } else if (adaptation.attributes.codingDependency != null) {
-      parsedRepresentation.codingDependency =
-        adaptation.attributes.codingDependency;
-    }
     if (representation.attributes.frameRate != null) {
       parsedRepresentation.frameRate =
         representation.attributes.frameRate;
@@ -200,44 +186,12 @@ export default function parseRepresentations(
       parsedRepresentation.height =
         adaptation.attributes.height;
     }
-    if (representation.attributes.maxPlayoutRate != null) {
-      parsedRepresentation.maxPlayoutRate =
-        representation.attributes.maxPlayoutRate;
-    } else if (adaptation.attributes.maxPlayoutRate != null) {
-      parsedRepresentation.maxPlayoutRate =
-        adaptation.attributes.maxPlayoutRate;
-    }
-    if (representation.attributes.maximumSAPPeriod != null) {
-      parsedRepresentation.maximumSAPPeriod =
-        representation.attributes.maximumSAPPeriod;
-    } else if (adaptation.attributes.maximumSAPPeriod != null) {
-      parsedRepresentation.maximumSAPPeriod =
-        adaptation.attributes.maximumSAPPeriod;
-    }
     if (representation.attributes.mimeType != null) {
       parsedRepresentation.mimeType =
         representation.attributes.mimeType;
     } else if (adaptation.attributes.mimeType != null) {
       parsedRepresentation.mimeType =
         adaptation.attributes.mimeType;
-    }
-    if (representation.attributes.profiles != null) {
-      parsedRepresentation.profiles =
-        representation.attributes.profiles;
-    } else if (adaptation.attributes.profiles != null) {
-      parsedRepresentation.profiles =
-        adaptation.attributes.profiles;
-    }
-    if (representation.attributes.qualityRanking != null) {
-      parsedRepresentation.qualityRanking =
-        representation.attributes.qualityRanking;
-    }
-    if (representation.attributes.segmentProfiles != null) {
-      parsedRepresentation.segmentProfiles =
-        representation.attributes.segmentProfiles;
-    } else if (adaptation.attributes.segmentProfiles != null) {
-      parsedRepresentation.segmentProfiles =
-        adaptation.attributes.segmentProfiles;
     }
     if (representation.attributes.width != null) {
       parsedRepresentation.width =

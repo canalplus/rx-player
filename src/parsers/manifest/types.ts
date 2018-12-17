@@ -28,24 +28,11 @@ export interface IParsedRepresentation {
   id: string;
 
   // optional
-  audioSamplingRate?: string;
-  audiotag? : number;
-  bitsPerSample? : number;
-  channels? : number;
-  codecPrivateData? : string;
   codecs?: string;
-  codingDependency?: boolean;
   contentProtections? : IContentProtection[];
   frameRate?: string;
   height?: number;
-  maxPlayoutRate?: number;
-  maximumSAPPeriod?: number;
   mimeType?: string;
-  packetSize? : number;
-  profiles?: string;
-  qualityRanking?: number;
-  samplingRate? : number;
-  segmentProfiles?: string;
   width?: number;
 }
 
@@ -62,41 +49,35 @@ export interface IParsedAdaptation {
   audioDescription? : boolean;
   closedCaption? : boolean;
   language?: string;
-  normalizedLanguage? : string;
 }
 
 export interface IParsedPeriod {
   // required
   id : string;
   start : number;
-  end? : number;
   adaptations : IParsedAdaptations;
 
   // optional
   duration? : number;
+  end? : number;
 }
 
 export interface IParsedManifest {
   // required
-  availabilityStartTime : number;
-  duration: number;
   id: string;
+  isLive : boolean;
   periods: IParsedPeriod[];
   transportType: string; // "smooth", "dash" etc.
-  isLive : boolean;
-  uris: string[]; // uris where the manifest can be refreshed
 
   // optional
-  availabilityEndTime?: number;
+  availabilityEndTime? : number;
+  availabilityStartTime? : number;
   baseURL? : string;
-  maxSegmentDuration?: number;
-  maxSubsegmentDuration?: number;
-  minBufferTime?: number;
-  minimumTime? : number;
+  duration? : number;
   lifetime?: number;
+  minimumTime? : number;
   presentationLiveGap?: number;
-  profiles?: string;
-  publishTime?: number;
   suggestedPresentationDelay?: number;
   timeShiftBufferDepth?: number;
+  uris?: string[]; // uris where the manifest can be refreshed
 }

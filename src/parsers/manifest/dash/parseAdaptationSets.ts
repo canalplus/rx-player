@@ -17,7 +17,6 @@
 import arrayFind from "array-find";
 import log from "../../../log";
 import arrayIncludes from "../../../utils/array-includes";
-import { normalize as normalizeLang } from "../../../utils/languages";
 import { resolveURL } from "../../../utils/url";
 import {
   IParsedAdaptation,
@@ -191,8 +190,6 @@ export default function parseAdaptationSets(
         };
         if (adaptation.attributes.language != null) {
           parsedAdaptationSet.language = adaptation.attributes.language;
-          parsedAdaptationSet.normalizedLanguage =
-            normalizeLang(adaptation.attributes.language);
         }
         if (isClosedCaption != null) {
           parsedAdaptationSet.closedCaption = isClosedCaption;

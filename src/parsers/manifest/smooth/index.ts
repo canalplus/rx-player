@@ -18,7 +18,6 @@ import objectAssign from "object-assign";
 import config from "../../../config";
 import assert from "../../../utils/assert";
 import generateNewId from "../../../utils/id";
-import { normalize as normalizeLang } from "../../../utils/languages";
 import {
   normalizeBaseURL,
   resolveURL,
@@ -226,8 +225,6 @@ function createSmoothStreamingParser(
 
     const subType = root.getAttribute("Subtype");
     const language = root.getAttribute("Language");
-    const normalizedLanguage = language == null ?
-      language : normalizeLang(language);
     const baseURL = root.getAttribute("Url") || "";
     if (__DEV__) {
       assert(baseURL !== "");
@@ -349,10 +346,7 @@ function createSmoothStreamingParser(
       id: adaptationID,
       type: adaptationType,
       representations,
-      language: language == null ?
-        undefined : language,
-      normalizedLanguage: normalizedLanguage == null ?
-        undefined : normalizedLanguage,
+      language: language == null ?  undefined : language,
     };
 
     if (adaptationType === "text" && subType === "DESC") {
@@ -438,7 +432,6 @@ function createSmoothStreamingParser(
     let suggestedPresentationDelay : number|undefined;
     let presentationLiveGap : number|undefined;
     let availabilityStartTime : number|undefined;
-    let duration : number;
 
     const firstVideoAdaptation = adaptations.video ? adaptations.video[0] : undefined;
     const firstAudioAdaptation = adaptations.audio ? adaptations.audio[0] : undefined;
@@ -494,6 +487,7 @@ function createSmoothStreamingParser(
       }
     }
 
+    let duration : number|undefined;
     if (isLive) {
       suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
       availabilityStartTime = REFERENCE_DATE_TIME;
@@ -502,7 +496,7 @@ function createSmoothStreamingParser(
           (lastTimeReference + availabilityStartTime) : 10);
       const manifestDuration = root.getAttribute("Duration");
       duration = (manifestDuration != null && +manifestDuration !== 0) ?
-        (+manifestDuration / timescale) : Infinity;
+        (+manifestDuration / timescale) : undefined;
     } else {
       // if non-live and first time reference different than 0. Add first time reference
       // to duration
@@ -513,7 +507,7 @@ function createSmoothStreamingParser(
           (+manifestDuration / timescale) + (firstTimeReference || 0) :
           lastTimeReference;
       } else {
-        duration = Infinity;
+        duration = undefined;
       }
 
     }

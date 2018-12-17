@@ -22,6 +22,7 @@ import { ICustomError } from "../errors";
 import MediaError from "../errors/MediaError";
 import log from "../log";
 import generateNewId from "../utils/id";
+import { normalize as normalizeLang } from "../utils/languages";
 import uniq from "../utils/uniq";
 import Representation, {
   IRepresentationArguments,
@@ -47,16 +48,15 @@ export type IRepresentationFilter = (
 
 export interface IAdaptationArguments {
   // -- required
+  id : string;
   representations : IRepresentationArguments[];
   type : IAdaptationType;
 
   // -- optional
   audioDescription? : boolean;
   closedCaption? : boolean;
-  id? : number|string;
   language? : string;
   manuallyAdded? : boolean;
-  normalizedLanguage? : string;
 }
 
 /**
@@ -147,10 +147,7 @@ export default class Adaptation {
 
     if (args.language != null) {
       this.language = args.language;
-    }
-
-    if (args.normalizedLanguage != null) {
-      this.normalizedLanguage = args.normalizedLanguage;
+      this.normalizedLanguage = normalizeLang(args.language);
     }
 
     if (args.closedCaption != null) {

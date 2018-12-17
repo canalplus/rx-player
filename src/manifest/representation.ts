@@ -25,16 +25,16 @@ interface IContentProtection {
 export interface IRepresentationArguments {
   // -- required
   bitrate : number;
+  id : string;
   index : IRepresentationIndex;
 
   // -- optional
-  frameRate? : string;
   codecs? : string;
+  contentProtections? : IContentProtection[];
+  frameRate? : string;
   height? : number;
-  id? : string|number;
   mimeType? : string;
   width? : number;
-  contentProtections? : IContentProtection[];
 }
 
 /**

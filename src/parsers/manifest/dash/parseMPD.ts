@@ -149,12 +149,12 @@ function parseCompleteIntermediateRepresentation(
     baseURL,
   });
 
-  const duration : number = (() => {
+  const duration : number|undefined = (() => {
     if (rootAttributes.duration != null) {
       return rootAttributes.duration;
     }
     if (isDynamic) {
-      return Infinity;
+      return undefined;
     }
     if (parsedPeriods.length) {
       const lastPeriod = parsedPeriods[parsedPeriods.length - 1];
@@ -164,7 +164,7 @@ function parseCompleteIntermediateRepresentation(
         return lastPeriod.start + lastPeriod.duration;
       }
     }
-    return Infinity;
+    return undefined;
   })();
 
   const parsedMPD : IParsedManifest = {
@@ -184,29 +184,11 @@ function parseCompleteIntermediateRepresentation(
 
   // -- add optional fields --
 
-  if (rootAttributes.profiles != null) {
-    parsedMPD.profiles = rootAttributes.profiles;
-  }
   if (rootAttributes.type !== "static" && rootAttributes.availabilityEndTime != null) {
     parsedMPD.availabilityEndTime = rootAttributes.availabilityEndTime;
   }
-  if (rootAttributes.publishTime != null) {
-    parsedMPD.publishTime = rootAttributes.publishTime;
-  }
-  if (rootAttributes.duration != null) {
-    parsedMPD.duration = rootAttributes.duration;
-  }
-  if (rootAttributes.minBufferTime != null) {
-    parsedMPD.minBufferTime = rootAttributes.minBufferTime;
-  }
   if (rootAttributes.timeShiftBufferDepth != null) {
     parsedMPD.timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
-  }
-  if (rootAttributes.maxSegmentDuration != null) {
-    parsedMPD.maxSegmentDuration = rootAttributes.maxSegmentDuration;
-  }
-  if (rootAttributes.maxSubsegmentDuration != null) {
-    parsedMPD.maxSubsegmentDuration = rootAttributes.maxSubsegmentDuration;
   }
 
   checkManifestIDs(parsedMPD);
