@@ -101,7 +101,7 @@ export default class Period {
           if (args.adaptations[type]) {
             const adaptationsForType = args.adaptations[type];
             if (adaptationsForType) {
-              acc[type] = adaptationsForType
+              const filteredAdaptations = adaptationsForType
                 .filter((adaptation) => {
                   if (!arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, adaptation.type)) {
                     log.info("not supported adaptation type", adaptation.type);
@@ -117,6 +117,15 @@ export default class Period {
                   return new Adaptation(adaptation, warning$, representationFilter);
                 })
                 .filter((adaptation) => adaptation.representations.length);
+              if (
+                filteredAdaptations.length === 0 &&
+                adaptationsForType.length > 0 &&
+                (type === "video" || type === "audio")
+              ) {
+                const error = new Error("No supported " + type + " adaptations");
+                throw new MediaError("MANIFEST_PARSE_ERROR", error, true);
+              }
+              acc[type] = filteredAdaptations;
             }
           }
           return acc;
@@ -126,7 +135,8 @@ export default class Period {
       (!this.adaptations.video || !this.adaptations.video.length) &&
       (!this.adaptations.audio || !this.adaptations.audio.length)
     ) {
-      throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
+      const error = new Error("No supported audio and video adaptations.");
+      throw new MediaError("MANIFEST_PARSE_ERROR", error, true);
     }
 
     this.duration = args.duration;
