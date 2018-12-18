@@ -232,7 +232,7 @@ export default function createMediaSourceLoader({
     Object.keys(period.adaptations).forEach(bufferType => {
       if (SourceBufferManager.isNative(bufferType)) {
         const adaptations = period.adaptations[bufferType] || [];
-        const representations = adaptations ?
+        const representations = adaptations != null && adaptations.length ?
           adaptations[0].representations : [];
         if (representations.length) {
           const codec = representations[0].getMimeTypeString();
