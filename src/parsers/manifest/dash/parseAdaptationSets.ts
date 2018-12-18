@@ -37,6 +37,7 @@ import parseRepresentations from "./parseRepresentations";
 export interface IPeriodInfos {
   isDynamic : boolean; // Whether the Manifest can evolve with time
   start : number; // Start time of the current period, in seconds
+  end? : number; // End time of the current period, in seconds
   baseURL? : string; // Eventual URL from which every relative URL will be based
                      // on
 }
@@ -144,6 +145,7 @@ export default function parseAdaptationSets(
       const representations = parseRepresentations(representationsIR, adaptation, {
         isDynamic: periodInfos.isDynamic,
         start: periodInfos.start,
+        end: periodInfos.end,
         baseURL: resolveURL(periodInfos.baseURL, adaptationChildren.baseURL),
       });
       const adaptationMimeType = adaptation.attributes.mimeType;

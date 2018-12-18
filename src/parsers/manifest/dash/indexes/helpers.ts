@@ -25,28 +25,36 @@ interface IIndexSegment {
 }
 
 /**
- * Calculate the number of times a timeline element repeat based on the next
- * segment.
+ * Calculate the number of times a timeline element repeat.
  * @param {Object} element
  * @param {Object} nextElement
+ * @param {number} timelineEnd
  * @returns {Number}
  */
 function calculateRepeat(
   element : IIndexSegment,
-  nextElement : IIndexSegment
+  nextElement? : IIndexSegment|null,
+  timelineEnd? : number
 ) : number {
-  let rep = element.repeatCount || 0;
+  const { repeatCount } = element;
+
+  if (repeatCount >= 0) {
+    return repeatCount;
+  }
 
   // A negative value of the @r attribute of the S element indicates
   // that the duration indicated in @d attribute repeats until the
   // start of the next S element, the end of the Period or until the
   // next MPD update.
-  if (rep < 0) {
-    const repEnd = nextElement ? nextElement.start : Infinity;
-    rep = Math.ceil((repEnd - element.start) / element.duration) - 1;
+  let segmentEnd : number;
+  if (nextElement != null) {
+    segmentEnd = nextElement.start;
+  } else if (timelineEnd != null) {
+    segmentEnd = timelineEnd;
+  } else {
+    segmentEnd = Number.MAX_VALUE;
   }
-
-  return rep;
+  return Math.ceil((segmentEnd - element.start) / element.duration) - 1;
 }
 
 /**
@@ -102,29 +110,23 @@ function getTimescaledRange(
 }
 
 /**
- * Get start of the given index range, timescaled.
- * @param {Object} element
- * @returns {Number} - absolute start time of the range
+ * @param {Object} segment
+ * @param {Object|null} [nextSegment]
+ * @param {number} timelineEnd
+ * @returns {Number}
  */
-function getTimelineItemRangeStart({
-  start,
-  duration,
-  repeatCount,
-}: IIndexSegment) : number {
-  return duration === -1 ? start : start + repeatCount * duration;
-}
+function getIndexSegmentEnd(
+  segment : IIndexSegment,
+  nextSegment : IIndexSegment|null,
+  timelineEnd : number|undefined
+) : number {
+  const { start, duration } = segment;
+  if (duration === -1) {
+    return start;
+  }
 
-/**
- * Get end of the given index range, timescaled.
- * @param {Object} element
- * @returns {Number} - absolute end time of the range
- */
-function getTimelineItemRangeEnd({
-  start,
-  duration,
-  repeatCount,
-}: IIndexSegment) : number {
-  return duration === -1 ? start : start + (repeatCount + 1) * duration;
+  const repeat = calculateRepeat(segment, nextSegment, timelineEnd);
+  return start + (repeat + 1) * duration;
 }
 
 /**
@@ -180,12 +182,8 @@ function getWantedRepeatIndex(
  * Get a list of Segments for the time range wanted.
  * @param {Object} index - index object, constructed by parsing the manifest.
  * @param {number} from - starting timestamp wanted, in seconds
- * @param {number} duration - duration wanted, in seconds
- * @param {number} indexTimeOffset - offset used to convert from decoding
- * time (used by the `from` argument) to manifest time (used in the `index`
- * argument). Basically, we should be able to convert the `from` argument into
- * manifest time by doing something like:
- * ``from * index.timescale + indexTimeOffset``
+ * @param {number} durationWanted - duration wanted, in seconds
+ * @returns {Array.<Object>}
  */
 function getSegmentsFromTimeline(
   index : {
@@ -194,13 +192,14 @@ function getSegmentsFromTimeline(
     timeline : IIndexSegment[];
     timescale : number;
     indexTimeOffset : number;
+    timelineEnd? : number;
   },
   from : number,
   durationWanted : number
 ) : ISegment[] {
   const scaledUp = toIndexTime(index, from);
   const scaledTo = toIndexTime(index, from + durationWanted);
-  const { timeline, timescale, mediaURL, startNumber } = index;
+  const { timeline, timescale, mediaURL, startNumber, timelineEnd } = index;
 
   let currentNumber = startNumber != null ? startNumber : undefined;
 
@@ -239,7 +238,7 @@ function getSegmentsFromTimeline(
       return segments;
     }
 
-    const repeat = calculateRepeat(timelineItem, timeline[i + 1]);
+    const repeat = calculateRepeat(timelineItem, timeline[i + 1], timelineEnd);
     let segmentNumberInCurrentRange = getWantedRepeatIndex(start, duration, scaledUp);
     let segmentTime = start + segmentNumberInCurrentRange * duration;
     while (segmentTime < scaledTo && segmentNumberInCurrentRange <= repeat) {
@@ -277,12 +276,12 @@ function getSegmentsFromTimeline(
 }
 
 export {
-  IIndexSegment,
+  calculateRepeat,
+  fromIndexTime,
+  getIndexSegmentEnd,
   getInitSegment,
   getSegmentsFromTimeline,
-  getTimelineItemRangeEnd,
-  getTimelineItemRangeStart,
   getTimescaledRange,
-  fromIndexTime,
+  IIndexSegment,
   toIndexTime,
 };

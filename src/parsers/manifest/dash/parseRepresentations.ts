@@ -36,6 +36,7 @@ import {
 export interface IAdaptationInfos {
   isDynamic : boolean; // Whether the Manifest can evolve with time
   start : number; // Start time of the current period, in seconds
+  end? : number; // End time of the current period, in seconds
   baseURL? : string; // Eventual URL from which every relative URL will be based
                      // on
 }
@@ -44,6 +45,8 @@ export interface IAdaptationInfos {
 interface IIndexContext {
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
+  periodEnd : number|undefined; // End of the period concerned by this
+                                // RepresentationIndex, in seconds
   representationBaseURL : string; // Base URL for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
@@ -103,6 +106,7 @@ export default function parseRepresentations(
     // 4-2-1. Find Index
     const context = {
       periodStart: adaptationInfos.start,
+      periodEnd: adaptationInfos.end,
       isDynamic: adaptationInfos.isDynamic,
       representationBaseURL,
       representationId: representation.attributes.id,
