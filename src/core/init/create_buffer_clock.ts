@@ -28,7 +28,7 @@ import {
   tap,
 } from "rxjs/operators";
 import Manifest from "../../manifest";
-import { IPeriodBufferManagerClockTick } from "../buffer";
+import { IPeriodBufferManagerClockTick } from "../buffers";
 import { IInitClockTick } from "./types";
 
 /**

@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import config from "../../config";
-import { Period } from "../../manifest";
+import config from "../../../config";
+import { Period } from "../../../manifest";
 import {
   convertToRanges,
   isTimeInRange,
   keepRangeIntersection,
-} from "../../utils/ranges";
-import { IBufferType } from "../source_buffers";
+} from "../../../utils/ranges";
+import { IBufferType } from "../../source_buffers";
 
 const { ADAPTATION_SWITCH_BUFFER_PADDINGS } = config;
 

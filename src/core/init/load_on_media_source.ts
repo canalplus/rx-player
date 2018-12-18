@@ -37,7 +37,7 @@ import Manifest, {
 import ABRManager from "../abr";
 import PeriodBufferManager, {
   IPeriodBufferManagerEvent,
-} from "../buffer";
+} from "../buffers";
 import { SegmentPipelinesManager } from "../pipelines";
 import SourceBufferManager, {
   ITextTrackSourceBufferOptions,
