@@ -25,8 +25,6 @@ current transport protocol to return an unified Manifest object.
 This is the part of the code that interacts with `transports` to perform the
 request and parsing  of the Manifest file.
 
-It can also add multiple supplementary Image or Text tracks to a given Manifest.
-
 
 
 ## The SegmentPipelinesManager #################################################

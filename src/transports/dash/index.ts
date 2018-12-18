@@ -30,6 +30,7 @@ import {
   mergeMap,
 } from "rxjs/operators";
 import features from "../../features";
+import Manifest from "../../manifest";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
@@ -42,6 +43,18 @@ import dashManifestParser, {
   IMPDParserResponse,
 } from "../../parsers/manifest/dash";
 import request from "../../utils/request";
+import {
+  ILoaderObservable,
+  ImageParserObservable,
+  IManifestLoaderArguments,
+  IManifestParserArguments,
+  IManifestParserObservable,
+  ISegmentLoaderArguments,
+  ISegmentParserArguments,
+  ITransportOptions,
+  ITransportPipelines,
+  SegmentParserObservable,
+} from "../types";
 import generateManifestLoader from "../utils/manifest_loader";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 import generateSegmentLoader from "./segment_loader";
@@ -50,25 +63,6 @@ import {
   parser as TextTrackParser,
 } from "./texttracks";
 import { addNextSegments } from "./utils";
-
-import {
-  CustomManifestLoader,
-  CustomSegmentLoader,
-  ILoaderObservable,
-  ImageParserObservable,
-  IManifestLoaderArguments,
-  IManifestParserArguments,
-  IManifestParserObservable,
-  ISegmentLoaderArguments,
-  ISegmentParserArguments,
-  ITransportPipelines,
-  SegmentParserObservable,
-} from "../types";
-
-interface IDASHOptions {
-  manifestLoader? : CustomManifestLoader;
-  segmentLoader? : CustomSegmentLoader;
-}
 
 /**
  * Request external "xlink" ressource from a MPD.
@@ -93,7 +87,7 @@ function requestXLink(xlinkURL : string) : Observable<string> {
  * @returns {Object}
  */
 export default function(
-  options : IDASHOptions = {}
+  options : ITransportOptions = {}
 ) : ITransportPipelines {
   const manifestLoader = generateManifestLoader({
     customManifestLoader: options.manifestLoader,
@@ -116,12 +110,14 @@ export default function(
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
       const parsedManifest = dashManifestParser(data, url);
+      return loadExternalRessources(parsedManifest);
 
       function loadExternalRessources(
         parserResponse : IMPDParserResponse
       ) : IManifestParserObservable {
         if (parserResponse.type === "done") {
-          return observableOf({ manifest: parserResponse.value, url });
+          const manifest = new Manifest(parserResponse.value, options);
+          return observableOf({ manifest, url });
         }
 
         const { ressources, continue: continueParsing } = parserResponse.value;
@@ -133,7 +129,6 @@ export default function(
             loadExternalRessources(continueParsing(loadedRessources))
           ));
       }
-      return loadExternalRessources(parsedManifest);
     },
   };
 

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import arrayFind from "array-find";
-import { Subject } from "rxjs";
 import { ICustomError } from "../errors";
 import MediaError from "../errors/MediaError";
 import log from "../log";
@@ -84,16 +83,22 @@ export default class Period {
   public end? : number;
 
   /**
+   * Array containing every errors that happened when the Period has been
+   * created, in the order they have happened.
+   * @type {Array.<Error>}
+   */
+  public readonly parsingErrors : Array<Error|ICustomError>;
+
+  /**
    * @constructor
    * @param {Object} args
-   * @param {Subject} warning$
    * @param {function|undefined} [representationFilter]
    */
   constructor(
     args : IPeriodArguments,
-    warning$: Subject<Error|ICustomError>,
     representationFilter? : IRepresentationFilter
   ) {
+    this.parsingErrors = [];
     this.id = args.id;
     this.adaptations =
       (Object.keys(args.adaptations) as IAdaptationType[])
@@ -105,7 +110,7 @@ export default class Period {
                 .filter((adaptation) => {
                   if (!arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, adaptation.type)) {
                     log.info("not supported adaptation type", adaptation.type);
-                    warning$.next(
+                    this.parsingErrors.push(
                       new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE", null, false)
                     );
                     return false;
@@ -114,7 +119,10 @@ export default class Period {
                   }
                 })
                 .map((adaptation) => {
-                  return new Adaptation(adaptation, warning$, representationFilter);
+                  const newAdaptation =
+                    new Adaptation(adaptation, representationFilter);
+                  this.parsingErrors.push(...newAdaptation.parsingErrors);
+                  return newAdaptation;
                 })
                 .filter((adaptation) => adaptation.representations.length);
               if (

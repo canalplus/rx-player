@@ -360,10 +360,9 @@ export default function PeriodBufferManager(
 
     // Create Period Buffer for the next Period.
     const nextPeriodBuffer$ = createNextPeriodBuffer$
-      .pipe(exhaustMap((nextPeriod) => {
-        return manageConsecutivePeriodBuffers(
-          bufferType, nextPeriod, destroyNextBuffers$);
-      }));
+      .pipe(exhaustMap((nextPeriod) =>
+        manageConsecutivePeriodBuffers(bufferType, nextPeriod, destroyNextBuffers$)
+      ));
 
     // Allows to destroy each created Buffer, from the newest to the oldest,
     // once destroy$ emits.

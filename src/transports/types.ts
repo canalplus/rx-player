@@ -20,12 +20,14 @@ import {
 } from "rxjs";
 import Manifest, {
   Adaptation,
+  IRepresentationFilter,
   ISegment,
+  ISupplementaryImageTrack,
+  ISupplementaryTextTrack,
   Period,
   Representation,
 } from "../manifest";
 import { IBifThumbnail } from "../parsers/images/bif";
-import { IParsedManifest } from "../parsers/manifest/types";
 
 // Contains timings informations on a single segment.
 // Those variables expose the best guess we have on the effective duration and
@@ -145,12 +147,13 @@ export interface ISegmentParserArguments<T> {
 
 // -- response
 
-export interface IManifestResult {
-  manifest: IParsedManifest; // the manifest itself
+// Result from the Manifest parser
+export interface IManifestParserResult {
+  manifest: Manifest; // the manifest itself
   url? : string; // final URL of the manifest
 }
 
-export type IManifestParserObservable = Observable<IManifestResult>;
+export type IManifestParserObservable = Observable<IManifestParserResult>;
 
 export type SegmentParserObservable = Observable<{
   segmentData : Uint8Array|ArrayBuffer|null; // Data to decode
@@ -273,6 +276,9 @@ export interface ITransportOptions {
   referenceDateTime? : number;
   minRepresentationBitrate? : number;
   keySystems? : (hex? : Uint8Array) => IParsedKeySystem[];
+  representationFilter? : IRepresentationFilter;
+  supplementaryImageTracks? : ISupplementaryImageTrack[];
+  supplementaryTextTracks? : ISupplementaryTextTrack[];
 }
 
 export type ITransportFunction = (options? : ITransportOptions) =>

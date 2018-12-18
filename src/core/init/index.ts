@@ -41,6 +41,7 @@ import config from "../../config";
 import { ICustomError } from "../../errors";
 import log from "../../log";
 import Manifest from "../../manifest";
+import { ITransportPipelines } from "../../net/types";
 import throttle from "../../utils/rx-throttle";
 import ABRManager, {
   IABRMetric,
@@ -49,7 +50,6 @@ import ABRManager, {
 import { IKeySystemOption } from "../eme/types";
 import {
   createManifestPipeline,
-  IManifestTransportInfos,
   IPipelineOptions,
   SegmentPipelinesManager,
 } from "../pipelines";
@@ -122,7 +122,7 @@ export interface IInitializeOptions {
   speed$ : Observable<number>;
   startAt? : IInitialTimeOptions;
   textTrackOptions : ITextTrackSourceBufferOptions;
-  transport : IManifestTransportInfos;
+  pipelines : ITransportPipelines;
   url : string;
 }
 
@@ -160,7 +160,7 @@ export default function Initialize({
   speed$,
   startAt,
   textTrackOptions,
-  transport,
+  pipelines,
   url,
 } : IInitializeOptions) : Observable<IInitEvent> {
   // Subject through which warnings will be sent
@@ -169,7 +169,7 @@ export default function Initialize({
   // Fetch and parse the manifest from the URL given.
   // Throttled to avoid doing multiple simultaneous requests.
   const fetchManifest = throttle(createManifestPipeline(
-    transport,
+    pipelines,
     getManifestPipelineOptions(networkConfig),
     warning$
   ));
@@ -184,7 +184,7 @@ export default function Initialize({
 
   // Creates pipelines for downloading segments.
   const segmentPipelinesManager = new SegmentPipelinesManager<any>(
-    transport.pipelines, requestsInfos$, network$, warning$);
+    pipelines, requestsInfos$, network$, warning$);
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".

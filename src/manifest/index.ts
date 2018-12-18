@@ -15,7 +15,6 @@
  */
 
 import arrayFind from "array-find";
-import { Subject } from "rxjs";
 import { ICustomError } from "../errors";
 import log from "../log";
 import assert from "../utils/assert";
@@ -179,6 +178,13 @@ export default class Manifest {
   public timeShiftBufferDepth? : number;
 
   /**
+   * Array containing every errors that happened when the Manifest has been
+   * created, in the order they have happened.
+   * @type {Array.<Error>}
+   */
+  public readonly parsingErrors : Array<Error|ICustomError>;
+
+  /**
    * Whole duration anounced in the Manifest.
    * @private
    * @type {number}
@@ -189,22 +195,21 @@ export default class Manifest {
    * @constructor
    * @param {Object} args
    */
-  constructor(
-    args : IManifestArguments,
-    warning$ : Subject<Error|ICustomError>,
-    options : IManifestParsingOptions
-  ) {
+  constructor(args : IManifestArguments, options : IManifestParsingOptions) {
     const {
       supplementaryTextTracks = [],
       supplementaryImageTracks = [],
       representationFilter,
     } = options;
+    this.parsingErrors = [];
     const nId = generateNewId();
     this.id = args.id == null ? nId : "" + args.id;
     this.transport = args.transportType || "";
 
     this.periods = args.periods.map((period) => {
-      return new Period(period, warning$, representationFilter);
+      const parsedPeriod = new Period(period, representationFilter);
+      this.parsingErrors.push(...parsedPeriod.parsingErrors);
+      return parsedPeriod;
     });
 
     /**
@@ -237,10 +242,10 @@ export default class Manifest {
     }
 
     if (supplementaryImageTracks.length) {
-      this.addSupplementaryImageAdaptations(supplementaryImageTracks, warning$);
+      this.addSupplementaryImageAdaptations(supplementaryImageTracks);
     }
     if (supplementaryTextTracks.length) {
-      this.addSupplementaryTextAdaptations(supplementaryTextTracks, warning$);
+      this.addSupplementaryTextAdaptations(supplementaryTextTracks);
     }
   }
 
@@ -500,14 +505,13 @@ export default class Manifest {
    * @param {Object|Array.<Object>} imageTracks
    */
   private addSupplementaryImageAdaptations(
-    imageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[],
-    warning$ : Subject<Error|ICustomError>
+    imageTracks : ISupplementaryImageTrack|ISupplementaryImageTrack[]
   ) {
     const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
     const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
       const adaptationID = "gen-image-ada-" + generateNewId();
       const representationID = "gen-image-rep-" + generateNewId();
-      return new Adaptation({
+      const newAdaptation = new Adaptation({
         id: adaptationID,
         type: "image",
         manuallyAdded: true,
@@ -517,7 +521,9 @@ export default class Manifest {
           mimeType,
           index: new StaticRepresentationIndex({ media: url }),
         }],
-      }, warning$);
+      });
+      this.parsingErrors.push(...newAdaptation.parsingErrors);
+      return newAdaptation;
     });
 
     if (newImageTracks.length && this.periods.length) {
@@ -533,8 +539,7 @@ export default class Manifest {
    * @param {Object|Array.<Object>} textTracks
    */
   private addSupplementaryTextAdaptations(
-    textTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[],
-    warning$ : Subject<Error|ICustomError>
+    textTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[]
   ) {
     const _textTracks = Array.isArray(textTracks) ? textTracks : [textTracks];
     const newTextAdaptations = _textTracks.reduce((allSubs : Adaptation[], {
@@ -550,7 +555,7 @@ export default class Manifest {
       return allSubs.concat(langsToMapOn.map((_language) => {
         const adaptationID = "gen-text-ada-" + generateNewId();
         const representationID = "gen-text-rep-" + generateNewId();
-        return new Adaptation({
+        const newAdaptation = new Adaptation({
           id: adaptationID,
           type: "text",
           language: _language,
@@ -563,7 +568,9 @@ export default class Manifest {
             codecs,
             index: new StaticRepresentationIndex({ media: url }),
           }],
-        }, warning$);
+        });
+        this.parsingErrors.push(...newAdaptation.parsingErrors);
+        return newAdaptation;
       }));
     }, []);
 
