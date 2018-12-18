@@ -24,7 +24,7 @@ a single directory or subdirectory, in alphabetical order.
 - [src/core/: The core directory](#core)
   - [src/core/abr/: The adaptive bitrate code](#core-abr)
   - [src/core/api/: The API definition](#core-api)
-  - [src/core/buffer/: The Buffer management](#core-buffer)
+  - [src/core/buffers/: The Buffer management](#core-buffers)
   - [src/core/eme/: Encryption management](#core-eme)
   - [src/core/pipelines/: The networking pipelines](#core-pipelines)
   - [src/core/source_buffers/: SourceBuffers definitions](#core-sb)
@@ -226,8 +226,8 @@ Defines the rx-player API. This is the part the library user will directly
 interact with.
 
 
-<a name="core-buffer"></a>
-### src/core/buffer/: The Buffer management ####################################
+<a name="core-buffers"></a>
+### src/core/buffers/: The Buffer management ###################################
 
 The code there calculate which segments should be downloaded, ask for their
 download and push the segments into the sourceBuffers.
