@@ -38,7 +38,6 @@ import {
 } from "rxjs";
 import {
   catchError,
-  concatMap,
   distinctUntilChanged,
   filter,
   map,
@@ -55,6 +54,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
+import concatMapLatest from "../../utils/concat_map_latest";
 import ABRManager, {
   IABREstimation,
 } from "../abr";
@@ -171,7 +171,7 @@ export default function AdaptationBuffer<T>(
       }
     }),
 
-    concatMap((estimate, i) : Observable<IAdaptationBufferEvent<T>> => {
+    concatMapLatest((estimate, i) : Observable<IAdaptationBufferEvent<T>> => {
       const { representation } = estimate;
       currentRepresentation = representation;
 
