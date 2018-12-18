@@ -28,7 +28,7 @@ import {
   tap,
 } from "rxjs/operators";
 import Manifest from "../../manifest";
-import { IPeriodBufferManagerClockTick } from "../buffers";
+import { IBufferOrchestratorClockTick } from "../buffers";
 import { IInitClockTick } from "./types";
 
 /**
@@ -45,7 +45,7 @@ export default function createBufferClock(
   initialSeek$ : Observable<unknown>,
   speed$ : Observable<number>,
   startTime : number
-) : Observable<IPeriodBufferManagerClockTick> {
+) : Observable<IBufferOrchestratorClockTick> {
   /**
    * wantedTimeOffset is an offset to add to the timing's current time to have
    * the "real" wanted position.
@@ -62,7 +62,7 @@ export default function createBufferClock(
     ignoreElements()
   );
 
-  const clock$ : Observable<IPeriodBufferManagerClockTick> =
+  const clock$ : Observable<IBufferOrchestratorClockTick> =
     observableCombineLatest(initClock$, speed$)
       .pipe(map(([tick, speed]) => {
         const manifest = manifest$.getValue();

@@ -35,8 +35,8 @@ import Manifest, {
   Period,
 } from "../../manifest";
 import ABRManager from "../abr";
-import PeriodBufferManager, {
-  IPeriodBufferManagerEvent,
+import BufferOrchestrator, {
+  IBufferOrchestratorEvent,
 } from "../buffers";
 import { SegmentPipelinesManager } from "../pipelines";
 import SourceBufferManager, {
@@ -85,7 +85,7 @@ export type IMediaSourceLoaderEvent =
   ISpeedChangedEvent |
   ILoadedEvent |
   IWarningEvent |
-  IPeriodBufferManagerEvent;
+  IBufferOrchestratorEvent;
 
 /**
  * Returns a function allowing to load or reload the content in arguments into
@@ -153,7 +153,7 @@ export default function createMediaSourceLoader({
     const cancelEndOfStream$ = new Subject<null>();
 
     // Creates Observable which will manage every Buffer for the given Content.
-    const buffers$ = PeriodBufferManager(
+    const buffers$ = BufferOrchestrator(
       { manifest$, initialPeriod },
       bufferClock$,
       abrManager,

@@ -61,12 +61,12 @@ import PeriodBuffer, {
 } from "./period";
 import SegmentBookkeeper from "./segment_bookkeeper";
 import {
+  IBufferOrchestratorEvent,
   IMultiplePeriodBuffersEvent,
   IPeriodBufferEvent,
-  IPeriodBufferManagerEvent,
 } from "./types";
 
-export type IPeriodBufferManagerClockTick = IPeriodBufferClockTick;
+export type IBufferOrchestratorClockTick = IPeriodBufferClockTick;
 
 const {
   MAXIMUM_MAX_BUFFER_AHEAD,
@@ -101,12 +101,12 @@ const {
  * TODO Special case for image Buffer, where we want data for EVERY active
  * periods.
  */
-export default function PeriodBufferManager(
+export default function IBufferOrchestratorEvent(
   content : {
     manifest$ : BehaviorSubject<Manifest>;
     initialPeriod : Period;
   },
-  clock$ : Observable<IPeriodBufferClockTick>,
+  clock$ : Observable<IBufferOrchestratorClockTick>,
   abrManager : ABRManager,
   sourceBufferManager : SourceBufferManager,
   segmentPipelinesManager : SegmentPipelinesManager<any>,
@@ -119,7 +119,7 @@ export default function PeriodBufferManager(
     textTrackOptions? : ITextTrackSourceBufferOptions;
     manualBitrateSwitchingMode : "seamless"|"direct";
   }
-) : Observable<IPeriodBufferManagerEvent> {
+) : Observable<IBufferOrchestratorEvent> {
   const { manifest$, initialPeriod } = content;
   const { maxBufferAhead$, maxBufferBehind$ } = options;
 

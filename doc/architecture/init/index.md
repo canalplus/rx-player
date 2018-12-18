@@ -37,8 +37,8 @@ Basically, the job of the Init is to:
   - Connect most core parts of the player together, such as adaptive
     streaming management, segment pipelines, DRMs, speed management...
 
-  - Call with the right argument the PeriodBufferManager, which will download
-    and push segment to be decoded by the browser.
+  - Call with the right argument the BufferOrchestrator, which will download and
+    push segment to be decoded by the browser.
 
 As such, during the various events happening on content playback, the Init
 will create / destroy / update various player blocks. Such example of blocks

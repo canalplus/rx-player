@@ -1,4 +1,4 @@
-# PeriodBufferManager ##########################################################
+# BufferOchestrator ############################################################
 
 
 ## Overview ####################################################################
@@ -6,10 +6,10 @@
 To be able to play a content, the player has to be able to download chunks of
 media data - called segments - and has to push them to SourceBuffers.
 
-In the RxPlayer, the _PeriodBufferManager_ is the entry point for performing all
+In the RxPlayer, the _BufferOrchestrator_ is the entry point for performing all
 those tasks.
 
-Basically, the _PeriodBufferManager_:
+Basically, the _BufferOrchestrator_:
 
   - dynamically creates various SourceBuffers depending on the needs of the
     given content

@@ -135,7 +135,7 @@ To better understand the player's architecture, you can find below a
 |                                      |  ~                                 |
 |                                      V  ~                                 |
 |  Create the right          +-----------------------------------------+    |
-|  PeriodBuffers depending   |           PeriodBufferManager           |    |
+|  PeriodBuffers depending   |            BufferOrchestrator           |    |
 |  on the current position,  +-----------------------------------------+    |
 |  settings, and the already    | ^              |  ^             | ^       |
 |  created buffers              | ~              |  ~             | ~       |

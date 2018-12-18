@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import PeriodBufferManager, {
-  IPeriodBufferManagerClockTick,
-} from "./period_buffer_manager";
-import { IPeriodBufferManagerEvent } from "./types";
+import BufferOrchestrator, {
+  IBufferOrchestratorClockTick,
+} from "./buffer_orchestrator";
+import { IBufferOrchestratorEvent } from "./types";
 
-export default PeriodBufferManager;
+export default BufferOrchestrator;
 export {
-  IPeriodBufferManagerClockTick,
-  IPeriodBufferManagerEvent,
+  IBufferOrchestratorClockTick,
+  IBufferOrchestratorEvent,
 };

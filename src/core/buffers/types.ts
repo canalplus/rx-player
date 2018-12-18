@@ -188,8 +188,8 @@ export type IMultiplePeriodBuffersEvent =
   IPeriodBufferClearedEvent |
   ICompletedBufferEvent;
 
-// Every events sent by the PeriodBufferManager exported here.
-export type IPeriodBufferManagerEvent =
+// Every events sent by the BufferOrchestrator exported here.
+export type IBufferOrchestratorEvent =
   IActivePeriodChangedEvent |
   IMultiplePeriodBuffersEvent |
   IEndOfStreamEvent |
