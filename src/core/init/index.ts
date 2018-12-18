@@ -41,7 +41,7 @@ import config from "../../config";
 import { ICustomError } from "../../errors";
 import log from "../../log";
 import Manifest from "../../manifest";
-import { ITransportPipelines } from "../../net/types";
+import { ITransportPipelines } from "../../transports/types";
 import throttle from "../../utils/rx-throttle";
 import ABRManager, {
   IABRMetric,
