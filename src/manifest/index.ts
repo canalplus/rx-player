@@ -381,43 +381,7 @@ export default class Manifest {
         oldPeriods.splice(i, 1);
         i--;
       } else {
-        oldPeriod.start = newPeriod.start;
-        oldPeriod.end = newPeriod.end;
-        oldPeriod.duration = newPeriod.duration;
-
-        const oldAdaptations = oldPeriod.getAdaptations();
-        const newAdaptations = newPeriod.getAdaptations();
-
-        for (let j = 0; j < oldAdaptations.length; j++) {
-          const oldAdaptation = oldAdaptations[j];
-          const newAdaptation =
-            arrayFind(newAdaptations, a => a.id === oldAdaptation.id);
-
-          if (!newAdaptation) {
-            log.warn(
-              `manifest: adaptation "${oldAdaptations[j].id}" not found when merging.`
-            );
-          } else {
-            const oldRepresentations = oldAdaptations[j].representations;
-            const newRepresentations = newAdaptation.representations;
-
-            for (let k = 0; k < oldRepresentations.length; k++) {
-              const oldRepresentation = oldRepresentations[k];
-              const newRepresentation = arrayFind(newRepresentations,
-                representation => representation.id === oldRepresentation.id);
-
-              if (!newRepresentation) {
-                /* tslint:disable:max-line-length */
-                log.warn(
-                  `manifest: representation "${oldRepresentations[k].id}" not found when merging.`
-                );
-                /* tslint:enable:max-line-length */
-              } else {
-                oldRepresentations[k].index._update(newRepresentation.index);
-              }
-            }
-          }
-        }
+        updatePeriodInPlace(newPeriod, oldPeriod);
       }
     }
 
@@ -578,6 +542,55 @@ export default class Manifest {
       const { adaptations } = this.periods[0];
       adaptations.text = adaptations.text ?
         adaptations.text.concat(newTextAdaptations) : newTextAdaptations;
+    }
+  }
+}
+
+/**
+ * Update oldPeriod attributes with the one from newPeriod (e.g. when updating
+ * the Manifest).
+ * @param {Object} oldPeriod
+ * @param {Object} newPeriod
+ */
+function updatePeriodInPlace(
+  oldPeriod : Period,
+  newPeriod : Period
+) : void {
+  oldPeriod.start = newPeriod.start;
+  oldPeriod.end = newPeriod.end;
+  oldPeriod.duration = newPeriod.duration;
+
+  const oldAdaptations = oldPeriod.getAdaptations();
+  const newAdaptations = newPeriod.getAdaptations();
+
+  for (let j = 0; j < oldAdaptations.length; j++) {
+    const oldAdaptation = oldAdaptations[j];
+    const newAdaptation =
+      arrayFind(newAdaptations, a => a.id === oldAdaptation.id);
+
+    if (!newAdaptation) {
+      log.warn(
+        `manifest: adaptation "${oldAdaptations[j].id}" not found when merging.`
+      );
+    } else {
+      const oldRepresentations = oldAdaptations[j].representations;
+      const newRepresentations = newAdaptation.representations;
+
+      for (let k = 0; k < oldRepresentations.length; k++) {
+        const oldRepresentation = oldRepresentations[k];
+        const newRepresentation = arrayFind(newRepresentations,
+          representation => representation.id === oldRepresentation.id);
+
+        if (!newRepresentation) {
+          /* tslint:disable:max-line-length */
+          log.warn(
+            `manifest: representation "${oldRepresentations[k].id}" not found when merging.`
+          );
+          /* tslint:enable:max-line-length */
+        } else {
+          oldRepresentations[k].index._update(newRepresentation.index);
+        }
+      }
     }
   }
 }
