@@ -182,7 +182,7 @@ export default class Manifest {
    * created, in the order they have happened.
    * @type {Array.<Error>}
    */
-  public readonly parsingErrors : Array<Error|ICustomError>;
+  public parsingErrors : Array<Error|ICustomError>;
 
   /**
    * Whole duration anounced in the Manifest.
@@ -362,10 +362,12 @@ export default class Manifest {
    */
   update(newManifest : Manifest) : Manifest {
     this._duration = newManifest.getDuration();
-    this.lifetime = newManifest.lifetime;
-    this.timeShiftBufferDepth = newManifest.timeShiftBufferDepth;
     this.availabilityStartTime = newManifest.availabilityStartTime;
+    this.lifetime = newManifest.lifetime;
+    this.minimumTime = newManifest.minimumTime;
+    this.parsingErrors = newManifest.parsingErrors;
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
+    this.timeShiftBufferDepth = newManifest.timeShiftBufferDepth;
     this.uris = newManifest.uris;
 
     const oldPeriods = this.periods;
