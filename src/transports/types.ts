@@ -92,7 +92,7 @@ export interface ILoaderResponse<T> {
 interface ILoaderData<T> {
   type : "data";
   value : {
-    responseData: T;
+    responseData : T;
   };
 }
 
@@ -111,7 +111,7 @@ export interface ILoaderProgress {
 interface ILoaderData<T> {
   type : "data";
   value : {
-    responseData: T;
+    responseData : T;
   };
 }
 
@@ -131,7 +131,7 @@ export interface IManifestParserArguments<T, U> {
   url : string; // URL originally requested
 
   // allow the parser to load supplementary ressources (of type U)
-  scheduleRequest: (request: () => Observable<U>) => Observable<U>;
+  scheduleRequest : (request : () => Observable<U>) => Observable<U>;
 }
 
 export interface ISegmentParserArguments<T> {
@@ -149,7 +149,7 @@ export interface ISegmentParserArguments<T> {
 
 // Result from the Manifest parser
 export interface IManifestParserResult {
-  manifest: Manifest; // the manifest itself
+  manifest : Manifest; // the manifest itself
   url? : string; // final URL of the manifest
 }
 
@@ -208,17 +208,17 @@ export type ImageParserObservable = Observable<{
 
 export interface ITransportManifestPipeline {
   // TODO Remove resolver
-  resolver?: (x : IManifestLoaderArguments) =>
+  resolver? : (x : IManifestLoaderArguments) =>
     Observable<IManifestLoaderArguments>;
-  loader: (x : IManifestLoaderArguments) =>
+  loader : (x : IManifestLoaderArguments) =>
     ILoaderObservable<Document|string>;
-  parser: (x : IManifestParserArguments<Document|string, string>) =>
+  parser : (x : IManifestParserArguments<Document|string, string>) =>
     IManifestParserObservable;
 }
 
 interface ITransportSegmentPipelineBase<T> {
   loader : (x : ISegmentLoaderArguments) => ILoaderObservable<T>;
-  parser: (x : ISegmentParserArguments<T>) => SegmentParserObservable;
+  parser : (x : ISegmentParserArguments<T>) => SegmentParserObservable;
 }
 
 export type ITransportVideoSegmentPipeline =
@@ -229,17 +229,17 @@ export type ITransportAudioSegmentPipeline =
 
 export interface ITransportTextSegmentPipeline {
   // Note: The segment's data can be null for init segments
-  loader: (x : ISegmentLoaderArguments) =>
+  loader : (x : ISegmentLoaderArguments) =>
     ILoaderObservable<Uint8Array|ArrayBuffer|string|null>;
-  parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|string|null>) =>
+  parser : (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|string|null>) =>
     TextTrackParserObservable;
 }
 
 export interface ITransportImageSegmentPipeline {
   // Note: The segment's data can be null for init segments
-  loader: (x : ISegmentLoaderArguments) =>
+  loader : (x : ISegmentLoaderArguments) =>
     ILoaderObservable<Uint8Array|ArrayBuffer|null>;
-  parser: (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>) =>
+  parser : (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>) =>
     ImageParserObservable;
 }
 
@@ -297,7 +297,7 @@ export type CustomSegmentLoader = (
 
   // second argument: callbacks
   callbacks : {
-    resolve : (args: {
+    resolve : (args : {
       data : ArrayBuffer|Uint8Array;
       size : number;
       duration : number;
@@ -312,11 +312,11 @@ export type CustomSegmentLoader = (
 
 export type CustomManifestLoader = (
   // first argument: url of the manifest
-  url: string,
+  url : string,
 
   // second argument: callbacks
   callbacks : {
-    resolve : (args: {
+    resolve : (args : {
       data : Document|string;
       size : number;
       duration : number;
