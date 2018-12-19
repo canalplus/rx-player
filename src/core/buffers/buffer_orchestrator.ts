@@ -15,7 +15,6 @@
  */
 
 import {
-  BehaviorSubject,
   concat as observableConcat,
   EMPTY,
   merge as observableMerge,
@@ -103,7 +102,7 @@ const {
  */
 export default function IBufferOrchestratorEvent(
   content : {
-    manifest$ : BehaviorSubject<Manifest>;
+    manifest : Manifest;
     initialPeriod : Period;
   },
   clock$ : Observable<IBufferOrchestratorClockTick>,
@@ -120,7 +119,7 @@ export default function IBufferOrchestratorEvent(
     manualBitrateSwitchingMode : "seamless"|"direct";
   }
 ) : Observable<IBufferOrchestratorEvent> {
-  const { manifest$, initialPeriod } = content;
+  const { manifest, initialPeriod } = content;
   const { maxBufferAhead$, maxBufferBehind$ } = options;
 
   // Keep track of a unique BufferGarbageCollector created per
@@ -230,11 +229,10 @@ export default function IBufferOrchestratorEvent(
     const outOfManifest$ = clock$.pipe(
       mergeMap(({ currentTime, wantedTimeOffset }) => {
         const position = wantedTimeOffset + currentTime;
-        const currentManifest = manifest$.getValue();
-        if (position < currentManifest.getMinimumPosition()) {
+        if (position < manifest.getMinimumPosition()) {
           const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST", null, false);
           return observableOf(EVENTS.warning(warning));
-        } else if (position > currentManifest.getMaximumPosition()) {
+        } else if (position > manifest.getMaximumPosition()) {
           const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST", null, false);
           return observableOf(EVENTS.warning(warning));
         }
@@ -246,8 +244,7 @@ export default function IBufferOrchestratorEvent(
     // than the ones already considered
     const restartBuffers$ = clock$.pipe(
       filter(({ currentTime, wantedTimeOffset }) => {
-        const currentManifest = manifest$.getValue();
-        return !!currentManifest.getPeriodForTime(wantedTimeOffset + currentTime) &&
+        return !!manifest.getPeriodForTime(wantedTimeOffset + currentTime) &&
           isOutOfPeriodList(wantedTimeOffset + currentTime);
       }),
 
@@ -260,7 +257,7 @@ export default function IBufferOrchestratorEvent(
       }),
 
       mergeMap(({ currentTime, wantedTimeOffset }) => {
-        const newInitialPeriod = manifest$.getValue()
+        const newInitialPeriod = manifest
           .getPeriodForTime(currentTime + wantedTimeOffset);
         if (newInitialPeriod == null) {
           throw new MediaError("MEDIA_TIME_NOT_FOUND", null, true);
@@ -369,7 +366,7 @@ export default function IBufferOrchestratorEvent(
       abrManager,
       bufferType,
       clock$,
-      content: { manifest$, period: basePeriod },
+      content: { manifest, period: basePeriod },
       garbageCollectors,
       segmentBookkeepers,
       segmentPipelinesManager,
@@ -381,7 +378,7 @@ export default function IBufferOrchestratorEvent(
       ) : Observable<IMultiplePeriodBuffersEvent> => {
         const { type } = evt;
         if (type === "full-buffer") {
-          const nextPeriod = manifest$.getValue().getPeriodAfter(basePeriod);
+          const nextPeriod = manifest.getPeriodAfter(basePeriod);
           if (nextPeriod == null) {
             return observableOf(EVENTS.bufferComplete(bufferType));
           } else {

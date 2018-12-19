@@ -15,7 +15,6 @@
  */
 
 import {
-  BehaviorSubject,
   EMPTY,
   merge as observableMerge,
   Observable,
@@ -61,7 +60,7 @@ import updatePlaybackRate from "./update_playback_rate";
 export interface IMediaSourceLoaderArguments {
   mediaElement : HTMLMediaElement; // Media Element on which the content will be
                                    // played
-  manifest$ : BehaviorSubject<Manifest>; // Manifest of the content we want to
+  manifest : Manifest; // Manifest of the content we want to
                                          // play
   clock$ : Observable<IInitClockTick>; // Emit position informations
   speed$ : Observable<number>; // Emit the speed.
@@ -95,7 +94,7 @@ export type IMediaSourceLoaderEvent =
  */
 export default function createMediaSourceLoader({
   mediaElement,
-  manifest$,
+  manifest,
   clock$,
   speed$,
   bufferOptions,
@@ -117,8 +116,6 @@ export default function createMediaSourceLoader({
     initialTime : number,
     autoPlay : boolean
   ) {
-    const manifest = manifest$.getValue();
-
     // TODO Update the duration if it evolves?
     const duration = manifest.getDuration();
     setDurationToMediaSource(mediaSource, duration == null ?  Infinity : duration);
@@ -147,14 +144,14 @@ export default function createMediaSourceLoader({
     const { seek$, load$ } =
       seekAndLoadOnMediaEvents(clock$, mediaElement, initialTime, autoPlay);
 
-    const bufferClock$ = createBufferClock(manifest$, clock$, seek$, speed$, initialTime);
+    const bufferClock$ = createBufferClock(manifest, clock$, seek$, speed$, initialTime);
 
     // Will be used to cancel any endOfStream tries when the contents resume
     const cancelEndOfStream$ = new Subject<null>();
 
     // Creates Observable which will manage every Buffer for the given Content.
     const buffers$ = BufferOrchestrator(
-      { manifest$, initialPeriod },
+      { manifest, initialPeriod },
       bufferClock$,
       abrManager,
       sourceBufferManager,

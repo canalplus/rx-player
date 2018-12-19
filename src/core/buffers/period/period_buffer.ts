@@ -15,7 +15,6 @@
  */
 
 import {
-  BehaviorSubject,
   concat as observableConcat,
   EMPTY,
   merge as observableMerge,
@@ -76,7 +75,7 @@ export interface IPeriodBufferArguments {
   bufferType : IBufferType;
   clock$ : Observable<IPeriodBufferClockTick>;
   content : {
-    manifest$ : BehaviorSubject<Manifest>;
+    manifest : Manifest;
     period : Period;
   };
   garbageCollectors : WeakMapMemory<QueuedSourceBuffer<unknown>, Observable<never>>;
@@ -186,7 +185,7 @@ export default function PeriodBuffer({
     adaptation : Adaptation,
     qSourceBuffer : QueuedSourceBuffer<T>
   ) : Observable<IAdaptationBufferEvent<T>|IBufferWarningEvent> {
-    const { manifest$ } = content;
+    const { manifest } = content;
     const segmentBookkeeper = segmentBookkeepers.get(qSourceBuffer);
     const pipelineOptions = getPipelineOptions(
       bufferType, options.segmentRetry, options.offlineRetry);
@@ -198,7 +197,7 @@ export default function PeriodBuffer({
       segmentBookkeeper,
       pipeline,
       wantedBufferAhead$,
-      { manifest$, period, adaptation },
+      { manifest, period, adaptation },
       abrManager,
       options
     ).pipe(catchError((error : Error) => {

@@ -16,7 +16,6 @@
 
 import objectAssign from "object-assign";
 import {
-  BehaviorSubject,
   combineLatest as observableCombineLatest,
   concat as observableConcat,
   EMPTY,
@@ -208,7 +207,6 @@ export default function Initialize({
     openMediaSource(mediaElement),
     fetchManifest(url)
   ).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
-    const manifest$ = new BehaviorSubject(manifest);
 
     /**
      * Refresh the manifest on subscription.
@@ -223,12 +221,8 @@ export default function Initialize({
 
       return fetchManifest(refreshURL).pipe(
         tap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
-          const updatedManifest = manifest.update(newManifest);
-          manifest$.next(updatedManifest);
-          manifestRefreshed$.next({
-            manifest: updatedManifest,
-            sendingTime: newSendingTime,
-          });
+          manifest.update(newManifest);
+          manifestRefreshed$.next({ manifest, sendingTime: newSendingTime });
         }),
         ignoreElements(),
         share() // share the previous side-effect
@@ -237,7 +231,7 @@ export default function Initialize({
 
     const loadOnMediaSource = createMediaSourceLoader({ // Behold!
       mediaElement,
-      manifest$,
+      manifest,
       clock$,
       speed$,
       abrManager,
@@ -269,7 +263,7 @@ export default function Initialize({
     );
 
     const loadOnMediaSource$ = observableConcat(
-      observableOf(EVENTS.manifestReady(abrManager, manifest$)),
+      observableOf(EVENTS.manifestReady(abrManager, manifest)),
       loadOnMediaSource(mediaSource, initialTime, autoPlay).pipe(
         takeUntil(reloadMediaSource$),
         mergeMap(onEvent)
