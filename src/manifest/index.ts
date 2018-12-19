@@ -479,14 +479,14 @@ export default class Manifest {
     // TODO use RTT for the manifest request? (+ 3 or something)
     const BUFFER_DEPTH_SECURITY = 5;
 
-    const minimumTime = this.minimumTime != null ? this.minimumTime : 0;
+    const ast = this.availabilityStartTime || 0;
+    const minimumTime = this.minimumTime != null ? this.minimumTime : ast;
     if (!this.isLive) {
       const duration = this.getDuration();
       const maximumTime = duration == null ? Infinity : duration;
       return [minimumTime, maximumTime];
     }
 
-    const ast = this.availabilityStartTime || 0;
     const plg = this.presentationLiveGap || 0;
     const tsbd = this.timeShiftBufferDepth || 0;
 
