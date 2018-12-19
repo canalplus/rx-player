@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import config from "../../config";
-import { Adaptation } from "../../manifest";
+import config from "../../../config";
+import { Adaptation } from "../../../manifest";
 
 const { BUFFER_PADDING } = config;
 

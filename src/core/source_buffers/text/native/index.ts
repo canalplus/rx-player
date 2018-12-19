@@ -38,7 +38,7 @@ export interface INativeTextTrackData {
 }
 
 /**
- * Source buffer to display TextTracks in a <track> element, in the given
+ * SourceBuffer to display TextTracks in a <track> element, in the given
  * video element.
  * @class NativeTextTrackSourceBuffer
  * @extends AbstractSourceBuffer
@@ -59,7 +59,7 @@ export default class NativeTextTrackSourceBuffer
     videoElement : HTMLMediaElement,
     hideNativeSubtitle : boolean
   ) {
-    log.debug("NTTSB: Creating native text track source buffer");
+    log.debug("NTTSB: Creating native text track SourceBuffer");
     super();
     const {
       track,
@@ -141,7 +141,7 @@ export default class NativeTextTrackSourceBuffer
   }
 
   _abort() : void {
-    log.debug("NTTSB: Aborting native text track source buffer");
+    log.debug("NTTSB: Aborting native text track SourceBuffer");
     const {
       _trackElement,
       _videoElement,

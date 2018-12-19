@@ -20,7 +20,7 @@ import Manifest, {
   Period,
 } from "../../manifest";
 import ABRManager from "../abr";
-import { IRepresentationChangeEvent } from "../buffer/types";
+import { IRepresentationChangeEvent } from "../buffers/types";
 import { IBufferType } from "../source_buffers";
 import { IStallingItem } from "./get_stalled_events";
 import {

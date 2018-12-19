@@ -62,7 +62,7 @@ export default class SegmentBookkeeper {
      * The inventory keep track of all the segments which should be currently
      * in the browser's memory.
      * This array contains objects, each being related to a single downloaded
-     * segment which is at least partially added in a source buffer.
+     * segment which is at least partially added in a SourceBuffer.
      * @type {Array.<Object>}
      */
     this.inventory = [];
@@ -70,7 +70,7 @@ export default class SegmentBookkeeper {
 
   /**
    * Infer each segment's bufferedStart and bufferedEnd from the TimeRanges
-   * given (coming from the source buffer).
+   * given (coming from the SourceBuffer).
    * @param {TimeRanges}
    *
    * TODO implement management of segments whose end is not known

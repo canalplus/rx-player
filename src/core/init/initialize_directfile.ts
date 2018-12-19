@@ -149,7 +149,7 @@ export default function initializeDirectfileContent({
   const mediaError$ = throwOnMediaError(mediaElement);
 
   // Set the speed set by the user on the media element while pausing a
-  // little longer while the buffer is stalled.
+  // little longer while the buffer is empty.
   const playbackRate$ = updatePlaybackRate(mediaElement, speed$, clock$, {
     pauseWhenStalled: true,
   }).pipe(map(EVENTS.speedChanged));

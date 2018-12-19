@@ -22,11 +22,10 @@ import {
   filter,
   map,
 } from "rxjs/operators";
-import log from "../../log";
-import { Period } from "../../manifest";
-import { IBufferType } from "../source_buffers";
-import { IAdaptationBufferClockTick } from "./adaptation_buffer";
-import { IBufferStateFull } from "./types";
+import log from "../../../log";
+import { Period } from "../../../manifest";
+import { IBufferType } from "../../source_buffers";
+import { IBufferStateFull } from "../types";
 
 /**
  * Create empty AdaptationBuffer Observable, linked to a Period.
@@ -41,7 +40,7 @@ import { IBufferStateFull } from "./types";
  * @returns {Observable}
  */
 export default function createFakeAdaptationBuffer(
-  bufferClock$ : Observable<IAdaptationBufferClockTick>,
+  bufferClock$ : Observable<{ currentTime : number }>,
   wantedBufferAhead$ : Observable<number>,
   bufferType : IBufferType,
   content : { period : Period }

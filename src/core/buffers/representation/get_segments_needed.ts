@@ -17,7 +17,7 @@
 import {
   ISegment,
   Representation,
-} from "../../manifest";
+} from "../../../manifest";
 
 /**
  * Returns every segments currently wanted.

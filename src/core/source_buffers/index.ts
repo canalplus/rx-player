@@ -78,7 +78,7 @@ type INativeSourceBufferType = "audio" | "video";
 /**
  * Allows to easily create and dispose SourceBuffers.
  *
- * Only one source buffer per type is allowed at the same time:
+ * Only one SourceBuffer per type is allowed at the same time:
  *
  *   - source buffers for native types (which depends on the native
  *     SourceBuffer implementation), are reused if one is re-created.
@@ -93,7 +93,7 @@ type INativeSourceBufferType = "audio" | "video";
  */
 export default class SourceBufferManager {
   /**
-   * Returns true if the source buffer is "native" (has to be attached to the
+   * Returns true if the SourceBuffer is "native" (has to be attached to the
    * mediaSource before playback).
    * @static
    * @param {string} bufferType
@@ -136,7 +136,7 @@ export default class SourceBufferManager {
   }
 
   /**
-   * Creates a new QueuedSourceBuffer for the given buffer type.
+   * Creates a new QueuedSourceBuffer for the SourceBuffer type.
    * Reuse an already created one if a QueuedSourceBuffer for the given type
    * already exists.
    * @param {string} bufferType
@@ -221,7 +221,7 @@ export default class SourceBufferManager {
       return;
     }
 
-    log.info("SB: Aborting source buffer", bufferType);
+    log.info("SB: Aborting SourceBuffer", bufferType);
     memorizedSourceBuffer.dispose();
     if (
       !shouldHaveNativeSourceBuffer(bufferType) ||
@@ -265,7 +265,7 @@ function createNativeQueuedSourceBuffer(
 
 /**
  * Returns true if the given buffeType is a native buffer, false otherwise.
- * "Native" source buffers are directly added to the MediaSource.
+ * "Native" SourceBuffers are directly added to the MediaSource.
  * @param {string} bufferType
  * @returns {Boolean}
  */

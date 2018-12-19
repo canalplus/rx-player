@@ -30,7 +30,7 @@ const PSSH_TO_INTEGER = be4toi(strToBytes("pssh"), 0);
 /**
  * As we observed on some browsers (IE and Edge), the initialization data on
  * some segments have sometimes duplicated PSSH when sent through an encrypted
- * event (but not when pushed to the source buffer).
+ * event (but not when pushed to the SourceBuffer).
  *
  * This function tries to guess if the initialization data contains only PSSHs
  * concatenated (as it is usually the case).

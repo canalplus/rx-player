@@ -47,25 +47,24 @@ import {
   takeUntil,
   tap,
 } from "rxjs/operators";
-import { ErrorTypes } from "../../errors";
-import log from "../../log";
+import { ErrorTypes } from "../../../errors";
+import log from "../../../log";
 import Manifest, {
   Adaptation,
   Period,
   Representation,
-} from "../../manifest";
-import concatMapLatest from "../../utils/concat_map_latest";
+} from "../../../manifest";
+import concatMapLatest from "../../../utils/concat_map_latest";
 import ABRManager, {
   IABREstimation,
-} from "../abr";
-import { IPrioritizedSegmentFetcher } from "../pipelines";
-import { QueuedSourceBuffer } from "../source_buffers";
-import createFakeBuffer from "./create_fake_buffer";
-import EVENTS from "./events_generators";
+} from "../../abr";
+import { IPrioritizedSegmentFetcher } from "../../pipelines";
+import { QueuedSourceBuffer } from "../../source_buffers";
+import EVENTS from "../events_generators";
 import RepresentationBuffer, {
   IRepresentationBufferClockTick,
-} from "./representation_buffer";
-import SegmentBookkeeper from "./segment_bookkeeper";
+} from "../representation";
+import SegmentBookkeeper from "../segment_bookkeeper";
 import {
   IAdaptationBufferEvent,
   IBufferEventAddedSegment,
@@ -74,7 +73,7 @@ import {
   IBufferStateActive,
   IBufferStateFull,
   IRepresentationBufferEvent,
-} from "./types";
+} from "../types";
 
 export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTick {
   isLive : boolean;
@@ -243,7 +242,6 @@ export default function AdaptationBuffer<T>(
 
 // Re-export RepresentationBuffer events used by the AdaptationBufferManager
 export {
-  createFakeBuffer,
   IBufferEventAddedSegment,
   IBufferNeedsDiscontinuitySeek,
   IBufferNeedsManifestRefresh,

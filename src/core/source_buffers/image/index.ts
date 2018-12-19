@@ -64,7 +64,7 @@ class ImageSourceBuffer
   }
 
   _abort() {
-    log.debug("ImageSourceBuffer: aborting image source buffer");
+    log.debug("ImageSourceBuffer: aborting image SourceBuffer");
   }
 }
 

@@ -48,36 +48,36 @@ import {
   takeWhile,
   tap,
 } from "rxjs/operators";
-import log from "../../log";
+import log from "../../../log";
 import Manifest, {
   Adaptation,
   ISegment,
   Period,
   Representation,
-} from "../../manifest";
-import SimpleSet from "../../utils/simple_set";
+} from "../../../manifest";
+import SimpleSet from "../../../utils/simple_set";
 import {
   IFetchedSegment,
   IPrioritizedSegmentFetcher,
-} from "../pipelines";
+} from "../../pipelines";
 import {
   QueuedSourceBuffer,
-} from "../source_buffers";
-import appendDataInSourceBuffer from "./append_data";
-import EVENTS from "./events_generators";
-import getBufferPaddings from "./get_buffer_paddings";
-import getSegmentPriority from "./get_segment_priority";
-import getSegmentsNeeded from "./get_segments_needed";
-import getWantedRange from "./get_wanted_range";
-import SegmentBookkeeper from "./segment_bookkeeper";
-import segmentFilter from "./segment_filter";
+} from "../../source_buffers";
+import EVENTS from "../events_generators";
+import SegmentBookkeeper from "../segment_bookkeeper";
 import {
   IBufferEventAddedSegment,
   IBufferNeededActions,
   IBufferStateActive,
   IBufferStateFull,
   IRepresentationBufferEvent,
-} from "./types";
+} from "../types";
+import appendDataInSourceBuffer from "./append_data";
+import getBufferPaddings from "./get_buffer_paddings";
+import getSegmentPriority from "./get_segment_priority";
+import getSegmentsNeeded from "./get_segments_needed";
+import getWantedRange from "./get_wanted_range";
+import segmentFilter from "./segment_filter";
 
 // Item emitted by the Buffer's clock$
 export interface IRepresentationBufferClockTick {

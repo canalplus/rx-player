@@ -1,9 +1,9 @@
-# The Buffer ###################################################################
+# The Buffers ##################################################################
 
 
 ## Overview ####################################################################
 
-The Buffer is the part of the RxPlayer choosing which segments to request and
+The Buffers is the part of the RxPlayer choosing which segments to request and
 pushing them to the corresponding SourceBuffer.
 
 It tries to choose the optimal segments based on:
@@ -18,14 +18,24 @@ It tries to choose the optimal segments based on:
 
 
 
-## The PeriodBufferManager #####################################################
+## The BufferOrchestrator #####################################################$
 
-The ``PeriodBufferManager`` is the main entry point to interact with the buffer.
+The ``BufferOrchestrator`` is the main entry point to interact with the buffer.
 It completely takes care of segment downloading and pushing for a whole content.
 
-To do so, it creates the right ``AdaptationBuffer``s at the right time. For more
-informations on it, you can look at [the PeriodBufferManager
-documentation](./period_buffer_manager.md).
+To do so, it creates the right ``PeriodBuffer``s depending on the current
+conditions.
+For more informations on it, you can look at [the BufferOrchestrator
+documentation](./buffer_orchestrator.md).
+
+
+
+## The PeriodBuffer ############################################################
+
+The ``PeriodBuffer`` creates and destroys ``AdaptationBuffer``s for a single
+manifest's Period.
+If no SourceBuffer was created, it lazily creates one (this only applies to
+custom SourceBuffer - not managed by the browser - like text).
 
 
 

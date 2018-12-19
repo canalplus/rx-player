@@ -449,7 +449,7 @@ export default class QueuedSourceBuffer<T> {
             this._sourceBuffer.timestampOffset = newTimestampOffset;
           }
 
-          log.debug("QSB: pushing new data to source buffer", this.bufferType);
+          log.debug("QSB: pushing new data to SourceBuffer", this.bufferType);
           if (isInit) {
             this._lastInitSegment = segment;
           }
@@ -457,7 +457,7 @@ export default class QueuedSourceBuffer<T> {
           break;
         case SourceBufferAction.Remove:
           const { start, end } = task.value;
-          log.debug("QSB: removing data from source buffer", this.bufferType, start, end);
+          log.debug("QSB: removing data from SourceBuffer", this.bufferType, start, end);
           this._sourceBuffer.remove(start, end);
           break;
       }

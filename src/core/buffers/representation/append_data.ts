@@ -23,11 +23,11 @@ import {
   catchError,
   mergeMapTo,
 } from "rxjs/operators";
-import { MediaError } from "../../errors";
+import { MediaError } from "../../../errors";
 import {
   IAppendBufferInfos,
   QueuedSourceBuffer,
-} from "../source_buffers";
+} from "../../source_buffers";
 import forceGarbageCollection from "./force_garbage_collection";
 
 /**
