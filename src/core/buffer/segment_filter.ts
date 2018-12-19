@@ -83,10 +83,12 @@ export default function shouldDownloadSegment(
     return true;
   }
 
-  if (
-    currentSegment.infos.period.id !== period.id ||
-    currentSegment.infos.adaptation.id !== adaptation.id
-  ) {
+  if (currentSegment.infos.period.id !== period.id) {
+    // segments for later periods have the advantage here
+    return period.start >= currentSegment.infos.period.start;
+  }
+
+  if (currentSegment.infos.adaptation.id !== adaptation.id) {
     return true;
   }
 
