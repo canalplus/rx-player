@@ -17,7 +17,6 @@
 import arrayFind from "array-find";
 import { ICustomError } from "../errors";
 import log from "../log";
-import assert from "../utils/assert";
 import generateNewId from "../utils/id";
 import warnOnce from "../utils/warnOnce";
 import Adaptation, {
@@ -235,11 +234,6 @@ export default class Manifest {
       log.warn("Manifest: non live content and duration is null.");
     }
     this._duration = args.duration;
-
-    if (__DEV__ && this.isLive) {
-      assert(this.availabilityStartTime != null);
-      assert(this.timeShiftBufferDepth != null);
-    }
 
     if (supplementaryImageTracks.length) {
       this.addSupplementaryImageAdaptations(supplementaryImageTracks);
