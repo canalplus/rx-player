@@ -83,14 +83,19 @@ export default function parsePeriods(
       periodDuration = manifestInfos.duration;
     }
 
+    const periodEnd = periodDuration != null ?
+      (periodStart + periodDuration) : undefined;
+
     const adaptations = parseAdaptationSets(period.children.adaptations, {
       isDynamic: manifestInfos.isDynamic,
       start: periodStart,
+      end: periodEnd,
       baseURL: periodBaseURL,
     });
     const parsedPeriod : IParsedPeriod = {
       id: periodID,
       start: periodStart,
+      end: periodEnd,
       duration: periodDuration,
       adaptations,
     };
