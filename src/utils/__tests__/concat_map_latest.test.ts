@@ -17,6 +17,9 @@
 import { expect } from "chai";
 
 import {
+  concat as observableConcat,
+  interval,
+  merge as observableMerge,
   Observable,
   of as observableOf,
   Subject,
@@ -25,6 +28,7 @@ import {
 import {
   concatMap,
   mapTo,
+  take,
   tap,
 } from "rxjs/operators";
 import concatMapLatest from "../concat_map_latest";
@@ -141,5 +145,67 @@ describe("utils - concatMapLatest", () => {
     counter$.next(0);
     counter$.next(1); // should be ignored
     counter$.next(2); // should be ignored
+  });
+
+  /* tslint:disable:max-line-length */
+  it("should increment the counter each times the callback is called", (done) => {
+  /* tslint:enable:max-line-length */
+
+    let itemProcessed = 0;
+    let nextCount = 0;
+    const obs1$ = observableOf(1, 2, 3);
+    const obs2$ = observableOf(4, 5);
+    const obs3$ = observableOf(6, 7, 8, 9);
+
+    observableOf<[number, Observable<number>]>(
+      [0, obs1$],
+      [1, obs2$],
+      [2, obs3$]
+    ).pipe(
+      concatMapLatest(([wantedCounter, obs$], counter) => {
+        itemProcessed++;
+        expect(counter).to.equal(wantedCounter);
+        return obs$;
+      })
+    ).subscribe(() => {
+      nextCount++;
+    }, undefined, () => {
+      expect(itemProcessed).to.equal(3);
+      expect(nextCount).to.equal(3 + 2 + 4);
+      done();
+    });
+  });
+
+  it("should reset the counter for each subscription", async () => {
+    const base$ = interval(10).pipe(take(10));
+    const counter$ = base$.pipe(concatMapLatest((_, i) => observableOf(i)));
+
+    function validateThroughMerge() {
+      let nextCount = 0;
+      return new Promise(res => {
+        observableMerge(counter$, counter$, counter$).subscribe((item) => {
+          expect(item).to.equal(Math.floor(nextCount / 3));
+          nextCount++;
+        }, undefined, () => {
+          expect(nextCount).to.equal(30);
+          res();
+        });
+      });
+    }
+
+    function validateThroughConcat() {
+      let nextCount = 0;
+      return new Promise(res => {
+        observableConcat(counter$, counter$, counter$).subscribe((item) => {
+          expect(item).to.equal(nextCount % 10);
+          nextCount++;
+        }, undefined, () => {
+          expect(nextCount).to.equal(30);
+          res();
+        });
+      });
+    }
+
+    await Promise.all([validateThroughConcat(), validateThroughMerge()]);
   });
 });
