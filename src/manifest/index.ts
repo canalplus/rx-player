@@ -17,7 +17,6 @@
 import arrayFind from "array-find";
 import { ICustomError } from "../errors";
 import log from "../log";
-import assert from "../utils/assert";
 import generateNewId from "../utils/id";
 import warnOnce from "../utils/warnOnce";
 import Adaptation, {
@@ -182,7 +181,7 @@ export default class Manifest {
    * created, in the order they have happened.
    * @type {Array.<Error>}
    */
-  public readonly parsingErrors : Array<Error|ICustomError>;
+  public parsingErrors : Array<Error|ICustomError>;
 
   /**
    * Whole duration anounced in the Manifest.
@@ -235,11 +234,6 @@ export default class Manifest {
       log.warn("Manifest: non live content and duration is null.");
     }
     this._duration = args.duration;
-
-    if (__DEV__ && this.isLive) {
-      assert(this.availabilityStartTime != null);
-      assert(this.timeShiftBufferDepth != null);
-    }
 
     if (supplementaryImageTracks.length) {
       this.addSupplementaryImageAdaptations(supplementaryImageTracks);
@@ -362,10 +356,12 @@ export default class Manifest {
    */
   update(newManifest : Manifest) : Manifest {
     this._duration = newManifest.getDuration();
-    this.lifetime = newManifest.lifetime;
-    this.timeShiftBufferDepth = newManifest.timeShiftBufferDepth;
     this.availabilityStartTime = newManifest.availabilityStartTime;
+    this.lifetime = newManifest.lifetime;
+    this.minimumTime = newManifest.minimumTime;
+    this.parsingErrors = newManifest.parsingErrors;
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
+    this.timeShiftBufferDepth = newManifest.timeShiftBufferDepth;
     this.uris = newManifest.uris;
 
     const oldPeriods = this.periods;
@@ -441,14 +437,14 @@ export default class Manifest {
     // TODO use RTT for the manifest request? (+ 3 or something)
     const BUFFER_DEPTH_SECURITY = 5;
 
-    const minimumTime = this.minimumTime != null ? this.minimumTime : 0;
+    const ast = this.availabilityStartTime || 0;
+    const minimumTime = this.minimumTime != null ? this.minimumTime : ast;
     if (!this.isLive) {
       const duration = this.getDuration();
       const maximumTime = duration == null ? Infinity : duration;
       return [minimumTime, maximumTime];
     }
 
-    const ast = this.availabilityStartTime || 0;
     const plg = this.presentationLiveGap || 0;
     const tsbd = this.timeShiftBufferDepth || 0;
 

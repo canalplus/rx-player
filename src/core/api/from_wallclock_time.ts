@@ -43,13 +43,15 @@ function normalizeWallClockTime(
   }
   const spd = manifest.suggestedPresentationDelay || 0;
   const plg = manifest.presentationLiveGap || 0;
-  const tsbd = manifest.timeShiftBufferDepth || 0;
+  const tsbd = manifest.timeShiftBufferDepth;
 
   const timeInMs = typeof _time === "number" ?
     _time : +_time;
 
   const now = Date.now();
   const max = now - (plg + spd) * 1000;
-  const min = now - (tsbd) * 1000;
+  const min = tsbd == null ?
+    (manifest.minimumTime || manifest.availabilityStartTime || 0) :
+    now - (tsbd) * 1000;
   return Math.max(Math.min(timeInMs, max), min);
 }
