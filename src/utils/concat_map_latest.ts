@@ -32,8 +32,9 @@ import {
  * @returns {function}
  */
 export default function concatMapLatest<T, U>(
-  callback: (...args: any) => Observable<U>
+  callback: (arg: T, i: number) => Observable<U>
 ): (source: Observable<T>) => Observable<U> {
+  let counter = 0;
   return (source: Observable<T>) => observableDefer(() => {
     let latestValue: T;
     let hasLatestValue = false;
@@ -47,8 +48,11 @@ export default function concatMapLatest<T, U>(
         }
         hasLatestValue = false;
         isExhausting = true;
-        return callback(value).pipe(
-          tap({ complete: () => isExhausting = false }),
+        return callback(value, counter).pipe(
+          tap({
+            next: () => counter++,
+            complete: () => isExhausting = false,
+          }),
           (s: Observable<U>) => observableConcat(s, observableDefer(() => hasLatestValue ?
             next(latestValue) :
             EMPTY

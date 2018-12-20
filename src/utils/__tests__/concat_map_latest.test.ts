@@ -50,11 +50,16 @@ describe("utils - concatMapLatest", () => {
   it("should consider all values if precedent inner Observable finished synchronously", (done) => {
   /* tslint:enable:max-line-length */
     const innerValues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const innerValuesLength = innerValues.length;
+    let lastCount: number|undefined;
 
     const counter$ : Observable<number> = observableOf(...innerValues);
     counter$.pipe(
       /* tslint:disable no-unnecessary-callback-wrapper */
-      concatMapLatest((i: number) => observableOf(i))
+      concatMapLatest((i: number, count: number) => {
+        lastCount = count;
+        return observableOf(i);
+      })
       /* tslint:enable no-unnecessary-callback-wrapper */
     ).subscribe((res: number) => {
       const expectedResult = innerValues.shift();
@@ -63,6 +68,7 @@ describe("utils - concatMapLatest", () => {
       if (innerValues.length !== 0) {
         throw new Error("Not all values were received.");
       }
+      expect(lastCount).to.equal(innerValuesLength - 1);
       done();
     });
   });
@@ -71,13 +77,18 @@ describe("utils - concatMapLatest", () => {
   it("should consider all values if precedent inner Observable had time to finish", (done) => {
   /* tslint:enable:max-line-length */
     const innerValues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const innerValuesLength = innerValues.length;
+    let lastCount: number|undefined;
 
     const counter$ : Observable<number> = observableOf(...innerValues).pipe(
       concatMap((v) => timer(5).pipe(mapTo(v)))
     );
     counter$.pipe(
       /* tslint:disable no-unnecessary-callback-wrapper */
-      concatMapLatest((i: number) => observableOf(i))
+      concatMapLatest((i: number, count: number) => {
+        lastCount = count;
+        return observableOf(i);
+      })
       /* tslint:enable no-unnecessary-callback-wrapper */
     ).subscribe((res: number) => {
       const expectedResult = innerValues.shift();
@@ -86,6 +97,7 @@ describe("utils - concatMapLatest", () => {
       if (innerValues.length !== 0) {
         throw new Error("Not all values were received.");
       }
+      expect(lastCount).to.equal(innerValuesLength - 1);
       done();
     });
   });
@@ -97,10 +109,14 @@ describe("utils - concatMapLatest", () => {
     const counter$ = new Subject<number>();
     let itemEmittedCounter = 0;
     let itemProcessedCounter = 0;
+    let lastCount: number|undefined;
 
     counter$.pipe(
       tap(() => { itemEmittedCounter++; }),
-      concatMapLatest((i: number) => timer(230).pipe(mapTo(i)))
+      concatMapLatest((i: number, count: number) => {
+        lastCount = count;
+        return timer(230).pipe(mapTo(i));
+      })
     ).subscribe((result: number) => {
       switch (itemProcessedCounter++) {
         case 0:
@@ -118,6 +134,7 @@ describe("utils - concatMapLatest", () => {
     }, undefined, () => {
       expect(itemEmittedCounter).to.equal(5);
       expect(itemProcessedCounter).to.equal(2);
+      expect(lastCount).to.equal(itemProcessedCounter - 1);
       done();
     });
 
