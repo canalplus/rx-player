@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+import {
+  Observable,
+  Observer,
+} from "rxjs";
 import log from "../log";
 
 type IListeners<T extends string, U> =
@@ -116,4 +120,26 @@ export default class EventEmitter<T extends string, U>
       }
     });
   }
+}
+
+/**
+ * Simple redefinition of the fromEvent from rxjs to also work on our
+ * implementation of EventEmitter with type-checked strings
+ * @param {Object} target
+ * @param {string} eventName
+ * @returns {Observable}
+ */
+export function fromEvent<T extends string, U>(
+  target : IEventEmitter<T, U>,
+  eventName : T
+) : Observable<U> {
+  return Observable.create((obs : Observer<U>) => {
+    function handler(event : U) {
+      obs.next(event);
+    }
+    target.addEventListener(eventName, handler);
+    return () => {
+      target.removeEventListener(eventName, handler);
+    };
+  });
 }

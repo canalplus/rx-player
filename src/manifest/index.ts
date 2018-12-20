@@ -17,6 +17,7 @@
 import arrayFind from "array-find";
 import { ICustomError } from "../errors";
 import log from "../log";
+import EventEmitter from "../utils/eventemitter";
 import generateNewId from "../utils/id";
 import warnOnce from "../utils/warnOnce";
 import Adaptation, {
@@ -78,7 +79,7 @@ interface IManifestParsingOptions {
  * Normalized Manifest structure.
  * @class Manifest
  */
-export default class Manifest {
+export default class Manifest extends EventEmitter<"manifestUpdate", null> {
   /**
    * ID uniquely identifying this Manifest.
    * @type {string}
@@ -195,6 +196,7 @@ export default class Manifest {
    * @param {Object} args
    */
   constructor(args : IManifestArguments, options : IManifestParsingOptions) {
+    super();
     const {
       supplementaryTextTracks = [],
       supplementaryImageTracks = [],
@@ -339,6 +341,7 @@ export default class Manifest {
 
   /**
    * @param {number} delta
+   * TODO Remove?
    */
   updateLiveGap(delta : number) : void {
     if (this.isLive) {
@@ -354,7 +357,7 @@ export default class Manifest {
    * Update the current manifest properties
    * @param {Object} Manifest
    */
-  update(newManifest : Manifest) : Manifest {
+  update(newManifest : Manifest) : void {
     this._duration = newManifest.getDuration();
     this.availabilityStartTime = newManifest.availabilityStartTime;
     this.lifetime = newManifest.lifetime;
@@ -400,7 +403,7 @@ export default class Manifest {
         }
       }
     }
-    return this;
+    this.trigger("manifestUpdate", null);
   }
 
   /**

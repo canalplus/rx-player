@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { BehaviorSubject } from "rxjs";
 import { ICustomError } from "../../errors";
 import Manifest, {
   Period,
@@ -57,11 +56,11 @@ function stalled(stalling : IStallingItem|null) : IStalledEvent {
  */
 function manifestReady(
   abrManager : ABRManager,
-  manifest$ : BehaviorSubject<Manifest>
+  manifest : Manifest
 ) : IManifestReadyEvent {
   return {
     type: "manifestReady",
-    value: { abrManager, manifest$ },
+    value: { abrManager, manifest },
   };
 }
 

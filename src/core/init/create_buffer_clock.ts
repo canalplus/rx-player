@@ -16,7 +16,6 @@
 
 import objectAssign from "object-assign";
 import {
-  BehaviorSubject,
   combineLatest as observableCombineLatest,
   merge as observableMerge,
   Observable,
@@ -40,7 +39,7 @@ import { IInitClockTick } from "./types";
  * @returns {Observable}
  */
 export default function createBufferClock(
-  manifest$ : BehaviorSubject<Manifest>,
+  manifest : Manifest,
   initClock$ : Observable<IInitClockTick>,
   initialSeek$ : Observable<unknown>,
   speed$ : Observable<number>,
@@ -65,7 +64,6 @@ export default function createBufferClock(
   const clock$ : Observable<IBufferOrchestratorClockTick> =
     observableCombineLatest(initClock$, speed$)
       .pipe(map(([tick, speed]) => {
-        const manifest = manifest$.getValue();
         return objectAssign({
           isLive: manifest.isLive,
           liveGap: manifest.isLive ?

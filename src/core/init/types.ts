@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { BehaviorSubject } from "rxjs";
 import { ICustomError } from "../../errors";
 import Manifest from "../../manifest";
 import ABRManager from "../abr";
@@ -47,7 +46,7 @@ export interface IManifestReadyEvent {
   type : "manifestReady";
   value : {
     abrManager : ABRManager;
-    manifest$ : BehaviorSubject<Manifest>;
+    manifest : Manifest;
   };
 }
 
