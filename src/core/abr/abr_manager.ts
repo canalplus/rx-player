@@ -24,6 +24,7 @@ import {
 } from "rxjs/operators";
 import log from "../../log";
 import { Representation } from "../../manifest";
+import BOLAManager from "../buffers/bola_estimate";
 import { IBufferType } from "../source_buffers";
 import RepresentationChooser, {
   IABREstimation,
@@ -227,10 +228,11 @@ export default class ABRManager {
    */
   public get$(
     type : IBufferType,
-    clock$: Observable<IABRClockTick>,
-    representations: Representation[] = []
+    clock$ : Observable<IABRClockTick>,
+    representations : Representation[] = [],
+    bolaManager : BOLAManager
   ) : Observable<IABREstimation> {
-    return this._lazilyCreateChooser(type).get$(clock$, representations);
+    return this._lazilyCreateChooser(type).get$(clock$, representations, bolaManager);
   }
 
   /**

@@ -18,22 +18,29 @@ import objectAssign from "object-assign";
 import {
   BehaviorSubject,
   combineLatest as observableCombineLatest,
+  concat as obserableConcat,
+  EMPTY,
   Observable,
   of as observableOf,
   Subject,
 } from "rxjs";
 import {
+  distinctUntilChanged,
+  filter,
   map,
   startWith,
   switchMap,
   takeUntil,
   tap,
+  withLatestFrom,
 } from "rxjs/operators";
 import config from "../../config";
 import log from "../../log";
 import { Representation } from "../../manifest";
 import arrayFind from "../../utils/array_find";
+import arrayFindIndex from "../../utils/array_find_index";
 import objectValues from "../../utils/object_values";
+import BOLAManager from "../buffers/bola_estimate";
 import { IBufferType } from "../source_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
 import EWMA from "./ewma";
@@ -384,7 +391,8 @@ export default class RepresentationChooser {
    */
   public get$(
     clock$ : Observable<IRepresentationChooserClockTick>,
-    representations : Representation[]
+    representations : Representation[],
+    bolaManager : BOLAManager
   ) : Observable<IABREstimation> {
     if (!representations.length) {
       throw new Error("ABRManager: no representation choice given");
@@ -438,7 +446,7 @@ export default class RepresentationChooser {
 
       // -- AUTO mode --
       let inStarvationMode = false; // == buffer gap too low == panic mode
-      return observableCombineLatest(
+      const throughputRuleEstimate$ = observableCombineLatest(
         clock$,
         maxAutoBitrate$,
         deviceEvents$,
@@ -535,6 +543,111 @@ export default class RepresentationChooser {
         }),
 
         takeUntil(this._dispose$)
+      );
+
+      const fastEWMA = new EWMA(10);
+      let lastEstimate : Representation|undefined;
+
+      const fastThroughPutSwitch$ = throughputRuleEstimate$.pipe(
+        withLatestFrom(clock$),
+        tap(([ estimate, clock ]) => {
+          if (
+            (
+              lastEstimate != null &&
+              estimate.bitrate != null &&
+              lastEstimate.bitrate > estimate.representation.bitrate
+            ) || (
+                clock.bufferGap < ABR_STARVATION_GAP &&
+                clock.currentTime > ABR_STARVATION_GAP
+              )
+            ) {
+              bolaManager.increaseDistanceToFirstStep();
+          } else if (
+            lastEstimate != null &&
+            estimate.bitrate != null &&
+            lastEstimate.bitrate < estimate.representation.bitrate
+          ) {
+            bolaManager.decreaseDistanceToFirstStep();
+          }
+          lastEstimate = estimate.representation;
+        }),
+        filter(([ estimate, clock ]) => clock.bufferGap < 5 && estimate.urgent),
+        map(([estimate, _]) => estimate),
+        startWith(null)
+      );
+
+      const BOLAEstimate$ = bolaManager.get$(clock$);
+
+      let lastWasThroughput = false;
+      let currentRepIdx = -1;
+
+      return fastThroughPutSwitch$.pipe(
+        switchMap((throughput) => {
+          lastWasThroughput = true;
+          bolaManager.increaseDistanceToFirstStep();
+          return obserableConcat(
+            throughput == null ? EMPTY : observableOf(throughput),
+            BOLAEstimate$.pipe(
+              map((r) => {
+                fastEWMA.addSample(1, r.bitrate);
+                const estimate = fastEWMA.getEstimate();
+                const { rep } = representations.reduce((acc: {
+                  min: number; rep: Representation;
+                }, value) => {
+                  if (
+                    !acc.rep ||
+                    Math.abs(value.bitrate - estimate) < acc.min
+                  ) {
+                    return {
+                      min: Math.abs(value.bitrate - estimate),
+                      rep: value,
+                    };
+                  }
+                  return acc;
+                }, { min: Infinity, rep: representations[0] });
+                return rep;
+              }),
+              withLatestFrom(clock$),
+              map(([representation, clock]) => {
+                const urgent = (() => {
+                  if (clock.downloadBitrate == null) {
+                    return true;
+                  } else if (representation.bitrate >= clock.downloadBitrate) {
+                    return !inStarvationMode;
+                  }
+                  return shouldDirectlySwitchToLowBitrate(this._currentRequests, clock);
+                })();
+
+                const bolaEstimate = {
+                  representation,
+                  bitrate: representation.bitrate,
+                  manual: false,
+                  urgent,
+                };
+
+                if (
+                  clock.bufferGap < ABR_STARVATION_GAP &&
+                  throughput &&
+                  throughput.representation.bitrate < representation.bitrate
+                ) {
+                  lastWasThroughput = true;
+                  return throughput;
+                }
+
+                lastWasThroughput = false;
+                return bolaEstimate;
+              })
+            )
+          );
+        }),
+        distinctUntilChanged((a, b) => a.representation.id === b.representation.id),
+        tap((e) => {
+          currentRepIdx =
+            arrayFindIndex(representations, (r) => r.id === e.representation.id);
+          if (lastWasThroughput && currentRepIdx > -1) {
+              bolaManager.setFactorForFirstStep(currentRepIdx);
+            }
+        })
       );
     }));
   }
