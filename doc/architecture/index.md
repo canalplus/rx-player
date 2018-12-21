@@ -144,7 +144,7 @@ Buffers                          | ~                                            
 | Create the right +----------+   +----------+    +----------+   | +---------------+  |~
 | AdaptationBuffer |          |   |          |    |          |---->|  SourceBuffer |  |~
 | depending on the |  Period  |-+ |  Period  |-+  |  Period  |-+ | |   Manager (1) |  |~
-| track choosen    |  Buffer  | | |  Buffer  | |  |  Buffer  | | | +---------------+  |~
+| wanted track     |  Buffer  | | |  Buffer  | |  |  Buffer  | | | +---------------+  |~
 |                  |          | | |          | |  |          | | | Create and handle  |~
 |                  +----------+ | +----------+ |  +----------+ | |     SourceBuffers  |~
 |                   |           |  |           |   |           | |                    |~
