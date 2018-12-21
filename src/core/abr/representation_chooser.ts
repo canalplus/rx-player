@@ -512,7 +512,9 @@ export default class RepresentationChooser {
           const urgent = (() => {
             if (clock.downloadBitrate == null) {
               return true;
-            } else if (chosenRepresentation.bitrate >= clock.downloadBitrate) {
+            } else if (chosenRepresentation.bitrate === clock.downloadBitrate) {
+              return false;
+            } else if (chosenRepresentation.bitrate > clock.downloadBitrate) {
               return !inStarvationMode;
             }
             return shouldDirectlySwitchToLowBitrate(this._currentRequests, clock);
