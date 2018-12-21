@@ -1,5 +1,21 @@
 # Changelog
 
+## v3.10.1 (2018/12/21)
+
+### Bug fixes
+
+  - abr: always consider the last quality estimation
+  - dash: handle `S` nodes (segments) with an @r attribute at `-1` in an MPD
+  - dash: handle `SegmentTimeline` which have as a first `S` node (segment) an undefined @t attribute in an MPD
+  - dash: Representation.index.getLastPosition() for SegmentBase-based DASH Representations now returns the end of the last segment (it returned the start of the last segment before)
+  - dash/smooth: throw better error (`MANIFEST_PARSE_ERROR`) if none of the audio or video tracks of a content can be played (e.g. none have supported codecs)
+
+### Other improvements
+
+  - manifest: better infer the minimum time of a Manifest
+  - code: refresh code architecture (rename the `Stream` layer to the `Init` layer, rename `net` to `transports`, `PeriodBufferManager` to `BufferOrchestrator` etc.)
+
+
 ## v3.10.0 (2018/12/11)
 
 ### Features
