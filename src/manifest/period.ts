@@ -143,7 +143,7 @@ export default class Period {
       (!this.adaptations.video || !this.adaptations.video.length) &&
       (!this.adaptations.audio || !this.adaptations.audio.length)
     ) {
-      const error = new Error("No supported audio and video adaptations.");
+      const error = new Error("No supported audio and video tracks.");
       throw new MediaError("MANIFEST_PARSE_ERROR", error, true);
     }
 
