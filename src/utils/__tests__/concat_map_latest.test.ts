@@ -182,7 +182,7 @@ describe("utils - concatMapLatest", () => {
 
     function validateThroughMerge() {
       let nextCount = 0;
-      return new Promise(res => {
+      return new Promise<void>(res => {
         observableMerge(counter$, counter$, counter$).subscribe((item) => {
           expect(item).to.equal(Math.floor(nextCount / 3));
           nextCount++;
@@ -195,7 +195,7 @@ describe("utils - concatMapLatest", () => {
 
     function validateThroughConcat() {
       let nextCount = 0;
-      return new Promise(res => {
+      return new Promise<void>(res => {
         observableConcat(counter$, counter$, counter$).subscribe((item) => {
           expect(item).to.equal(nextCount % 10);
           nextCount++;
