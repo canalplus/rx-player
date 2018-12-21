@@ -138,11 +138,10 @@
                 /* tslint:disable no-console */ , this.error = level >= this.LEVELS.ERROR ? console.error.bind(console) : noop.a, 
                 this.warn = level >= this.LEVELS.WARNING ? console.warn.bind(console) : noop.a, 
                 this.info = level >= this.LEVELS.INFO ? console.info.bind(console) : noop.a, this.debug = level >= this.LEVELS.DEBUG ? console.log.bind(console) : noop.a;
-            }, 
+            }
             /**
    * @returns {string}
-   */
-            _proto.getLevel = function getLevel() {
+   */ , _proto.getLevel = function getLevel() {
                 return this.currentLevel;
             }, Logger;
         }())();
@@ -3525,7 +3524,7 @@ object-assign
                 listeners ? listeners.push(fn) : 
                 // TS Bug?
                 this._listeners[evt] = [ fn ];
-            }, 
+            }
             /**
    * Unregister callbacks linked to events.
    * @param {string} [evt] - The event for which the callback[s] should be
@@ -3534,8 +3533,7 @@ object-assign
    * @param {Function} [fn] - The callback to unregister. If set to null
    * or undefined while the evt argument is set, all callbacks linked to that
    * event will be unregistered.
-   */
-            _proto.removeEventListener = function removeEventListener(evt, fn) {
+   */ , _proto.removeEventListener = function removeEventListener(evt, fn) {
                 if (null != evt) {
                     var listeners = this._listeners[evt];
                     if (listeners) if (null != fn) {
@@ -3543,14 +3541,13 @@ object-assign
                         ~index && listeners.splice(index, 1), listeners.length || delete this._listeners[evt];
                     } else delete this._listeners[evt];
                 } else this._listeners = {};
-            }, 
+            }
             /**
    * Trigger every registered callbacks for a given event
    * @param {string} evt - The event to trigger
    * @param {*} arg - The eventual payload for that event. All triggered
    * callbacks will recieve this payload as argument.
-   */
-            _proto.trigger = function trigger(evt, arg) {
+   */ , _proto.trigger = function trigger(evt, arg) {
                 var listeners = this._listeners[evt];
                 listeners && listeners.slice().forEach(function(listener) {
                     try {
@@ -4736,28 +4733,25 @@ object-assign
    */            var _proto = SimpleSet.prototype;
             return _proto.add = function add(x) {
                 this._hashes[x] = !0;
-            }, 
+            }
             /**
    * Remove an hash entry from the set.
    * Do not have any effect on already-removed or inexistant hashes
    * @param {string|number} x
-   */
-            _proto.remove = function remove(x) {
+   */ , _proto.remove = function remove(x) {
                 delete this._hashes[x];
-            }, 
+            }
             /**
    * Test if the given hash has an entry in the set.
    * @param {string|number} x
    * @returns {boolean}
-   */
-            _proto.test = function test(x) {
+   */ , _proto.test = function test(x) {
                 return !!this._hashes[x];
-            }, 
+            }
             /**
    * Returns true if there's currently no hash in this set.
    * @returns {boolean}
-   */
-            _proto.isEmpty = function isEmpty() {
+   */ , _proto.isEmpty = function isEmpty() {
                 return !Object.keys(this._hashes).length;
             }, SimpleSet;
         }();
@@ -5000,32 +4994,29 @@ object-assign
                 this._lock(function() {
                     return _this2._append(data);
                 });
-            }, 
+            }
             /**
    * Mimic the SourceBuffer _remove_ method: remove buffered segments.
    * @param {Number} from
    * @param {Number} to
-   */
-            _proto.remove = function remove(from, to) {
+   */ , _proto.remove = function remove(from, to) {
                 var _this3 = this;
                 this._lock(function() {
                     return _this3._remove(from, to);
                 });
-            }, 
+            }
             /**
    * Mimic the SourceBuffer _abort_ method.
-   */
-            _proto.abort = function abort() {
+   */ , _proto.abort = function abort() {
                 this.remove(0, Infinity), this.updating = !1, this.readyState = "closed", this._abort();
-            }, 
+            }
             /**
    * Active a lock, execute the given function, unlock when finished (on
    * nextTick).
    * Throws if multiple lock are active at the same time.
    * Also triggers the right events on start, error and end
    * @param {Function} func
-   */
-            _proto._lock = function _lock(func) {
+   */ , _proto._lock = function _lock(func) {
                 var _this4 = this;
                 if (this.updating) throw new Error("SourceBuffer: SourceBuffer already updating.");
                 this.updating = !0, this.trigger("updatestart", void 0), Object(rx_tryCatch.a)(function() {
@@ -5799,7 +5790,7 @@ object-assign
                         sessionType: entry.sessionType
                     };
                 });
-            }, 
+            }
             /**
    * Returns an entry in this cache with the initData and initDataType given.
    * null if no such session is stored.
@@ -5807,8 +5798,7 @@ object-assign
    * @param {Uint8Array} initData
    * @param {string|undefined} initDataType
    * @returns {Object|null}
-   */
-            _proto.get = function get(initData, initDataType) {
+   */ , _proto.get = function get(initData, initDataType) {
                 var initDataHash = hashBuffer(initData), foundEntry = find_default()(this._entries, function(entry) {
                     return entry.initData === initDataHash && entry.initDataType === initDataType;
                 });
@@ -5816,15 +5806,14 @@ object-assign
                     session: foundEntry.session,
                     sessionType: foundEntry.sessionType
                 } : null;
-            }, 
+            }
             /**
    * @param {Uint8Array} initData
    * @param {string|undefined} initDataType
    * @param {string} sessionType
    * @returns {MediaKeySession}
    * @throws {EncryptedMediaError}
-   */
-            _proto.createSession = function createSession(initData, initDataType, sessionType) {
+   */ , _proto.createSession = function createSession(initData, initDataType, sessionType) {
                 var _this = this;
                 if (this.get(initData, initDataType)) {
                     var error = new Error("This initialization data was already stored.");
@@ -5841,13 +5830,12 @@ object-assign
                 }).catch(function(e) {
                     log.a.warn("EME-MKSS: session.closed rejected: " + e);
                 }), log.a.debug("EME-MKSS: Add session", entry), this._entries.push(entry), session;
-            }, 
+            }
             /**
    * Close a MediaKeySession and remove its entry if it's found in the store.
    * @param {MediaKeySession} session
    * @returns {Observable}
-   */
-            _proto.deleteAndCloseSession = function deleteAndCloseSession(session) {
+   */ , _proto.deleteAndCloseSession = function deleteAndCloseSession(session) {
                 var _this2 = this;
                 return Object(defer.a)(function() {
                     return _this2._delete(session), log.a.debug("EME-MKSS: Close session", session), 
@@ -5855,13 +5843,12 @@ object-assign
                         return Object(of.a)(null);
                     }));
                 });
-            }, 
+            }
             /**
    * Close all sessions in this store.
    * Emit null when done
    * @returns {Observable}
-   */
-            _proto.closeAllSessions = function closeAllSessions() {
+   */ , _proto.closeAllSessions = function closeAllSessions() {
                 var _this3 = this;
                 return Object(defer.a)(function() {
                     var previousEntries = _this3._entries;
@@ -5872,14 +5859,13 @@ object-assign
                     });
                     return Object(concat.a)(merge.a.apply(void 0, disposed).pipe(Object(ignoreElements.a)()), Object(of.a)(null));
                 });
-            }, 
+            }
             /**
    * Remove a MediaKeySession from the Cache, without closing it.
    * Returns the entry if found, null otherwise.
    * @param {MediaKeySession} session
    * @returns {number} - index of the session in the cache. -1 of not found.
-   */
-            _proto._delete = function _delete(session) {
+   */ , _proto._delete = function _delete(session) {
                 var entry = find_default()(this._entries, function(e) {
                     return e.session === session;
                 });
@@ -5946,14 +5932,13 @@ object-assign
                 return find_default()(this._entries, function(e) {
                     return e.initData === hash && e.initDataType === initDataType;
                 }) || null;
-            }, 
+            }
             /**
    * Add a new entry in the storage.
    * @param {Uint8Array}  initData
    * @param {string|undefined} initDataType
    * @param {MediaKeySession} session
-   */
-            _proto.add = function add(initData, initDataType, session) {
+   */ , _proto.add = function add(initData, initDataType, session) {
                 var sessionId = session && session.sessionId;
                 if (sessionId) {
                     var currentEntry = this.get(initData, initDataType);
@@ -5966,13 +5951,12 @@ object-assign
                         initDataType: initDataType
                     }), this._save());
                 }
-            }, 
+            }
             /**
    * Delete entry (sessionId + initData) based on its initData.
    * @param {Uint8Array}  initData
    * @param {string|undefined} initDataType
-   */
-            _proto.delete = function _delete(initData, initDataType) {
+   */ , _proto.delete = function _delete(initData, initDataType) {
                 var hash = hashBuffer(initData), entry = find_default()(this._entries, function(e) {
                     return e.initData === hash && e.initDataType === initDataType;
                 });
@@ -5981,17 +5965,15 @@ object-assign
                     var idx = this._entries.indexOf(entry);
                     this._entries.splice(idx, 1), this._save();
                 }
-            }, 
+            }
             /**
    * Delete all saved entries.
-   */
-            _proto.dispose = function dispose() {
+   */ , _proto.dispose = function dispose() {
                 this._entries = [], this._save();
-            }, 
+            }
             /**
    * Use the given storage to store the current entries.
-   */
-            _proto._save = function _save() {
+   */ , _proto._save = function _save() {
                 try {
                     this._storage.save(this._entries);
                 } catch (e) {
@@ -6698,24 +6680,22 @@ object-assign
    */            var _proto = InitDataStore.prototype;
             return _proto.has = function has(initData, initDataType) {
                 return initDataType ? !!this._namedTypeData[initDataType] && this._namedTypeData[initDataType].test(hashBuffer(initData)) : this._unnamedTypeData.test(hashBuffer(initData));
-            }, 
+            }
             /**
    * Add initialization data to this memory.
    * @param {Uint8Array} initData
    * @param {string|undefined} initDataType
-   */
-            _proto.add = function add(initData, initDataType) {
+   */ , _proto.add = function add(initData, initDataType) {
                 this.has(initData, initDataType) || (initDataType ? (this._namedTypeData[initDataType] || (this._namedTypeData[initDataType] = new simple_set.a()), 
                 this._namedTypeData[initDataType].add(hashBuffer(initData))) : this._unnamedTypeData.add(hashBuffer(initData)));
-            }, 
+            }
             /**
    * Remove the initialization data from this memory.
    * Returns true if this instance had the given initData stored.
    * @param {Uint8Array} initData
    * @param {string|undefined} initDataType
    * @returns {boolean}
-   */
-            _proto.remove = function remove(initData, initDataType) {
+   */ , _proto.remove = function remove(initData, initDataType) {
                 if (initDataType) {
                     if (!this._namedTypeData[initDataType]) return !1;
                     var _hashed = hashBuffer(initData), simpleSet = this._namedTypeData[initDataType];
@@ -7995,24 +7975,22 @@ object-assign
                     return representation.bitrate;
                 });
                 return uniq(bitrates);
-            }, 
+            }
             /**
    * Returns the Representation linked to the given ID.
    * @param {number|string} wantedId
    * @returns {Object|undefined}
-   */
-            _proto.getRepresentation = function getRepresentation(wantedId) {
+   */ , _proto.getRepresentation = function getRepresentation(wantedId) {
                 return find_default()(this.representations, function(_ref) {
                     var id = _ref.id;
                     return wantedId === id;
                 });
-            }, 
+            }
             /**
    * Returns the Representations linked to the given bitrate.
    * @param {Number} bitrate
    * @returns {Array.<Object>|null}
-   */
-            _proto.getRepresentationsForBitrate = function getRepresentationsForBitrate(bitrate) {
+   */ , _proto.getRepresentationsForBitrate = function getRepresentationsForBitrate(bitrate) {
                 return this.representations.filter(function(representation) {
                     return representation.bitrate === bitrate;
                 }) || null;
@@ -8091,22 +8069,20 @@ object-assign
                     adaptationsList.push.apply(adaptationsList, adaptations);
                 }
                 return adaptationsList;
-            }, 
+            }
             /**
    * Returns every `Adaptations` (or `tracks`) linked to that Period for a
    * given type.
    * @param {string} adaptationType
    * @returns {Array.<Object>}
-   */
-            _proto.getAdaptationsForType = function getAdaptationsForType(adaptationType) {
+   */ , _proto.getAdaptationsForType = function getAdaptationsForType(adaptationType) {
                 return this.adaptations[adaptationType] || [];
-            }, 
+            }
             /**
    * Returns the Adaptation linked to the given ID.
    * @param {number|string} wantedId
    * @returns {Object|undefined}
-   */
-            _proto.getAdaptation = function getAdaptation(wantedId) {
+   */ , _proto.getAdaptation = function getAdaptation(wantedId) {
                 return find_default()(this.getAdaptations(), function(_ref) {
                     var id = _ref.id;
                     return wantedId === id;
@@ -8128,12 +8104,11 @@ object-assign
    */            var _proto = StaticRepresentationIndex.prototype;
             return _proto.getInitSegment = function getInitSegment() {
                 return null;
-            }, 
+            }
             /**
    * Returns the only Segment available here.
    * @returns {Array.<Object>}
-   */
-            _proto.getSegments = function getSegments() {
+   */ , _proto.getSegments = function getSegments() {
                 return [ {
                     id: "0",
                     isInit: !1,
@@ -8143,29 +8118,25 @@ object-assign
                     timescale: 1,
                     mediaURL: this._media
                 } ];
-            }, 
+            }
             /**
    * Returns first position in index.
    * @returns {undefined}
-   */
-            _proto.getFirstPosition = function getFirstPosition() {
-                /* tslint:enable return-undefined */}, 
+   */ , _proto.getFirstPosition = function getFirstPosition() {
+                /* tslint:enable return-undefined */}
             /**
    * Returns last position in index.
    * @returns {undefined}
-   */
-            _proto.getLastPosition = function getLastPosition() {}, 
+   */ , _proto.getLastPosition = function getLastPosition() {}
             /**
    * Returns false as a static file never need to be refreshed.
    * @returns {Boolean}
-   */
-            _proto.shouldRefresh = function shouldRefresh() {
+   */ , _proto.shouldRefresh = function shouldRefresh() {
                 return !1;
-            }, 
+            }
             /**
    * @returns {Number}
-   */
-            _proto.checkDiscontinuity = function checkDiscontinuity() {
+   */ , _proto.checkDiscontinuity = function checkDiscontinuity() {
                 return -1;
             }, _proto._addSegments = function _addSegments() {
                 0;
@@ -8271,38 +8242,34 @@ object-assign
                 return find_default()(this.periods, function(period) {
                     return time >= period.start && (null == period.end || period.end > time);
                 });
-            }, 
+            }
             /**
    * Returns period coming just after a given period.
    * Returns undefined if not found.
    * @param {Period} period
    * @returns {Period|null}
-   */
-            _proto.getPeriodAfter = function getPeriodAfter(period) {
+   */ , _proto.getPeriodAfter = function getPeriodAfter(period) {
                 var endOfPeriod = period.end;
                 return null == endOfPeriod ? null : find_default()(this.periods, function(_period) {
                     return null == _period.end || endOfPeriod < _period.end;
                 }) || null;
-            }, 
+            }
             /**
    * Returns the duration of the whole content described by that Manifest.
    * @returns {Number}
-   */
-            _proto.getDuration = function getDuration() {
+   */ , _proto.getDuration = function getDuration() {
                 return this._duration;
-            }, 
+            }
             /**
    * Returns the most important URL from which the Manifest can be refreshed.
    * @returns {string|undefined}
-   */
-            _proto.getUrl = function getUrl() {
+   */ , _proto.getUrl = function getUrl() {
                 return this.uris[0];
-            }, 
+            }
             /**
    * @deprecated only returns adaptations for the first period
    * @returns {Array.<Object>}
-   */
-            _proto.getAdaptations = function getAdaptations() {
+   */ , _proto.getAdaptations = function getAdaptations() {
                 Object(warnOnce.a)("manifest.getAdaptations() is deprecated. Please use manifest.period[].getAdaptations() instead");
                 var firstPeriod = this.periods[0];
                 if (!firstPeriod) return [];
@@ -8312,40 +8279,36 @@ object-assign
                     adaptationsList.push.apply(adaptationsList, adaptations);
                 }
                 return adaptationsList;
-            }, 
+            }
             /**
    * @deprecated only returns adaptations for the first period
    * @returns {Array.<Object>}
-   */
-            _proto.getAdaptationsForType = function getAdaptationsForType(adaptationType) {
+   */ , _proto.getAdaptationsForType = function getAdaptationsForType(adaptationType) {
                 Object(warnOnce.a)("manifest.getAdaptationsForType(type) is deprecated. Please use manifest.period[].getAdaptationsForType(type) instead");
                 var firstPeriod = this.periods[0];
                 return firstPeriod && firstPeriod.adaptations[adaptationType] || [];
-            }, 
+            }
             /**
    * @deprecated only returns adaptations for the first period
    * @returns {Array.<Object>}
-   */
-            _proto.getAdaptation = function getAdaptation(wantedId) {
+   */ , _proto.getAdaptation = function getAdaptation(wantedId) {
                 /* tslint:disable:deprecation */
                 return Object(warnOnce.a)("manifest.getAdaptation(id) is deprecated. Please use manifest.period[].getAdaptation(id) instead"), 
                 find_default()(this.getAdaptations(), function(_ref) {
                     var id = _ref.id;
                     return wantedId === id;
                 });
-                /* tslint:enable:deprecation */            }, 
+                /* tslint:enable:deprecation */            }
             /**
    * @param {number} delta
    * TODO Remove?
-   */
-            _proto.updateLiveGap = function updateLiveGap(delta) {
+   */ , _proto.updateLiveGap = function updateLiveGap(delta) {
                 this.isLive && (this.presentationLiveGap ? this.presentationLiveGap += delta : this.presentationLiveGap = delta);
-            }, 
+            }
             /**
    * Update the current manifest properties
    * @param {Object} Manifest
-   */
-            _proto.update = function update(newManifest) {
+   */ , _proto.update = function update(newManifest) {
                 this._duration = newManifest.getDuration(), this.availabilityStartTime = newManifest.availabilityStartTime, 
                 this.lifetime = newManifest.lifetime, this.minimumTime = newManifest.minimumTime, 
                 this.parsingErrors = newManifest.parsingErrors, this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay, 
@@ -8370,32 +8333,29 @@ object-assign
                     }
                 }
                 this.trigger("manifestUpdate", null);
-            }, 
+            }
             /**
    * Get minimum position currently defined by the Manifest, in seconds.
    * @returns {number}
-   */
-            _proto.getMinimumPosition = function getMinimumPosition() {
+   */ , _proto.getMinimumPosition = function getMinimumPosition() {
                 return this.getCurrentPositionLimits()[0];
-            }, 
+            }
             /**
    * Get maximum position currently defined by the Manifest, in seconds.
    * @returns {number}
-   */
-            _proto.getMaximumPosition = function getMaximumPosition() {
+   */ , _proto.getMaximumPosition = function getMaximumPosition() {
                 if (!this.isLive) {
                     var duration = this.getDuration();
                     return null == duration ? Infinity : duration;
                 }
                 var ast = this.availabilityStartTime || 0, plg = this.presentationLiveGap || 0;
                 return Date.now() / 1e3 - ast - plg;
-            }, 
+            }
             /**
    * Get minimum AND maximum positions currently defined by the manifest, in
    * seconds.
    * @returns {Array.<number>}
-   */
-            _proto.getCurrentPositionLimits = function getCurrentPositionLimits() {
+   */ , _proto.getCurrentPositionLimits = function getCurrentPositionLimits() {
                 // TODO use RTT for the manifest request? (+ 3 or something)
                 var ast = this.availabilityStartTime || 0, minimumTime = null != this.minimumTime ? this.minimumTime : ast;
                 if (!this.isLive) {
@@ -8404,13 +8364,12 @@ object-assign
                 }
                 var plg = this.presentationLiveGap || 0, tsbd = this.timeShiftBufferDepth || 0, max = Date.now() / 1e3 - ast - plg;
                 return [ Math.min(max, Math.max(minimumTime, max - tsbd + 5)), max ];
-            }, 
+            }
             /**
    * Add supplementary image Adaptation(s) to the manifest.
    * @private
    * @param {Object|Array.<Object>} imageTracks
-   */
-            _proto.addSupplementaryImageAdaptations = function addSupplementaryImageAdaptations(imageTracks) {
+   */ , _proto.addSupplementaryImageAdaptations = function addSupplementaryImageAdaptations(imageTracks) {
                 var _this2 = this, newImageTracks = (Array.isArray(imageTracks) ? imageTracks : [ imageTracks ]).map(function(_ref2) {
                     var _this2$parsingErrors, mimeType = _ref2.mimeType, url = _ref2.url, adaptationID = "gen-image-ada-" + Object(id.a)(), representationID = "gen-image-rep-" + Object(id.a)(), newAdaptation = new adaptation_Adaptation({
                         id: adaptationID,
@@ -8432,13 +8391,12 @@ object-assign
                     var adaptations = this.periods[0].adaptations;
                     adaptations.image = adaptations.image ? adaptations.image.concat(newImageTracks) : newImageTracks;
                 }
-            }, 
+            }
             /**
    * Add supplementary text Adaptation(s) to the manifest.
    * @private
    * @param {Object|Array.<Object>} textTracks
-   */
-            _proto.addSupplementaryTextAdaptations = function addSupplementaryTextAdaptations(textTracks) {
+   */ , _proto.addSupplementaryTextAdaptations = function addSupplementaryTextAdaptations(textTracks) {
                 var _this3 = this, newTextAdaptations = (Array.isArray(textTracks) ? textTracks : [ textTracks ]).reduce(function(allSubs, _ref3) {
                     var mimeType = _ref3.mimeType, codecs = _ref3.codecs, url = _ref3.url, language = _ref3.language, languages = _ref3.languages, closedCaption = _ref3.closedCaption, langsToMapOn = language ? [ language ] : languages || [];
                     return allSubs.concat(langsToMapOn.map(function(_language) {
@@ -9214,11 +9172,10 @@ object-assign
                 return new promise.a(function(res) {
                     return res(_this._mediaKeys);
                 });
-            }, 
+            }
             /**
    * @returns {Object}
-   */
-            _proto.getConfiguration = function getConfiguration() {
+   */ , _proto.getConfiguration = function getConfiguration() {
                 return this._configuration;
             }, _createClass(CustomMediaKeySystemAccess, [ {
                 key: "keySystem",
@@ -10233,12 +10190,11 @@ object-assign
                 _log__WEBPACK_IMPORTED_MODULE_0__.a.debug("ImageSourceBuffer: appending new data.");
                 var start = data.start, end = data.end, timescale = data.timescale;
                 this.buffered.insert(start / timescale, null == end ? Number.MAX_VALUE : end / timescale);
-            }, 
+            }
             /**
    * @param {Number} from
    * @param {Number} to
-   */
-            _proto._remove = function _remove(from, to) {
+   */ , _proto._remove = function _remove(from, to) {
                 _log__WEBPACK_IMPORTED_MODULE_0__.a.info("ImageSourceBuffer: ignored image data remove order", from, to);
  // TODO once a better strategy for image cleaning has been set (surely done
                 // when we will work for live thumbnails), restore this implementation.
@@ -11216,11 +11172,10 @@ object-assign
             return _proto.addSample = function addSample(weight, value) {
                 var adjAlpha = Math.pow(this._alpha, weight), newEstimate = value * (1 - adjAlpha) + adjAlpha * this._lastEstimate;
                 isNaN(newEstimate) || (this._lastEstimate = newEstimate, this._totalWeight += weight);
-            }, 
+            }
             /**
    * @returns {number} value
-   */
-            _proto.getEstimate = function getEstimate() {
+   */ , _proto.getEstimate = function getEstimate() {
                 var zeroFactor = 1 - Math.pow(this._alpha, this._totalWeight);
                 return this._lastEstimate / zeroFactor;
             }, EWMA;
@@ -11257,20 +11212,18 @@ object-assign
                     this._bytesSampled += numberOfBytes, this._fastEWMA.addSample(weight, bandwidth), 
                     this._slowEWMA.addSample(weight, bandwidth);
                 }
-            }, 
+            }
             /**
    * Get estimate of the bandwidth, in bits per seconds.
    * @returns {Number|undefined}
-   */
-            _proto.getEstimate = function getEstimate() {
+   */ , _proto.getEstimate = function getEstimate() {
                 if (!(this._bytesSampled < ABR_MINIMUM_TOTAL_BYTES)) // Take the minimum of these two estimates.  This should have the effect of
                 // adapting down quickly, but up more slowly.
                 return Math.min(this._fastEWMA.getEstimate(), this._slowEWMA.getEstimate());
-            }, 
+            }
             /**
    * Reset the bandwidth estimation.
-   */
-            _proto.reset = function reset() {
+   */ , _proto.reset = function reset() {
                 this._fastEWMA = new EWMA(ABR_FAST_EMA), this._slowEWMA = new EWMA(ABR_SLOW_EMA), 
                 this._bytesSampled = 0;
             }, BandwidthEstimator;
@@ -11587,25 +11540,23 @@ object-assign
                         null != bitrate && (lastEstimatedBitrate = bitrate);
                     }), Object(takeUntil.a)(_this._dispose$));
                 }));
-            }, 
+            }
             /**
    * Add a bandwidth estimate by giving:
    *   - the duration of the request, in s
    *   - the size of the request in bytes
    * @param {number} duration
    * @param {number} size
-   */
-            _proto.addEstimate = function addEstimate(duration, size) {
+   */ , _proto.addEstimate = function addEstimate(duration, size) {
                 null != duration && null != size && (this.estimator.addSample(duration, size), this._reEstimate$.next());
-            }, 
+            }
             /**
    * Add informations about a new pending request.
    * This can be useful if the network bandwidth drastically changes to infer
    * a new bandwidth through this single request.
    * @param {string|number} id
    * @param {Object} payload
-   */
-            _proto.addPendingRequest = function addPendingRequest(id, payload) {
+   */ , _proto.addPendingRequest = function addPendingRequest(id, payload) {
                 if (this._currentRequests[id]) log.a.warn("ABR: request already added."); else {
                     var _payload$value = payload.value, time = _payload$value.time, duration = _payload$value.duration, requestTimestamp = _payload$value.requestTimestamp;
                     this._currentRequests[id] = {
@@ -11615,7 +11566,7 @@ object-assign
                         progress: []
                     };
                 }
-            }, 
+            }
             /**
    * Add progress informations to a pending request.
    * Progress objects are a key part to calculate the bandwidth from a single
@@ -11623,23 +11574,20 @@ object-assign
    * it.
    * @param {string|number} id
    * @param {Object} progress
-   */
-            _proto.addRequestProgress = function addRequestProgress(id, progress) {
+   */ , _proto.addRequestProgress = function addRequestProgress(id, progress) {
                 var request = this._currentRequests[id];
                 request ? request.progress.push(progress.value) : log.a.warn("ABR: progress for a request not added");
-            }, 
+            }
             /**
    * Remove a request previously set as pending through the addPendingRequest
    * method.
    * @param {string|number} id
-   */
-            _proto.removePendingRequest = function removePendingRequest(id) {
+   */ , _proto.removePendingRequest = function removePendingRequest(id) {
                 this._currentRequests[id] || log.a.warn("ABR: can't remove unknown request"), delete this._currentRequests[id];
-            }, 
+            }
             /**
    * Free up the resources used by the RepresentationChooser.
-   */
-            _proto.dispose = function dispose() {
+   */ , _proto.dispose = function dispose() {
                 this._dispose$.next(), this._dispose$.complete(), this._reEstimate$.next(), this._reEstimate$.complete(), 
                 this.manualBitrate$.complete(), this.maxAutoBitrate$.complete();
             }, RepresentationChooser;
@@ -11775,7 +11723,7 @@ object-assign
    */            var _proto = ABRManager.prototype;
             return _proto.get$ = function get$(type, clock$, representations) {
                 return void 0 === representations && (representations = []), this._lazilyCreateChooser(type).get$(clock$, representations);
-            }, 
+            }
             /**
    * Set manually the bitrate for a given type.
    *
@@ -11787,66 +11735,60 @@ object-assign
    *
    * @param {string} type
    * @param {number} bitrate
-   */
-            _proto.setManualBitrate = function setManualBitrate(type, bitrate) {
+   */ , _proto.setManualBitrate = function setManualBitrate(type, bitrate) {
                 log.a.info("ABR: Setting manual bitrate");
                 var chooser = this._choosers[type];
                 chooser ? chooser.manualBitrate$.next(bitrate) : 
                 // if no chooser yet, store as a chooser option for when it will be
                 // effectively instantiated
                 this._chooserInstanceOptions.initialBitrates[type] = bitrate;
-            }, 
+            }
             /**
    * Set a maximum bitrate a given type will be able to automatically switch to.
    * The chooser for the given type can still emit higher bitrates with the
    * setManualBitrate method.
    * @param {string} supportedBufferTypes
    * @param {number} bitrate
-   */
-            _proto.setMaxAutoBitrate = function setMaxAutoBitrate(type, bitrate) {
+   */ , _proto.setMaxAutoBitrate = function setMaxAutoBitrate(type, bitrate) {
                 log.a.info("ABR: Setting maximum auto bitrate");
                 var chooser = this._choosers[type];
                 chooser ? chooser.maxAutoBitrate$.next(bitrate) : 
                 // if no chooser yet, store as a chooser option for when it will be
                 // effectively instantiated
                 this._chooserInstanceOptions.maxAutoBitrates[type] = bitrate;
-            }, 
+            }
             /**
    * Returns the set (and active) manual bitrate for the given type.
    * @param {string} supportedBufferTypes
    * @returns {number|undefined}
-   */
-            _proto.getManualBitrate = function getManualBitrate(type) {
+   */ , _proto.getManualBitrate = function getManualBitrate(type) {
                 var chooser = this._choosers[type];
                 return chooser ? chooser.manualBitrate$.getValue() : this._chooserInstanceOptions.manualBitrates[type];
-            }, 
+            }
             /**
    * Returns the set (and active) maximum auto bitrate for the given type.
    * @param {string} supportedBufferTypes
    * @returns {number|undefined}
-   */
-            _proto.getMaxAutoBitrate = function getMaxAutoBitrate(type) {
+   */ , _proto.getMaxAutoBitrate = function getMaxAutoBitrate(type) {
                 var chooser = this._choosers[type];
                 return chooser ? chooser.maxAutoBitrate$.getValue() : this._chooserInstanceOptions.maxAutoBitrates[type];
-            }, 
+            }
             /**
    * Clean every ressources linked to the ABRManager.
    * The ABRManager is unusable after calling this method.
-   */
-            _proto.dispose = function dispose() {
+   */ , _proto.dispose = function dispose() {
                 var _this2 = this;
                 log.a.debug("ABR: Freeing up ressources"), Object.keys(this._choosers).forEach(function(type) {
                     _this2._choosers[type].dispose();
                 }), this._chooserInstanceOptions = defaultChooserOptions, this._choosers = {}, this._dispose$.next(), 
                 this._dispose$.complete();
-            }, 
+            }
             /**
    * If it doesn't exist, create a RepresentationChooser under the
    * _choosers[bufferType] property.
    * @param {string} bufferType
    * @returns {Object}
-   */
-            _proto._lazilyCreateChooser = function _lazilyCreateChooser(bufferType) {
+   */ , _proto._lazilyCreateChooser = function _lazilyCreateChooser(bufferType) {
                 return this._choosers[bufferType] || (log.a.debug("ABR: Creating new buffer for ", bufferType), 
                 this._choosers[bufferType] = abr_createChooser(bufferType, this._chooserInstanceOptions)), 
                 this._choosers[bufferType];
@@ -12278,7 +12220,7 @@ object-assign
                     }));
                 });
                 return pObs$;
-            }, 
+            }
             /**
    * Update the priority of an Observable created through the create method.
    *
@@ -12291,8 +12233,7 @@ object-assign
    *
    * @param {Observable} obs
    * @param {number} priority
-   */
-            _proto.updatePriority = function updatePriority(obs, priority) {
+   */ , _proto.updatePriority = function updatePriority(obs, priority) {
                 var index = array_find_index_default()(this._queue, function(elt) {
                     return elt.observable === obs;
                 });
@@ -12824,7 +12765,7 @@ object-assign
             return _proto.get = function get(index) {
                 if (index < 0 || index >= this._array.length) throw new Error("Invalid index.");
                 return this._array[index];
-            }, 
+            }
             /**
    * Find the first element corresponding to the given predicate.
    *
@@ -12833,34 +12774,30 @@ object-assign
    * You can still re-force the sorting to happen by calling forceSort.
    * @param {Function} fn
    * @returns {*}
-   */
-            _proto.findFirst = function findFirst(fn) {
+   */ , _proto.findFirst = function findFirst(fn) {
                 return find_default()(this._array, fn);
-            }, 
+            }
             /**
    * Returns the index of the given element in the list.
    * -1 if not found.
    * @param {*} element
    * @returns {number}
-   */
-            _proto.indexOf = function indexOf(element) {
+   */ , _proto.indexOf = function indexOf(element) {
                 return this._array.indexOf(element);
-            }, 
+            }
             /**
    * Returns true if the List contains the given element.
    * @param {*} element
    * @returns {Boolean}
-   */
-            _proto.has = function has(element) {
+   */ , _proto.has = function has(element) {
                 return Object(array_includes.a)(this._array, element);
-            }, 
+            }
             /**
    * Returns the current length of the list.
    * @returns {number}
-   */
-            _proto.length = function length() {
+   */ , _proto.length = function length() {
                 return this._array.length;
-            }, 
+            }
             /**
    * Add a new element to the List at the right place for the List to stay
    * sorted.
@@ -12869,8 +12806,7 @@ object-assign
    * argument, any mutation on your part can lead to an un-sorted SortedList.
    * You can still re-force the sorting to happen by calling forceSort.
    * @param {...*} elements
-   */
-            _proto.add = function add() {
+   */ , _proto.add = function add() {
                 for (var _len = arguments.length, elements = new Array(_len), _key = 0; _key < _len; _key++) elements[_key] = arguments[_key];
                 elements.sort(this._sortingFn);
                 for (var j = 0, i = 0; i < elements.length; i++) {
@@ -12878,16 +12814,15 @@ object-assign
                     inserted = !0) : j++;
                     inserted || this._array.push(element);
                 }
-            }, 
+            }
             /**
    * Remove the first occurence of the given element.
    * Returns the index of the removed element. Undefined if not found.
    * @returns {number|undefined}
-   */
-            _proto.removeElement = function removeElement(element) {
+   */ , _proto.removeElement = function removeElement(element) {
                 var indexOf = this._array.indexOf(element);
                 if (0 <= indexOf) return this._array.splice(indexOf, 1), indexOf;
-            }, 
+            }
             /**
    * Returns the first element.
    *
@@ -12895,10 +12830,9 @@ object-assign
    * internally, any mutation on your part can lead to an un-sorted SortedList.
    * You can still re-force the sorting to happen by calling forceSort.
    * @returns {*}
-   */
-            _proto.head = function head() {
+   */ , _proto.head = function head() {
                 return this._array[0];
-            }, 
+            }
             /**
    * Returns the last element.
    *
@@ -12906,26 +12840,23 @@ object-assign
    * internally, any mutation on your part can lead to an un-sorted SortedList.
    * You can still re-force the sorting to happen by calling forceSort.
    * @returns {*}
-   */
-            _proto.last = function last() {
+   */ , _proto.last = function last() {
                 return this._array[this._array.length - 1];
-            }, 
+            }
             /**
    * Remove the first element.
    * Returns the element removed or undefined if no element were removed.
    * @returns {*}
-   */
-            _proto.shift = function shift() {
+   */ , _proto.shift = function shift() {
                 return this._array.shift();
-            }, 
+            }
             /**
    * Remove the last element.
    * Returns the element removed or undefined if no element were removed.
    * @returns {*}
-   */
-            _proto.pop = function pop() {
+   */ , _proto.pop = function pop() {
                 return this._array.pop();
-            }, 
+            }
             /**
    * Returns true if the wrapped Array is well-sorted.
    *
@@ -12952,18 +12883,16 @@ object-assign
    * console.log(sortedList.checkSort()); // -> true
    * ```
    * @returns {Boolean}
-   */
-            _proto.checkSort = function checkSort() {
+   */ , _proto.checkSort = function checkSort() {
                 for (var i = 0; i < this._array.length - 1; i++) if (0 < this._sortingFn(this._array[i], this._array[i + 1])) return !1;
                 return !0;
-            }, 
+            }
             /**
    * Force the array to be sorted.
    *
    * You might want to call this function when you're unsure that a mutation
    * you've done yourself impacted the order of the elements in the list.
-   */
-            _proto.forceSort = function forceSort() {
+   */ , _proto.forceSort = function forceSort() {
                 this._array.sort(this._sortingFn);
             }, SortedList;
         }(), WeakMapMemory = 
@@ -12984,11 +12913,10 @@ object-assign
                 if (void 0 !== fromMemory) return fromMemory;
                 var newElement = this._fn(obj);
                 return this._weakMap.set(obj, newElement), newElement;
-            }, 
+            }
             /**
    * @param {Object} obj
-   */
-            _proto.destroy = function destroy(obj) {
+   */ , _proto.destroy = function destroy(obj) {
                 this._weakMap.delete(obj);
             }, WeakMapMemory;
         }(), concatAll = __webpack_require__(115);
@@ -13157,14 +13085,13 @@ object-assign
                     type: SourceBufferAction.Append,
                     value: infos
                 });
-            }, 
+            }
             /**
    * Remove data from the attached SourceBuffer, in a FIFO queue.
    * @param {number} start - start position, in seconds
    * @param {number} end - end position, in seconds
    * @returns {Observable}
-   */
-            _proto.removeBuffer = function removeBuffer(start, end) {
+   */ , _proto.removeBuffer = function removeBuffer(start, end) {
                 return this._addToQueue({
                     type: SourceBufferAction.Remove,
                     value: {
@@ -13172,54 +13099,49 @@ object-assign
                         end: end
                     }
                 });
-            }, 
+            }
             /**
    * Returns the currently buffered data, in a TimeRanges object.
    * @returns {TimeRanges}
-   */
-            _proto.getBuffered = function getBuffered() {
+   */ , _proto.getBuffered = function getBuffered() {
                 return this._sourceBuffer.buffered;
-            }, 
+            }
             /**
    * Dispose of the resources used by this QueuedSourceBuffer.
    *
    * /!\ You won't be able to use the QueuedSourceBuffer after calling this
    * function.
    * @private
-   */
-            _proto.dispose = function dispose() {
+   */ , _proto.dispose = function dispose() {
                 for (this._sourceBuffer.removeEventListener("error", this.__onError), this._sourceBuffer.removeEventListener("updateend", this.__onUpdateEnd), 
                 null != this._currentOrder && (this._currentOrder.subject.complete(), this._currentOrder = null); this._queue.length; ) {
                     var nextElement = this._queue.shift();
                     null != nextElement && nextElement.subject.complete();
                 }
-            }, 
+            }
             /**
    * Abort the linked SourceBuffer.
    *
    * /!\ You won't be able to use the QueuedSourceBuffer after calling this
    * function.
    * @private
-   */
-            _proto.abort = function abort() {
+   */ , _proto.abort = function abort() {
                 this._sourceBuffer.abort();
-            }, 
+            }
             /**
    * Callback used for the 'updateend' event, as a segment has been added/removed.
    * @private
-   */
-            _proto._onUpdateEnd = function _onUpdateEnd() {
+   */ , _proto._onUpdateEnd = function _onUpdateEnd() {
                 this._flush();
-            }, 
+            }
             /**
    * Callback used for the 'error' event from the SourceBuffer.
    * @private
    * @param {Event} error
-   */
-            _proto._onError = function _onError(error) {
+   */ , _proto._onError = function _onError(error) {
                 // initialize init segment as a security
                 (this._lastInitSegment = null) != this._currentOrder && this._currentOrder.subject.error(error);
-            }, 
+            }
             /**
    * When the returned observable is subscribed:
    *   1. Add your order to the queue.
@@ -13229,8 +13151,7 @@ object-assign
    * @private
    * @param {Object} order
    * @returns {Observable}
-   */
-            _proto._addToQueue = function _addToQueue(order) {
+   */ , _proto._addToQueue = function _addToQueue(order) {
                 var _this = this;
                 return Observable.a.create(function(obs) {
                     var queueItem, shouldRestartQueue = 0 === _this._queue.length && null == _this._currentOrder, subject = new Subject.a();
@@ -13264,12 +13185,11 @@ object-assign
                         0 <= index && _this._queue.splice(index, 1);
                     };
                 });
-            }, 
+            }
             /**
    * Perform next task if one.
    * @private
-   */
-            _proto._flush = function _flush() {
+   */ , _proto._flush = function _flush() {
                 if (!this._sourceBuffer.updating) {
                     if (null == this._currentOrder) {
                         if (0 === this._queue.length) return;
@@ -13382,11 +13302,6 @@ object-assign
  */        var source_buffers_SourceBufferManager = 
         /* */
         function() {
-            /**
-   * @param {HTMLMediaElement} mediaElement
-   * @param {MediaSource} mediaSource
-   * @constructor
-   */
             function SourceBufferManager(mediaElement, mediaSource) {
                 this._mediaElement = mediaElement, this._mediaSource = mediaSource, this._initializedSourceBuffers = {};
             }
@@ -13406,11 +13321,16 @@ object-assign
    */
             SourceBufferManager.isNative = function isNative(bufferType) {
                 return shouldHaveNativeSourceBuffer(bufferType);
-            };
+            }
+            /**
+   * @param {HTMLMediaElement} mediaElement
+   * @param {MediaSource} mediaSource
+   * @constructor
+   */;
             var _proto = SourceBufferManager.prototype;
             return _proto.get = function get(bufferType) {
                 return this._initializedSourceBuffers[bufferType] || null;
-            }, 
+            }
             /**
    * Creates a new QueuedSourceBuffer for the SourceBuffer type.
    * Reuse an already created one if a QueuedSourceBuffer for the given type
@@ -13419,8 +13339,7 @@ object-assign
    * @param {string} codec
    * @param {Object|undefined} options
    * @returns {QueuedSourceBuffer}
-   */
-            _proto.createSourceBuffer = function createSourceBuffer(bufferType, codec, options) {
+   */ , _proto.createSourceBuffer = function createSourceBuffer(bufferType, codec, options) {
                 void 0 === options && (options = {});
                 var memorizedSourceBuffer = this._initializedSourceBuffers[bufferType];
                 if (shouldHaveNativeSourceBuffer(bufferType)) {
@@ -13450,12 +13369,11 @@ object-assign
                 log.a.info("SB: Creating a new image SourceBuffer with codec", codec);
                 var _sourceBuffer = new features.a.imageBuffer(), _queuedSourceBuffer = new queued_source_buffer_QueuedSourceBuffer("image", codec, _sourceBuffer);
                 return this._initializedSourceBuffers.image = _queuedSourceBuffer;
-            }, 
+            }
             /**
    * Dispose of the active SourceBuffer for the given type.
    * @param {string} bufferType
-   */
-            _proto.disposeSourceBuffer = function disposeSourceBuffer(bufferType) {
+   */ , _proto.disposeSourceBuffer = function disposeSourceBuffer(bufferType) {
                 var memorizedSourceBuffer = this._initializedSourceBuffers[bufferType];
                 if (null != memorizedSourceBuffer) {
                     if (log.a.info("SB: Aborting SourceBuffer", bufferType), memorizedSourceBuffer.dispose(), 
@@ -13466,11 +13384,10 @@ object-assign
                     }
                     delete this._initializedSourceBuffers[bufferType];
                 } else log.a.warn("SB: Trying to dispose a SourceBuffer that does not exist");
-            }, 
+            }
             /**
    * Dispose of all QueuedSourceBuffer created on this SourceBufferManager.
-   */
-            _proto.disposeAll = function disposeAll() {
+   */ , _proto.disposeAll = function disposeAll() {
                 var _this = this;
                 POSSIBLE_BUFFER_TYPES.forEach(function(bufferType) {
                     null != _this.get(bufferType) && _this.disposeSourceBuffer(bufferType);
@@ -13804,12 +13721,11 @@ object-assign
             return _proto.add = function add(_ref, response) {
                 var representation = _ref.representation;
                 _ref.segment.isInit && this._cache.set(representation, response);
-            }, 
+            }
             /**
    * @param {Object} obj
    * @returns {*} response
-   */
-            _proto.get = function get(_ref2) {
+   */ , _proto.get = function get(_ref2) {
                 var representation = _ref2.representation;
                 if (_ref2.segment.isInit) {
                     var value = this._cache.get(representation);
@@ -14875,7 +14791,7 @@ object-assign
  // if we still have segments left, they are not affiliated to any range.
                 // They might have been garbage collected, delete them from here.
                                 thisSegment && inventory.splice(inventoryIndex, inventory.length - inventoryIndex);
-            }, 
+            }
             /**
    * Add a new segment in the inventory.
    *
@@ -14889,8 +14805,7 @@ object-assign
    * @param {Number} start - start time of the segment, in seconds
    * @param {Number|undefined} end - end time of the segment, in seconds. Can
    * be undefined in some rare cases
-   */
-            _proto.insert = function insert(period, adaptation, representation, segment, start, end) {
+   */ , _proto.insert = function insert(period, adaptation, representation, segment, start, end) {
                 // TODO (*very* low-priority) manage segments whose end is unknown (rare but
                 // could eventually happen).
                 // This should be properly managed in this method, but it is not in some
@@ -15050,7 +14965,7 @@ object-assign
                     this.inventory.push(newSegment);
                 } else // This leads to excessive re-downloads of segment without an ending time.
                 log.a.warn("SB: ending time of the segment not defined");
-            }, 
+            }
             /**
    * Returns segment infos for a segment corresponding to the given time,
    * duration and timescale.
@@ -15071,8 +14986,7 @@ object-assign
    * @param {Object} wantedRange
    * @param {Object} segmentInfos
    * @returns {Object|null}
-   */
-            _proto.hasPlayableSegment = function hasPlayableSegment(wantedRange, segmentInfos) {
+   */ , _proto.hasPlayableSegment = function hasPlayableSegment(wantedRange, segmentInfos) {
                 for (var time = segmentInfos.time, duration = segmentInfos.duration, timescale = segmentInfos.timescale, inventory = this.inventory, i = inventory.length - 1; 0 <= i; i--) {
                     var currentSegmentI = inventory[i], prevSegmentI = inventory[i - 1], nextSegmentI = inventory[i + 1], segment = currentSegmentI.infos.segment, _time = time, _duration = duration;
                     if (segment.timescale !== timescale && (
@@ -15120,11 +15034,10 @@ object-assign
                     }
                     return !0;
                 }
-            }, 
+            }
             /**
    * Empty the current inventory
-   */
-            _proto.reset = function reset() {
+   */ , _proto.reset = function reset() {
                 this.inventory = [];
             }, SegmentBookkeeper;
         }(), MAXIMUM_MAX_BUFFER_AHEAD = config.a.MAXIMUM_MAX_BUFFER_AHEAD, MAXIMUM_MAX_BUFFER_BEHIND = config.a.MAXIMUM_MAX_BUFFER_BEHIND;
@@ -16259,13 +16172,12 @@ object-assign
                         adaptation$: adaptation$
                     }, _this$_periods$add));
                 }
-            }, 
+            }
             /**
    * Remove Subject to choose an "audio" or "text" Adaptation for a Period.
    * @param {string} bufferType
    * @param {Period} period
-   */
-            _proto.removePeriod = function removePeriod(bufferType, period) {
+   */ , _proto.removePeriod = function removePeriod(bufferType, period) {
                 var periodIndex = findPeriodIndex(this._periods, period);
                 if (null != periodIndex) {
                     var periodItem = this._periods.get(periodIndex);
@@ -16273,15 +16185,14 @@ object-assign
                 } else log.a.warn("TrackManager: " + bufferType + " not found for period", period);
             }, _proto.resetPeriods = function resetPeriods() {
                 for (;0 < this._periods.length(); ) this._periods.pop();
-            }, 
+            }
             /**
    * Update the choice of all added Periods based on:
    *   1. What was the last chosen adaptation
    *   2. If not found, the preferences
-   */
-            _proto.update = function update() {
+   */ , _proto.update = function update() {
                 this._updateAudioTrackChoices(), this._updateTextTrackChoices(), this._updateVideoTrackChoices();
-            }, 
+            }
             /**
    * Emit initial audio Adaptation through the given Subject based on:
    *   - the preferred audio tracks
@@ -16289,8 +16200,7 @@ object-assign
    * @param {Period} period
    *
    * @throws Error - Throws if the period given has not been added
-   */
-            _proto.setInitialAudioTrack = function setInitialAudioTrack(period) {
+   */ , _proto.setInitialAudioTrack = function setInitialAudioTrack(period) {
                 var periodItem = getPeriodItem(this._periods, period), audioInfos = periodItem && periodItem.audio;
                 if (!audioInfos || !periodItem) throw new Error("TrackManager: Given Period not found.");
                 var preferredAudioTracks = this._preferredAudioTracks, audioAdaptations = period.adaptations.audio || [], chosenAudioAdaptation = this._audioChoiceMemory.get(period);
@@ -16298,7 +16208,7 @@ object-assign
                     var optimalAdaptation = findFirstOptimalAudioAdaptation(audioAdaptations, preferredAudioTracks);
                     this._audioChoiceMemory.set(period, optimalAdaptation), audioInfos.adaptation$.next(optimalAdaptation);
                 }
-            }, 
+            }
             /**
    * Emit initial text Adaptation through the given Subject based on:
    *   - the preferred text tracks
@@ -16306,8 +16216,7 @@ object-assign
    * @param {Period} period
    *
    * @throws Error - Throws if the period given has not been added
-   */
-            _proto.setInitialTextTrack = function setInitialTextTrack(period) {
+   */ , _proto.setInitialTextTrack = function setInitialTextTrack(period) {
                 var periodItem = getPeriodItem(this._periods, period), textInfos = periodItem && periodItem.text;
                 if (!textInfos || !periodItem) throw new Error("TrackManager: Given Period not found.");
                 var preferredTextTracks = this._preferredTextTracks, textAdaptations = period.adaptations.text || [], chosenTextAdaptation = this._textChoiceMemory.get(period);
@@ -16315,7 +16224,7 @@ object-assign
                     var optimalAdaptation = findFirstOptimalTextAdaptation(textAdaptations, preferredTextTracks);
                     this._textChoiceMemory.set(period, optimalAdaptation), textInfos.adaptation$.next(optimalAdaptation);
                 }
-            }, 
+            }
             /**
    * Emit initial video Adaptation through the given Subject based on:
    *   - the preferred video tracks
@@ -16323,8 +16232,7 @@ object-assign
    * @param {Period} period
    *
    * @throws Error - Throws if the period given has not been added
-   */
-            _proto.setInitialVideoTrack = function setInitialVideoTrack(period) {
+   */ , _proto.setInitialVideoTrack = function setInitialVideoTrack(period) {
                 var periodItem = getPeriodItem(this._periods, period), videoInfos = periodItem && periodItem.video;
                 if (!videoInfos || !periodItem) throw new Error("TrackManager: Given Period not found.");
                 var videoAdaptations = period.adaptations.video || [], chosenVideoAdaptation = this._videoChoiceMemory.get(period);
@@ -16332,7 +16240,7 @@ object-assign
                     var optimalAdaptation = videoAdaptations[0];
                     this._videoChoiceMemory.set(period, optimalAdaptation), videoInfos.adaptation$.next(optimalAdaptation);
                 }
-            }, 
+            }
             /**
    * Set audio track based on the ID of its adaptation for a given added Period.
    *
@@ -16342,8 +16250,7 @@ object-assign
    * @throws Error - Throws if the period given has not been added
    * @throws Error - Throws if the given id is not found in any audio adaptation
    * of the given Period.
-   */
-            _proto.setAudioTrackByID = function setAudioTrackByID(period, wantedId) {
+   */ , _proto.setAudioTrackByID = function setAudioTrackByID(period, wantedId) {
                 var periodItem = getPeriodItem(this._periods, period), audioInfos = periodItem && periodItem.audio;
                 if (!audioInfos) throw new Error("TrackManager: Given Period not found.");
                 var wantedAdaptation = find_default()(audioInfos.adaptations, function(_ref) {
@@ -16352,7 +16259,7 @@ object-assign
                 if (void 0 === wantedAdaptation) throw new Error("Audio Track not found.");
                 this._audioChoiceMemory.get(period) !== wantedAdaptation && (this._audioChoiceMemory.set(period, wantedAdaptation), 
                 audioInfos.adaptation$.next(wantedAdaptation));
-            }, 
+            }
             /**
    * Set text track based on the ID of its adaptation for a given added Period.
    *
@@ -16362,8 +16269,7 @@ object-assign
    * @throws Error - Throws if the period given has not been added
    * @throws Error - Throws if the given id is not found in any text adaptation
    * of the given Period.
-   */
-            _proto.setTextTrackByID = function setTextTrackByID(period, wantedId) {
+   */ , _proto.setTextTrackByID = function setTextTrackByID(period, wantedId) {
                 var periodItem = getPeriodItem(this._periods, period), textInfos = periodItem && periodItem.text;
                 if (!textInfos) throw new Error("TrackManager: Given Period not found.");
                 var wantedAdaptation = find_default()(textInfos.adaptations, function(_ref2) {
@@ -16372,7 +16278,7 @@ object-assign
                 if (void 0 === wantedAdaptation) throw new Error("Text Track not found.");
                 this._textChoiceMemory.get(period) !== wantedAdaptation && (this._textChoiceMemory.set(period, wantedAdaptation), 
                 textInfos.adaptation$.next(wantedAdaptation));
-            }, 
+            }
             /**
    * Set video track based on the ID of its adaptation for a given added Period.
    *
@@ -16382,8 +16288,7 @@ object-assign
    * @throws Error - Throws if the period given has not been added
    * @throws Error - Throws if the given id is not found in any video adaptation
    * of the given Period.
-   */
-            _proto.setVideoTrackByID = function setVideoTrackByID(period, wantedId) {
+   */ , _proto.setVideoTrackByID = function setVideoTrackByID(period, wantedId) {
                 var periodItem = getPeriodItem(this._periods, period), videoInfos = periodItem && periodItem.video;
                 if (!videoInfos) throw new Error("LanguageManager: Given Period not found.");
                 var wantedAdaptation = find_default()(videoInfos.adaptations, function(_ref3) {
@@ -16392,33 +16297,31 @@ object-assign
                 if (void 0 === wantedAdaptation) throw new Error("Video Track not found.");
                 this._videoChoiceMemory.get(period) !== wantedAdaptation && (this._videoChoiceMemory.set(period, wantedAdaptation), 
                 videoInfos.adaptation$.next(wantedAdaptation));
-            }, 
+            }
             /**
    * Disable the given audio track for a given Period.
    *
    * @param {Period} period - The concerned Period.
    *
    * @throws Error - Throws if the period given has not been added
-   */
-            _proto.disableAudioTrack = function disableAudioTrack(period) {
+   */ , _proto.disableAudioTrack = function disableAudioTrack(period) {
                 var periodItem = getPeriodItem(this._periods, period), audioInfos = periodItem && periodItem.audio;
                 if (!audioInfos) throw new Error("TrackManager: Given Period not found.");
                 null !== this._audioChoiceMemory.get(period) && (this._audioChoiceMemory.set(period, null), 
                 audioInfos.adaptation$.next(null));
-            }, 
+            }
             /**
    * Disable the current text track for a given period.
    *
    * @param {Period} period - The concerned Period.
    *
    * @throws Error - Throws if the period given has not been added
-   */
-            _proto.disableTextTrack = function disableTextTrack(period) {
+   */ , _proto.disableTextTrack = function disableTextTrack(period) {
                 var periodItem = getPeriodItem(this._periods, period), textInfos = periodItem && periodItem.text;
                 if (!textInfos) throw new Error("TrackManager: Given Period not found.");
                 null !== this._textChoiceMemory.get(period) && (this._textChoiceMemory.set(period, null), 
                 textInfos.adaptation$.next(null));
-            }, 
+            }
             /**
    * Returns an object describing the chosen audio track for the given audio
    * Period.
@@ -16428,8 +16331,7 @@ object-assign
    *
    * @param {Period} period
    * @returns {Object|null}
-   */
-            _proto.getChosenAudioTrack = function getChosenAudioTrack(period) {
+   */ , _proto.getChosenAudioTrack = function getChosenAudioTrack(period) {
                 var periodItem = getPeriodItem(this._periods, period);
                 if (null == (periodItem && periodItem.audio)) return null;
                 var chosenAudioAdaptation = this._audioChoiceMemory.get(period);
@@ -16439,7 +16341,7 @@ object-assign
                     audioDescription: !!chosenAudioAdaptation.isAudioDescription,
                     id: chosenAudioAdaptation.id
                 } : null;
-            }, 
+            }
             /**
    * Returns an object describing the chosen text track for the given text
    * Period.
@@ -16449,8 +16351,7 @@ object-assign
    *
    * @param {Period} period
    * @returns {Object|null}
-   */
-            _proto.getChosenTextTrack = function getChosenTextTrack(period) {
+   */ , _proto.getChosenTextTrack = function getChosenTextTrack(period) {
                 var periodItem = getPeriodItem(this._periods, period);
                 if (null == (periodItem && periodItem.text)) return null;
                 var chosenTextAdaptation = this._textChoiceMemory.get(period);
@@ -16460,7 +16361,7 @@ object-assign
                     closedCaption: !!chosenTextAdaptation.isClosedCaption,
                     id: chosenTextAdaptation.id
                 } : null;
-            }, 
+            }
             /**
    * Returns an object describing the chosen video track for the given video
    * Period.
@@ -16470,8 +16371,7 @@ object-assign
    *
    * @param {Period} period
    * @returns {Object|null}
-   */
-            _proto.getChosenVideoTrack = function getChosenVideoTrack(period) {
+   */ , _proto.getChosenVideoTrack = function getChosenVideoTrack(period) {
                 var periodItem = getPeriodItem(this._periods, period);
                 if (null == (periodItem && periodItem.video)) return null;
                 var chosenVideoAdaptation = this._videoChoiceMemory.get(period);
@@ -16479,14 +16379,13 @@ object-assign
                     id: chosenVideoAdaptation.id,
                     representations: chosenVideoAdaptation.representations.map(parseVideoRepresentation)
                 } : null;
-            }, 
+            }
             /**
    * Returns all available audio tracks for a given Period, as an array of
    * objects.
    *
    * @returns {Array.<Object>}
-   */
-            _proto.getAvailableAudioTracks = function getAvailableAudioTracks(period) {
+   */ , _proto.getAvailableAudioTracks = function getAvailableAudioTracks(period) {
                 var periodItem = getPeriodItem(this._periods, period), audioInfos = periodItem && periodItem.audio;
                 if (null == audioInfos) return [];
                 var chosenAudioAdaptation = this._audioChoiceMemory.get(period), currentId = chosenAudioAdaptation && chosenAudioAdaptation.id;
@@ -16499,15 +16398,14 @@ object-assign
                         active: null != currentId && currentId === adaptation.id
                     };
                 });
-            }, 
+            }
             /**
    * Returns all available text tracks for a given Period, as an array of
    * objects.
    *
    * @param {Period} period
    * @returns {Array.<Object>}
-   */
-            _proto.getAvailableTextTracks = function getAvailableTextTracks(period) {
+   */ , _proto.getAvailableTextTracks = function getAvailableTextTracks(period) {
                 var periodItem = getPeriodItem(this._periods, period), textInfos = periodItem && periodItem.text;
                 if (null == textInfos) return [];
                 var chosenTextAdaptation = this._textChoiceMemory.get(period), currentId = chosenTextAdaptation && chosenTextAdaptation.id;
@@ -16520,14 +16418,13 @@ object-assign
                         active: null != currentId && currentId === adaptation.id
                     };
                 });
-            }, 
+            }
             /**
    * Returns all available video tracks for a given Period, as an array of
    * objects.
    *
    * @returns {Array.<Object>}
-   */
-            _proto.getAvailableVideoTracks = function getAvailableVideoTracks(period) {
+   */ , _proto.getAvailableVideoTracks = function getAvailableVideoTracks(period) {
                 var periodItem = getPeriodItem(this._periods, period), videoInfos = periodItem && periodItem.video;
                 if (null == videoInfos) return [];
                 var chosenVideoAdaptation = this._videoChoiceMemory.get(period), currentId = chosenVideoAdaptation && chosenVideoAdaptation.id;
@@ -16882,12 +16779,11 @@ object-assign
    */            return _proto.stop = function stop() {
                 this.state !== PLAYER_STATES_STOPPED && (this._priv_stopCurrentContent$.next(), 
                 this._priv_cleanUpCurrentContentState(), this._priv_setPlayerState(PLAYER_STATES_STOPPED));
-            }, 
+            }
             /**
    * Free the resources used by the player.
    * /!\ The player cannot be "used" anymore after this method has been called.
-   */
-            _proto.dispose = function dispose() {
+   */ , _proto.dispose = function dispose() {
                 // free resources linked to the loaded content
                 this.stop(), this.videoElement && 
                 // free resources used for EME management
@@ -16898,7 +16794,7 @@ object-assign
                 this._priv_bufferOptions.maxBufferAhead$.complete(), this._priv_bufferOptions.maxBufferBehind$.complete(), 
                 // un-attach video element
                 this.videoElement = null;
-            }, 
+            }
             /**
    * Load a new video.
    * @param {Object} opts
@@ -16907,8 +16803,7 @@ object-assign
    * @throws Error - throws if no transport is given and no default transport
    * has been set.
    * @throws Error - throws if the asked transport does not exist
-   */
-            _proto.loadVideo = function loadVideo(opts) {
+   */ , _proto.loadVideo = function loadVideo(opts) {
                 var _this2 = this, options = parseLoadVideoOptions(opts);
                 log.a.info("API: Calling loadvideo", options);
                 var autoPlay = options.autoPlay, defaultAudioTrack = options.defaultAudioTrack, defaultTextTrack = options.defaultTextTrack, keySystems = options.keySystems, manualBitrateSwitchingMode = options.manualBitrateSwitchingMode, networkConfig = options.networkConfig, startAt = options.startAt, supplementaryImageTracks = options.supplementaryImageTracks, supplementaryTextTracks = options.supplementaryTextTracks, transport = options.transport, transportOptions = options.transportOptions, url = options.url;
@@ -17031,133 +16926,120 @@ object-assign
                 }), Object(take.a)(1), Object(takeUntil.a)(this._priv_stopCurrentContent$)).subscribe(function() {
                     playbackSubscription = playback$.connect();
                 });
-            }, 
+            }
             /**
    * Returns fatal error if one for the current content.
    * null otherwise.
    * @returns {Object|null}
-   */
-            _proto.getError = function getError() {
+   */ , _proto.getError = function getError() {
                 return this._priv_currentError;
-            }, 
+            }
             /**
    * Returns manifest/playlist object.
    * null if the player is STOPPED.
    * @returns {Manifest|null}
-   */
-            _proto.getManifest = function getManifest() {
+   */ , _proto.getManifest = function getManifest() {
                 return this._priv_contentInfos && this._priv_contentInfos.manifest;
-            }, 
+            }
             /**
    * Returns adaptations (tracks) for every currently playing type
    * (audio/video/text...).
    * @returns {Object|null}
-   */
-            _proto.getCurrentAdaptations = function getCurrentAdaptations() {
+   */ , _proto.getCurrentAdaptations = function getCurrentAdaptations() {
                 if (!this._priv_contentInfos) return null;
                 var _this$_priv_contentIn = this._priv_contentInfos, currentPeriod = _this$_priv_contentIn.currentPeriod, activeAdaptations = _this$_priv_contentIn.activeAdaptations;
                 return currentPeriod && activeAdaptations && activeAdaptations[currentPeriod.id] || null;
-            }, 
+            }
             /**
    * Returns representations (qualities) for every currently playing type
    * (audio/video/text...).
    * @returns {Object|null}
-   */
-            _proto.getCurrentRepresentations = function getCurrentRepresentations() {
+   */ , _proto.getCurrentRepresentations = function getCurrentRepresentations() {
                 if (!this._priv_contentInfos) return null;
                 var _this$_priv_contentIn2 = this._priv_contentInfos, currentPeriod = _this$_priv_contentIn2.currentPeriod, activeRepresentations = _this$_priv_contentIn2.activeRepresentations;
                 return currentPeriod && activeRepresentations && activeRepresentations[currentPeriod.id] || null;
-            }, 
+            }
             /**
    * Returns the media DOM element used by the player.
    * You should not its HTML5 API directly and use the player's method instead,
    * to ensure a well-behaved player.
    * @returns {HTMLMediaElement|null}
-   */
-            _proto.getVideoElement = function getVideoElement() {
+   */ , _proto.getVideoElement = function getVideoElement() {
                 return this.videoElement;
-            }, 
+            }
             /**
    * If one returns the first native text-track element attached to the media element.
    * @deprecated
    * @returns {TextTrack}
-   */
-            _proto.getNativeTextTrack = function getNativeTextTrack() {
+   */ , _proto.getNativeTextTrack = function getNativeTextTrack() {
                 if (Object(warnOnce.a)("getNativeTextTrack is deprecated. Please open an issue if you used this API."), 
                 !this.videoElement) throw new Error("Disposed player");
                 var videoElement = this.videoElement;
                 return 0 < videoElement.textTracks.length ? videoElement.textTracks[0] : null;
-            }, 
+            }
             /**
    * Returns the player's current state.
    * @returns {string}
-   */
-            _proto.getPlayerState = function getPlayerState() {
+   */ , _proto.getPlayerState = function getPlayerState() {
                 return this.state;
-            }, 
+            }
             /**
    * Returns true if both:
    *   - a content is loaded
    *   - the content loaded is a live content
    * @returns {Boolean}
-   */
-            _proto.isLive = function isLive() {
+   */ , _proto.isLive = function isLive() {
                 if (!this._priv_contentInfos) return !1;
                 var _this$_priv_contentIn3 = this._priv_contentInfos, isDirectFile = _this$_priv_contentIn3.isDirectFile, manifest = _this$_priv_contentIn3.manifest;
                 return !isDirectFile && null != manifest && manifest.isLive;
-            }, 
+            }
             /**
    * Returns the url of the content's manifest
    * @returns {string|undefined}
-   */
-            _proto.getUrl = function getUrl() {
+   */ , _proto.getUrl = function getUrl() {
                 if (this._priv_contentInfos) {
                     var _this$_priv_contentIn4 = this._priv_contentInfos, isDirectFile = _this$_priv_contentIn4.isDirectFile, manifest = _this$_priv_contentIn4.manifest, url = _this$_priv_contentIn4.url;
                     return isDirectFile ? url : null != manifest ? manifest.getUrl() : void 0;
                 }
-            }, 
+            }
             /**
    * Returns the video duration, in seconds.
    * NaN if no video is playing.
    * @returns {Number}
-   */
-            _proto.getVideoDuration = function getVideoDuration() {
+   */ , _proto.getVideoDuration = function getVideoDuration() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 return this.videoElement.duration;
-            }, 
+            }
             /**
    * Returns in seconds the difference between:
    *   - the end of the current contiguous loaded range.
    *   - the current time
    * @returns {Number}
-   */
-            _proto.getVideoBufferGap = function getVideoBufferGap() {
+   */ , _proto.getVideoBufferGap = function getVideoBufferGap() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 var videoElement = this.videoElement;
                 return Object(utils_ranges.c)(videoElement.buffered, videoElement.currentTime);
-            }, 
+            }
             /**
    * Returns in seconds the difference between:
    *   - the end of the current contiguous loaded range.
    *   - the start of the current contiguous loaded range.
    * @returns {Number}
-   */
-            _proto.getVideoLoadedTime = function getVideoLoadedTime() {
+   */ , _proto.getVideoLoadedTime = function getVideoLoadedTime() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 var videoElement = this.videoElement;
                 return Object(utils_ranges.g)(videoElement.buffered, videoElement.currentTime);
-            }, 
+            }
             /**
    * Returns in seconds the difference between:
    *   - the current time.
    *   - the start of the current contiguous loaded range.
    * @returns {Number}
-   */
-            _proto.getVideoPlayedTime = function getVideoPlayedTime() {
+   */ , _proto.getVideoPlayedTime = function getVideoPlayedTime() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 var videoElement = this.videoElement;
                 return Object(utils_ranges.e)(videoElement.buffered, videoElement.currentTime);
-            }, 
+            }
             /**
    * Get the current position, in s, in wall-clock time.
    * That is:
@@ -17171,8 +17053,7 @@ object-assign
    *     actions (like statistics) with the real player data, use getPosition.
    *
    * @returns {Number}
-   */
-            _proto.getWallClockTime = function getWallClockTime() {
+   */ , _proto.getWallClockTime = function getWallClockTime() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 if (!this._priv_contentInfos) return this.videoElement.currentTime;
                 var _this$_priv_contentIn5 = this._priv_contentInfos, isDirectFile = _this$_priv_contentIn5.isDirectFile, manifest = _this$_priv_contentIn5.manifest;
@@ -17180,7 +17061,7 @@ object-assign
                 if (null == manifest) return 0;
                 var currentTime = this.videoElement.currentTime;
                 return this.isLive() ? currentTime + (manifest.availabilityStartTime || 0) : currentTime;
-            }, 
+            }
             /**
    * Get the current position, in seconds, of the video element.
    *
@@ -17191,96 +17072,84 @@ object-assign
    *     actions (like statistics) with the real player data, use this one.
    *
    * @returns {Number}
-   */
-            _proto.getPosition = function getPosition() {
+   */ , _proto.getPosition = function getPosition() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 return this.videoElement.currentTime;
-            }, 
+            }
             /**
    * Returns the current speed at which the video plays.
    * @returns {Number}
-   */
-            _proto.getPlaybackRate = function getPlaybackRate() {
+   */ , _proto.getPlaybackRate = function getPlaybackRate() {
                 return this._priv_speed$.getValue();
-            }, 
+            }
             /**
    * Update the playback rate of the video.
    * @param {Number} rate
-   */
-            _proto.setPlaybackRate = function setPlaybackRate(rate) {
+   */ , _proto.setPlaybackRate = function setPlaybackRate(rate) {
                 this._priv_speed$.next(rate);
-            }, 
+            }
             /**
    * Returns all available bitrates for the current video Adaptation.
    * @returns {Array.<Number>}
-   */
-            _proto.getAvailableVideoBitrates = function getAvailableVideoBitrates() {
+   */ , _proto.getAvailableVideoBitrates = function getAvailableVideoBitrates() {
                 if (!this._priv_contentInfos) return [];
                 var _this$_priv_contentIn6 = this._priv_contentInfos, currentPeriod = _this$_priv_contentIn6.currentPeriod, activeAdaptations = _this$_priv_contentIn6.activeAdaptations;
                 if (!currentPeriod || !activeAdaptations) return [];
                 var adaptations = activeAdaptations[currentPeriod.id], videoAdaptation = adaptations && adaptations.video;
                 return videoAdaptation ? videoAdaptation.getAvailableBitrates() : [];
-            }, 
+            }
             /**
    * Returns all available bitrates for the current audio Adaptation.
    * @returns {Array.<Number>}
-   */
-            _proto.getAvailableAudioBitrates = function getAvailableAudioBitrates() {
+   */ , _proto.getAvailableAudioBitrates = function getAvailableAudioBitrates() {
                 if (!this._priv_contentInfos) return [];
                 var _this$_priv_contentIn7 = this._priv_contentInfos, currentPeriod = _this$_priv_contentIn7.currentPeriod, activeAdaptations = _this$_priv_contentIn7.activeAdaptations;
                 if (!currentPeriod || !activeAdaptations) return [];
                 var adaptations = activeAdaptations[currentPeriod.id], audioAdaptation = adaptations && adaptations.audio;
                 return audioAdaptation ? audioAdaptation.getAvailableBitrates() : [];
-            }, 
+            }
             /**
    * Returns the manual audio bitrate set. -1 if in AUTO mode.
    * @returns {Number}
-   */
-            _proto.getManualAudioBitrate = function getManualAudioBitrate() {
+   */ , _proto.getManualAudioBitrate = function getManualAudioBitrate() {
                 return this._priv_bitrateInfos.manualBitrates.audio;
-            }, 
+            }
             /**
    * Returns the manual video bitrate set. -1 if in AUTO mode.
    * @returns {Number}
-   */
-            _proto.getManualVideoBitrate = function getManualVideoBitrate() {
+   */ , _proto.getManualVideoBitrate = function getManualVideoBitrate() {
                 return this._priv_bitrateInfos.manualBitrates.video;
-            }, 
+            }
             /**
    * Returns currently considered bitrate for video segments.
    * @returns {Number|undefined}
-   */
-            _proto.getVideoBitrate = function getVideoBitrate() {
+   */ , _proto.getVideoBitrate = function getVideoBitrate() {
                 var representations = this.getCurrentRepresentations();
                 if (representations && representations.video) return representations.video.bitrate;
-            }, 
+            }
             /**
    * Returns currently considered bitrate for audio segments.
    * @returns {Number|undefined}
-   */
-            _proto.getAudioBitrate = function getAudioBitrate() {
+   */ , _proto.getAudioBitrate = function getAudioBitrate() {
                 var representations = this.getCurrentRepresentations();
                 if (representations && representations.audio) return representations.audio.bitrate;
-            }, 
+            }
             /**
    * Returns max wanted video bitrate currently set.
    * @returns {Number}
-   */
-            _proto.getMaxVideoBitrate = function getMaxVideoBitrate() {
+   */ , _proto.getMaxVideoBitrate = function getMaxVideoBitrate() {
                 return this._priv_abrManager ? this._priv_abrManager.getMaxAutoBitrate("video") : this._priv_bitrateInfos.initialMaxAutoBitrates.video;
-            }, 
+            }
             /**
    * Returns max wanted audio bitrate currently set.
    * @returns {Number}
-   */
-            _proto.getMaxAudioBitrate = function getMaxAudioBitrate() {
+   */ , _proto.getMaxAudioBitrate = function getMaxAudioBitrate() {
                 return this._priv_abrManager ? this._priv_abrManager.getMaxAutoBitrate("audio") : this._priv_bitrateInfos.initialMaxAutoBitrates.audio;
-            }, 
+            }
             /**
    * Play/Resume the current video.
    * @returns {Promise}
-   */
-            _proto.play = function play() {
+   */ , _proto.play = function play() {
                 var _this3 = this;
                 if (!this.videoElement) throw new Error("Disposed player");
                 var playPromise = this.videoElement.play();
@@ -17291,20 +17160,18 @@ object-assign
                     }
                     throw error;
                 });
-            }, 
+            }
             /**
    * Pause the current video.
-   */
-            _proto.pause = function pause() {
+   */ , _proto.pause = function pause() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 this.videoElement.pause();
-            }, 
+            }
             /**
    * Seek to a given absolute position.
    * @param {Number|Object} time
    * @returns {Number} - The time the player has seek to
-   */
-            _proto.seekTo = function seekTo(time) {
+   */ , _proto.seekTo = function seekTo(time) {
                 if (!this.videoElement) throw new Error("Disposed player");
                 if (!this._priv_contentInfos) throw new Error("player: no content loaded");
                 var positionWanted, _this$_priv_contentIn8 = this._priv_contentInfos, isDirectFile = _this$_priv_contentIn8.isDirectFile, manifest = _this$_priv_contentIn8.manifest;
@@ -17319,224 +17186,198 @@ object-assign
                 }
                 if (void 0 === positionWanted) throw new Error("invalid time given");
                 return this.videoElement.currentTime = positionWanted;
-            }, 
+            }
             /**
    * Returns true if the media element is full screen.
    * @deprecated
    * @returns {Boolean}
-   */
-            _proto.isFullscreen = function isFullscreen() {
+   */ , _proto.isFullscreen = function isFullscreen() {
                 return Object(warnOnce.a)("isFullscreen is deprecated. Fullscreen management should now be managed by the application"), 
                 Object(fullscreen.b)();
-            }, 
+            }
             /**
    * Set/exit fullScreen.
    * @deprecated
    * @param {Boolean} [goFull=true] - if false, exit full screen.
-   */
-            _proto.setFullscreen = function setFullscreen(goFull) {
+   */ , _proto.setFullscreen = function setFullscreen(goFull) {
                 if (void 0 === goFull && (goFull = !0), Object(warnOnce.a)("setFullscreen is deprecated. Fullscreen management should now be managed by the application"), 
                 !this.videoElement) throw new Error("Disposed player");
                 goFull ? Object(fullscreen.c)(this.videoElement) : Object(fullscreen.a)();
-            }, 
+            }
             /**
    * Exit from full screen mode.
    * @deprecated
-   */
-            _proto.exitFullscreen = function exitFullscreen() {
+   */ , _proto.exitFullscreen = function exitFullscreen() {
                 Object(warnOnce.a)("exitFullscreen is deprecated. Fullscreen management should now be managed by the application"), 
                 Object(fullscreen.a)();
-            }, 
+            }
             /**
    * Returns the current player's audio volume on the media element.
    * From 0 (no audio) to 1 (maximum volume).
    * @returns {Number}
-   */
-            _proto.getVolume = function getVolume() {
+   */ , _proto.getVolume = function getVolume() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 return this.videoElement.volume;
-            }, 
+            }
             /**
    * Set the player's audio volume. From 0 (no volume) to 1 (maximum volume).
    * @param {Number} volume
-   */
-            _proto.setVolume = function setVolume(volume) {
+   */ , _proto.setVolume = function setVolume(volume) {
                 if (!this.videoElement) throw new Error("Disposed player");
                 var videoElement = this.videoElement;
                 volume !== videoElement.volume && (videoElement.volume = volume, this.trigger("volumeChange", volume));
-            }, 
+            }
             /**
    * Returns true if the volume is set to 0. false otherwise.
    * @returns {Boolean}
-   */
-            _proto.isMute = function isMute() {
+   */ , _proto.isMute = function isMute() {
                 return !this.getVolume();
-            }, 
+            }
             /**
    * Set the volume to 0 and save current one for when unmuted.
-   */
-            _proto.mute = function mute() {
+   */ , _proto.mute = function mute() {
                 this._priv_mutedMemory = this.getVolume(), this.setVolume(0);
-            }, 
+            }
             /**
    * Set the volume back to when it was when mute was last called.
    * If the volume was set to 0, set a default volume instead (see config).
-   */
-            _proto.unMute = function unMute() {
+   */ , _proto.unMute = function unMute() {
                 0 === this.getVolume() && this.setVolume(this._priv_mutedMemory || DEFAULT_UNMUTED_VOLUME);
-            }, 
+            }
             /**
    * Force the video bitrate to a given value. Act as a ceil.
    * -1 to set it on AUTO Mode
    * @param {Number} btr
-   */
-            _proto.setVideoBitrate = function setVideoBitrate(btr) {
+   */ , _proto.setVideoBitrate = function setVideoBitrate(btr) {
                 this._priv_bitrateInfos.manualBitrates.video = btr, this._priv_abrManager && this._priv_abrManager.setManualBitrate("video", btr);
-            }, 
+            }
             /**
    * Force the audio bitrate to a given value. Act as a ceil.
    * -1 to set it on AUTO Mode
    * @param {Number} btr
-   */
-            _proto.setAudioBitrate = function setAudioBitrate(btr) {
+   */ , _proto.setAudioBitrate = function setAudioBitrate(btr) {
                 this._priv_bitrateInfos.manualBitrates.audio = btr, this._priv_abrManager && this._priv_abrManager.setManualBitrate("audio", btr);
-            }, 
+            }
             /**
    * Update the maximum video bitrate the user can switch to.
    * @param {Number} btr
-   */
-            _proto.setMaxVideoBitrate = function setMaxVideoBitrate(btr) {
+   */ , _proto.setMaxVideoBitrate = function setMaxVideoBitrate(btr) {
                 // set it for the next content loaded
                 this._priv_bitrateInfos.initialMaxAutoBitrates.video = btr, // set it for the current if one is loaded
                 this._priv_abrManager && this._priv_abrManager.setMaxAutoBitrate("video", btr);
-            }, 
+            }
             /**
    * Update the maximum video bitrate the user can switch to.
    * @param {Number} btr
-   */
-            _proto.setMaxAudioBitrate = function setMaxAudioBitrate(btr) {
+   */ , _proto.setMaxAudioBitrate = function setMaxAudioBitrate(btr) {
                 // set it for the next content loaded
                 this._priv_bitrateInfos.initialMaxAutoBitrates.audio = btr, // set it for the current if one is loaded
                 this._priv_abrManager && this._priv_abrManager.setMaxAutoBitrate("audio", btr);
-            }, 
+            }
             /**
    * Set the max buffer size for the buffer behind the current position.
    * Every buffer data before will be removed.
    * @param {Number} depthInSeconds
-   */
-            _proto.setMaxBufferBehind = function setMaxBufferBehind(depthInSeconds) {
+   */ , _proto.setMaxBufferBehind = function setMaxBufferBehind(depthInSeconds) {
                 this._priv_bufferOptions.maxBufferBehind$.next(depthInSeconds);
-            }, 
+            }
             /**
    * Set the max buffer size for the buffer behind the current position.
    * Every buffer data before will be removed.
    * @param {Number} depthInSeconds
-   */
-            _proto.setMaxBufferAhead = function setMaxBufferAhead(depthInSeconds) {
+   */ , _proto.setMaxBufferAhead = function setMaxBufferAhead(depthInSeconds) {
                 this._priv_bufferOptions.maxBufferAhead$.next(depthInSeconds);
-            }, 
+            }
             /**
    * Set the max buffer size for the buffer ahead of the current position.
    * The player will stop downloading chunks when this size is reached.
    * @param {Number} sizeInSeconds
-   */
-            _proto.setWantedBufferAhead = function setWantedBufferAhead(sizeInSeconds) {
+   */ , _proto.setWantedBufferAhead = function setWantedBufferAhead(sizeInSeconds) {
                 this._priv_bufferOptions.wantedBufferAhead$.next(sizeInSeconds);
-            }, 
+            }
             /**
    * Returns the max buffer size for the buffer behind the current position.
    * @returns {Number}
-   */
-            _proto.getMaxBufferBehind = function getMaxBufferBehind() {
+   */ , _proto.getMaxBufferBehind = function getMaxBufferBehind() {
                 return this._priv_bufferOptions.maxBufferBehind$.getValue();
-            }, 
+            }
             /**
    * Returns the max buffer size for the buffer behind the current position.
    * @returns {Number}
-   */
-            _proto.getMaxBufferAhead = function getMaxBufferAhead() {
+   */ , _proto.getMaxBufferAhead = function getMaxBufferAhead() {
                 return this._priv_bufferOptions.maxBufferAhead$.getValue();
-            }, 
+            }
             /**
    * Returns the max buffer size for the buffer ahead of the current position.
    * @returns {Number}
-   */
-            _proto.getWantedBufferAhead = function getWantedBufferAhead() {
+   */ , _proto.getWantedBufferAhead = function getWantedBufferAhead() {
                 return this._priv_bufferOptions.wantedBufferAhead$.getValue();
-            }, 
+            }
             /**
    * Returns type of current keysystem (e.g. playready, widevine) if the content
    * is encrypted. null otherwise.
    * @returns {string|null}
-   */
-            _proto.getCurrentKeySystem = function getCurrentKeySystem() {
+   */ , _proto.getCurrentKeySystem = function getCurrentKeySystem() {
                 if (!this.videoElement) throw new Error("Disposed player");
                 return Object(eme.getCurrentKeySystem)(this.videoElement);
-            }, 
+            }
             /**
    * Returns every available audio tracks for the current Period.
    * @returns {Array.<Object>|null}
-   */
-            _proto.getAvailableAudioTracks = function getAvailableAudioTracks() {
+   */ , _proto.getAvailableAudioTracks = function getAvailableAudioTracks() {
                 if (!this._priv_contentInfos) return [];
                 var currentPeriod = this._priv_contentInfos.currentPeriod;
                 return this._priv_trackManager && currentPeriod ? this._priv_trackManager.getAvailableAudioTracks(currentPeriod) : [];
-            }, 
+            }
             /**
    * Returns every available text tracks for the current Period.
    * @returns {Array.<Object>|null}
-   */
-            _proto.getAvailableTextTracks = function getAvailableTextTracks() {
+   */ , _proto.getAvailableTextTracks = function getAvailableTextTracks() {
                 if (!this._priv_contentInfos) return [];
                 var currentPeriod = this._priv_contentInfos.currentPeriod;
                 return this._priv_trackManager && currentPeriod ? this._priv_trackManager.getAvailableTextTracks(currentPeriod) : [];
-            }, 
+            }
             /**
    * Returns every available video tracks for the current Period.
    * @returns {Array.<Object>|null}
-   */
-            _proto.getAvailableVideoTracks = function getAvailableVideoTracks() {
+   */ , _proto.getAvailableVideoTracks = function getAvailableVideoTracks() {
                 if (!this._priv_contentInfos) return [];
                 var currentPeriod = this._priv_contentInfos.currentPeriod;
                 return this._priv_trackManager && currentPeriod ? this._priv_trackManager.getAvailableVideoTracks(currentPeriod) : [];
-            }, 
+            }
             /**
    * Returns currently chosen audio language for the current Period.
    * @returns {string}
-   */
-            _proto.getAudioTrack = function getAudioTrack() {
+   */ , _proto.getAudioTrack = function getAudioTrack() {
                 if (this._priv_contentInfos) {
                     var currentPeriod = this._priv_contentInfos.currentPeriod;
                     if (this._priv_trackManager && currentPeriod) return this._priv_trackManager.getChosenAudioTrack(currentPeriod);
                 }
-            }, 
+            }
             /**
    * Returns currently chosen subtitle for the current Period.
    * @returns {string}
-   */
-            _proto.getTextTrack = function getTextTrack() {
+   */ , _proto.getTextTrack = function getTextTrack() {
                 if (this._priv_contentInfos) {
                     var currentPeriod = this._priv_contentInfos.currentPeriod;
                     if (this._priv_trackManager && currentPeriod) return this._priv_trackManager.getChosenTextTrack(currentPeriod);
                 }
-            }, 
+            }
             /**
    * Returns currently chosen video track for the current Period.
    * @returns {string}
-   */
-            _proto.getVideoTrack = function getVideoTrack() {
+   */ , _proto.getVideoTrack = function getVideoTrack() {
                 if (this._priv_contentInfos) {
                     var currentPeriod = this._priv_contentInfos.currentPeriod;
                     if (this._priv_trackManager && currentPeriod) return this._priv_trackManager.getChosenVideoTrack(currentPeriod);
                 }
-            }, 
+            }
             /**
    * Update the audio language for the current Period.
    * @param {string} audioId
    * @throws Error - the current content has no TrackManager.
    * @throws Error - the given id is linked to no audio track.
-   */
-            _proto.setAudioTrack = function setAudioTrack(audioId) {
+   */ , _proto.setAudioTrack = function setAudioTrack(audioId) {
                 if (!this._priv_contentInfos) throw new Error("No content loaded");
                 var currentPeriod = this._priv_contentInfos.currentPeriod;
                 if (!this._priv_trackManager || !currentPeriod) throw new Error("No compatible content launched.");
@@ -17545,14 +17386,13 @@ object-assign
                 } catch (e) {
                     throw new Error("player: unknown audio track");
                 }
-            }, 
+            }
             /**
    * Update the text language for the current Period.
    * @param {string} sub
    * @throws Error - the current content has no TrackManager.
    * @throws Error - the given id is linked to no text track.
-   */
-            _proto.setTextTrack = function setTextTrack(textId) {
+   */ , _proto.setTextTrack = function setTextTrack(textId) {
                 if (!this._priv_contentInfos) throw new Error("No content loaded");
                 var currentPeriod = this._priv_contentInfos.currentPeriod;
                 if (!this._priv_trackManager || !currentPeriod) throw new Error("No compatible content launched.");
@@ -17561,23 +17401,21 @@ object-assign
                 } catch (e) {
                     throw new Error("player: unknown text track");
                 }
-            }, 
+            }
             /**
    * Disable subtitles for the current content.
-   */
-            _proto.disableTextTrack = function disableTextTrack() {
+   */ , _proto.disableTextTrack = function disableTextTrack() {
                 if (this._priv_contentInfos) {
                     var currentPeriod = this._priv_contentInfos.currentPeriod;
                     if (this._priv_trackManager && currentPeriod) return this._priv_trackManager.disableTextTrack(currentPeriod);
                 }
-            }, 
+            }
             /**
    * Update the video track for the current Period.
    * @param {string} videoId
    * @throws Error - the current content has no TrackManager.
    * @throws Error - the given id is linked to no video track.
-   */
-            _proto.setVideoTrack = function setVideoTrack(videoId) {
+   */ , _proto.setVideoTrack = function setVideoTrack(videoId) {
                 if (!this._priv_contentInfos) throw new Error("No content loaded");
                 var currentPeriod = this._priv_contentInfos.currentPeriod;
                 if (!this._priv_trackManager || !currentPeriod) throw new Error("No compatible content launched.");
@@ -17586,28 +17424,25 @@ object-assign
                 } catch (e) {
                     throw new Error("player: unknown video track");
                 }
-            }, 
+            }
             /**
    * @returns {Array.<Object>|null}
-   */
-            _proto.getImageTrackData = function getImageTrackData() {
+   */ , _proto.getImageTrackData = function getImageTrackData() {
                 return this._priv_contentInfos && this._priv_contentInfos.thumbnails;
-            }, 
+            }
             /**
    * Get minimum seek-able position.
    * @returns {number}
-   */
-            _proto.getMinimumPosition = function getMinimumPosition() {
+   */ , _proto.getMinimumPosition = function getMinimumPosition() {
                 if (!this._priv_contentInfos) return null;
                 if (this._priv_contentInfos.isDirectFile) return 0;
                 var manifest = this._priv_contentInfos.manifest;
                 return null != manifest ? manifest.getMinimumPosition() : null;
-            }, 
+            }
             /**
    * Get maximum seek-able position.
    * @returns {number}
-   */
-            _proto.getMaximumPosition = function getMaximumPosition() {
+   */ , _proto.getMaximumPosition = function getMaximumPosition() {
                 if (!this._priv_contentInfos) return null;
                 var _this$_priv_contentIn9 = this._priv_contentInfos, isDirectFile = _this$_priv_contentIn9.isDirectFile, manifest = _this$_priv_contentIn9.manifest;
                 if (isDirectFile) {
@@ -17615,12 +17450,11 @@ object-assign
                     return this.videoElement.duration;
                 }
                 return null != manifest ? manifest.getMaximumPosition() : null;
-            }, 
+            }
             /**
    * Reset all state properties relative to a playing content.
    * @private
-   */
-            _proto._priv_cleanUpCurrentContentState = function _priv_cleanUpCurrentContentState() {
+   */ , _proto._priv_cleanUpCurrentContentState = function _priv_cleanUpCurrentContentState() {
                 var _this4 = this;
                 // lock playback of new contents while cleaning up is pending
                                 this._priv_contentLock$.next(!0), this._priv_contentInfos = null, 
@@ -17646,7 +17480,7 @@ object-assign
                 deep_equal_default()(prev, value) || (this._priv_contentEventsMemory[type] = value, 
                 // SAD
                 this.trigger(type + "Change", value));
-            }, 
+            }
             /**
    * Triggered each time the playback Observable emits.
    *
@@ -17654,8 +17488,7 @@ object-assign
    *
    * @param {Object} event - payload emitted
    * @private
-   */
-            _proto._priv_onPlaybackEvent = function _priv_onPlaybackEvent(event) {
+   */ , _proto._priv_onPlaybackEvent = function _priv_onPlaybackEvent(event) {
                 switch (event.type) {
                   case "activePeriodChanged":
                     this._priv_onActivePeriodChanged(event.value);
@@ -17707,14 +17540,13 @@ object-assign
                         });
                     }
                 }
-            }, 
+            }
             /**
    * Triggered when we received a fatal error.
    * Clean-up ressources and signal that the content has stopped on error.
    * @param {Error} error
    * @private
-   */
-            _proto._priv_onPlaybackError = function _priv_onPlaybackError(error) {
+   */ , _proto._priv_onPlaybackError = function _priv_onPlaybackError(error) {
                 this._priv_stopCurrentContent$.next(), this._priv_cleanUpCurrentContentState(), 
                 this._priv_currentError = error, log.a.error("API: The player stopped because of an error:", error), 
                 this._priv_setPlayerState(PLAYER_STATES_STOPPED), // TODO This condition is here because the eventual callback called when the
@@ -17722,32 +17554,29 @@ object-assign
                 // be here anymore, in which case triggering the "error" event is unwanted.
                 // This is very ugly though, and we should probable have a better solution
                 this._priv_currentError === error && this.trigger("error", error);
-            }, 
+            }
             /**
    * Triggered when the playback Observable completes.
    * Clean-up ressources and signal that the content has ended.
    * @private
-   */
-            _proto._priv_onPlaybackFinished = function _priv_onPlaybackFinished() {
+   */ , _proto._priv_onPlaybackFinished = function _priv_onPlaybackFinished() {
                 this._priv_stopCurrentContent$.next(), this._priv_cleanUpCurrentContentState(), 
                 this._priv_setPlayerState(PLAYER_STATES_ENDED);
-            }, 
+            }
             /**
    * Triggered when we received a warning event during playback.
    * Trigger the right API event.
    * @param {Error} error
    * @private
-   */
-            _proto._priv_onPlaybackWarning = function _priv_onPlaybackWarning(error) {
+   */ , _proto._priv_onPlaybackWarning = function _priv_onPlaybackWarning(error) {
                 log.a.warn("API: Sending warning:", error), this.trigger("warning", error);
-            }, 
+            }
             /**
    * Triggered when the Manifest has been loaded for the current content.
    * Initialize various private properties and emit initial event.
    * @param {Object} value
    * @private
-   */
-            _proto._priv_onManifestReady = function _priv_onManifestReady(value) {
+   */ , _proto._priv_onManifestReady = function _priv_onManifestReady(value) {
                 var _this5 = this;
                 if (this._priv_contentInfos) {
                     var manifest = value.manifest, abrManager = value.abrManager;
@@ -17761,15 +17590,14 @@ object-assign
                         _this5._priv_trackManager && _this5._priv_trackManager.update();
                     });
                 } else log.a.error("API: The manifest is loaded but no content is.");
-            }, 
+            }
             /**
    * Triggered each times the current Period Changed.
    * Store and emit initial state for the Period.
    *
    * @param {Object} value
    * @private
-   */
-            _proto._priv_onActivePeriodChanged = function _priv_onActivePeriodChanged(_ref2) {
+   */ , _proto._priv_onActivePeriodChanged = function _priv_onActivePeriodChanged(_ref2) {
                 var period = _ref2.period;
                 if (this._priv_contentInfos) {
                     // Emit intial events for the Period
@@ -17791,14 +17619,13 @@ object-assign
                         this._priv_triggerContentEvent("videoBitrate", null != _bitrate ? _bitrate : -1);
                     } else this._priv_triggerContentEvent("videoBitrate", null);
                 } else log.a.error("API: The active period changed but no content is loaded");
-            }, 
+            }
             /**
    * Triggered each times a new "PeriodBuffer" is ready.
    * Choose the right Adaptation for the Period and emit it.
    * @param {Object} value
    * @private
-   */
-            _proto._priv_onPeriodBufferReady = function _priv_onPeriodBufferReady(value) {
+   */ , _proto._priv_onPeriodBufferReady = function _priv_onPeriodBufferReady(value) {
                 var type = value.type, period = value.period, adaptation$ = value.adaptation$;
                 switch (type) {
                   case "video":
@@ -17823,13 +17650,12 @@ object-assign
                     var adaptations = period.adaptations[type];
                     adaptations && adaptations.length ? adaptation$.next(adaptations[0]) : adaptation$.next(null);
                 }
-            }, 
+            }
             /**
    * Triggered each times the we "remove" a PeriodBuffer.
    * @param {Object} value
    * @private
-   */
-            _proto._priv_onPeriodBufferCleared = function _priv_onPeriodBufferCleared(value) {
+   */ , _proto._priv_onPeriodBufferCleared = function _priv_onPeriodBufferCleared(value) {
                 var type = value.type, period = value.period;
  // Clean-up track choice from TrackManager
                                 switch (type) {
@@ -17844,21 +17670,19 @@ object-assign
                     activeAdaptations && activeAdaptations[period.id] && delete activeAdaptations[period.id], 
                     activeRepresentations && activeRepresentations[period.id] && delete activeRepresentations[period.id];
                 }
-            }, 
+            }
             /**
    * Triggered each time the content is re-loaded on the MediaSource.
-   */
-            _proto._priv_onReloadingMediaSource = function _priv_onReloadingMediaSource() {
+   */ , _proto._priv_onReloadingMediaSource = function _priv_onReloadingMediaSource() {
                 this._priv_trackManager && this._priv_trackManager.resetPeriods();
-            }, 
+            }
             /**
    * Triggered each times a new Adaptation is considered for the current
    * content.
    * Store given Adaptation and emit it if from the current Period.
    * @param {Object} value
    * @private
-   */
-            _proto._priv_onAdaptationChange = function _priv_onAdaptationChange(_ref3) {
+   */ , _proto._priv_onAdaptationChange = function _priv_onAdaptationChange(_ref3) {
                 var type = _ref3.type, adaptation = _ref3.adaptation, period = _ref3.period;
                 if (this._priv_contentInfos) {
                     // lazily create this._priv_contentInfos.activeAdaptations
@@ -17882,7 +17706,7 @@ object-assign
                         this._priv_triggerContentEvent("videoTrack", videoTrack);
                     }
                 } else log.a.error("API: The adaptations changed but no content is loaded");
-            }, 
+            }
             /**
    * Triggered each times a new Representation is considered during playback.
    *
@@ -17890,8 +17714,7 @@ object-assign
    *
    * @param {Object} obj
    * @private
-   */
-            _proto._priv_onRepresentationChange = function _priv_onRepresentationChange(_ref4) {
+   */ , _proto._priv_onRepresentationChange = function _priv_onRepresentationChange(_ref4) {
                 var type = _ref4.type, period = _ref4.period, representation = _ref4.representation;
                 if (this._priv_contentInfos) {
                     // lazily create this._priv_contentInfos.activeRepresentations
@@ -17902,7 +17725,7 @@ object-assign
                     var bitrate = representation && representation.bitrate;
                     null != bitrate && (this._priv_bitrateInfos.lastBitrates[type] = bitrate), null != period && null != currentPeriod && currentPeriod.id === period.id && ("video" === type ? this._priv_triggerContentEvent("videoBitrate", null != bitrate ? bitrate : -1) : "audio" === type && this._priv_triggerContentEvent("audioBitrate", null != bitrate ? bitrate : -1));
                 } else log.a.error("API: The representations changed but no content is loaded");
-            }, 
+            }
             /**
    * Triggered each time a bitrate estimate is calculated.
    *
@@ -17910,14 +17733,13 @@ object-assign
    *
    * @param {Object} value
    * @private
-   */
-            _proto._priv_onBitrateEstimationChange = function _priv_onBitrateEstimationChange(_ref5) {
+   */ , _proto._priv_onBitrateEstimationChange = function _priv_onBitrateEstimationChange(_ref5) {
                 var type = _ref5.type, bitrate = _ref5.bitrate;
                 this._priv_triggerContentEvent("bitrateEstimation", {
                     type: type,
                     bitrate: bitrate
                 });
-            }, 
+            }
             /**
    * Triggered each time the videoElement alternates between play and pause.
    *
@@ -17925,11 +17747,10 @@ object-assign
    *
    * @param {Boolean} isPlaying
    * @private
-   */
-            _proto._priv_onPlayPauseNext = function _priv_onPlayPauseNext(isPlaying) {
+   */ , _proto._priv_onPlayPauseNext = function _priv_onPlayPauseNext(isPlaying) {
                 if (!this.videoElement) throw new Error("Disposed player");
                 this._priv_playing$.next(isPlaying);
-            }, 
+            }
             /**
    * Triggered each time a textTrack is added to the video DOM Element.
    *
@@ -17937,10 +17758,9 @@ object-assign
    *
    * @param {Array.<TextTrackElement>} tracks
    * @private
-   */
-            _proto._priv_onNativeTextTracksNext = function _priv_onNativeTextTracksNext(tracks) {
+   */ , _proto._priv_onNativeTextTracksNext = function _priv_onNativeTextTracksNext(tracks) {
                 this.trigger("nativeTextTracksChange", tracks);
-            }, 
+            }
             /**
    * Triggered each time the player state updates.
    *
@@ -17948,11 +17768,10 @@ object-assign
    *
    * @param {string} newState
    * @private
-   */
-            _proto._priv_setPlayerState = function _priv_setPlayerState(newState) {
+   */ , _proto._priv_setPlayerState = function _priv_setPlayerState(newState) {
                 this.state !== newState && (this.state = newState, log.a.info("API: playerStateChange event", newState), 
                 this.trigger("playerStateChange", newState));
-            }, 
+            }
             /**
    * Triggered each time a new clock tick object is emitted.
    *
@@ -17960,8 +17779,7 @@ object-assign
    *
    * @param {Object} clockTick
    * @private
-   */
-            _proto._priv_triggerTimeChange = function _priv_triggerTimeChange(clockTick) {
+   */ , _proto._priv_triggerTimeChange = function _priv_triggerTimeChange(clockTick) {
                 if (this._priv_contentInfos) {
                     if (this.state !== PLAYER_STATES_RELOADING) {
                         var _this$_priv_contentIn14 = this._priv_contentInfos, isDirectFile = _this$_priv_contentIn14.isDirectFile, manifest = _this$_priv_contentIn14.manifest;
@@ -19761,59 +19579,52 @@ object-assign
    */            var _proto = BaseRepresentationIndex.prototype;
             return _proto.getInitSegment = function getInitSegment() {
                 return helpers_getInitSegment(this._index);
-            }, 
+            }
             /**
    * @param {Number} _up
    * @param {Number} _to
    * @returns {Array.<Object>}
-   */
-            _proto.getSegments = function getSegments(_up, _to) {
+   */ , _proto.getSegments = function getSegments(_up, _to) {
                 return getSegmentsFromTimeline(this._index, _up, _to);
-            }, 
+            }
             /**
    * Returns false as no Segment-Base based index should need to be refreshed.
    * @returns {Boolean}
-   */
-            _proto.shouldRefresh = function shouldRefresh() {
+   */ , _proto.shouldRefresh = function shouldRefresh() {
                 return !1;
-            }, 
+            }
             /**
    * Returns first position in index.
    * @returns {Number|undefined}
-   */
-            _proto.getFirstPosition = function getFirstPosition() {
+   */ , _proto.getFirstPosition = function getFirstPosition() {
                 var index = this._index;
                 if (0 !== index.timeline.length) return fromIndexTime(index, index.timeline[0].start);
-            }, 
+            }
             /**
    * Returns last position in index.
    * @returns {Number|undefined}
-   */
-            _proto.getLastPosition = function getLastPosition() {
+   */ , _proto.getLastPosition = function getLastPosition() {
                 var _this$_index = this._index, timeline = _this$_index.timeline, timelineEnd = _this$_index.timelineEnd;
                 if (0 !== timeline.length) {
                     var lastTime = getIndexSegmentEnd(timeline[timeline.length - 1], null, timelineEnd);
                     return fromIndexTime(this._index, lastTime);
                 }
-            }, 
+            }
             /**
    * We do not check for discontinuity in SegmentBase-based indexes.
    * @returns {Number}
-   */
-            _proto.checkDiscontinuity = function checkDiscontinuity() {
+   */ , _proto.checkDiscontinuity = function checkDiscontinuity() {
                 return -1;
-            }, 
+            }
             /**
    * @param {Array.<Object>} nextSegments
    * @returns {Array.<Object>}
-   */
-            _proto._addSegments = function _addSegments(nextSegments) {
+   */ , _proto._addSegments = function _addSegments(nextSegments) {
                 for (var i = 0; i < nextSegments.length; i++) _addSegmentInfos(this._index, nextSegments[i]);
-            }, 
+            }
             /**
    * @param {Object} newIndex
-   */
-            _proto._update = function _update(newIndex) {
+   */ , _proto._update = function _update(newIndex) {
                 this._index = newIndex._index;
             }, BaseRepresentationIndex;
         }(), list_ListRepresentationIndex = 
@@ -19850,13 +19661,12 @@ object-assign
    */            var _proto = ListRepresentationIndex.prototype;
             return _proto.getInitSegment = function getInitSegment() {
                 return helpers_getInitSegment(this._index);
-            }, 
+            }
             /**
    * @param {Number} fromTime
    * @param {Number} duration
    * @returns {Array.<Object>}
-   */
-            _proto.getSegments = function getSegments(fromTime, dur) {
+   */ , _proto.getSegments = function getSegments(fromTime, dur) {
                 for (var index = this._index, _getTimescaledRange = getTimescaledRange(index, fromTime + this._periodStart, dur), up = _getTimescaledRange.up, to = _getTimescaledRange.to, duration = index.duration, list = index.list, timescale = index.timescale, length = Math.min(list.length - 1, Math.floor(to / duration)), segments = [], i = Math.floor(up / duration); i <= length; ) {
                     var args = {
                         id: "" + i,
@@ -19871,51 +19681,45 @@ object-assign
                     segments.push(args), i++;
                 }
                 return segments;
-            }, 
+            }
             /**
    * Returns true if, based on the arguments, the index should be refreshed.
    * (If we should re-fetch the manifest)
    * @param {Number} _fromTime
    * @param {Number} toTime
    * @returns {Boolean}
-   */
-            _proto.shouldRefresh = function shouldRefresh(_fromTime, toTime) {
+   */ , _proto.shouldRefresh = function shouldRefresh(_fromTime, toTime) {
                 var _this$_index = this._index, timescale = _this$_index.timescale, duration = _this$_index.duration, list = _this$_index.list, scaledTo = toTime * timescale, i = Math.floor(scaledTo / duration);
                 return !(0 <= i && i < list.length);
-            }, 
+            }
             /**
    * Returns first position in index.
    * @returns {Number}
-   */
-            _proto.getFirstPosition = function getFirstPosition() {
+   */ , _proto.getFirstPosition = function getFirstPosition() {
                 return this._periodStart;
-            }, 
+            }
             /**
    * Returns last position in index.
    * @returns {Number}
-   */
-            _proto.getLastPosition = function getLastPosition() {
+   */ , _proto.getLastPosition = function getLastPosition() {
                 var index = this._index, duration = index.duration;
                 return index.list.length * duration / index.timescale + this._periodStart;
-            }, 
+            }
             /**
    * We do not check for discontinuity in SegmentList-based indexes.
    * @returns {Number}
-   */
-            _proto.checkDiscontinuity = function checkDiscontinuity() {
+   */ , _proto.checkDiscontinuity = function checkDiscontinuity() {
                 return -1;
-            }, 
+            }
             /**
    * @param {Object} newIndex
-   */
-            _proto._update = function _update(newIndex) {
+   */ , _proto._update = function _update(newIndex) {
                 this._index = newIndex._index;
-            }, 
+            }
             /**
    * We do not have to add new segments to SegmentList-based indexes.
    * @returns {Array}
-   */
-            _proto._addSegments = function _addSegments() {
+   */ , _proto._addSegments = function _addSegments() {
                 0;
             }, ListRepresentationIndex;
         }(), template_TemplateRepresentationIndex = 
@@ -19949,13 +19753,12 @@ object-assign
    */            var _proto = TemplateRepresentationIndex.prototype;
             return _proto.getInitSegment = function getInitSegment() {
                 return helpers_getInitSegment(this._index);
-            }, 
+            }
             /**
    * @param {Number} fromTime
    * @param {Number} dur
    * @returns {Array.<Object>}
-   */
-            _proto.getSegments = function getSegments(fromTime, dur) {
+   */ , _proto.getSegments = function getSegments(fromTime, dur) {
                 var index = this._index, _getTimescaledRange = getTimescaledRange(index, fromTime, dur), up = _getTimescaledRange.up, to = _getTimescaledRange.to;
                 if (to <= up) return [];
                 for (var duration = index.duration, startNumber = index.startNumber, timescale = index.timescale, mediaURL = index.mediaURL, segments = [], baseTime = up; baseTime <= to; baseTime += duration) {
@@ -19972,43 +19775,37 @@ object-assign
                     segments.push(args);
                 }
                 return segments;
-            }, 
+            }
             /**
    * Returns first position in index.
    * @returns {undefined}
-   */
-            _proto.getFirstPosition = function getFirstPosition() {}, 
+   */ , _proto.getFirstPosition = function getFirstPosition() {}
             /**
    * Returns last position in index.
    * @returns {undefined}
-   */
-            _proto.getLastPosition = function getLastPosition() {}, 
+   */ , _proto.getLastPosition = function getLastPosition() {}
             /**
    * Returns true if, based on the arguments, the index should be refreshed.
    * We never have to refresh a SegmentTemplate-based manifest.
    * @returns {Boolean}
-   */
-            _proto.shouldRefresh = function shouldRefresh() {
+   */ , _proto.shouldRefresh = function shouldRefresh() {
                 return !1;
-            }, 
+            }
             /**
    * We cannot check for discontinuity in SegmentTemplate-based indexes.
    * @returns {Number}
-   */
-            _proto.checkDiscontinuity = function checkDiscontinuity() {
+   */ , _proto.checkDiscontinuity = function checkDiscontinuity() {
                 return -1;
-            }, 
+            }
             /**
    * We do not have to add new segments to SegmentList-based indexes.
    * @returns {Array}
-   */
-            _proto._addSegments = function _addSegments() {
+   */ , _proto._addSegments = function _addSegments() {
                 0;
-            }, 
+            }
             /**
    * @param {Object} newIndex
-   */
-            _proto._update = function _update(newIndex) {
+   */ , _proto._update = function _update(newIndex) {
                 this._index = newIndex._index;
             }, TemplateRepresentationIndex;
         }();
@@ -20159,23 +19956,21 @@ object-assign
    */            var _proto = TimelineRepresentationIndex.prototype;
             return _proto.getInitSegment = function getInitSegment() {
                 return helpers_getInitSegment(this._index);
-            }, 
+            }
             /**
    * Asks for segments to download for a given time range.
    * @param {Number} from - Beginning of the time wanted, in seconds
    * @param {Number} duration - duration wanted, in seconds
    * @returns {Array.<Object>}
-   */
-            _proto.getSegments = function getSegments(from, duration) {
+   */ , _proto.getSegments = function getSegments(from, duration) {
                 return getSegmentsFromTimeline(this._index, from, duration);
-            }, 
+            }
             /**
    * Returns true if, based on the arguments, the index should be refreshed.
    * @param {Number} _start
    * @param {Number} end
    * @returns {Boolean}
-   */
-            _proto.shouldRefresh = function shouldRefresh(_start, end) {
+   */ , _proto.shouldRefresh = function shouldRefresh(_start, end) {
                 if (!this._index.isDynamic || 0 === this._index.timeline.length) return !1;
                 var timeline = this._index.timeline, scaledTo = toIndexTime(this._index, end), lastItem = timeline[timeline.length - 1];
                 return !(null == lastItem || lastItem.repeatCount < 0) && (lastItem.duration < 0 && (lastItem = {
@@ -20183,26 +19978,24 @@ object-assign
                     duration: 0,
                     repeatCount: lastItem.repeatCount
                 }), scaledTo > getIndexSegmentEnd(lastItem, null, this._index.timelineEnd));
-            }, 
+            }
             /**
    * Returns first position in index.
    * @returns {Number|undefined}
-   */
-            _proto.getFirstPosition = function getFirstPosition() {
+   */ , _proto.getFirstPosition = function getFirstPosition() {
                 var index = this._index;
                 if (0 !== index.timeline.length) return fromIndexTime(index, index.timeline[0].start);
-            }, 
+            }
             /**
    * Returns lastItem position in index.
    * @returns {Number|undefined}
-   */
-            _proto.getLastPosition = function getLastPosition() {
+   */ , _proto.getLastPosition = function getLastPosition() {
                 var _this$_index = this._index, timeline = _this$_index.timeline, timelineEnd = _this$_index.timelineEnd;
                 if (0 !== timeline.length) {
                     var lastTime = getIndexSegmentEnd(timeline[timeline.length - 1], null, timelineEnd);
                     return fromIndexTime(this._index, lastTime);
                 }
-            }, 
+            }
             /**
    * Checks if the time given is in a discontinuity. That is:
    *   - We're on the upper bound of the current range (end of the range - time
@@ -20211,8 +20004,7 @@ object-assign
    * @param {Number} _time
    * @returns {Number} - If a discontinuity is present, this is the Starting
    * time for the next (discontinuited) range. If not this is equal to -1.
-   */
-            _proto.checkDiscontinuity = function checkDiscontinuity(_time) {
+   */ , _proto.checkDiscontinuity = function checkDiscontinuity(_time) {
                 var _this$_index2 = this._index, timeline = _this$_index2.timeline, timescale = _this$_index2.timescale, timelineEnd = _this$_index2.timelineEnd, scaledTime = toIndexTime(this._index, _time);
                 if (scaledTime <= 0) return -1;
                 var segmentIndex = getSegmentIndex(this._index, scaledTime);
@@ -20225,20 +20017,18 @@ object-assign
                 // when we are actually inside the found range and this range has
                 // an explicit discontinuity with the next one
                 return rangeTo !== nextTimelineItem.start && rangeUp <= scaledTime && scaledTime <= rangeTo && rangeTo - scaledTime < timescale ? fromIndexTime(this._index, nextTimelineItem.start) : -1;
-            }, 
+            }
             /**
    * @param {Object} newIndex
-   */
-            _proto._update = function _update(newIndex) {
+   */ , _proto._update = function _update(newIndex) {
                 this._index = newIndex._index;
-            }, 
+            }
             /**
    * We do not have to add new segments to SegmentList-based indexes.
    * @param {Array.<Object>} nextSegments
    * @param {Object|undefined} currentSegmentInfos
    * @returns {Array}
-   */
-            _proto._addSegments = function _addSegments(nextSegments, currentSegmentInfos) {
+   */ , _proto._addSegments = function _addSegments(nextSegments, currentSegmentInfos) {
                 for (var i = 0; i < nextSegments.length; i++) timeline_addSegmentInfos(this._index, nextSegments[i], currentSegmentInfos);
             }, TimelineRepresentationIndex;
         }();
@@ -21504,15 +21294,14 @@ object-assign
                     },
                     mediaURL: null
                 };
-            }, 
+            }
             /**
    * Generate a list of Segments for a particular period of time.
    *
    * @param {Number} _up
    * @param {Number} _to
    * @returns {Array.<Object>}
-   */
-            _proto.getSegments = function getSegments(_up, _to) {
+   */ , _proto.getSegments = function getSegments(_up, _to) {
                 for (var currentNumber, index = this._index, _normalizeRange = normalizeRange(index, _up, _to), up = _normalizeRange.up, to = _normalizeRange.to, timeline = index.timeline, timescale = index.timescale, media = index.media, segments = [], timelineLength = timeline.length, maxEncounteredDuration = timeline.length && timeline[0].duration || 0, i = 0; i < timelineLength; i++) {
                     var segmentRange = timeline[i], duration = segmentRange.duration, start = segmentRange.start;
                     // live-added segments have @d attribute equals to -1
@@ -21551,40 +21340,37 @@ object-assign
                     null != currentNumber && (currentNumber += repeat + 1);
                 }
                 return segments;
-            }, 
+            }
             /**
    * Returns true if, based on the arguments, the index should be refreshed.
    * (If we should re-fetch the manifest)
    * @param {Number} from
    * @param {Number} to
    * @returns {Boolean}
-   */
-            _proto.shouldRefresh = function shouldRefresh(up, to) {
+   */ , _proto.shouldRefresh = function shouldRefresh(up, to) {
                 if (!this._index.isLive) return !1;
                 var _this$_index = this._index, timeline = _this$_index.timeline, timescale = _this$_index.timescale, lastSegmentInCurrentTimeline = timeline[timeline.length - 1];
                 if (!lastSegmentInCurrentTimeline) return !1;
                 var repeat = lastSegmentInCurrentTimeline.repeatCount || 0, endOfLastSegmentInCurrentTimeline = lastSegmentInCurrentTimeline.start + (repeat + 1) * lastSegmentInCurrentTimeline.duration;
                 return !(to * timescale < endOfLastSegmentInCurrentTimeline) && (endOfLastSegmentInCurrentTimeline <= up * timescale || lastSegmentInCurrentTimeline.start + repeat * lastSegmentInCurrentTimeline.duration < up * timescale);
-            }, 
+            }
             /**
    * Returns first position in the index.
    *
    * @param {Object} index
    * @returns {Number}
-   */
-            _proto.getFirstPosition = function getFirstPosition() {
+   */ , _proto.getFirstPosition = function getFirstPosition() {
                 var index = this._index;
                 if (index.timeline.length) return index.timeline[0].start / index.timescale;
-            }, 
+            }
             /**
    * Returns last position in the index.
    * @param {Object} index
    * @returns {Number}
-   */
-            _proto.getLastPosition = function getLastPosition() {
+   */ , _proto.getLastPosition = function getLastPosition() {
                 var index = this._index;
                 if (index.timeline.length) return getTimelineRangeEnd(index.timeline[index.timeline.length - 1]) / index.timescale;
-            }, 
+            }
             /**
    * Checks if the time given is in a discontinuity. That is:
    *   - We're on the upper bound of the current range (end of the range - time
@@ -21594,8 +21380,7 @@ object-assign
    * @param {Number} _time
    * @returns {Number} - If a discontinuity is present, this is the Starting
    * time for the next (discontinuited) range. If not this is equal to -1.
-   */
-            _proto.checkDiscontinuity = function checkDiscontinuity(_time) {
+   */ , _proto.checkDiscontinuity = function checkDiscontinuity(_time) {
                 var index = this._index, timeline = index.timeline, _index$timescale = index.timescale, timescale = void 0 === _index$timescale ? 1 : _index$timescale, time = _time * timescale;
                 if (time <= 0) return -1;
                 var segmentIndex = getSegmentIndex(index, time);
@@ -21606,14 +21391,13 @@ object-assign
                 // when we are actually inside the found range and this range has
                 // an explicit discontinuity with the next one
                 return rangeTo !== nextRange.start && rangeUp <= time && time <= rangeTo && rangeTo - time < timescale ? nextRange.start / timescale : -1;
-            }, 
+            }
             /**
    * Update this RepresentationIndex by a newly downloaded one.
    * Check if the old index had more informations about new segments and
    * re-add them if that's the case.
    * @param {Object} newIndex
-   */
-            _proto._update = function _update(newIndex) {
+   */ , _proto._update = function _update(newIndex) {
                 var oldTimeline = this._index.timeline, newTimeline = newIndex._index.timeline, oldTimescale = this._index.timescale, newTimescale = newIndex._index.timescale;
                 if (this._index = newIndex._index, this._initialLastPosition = newIndex._initialLastPosition, 
                 this._indexValidityTime = newIndex._indexValidityTime, oldTimeline.length && newTimeline.length && oldTimescale === newTimescale) {
@@ -23198,7 +22982,7 @@ object-assign
             if (parentElement.className = "rxp-texttrack-region", applyGeneralStyle(parentElement, paragraphStyle), 
             body) {
                 // applies to body, div, p, region, span
-                var bodyBackgroundColor = Object(ttml_style.a)([ "backgroundColor" ], divs.concat([ body ]), styles, regions).bodyBackgroundColor;
+                var bodyBackgroundColor = Object(ttml_style.a)([ "backgroundColor" ], [].concat(divs, [ body ]), styles, regions).bodyBackgroundColor;
                 bodyBackgroundColor && (parentElement.style.backgroundColor = ttmlColorToCSSColor(bodyBackgroundColor));
             }
             var pElement = document.createElement("p");
@@ -23716,13 +23500,12 @@ object-assign
                     var cue = cues[j];
                     if (time >= cue.start) return time < cue.end ? cue : void 0;
                 }
-            }, 
+            }
             /**
    * Remove cue from a certain range of time.
    * @param {Number} from
    * @param {Number} to
-   */
-            _proto.remove = function remove(from, _to) {
+   */ , _proto.remove = function remove(from, _to) {
                 for (var to = Math.max(from, _to), cuesBuffer = this._cuesBuffer, len = cuesBuffer.length, i = 0; i < len; i++) if (cuesBuffer[i].end > from) {
                     var startCuesInfos = cuesBuffer[i];
                     if (startCuesInfos.start >= to) 
@@ -23747,7 +23530,7 @@ object-assign
                     }
                     return void cuesBuffer.splice(i + 1, cuesBuffer.length - (i + 1));
                 }
-            }, 
+            }
             /**
    * Insert new cues in our text buffer.
    * cues is an array of objects with three properties:
@@ -23774,8 +23557,7 @@ object-assign
    *     cue in it
    * If those requirements are not met, we could delete some cues when adding
    * a CuesGroup before/after. Find a solution.
-   */
-            _proto.insert = function insert(cues, start, end) {
+   */ , _proto.insert = function insert(cues, start, end) {
                 for (var cuesBuffer = this._cuesBuffer, cuesInfosToInsert = {
                     start: start,
                     end: end,
@@ -23996,19 +23778,17 @@ object-assign
                     var startTime = timescaledStart / timescale, endTime = null != timescaledEnd ? timescaledEnd / timescale : void 0, cues = parseTextTrackToElements(type, dataString, this.timestampOffset, language), start = startTime, end = null != endTime ? endTime : cues[cues.length - 1].end;
                     this._buffer.insert(cues, start, end), this.buffered.insert(start, end);
                 }
-            }, 
+            }
             /**
    * @param {Number} from
    * @param {Number} to
-   */
-            _proto._remove = function _remove(from, to) {
+   */ , _proto._remove = function _remove(from, to) {
                 log.a.debug("HTTSB: Removing html text track data", from, to), this._buffer.remove(from, to), 
                 this.buffered.remove(from, to);
-            }, 
+            }
             /**
    * Free up ressources from this sourceBuffer
-   */
-            _proto._abort = function _abort() {
+   */ , _proto._abort = function _abort() {
                 log.a.debug("HTTSB: Aborting html text track SourceBuffer"), this._destroy$.next(), 
                 this._destroy$.complete(), safelyRemoveChild(this._textTrackElement, this._currentElement);
             }, HTMLTextTrackSourceBuffer;
@@ -24121,12 +23901,11 @@ object-assign
                         this.buffered.insert(startTime, null != endTime ? endTime : cues[cues.length - 1].endTime);
                     } else null != endTime && this.buffered.insert(startTime, endTime);
                 }
-            }, 
+            }
             /**
    * @param {Number} from
    * @param {Number} to
-   */
-            _proto._remove = function _remove(from, to) {
+   */ , _proto._remove = function _remove(from, to) {
                 log.a.debug("NTTSB: Removing native text track data", from, to);
                 for (var track = this._track, cues = track.cues, i = cues.length - 1; 0 <= i; i--) {
                     var cue = cues[i], startTime = cue.startTime, endTime = cue.endTime;
