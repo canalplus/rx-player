@@ -285,31 +285,26 @@ export default function IBufferOrchestratorEvent(
   }
 
   /**
-   * Manage creation and removal of Buffers for consecutive Periods.
+   * Create lazily consecutive PeriodBuffers:
    *
-   * This function is called recursively for each successive Periods as needed.
+   * It first creates the PeriodBuffer for `basePeriod` and - once it becomes
+   * full - automatically creates the next chronological one.
+   * This process repeats until the PeriodBuffer linked to the last Period is
+   * full.
    *
-   * This function does not guarantee creation/destruction of the right Buffers
-   * when the user seeks or rewind in the content.
-   * It only manages regular playback, another layer should be used to manage
-   * those cases.
+   * If an "old" PeriodBuffer becomes active again, it destroys all PeriodBuffer
+   * coming after it (from the last chronological one to the first).
    *
-   * You can know about buffers creation and destruction respectively through
-   * the "periodBufferReady" and "periodBufferCleared" events.
+   * To clean-up PeriodBuffers, each one of them are also automatically
+   * destroyed once the clock anounce a time superior or equal to the end of
+   * the concerned Period.
    *
-   * The "periodBufferReady" related to the given period should be sent synchronously
-   * on subscription.
-   * Further "periodBufferReady" for further Periods should be sent each time the
-   * Buffer for the previous Buffer is full.
+   * A "periodBufferReady" event is sent each times a new PeriodBuffer is
+   * created. The first one (for `basePeriod`) should be sent synchronously on
+   * subscription.
    *
-   * Buffers for each Period are cleared ("periodBufferCleared" event) either:
-   *   - when it has finished to play (currentTime is after it)
-   *   - when one of the older Buffers becomes active again, in which case the
-   *     Buffers coming after will be cleared from the newest to the oldest.
-   *   - when the destroy$ observable emits, in which case every created Buffer
-   *     here will be cleared from the newest to the oldest.
-   *
-   * TODO The code here can surely be greatly simplified.
+   * A "periodBufferCleared" event is sent each times a PeriodBuffer is
+   * destroyed.
    * @param {string} bufferType - e.g. "audio" or "video"
    * @param {Period} basePeriod - Initial Period downloaded.
    * @param {Observable} destroy$ - Emit when/if all created Buffers from this

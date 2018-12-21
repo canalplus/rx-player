@@ -40,7 +40,7 @@ Such modules are (with link to their respective documentation, if one):
     another to allow continuous playback.
 
 
-  - __the EMEManager__
+  - __the [EMEManager](./eme/index.md)__
 
     Allows to handle contents with DRM (Digital Right Management).
 
@@ -60,16 +60,16 @@ Such modules are (with link to their respective documentation, if one):
     the ``doc/architecture/buffer`` directory.
 
 
-  - __the Source Buffers__
+  - __the SourceBuffers__
 
-    Provides abstractions on top of the SourceBuffers, which are used to push
-    media segments.
-    These files help to handle "native" SourceBuffers already defined by the
-    browser (for audio and video segments), but also define custom ones for
-    media managed entirely by the RxPlayer (example: subtitles and thumbnails).
+    Provides abstractions on top of the browser's SourceBuffers, which are used
+    to push media segments.
+    These files help to handle those "native" SourceBuffers (defined by the
+    browser), but also define custom ones for media managed entirely by the
+    RxPlayer like subtitles and thumbnails.
 
 
-  - __the [transports code](./transports/index.md)__
+  - __the [transports](./transports/index.md)__
 
     Perform manifest/segment requests, and parse them.
     `transports` in essence abstracts the transport protocol used (example:
@@ -101,85 +101,83 @@ To better understand the player's architecture, you can find below a
 (simplified!) schema of it:
 
 ```
-               +---------------------------------------------+
-               |                                             |
-               |               Application/UI                |
-               |                                             |
-               +---------------------------------------------+
-                   |       ^
-                   |       |
------RxPlayer---------------------------------------------------------------------------------------
-                   |       |                                                  +-------------------+
-                   V       |           Front-facing API                       |  ---> Call        |
-        +-----------------------------------------------------------+         |  ~~~> Send events |
-        |                            API                            |         +-------------------+
-        +-----------------------------------------------------------+
- +----------------------+     |         |   ~
- |     TrackManager     | <---+         |   ~
- +----------------------+               |   ~
- Manage track switching                 |   ~
-                                        V   ~
-                                  +--------------------+
-  +-------------------+           |                    | ----> +------------+
-  | Manifest Pipeline | <-------- |                    | <~~~~ | EMEManager |
-  +-------------------+ ~~~~~~~~> |        Init        |       +------------+
-   Download and parse             |                    |     Handle encrypted
-   the manifest                   |                    |             contents
-                                  +--------------------+
-                                       |  ^  Initialize
-                                       |  ~  a content
-                                       |  ~  and connect
-                                       |  ~  everything
-                                       |  ~
-+--------------------------------------|--~---------------------------------+
-|                                      |  ~                                 |
-|                                      V  ~                                 |
-|  Create the right          +-----------------------------------------+    |
-|  PeriodBuffers depending   |            BufferOrchestrator           |    |
-|  on the current position,  +-----------------------------------------+    |
-|  settings, and the already    | ^              |  ^             | ^       |
-|  created buffers              | ~              |  ~             | ~       |
-|                               | ~              |  ~             | ~       |
-|                               | ~              |  ~             | ~       |
-|                       (audio) v ~      (video) V  ~      (text) v ~       |
-| Create the right      +------------+   +------------+    +------------+   |  +-------------------+
-| AdaptationBuffer      |            |   |            |    |            |----->|SourceBufferManager|
-| depending on the track|   Period   |-+ |   Period   |-+  |   Period   |-+ |  |        (1)        |
-| choice (language      |   Buffer   | | |   Buffer   | |  |   Buffer   | | |  +-------------------+
-| settings, video track |            | | |            | |  |            | | |   Create and handle
-| etc.)                 +------------+ | +------------+ |  +------------+ | |   SourceBuffers
-|                        |             |  |             |   |             | |
-|                        +-------------+  +-------------+   +-------------+ |
-|                               | ^              |  ^             | ^       |
-|                               | ~              |  ~             | ~       |
-|                               | ~              |  ~             | ~       |
-|                               | ~              |  ~             | ~       |
-|                       (audio) v ~      (video) V  ~      (text) v ~       |
-|                       +------------+   +------------+    +------------+ <~~~~~ +----------------+
-| Create the right      |            |   |            |    |            | -----> | ABRManager (1) |
-| RepresentationBuffer  | Adaptation |-+ | Adaptation |-+  | Adaptation |-+ |    +----------------+
-| depending on current  |   Buffer   | | |   Buffer   | |  |   Buffer   | | |         Find the best
-| conditions (network,  |            | | |            | |  |            | | |               bitrate
-| settings...)          +------------+ | +------------+ |  +------------+ | |
-|                        |             |  |             |   |             | |
-|                        +-------------+  +-------------+   +-------------+ |
-|                               | ^              |  ^             | ^       |
-|                               | ~              |  ~             | ~       |
-|                               | ~              |  ~             | ~       |
-|                               | ~              |  ~             | ~       |
-|                       (audio) v ~      (video) V  ~      (text) v ~       |
-|                       +------------+   +------------+    +------------+ <~~~~ +------------------+
-| (RepresentationBuffer)|            |   |            |    |            | ----> | Segment Pipeline |
-| Download and push     |Represent...|-+ |Represent...|-+  |Represent...|-+ |   |       (1)        |
-| segments for a given  |   Buffer   | | |   Buffer   | |  |   Buffer   | | |   +------------------+
-| type based on the     |            | | |            | |  |            | | |      Download segments
-| current position and  +------------+ | +------------+ |  +------------+ | |
-| available segments.    |             |  |             |   |             | |
-|                        +-------------+  +-------------+   +-------------+ |
-|                                                                           |
-+---------------------------------------------------------------------------+
-                                                                        Buffers
+               +---------------------------------------------+              ,,,,,,,
+               |                                             |             (  CDN  )
+               |               Application/UI                |              ```````
+               |                                             |                 ^
+               +---------------------------------------------+                 |
+                   |   ^                                                       |
+                   |   ~                                                       |
+-----RxPlayer------------------------------------------------------------------|----------
+                   |   ~                             +-------------------+     |
+                   V   ~          Front-facing API   |  ---> Call        |     |
+     +-------------------------------------------+   |  ~~~> Send events |     |
+     |                    API                    |   +-------------------+     |
+     +-------------------------------------------+                             |
+ +--------------------+    |    |   ^                                          |
+ |    TrackManager    | <--+    |   ~                                          |
+ +--------------------+         |   ~                                          |
+ Manage track switching         |   ~                                          |
+                                V   ~                                          |
+                          +---------------+                                    |
+ +------------+           |               | ----> +----------+             +------------+
+ | EMEManager | <-------- |               | <~~~~ | Manifest | ----------> | transports |
+ +------------+ ~~~~~~~~> |     Init      |       | Pipeline | <~~~~~~~~~~ +------------+
+ Handle encrypted         |               |       +----------+             Implement  ^~
+ contents                 |               |       Download the             the        |~
+                          +---------------+       manifest                 streaming  |~
+                                 | ^  Initialize                           protocol   |~
+                                 | ~  a content                                       |~
+                                 | ~  and connect                                     |~
+                                 | ~  everything                                      |~
+Buffers                          | ~                                                  |~
++--------------------------------|-~-----------------------------+                    |~
+|                                V ~                             |                    |~
+|  Create the right         +-------------------------------+    |                    |~
+|  PeriodBuffers depending  |       BufferOrchestrator      |    |                    |~
+|  on the current position, +-------------------------------+    |                    |~
+|  settings, and the         | ^          |  ^           | ^     |                    |~
+|  already created buffers   | ~          |  ~           | ~     |                    |~
+|                            | ~          |  ~           | ~     |                    |~
+|                            | ~          |  ~           | ~     |                    |~
+|                  (audio)   v ~  (video) V  ~    (text) v ~     |                    |~
+| Create the right +----------+   +----------+    +----------+   | +---------------+  |~
+| AdaptationBuffer |          |   |          |    |          |---->|  SourceBuffer |  |~
+| depending on the |  Period  |-+ |  Period  |-+  |  Period  |-+ | |   Manager (1) |  |~
+| track choosen    |  Buffer  | | |  Buffer  | |  |  Buffer  | | | +---------------+  |~
+|                  |          | | |          | |  |          | | | Create and handle  |~
+|                  +----------+ | +----------+ |  +----------+ | |     SourceBuffers  |~
+|                   |           |  |           |   |           | |                    |~
+|                   +-----------+  +-----------+   +-----------+ |                    |~
+|                          | ^            |  ^           | ^     |                    |~
+|                          | ~            |  ~           | ~     |                    |~
+|                          | ~            |  ~           | ~     |                    |~
+|                          | ~            |  ~           | ~     |                    |~
+|                  (audio) v ~    (video) V  ~    (text) v ~     |                    |~
+|                  +----------+   +----------+    +----------+ <~~~+----------------+ |~
+| Create the right |          |   |          |    |          | --->| ABRManager (1) | |~
+| Representation   |Adaptation|-+ |Adaptation|-+  |Adaptation|-+ | +----------------+ |~
+| Buffer depending |  Buffer  | | |  Buffer  | |  |  Buffer  | | |      Find the best |~
+| on the current   |          | | |          | |  |          | | |            bitrate |~
+| network,         +----------+ | +----------+ |  +----------+ | |                    |~
+| settings...)      |           |  |           |   |           | |                    |~
+|                   +-----------+  +-----------+   +-----------+ |                    |~
+|                          | ^            |  ^           | ^     |                    |~
+|                          | ~            |  ~           | ~     |                    |~
+|                          | ~            |  ~           | ~     |                    |~
+|                          | ~            |  ~           | ~     |                    |~
+|                  (audio) v ~    (video) V  ~    (text) v ~     |                    |~
+|                  +----------+   +----------+    +----------+ <~~~~ +-------------+  |~
+| (Representation  |          |   |          |    |          | ----> | Segment     |--+~
+| Buffer).         |Represe...|-+ |Represe...|-+  |Represe...|-+ |   | Pipeline (1)|<~~+
+| Download and push|  Buffer  | | |  Buffer  | |  |  Buffer  | | |   +-------------+
+| segments based on|          | | |          | |  |          | | |   Download media
+| the current      +----------+ | +----------+ |  +----------+ | |   segments
+| position and      |           |  |           |   |           | |
+| buffer state      +-----------+  +-----------+   +-----------+ |
+|                                                                |
++----------------------------------------------------------------+
 
-(1) The SourceBufferManager, Segment Pipeline and ABRManager are actually created by the Init and then
-used by the Buffers.
+(1) The SourceBufferManager, Segment Pipeline and ABRManager are actually created by the
+Init and then used by the Buffers.
 ```
