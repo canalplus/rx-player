@@ -36,19 +36,17 @@ export type IEMEManager = (
   keySystems: IKeySystemOption[]
 ) => Observable<IEMEManagerEvent>;
 
-export interface INativeTextTracksBuffer {
+export type INativeTextTracksBuffer =
   new(
     mediaElement : HTMLMediaElement,
     hideNativeSubtitle: boolean
-  ) : ICustomSourceBuffer<unknown>;
-}
+  ) => ICustomSourceBuffer<unknown>;
 
-export interface IHTMLTextTracksBuffer {
+export type IHTMLTextTracksBuffer =
   new(
     mediaElement : HTMLMediaElement,
     textTrackElement: HTMLElement
-  ) : ICustomSourceBuffer<unknown>;
-}
+  ) => ICustomSourceBuffer<unknown>;
 
 interface IBifThumbnail {
   index : number;
@@ -77,9 +75,10 @@ interface IBifObject {
   isVod : boolean;
   thumbs : IBifThumbnail[];
 }
-export interface IImageBuffer {
-  new() : ICustomSourceBuffer<IImageTrackSegmentData>;
-}
+
+export type IImageBuffer =
+  new() => ICustomSourceBuffer<IImageTrackSegmentData>;
+
 export type IImageParser =
   ((buffer : Uint8Array) => IBifObject);
 

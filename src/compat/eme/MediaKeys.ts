@@ -143,9 +143,8 @@ export interface ICustomMediaKeys {
   setServerCertificate(setServerCertificate : ArrayBuffer|TypedArray) : Promise<void>;
 }
 
-interface IMockMediaKeysConstructor {
-  new(ks : string) : ICustomMediaKeys;
-}
+type IMockMediaKeysConstructor =
+  new(ks : string) => ICustomMediaKeys;
 
 // Default MockMediaKeys implementation
 let MockMediaKeys : IMockMediaKeysConstructor =

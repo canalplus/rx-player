@@ -24,9 +24,8 @@ interface ICompatMediaKeysConstructor {
 
 // Regular VTTCue as present in most browsers
 // TODO open TypeScript issue about it?
-interface ICompatVTTCueConstructor {
-  new(start : number, end : number, cueText : string) : ICompatVTTCue;
-}
+type ICompatVTTCueConstructor =
+  new(start : number, end : number, cueText : string) => ICompatVTTCue;
 
 interface ICompatVTTCue {
   align : string;

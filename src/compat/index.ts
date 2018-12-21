@@ -173,9 +173,8 @@ function hasLoadedMetadata(
   }
 }
 
-interface IWebKitSourceBufferConstructor {
-  new() : IWebKitSourceBuffer;
-}
+type IWebKitSourceBufferConstructor =
+  new() => IWebKitSourceBuffer;
 
 interface IWebKitSourceBuffer {
   append(data : ArrayBuffer) : void;
