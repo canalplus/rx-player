@@ -59,6 +59,7 @@ import ABRManager, {
 } from "../../abr";
 import { IPrioritizedSegmentFetcher } from "../../pipelines";
 import { QueuedSourceBuffer } from "../../source_buffers";
+import BOLAManager from "../bola_estimate";
 import EVENTS from "../events_generators";
 import RepresentationBuffer, {
   IRepresentationBufferClockTick,
@@ -129,8 +130,15 @@ export default function AdaptationBuffer<T>(
     return objectAssign({ downloadBitrate }, tick);
   }));
 
+  const bolaManager = new BOLAManager(adaptation.representations, wantedBufferAhead$);
+
   const abr$ : Observable<IABREstimation> =
-    abrManager.get$(adaptation.type, abrClock$, adaptation.representations).pipe(
+    abrManager.get$(
+      adaptation.type,
+      abrClock$,
+      adaptation.representations,
+      bolaManager
+    ).pipe(
       // equivalent to a sane shareReplay:
       // https://github.com/ReactiveX/rxjs/issues/3336
       // XXX TODO Replace it when that issue is resolved
@@ -212,6 +220,7 @@ export default function AdaptationBuffer<T>(
         segmentFetcher,
         terminate$: terminateCurrentBuffer$,
         wantedBufferAhead$,
+        bolaManager,
       }).pipe(
         catchError((error) => {
           // TODO only for smooth/to Delete? Do it elsewhere?

@@ -62,6 +62,7 @@ import {
 import {
   QueuedSourceBuffer,
 } from "../../source_buffers";
+import BOLAManager from "../bola_estimate";
 import EVENTS from "../events_generators";
 import SegmentBookkeeper from "../segment_bookkeeper";
 import {
@@ -80,6 +81,7 @@ import segmentFilter from "./segment_filter";
 
 // Item emitted by the Buffer's clock$
 export interface IRepresentationBufferClockTick {
+  bufferGap : number;
   currentTime : number; // the current position we are in the video in s
   wantedTimeOffset : number; // offset in s to add to currentTime to obtain the
                              // position we actually want to download from
@@ -103,6 +105,7 @@ export interface IRepresentationBufferArguments<T> {
   segmentFetcher : IPrioritizedSegmentFetcher<T>;
   terminate$ : Observable<void>;
   wantedBufferAhead$ : Observable<number>;
+  bolaManager : BOLAManager;
 }
 
 // Informations about a Segment waiting for download
@@ -124,6 +127,8 @@ interface ISegmentObject<T> {
   segmentInfos : ISegmentInfos|null; // informations about the segment's start
                                      // and duration
   segmentOffset : number; // Offset to add to the segment at decode time
+  receivedTime? : number;
+  sendingTime? : number;
 }
 
 // Informations about a loaded and parsed Segment
@@ -159,6 +164,7 @@ export default function RepresentationBuffer<T>({
   segmentFetcher, // allows to download new segments
   terminate$, // signal the RepresentationBuffer that it should terminate
   wantedBufferAhead$, // emit the buffer goal
+  bolaManager,
 } : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent<T>> {
   const { manifest, period, adaptation, representation } = content;
   const codec = representation.getMimeTypeString();
@@ -358,13 +364,13 @@ export default function RepresentationBuffer<T>({
 
         currentSegmentRequest = { segment, priority, request$ };
         const response$ = request$.pipe(
-          mergeMap((fetchedSegment) => {
-            currentSegmentRequest = null;
-            const initInfos = initSegmentObject &&
-              initSegmentObject.segmentInfos || undefined;
-            return fetchedSegment.parse(initInfos);
-          }),
-          map((args) => ({ segment, value: args }))
+              mergeMap((fetchedSegment) => {
+                currentSegmentRequest = null;
+                const initInfos = initSegmentObject &&
+                  initSegmentObject.segmentInfos || undefined;
+                return fetchedSegment.parse(initInfos);
+              }),
+              map((args) => ({ segment, value: args }))
         );
 
         return observableConcat(response$, requestNextSegment$);
@@ -406,18 +412,19 @@ export default function RepresentationBuffer<T>({
       sourceBufferWaitingQueue.add(segment.id);
 
       return append$.pipe(
-        mapTo(EVENTS.addedSegment(bufferType, segment, segmentData)),
         tap(() => { // add to SegmentBookkeeper
           if (segment.isInit) {
             return;
           }
           const { time, duration, timescale } = segmentInfos != null ?
-            segmentInfos : segment;
+          segmentInfos : segment;
           const start = time / timescale;
           const end = duration && (time + duration) / timescale;
           segmentBookkeeper
-            .insert(period, adaptation, representation, segment, start, end);
+          .insert(period, adaptation, representation, segment, start, end);
+          bolaManager.updateSegments(segmentBookkeeper.getSegments());
         }),
+        mapTo(EVENTS.addedSegment(bufferType, segment, segmentData)),
         finalize(() => { // remove from queue
           sourceBufferWaitingQueue.remove(segment.id);
         }));

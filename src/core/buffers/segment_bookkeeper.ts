@@ -651,6 +651,14 @@ export default class SegmentBookkeeper {
   }
 
   /**
+   * Get segments from inventory.
+   * @returns {Array.<Object>} - segments
+   */
+  public getSegments() {
+    return this.inventory.slice();
+  }
+
+  /**
    * Empty the current inventory
    */
   public reset() {
