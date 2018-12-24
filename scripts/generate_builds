@@ -196,7 +196,7 @@ echo "/**
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export * from \"../dist/_esm5.processed/exported_types\";" > types/index.d.ts
+export * from \"../dist/_esm5.processed/public_types\";" > types/index.d.ts
 
 echo "creating types for legacy code bases..."
 rm -f dist/rx-player.d.ts rx-player.min.d.ts
