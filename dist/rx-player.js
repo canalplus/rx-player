@@ -14105,11 +14105,10 @@ object-assign
  * Download and push segments linked to the given Representation according
  * to what is already in the SourceBuffer and where the playback currently is.
  *
- * Multiple RepresentationBuffer observables can be ran on the same
- * SourceBuffer.
+ * Multiple RepresentationBuffer observables can run on the same SourceBuffer.
  * This allows for example smooth transitions between multiple periods.
  *
- * @param {Object} opt
+ * @param {Object} args
  * @returns {Observable}
  */        
         // CONCATENATED MODULE: ./src/core/buffers/representation/index.ts
@@ -14136,7 +14135,6 @@ object-assign
             } : null, startQueue$ = new ReplaySubject.a(1), downloadQueue = [], finishedDownloadQueue$ = new Subject.a(), currentSegmentRequest = null, sourceBufferWaitingQueue = new simple_set.a(), status$ = Object(combineLatest.a)(clock$, wantedBufferAhead$, terminate$.pipe(Object(take.a)(1), Object(mapTo.a)(!0), Object(startWith.a)(!1)), finishedDownloadQueue$.pipe(Object(startWith.a)(void 0))).pipe(Object(map.a)(function getCurrentStatus(_ref2) {
                 var timing = _ref2[0], bufferGoal = _ref2[1], terminate = _ref2[2], buffered = queuedSourceBuffer.getBuffered();
                 segmentBookkeeper.synchronizeBuffered(buffered);
-                // /!\ Side effect
                 var neededRange = getWantedRange(period, buffered, timing, bufferGoal, paddings), discontinuity = timing.stalled && manifest.isLive ? representation.index.checkDiscontinuity(timing.currentTime) : -1, shouldRefreshManifest = representation.index.shouldRefresh(neededRange.start, neededRange.end), neededSegments = getSegmentsNeeded(representation, neededRange).filter(function(segment) {
                     return shouldDownloadSegment(segment, neededRange);
                 }).map(function(segment) {
@@ -14233,8 +14231,7 @@ object-assign
    * @param {Array.<Object>} neededRange
    * @returns {Boolean}
    */));
-            // unwrap components of the content
-                        return Object(merge.a)(status$, bufferQueue$).pipe(Object(share.a)());
+            return Object(merge.a)(status$, bufferQueue$).pipe(Object(share.a)());
             /**
    * Request every Segment in the ``downloadQueue`` on subscription.
    * Emit the data of a segment when a request succeeded.
