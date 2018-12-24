@@ -80,20 +80,23 @@ import segmentFilter from "./segment_filter";
 
 // Item emitted by the Buffer's clock$
 export interface IRepresentationBufferClockTick {
-  currentTime : number;
-  wantedTimeOffset : number;
-  stalled : object|null;
-  liveGap? : number;
+  currentTime : number; // the current position we are in the video in s
+  wantedTimeOffset : number; // offset in s to add to currentTime to obtain the
+                             // position we actually want to download from
+  stalled : object|null; // if set, the player is currently stalled
+  liveGap? : number; // gap between the current position and the live edge of
+                     // the content. Not set for non-live contents
 }
 
-// Arguments to give to the Buffer
+// Arguments to give to the RepresentationBuffer
+// @see RepresentationBuffer for documentation
 export interface IRepresentationBufferArguments<T> {
   clock$ : Observable<IRepresentationBufferClockTick>;
   content: {
-    representation : Representation;
     adaptation : Adaptation;
-    period : Period;
     manifest : Manifest;
+    period : Period;
+    representation : Representation;
   };
   queuedSourceBuffer : QueuedSourceBuffer<T>;
   segmentBookkeeper : SegmentBookkeeper;
@@ -104,8 +107,8 @@ export interface IRepresentationBufferArguments<T> {
 
 // Informations about a Segment waiting for download
 interface IQueuedSegment {
-  priority : number; // the priority of the request
-  segment : ISegment; // the Segment wanted
+  priority : number; // Priority of the request (lower number = higher priority)
+  segment : ISegment; // Segment wanted
 }
 
 // temporal informations of a Segment
@@ -115,7 +118,7 @@ interface ISegmentInfos {
   timescale : number;
 }
 
-// Informations about any Segment of a given Representation.
+// Parsed Segment information
 interface ISegmentObject<T> {
   segmentData : T|null; // What will be pushed to the SourceBuffer
   segmentInfos : ISegmentInfos|null; // informations about the segment's start
@@ -123,10 +126,10 @@ interface ISegmentObject<T> {
   segmentOffset : number; // Offset to add to the segment at decode time
 }
 
-// Informations about a loaded Segment
+// Informations about a loaded and parsed Segment
 interface ILoadedSegmentObject<T> {
   segment : ISegment; // Concerned Segment
-  value : ISegmentObject<T>; // Data and informations
+  value : ISegmentObject<T>; // parsed Data
 }
 
 // Object describing a pending Segment request
@@ -142,11 +145,10 @@ interface ISegmentRequestObject<T> {
  * Download and push segments linked to the given Representation according
  * to what is already in the SourceBuffer and where the playback currently is.
  *
- * Multiple RepresentationBuffer observables can be ran on the same
- * SourceBuffer.
+ * Multiple RepresentationBuffer observables can run on the same SourceBuffer.
  * This allows for example smooth transitions between multiple periods.
  *
- * @param {Object} opt
+ * @param {Object} args
  * @returns {Observable}
  */
 export default function RepresentationBuffer<T>({
@@ -158,7 +160,6 @@ export default function RepresentationBuffer<T>({
   terminate$, // signal the RepresentationBuffer that it should terminate
   wantedBufferAhead$, // emit the buffer goal
 } : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent<T>> {
-  // unwrap components of the content
   const { manifest, period, adaptation, representation } = content;
   const codec = representation.getMimeTypeString();
   const bufferType = adaptation.type;
@@ -203,7 +204,7 @@ export default function RepresentationBuffer<T>({
       shouldRefreshManifest : boolean;
     } {
       const buffered = queuedSourceBuffer.getBuffered();
-      segmentBookkeeper.synchronizeBuffered(buffered); // /!\ Side effect
+      segmentBookkeeper.synchronizeBuffered(buffered);
 
       const neededRange =
         getWantedRange(period, buffered, timing, bufferGoal, paddings);

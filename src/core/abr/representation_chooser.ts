@@ -66,6 +66,8 @@ interface IRepresentationChooserClockTick {
   downloadBitrate : number|undefined; // bitrate of the currently downloaded
                                       // segments, in bit per seconds
   bufferGap : number; // time to the end of the buffer, in seconds
+                      // XXX TODO for the current SourceBuffer
+
   currentTime : number; // current position, in seconds
   speed : number; // current playback rate
   duration : number; // whole duration of the content
@@ -359,12 +361,12 @@ export default class RepresentationChooser {
 
     this.manualBitrate$ = new BehaviorSubject(
       options.manualBitrate != null ?
-        options.manualBitrate : -1
+      options.manualBitrate : -1
     );
 
     this.maxAutoBitrate$ = new BehaviorSubject(
       options.maxAutoBitrate != null ?
-        options.maxAutoBitrate : Infinity
+      options.maxAutoBitrate : Infinity
     );
 
     this.estimator = new BandwidthEstimator();

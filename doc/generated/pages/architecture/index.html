@@ -33,12 +33,12 @@ implementing it.</p>
 </li>
 <li>
 <p><strong>the <a href="init/index.html">Init</a></strong></p>
-<p>Initialize the content and connects the different modules between one
-another to allow continuous playback.</p>
+<p>Initialize playback and connects the different modules between one another.</p>
 </li>
 <li>
 <p><strong>the <a href="eme/index.html">EMEManager</a></strong></p>
-<p>Allows to handle contents with DRM (Digital Right Management).</p>
+<p>Negotiate content decryption.</p>
+<p>Only used for contents with DRM (Digital Right Management).</p>
 </li>
 <li>
 <p><strong>the <a href="abr/index.html">ABRManager</a></strong></p>
@@ -53,7 +53,7 @@ then be able to decode them.</p>
 the <code>doc/architecture/buffer</code> directory.</p>
 </li>
 <li>
-<p><strong>the SourceBuffers</strong></p>
+<p><strong>the <a href="source-buffers/index.html">SourceBuffers</a></strong></p>
 <p>Provides abstractions on top of the browser&#x2019;s SourceBuffers, which are used
 to push media segments.
 These files help to handle those &#x201C;native&#x201D; SourceBuffers (defined by the
@@ -76,10 +76,10 @@ download/refresh the manifest and collect data (such as the user&#x2019;s
 bandwidth) for the other modules.</p>
 </li>
 </ul>
-<p>The RxPlayer also has multiple isolated helpers (for manifest management,
-segment parsing, browser compatibility) which are used by these different
-modules.</p>
-<p>A documentation about the file organization of the project is also available
+<p>The RxPlayer also has a multitude of isolated helpers (for manifest management,
+segment parsing, browser compatibility, feature switching, error handling etc.)
+which are used by these different modules.</p>
+<p>A documentation about the file organization of the project is available
 <a href="files.html">here</a>.</p>
 <p><a name="chapter-Global%20architecture"></a></p>
 <h2>Global architecture</h2>
@@ -90,71 +90,71 @@ modules.</p>
                |               Application/UI                |              ```````
                |                                             |                 ^
                +---------------------------------------------+                 |
-                   |   ^                                                       |
-                   |   ~                                                       |
+                          | ^                                                  |
+                          | ~                                                  |
 -----RxPlayer------------------------------------------------------------------|----------
-                   |   ~                             +-------------------+     |
-                   V   ~          Front-facing API   |  ---&gt; Call        |     |
-     +-------------------------------------------+   |  ~~~&gt; Send events |     |
-     |                    API                    |   +-------------------+     |
+                          | ~                          +-------------------+   |
+                          V ~     Front-facing API     |  ---&gt; Call        |   |
+     +-------------------------------------------+     |  ~~~&gt; Send events |   |
+     |                    API                    |     +-------------------+   |
      +-------------------------------------------+                             |
- +--------------------+    |    |   ^                                          |
- |    TrackManager    | &lt;--+    |   ~                                          |
- +--------------------+         |   ~                                          |
- Manage track switching         |   ~                                          |
-                                V   ~                                          |
-                          +---------------+                                    |
- +------------+           |               | ----&gt; +----------+             +------------+
- | EMEManager | &lt;-------- |               | &lt;~~~~ | Manifest | ----------&gt; | transports |
- +------------+ ~~~~~~~~&gt; |     Init      |       | Pipeline | &lt;~~~~~~~~~~ +------------+
- Handle encrypted         |               |       +----------+             Implement  ^~
- contents                 |               |       Download the             the        |~
-                          +---------------+       manifest                 streaming  |~
-                                 | ^  Initialize                           protocol   |~
-                                 | ~  a content                                       |~
-                                 | ~  and connect                                     |~
-                                 | ~  everything                                      |~
-Buffers                          | ~                                                  |~
-+--------------------------------|-~-----------------------------+                    |~
-|                                V ~                             |                    |~
-|  Create the right         +-------------------------------+    |                    |~
-|  PeriodBuffers depending  |       BufferOrchestrator      |    |                    |~
-|  on the current position, +-------------------------------+    |                    |~
-|  settings, and the         | ^          |  ^           | ^     |                    |~
-|  already created buffers   | ~          |  ~           | ~     |                    |~
-|                            | ~          |  ~           | ~     |                    |~
-|                            | ~          |  ~           | ~     |                    |~
-|                  (audio)   v ~  (video) V  ~    (text) v ~     |                    |~
-| Create the right +----------+   +----------+    +----------+   | +---------------+  |~
-| AdaptationBuffer |          |   |          |    |          |----&gt;|  SourceBuffer |  |~
-| depending on the |  Period  |-+ |  Period  |-+  |  Period  |-+ | |   Manager (1) |  |~
-| track choosen    |  Buffer  | | |  Buffer  | |  |  Buffer  | | | +---------------+  |~
-|                  |          | | |          | |  |          | | | Create and handle  |~
-|                  +----------+ | +----------+ |  +----------+ | |     SourceBuffers  |~
-|                   |           |  |           |   |           | |                    |~
-|                   +-----------+  +-----------+   +-----------+ |                    |~
-|                          | ^            |  ^           | ^     |                    |~
-|                          | ~            |  ~           | ~     |                    |~
-|                          | ~            |  ~           | ~     |                    |~
-|                          | ~            |  ~           | ~     |                    |~
-|                  (audio) v ~    (video) V  ~    (text) v ~     |                    |~
-|                  +----------+   +----------+    +----------+ &lt;~~~+----------------+ |~
-| Create the right |          |   |          |    |          | ---&gt;| ABRManager (1) | |~
-| Representation   |Adaptation|-+ |Adaptation|-+  |Adaptation|-+ | +----------------+ |~
-| Buffer depending |  Buffer  | | |  Buffer  | |  |  Buffer  | | |      Find the best |~
-| on the current   |          | | |          | |  |          | | |            bitrate |~
-| network,         +----------+ | +----------+ |  +----------+ | |                    |~
-| settings...)      |           |  |           |   |           | |                    |~
-|                   +-----------+  +-----------+   +-----------+ |                    |~
-|                          | ^            |  ^           | ^     |                    |~
-|                          | ~            |  ~           | ~     |                    |~
-|                          | ~            |  ~           | ~     |                    |~
-|                          | ~            |  ~           | ~     |                    |~
-|                  (audio) v ~    (video) V  ~    (text) v ~     |                    |~
-|                  +----------+   +----------+    +----------+ &lt;~~~~ +-------------+  |~
-| (Representation  |          |   |          |    |          | ----&gt; | Segment     |--+~
-| Buffer).         |Represe...|-+ |Represe...|-+  |Represe...|-+ |   | Pipeline (1)|&lt;~~+
-| Download and push|  Buffer  | | |  Buffer  | |  |  Buffer  | | |   +-------------+
+ +--------------+    |            | ^                                          |
+ | TrackManager | &lt;--+            | ~                                          |
+ +--------------+                 | ~                                          |
+ Facilitate track                 | ~                                          |
+ switching for                    V ~                                          |
+ the API                  +---------------+                                    |
+                          |               |           +----------+ ------&gt; +------------+
+ +------------+ &lt;-------- |               | --------&gt; | Manifest | &lt;~~~~~~ | transports |
+ | EMEManager | ~~~~~~~~&gt; |     Init      | &lt;~~~~~~~~ | Pipeline |         +------------+
+ +------------+           |               |           +----------+         Abstract   ^ ~
+ Negotiate content        |               |           Download the         the        | ~
+ decryption               +---------------+           manifest             streaming  | ~
+                                 | ^  Initialize                           protocol   | ~
+                                 | ~  playback and                                    | ~
+                                 | ~  create/connect                                  | ~
+                                 | ~  modules                                         | ~
+Buffers                          | ~                                                  | ~
++--------------------------------|-~-----------------------------+                    | ~
+|                                V ~                             |                    | ~
+|  Create the right         +-------------------------------+    |                    | ~
+|  PeriodBuffers depending  |       BufferOrchestrator      |    |                    | ~
+|  on the current position, +-------------------------------+    |                    | ~
+|  and settings              | ^          | ^            | ^     |                    | ~
+|                            | ~          | ~            | ~     |                    | ~
+|                            | ~          | ~            | ~     |                    | ~
+|                            | ~          | ~            | ~     |                    | ~
+|                  (audio)   v ~  (video) V ~     (text) v ~     |                    | ~
+| Create the right +----------+   +----------+    +----------+   |  +--------------+  | ~
+| AdaptationBuffer |          |   |          |    |          |----&gt; | SourceBuffer |  | ~
+| depending on the |  Period  |-+ |  Period  |-+  |  Period  |-+ |  |  Manager (1) |  | ~
+| wanted track     |  Buffer  | | |  Buffer  | |  |  Buffer  | | |  +--------------+  | ~
+| (One per Period  |          | | |          | |  |          | | |  Create            | ~
+| and one per type +----------+ | +----------+ |  +----------+ | |  SourceBuffers     | ~
+| of media)         |           |  |           |   |           | |  (native and       | ~
+|                   +-----------+  +-----------+   +-----------+ |  custom)           | ~
+|                          | ^            | ^            | ^     |                    | ~
+|                          | ~            | ~            | ~     |                    | ~
+|                          | ~            | ~            | ~     |                    | ~
+|                          | ~            | ~            | ~     |                    | ~
+|                  (audio) v ~    (video) V ~     (text) v ~     |                    | ~
+|                  +----------+   +----------+    +----------+ ---&gt; +--------------+  | ~
+| Create the right |          |   |          |    |          | &lt;~~~ |ABRManager (1)|  | ~
+| Representation-  |Adaptation|-+ |Adaptation|-+  |Adaptation|-+ |  +--------------+  | ~
+| Buffer depending |  Buffer  | | |  Buffer  | |  |  Buffer  | | |  Find the best     | ~
+| on the current   |          | | |          | |  |          | | |  bitrate           | ~
+| network,         +----------+ | +----------+ |  +----------+ | |                    | ~
+| settings...).     |           |  |           |   |           | |                    | ~
+|                   +-----------+  +-----------+   +-----------+ |                    | ~
+|                          | ^            | ^            | ^     |                    | ~
+|                          | ~            | ~            | ~     |                    | ~
+|                          | ~            | ~            | ~     |                    | ~
+|                          | ~            | ~            | ~     |                    | ~
+|                  (audio) v ~    (video) V ~     (text) v ~     |                    | ~
+|                  +----------+   +----------+    +----------+ ----&gt; +------------+   | ~
+| (Representation- |          |   |          |    |          | &lt;~~~~ |  Segment   | --+ ~
+| Buffer).         |Represe...|-+ |Represe...|-+  |Represe...|-+ |   |Pipeline (1)| &lt;~~~+
+| Download and push|  Buffer  | | |  Buffer  | |  |  Buffer  | | |   +------------+
 | segments based on|          | | |          | |  |          | | |   Download media
 | the current      +----------+ | +----------+ |  +----------+ | |   segments
 | position and      |           |  |           |   |           | |
@@ -162,7 +162,7 @@ Buffers                          | ~                                            
 |                                                                |
 +----------------------------------------------------------------+
 
-(1) The SourceBufferManager, Segment Pipeline and ABRManager are actually created by the
+(1) The SourceBuffer Manager, Segment Pipeline and ABRManager are actually created by the
 Init and then used by the Buffers.
 </code></pre>
 </body></html></div></div></div></body>
