@@ -15,7 +15,7 @@
  */
 
 import config from "../../../config";
-import generateNewId from "../../../utils/generate_new_id";
+import idGenerator from "../../../utils/id_generator";
 import resolveURL, {
   normalizeBaseURL,
 } from "../../../utils/resolve_url";
@@ -31,6 +31,8 @@ import {
   IPeriodIntermediateRepresentation,
 } from "./node_parsers/Period";
 import parsePeriods from "./parse_periods";
+
+const generateManifestID = idGenerator();
 
 export type IParserResponse<T> =
   {
@@ -171,7 +173,7 @@ function parseCompleteIntermediateRepresentation(
     baseURL,
     duration,
     id: rootAttributes.id != null ?
-      rootAttributes.id : "gen-dash-manifest-" + generateNewId(),
+      rootAttributes.id : "gen-dash-manifest-" + generateManifestID(),
     periods: parsedPeriods,
     transportType: "dash",
     isLive: isDynamic,

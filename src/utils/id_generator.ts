@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-let _lastId = 0;
-
 /**
- * @returns {string}
+ * Creates an ID generator which generates an ID each time you call it.
+ * @returns {Function}
  */
-export default function generateNewId() : string {
-  let newId = 0;
-  if (_lastId < Number.MAX_VALUE) {
-    newId = _lastId + 1;
-  }
-  _lastId = newId;
-  return "" + newId;
+export default function idGenerator() : () => string {
+  let lastID = 0;
+  return function generateNewId() : string {
+    return "" + lastID++;
+  };
 }

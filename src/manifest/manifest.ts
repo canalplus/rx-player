@@ -18,7 +18,7 @@ import arrayFind from "array-find";
 import { ICustomError } from "../errors";
 import log from "../log";
 import EventEmitter from "../utils/event_emitter";
-import generateNewId from "../utils/generate_new_id";
+import idGenerator from "../utils/id_generator";
 import warnOnce from "../utils/warn_once";
 import Adaptation, {
   IAdaptationType,
@@ -28,6 +28,8 @@ import Period, {
   IPeriodArguments,
 } from "./period";
 import { StaticRepresentationIndex } from "./representation_index";
+
+const generateNewId = idGenerator();
 
 type ManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
 

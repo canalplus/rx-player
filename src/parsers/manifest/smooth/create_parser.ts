@@ -17,7 +17,7 @@
 import objectAssign from "object-assign";
 import config from "../../../config";
 import assert from "../../../utils/assert";
-import generateNewId from "../../../utils/generate_new_id";
+import idGenerator from "../../../utils/id_generator";
 import resolveURL, {
   normalizeBaseURL,
 } from "../../../utils/resolve_url";
@@ -42,6 +42,8 @@ import RepresentationIndex from "./representation_index";
 import parseBoolean from "./utils/parseBoolean";
 import reduceChildren from "./utils/reduceChildren";
 import { replaceRepresentationSmoothTokens } from "./utils/tokens";
+
+const generateManifestID = idGenerator();
 
 interface IAdaptationParserArguments {
   root : Element;
@@ -515,7 +517,7 @@ function createSmoothStreamingParser(
       firstTimeReference : undefined;
 
     const manifest = {
-      id: "gen-smooth-manifest-" + generateNewId(),
+      id: "gen-smooth-manifest-" + generateManifestID(),
       availabilityStartTime: availabilityStartTime || 0,
       duration,
       presentationLiveGap,

@@ -15,12 +15,14 @@
  */
 
 import log from "../../../log";
-import generateNewId from "../../../utils/generate_new_id";
+import idGenerator from "../../../utils/id_generator";
 import resolveURL from "../../../utils/resolve_url";
 import { IParsedPeriod } from "../types";
 import flattenOverlappingPeriods from "./flatten_overlapping_periods";
 import { IPeriodIntermediateRepresentation } from "./node_parsers/Period";
 import parseAdaptationSets from "./parse_adaptation_sets";
+
+const generatePeriodID = idGenerator();
 
 export interface IManifestInfos {
   isDynamic : boolean;
@@ -48,7 +50,7 @@ export default function parsePeriods(
     let periodID : string;
     if (period.attributes.id == null) {
       log.warn("DASH: No usable id found in the Period. Generating one.");
-      periodID = "gen-dash-period-" + generateNewId();
+      periodID = "gen-dash-period-" + generatePeriodID();
     } else {
       periodID = period.attributes.id;
     }
