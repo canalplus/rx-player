@@ -33,12 +33,10 @@ import {
   takeUntil,
   timeout,
 } from "rxjs/operators";
-import { ICustomMediaKeySession } from "../../compat";
 import {
-  onKeyError$,
-  onKeyMessage$,
-  onKeyStatusesChange$,
-} from "../../compat/events";
+  events,
+  ICustomMediaKeySession,
+} from "../../compat";
 import {
   EncryptedMediaError,
   ErrorTypes,
@@ -46,14 +44,20 @@ import {
   isKnownError,
 } from "../../errors";
 import log from "../../log";
-import castToObservable from "../../utils/castToObservable";
-import { retryObsWithBackoff } from "../../utils/retry";
+import castToObservable from "../../utils/cast_to_observable";
+import { retryObsWithBackoff } from "../../utils/retry_with_backoff";
 import tryCatch from "../../utils/rx-tryCatch";
 import {
   IEMEWarningEvent,
   IKeySystemOption,
   KEY_STATUS_ERRORS,
 } from "./types";
+
+const {
+  onKeyError$,
+  onKeyMessage$,
+  onKeyStatusesChange$,
+} = events;
 
 type TypedArray =
   Int8Array |

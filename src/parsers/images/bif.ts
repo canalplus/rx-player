@@ -23,7 +23,7 @@ import {
   bytesToStr,
   le2toi,
   le4toi,
-} from "../../utils/bytes";
+} from "../../utils/byte_parsing";
 
 export interface IBifThumbnail {
   index : number;

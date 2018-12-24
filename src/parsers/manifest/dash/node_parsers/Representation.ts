@@ -15,7 +15,6 @@
  */
 
 import log from "../../../../log";
-import { parseBoolean } from "../helpers";
 import parseSegmentBase, {
   IParsedSegmentBase,
 } from "./SegmentBase";
@@ -26,6 +25,7 @@ import parseSegmentTemplate, {
   IParsedSegmentTemplate,
   IParsedSegmentTimeline,
 } from "./SegmentTemplate";
+import { parseBoolean } from "./utils";
 
 export interface IRepresentationIntermediateRepresentation {
   children : IRepresentationChildren;

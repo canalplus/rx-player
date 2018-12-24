@@ -38,7 +38,7 @@ import {
   ISegmentTimingInfos,
   ITransportPipelines,
 } from "../../../transports/types";
-import generateID from "../../../utils/id";
+import generateNewId from "../../../utils/generate_new_id";
 import {
   IABRMetric,
   IABRRequest
@@ -146,7 +146,7 @@ export default function createSegmentFetcher<T>(
 
               const duration = segment.duration / segment.timescale;
               const time = segment.time / segment.timescale;
-              id = generateID();
+              id = generateNewId();
               request$.next({
                 type: bufferType,
                 event: "requestBegin",

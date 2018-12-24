@@ -34,7 +34,7 @@ import {
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
-import arrayIncludes from "../../utils/array-includes";
+import arrayIncludes from "../../utils/array_includes";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 import { IKeySystemOption } from "./types";
 

@@ -37,7 +37,7 @@ import Manifest, {
   Adaptation,
   Period,
 } from "../../../manifest";
-import arrayIncludes from "../../../utils/array-includes";
+import arrayIncludes from "../../../utils/array_includes";
 import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
@@ -45,7 +45,7 @@ import {
   IPipelineOptions,
   SegmentPipelinesManager,
 } from "../../pipelines";
-import SourceBufferManager, {
+import SourceBuffersManager, {
   IBufferType,
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
@@ -81,7 +81,7 @@ export interface IPeriodBufferArguments {
   garbageCollectors : WeakMapMemory<QueuedSourceBuffer<unknown>, Observable<never>>;
   segmentBookkeepers : WeakMapMemory<QueuedSourceBuffer<unknown>, SegmentBookkeeper>;
   segmentPipelinesManager : SegmentPipelinesManager<any>;
-  sourceBufferManager : SourceBufferManager;
+  sourceBuffersManager : SourceBuffersManager;
   options: {
     manualBitrateSwitchingMode : "seamless"|"direct";
     offlineRetry? : number;
@@ -108,7 +108,7 @@ export default function PeriodBuffer({
   garbageCollectors,
   segmentBookkeepers,
   segmentPipelinesManager,
-  sourceBufferManager,
+  sourceBuffersManager,
   options,
 } : IPeriodBufferArguments) : Observable<IPeriodBufferEvent> {
   const { period } = content;
@@ -120,7 +120,7 @@ export default function PeriodBuffer({
     switchMap((adaptation) => {
       if (adaptation == null) {
         log.info(`Buffer: Set no ${bufferType} Adaptation`, period);
-        const previousQSourceBuffer = sourceBufferManager.get(bufferType);
+        const previousQSourceBuffer = sourceBuffersManager.get(bufferType);
         let cleanBuffer$ : Observable<unknown>;
 
         if (previousQSourceBuffer != null) {
@@ -143,7 +143,7 @@ export default function PeriodBuffer({
         take(1),
         mergeMap<IPeriodBufferClockTick, IPeriodBufferEvent>((tick) => {
           const qSourceBuffer = createOrReuseQueuedSourceBuffer(
-            sourceBufferManager, bufferType, adaptation, options);
+            sourceBuffersManager, bufferType, adaptation, options);
           const strategy = getAdaptationSwitchStrategy(
             qSourceBuffer.getBuffered(), period, bufferType, tick);
 
@@ -204,9 +204,9 @@ export default function PeriodBuffer({
       // non native buffer should not impact the stability of the
       // player. ie: if a text buffer sends an error, we want to
       // continue playing without any subtitles
-      if (!SourceBufferManager.isNative(bufferType)) {
+      if (!SourceBuffersManager.isNative(bufferType)) {
         log.error(`Buffer: Custom ${bufferType} buffer crashed. Aborting it.`, error);
-        sourceBufferManager.disposeSourceBuffer(bufferType);
+        sourceBuffersManager.disposeSourceBuffer(bufferType);
         return observableConcat<IAdaptationBufferEvent<T>|IBufferWarningEvent>(
           observableOf(EVENTS.warning(error)),
           createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { period })
@@ -224,19 +224,19 @@ export default function PeriodBuffer({
  * @returns {Object}
  */
 function createOrReuseQueuedSourceBuffer<T>(
-  sourceBufferManager : SourceBufferManager,
+  sourceBuffersManager : SourceBuffersManager,
   bufferType : IBufferType,
   adaptation : Adaptation,
   options: { textTrackOptions? : ITextTrackSourceBufferOptions }
 ) : QueuedSourceBuffer<T> {
-  const currentQSourceBuffer = sourceBufferManager.get(bufferType);
+  const currentQSourceBuffer = sourceBuffersManager.get(bufferType);
   if (currentQSourceBuffer != null) {
     log.info("Buffer: Reusing a previous SourceBuffer for the type", bufferType);
     return currentQSourceBuffer;
   }
   const codec = getFirstDeclaredMimeType(adaptation);
   const sbOptions = bufferType === "text" ?  options.textTrackOptions : undefined;
-  return sourceBufferManager.createSourceBuffer(bufferType, codec, sbOptions);
+  return sourceBuffersManager.createSourceBuffer(bufferType, codec, sbOptions);
 }
 
 /**

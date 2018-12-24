@@ -44,7 +44,7 @@ import {
   ILoaderResponseValue,
   ITransportPipeline,
 } from "../../../transports/types";
-import castToObservable from "../../../utils/castToObservable";
+import castToObservable from "../../../utils/cast_to_observable";
 import tryCatch from "../../../utils/rx-tryCatch";
 import downloadingBackoff from "./backoff";
 

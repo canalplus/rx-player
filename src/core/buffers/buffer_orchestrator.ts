@@ -43,7 +43,7 @@ import SortedList from "../../utils/sorted_list";
 import WeakMapMemory from "../../utils/weak_map_memory";
 import ABRManager from "../abr";
 import { SegmentPipelinesManager } from "../pipelines";
-import SourceBufferManager, {
+import SourceBuffersManager, {
   BufferGarbageCollector,
   getBufferTypes,
   IBufferType,
@@ -91,7 +91,7 @@ const {
  * @param {Observable} clock$ - Emit position informations
  * @param {Object} abrManager - Emit bitrate estimation and best Representation
  * to play.
- * @param {Object} sourceBufferManager - Will be used to lazily create
+ * @param {Object} sourceBuffersManager - Will be used to lazily create
  * SourceBuffer instances associated with the current content.
  * @param {Object} segmentPipelinesManager - Download segments
  * @param {Object} options
@@ -107,7 +107,7 @@ export default function IBufferOrchestratorEvent(
   },
   clock$ : Observable<IBufferOrchestratorClockTick>,
   abrManager : ABRManager,
-  sourceBufferManager : SourceBufferManager,
+  sourceBuffersManager : SourceBuffersManager,
   segmentPipelinesManager : SegmentPipelinesManager<any>,
   options: {
     wantedBufferAhead$ : Observable<number>;
@@ -365,7 +365,7 @@ export default function IBufferOrchestratorEvent(
       garbageCollectors,
       segmentBookkeepers,
       segmentPipelinesManager,
-      sourceBufferManager,
+      sourceBuffersManager,
       options,
     }).pipe(
       mergeMap((

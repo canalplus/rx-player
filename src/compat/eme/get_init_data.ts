@@ -20,7 +20,7 @@ import {
   be4toi,
   concat,
   strToBytes,
-} from "../../utils/bytes";
+} from "../../utils/byte_parsing";
 import hashBuffer from "../../utils/hash_buffer";
 import SimpleSet from "../../utils/simple_set";
 

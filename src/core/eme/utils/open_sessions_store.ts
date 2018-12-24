@@ -33,7 +33,7 @@ import {
 } from "../../../compat";
 import { EncryptedMediaError } from "../../../errors";
 import log from "../../../log";
-import castToObservable from "../../../utils/castToObservable";
+import castToObservable from "../../../utils/cast_to_observable";
 import hashBuffer from "../../../utils/hash_buffer";
 
 // Cached data for a single MediaKeySession

@@ -27,7 +27,7 @@ import {
   Period,
   Representation,
 } from "../../manifest";
-import arrayIncludes from "../../utils/array-includes";
+import arrayIncludes from "../../utils/array_includes";
 import SortedList from "../../utils/sorted_list";
 
 // single preference for an audio track Adaptation

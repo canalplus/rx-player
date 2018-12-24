@@ -14,8 +14,4 @@
  * limitations under the License.
  */
 
-import getPlayReadyKIDFromPrivateData from "./playready";
-
-export {
-  getPlayReadyKIDFromPrivateData
-};
+export { getPlayReadyKIDFromPrivateData } from "./playready";

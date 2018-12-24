@@ -20,7 +20,7 @@ import {
   of as observableOf,
 } from "rxjs";
 import { ICustomSourceBuffer } from "../../compat";
-import EventEmitter from "../../utils/eventemitter";
+import EventEmitter from "../../utils/event_emitter";
 import tryCatch from "../../utils/rx-tryCatch";
 import ManualTimeRanges from "./time_ranges";
 

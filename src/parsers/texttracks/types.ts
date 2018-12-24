@@ -23,10 +23,12 @@ export interface IHTMLCue {
   element : HTMLElement;
 }
 
+// Function to parse texttracks into native VTT cues
 export type INativeTextTracksParserFn =
   (texttrack : string, timeOffset : number, language? : string) =>
     Array<ICompatVTTCue|TextTrackCue>;
 
+// Function to parse texttracks into HTML cues
 export type IHTMLTextTracksParserFn =
   (texttrack : string, timeOffset : number, language? : string) =>
     IHTMLCue[];

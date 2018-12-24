@@ -25,11 +25,13 @@ import {
 } from "rxjs/operators";
 import {
   clearElementSrc,
+  events,
   MediaSource_,
 } from "../../compat";
-import { onSourceOpen$ } from "../../compat/events";
 import { MediaError } from "../../errors";
 import log from "../../log";
+
+const { onSourceOpen$ } = events;
 
 /**
  * Set the media duration in the mediaSource.

@@ -15,9 +15,24 @@
  */
 
 import config from "../../config";
-import { PLAYER_STATES } from "./constants";
 
 const { FORCED_ENDED_THRESHOLD } = config;
+
+/**
+ * Player state dictionnary
+ * @type {Object}
+ */
+export const PLAYER_STATES = {
+  STOPPED: "STOPPED",
+  LOADED: "LOADED",
+  LOADING: "LOADING",
+  PLAYING: "PLAYING",
+  PAUSED: "PAUSED",
+  ENDED: "ENDED",
+  BUFFERING: "BUFFERING",
+  SEEKING: "SEEKING",
+  RELOADING: "RELOADING",
+};
 
 /**
  * Get state string for a loaded content.

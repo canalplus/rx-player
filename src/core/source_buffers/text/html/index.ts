@@ -33,16 +33,18 @@ import {
   switchMapTo,
   takeUntil,
 } from "rxjs/operators";
-import {
-  onEnded$,
-  onSeeked$,
-  onSeeking$,
-} from "../../../../compat/events";
+import { events } from "../../../../compat";
 import config from "../../../../config";
 import log from "../../../../log";
 import AbstractSourceBuffer from "../../abstract_source_buffer";
 import TextBufferManager from "./buffer_manager";
 import parseTextTrackToElements from "./parsers";
+
+const {
+  onEnded$,
+  onSeeked$,
+  onSeeking$,
+} = events;
 
 export interface IHTMLTextTrackData {
   timescale : number;

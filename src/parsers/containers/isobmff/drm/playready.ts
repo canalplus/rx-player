@@ -18,14 +18,14 @@ import {
     bytesToUTF16Str,
     guidToUuid,
     le2toi,
-} from "../../../../utils/bytes";
+} from "../../../../utils/byte_parsing";
 
 /**
  * Parse PlayReady privateData to get its Hexa-coded KeyID.
  * @param {Uint8Array} privateData
  * @returns {string}
  */
-export default function getPlayReadyKIDFromPrivateData(
+export function getPlayReadyKIDFromPrivateData(
   data: Uint8Array
 ) : string {
   const xmlLength = le2toi(data, 8);
