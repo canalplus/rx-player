@@ -75,11 +75,11 @@ import {
 } from "../types";
 
 export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTick {
-  isLive : boolean;
-  speed : number;
-  bufferGap : number;
-  readyState : number;
-  duration : number;
+  bufferGap : number; // /!\ bufferGap of the SourceBuffer
+  duration : number; // duration of the HTMLMediaElement
+  isLive : boolean; // If true, we're playing a live content
+  readyState : number; // readyState of the HTMLMediaElement
+  speed : number; // playback rate at which the content plays
 }
 
 /**

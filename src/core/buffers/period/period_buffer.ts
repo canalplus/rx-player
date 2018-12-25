@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import objectAssign from "object-assign";
 import {
   concat as observableConcat,
   EMPTY,
@@ -25,6 +26,7 @@ import {
 import {
   catchError,
   ignoreElements,
+  map,
   mapTo,
   mergeMap,
   startWith,
@@ -39,6 +41,7 @@ import Manifest, {
 } from "../../../manifest";
 import arrayIncludes from "../../../utils/array_includes";
 import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
+import { getLeftSizeOfRange } from "../../../utils/ranges";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
 import {
@@ -50,9 +53,7 @@ import SourceBuffersManager, {
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
 } from "../../source_buffers";
-import AdaptationBuffer, {
-  IAdaptationBufferClockTick,
-} from "../adaptation";
+import AdaptationBuffer from "../adaptation";
 import EVENTS from "../events_generators";
 import SegmentBookkeeper from "../segment_bookkeeper";
 import {
@@ -68,7 +69,18 @@ const {
   DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE,
 } = config;
 
-export type IPeriodBufferClockTick = IAdaptationBufferClockTick;
+export interface IPeriodBufferClockTick {
+  currentTime : number; // the current position we are in the video in s
+  duration : number; // duration of the HTMLMediaElement
+  isLive : boolean; // If true, we're playing a live content
+  liveGap? : number; // gap between the current position and the live edge of
+                     // the content. Not set for non-live contents
+  readyState : number; // readyState of the HTMLMediaElement
+  speed : number; // playback rate at which the content plays
+  stalled : object|null; // if set, the player is currently stalled
+  wantedTimeOffset : number; // offset in s to add to currentTime to obtain the
+                             // position we actually want to download from
+}
 
 export interface IPeriodBufferArguments {
   abrManager : ABRManager;
@@ -191,8 +203,16 @@ export default function PeriodBuffer({
       bufferType, options.segmentRetry, options.offlineRetry);
     const pipeline = segmentPipelinesManager
     .createPipeline(bufferType, pipelineOptions);
+
+    const adaptationBufferClock$ = clock$.pipe(map(tick => {
+      const buffered = qSourceBuffer.getBuffered();
+      return objectAssign({}, tick, {
+        buffered,
+        bufferGap: getLeftSizeOfRange(buffered, tick.currentTime),
+      });
+    }));
     return AdaptationBuffer(
-      clock$,
+      adaptationBufferClock$,
       qSourceBuffer,
       segmentBookkeeper,
       pipeline,

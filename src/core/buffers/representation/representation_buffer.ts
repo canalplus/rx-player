@@ -80,12 +80,13 @@ import segmentFilter from "./segment_filter";
 
 // Item emitted by the Buffer's clock$
 export interface IRepresentationBufferClockTick {
+  buffered : TimeRanges; // buffered ranged of the SourceBuffer
   currentTime : number; // the current position we are in the video in s
-  wantedTimeOffset : number; // offset in s to add to currentTime to obtain the
-                             // position we actually want to download from
-  stalled : object|null; // if set, the player is currently stalled
   liveGap? : number; // gap between the current position and the live edge of
                      // the content. Not set for non-live contents
+  stalled : object|null; // if set, the player is currently stalled
+  wantedTimeOffset : number; // offset in s to add to currentTime to obtain the
+                             // position we actually want to download from
 }
 
 // Arguments to give to the RepresentationBuffer
@@ -203,7 +204,7 @@ export default function RepresentationBuffer<T>({
       neededSegments : IQueuedSegment[];
       shouldRefreshManifest : boolean;
     } {
-      const buffered = queuedSourceBuffer.getBuffered();
+      const { buffered } = timing;
       segmentBookkeeper.synchronizeBuffered(buffered);
 
       const neededRange =
