@@ -15,8 +15,7 @@
  */
 
 /**
- * This file and directory defines the public API for the RxPlayer.
- *
+ * This file defines the public API for the RxPlayer.
  * It also starts the different sub-parts of the player on various API calls.
  */
 

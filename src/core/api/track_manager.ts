@@ -15,8 +15,8 @@
  */
 
 /**
- * This file is used to abstract the notion of text and audio tracks switching
- * for an easier API management.
+ * This file is used to abstract the notion of text, audio and video tracks
+ * switching for an easier API management.
  */
 
 import arrayFind from "array-find";

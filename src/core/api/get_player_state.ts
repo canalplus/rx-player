@@ -35,7 +35,7 @@ export const PLAYER_STATES = {
 };
 
 /**
- * Get state string for a loaded content.
+ * Get state string for a _loaded_ content.
  * @param {HTMLMediaElement} mediaElement
  * @param {boolean} isPlaying - false when the player is paused. true otherwise.
  * @param {Object} stalledStatus - Current stalled state:
