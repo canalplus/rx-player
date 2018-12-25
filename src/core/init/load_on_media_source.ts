@@ -210,31 +210,31 @@ export default function createMediaSourceLoader({
         sourceBuffersManager.disposeAll();
       }));
   };
+}
 
-  /**
-   * Create all native SourceBuffers needed for a given Period.
-   *
-   * Native Buffers have the particulary to need to be created at the beginning of
-   * the content.
-   * Custom source buffers (entirely managed in JS) can generally be created and
-   * disposed at will during the lifecycle of the content.
-   * @param {SourceBuffersManager} sourceBuffersManager
-   * @param {Period} period
-   */
-  function createNativeSourceBuffersForPeriod(
-    sourceBuffersManager : SourceBuffersManager,
-    period : Period
-  ) : void {
-    Object.keys(period.adaptations).forEach(bufferType => {
-      if (SourceBuffersManager.isNative(bufferType)) {
-        const adaptations = period.adaptations[bufferType] || [];
-        const representations = adaptations != null && adaptations.length ?
-          adaptations[0].representations : [];
-        if (representations.length) {
-          const codec = representations[0].getMimeTypeString();
-          sourceBuffersManager.createSourceBuffer(bufferType, codec);
-        }
+/**
+ * Create all native SourceBuffers needed for a given Period.
+ *
+ * Native Buffers have the particulary to need to be created at the beginning of
+ * the content.
+ * Custom source buffers (entirely managed in JS) can generally be created and
+ * disposed at will during the lifecycle of the content.
+ * @param {SourceBuffersManager} sourceBuffersManager
+ * @param {Period} period
+ */
+function createNativeSourceBuffersForPeriod(
+  sourceBuffersManager : SourceBuffersManager,
+  period : Period
+) : void {
+  Object.keys(period.adaptations).forEach(bufferType => {
+    if (SourceBuffersManager.isNative(bufferType)) {
+      const adaptations = period.adaptations[bufferType] || [];
+      const representations = adaptations != null && adaptations.length ?
+        adaptations[0].representations : [];
+      if (representations.length) {
+        const codec = representations[0].getMimeTypeString();
+        sourceBuffersManager.createSourceBuffer(bufferType, codec);
       }
-    });
-  }
+    }
+  });
 }
