@@ -25,7 +25,8 @@ interface IWebKitSourceBuffer {
   remove(from : number, to : number) : void;
 }
 
-// XXX TODO Remove that :/
+// TODO This is the last ugly side-effect here.
+// Either remove it or find the best way to implement that
 export default function patchWebkitSourceBuffer() {
   // old WebKit SourceBuffer implementation,
   // where a synchronous append is used instead of appendBuffer
