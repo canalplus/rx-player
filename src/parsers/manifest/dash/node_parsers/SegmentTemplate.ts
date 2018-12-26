@@ -15,9 +15,6 @@
  */
 
 import objectAssign from "object-assign";
-import {
-  parseBoolean,
-} from "../helpers";
 import { IParsedInitialization } from "./Initialization";
 import parseSegmentBase, {
   IParsedSegmentBase
@@ -25,6 +22,9 @@ import parseSegmentBase, {
 import parseSegmentTimeline, {
   IParsedTimeline,
 } from "./SegmentTimeline";
+import {
+  parseBoolean,
+} from "./utils";
 
 export interface IParsedSegmentTemplate extends IParsedSegmentBase {
   indexType: "template";

@@ -21,11 +21,9 @@ import {
 } from "../../../../manifest";
 import {
   createIndexURL,
-  replaceSegmentDASHTokens,
-} from "../helpers";
-import {
   getInitSegment,
   getTimescaledRange,
+  replaceSegmentDASHTokens,
 } from "./helpers";
 
 // index property defined for a SegmentTemplate RepresentationIndex

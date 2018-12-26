@@ -31,12 +31,15 @@ import {
   tap,
 } from "rxjs/operators";
 import {
+  events,
   play$,
   shouldValidateMetadata
 } from "../../compat";
-import { onLoadedMetadata$ } from "../../compat/events";
 import log from "../../log";
 import { IInitClockTick } from "./types";
+
+// XXX TODO Are we sure we shouldn't use whenLoadedMetadata here?
+const { onLoadedMetadata$ } = events;
 
 type ILoadEvents =
   "not-loaded-metadata" | // metadata are not loaded. Manual action required

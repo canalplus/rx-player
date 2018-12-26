@@ -19,53 +19,11 @@
  * It always should be imported through the `features` object.
  */
 
-import log from "../../../log";
-import { IBifThumbnail } from "../../../parsers/images/bif";
-import AbstractSourceBuffer from "../abstract_source_buffer";
-
-export interface IImageTrackSegmentData {
-  data : IBifThumbnail[]; // image track data, in the given type
-  end : number; // end time time until which the segment apply
-  start : number; // start time from which the segment apply
-  timescale : number; // timescale to convert the start and end into seconds
-  type : string; // the type of the data (example: "bif")
-}
-
-/**
- * Image SourceBuffer implementation.
- * @class ImageSourceBuffer
- */
-class ImageSourceBuffer
-  extends AbstractSourceBuffer<IImageTrackSegmentData>
-{
-  /**
-   * @param {Object} data
-   */
-  _append(data : IImageTrackSegmentData) {
-    log.debug("ImageSourceBuffer: appending new data.");
-    const { start, end, timescale } = data;
-    this.buffered.insert(
-      start / timescale,
-      end == null ? Number.MAX_VALUE : end / timescale
-    );
-  }
-
-  /**
-   * @param {Number} from
-   * @param {Number} to
-   */
-  _remove(from : number, to : number) : void {
-    log.info("ImageSourceBuffer: ignored image data remove order", from, to);
-
-    // TODO once a better strategy for image cleaning has been set (surely done
-    // when we will work for live thumbnails), restore this implementation.
-    // log.debug("ImageSourceBuffer: removing image data", from, to);
-    // this.buffered.remove(from, to);
-  }
-
-  _abort() {
-    log.debug("ImageSourceBuffer: aborting image SourceBuffer");
-  }
-}
+import ImageSourceBuffer, {
+  IImageTrackSegmentData,
+} from "./image_source_buffer";
 
 export default ImageSourceBuffer;
+export {
+  IImageTrackSegmentData,
+};

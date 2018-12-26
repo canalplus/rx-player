@@ -25,7 +25,7 @@ import {
   ILoaderObserver,
   ISegmentLoaderArguments,
 } from "../types";
-import { byteRange } from "./utils";
+import byteRange from "../utils/byte_range";
 
 interface IRegularSegmentLoaderArguments extends ISegmentLoaderArguments {
   url : string;

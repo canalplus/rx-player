@@ -21,7 +21,7 @@
 
 import {
   ICompatVTTCue,
-  makeCue,
+  makeVTTCue,
 } from "../../../compat";
 import assert from "../../../utils/assert";
 
@@ -48,7 +48,7 @@ function createCuesFromArray(cuesArray : ISubs[]) : Array<TextTrackCue|ICompatVT
   for (let i = 0; i < cuesArray.length; i++) {
     const { start, end, text } = cuesArray[i];
     if (text && end != null) {
-      const cue = makeCue(start, end, text);
+      const cue = makeVTTCue(start, end, text);
       if (cue != null) {
         nativeCues.push(cue);
       }

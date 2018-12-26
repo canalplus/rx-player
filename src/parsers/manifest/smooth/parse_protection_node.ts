@@ -18,7 +18,7 @@ import {
   concat,
   hexToBytes,
   strToBytes,
-} from "../../../utils/bytes";
+} from "../../../utils/byte_parsing";
 import { getPlayReadyKIDFromPrivateData } from "../../containers/isobmff";
 
 export interface IKeySystem {

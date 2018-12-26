@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import arrayFind from "array-find";
-import { ICustomError } from "../errors";
-import MediaError from "../errors/MediaError";
+import {
+  ICustomError,
+  MediaError,
+} from "../errors";
 import log from "../log";
-import arrayIncludes from "../utils/array-includes";
+import arrayFind from "../utils/array_find";
+import arrayIncludes from "../utils/array_includes";
 import Adaptation, {
   IAdaptationArguments,
   IAdaptationType,

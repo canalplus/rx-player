@@ -38,7 +38,7 @@ import {
   ISegmentTimingInfos,
   ITransportPipelines,
 } from "../../../transports/types";
-import generateID from "../../../utils/id";
+import idGenerator from "../../../utils/id_generator";
 import {
   IABRMetric,
   IABRRequest
@@ -65,6 +65,8 @@ export interface IFetchedSegment<T> {
 
 export type ISegmentFetcher<T> =
   (content : ISegmentLoaderArguments) => Observable<IFetchedSegment<T>>;
+
+const generateRequestID = idGenerator();
 
 /**
  * Create a function which will fetch segments.
@@ -146,7 +148,7 @@ export default function createSegmentFetcher<T>(
 
               const duration = segment.duration / segment.timescale;
               const time = segment.time / segment.timescale;
-              id = generateID();
+              id = generateRequestID();
               request$.next({
                 type: bufferType,
                 event: "requestBegin",

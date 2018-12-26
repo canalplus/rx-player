@@ -24,7 +24,7 @@ import {
 import { ICustomMediaKeySession } from "../../compat";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
-import castToObservable from "../../utils/castToObservable";
+import castToObservable from "../../utils/cast_to_observable";
 
 /**
  * Generate a request from session.

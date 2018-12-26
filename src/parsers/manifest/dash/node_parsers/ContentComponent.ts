@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  parseRatio,
-} from "../helpers";
+import { parseRatio } from "./utils";
 
 export interface IParsedContentComponent {
   id?: string;

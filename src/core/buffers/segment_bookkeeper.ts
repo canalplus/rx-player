@@ -23,7 +23,7 @@ import {
   Representation,
 } from "../../manifest";
 import { convertToRanges } from "../../utils/ranges";
-import takeFirstSet from "../../utils/takeFirstSet";
+import takeFirstSet from "../../utils/take_first_set";
 
 const {
   MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,

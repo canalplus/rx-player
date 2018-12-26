@@ -15,9 +15,7 @@
  */
 
 import log from "../../../../log";
-import {
-  parseByteRange,
-} from "../helpers";
+import { parseByteRange } from "./utils";
 
 export interface IParsedSegmentURL {
   media?: string;

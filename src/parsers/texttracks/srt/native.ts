@@ -24,10 +24,10 @@
 
 import {
   ICompatVTTCue,
-  makeCue,
+  makeVTTCue,
 } from "../../../compat/index";
-import getCueBlocks from "./getCueBlocks";
-import parseCueBlock from "./parseCue";
+import getCueBlocks from "./get_cue_blocks";
+import parseCueBlock from "./parse_cue";
 
 /**
  * Parse whole srt file into an array of cues, to be inserted in a video's
@@ -70,5 +70,5 @@ function toNativeCue(cueObj : {
 }) : ICompatVTTCue|TextTrackCue|null {
   const { start, end, payload } = cueObj;
   const text = payload.join("\n");
-  return makeCue(start, end, text);
+  return makeVTTCue(start, end, text);
 }

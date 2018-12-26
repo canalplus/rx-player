@@ -22,11 +22,11 @@
 import {
   ICompatVTTCue,
   isVTTCue,
-  makeCue,
+  makeVTTCue,
 } from "../../../compat/index";
-import arrayIncludes from "../../../utils/array-includes";
-import getCueBlocks from "./getCueBlocks";
-import parseCueBlock from "./parseCueBlock";
+import arrayIncludes from "../../../utils/array_includes";
+import getCueBlocks from "./get_cue_blocks";
+import parseCueBlock from "./parse_cue_block";
 import { getFirstLineAfterHeader } from "./utils";
 
 // Simple VTT to ICompatVTTCue parser:
@@ -80,7 +80,7 @@ function toNativeCue(cueObj : {
 }) : ICompatVTTCue|TextTrackCue|null {
   const { start, end, payload } = cueObj;
   const text = payload.join("\n");
-  return makeCue(start, end, text);
+  return makeVTTCue(start, end, text);
 }
 
 /**

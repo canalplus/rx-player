@@ -16,14 +16,14 @@
 
 import objectAssign from "object-assign";
 import log from "../../../../log";
+import parseInitialization, {
+  IParsedInitialization,
+} from "./Initialization";
 import {
   parseBoolean,
   parseByteRange,
   parseDuration,
-} from "../helpers";
-import parseInitialization, {
-  IParsedInitialization,
-} from "./Initialization";
+} from "./utils";
 
 export interface ISegmentBaseAttributes {
   availabilityTimeComplete?: boolean;

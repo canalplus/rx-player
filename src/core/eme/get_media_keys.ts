@@ -26,7 +26,7 @@ import {
   EncryptedMediaError,
 } from "../../errors";
 import log from "../../log";
-import castToObservable from "../../utils/castToObservable";
+import castToObservable from "../../utils/cast_to_observable";
 import getMediaKeySystemAccess from "./find_key_system";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 import {

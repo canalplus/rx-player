@@ -33,7 +33,10 @@ import {
 } from "rxjs/operators";
 import config from "../../config";
 import log from "../../log";
-import { getLeftSizeOfRange, getRange } from "../../utils/ranges";
+import {
+  getLeftSizeOfRange,
+  getRange,
+} from "../../utils/ranges";
 
 export type IMediaInfosState =
   "init" |

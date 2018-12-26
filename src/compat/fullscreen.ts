@@ -17,7 +17,7 @@
 import {
   ICompatDocument,
   ICompatHTMLMediaElement,
-} from "./constants";
+} from "./browser_compatibility_types";
 
 /**
  * Request fullScreen action on a given element.

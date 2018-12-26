@@ -18,18 +18,16 @@ import {
   Observable,
   of as observableOf,
 } from "rxjs";
-
 import assert from "../../utils/assert";
 import request from "../../utils/request";
-import mp4Utils from "./mp4";
-import { byteRange } from "./utils";
-
 import {
   CustomSegmentLoader,
   ILoaderObservable,
   ILoaderObserver,
   ISegmentLoaderArguments,
 } from "../types";
+import byteRange from "../utils/byte_range";
+import mp4Utils from "./mp4_utils";
 
 const {
   createVideoInitSegment,

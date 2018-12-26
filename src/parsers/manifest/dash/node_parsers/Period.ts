@@ -16,13 +16,13 @@
 
 import log from "../../../../log";
 import {
-  parseBoolean,
-  parseDuration,
-} from "../helpers";
-import {
   createAdaptationSetIntermediateRepresentation,
   IAdaptationSetIntermediateRepresentation,
 } from "./AdaptationSet";
+import {
+  parseBoolean,
+  parseDuration,
+} from "./utils";
 
 export interface IPeriodIntermediateRepresentation {
   children : IPeriodChildren;

@@ -15,13 +15,13 @@
  */
 
 import {
-  parseDateTime,
-  parseDuration,
-} from "../helpers";
-import {
   createPeriodIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
 } from "./Period";
+import {
+  parseDateTime,
+  parseDuration,
+} from "./utils";
 
 export interface IMPDIntermediateRepresentation {
   children : IMPDChildren;

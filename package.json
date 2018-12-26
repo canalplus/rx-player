@@ -110,8 +110,6 @@
     "url": "git://github.com/canalplus/rx-player.git"
   },
   "dependencies": {
-    "array-find": "1.0.0",
-    "array-find-index": "1.0.2",
     "deep-equal": "1.0.1",
     "next-tick": "1.0.0",
     "object-assign": "4.1.1",

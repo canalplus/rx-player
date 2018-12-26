@@ -16,13 +16,17 @@
 
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
-import { hasEMEAPIs } from "../../compat/";
-import { onEncrypted$ } from "../../compat/events";
+import {
+  events,
+  hasEMEAPIs,
+} from "../../compat/";
 import { EncryptedMediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
 import { IEMEManagerEvent } from "../eme";
 import { IKeySystemOption } from "../eme/types";
+
+const { onEncrypted$ } = events;
 
 /**
  * Create EMEManager if possible (has the APIs and configuration).

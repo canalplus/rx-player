@@ -15,7 +15,7 @@
  */
 
 import assert from "../../../utils/assert";
-import { be4toi } from "../../../utils/bytes";
+import { be4toi } from "../../../utils/byte_parsing";
 
 /**
  * @param {Uint8Array} buf - the isobmff structure

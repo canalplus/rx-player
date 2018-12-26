@@ -26,9 +26,9 @@ import {
 } from "rxjs/operators";
 import { ICustomMediaKeySession } from "../../compat";
 import log from "../../log";
-import arrayIncludes from "../../utils/array-includes";
+import arrayIncludes from "../../utils/array_includes";
 import assert from "../../utils/assert";
-import castToObservable from "../../utils/castToObservable";
+import castToObservable from "../../utils/cast_to_observable";
 import { IMediaKeysInfos } from "./types";
 import isSessionUsable from "./utils/is_session_usable";
 

@@ -28,12 +28,14 @@ import {
   take,
   takeLast,
 } from "rxjs/operators";
-import {
+import { events } from "../../compat";
+import log from "../../log";
+
+const {
   onRemoveSourceBuffers$,
   onSourceOpen$,
   onUpdate$,
-} from "../../compat/events";
-import log from "../../log";
+} = events;
 
 /**
  * Get "updating" SourceBuffers from a SourceBufferList.

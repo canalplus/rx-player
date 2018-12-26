@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
 import objectAssign from "object-assign";
 import {
   BehaviorSubject,
@@ -33,13 +32,14 @@ import {
 import config from "../../config";
 import log from "../../log";
 import { Representation } from "../../manifest";
-import objectValues from "../../utils/object-values";
+import arrayFind from "../../utils/array_find";
+import objectValues from "../../utils/object_values";
 import { IBufferType } from "../source_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
 import EWMA from "./ewma";
-import filterByBitrate from "./filterByBitrate";
-import filterByWidth from "./filterByWidth";
-import fromBitrateCeil from "./fromBitrateCeil";
+import filterByBitrate from "./filter_by_bitrate";
+import filterByWidth from "./filter_by_width";
+import fromBitrateCeil from "./from_bitrate_ceil";
 
 const {
   ABR_REGULAR_FACTOR,
@@ -66,8 +66,6 @@ interface IRepresentationChooserClockTick {
   downloadBitrate : number|undefined; // bitrate of the currently downloaded
                                       // segments, in bit per seconds
   bufferGap : number; // time to the end of the buffer, in seconds
-                      // XXX TODO for the current SourceBuffer
-
   currentTime : number; // current position, in seconds
   speed : number; // current playback rate
   duration : number; // whole duration of the content

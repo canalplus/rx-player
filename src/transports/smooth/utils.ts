@@ -14,18 +14,10 @@
  * limitations under the License.
  */
 
-import warnOnce from "../../utils/warnOnce";
+import warnOnce from "../../utils/warn_once";
 
 const ISM_REG = /(\.isml?)(\?token=\S+)?$/;
 const TOKEN_REG = /\?token=(\S+)/;
-
-function byteRange([start, end] : [number, number]) : string {
-  if (!end || end === Infinity) {
-    return "bytes=" + (+start) + "-";
-  } else {
-    return "bytes=" + (+start) + "-" + (+end);
-  }
-}
 
 /**
  * TODO Remove this logic completely from the player
@@ -74,7 +66,6 @@ function resolveManifest(url : string) : string {
 }
 
 export {
-  byteRange,
   extractISML,
   extractToken,
   replaceToken,

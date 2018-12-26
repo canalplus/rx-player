@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
 import objectAssign from "object-assign";
 import { isCodecSupported } from "../compat";
-import { ICustomError } from "../errors";
-import MediaError from "../errors/MediaError";
+import {
+  ICustomError,
+  MediaError,
+} from "../errors";
 import log from "../log";
-import generateNewId from "../utils/id";
+import arrayFind from "../utils/array_find";
 import { normalize as normalizeLang } from "../utils/languages";
 import uniq from "../utils/uniq";
 import Representation, {
@@ -136,8 +137,7 @@ export default class Adaptation {
     representationFilter? : IRepresentationFilter
   ) {
     this.parsingErrors = [];
-    const nId = generateNewId();
-    this.id = args.id == null ? nId : "" + args.id;
+    this.id = args.id;
     this.type = args.type;
 
     const hadRepresentations = !!args.representations.length;
