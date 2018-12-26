@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
 import log from "../../../log";
+import arrayFind from "../../../utils/array_find";
 import arrayIncludes from "../../../utils/array_includes";
 import resolveURL from "../../../utils/resolve_url";
 import {

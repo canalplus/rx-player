@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
 import { ICustomError } from "../errors";
 import log from "../log";
+import arrayFind from "../utils/array_find";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
 import warnOnce from "../utils/warn_once";

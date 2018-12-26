@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
 import { Representation } from "../../manifest";
+import arrayFind from "../../utils/array_find";
 
 /**
  * Filter representations based on their width:

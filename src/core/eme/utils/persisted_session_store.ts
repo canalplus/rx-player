@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
 import { ICustomMediaKeySession } from "../../../compat";
 import log from "../../../log";
+import arrayFind from "../../../utils/array_find";
 import assert, {
   assertInterface,
 } from "../../../utils/assert";

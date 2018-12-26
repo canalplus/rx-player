@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
+import arrayFind from "../../../../utils/array_find";
 import PPromise from "../../../../utils/promise";
 import log from "../log";
 import {

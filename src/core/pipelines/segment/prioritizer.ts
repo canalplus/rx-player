@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import arrayFindIndex from "array-find-index";
 import {
   defer as observableDefer,
   Observable,
@@ -24,6 +23,7 @@ import {
   finalize,
   mergeMap,
 } from "rxjs/operators";
+import arrayFindIndex from "../../../utils/array_find_index";
 
 /**
  * Create Observables which can be priorized between one another.

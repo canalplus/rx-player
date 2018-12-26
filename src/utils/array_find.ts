@@ -14,12 +14,30 @@
  * limitations under the License.
  */
 
-declare module "array-find" {
-  function arrayFind<T>(
+/**
+ * Array.prototype.find ponyfill.
+ * @param {Array} arr
+ * @param {Function} predicate
+ * @param {*} context
+ * @returns {boolean}
+ */
+export default function arrayFind<T>(
     arr : T[],
-    predicate : (arg: T) => boolean,
+    predicate : (arg: T, index : number, arr : T[]) => boolean,
     thisArg? : any
-  ) : T | undefined;
+) : T | undefined {
+  if (typeof (Array.prototype as any).find === "function") {
+    /* tslint:disable ban */
+    return (arr as any).find(predicate, thisArg);
+    /* tslint:enable ban */
+  }
 
-  export default arrayFind;
+  const len = arr.length >>> 0;
+  for (let i = 0; i < len; i++) {
+    const val = arr[i];
+    if (predicate.call(thisArg, val, i, arr)) {
+      return val;
+    }
+  }
+  return undefined;
 }

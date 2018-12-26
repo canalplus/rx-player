@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
 import objectAssign from "object-assign";
 import {
   BehaviorSubject,
@@ -33,6 +32,7 @@ import {
 import config from "../../config";
 import log from "../../log";
 import { Representation } from "../../manifest";
+import arrayFind from "../../utils/array_find";
 import objectValues from "../../utils/object_values";
 import { IBufferType } from "../source_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import arrayFindIndex from "array-find-index";
 import { Representation } from "../../manifest";
+import arrayFindIndex from "../../utils/array_find_index";
 
 /**
  * Get only representations lower than a given bitrate.

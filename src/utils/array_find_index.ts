@@ -14,12 +14,29 @@
  * limitations under the License.
  */
 
-declare module "array-find-index" {
-  function arrayFindIndex<T>(
+/**
+ * Array.prototype.find ponyfill.
+ * @param {Array} arr
+ * @param {Function} predicate
+ * @param {*} context
+ * @returns {boolean}
+ */
+export default function arrayFindIndex<T>(
     arr : T[],
-    predicate : (arg: T) => boolean,
+    predicate : (arg: T, index : number, arr : T[]) => boolean,
     thisArg? : any
-  ) : number;
+) : number {
+  if (typeof (Array.prototype as any).findIndex === "function") {
+    /* tslint:disable ban */
+    return (arr as any).findIndex(predicate, thisArg);
+    /* tslint:enable ban */
+  }
 
-  export default arrayFindIndex;
+  const len = arr.length >>> 0;
+  for (let i = 0; i < len; i++) {
+    if (predicate.call(thisArg, arr[i], i, arr)) {
+      return i;
+    }
+  }
+  return -1;
 }

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
 import objectAssign from "object-assign";
+import arrayFind from "../../../../utils/array_find";
 import getParameters from "../get_parameters";
 import getParentElementsByTagName from "../get_parent_elements_by_tag_name";
 import {

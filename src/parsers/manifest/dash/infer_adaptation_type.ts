@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
+import arrayFind from "../../../utils/array_find";
 import arrayIncludes from "../../../utils/array_includes";
 
 const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];

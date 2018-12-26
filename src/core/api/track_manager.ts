@@ -19,7 +19,6 @@
  * switching for an easier API management.
  */
 
-import arrayFind from "array-find";
 import { Subject } from "rxjs";
 import log from "../../log";
 import {
@@ -27,6 +26,7 @@ import {
   Period,
   Representation,
 } from "../../manifest";
+import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
 import SortedList from "../../utils/sorted_list";
 

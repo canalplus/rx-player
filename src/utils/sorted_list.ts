@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
+import arrayFind from "./array_find";
 import arrayIncludes from "./array_includes";
 
 /**

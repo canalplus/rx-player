@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
 import objectAssign from "object-assign";
 import { isCodecSupported } from "../compat";
 import {
@@ -22,6 +21,7 @@ import {
   MediaError,
 } from "../errors";
 import log from "../log";
+import arrayFind from "../utils/array_find";
 import { normalize as normalizeLang } from "../utils/languages";
 import uniq from "../utils/uniq";
 import Representation, {
