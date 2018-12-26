@@ -637,13 +637,13 @@ export default function launchTestsForContent(
         await sleep(100);
 
         const bufferGap = player.getVideoBufferGap();
-        expect(player.getPosition()).to.equal(minimumTime);
-        expect(player.getVideoLoadedTime()).to.equal(bufferGap);
+        expect(player.getPosition()).to.be.closeTo(minimumTime, 0.1);
+        expect(player.getVideoLoadedTime()).to.be.closeTo(bufferGap, 0.1);
 
         fakeServer.autoRespond = false;
         player.seekTo(minimumTime + 5);
         await sleep(100);
-        expect(player.getVideoLoadedTime()).to.equal(bufferGap);
+        expect(player.getVideoLoadedTime()).to.be.closeTo(bufferGap, 0.1);
 
         fakeServer.respond();
         fakeServer.autoRespond = true;
