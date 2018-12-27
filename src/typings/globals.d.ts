@@ -20,6 +20,7 @@
 declare const __DEV__: boolean;
 declare const __LOGGER_LEVEL__: string;
 declare const __FEATURES__ : {
+  METAPLAYLIST : boolean;
   SMOOTH : boolean;
   DASH : boolean;
   DIRECTFILE : boolean;
@@ -40,6 +41,7 @@ declare const __RELATIVE_PATH__ : {
   BIF_PARSER: string;
   SMOOTH: string;
   DASH: string;
+  METAPLAYLIST: string;
   NATIVE_TEXT_BUFFER: string;
   NATIVE_VTT: string;
   NATIVE_SRT: string;
