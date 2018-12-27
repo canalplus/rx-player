@@ -18,9 +18,9 @@ class Progressbar extends React.Component {
   }
 
   showTimeIndicator(wallClockTime, clientX, isLive) {
-    let hours,
-        minutes,
-        seconds;
+    let hours;
+    let minutes;
+    let seconds;
     if (isLive) {
       const date = new Date(wallClockTime * 1000);
       hours = date.getHours();
