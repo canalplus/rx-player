@@ -75,7 +75,7 @@ function generateGetLicense(licenseServerUrl, drmType) {
         }
       };
       if (isPlayready) {
-        xhr.setRequestHeader("content-type", "text/xml; charset=utf-8")
+        xhr.setRequestHeader("content-type", "text/xml; charset=utf-8");
       } else {
         xhr.responseType = "arraybuffer";
       }
