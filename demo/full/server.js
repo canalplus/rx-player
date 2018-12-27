@@ -7,6 +7,9 @@ const path = require("path");
 const { promisify } = require("util");
 const https = require("https");
 
+// uglily mutate RXP_METAPLAYLIST environment variable
+process.env.RXP_METAPLAYLIST = true;
+
 const webpackDemoConfig = require("../../webpack-demo.config.js");
 const webpackLibConfig = require("../../webpack.config.js");
 
