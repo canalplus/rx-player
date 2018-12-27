@@ -67,6 +67,8 @@ Can be either:
     This is documented in the documentation of each concerned method, option or
     event in the API.
 
+  - ``"metaplaylist"`` for [MetaPlaylist](./metaplaylist.md) streams
+
 This property is mandatory.
 
 
@@ -75,7 +77,8 @@ This property is mandatory.
 
 _type_: ``string|undefined``
 
-For Smooth or DASH contents, the URL to the [Manifest](../terms.md#manifest).
+For Smooth, DASH or MetaPlaylist contents, the URL to the
+[Manifest](../terms.md#manifest) (or equivalent)
 
 For _DirectFile_ mode contents, the URL of the content (the supported contents
 depends on the current browser).
