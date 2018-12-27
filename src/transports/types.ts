@@ -216,7 +216,8 @@ export type IManifestLoaderFunction =
 
 export type IManifestParserFunction =
   (x : IManifestParserArguments< Document | string,
-                                 string>) => IManifestParserObservable;
+                                 ILoaderDataLoadedValue< Document | string > >) =>
+    IManifestParserObservable;
 
 // TODO Remove resolver
 export interface ITransportManifestPipeline { resolver? : IManifestResolverFunction;
