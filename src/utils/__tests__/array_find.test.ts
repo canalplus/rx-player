@@ -103,6 +103,7 @@ describe("utils - arrayFind", () => {
       expect(currentIndex).to.equal(2);
 
       expect(spy.calledWith(predicate, context)).to.equal(true);
+      spy.restore();
     });
   }
 });

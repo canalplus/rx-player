@@ -35,5 +35,6 @@ describe("utils - warnOnce", () => {
 
     expect(warnSpy.calledWith("toto tito")).to.equal(true);
     expect(warnSpy.calledTwice).to.equal(true);
+    warnSpy.restore();
   });
 });

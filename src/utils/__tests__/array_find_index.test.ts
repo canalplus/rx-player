@@ -101,6 +101,7 @@ describe("utils - arrayFindIndex", () => {
       expect(arrayFindIndex(arr, predicate, context)).to.equal(1);
       expect(currentIndex).to.equal(2);
       expect(spy.calledWith(predicate, context)).to.equal(true);
+      spy.restore();
     });
   }
 });
