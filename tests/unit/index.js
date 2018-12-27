@@ -1,9 +1,3 @@
-// load chai plugins
-import chai from "chai";
-import SinonChai from "sinon-chai";
-
-chai.use(SinonChai);
-
 /**
  * Require all files returned by a require.context call
  * @param {Function} requireContext - Return of a require.context.

@@ -1,7 +1,5 @@
-import chai from "chai";
 import { expect } from "chai";
 import sinon from "sinon";
-import SinonChai from "sinon-chai";
 import RxPlayer from "../../src";
 import {
   manifestInfos,
@@ -10,8 +8,6 @@ import {
 import mockRequests from "../utils/mock_requests.js";
 import sleep from "../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../utils/waitForPlayerState";
-
-chai.use(SinonChai);
 
 let player;
 let fakeServer;
