@@ -88,7 +88,7 @@
     "standalone": "cross-env RXP_ENV=development node ./demo/standalone/server.js",
     "start": "cross-env RXP_ENV=development node ./demo/full/server.js",
     "test": "npm run test:unit && npm run test:integration",
-    "test:appveyor": "npm run test:unit && npm run test:integration:appveyor",
+    "test:appveyor": "npm run test:unit",
     "test:travis": "npm run test:unit && npm run test:integration:travis",
     "test:integration": "karma start tests/integration/karma.conf.js",
     "test:integration:chrome": "karma start tests/integration/karma.conf.js --browsers Chrome",
