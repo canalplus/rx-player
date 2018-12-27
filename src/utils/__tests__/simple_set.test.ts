@@ -17,7 +17,7 @@
 import { expect } from "chai";
 import SimpleSet from "../simple_set";
 
-describe("utils - collections", () => {
+describe("utils - SimpleSet", () => {
   it("should allow to push string or number and to test them", () => {
     const simpleSet = new SimpleSet();
     expect(simpleSet.test("a")).to.equal(false);
