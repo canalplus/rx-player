@@ -14,15 +14,10 @@
  * limitations under the License.
  */
 
-import StaticRepresentationIndex from "./static";
-import IRepresentationIndex, {
-  IBaseContentInfos,
-  ISegment,
-} from "./types";
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
 
-export default IRepresentationIndex;
-export {
-  IBaseContentInfos,
-  ISegment,
-  StaticRepresentationIndex,
-};
+import MetaPlaylistPipelines from "./pipelines";
+export default MetaPlaylistPipelines;

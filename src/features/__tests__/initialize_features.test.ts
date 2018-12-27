@@ -41,6 +41,7 @@ describe("Features - initializeFeaturesObject", () => {
       BIF_PARSER: "../parsers/images/bif.ts",
       SMOOTH: "../transports/smooth/index.ts",
       DASH: "../transports/dash/index.ts",
+      METAPLAYLIST: "../transports/metaplaylist/index.ts",
       NATIVE_TEXT_BUFFER: "../core/source_buffers/text/native/index.ts",
       NATIVE_VTT: "../parsers/texttracks/webvtt/native/index.ts",
       NATIVE_SRT: "../parsers/texttracks/srt/native.ts",
@@ -72,6 +73,7 @@ describe("Features - initializeFeaturesObject", () => {
     initializeFeaturesObject();
     expect(feat).toEqual({
       transports: {
+        metaplaylist: require("../../transports/metaplaylist/index").default,
         dash: require("../../transports/dash/index").default,
         smooth: require("../../transports/smooth/index").default,
       },

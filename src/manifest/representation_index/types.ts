@@ -15,6 +15,11 @@
  */
 
 import { ICustomError } from "../../errors";
+import Manifest, {
+  Adaptation,
+  Period,
+  Representation,
+} from "../../manifest";
 
 // privateInfos specific to Smooth Initialization Segments
 export interface ISmoothInitSegmentPrivateInfos { codecPrivateData? : string;
@@ -30,7 +35,16 @@ export interface ISmoothInitSegmentPrivateInfos { codecPrivateData? : string;
                                                     }>;
                                                   }; }
 
-export interface IPrivateInfos { smoothInit? : ISmoothInitSegmentPrivateInfos; }
+export interface IBaseContentInfos { manifest: Manifest;
+                                     period: Period;
+                                     adaptation: Adaptation;
+                                     representation: Representation; }
+
+export interface IPrivateInfos {
+  smoothInit? : ISmoothInitSegmentPrivateInfos;
+  metaplaylistInfos? : { transportType : string;
+                         baseContent : IBaseContentInfos; };
+}
 
 // ISegment Object.
 // Represent a single Segment from a Representation.
