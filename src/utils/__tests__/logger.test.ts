@@ -34,8 +34,6 @@ import * as sinon from "sinon";
 import Logger from "../logger";
 
 describe("utils - Logger", () => {
-  before(() => {
-  });
   it("should set a default logger level of \"NONE\"", () => {
     const logger = new Logger();
     expect(logger.getLevel()).to.eql("NONE");

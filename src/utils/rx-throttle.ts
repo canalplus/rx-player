@@ -51,7 +51,7 @@ export default function throttle<T, U>(
       if (isPending) {
         hasErroredOrCompleted = true;
         obs.complete();
-        return;
+        return undefined;
       }
 
       isPending = true;
