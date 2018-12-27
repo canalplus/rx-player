@@ -1,5 +1,4 @@
 import chai from "chai";
-import ChaiSpies from "chai-spies";
 import { expect } from "chai";
 import sinon from "sinon";
 import SinonChai from "sinon-chai";
@@ -12,7 +11,6 @@ import mockRequests from "../utils/mock_requests.js";
 import sleep from "../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../utils/waitForPlayerState";
 
-chai.use(ChaiSpies);
 chai.use(SinonChai);
 
 let player;
