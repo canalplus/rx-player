@@ -15,11 +15,9 @@
  */
 
 import {
-  EMPTY,
   Observable,
+  Observer,
 } from "rxjs";
-import { tap } from "rxjs/operators";
-import noop from "./noop";
 
 /**
  * Throttle an asynchronous function returning an Observable to drop calls done
@@ -47,17 +45,37 @@ export default function throttle<T, U>(
 ) : (...args : T[]) => Observable<U> {
   let isPending = false;
 
-  return (...args) => {
-    if (isPending) {
-      return EMPTY;
-    }
+  return (...args : T[]) : Observable<U> => {
+    return Observable.create((obs : Observer<U>) => {
+      let hasErroredOrCompleted = false;
+      if (isPending) {
+        hasErroredOrCompleted = true;
+        obs.complete();
+        return;
+      }
 
-    isPending = true;
-    return func(...args)
-      .pipe(tap(
-        noop,
-        () => isPending = false,
-        () => isPending = false
-      ));
+      isPending = true;
+      func(...args)
+        .subscribe(
+          (i) => { obs.next(i); },
+          (e) => {
+            hasErroredOrCompleted = true;
+            isPending = false;
+            obs.error(e);
+          },
+          () => {
+            hasErroredOrCompleted = true;
+            isPending = false;
+            obs.complete();
+          }
+        );
+
+      return () => {
+        // handle unsubscription
+        if (!hasErroredOrCompleted) {
+          isPending = false;
+        }
+      };
+    });
   };
 }
