@@ -1,11 +1,9 @@
 // load chai plugins
 import chai from "chai";
 
-import ChaiAsPromised from "chai-as-promised";
 import ChaiSpies from "chai-spies";
 import SinonChai from "sinon-chai";
 
-chai.use(ChaiAsPromised);
 chai.use(ChaiSpies);
 chai.use(SinonChai);
 
