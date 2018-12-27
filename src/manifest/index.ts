@@ -28,7 +28,9 @@ import Manifest, {
 import Period from "./period";
 import Representation from "./representation";
 import IRepresentationIndex, {
+  IBaseContentInfos,
   ISegment,
+  StaticRepresentationIndex,
 } from "./representation_index";
 
 export default Manifest;
@@ -41,11 +43,13 @@ export {
   // types
   IAdaptationType,
   IManifestArguments,
+  IBaseContentInfos,
   IManifestParsingOptions,
   IRepresentationFilter,
   IRepresentationIndex,
   ISegment,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
+  StaticRepresentationIndex,
   SUPPORTED_ADAPTATIONS_TYPE,
 };
