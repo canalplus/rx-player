@@ -2,6 +2,11 @@
 environment:
   nodejs_version: "8"
 
+branches: 
+  only:
+    - master
+    - /^release\/.*$/
+
 # Install scripts. (runs after repo cloning)
 install:
   - choco install firefox
