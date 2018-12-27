@@ -233,10 +233,10 @@ describe("DASH live content (SegmentTimeline)", function () {
       });
       expect(player.getAvailableAudioTracks()).to.eql([]);
 
-      await sleep(1);
+      await sleep(5);
       expect(player.getAvailableAudioTracks()).to.eql([]);
       fakeServer.respond();
-      await sleep(1);
+      await sleep(5);
 
       const audioTracks = player.getAvailableAudioTracks();
 
@@ -282,10 +282,10 @@ describe("DASH live content (SegmentTimeline)", function () {
       });
       expect(player.getAvailableTextTracks()).to.eql([]);
 
-      await sleep(1);
+      await sleep(5);
       expect(player.getAvailableTextTracks()).to.eql([]);
       fakeServer.respond();
-      await sleep(1);
+      await sleep(5);
 
       const textTracks = player.getAvailableTextTracks();
 
