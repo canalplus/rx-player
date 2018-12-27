@@ -23,7 +23,8 @@ const HAS_EME_APIs = (
 );
 
 const IS_HTTPS = window.location.protocol.startsWith("https");
-const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile"];
+
+const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile", "MetaPlaylist"];
 const DRM_TYPES = ["Widevine", "Playready", "Clearkey"];
 
 const URL_DENOMINATIONS = {
