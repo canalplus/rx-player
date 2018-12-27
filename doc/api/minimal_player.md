@@ -23,7 +23,7 @@ usecases. The main disadvantages of this solution are that to reduce file size:
 
   - you will need to use a module-bundler or minifier which performs
     [tree-shaking](https://en.wikipedia.org/wiki/Tree_shaking), like webpack's
-    production mode.
+    production mode or rollup.
 
   - you will need to use the package published on npm (as opposed to the git
     repository directly).
@@ -93,32 +93,33 @@ are all objects declared in upper-case.
 
 Here is the anotated exhaustive list (notes are at the bottom of the table):
 
-| Feature                  | Description of the feature                              |
-| ------------------------ | ------------------------------------------------------- |
-| `SMOOTH`                 | Enable Smooth streaming (HSS) playback                  |
-| `DASH`                   | Enable DASH playback                                    |
-| `DIRECTFILE`             | Enable playback of "directfile" contents                |
-| `EME`                    | Enable playback of encrypted contents                   |
-| `NATIVE_TEXT_BUFFER` [1] | Allow to manage text tracks through \<tracks\> elements |
-| `HTML_TEXT_BUFFER` [1]   | Allow to manage text tracks through HTML elements       |
-| `IMAGE_BUFFER` [1]       | Allow to manage images buffer                           |
-| `NATIVE_SRT_PARSER` [2]  | Parse SRT text tracks for the native text buffer        |
-| `NATIVE_VTT_PARSER` [2]  | Parse VTT text tracks for the native text buffer        |
-| `NATIVE_TTML_PARSER` [2] | Parse TTML text tracks for the native text buffer       |
-| `NATIVE_SAMI_PARSER` [2] | Parse SAMI text tracks for the native text buffer       |
-| `HTML_SRT_PARSER` [3]    | Parse SRT text tracks for the HTML text buffer          |
-| `HTML_VTT_PARSER` [3]    | Parse VTT text tracks for the HTML text buffer          |
-| `HTML_TTML_PARSER` [3]   | Parse TTML text tracks for the HTML text buffer         |
-| `HTML_SAMI_PARSER` [3]   | Parse SAMI text tracks for the HTML text buffer         |
-| `BIF_PARSER` [4]         | Parse BIF image tracks for the image buffer             |
+| Feature                  | Description of the feature                               |
+| ------------------------ | -------------------------------------------------------- |
+| `SMOOTH`                 | Enable Smooth streaming (HSS) playback                   |
+| `DASH`                   | Enable DASH playback                                     |
+| `DIRECTFILE`             | Enable playback of "directfile" contents                 |
+| `EME`                    | Enable playback of encrypted contents                    |
+| `NATIVE_TEXT_BUFFER` [1] | Allow to display text tracks through \<tracks\> elements |
+| `HTML_TEXT_BUFFER` [1]   | Allow to display richer text tracks through HTML elements|
+| `IMAGE_BUFFER` [1]       | Allow to display thumbnails through the images buffer    |
+| `NATIVE_SRT_PARSER` [2]  | Parse SRT text tracks for the native text buffer         |
+| `NATIVE_VTT_PARSER` [2]  | Parse VTT text tracks for the native text buffer         |
+| `NATIVE_TTML_PARSER` [2] | Parse TTML text tracks for the native text buffer        |
+| `NATIVE_SAMI_PARSER` [2] | Parse SAMI text tracks for the native text buffer        |
+| `HTML_SRT_PARSER` [3]    | Parse SRT text tracks for the HTML text buffer           |
+| `HTML_VTT_PARSER` [3]    | Parse VTT text tracks for the HTML text buffer           |
+| `HTML_TTML_PARSER` [3]   | Parse TTML text tracks for the HTML text buffer          |
+| `HTML_SAMI_PARSER` [3]   | Parse SAMI text tracks for the HTML text buffer          |
+| `BIF_PARSER` [4]         | Parse BIF image tracks for the image buffer              |
 
 ---
 
 __Notes__:
 
 __[1]__: You will need to also add at least one parser for this type of buffer
- for it to be useful.
- (example: ``NATIVE_SRT_PARSER`` for the ``NATIVE_TEXT_BUFFER``)
+ for those features to be useful.
+ (example: ``NATIVE_SRT_PARSER`` will parse srt subtitles for the
+ ``NATIVE_TEXT_BUFFER``)
 
 __[2]__: Those features will only be used if ``NATIVE_TEXT_BUFFER`` is an added
 feature.
@@ -166,11 +167,11 @@ RxPlayer.addFeatures([
   EME,
   HTML_TEXT_BUFFER,
   HTML_VTT_PARSER,
-  HTML_HTML_PARSER
+  HTML_TTML_PARSER
 ]);
 ```
 
-#### Smooth contents with image (BIF) support
+#### Smooth contents with thumbnails (BIF) support
 
 ```js
 import RxPlayer from "rx-player/minimal";
