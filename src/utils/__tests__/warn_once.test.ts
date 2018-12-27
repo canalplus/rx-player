@@ -20,7 +20,7 @@ import warnOnce from "../warn_once";
 
 describe("utils - warnOnce", () => {
   it("should only call console.warn once for a given message", () => {
-    const warnSpy = sinon.spy(console, "warn");
+    const warnSpy = sinon.stub(console, "warn");
     warnOnce("toto titi");
 
     expect(warnSpy.calledWith("toto titi")).to.equal(true);

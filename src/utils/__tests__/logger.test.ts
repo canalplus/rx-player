@@ -34,6 +34,8 @@ import * as sinon from "sinon";
 import Logger from "../logger";
 
 describe("utils - Logger", () => {
+  before(() => {
+  });
   it("should set a default logger level of \"NONE\"", () => {
     const logger = new Logger();
     expect(logger.getLevel()).to.eql("NONE");
@@ -89,11 +91,11 @@ describe("utils - Logger", () => {
   });
 
   it("should never call console.* functions if logger level is set to \"NONE\"", () => {
-    const consoleLogSpy = sinon.spy(console, "log");
-    const consoleErrorSpy = sinon.spy(console, "error");
-    const consoleWarnSpy = sinon.spy(console, "warn");
-    const consoleInfoSpy = sinon.spy(console, "info");
-    const consoleDebugSpy = sinon.spy(console, "debug");
+    const consoleLogSpy = sinon.stub(console, "log");
+    const consoleErrorSpy = sinon.stub(console, "error");
+    const consoleWarnSpy = sinon.stub(console, "warn");
+    const consoleInfoSpy = sinon.stub(console, "info");
+    const consoleDebugSpy = sinon.stub(console, "debug");
 
     const logger = new Logger();
     logger.error("test");
@@ -114,11 +116,11 @@ describe("utils - Logger", () => {
   });
 
   it("should only call console.error if logger level is set to \"ERROR\"", () => {
-    const consoleLogSpy = sinon.spy(console, "log");
-    const consoleErrorSpy = sinon.spy(console, "error");
-    const consoleWarnSpy = sinon.spy(console, "warn");
-    const consoleInfoSpy = sinon.spy(console, "info");
-    const consoleDebugSpy = sinon.spy(console, "debug");
+    const consoleLogSpy = sinon.stub(console, "log");
+    const consoleErrorSpy = sinon.stub(console, "error");
+    const consoleWarnSpy = sinon.stub(console, "warn");
+    const consoleInfoSpy = sinon.stub(console, "info");
+    const consoleDebugSpy = sinon.stub(console, "debug");
 
     const logger = new Logger();
     logger.setLevel("ERROR");
@@ -140,11 +142,11 @@ describe("utils - Logger", () => {
   });
 
   it("should call console.{error,warn} if logger level is set to \"WARNING\"", () => {
-    const consoleLogSpy = sinon.spy(console, "log");
-    const consoleErrorSpy = sinon.spy(console, "error");
-    const consoleWarnSpy = sinon.spy(console, "warn");
-    const consoleInfoSpy = sinon.spy(console, "info");
-    const consoleDebugSpy = sinon.spy(console, "debug");
+    const consoleLogSpy = sinon.stub(console, "log");
+    const consoleErrorSpy = sinon.stub(console, "error");
+    const consoleWarnSpy = sinon.stub(console, "warn");
+    const consoleInfoSpy = sinon.stub(console, "info");
+    const consoleDebugSpy = sinon.stub(console, "debug");
 
     const logger = new Logger();
     logger.setLevel("WARNING");
@@ -166,11 +168,11 @@ describe("utils - Logger", () => {
   });
 
   it("should call console.{error,warn,info} if logger level is set to \"INFO\"", () => {
-    const consoleLogSpy = sinon.spy(console, "log");
-    const consoleErrorSpy = sinon.spy(console, "error");
-    const consoleWarnSpy = sinon.spy(console, "warn");
-    const consoleInfoSpy = sinon.spy(console, "info");
-    const consoleDebugSpy = sinon.spy(console, "debug");
+    const consoleLogSpy = sinon.stub(console, "log");
+    const consoleErrorSpy = sinon.stub(console, "error");
+    const consoleWarnSpy = sinon.stub(console, "warn");
+    const consoleInfoSpy = sinon.stub(console, "info");
+    const consoleDebugSpy = sinon.stub(console, "debug");
 
     const logger = new Logger();
     logger.setLevel("INFO");
@@ -194,11 +196,11 @@ describe("utils - Logger", () => {
   /* tslint:disable max-line-length */
   it("should call console.{error,warn,info, log} if logger level is set to \"DEBUG\"", () => {
   /* tslint:enable max-line-length */
-    const consoleLogSpy = sinon.spy(console, "log");
-    const consoleErrorSpy = sinon.spy(console, "error");
-    const consoleWarnSpy = sinon.spy(console, "warn");
-    const consoleInfoSpy = sinon.spy(console, "info");
-    const consoleDebugSpy = sinon.spy(console, "debug");
+    const consoleLogSpy = sinon.stub(console, "log");
+    const consoleErrorSpy = sinon.stub(console, "error");
+    const consoleWarnSpy = sinon.stub(console, "warn");
+    const consoleInfoSpy = sinon.stub(console, "info");
+    const consoleDebugSpy = sinon.stub(console, "debug");
 
     const logger = new Logger();
     logger.setLevel("DEBUG");
