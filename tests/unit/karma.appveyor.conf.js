@@ -2,6 +2,23 @@
 const path = require("path");
 const webpackConfig = require("../../webpack-tests.config.js");
 
+webpackConfig.module.rules = [{
+  test: /\.tsx?$/,
+  exclude: /node_modules/,
+  use: [
+    {
+      loader: "babel-loader",
+      options: {
+        cacheDirectory: true,
+        presets: [
+          [ "@babel/env", { loose: true, modules: false } ],
+        ],
+      },
+    },
+    { loader: "ts-loader" },
+  ],
+}];
+
 const singleRun = !process.env.RXP_TESTS_WATCH;
 
 const karmaConf = {
