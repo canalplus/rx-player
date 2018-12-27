@@ -8,5 +8,3 @@ const requireAll = function(requireContext) {
 };
 
 requireAll(require.context("./scenarios", true, /\.js$/));
-requireAll(require.context("./experimental", true, /\.js$/));
-
