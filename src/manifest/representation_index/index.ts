@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+import StaticRepresentationIndex from "./static";
 import IRepresentationIndex, {
   ISegment,
-} from "./interfaces";
-import StaticRepresentationIndex from "./static";
+} from "./types";
 
 export default IRepresentationIndex;
 export {
