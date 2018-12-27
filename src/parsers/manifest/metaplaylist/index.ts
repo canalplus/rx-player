@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-import StaticRepresentationIndex from "./static";
-import IRepresentationIndex, {
-  IBaseContentInfos,
-  ISegment,
-} from "./types";
+import parseMetaPlaylist, {
+  IAdaptationType,
+  IMetaPlaylist,
+  IMetaPlaylistTextTrack,
+  IParserResponse,
+} from "./metaplaylist_parser";
 
-export default IRepresentationIndex;
+export default parseMetaPlaylist;
 export {
-  IBaseContentInfos,
-  ISegment,
-  StaticRepresentationIndex,
+  IAdaptationType,
+  IMetaPlaylist,
+  IMetaPlaylistTextTrack,
+  IParserResponse,
 };

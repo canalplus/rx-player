@@ -30,6 +30,7 @@ import dashManifestParser, {
 } from "../../parsers/manifest/dash";
 import request from "../../utils/request";
 import {
+  ILoaderDataLoadedValue,
   IManifestLoaderArguments,
   IManifestLoaderObservable,
   IManifestParserArguments,
@@ -54,12 +55,14 @@ import {
  * @param {string} xlinkURL
  * @returns {Observable}
  */
-function requestStringResource(url : string) : Observable<string> {
+function requestStringResource(
+  url : string
+) : Observable< ILoaderDataLoadedValue < string > > {
   return request({ url,
                    responseType: "text" })
   .pipe(
     filter((e) => e.type === "data-loaded"),
-    map((e) => e.value.responseData)
+    map((e) => e.value)
   );
 }
 
@@ -87,7 +90,8 @@ export default function(
 
     parser(
       { response, url: loaderURL, scheduleRequest, hasClockSynchronization } :
-      IManifestParserArguments< Document | string, string >
+      IManifestParserArguments< Document | string,
+                                ILoaderDataLoadedValue< Document | string > >
     ) : IManifestParserObservable {
       const url = response.url == null ? loaderURL :
                                          response.url;
@@ -117,9 +121,15 @@ export default function(
           .map(resource => scheduleRequest(() => requestStringResource(resource)));
 
         return observableCombineLatest(externalResources$)
-          .pipe(mergeMap(loadedResources =>
-            loadExternalResources(continueParsing(loadedResources))
-          ));
+          .pipe(mergeMap(loadedResources => {
+            const resourceData = loadedResources.map(r => {
+              if (typeof r.responseData !== "string") {
+                throw new Error("External DASH resources should only be strings");
+              }
+              return r.responseData;
+            });
+            return loadExternalResources(continueParsing(resourceData));
+          }));
       }
     },
   };

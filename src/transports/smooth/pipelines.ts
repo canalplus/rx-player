@@ -33,6 +33,7 @@ import stringFromUTF8 from "../../utils/string_from_utf8";
 import warnOnce from "../../utils/warn_once";
 import {
   IImageParserObservable,
+  ILoaderDataLoadedValue,
   IManifestLoaderArguments,
   IManifestLoaderObservable,
   IManifestParserArguments,
@@ -126,8 +127,11 @@ export default function(
       return manifestLoader(url);
     },
 
-    parser(
-      { response, url: reqURL } : IManifestParserArguments<Document|string, string>
+    parser({
+      response,
+      url: reqURL,
+    } : IManifestParserArguments<Document | string,
+                                 ILoaderDataLoadedValue< Document | string > >
     ) : IManifestParserObservable {
       const url = response.url == null ? reqURL :
                                          response.url;

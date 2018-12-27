@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+import Manifest, {
+  Adaptation,
+  Representation,
+} from "../../manifest";
+import Period from "../period";
+
 // privateInfos specific to Smooth Initialization Segments
 export interface ISmoothInitSegmentPrivateInfos { codecPrivateData? : string;
                                                   bitsPerSample? : number;
@@ -28,7 +34,16 @@ export interface ISmoothInitSegmentPrivateInfos { codecPrivateData? : string;
                                                     }>;
                                                   }; }
 
-export interface IPrivateInfos { smoothInit? : ISmoothInitSegmentPrivateInfos; }
+export interface IBaseContentInfos { manifest: Manifest;
+                                     period: Period;
+                                     adaptation: Adaptation;
+                                     representation: Representation; }
+
+export interface IPrivateInfos {
+  smoothInit? : ISmoothInitSegmentPrivateInfos;
+  metaplaylistInfos? : { transportType : string;
+                         baseContent : IBaseContentInfos; };
+}
 
 // ISegment Object.
 // Represent a single Segment from a Representation.
