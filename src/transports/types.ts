@@ -207,10 +207,12 @@ export type ImageParserObservable = Observable<{
 
 export interface ITransportManifestPipeline {
   // TODO Remove resolver
-  resolver? : (x : IManifestLoaderArguments) => Observable<IManifestLoaderArguments>;
-  loader : (x : IManifestLoaderArguments) => ILoaderObservable<Document|string>;
-  parser : (x : IManifestParserArguments< Document |
-                                          string, string>) => IManifestParserObservable;
+  resolver? : (x : IManifestLoaderArguments) =>
+    Observable<IManifestLoaderArguments>;
+  loader : (x : IManifestLoaderArguments) =>
+    ILoaderObservable<Document|string>;
+  parser : (x : IManifestParserArguments<Document|string, any>) =>
+    IManifestParserObservable;
 }
 
 interface ITransportSegmentPipelineBase<T> {

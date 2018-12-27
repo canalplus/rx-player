@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-import StaticRepresentationIndex from "./static";
-import IRepresentationIndex, {
-  IBaseContentInfos,
-  ISegment,
-} from "./types";
+import metaplaylist from "../../transports/metaplaylist";
+import { IFeaturesObject } from "../types";
 
-export default IRepresentationIndex;
-export {
-  IBaseContentInfos,
-  ISegment,
-  StaticRepresentationIndex,
-};
+function addMetaPlaylistFeature(features: IFeaturesObject) {
+  features.transports.metaplaylist = metaplaylist;
+}
+
+export { addMetaPlaylistFeature as METAPLAYLIST };
+export default addMetaPlaylistFeature;

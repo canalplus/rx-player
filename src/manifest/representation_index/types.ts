@@ -14,21 +14,37 @@
  * limitations under the License.
  */
 
-// privateInfos specific to Smooth Initialization Segments
-export interface ISmoothInitSegmentPrivateInfos { codecPrivateData? : string;
-                                                  bitsPerSample? : number;
-                                                  channels? : number;
-                                                  packetSize? : number;
-                                                  samplingRate? : number;
-                                                  protection? : {
-                                                    keyId : string;
-                                                    keySystems : Array<{
-                                                      systemId : string;
-                                                      privateData : Uint8Array;
-                                                    }>;
-                                                  }; }
+import Manifest, {
+  Adaptation,
+  Representation,
+} from "../../manifest";
+import Period from "../period";
 
-export interface IPrivateInfos { smoothInit? : ISmoothInitSegmentPrivateInfos; }
+export type IMetaPlaylistTransportTypePrivateInfos = string;
+
+export interface ISmoothInitSegmentPrivateInfos {
+  codecPrivateData? : string;
+  bitsPerSample? : number;
+  channels? : number;
+  packetSize? : number;
+  samplingRate? : number;
+  protection? : { keyId : string;
+                  keySystems : Array<{
+                  systemId : string;
+                  privateData : Uint8Array; }>;
+  };
+}
+
+export interface IBaseContentInfos { manifest: Manifest;
+                                     period: Period;
+                                     adaptation: Adaptation;
+                                     representation: Representation; }
+
+export interface IPrivateInfos {
+  smoothInit? : ISmoothInitSegmentPrivateInfos;
+  metaplaylistInfos? : { transportType : IMetaPlaylistTransportTypePrivateInfos;
+                         baseContent : IBaseContentInfos; };
+}
 
 // ISegment Object.
 // Represent a single Segment from a Representation.
