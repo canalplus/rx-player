@@ -45,7 +45,7 @@ import {
 } from "../../errors";
 import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
-import { retryObsWithBackoff } from "../../utils/retry_with_backoff";
+import retryObsWithBackoff from "../../utils/rx-retry_with_backoff";
 import tryCatch from "../../utils/rx-try_catch";
 import {
   IEMEWarningEvent,

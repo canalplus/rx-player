@@ -16,7 +16,6 @@
 
 import {
   Observable,
-  Observer,
   timer as observableTimer,
 } from "rxjs";
 import {
@@ -99,7 +98,7 @@ interface IBackoffOptions {
  * TODO Take errorSelector out. Should probably be entirely managed in the
  * calling code via a catch (much simpler to use and to understand).
  */
-function retryObsWithBackoff<T>(
+export default function retryObsWithBackoff<T>(
   obs$ : Observable<T>,
   options : IBackoffOptions
 ) : Observable<T> {
@@ -142,126 +141,3 @@ function retryObsWithBackoff<T>(
       }));
   }));
 }
-
-/**
- * Retry the given function (if it triggers an error) with an exponential
- * backoff.
- * The backoff behavior can be tweaked through the options given.
- *
- * @param {Function} func
- * @param {Object} options - Configuration object. @see retryObsWithBackoff
- * @returns {Observable}
- */
-function retryFuncWithBackoff<T>(
-  func: () => T,
-  options : IBackoffOptions
-) : Observable<T> {
-  const {
-    retryDelay,
-    totalRetry,
-    shouldRetry,
-    resetDelay,
-    errorSelector,
-    onRetry,
-  } = options;
-
-  let retryCount = 0;
-  let debounceRetryCount : () => void|undefined;
-  if (resetDelay != null && resetDelay > 0) {
-    debounceRetryCount = debounce(() => { retryCount = 0; }, resetDelay);
-  }
-
-  function doRetry() : Observable<T> {
-    const func$ : Observable<T> = Observable.create((obs : Observer<T>) => {
-      obs.next(func());
-      obs.complete();
-    });
-
-    return func$.pipe(catchError((error : Error|ICustomError) => {
-      const wantRetry = !shouldRetry || shouldRetry(error);
-      if (!wantRetry || retryCount++ >= totalRetry) {
-        if (errorSelector) {
-          throw errorSelector(error, retryCount);
-        } else {
-          throw error;
-        }
-      }
-
-      if (onRetry) {
-        onRetry(error, retryCount);
-      }
-
-      const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
-      return observableTimer(fuzzedDelay)
-        .pipe(mergeMap(() => {
-          if (debounceRetryCount) {
-            debounceRetryCount();
-          }
-          return doRetry();
-        }));
-    }));
-  }
-
-  return doRetry();
-}
-
-/**
- * Same than retryObsWithBackoff, only with a function returning an observable
- * instead of an observable.
- * @param {Function} fn - Function returning an Observable which
- * will (well, might) be retried.
- * @param {Object} options - Configuration object. @see retryObsWithBackoff
- * @returns {Function} - take in argument fn's arguments, returns
- * an Observable.
- */
-function retryableFuncWithBackoff<T, I>(
-  fn : (...args : T[]) => Observable<I>,
-  options : IBackoffOptions
-) : (...args : T[]) => Observable<I> {
-  const {
-    retryDelay,
-    totalRetry,
-    shouldRetry,
-    resetDelay,
-    errorSelector,
-    onRetry,
-  } = options;
-
-  let retryCount = 0;
-  let debounceRetryCount : () => void|undefined;
-  if (resetDelay != null && resetDelay > 0) {
-    debounceRetryCount = debounce(() => { retryCount = 0; }, resetDelay);
-  }
-
-  return function doRetry(...args : T[]) : Observable<I> {
-    return fn(...args).pipe(catchError((error : Error|ICustomError) => {
-      const wantRetry = !shouldRetry || shouldRetry(error);
-      if (!wantRetry || retryCount++ >= totalRetry) {
-        if (errorSelector) {
-          throw errorSelector(error, retryCount);
-        } else {
-          throw error;
-        }
-      }
-
-      if (onRetry) {
-        onRetry(error, retryCount);
-      }
-
-      const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
-      return observableTimer(fuzzedDelay).pipe(mergeMap(() => {
-        if (debounceRetryCount) {
-          debounceRetryCount();
-        }
-        return doRetry(...args);
-      }));
-    }));
-  };
-}
-
-export {
-  retryObsWithBackoff,
-  retryableFuncWithBackoff,
-  retryFuncWithBackoff,
-  ICustomError,
-};
