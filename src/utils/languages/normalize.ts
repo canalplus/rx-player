@@ -46,7 +46,7 @@ interface INormalizedTextTrackObject extends IMinimalTextTrackObject {
  * @param {string} _language
  * @returns {string}
  */
-function normalize(_language : string) : string {
+function normalizeLanguage(_language : string) : string {
   if (_language == null || _language === "") {
     return "";
   }
@@ -104,7 +104,7 @@ function normalizeTextTrack(
     return {
       language,
       closedCaption,
-      normalized: normalize(language),
+      normalized: normalizeLanguage(language),
     };
   }
 
@@ -138,15 +138,15 @@ function normalizeAudioTrack(
     return {
       language,
       audioDescription,
-      normalized: normalize(language),
+      normalized: normalizeLanguage(language),
     };
   }
 
   return _language;
 }
 
+export default normalizeLanguage;
 export {
-  normalize,
   normalizeAudioTrack,
   normalizeTextTrack,
   INormalizedTextTrackObject,

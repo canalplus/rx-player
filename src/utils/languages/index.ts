@@ -14,10 +14,16 @@
  * limitations under the License.
  */
 
-export {
-  normalize,
+import normalizeLanguage, {
+  INormalizedAudioTrackObject,
+  INormalizedTextTrackObject,
   normalizeAudioTrack,
   normalizeTextTrack,
-  INormalizedTextTrackObject,
-  INormalizedAudioTrackObject,
 } from "./normalize";
+export default normalizeLanguage;
+export {
+  INormalizedAudioTrackObject,
+  INormalizedTextTrackObject,
+  normalizeAudioTrack,
+  normalizeTextTrack,
+};

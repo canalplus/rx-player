@@ -22,7 +22,7 @@ import {
 } from "../errors";
 import log from "../log";
 import arrayFind from "../utils/array_find";
-import { normalize as normalizeLang } from "../utils/languages";
+import normalizeLanguage from "../utils/languages";
 import uniq from "../utils/uniq";
 import Representation, {
   IRepresentationArguments,
@@ -152,7 +152,7 @@ export default class Adaptation {
 
     if (args.language != null) {
       this.language = args.language;
-      this.normalizedLanguage = normalizeLang(args.language);
+      this.normalizedLanguage = normalizeLanguage(args.language);
     }
 
     if (args.closedCaption != null) {
