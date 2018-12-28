@@ -17,7 +17,7 @@
 import objectAssign from "object-assign";
 import { of as observableOf } from "rxjs";
 import assert from "../../utils/assert";
-import { stringFromUTF8 } from "../../utils/strings";
+import stringFromUTF8 from "../../utils/string_from_utf8";
 
 import {
   getMDAT,

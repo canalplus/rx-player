@@ -28,7 +28,7 @@ import Manifest, {
 import createSmoothManifestParser from "../../parsers/manifest/smooth";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
-import { stringFromUTF8 } from "../../utils/strings";
+import stringFromUTF8 from "../../utils/string_from_utf8";
 import warnOnce from "../../utils/warn_once";
 import {
   ILoaderObservable,

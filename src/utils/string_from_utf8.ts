@@ -39,7 +39,7 @@ function stringFromCharCode(args : Uint8Array) : string {
  * @throws {Error}
  * @export
  */
-function stringFromUTF8(data? : Uint8Array|null) : string {
+export default function stringFromUTF8(data? : Uint8Array|null) : string {
   if (!data) {
     return "";
   }
@@ -66,8 +66,3 @@ function stringFromUTF8(data? : Uint8Array|null) : string {
   // Example: "g#%E3%82%AC" -> "g#€"
   return decodeURIComponent(escaped);
 }
-
-export {
-  stringFromCharCode,
-  stringFromUTF8,
-};
