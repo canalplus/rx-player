@@ -26,8 +26,8 @@ import {
  * function's result (which should be, in most cases, an Observable).
  */
 export default function tryCatch<T, I>(
-  func : (args? : T) => Observable<I>,
-  args? : T
+  func : (args : T) => Observable<I>,
+  args : T
 ) : Observable<I>|Observable<never> {
   try {
     return func(args);

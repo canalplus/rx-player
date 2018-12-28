@@ -46,7 +46,7 @@ import {
 import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
 import { retryObsWithBackoff } from "../../utils/retry_with_backoff";
-import tryCatch from "../../utils/rx-tryCatch";
+import tryCatch from "../../utils/rx-try_catch";
 import {
   IEMEWarningEvent,
   IKeySystemOption,
@@ -174,7 +174,7 @@ export default function handleSessionEvents(
             castToObservable(
               keySystem.onKeyStatusesChange(keyStatusesEvent, session)
             ) as Observable<TypedArray|ArrayBuffer|null> : EMPTY;
-        }).pipe() // TS or RxJS Bug?
+        }, undefined).pipe() // TS or RxJS Bug?
           .pipe(
             catchError((error: Error) => {
               throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", error, true);

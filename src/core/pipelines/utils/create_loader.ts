@@ -45,7 +45,7 @@ import {
   ITransportPipeline,
 } from "../../../transports/types";
 import castToObservable from "../../../utils/cast_to_observable";
-import tryCatch from "../../../utils/rx-tryCatch";
+import tryCatch from "../../../utils/rx-try_catch";
 import downloadingBackoff from "./backoff";
 
 interface IPipelineLoaderCache<T> {

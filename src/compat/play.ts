@@ -19,7 +19,7 @@ import {
   Observable,
 } from "rxjs";
 import castToObservable from "../utils/cast_to_observable";
-import tryCatch from "../utils/rx-tryCatch";
+import tryCatch from "../utils/rx-try_catch";
 
 /**
  * Call play on the media element on subscription and return the response as an
@@ -32,6 +32,6 @@ export default function play$(mediaElement : HTMLMediaElement) : Observable<unkn
     // mediaElement.play is not always a Promise. In the improbable case it
     // throws, I prefer still to catch to return the error wrapped in an
     // Observable
-    tryCatch(() => castToObservable(mediaElement.play()))
+    tryCatch(() => castToObservable(mediaElement.play()), undefined)
   );
 }

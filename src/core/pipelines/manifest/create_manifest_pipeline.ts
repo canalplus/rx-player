@@ -39,7 +39,7 @@ import {
   IManifestLoaderArguments,
   ITransportPipelines,
 } from "../../../transports/types";
-import tryCatch from "../../../utils/rx-tryCatch";
+import tryCatch from "../../../utils/rx-try_catch";
 import downloadingBackoff from "../utils/backoff";
 import createLoader, {
   IPipelineLoaderOptions,
@@ -126,7 +126,7 @@ export default function createManifestPipeline(
         warning$.next(errorSelector("PIPELINE_LOAD_ERROR", error, false));
       },
     };
-    return downloadingBackoff(tryCatch(request), backoffOptions).pipe(
+    return downloadingBackoff(tryCatch(request, undefined), backoffOptions).pipe(
       catchError((error : Error) : Observable<never> => {
         throw errorSelector("PIPELINE_LOAD_ERROR", error, true);
       }));
