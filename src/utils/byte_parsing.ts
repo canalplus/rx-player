@@ -28,8 +28,12 @@ type TypedArray =
   Float64Array;
 
 /**
- * Returns Uint8Array from UTF16 string.
- * /!\ Take only the first byte from each UTF16 code.
+ * Convert a simple string to an Uint8Array containing the corresponding
+ * UTF-8 code units.
+ * /!\ its implementation favors simplicity and performance over accuracy.
+ * Each character having a code unit higher than 255 in UTF-16 will be
+ * truncated (real value % 256).
+ * Please take that into consideration when calling this function.
  * @param {string} str
  * @returns {Uint8Array}
  */
@@ -43,9 +47,8 @@ function strToBytes(str : string) : Uint8Array {
 }
 
 /**
- * construct string from unicode values.
- * /!\ does not support non-UCS-2 values
- * @param {Uint8Array} bytes
+ * construct string from the code units given
+ * @param {Uint16Array|Uint8Array} bytes
  * @returns {string}
  */
 function bytesToStr(bytes : TypedArray) : string {
@@ -54,13 +57,12 @@ function bytesToStr(bytes : TypedArray) : string {
 }
 
 /**
- * construct string from unicode values.
+ * construct string from the code units given.
  * Only use every other byte for each UTF-16 character.
- * /!\ does not support non-UCS-2 values
  * @param {Uint8Array} bytes
  * @returns {string}
  */
-function bytesToUTF16Str(bytes : Uint8Array) : string {
+function bytesToUTF16Str(bytes : TypedArray) : string {
   let str = "";
   const len = bytes.length;
   for (let i = 0; i < len; i += 2) {
