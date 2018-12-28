@@ -54,64 +54,6 @@ export default class SortedList<T> {
   }
 
   /**
-   * Returns the nth element. Throws if the index does not exist.
-   *
-   * /!\ The returned Element shares the same reference with what is used
-   * internally, any mutation on your part can lead to an un-sorted SortedList.
-   * You can still re-force the sorting to happen by calling forceSort.
-   * @throws Error - Throws if the given index is negative or superior to the
-   * array's length.
-   * @param {number} index
-   * @returns {*}
-   */
-  get(index : number) : T {
-    if (index < 0 || index >= this._array.length) {
-      throw new Error("Invalid index.");
-    }
-    return this._array[index];
-  }
-
-  /**
-   * Find the first element corresponding to the given predicate.
-   *
-   * /!\ The returned element shares the same reference with what is used
-   * internally, any mutation on your part can lead to an un-sorted SortedList.
-   * You can still re-force the sorting to happen by calling forceSort.
-   * @param {Function} fn
-   * @returns {*}
-   */
-  findFirst(fn : (element : T) => boolean) : T | undefined {
-    return arrayFind(this._array, fn);
-  }
-
-  /**
-   * Returns the index of the given element in the list.
-   * -1 if not found.
-   * @param {*} element
-   * @returns {number}
-   */
-  indexOf(element : T) : number {
-    return this._array.indexOf(element);
-  }
-
-  /**
-   * Returns true if the List contains the given element.
-   * @param {*} element
-   * @returns {Boolean}
-   */
-  has(element : T) : boolean {
-    return arrayIncludes(this._array, element);
-  }
-
-  /**
-   * Returns the current length of the list.
-   * @returns {number}
-   */
-  length() : number {
-    return this._array.length;
-  }
-
-  /**
    * Add a new element to the List at the right place for the List to stay
    * sorted.
    *
@@ -120,7 +62,7 @@ export default class SortedList<T> {
    * You can still re-force the sorting to happen by calling forceSort.
    * @param {...*} elements
    */
-  add(...elements : T[]) {
+  public add(...elements : T[]) {
     elements.sort(this._sortingFn);
 
     let j = 0;
@@ -143,11 +85,59 @@ export default class SortedList<T> {
   }
 
   /**
+   * Returns the current length of the list.
+   * @returns {number}
+   */
+  public length() : number {
+    return this._array.length;
+  }
+
+  /**
+   * Returns the nth element. Throws if the index does not exist.
+   *
+   * /!\ The returned Element shares the same reference with what is used
+   * internally, any mutation on your part can lead to an un-sorted SortedList.
+   * You can still re-force the sorting to happen by calling forceSort.
+   * @throws Error - Throws if the given index is negative or superior to the
+   * array's length.
+   * @param {number} index
+   * @returns {*}
+   */
+  public get(index : number) : T {
+    if (index < 0 || index >= this._array.length) {
+      throw new Error("Invalid index.");
+    }
+    return this._array[index];
+  }
+
+  /**
+   * Find the first element corresponding to the given predicate.
+   *
+   * /!\ The returned element shares the same reference with what is used
+   * internally, any mutation on your part can lead to an un-sorted SortedList.
+   * You can still re-force the sorting to happen by calling forceSort.
+   * @param {Function} fn
+   * @returns {*}
+   */
+  public findFirst(fn : (element : T) => boolean) : T | undefined {
+    return arrayFind(this._array, fn);
+  }
+
+  /**
+   * Returns true if the List contains the given element.
+   * @param {*} element
+   * @returns {Boolean}
+   */
+  public has(element : T) : boolean {
+    return arrayIncludes(this._array, element);
+  }
+
+  /**
    * Remove the first occurence of the given element.
    * Returns the index of the removed element. Undefined if not found.
    * @returns {number|undefined}
    */
-  removeElement(element : T) : number|undefined {
+  public removeElement(element : T) : number|undefined {
     const indexOf = this._array.indexOf(element);
     if (indexOf >= 0) {
       this._array.splice(indexOf, 1);
@@ -163,7 +153,7 @@ export default class SortedList<T> {
    * You can still re-force the sorting to happen by calling forceSort.
    * @returns {*}
    */
-  head() : T|undefined {
+  public head() : T|undefined {
     return this._array[0];
   }
 
@@ -175,7 +165,7 @@ export default class SortedList<T> {
    * You can still re-force the sorting to happen by calling forceSort.
    * @returns {*}
    */
-  last() : T|undefined {
+  public last() : T|undefined {
     return this._array[this._array.length - 1];
   }
 
@@ -184,7 +174,7 @@ export default class SortedList<T> {
    * Returns the element removed or undefined if no element were removed.
    * @returns {*}
    */
-  shift() : T|undefined {
+  public shift() : T|undefined {
     return this._array.shift();
   }
 
@@ -193,7 +183,7 @@ export default class SortedList<T> {
    * Returns the element removed or undefined if no element were removed.
    * @returns {*}
    */
-  pop() : T|undefined {
+  public pop() : T|undefined {
     return this._array.pop();
   }
 
@@ -224,14 +214,14 @@ export default class SortedList<T> {
    * ```
    * @returns {Boolean}
    */
-  checkSort() : boolean {
-    for (let i = 0; i < this._array.length - 1; i++) {
-      if (this._sortingFn(this._array[i], this._array[i + 1]) > 0) {
-        return false;
-      }
-    }
-    return true;
-  }
+  // checkSort() : boolean {
+  //   for (let i = 0; i < this._array.length - 1; i++) {
+  //     if (this._sortingFn(this._array[i], this._array[i + 1]) > 0) {
+  //       return false;
+  //     }
+  //   }
+  //   return true;
+  // }
 
   /**
    * Force the array to be sorted.
@@ -239,7 +229,7 @@ export default class SortedList<T> {
    * You might want to call this function when you're unsure that a mutation
    * you've done yourself impacted the order of the elements in the list.
    */
-  forceSort() {
-    this._array.sort(this._sortingFn);
-  }
+  // forceSort() {
+  //   this._array.sort(this._sortingFn);
+  // }
 }

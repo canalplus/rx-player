@@ -17,8 +17,6 @@
 import { expect } from "chai";
 import {
   concat,
-  // EMPTY,
-  // NEVER,
   Observable,
   of as observableOf,
   Subject,
