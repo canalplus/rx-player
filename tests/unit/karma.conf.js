@@ -1,6 +1,8 @@
 /* eslint-env node */
+
 const path = require("path");
 const webpackConfig = require("../../webpack-tests.config.js");
+const coverageIsWanted = !!process.env.RXP_COVERAGE;
 
 const singleRun = !process.env.RXP_TESTS_WATCH;
 
@@ -55,6 +57,24 @@ const karmaConf = {
     },
   },
 };
+
+if (coverageIsWanted) {
+  karmaConf.reporters.push("coverage-istanbul");
+  karmaConf.coverageIstanbulReporter = {
+    reports: [ "html", "text-summary" ],
+    dir: path.join(__dirname, "coverage"),
+    fixWebpackSourcePaths: true,
+    "report-config": {
+      html: { outdir: "html" },
+    },
+  };
+  karmaConf.preprocessors = {
+    [path.resolve(__dirname, "./coverage.js")]: "webpack",
+  };
+  karmaConf.files =  [
+    path.resolve(__dirname, "./coverage.js"),
+  ];
+}
 
 module.exports = function(config) {
   config.set(karmaConf);
