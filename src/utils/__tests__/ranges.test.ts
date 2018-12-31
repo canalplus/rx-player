@@ -23,14 +23,13 @@ import {
   getPlayedSizeOfRange,
   getRange,
   getSizeOfRange,
+  insertInto,
+  isAfter,
+  isBefore,
   isTimeInRange,
   keepRangeIntersection,
-  // TODO
-  // insertInto,
-  // isAfter,
-  // isBefore,
-  // mergeContiguousRanges,
-  // removeEmptyRanges,
+  mergeContiguousRanges,
+  removeEmptyRanges,
 } from "../ranges";
 
 /**
@@ -508,6 +507,265 @@ describe("utils - ranges", () => {
       expect(isTimeInRange({ start: 30, end: 70 }, 80)).to.equal(false);
       expect(isTimeInRange({ start: 72, end: Infinity }, 70)).to.equal(false);
       expect(isTimeInRange({ start: 0, end: 1 }, 7)).to.equal(false);
+    });
+  });
+
+  describe("removeEmptyRanges", () => {
+    it("should do nothing on an empty array", () => {
+      expect(removeEmptyRanges([])).to.eql([]);
+    });
+    it("should clear ranges which have their start equal to their end", () => {
+      expect(removeEmptyRanges([
+        { start: 30, end: 70 },
+        { start: 90, end: 90 },
+        { start: 100, end: 101 },
+      ])).to.eql([
+        { start: 30, end: 70 },
+        { start: 100, end: 101 },
+      ]);
+      expect(removeEmptyRanges([
+        { start: 30, end: 70 },
+        { start: 90, end: 91 },
+        { start: 100, end: 101 },
+      ])).to.eql([
+        { start: 30, end: 70 },
+        { start: 90, end: 91 },
+        { start: 100, end: 101 },
+      ]);
+    });
+  });
+
+  describe("mergeContiguousRanges", () => {
+    it("should do nothing on an empty array", () => {
+      expect(mergeContiguousRanges([])).to.eql([]);
+    });
+
+    it("should return ranges with merged contiguity", () => {
+      expect(mergeContiguousRanges([
+        { start: 30, end: 70 },
+        { start: 70, end: 80 },
+        { start: 90, end: 90 },
+        { start: 100, end: 100 },
+        { start: 100, end: 111 },
+      ])).to.eql([
+        { start: 30, end: 80 },
+        { start: 90, end: 90 },
+        { start: 100, end: 111 },
+      ]);
+    });
+
+    it("should allow a small delta when calculating contiguity", () => {
+      const delta = 1 / 60;
+      expect(mergeContiguousRanges([
+        { start: 30, end: 70 },
+        { start: delta + 70, end: 80 },
+        { start: 90, end: 90 },
+        { start: 100, end: 100 },
+        { start: delta * 2 + 100, end: 111 },
+      ])).to.eql([
+        { start: 30, end: 80 },
+        { start: 90, end: 90 },
+        { start: 100, end: 100 },
+        { start: delta * 2 + 100, end: 111 },
+      ]);
+    });
+  });
+
+  describe("isAfter", () => {
+    /* tslint:disable max-line-length */
+    it("should return true if the first range begins after the end of the second range", () => {
+    /* tslint:enable max-line-length */
+      expect(isAfter(
+        { start: 10, end: 15 },
+        { start: 0, end: 5 }
+      )).to.equal(true);
+    });
+
+    /* tslint:disable max-line-length */
+    it("should return true if the first range begins at the same time than the end of the second range", () => {
+    /* tslint:enable max-line-length */
+      expect(isAfter(
+        { start: 5, end: 15 },
+        { start: 0, end: 5 }
+      )).to.equal(true);
+      expect(isAfter(
+        { start: 70, end: 70 },
+        { start: 10, end: 70 }
+      )).to.equal(true);
+    });
+
+    /* tslint:disable max-line-length */
+    it("should return false if the first range begins before the end of the second range", () => {
+    /* tslint:enable max-line-length */
+      expect(isAfter(
+        { start: 10.1, end: 10.2 },
+        { start: 10, end: 70 }
+      )).to.equal(false);
+      expect(isAfter(
+        { start: 19, end: 50 },
+        { start: 10, end: 20 }
+      )).to.equal(false);
+      expect(isAfter(
+        { start: 0, end: 5 },
+        { start: 5, end: 15 }
+      )).to.equal(false);
+    });
+  });
+
+  describe("isBefore", () => {
+    /* tslint:disable max-line-length */
+    it("should return true if the first range ends before the start of the second range", () => {
+    /* tslint:enable max-line-length */
+      expect(isBefore(
+        { start: 0, end: 5 },
+        { start: 10, end: 15 }
+      )).to.equal(true);
+    });
+
+    /* tslint:disable max-line-length */
+    it("should return true if the first range ends at the same time than the start of the second range", () => {
+    /* tslint:enable max-line-length */
+      expect(isBefore(
+        { start: 0, end: 5 },
+        { start: 5, end: 15 }
+      )).to.equal(true);
+      expect(isBefore(
+        { start: 10, end: 70 },
+        { start: 70, end: 70 }
+      )).to.equal(true);
+    });
+
+    /* tslint:disable max-line-length */
+    it("should return false if the first range ends after the start of the second range", () => {
+    /* tslint:enable max-line-length */
+      expect(isBefore(
+        { start: 10, end: 70 },
+        { start: 10.1, end: 10.2 }
+      )).to.equal(false);
+      expect(isBefore(
+        { start: 10, end: 20 },
+        { start: 19, end: 50 }
+      )).to.equal(false);
+      expect(isBefore(
+        { start: 5, end: 15 },
+        { start: 0, end: 5 }
+      )).to.equal(false);
+    });
+  });
+
+  describe("insertInto", () => {
+    it("should do nothing if the given range is empty", () => {
+      expect(insertInto([], { start: 10, end: 10 })).to.eql([]);
+      expect(insertInto([
+        { start: 0, end: 0 },
+      ], { start: 10, end: 10 })).to.eql([
+        { start: 0, end: 0 },
+      ]);
+      expect(insertInto([
+        { start: 0, end: 9 },
+      ], { start: 10, end: 10 })).to.eql([
+        { start: 0, end: 9 },
+      ]);
+    });
+
+    it("should just add the range if we had no original ranges", () => {
+      expect(insertInto([], { start: 0, end: 5 })).to.eql([{ start: 0, end: 5 }]);
+    });
+
+    it("should not add a range contained entirely in a previous one", () => {
+      expect(insertInto([
+        { start: 0, end: 100 },
+      ], { start: 10, end: 20 })).to.eql([
+        { start: 0, end: 100 },
+      ]);
+      expect(insertInto([
+        { start: 0, end: 100 },
+        { start: 101, end: 201 },
+      ], { start: 0, end: 100 })).to.eql([
+        { start: 0, end: 100 },
+        { start: 101, end: 201 },
+      ]);
+    });
+
+    it("should merge a range contained partially in a previous one", () => {
+      expect(insertInto([
+        { start: 0, end: 100 },
+      ], { start: 10, end: 110 })).to.eql([
+        { start: 0, end: 110 },
+      ]);
+      expect(insertInto([
+        { start: 0, end: 100 },
+        { start: 101, end: 201 },
+      ], { start: 90, end: 150 })).to.eql([
+        { start: 0, end: 201 },
+      ]);
+    });
+
+    it("should merge a range contiguous with a previous one", () => {
+      expect(insertInto([
+        { start: 0, end: 100 },
+      ], { start: 100, end: 110 })).to.eql([
+        { start: 0, end: 110 },
+      ]);
+      expect(insertInto([
+        { start: 50, end: 70 },
+      ], { start: 0, end: 50 })).to.eql([
+        { start: 0, end: 70 },
+      ]);
+      expect(insertInto([
+        { start: 0, end: 100 },
+        { start: 101, end: 201 },
+      ], { start: 100, end: 101 })).to.eql([
+        { start: 0, end: 201 },
+      ]);
+    });
+
+    it("should allow a small delta when calculating contiguity", () => {
+      const delta = 1 / 60;
+      expect(insertInto([
+        { start: 0, end: 100 },
+      ], { start: delta + 100, end: 110 })).to.eql([
+        { start: 0, end: 110 },
+      ]);
+      expect(insertInto([
+        { start: 0, end: 100 },
+        { start: 101, end: 201 },
+      ], { start: delta + 100, end: 101 - delta })).to.eql([
+        { start: 0, end: 201 },
+      ]);
+    });
+
+    it("should add a range strictly before what we already have", () => {
+      expect(insertInto([
+        { start: 50, end: 100 },
+        { start: 101, end: 201 },
+      ], { start: 0, end: 10 })).to.eql([
+        { start: 0, end: 10 },
+        { start: 50, end: 100 },
+        { start: 101, end: 201 },
+      ]);
+    });
+
+    it("should add a range strictly after what we already have", () => {
+      expect(insertInto([
+        { start: 50, end: 100 },
+        { start: 101, end: 201 },
+      ], { start: 500, end: 510 })).to.eql([
+        { start: 50, end: 100 },
+        { start: 101, end: 201 },
+        { start: 500, end: 510 },
+      ]);
+    });
+
+    it("should add a range between ranges we already have", () => {
+      expect(insertInto([
+        { start: 50, end: 100 },
+        { start: 150, end: 200 },
+      ], { start: 110, end: 120 })).to.eql([
+        { start: 50, end: 100 },
+        { start: 110, end: 120 },
+        { start: 150, end: 200 },
+      ]);
     });
   });
 });

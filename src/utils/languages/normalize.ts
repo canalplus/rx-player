@@ -61,10 +61,11 @@ function normalizeLanguage(_language : string) : string {
 
 /**
  * Normalize language into an ISO639-3 format.
+ * Returns undefined if it failed to do so
  * @param {string} base
  * @returns {string}
  */
-function normalizeBase(base : string) : string {
+function normalizeBase(base : string) : string|undefined {
   let result;
   switch (base.length) {
     case 2:
@@ -74,7 +75,7 @@ function normalizeBase(base : string) : string {
       result = ISO_MAP_2_TO_3[base];
       break;
   }
-  return result || base;
+  return result;
 }
 
 /**

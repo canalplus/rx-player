@@ -71,7 +71,9 @@ export default function arrayIncludes<T>(
   }
 
   const n = (fromIndex as number) | 0;
-  let k = Math.max(n >= 0 ? n : len - Math.abs(n), 0);
+  let k = n >= 0 ?
+    Math.min(n, len - 1) :
+    Math.max(len + n, 0);
 
   const areTheSame = (x : T, y : T) =>
     x === y ||

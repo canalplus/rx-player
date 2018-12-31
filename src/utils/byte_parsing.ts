@@ -322,27 +322,6 @@ function itole4(num : number) : Uint8Array {
 }
 
 /**
- * Translate Integer to a Uint8Array of length 8 of the corresponding
- * little-endian bytes.
- * @param {Number} num
- * @returns {Uint8Array}
- */
-function itole8(num : number) : Uint8Array {
-  const l = (num % 0x100000000);
-  const h = (num - l) / 0x100000000;
-  return new Uint8Array([
-    (h)        & 0xFF,
-    (h >>>  8) & 0xFF,
-    (h >>> 16) & 0xFF,
-    (h >>> 24) & 0xFF,
-    (l)        & 0xFF,
-    (l >>>  8) & 0xFF,
-    (l >>> 16) & 0xFF,
-    (l >>> 24) & 0xFF,
-  ]);
-}
-
-/**
  * @param {string} uuid
  * @returns {string}
  * @throws AssertionError - The uuid length is not 16
@@ -372,16 +351,6 @@ function guidToUuid(uuid : string) : string {
   return bytesToHex(ord);
 }
 
-/**
- * Creates a base-64 encoded ASCII string from a string of binary data, with
- * possible trailing equal sign(s) stripped.
- * @param {string} str
- * @returns {string}
- */
-function toBase64URL(str : string) : string {
-  return btoa(str).replace(/\=+$/, "");
-}
-
 export {
   strToBytes,
   bytesToStr, bytesToUTF16Str,
@@ -391,7 +360,6 @@ export {
   be2toi, be3toi, be4toi, be8toi,
   le2toi, le4toi, le8toi,
   itobe2, itobe4, itobe8,
-  itole2, itole4, itole8,
+  itole2, itole4,
   guidToUuid,
-  toBase64URL,
 };

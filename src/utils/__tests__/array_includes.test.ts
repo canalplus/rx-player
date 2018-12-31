@@ -39,6 +39,14 @@ describe("utils - array-includes", () => {
     expect(arrayIncludes([1, "toto", /aa/, 4, []], 4)).to.equal(true);
   });
 
+  it("should always be false if an empty array is given", () => {
+    expect(arrayIncludes([], undefined)).to.equal(false);
+    expect(arrayIncludes([], null)).to.equal(false);
+    expect(arrayIncludes([], 0)).to.equal(false);
+    expect(arrayIncludes([], "")).to.equal(false);
+    expect(arrayIncludes([], [])).to.equal(false);
+  });
+
   it("should be false if a number is not included", () => {
     expect(arrayIncludes([1, 2, 3, 4, 5], 0)).to.equal(false);
     expect(arrayIncludes([1, 2, /aaaa/, 4, 5], 6)).to.equal(false);
@@ -117,5 +125,24 @@ describe("utils - array-includes", () => {
       .to.equal(true);
     expect(arrayIncludes([obj1, obj2, obj3], obj2, 2))
       .to.equal(false);
+    expect(arrayIncludes([obj1, obj2, obj3], obj2, 3)) // out of bounds
+      .to.equal(false);
+  });
+
+  it("should go from the end if the given index is negative", () => {
+    const obj1 = { a: 4, b: 3 };
+    const obj2 = { a: obj1, b: { a: 4 } };
+    const obj3 = { a: obj1, b: { a: 4 } };
+    const obj4 = {};
+    expect(arrayIncludes([obj1, obj2, obj3, obj4], obj3))
+      .to.equal(true);
+    expect(arrayIncludes([obj1, obj2, obj3, obj4], obj3, -1))
+      .to.equal(false);
+    expect(arrayIncludes([obj1, obj2, obj3, obj4], obj3, -2))
+      .to.equal(true);
+    expect(arrayIncludes([obj1, obj2, obj3, obj4], obj3, -3))
+      .to.equal(true);
+    expect(arrayIncludes([obj1, obj2, obj3, obj4], obj3, -12)) // out of bounds
+      .to.equal(true);
   });
 });

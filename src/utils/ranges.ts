@@ -38,15 +38,6 @@ interface IRange {
 }
 
 /**
- * @param {number} start
- * @param {number} end
- * @returns {Object}
- */
-function createRange(start : number, end : number) : IRange {
-  return { start, end };
-}
-
-/**
  * Check equality with a tolerance of EPSILON.
  * Used for various functions with this sort of tolerance regarding the
  * start/end of contiguous ranges.
@@ -397,7 +388,6 @@ function keepRangeIntersection(
 }
 
 export {
-  createRange,
   convertToRanges,
   getInnerAndOuterTimeRanges,
   getLeftSizeOfRange,

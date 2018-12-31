@@ -16,6 +16,8 @@
 
 import { expect } from "chai";
 import { take } from "rxjs/operators";
+import * as sinon from "sinon";
+import log from "../../log";
 import EventEmitter, {
   fromEvent,
 } from "../event_emitter";
@@ -33,6 +35,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalled).to.eql(1);
     eventEmitter.trigger("nope", undefined);
     expect(wasCalled).to.eql(1);
+    eventEmitter.removeEventListener();
   });
 
   it("should communicate the given payload", () => {
@@ -83,6 +86,7 @@ describe("utils - EventEmitter", () => {
     eventEmitter.trigger("nope", undefined);
     expect(wasCalledWithString).to.eql(4);
     expect(wasCalledWithObject).to.eql(1);
+    eventEmitter.removeEventListener();
   });
 
   it("should be able to remove the listener for a given event", () => {
@@ -139,6 +143,7 @@ describe("utils - EventEmitter", () => {
     eventEmitter.trigger("nope", "a");
     expect(wasCalledWithString).to.eql(3);
     expect(wasCalledWithObject).to.eql(1);
+    eventEmitter.removeEventListener();
   });
 
   it("should be able to register multiple callbacks for the same event", () => {
@@ -264,6 +269,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithObject2).to.eql(1);
     expect(wasCalledWithString3).to.eql(2);
     expect(wasCalledWithObject3).to.eql(3);
+    eventEmitter.removeEventListener();
   });
 
   /* tslint:disable max-line-length */
@@ -391,6 +397,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithObject2).to.eql(1);
     expect(wasCalledWithString3).to.eql(2);
     expect(wasCalledWithObject3).to.eql(2);
+    eventEmitter.removeEventListener();
   });
 
   /* tslint:disable max-line-length */
@@ -518,6 +525,42 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithObject2).to.eql(1);
     expect(wasCalledWithString3).to.eql(2);
     expect(wasCalledWithObject3).to.eql(1);
+    eventEmitter.removeEventListener();
+  });
+
+  it("should allow removing event listener that do not exist", () => {
+    const eventEmitter = new EventEmitter<string, never>();
+    const cb1 = function() {
+      throw new Error("Should not be called");
+    };
+    const cb2 = function() {
+      throw new Error("Should not be called");
+    };
+    eventEmitter.addEventListener("test", cb2);
+    eventEmitter.removeEventListener("test", cb1);
+    eventEmitter.removeEventListener("test", cb2);
+    eventEmitter.removeEventListener("test", cb2);
+    eventEmitter.removeEventListener("test");
+    eventEmitter.removeEventListener("test");
+    eventEmitter.removeEventListener();
+    eventEmitter.removeEventListener();
+  });
+
+  it("should log if an event listener throws", () => {
+    const eventEmitter = new EventEmitter<string, void>();
+    const err = new Error("Should not be called");
+    const cb = function() {
+      throw err;
+    };
+    const logSpy = sinon.stub(log, "error");
+    eventEmitter.addEventListener("t", cb);
+
+    expect(logSpy.callCount).to.equal(0);
+    eventEmitter.trigger("t", undefined);
+    expect(logSpy.callCount).to.equal(1);
+    expect(logSpy.calledWith(err, err.stack)).to.equal(true);
+    logSpy.restore();
+    eventEmitter.removeEventListener();
   });
 });
 

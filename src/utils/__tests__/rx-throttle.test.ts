@@ -133,6 +133,50 @@ describe("utils - throttle (RxJS)", () => {
     sub3.complete();
   });
 
+  it("should execute Observable coming after the previous one has errored", (done) => {
+    const sub1 = new Subject<void>();
+    const sub2 = new Subject<void>();
+    const sub3 = new Subject<void>();
+    const obsFunction = (sub : Subject<void>) : Observable<void> => {
+      return concat(observableOf(undefined), sub);
+    };
+    const throttledObsFunction = throttle(obsFunction);
+    const Obs1 = throttledObsFunction(sub1);
+    const Obs2 = throttledObsFunction(sub2);
+    const Obs3 = throttledObsFunction(sub3);
+    const error = new Error("ffo");
+
+    let itemsReceivedFrom1 = 0;
+    let itemsReceivedFrom3 = 0;
+
+    let has1Errored = false;
+
+    Obs2.subscribe();
+    sub2.complete();
+
+    Obs1.subscribe(
+      () => { itemsReceivedFrom1++; },
+      (e) => {
+        expect(e).to.equal("titi");
+        has1Errored = true;
+      }
+    );
+    sub1.error("titi");
+
+    Obs3.subscribe(
+      () => { itemsReceivedFrom3++; },
+      (e) => {
+        expect(e).to.equal(error);
+        expect(has1Errored).to.equal(true);
+        expect(itemsReceivedFrom1).to.equal(1);
+        expect(itemsReceivedFrom3).to.equal(1);
+        done();
+      }
+    );
+
+    sub3.error(error);
+  });
+
   /* tslint:disable max-line-length */
   it("should execute Observable coming after the previous one was unsubscribed", (done) => {
   /* tslint:enable max-line-length */
@@ -216,5 +260,4 @@ describe("utils - throttle (RxJS)", () => {
     sub2.complete();
     sub1.complete();
   });
-
 });

@@ -120,11 +120,12 @@ describe("utils - byte parsing", () => {
     it("should concatenate multiple TypedArray in a single Uint8Array", () => {
       const arr8 = new Uint8Array([54, 255]);
       const arr16 = new Uint16Array([258, 54]);
+      const arr0 = new Uint8Array([]);
       const arr32 = new Uint32Array([11867, 87]);
       const expected = new Uint8Array(
         [54, 255, 258, 54, 11867, 87].map(e => e & 0xFF)
       );
-      const res = byteUtils.concat(arr8, arr16, arr32);
+      const res = byteUtils.concat(arr8, arr0, arr16, arr0, arr32);
       expect(res).to.have.lengthOf(arr8.length + arr16.length + arr32.length);
       res.forEach((x, i) => expect(x).to.equal(expected[i]));
     });
@@ -176,6 +177,22 @@ describe("utils - byte parsing", () => {
       expect(byteUtils.be2toi(arr, 1)).to.equal(expected[1]);
       expect(byteUtils.be2toi(arr, 2)).to.equal(expected[2]);
       expect(byteUtils.be2toi(arr, 3)).to.equal(expected[3]);
+    });
+  });
+
+  describe("be3toi", () => {
+    /* tslint:disable:max-line-length */
+    it("should return the number value for the 2 first elements of an Uint8Array from the offset", () => {
+    /* tslint:enable:max-line-length */
+      // as the test would be equivalent to re-implement the function, I
+      // directly take the expected result (number to hex and hex to
+      // number) and compare
+      const arr = new Uint8Array([255, 255, 255, 1, 8, 17]);
+      const expected = [16777215, 16776961, 16711944, 67601];
+      expect(byteUtils.be3toi(arr, 0)).to.equal(expected[0]);
+      expect(byteUtils.be3toi(arr, 1)).to.equal(expected[1]);
+      expect(byteUtils.be3toi(arr, 2)).to.equal(expected[2]);
+      expect(byteUtils.be3toi(arr, 3)).to.equal(expected[3]);
     });
   });
 
@@ -277,6 +294,45 @@ describe("utils - byte parsing", () => {
       });
   });
 
+  describe("itobe2", () => {
+    /* tslint:disable:max-line-length */
+    it("should convert the number given into two elements in a Uint8Array", () => {
+    /* tslint:enable:max-line-length */
+      expect(byteUtils.itobe2(65535))
+        .to.eql(new Uint8Array([255, 255]));
+      expect(byteUtils.itobe2(65281))
+        .to.eql(new Uint8Array([255, 1]));
+      expect(byteUtils.itobe2(264))
+        .to.eql(new Uint8Array([1, 8]));
+    });
+  });
+
+  describe("itobe4", () => {
+    /* tslint:disable:max-line-length */
+    it("should convert the number given into four elements in a Uint8Array", () => {
+    /* tslint:enable:max-line-length */
+      expect(byteUtils.itobe4(1))
+        .to.eql(new Uint8Array([0, 0, 0, 1]));
+      expect(byteUtils.itobe4(511))
+        .to.eql(new Uint8Array([0, 0, 1, 255]));
+      expect(byteUtils.itobe4(130819))
+        .to.eql(new Uint8Array([0, 1, 255, 3]));
+      expect(byteUtils.itobe4(33489666))
+        .to.eql(new Uint8Array([1, 255, 3, 2]));
+    });
+  });
+
+  describe("itobe8", () => {
+    /* tslint:disable:max-line-length */
+    it("should return the number value for the 8 first elements of an Uint8Array from the offset", () => {
+    /* tslint:enable:max-line-length */
+      expect(byteUtils.itobe8(1))
+        .to.eql(new Uint8Array([0, 0, 0, 0, 0, 0, 0, 1]));
+      expect(byteUtils.itobe8(1237106686452549))
+        .to.eql(new Uint8Array([0x00, 0x04, 0x65, 0x24, 0x58, 0x98, 0x63, 0x45]));
+    });
+  });
+
   describe("itole2", () => {
     /* tslint:disable:max-line-length */
     it("should return a little-endian style Uint8Array of length 2 translated from the number given", () => {
@@ -304,15 +360,44 @@ describe("utils - byte parsing", () => {
     });
   });
 
-  describe("itole8", () => {
+  describe("hexToBytes", () => {
+    it("should translate an empty string into an empty Uint8Array", () => {
+      expect(byteUtils.hexToBytes("")).to.eql(new Uint8Array([]));
+    });
+    it("should translate lower case hexa codes into its Uint8Array counterpart", () => {
+      expect(byteUtils.hexToBytes("ff87a59800000005"))
+        .to.eql(new Uint8Array([255, 135, 165, 152, 0, 0, 0, 5]));
+    });
+    it("should translate higher case hexa codes into its Uint8Array counterpart", () => {
+      expect(byteUtils.hexToBytes("FECD87A59800000005"))
+        .to.eql(new Uint8Array([254, 205, 135, 165, 152, 0, 0, 0, 5]));
+    });
+
     /* tslint:disable:max-line-length */
-    xit("should return a little-endian style Uint8Array of length 8 translated from the number given", () => {
+    it("should translate a mix of higher case and lower case hexa codes into its Uint8Array counterpart", () => {
     /* tslint:enable:max-line-length */
-      const values = [ 1, 280379743338240 ];
-      expect(byteUtils.itole8(values[0])).to.deep.equal(new Uint8Array([
-        1, 0, 0, 0, 0, 0, 0, 0 ]));
-      expect(byteUtils.itole8(values[1])).to.deep.equal(new Uint8Array([
-        0, 255, 0, 255, 0, 255, 0, 0 ]));
+      expect(byteUtils.hexToBytes("FECD87A59800000005"))
+        .to.eql(new Uint8Array([254, 205, 135, 165, 152, 0, 0, 0, 5]));
+    });
+  });
+
+  describe("guidToUuid", () => {
+    it("should throw if the length is different than 16 bytes", () => {
+      expect(() => byteUtils.guidToUuid("")).to.throw();
+      expect(() => byteUtils.guidToUuid("abca")).to.throw();
+      expect(() => byteUtils.guidToUuid("a;rokgr;oeo;reugporugpuwrhpwjtw")).to.throw();
+    });
+    it("should translate PlayReady GUID to universal UUID", () => {
+      const uuid1 = String.fromCharCode(
+        ...[15, 27, 175, 76, 7, 184, 156, 73, 181, 133, 213, 230, 192, 48, 134, 31]
+      );
+      const uuid2 = String.fromCharCode(
+        ...[212, 72, 21, 77, 26, 220, 79, 95, 101, 86, 92, 99, 110, 189, 1, 111]
+      );
+      expect(byteUtils.guidToUuid(uuid1))
+        .to.equal("4caf1b0fb807499cb585d5e6c030861f");
+      expect(byteUtils.guidToUuid(uuid2))
+      .to.equal("4d1548d4dc1a5f4f65565c636ebd016f");
     });
   });
 });

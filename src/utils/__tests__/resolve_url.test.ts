@@ -20,15 +20,50 @@ import resolveURL, {
 } from "../resolve_url";
 
 describe("utils - resolveURL", () => {
+  it("should return an empty string if no argument is given", () => {
+    expect(resolveURL()).to.equal("");
+  });
+
   it("should concatenate multiple URLs", () => {
     expect(resolveURL("http://toto.com/a"))
       .to.equal("http://toto.com/a");
     expect(resolveURL("http://toto.com/a", "b/c/d/", "g.a"))
       .to.equal("http://toto.com/a/b/c/d/g.a");
   });
+
+  it("should ignore empty strings when concatenating multiple URLs", () => {
+    expect(resolveURL("", "http://toto.com/a", ""))
+      .to.equal("http://toto.com/a");
+    expect(resolveURL("http://toto.com/a", "b/c/d/", "", "g.a"))
+      .to.equal("http://toto.com/a/b/c/d/g.a");
+  });
+
+  it("should remove a leading slash if one", () => {
+    expect(resolveURL("http://toto.com/a", "/b/c/d/", "/", "/g.a"))
+      .to.equal("http://toto.com/a/b/c/d/g.a");
+  });
+
   it("should reset the concatenation if a given string contains a scheme", () => {
     expect(resolveURL("http://toto.com/a", "b/c/d/", "torrent://g.a", "b"))
       .to.equal("torrent://g.a/b");
+  });
+
+  it("should have a - fairly simple - algorithm to simplify parent directories", () => {
+    expect(resolveURL("http://toto.com/a", "b/c/d/", "torrent://g.a/b/c/d", "../a"))
+      .to.equal("torrent://g.a/b/c/a");
+    expect(
+      resolveURL("http://toto.com/a", "b/c/d/", "torrent://g.a/b/c/d", "../c/../../a")
+    ).to.equal("torrent://g.a/b/a");
+  });
+
+  /* tslint:disable max-line-length */
+  it("should have a - fairly simple - algorithm to simplify the current directory", () => {
+  /* tslint:enable max-line-length */
+    expect(resolveURL("http://toto.com/a", "b/c/d/", "torrent://g.a/b/c/d", "./a"))
+      .to.equal("torrent://g.a/b/c/d/a");
+    expect(
+      resolveURL("http://toto.com/a", "b/c/d/", "torrent://g.a/b/c/d", "../c/.././a")
+    ).to.equal("torrent://g.a/b/c/a");
   });
 });
 
