@@ -16,8 +16,10 @@
 
 import { Observable } from "rxjs";
 import { ICustomSourceBuffer } from "../compat";
-import { IEMEManagerEvent } from "../core/eme";
-import { IKeySystemOption } from "../core/eme/types";
+import {
+  IEMEManagerEvent,
+  IKeySystemOption,
+} from "../core/eme";
 import {
   IDirectfileEvent,
   IDirectFileOptions,
@@ -25,8 +27,8 @@ import {
 import {
   IHTMLTextTracksParserFn,
   INativeTextTracksParserFn,
-} from "../parsers/texttracks/types";
-import { ITransportFunction } from "../transports/types";
+} from "../parsers/texttracks";
+import { ITransportFunction } from "../transports";
 
 export type IDirectFileInit =
   (args : IDirectFileOptions) => Observable<IDirectfileEvent>;

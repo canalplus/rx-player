@@ -19,7 +19,7 @@ import { ICustomError } from "../../../errors";
 import {
   ISegmentLoaderArguments,
   ITransportPipelines,
-} from "../../../transports/types";
+} from "../../../transports";
 import {
   IABRMetric,
   IABRRequest

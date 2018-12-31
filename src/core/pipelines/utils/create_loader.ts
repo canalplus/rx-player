@@ -43,7 +43,7 @@ import {
   ILoaderProgress,
   ILoaderResponseValue,
   ITransportPipeline,
-} from "../../../transports/types";
+} from "../../../transports";
 import castToObservable from "../../../utils/cast_to_observable";
 import tryCatch from "../../../utils/rx-try_catch";
 import downloadingBackoff from "./backoff";

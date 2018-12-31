@@ -38,7 +38,7 @@ import Manifest from "../../../manifest";
 import {
   IManifestLoaderArguments,
   ITransportPipelines,
-} from "../../../transports/types";
+} from "../../../transports";
 import tryCatch from "../../../utils/rx-try_catch";
 import downloadingBackoff from "../utils/backoff";
 import createLoader, {

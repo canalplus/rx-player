@@ -30,7 +30,7 @@ import { IInitClockTick } from "./types";
 const { DISCONTINUITY_THRESHOLD } = config;
 
 export interface IStallingItem {
-  reason : string;
+  reason : "seeking" | "not-ready" | "buffering";
   timestamp : number;
 }
 

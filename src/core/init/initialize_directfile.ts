@@ -37,7 +37,7 @@ import {
   MediaError,
 } from "../../errors";
 import log from "../../log";
-import { IKeySystemOption } from "../eme/types";
+import { IKeySystemOption } from "../eme";
 import createEMEManager from "./create_eme_manager";
 import EVENTS from "./events_generators";
 import { IInitialTimeOptions } from "./get_initial_time";

@@ -25,7 +25,7 @@ import EMEManager, {
   getCurrentKeySystem,
   IEMEManagerEvent,
 } from "./eme_manager";
-export { IKeySystemOption } from "./types";
+export * from "./types";
 
 export default EMEManager;
 export {
