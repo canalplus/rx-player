@@ -83,7 +83,7 @@ const manifestInfos = {
           {
             isAudioDescription: undefined,
             language: "UND",
-            normalizedLanguage: "und",
+            normalizedLanguage: "UND",
             representations: [
               {
                 bitrate: 96000,
