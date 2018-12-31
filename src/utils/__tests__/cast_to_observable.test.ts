@@ -15,7 +15,11 @@
  */
 
 import { expect } from "chai";
-import { Observable } from "rxjs";
+import {
+  Observable,
+  Subject,
+} from "rxjs";
+import { share } from "rxjs/operators";
 
 import castToObservable from "../cast_to_observable";
 import noop from "../noop";
@@ -67,5 +71,147 @@ describe("utils - castToObservable", () => {
       throw new Error();
     }
     reject(errorItem);
+  });
+
+  /* tslint:disable:max-line-length */
+  it("should translate Observable implementation not from RxJS into RxJS Observables", (done) => {
+  /* tslint:enable:max-line-length */
+
+    const sub1 = new Subject<number>();
+    const sub2 = new Subject<number>();
+    const myObs1 = {
+      subscribe(a : () => void, b : () => void, c : () => {}) {
+        sub1.subscribe(a, b, c);
+        return null;
+      },
+    };
+    const myObs2 = {
+      subscribe(a : () => void, b : () => void, c : () => {}) {
+        sub2.subscribe(a, b, c);
+        return null;
+      },
+    };
+
+    const rxObs1 = castToObservable(myObs1);
+    const rxObs2 = castToObservable(myObs2);
+    let itemFromObs1 = 0;
+    let itemFromObs2 = 0;
+    rxObs1.subscribe(
+      (num) => {
+        switch (itemFromObs1++) {
+          case 0:
+            expect(num).to.equal(1);
+            break;
+          case 1:
+            expect(num).to.equal(12);
+            break;
+          case 2:
+            expect(num).to.equal(5);
+            break;
+          default:
+            throw new Error("Invalid item received");
+        }
+      },
+
+      (err : Error) => {
+        expect(err.message).to.equal("ffob");
+        expect(itemFromObs1).to.equal(3);
+        rxObs2.subscribe(
+          () => { itemFromObs2++; },
+          undefined,
+          () => {
+            expect(itemFromObs2).to.equal(0);
+            done();
+          }
+        );
+      }
+    );
+    sub1.next(1);
+    sub1.next(12);
+    sub1.next(5);
+    sub2.complete();
+    sub1.error(new Error("ffob"));
+  });
+
+  /* tslint:disable:max-line-length */
+  it("should call dispose on unsubscription if the Observable implementation has a dispose function", () => {
+  /* tslint:enable:max-line-length */
+
+    let disposeHasBeenCalled = 0;
+    const myObs = {
+      subscribe(_a : () => void, _b : () => void, _c : () => {}) {
+        return {
+          dispose() {
+            disposeHasBeenCalled++;
+          },
+        };
+      },
+    };
+    const rxObs = castToObservable(myObs);
+    const sub1 = rxObs.subscribe();
+    const sub2 = rxObs.subscribe();
+    sub1.unsubscribe();
+    sub2.unsubscribe();
+    expect(disposeHasBeenCalled).to.equal(2);
+
+    // reset counter
+    disposeHasBeenCalled = 0;
+
+    const sharedRxObs = rxObs.pipe(share());
+    const sharedSub1 = sharedRxObs.subscribe();
+    const sharedSub2 = sharedRxObs.subscribe();
+    sharedSub1.unsubscribe();
+    sharedSub2.unsubscribe();
+    expect(disposeHasBeenCalled).to.equal(1);
+  });
+
+  /* tslint:disable:max-line-length */
+  it("should call unsubscribe on unsubscription if the Observable implementation has an unsubscribe function", () => {
+  /* tslint:enable:max-line-length */
+
+    let disposeHasBeenCalled = 0;
+    const myObs = {
+      subscribe(_a : () => void, _b : () => void, _c : () => {}) {
+        return {
+          unsubscribe() {
+            disposeHasBeenCalled++;
+          },
+        };
+      },
+    };
+    const rxObs = castToObservable(myObs);
+    const sub1 = rxObs.subscribe();
+    const sub2 = rxObs.subscribe();
+    sub1.unsubscribe();
+    sub2.unsubscribe();
+    expect(disposeHasBeenCalled).to.equal(2);
+
+    // reset counter
+    disposeHasBeenCalled = 0;
+
+    const sharedRxObs = rxObs.pipe(share());
+    const sharedSub1 = sharedRxObs.subscribe();
+    const sharedSub2 = sharedRxObs.subscribe();
+    sharedSub1.unsubscribe();
+    sharedSub2.unsubscribe();
+    expect(disposeHasBeenCalled).to.equal(1);
+  });
+
+  it("should wrap other values in an rxJS Observable", (done) =>  {
+    const err = new Error("TEST");
+    const obs = castToObservable(err);
+    let nextHasBeenCalled = 0;
+    obs.subscribe(
+      (e) => {
+        nextHasBeenCalled++;
+        expect(e).to.be.instanceof(Error);
+        expect(e.message).to.equal("TEST");
+      },
+      undefined,
+      () => {
+        expect(nextHasBeenCalled).to.equal(1);
+        done();
+      }
+    );
   });
 });

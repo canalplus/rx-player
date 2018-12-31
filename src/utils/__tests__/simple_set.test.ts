@@ -38,7 +38,9 @@ describe("utils - SimpleSet", () => {
 
   it("should allow to remove pushed strings and numbers", () => {
     const simpleSet = new SimpleSet();
+    expect(simpleSet.isEmpty()).to.equal(true);
     simpleSet.add("a");
+    expect(simpleSet.isEmpty()).to.equal(false);
     simpleSet.add("cde");
     simpleSet.add(54);
     simpleSet.remove(54);
@@ -48,5 +50,9 @@ describe("utils - SimpleSet", () => {
     expect(simpleSet.test("cde")).to.equal(false);
     expect(simpleSet.test(1)).to.equal(false);
     expect(simpleSet.test(54)).to.equal(false);
+    expect(simpleSet.isEmpty()).to.equal(false);
+    simpleSet.remove("a");
+    expect(simpleSet.isEmpty()).to.equal(true);
   });
+
 });

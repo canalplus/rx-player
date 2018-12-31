@@ -22,3 +22,6 @@
 
 /localhost.key
 /localhost.crt
+
+/tests/integration/coverage
+/tests/unit/coverage

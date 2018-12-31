@@ -1,6 +1,5 @@
 /* eslint-env node */
 
-const path = require("path");
 const webpack = require("webpack");
 const coverageIsWanted = !!process.env.RXP_COVERAGE;
 
@@ -77,18 +76,30 @@ const config = {
 };
 
 if (coverageIsWanted) {
-  config.module.rules.push({
-    test: /\.js$/,
-    enforce: "post",
-    include: path.resolve(__dirname, "./src/"),
-    exclude: [/__tests__/],
-    use: {
-      loader: "istanbul-instrumenter-loader",
-      query: {
-        esModules: true,
+  config.devtool = "inline-source-map";
+  config.module.rules = [
+    {
+      test: /\.tsx?$/,
+      use: [{
+        loader: "ts-loader",
+        options: {
+          compilerOptions: {
+            // needed for istanbul accuracy
+            sourceMap: true,
+          },
+        },
+      }],
+    },
+    {
+      test: /\.ts$/,
+      exclude: [/__tests__/],
+      enforce: "post",
+      use: {
+        loader: "istanbul-instrumenter-loader",
+        options: { esModules: true },
       },
     },
-  });
+  ];
 }
 
 module.exports = config;

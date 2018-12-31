@@ -28,6 +28,7 @@ describe("utils - stringFromUTF8", () => {
 
   /* tslint:disable max-line-length */
   it("should translate sequence of UTF-8 code units into the corresponding string", () => {
+  /* tslint:enable max-line-length */
     expect(stringFromUTF8(new Uint8Array([
       0xF0, 0x9F, 0x98, 0x80,
       0xF0, 0x9F, 0x90, 0x80,
@@ -40,5 +41,15 @@ describe("utils - stringFromUTF8", () => {
     expect(() => {
       stringFromUTF8(new Uint8Array([0xA0, 0x9F, 0x98, 0x80]));
     }).to.throw();
+  });
+
+  it("should strip off the UTF8 BOM if present", () => {
+    expect(stringFromUTF8(new Uint8Array([
+      0xEF, 0xBB, 0xBF,
+      0xF0, 0x9F, 0x98, 0x80,
+      0xF0, 0x9F, 0x90, 0x80,
+      0xE1, 0xBC, 0x80,
+      0x65,
+    ]))).to.equal("😀🐀ἀe");
   });
 });

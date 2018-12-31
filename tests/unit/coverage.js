@@ -10,3 +10,7 @@ const requireAll = function(requireContext) {
 // requires all modules ending in ".test.js" from the
 // core directory and all subdirectories
 requireAll(require.context("../../src", true, /\.test\.ts$/));
+
+// requires all code in `project/src/**`, to give a better coverage
+const lib = require.context("../../src/", true, /index\.ts$/);
+lib.keys().forEach(lib);

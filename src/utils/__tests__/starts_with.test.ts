@@ -15,6 +15,7 @@
  */
 
 import { expect } from "chai";
+import * as sinon from "sinon";
 import startsWith from "../starts_with";
 
 /* tslint:disable no-unbound-method */
@@ -42,4 +43,21 @@ describe("utils - starts-with", () => {
     expect(startsWith("Rough Sleeper", "Ro", -5)).to.eql(true);
     expect(startsWith("", "")).to.eql(true);
   });
+
+  if (typeof initialStartsWith === "function") {
+    it("should call the original startsWith function if available", () => {
+      String.prototype.startsWith = initialStartsWith;
+      const startsWithSpy = sinon.spy(String.prototype, "startsWith");
+      const str = "Street Halo";
+      expect(startsWith(str, "Stree")).to.equal(true);
+      expect(startsWith(str, "Halo")).to.equal(false);
+      expect(startsWith(str, "Stree", 1)).to.equal(false);
+
+      expect(startsWithSpy.callCount).to.equal(3);
+      expect(startsWithSpy.calledWith("Stree")).to.equal(true);
+      expect(startsWithSpy.calledWith("Halo")).to.equal(true);
+      expect(startsWithSpy.calledWith("Stree", 1)).to.equal(true);
+      startsWithSpy.restore();
+    });
+  }
 });
