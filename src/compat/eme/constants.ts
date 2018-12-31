@@ -14,27 +14,10 @@
  * limitations under the License.
  */
 
-import CustomMediaKeySystemAccess, {
-  ICustomMediaKeySystemAccess,
-} from "./custom_key_system_access";
 import {
-  createSession,
-  ICustomMediaKeys,
-  ICustomMediaKeySession,
-  requestMediaKeySystemAccess,
-} from "./custom_media_keys";
-import generateKeyRequest from "./generate_key_request";
-import getInitData from "./get_init_data";
-import setMediaKeys from "./set_media_keys";
+  be4toi,
+  strToBytes,
+} from "../../utils/byte_parsing";
 
-export {
-  CustomMediaKeySystemAccess,
-  createSession,
-  generateKeyRequest,
-  getInitData,
-  ICustomMediaKeySession,
-  ICustomMediaKeySystemAccess,
-  ICustomMediaKeys,
-  requestMediaKeySystemAccess,
-  setMediaKeys,
-};
+// The way "pssh" will be written in ISOBMFF files
+export const PSSH_TO_INTEGER = be4toi(strToBytes("pssh"), 0);

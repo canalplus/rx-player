@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-import { EncryptedMediaError } from "../../errors";
+import {
+  defer as observableDefer,
+  Observable,
+} from "rxjs";
+import { catchError } from "rxjs/operators";
 import log from "../../log";
 import {
   be4toi,
   concat,
-  strToBytes,
 } from "../../utils/byte_parsing";
-import hashBuffer from "../../utils/hash_buffer";
-import SimpleSet from "../../utils/simple_set";
-
-// The way "pssh" will be written in those encrypted events
-const PSSH_TO_INTEGER = be4toi(strToBytes("pssh"), 0);
+import castToObservable from "../../utils/cast_to_observable";
+import { isIEOrEdge } from "../browser_detection";
+import { PSSH_TO_INTEGER } from "./constants";
+import { ICustomMediaKeySession } from "./custom_media_keys";
 
 /**
  * Some browsers have problems when the CENC PSSH box is the first managed PSSH
@@ -59,6 +61,7 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
       throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
     }
     if (
+      // yep
       initData[offset + 12] === 0x10 &&
       initData[offset + 13] === 0x77 &&
       initData[offset + 14] === 0xef &&
@@ -97,78 +100,35 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
 }
 
 /**
- * As we observed on some browsers (IE and Edge), the initialization data on
- * some segments have sometimes duplicated PSSH when sent through an encrypted
- * event (but not when pushed to the SourceBuffer).
- *
- * This function tries to guess if the initialization data contains only PSSHs
- * concatenated (as it is usually the case).
- * If that's the case, it will filter duplicated PSSHs from it.
- *
- * @param {Uint8Array} initData
- * @returns {Uint8Array}
+ * Generate a request from session.
+ * @param {MediaKeySession} session
+ * @param {Uint8Array} initData
+ * @param {string} initDataType
+ * @param {string} sessionType
+ * @returns {Observable}
  */
-function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
-  let resInitData = new Uint8Array();
-  const currentHashes = new SimpleSet();
-
-  let offset = 0;
-  while (offset < initData.length) {
-    if (
-      initData.length < offset + 8 ||
-      be4toi(initData, offset + 4) !== PSSH_TO_INTEGER
-    ) {
-      log.warn("unrecognized initialization data. Use as is.");
-      return initData;
-    }
-
-    const len = be4toi(new Uint8Array(initData), offset);
-    if (offset + len > initData.length) {
-      log.warn("unrecognized initialization data. Use as is.");
-      return initData;
-    }
-    const currentPSSH = initData.subarray(offset, offset + len);
-    const currentPSSHHash = hashBuffer(currentPSSH);
-    if (!currentHashes.test(currentPSSHHash)) {
-      currentHashes.add(currentPSSHHash);
-      resInitData = concat(resInitData, currentPSSH);
-    } else {
-      log.warn("Duplicated PSSH found in initialization data, removing it.");
-    }
-    offset += len;
-  }
-
-  if (offset !== initData.length) {
-    log.warn("unrecognized initialization data. Use as is.");
-    return initData;
-  }
-  return resInitData;
-}
-
-/**
- * Take out the two things we need on an encryptedEvent:
- *   - the initialization Data
- *   - the initialization Data type
- *
- * @param {MediaEncryptedEvent} encryptedEvent
- * @returns {Object}
- * @throws {EncryptedMediaError} - Throws if no initialization data is
- * encountered in the given event.
- */
-export default function getInitData(
-  encryptedEvent : MediaEncryptedEvent
-) : {
-  initData : Uint8Array;
-  initDataType : string|undefined;
-} {
-  const initData = encryptedEvent.initData;
-  if (initData == null) {
-    const error = new Error("no init data found on media encrypted event.");
-    throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
-  }
-  const initDataBytes = new Uint8Array(initData);
-  return {
-    initData: cleanEncryptedEvent(initDataBytes),
-    initDataType: encryptedEvent.initDataType,
-  };
+export default function generateKeyRequest(
+  session: MediaKeySession|ICustomMediaKeySession,
+  initData: Uint8Array,
+  initDataType: string|undefined
+) : Observable<unknown> {
+  return observableDefer(() => {
+    log.debug("Compat: Calling generateRequest on the MediaKeySession");
+    return castToObservable(
+      session.generateRequest(initDataType || "", initData)
+    ).pipe(catchError((error) => {
+      if (isIEOrEdge) {
+        let patchedInit : Uint8Array;
+        try {
+          patchedInit = patchInitData(initData);
+        } catch (_e) {
+          throw error;
+        }
+        return castToObservable(
+          session.generateRequest(initDataType || "", patchedInit)
+        );
+      }
+      throw error;
+    }));
+  });
 }
