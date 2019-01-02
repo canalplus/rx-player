@@ -31,6 +31,7 @@ import clearElementSrc from "./clear_element_src";
 import {
   createSession,
   CustomMediaKeySystemAccess,
+  generateKeyRequest,
   getInitData,
   ICustomMediaKeys,
   ICustomMediaKeySession,
@@ -70,6 +71,7 @@ export {
   CustomMediaKeySystemAccess,
   events,
   exitFullscreen,
+  generateKeyRequest,
   getInitData,
   hasEMEAPIs,
   ICompatMediaKeySystemAccess,

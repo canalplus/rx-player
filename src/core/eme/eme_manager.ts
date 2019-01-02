@@ -24,6 +24,7 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
+  catchError,
   filter,
   ignoreElements,
   map,
@@ -32,14 +33,15 @@ import {
 } from "rxjs/operators";
 import {
   events,
+  generateKeyRequest,
   shouldUnsetMediaKeys,
 } from "../../compat/";
+import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import { assertInterface } from "../../utils/assert";
 import noop from "../../utils/noop";
 import attachMediaKeys from "./attach_media_keys";
 import disposeMediaKeys from "./dispose_media_keys";
-import generateKeyRequest from "./generate_key_request";
 import getMediaKeysInfos from "./get_media_keys";
 import getSession from "./get_session";
 import handleSessionEvents from "./handle_session_events";
@@ -177,6 +179,9 @@ export default function EMEManager(
               if (sessionType === "persistent-license" && sessionStorage != null) {
                 sessionStorage.add(initData, initDataType, mediaKeySession);
               }
+            }),
+            catchError((error) => {
+              throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR", error, false);
             }),
             ignoreElements()
           ) : EMPTY

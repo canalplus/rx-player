@@ -19,13 +19,10 @@ import log from "../../log";
 import {
   be4toi,
   concat,
-  strToBytes,
 } from "../../utils/byte_parsing";
 import hashBuffer from "../../utils/hash_buffer";
 import SimpleSet from "../../utils/simple_set";
-
-// The way "pssh" will be written in those encrypted events
-const PSSH_TO_INTEGER = be4toi(strToBytes("pssh"), 0);
+import { PSSH_TO_INTEGER } from "./constants";
 
 /**
  * As we observed on some browsers (IE and Edge), the initialization data on
@@ -49,13 +46,13 @@ function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
       initData.length < offset + 8 ||
       be4toi(initData, offset + 4) !== PSSH_TO_INTEGER
     ) {
-      log.warn("unrecognized initialization data. Use as is.");
+      log.warn("Compat: Unrecognized initialization data. Use as is.");
       return initData;
     }
 
     const len = be4toi(new Uint8Array(initData), offset);
     if (offset + len > initData.length) {
-      log.warn("unrecognized initialization data. Use as is.");
+      log.warn("Compat: Unrecognized initialization data. Use as is.");
       return initData;
     }
     const currentPSSH = initData.subarray(offset, offset + len);
@@ -64,13 +61,13 @@ function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
       currentHashes.add(currentPSSHHash);
       resInitData = concat(resInitData, currentPSSH);
     } else {
-      log.warn("Duplicated PSSH found in initialization data, removing it.");
+      log.warn("Compat: Duplicated PSSH found in initialization data, removing it.");
     }
     offset += len;
   }
 
   if (offset !== initData.length) {
-    log.warn("unrecognized initialization data. Use as is.");
+    log.warn("Compat: Unrecognized initialization data. Use as is.");
     return initData;
   }
   return resInitData;
@@ -94,7 +91,7 @@ export default function getInitData(
 } {
   const initData = encryptedEvent.initData;
   if (initData == null) {
-    const error = new Error("no init data found on media encrypted event.");
+    const error = new Error("Compat: No init data found on media encrypted event.");
     throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT", error, true);
   }
   const initDataBytes = new Uint8Array(initData);
