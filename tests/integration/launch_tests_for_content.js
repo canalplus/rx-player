@@ -1835,7 +1835,7 @@ export default function launchTestsForContent(
           .at.most(minimumTime + 10 + 20 + 10);
 
         player.seekTo(minimumTime + 10 + 20 + 10 + 10);
-        await sleep(300);
+        await sleep(500);
         buffered = player.getVideoElement().buffered;
         expect(player.getWantedBufferAhead()).to.equal(20);
         expect(buffered.length).to.equal(2);
