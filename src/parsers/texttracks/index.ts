@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-import BufferOrchestrator, {
-  IBufferOrchestratorClockTick,
-} from "./buffer_orchestrator";
-export * from "./types";
-
-export default BufferOrchestrator;
 export {
-  IBufferOrchestratorClockTick,
-};
+  IHTMLCue,
+  INativeTextTracksParserFn,
+  IHTMLTextTracksParserFn,
+} from "./types";

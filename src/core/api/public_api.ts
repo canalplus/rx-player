@@ -90,12 +90,10 @@ import {
 } from "../eme";
 import initializeMediaSourcePlayback, {
   IInitEvent,
-} from "../init";
-import {
   ILoadedEvent,
   IReloadingMediaSourceEvent,
   IStalledEvent,
-} from "../init/types";
+} from "../init";
 import { IBufferType } from "../source_buffers";
 import createClock, {
   IClockTick

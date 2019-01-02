@@ -14,7 +14,4 @@
  * limitations under the License.
  */
 
-export {
-  ITransportFunction,
-  ITransportPipelines,
-} from "./types";
+export * from "./types";

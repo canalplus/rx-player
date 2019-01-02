@@ -33,7 +33,7 @@ const karmaConf = {
     },
   },
 
-  reporters: ["mocha"],
+  reporters: ["dots"],
 
   frameworks: ["mocha"],
 
@@ -52,6 +52,7 @@ const karmaConf = {
   ],
 
   client: {
+    captureConsole: false,
     mocha: {
       reporter: "html",
     },

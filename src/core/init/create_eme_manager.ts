@@ -23,8 +23,10 @@ import {
 import { EncryptedMediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
-import { IEMEManagerEvent } from "../eme";
-import { IKeySystemOption } from "../eme/types";
+import {
+  IEMEManagerEvent,
+  IKeySystemOption,
+} from "../eme";
 
 const { onEncrypted$ } = events;
 

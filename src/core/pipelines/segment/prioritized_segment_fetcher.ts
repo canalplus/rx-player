@@ -15,7 +15,7 @@
  */
 
 import { Observable } from "rxjs";
-import { ISegmentLoaderArguments } from "../../../transports/types";
+import { ISegmentLoaderArguments } from "../../../transports";
 import ObservablePrioritizer from "./prioritizer";
 import {
   IFetchedSegment,

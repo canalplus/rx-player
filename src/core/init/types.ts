@@ -17,7 +17,7 @@
 import { ICustomError } from "../../errors";
 import Manifest from "../../manifest";
 import ABRManager from "../abr";
-import { IRepresentationChangeEvent } from "../buffers/types";
+import { IRepresentationChangeEvent } from "../buffers";
 import { IStallingItem } from "./get_stalled_events";
 
 // Object emitted when the clock ticks

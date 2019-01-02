@@ -40,13 +40,13 @@ import config from "../../config";
 import { ICustomError } from "../../errors";
 import log from "../../log";
 import Manifest from "../../manifest";
-import { ITransportPipelines } from "../../transports/types";
+import { ITransportPipelines } from "../../transports";
 import throttle from "../../utils/rx-throttle";
 import ABRManager, {
   IABRMetric,
   IABRRequest,
 } from "../abr";
-import { IKeySystemOption } from "../eme/types";
+import { IKeySystemOption } from "../eme";
 import {
   createManifestPipeline,
   IPipelineOptions,

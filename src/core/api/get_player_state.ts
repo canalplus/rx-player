@@ -46,7 +46,7 @@ export const PLAYER_STATES = {
 export default function getLoadedContentState(
   mediaElement : HTMLMediaElement,
   isPlaying : boolean,
-  stalledStatus : { reason : string }|null
+  stalledStatus : { reason : "seeking" | "not-ready" | "buffering" }|null
 ) : string {
   if (mediaElement.ended) {
     return PLAYER_STATES.ENDED;

@@ -29,7 +29,11 @@
  * already have been instanciated.
  */
 
-import { IFeaturesObject } from "./types";
+import addFeatures from "./add_features";
+import {
+  IFeatureFunction,
+  IFeaturesObject,
+} from "./types";
 
 /**
  * Initial features object, with no feature activated by default.
@@ -48,3 +52,7 @@ const features : IFeaturesObject = {
 };
 
 export default features;
+export {
+  addFeatures,
+  IFeatureFunction,
+};
