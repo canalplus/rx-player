@@ -17,7 +17,7 @@
 import log from "../../log";
 import IRepresentationIndex, {
   ISegment,
-} from "./interfaces";
+} from "./types";
 
 export interface IStaticRepresentationIndexInfos {
   media: string;

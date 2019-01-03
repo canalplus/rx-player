@@ -37,8 +37,8 @@ import {
   ISegmentLoaderArguments,
   ISegmentTimingInfos,
   ITransportPipelines,
-} from "../../../net/types";
-import generateID from "../../../utils/id";
+} from "../../../transports";
+import idGenerator from "../../../utils/id_generator";
 import {
   IABRMetric,
   IABRRequest
@@ -47,7 +47,7 @@ import { IBufferType } from "../../source_buffers";
 import createLoader, {
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
-} from "../create_loader";
+} from "../utils/create_loader";
 
 interface IParsedSegment<T> {
   segmentData : T;
@@ -65,6 +65,8 @@ export interface IFetchedSegment<T> {
 
 export type ISegmentFetcher<T> =
   (content : ISegmentLoaderArguments) => Observable<IFetchedSegment<T>>;
+
+const generateRequestID = idGenerator();
 
 /**
  * Create a function which will fetch segments.
@@ -98,7 +100,7 @@ export default function createSegmentFetcher<T>(
   let id : string|undefined;
 
   /**
-   * Process a pipeline observable to adapt it to the Stream way:
+   * Process a pipeline observable to adapt it to the the rest of the code:
    *   - use the network$ subject for network metrics (bandwitdh mesure)
    *   - use the requests subject for network requests and their progress
    *   - use the warning$ subject for retries' error messages
@@ -146,7 +148,7 @@ export default function createSegmentFetcher<T>(
 
               const duration = segment.duration / segment.timescale;
               const time = segment.time / segment.timescale;
-              id = generateID();
+              id = generateRequestID();
               request$.next({
                 type: bufferType,
                 event: "requestBegin",

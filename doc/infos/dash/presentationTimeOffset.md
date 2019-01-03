@@ -211,15 +211,15 @@ As it turns out it's a lot simpler once you make two isolated groups:
       - the playerTime
       - the bufferedTime
 
-The ``manifest`` group is then only used in the ``networking`` code of the
+The ``manifest`` group is then only used in the ``transports`` code of the
 RxPlayer.
 Meanwhile, the ``real time`` group is used everywhere else.
 
-It's actually the ``networking`` group that does most of the conversion for
-the rest of the code (removing the offset when requesting new segments,
-re-adding it once the segment is downloaded.
+It's actually the ``transports`` code that does most of the conversion for the
+rest of the code (removing the offset when requesting new segments, re-adding it
+once the segment is downloaded.
 
 To be able to offset those segments in the source buffer, those are still
-informed of course of the ``timestampOffset`` by the ``networking`` code.
+informed of course of the ``timestampOffset`` by the ``transports`` code.
 Then, this ``timestampOffset`` will be exploited only by the final decoding
 code.

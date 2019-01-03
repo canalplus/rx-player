@@ -15,15 +15,33 @@
  */
 
 /**
+ * Uniq implementation by combining a filter and an indexOf.
+ * @param {Array.<*>} arr
+ * @returns {Array.<*>}
+ */
+function uniqFromFilter<T>(arr: T[]) {
+  return arr.filter((val, i, self) => self.indexOf(val) === i);
+}
+
+/**
+ * Uniq implementation by using the Set browser API.
+ * @param {Array.<*>} arr
+ * @returns {Array.<*>}
+ */
+function uniqFromSet<T>(arr: T[]) {
+  return Array.from(new Set(arr));
+}
+
+/**
  * Returns the input array without duplicates values.
  * All values are unique.
  * @param {Array.<*>} arr
  * @returns {Array.<*>}
  */
 export default typeof (window as any).Set === "function" ?
-  function uniqFromSet<T>(arr: T[]) {
-    return Array.from(new Set(arr));
-  } :
-  function uniqFromFilter<T>(arr: T[]) {
-    return arr.filter((val, i, self) => self.indexOf(val) === i);
-  };
+  uniqFromSet : uniqFromFilter;
+
+export {
+  uniqFromFilter,
+  uniqFromSet,
+};

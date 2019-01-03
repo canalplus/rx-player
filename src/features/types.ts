@@ -16,39 +16,39 @@
 
 import { Observable } from "rxjs";
 import { ICustomSourceBuffer } from "../compat";
-import { IEMEManagerEvent } from "../core/eme";
-import { IKeySystemOption } from "../core/eme/types";
+import {
+  IEMEManagerEvent,
+  IKeySystemOption,
+} from "../core/eme";
 import {
   IDirectfileEvent,
-  IDirectFileStreamOptions,
-} from "../core/stream/directfile";
-import { ITransportFunction } from "../net/types";
+  IDirectFileOptions,
+} from "../core/init/initialize_directfile";
 import {
   IHTMLTextTracksParserFn,
   INativeTextTracksParserFn,
-} from "../parsers/texttracks/types";
+} from "../parsers/texttracks";
+import { ITransportFunction } from "../transports";
 
-export type IDirectFileStream =
-  (args : IDirectFileStreamOptions) => Observable<IDirectfileEvent>;
+export type IDirectFileInit =
+  (args : IDirectFileOptions) => Observable<IDirectfileEvent>;
 
 export type IEMEManager = (
   mediaElement : HTMLMediaElement,
   keySystems: IKeySystemOption[]
 ) => Observable<IEMEManagerEvent>;
 
-export interface INativeTextTracksBuffer {
+export type INativeTextTracksBuffer =
   new(
     mediaElement : HTMLMediaElement,
     hideNativeSubtitle: boolean
-  ) : ICustomSourceBuffer<unknown>;
-}
+  ) => ICustomSourceBuffer<unknown>;
 
-export interface IHTMLTextTracksBuffer {
+export type IHTMLTextTracksBuffer =
   new(
     mediaElement : HTMLMediaElement,
     textTrackElement: HTMLElement
-  ) : ICustomSourceBuffer<unknown>;
-}
+  ) => ICustomSourceBuffer<unknown>;
 
 interface IBifThumbnail {
   index : number;
@@ -77,9 +77,10 @@ interface IBifObject {
   isVod : boolean;
   thumbs : IBifThumbnail[];
 }
-export interface IImageBuffer {
-  new() : ICustomSourceBuffer<IImageTrackSegmentData>;
-}
+
+export type IImageBuffer =
+  new() => ICustomSourceBuffer<IImageTrackSegmentData>;
+
 export type IImageParser =
   ((buffer : Uint8Array) => IBifObject);
 
@@ -94,7 +95,7 @@ export interface IFeaturesObject {
   htmlTextTracksBuffer : IHTMLTextTracksBuffer|null;
   htmlTextTracksParsers : Partial<Record<string, IHTMLTextTracksParserFn>>;
   emeManager : IEMEManager|null;
-  directfile : IDirectFileStream|null;
+  directfile : IDirectFileInit|null;
 }
 
 export type IFeatureFunction = (features : IFeaturesObject) => void;

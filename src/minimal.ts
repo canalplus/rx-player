@@ -22,8 +22,10 @@
  */
 
 import Player from "./core/api";
-import addFeatures from "./features/add_features";
-import { IFeatureFunction } from "./features/types";
+import {
+  addFeatures,
+  IFeatureFunction,
+} from "./features";
 import logger from "./log";
 
 if (__DEV__) {

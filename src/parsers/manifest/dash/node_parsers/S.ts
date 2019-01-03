@@ -16,7 +16,9 @@
 
 export interface IParsedS {
   start? : number;
-  repeatCount? : number; // Amount of repetition(s), 0 = no repeat
+  repeatCount? : number; // Amount of repetition(s)
+                         // 0 = no repeat
+                         // negative number = max possible repeat
   duration? : number;
 }
 
@@ -28,6 +30,7 @@ export default function parseS(root : Element) : IParsedS {
   let start : number|undefined;
   let duration : number|undefined;
   let repeatCount : number|undefined;
+
   for (let j = 0; j < root.attributes.length; j++) {
     const attribute = root.attributes[j];
 

@@ -19,8 +19,8 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
-import { createIndexURL } from "../helpers";
 import {
+  createIndexURL,
   getInitSegment,
   getTimescaledRange,
 } from "./helpers";

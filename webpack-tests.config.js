@@ -1,6 +1,5 @@
 /* eslint-env node */
 
-const path = require("path");
 const webpack = require("webpack");
 const coverageIsWanted = !!process.env.RXP_COVERAGE;
 
@@ -44,8 +43,8 @@ const config = {
         EME_MANAGER: JSON.stringify("../core/eme/index.ts"),
         IMAGE_BUFFER: JSON.stringify("../core/source_buffers/image/index.ts"),
         BIF_PARSER: JSON.stringify("../parsers/images/bif.ts"),
-        SMOOTH: JSON.stringify("../net/smooth/index.ts"),
-        DASH: JSON.stringify("../net/dash/index.ts"),
+        SMOOTH: JSON.stringify("../transports/smooth/index.ts"),
+        DASH: JSON.stringify("../transports/dash/index.ts"),
         NATIVE_TEXT_BUFFER: JSON.stringify("../core/source_buffers/text/native/index.ts"),
         NATIVE_VTT: JSON.stringify("../parsers/texttracks/webvtt/native.ts"),
         NATIVE_SRT: JSON.stringify("../parsers/texttracks/srt/native.ts"),
@@ -56,7 +55,7 @@ const config = {
         HTML_SRT: JSON.stringify("../parsers/texttracks/srt/html.ts"),
         HTML_TTML: JSON.stringify("../parsers/texttracks/ttml/html/index.ts"),
         HTML_SAMI: JSON.stringify("../parsers/texttracks/sami/html.ts"),
-        DIRECTFILE: JSON.stringify("../core/stream/directfile.ts"),
+        DIRECTFILE: JSON.stringify("../core/init/initialize_directfile.ts"),
       },
       __DEV__: true,
       __LOGGER_LEVEL__: "\"NONE\"",
@@ -77,18 +76,30 @@ const config = {
 };
 
 if (coverageIsWanted) {
-  config.module.rules.push({
-    test: /\.js$/,
-    enforce: "post",
-    include: path.resolve(__dirname, "./src/"),
-    exclude: [/__tests__/],
-    use: {
-      loader: "istanbul-instrumenter-loader",
-      query: {
-        esModules: true,
+  config.devtool = "inline-source-map";
+  config.module.rules = [
+    {
+      test: /\.tsx?$/,
+      use: [{
+        loader: "ts-loader",
+        options: {
+          compilerOptions: {
+            // needed for istanbul accuracy
+            sourceMap: true,
+          },
+        },
+      }],
+    },
+    {
+      test: /\.ts$/,
+      exclude: [/__tests__/],
+      enforce: "post",
+      use: {
+        loader: "istanbul-instrumenter-loader",
+        options: { esModules: true },
       },
     },
-  });
+  ];
 }
 
 module.exports = config;

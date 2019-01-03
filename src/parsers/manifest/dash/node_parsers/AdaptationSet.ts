@@ -15,12 +15,6 @@
  */
 
 import log from "../../../../log";
-import {
-  IScheme,
-  parseBoolean,
-  parseIntOrBoolean,
-  parseScheme,
-} from "../helpers";
 import parseContentComponent, {
   IParsedContentComponent
 } from "./ContentComponent";
@@ -41,6 +35,12 @@ import parseSegmentTemplate, {
   IParsedSegmentTemplate,
   IParsedSegmentTimeline,
 } from "./SegmentTemplate";
+import {
+  IScheme,
+  parseBoolean,
+  parseIntOrBoolean,
+  parseScheme,
+} from "./utils";
 
 export interface IAdaptationSetIntermediateRepresentation {
   children : IAdaptationSetChildren;
@@ -87,7 +87,6 @@ export interface IAdaptationSetAttributes {
   minFrameRate? : string;
   minHeight? : number;
   minWidth? : number;
-  normalizedLanguage? : string;
   par? : string;
   profiles? : string;
   segmentAlignment? : number|boolean;

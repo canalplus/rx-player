@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
 import objectAssign from "object-assign";
 import {
   BehaviorSubject,
@@ -33,13 +32,14 @@ import {
 import config from "../../config";
 import log from "../../log";
 import { Representation } from "../../manifest";
-import objectValues from "../../utils/object-values";
+import arrayFind from "../../utils/array_find";
+import objectValues from "../../utils/object_values";
 import { IBufferType } from "../source_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
 import EWMA from "./ewma";
-import filterByBitrate from "./filterByBitrate";
-import filterByWidth from "./filterByWidth";
-import fromBitrateCeil from "./fromBitrateCeil";
+import filterByBitrate from "./filter_by_bitrate";
+import filterByWidth from "./filter_by_width";
+import fromBitrateCeil from "./from_bitrate_ceil";
 
 const {
   ABR_REGULAR_FACTOR,
@@ -359,12 +359,12 @@ export default class RepresentationChooser {
 
     this.manualBitrate$ = new BehaviorSubject(
       options.manualBitrate != null ?
-        options.manualBitrate : -1
+      options.manualBitrate : -1
     );
 
     this.maxAutoBitrate$ = new BehaviorSubject(
       options.maxAutoBitrate != null ?
-        options.maxAutoBitrate : Infinity
+      options.maxAutoBitrate : Infinity
     );
 
     this.estimator = new BandwidthEstimator();
@@ -512,7 +512,9 @@ export default class RepresentationChooser {
           const urgent = (() => {
             if (clock.downloadBitrate == null) {
               return true;
-            } else if (chosenRepresentation.bitrate >= clock.downloadBitrate) {
+            } else if (chosenRepresentation.bitrate === clock.downloadBitrate) {
+              return false;
+            } else if (chosenRepresentation.bitrate > clock.downloadBitrate) {
               return !inStarvationMode;
             }
             return shouldDirectlySwitchToLowBitrate(this._currentRequests, clock);

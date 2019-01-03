@@ -38,7 +38,7 @@ describe("DASH live content (SegmentTimeline)", function () {
     const manifest = player.getManifest();
     expect(manifest).not.to.equal(null);
     expect(typeof manifest).to.equal("object");
-    expect(manifest.getDuration()).to.equal(Infinity);
+    expect(manifest.getDuration()).to.equal(undefined);
     expect(manifest.transport)
       .to.equal(manifestInfos.transport);
     expect(typeof manifest.id).to.equal("string");
@@ -233,10 +233,10 @@ describe("DASH live content (SegmentTimeline)", function () {
       });
       expect(player.getAvailableAudioTracks()).to.eql([]);
 
-      await sleep(1);
+      await sleep(5);
       expect(player.getAvailableAudioTracks()).to.eql([]);
       fakeServer.respond();
-      await sleep(1);
+      await sleep(5);
 
       const audioTracks = player.getAvailableAudioTracks();
 
@@ -282,10 +282,10 @@ describe("DASH live content (SegmentTimeline)", function () {
       });
       expect(player.getAvailableTextTracks()).to.eql([]);
 
-      await sleep(1);
+      await sleep(5);
       expect(player.getAvailableTextTracks()).to.eql([]);
       fakeServer.respond();
-      await sleep(1);
+      await sleep(5);
 
       const textTracks = player.getAvailableTextTracks();
 

@@ -12,7 +12,7 @@
 <li><a href="#subchapter-src/experimental/:%20Experimental%20features">src/experimental/: Experimental features</a></li>
 <li><a href="#subchapter-src/features/:%20Feature%20switching">src/features/: Feature switching</a></li>
 <li><a href="#subchapter-src/manifest/:%20The%20Manifest%20class">src/manifest/: The Manifest class</a></li>
-<li><a href="#subchapter-src/net/:%20The%20networking%20and%20files">src/net/: The networking and files</a></li>
+<li><a href="#subchapter-src/transports/:%20The%20transport%20protocols">src/transports/: The transport protocols</a></li>
 <li><a href="#subchapter-src/parsers/:%20The%20parsing%20files">src/parsers/: The parsing files</a></li>
 <li><a href="#subchapter-src/typings/:%20Typescript%20typings">src/typings/: Typescript typings</a></li>
 <li><a href="#subchapter-src/utils/:%20The%20utils">src/utils/: The utils</a></li>
@@ -22,11 +22,11 @@
 <ul>
 <li><a href="#subchapter-src/core/abr/:%20The%20adaptive%20bitrate%20code">src/core/abr/: The adaptive bitrate code</a></li>
 <li><a href="#subchapter-src/core/api/:%20The%20API%20definition">src/core/api/: The API definition</a></li>
-<li><a href="#subchapter-src/core/buffer/:%20The%20Buffer%20management">src/core/buffer/: The Buffer management</a></li>
+<li><a href="#subchapter-src/core/buffers/:%20The%20Buffer%20management">src/core/buffers/: The Buffer management</a></li>
 <li><a href="#subchapter-src/core/eme/:%20Encryption%20management">src/core/eme/: Encryption management</a></li>
 <li><a href="#subchapter-src/core/pipelines/:%20The%20networking%20pipelines">src/core/pipelines/: The networking pipelines</a></li>
 <li><a href="#subchapter-src/core/source_buffers/:%20SourceBuffers%20definitions">src/core/source_buffers/: SourceBuffers definitions</a></li>
-<li><a href="#subchapter-src/core/stream/:%20Media%20streaming%20logic">src/core/stream/: Media streaming logic</a></li>
+<li><a href="#subchapter-src/core/init/:%20Content%20initialization">src/core/init/: Content initialization</a></li>
 </ul>
 </li>
 <li><a href="#chapter-The%20tests/%20directory:%20Test%20strategies,%20integration%20and%20memory%20tests">The tests/ directory: Test strategies, integration and memory tests</a></li>
@@ -140,9 +140,9 @@ to initialize and update them.</p>
 <h3>src/manifest/: The Manifest class</h3>
 <p>Defines a common manifest class, regardless of the streaming technology (DASH,
 HSS&#x2026;).</p>
-<p><a name="src-net"></a>
-<a name="subchapter-src/net/:%20The%20networking%20and%20files"></a></p>
-<h3>src/net/: The networking and files</h3>
+<p><a name="src-transports"></a>
+<a name="subchapter-src/transports/:%20The%20transport%20protocols"></a></p>
+<h3>src/transports/: The transport protocols</h3>
 <p>Defines a common interface for multiple streaming technologies (DASH, HSS).</p>
 <p>What is exported there are functions to load and parse:</p>
 <ul>
@@ -192,9 +192,9 @@ improvements.</p>
 <h3>src/core/api/: The API definition</h3>
 <p>Defines the rx-player API. This is the part the library user will directly
 interact with.</p>
-<p><a name="core-buffer"></a>
-<a name="subchapter-src/core/buffer/:%20The%20Buffer%20management"></a></p>
-<h3>src/core/buffer/: The Buffer management</h3>
+<p><a name="core-buffers"></a>
+<a name="subchapter-src/core/buffers/:%20The%20Buffer%20management"></a></p>
+<h3>src/core/buffers/: The Buffer management</h3>
 <p>The code there calculate which segments should be downloaded, ask for their
 download and push the segments into the sourceBuffers.</p>
 <p><a name="core-eme"></a>
@@ -205,7 +205,7 @@ download and push the segments into the sourceBuffers.</p>
 <a name="subchapter-src/core/pipelines/:%20The%20networking%20pipelines"></a></p>
 <h3>src/core/pipelines/: The networking pipelines</h3>
 <p>Handle the segment downloading pipelines (load and parse) as defined in the
-<code>src/net/</code> directory.</p>
+<code>src/transports/</code> directory.</p>
 <p>This is the layer directly interacting with the transport part (HSS, DASH).
 It facilitates the role of loading manifest and new segments for the rest of the
 core.</p>
@@ -217,9 +217,9 @@ through which media segments are added to the browser.</p>
 <p>In this directory, you have code for both SourceBuffer managed natively (i.e.
 Audio and Video SourceBuffers) and SourceBuffer implementations for other types
 of content (text, images etc.).</p>
-<p><a name="core-stream"></a>
-<a name="subchapter-src/core/stream/:%20Media%20streaming%20logic"></a></p>
-<h3>src/core/stream/: Media streaming logic</h3>
+<p><a name="core-init"></a>
+<a name="subchapter-src/core/init/:%20Content%20initialization"></a></p>
+<h3>src/core/init/: Content initialization</h3>
 <p>This is the central part which download manifests, initialize MSE and EME APIs,
 instanciate the Buffer and link together many subparts of the player.</p>
 <p><a name="tests"></a>

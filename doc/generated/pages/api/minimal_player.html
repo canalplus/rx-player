@@ -40,7 +40,7 @@ usecases. The main disadvantages of this solution are that to reduce file size:<
 <li>
 <p>you will need to use a module-bundler or minifier which performs
 <a href="https://en.wikipedia.org/wiki/Tree_shaking">tree-shaking</a>, like webpack&#x2019;s
-production mode.</p>
+production mode or rollup.</p>
 </li>
 <li>
 <p>you will need to use the package published on npm (as opposed to the git
@@ -116,15 +116,15 @@ are all objects declared in upper-case.</p>
 </tr>
 <tr>
 <td><code>NATIVE_TEXT_BUFFER</code> [1]</td>
-<td>Allow to manage text tracks through &lt;tracks&gt; elements</td>
+<td>Allow to display text tracks through &lt;tracks&gt; elements</td>
 </tr>
 <tr>
 <td><code>HTML_TEXT_BUFFER</code> [1]</td>
-<td>Allow to manage text tracks through HTML elements</td>
+<td>Allow to display richer text tracks through HTML elements</td>
 </tr>
 <tr>
 <td><code>IMAGE_BUFFER</code> [1]</td>
-<td>Allow to manage images buffer</td>
+<td>Allow to display thumbnails through the images buffer</td>
 </tr>
 <tr>
 <td><code>NATIVE_SRT_PARSER</code> [2]</td>
@@ -167,8 +167,9 @@ are all objects declared in upper-case.</p>
 <hr>
 <p><strong>Notes</strong>:</p>
 <p><strong>[1]</strong>: You will need to also add at least one parser for this type of buffer
-for it to be useful.
-(example: <code>NATIVE_SRT_PARSER</code> for the <code>NATIVE_TEXT_BUFFER</code>)</p>
+for those features to be useful.
+(example: <code>NATIVE_SRT_PARSER</code> will parse srt subtitles for the
+<code>NATIVE_TEXT_BUFFER</code>)</p>
 <p><strong>[2]</strong>: Those features will only be used if <code>NATIVE_TEXT_BUFFER</code> is an added
 feature.</p>
 <p><strong>[3]</strong>: Those features will only be used if <code>HTML_TEXT_BUFFER</code> is an added
@@ -204,10 +205,10 @@ RxPlayer.addFeatures([
   EME,
   HTML_TEXT_BUFFER,
   HTML_VTT_PARSER,
-  HTML_HTML_PARSER
+  HTML_TTML_PARSER
 ]);
 </code></pre>
-<h4>Smooth contents with image (BIF) support</h4>
+<h4>Smooth contents with thumbnails (BIF) support</h4>
 <pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/minimal&quot;</span>;
 <span class="hljs-keyword">import</span> {
   SMOOTH,

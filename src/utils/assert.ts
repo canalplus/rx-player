@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import AssertionError from "../errors/AssertionError";
+import { AssertionError } from "../errors";
 
 /**
  * Throw an AssertionError if the given assertion is false.

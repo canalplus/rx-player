@@ -187,11 +187,11 @@ We found that we could profit a lot more from adding a reactive-programming
 approach, with most notably the help of [the RxJS
 library](https://github.com/ReactiveX/rxjs).
 
-RxJS provides gracious interfaces and operators to compose asynchronous tasks
-together by representating changing states as observable stream of values.
+RxJS provides interfaces and operators to compose asynchronous tasks together
+by representating changing states as observable stream of values.
 It also comes with a **cancelation** contract so that every asynchronous
 side-effect can be properly disposed when discarded by the system.
-This change of paradigm answers gracefully to most of our needs.
+This change of paradigm answers to most of our needs.
 
 Moreover, writing the RxPlayer in TypeScript instead of plain JavaScript gives
 us more tools and confidence in our codebase.
@@ -217,5 +217,5 @@ Here is a basic list of supported platforms:
 [2] Android version >= 4.2
 
 And more. A good way to know if the browser should be supported by our player is
-to go on the page https://www.youtube.com/html5 and check support for MSE and
-H.264.
+to go on the page https://www.youtube.com/html5 and check support for MSE
+support.

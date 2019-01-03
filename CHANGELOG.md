@@ -1,5 +1,24 @@
 # Changelog
 
+## v3.10.1 (2019/01/03)
+
+### Bug fixes
+
+  - abr: always consider the last quality estimation
+  - drm: work-arround Edge bug where the browser does not accept a valid CENC PSSH (DRM-related information in an ISOBMFF)
+  - dash: handle `S` nodes (segments) with an @r attribute at `-1` in an MPD
+  - dash: handle `SegmentTimeline` which have as a first `S` node (segment) an undefined @t attribute in an MPD
+  - dash: Representation.index.getLastPosition() for SegmentBase-based DASH Representations now returns the end of the last segment (it returned the start of the last segment before)
+  - dash/smooth: throw better error (`MANIFEST_PARSE_ERROR`) if none of the audio or video tracks of a content can be played (e.g. none have supported codecs)
+
+### Other improvements
+
+  - manifest: better infer the minimum time of a Manifest
+  - code: refresh code architecture (rename and move modules, remove some dependencies...)
+  - tests: add coverage reports for both unit and "integration" tests, to check where tests are lacking and better pin down our hot-spots
+  - tests: add appveyor countinous integration service for unit tests
+
+
 ## v3.10.0 (2018/12/11)
 
 ### Features

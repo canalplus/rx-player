@@ -34,7 +34,7 @@ import {
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
-import arrayIncludes from "../../utils/array-includes";
+import arrayIncludes from "../../utils/array_includes";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 import { IKeySystemOption } from "./types";
 
@@ -188,8 +188,8 @@ function buildKeySystemConfigurations(
 
   // From the W3 EME spec, we have to provide videoCapabilities and
   // audioCapabilities.
-  // These capabilities must specify a codec (even though your stream can use
-  // a completely different codec afterward).
+  // These capabilities must specify a codec (even though you can use a
+  // completely different codec afterward).
   // It is also strongly recommended to specify the required security
   // robustness. As we do not want to forbide any security level, we specify
   // every existing security level from highest to lowest so that the best

@@ -30,9 +30,9 @@ You'll find there:
 
 
 
-## SourceBufferManager #########################################################
+## SourceBuffersManager ########################################################
 
-The ``SourceBufferManager`` is the main export from there. It facilitates the
+The ``SourceBuffersManager`` is the main export from there. It facilitates the
 creation and destruction of SourceBuffers.
 More specifically, it keep track of every ``SourceBuffer`` created for a given
 content.

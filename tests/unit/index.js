@@ -1,14 +1,3 @@
-// load chai plugins
-import chai from "chai";
-
-import ChaiAsPromised from "chai-as-promised";
-import ChaiSpies from "chai-spies";
-import SinonChai from "sinon-chai";
-
-chai.use(ChaiAsPromised);
-chai.use(ChaiSpies);
-chai.use(SinonChai);
-
 /**
  * Require all files returned by a require.context call
  * @param {Function} requireContext - Return of a require.context.
@@ -18,6 +7,6 @@ const requireAll = function(requireContext) {
   return requireContext.keys().forEach(requireContext);
 };
 
-// require all modules ending in ".test.js" from the
+// requires all modules ending in ".test.js" from the
 // core directory and all subdirectories
-requireAll(require.context("../../src", true, /\.test\.ts/));
+requireAll(require.context("../../src", true, /\.test\.ts$/));

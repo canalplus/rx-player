@@ -1,0 +1,628 @@
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { expect } from "chai";
+import { take } from "rxjs/operators";
+import * as sinon from "sinon";
+import log from "../../log";
+import EventEmitter, {
+  fromEvent,
+} from "../event_emitter";
+
+describe("utils - EventEmitter", () => {
+  it("should be able to call synchronously a callback on a given event", () => {
+    const eventEmitter = new EventEmitter<string, undefined>();
+    let wasCalled = 0;
+    eventEmitter.addEventListener("something", () => {
+      wasCalled++;
+    });
+
+    expect(wasCalled).to.eql(0);
+    eventEmitter.trigger("something", undefined);
+    expect(wasCalled).to.eql(1);
+    eventEmitter.trigger("nope", undefined);
+    expect(wasCalled).to.eql(1);
+    eventEmitter.removeEventListener();
+  });
+
+  it("should communicate the given payload", () => {
+    const eventEmitter = new EventEmitter<
+      string,
+      undefined|"a"|{ a: string }
+      >();
+    let wasCalledWithString = 0;
+    let wasCalledWithObject = 0;
+    eventEmitter.addEventListener("something",
+      (payload : undefined|"a"|{ a: string }) => {
+        if (payload === "a") {
+          wasCalledWithString++;
+        } else if (payload && payload.a === "b") {
+          wasCalledWithObject++;
+        }
+      });
+
+    expect(wasCalledWithString).to.eql(0);
+    expect(wasCalledWithObject).to.eql(0);
+
+    eventEmitter.trigger("something", undefined);
+    expect(wasCalledWithString).to.eql(0);
+    expect(wasCalledWithObject).to.eql(0);
+
+    eventEmitter.trigger("something", "a");
+    expect(wasCalledWithString).to.eql(1);
+    expect(wasCalledWithObject).to.eql(0);
+
+    eventEmitter.trigger("nope", undefined);
+    expect(wasCalledWithString).to.eql(1);
+    expect(wasCalledWithObject).to.eql(0);
+
+    eventEmitter.trigger("nope", undefined);
+    expect(wasCalledWithString).to.eql(1);
+    expect(wasCalledWithObject).to.eql(0);
+
+    eventEmitter.trigger("something", { a: "b" });
+    expect(wasCalledWithString).to.eql(1);
+    expect(wasCalledWithObject).to.eql(1);
+
+    eventEmitter.trigger("something", "a");
+    eventEmitter.trigger("something", "a");
+    eventEmitter.trigger("something", "a");
+    expect(wasCalledWithString).to.eql(4);
+    expect(wasCalledWithObject).to.eql(1);
+
+    eventEmitter.trigger("nope", undefined);
+    expect(wasCalledWithString).to.eql(4);
+    expect(wasCalledWithObject).to.eql(1);
+    eventEmitter.removeEventListener();
+  });
+
+  it("should be able to remove the listener for a given event", () => {
+    const eventEmitter = new EventEmitter<
+      string,
+      undefined|"a"|{ a: string }
+      >();
+    let wasCalledWithString = 0;
+    let wasCalledWithObject = 0;
+    const callback = (payload : undefined|"a"|{ a: string }) => {
+      if (payload === "a") {
+        wasCalledWithString++;
+      } else if (payload && payload.a === "b") {
+        wasCalledWithObject++;
+      }
+    };
+    eventEmitter.addEventListener("something", callback);
+    eventEmitter.addEventListener("nope", callback);
+
+    expect(wasCalledWithString).to.eql(0);
+    expect(wasCalledWithObject).to.eql(0);
+
+    eventEmitter.trigger("something", undefined);
+    expect(wasCalledWithString).to.eql(0);
+    expect(wasCalledWithObject).to.eql(0);
+
+    eventEmitter.trigger("something", "a");
+    expect(wasCalledWithString).to.eql(1);
+    expect(wasCalledWithObject).to.eql(0);
+
+    eventEmitter.trigger("nope", undefined);
+    expect(wasCalledWithString).to.eql(1);
+    expect(wasCalledWithObject).to.eql(0);
+
+    eventEmitter.trigger("nope", "a");
+    expect(wasCalledWithString).to.eql(2);
+    expect(wasCalledWithObject).to.eql(0);
+
+    eventEmitter.trigger("something", { a: "b" });
+    expect(wasCalledWithString).to.eql(2);
+    expect(wasCalledWithObject).to.eql(1);
+
+    eventEmitter.removeEventListener("something", callback);
+    eventEmitter.trigger("something", "a");
+    eventEmitter.trigger("something", "a");
+    eventEmitter.trigger("something", "a");
+    expect(wasCalledWithString).to.eql(2);
+    expect(wasCalledWithObject).to.eql(1);
+
+    eventEmitter.trigger("nope", undefined);
+    expect(wasCalledWithString).to.eql(2);
+    expect(wasCalledWithObject).to.eql(1);
+
+    eventEmitter.trigger("nope", "a");
+    expect(wasCalledWithString).to.eql(3);
+    expect(wasCalledWithObject).to.eql(1);
+    eventEmitter.removeEventListener();
+  });
+
+  it("should be able to register multiple callbacks for the same event", () => {
+    const eventEmitter = new EventEmitter<
+      string,
+      undefined|"a"|{ a: string }
+      >();
+    let wasCalledWithString1 = 0;
+    let wasCalledWithObject1 = 0;
+    let wasCalledWithString2 = 0;
+    let wasCalledWithObject2 = 0;
+    let wasCalledWithString3 = 0;
+    let wasCalledWithObject3 = 0;
+    const callback1 = (payload : undefined|"a"|{ a: string }) => {
+      if (payload === "a") {
+        wasCalledWithString1++;
+      } else if (payload && payload.a === "b") {
+        wasCalledWithObject1++;
+      }
+    };
+    const callback2 = (payload : undefined|"a"|{ a: string }) => {
+      if (payload === "a") {
+        wasCalledWithString2++;
+      } else if (payload && payload.a === "b") {
+        wasCalledWithObject2++;
+      }
+    };
+    const callback3 = (payload : undefined|"a"|{ a: string }) => {
+      if (payload === "a") {
+        wasCalledWithString3++;
+      } else if (payload && payload.a === "b") {
+        wasCalledWithObject3++;
+      }
+    };
+
+    eventEmitter.addEventListener("something", callback1);
+    eventEmitter.addEventListener("something", callback2);
+    eventEmitter.addEventListener("nope", callback1);
+    eventEmitter.addEventListener("nope", callback3);
+    expect(wasCalledWithString1).to.eql(0);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(0);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(0);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("something", undefined);
+    expect(wasCalledWithString1).to.eql(0);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(0);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(0);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("something", "a");
+    expect(wasCalledWithString1).to.eql(1);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(1);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(0);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.addEventListener("something", callback3);
+    expect(wasCalledWithString1).to.eql(1);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(1);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(0);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("something", "a");
+    expect(wasCalledWithString1).to.eql(2);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(1);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("nope", undefined);
+    expect(wasCalledWithString1).to.eql(2);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(1);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("nope", "a");
+    expect(wasCalledWithString1).to.eql(3);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(2);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("something", { a: "b" });
+    expect(wasCalledWithString1).to.eql(3);
+    expect(wasCalledWithObject1).to.eql(1);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(1);
+    expect(wasCalledWithString3).to.eql(2);
+    expect(wasCalledWithObject3).to.eql(1);
+
+    eventEmitter.removeEventListener("something", callback2);
+    expect(wasCalledWithString1).to.eql(3);
+    expect(wasCalledWithObject1).to.eql(1);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(1);
+    expect(wasCalledWithString3).to.eql(2);
+    expect(wasCalledWithObject3).to.eql(1);
+
+    eventEmitter.trigger("something", { a: "b" });
+    expect(wasCalledWithString1).to.eql(3);
+    expect(wasCalledWithObject1).to.eql(2);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(1);
+    expect(wasCalledWithString3).to.eql(2);
+    expect(wasCalledWithObject3).to.eql(2);
+
+    eventEmitter.trigger("nope", { a: "b" });
+    expect(wasCalledWithString1).to.eql(3);
+    expect(wasCalledWithObject1).to.eql(3);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(1);
+    expect(wasCalledWithString3).to.eql(2);
+    expect(wasCalledWithObject3).to.eql(3);
+    eventEmitter.removeEventListener();
+  });
+
+  /* tslint:disable max-line-length */
+  it("should remove every callback for an event if no callback is provided to removeEventListener", () => {
+  /* tslint:enable max-line-length */
+    const eventEmitter = new EventEmitter<
+      string,
+      undefined|"a"|{ a: string }
+      >();
+    let wasCalledWithString1 = 0;
+    let wasCalledWithObject1 = 0;
+    let wasCalledWithString2 = 0;
+    let wasCalledWithObject2 = 0;
+    let wasCalledWithString3 = 0;
+    let wasCalledWithObject3 = 0;
+    const callback1 = (payload : undefined|"a"|{ a: string }) => {
+      if (payload === "a") {
+        wasCalledWithString1++;
+      } else if (payload && payload.a === "b") {
+        wasCalledWithObject1++;
+      }
+    };
+    const callback2 = (payload : undefined|"a"|{ a: string }) => {
+      if (payload === "a") {
+        wasCalledWithString2++;
+      } else if (payload && payload.a === "b") {
+        wasCalledWithObject2++;
+      }
+    };
+    const callback3 = (payload : undefined|"a"|{ a: string }) => {
+      if (payload === "a") {
+        wasCalledWithString3++;
+      } else if (payload && payload.a === "b") {
+        wasCalledWithObject3++;
+      }
+    };
+
+    eventEmitter.addEventListener("something", callback1);
+    eventEmitter.addEventListener("something", callback2);
+    eventEmitter.addEventListener("nope", callback1);
+    eventEmitter.addEventListener("nope", callback3);
+    expect(wasCalledWithString1).to.eql(0);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(0);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(0);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("something", undefined);
+    expect(wasCalledWithString1).to.eql(0);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(0);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(0);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("something", "a");
+    expect(wasCalledWithString1).to.eql(1);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(1);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(0);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.addEventListener("something", callback3);
+    expect(wasCalledWithString1).to.eql(1);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(1);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(0);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("something", "a");
+    expect(wasCalledWithString1).to.eql(2);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(1);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("nope", undefined);
+    expect(wasCalledWithString1).to.eql(2);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(1);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("nope", "a");
+    expect(wasCalledWithString1).to.eql(3);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(2);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("something", { a: "b" });
+    expect(wasCalledWithString1).to.eql(3);
+    expect(wasCalledWithObject1).to.eql(1);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(1);
+    expect(wasCalledWithString3).to.eql(2);
+    expect(wasCalledWithObject3).to.eql(1);
+
+    eventEmitter.removeEventListener("something");
+    expect(wasCalledWithString1).to.eql(3);
+    expect(wasCalledWithObject1).to.eql(1);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(1);
+    expect(wasCalledWithString3).to.eql(2);
+    expect(wasCalledWithObject3).to.eql(1);
+
+    eventEmitter.trigger("something", { a: "b" });
+    expect(wasCalledWithString1).to.eql(3);
+    expect(wasCalledWithObject1).to.eql(1);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(1);
+    expect(wasCalledWithString3).to.eql(2);
+    expect(wasCalledWithObject3).to.eql(1);
+
+    eventEmitter.trigger("nope", { a: "b" });
+    expect(wasCalledWithString1).to.eql(3);
+    expect(wasCalledWithObject1).to.eql(2);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(1);
+    expect(wasCalledWithString3).to.eql(2);
+    expect(wasCalledWithObject3).to.eql(2);
+    eventEmitter.removeEventListener();
+  });
+
+  /* tslint:disable max-line-length */
+  it("should remove every callback for any event if no callback and no event is provided to removeEventListener", () => {
+  /* tslint:enable max-line-length */
+    const eventEmitter = new EventEmitter<
+      string,
+      undefined|"a"|{ a: string }
+      >();
+    let wasCalledWithString1 = 0;
+    let wasCalledWithObject1 = 0;
+    let wasCalledWithString2 = 0;
+    let wasCalledWithObject2 = 0;
+    let wasCalledWithString3 = 0;
+    let wasCalledWithObject3 = 0;
+    const callback1 = (payload : undefined|"a"|{ a: string }) => {
+      if (payload === "a") {
+        wasCalledWithString1++;
+      } else if (payload && payload.a === "b") {
+        wasCalledWithObject1++;
+      }
+    };
+    const callback2 = (payload : undefined|"a"|{ a: string }) => {
+      if (payload === "a") {
+        wasCalledWithString2++;
+      } else if (payload && payload.a === "b") {
+        wasCalledWithObject2++;
+      }
+    };
+    const callback3 = (payload : undefined|"a"|{ a: string }) => {
+      if (payload === "a") {
+        wasCalledWithString3++;
+      } else if (payload && payload.a === "b") {
+        wasCalledWithObject3++;
+      }
+    };
+
+    eventEmitter.addEventListener("something", callback1);
+    eventEmitter.addEventListener("something", callback2);
+    eventEmitter.addEventListener("nope", callback1);
+    eventEmitter.addEventListener("nope", callback3);
+    expect(wasCalledWithString1).to.eql(0);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(0);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(0);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("something", undefined);
+    expect(wasCalledWithString1).to.eql(0);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(0);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(0);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("something", "a");
+    expect(wasCalledWithString1).to.eql(1);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(1);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(0);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.addEventListener("something", callback3);
+    expect(wasCalledWithString1).to.eql(1);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(1);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(0);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("something", "a");
+    expect(wasCalledWithString1).to.eql(2);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(1);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("nope", undefined);
+    expect(wasCalledWithString1).to.eql(2);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(1);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("nope", "a");
+    expect(wasCalledWithString1).to.eql(3);
+    expect(wasCalledWithObject1).to.eql(0);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(0);
+    expect(wasCalledWithString3).to.eql(2);
+    expect(wasCalledWithObject3).to.eql(0);
+
+    eventEmitter.trigger("something", { a: "b" });
+    expect(wasCalledWithString1).to.eql(3);
+    expect(wasCalledWithObject1).to.eql(1);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(1);
+    expect(wasCalledWithString3).to.eql(2);
+    expect(wasCalledWithObject3).to.eql(1);
+
+    eventEmitter.removeEventListener();
+    expect(wasCalledWithString1).to.eql(3);
+    expect(wasCalledWithObject1).to.eql(1);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(1);
+    expect(wasCalledWithString3).to.eql(2);
+    expect(wasCalledWithObject3).to.eql(1);
+
+    eventEmitter.trigger("something", { a: "b" });
+    expect(wasCalledWithString1).to.eql(3);
+    expect(wasCalledWithObject1).to.eql(1);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(1);
+    expect(wasCalledWithString3).to.eql(2);
+    expect(wasCalledWithObject3).to.eql(1);
+
+    eventEmitter.trigger("nope", { a: "b" });
+    expect(wasCalledWithString1).to.eql(3);
+    expect(wasCalledWithObject1).to.eql(1);
+    expect(wasCalledWithString2).to.eql(2);
+    expect(wasCalledWithObject2).to.eql(1);
+    expect(wasCalledWithString3).to.eql(2);
+    expect(wasCalledWithObject3).to.eql(1);
+    eventEmitter.removeEventListener();
+  });
+
+  it("should allow removing event listener that do not exist", () => {
+    const eventEmitter = new EventEmitter<string, never>();
+    const cb1 = function() {
+      throw new Error("Should not be called");
+    };
+    const cb2 = function() {
+      throw new Error("Should not be called");
+    };
+    eventEmitter.addEventListener("test", cb2);
+    eventEmitter.removeEventListener("test", cb1);
+    eventEmitter.removeEventListener("test", cb2);
+    eventEmitter.removeEventListener("test", cb2);
+    eventEmitter.removeEventListener("test");
+    eventEmitter.removeEventListener("test");
+    eventEmitter.removeEventListener();
+    eventEmitter.removeEventListener();
+  });
+
+  it("should log if an event listener throws", () => {
+    const eventEmitter = new EventEmitter<string, void>();
+    const err = new Error("Should not be called");
+    const cb = function() {
+      throw err;
+    };
+    const logSpy = sinon.stub(log, "error");
+    eventEmitter.addEventListener("t", cb);
+
+    expect(logSpy.callCount).to.equal(0);
+    eventEmitter.trigger("t", undefined);
+    expect(logSpy.callCount).to.equal(1);
+    expect(logSpy.calledWith(err, err.stack)).to.equal(true);
+    logSpy.restore();
+    eventEmitter.removeEventListener();
+  });
+});
+
+describe("utils - fromEvent", () => {
+  it("should subscribe to a given event", (done) => {
+    let stringItemsReceived = 0;
+    let numberItemsReceived = 0;
+    const eventEmitter = new EventEmitter<string, undefined|string|number>();
+    fromEvent(eventEmitter, "fooba")
+      .pipe(take(6))
+      .subscribe((item) => {
+        if (typeof item === "number") {
+          numberItemsReceived++;
+        } else if (typeof item === "string") {
+          stringItemsReceived++;
+        }
+      }, undefined, () => {
+        eventEmitter.trigger("fooba", 6);
+        expect(numberItemsReceived).to.equal(2);
+        expect(stringItemsReceived).to.equal(3);
+        done();
+      });
+
+    eventEmitter.trigger("test", undefined);
+    eventEmitter.trigger("fooba", undefined);
+    eventEmitter.trigger("fooba", 5);
+    eventEmitter.trigger("fooba", "a");
+    eventEmitter.trigger("test", undefined);
+    eventEmitter.trigger("test", undefined);
+    eventEmitter.trigger("test", undefined);
+    eventEmitter.trigger("fooba", "b");
+    eventEmitter.trigger("fooba", "c");
+    eventEmitter.trigger("fooba", 6);
+  });
+
+  it("should remove the event listener on unsubscription", () => {
+    let stringItemsReceived = 0;
+    let numberItemsReceived = 0;
+    const eventEmitter = new EventEmitter<string, undefined|string|number>();
+    const subscription = fromEvent(eventEmitter, "fooba")
+      .pipe(take(6))
+      .subscribe((item) => {
+        if (typeof item === "number") {
+          numberItemsReceived++;
+        } else if (typeof item === "string") {
+          stringItemsReceived++;
+        }
+      });
+
+    eventEmitter.trigger("test", undefined);
+    eventEmitter.trigger("fooba", undefined);
+    eventEmitter.trigger("fooba", 5);
+    eventEmitter.trigger("fooba", "a");
+    subscription.unsubscribe();
+    eventEmitter.trigger("test", undefined);
+    eventEmitter.trigger("test", undefined);
+    eventEmitter.trigger("test", undefined);
+    eventEmitter.trigger("fooba", "b");
+    eventEmitter.trigger("fooba", "c");
+    eventEmitter.trigger("fooba", 6);
+
+    expect(stringItemsReceived).to.equal(1);
+    expect(numberItemsReceived).to.equal(1);
+  });
+});

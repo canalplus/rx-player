@@ -24,8 +24,8 @@
 // Done for fun. Understand <b>, <i>, <u> and <font color="#ff0000" /> type
 // of tags.
 
-import getCueBlocks from "./getCueBlocks";
-import parseCueBlock from "./parseCue";
+import getCueBlocks from "./get_cue_blocks";
+import parseCueBlock from "./parse_cue";
 
 export interface ISRTHTMLCue {
   start : number;

@@ -187,4 +187,32 @@ describe("utils - assertInterface", () => {
 
     assertInterface(myObj, objIface, nameOfMyObj);
   });
+
+  /* tslint:disable:max-line-length */
+  it("should not consider inherited properties as part of the interface", () => {
+  /* tslint:enable:max-line-length */
+
+    const nameOfMyObj = "toto titi";
+    const myObj = {
+      a: 45,
+      b: {
+        c: "toto",
+      },
+      /* tslint:disable:no-empty */
+      d: () => {},
+      /* tslint:enable:no-empty */
+      e: true,
+    };
+
+    (Object.prototype as any).f = "number";
+
+    const objIface = {
+      a: "number",
+      b: "object",
+      d: "function",
+      e: "boolean",
+    };
+
+    assertInterface(myObj, objIface, nameOfMyObj);
+  });
 });

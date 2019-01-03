@@ -36,8 +36,8 @@ for f in "$files"; do
   sed -i -E "s/\b__RELATIVE_PATH__\.EME_MANAGER\b/\"..\/core\/eme\/index.js\"/g" $f
   sed -i -E "s/\b__RELATIVE_PATH__\.IMAGE_BUFFER\b/\"..\/core\/source_buffers\/image\/index.js\"/g" $f
   sed -i -E "s/\b__RELATIVE_PATH__\.BIF_PARSER\b/\"..\/parsers\/images\/bif.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.SMOOTH\b/\"..\/net\/smooth\/index.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.DASH\b/\"..\/net\/dash\/index.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.SMOOTH\b/\"..\/transports\/smooth\/index.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.DASH\b/\"..\/transports\/dash\/index.js\"/g" $f
   sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_TEXT_BUFFER\b/\"..\/core\/source_buffers\/text\/native\/index.js\"/g" $f
   sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_VTT\b/\"..\/parsers\/texttracks\/webvtt\/native.js\"/g" $f
   sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_SRT\b/\"..\/parsers\/texttracks\/srt\/native.js\"/g" $f
@@ -48,7 +48,7 @@ for f in "$files"; do
   sed -i -E "s/\b__RELATIVE_PATH__\.HTML_SRT\b/\"..\/parsers\/texttracks\/srt\/html.js\"/g" $f
   sed -i -E "s/\b__RELATIVE_PATH__\.HTML_TTML\b/\"..\/parsers\/texttracks\/ttml\/html\/index.js\"/g" $f
   sed -i -E "s/\b__RELATIVE_PATH__\.HTML_SAMI\b/\"..\/parsers\/texttracks\/sami\/html.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.DIRECTFILE\b/\"..\/core\/stream\/directfile.js\"/g" $f
+  sed -i -E "s/\b__RELATIVE_PATH__\.DIRECTFILE\b/\"..\/core\/init\/directfile.js\"/g" $f
 done
 
 echo "processed modular build succesfully created!"
@@ -196,7 +196,7 @@ echo "/**
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export * from \"../dist/_esm5.processed/exported_types\";" > types/index.d.ts
+export * from \"../dist/_esm5.processed/public_types\";" > types/index.d.ts
 
 echo "creating types for legacy code bases..."
 rm -f dist/rx-player.d.ts rx-player.min.d.ts

@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
 import objectAssign from "object-assign";
-import { Subject } from "rxjs";
 import { isCodecSupported } from "../compat";
-import { ICustomError } from "../errors";
-import MediaError from "../errors/MediaError";
+import {
+  ICustomError,
+  MediaError,
+} from "../errors";
 import log from "../log";
-import generateNewId from "../utils/id";
+import arrayFind from "../utils/array_find";
+import normalizeLanguage from "../utils/languages";
 import uniq from "../utils/uniq";
 import Representation, {
   IRepresentationArguments,
@@ -47,16 +48,15 @@ export type IRepresentationFilter = (
 
 export interface IAdaptationArguments {
   // -- required
+  id : string;
   representations : IRepresentationArguments[];
   type : IAdaptationType;
 
   // -- optional
   audioDescription? : boolean;
   closedCaption? : boolean;
-  id? : number|string;
   language? : string;
   manuallyAdded? : boolean;
-  normalizedLanguage? : string;
 }
 
 /**
@@ -74,7 +74,7 @@ export default class Adaptation {
    * TODO in the Manifest instead?
    * @type {string}
    */
-  public readonly id : string|number;
+  public readonly id : string;
 
   /**
    * Different `Representations` (e.g. qualities) this Adaptation is available
@@ -121,18 +121,23 @@ export default class Adaptation {
   public manuallyAdded? : boolean;
 
   /**
+   * Array containing every errors that happened when the Adaptation has been
+   * created, in the order they have happened.
+   * @type {Array.<Error>}
+   */
+  public readonly parsingErrors : Array<Error|ICustomError>;
+
+  /**
    * @constructor
    * @param {Object} args
-   * @param {Subject} warning$
    * @param {Function|undefined} [representationFilter]
    */
   constructor(
     args : IAdaptationArguments,
-    warning$ : Subject<Error|ICustomError>,
     representationFilter? : IRepresentationFilter
   ) {
-    const nId = generateNewId();
-    this.id = args.id == null ? nId : "" + args.id;
+    this.parsingErrors = [];
+    this.id = args.id;
     this.type = args.type;
 
     const hadRepresentations = !!args.representations.length;
@@ -142,15 +147,12 @@ export default class Adaptation {
     if (hadRepresentations && argsRepresentations.length === 0) {
       log.warn("Incompatible codecs for adaptation", args);
       const error = new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR", null, false);
-      warning$.next(error);
+      this.parsingErrors.push(error);
     }
 
     if (args.language != null) {
       this.language = args.language;
-    }
-
-    if (args.normalizedLanguage != null) {
-      this.normalizedLanguage = args.normalizedLanguage;
+      this.normalizedLanguage = normalizeLanguage(args.language);
     }
 
     if (args.closedCaption != null) {

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import arrayFind from "array-find";
 import {
   concat as observableConcat,
   defer as observableDefer,
@@ -33,7 +32,8 @@ import {
 } from "../../../compat";
 import { EncryptedMediaError } from "../../../errors";
 import log from "../../../log";
-import castToObservable from "../../../utils/castToObservable";
+import arrayFind from "../../../utils/array_find";
+import castToObservable from "../../../utils/cast_to_observable";
 import hashBuffer from "../../../utils/hash_buffer";
 
 // Cached data for a single MediaKeySession

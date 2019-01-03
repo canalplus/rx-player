@@ -14,25 +14,27 @@
  * limitations under the License.
  */
 
-import getInitData from "./get_init_data";
 import CustomMediaKeySystemAccess, {
   ICustomMediaKeySystemAccess,
-} from "./keySystemAccess";
+} from "./custom_key_system_access";
 import {
   createSession,
   ICustomMediaKeys,
   ICustomMediaKeySession,
   requestMediaKeySystemAccess,
-} from "./MediaKeys";
-import setMediaKeys from "./setMediaKeys";
+} from "./custom_media_keys";
+import generateKeyRequest from "./generate_key_request";
+import getInitData from "./get_init_data";
+import setMediaKeys from "./set_media_keys";
 
 export {
+  CustomMediaKeySystemAccess,
+  createSession,
+  generateKeyRequest,
+  getInitData,
   ICustomMediaKeySession,
   ICustomMediaKeySystemAccess,
   ICustomMediaKeys,
-  CustomMediaKeySystemAccess,
-  createSession,
-  getInitData,
   requestMediaKeySystemAccess,
   setMediaKeys,
 };

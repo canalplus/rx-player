@@ -26,7 +26,7 @@ import { IRepresentationFilter } from "../../manifest";
 import {
   CustomManifestLoader,
   CustomSegmentLoader,
-} from "../../net/types";
+} from "../../transports";
 import {
   normalizeAudioTrack,
   normalizeTextTrack,
@@ -42,6 +42,7 @@ const {
   DEFAULT_MAX_BUFFER_AHEAD,
   DEFAULT_MAX_BUFFER_BEHIND,
   DEFAULT_SHOW_NATIVE_SUBTITLE,
+  DEFAULT_STOP_AT_END,
   DEFAULT_TEXT_TRACK_MODE,
   DEFAULT_THROTTLE_WHEN_HIDDEN,
   DEFAULT_WANTED_BUFFER_AHEAD,
@@ -291,13 +292,8 @@ function parseConstructorOptions(
     }
   }
 
-  if (options.stopAtEnd == null) {
-    stopAtEnd = true;
-  } else if (typeof options.stopAtEnd === "boolean") {
-    stopAtEnd = options.stopAtEnd;
-  } else {
-    throw new Error("Invalid stopAtEnd parameter. Should be a boolean.");
-  }
+  stopAtEnd = options.stopAtEnd == null ?
+    DEFAULT_STOP_AT_END : !!options.stopAtEnd;
 
   return {
     maxBufferAhead,

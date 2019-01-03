@@ -15,7 +15,7 @@
  */
 
 import log from "../../../log";
-import arrayIncludes from "../../../utils/array-includes";
+import arrayIncludes from "../../../utils/array_includes";
 import { IParsedManifest } from "../types";
 
 /**

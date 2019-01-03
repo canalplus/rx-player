@@ -14,51 +14,31 @@
  * limitations under the License.
  */
 
+import AssertionError from "./assertion_error";
+import EncryptedMediaError from "./encrypted_media_error";
 import {
   ErrorCodes,
   ErrorTypes,
   RequestErrorTypes,
-} from "./constants";
-
-// Custom Errors
-import EncryptedMediaError from "./EncryptedMediaError";
-import MediaError from "./MediaError";
-import OtherError from "./OtherError";
-
-import NetworkError from "./NetworkError";
-
-// Error used for XHRs
-import RequestError from "./RequestError";
-
-export type ICustomError =
-  EncryptedMediaError |
-  MediaError |
-  OtherError |
-  NetworkError;
-
-/**
- * Whether the error given is a ICustomError.
- * @param {Error} error
- * @returns {Boolean}
- */
-function isKnownError(error : any) : error is ICustomError {
-  return (
-    !!error &&
-    !!error.type &&
-    Object.keys(ErrorTypes).indexOf(error.type) >= 0
-  );
-}
+} from "./error_codes";
+import isKnownError, {
+  ICustomError,
+} from "./is_known_error";
+import MediaError from "./media_error";
+import NetworkError from "./network_error";
+import OtherError from "./other_error";
+import RequestError from "./request_error";
 
 export {
+  AssertionError,
+  EncryptedMediaError,
   ErrorCodes,
   ErrorTypes,
-  RequestErrorTypes,
-
-  EncryptedMediaError,
+  ICustomError,
   MediaError,
   NetworkError,
   OtherError,
   RequestError,
-
+  RequestErrorTypes,
   isKnownError,
 };

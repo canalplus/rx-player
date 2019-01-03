@@ -14,25 +14,11 @@
  * limitations under the License.
  */
 
-import { IParsedManifest } from "../types";
-import parseMPD, {
-  IParserResponse,
-} from "./parseMPD";
+import parseFromDocument, {
+  IMPDParserResponse,
+} from "./parse_from_document";
 
-export type IMPDParserResponse = IParserResponse<IParsedManifest>;
-
-/**
- * @param {Document} manifest - Original manifest as returned by the server
- * @param {string} uri
- * @returns {Object} - parsed manifest
- */
-export default function parseFromDocument(
-  document: Document,
-  uri : string
-) : IMPDParserResponse {
-  const root = document.documentElement;
-  if (!root || root.nodeName !== "MPD") {
-    throw new Error("DASH Parser: document root should be MPD");
-  }
-  return parseMPD(root, uri);
-}
+export default parseFromDocument;
+export {
+  IMPDParserResponse,
+};

@@ -18,23 +18,21 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
-import { createIndexURL } from "../helpers";
 import {
+  createIndexURL,
   fromIndexTime,
+  getIndexSegmentEnd,
   getInitSegment,
   getSegmentsFromTimeline,
-  getTimelineItemRangeStart,
   IIndexSegment,
 } from "./helpers";
 
 // index property defined for a SegmentBase RepresentationIndex
 export interface IBaseIndex {
-  mediaURL : string; // base URL to access any segment. Can contain token to
-                     // replace to convert it to a real URL
-  timeline : IIndexSegment[]; // Every segments defined in this index
-  timescale : number; // timescale to convert a time given here into seconds.
-                      // This is done by this simple operation:
-                      // ``timeInSeconds = timeInIndex * timescale``
+  duration? : number; // duration of each element in the timeline, in the
+                      // timescale given (see timescale and timeline)
+  indexRange?: [number, number]; // byte range for a possible index of segments
+                                 // in the server
   indexTimeOffset : number; // Temporal offset, in the current timescale (see
                             // timescale), to add to the presentation time
                             // (time a segment has at decoding time) to
@@ -46,17 +44,20 @@ export interface IBaseIndex {
                             // actually will look for a segment in the index
                             // beginning at:
                             // ``` T * timescale + indexTimeOffset ```
-
-  duration? : number; // duration of each element in the timeline, in the
-                      // timescale given (see timescale and timeline)
-  indexRange?: [number, number]; // byte range for a possible index of segments
-                                 // in the server
   initialization? : { // informations on the initialization segment
     mediaURL: string; // URL to access the initialization segment
     range?: [number, number]; // possible byte range to request it
   };
+  mediaURL : string; // base URL to access any segment. Can contain token to
+                     // replace to convert it to a real URL
   startNumber? : number; // number from which the first segments in this index
                          // starts with
+  timeline : IIndexSegment[]; // Every segments defined in this index
+  timelineEnd : number|undefined; // Absolute end of the timeline, in the
+                                  // current timescale
+  timescale : number; // timescale to convert a time given here into seconds.
+                      // This is done by this simple operation:
+                      // ``timeInSeconds = timeInIndex * timescale``
 }
 
 // `index` Argument for a SegmentBase RepresentationIndex
@@ -90,6 +91,8 @@ export interface IBaseIndexIndexArgument {
 export interface IBaseIndexContextArgument {
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
+  periodEnd : number|undefined; // End of the period concerned by this
+                                // RepresentationIndex, in seconds
   representationBaseURL : string; // Base URL for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
@@ -146,30 +149,23 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   constructor(index : IBaseIndexIndexArgument, context : IBaseIndexContextArgument) {
     const {
       periodStart,
+      periodEnd,
       representationBaseURL,
       representationId,
       representationBitrate,
     } = context;
+    const { timescale } = index;
 
     const presentationTimeOffset = index.presentationTimeOffset != null ?
       index.presentationTimeOffset : 0;
 
     const indexTimeOffset =
-      presentationTimeOffset - periodStart * index.timescale;
+      presentationTimeOffset - periodStart * timescale;
 
     this._index = {
-      mediaURL: createIndexURL(
-        representationBaseURL,
-        index.media,
-        representationId,
-        representationBitrate
-      ),
-      timeline: index.timeline,
-      timescale: index.timescale,
       duration: index.duration,
-      indexTimeOffset,
       indexRange: index.indexRange,
-      startNumber: index.startNumber,
+      indexTimeOffset,
       initialization: index.initialization && {
         mediaURL: createIndexURL(
           representationBaseURL,
@@ -179,6 +175,16 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
         ),
         range: index.initialization.range,
       },
+      mediaURL: createIndexURL(
+        representationBaseURL,
+        index.media,
+        representationId,
+        representationBitrate
+      ),
+      startNumber: index.startNumber,
+      timeline: index.timeline,
+      timelineEnd: periodEnd == null ? undefined : periodEnd * timescale,
+      timescale,
     };
   }
 
@@ -213,7 +219,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    */
   getFirstPosition() : number|undefined {
     const index = this._index;
-    if (!index.timeline.length) {
+    if (index.timeline.length === 0) {
       return undefined;
     }
     return fromIndexTime(index, index.timeline[0].start);
@@ -224,12 +230,14 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @returns {Number|undefined}
    */
   getLastPosition() : number|undefined {
-    const index = this._index;
-    if (!index.timeline.length) {
+    const { timeline, timelineEnd } = this._index;
+    if (timeline.length === 0) {
       return undefined;
     }
-    const lastTimelineElement = index.timeline[index.timeline.length - 1];
-    return fromIndexTime(index, getTimelineItemRangeStart(lastTimelineElement));
+    const lastTimelineElement = timeline[timeline.length - 1];
+
+    const lastTime = getIndexSegmentEnd(lastTimelineElement, null, timelineEnd);
+    return fromIndexTime(this._index, lastTime);
   }
 
   /**

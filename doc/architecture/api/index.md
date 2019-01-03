@@ -18,7 +18,7 @@ As such, its main roles are to:
 
 ## Why is it so big? ###########################################################
 
-`core/api/index.ts` is at the time of writing the longest file in all the
+`core/api/public_api.ts` is at the time of writing the longest file in all the
 RxPlayer, with more than 2000 lines!
 
 So why is that, isn't that a signal that we should split up its role into

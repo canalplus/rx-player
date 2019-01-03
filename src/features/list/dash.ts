@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import dash from "../../net/dash";
+import dash from "../../transports/dash";
 import { IFeaturesObject } from "../types";
 
 /**

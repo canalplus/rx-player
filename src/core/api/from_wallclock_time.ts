@@ -17,9 +17,13 @@
 import Manifest from "../../manifest";
 
 /**
- * @param {number} timeInMs
- * @param {Object} manifest
- * @returns {number}
+ * Translate "wall-clock time" in ms (time since unix epoch without counting
+ * leap seconds a.k.a. unix time a.k.a. Date.now()), into the real media time of
+ * the content.
+ * @param {number} timeInMs - Wall-clock time in milliseconds
+ * @param {Object} manifest - Manifest describing the current content
+ * @returns {number} - Real media time you can seek to to be at that wall-clock
+ * time.
  */
 export default function fromWallClockTime(
   timeInMs : number,
@@ -30,26 +34,27 @@ export default function fromWallClockTime(
 }
 
 /**
- * @param {number|date}
- * @param {Object} manifest
- * @retunrs {number}
+ * Bound the given "wall-clock time" in ms (unix time) to the time limits of the
+ * content as described by the Manifest.
+ * @param {number}
+ * @param {Object} manifest - Manifest describing the current content
+ * @returns {number}
  */
 function normalizeWallClockTime(
-  _time : number|Date,
+  timeInMs : number,
   manifest : Manifest
 ) : number {
   if (!manifest.isLive) {
-    return +_time;
+    return +timeInMs;
   }
   const spd = manifest.suggestedPresentationDelay || 0;
   const plg = manifest.presentationLiveGap || 0;
-  const tsbd = manifest.timeShiftBufferDepth || 0;
-
-  const timeInMs = typeof _time === "number" ?
-    _time : +_time;
+  const tsbd = manifest.timeShiftBufferDepth;
 
   const now = Date.now();
   const max = now - (plg + spd) * 1000;
-  const min = now - (tsbd) * 1000;
+  const min = tsbd == null ?
+    (manifest.minimumTime || manifest.availabilityStartTime || 0) :
+    now - (tsbd) * 1000;
   return Math.max(Math.min(timeInMs, max), min);
 }

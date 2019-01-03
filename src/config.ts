@@ -74,6 +74,18 @@ export default {
   DEFAULT_SHOW_NATIVE_SUBTITLE: true,
 
   /**
+   * If set to true, the player will by default stop immediately and unload the
+   * content on reaching the end of the media.
+   *
+   * If set to false, it will not unload nor stop by default, leaving the user
+   * free to seek in the already-loaded content.
+   *
+   * Set to `true` for legacy reasons.
+   * @type {Boolean}
+   */
+  DEFAULT_STOP_AT_END: true,
+
+  /**
    * Default buffer goal in seconds.
    * Once enough content has been downloaded to fill the buffer up to
    * ``current position + DEFAULT_WANTED_BUFFER_AHEAD", we will stop downloading
@@ -224,7 +236,7 @@ export default {
 
   /**
    * Those are used when a "QuotaExceededError" error is received after
-   * appending a new segment in the source buffer.
+   * appending a new segment in the SourceBuffer.
    *
    * This error can arise when the browser's buffer is considered full.
    * In this case, the player goes into manual garbage collection (GC) mode.
@@ -429,7 +441,7 @@ export default {
 
   /**
    * Number of seconds ahead in the buffer after which playback will resume when
-   * seeking on an unbuffered part of the stream.
+   * seeking on an unbuffered part of the content.
    * @type {Number}
    */
   RESUME_GAP_AFTER_SEEKING: 1.5,
@@ -461,7 +473,7 @@ export default {
   /**
    * Maximum difference allowed between a segment _announced_ start (what the
    * rx-player infers to be the starting time) and its _real_  current starting
-   * time in the source buffer, in seconds, until the segment is considered
+   * time in the SourceBuffer, in seconds, until the segment is considered
    * "incomplete".
    * Same for the ending time announced and its effective end time in the source
    * buffer.
@@ -482,7 +494,7 @@ export default {
    * will wrongly believed to be partially garbage-collected.
    *
    * If a segment has a perfect continuity with a previous/following one in the
-   * source buffer the start/end of it will not be checked. This allows to limit
+   * SourceBuffer the start/end of it will not be checked. This allows to limit
    * the number of time this error-prone logic is applied.
    *
    * Note that in most cases, the rx-player's start and end times estimations
@@ -502,9 +514,9 @@ export default {
    * This limit allows to avoid resizing too much downloaded segments because
    * no other segment is linked to a buffered part.
    *
-   * Setting a value too high can lead to parts of the source buffer being
+   * Setting a value too high can lead to parts of the SourceBuffer being
    * linked to the wrong segments.
-   * Setting a value too low can lead to parts of the source buffer not being
+   * Setting a value too low can lead to parts of the SourceBuffer not being
    * linked to the concerned segment.
    * @type {Number}
    */

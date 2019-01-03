@@ -17,7 +17,7 @@
 import { expect } from "chai";
 import SimpleSet from "../simple_set";
 
-describe("utils - collections", () => {
+describe("utils - SimpleSet", () => {
   it("should allow to push string or number and to test them", () => {
     const simpleSet = new SimpleSet();
     expect(simpleSet.test("a")).to.equal(false);
@@ -38,7 +38,9 @@ describe("utils - collections", () => {
 
   it("should allow to remove pushed strings and numbers", () => {
     const simpleSet = new SimpleSet();
+    expect(simpleSet.isEmpty()).to.equal(true);
     simpleSet.add("a");
+    expect(simpleSet.isEmpty()).to.equal(false);
     simpleSet.add("cde");
     simpleSet.add(54);
     simpleSet.remove(54);
@@ -48,5 +50,9 @@ describe("utils - collections", () => {
     expect(simpleSet.test("cde")).to.equal(false);
     expect(simpleSet.test(1)).to.equal(false);
     expect(simpleSet.test(54)).to.equal(false);
+    expect(simpleSet.isEmpty()).to.equal(false);
+    simpleSet.remove("a");
+    expect(simpleSet.isEmpty()).to.equal(true);
   });
+
 });

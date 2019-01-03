@@ -20,8 +20,8 @@ import {
   of as observableOf,
 } from "rxjs";
 import { ICustomSourceBuffer } from "../../compat";
-import EventEmitter from "../../utils/eventemitter";
-import tryCatch from "../../utils/rx-tryCatch";
+import EventEmitter from "../../utils/event_emitter";
+import tryCatch from "../../utils/rx-try_catch";
 import ManualTimeRanges from "./time_ranges";
 
 /**
@@ -94,7 +94,7 @@ export default abstract class AbstractSourceBuffer<T>
     const result : Observable<void> = tryCatch(() => {
       func();
       return observableOf(undefined);
-    });
+    }, undefined);
     result.subscribe(
       ()  => nextTick(() => {
         this.updating = false;

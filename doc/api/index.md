@@ -85,9 +85,9 @@
 ## Overview ####################################################################
 
 The Rx-player has a complete API allowing you to:
-  - load and stop streams
+  - load and stop video or audio contents
   - perform trickmodes (play, pause, seek, etc.) as a content is loaded.
-  - get multiple informations on the current stream and on the player's state.
+  - get multiple informations on the current content and on the player's state.
   - choose a specific audio language or subtitles track
   - set your own bitrate and buffer length
   - and more
@@ -265,11 +265,11 @@ Can be either one of those strings:
     From this point onward you can use APIs interacting with the current content
     such as ``seekTo`` or ``setAudioTrack``.
 
-  - ``"PLAYING"``: The player is currently playing the stream.
+  - ``"PLAYING"``: The player is currently playing the content.
 
   - ``"PAUSED"``: The player has paused.
 
-  - ``"ENDED"``: The player has reached the end of the stream.
+  - ``"ENDED"``: The player has reached the end of the current content.
 
   - ``"BUFFERING"``: the player has reached the end of the buffer and is waiting
     for data to be appended.

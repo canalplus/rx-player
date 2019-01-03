@@ -15,12 +15,27 @@
  */
 
 import config from "../../config";
-import { PLAYER_STATES } from "./constants";
 
 const { FORCED_ENDED_THRESHOLD } = config;
 
 /**
- * Get state string for a loaded content.
+ * Player state dictionnary
+ * @type {Object}
+ */
+export const PLAYER_STATES = {
+  STOPPED: "STOPPED",
+  LOADED: "LOADED",
+  LOADING: "LOADING",
+  PLAYING: "PLAYING",
+  PAUSED: "PAUSED",
+  ENDED: "ENDED",
+  BUFFERING: "BUFFERING",
+  SEEKING: "SEEKING",
+  RELOADING: "RELOADING",
+};
+
+/**
+ * Get state string for a _loaded_ content.
  * @param {HTMLMediaElement} mediaElement
  * @param {boolean} isPlaying - false when the player is paused. true otherwise.
  * @param {Object} stalledStatus - Current stalled state:
@@ -31,7 +46,7 @@ const { FORCED_ENDED_THRESHOLD } = config;
 export default function getLoadedContentState(
   mediaElement : HTMLMediaElement,
   isPlaying : boolean,
-  stalledStatus : { reason : string }|null
+  stalledStatus : { reason : "seeking" | "not-ready" | "buffering" }|null
 ) : string {
   if (mediaElement.ended) {
     return PLAYER_STATES.ENDED;

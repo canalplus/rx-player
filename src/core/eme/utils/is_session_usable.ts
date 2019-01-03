@@ -16,7 +16,7 @@
 
 import { ICustomMediaKeySession } from "../../../compat";
 import log from "../../../log";
-import arrayIncludes from "../../../utils/array-includes";
+import arrayIncludes from "../../../utils/array_includes";
 
 /**
  * If all key statuses attached to session are valid (either not

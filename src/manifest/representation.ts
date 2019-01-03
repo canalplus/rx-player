@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import generateNewId from "../utils/id";
 import IRepresentationIndex from "./representation_index";
 
 interface IContentProtection {
@@ -25,16 +24,16 @@ interface IContentProtection {
 export interface IRepresentationArguments {
   // -- required
   bitrate : number;
+  id : string;
   index : IRepresentationIndex;
 
   // -- optional
-  frameRate? : string;
   codecs? : string;
+  contentProtections? : IContentProtection[];
+  frameRate? : string;
   height? : number;
-  id? : string|number;
   mimeType? : string;
   width? : number;
-  contentProtections? : IContentProtection[];
 }
 
 /**
@@ -84,7 +83,7 @@ class Representation {
    * @param {Object} args
    */
   constructor(args : IRepresentationArguments) {
-    this.id = (args.id == null ? generateNewId() : args.id);
+    this.id = args.id;
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
 

@@ -33,12 +33,10 @@ import {
   takeUntil,
   timeout,
 } from "rxjs/operators";
-import { ICustomMediaKeySession } from "../../compat";
 import {
-  onKeyError$,
-  onKeyMessage$,
-  onKeyStatusesChange$,
-} from "../../compat/events";
+  events,
+  ICustomMediaKeySession,
+} from "../../compat";
 import {
   EncryptedMediaError,
   ErrorTypes,
@@ -46,14 +44,20 @@ import {
   isKnownError,
 } from "../../errors";
 import log from "../../log";
-import castToObservable from "../../utils/castToObservable";
-import { retryObsWithBackoff } from "../../utils/retry";
-import tryCatch from "../../utils/rx-tryCatch";
+import castToObservable from "../../utils/cast_to_observable";
+import retryObsWithBackoff from "../../utils/rx-retry_with_backoff";
+import tryCatch from "../../utils/rx-try_catch";
 import {
   IEMEWarningEvent,
   IKeySystemOption,
   KEY_STATUS_ERRORS,
 } from "./types";
+
+const {
+  onKeyError$,
+  onKeyMessage$,
+  onKeyStatusesChange$,
+} = events;
 
 type TypedArray =
   Int8Array |
@@ -111,7 +115,6 @@ function licenseErrorSelector(
  * selected keySystem.
  * @param {MediaKeySession} session
  * @param {Object} keySystem
- * @param {Subject} errorStream
  * @returns {Observable}
  */
 export default function handleSessionEvents(
@@ -171,7 +174,7 @@ export default function handleSessionEvents(
             castToObservable(
               keySystem.onKeyStatusesChange(keyStatusesEvent, session)
             ) as Observable<TypedArray|ArrayBuffer|null> : EMPTY;
-        }).pipe() // TS or RxJS Bug?
+        }, undefined).pipe() // TS or RxJS Bug?
           .pipe(
             catchError((error: Error) => {
               throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", error, true);

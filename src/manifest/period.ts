@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import arrayFind from "array-find";
-import { Subject } from "rxjs";
-import { ICustomError } from "../errors";
-import MediaError from "../errors/MediaError";
+import {
+  ICustomError,
+  MediaError,
+} from "../errors";
 import log from "../log";
-import arrayIncludes from "../utils/array-includes";
+import arrayFind from "../utils/array_find";
+import arrayIncludes from "../utils/array_includes";
 import Adaptation, {
   IAdaptationArguments,
   IAdaptationType,
@@ -34,9 +35,12 @@ export type IAdaptationsArguments =
 
 // Arguments constitutive of a new Period.
 export interface IPeriodArguments {
+  // required
   id : string; // unique ID for that Period.
   adaptations : IAdaptationsArguments; // "Tracks" in that Period.
   start : number; // start time of the Period, in seconds.
+
+  // optional
   duration? : number; // duration of the Period, in seconds.
                       // Can be undefined for a still-running one.
 }
@@ -81,16 +85,22 @@ export default class Period {
   public end? : number;
 
   /**
+   * Array containing every errors that happened when the Period has been
+   * created, in the order they have happened.
+   * @type {Array.<Error>}
+   */
+  public readonly parsingErrors : Array<Error|ICustomError>;
+
+  /**
    * @constructor
    * @param {Object} args
-   * @param {Subject} warning$
    * @param {function|undefined} [representationFilter]
    */
   constructor(
     args : IPeriodArguments,
-    warning$: Subject<Error|ICustomError>,
     representationFilter? : IRepresentationFilter
   ) {
+    this.parsingErrors = [];
     this.id = args.id;
     this.adaptations =
       (Object.keys(args.adaptations) as IAdaptationType[])
@@ -98,11 +108,11 @@ export default class Period {
           if (args.adaptations[type]) {
             const adaptationsForType = args.adaptations[type];
             if (adaptationsForType) {
-              acc[type] = adaptationsForType
+              const filteredAdaptations = adaptationsForType
                 .filter((adaptation) => {
                   if (!arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, adaptation.type)) {
                     log.info("not supported adaptation type", adaptation.type);
-                    warning$.next(
+                    this.parsingErrors.push(
                       new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE", null, false)
                     );
                     return false;
@@ -111,9 +121,21 @@ export default class Period {
                   }
                 })
                 .map((adaptation) => {
-                  return new Adaptation(adaptation, warning$, representationFilter);
+                  const newAdaptation =
+                    new Adaptation(adaptation, representationFilter);
+                  this.parsingErrors.push(...newAdaptation.parsingErrors);
+                  return newAdaptation;
                 })
                 .filter((adaptation) => adaptation.representations.length);
+              if (
+                filteredAdaptations.length === 0 &&
+                adaptationsForType.length > 0 &&
+                (type === "video" || type === "audio")
+              ) {
+                const error = new Error("No supported " + type + " adaptations");
+                throw new MediaError("MANIFEST_PARSE_ERROR", error, true);
+              }
+              acc[type] = filteredAdaptations;
             }
           }
           return acc;
@@ -123,7 +145,8 @@ export default class Period {
       (!this.adaptations.video || !this.adaptations.video.length) &&
       (!this.adaptations.audio || !this.adaptations.audio.length)
     ) {
-      throw new MediaError("MANIFEST_PARSE_ERROR", null, true);
+      const error = new Error("No supported audio and video tracks.");
+      throw new MediaError("MANIFEST_PARSE_ERROR", error, true);
     }
 
     this.duration = args.duration;

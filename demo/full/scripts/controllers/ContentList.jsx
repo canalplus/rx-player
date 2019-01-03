@@ -22,7 +22,6 @@ const HAS_EME_APIs = (
   typeof HTMLVideoElement.prototype.webkitGenerateKeyRequest === "function"
 );
 
-
 const IS_HTTPS = window.location.protocol.startsWith("https");
 const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile"];
 const DRM_TYPES = ["Widevine", "Playready", "Clearkey"];

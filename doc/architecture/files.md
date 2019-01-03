@@ -17,18 +17,18 @@ a single directory or subdirectory, in alphabetical order.
   - [src/experimental/: Experimental features](#src-experimental)
   - [src/features/: Feature switching](#src-features)
   - [src/manifest/: The Manifest class](#src-manifest)
-  - [src/net/: The networking files](#src-net)
+  - [src/transports/: The transport protocols](#src-transports)
   - [src/parsers/: The parsing files](#src-parsers)
   - [src/typings/: Typescript typings](#src-typings)
   - [src/utils/: The utils](#src-utils)
 - [src/core/: The core directory](#core)
   - [src/core/abr/: The adaptive bitrate code](#core-abr)
   - [src/core/api/: The API definition](#core-api)
-  - [src/core/buffer/: The Buffer management](#core-buffer)
+  - [src/core/buffers/: The Buffer management](#core-buffers)
   - [src/core/eme/: Encryption management](#core-eme)
   - [src/core/pipelines/: The networking pipelines](#core-pipelines)
   - [src/core/source_buffers/: SourceBuffers definitions](#core-sb)
-  - [src/core/stream/: Media streaming logic](#core-stream)
+  - [src/core/init/: Media streaming logic](#core-init)
 - [tests/: Test strategies, integration and memory tests](#tests)
 
 
@@ -156,8 +156,8 @@ Defines a common manifest class, regardless of the streaming technology (DASH,
 HSS...).
 
 
-<a name="src-net"></a>
-### src/net/: The networking and files #########################################
+<a name="src-transports"></a>
+### src/transports/: The transport protocols ###################################
 
 Defines a common interface for multiple streaming technologies (DASH, HSS).
 
@@ -226,8 +226,8 @@ Defines the rx-player API. This is the part the library user will directly
 interact with.
 
 
-<a name="core-buffer"></a>
-### src/core/buffer/: The Buffer management ####################################
+<a name="core-buffers"></a>
+### src/core/buffers/: The Buffer management ###################################
 
 The code there calculate which segments should be downloaded, ask for their
 download and push the segments into the sourceBuffers.
@@ -243,7 +243,7 @@ Defines functions allowing to handle encrypted contents through the EME APIs.
 ### src/core/pipelines/: The networking pipelines ##############################
 
 Handle the segment downloading pipelines (load and parse) as defined in the
-``src/net/`` directory.
+``src/transports/`` directory.
 
 This is the layer directly interacting with the transport part (HSS, DASH).
 It facilitates the role of loading manifest and new segments for the rest of the
@@ -261,8 +261,8 @@ Audio and Video SourceBuffers) and SourceBuffer implementations for other types
 of content (text, images etc.).
 
 
-<a name="core-stream"></a>
-### src/core/stream/: Media streaming logic ####################################
+<a name="core-init"></a>
+### src/core/init/: Content initialization #####################################
 
 This is the central part which download manifests, initialize MSE and EME APIs,
 instanciate the Buffer and link together many subparts of the player.
