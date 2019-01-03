@@ -1,4 +1,4 @@
-<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>PeriodBufferManager - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-PeriodBufferManager">PeriodBufferManager</a></p>
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>BufferOchestrator - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-BufferOchestrator">BufferOchestrator</a></p>
 <ul>
 <li><a href="#chapter-Overview">Overview</a></li>
 <li><a href="#chapter-Multiple%20types%20handling">Multiple types handling</a></li>
@@ -10,15 +10,15 @@
 </ul>
 </li>
 </ul>
-</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-PeriodBufferManager"></a></p>
-<h1>PeriodBufferManager</h1>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-BufferOchestrator"></a></p>
+<h1>BufferOchestrator</h1>
 <p><a name="chapter-Overview"></a></p>
 <h2>Overview</h2>
 <p>To be able to play a content, the player has to be able to download chunks of
 media data - called segments - and has to push them to SourceBuffers.</p>
-<p>In the RxPlayer, the <em>PeriodBufferManager</em> is the entry point for performing all
+<p>In the RxPlayer, the <em>BufferOrchestrator</em> is the entry point for performing all
 those tasks.</p>
-<p>Basically, the <em>PeriodBufferManager</em>:</p>
+<p>Basically, the <em>BufferOrchestrator</em>:</p>
 <ul>
 <li>
 <p>dynamically creates various SourceBuffers depending on the needs of the
@@ -196,9 +196,8 @@ Thus, multiple <em>PeriodBuffers</em> might be active at the same time:</p>
 </code></pre>
 <p><a name="subchapter-Multi-Period%20management"></a></p>
 <h3>Multi-Period management</h3>
-<p>The creation/destruction of <em>PeriodBuffers</em> by the Stream is actually done in a
-very precize and optimal way, which gives a higher priority to immediate
-content.</p>
+<p>The creation/destruction of <em>PeriodBuffers</em> is actually done in a very precize
+and optimal way, which gives a higher priority to immediate content.</p>
 <p>To better grasp how it works, let&#x2019;s imagine a regular use-case, with two periods
 for a single type of buffer:</p>
 <hr>
@@ -294,7 +293,7 @@ influence a <em>video</em> one:</p>
 </ul>
 <p><a name="subchapter-Communication%20with%20the%20API"></a></p>
 <h3>Communication with the API</h3>
-<p>The Stream communicates to the API about creations and destructions of
+<p>The Buffer communicates to the API about creations and destructions of
 <em>PeriodBuffers</em> respectively through <code>&quot;periodBufferReady&quot;</code> and
 <code>&quot;periodBufferCleared&quot;</code> events.</p>
 <p>When the currently seen Period changes, an <code>activePeriodChanged</code> event is

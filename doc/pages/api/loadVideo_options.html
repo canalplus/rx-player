@@ -49,10 +49,10 @@ player.loadVideo(options);
 <p>Can be either:</p>
 <ul>
 <li>
-<p><code>&quot;dash&quot;</code> - for DASH streams</p>
+<p><code>&quot;dash&quot;</code> - for DASH contents</p>
 </li>
 <li>
-<p><code>&quot;smooth&quot;</code> - for Microsoft Smooth Streaming streams</p>
+<p><code>&quot;smooth&quot;</code> - for Microsoft Smooth Streaming contents</p>
 </li>
 <li>
 <p><code>&quot;directfile&quot;</code> - for loading a video in <em>DirectFile</em> mode, which allows to
@@ -118,7 +118,7 @@ error. If this limit is problematic for you, please open an issue.</p>
 <p><code>serverCertificate</code> (<code>BufferSource|undefined</code>): Eventual certificate
 used to encrypt messages to the license server.
 If set, we will try to set this certificate on the CDM. If it fails, we will
-still continue to try deciphering the stream (albeit a
+still continue to try deciphering the content (albeit a
 <a href="errors.html">warning</a> will be emitted in that case with the code
 <code>&quot;LICENSE_SERVER_CERTIFICATE_ERROR&quot;</code>).</p>
 </li>
