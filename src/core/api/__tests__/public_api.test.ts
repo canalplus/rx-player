@@ -208,22 +208,22 @@ describe("API - Public API", () => {
 
     describe("getPlaybackRate/setPlaybackRate", () => {
       it("should allow to change the playback rate through setPlaybackRate", () => {
-        expect(player.setPlaybackRate(4)).to.equal(undefined);
+        player.setPlaybackRate(4);
         expect(player.getPlaybackRate()).to.equal(4);
 
-        expect(player.setPlaybackRate(3)).to.equal(undefined);
+        player.setPlaybackRate(3);
         expect(player.getPlaybackRate()).to.equal(3);
 
-        expect(player.setPlaybackRate(2)).to.equal(undefined);
+        player.setPlaybackRate(2);
         expect(player.getPlaybackRate()).to.equal(2);
 
-        expect(player.setPlaybackRate(1.5)).to.equal(undefined);
+        player.setPlaybackRate(1.5);
         expect(player.getPlaybackRate()).to.equal(1.5);
 
-        expect(player.setPlaybackRate(0.7)).to.equal(undefined);
+        player.setPlaybackRate(0.7);
         expect(player.getPlaybackRate()).to.equal(0.7);
 
-        expect(player.setPlaybackRate(1)).to.equal(undefined);
+        player.setPlaybackRate(1);
         expect(player.getPlaybackRate()).to.equal(1);
       });
     });
@@ -241,7 +241,7 @@ describe("API - Public API", () => {
     describe("exitFullscreen", () => {
       it("should allow exitFullscreen by default", () => {
         /* tslint:disable deprecation */
-        expect(player.exitFullscreen()).to.equal(undefined);
+        player.exitFullscreen();
         /* tslint:enable deprecation */
       });
     });
@@ -249,12 +249,12 @@ describe("API - Public API", () => {
     describe("setFullscreen", () => {
       it("should allow setFullscreen by default", () => {
         /* tslint:disable deprecation */
-        expect(player.setFullscreen()).to.equal(undefined);
+        player.setFullscreen();
         /* tslint:enable deprecation */
 
         // TODO remove for v3.0.0
         /* tslint:disable deprecation */
-        expect(player.setFullscreen(false)).to.equal(undefined);
+        player.setFullscreen(false);
         /* tslint:enable deprecation */
       });
     });
@@ -271,12 +271,12 @@ describe("API - Public API", () => {
         if (videoElement == null) {
           throw new Error("The API is disposed");
         }
-        expect(player.setVolume(1)).to.equal(undefined);
-        expect(player.setVolume(0.5)).to.equal(undefined);
+        player.setVolume(1);
+        player.setVolume(0.5);
         expect(player.getVolume()).to.equal(0.5);
         expect(videoElement.volume).to.equal(0.5);
 
-        expect(player.setVolume(1)).to.equal(undefined);
+        player.setVolume(1);
         expect(player.getVolume()).to.equal(1);
         expect(videoElement.volume).to.equal(1);
       });
@@ -293,7 +293,7 @@ describe("API - Public API", () => {
         }
         player.setVolume(1);
 
-        expect(player.mute()).to.equal(undefined);
+        player.mute();
         expect(player.getVolume()).to.equal(0);
         expect(videoElement.volume).to.equal(0);
         expect(videoElement.muted).to.equal(false);
@@ -408,19 +408,19 @@ describe("API - Public API", () => {
       /* tslint:enable:max-line-length */
         const oldMax = player.getManualVideoBitrate();
 
-        expect(player.setMaxVideoBitrate(Infinity)).to.equal(undefined);
+        player.setMaxVideoBitrate(Infinity);
         expect(player.getMaxVideoBitrate()).to.equal(Infinity);
 
-        expect(player.setMaxVideoBitrate(500)).to.equal(undefined);
+        player.setMaxVideoBitrate(500);
         expect(player.getMaxVideoBitrate()).to.equal(500);
 
-        expect(player.setMaxVideoBitrate(3)).to.equal(undefined);
+        player.setMaxVideoBitrate(3);
         expect(player.getMaxVideoBitrate()).to.equal(3);
 
-        expect(player.setMaxVideoBitrate(Infinity)).to.equal(undefined);
-        expect(player.getMaxVideoBitrate()).to.equal(Infinity);
+        player.setMaxVideoBitrate(Infinity);
+        player.getMaxVideoBitrate();
 
-        expect(player.setMaxVideoBitrate(oldMax)).to.equal(undefined);
+        player.setMaxVideoBitrate(oldMax);
         expect(player.getMaxVideoBitrate()).to.equal(oldMax);
       });
     });
@@ -431,19 +431,19 @@ describe("API - Public API", () => {
       /* tslint:enable:max-line-length */
         const oldMax = player.getManualAudioBitrate();
 
-        expect(player.setMaxAudioBitrate(Infinity)).to.equal(undefined);
+        player.setMaxAudioBitrate(Infinity);
         expect(player.getMaxAudioBitrate()).to.equal(Infinity);
 
-        expect(player.setMaxAudioBitrate(500)).to.equal(undefined);
+        player.setMaxAudioBitrate(500);
         expect(player.getMaxAudioBitrate()).to.equal(500);
 
-        expect(player.setMaxAudioBitrate(3)).to.equal(undefined);
+        player.setMaxAudioBitrate(3);
         expect(player.getMaxAudioBitrate()).to.equal(3);
 
-        expect(player.setMaxAudioBitrate(Infinity)).to.equal(undefined);
+        player.setMaxAudioBitrate(Infinity);
         expect(player.getMaxAudioBitrate()).to.equal(Infinity);
 
-        expect(player.setMaxAudioBitrate(oldMax)).to.equal(undefined);
+        player.setMaxAudioBitrate(oldMax);
         expect(player.getMaxAudioBitrate()).to.equal(oldMax);
       });
     });
@@ -452,10 +452,10 @@ describe("API - Public API", () => {
       /* tslint:disable:max-line-length */
       it("should update the max buffer behind through setMaxBufferBehind by default", () => {
       /* tslint:enable:max-line-length */
-        expect(player.setMaxBufferBehind(50)).to.equal(undefined);
+        player.setMaxBufferBehind(50);
         expect(player.getMaxBufferBehind()).to.equal(50);
 
-        expect(player.setMaxBufferBehind(Infinity)).to.equal(undefined);
+        player.setMaxBufferBehind(Infinity);
         expect(player.getMaxBufferBehind()).to.equal(Infinity);
       });
     });
@@ -464,20 +464,20 @@ describe("API - Public API", () => {
       /* tslint:disable:max-line-length */
       it("should update the max buffer behind through setMaxBufferAhead by default", () => {
       /* tslint:enable:max-line-length */
-        expect(player.setMaxBufferAhead(50)).to.equal(undefined);
+        player.setMaxBufferAhead(50);
         expect(player.getMaxBufferAhead()).to.equal(50);
 
-        expect(player.setMaxBufferAhead(Infinity)).to.equal(undefined);
+        player.setMaxBufferAhead(Infinity);
         expect(player.getMaxBufferAhead()).to.equal(Infinity);
       });
     });
 
     describe("getWantedBufferAhead/setWantedBufferAhead", () => {
       it("should update the buffer goal through setWantedBufferAhead by default", () => {
-        expect(player.setWantedBufferAhead(50)).to.equal(undefined);
+        player.setWantedBufferAhead(50);
         expect(player.getWantedBufferAhead()).to.equal(50);
 
-        expect(player.setWantedBufferAhead(Infinity)).to.equal(undefined);
+        player.setWantedBufferAhead(Infinity);
         expect(player.getWantedBufferAhead()).to.equal(Infinity);
       });
     });
@@ -545,7 +545,7 @@ describe("API - Public API", () => {
 
     describe("disableTextTrack", () => {
       it("should disable text tracks in disableTextTrack by default", () => {
-        expect(player.disableTextTrack()).to.equal(undefined);
+        player.disableTextTrack();
         expect(player.getTextTrack()).to.equal(undefined);
       });
     });
