@@ -14,25 +14,14 @@
  * limitations under the License.
  */
 
-/**
- * Error due to an abnormal assertion fails.
- *
- * @class AssertionError
- * @extends Error
- */
-export default class AssertionError extends Error {
-  public readonly name : "AssertionError";
-  public readonly message : string;
+import { expect } from "chai";
+import AssertionError from "../assertion_error";
 
-  /**
-   * @param {string} message
-   */
-  constructor(message : string) {
-    super();
-    // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
-    Object.setPrototypeOf(this, AssertionError.prototype);
-
-    this.name = "AssertionError";
-    this.message = message;
-  }
-}
+describe("errors - AssertionError", () => {
+  it("should format an Assertion when called", () => {
+    const error = new AssertionError("foo");
+    expect(error).instanceof(Error);
+    expect(error.name).to.equal("AssertionError");
+    expect(error.message).to.equal("foo");
+  });
+});

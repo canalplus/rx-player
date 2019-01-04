@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import { isCodecSupported } from "../compat";
 import {
   ICustomError,
@@ -33,7 +32,7 @@ export type IAdaptationType = "video"|"audio"|"text"|"image";
 export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] =
   ["audio", "video", "text", "image"];
 
-interface IRepresentationInfos {
+export interface IRepresentationInfos {
   bufferType: IAdaptationType;
   language?: string;
   isAudioDescription? : boolean;
@@ -116,9 +115,9 @@ export default class Adaptation {
   /**
    * `true` if this Adaptation was not present in the original Manifest, but was
    * manually added after through the corresponding APIs.
-   * @type {boolean|undefined}
+   * @type {boolean}
    */
-  public manuallyAdded? : boolean;
+  public manuallyAdded : boolean;
 
   /**
    * Array containing every errors that happened when the Adaptation has been
@@ -163,9 +162,7 @@ export default class Adaptation {
     }
 
     this.representations = argsRepresentations
-      .map(representation =>
-        new Representation(objectAssign({ rootId: this.id }, representation))
-      )
+      .map(representation => new Representation(representation))
       .sort((a, b) => a.bitrate - b.bitrate)
       .filter(representation => {
         if (representationFilter == null) {

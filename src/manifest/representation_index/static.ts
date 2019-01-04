@@ -95,9 +95,7 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
   }
 
   _addSegments() : void {
-    if (__DEV__) {
-      log.warn("Tried add Segments to a static RepresentationIndex");
-    }
+    log.warn("Tried add Segments to a static RepresentationIndex");
   }
 
   _update() : void {
