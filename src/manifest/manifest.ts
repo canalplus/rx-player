@@ -376,7 +376,7 @@ export default class Manifest extends EventEmitter<"manifestUpdate", null> {
         oldPeriods.splice(i, 1);
         i--;
       } else {
-        updatePeriodInPlace(newPeriod, oldPeriod);
+        updatePeriodInPlace(oldPeriod, newPeriod);
       }
     }
 
