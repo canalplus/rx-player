@@ -175,7 +175,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Current version of the RxPlayer.
    * @type {string}
    */
-  public static version = /*PLAYER_VERSION*/"3.10.1";
+  public static version : string;
 
   /**
    * Current version of the RxPlayer.
@@ -2373,5 +2373,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this.trigger("positionUpdate", positionData);
   }
 }
+Player.version = /*PLAYER_VERSION*/"3.10.1";
 
 export default Player;

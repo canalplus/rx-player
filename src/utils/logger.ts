@@ -32,20 +32,25 @@ const DEFAULT_LOG_LEVEL : ILoggerLevel = "NONE";
  * @class Logger
  */
 export default class Logger {
-  public error : tConsoleFn = noop;
-  public warn : tConsoleFn = noop;
-  public info : tConsoleFn = noop;
-  public debug : tConsoleFn = noop;
+  public error : tConsoleFn;
+  public warn : tConsoleFn;
+  public info : tConsoleFn;
+  public debug : tConsoleFn;
   private currentLevel : ILoggerLevel;
-  private readonly LEVELS : Record<ILoggerLevel, number> = {
-    NONE: 0,
-    ERROR: 1,
-    WARNING: 2,
-    INFO: 3,
-    DEBUG: 4,
-  };
+  private readonly LEVELS : Record<ILoggerLevel, number>;
 
   constructor() {
+    this.error = noop;
+    this.warn = noop;
+    this.info = noop;
+    this.debug = noop;
+    this.LEVELS = {
+      NONE: 0,
+      ERROR: 1,
+      WARNING: 2,
+      INFO: 3,
+      DEBUG: 4,
+    };
     this.currentLevel = DEFAULT_LOG_LEVEL;
   }
 
