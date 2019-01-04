@@ -15,6 +15,7 @@
  */
 
 import { expect } from "chai";
+import * as sinon from "sinon";
 import config from "../../../config";
 import {
   parseConstructorOptions,
@@ -35,13 +36,29 @@ const {
 } = config;
 
 describe("API - parseConstructorOptions", () => {
+  const videoElement = document.createElement("video");
+  let createElementStub : sinon.SinonStub|undefined;
+  beforeEach(() => {
+    createElementStub = sinon.stub(document, "createElement").callsFake((type) => {
+      if (type !== "video") {
+        throw new Error("Invalid element");
+      }
+      return videoElement;
+    });
+  });
+
+  afterEach(() => {
+    if (createElementStub) {
+      createElementStub.restore();
+    }
+  });
   const defaultConstructorOptions = {
     maxBufferAhead: DEFAULT_MAX_BUFFER_AHEAD,
     maxBufferBehind: DEFAULT_MAX_BUFFER_BEHIND,
     wantedBufferAhead: DEFAULT_WANTED_BUFFER_AHEAD,
     limitVideoWidth: DEFAULT_LIMIT_VIDEO_WIDTH,
     throttleWhenHidden: DEFAULT_THROTTLE_WHEN_HIDDEN,
-    videoElement: document.createElement("video"),
+    videoElement,
     initialVideoBitrate: DEFAULT_INITIAL_BITRATES.video,
     initialAudioBitrate: DEFAULT_INITIAL_BITRATES.audio,
     maxAudioBitrate: DEFAULT_MAX_BITRATES.audio,
@@ -122,13 +139,16 @@ describe("API - parseConstructorOptions", () => {
   /* tslint:disable:max-line-length */
   it("should authorize setting a videoElement option which can be any media element", () => {
   /* tslint:enable:max-line-length */
-    const videoElement = document.createElement("video");
-    const parsed1 = parseConstructorOptions({ videoElement });
+    if (createElementStub) {
+      createElementStub.restore();
+    }
+    const _videoElement = document.createElement("video");
+    const parsed1 = parseConstructorOptions({ videoElement: _videoElement });
     expect(parsed1).to.eql({
       ...defaultConstructorOptions,
-      videoElement,
+      videoElement: _videoElement,
     });
-    expect(parsed1.videoElement).to.equal(videoElement);
+    expect(parsed1.videoElement).to.equal(_videoElement);
 
     const audioElement = document.createElement("audio");
     const parsed2 = parseConstructorOptions({ videoElement: audioElement });
