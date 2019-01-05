@@ -29,15 +29,14 @@
  * convertToRanges methods.
  */
 
-import { expect } from "chai";
 import listToMap from "../list_to_map";
 
 describe("utils - listToMap", () => {
     it("should return an empty object for an empty array", () => {
-      expect(listToMap([])).to.deep.equal({});
+      expect(listToMap([])).toEqual({});
     });
     it("should correctly process array of strings", () => {
-      expect(listToMap(["a", "foo", "bar", "c"])).to.deep.equal({
+      expect(listToMap(["a", "foo", "bar", "c"])).toEqual({
         a: "a",
         foo: "foo",
         bar: "bar",

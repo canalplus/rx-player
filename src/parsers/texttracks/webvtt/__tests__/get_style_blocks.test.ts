@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import getStyleBlocks from "../get_style_blocks";
 
 const webvtt1 = [
@@ -46,7 +45,7 @@ const webvtt1 = [
 
 describe("parsers - webvtt - getStyleBlocks", () => {
   it("should return only style blocks from a webvtt", () => {
-    expect(getStyleBlocks(webvtt1, 1)).to.eql([
+    expect(getStyleBlocks(webvtt1, 1)).toEqual([
       [
         "STYLE",
         "::cue {",

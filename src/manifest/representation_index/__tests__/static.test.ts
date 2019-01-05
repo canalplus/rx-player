@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import * as sinon from "sinon";
 import log from "../../../log";
 import StaticRepresentationIndex from "../static";
@@ -22,12 +21,12 @@ import StaticRepresentationIndex from "../static";
 describe("manifest - StaticRepresentationIndex", () => {
   it("should return no init segment", () => {
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
-    expect(staticRI.getInitSegment()).to.equal(null);
+    expect(staticRI.getInitSegment()).toBe(null);
   });
 
   it("should return a single segment with the maximum duration and the right url", () => {
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
-    expect(staticRI.getSegments()).to.eql([{
+    expect(staticRI.getSegments()).toEqual([{
       id: "0",
       isInit: false,
       number: 0,
@@ -40,22 +39,22 @@ describe("manifest - StaticRepresentationIndex", () => {
 
   it("should return no first position", () => {
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
-    expect(staticRI.getFirstPosition()).to.equal(undefined);
+    expect(staticRI.getFirstPosition()).toBe(undefined);
   });
 
   it("should return no last position", () => {
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
-    expect(staticRI.getLastPosition()).to.equal(undefined);
+    expect(staticRI.getLastPosition()).toBe(undefined);
   });
 
   it("should never be refreshed", () => {
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
-    expect(staticRI.shouldRefresh()).to.equal(false);
+    expect(staticRI.shouldRefresh()).toBe(false);
   });
 
   it("should never have a discontinuity", () => {
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
-    expect(staticRI.checkDiscontinuity()).to.equal(-1);
+    expect(staticRI.checkDiscontinuity()).toBe(-1);
   });
 
   it("should never add segments and warn when trying to do so", () => {
@@ -64,8 +63,8 @@ describe("manifest - StaticRepresentationIndex", () => {
 
     staticRI._addSegments();
 
-    expect(warnStub.callCount).to.equal(1);
-    expect(staticRI.getSegments().length).to.equal(1);
+    expect(warnStub.callCount).toBe(1);
+    expect(staticRI.getSegments().length).toBe(1);
     warnStub.restore();
   });
 
@@ -75,7 +74,7 @@ describe("manifest - StaticRepresentationIndex", () => {
 
     staticRI._update();
 
-    expect(warnStub.callCount).to.equal(1);
+    expect(warnStub.callCount).toBe(1);
     warnStub.restore();
   });
 });

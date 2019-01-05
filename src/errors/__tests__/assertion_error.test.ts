@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import AssertionError from "../assertion_error";
 
 describe("errors - AssertionError", () => {
   it("should format an Assertion when called", () => {
     const error = new AssertionError("foo");
-    expect(error).instanceof(Error);
-    expect(error.name).to.equal("AssertionError");
-    expect(error.message).to.equal("foo");
+    expect(error).toBeInstanceOf(Error);
+    expect(error.name).toBe("AssertionError");
+    expect(error.message).toBe("foo");
   });
 });

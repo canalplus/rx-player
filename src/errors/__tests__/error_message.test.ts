@@ -14,34 +14,33 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import errorMessage from "../error_message";
 
 describe("Errors - generateErrorMessage", () => {
   it("should format a certain way when only a name and a code is given", () => {
     expect(errorMessage("foo", "bar"))
-      .to.equal("foo (bar)");
+      .toBe("foo (bar)");
   });
 
   it("should format a certain way if the reason given is null", () => {
     expect(errorMessage("foo", "bar", "baz"))
-      .to.equal("foo (bar) baz");
+      .toBe("foo (bar) baz");
   });
 
   it("should format a certain way if the reason given is a string", () => {
     expect(errorMessage("foo", "bar", "baz"))
-      .to.equal("foo (bar) baz");
+      .toBe("foo (bar) baz");
   });
 
   it("should format a certain way if the reason given is an Error", () => {
     const err = new Error("idk");
     expect(errorMessage("foo", "bar", err))
-      .to.equal("foo (bar) idk");
+      .toBe("foo (bar) idk");
   });
 
   it("should format a certain way if the reason given is an Event", () => {
     const evt = new Event("test");
     expect(errorMessage("foo", "bar", evt))
-      .to.equal("foo (bar) test");
+      .toBe("foo (bar) test");
   });
 });

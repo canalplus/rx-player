@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import Representation from "../representation";
 
 const minimalIndex = {
@@ -32,76 +31,76 @@ describe("manifest - Representation", () => {
   it("should be able to create Representation with the minimum arguments given", () => {
     const args = { bitrate: 12, id: "test", index: minimalIndex };
     const representation = new Representation(args);
-    expect(representation.id).to.equal("test");
-    expect(representation.bitrate).to.equal(12);
-    expect(representation.index).to.equal(minimalIndex);
-    expect(representation.codec).to.equal(undefined);
-    expect(representation.contentProtections).to.equal(undefined);
-    expect(representation.frameRate).to.equal(undefined);
-    expect(representation.height).to.equal(undefined);
-    expect(representation.mimeType).to.equal(undefined);
-    expect(representation.width).to.equal(undefined);
-    expect(representation.getMimeTypeString()).to.equal("undefined;codecs=\"undefined\"");
+    expect(representation.id).toBe("test");
+    expect(representation.bitrate).toBe(12);
+    expect(representation.index).toBe(minimalIndex);
+    expect(representation.codec).toBe(undefined);
+    expect(representation.contentProtections).toBe(undefined);
+    expect(representation.frameRate).toBe(undefined);
+    expect(representation.height).toBe(undefined);
+    expect(representation.mimeType).toBe(undefined);
+    expect(representation.width).toBe(undefined);
+    expect(representation.getMimeTypeString()).toBe("undefined;codecs=\"undefined\"");
   });
 
   it("should be able to add a height attribute", () => {
     const args = { bitrate: 12, id: "test", height: 57, index: minimalIndex };
     const representation = new Representation(args);
-    expect(representation.id).to.equal("test");
-    expect(representation.bitrate).to.equal(12);
-    expect(representation.index).to.equal(minimalIndex);
-    expect(representation.codec).to.equal(undefined);
-    expect(representation.contentProtections).to.equal(undefined);
-    expect(representation.frameRate).to.equal(undefined);
-    expect(representation.height).to.equal(57);
-    expect(representation.mimeType).to.equal(undefined);
-    expect(representation.width).to.equal(undefined);
-    expect(representation.getMimeTypeString()).to.equal("undefined;codecs=\"undefined\"");
+    expect(representation.id).toBe("test");
+    expect(representation.bitrate).toBe(12);
+    expect(representation.index).toBe(minimalIndex);
+    expect(representation.codec).toBe(undefined);
+    expect(representation.contentProtections).toBe(undefined);
+    expect(representation.frameRate).toBe(undefined);
+    expect(representation.height).toBe(57);
+    expect(representation.mimeType).toBe(undefined);
+    expect(representation.width).toBe(undefined);
+    expect(representation.getMimeTypeString()).toBe("undefined;codecs=\"undefined\"");
   });
 
   it("should be able to add a width attribute", () => {
     const args = { bitrate: 12, id: "test", width: 2, index: minimalIndex };
     const representation = new Representation(args);
-    expect(representation.id).to.equal("test");
-    expect(representation.bitrate).to.equal(12);
-    expect(representation.index).to.equal(minimalIndex);
-    expect(representation.codec).to.equal(undefined);
-    expect(representation.contentProtections).to.equal(undefined);
-    expect(representation.frameRate).to.equal(undefined);
-    expect(representation.height).to.equal(undefined);
-    expect(representation.mimeType).to.equal(undefined);
-    expect(representation.width).to.equal(2);
-    expect(representation.getMimeTypeString()).to.equal("undefined;codecs=\"undefined\"");
+    expect(representation.id).toBe("test");
+    expect(representation.bitrate).toBe(12);
+    expect(representation.index).toBe(minimalIndex);
+    expect(representation.codec).toBe(undefined);
+    expect(representation.contentProtections).toBe(undefined);
+    expect(representation.frameRate).toBe(undefined);
+    expect(representation.height).toBe(undefined);
+    expect(representation.mimeType).toBe(undefined);
+    expect(representation.width).toBe(2);
+    expect(representation.getMimeTypeString()).toBe("undefined;codecs=\"undefined\"");
   });
 
   it("should be able to add a codecs attribute", () => {
     const args = { bitrate: 12, id: "test", codecs: "vp9", index: minimalIndex };
     const representation = new Representation(args);
-    expect(representation.id).to.equal("test");
-    expect(representation.bitrate).to.equal(12);
-    expect(representation.index).to.equal(minimalIndex);
-    expect(representation.codec).to.equal("vp9");
-    expect(representation.contentProtections).to.equal(undefined);
-    expect(representation.frameRate).to.equal(undefined);
-    expect(representation.height).to.equal(undefined);
-    expect(representation.mimeType).to.equal(undefined);
-    expect(representation.width).to.equal(undefined);
-    expect(representation.getMimeTypeString()).to.equal("undefined;codecs=\"vp9\"");
+    expect(representation.id).toBe("test");
+    expect(representation.bitrate).toBe(12);
+    expect(representation.index).toBe(minimalIndex);
+    expect(representation.codec).toBe("vp9");
+    expect(representation.contentProtections).toBe(undefined);
+    expect(representation.frameRate).toBe(undefined);
+    expect(representation.height).toBe(undefined);
+    expect(representation.mimeType).toBe(undefined);
+    expect(representation.width).toBe(undefined);
+    expect(representation.getMimeTypeString()).toBe("undefined;codecs=\"vp9\"");
   });
 
   it("should be able to add a mimeType attribute", () => {
     const args = { bitrate: 12, id: "test", mimeType: "audio/mp4", index: minimalIndex };
     const representation = new Representation(args);
-    expect(representation.id).to.equal("test");
-    expect(representation.bitrate).to.equal(12);
-    expect(representation.index).to.equal(minimalIndex);
-    expect(representation.codec).to.equal(undefined);
-    expect(representation.contentProtections).to.equal(undefined);
-    expect(representation.frameRate).to.equal(undefined);
-    expect(representation.height).to.equal(undefined);
-    expect(representation.mimeType).to.equal("audio/mp4");
-    expect(representation.width).to.equal(undefined);
-    expect(representation.getMimeTypeString()).to.equal("audio/mp4;codecs=\"undefined\"");
+    expect(representation.id).toBe("test");
+    expect(representation.bitrate).toBe(12);
+    expect(representation.index).toBe(minimalIndex);
+    expect(representation.codec).toBe(undefined);
+    expect(representation.contentProtections).toBe(undefined);
+    expect(representation.frameRate).toBe(undefined);
+    expect(representation.height).toBe(undefined);
+    expect(representation.mimeType).toBe("audio/mp4");
+    expect(representation.width).toBe(undefined);
+    expect(representation.getMimeTypeString()).toBe("audio/mp4;codecs=\"undefined\"");
   });
 
   it("should be able to add a contentProtections attribute", () => {
@@ -114,45 +113,45 @@ describe("manifest - Representation", () => {
       }],
     };
     const representation = new Representation(args);
-    expect(representation.id).to.equal("test");
-    expect(representation.bitrate).to.equal(12);
-    expect(representation.index).to.equal(minimalIndex);
-    expect(representation.codec).to.equal(undefined);
-    expect(representation.contentProtections).to.equal(args.contentProtections);
-    expect(representation.frameRate).to.equal(undefined);
-    expect(representation.height).to.equal(undefined);
-    expect(representation.mimeType).to.equal(undefined);
-    expect(representation.width).to.equal(undefined);
-    expect(representation.getMimeTypeString()).to.equal("undefined;codecs=\"undefined\"");
+    expect(representation.id).toBe("test");
+    expect(representation.bitrate).toBe(12);
+    expect(representation.index).toBe(minimalIndex);
+    expect(representation.codec).toBe(undefined);
+    expect(representation.contentProtections).toBe(args.contentProtections);
+    expect(representation.frameRate).toBe(undefined);
+    expect(representation.height).toBe(undefined);
+    expect(representation.mimeType).toBe(undefined);
+    expect(representation.width).toBe(undefined);
+    expect(representation.getMimeTypeString()).toBe("undefined;codecs=\"undefined\"");
   });
 
   it("should be able to add a frameRate attribute", () => {
     const args = { bitrate: 12, id: "test", frameRate: "1/60", index: minimalIndex };
     const representation = new Representation(args);
-    expect(representation.id).to.equal("test");
-    expect(representation.bitrate).to.equal(12);
-    expect(representation.index).to.equal(minimalIndex);
-    expect(representation.codec).to.equal(undefined);
-    expect(representation.contentProtections).to.equal(undefined);
-    expect(representation.frameRate).to.equal("1/60");
-    expect(representation.height).to.equal(undefined);
-    expect(representation.mimeType).to.equal(undefined);
-    expect(representation.width).to.equal(undefined);
-    expect(representation.getMimeTypeString()).to.equal("undefined;codecs=\"undefined\"");
+    expect(representation.id).toBe("test");
+    expect(representation.bitrate).toBe(12);
+    expect(representation.index).toBe(minimalIndex);
+    expect(representation.codec).toBe(undefined);
+    expect(representation.contentProtections).toBe(undefined);
+    expect(representation.frameRate).toBe("1/60");
+    expect(representation.height).toBe(undefined);
+    expect(representation.mimeType).toBe(undefined);
+    expect(representation.width).toBe(undefined);
+    expect(representation.getMimeTypeString()).toBe("undefined;codecs=\"undefined\"");
   });
 
   it("should be able to return an exploitable mimeTypeString", () => {
     const args1 = { bitrate: 12, id: "test", index: minimalIndex };
     expect(new Representation(args1).getMimeTypeString())
-      .to.equal("undefined;codecs=\"undefined\"");
+      .toBe("undefined;codecs=\"undefined\"");
 
     const args2 = { bitrate: 12, id: "test", mimeType: "foo", index: minimalIndex };
     expect(new Representation(args2).getMimeTypeString())
-      .to.equal("foo;codecs=\"undefined\"");
+      .toBe("foo;codecs=\"undefined\"");
 
     const args3 = { bitrate: 12, id: "test", codecs: "bar", index: minimalIndex };
     expect(new Representation(args3).getMimeTypeString())
-      .to.equal("undefined;codecs=\"bar\"");
+      .toBe("undefined;codecs=\"bar\"");
 
     const args4 = {
       bitrate: 12,
@@ -162,6 +161,6 @@ describe("manifest - Representation", () => {
       index: minimalIndex,
     };
     expect(new Representation(args4).getMimeTypeString())
-      .to.equal("foo;codecs=\"bar\"");
+      .toBe("foo;codecs=\"bar\"");
   });
 });

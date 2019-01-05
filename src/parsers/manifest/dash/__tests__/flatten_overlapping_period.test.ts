@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import flattenOverlappingPeriods from "../flatten_overlapping_periods";
 
 describe("flattenOverlappingPeriods", function() {
@@ -28,13 +27,13 @@ describe("flattenOverlappingPeriods", function() {
     ];
 
     const flattenPeriods = flattenOverlappingPeriods(periods);
-    expect(flattenPeriods.length).to.be.equal(2);
-    expect(flattenPeriods[0].start).to.be.equal(0);
-    expect(flattenPeriods[0].duration).to.be.equal(60);
-    expect(flattenPeriods[0].id).to.be.equal("1");
-    expect(flattenPeriods[1].start).to.be.equal(60);
-    expect(flattenPeriods[1].duration).to.be.equal(60);
-    expect(flattenPeriods[1].id).to.be.equal("3");
+    expect(flattenPeriods.length).toBe(2);
+    expect(flattenPeriods[0].start).toBe(0);
+    expect(flattenPeriods[0].duration).toBe(60);
+    expect(flattenPeriods[0].id).toBe("1");
+    expect(flattenPeriods[1].start).toBe(60);
+    expect(flattenPeriods[1].duration).toBe(60);
+    expect(flattenPeriods[1].id).toBe("3");
   });
 
   // [ Period 1 ][ Period 2 ]       ------>  [ Period 1 ][  2  ][ Period 3 ]
@@ -47,16 +46,16 @@ describe("flattenOverlappingPeriods", function() {
     ];
 
     const flattenPeriods = flattenOverlappingPeriods(periods);
-    expect(flattenPeriods.length).to.be.equal(3);
-    expect(flattenPeriods[0].start).to.be.equal(0);
-    expect(flattenPeriods[0].duration).to.be.equal(60);
-    expect(flattenPeriods[0].id).to.be.equal("1");
-    expect(flattenPeriods[1].start).to.be.equal(60);
-    expect(flattenPeriods[1].duration).to.be.equal(30);
-    expect(flattenPeriods[1].id).to.be.equal("2");
-    expect(flattenPeriods[2].start).to.be.equal(90);
-    expect(flattenPeriods[2].duration).to.be.equal(60);
-    expect(flattenPeriods[2].id).to.be.equal("3");
+    expect(flattenPeriods.length).toBe(3);
+    expect(flattenPeriods[0].start).toBe(0);
+    expect(flattenPeriods[0].duration).toBe(60);
+    expect(flattenPeriods[0].id).toBe("1");
+    expect(flattenPeriods[1].start).toBe(60);
+    expect(flattenPeriods[1].duration).toBe(30);
+    expect(flattenPeriods[1].id).toBe("2");
+    expect(flattenPeriods[2].start).toBe(90);
+    expect(flattenPeriods[2].duration).toBe(60);
+    expect(flattenPeriods[2].id).toBe("3");
   });
 
   // [ Period 1 ][ Period 2 ]       ------>  [  1  ][      Period 3     ]
@@ -69,13 +68,13 @@ describe("flattenOverlappingPeriods", function() {
     ];
 
     const flattenPeriods = flattenOverlappingPeriods(periods);
-    expect(flattenPeriods.length).to.be.equal(2);
-    expect(flattenPeriods[0].start).to.be.equal(0);
-    expect(flattenPeriods[0].duration).to.be.equal(50);
-    expect(flattenPeriods[0].id).to.be.equal("1");
-    expect(flattenPeriods[1].start).to.be.equal(50);
-    expect(flattenPeriods[1].duration).to.be.equal(120);
-    expect(flattenPeriods[1].id).to.be.equal("3");
+    expect(flattenPeriods.length).toBe(2);
+    expect(flattenPeriods[0].start).toBe(0);
+    expect(flattenPeriods[0].duration).toBe(50);
+    expect(flattenPeriods[0].id).toBe("1");
+    expect(flattenPeriods[1].start).toBe(50);
+    expect(flattenPeriods[1].duration).toBe(120);
+    expect(flattenPeriods[1].id).toBe("3");
   });
 
   // [ Period 1 ][ Period 2 ]       ------>  [  1  ][  100   ]
@@ -94,12 +93,12 @@ describe("flattenOverlappingPeriods", function() {
     }
 
     const flattenPeriods = flattenOverlappingPeriods(periods);
-    expect(flattenPeriods.length).to.be.equal(2);
-    expect(flattenPeriods[0].start).to.be.equal(0);
-    expect(flattenPeriods[0].duration).to.be.equal(60);
-    expect(flattenPeriods[0].id).to.be.equal("1");
-    expect(flattenPeriods[1].start).to.be.equal(60);
-    expect(flattenPeriods[1].duration).to.be.equal(60);
-    expect(flattenPeriods[1].id).to.be.equal("100");
+    expect(flattenPeriods.length).toBe(2);
+    expect(flattenPeriods[0].start).toBe(0);
+    expect(flattenPeriods[0].duration).toBe(60);
+    expect(flattenPeriods[0].id).toBe("1");
+    expect(flattenPeriods[1].start).toBe(60);
+    expect(flattenPeriods[1].duration).toBe(60);
+    expect(flattenPeriods[1].id).toBe("100");
   });
 });

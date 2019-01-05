@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import RequestError from "../request_error";
 
 describe("errors - RequestError", () => {
@@ -22,13 +21,13 @@ describe("errors - RequestError", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
     const requestError = new RequestError(xhr, "foo", "bar");
-    expect(requestError).instanceof(Error);
-    expect(requestError.name).to.equal("RequestError");
-    expect(requestError.url).to.equal("foo");
-    expect(requestError.xhr).to.equal(xhr);
-    expect(requestError.status).to.equal(xhr.status);
-    expect(requestError.type).to.equal("bar");
-    expect(requestError.message).to.equal("bar");
+    expect(requestError).toBeInstanceOf(Error);
+    expect(requestError.name).toBe("RequestError");
+    expect(requestError.url).toBe("foo");
+    expect(requestError.xhr).toBe(xhr);
+    expect(requestError.status).toBe(xhr.status);
+    expect(requestError.type).toBe("bar");
+    expect(requestError.message).toBe("bar");
     xhr.abort();
   });
 });

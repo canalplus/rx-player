@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import {
   concat,
   Observable,
@@ -34,15 +33,15 @@ describe("utils - tryCatch (RxJS)", () => {
     tryCatch(func, undefined).subscribe(
       () => { itemsReceived++; },
       (err) => {
-        expect(itemsReceived).to.equal(0);
-        expect(err).to.equal(4);
+        expect(itemsReceived).toBe(0);
+        expect(err).toBe(4);
         done();
       });
   });
 
   it("should allow giving optional arguments", (done) => {
     function func(a : number) : Observable<never> {
-      expect(a).to.equal(4);
+      expect(a).toBe(4);
       throw new Error();
     }
     tryCatch(func, 4).subscribe(undefined, () => { done(); });
@@ -60,13 +59,13 @@ describe("utils - tryCatch (RxJS)", () => {
       (i) => {
         switch (itemsReceived++) {
           case 0:
-            expect(i).to.equal(1);
+            expect(i).toBe(1);
             break;
           case 1:
-            expect(i).to.equal(2);
+            expect(i).toBe(2);
             break;
           case 2:
-            expect(i).to.equal(3);
+            expect(i).toBe(3);
             break;
           default:
             throw new Error("Too much items emitted");
@@ -74,7 +73,7 @@ describe("utils - tryCatch (RxJS)", () => {
       },
       undefined,
       () => {
-        expect(itemsReceived).to.equal(3);
+        expect(itemsReceived).toBe(3);
         done();
       }
     );
@@ -89,11 +88,11 @@ describe("utils - tryCatch (RxJS)", () => {
     tryCatch(func, undefined).subscribe(
       (i) => {
         itemsReceived++;
-        expect(i).to.equal(1);
+        expect(i).toBe(1);
       },
       (err) => {
-        expect(itemsReceived).to.equal(1);
-        expect(err).to.equal("a");
+        expect(itemsReceived).toBe(1);
+        expect(err).toBe("a");
         done();
       }
     );

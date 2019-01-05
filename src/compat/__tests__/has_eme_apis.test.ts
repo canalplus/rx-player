@@ -25,7 +25,7 @@ describe("compat - hasEMEAPIs", () => {
     const oldRequestMediaKeySystemAccessValue = emeCompat.requestMediaKeySystemAccess;
     (emeCompat as any)
       .requestMediaKeySystemAccess = () => { /* noop */};
-    expect(hasEMEAPIs()).toEqual(true);
+    expect(hasEMEAPIs()).toBe(true);
     (emeCompat as any)
       .requestMediaKeySystemAccess = oldRequestMediaKeySystemAccessValue;
   });
@@ -37,7 +37,7 @@ describe("compat - hasEMEAPIs", () => {
     const oldRequestMediaKeySystemAccessValue = emeCompat.requestMediaKeySystemAccess;
     (emeCompat as any)
       .requestMediaKeySystemAccess = null;
-    expect(hasEMEAPIs()).toEqual(false);
+    expect(hasEMEAPIs()).toBe(false);
     (emeCompat as any)
       .requestMediaKeySystemAccess = oldRequestMediaKeySystemAccessValue;
   });

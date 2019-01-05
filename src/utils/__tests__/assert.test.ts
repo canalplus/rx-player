@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import assert, {
   assertInterface,
 } from "../assert";
@@ -27,14 +26,14 @@ describe("utils - assert", () => {
     } catch (e) {
       error = e;
       /* tslint:disable:no-unused-expression */
-      expect(e).to.exist;
+      expect(e).toBeDefined();
       /* tslint:enable:no-unused-expression */
     }
     /* tslint:disable:no-unused-expression */
-    expect(error).to.exist;
+    expect(error).toBeDefined();
     /* tslint:enable:no-unused-expression */
-    expect(error.message).to.equal("invalid assertion");
-    expect(error.name).to.equal("AssertionError");
+    expect(error.message).toBe("invalid assertion");
+    expect(error.name).toBe("AssertionError");
   });
 
   it("should be able to take a message argument", () => {
@@ -45,14 +44,14 @@ describe("utils - assert", () => {
     } catch (e) {
       error = e;
       /* tslint:disable:no-unused-expression */
-      expect(e).to.exist;
+      expect(e).toBeDefined();
       /* tslint:enable:no-unused-expression */
     }
     /* tslint:disable:no-unused-expression */
-    expect(error).to.exist;
+    expect(error).toBeDefined();
     /* tslint:enable:no-unused-expression */
-    expect(error.message).to.equal(myMessage);
-    expect(error.name).to.equal("AssertionError");
+    expect(error.message).toBe(myMessage);
+    expect(error.name).toBe("AssertionError");
   });
 
   it("should not throw an error if the assertion is true", () => {
@@ -77,10 +76,10 @@ describe("utils - assertInterface", () => {
       error = e;
     }
     /* tslint:disable:no-unused-expression */
-    expect(error).to.exist;
+    expect(error).toBeDefined();
     /* tslint:enable:no-unused-expression */
-    expect(error.message).to.equal(`${nameOfMyObj} should be an object`);
-    expect(error.name).to.equal("AssertionError");
+    expect(error.message).toBe(`${nameOfMyObj} should be an object`);
+    expect(error.name).toBe("AssertionError");
 
     error = null;
 
@@ -90,10 +89,10 @@ describe("utils - assertInterface", () => {
       error = e;
     }
     /* tslint:disable:no-unused-expression */
-    expect(error).to.exist;
+    expect(error).toBeDefined();
     /* tslint:enable:no-unused-expression */
-    expect(error.message).to.equal(`${nameOfMyObj} should be an object`);
-    expect(error.name).to.equal("AssertionError");
+    expect(error.message).toBe(`${nameOfMyObj} should be an object`);
+    expect(error.name).toBe("AssertionError");
   });
 
   it("should throw if the concerned interface is not respected", () => {
@@ -124,11 +123,11 @@ describe("utils - assertInterface", () => {
       error = e;
     }
     /* tslint:disable:no-unused-expression */
-    expect(error).to.exist;
+    expect(error).toBeDefined();
     /* tslint:enable:no-unused-expression */
     expect(error.message)
-      .to.equal(`${nameOfMyObj} should have property f as a function`);
-    expect(error.name).to.equal("AssertionError");
+      .toBe(`${nameOfMyObj} should have property f as a function`);
+    expect(error.name).toBe("AssertionError");
   });
 
   it("should name the interface 'object' if no name is specified", () => {
@@ -158,11 +157,11 @@ describe("utils - assertInterface", () => {
       error = e;
     }
     /* tslint:disable:no-unused-expression */
-    expect(error).to.exist;
+    expect(error).toBeDefined();
     /* tslint:enable:no-unused-expression */
     expect(error.message)
-      .to.equal("object should have property f as a function");
-    expect(error.name).to.equal("AssertionError");
+      .toBe("object should have property f as a function");
+    expect(error.name).toBe("AssertionError");
   });
 
   it("should not throw if the concerned interface is respected", () => {

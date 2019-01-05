@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import AssertionError from "../assertion_error";
 import EncryptedMediaError from "../encrypted_media_error";
 import isKnownError from "../is_known_error";
@@ -26,24 +25,24 @@ import RequestError from "../request_error";
 describe("Errors - isKnownError", () => {
   it("should return false for a regular error", () => {
     expect(isKnownError(new Error("nope")))
-      .to.equal(false);
+      .toBe(false);
   });
 
   it("should return false for a RequestError", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
     const requestError = new RequestError(xhr, "foo", "bar");
-    expect(isKnownError(requestError)).to.equal(false);
+    expect(isKnownError(requestError)).toBe(false);
   });
 
   it("should return false for an AssertionError", () => {
     const assertionError = new AssertionError("foo");
-    expect(isKnownError(assertionError)).to.equal(false);
+    expect(isKnownError(assertionError)).toBe(false);
   });
 
   it("should return true for an OtherError", () => {
     const otherError = new OtherError("foo", null);
-    expect(isKnownError(otherError)).to.equal(true);
+    expect(isKnownError(otherError)).toBe(true);
   });
 
   it("should return true for a NetworkError", () => {
@@ -51,16 +50,16 @@ describe("Errors - isKnownError", () => {
     xhr.open("GET", "http://www.example.com");
     const requestError = new RequestError(xhr, "foo", "bar");
     const networkError = new NetworkError("foo", requestError);
-    expect(isKnownError(networkError)).to.equal(true);
+    expect(isKnownError(networkError)).toBe(true);
   });
 
   it("should return true for a MediaError", () => {
     const mediaError = new MediaError("foo", null);
-    expect(isKnownError(mediaError)).to.equal(true);
+    expect(isKnownError(mediaError)).toBe(true);
   });
 
   it("should return true for an EncryptedMediaError", () => {
     const encryptedMediaError = new EncryptedMediaError("foo", null);
-    expect(isKnownError(encryptedMediaError)).to.equal(true);
+    expect(isKnownError(encryptedMediaError)).toBe(true);
   });
 });

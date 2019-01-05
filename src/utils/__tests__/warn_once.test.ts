@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import * as sinon from "sinon";
 import warnOnce from "../warn_once";
 
@@ -23,18 +22,18 @@ describe("utils - warnOnce", () => {
     const warnSpy = sinon.stub(console, "warn");
     warnOnce("toto titi");
 
-    expect(warnSpy.calledWith("toto titi")).to.equal(true);
-    expect(warnSpy.calledOnce).to.equal(true);
+    expect(warnSpy.calledWith("toto titi")).toBe(true);
+    expect(warnSpy.calledOnce).toBe(true);
 
     warnOnce("toto titi");
 
-    expect(warnSpy.calledOnce).to.equal(true);
+    expect(warnSpy.calledOnce).toBe(true);
 
     warnOnce("toto titi");
     warnOnce("toto tito");
 
-    expect(warnSpy.calledWith("toto tito")).to.equal(true);
-    expect(warnSpy.calledTwice).to.equal(true);
+    expect(warnSpy.calledWith("toto tito")).toBe(true);
+    expect(warnSpy.calledTwice).toBe(true);
     warnSpy.restore();
   });
 });

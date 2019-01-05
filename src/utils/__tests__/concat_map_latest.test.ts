@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 
 import {
   concat as observableConcat,
@@ -42,10 +41,10 @@ describe("utils - concatMapLatest", () => {
       concatMapLatest((i: number) => observableOf(i))
       /* tslint:enable no-unnecessary-callback-wrapper */
     ).subscribe((res: number) => {
-      expect(res).to.equal(0);
+      expect(res).toBe(0);
       itemReceived = true;
     }, undefined, () => {
-      expect(itemReceived).to.equal(true);
+      expect(itemReceived).toBe(true);
       done();
     });
   });
@@ -67,12 +66,12 @@ describe("utils - concatMapLatest", () => {
       /* tslint:enable no-unnecessary-callback-wrapper */
     ).subscribe((res: number) => {
       const expectedResult = innerValues.shift();
-      expect(res).to.equal(expectedResult);
+      expect(res).toBe(expectedResult);
     }, undefined, () => {
       if (innerValues.length !== 0) {
         throw new Error("Not all values were received.");
       }
-      expect(lastCount).to.equal(innerValuesLength - 1);
+      expect(lastCount).toBe(innerValuesLength - 1);
       done();
     });
   });
@@ -96,12 +95,12 @@ describe("utils - concatMapLatest", () => {
       /* tslint:enable no-unnecessary-callback-wrapper */
     ).subscribe((res: number) => {
       const expectedResult = innerValues.shift();
-      expect(res).to.be.equal(expectedResult);
+      expect(res).toBe(expectedResult);
     }, undefined, () => {
       if (innerValues.length !== 0) {
         throw new Error("Not all values were received.");
       }
-      expect(lastCount).to.equal(innerValuesLength - 1);
+      expect(lastCount).toBe(innerValuesLength - 1);
       done();
     });
   });
@@ -124,21 +123,21 @@ describe("utils - concatMapLatest", () => {
     ).subscribe((result: number) => {
       switch (itemProcessedCounter++) {
         case 0:
-          expect(result).to.equal(0);
+          expect(result).toBe(0);
           counter$.next(3); // should be ignored
           counter$.next(4);
           break;
         case 1:
-          expect(result).to.equal(4);
+          expect(result).toBe(4);
           counter$.complete();
           break;
         default:
           throw new Error("Should not have emitted that item");
       }
     }, undefined, () => {
-      expect(itemEmittedCounter).to.equal(5);
-      expect(itemProcessedCounter).to.equal(2);
-      expect(lastCount).to.equal(itemProcessedCounter - 1);
+      expect(itemEmittedCounter).toBe(5);
+      expect(itemProcessedCounter).toBe(2);
+      expect(lastCount).toBe(itemProcessedCounter - 1);
       done();
     });
 
@@ -164,14 +163,14 @@ describe("utils - concatMapLatest", () => {
     ).pipe(
       concatMapLatest(([wantedCounter, obs$], counter) => {
         itemProcessed++;
-        expect(counter).to.equal(wantedCounter);
+        expect(counter).toBe(wantedCounter);
         return obs$;
       })
     ).subscribe(() => {
       nextCount++;
     }, undefined, () => {
-      expect(itemProcessed).to.equal(3);
-      expect(nextCount).to.equal(3 + 2 + 4);
+      expect(itemProcessed).toBe(3);
+      expect(nextCount).toBe(3 + 2 + 4);
       done();
     });
   });
@@ -184,10 +183,10 @@ describe("utils - concatMapLatest", () => {
       let nextCount = 0;
       return new Promise<void>(res => {
         observableMerge(counter$, counter$, counter$).subscribe((item) => {
-          expect(item).to.equal(Math.floor(nextCount / 3));
+          expect(item).toBe(Math.floor(nextCount / 3));
           nextCount++;
         }, undefined, () => {
-          expect(nextCount).to.equal(30);
+          expect(nextCount).toBe(30);
           res();
         });
       });
@@ -197,10 +196,10 @@ describe("utils - concatMapLatest", () => {
       let nextCount = 0;
       return new Promise<void>(res => {
         observableConcat(counter$, counter$, counter$).subscribe((item) => {
-          expect(item).to.equal(nextCount % 10);
+          expect(item).toBe(nextCount % 10);
           nextCount++;
         }, undefined, () => {
-          expect(nextCount).to.equal(30);
+          expect(nextCount).toBe(30);
           res();
         });
       });

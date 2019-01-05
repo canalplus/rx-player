@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import uniq, {
   uniqFromFilter,
   uniqFromSet,
@@ -43,7 +42,7 @@ describe("utils - uniq", () => {
       "a",
       null,
       undefined,
-    ])).to.eql([
+    ])).toEqual([
       obj1,
       1,
       2,
@@ -81,7 +80,7 @@ describe("utils - uniqFromSet", () => {
       "a",
       null,
       undefined,
-    ])).to.eql([
+    ])).toEqual([
       obj1,
       1,
       2,
@@ -119,7 +118,7 @@ describe("utils - uniqFromFilter", () => {
       "a",
       null,
       undefined,
-    ])).to.eql([
+    ])).toEqual([
       obj1,
       1,
       2,

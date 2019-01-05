@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import { take } from "rxjs/operators";
 import * as sinon from "sinon";
 import log from "../../log";
@@ -30,11 +29,11 @@ describe("utils - EventEmitter", () => {
       wasCalled++;
     });
 
-    expect(wasCalled).to.eql(0);
+    expect(wasCalled).toEqual(0);
     eventEmitter.trigger("something", undefined);
-    expect(wasCalled).to.eql(1);
+    expect(wasCalled).toEqual(1);
     eventEmitter.trigger("nope", undefined);
-    expect(wasCalled).to.eql(1);
+    expect(wasCalled).toEqual(1);
     eventEmitter.removeEventListener();
   });
 
@@ -54,38 +53,38 @@ describe("utils - EventEmitter", () => {
         }
       });
 
-    expect(wasCalledWithString).to.eql(0);
-    expect(wasCalledWithObject).to.eql(0);
+    expect(wasCalledWithString).toEqual(0);
+    expect(wasCalledWithObject).toEqual(0);
 
     eventEmitter.trigger("something", undefined);
-    expect(wasCalledWithString).to.eql(0);
-    expect(wasCalledWithObject).to.eql(0);
+    expect(wasCalledWithString).toEqual(0);
+    expect(wasCalledWithObject).toEqual(0);
 
     eventEmitter.trigger("something", "a");
-    expect(wasCalledWithString).to.eql(1);
-    expect(wasCalledWithObject).to.eql(0);
+    expect(wasCalledWithString).toEqual(1);
+    expect(wasCalledWithObject).toEqual(0);
 
     eventEmitter.trigger("nope", undefined);
-    expect(wasCalledWithString).to.eql(1);
-    expect(wasCalledWithObject).to.eql(0);
+    expect(wasCalledWithString).toEqual(1);
+    expect(wasCalledWithObject).toEqual(0);
 
     eventEmitter.trigger("nope", undefined);
-    expect(wasCalledWithString).to.eql(1);
-    expect(wasCalledWithObject).to.eql(0);
+    expect(wasCalledWithString).toEqual(1);
+    expect(wasCalledWithObject).toEqual(0);
 
     eventEmitter.trigger("something", { a: "b" });
-    expect(wasCalledWithString).to.eql(1);
-    expect(wasCalledWithObject).to.eql(1);
+    expect(wasCalledWithString).toEqual(1);
+    expect(wasCalledWithObject).toEqual(1);
 
     eventEmitter.trigger("something", "a");
     eventEmitter.trigger("something", "a");
     eventEmitter.trigger("something", "a");
-    expect(wasCalledWithString).to.eql(4);
-    expect(wasCalledWithObject).to.eql(1);
+    expect(wasCalledWithString).toEqual(4);
+    expect(wasCalledWithObject).toEqual(1);
 
     eventEmitter.trigger("nope", undefined);
-    expect(wasCalledWithString).to.eql(4);
-    expect(wasCalledWithObject).to.eql(1);
+    expect(wasCalledWithString).toEqual(4);
+    expect(wasCalledWithObject).toEqual(1);
     eventEmitter.removeEventListener();
   });
 
@@ -106,43 +105,43 @@ describe("utils - EventEmitter", () => {
     eventEmitter.addEventListener("something", callback);
     eventEmitter.addEventListener("nope", callback);
 
-    expect(wasCalledWithString).to.eql(0);
-    expect(wasCalledWithObject).to.eql(0);
+    expect(wasCalledWithString).toEqual(0);
+    expect(wasCalledWithObject).toEqual(0);
 
     eventEmitter.trigger("something", undefined);
-    expect(wasCalledWithString).to.eql(0);
-    expect(wasCalledWithObject).to.eql(0);
+    expect(wasCalledWithString).toEqual(0);
+    expect(wasCalledWithObject).toEqual(0);
 
     eventEmitter.trigger("something", "a");
-    expect(wasCalledWithString).to.eql(1);
-    expect(wasCalledWithObject).to.eql(0);
+    expect(wasCalledWithString).toEqual(1);
+    expect(wasCalledWithObject).toEqual(0);
 
     eventEmitter.trigger("nope", undefined);
-    expect(wasCalledWithString).to.eql(1);
-    expect(wasCalledWithObject).to.eql(0);
+    expect(wasCalledWithString).toEqual(1);
+    expect(wasCalledWithObject).toEqual(0);
 
     eventEmitter.trigger("nope", "a");
-    expect(wasCalledWithString).to.eql(2);
-    expect(wasCalledWithObject).to.eql(0);
+    expect(wasCalledWithString).toEqual(2);
+    expect(wasCalledWithObject).toEqual(0);
 
     eventEmitter.trigger("something", { a: "b" });
-    expect(wasCalledWithString).to.eql(2);
-    expect(wasCalledWithObject).to.eql(1);
+    expect(wasCalledWithString).toEqual(2);
+    expect(wasCalledWithObject).toEqual(1);
 
     eventEmitter.removeEventListener("something", callback);
     eventEmitter.trigger("something", "a");
     eventEmitter.trigger("something", "a");
     eventEmitter.trigger("something", "a");
-    expect(wasCalledWithString).to.eql(2);
-    expect(wasCalledWithObject).to.eql(1);
+    expect(wasCalledWithString).toEqual(2);
+    expect(wasCalledWithObject).toEqual(1);
 
     eventEmitter.trigger("nope", undefined);
-    expect(wasCalledWithString).to.eql(2);
-    expect(wasCalledWithObject).to.eql(1);
+    expect(wasCalledWithString).toEqual(2);
+    expect(wasCalledWithObject).toEqual(1);
 
     eventEmitter.trigger("nope", "a");
-    expect(wasCalledWithString).to.eql(3);
-    expect(wasCalledWithObject).to.eql(1);
+    expect(wasCalledWithString).toEqual(3);
+    expect(wasCalledWithObject).toEqual(1);
     eventEmitter.removeEventListener();
   });
 
@@ -183,92 +182,92 @@ describe("utils - EventEmitter", () => {
     eventEmitter.addEventListener("something", callback2);
     eventEmitter.addEventListener("nope", callback1);
     eventEmitter.addEventListener("nope", callback3);
-    expect(wasCalledWithString1).to.eql(0);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(0);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(0);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(0);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(0);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(0);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("something", undefined);
-    expect(wasCalledWithString1).to.eql(0);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(0);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(0);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(0);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(0);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(0);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("something", "a");
-    expect(wasCalledWithString1).to.eql(1);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(1);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(0);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(1);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(1);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(0);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.addEventListener("something", callback3);
-    expect(wasCalledWithString1).to.eql(1);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(1);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(0);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(1);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(1);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(0);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("something", "a");
-    expect(wasCalledWithString1).to.eql(2);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(1);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(2);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(1);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("nope", undefined);
-    expect(wasCalledWithString1).to.eql(2);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(1);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(2);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(1);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("nope", "a");
-    expect(wasCalledWithString1).to.eql(3);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(2);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(3);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(2);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("something", { a: "b" });
-    expect(wasCalledWithString1).to.eql(3);
-    expect(wasCalledWithObject1).to.eql(1);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(1);
-    expect(wasCalledWithString3).to.eql(2);
-    expect(wasCalledWithObject3).to.eql(1);
+    expect(wasCalledWithString1).toEqual(3);
+    expect(wasCalledWithObject1).toEqual(1);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(1);
+    expect(wasCalledWithString3).toEqual(2);
+    expect(wasCalledWithObject3).toEqual(1);
 
     eventEmitter.removeEventListener("something", callback2);
-    expect(wasCalledWithString1).to.eql(3);
-    expect(wasCalledWithObject1).to.eql(1);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(1);
-    expect(wasCalledWithString3).to.eql(2);
-    expect(wasCalledWithObject3).to.eql(1);
+    expect(wasCalledWithString1).toEqual(3);
+    expect(wasCalledWithObject1).toEqual(1);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(1);
+    expect(wasCalledWithString3).toEqual(2);
+    expect(wasCalledWithObject3).toEqual(1);
 
     eventEmitter.trigger("something", { a: "b" });
-    expect(wasCalledWithString1).to.eql(3);
-    expect(wasCalledWithObject1).to.eql(2);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(1);
-    expect(wasCalledWithString3).to.eql(2);
-    expect(wasCalledWithObject3).to.eql(2);
+    expect(wasCalledWithString1).toEqual(3);
+    expect(wasCalledWithObject1).toEqual(2);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(1);
+    expect(wasCalledWithString3).toEqual(2);
+    expect(wasCalledWithObject3).toEqual(2);
 
     eventEmitter.trigger("nope", { a: "b" });
-    expect(wasCalledWithString1).to.eql(3);
-    expect(wasCalledWithObject1).to.eql(3);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(1);
-    expect(wasCalledWithString3).to.eql(2);
-    expect(wasCalledWithObject3).to.eql(3);
+    expect(wasCalledWithString1).toEqual(3);
+    expect(wasCalledWithObject1).toEqual(3);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(1);
+    expect(wasCalledWithString3).toEqual(2);
+    expect(wasCalledWithObject3).toEqual(3);
     eventEmitter.removeEventListener();
   });
 
@@ -311,92 +310,92 @@ describe("utils - EventEmitter", () => {
     eventEmitter.addEventListener("something", callback2);
     eventEmitter.addEventListener("nope", callback1);
     eventEmitter.addEventListener("nope", callback3);
-    expect(wasCalledWithString1).to.eql(0);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(0);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(0);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(0);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(0);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(0);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("something", undefined);
-    expect(wasCalledWithString1).to.eql(0);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(0);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(0);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(0);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(0);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(0);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("something", "a");
-    expect(wasCalledWithString1).to.eql(1);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(1);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(0);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(1);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(1);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(0);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.addEventListener("something", callback3);
-    expect(wasCalledWithString1).to.eql(1);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(1);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(0);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(1);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(1);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(0);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("something", "a");
-    expect(wasCalledWithString1).to.eql(2);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(1);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(2);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(1);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("nope", undefined);
-    expect(wasCalledWithString1).to.eql(2);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(1);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(2);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(1);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("nope", "a");
-    expect(wasCalledWithString1).to.eql(3);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(2);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(3);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(2);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("something", { a: "b" });
-    expect(wasCalledWithString1).to.eql(3);
-    expect(wasCalledWithObject1).to.eql(1);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(1);
-    expect(wasCalledWithString3).to.eql(2);
-    expect(wasCalledWithObject3).to.eql(1);
+    expect(wasCalledWithString1).toEqual(3);
+    expect(wasCalledWithObject1).toEqual(1);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(1);
+    expect(wasCalledWithString3).toEqual(2);
+    expect(wasCalledWithObject3).toEqual(1);
 
     eventEmitter.removeEventListener("something");
-    expect(wasCalledWithString1).to.eql(3);
-    expect(wasCalledWithObject1).to.eql(1);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(1);
-    expect(wasCalledWithString3).to.eql(2);
-    expect(wasCalledWithObject3).to.eql(1);
+    expect(wasCalledWithString1).toEqual(3);
+    expect(wasCalledWithObject1).toEqual(1);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(1);
+    expect(wasCalledWithString3).toEqual(2);
+    expect(wasCalledWithObject3).toEqual(1);
 
     eventEmitter.trigger("something", { a: "b" });
-    expect(wasCalledWithString1).to.eql(3);
-    expect(wasCalledWithObject1).to.eql(1);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(1);
-    expect(wasCalledWithString3).to.eql(2);
-    expect(wasCalledWithObject3).to.eql(1);
+    expect(wasCalledWithString1).toEqual(3);
+    expect(wasCalledWithObject1).toEqual(1);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(1);
+    expect(wasCalledWithString3).toEqual(2);
+    expect(wasCalledWithObject3).toEqual(1);
 
     eventEmitter.trigger("nope", { a: "b" });
-    expect(wasCalledWithString1).to.eql(3);
-    expect(wasCalledWithObject1).to.eql(2);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(1);
-    expect(wasCalledWithString3).to.eql(2);
-    expect(wasCalledWithObject3).to.eql(2);
+    expect(wasCalledWithString1).toEqual(3);
+    expect(wasCalledWithObject1).toEqual(2);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(1);
+    expect(wasCalledWithString3).toEqual(2);
+    expect(wasCalledWithObject3).toEqual(2);
     eventEmitter.removeEventListener();
   });
 
@@ -439,92 +438,92 @@ describe("utils - EventEmitter", () => {
     eventEmitter.addEventListener("something", callback2);
     eventEmitter.addEventListener("nope", callback1);
     eventEmitter.addEventListener("nope", callback3);
-    expect(wasCalledWithString1).to.eql(0);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(0);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(0);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(0);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(0);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(0);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("something", undefined);
-    expect(wasCalledWithString1).to.eql(0);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(0);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(0);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(0);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(0);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(0);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("something", "a");
-    expect(wasCalledWithString1).to.eql(1);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(1);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(0);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(1);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(1);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(0);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.addEventListener("something", callback3);
-    expect(wasCalledWithString1).to.eql(1);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(1);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(0);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(1);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(1);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(0);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("something", "a");
-    expect(wasCalledWithString1).to.eql(2);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(1);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(2);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(1);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("nope", undefined);
-    expect(wasCalledWithString1).to.eql(2);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(1);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(2);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(1);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("nope", "a");
-    expect(wasCalledWithString1).to.eql(3);
-    expect(wasCalledWithObject1).to.eql(0);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(0);
-    expect(wasCalledWithString3).to.eql(2);
-    expect(wasCalledWithObject3).to.eql(0);
+    expect(wasCalledWithString1).toEqual(3);
+    expect(wasCalledWithObject1).toEqual(0);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(0);
+    expect(wasCalledWithString3).toEqual(2);
+    expect(wasCalledWithObject3).toEqual(0);
 
     eventEmitter.trigger("something", { a: "b" });
-    expect(wasCalledWithString1).to.eql(3);
-    expect(wasCalledWithObject1).to.eql(1);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(1);
-    expect(wasCalledWithString3).to.eql(2);
-    expect(wasCalledWithObject3).to.eql(1);
+    expect(wasCalledWithString1).toEqual(3);
+    expect(wasCalledWithObject1).toEqual(1);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(1);
+    expect(wasCalledWithString3).toEqual(2);
+    expect(wasCalledWithObject3).toEqual(1);
 
     eventEmitter.removeEventListener();
-    expect(wasCalledWithString1).to.eql(3);
-    expect(wasCalledWithObject1).to.eql(1);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(1);
-    expect(wasCalledWithString3).to.eql(2);
-    expect(wasCalledWithObject3).to.eql(1);
+    expect(wasCalledWithString1).toEqual(3);
+    expect(wasCalledWithObject1).toEqual(1);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(1);
+    expect(wasCalledWithString3).toEqual(2);
+    expect(wasCalledWithObject3).toEqual(1);
 
     eventEmitter.trigger("something", { a: "b" });
-    expect(wasCalledWithString1).to.eql(3);
-    expect(wasCalledWithObject1).to.eql(1);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(1);
-    expect(wasCalledWithString3).to.eql(2);
-    expect(wasCalledWithObject3).to.eql(1);
+    expect(wasCalledWithString1).toEqual(3);
+    expect(wasCalledWithObject1).toEqual(1);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(1);
+    expect(wasCalledWithString3).toEqual(2);
+    expect(wasCalledWithObject3).toEqual(1);
 
     eventEmitter.trigger("nope", { a: "b" });
-    expect(wasCalledWithString1).to.eql(3);
-    expect(wasCalledWithObject1).to.eql(1);
-    expect(wasCalledWithString2).to.eql(2);
-    expect(wasCalledWithObject2).to.eql(1);
-    expect(wasCalledWithString3).to.eql(2);
-    expect(wasCalledWithObject3).to.eql(1);
+    expect(wasCalledWithString1).toEqual(3);
+    expect(wasCalledWithObject1).toEqual(1);
+    expect(wasCalledWithString2).toEqual(2);
+    expect(wasCalledWithObject2).toEqual(1);
+    expect(wasCalledWithString3).toEqual(2);
+    expect(wasCalledWithObject3).toEqual(1);
     eventEmitter.removeEventListener();
   });
 
@@ -555,10 +554,10 @@ describe("utils - EventEmitter", () => {
     const logSpy = sinon.stub(log, "error");
     eventEmitter.addEventListener("t", cb);
 
-    expect(logSpy.callCount).to.equal(0);
+    expect(logSpy.callCount).toBe(0);
     eventEmitter.trigger("t", undefined);
-    expect(logSpy.callCount).to.equal(1);
-    expect(logSpy.calledWith(err, err.stack)).to.equal(true);
+    expect(logSpy.callCount).toBe(1);
+    expect(logSpy.calledWith(err, err.stack)).toBe(true);
     logSpy.restore();
     eventEmitter.removeEventListener();
   });
@@ -579,8 +578,8 @@ describe("utils - fromEvent", () => {
         }
       }, undefined, () => {
         eventEmitter.trigger("fooba", 6);
-        expect(numberItemsReceived).to.equal(2);
-        expect(stringItemsReceived).to.equal(3);
+        expect(numberItemsReceived).toBe(2);
+        expect(stringItemsReceived).toBe(3);
         done();
       });
 
@@ -622,7 +621,7 @@ describe("utils - fromEvent", () => {
     eventEmitter.trigger("fooba", "c");
     eventEmitter.trigger("fooba", 6);
 
-    expect(stringItemsReceived).to.equal(1);
-    expect(numberItemsReceived).to.equal(1);
+    expect(stringItemsReceived).toBe(1);
+    expect(numberItemsReceived).toBe(1);
   });
 });

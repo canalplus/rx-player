@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import { MediaError } from "../../errors";
 // import Adaptation from "../adaptation";
 import Period from "../period";
@@ -49,11 +48,11 @@ describe("manifest - Period", () => {
       errorReceived = e;
     }
 
-    expect(period).to.equal(null);
-    expect(errorReceived).not.to.equal(null);
-    expect(errorReceived.code).to.equal("MANIFEST_PARSE_ERROR");
-    expect(errorReceived.message).to.include("No supported audio and video tracks.");
-    expect(errorReceived).to.be.instanceof(MediaError);
+    expect(period).toBe(null);
+    expect(errorReceived).not.toBe(null);
+    expect(errorReceived.code).toBe("MANIFEST_PARSE_ERROR");
+    expect(errorReceived.message).toContain("No supported audio and video tracks.");
+    expect(errorReceived).toBeInstanceOf(MediaError);
   });
 
   it("should throw if no audio nor video adaptation is given", () => {
@@ -67,11 +66,11 @@ describe("manifest - Period", () => {
       errorReceived = e;
     }
 
-    expect(period).to.equal(null);
-    expect(errorReceived).not.to.equal(null);
-    expect(errorReceived.code).to.equal("MANIFEST_PARSE_ERROR");
-    expect(errorReceived.message).to.include("No supported audio and video tracks.");
-    expect(errorReceived).to.be.instanceof(MediaError);
+    expect(period).toBe(null);
+    expect(errorReceived).not.toBe(null);
+    expect(errorReceived.code).toBe("MANIFEST_PARSE_ERROR");
+    expect(errorReceived.message).toContain("No supported audio and video tracks.");
+    expect(errorReceived).toBeInstanceOf(MediaError);
   });
 
   // TODO Mock Adaptaptation

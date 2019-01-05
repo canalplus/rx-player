@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import { Representation } from "../../../manifest";
 import filterByBitrate from "../filter_by_bitrate";
 
@@ -34,17 +33,17 @@ describe("ABR - filterByBitrate", () => {
   describe("filterByBitrate", () => {
     it("should return all representations when specified bitrate is infinite", () => {
       expect(filterByBitrate(fakeReps as Representation[], Infinity))
-      .to.deep.equal(fakeReps);
+      .toEqual(fakeReps);
     });
 
     it("should return no representation when specified bitrate is 0", () => {
       expect(filterByBitrate(fakeReps as Representation[], 0))
-      .to.deep.equal([]);
+      .toEqual([]);
     });
 
     it("should filter representation when specified bitrate is 999", () => {
       expect(filterByBitrate(fakeReps as Representation[], 1010))
-      .to.deep.equal(expectedFilteredReps);
+      .toEqual(expectedFilteredReps);
     });
   });
 

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import * as sinon from "sinon";
 import arrayFindIndex from "../array_find_index";
 
@@ -32,7 +31,7 @@ describe("utils - arrayFindIndex", () => {
   });
 
   it("should return -1 for an empty array", () => {
-    expect(arrayFindIndex([], () => { return true; })).to.equal(-1);
+    expect(arrayFindIndex([], () => { return true; })).toBe(-1);
   });
 
   it("should return the first corresponding index if found", () => {
@@ -40,7 +39,7 @@ describe("utils - arrayFindIndex", () => {
     const obj2 = {};
     expect(arrayFindIndex([obj2, obj1, obj2, obj1], (obj) => {
       return obj === obj1;
-    })).to.equal(1);
+    })).toBe(1);
   });
 
   it("should return -1 if the element is not found", () => {
@@ -49,7 +48,7 @@ describe("utils - arrayFindIndex", () => {
     const obj3 = {};
     expect(arrayFindIndex([obj2, obj1, obj2, obj1], (obj) => {
       return obj === obj3;
-    })).to.equal(-1);
+    })).toBe(-1);
   });
 
   it("should give an index as a second argument and the array as a third", () => {
@@ -58,12 +57,12 @@ describe("utils - arrayFindIndex", () => {
     const arr = [obj2, obj1, obj2, obj1];
     let currentIndex = 0;
     expect(arrayFindIndex(arr, (obj, index, cArr) => {
-      expect(index).to.equal(currentIndex++);
-      expect(cArr).to.equal(arr);
+      expect(index).toBe(currentIndex++);
+      expect(cArr).toBe(arr);
       return obj === obj1;
-    })).to.equal(1);
+    })).toBe(1);
 
-    expect(currentIndex).to.equal(2);
+    expect(currentIndex).toBe(2);
   });
 
   it("should give give a context if the third argument is provided", () => {
@@ -72,7 +71,7 @@ describe("utils - arrayFindIndex", () => {
     const context = {};
     const arr = [obj2, obj1, obj2, obj1];
     arrayFindIndex(arr, function(this : {}) {
-      expect(this).to.equal(context);
+      expect(this).toBe(context);
       return false;
     }, context);
   });
@@ -93,14 +92,14 @@ describe("utils - arrayFindIndex", () => {
         index : number,
         cArr : Array<{}>
       ) : boolean {
-        expect(this).to.equal(context);
-        expect(index).to.equal(currentIndex++);
-        expect(cArr).to.equal(arr);
+        expect(this).toBe(context);
+        expect(index).toBe(currentIndex++);
+        expect(cArr).toBe(arr);
         return obj === obj1;
       };
-      expect(arrayFindIndex(arr, predicate, context)).to.equal(1);
-      expect(currentIndex).to.equal(2);
-      expect(spy.calledWith(predicate, context)).to.equal(true);
+      expect(arrayFindIndex(arr, predicate, context)).toBe(1);
+      expect(currentIndex).toBe(2);
+      expect(spy.calledWith(predicate, context)).toBe(true);
       spy.restore();
     });
   }

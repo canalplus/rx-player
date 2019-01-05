@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import stringFromUTF8 from "../string_from_utf8";
 
 describe("utils - stringFromUTF8", () => {
   it ("should translate null by an empty string", () => {
-    expect(stringFromUTF8(null)).to.equal("");
+    expect(stringFromUTF8(null)).toBe("");
   });
 
   it ("should translate nothing by an empty string", () => {
-    expect(stringFromUTF8(new Uint8Array([]))).to.equal("");
+    expect(stringFromUTF8(new Uint8Array([]))).toBe("");
   });
 
   /* tslint:disable max-line-length */
@@ -34,13 +33,13 @@ describe("utils - stringFromUTF8", () => {
       0xF0, 0x9F, 0x90, 0x80,
       0xE1, 0xBC, 0x80,
       0x65,
-    ]))).to.equal("😀🐀ἀe");
+    ]))).toBe("😀🐀ἀe");
   });
 
   it("should throw at malformed UTF8 codes", () => {
     expect(() => {
       stringFromUTF8(new Uint8Array([0xA0, 0x9F, 0x98, 0x80]));
-    }).to.throw();
+    }).toThrow();
   });
 
   it("should strip off the UTF8 BOM if present", () => {
@@ -50,6 +49,6 @@ describe("utils - stringFromUTF8", () => {
       0xF0, 0x9F, 0x90, 0x80,
       0xE1, 0xBC, 0x80,
       0x65,
-    ]))).to.equal("😀🐀ἀe");
+    ]))).toBe("😀🐀ἀe");
   });
 });

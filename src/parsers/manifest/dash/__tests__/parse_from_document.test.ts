@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import parseFromDocument from "../index";
 
 describe("parseFromDocument", () => {
@@ -26,6 +25,6 @@ describe("parseFromDocument", () => {
     const doc = setDocumentFromString("<foo></foo>");
     expect(function() {
       parseFromDocument(doc, "");
-    }).to.throw("document root should be MPD");
+    }).toThrow("document root should be MPD");
   });
 });

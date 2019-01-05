@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import promise from "../promise";
 
 describe("utils - promise", () => {
   it("should export the browser's Promise as a default", () => {
-    expect(promise).to.equal(Promise as any);
+    expect(promise).toBe(Promise as any);
   });
 });
