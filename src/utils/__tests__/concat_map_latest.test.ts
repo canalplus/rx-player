@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import {
   concat as observableConcat,
   interval,

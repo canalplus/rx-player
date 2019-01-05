@@ -69,7 +69,7 @@ describe("utils - arrayFindIndex", () => {
     const obj2 = {};
     const context = {};
     const arr = [obj2, obj1, obj2, obj1];
-    arrayFindIndex(arr, function(this : {}) {
+    arrayFindIndex(arr, function(this : unknown) {
       expect(this).toBe(context);
       return false;
     }, context);
@@ -86,7 +86,7 @@ describe("utils - arrayFindIndex", () => {
 
       let currentIndex = 0;
       const predicate = function(
-        this : {},
+        this : unknown,
         obj : {},
         index : number,
         cArr : Array<{}>
