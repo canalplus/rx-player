@@ -9,8 +9,8 @@ branches:
 
 # Install scripts. (runs after repo cloning)
 install:
-  - choco install firefox
-  - choco install googlechrome
+  # - choco install firefox
+  # - choco install googlechrome
   - ps: Install-Product node $env:nodejs_version
   - npm install
 
