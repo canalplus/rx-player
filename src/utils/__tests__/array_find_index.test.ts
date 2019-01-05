@@ -23,11 +23,11 @@ const initialArrayFindIndex = (Array.prototype as any).findIndex;
 /* tslint:enable no-unbound-method */
 
 describe("utils - arrayFindIndex", () => {
-  before(() => {
+  beforeEach(() => {
     (Array.prototype as any).findIndex = undefined;
   });
 
-  after(() => {
+  afterEach(() => {
     (Array.prototype as any).findIndex = initialArrayFindIndex;
   });
 

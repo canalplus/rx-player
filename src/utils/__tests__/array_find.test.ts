@@ -23,11 +23,11 @@ const initialArrayFind = (Array.prototype as any).find;
 /* tslint:enable no-unbound-method */
 
 describe("utils - arrayFind", () => {
-  before(() => {
+  beforeEach(() => {
     (Array.prototype as any).find = undefined;
   });
 
-  after(() => {
+  afterEach(() => {
     (Array.prototype as any).find = initialArrayFind;
   });
 

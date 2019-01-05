@@ -33,8 +33,13 @@ describe("API - Public API", () => {
   });
 
   describe("public methods", () => {
-    const player = new PublicAPI();
-    after(() => player.dispose());
+    let player : PublicAPI;
+    beforeEach(() => {
+      player = new PublicAPI();
+    });
+    afterEach(() => {
+      player.dispose();
+    });
 
     describe("getError", () => {
       it("should have no error by default", () => {

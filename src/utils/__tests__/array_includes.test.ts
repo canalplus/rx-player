@@ -21,11 +21,11 @@ import arrayIncludes from "../array_includes";
 const initialArrayIncludes = Array.prototype.includes;
 /* tslint:enable no-unbound-method */
 describe("utils - array-includes", () => {
-  before(() => {
+  beforeEach(() => {
     (Array.prototype as any).includes = undefined;
   });
 
-  after(() => {
+  afterEach(() => {
     Array.prototype.includes = initialArrayIncludes;
   });
 
