@@ -14,31 +14,30 @@
  * limitations under the License.
  */
 
-import * as emeCompat from "../eme";
-import hasEMEAPIs from "../has_eme_apis";
-
 describe("compat - hasEMEAPIs", () => {
+  beforeEach(() => {
+    jest.resetModules();
+  });
+
   /* tslint:disable max-line-length */
   it("should return true if we could define a requestMediaKeySystemAccess function", () => {
   /* tslint:enable max-line-length */
 
-    const oldRequestMediaKeySystemAccessValue = emeCompat.requestMediaKeySystemAccess;
-    (emeCompat as any)
-      .requestMediaKeySystemAccess = () => { /* noop */};
-    expect(hasEMEAPIs()).toBe(true);
-    (emeCompat as any)
-      .requestMediaKeySystemAccess = oldRequestMediaKeySystemAccessValue;
+    jest.mock("../eme", () => {
+      return { requestMediaKeySystemAccess: () => null };
+    });
+    const hasEMEAPIs = require("../has_eme_apis");
+    expect(hasEMEAPIs.default()).toBe(true);
   });
 
   /* tslint:disable max-line-length */
   it("should return false if we could not define a requestMediaKeySystemAccess function", () => {
   /* tslint:enable max-line-length */
 
-    const oldRequestMediaKeySystemAccessValue = emeCompat.requestMediaKeySystemAccess;
-    (emeCompat as any)
-      .requestMediaKeySystemAccess = null;
-    expect(hasEMEAPIs()).toBe(false);
-    (emeCompat as any)
-      .requestMediaKeySystemAccess = oldRequestMediaKeySystemAccessValue;
+    jest.mock("../eme", () => {
+      return { requestMediaKeySystemAccess: null };
+    });
+    const hasEMEAPIs = require("../has_eme_apis");
+    expect(hasEMEAPIs.default()).toBe(false);
   });
 });
