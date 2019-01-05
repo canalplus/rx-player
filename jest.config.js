@@ -1,12 +1,16 @@
+/* eslint-env node */
+
+const coverageIsWanted = !!process.env.RXP_COVERAGE;
+
 module.exports = {
   roots: ["<rootDir>/src"],
   preset: "ts-jest",
   testEnvironment: "jsdom",
-  // collectCoverage: true,
-  // collectCoverageFrom: [
-  //   "src/**/*.ts",
-  //   "!**/__tests__/**",
-  // ],
+  collectCoverage: coverageIsWanted,
+  collectCoverageFrom: [
+    "src/**/*.ts",
+    "!**/__tests__/**",
+  ],
   globals: {
     __DEV__: true,
     "ts-jest": {

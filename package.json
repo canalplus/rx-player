@@ -100,7 +100,7 @@
     "test:memory:travis": "karma start tests/memory/karma.travis.conf.js",
     "test:travis": "npm run test:unit && npm run test:integration:travis",
     "test:unit": "jest",
-    "test:unit:coverage": "cross-env RXP_COVERAGE=true karma start tests/unit/karma.conf.js",
+    "test:unit:coverage": "cross-env RXP_COVERAGE=true jest",
     "update-version": "npm run version --git-tag-version=false",
     "version": "./scripts/update-version"
   },
