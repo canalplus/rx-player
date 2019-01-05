@@ -78,4 +78,3 @@ describe("errors - MediaError", () => {
     expect(mediaError.message).to.equal("MediaError (MEDIA_ERR_NETWORK) test");
   });
 });
-
