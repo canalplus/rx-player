@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import * as sinon from "sinon";
 import log from "../../../log";
 import StaticRepresentationIndex from "../static";
 
@@ -58,23 +57,23 @@ describe("manifest - StaticRepresentationIndex", () => {
   });
 
   it("should never add segments and warn when trying to do so", () => {
-    const warnStub = sinon.stub(log, "warn");
+    const spy = jest.fn();
+    jest.spyOn(log, "warn").mockImplementation(spy);
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
 
     staticRI._addSegments();
 
-    expect(warnStub.callCount).toBe(1);
+    expect(spy).toHaveBeenCalledTimes(1);
     expect(staticRI.getSegments().length).toBe(1);
-    warnStub.restore();
   });
 
   it("should never update and warn when trying to do so", () => {
-    const warnStub = sinon.stub(log, "warn");
+    const spy = jest.fn();
+    jest.spyOn(log, "warn").mockImplementation(spy);
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
 
     staticRI._update();
 
-    expect(warnStub.callCount).toBe(1);
-    warnStub.restore();
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });

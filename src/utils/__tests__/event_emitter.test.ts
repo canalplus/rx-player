@@ -15,7 +15,6 @@
  */
 
 import { take } from "rxjs/operators";
-import * as sinon from "sinon";
 import log from "../../log";
 import EventEmitter, {
   fromEvent,
@@ -551,14 +550,15 @@ describe("utils - EventEmitter", () => {
     const cb = function() {
       throw err;
     };
-    const logSpy = sinon.stub(log, "error");
+    const spy = jest.fn();
+    jest.spyOn(log, "error").mockImplementation(spy);
     eventEmitter.addEventListener("t", cb);
 
-    expect(logSpy.callCount).toBe(0);
+    expect(spy).toHaveBeenCalledTimes(0);
     eventEmitter.trigger("t", undefined);
-    expect(logSpy.callCount).toBe(1);
-    expect(logSpy.calledWith(err, err.stack)).toBe(true);
-    logSpy.restore();
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(err, err.stack);
     eventEmitter.removeEventListener();
   });
 });

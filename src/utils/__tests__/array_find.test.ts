@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import * as sinon from "sinon";
 import arrayFind from "../array_find";
 
 /* tslint:disable no-unbound-method */
@@ -83,7 +82,7 @@ describe("utils - arrayFind", () => {
       const obj2 = {};
       const context = {};
       const arr = [obj2, obj1, obj2, obj1];
-      const spy = sinon.spy(arr, "find");
+      const spy = jest.spyOn(arr, "find");
 
       let currentIndex = 0;
       const predicate = function(
@@ -101,8 +100,8 @@ describe("utils - arrayFind", () => {
 
       expect(currentIndex).toBe(2);
 
-      expect(spy.calledWith(predicate, context)).toBe(true);
-      spy.restore();
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(predicate, context);
     });
   }
 });

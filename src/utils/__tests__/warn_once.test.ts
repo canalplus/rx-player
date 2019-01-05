@@ -14,26 +14,25 @@
  * limitations under the License.
  */
 
-import * as sinon from "sinon";
 import warnOnce from "../warn_once";
 
 describe("utils - warnOnce", () => {
   it("should only call console.warn once for a given message", () => {
-    const warnSpy = sinon.stub(console, "warn");
+    const spy = jest.fn();
+    jest.spyOn(console, "warn").mockImplementation(spy);
     warnOnce("toto titi");
 
-    expect(warnSpy.calledWith("toto titi")).toBe(true);
-    expect(warnSpy.calledOnce).toBe(true);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith("toto titi");
 
     warnOnce("toto titi");
 
-    expect(warnSpy.calledOnce).toBe(true);
+    expect(spy).toHaveBeenCalledTimes(1);
 
     warnOnce("toto titi");
     warnOnce("toto tito");
 
-    expect(warnSpy.calledWith("toto tito")).toBe(true);
-    expect(warnSpy.calledTwice).toBe(true);
-    warnSpy.restore();
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenNthCalledWith(2, "toto tito");
   });
 });
