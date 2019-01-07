@@ -13,6 +13,7 @@
   - dash/smooth: improve precision of `getMaximumPosition` when the Manifest is updated
   - tests: use the Jest library for unit tests
   - tests: add a lot of unit tests to sensitive code (from a coverage of 13% in the v3.10.1 to 22% in the v3.10.2)
+  - npm: reduce size of the npm package
 
 
 ## v3.10.1 (2019/01/03)
