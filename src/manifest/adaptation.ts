@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { isCodecSupported } from "../compat";
 import {
   ICustomError,
   MediaError,
@@ -23,6 +22,7 @@ import log from "../log";
 import arrayFind from "../utils/array_find";
 import normalizeLanguage from "../utils/languages";
 import uniq from "../utils/uniq";
+import filterSupportedRepresentations from "./filter_supported_representations";
 import Representation, {
   IRepresentationArguments,
 } from "./representation";
@@ -198,46 +198,5 @@ export default class Adaptation {
    */
   getRepresentation(wantedId : number|string) : Representation|undefined {
     return arrayFind(this.representations, ({ id }) => wantedId === id);
-  }
-
-  /**
-   * Returns the Representations linked to the given bitrate.
-   * @param {Number} bitrate
-   * @returns {Array.<Object>|null}
-   */
-  getRepresentationsForBitrate(bitrate : number) : Representation[]|null {
-    return this.representations.filter(representation =>
-      representation.bitrate === bitrate) || null;
-  }
-}
-
-/**
- * Only keep Representations for which the codec is currently supported.
- * @param {string} adaptationType
- * @param {Array.<Object>} representations
- * @returns {Array.<Object>}
- */
-function filterSupportedRepresentations(
-  adaptationType : string,
-  representations : IRepresentationArguments[]
-) : IRepresentationArguments[] {
-  if (adaptationType === "audio" || adaptationType === "video") {
-    return representations.filter((representation) => {
-      return isCodecSupported(getCodec(representation));
-    });
-  }
-  // TODO for the other types?
-  return representations;
-
-  /**
-   * Construct the codec string from given codecs and mimetype.
-   * @param {Object} representation
-   * @returns {string}
-   */
-  function getCodec(
-    representation : IRepresentationArguments
-  ) : string {
-    const { codecs = "", mimeType = "" } = representation;
-    return `${mimeType};codecs="${codecs}"`;
   }
 }

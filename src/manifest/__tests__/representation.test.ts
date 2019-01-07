@@ -27,7 +27,7 @@ const minimalIndex = {
   _addSegments() { /* noop */ },
 };
 
-describe("manifest - Representation", () => {
+describe("Manifest - Representation", () => {
   it("should be able to create Representation with the minimum arguments given", () => {
     const args = { bitrate: 12, id: "test", index: minimalIndex };
     const representation = new Representation(args);
@@ -140,7 +140,7 @@ describe("manifest - Representation", () => {
     expect(representation.getMimeTypeString()).toBe("undefined;codecs=\"undefined\"");
   });
 
-  it("should be able to return an exploitable mimeTypeString", () => {
+  it("should be able to return an exploitable codecs + mimeType string", () => {
     const args1 = { bitrate: 12, id: "test", index: minimalIndex };
     expect(new Representation(args1).getMimeTypeString())
       .toBe("undefined;codecs=\"undefined\"");

@@ -20,6 +20,7 @@ import {
 import log from "../log";
 import arrayFind from "../utils/array_find";
 import arrayIncludes from "../utils/array_includes";
+import objectValues from "../utils/object_values";
 import Adaptation, {
   IAdaptationArguments,
   IAdaptationType,
@@ -102,49 +103,46 @@ export default class Period {
   ) {
     this.parsingErrors = [];
     this.id = args.id;
-    this.adaptations =
-      (Object.keys(args.adaptations) as IAdaptationType[])
-        .reduce<IManifestAdaptations>((acc, type) => {
-          if (args.adaptations[type]) {
-            const adaptationsForType = args.adaptations[type];
-            if (adaptationsForType) {
-              const filteredAdaptations = adaptationsForType
-                .filter((adaptation) => {
-                  if (!arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, adaptation.type)) {
-                    log.info("not supported adaptation type", adaptation.type);
-                    this.parsingErrors.push(
-                      new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE", null, false)
-                    );
-                    return false;
-                  } else {
-                    return true;
-                  }
-                })
-                .map((adaptation) => {
-                  const newAdaptation =
-                    new Adaptation(adaptation, representationFilter);
-                  this.parsingErrors.push(...newAdaptation.parsingErrors);
-                  return newAdaptation;
-                })
-                .filter((adaptation) => adaptation.representations.length);
-              if (
-                filteredAdaptations.length === 0 &&
-                adaptationsForType.length > 0 &&
-                (type === "video" || type === "audio")
-              ) {
-                const error = new Error("No supported " + type + " adaptations");
-                throw new MediaError("MANIFEST_PARSE_ERROR", error, true);
-              }
-              acc[type] = filteredAdaptations;
-            }
-          }
+    this.adaptations = (Object.keys(args.adaptations) as IAdaptationType[])
+      .reduce<IManifestAdaptations>((acc, type) => {
+        const adaptationsForType = args.adaptations[type];
+        if (!adaptationsForType) {
           return acc;
-        }, {});
+        }
+        const filteredAdaptations = adaptationsForType
+          .filter((adaptation) => {
+            if (!arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, adaptation.type)) {
+              log.info("not supported adaptation type", adaptation.type);
+              const error =
+                new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE", null, false);
+              this.parsingErrors.push(error);
+              return false;
+            } else {
+              return true;
+            }
+          })
+          .map((adaptation) => {
+            const newAdaptation = new Adaptation(adaptation, representationFilter);
+            this.parsingErrors.push(...newAdaptation.parsingErrors);
+            return newAdaptation;
+          })
+          .filter((adaptation) => adaptation.representations.length);
+        if (
+          filteredAdaptations.length === 0 &&
+          adaptationsForType.length > 0 &&
+          (type === "video" || type === "audio")
+        ) {
+          const error = new Error("No supported " + type + " adaptations");
+          throw new MediaError("MANIFEST_PARSE_ERROR", error, true);
+        }
 
-    if (
-      (!this.adaptations.video || !this.adaptations.video.length) &&
-      (!this.adaptations.audio || !this.adaptations.audio.length)
-    ) {
+        if (filteredAdaptations.length) {
+          acc[type] = filteredAdaptations;
+        }
+        return acc;
+      }, {});
+
+    if (!this.adaptations.video && !this.adaptations.audio) {
       const error = new Error("No supported audio and video tracks.");
       throw new MediaError("MANIFEST_PARSE_ERROR", error, true);
     }
@@ -164,15 +162,12 @@ export default class Period {
    */
   getAdaptations() : Adaptation[] {
     const adaptationsByType = this.adaptations;
-    const adaptationsList : Adaptation[] = [];
-    for (const adaptationType in adaptationsByType) {
-      if (adaptationsByType.hasOwnProperty(adaptationType)) {
-        const adaptations =
-          adaptationsByType[adaptationType as IAdaptationType] as Adaptation[];
-        adaptationsList.push(...adaptations);
-      }
-    }
-    return adaptationsList;
+    return objectValues(adaptationsByType)
+      .reduce<Adaptation[]>((acc, adaptations) =>
+        // Note: the second case cannot happen. TS is just being dumb here
+        adaptations != null ? acc.concat(adaptations) : acc,
+        []
+    );
   }
 
   /**
@@ -190,7 +185,7 @@ export default class Period {
    * @param {number|string} wantedId
    * @returns {Object|undefined}
    */
-  getAdaptation(wantedId : number|string) : Adaptation|undefined {
+  getAdaptation(wantedId : string) : Adaptation|undefined {
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
   }
 }
