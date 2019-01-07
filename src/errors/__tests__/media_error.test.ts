@@ -17,7 +17,7 @@
 import MediaError from "../media_error";
 
 describe("errors - MediaError", () => {
-  it("should format an MediaError when called with minimal arguments", () => {
+  it("should format a MediaError when called with minimal arguments", () => {
     const mediaError = new MediaError("foo", null);
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");

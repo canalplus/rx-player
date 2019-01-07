@@ -49,7 +49,7 @@ describe("Manifest - filterSupportedRepresentations", () => {
     expect(isCodecSupportedSpy).not.toHaveBeenCalled();
   });
 
-  it("should filter video adaptations based on the mime-type and codec", () => {
+  it("should filter video adaptations based on the MIME type and codec", () => {
     const isCodecSupportedSpy = jest.fn((arg : string) => arg.indexOf("webm") !== -1);
     jest.mock("../../compat", () => ({ isCodecSupported: isCodecSupportedSpy }));
 
@@ -66,7 +66,7 @@ describe("Manifest - filterSupportedRepresentations", () => {
     expect(isCodecSupportedSpy).toHaveBeenCalledWith("video/webm;codecs=\"vp9\"");
   });
 
-  it("should filter audio adaptations based on the mime-type and codec", () => {
+  it("should filter audio adaptations based on the MIME type and codec", () => {
     const isCodecSupportedSpy = jest.fn((arg : string) => arg.indexOf("aac") !== -1);
     jest.mock("../../compat", () => ({ isCodecSupported: isCodecSupportedSpy }));
 
@@ -83,7 +83,7 @@ describe("Manifest - filterSupportedRepresentations", () => {
     expect(isCodecSupportedSpy).toHaveBeenCalledWith("audio/webm;codecs=\"ogg\"");
   });
 
-  it("should filter audio adaptations based on the mime-type and codec", () => {
+  it("should filter audio adaptations based on the MIME type and codec", () => {
     const isCodecSupportedSpy = jest.fn((arg : string) => arg.indexOf("aac") !== -1);
     jest.mock("../../compat", () => ({ isCodecSupported: isCodecSupportedSpy }));
 
@@ -100,7 +100,7 @@ describe("Manifest - filterSupportedRepresentations", () => {
     expect(isCodecSupportedSpy).toHaveBeenCalledWith("audio/webm;codecs=\"ogg\"");
   });
 
-  it("should set default mimeType and codecs for video adaptations", () => {
+  it("should set default MIME type and codecs for video adaptations", () => {
     const isCodecSupportedSpy = jest.fn(() => false);
     jest.mock("../../compat", () => ({ isCodecSupported: isCodecSupportedSpy }));
 
@@ -118,7 +118,7 @@ describe("Manifest - filterSupportedRepresentations", () => {
     expect(isCodecSupportedSpy).toHaveBeenCalledWith(";codecs=\"\"");
   });
 
-  it("should set default mimeType and codecs for audio adaptations", () => {
+  it("should set default MIME type and codecs for audio adaptations", () => {
     const isCodecSupportedSpy = jest.fn(() => false);
     jest.mock("../../compat", () => ({ isCodecSupported: isCodecSupportedSpy }));
 
