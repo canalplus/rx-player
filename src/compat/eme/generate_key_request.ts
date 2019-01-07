@@ -18,7 +18,6 @@ import {
   defer as observableDefer,
   Observable,
 } from "rxjs";
-import { catchError } from "rxjs/operators";
 import log from "../../log";
 import {
   be4toi,
@@ -33,7 +32,8 @@ import { ICustomMediaKeySession } from "./custom_media_keys";
  * Some browsers have problems when the CENC PSSH box is the first managed PSSH
  * encountered (for the moment just Edge was noted with this behavior).
  *
- * This function tries to remove the CENC PSSH box in the given init data.
+ * This function tries to move CENC PSSH boxes at the end of the given init
+ * data.
  *
  * If the initData is unrecognized or if a CENC PSSH is not found, this function
  * throws.
@@ -42,7 +42,8 @@ import { ICustomMediaKeySession } from "./custom_media_keys";
  */
 export function patchInitData(initData : Uint8Array) : Uint8Array {
   const initialLength = initData.byteLength;
-  log.info("Compat: Trying to remove CENC PSSH from init data.");
+  log.info("Compat: Trying to move CENC PSSH from init data at the end of it.");
+  let cencs = new Uint8Array();
   let resInitData = new Uint8Array();
 
   let offset = 0;
@@ -60,6 +61,8 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
       log.warn("Compat: unrecognized initialization data. Cannot patch it.");
       throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
     }
+
+    const currentPSSH = initData.subarray(offset, offset + len);
     if (
       // yep
       initData[offset + 12] === 0x10 &&
@@ -79,9 +82,9 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
       initData[offset + 26] === 0xfb &&
       initData[offset + 27] === 0x4b
     ) {
-      log.info("Compat: CENC PSSH found. Removing it.");
+      log.info("Compat: CENC PSSH found.");
+      cencs = concat(cencs, currentPSSH);
     } else {
-      const currentPSSH = initData.subarray(offset, offset + len);
       resInitData = concat(resInitData, currentPSSH);
     }
     offset += len;
@@ -96,7 +99,7 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
     log.warn("Compat: CENC PSSH not found. Cannot patch it");
     throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
   }
-  return resInitData;
+  return concat(resInitData, cencs);
 }
 
 /**
@@ -114,21 +117,18 @@ export default function generateKeyRequest(
 ) : Observable<unknown> {
   return observableDefer(() => {
     log.debug("Compat: Calling generateRequest on the MediaKeySession");
-    return castToObservable(
-      session.generateRequest(initDataType || "", initData)
-    ).pipe(catchError((error) => {
-      if (isIEOrEdge) {
-        let patchedInit : Uint8Array;
-        try {
-          patchedInit = patchInitData(initData);
-        } catch (_e) {
-          throw error;
-        }
-        return castToObservable(
-          session.generateRequest(initDataType || "", patchedInit)
-        );
+    let patchedInit : Uint8Array;
+    if (isIEOrEdge) {
+      try {
+        patchedInit = patchInitData(initData);
+      } catch (_e) {
+        patchedInit = initData;
       }
-      throw error;
-    }));
+    } else {
+      patchedInit = initData;
+    }
+    return castToObservable(
+      session.generateRequest(initDataType || "", patchedInit)
+    );
   });
 }
