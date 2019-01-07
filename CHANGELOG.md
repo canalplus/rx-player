@@ -5,6 +5,7 @@
 ### Bug fixes
 
   - dash/smooth: fix manifest updates for some DASH contents (SegmentTimeline without SegmentTemplate) and for some Smooth usages
+  - compat/drm: adopt a new strategy for malfunctioning CENC PSSH on Edge by moving them at the end of the initialization data
   - dash/smooth: update deprecated Manifest.adaptations property when updating the manifest
 
 
