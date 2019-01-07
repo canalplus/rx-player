@@ -4611,7 +4611,8 @@ object-assign
  * Some browsers have problems when the CENC PSSH box is the first managed PSSH
  * encountered (for the moment just Edge was noted with this behavior).
  *
- * This function tries to remove the CENC PSSH box in the given init data.
+ * This function tries to move CENC PSSH boxes at the end of the given init
+ * data.
  *
  * If the initData is unrecognized or if a CENC PSSH is not found, this function
  * throws.
@@ -4620,25 +4621,24 @@ object-assign
  */
         function patchInitData(initData) {
             var initialLength = initData.byteLength;
-            log.a.info("Compat: Trying to remove CENC PSSH from init data.");
-            for (var resInitData = new Uint8Array(), offset = 0; offset < initData.length; ) {
+            log.a.info("Compat: Trying to move CENC PSSH from init data at the end of it.");
+            for (var cencs = new Uint8Array(), resInitData = new Uint8Array(), offset = 0; offset < initData.length; ) {
                 if (initData.length < offset + 8 || Object(byte_parsing.c)(initData, offset + 4) !== PSSH_TO_INTEGER) throw log.a.warn("Compat: unrecognized initialization data. Cannot patch it."), 
                 new Error("Compat: unrecognized initialization data. Cannot patch it.");
                 var len = Object(byte_parsing.c)(new Uint8Array(initData), offset);
                 if (offset + len > initData.length) throw log.a.warn("Compat: unrecognized initialization data. Cannot patch it."), 
                 new Error("Compat: unrecognized initialization data. Cannot patch it.");
-                if (// yep
-                16 === initData[offset + 12] && 119 === initData[offset + 13] && 239 === initData[offset + 14] && 236 === initData[offset + 15] && 192 === initData[offset + 16] && 178 === initData[offset + 17] && 77 === initData[offset + 18] && 2 === initData[offset + 19] && 172 === initData[offset + 20] && 227 === initData[offset + 21] && 60 === initData[offset + 22] && 30 === initData[offset + 23] && 82 === initData[offset + 24] && 226 === initData[offset + 25] && 251 === initData[offset + 26] && 75 === initData[offset + 27]) log.a.info("Compat: CENC PSSH found. Removing it."); else {
-                    var currentPSSH = initData.subarray(offset, offset + len);
-                    resInitData = Object(byte_parsing.h)(resInitData, currentPSSH);
-                }
+                var currentPSSH = initData.subarray(offset, offset + len);
+                // yep
+                16 === initData[offset + 12] && 119 === initData[offset + 13] && 239 === initData[offset + 14] && 236 === initData[offset + 15] && 192 === initData[offset + 16] && 178 === initData[offset + 17] && 77 === initData[offset + 18] && 2 === initData[offset + 19] && 172 === initData[offset + 20] && 227 === initData[offset + 21] && 60 === initData[offset + 22] && 30 === initData[offset + 23] && 82 === initData[offset + 24] && 226 === initData[offset + 25] && 251 === initData[offset + 26] && 75 === initData[offset + 27] ? (log.a.info("Compat: CENC PSSH found."), 
+                cencs = Object(byte_parsing.h)(cencs, currentPSSH)) : resInitData = Object(byte_parsing.h)(resInitData, currentPSSH), 
                 offset += len;
             }
             if (offset !== initData.length) throw log.a.warn("Compat: unrecognized initialization data. Cannot patch it."), 
             new Error("Compat: unrecognized initialization data. Cannot patch it.");
             if (resInitData.byteLength === initialLength) throw log.a.warn("Compat: CENC PSSH not found. Cannot patch it"), 
             new Error("Compat: unrecognized initialization data. Cannot patch it.");
-            return resInitData;
+            return Object(byte_parsing.h)(resInitData, cencs);
         }
         /**
  * Generate a request from session.
@@ -4649,18 +4649,13 @@ object-assign
  * @returns {Observable}
  */        function generateKeyRequest(session, initData, initDataType) {
             return Object(defer.a)(function() {
-                return log.a.debug("Compat: Calling generateRequest on the MediaKeySession"), Object(cast_to_observable.a)(session.generateRequest(initDataType || "", initData)).pipe(Object(catchError.a)(function(error) {
-                    if (browser_detection.c) {
-                        var patchedInit;
-                        try {
-                            patchedInit = patchInitData(initData);
-                        } catch (_e) {
-                            throw error;
-                        }
-                        return Object(cast_to_observable.a)(session.generateRequest(initDataType || "", patchedInit));
-                    }
-                    throw error;
-                }));
+                var patchedInit;
+                if (log.a.debug("Compat: Calling generateRequest on the MediaKeySession"), browser_detection.c) try {
+                    patchedInit = patchInitData(initData);
+                } catch (_e) {
+                    patchedInit = initData;
+                } else patchedInit = initData;
+                return Object(cast_to_observable.a)(session.generateRequest(initDataType || "", patchedInit));
             });
         }
         // EXTERNAL MODULE: ./src/errors/encrypted_media_error.ts
