@@ -1,5 +1,20 @@
 # Changelog
 
+## v3.10.2 (2019/01/07)
+
+### Bug fixes
+
+  - dash/smooth: fix manifest updates for some DASH contents (SegmentTimeline without SegmentTemplate) and for some Smooth usages
+  - dash/smooth: update deprecated Manifest.adaptations property when updating the manifest
+
+
+## Other improvements
+
+  - dash/smooth: improve precision of `getMaximumPosition` when the Manifest is updated
+  - tests: use the Jest library for unit tests
+  - tests: add a lot of unit tests to sensitive code (from a coverage of 13% in the v3.10.1 to 22% in the v3.10.2)
+
+
 ## v3.10.1 (2019/01/03)
 
 ### Bug fixes
