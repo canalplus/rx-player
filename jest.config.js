@@ -9,6 +9,7 @@ module.exports = {
   collectCoverage: coverageIsWanted,
   collectCoverageFrom: [
     "src/**/*.ts",
+    "!src/**/index.ts",
     "!**/__tests__/**",
   ],
   globals: {
