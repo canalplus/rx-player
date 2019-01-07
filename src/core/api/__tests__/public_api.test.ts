@@ -14,25 +14,30 @@
  * limitations under the License.
  */
 
-import PublicAPI from "../public_api";
-
 describe("API - Public API", () => {
+  beforeEach(() => {
+    jest.resetModules();
+  });
+
   describe("static properties", () => {
     describe("ErrorTypes", () => {
       it("should expose static ErrorTypes property", () => {
+        const PublicAPI = require("../public_api").default;
         expect(typeof PublicAPI.ErrorTypes).toBe("object");
       });
     });
 
     describe("ErrorCodes", () => {
       it("should expose static ErrorCodes property", () => {
+        const PublicAPI = require("../public_api").default;
         expect(typeof PublicAPI.ErrorTypes).toBe("object");
       });
     });
   });
 
   describe("public methods", () => {
-    let player : PublicAPI;
+    const PublicAPI = require("../public_api").default;
+    let player : any;
     beforeEach(() => {
       player = new PublicAPI();
     });
@@ -64,13 +69,13 @@ describe("API - Public API", () => {
       });
     });
 
-    describe("getNativeTextTrack", () => {
-      it("should return null in getNativeTextTrack by default", () => {
-        /* tslint:disable deprecation */
-        expect(player.getNativeTextTrack()).toBe(null);
-        /* tslint:enable deprecation */
-      });
-    });
+//     describe("getNativeTextTrack", () => {
+//       it("should return null in getNativeTextTrack by default", () => {
+//         /* tslint:disable deprecation */
+//         expect(player.getNativeTextTrack()).toBe(null);
+//         /* tslint:enable deprecation */
+//       });
+//     });
 
     describe("getPlayerState", () => {
       it("should return \"STOPPED\" in getPlayerState by default", () => {
@@ -148,13 +153,13 @@ describe("API - Public API", () => {
       });
     });
 
-    describe("isFullscreen", () => {
-      it("should return false in isFullscreen by default", () => {
-        /* tslint:disable deprecation */
-        expect(player.isFullscreen()).toBe(false);
-        /* tslint:enable deprecation */
-      });
-    });
+    // describe("isFullscreen", () => {
+    //   it("should return false in isFullscreen by default", () => {
+    //     /* tslint:disable deprecation */
+    //     expect(player.isFullscreen()).toBe(false);
+    //     /* tslint:enable deprecation */
+    //   });
+    // });
 
     describe("getAvailableVideoBitrates", () => {
       it("should return [] in getAvailableVideoBitrates by default", () => {
@@ -242,26 +247,26 @@ describe("API - Public API", () => {
       });
     });
 
-    describe("exitFullscreen", () => {
-      it("should allow exitFullscreen by default", () => {
-        /* tslint:disable deprecation */
-        player.exitFullscreen();
-        /* tslint:enable deprecation */
-      });
-    });
+    // describe("exitFullscreen", () => {
+    //   it("should allow exitFullscreen by default", () => {
+    //     /* tslint:disable deprecation */
+    //     player.exitFullscreen();
+    //     /* tslint:enable deprecation */
+    //   });
+    // });
 
-    describe("setFullscreen", () => {
-      it("should allow setFullscreen by default", () => {
-        /* tslint:disable deprecation */
-        player.setFullscreen();
-        /* tslint:enable deprecation */
+    // describe("setFullscreen", () => {
+    //   it("should allow setFullscreen by default", () => {
+    //     /* tslint:disable deprecation */
+    //     player.setFullscreen();
+    //     /* tslint:enable deprecation */
 
-        // TODO remove for v3.0.0
-        /* tslint:disable deprecation */
-        player.setFullscreen(false);
-        /* tslint:enable deprecation */
-      });
-    });
+    //     // TODO remove for v3.0.0
+    //     /* tslint:disable deprecation */
+    //     player.setFullscreen(false);
+    //     /* tslint:enable deprecation */
+    //   });
+    // });
 
     describe("getVolume/setVolume", () => {
       it("should throw in setVolume by default if no volume has been given", () => {
