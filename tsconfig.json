@@ -12,7 +12,7 @@
     "strictPropertyInitialization": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
-    "types": ["rxjs", "mocha", "node"],
+    "types": ["rxjs", "node", "jest"],
     "moduleResolution": "node",
     "typeRoots": [
       "./src/typings",

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import config from "../../../config";
 import getLoadedContentState from "../get_player_state";
 
@@ -29,27 +28,27 @@ describe("API - getLoadedContentState", () => {
 
     // we can just do every possibility here
     expect(getLoadedContentState(mediaElement, true, null))
-      .to.equal("ENDED");
+      .toBe("ENDED");
     expect(getLoadedContentState(mediaElement, false, null))
-      .to.equal("ENDED");
+      .toBe("ENDED");
     expect(getLoadedContentState(mediaElement, true, {
       reason: "seeking",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, true, {
       reason: "not-ready",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, true, {
       reason: "buffering",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, false, {
       reason: "seeking",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, false, {
       reason: "not-ready",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, false, {
       reason: "buffering",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
   });
 
   it("should be PLAYING if not stalled nor ended and if not paused", () => {
@@ -60,7 +59,7 @@ describe("API - getLoadedContentState", () => {
     };
     const mediaElement = fakeProps as HTMLMediaElement;
     expect(getLoadedContentState(mediaElement, true, null))
-      .to.equal("PLAYING");
+      .toBe("PLAYING");
   });
 
   it("should be PAUSED if not stalled nor ended and if paused", () => {
@@ -71,7 +70,7 @@ describe("API - getLoadedContentState", () => {
     };
     const mediaElement = fakeProps as HTMLMediaElement;
     expect(getLoadedContentState(mediaElement, false, null))
-      .to.equal("PAUSED");
+      .toBe("PAUSED");
   });
 
   it("should be BUFFERING if not ended and stalled because of bufferring", () => {
@@ -83,10 +82,10 @@ describe("API - getLoadedContentState", () => {
     const mediaElement = fakeProps as HTMLMediaElement;
     expect(getLoadedContentState(mediaElement, true, {
       reason: "buffering",
-    })).to.equal("BUFFERING");
+    })).toBe("BUFFERING");
     expect(getLoadedContentState(mediaElement, false, {
       reason: "buffering",
-    })).to.equal("BUFFERING");
+    })).toBe("BUFFERING");
   });
 
   it("should be BUFFERING if not ended and stalled because of `not-ready`", () => {
@@ -98,10 +97,10 @@ describe("API - getLoadedContentState", () => {
     const mediaElement = fakeProps as HTMLMediaElement;
     expect(getLoadedContentState(mediaElement, true, {
       reason: "not-ready",
-    })).to.equal("BUFFERING");
+    })).toBe("BUFFERING");
     expect(getLoadedContentState(mediaElement, false, {
       reason: "not-ready",
-    })).to.equal("BUFFERING");
+    })).toBe("BUFFERING");
   });
 
   it("should be SEEKING if not ended and stalled because of `seeking`", () => {
@@ -113,10 +112,10 @@ describe("API - getLoadedContentState", () => {
     const mediaElement = fakeProps as HTMLMediaElement;
     expect(getLoadedContentState(mediaElement, true, {
       reason: "seeking",
-    })).to.equal("SEEKING");
+    })).toBe("SEEKING");
     expect(getLoadedContentState(mediaElement, false, {
       reason: "seeking",
-    })).to.equal("SEEKING");
+    })).toBe("SEEKING");
   });
 
   it("should be ENDED if stalled and currentTime is equal to duration", () => {
@@ -128,22 +127,22 @@ describe("API - getLoadedContentState", () => {
     const mediaElement = fakeProps as HTMLMediaElement;
     expect(getLoadedContentState(mediaElement, true, {
       reason: "seeking",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, false, {
       reason: "seeking",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, true, {
       reason: "buffering",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, false, {
       reason: "buffering",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, true, {
       reason: "not-ready",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, false, {
       reason: "not-ready",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
   });
 
   it("should be ENDED if stalled and currentTime is very close to the duration", () => {
@@ -155,22 +154,22 @@ describe("API - getLoadedContentState", () => {
     const mediaElement = fakeProps as HTMLMediaElement;
     expect(getLoadedContentState(mediaElement, true, {
       reason: "seeking",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, false, {
       reason: "seeking",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, true, {
       reason: "buffering",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, false, {
       reason: "buffering",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, true, {
       reason: "not-ready",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, false, {
       reason: "not-ready",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
   });
 
   it("should be ENDED if stalled and currentTime is very close to the duration", () => {
@@ -182,22 +181,22 @@ describe("API - getLoadedContentState", () => {
     const mediaElement1 = fakeProps1 as HTMLMediaElement;
     expect(getLoadedContentState(mediaElement1, true, {
       reason: "seeking",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement1, false, {
       reason: "seeking",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement1, true, {
       reason: "buffering",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement1, false, {
       reason: "buffering",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement1, true, {
       reason: "not-ready",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement1, false, {
       reason: "not-ready",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
 
     const fakeProps2 = {
       ended: false,
@@ -207,21 +206,21 @@ describe("API - getLoadedContentState", () => {
     const mediaElement2 = fakeProps2 as HTMLMediaElement;
     expect(getLoadedContentState(mediaElement2, true, {
       reason: "seeking",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement2, false, {
       reason: "seeking",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement2, true, {
       reason: "buffering",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement2, false, {
       reason: "buffering",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement2, true, {
       reason: "not-ready",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
     expect(getLoadedContentState(mediaElement2, false, {
       reason: "not-ready",
-    })).to.equal("ENDED");
+    })).toBe("ENDED");
   });
 });

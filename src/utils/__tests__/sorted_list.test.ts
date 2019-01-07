@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import SortedList from "../sorted_list";
 
 describe("utils - SortedList", () => {
@@ -28,15 +27,15 @@ describe("utils - SortedList", () => {
 
   it("should return then number of items when calling `length`", () => {
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
-    expect(sortedList.length()).to.equal(0);
+    expect(sortedList.length()).toBe(0);
     const item = { start: 12 };
     const item2 = { start: 13 };
     sortedList.add(item);
-    expect(sortedList.length()).to.equal(1);
+    expect(sortedList.length()).toBe(1);
     sortedList.add(item2);
-    expect(sortedList.length()).to.equal(2);
+    expect(sortedList.length()).toBe(2);
     sortedList.add(item);
-    expect(sortedList.length()).to.equal(3);
+    expect(sortedList.length()).toBe(3);
   });
 
   it("should sort when adding and get the corresponding index when calling `get`", () => {
@@ -52,17 +51,17 @@ describe("utils - SortedList", () => {
     sortedList.add(item4);
     sortedList.add(item5);
     sortedList.add(item1); // same than the first on purpose
-    expect(sortedList.get(0)).to.equal(item1);
-    expect(sortedList.get(1)).to.equal(item1);
-    expect(sortedList.get(2)).to.equal(item2);
-    expect(sortedList.get(3)).to.equal(item3);
-    expect(sortedList.get(4)).to.equal(item4);
-    expect(sortedList.get(5)).to.equal(item5);
+    expect(sortedList.get(0)).toBe(item1);
+    expect(sortedList.get(1)).toBe(item1);
+    expect(sortedList.get(2)).toBe(item2);
+    expect(sortedList.get(3)).toBe(item3);
+    expect(sortedList.get(4)).toBe(item4);
+    expect(sortedList.get(5)).toBe(item5);
   });
 
   it("should throw when `getting` on an empty SortedList", () => {
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
-    expect(() => { sortedList.get(0); }).to.throw();
+    expect(() => { sortedList.get(0); }).toThrow();
   });
 
   it("should throw when getting outside the bounds of the SortedList", () => {
@@ -74,7 +73,7 @@ describe("utils - SortedList", () => {
     sortedList.add(item2);
     sortedList.add(item3);
     sortedList.add(item1);
-    expect(() => { sortedList.get(4); }).to.throw();
+    expect(() => { sortedList.get(4); }).toThrow();
   });
 
   it("should throw when getting with a negative index", () => {
@@ -86,7 +85,7 @@ describe("utils - SortedList", () => {
     sortedList.add(item2);
     sortedList.add(item3);
     sortedList.add(item1);
-    expect(() => { sortedList.get(-1); }).to.throw();
+    expect(() => { sortedList.get(-1); }).toThrow();
   });
 
   /* tslint:disable max-line-length */
@@ -100,8 +99,8 @@ describe("utils - SortedList", () => {
     sortedList.add(item2);
     sortedList.add(item3);
 
-    expect(sortedList.findFirst((i) => i.start === 12)).to.equal(item1);
-    expect(sortedList.findFirst((i) => i.start === 13)).to.equal(item2);
+    expect(sortedList.findFirst((i) => i.start === 12)).toBe(item1);
+    expect(sortedList.findFirst((i) => i.start === 13)).toBe(item2);
   });
 
   /* tslint:disable max-line-length */
@@ -115,7 +114,7 @@ describe("utils - SortedList", () => {
     sortedList.add(item2);
     sortedList.add(item3);
 
-    expect(sortedList.findFirst((i) => i.start === 15)).to.equal(undefined);
+    expect(sortedList.findFirst((i) => i.start === 15)).toBe(undefined);
   });
 
   /* tslint:disable max-line-length */
@@ -130,9 +129,9 @@ describe("utils - SortedList", () => {
     sortedList.add(item1);
     sortedList.add(item3);
 
-    expect(sortedList.has(item1)).to.equal(true);
-    expect(sortedList.has(item2)).to.equal(true);
-    expect(sortedList.has(item3)).to.equal(true);
+    expect(sortedList.has(item1)).toBe(true);
+    expect(sortedList.has(item2)).toBe(true);
+    expect(sortedList.has(item3)).toBe(true);
   });
 
   it("should return false when calling `has` if it doesn't have that item", () => {
@@ -146,7 +145,7 @@ describe("utils - SortedList", () => {
     sortedList.add(item1);
     sortedList.add(item3);
 
-    expect(sortedList.has(item4)).to.equal(false);
+    expect(sortedList.has(item4)).toBe(false);
   });
 
   /* tslint:disable max-line-length */
@@ -159,13 +158,13 @@ describe("utils - SortedList", () => {
     sortedList.add(item2);
     sortedList.add(item1);
 
-    expect(sortedList.removeElement(item1)).to.equal(0);
-    expect(sortedList.length()).to.equal(2);
-    expect(sortedList.has(item1)).to.equal(true);
+    expect(sortedList.removeElement(item1)).toBe(0);
+    expect(sortedList.length()).toBe(2);
+    expect(sortedList.has(item1)).toBe(true);
 
-    expect(sortedList.removeElement(item1)).to.equal(0);
-    expect(sortedList.length()).to.equal(1);
-    expect(sortedList.has(item1)).to.equal(false);
+    expect(sortedList.removeElement(item1)).toBe(0);
+    expect(sortedList.length()).toBe(1);
+    expect(sortedList.has(item1)).toBe(false);
   });
 
   /* tslint:disable max-line-length */
@@ -179,14 +178,14 @@ describe("utils - SortedList", () => {
     sortedList.add(item2);
     sortedList.add(item1);
 
-    expect(sortedList.length()).to.equal(3);
-    expect(sortedList.removeElement(item3)).to.equal(undefined);
-    expect(sortedList.length()).to.equal(3);
+    expect(sortedList.length()).toBe(3);
+    expect(sortedList.removeElement(item3)).toBe(undefined);
+    expect(sortedList.length()).toBe(3);
   });
 
   it("should return undefined when calling `head` on an empty `SortedList`", () => {
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
-    expect(sortedList.head()).to.equal(undefined);
+    expect(sortedList.head()).toBe(undefined);
   });
 
   /* tslint:disable max-line-length */
@@ -204,14 +203,14 @@ describe("utils - SortedList", () => {
     sortedList.add(item4);
     sortedList.add(item5);
     sortedList.add(item1); // same than the first on purpose
-    expect(sortedList.head()).to.equal(item1);
+    expect(sortedList.head()).toBe(item1);
   });
 
   /* tslint:disable max-line-length */
   it("should return undefined when calling `last` on an empty `SortedList`", () => {
   /* tslint:enable max-line-length */
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
-    expect(sortedList.last()).to.equal(undefined);
+    expect(sortedList.last()).toBe(undefined);
   });
 
   /* tslint:disable max-line-length */
@@ -229,16 +228,16 @@ describe("utils - SortedList", () => {
     sortedList.add(item4);
     sortedList.add(item5);
     sortedList.add(item1); // same than the first on purpose
-    expect(sortedList.last()).to.equal(item5);
+    expect(sortedList.last()).toBe(item5);
   });
 
   /* tslint:disable max-line-length */
   it("should return undefined and do nothing when calling `shift` on an empty `SortedList`", () => {
   /* tslint:enable max-line-length */
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
-    expect(sortedList.length()).to.equal(0);
-    expect(sortedList.shift()).to.equal(undefined);
-    expect(sortedList.length()).to.equal(0);
+    expect(sortedList.length()).toBe(0);
+    expect(sortedList.shift()).toBe(undefined);
+    expect(sortedList.length()).toBe(0);
   });
 
   /* tslint:disable max-line-length */
@@ -256,40 +255,40 @@ describe("utils - SortedList", () => {
     sortedList.add(item4);
     sortedList.add(item5);
 
-    expect(sortedList.length()).to.equal(5);
+    expect(sortedList.length()).toBe(5);
 
-    expect(sortedList.shift()).to.equal(item1);
-    expect(sortedList.length()).to.equal(4);
-    expect(sortedList.head()).to.equal(item2);
+    expect(sortedList.shift()).toBe(item1);
+    expect(sortedList.length()).toBe(4);
+    expect(sortedList.head()).toBe(item2);
 
-    expect(sortedList.shift()).to.equal(item2);
-    expect(sortedList.length()).to.equal(3);
-    expect(sortedList.head()).to.equal(item3);
+    expect(sortedList.shift()).toBe(item2);
+    expect(sortedList.length()).toBe(3);
+    expect(sortedList.head()).toBe(item3);
 
-    expect(sortedList.shift()).to.equal(item3);
-    expect(sortedList.length()).to.equal(2);
-    expect(sortedList.head()).to.equal(item4);
+    expect(sortedList.shift()).toBe(item3);
+    expect(sortedList.length()).toBe(2);
+    expect(sortedList.head()).toBe(item4);
 
-    expect(sortedList.shift()).to.equal(item4);
-    expect(sortedList.length()).to.equal(1);
-    expect(sortedList.head()).to.equal(item5);
+    expect(sortedList.shift()).toBe(item4);
+    expect(sortedList.length()).toBe(1);
+    expect(sortedList.head()).toBe(item5);
 
-    expect(sortedList.shift()).to.equal(item5);
-    expect(sortedList.length()).to.equal(0);
-    expect(sortedList.head()).to.equal(undefined);
+    expect(sortedList.shift()).toBe(item5);
+    expect(sortedList.length()).toBe(0);
+    expect(sortedList.head()).toBe(undefined);
 
-    expect(sortedList.shift()).to.equal(undefined);
-    expect(sortedList.length()).to.equal(0);
-    expect(sortedList.head()).to.equal(undefined);
+    expect(sortedList.shift()).toBe(undefined);
+    expect(sortedList.length()).toBe(0);
+    expect(sortedList.head()).toBe(undefined);
   });
 
   /* tslint:disable max-line-length */
   it("should return undefined and do nothing when calling `pop` on an empty `SortedList`", () => {
   /* tslint:enable max-line-length */
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
-    expect(sortedList.length()).to.equal(0);
-    expect(sortedList.pop()).to.equal(undefined);
-    expect(sortedList.length()).to.equal(0);
+    expect(sortedList.length()).toBe(0);
+    expect(sortedList.pop()).toBe(undefined);
+    expect(sortedList.length()).toBe(0);
   });
 
   /* tslint:disable max-line-length */
@@ -307,30 +306,30 @@ describe("utils - SortedList", () => {
     sortedList.add(item4);
     sortedList.add(item5);
 
-    expect(sortedList.length()).to.equal(5);
+    expect(sortedList.length()).toBe(5);
 
-    expect(sortedList.pop()).to.equal(item5);
-    expect(sortedList.length()).to.equal(4);
-    expect(sortedList.last()).to.equal(item4);
+    expect(sortedList.pop()).toBe(item5);
+    expect(sortedList.length()).toBe(4);
+    expect(sortedList.last()).toBe(item4);
 
-    expect(sortedList.pop()).to.equal(item4);
-    expect(sortedList.length()).to.equal(3);
-    expect(sortedList.last()).to.equal(item3);
+    expect(sortedList.pop()).toBe(item4);
+    expect(sortedList.length()).toBe(3);
+    expect(sortedList.last()).toBe(item3);
 
-    expect(sortedList.pop()).to.equal(item3);
-    expect(sortedList.length()).to.equal(2);
-    expect(sortedList.last()).to.equal(item2);
+    expect(sortedList.pop()).toBe(item3);
+    expect(sortedList.length()).toBe(2);
+    expect(sortedList.last()).toBe(item2);
 
-    expect(sortedList.pop()).to.equal(item2);
-    expect(sortedList.length()).to.equal(1);
-    expect(sortedList.last()).to.equal(item1);
+    expect(sortedList.pop()).toBe(item2);
+    expect(sortedList.length()).toBe(1);
+    expect(sortedList.last()).toBe(item1);
 
-    expect(sortedList.pop()).to.equal(item1);
-    expect(sortedList.length()).to.equal(0);
-    expect(sortedList.last()).to.equal(undefined);
+    expect(sortedList.pop()).toBe(item1);
+    expect(sortedList.length()).toBe(0);
+    expect(sortedList.last()).toBe(undefined);
 
-    expect(sortedList.pop()).to.equal(undefined);
-    expect(sortedList.length()).to.equal(0);
-    expect(sortedList.last()).to.equal(undefined);
+    expect(sortedList.pop()).toBe(undefined);
+    expect(sortedList.length()).toBe(0);
+    expect(sortedList.last()).toBe(undefined);
   });
 });

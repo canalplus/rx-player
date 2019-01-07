@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import getCueBlocks from "../get_cue_blocks";
 
 const srt1 = [
@@ -70,7 +69,7 @@ const srt3 = [
 
 describe("parsers - srt - getCueBlocks", () => {
   it("should return only timed cue blocks from a srt", () => {
-    expect(getCueBlocks(srt1)).to.eql([
+    expect(getCueBlocks(srt1)).toEqual([
       [
         "112",
         "00:17:31.080 --> 00:17:32.200",
@@ -97,7 +96,7 @@ describe("parsers - srt - getCueBlocks", () => {
         "J'irai te visiter",
       ],
     ]);
-    expect(getCueBlocks(srt2)).to.eql([
+    expect(getCueBlocks(srt2)).toEqual([
       [
         "112",
         "00:17:31.080 --> 00:17:32.200",
@@ -105,7 +104,7 @@ describe("parsers - srt - getCueBlocks", () => {
         "Ce qu'elle a dit, ce soir la",
       ],
     ]);
-    expect(getCueBlocks(srt3)).to.eql([
+    expect(getCueBlocks(srt3)).toEqual([
       [
         "1",                                     // 2
         "00:17:31.080 --> 00:17:32.200",         // 3

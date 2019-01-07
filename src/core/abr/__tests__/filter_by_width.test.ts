@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import { Representation } from "../../../manifest";
 import filterByWidth from "../filter_by_width";
 
@@ -34,27 +33,27 @@ describe("ABR - filterByWidth", () => {
   describe("filterByWidth", () => {
     it("should properly filter representations whose width is < 900", () => {
       expect(filterByWidth(fakeReps as Representation[], 999))
-        .to.deep.equal(expectedWidthReps);
+        .toEqual(expectedWidthReps);
     });
 
     it("should return all representations when specified width is over maxWidth", () => {
       expect(filterByWidth(fakeReps as Representation[], 1000000))
-        .to.deep.equal(fakeReps);
+        .toEqual(fakeReps);
     });
 
     it("should return all representations when specified width is infinite", () => {
       expect(filterByWidth(fakeReps as Representation[], Infinity))
-        .to.deep.equal(fakeReps);
+        .toEqual(fakeReps);
     });
 
     it("should return first representation when specified width is 0", () => {
       expect(filterByWidth(fakeReps as Representation[], 0))
-        .to.deep.equal([{ width: 100 }]);
+        .toEqual([{ width: 100 }]);
     });
 
     it("should return no representation when specified array is empty", () => {
       expect(filterByWidth([], 0))
-      .to.deep.equal([]);
+      .toEqual([]);
     });
   });
 

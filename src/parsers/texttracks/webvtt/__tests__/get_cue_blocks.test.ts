@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import getCueBlocks from "../get_cue_blocks";
 
 const webvtt1 = [
@@ -136,7 +135,7 @@ const webvtt6 = [
 
 describe("parsers - webvtt - getCueBlocks", () => {
   it("should return only timed cue blocks from a webvtt", () => {
-    expect(getCueBlocks(webvtt1, 1)).to.eql([
+    expect(getCueBlocks(webvtt1, 1)).toEqual([
       [
         "00:00:00.000 --> 00:00:10.000",
         "- Hello <b>world</b>.",
@@ -146,7 +145,7 @@ describe("parsers - webvtt - getCueBlocks", () => {
         "Rendez-vous on Champs-Elysees",
       ],
     ]);
-    expect(getCueBlocks(webvtt2, 1)).to.eql([
+    expect(getCueBlocks(webvtt2, 1)).toEqual([
       [
         "00:00:00.000 --> 00:00:10.000",
         "Toussaint Louverture",
@@ -161,7 +160,7 @@ describe("parsers - webvtt - getCueBlocks", () => {
         "Fraternite",
       ],
     ]);
-    expect(getCueBlocks(webvtt3, 1)).to.eql([
+    expect(getCueBlocks(webvtt3, 1)).toEqual([
       [
         "NOTE",
         "00:17:31.080 --> 00:17:32.200",
@@ -189,7 +188,7 @@ describe("parsers - webvtt - getCueBlocks", () => {
         "J'irai te visiter",
       ],
     ]);
-    expect(getCueBlocks(webvtt4, 1)).to.eql([
+    expect(getCueBlocks(webvtt4, 1)).toEqual([
       [
         "STYLE",
         "00:17:31.080 --> 00:17:32.200",
@@ -197,7 +196,7 @@ describe("parsers - webvtt - getCueBlocks", () => {
         "Ce qu'elle a dit, ce soir la",
       ],
     ]);
-    expect(getCueBlocks(webvtt5, 5)).to.eql([
+    expect(getCueBlocks(webvtt5, 5)).toEqual([
       [
         "REGION",
         "00:17:31.080 --> 00:17:32.200",
@@ -208,7 +207,7 @@ describe("parsers - webvtt - getCueBlocks", () => {
         "Je n'ai plus peur de perdre mes dents",
       ],
     ]);
-    expect(getCueBlocks(webvtt6, 0)).to.eql([
+    expect(getCueBlocks(webvtt6, 0)).toEqual([
       [
         "112",
         "00:17:31.080 --> 00:17:32.200",

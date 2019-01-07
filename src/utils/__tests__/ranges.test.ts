@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import {
   convertToRanges,
   getInnerAndOuterTimeRanges,
@@ -77,7 +76,7 @@ describe("utils - ranges", () => {
 
       const timeRanges = constructTimeRanges(times);
       const ranges = convertToRanges(timeRanges);
-      expect(ranges).to.deep.equal([
+      expect(ranges).toEqual([
         {
           start: 0,
           end: 10,
@@ -98,7 +97,7 @@ describe("utils - ranges", () => {
 
       const timeRanges = constructTimeRanges(times);
       const ranges = convertToRanges(timeRanges);
-      expect(ranges).to.deep.equal([]);
+      expect(ranges).toEqual([]);
     });
   });
 
@@ -111,8 +110,8 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getInnerAndOuterTimeRanges(timeRanges, 0)).to.deep
-        .equal({
+      expect(getInnerAndOuterTimeRanges(timeRanges, 0))
+        .toEqual({
           outerRanges: [
             {
               start: 20,
@@ -128,8 +127,8 @@ describe("utils - ranges", () => {
             end: 10,
           },
         });
-      expect(getInnerAndOuterTimeRanges(timeRanges, 9)).to.deep
-        .equal({
+      expect(getInnerAndOuterTimeRanges(timeRanges, 9))
+        .toEqual({
           outerRanges: [
             {
               start: 20,
@@ -145,8 +144,8 @@ describe("utils - ranges", () => {
             end: 10,
           },
         });
-      expect(getInnerAndOuterTimeRanges(timeRanges, 29)).to.deep
-        .equal({
+      expect(getInnerAndOuterTimeRanges(timeRanges, 29))
+        .toEqual({
           outerRanges: [
             {
               start: 0,
@@ -170,8 +169,8 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getInnerAndOuterTimeRanges(timeRanges, 10)).to.deep
-        .equal({
+      expect(getInnerAndOuterTimeRanges(timeRanges, 10))
+        .toEqual({
           outerRanges: [
             {
               start: 0,
@@ -188,8 +187,8 @@ describe("utils - ranges", () => {
           ],
           innerRange: null,
         });
-      expect(getInnerAndOuterTimeRanges(timeRanges, 80)).to.deep
-        .equal({
+      expect(getInnerAndOuterTimeRanges(timeRanges, 80))
+        .toEqual({
           outerRanges: [
             {
               start: 0,
@@ -214,8 +213,8 @@ describe("utils - ranges", () => {
       const timeRanges = constructTimeRanges([
         [20, 30],
       ]);
-      expect(getInnerAndOuterTimeRanges(timeRanges, 20)).to.deep
-        .equal({
+      expect(getInnerAndOuterTimeRanges(timeRanges, 20))
+        .toEqual({
           outerRanges: [],
           innerRange: {
             start: 20,
@@ -227,13 +226,13 @@ describe("utils - ranges", () => {
     it("should return null ane empty array if no timerange is given", () => {
       const times : Array<[number, number]> = [];
       const timeRanges = constructTimeRanges(times);
-      expect(getInnerAndOuterTimeRanges(timeRanges, 0)).to.deep
-        .equal({
+      expect(getInnerAndOuterTimeRanges(timeRanges, 0))
+        .toEqual({
           outerRanges: [],
           innerRange: null,
         });
-      expect(getInnerAndOuterTimeRanges(timeRanges, 0)).to.deep
-        .equal({
+      expect(getInnerAndOuterTimeRanges(timeRanges, 0))
+        .toEqual({
           outerRanges: [],
           innerRange: null,
         });
@@ -247,9 +246,9 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getLeftSizeOfRange(timeRanges, 0)).to.equal(10 - 0);
-      expect(getLeftSizeOfRange(timeRanges, 9.9)).to.equal(10 - 9.9);
-      expect(getLeftSizeOfRange(timeRanges, 54.6)).to.equal(70 - 54.6);
+      expect(getLeftSizeOfRange(timeRanges, 0)).toBe(10 - 0);
+      expect(getLeftSizeOfRange(timeRanges, 9.9)).toBe(10 - 9.9);
+      expect(getLeftSizeOfRange(timeRanges, 54.6)).toBe(70 - 54.6);
     });
 
     it("should return Infinity if the given time is at the edge of a range", () => {
@@ -258,9 +257,9 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getLeftSizeOfRange(timeRanges, 10)).to.equal(Infinity);
-      expect(getLeftSizeOfRange(timeRanges, 30)).to.equal(Infinity);
-      expect(getLeftSizeOfRange(timeRanges, 70)).to.equal(Infinity);
+      expect(getLeftSizeOfRange(timeRanges, 10)).toBe(Infinity);
+      expect(getLeftSizeOfRange(timeRanges, 30)).toBe(Infinity);
+      expect(getLeftSizeOfRange(timeRanges, 70)).toBe(Infinity);
     });
 
     it("should return Infinity if the given time is not in any range", () => {
@@ -269,10 +268,10 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getLeftSizeOfRange(timeRanges, 15)).to.equal(Infinity);
-      expect(getLeftSizeOfRange(timeRanges, 38)).to.equal(Infinity);
-      expect(getLeftSizeOfRange(timeRanges, -Infinity)).to.equal(Infinity);
-      expect(getLeftSizeOfRange(timeRanges, Infinity)).to.equal(Infinity);
+      expect(getLeftSizeOfRange(timeRanges, 15)).toBe(Infinity);
+      expect(getLeftSizeOfRange(timeRanges, 38)).toBe(Infinity);
+      expect(getLeftSizeOfRange(timeRanges, -Infinity)).toBe(Infinity);
+      expect(getLeftSizeOfRange(timeRanges, Infinity)).toBe(Infinity);
     });
   });
 
@@ -285,8 +284,8 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getNextRangeGap(timeRanges, 15.6)).to.equal(20 - 15.6);
-      expect(getNextRangeGap(timeRanges, 30)).to.equal(50 - 30);
+      expect(getNextRangeGap(timeRanges, 15.6)).toBe(20 - 15.6);
+      expect(getNextRangeGap(timeRanges, 30)).toBe(50 - 30);
     });
 
     /* tslint:disable max-line-length */
@@ -297,8 +296,8 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getNextRangeGap(timeRanges, 0)).to.equal(20 - 0);
-      expect(getNextRangeGap(timeRanges, 20.5)).to.equal(50 - 20.5);
+      expect(getNextRangeGap(timeRanges, 0)).toBe(20 - 0);
+      expect(getNextRangeGap(timeRanges, 20.5)).toBe(50 - 20.5);
     });
 
     it("should return Infinity when we are in the last time range", () => {
@@ -307,8 +306,8 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getNextRangeGap(timeRanges, 50)).to.equal(Infinity);
-      expect(getNextRangeGap(timeRanges, 58.5)).to.equal(Infinity);
+      expect(getNextRangeGap(timeRanges, 50)).toBe(Infinity);
+      expect(getNextRangeGap(timeRanges, 58.5)).toBe(Infinity);
     });
 
     it("should return Infinity when we are after the last time range", () => {
@@ -317,8 +316,8 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getNextRangeGap(timeRanges, Infinity)).to.equal(Infinity);
-      expect(getNextRangeGap(timeRanges, 70)).to.equal(Infinity);
+      expect(getNextRangeGap(timeRanges, Infinity)).toBe(Infinity);
+      expect(getNextRangeGap(timeRanges, 70)).toBe(Infinity);
     });
   });
 
@@ -329,9 +328,9 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getPlayedSizeOfRange(timeRanges, 0)).to.equal(0 - 0);
-      expect(getPlayedSizeOfRange(timeRanges, 9.9)).to.equal(9.9 - 0);
-      expect(getPlayedSizeOfRange(timeRanges, 54.6)).to.equal(54.6 - 50);
+      expect(getPlayedSizeOfRange(timeRanges, 0)).toBe(0 - 0);
+      expect(getPlayedSizeOfRange(timeRanges, 9.9)).toBe(9.9 - 0);
+      expect(getPlayedSizeOfRange(timeRanges, 54.6)).toBe(54.6 - 50);
     });
 
     it("should return 0 if the given time is at the edge of a range", () => {
@@ -340,9 +339,9 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getPlayedSizeOfRange(timeRanges, 10)).to.equal(0);
-      expect(getPlayedSizeOfRange(timeRanges, 30)).to.equal(0);
-      expect(getPlayedSizeOfRange(timeRanges, 70)).to.equal(0);
+      expect(getPlayedSizeOfRange(timeRanges, 10)).toBe(0);
+      expect(getPlayedSizeOfRange(timeRanges, 30)).toBe(0);
+      expect(getPlayedSizeOfRange(timeRanges, 70)).toBe(0);
     });
 
     it("should return 0 if the given time is not in any range", () => {
@@ -351,10 +350,10 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getPlayedSizeOfRange(timeRanges, 15)).to.equal(0);
-      expect(getPlayedSizeOfRange(timeRanges, 38)).to.equal(0);
-      expect(getPlayedSizeOfRange(timeRanges, -Infinity)).to.equal(0);
-      expect(getPlayedSizeOfRange(timeRanges, Infinity)).to.equal(0);
+      expect(getPlayedSizeOfRange(timeRanges, 15)).toBe(0);
+      expect(getPlayedSizeOfRange(timeRanges, 38)).toBe(0);
+      expect(getPlayedSizeOfRange(timeRanges, -Infinity)).toBe(0);
+      expect(getPlayedSizeOfRange(timeRanges, Infinity)).toBe(0);
     });
   });
 
@@ -365,15 +364,15 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getRange(timeRanges, 0)).to.deep.equal({
+      expect(getRange(timeRanges, 0)).toEqual({
         start: 0,
         end: 10,
       });
-      expect(getRange(timeRanges, 9.9)).to.deep.equal({
+      expect(getRange(timeRanges, 9.9)).toEqual({
         start: 0,
         end: 10,
       });
-      expect(getRange(timeRanges, 54.6)).to.deep.equal({
+      expect(getRange(timeRanges, 54.6)).toEqual({
         start: 50,
         end: 70,
       });
@@ -385,9 +384,9 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getRange(timeRanges, 10)).to.deep.equal(null);
-      expect(getRange(timeRanges, 30)).to.deep.equal(null);
-      expect(getRange(timeRanges, 70)).to.deep.equal(null);
+      expect(getRange(timeRanges, 10)).toEqual(null);
+      expect(getRange(timeRanges, 30)).toEqual(null);
+      expect(getRange(timeRanges, 70)).toEqual(null);
     });
 
     it("should return null if the given time is not in any range", () => {
@@ -396,10 +395,10 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getRange(timeRanges, 15)).to.deep.equal(null);
-      expect(getRange(timeRanges, 38)).to.deep.equal(null);
-      expect(getRange(timeRanges, -Infinity)).to.deep.equal(null);
-      expect(getRange(timeRanges, Infinity)).to.deep.equal(null);
+      expect(getRange(timeRanges, 15)).toEqual(null);
+      expect(getRange(timeRanges, 38)).toEqual(null);
+      expect(getRange(timeRanges, -Infinity)).toEqual(null);
+      expect(getRange(timeRanges, Infinity)).toEqual(null);
     });
   });
 
@@ -410,9 +409,9 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getSizeOfRange(timeRanges, 0)).to.equal(10);
-      expect(getSizeOfRange(timeRanges, 9.9)).to.equal(10);
-      expect(getSizeOfRange(timeRanges, 54.6)).to.equal(20);
+      expect(getSizeOfRange(timeRanges, 0)).toBe(10);
+      expect(getSizeOfRange(timeRanges, 9.9)).toBe(10);
+      expect(getSizeOfRange(timeRanges, 54.6)).toBe(20);
     });
 
     it("should return 0 if the given time is at the edge of a range", () => {
@@ -421,9 +420,9 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getSizeOfRange(timeRanges, 10)).to.equal(0);
-      expect(getSizeOfRange(timeRanges, 30)).to.equal(0);
-      expect(getSizeOfRange(timeRanges, 70)).to.equal(0);
+      expect(getSizeOfRange(timeRanges, 10)).toBe(0);
+      expect(getSizeOfRange(timeRanges, 30)).toBe(0);
+      expect(getSizeOfRange(timeRanges, 70)).toBe(0);
     });
 
     it("should return null if the given time is not in any range", () => {
@@ -432,10 +431,10 @@ describe("utils - ranges", () => {
         [20, 30],
         [50, 70],
       ]);
-      expect(getSizeOfRange(timeRanges, 15)).to.equal(0);
-      expect(getSizeOfRange(timeRanges, 38)).to.equal(0);
-      expect(getSizeOfRange(timeRanges, -Infinity)).to.equal(0);
-      expect(getSizeOfRange(timeRanges, Infinity)).to.equal(0);
+      expect(getSizeOfRange(timeRanges, 15)).toBe(0);
+      expect(getSizeOfRange(timeRanges, 38)).toBe(0);
+      expect(getSizeOfRange(timeRanges, -Infinity)).toBe(0);
+      expect(getSizeOfRange(timeRanges, Infinity)).toBe(0);
     });
   });
 
@@ -446,7 +445,7 @@ describe("utils - ranges", () => {
         { start: 20, end: 30 },
         { start: 50, end: 70 },
       ];
-      expect(keepRangeIntersection(timeRanges, timeRanges)).to.deep.equal(timeRanges);
+      expect(keepRangeIntersection(timeRanges, timeRanges)).toEqual(timeRanges);
     });
 
     it("should return the other range if one of it contains the other", () => {
@@ -460,8 +459,8 @@ describe("utils - ranges", () => {
         { start: 90, end: 100},
         { start: 100, end: 120},
       ];
-      expect(keepRangeIntersection(timeRanges1, timeRanges2)).to.deep.equal(timeRanges1);
-      expect(keepRangeIntersection(timeRanges2, timeRanges1)).to.deep.equal(timeRanges1);
+      expect(keepRangeIntersection(timeRanges1, timeRanges2)).toEqual(timeRanges1);
+      expect(keepRangeIntersection(timeRanges2, timeRanges1)).toEqual(timeRanges1);
     });
 
     it("should return the intersection between two ranges", () => {
@@ -481,45 +480,45 @@ describe("utils - ranges", () => {
         { start: 27, end: 29 },
         { start: 50, end: 70 },
       ];
-      expect(keepRangeIntersection(timeRanges1, timeRanges2)).to.deep.equal(result);
-      expect(keepRangeIntersection(timeRanges2, timeRanges1)).to.deep.equal(result);
+      expect(keepRangeIntersection(timeRanges1, timeRanges2)).toEqual(result);
+      expect(keepRangeIntersection(timeRanges2, timeRanges1)).toEqual(result);
     });
   });
 
   describe("isTimeInRange", () => {
     it("should return true if the given time is equal to the start of the range", () => {
-      expect(isTimeInRange({ start: 30, end: 70 }, 30)).to.equal(true);
-      expect(isTimeInRange({ start: 72, end: Infinity }, 72)).to.equal(true);
-      expect(isTimeInRange({ start: 0, end: 1 }, 0)).to.equal(true);
+      expect(isTimeInRange({ start: 30, end: 70 }, 30)).toBe(true);
+      expect(isTimeInRange({ start: 72, end: Infinity }, 72)).toBe(true);
+      expect(isTimeInRange({ start: 0, end: 1 }, 0)).toBe(true);
     });
     it("should return false if the given time is equal to the end of the range", () => {
-      expect(isTimeInRange({ start: 30, end: 70 }, 70)).to.equal(false);
-      expect(isTimeInRange({ start: 72, end: Infinity }, Infinity)).to.equal(false);
-      expect(isTimeInRange({ start: 0, end: 1 }, 1)).to.equal(false);
+      expect(isTimeInRange({ start: 30, end: 70 }, 70)).toBe(false);
+      expect(isTimeInRange({ start: 72, end: Infinity }, Infinity)).toBe(false);
+      expect(isTimeInRange({ start: 0, end: 1 }, 1)).toBe(false);
     });
     it("should return true if the given time is inside the range", () => {
-      expect(isTimeInRange({ start: 30, end: 70 }, 40)).to.equal(true);
-      expect(isTimeInRange({ start: 72, end: Infinity }, 10000)).to.equal(true);
-      expect(isTimeInRange({ start: 0, end: 1 }, 0.5)).to.equal(true);
+      expect(isTimeInRange({ start: 30, end: 70 }, 40)).toBe(true);
+      expect(isTimeInRange({ start: 72, end: Infinity }, 10000)).toBe(true);
+      expect(isTimeInRange({ start: 0, end: 1 }, 0.5)).toBe(true);
     });
     it("should return false if the given time is not inside the range", () => {
-      expect(isTimeInRange({ start: 30, end: 70 }, 20)).to.equal(false);
-      expect(isTimeInRange({ start: 30, end: 70 }, 80)).to.equal(false);
-      expect(isTimeInRange({ start: 72, end: Infinity }, 70)).to.equal(false);
-      expect(isTimeInRange({ start: 0, end: 1 }, 7)).to.equal(false);
+      expect(isTimeInRange({ start: 30, end: 70 }, 20)).toBe(false);
+      expect(isTimeInRange({ start: 30, end: 70 }, 80)).toBe(false);
+      expect(isTimeInRange({ start: 72, end: Infinity }, 70)).toBe(false);
+      expect(isTimeInRange({ start: 0, end: 1 }, 7)).toBe(false);
     });
   });
 
   describe("removeEmptyRanges", () => {
     it("should do nothing on an empty array", () => {
-      expect(removeEmptyRanges([])).to.eql([]);
+      expect(removeEmptyRanges([])).toEqual([]);
     });
     it("should clear ranges which have their start equal to their end", () => {
       expect(removeEmptyRanges([
         { start: 30, end: 70 },
         { start: 90, end: 90 },
         { start: 100, end: 101 },
-      ])).to.eql([
+      ])).toEqual([
         { start: 30, end: 70 },
         { start: 100, end: 101 },
       ]);
@@ -527,7 +526,7 @@ describe("utils - ranges", () => {
         { start: 30, end: 70 },
         { start: 90, end: 91 },
         { start: 100, end: 101 },
-      ])).to.eql([
+      ])).toEqual([
         { start: 30, end: 70 },
         { start: 90, end: 91 },
         { start: 100, end: 101 },
@@ -537,7 +536,7 @@ describe("utils - ranges", () => {
 
   describe("mergeContiguousRanges", () => {
     it("should do nothing on an empty array", () => {
-      expect(mergeContiguousRanges([])).to.eql([]);
+      expect(mergeContiguousRanges([])).toEqual([]);
     });
 
     it("should return ranges with merged contiguity", () => {
@@ -547,7 +546,7 @@ describe("utils - ranges", () => {
         { start: 90, end: 90 },
         { start: 100, end: 100 },
         { start: 100, end: 111 },
-      ])).to.eql([
+      ])).toEqual([
         { start: 30, end: 80 },
         { start: 90, end: 90 },
         { start: 100, end: 111 },
@@ -562,7 +561,7 @@ describe("utils - ranges", () => {
         { start: 90, end: 90 },
         { start: 100, end: 100 },
         { start: delta * 2 + 100, end: 111 },
-      ])).to.eql([
+      ])).toEqual([
         { start: 30, end: 80 },
         { start: 90, end: 90 },
         { start: 100, end: 100 },
@@ -578,7 +577,7 @@ describe("utils - ranges", () => {
       expect(isAfter(
         { start: 10, end: 15 },
         { start: 0, end: 5 }
-      )).to.equal(true);
+      )).toBe(true);
     });
 
     /* tslint:disable max-line-length */
@@ -587,11 +586,11 @@ describe("utils - ranges", () => {
       expect(isAfter(
         { start: 5, end: 15 },
         { start: 0, end: 5 }
-      )).to.equal(true);
+      )).toBe(true);
       expect(isAfter(
         { start: 70, end: 70 },
         { start: 10, end: 70 }
-      )).to.equal(true);
+      )).toBe(true);
     });
 
     /* tslint:disable max-line-length */
@@ -600,15 +599,15 @@ describe("utils - ranges", () => {
       expect(isAfter(
         { start: 10.1, end: 10.2 },
         { start: 10, end: 70 }
-      )).to.equal(false);
+      )).toBe(false);
       expect(isAfter(
         { start: 19, end: 50 },
         { start: 10, end: 20 }
-      )).to.equal(false);
+      )).toBe(false);
       expect(isAfter(
         { start: 0, end: 5 },
         { start: 5, end: 15 }
-      )).to.equal(false);
+      )).toBe(false);
     });
   });
 
@@ -619,7 +618,7 @@ describe("utils - ranges", () => {
       expect(isBefore(
         { start: 0, end: 5 },
         { start: 10, end: 15 }
-      )).to.equal(true);
+      )).toBe(true);
     });
 
     /* tslint:disable max-line-length */
@@ -628,11 +627,11 @@ describe("utils - ranges", () => {
       expect(isBefore(
         { start: 0, end: 5 },
         { start: 5, end: 15 }
-      )).to.equal(true);
+      )).toBe(true);
       expect(isBefore(
         { start: 10, end: 70 },
         { start: 70, end: 70 }
-      )).to.equal(true);
+      )).toBe(true);
     });
 
     /* tslint:disable max-line-length */
@@ -641,47 +640,47 @@ describe("utils - ranges", () => {
       expect(isBefore(
         { start: 10, end: 70 },
         { start: 10.1, end: 10.2 }
-      )).to.equal(false);
+      )).toBe(false);
       expect(isBefore(
         { start: 10, end: 20 },
         { start: 19, end: 50 }
-      )).to.equal(false);
+      )).toBe(false);
       expect(isBefore(
         { start: 5, end: 15 },
         { start: 0, end: 5 }
-      )).to.equal(false);
+      )).toBe(false);
     });
   });
 
   describe("insertInto", () => {
     it("should do nothing if the given range is empty", () => {
-      expect(insertInto([], { start: 10, end: 10 })).to.eql([]);
+      expect(insertInto([], { start: 10, end: 10 })).toEqual([]);
       expect(insertInto([
         { start: 0, end: 0 },
-      ], { start: 10, end: 10 })).to.eql([
+      ], { start: 10, end: 10 })).toEqual([
         { start: 0, end: 0 },
       ]);
       expect(insertInto([
         { start: 0, end: 9 },
-      ], { start: 10, end: 10 })).to.eql([
+      ], { start: 10, end: 10 })).toEqual([
         { start: 0, end: 9 },
       ]);
     });
 
     it("should just add the range if we had no original ranges", () => {
-      expect(insertInto([], { start: 0, end: 5 })).to.eql([{ start: 0, end: 5 }]);
+      expect(insertInto([], { start: 0, end: 5 })).toEqual([{ start: 0, end: 5 }]);
     });
 
     it("should not add a range contained entirely in a previous one", () => {
       expect(insertInto([
         { start: 0, end: 100 },
-      ], { start: 10, end: 20 })).to.eql([
+      ], { start: 10, end: 20 })).toEqual([
         { start: 0, end: 100 },
       ]);
       expect(insertInto([
         { start: 0, end: 100 },
         { start: 101, end: 201 },
-      ], { start: 0, end: 100 })).to.eql([
+      ], { start: 0, end: 100 })).toEqual([
         { start: 0, end: 100 },
         { start: 101, end: 201 },
       ]);
@@ -690,13 +689,13 @@ describe("utils - ranges", () => {
     it("should merge a range contained partially in a previous one", () => {
       expect(insertInto([
         { start: 0, end: 100 },
-      ], { start: 10, end: 110 })).to.eql([
+      ], { start: 10, end: 110 })).toEqual([
         { start: 0, end: 110 },
       ]);
       expect(insertInto([
         { start: 0, end: 100 },
         { start: 101, end: 201 },
-      ], { start: 90, end: 150 })).to.eql([
+      ], { start: 90, end: 150 })).toEqual([
         { start: 0, end: 201 },
       ]);
     });
@@ -704,18 +703,18 @@ describe("utils - ranges", () => {
     it("should merge a range contiguous with a previous one", () => {
       expect(insertInto([
         { start: 0, end: 100 },
-      ], { start: 100, end: 110 })).to.eql([
+      ], { start: 100, end: 110 })).toEqual([
         { start: 0, end: 110 },
       ]);
       expect(insertInto([
         { start: 50, end: 70 },
-      ], { start: 0, end: 50 })).to.eql([
+      ], { start: 0, end: 50 })).toEqual([
         { start: 0, end: 70 },
       ]);
       expect(insertInto([
         { start: 0, end: 100 },
         { start: 101, end: 201 },
-      ], { start: 100, end: 101 })).to.eql([
+      ], { start: 100, end: 101 })).toEqual([
         { start: 0, end: 201 },
       ]);
     });
@@ -724,13 +723,13 @@ describe("utils - ranges", () => {
       const delta = 1 / 60;
       expect(insertInto([
         { start: 0, end: 100 },
-      ], { start: delta + 100, end: 110 })).to.eql([
+      ], { start: delta + 100, end: 110 })).toEqual([
         { start: 0, end: 110 },
       ]);
       expect(insertInto([
         { start: 0, end: 100 },
         { start: 101, end: 201 },
-      ], { start: delta + 100, end: 101 - delta })).to.eql([
+      ], { start: delta + 100, end: 101 - delta })).toEqual([
         { start: 0, end: 201 },
       ]);
     });
@@ -739,7 +738,7 @@ describe("utils - ranges", () => {
       expect(insertInto([
         { start: 50, end: 100 },
         { start: 101, end: 201 },
-      ], { start: 0, end: 10 })).to.eql([
+      ], { start: 0, end: 10 })).toEqual([
         { start: 0, end: 10 },
         { start: 50, end: 100 },
         { start: 101, end: 201 },
@@ -750,7 +749,7 @@ describe("utils - ranges", () => {
       expect(insertInto([
         { start: 50, end: 100 },
         { start: 101, end: 201 },
-      ], { start: 500, end: 510 })).to.eql([
+      ], { start: 500, end: 510 })).toEqual([
         { start: 50, end: 100 },
         { start: 101, end: 201 },
         { start: 500, end: 510 },
@@ -761,7 +760,7 @@ describe("utils - ranges", () => {
       expect(insertInto([
         { start: 50, end: 100 },
         { start: 150, end: 200 },
-      ], { start: 110, end: 120 })).to.eql([
+      ], { start: 110, end: 120 })).toEqual([
         { start: 50, end: 100 },
         { start: 110, end: 120 },
         { start: 150, end: 200 },

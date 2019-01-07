@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import {
   parseByteRange,
   parseDuration,
@@ -23,23 +22,23 @@ import {
 describe("dash parser helpers", function() {
   describe("parseDuration", () => {
     it("should correctly parse duration in ISO8061 format", function() {
-      expect(parseDuration("P18Y9M4DT11H9M8S")).to.equal(591361748);
+      expect(parseDuration("P18Y9M4DT11H9M8S")).toBe(591361748);
     });
     it("should throw if duration not in ISO8061 format", function() {
-      expect(() => parseDuration("1000")).to.throw();
+      expect(() => parseDuration("1000")).toThrow();
     });
   });
 
   describe("parseByteRange", () => {
     it("should correctly parse byte range", function() {
       const parsedByteRange = parseByteRange("1-1000");
-      expect(parsedByteRange).not.to.equal(null);
-      expect((parsedByteRange as [number, number]).length).to.equal(2);
-      expect((parsedByteRange as [number, number])[0]).to.equal(1);
-      expect((parsedByteRange as [number, number])[1]).to.equal(1000);
+      expect(parsedByteRange).not.toBe(null);
+      expect((parsedByteRange as [number, number]).length).toBe(2);
+      expect((parsedByteRange as [number, number])[0]).toBe(1);
+      expect((parsedByteRange as [number, number])[1]).toBe(1000);
     });
     it("should return null if can't parse given byte range", function() {
-      expect(parseByteRange("main")).to.equal(null);
+      expect(parseByteRange("main")).toBe(null);
     });
   });
 });

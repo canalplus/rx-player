@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import takeFirstSet from "../take_first_set";
 
 describe("utils - takeFirstSet", () => {
   it("should return undefined with no argument", () => {
-    expect(takeFirstSet()).to.eql(undefined);
+    expect(takeFirstSet()).toEqual(undefined);
   });
 
   it("should return undefined with only undefined or null arguments", () => {
-    expect(takeFirstSet(undefined, undefined, undefined)).to.eql(undefined);
-    expect(takeFirstSet(null, null, null, null)).to.eql(undefined);
-    expect(takeFirstSet(undefined, null, null, undefined)).to.eql(undefined);
-    expect(takeFirstSet(null, null, null, undefined)).to.eql(undefined);
+    expect(takeFirstSet(undefined, undefined, undefined)).toEqual(undefined);
+    expect(takeFirstSet(null, null, null, null)).toEqual(undefined);
+    expect(takeFirstSet(undefined, null, null, undefined)).toEqual(undefined);
+    expect(takeFirstSet(null, null, null, undefined)).toEqual(undefined);
   });
 
   it("should return the first set argument", () => {
@@ -34,6 +33,6 @@ describe("utils - takeFirstSet", () => {
     const obj2 = { b: 12 };
 
     expect(takeFirstSet<unknown>(undefined, null, obj1, obj2))
-      .to.eql(obj1);
+      .toEqual(obj1);
   });
 });

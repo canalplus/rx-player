@@ -100,7 +100,7 @@ const {
  * TODO Special case for image Buffer, where we want data for EVERY active
  * periods.
  */
-export default function IBufferOrchestratorEvent(
+export default function BufferOrchestrator(
   content : {
     manifest : Manifest;
     initialPeriod : Period;

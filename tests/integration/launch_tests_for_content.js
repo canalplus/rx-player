@@ -248,11 +248,6 @@ export default function launchTestsForContent(
               expect(adaptation.getAvailableBitrates())
                 .to.eql(bitrates);
 
-              // TODO manage multiple ones
-              expect(
-                adaptation.getRepresentationsForBitrate(bitrates[0]).length
-              ).to.eql(1);
-
               expect(typeof adaptation.id).to.equal("string");
               expect(adaptation.representations.length)
                 .to.equal(adaptationInfos.representations.length);

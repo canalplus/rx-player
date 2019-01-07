@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import {
   replaceRepresentationDASHTokens,
   replaceSegmentDASHTokens,
@@ -24,30 +23,30 @@ describe("dash parser helpers", function() {
   describe("replaceSegmentDASHTokens", () => {
     it("should correctly parse time token", function() {
       expect(replaceSegmentDASHTokens("Example_Token_$Time$", 1000))
-        .to.equal("Example_Token_1000");
+        .toBe("Example_Token_1000");
     });
     it("should correctly parse number token", function() {
       expect(replaceSegmentDASHTokens("Example_Token_$Number$", 1000, 3))
-        .to.equal("Example_Token_3");
+        .toBe("Example_Token_3");
     });
     it("should return segment name if no token", function() {
       expect(replaceSegmentDASHTokens("Example_Token"))
-        .to.equal("Example_Token");
+        .toBe("Example_Token");
     });
   });
 
   describe("replaceRepresentationDASHTokens", () => {
     it("should correctly parse ID token", function() {
       expect(replaceRepresentationDASHTokens("Example_$RepresentationID$", "fakeId"))
-        .to.equal("Example_fakeId");
+        .toBe("Example_fakeId");
     });
     it("should correctly parse bitrate token", function() {
       expect(replaceRepresentationDASHTokens("Example_$Bandwidth$", "", 3000))
-        .to.equal("Example_3000");
+        .toBe("Example_3000");
     });
     it("should return segment name if no token", function() {
       expect(replaceRepresentationDASHTokens("Example_Token"))
-        .to.equal("Example_Token");
+        .toBe("Example_Token");
     });
   });
 });

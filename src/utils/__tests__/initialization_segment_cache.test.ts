@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import InitializationSegmentCache from "../initialization_segment_cache";
 
 const representation1 = {
@@ -123,11 +122,11 @@ describe("utils - InitializationSegmentCache", () => {
     expect(initializationSegmentCache.get({
       representation: representation1,
       segment: initSegment1,
-    })).to.equal(null);
+    })).toBe(null);
     expect(initializationSegmentCache.get({
       representation: representation1,
       segment: segment1,
-    })).to.equal(null);
+    })).toBe(null);
   });
 
   it("should only cache the init segments", () => {
@@ -156,35 +155,35 @@ describe("utils - InitializationSegmentCache", () => {
     expect(initializationSegmentCache.get({
       representation: representation1,
       segment: segment1,
-    })).to.equal(null);
+    })).toBe(null);
     expect(initializationSegmentCache.get({
       representation: representation1,
       segment: segment1,
-    })).to.equal(null);
+    })).toBe(null);
     expect(initializationSegmentCache.get({
       representation: representation1,
       segment: segment2,
-    })).to.equal(null);
+    })).toBe(null);
     expect(initializationSegmentCache.get({
       representation: representation1,
       segment: segment3,
-    })).to.equal(null);
+    })).toBe(null);
     expect(initializationSegmentCache.get({
       representation: representation1,
       segment: segment4,
-    })).to.equal(null);
+    })).toBe(null);
     expect(initializationSegmentCache.get({
       representation: representation1,
       segment: initSegment1,
-    })).to.equal(data2);
+    })).toBe(data2);
     expect(initializationSegmentCache.get({
       representation: representation1,
       segment: initSegment2,
-    })).to.equal(data2); // Note: it doesn't care about the segment ID here
+    })).toBe(data2); // Note: it doesn't care about the segment ID here
     expect(initializationSegmentCache.get({
       representation: representation1,
       segment: initSegment3,
-    })).to.equal(data2); // Note: it doesn't care about the segment ID here
+    })).toBe(data2); // Note: it doesn't care about the segment ID here
 
     initializationSegmentCache.add({
       representation: representation2,
@@ -194,15 +193,15 @@ describe("utils - InitializationSegmentCache", () => {
     expect(initializationSegmentCache.get({
       representation: representation1,
       segment: initSegment2,
-    })).to.equal(data2);
+    })).toBe(data2);
     expect(initializationSegmentCache.get({
       representation: representation2,
       segment: initSegment1,
-    })).to.equal(data1);
+    })).toBe(data1);
     expect(initializationSegmentCache.get({
       representation: representation2,
       segment: initSegment2,
-    })).to.equal(data1);
+    })).toBe(data1);
   });
 
   it("should overwrite a previous init segment's data if a new one is set", () => {
@@ -223,14 +222,14 @@ describe("utils - InitializationSegmentCache", () => {
     expect(initializationSegmentCache.get({
       representation: representation1,
       segment: initSegment1,
-    })).to.equal(data3);
+    })).toBe(data3);
     expect(initializationSegmentCache.get({
       representation: representation1,
       segment: initSegment2,
-    })).to.equal(data3);
+    })).toBe(data3);
     expect(initializationSegmentCache.get({
       representation: representation1,
       segment: initSegment3,
-    })).to.equal(data3);
+    })).toBe(data3);
   });
 });

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import findEndOfCueBlock from "../find_end_of_cue_block";
 
 const srt1 = [
@@ -70,31 +69,31 @@ const srt3 = [
 
 describe("parsers - srt - findEndOfCueBlock", () => {
   it("should return an index immediately after the end of a cue block", () => {
-    expect(findEndOfCueBlock(srt1, 0)).to.equal(5);
-    expect(findEndOfCueBlock(srt1, 1)).to.equal(5);
-    expect(findEndOfCueBlock(srt1, 2)).to.equal(5);
-    expect(findEndOfCueBlock(srt1, 3)).to.equal(5);
-    expect(findEndOfCueBlock(srt1, 4)).to.equal(5);
-    expect(findEndOfCueBlock(srt1, 7)).to.equal(9);
-    expect(findEndOfCueBlock(srt1, 8)).to.equal(9);
-    expect(findEndOfCueBlock(srt1, 10)).to.equal(11);
-    expect(findEndOfCueBlock(srt1, 14)).to.equal(16);
-    expect(findEndOfCueBlock(srt1, 15)).to.equal(16);
-    expect(findEndOfCueBlock(srt1, 17)).to.equal(21);
-    expect(findEndOfCueBlock(srt1, 18)).to.equal(21);
-    expect(findEndOfCueBlock(srt1, 19)).to.equal(21);
-    expect(findEndOfCueBlock(srt1, 20)).to.equal(21);
+    expect(findEndOfCueBlock(srt1, 0)).toBe(5);
+    expect(findEndOfCueBlock(srt1, 1)).toBe(5);
+    expect(findEndOfCueBlock(srt1, 2)).toBe(5);
+    expect(findEndOfCueBlock(srt1, 3)).toBe(5);
+    expect(findEndOfCueBlock(srt1, 4)).toBe(5);
+    expect(findEndOfCueBlock(srt1, 7)).toBe(9);
+    expect(findEndOfCueBlock(srt1, 8)).toBe(9);
+    expect(findEndOfCueBlock(srt1, 10)).toBe(11);
+    expect(findEndOfCueBlock(srt1, 14)).toBe(16);
+    expect(findEndOfCueBlock(srt1, 15)).toBe(16);
+    expect(findEndOfCueBlock(srt1, 17)).toBe(21);
+    expect(findEndOfCueBlock(srt1, 18)).toBe(21);
+    expect(findEndOfCueBlock(srt1, 19)).toBe(21);
+    expect(findEndOfCueBlock(srt1, 20)).toBe(21);
 
-    expect(findEndOfCueBlock(srt2, 0)).to.equal(4);
-    expect(findEndOfCueBlock(srt2, 1)).to.equal(4);
-    expect(findEndOfCueBlock(srt2, 2)).to.equal(4);
-    expect(findEndOfCueBlock(srt2, 3)).to.equal(4);
+    expect(findEndOfCueBlock(srt2, 0)).toBe(4);
+    expect(findEndOfCueBlock(srt2, 1)).toBe(4);
+    expect(findEndOfCueBlock(srt2, 2)).toBe(4);
+    expect(findEndOfCueBlock(srt2, 3)).toBe(4);
 
-    expect(findEndOfCueBlock(srt3, 2)).to.equal(5);
-    expect(findEndOfCueBlock(srt3, 3)).to.equal(5);
-    expect(findEndOfCueBlock(srt3, 4)).to.equal(5);
+    expect(findEndOfCueBlock(srt3, 2)).toBe(5);
+    expect(findEndOfCueBlock(srt3, 3)).toBe(5);
+    expect(findEndOfCueBlock(srt3, 4)).toBe(5);
 
-    expect(findEndOfCueBlock(srt3, 6)).to.equal(8);
-    expect(findEndOfCueBlock(srt3, 7)).to.equal(8);
+    expect(findEndOfCueBlock(srt3, 6)).toBe(8);
+    expect(findEndOfCueBlock(srt3, 7)).toBe(8);
   });
 });

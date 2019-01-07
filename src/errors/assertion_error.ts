@@ -34,8 +34,5 @@ export default class AssertionError extends Error {
 
     this.name = "AssertionError";
     this.message = message;
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, AssertionError);
-    }
   }
 }
