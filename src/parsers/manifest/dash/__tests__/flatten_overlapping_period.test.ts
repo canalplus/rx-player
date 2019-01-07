@@ -20,7 +20,7 @@ import flattenOverlappingPeriods from "../flatten_overlapping_periods";
 describe("flattenOverlappingPeriods", function() {
   // [ Period 1 ][ Period 2 ]       ------>  [ Period 1 ][ Period 3 ]
   //             [ Period 3 ]
-  it("flatten periods - case 1", function() {
+  it("should replace a period with an other if same start and duration", function() {
     const periods = [
       { id: "1", start: 0, duration: 60, adaptations: {} },
       { id: "2", start: 60, duration: 60, adaptations: {} },
@@ -39,7 +39,7 @@ describe("flattenOverlappingPeriods", function() {
 
   // [ Period 1 ][ Period 2 ]       ------>  [ Period 1 ][  2  ][ Period 3 ]
   //                  [ Period 3 ]
-  it("flatten periods - case 2", function() {
+  it("should replace part of period if part of next one is overlapping it", function() {
     const periods = [
       { id: "1", start: 0, duration: 60, adaptations: {} },
       { id: "2", start: 60, duration: 60, adaptations: {} },
@@ -61,7 +61,7 @@ describe("flattenOverlappingPeriods", function() {
 
   // [ Period 1 ][ Period 2 ]       ------>  [  1  ][      Period 3     ]
   //        [      Period 3     ]
-  it("flatten periods - case 3", function() {
+  it("should erase period if a next period starts before and ends after it", function() {
     const periods = [
       { id: "1", start: 0, duration: 60, adaptations: {} },
       { id: "2", start: 60, duration: 60, adaptations: {} },
@@ -82,7 +82,9 @@ describe("flattenOverlappingPeriods", function() {
   //             [ Period 3 ]
   //                  ...
   //             [   100    ]
-  it("flatten periods - case 4", function() {
+  /* tslint:disable max-line-length */
+  it("should keep last announced period from multiple periods with same start and end", function() {
+  /* tslint:enable max-line-length */
     const periods = [
       { id: "1", start: 0, duration: 60, adaptations: {} },
     ];
