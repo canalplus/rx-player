@@ -88,6 +88,37 @@ describe("Manifest - Manifest", () => {
     logSpy.mockRestore();
   });
 
+  it("should pass a `representationFilter` to the Period if given", () => {
+    const period1 = { id: "0" };
+    const period2 = { id: "1" };
+    const simpleFakeManifest = {
+      id: "man",
+      isLive: false,
+      duration: 5,
+      periods: [period1, period2],
+      transportType: "foobar",
+    };
+
+    const representationFilter = function() { /* noop */ };
+
+    const fakePeriod = jest.fn((period) => {
+      return { id: "foo" + period.id, parsingErrors: [] };
+    });
+    const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    jest.mock("../period", () =>  ({ default: fakePeriod }));
+    const Manifest = require("../manifest").default;
+
+    /* tslint:disable no-unused-expression */
+    new Manifest(simpleFakeManifest, { representationFilter });
+    /* tslint:enable no-unused-expression */
+
+    expect(fakePeriod).toHaveBeenCalledTimes(2);
+    expect(fakePeriod).toHaveBeenCalledWith(period1, representationFilter);
+    expect(fakePeriod).toHaveBeenCalledWith(period2, representationFilter);
+    expect(logSpy).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+  });
+
   it("should expose the adaptations of the first period if set", () => {
     const adapP1 = {};
     const adapP2 = {};
@@ -252,6 +283,55 @@ describe("Manifest - Manifest", () => {
     expect(manifest.transport).toEqual("foobar");
     expect(manifest.uris).toEqual(["url1", "url2"]);
     expect(logSpy).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+  });
+
+  it("should return the first URL given with `getUrl`", () => {
+    const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const fakePeriod = jest.fn((period) => {
+      return { ...period, id: "foo" + period.id, parsingErrors: [period.id] };
+    });
+    jest.mock("../period", () =>  ({ default: fakePeriod }));
+    const Manifest = require("../manifest").default;
+
+    const oldManifestArgs1 = {
+      availabilityStartTime: 5,
+      baseURL: "test",
+      duration: 12,
+      id: "man",
+      isLive: false,
+      lifetime: 13,
+      minimumTime: 4,
+      parsingErrors: ["a", "b"],
+      periods: [{ id: "0" }, { id: "1" }],
+      presentationLiveGap: 18,
+      suggestedPresentationDelay: 99,
+      timeShiftBufferDepth: 2,
+      transportType: "foobar",
+      uris: ["url1", "url2"],
+    };
+    const manifest1 = new Manifest(oldManifestArgs1, {});
+    expect(manifest1.getUrl()).toEqual("url1");
+
+    const oldManifestArgs2 = {
+      availabilityStartTime: 5,
+      baseURL: "test",
+      duration: 12,
+      id: "man",
+      isLive: false,
+      lifetime: 13,
+      minimumTime: 4,
+      parsingErrors: ["a", "b"],
+      periods: [{ id: "0" }, { id: "1" }],
+      presentationLiveGap: 18,
+      suggestedPresentationDelay: 99,
+      timeShiftBufferDepth: 2,
+      transportType: "foobar",
+      uris: [],
+    };
+    const manifest2 = new Manifest(oldManifestArgs2, {});
+    expect(manifest2.getUrl()).toEqual(undefined);
+
     logSpy.mockRestore();
   });
 
