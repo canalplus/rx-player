@@ -358,7 +358,7 @@ describe("Manifest - Manifest", () => {
       return { ...period, id: "foo" + period.id, parsingErrors: [period.id] };
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
-      Object.keys(oldPeriod).map(key => {
+      Object.keys(oldPeriod).forEach(key => {
         delete oldPeriod[key];
       });
       oldPeriod.id = newPeriod.id;
@@ -445,7 +445,7 @@ describe("Manifest - Manifest", () => {
       return { ...period, id: "foo" + period.id, parsingErrors: [period.id] };
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
-      Object.keys(oldPeriod).map(key => {
+      Object.keys(oldPeriod).forEach(key => {
         delete oldPeriod[key];
       });
       oldPeriod.id = newPeriod.id;
@@ -520,7 +520,7 @@ describe("Manifest - Manifest", () => {
       return { ...period, id: "foo" + period.id, parsingErrors: [period.id] };
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
-      Object.keys(oldPeriod).map(key => {
+      Object.keys(oldPeriod).forEach(key => {
         delete oldPeriod[key];
       });
       oldPeriod.id = newPeriod.id;
@@ -593,7 +593,7 @@ describe("Manifest - Manifest", () => {
       return { ...period, id: "foo" + period.id, parsingErrors: [period.id] };
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
-      Object.keys(oldPeriod).map(key => {
+      Object.keys(oldPeriod).forEach(key => {
         delete oldPeriod[key];
       });
       oldPeriod.id = newPeriod.id;
@@ -662,7 +662,7 @@ describe("Manifest - Manifest", () => {
       return { ...period, id: "foo" + period.id, parsingErrors: [period.id] };
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
-      Object.keys(oldPeriod).map(key => {
+      Object.keys(oldPeriod).forEach(key => {
         delete oldPeriod[key];
       });
       oldPeriod.id = newPeriod.id;
