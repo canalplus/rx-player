@@ -152,14 +152,20 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   // begins.
   public availabilityStartTime? : number;
 
-  // Informations about the first seekable position.
+  /**
+   * Informations about the first seekable position.
+   * @type {Object|undefined}
+   */
   public minimumTime? : {
     isContinuous : boolean; // Whether this value continuously evolve over time
     value : number; // Minimum seekable time in milliseconds calculated at `time`.
     time : number; // `Performance.now()` output at the time `value` was calculated
   };
 
-  // Informations about the last seekable position.
+  /**
+   * Informations about the last seekable position.
+   * @type {Object|undefined}
+   */
   public maximumTime? : {
     isContinuous : boolean; // Whether this value continuously evolve over time
     value : number; // Maximum seekable time in milliseconds calculated at `time`.
