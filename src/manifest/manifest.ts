@@ -50,21 +50,31 @@ interface ISupplementaryTextTrack {
 
 interface IManifestArguments {
   // required
-  id : string;
-  isLive : boolean;
-  periods : IPeriodArguments[];
-  transportType : string;
+  id: string; // Unique ID for the manifest.
+  isLive : boolean; // If true, this Manifest describes a content not finished yet.
+  periods: IPeriodArguments[]; // Periods contained in this manifest.
+  transportType: string; // "smooth", "dash" etc.
 
   // optional
-  availabilityStartTime? : number;
-  baseURL? : string;
-  duration? : number;
-  lifetime? : number;
-  minimumTime? : number;
-  presentationLiveGap? : number;
-  suggestedPresentationDelay? : number;
-  timeShiftBufferDepth? : number;
-  uris? : string[];
+  availabilityStartTime? : number; // Base time from which the segments arge generated.
+  baseURL? : string; // Base URL for relative URLs given in that Manifest.
+  duration? : number; // Last time in the content. Only useful for non-live contents.
+  lifetime?: number; // Duration of the validity of this Manifest, after which it
+                     // should be refreshed.
+  maximumTime? : { // Informations on the maximum seekable position.
+    isContinuous : boolean; // Whether this value linearly evolves over time.
+    value : number; // Maximum seekable time in milliseconds calculated at `time`.
+    time : number; // `Performance.now()` output at the time `value` was calculated.
+  };
+  minimumTime? : { // Informations on the minimum seekable position.
+    isContinuous : boolean; // Whether this value linearly evolves over time.
+    value : number; // minimum seekable time in milliseconds calculated at `time`.
+    time : number; // `Performance.now()` output at the time `value` was calculated.
+  };
+  suggestedPresentationDelay? : number; // Suggested delay from the last position.
+                                        // the player should start from by default.
+  uris?: string[]; // URIs where the manifest can be refreshed.
+                   // By order of importance.
 }
 
 interface IManifestParsingOptions {
@@ -158,27 +168,24 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   public availabilityStartTime? : number;
 
   /**
-   * Minimum time in this Manifest we can seek to, in seconds.
-   * @type {number|undefined}
+   * Informations about the first seekable position.
+   * @type {Object|undefined}
    */
-  public minimumTime? : number;
+  public minimumTime? : {
+    isContinuous : boolean; // Whether this value continuously evolve over time
+    value : number; // Minimum seekable time in milliseconds calculated at `time`.
+    time : number; // `Performance.now()` output at the time `value` was calculated
+  };
 
   /**
-   * Estimated difference between Date.now() and the real live edge of the
-   * content.
-   * Note: this is sometimes really hard to estimate.
-   * @type {number|undefined}
+   * Informations about the last seekable position.
+   * @type {Object|undefined}
    */
-  public presentationLiveGap? : number;
-
-  /**
-   * Time - relative to the last available position - in seconds from when
-   * the first segment is available.
-   * Every segments before that time can be considered as unavailable.
-   * This is also sometimes called the `TimeShift window`.
-   * @type {number|undefined}
-   */
-  public timeShiftBufferDepth? : number;
+  public maximumTime? : {
+    isContinuous : boolean; // Whether this value continuously evolve over time
+    value : number; // Maximum seekable time in milliseconds calculated at `time`.
+    time : number; // `Performance.now()` output at the time `value` was calculated
+  };
 
   /**
    * Array containing every errors that happened when the Manifest has been
@@ -230,8 +237,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.lifetime = args.lifetime;
     this.suggestedPresentationDelay = args.suggestedPresentationDelay;
     this.availabilityStartTime = args.availabilityStartTime;
-    this.presentationLiveGap = args.presentationLiveGap;
-    this.timeShiftBufferDepth = args.timeShiftBufferDepth;
+    this.maximumTime = args.maximumTime;
     this.baseURL = args.baseURL;
 
     if (!args.isLive && args.duration == null) {
@@ -357,11 +363,10 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.id = newManifest.id;
     this.isLive = newManifest.isLive;
     this.lifetime = newManifest.lifetime;
+    this.maximumTime = newManifest.maximumTime;
     this.minimumTime = newManifest.minimumTime;
     this.parsingErrors = newManifest.parsingErrors;
-    this.presentationLiveGap = newManifest.presentationLiveGap;
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
-    this.timeShiftBufferDepth = newManifest.timeShiftBufferDepth;
     this.transport = newManifest.transport;
     this.uris = newManifest.uris;
 
@@ -403,9 +408,15 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @returns {number}
    */
   public getMinimumPosition() : number {
-    // we have to know both the min and the max to be sure
-    const [min] = this.getCurrentPositionLimits();
-    return min;
+    const { minimumTime } = this;
+    if (minimumTime == null) {
+      return 0;
+    }
+    if (!minimumTime.isContinuous) {
+      return minimumTime.value;
+    }
+    const timeDiff = performance.now() - minimumTime.time;
+    return minimumTime.value + timeDiff / 1000;
   }
 
   /**
@@ -417,41 +428,16 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       const duration = this.getDuration();
       return duration == null ? Infinity : duration;
     }
-    const ast = this.availabilityStartTime || 0;
-    const plg = this.presentationLiveGap || 0;
-    const now = Date.now() / 1000;
-    return now - ast - plg;
-  }
-
-  /**
-   * Get minimum AND maximum positions currently defined by the manifest, in
-   * seconds.
-   * @returns {Array.<number>}
-   */
-  public getCurrentPositionLimits() : [number, number] {
-    // TODO use RTT for the manifest request? (+ 3 or something)
-    const BUFFER_DEPTH_SECURITY = 5;
-
-    const ast = this.availabilityStartTime || 0;
-    const minimumTime = this.minimumTime != null ? this.minimumTime : 0;
-    if (!this.isLive) {
-      const duration = this.getDuration();
-      const maximumTime = duration == null ? Infinity : duration;
-      return [minimumTime, maximumTime];
+    const { maximumTime } = this;
+    if (maximumTime == null) {
+      const ast = this.availabilityStartTime || 0;
+      return (Date.now() / 1000) - ast;
     }
-
-    const plg = this.presentationLiveGap || 0;
-    const tsbd = this.timeShiftBufferDepth || 0;
-
-    const now = Date.now() / 1000;
-    const max = now - ast - plg;
-    return [
-      Math.min(
-        max,
-        Math.max(minimumTime, max - tsbd + BUFFER_DEPTH_SECURITY)
-      ),
-      max,
-    ];
+    if (!maximumTime.isContinuous) {
+      return maximumTime.value;
+    }
+    const timeDiff = performance.now() - maximumTime.time;
+    return maximumTime.value + timeDiff / 1000;
   }
 
   /**

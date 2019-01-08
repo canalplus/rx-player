@@ -84,7 +84,8 @@ const manifestInfos = {
   transport: "dash",
   isLive: false,
   duration: 101.568367,
-  timeShiftBufferDepth: undefined,
+  minimumPosition: 0,
+  maximumPosition: 101.568367,
   availabilityStartTime: 0,
   periods: [
     {

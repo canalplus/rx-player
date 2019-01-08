@@ -64,20 +64,29 @@ export interface IParsedPeriod {
 
 export interface IParsedManifest {
   // required
-  id: string;
-  isLive : boolean;
-  periods: IParsedPeriod[];
+  id: string; // Unique ID for the manifest.
+  isLive : boolean; // If true, this Manifest describes a content not finished yet.
+  periods: IParsedPeriod[]; // Periods contained in this manifest.
   transportType: string; // "smooth", "dash" etc.
 
   // optional
-  availabilityEndTime? : number;
-  availabilityStartTime? : number;
-  baseURL? : string;
-  duration? : number;
-  lifetime?: number;
-  minimumTime? : number;
-  presentationLiveGap?: number;
-  suggestedPresentationDelay?: number;
-  timeShiftBufferDepth?: number;
-  uris?: string[]; // uris where the manifest can be refreshed
+  availabilityStartTime? : number; // Base time from which the segments arge generated.
+  baseURL? : string; // Base URL for relative URLs given in that Manifest.
+  duration? : number; // Last time in the content. Only useful for non-live contents.
+  lifetime?: number; // Duration of the validity of this Manifest, after which it
+                     // should be refreshed.
+  maximumTime? : { // Informations on the maximum seekable position.
+    isContinuous : boolean; // Whether this value linearly evolves over time.
+    value : number; // Maximum seekable time in seconds calculated at `time`.
+    time : number; // `Performance.now()` output at the time `value` was calculated.
+  };
+  minimumTime? : { // Informations on the minimum seekable position.
+    isContinuous : boolean; // Whether this value linearly evolves over time.
+    value : number; // minimum seekable time in seconds calculated at `time`.
+    time : number; // `Performance.now()` output at the time `value` was calculated.
+  };
+  suggestedPresentationDelay? : number; // Suggested delay from the last position.
+                                        // the player should start from by default.
+  uris?: string[]; // URIs where the manifest can be refreshed.
+                   // By order of importance.
 }

@@ -74,7 +74,6 @@ export interface IParsedMPD {
   suggestedPresentationDelay? : number;
   maxSegmentDuration? : number;
   maxSubsegmentDuration? : number;
-  presentationLiveGap? : number;
 }
 
 /**
