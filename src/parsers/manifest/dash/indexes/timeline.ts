@@ -378,7 +378,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       return false;
     }
     const { timeline } = this._index;
-    const scaledTo = toIndexTime(this._index, end);
 
     let lastItem = timeline[timeline.length - 1];
     if (lastItem == null || lastItem.repeatCount < 0) {
@@ -393,7 +392,16 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       };
     }
 
-    return scaledTo > getIndexSegmentEnd(lastItem, null, this._index.timelineEnd);
+    const scaledStart = toIndexTime(this._index, _start);
+    const indexEnd = getIndexSegmentEnd(lastItem, null, this._index.timelineEnd);
+    if (scaledStart >= indexEnd) {
+      return true;
+    }
+
+    const scaledTo = toIndexTime(this._index, end);
+
+    // Wait for at least the last item's duration
+    return (scaledTo - lastItem.duration) > indexEnd;
   }
 
   /**
