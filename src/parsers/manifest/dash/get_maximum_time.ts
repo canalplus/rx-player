@@ -18,24 +18,29 @@ import log from "../../../log";
 import { IParsedManifest } from "../types";
 
 /**
- * Get presentation live gap from manifest informations.
- * @param {Object} manifest
- * @param {number|undefined} lastTimeReference
+ * Return maximum seekable time of the MPD at the current time.
+ * @param {Object} parsedMPD
+ * @param {number|undefined} lastTimeReference - pre-parsed last time reference
+ * in the MPD. If undefined, it is not known. A position relative to now will be
+ * calculated instead.
  * @returns {number}
  */
-export default function getPresentationLiveGap(
-  parsedMPD: IParsedManifest,
+export default function getMaximumTime(
+  parsedMPD : IParsedManifest,
   lastTimeReference? : number
 ) : number {
   if (lastTimeReference != null) {
-    const ast = parsedMPD.availabilityStartTime || 0;
-    const now = Date.now() - (parsedMPD.clockOffset || 0);
-    return (now / 1000) - (lastTimeReference + ast);
-  } else if (parsedMPD.clockOffset != null) {
-    return 0;
-  } else {
+    return lastTimeReference;
+  }
+
+  const ast = parsedMPD.availabilityStartTime || 0;
+  if (parsedMPD.clockOffset == null) {
     log.warn("DASH Parser: no clock synchronization mechanism found." +
       "Setting a live gap of 10 seconds as a security.");
-    return 10; // put 10 seconds as a security
+    const now = Date.now() - 10000;
+    return now / 1000 - ast;
+  } else {
+    const now = Date.now() - parsedMPD.clockOffset;
+    return now / 1000 - ast;
   }
 }

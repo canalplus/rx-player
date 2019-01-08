@@ -98,7 +98,6 @@ import { IBufferType } from "../source_buffers";
 import createClock, {
   IClockTick
 } from "./clock";
-import fromWallClockTime from "./from_wallclock_time";
 import getPlayerState, {
   PLAYER_STATES,
 } from "./get_player_state";
@@ -1334,10 +1333,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       } else if ((time as { wallClockTime? : number }).wallClockTime != null) {
         positionWanted = isDirectFile ?
           (time as { wallClockTime : number }).wallClockTime :
-          fromWallClockTime(
-            (time as { wallClockTime : number }).wallClockTime * 1000,
-            (manifest as Manifest) // is TS or I dumb here?
-          );
+          (time as { wallClockTime : number }).wallClockTime -
+            ((manifest as Manifest).availabilityStartTime || 0);
       } else {
         throw new Error("invalid time object. You must set one of the " +
           "following properties: \"relative\", \"position\" or " +
