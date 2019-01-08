@@ -21,7 +21,7 @@ import resolveURL, {
 } from "../../../utils/resolve_url";
 import { IParsedManifest } from "../types";
 import checkManifestIDs from "../utils/check_manifest_ids";
-import getPresentationLiveGap from "./get_presentation_live_gap";
+import getTimeLimits from "./get_time_limits";
 import {
   createMPDIntermediateRepresentation,
   IMPDIntermediateRepresentation,
@@ -150,6 +150,10 @@ function parseCompleteIntermediateRepresentation(
     baseURL,
   });
 
+  if (parsedPeriods.length === 0) {
+    throw new Error("DASH Parser: no period declared in the MPD.");
+  }
+
   const duration : number|undefined = (() => {
     if (rootAttributes.duration != null) {
       return rootAttributes.duration;
@@ -184,17 +188,13 @@ function parseCompleteIntermediateRepresentation(
   };
 
   // -- add optional fields --
-
-  if (rootAttributes.type !== "static" && rootAttributes.availabilityEndTime != null) {
-    parsedMPD.availabilityEndTime = rootAttributes.availabilityEndTime;
-  }
-  if (rootAttributes.timeShiftBufferDepth != null) {
-    parsedMPD.timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
+  if (parsedMPD.isLive) {
+    const [minimumTime, maximumTime] =
+      getTimeLimits(parsedMPD, rootAttributes.timeShiftBufferDepth);
+    parsedMPD.minimumTime = minimumTime;
+    parsedMPD.maximumTime = maximumTime;
   }
 
   checkManifestIDs(parsedMPD);
-  if (parsedMPD.isLive) {
-    parsedMPD.presentationLiveGap = getPresentationLiveGap(parsedMPD);
-  }
   return parsedMPD;
 }

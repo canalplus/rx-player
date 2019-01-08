@@ -44,7 +44,8 @@ export default function getInitialTime(
   startAt? : IInitialTimeOptions
 ) : number {
   if (startAt) {
-    const [min, max] = manifest.getCurrentPositionLimits();
+    const min = manifest.getMinimumPosition();
+    const max = manifest.getMaximumPosition();
     if (startAt.position != null) {
       return Math.max(Math.min(startAt.position, max), min);
     }

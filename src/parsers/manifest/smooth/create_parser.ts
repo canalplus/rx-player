@@ -431,8 +431,9 @@ function createSmoothStreamingParser(
       }, initialAdaptations);
 
     let suggestedPresentationDelay : number|undefined;
-    let presentationLiveGap : number|undefined;
     let availabilityStartTime : number|undefined;
+    let minimumTime : { isContinuous : boolean; value : number; time : number}|undefined;
+    let maximumTime : { isContinuous : boolean; value : number; time : number}|undefined;
 
     const firstVideoAdaptation = adaptations.video ? adaptations.video[0] : undefined;
     const firstAudioAdaptation = adaptations.audio ? adaptations.audio[0] : undefined;
@@ -492,13 +493,33 @@ function createSmoothStreamingParser(
     if (isLive) {
       suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
       availabilityStartTime = REFERENCE_DATE_TIME;
-      presentationLiveGap = Date.now() / 1000 -
-        (lastTimeReference != null ?
-          (lastTimeReference + availabilityStartTime) : 10);
+
+      const time = performance.now();
+      maximumTime = {
+        isContinuous: true,
+        value: lastTimeReference != null ?
+          lastTimeReference : (Date.now() / 1000 - availabilityStartTime),
+        time,
+      };
+      minimumTime = {
+        isContinuous: true,
+        value: Math.min(
+          maximumTime.value - (timeShiftBufferDepth || 0) + 5,
+          maximumTime.value
+        ),
+        time,
+      };
       const manifestDuration = root.getAttribute("Duration");
       duration = (manifestDuration != null && +manifestDuration !== 0) ?
         (+manifestDuration / timescale) : undefined;
+
     } else {
+      minimumTime = {
+        isContinuous: false,
+        value: firstTimeReference != null ? firstTimeReference : 0,
+        time: performance.now(),
+      };
+
       // if non-live and first time reference different than 0. Add first time reference
       // to duration
       const manifestDuration = root.getAttribute("Duration");
@@ -510,30 +531,25 @@ function createSmoothStreamingParser(
       } else {
         duration = undefined;
       }
-
     }
-
-    const minimumTime = firstTimeReference != null ?
-      firstTimeReference : undefined;
 
     const manifest = {
       id: "gen-smooth-manifest-" + generateManifestID(),
-      availabilityStartTime: availabilityStartTime || 0,
-      duration,
-      presentationLiveGap,
-      suggestedPresentationDelay,
-      timeShiftBufferDepth,
-      transportType: "smooth",
       isLive,
-      uris: [url],
-      minimumTime,
       periods: [{
         id: "gen-smooth-period-0",
         duration,
         adaptations,
         start: 0,
-        // laFragCount: +(root.getAttribute("LookAheadFragmentCount") || 0),
       }],
+      transportType: "smooth",
+
+      availabilityStartTime: availabilityStartTime || 0,
+      duration,
+      maximumTime,
+      minimumTime,
+      suggestedPresentationDelay,
+      uris: [url],
     };
     checkManifestIDs(manifest);
     return manifest;

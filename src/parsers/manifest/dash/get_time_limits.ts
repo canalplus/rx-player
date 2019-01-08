@@ -63,9 +63,13 @@ function getLastLiveTimeReference(adaptation: IParsedAdaptation) : number | unde
  * @param {Object} manifest
  * @returns {number}
  */
-export default function getPresentationLiveGap(
-  manifest: IParsedManifest
-) : number {
+export default function getTimeLimits(
+  manifest: IParsedManifest,
+  timeShiftBufferDepth? : number
+) : [
+  { isContinuous : boolean; value : number; time : number }, // minimum
+  { isContinuous : boolean; value : number; time : number } // maximum
+] {
   if (manifest.periods.length === 0) {
     throw new Error("DASH Parser: no period available for a live content");
   }
@@ -79,5 +83,18 @@ export default function getPresentationLiveGap(
   const firstAdaptationFromLastPeriod = firstAdaptationsFromLastPeriod[0];
   const lastRef = getLastLiveTimeReference(firstAdaptationFromLastPeriod);
   const ast = manifest.availabilityStartTime || 0;
-  return lastRef != null ? Date.now() / 1000 - (lastRef + ast) : 10;
+  const time = performance.now();
+  const maximumTime = {
+    isContinuous: true,
+    value: lastRef != null ? lastRef : (Date.now() / 1000 - ast),
+    time,
+  };
+  const minimumTimeValue = maximumTime.value -
+    (timeShiftBufferDepth != null ? (timeShiftBufferDepth - 5) : 0);
+  const minimumTime = {
+    isContinuous: true,
+    value: Math.min(minimumTimeValue, maximumTime.value),
+    time,
+  };
+  return [minimumTime, maximumTime];
 }
