@@ -29,96 +29,93 @@
  * convertToRanges methods.
  */
 
-import { expect } from "chai";
-import * as sinon from "sinon";
 import Logger from "../logger";
 
 describe("utils - Logger", () => {
   it("should set a default logger level of \"NONE\"", () => {
     const logger = new Logger();
-    expect(logger.getLevel()).to.eql("NONE");
+    expect(logger.getLevel()).toEqual("NONE");
   });
 
   it("should be able to change the logger level to \"ERROR\"", () => {
     const logger = new Logger();
     logger.setLevel("ERROR");
-    expect(logger.getLevel()).to.eql("ERROR");
+    expect(logger.getLevel()).toEqual("ERROR");
   });
 
   it("should be able to change the logger level to \"WARNING\"", () => {
     const logger = new Logger();
     logger.setLevel("WARNING");
-    expect(logger.getLevel()).to.eql("WARNING");
+    expect(logger.getLevel()).toEqual("WARNING");
   });
 
   it("should be able to change the logger level to \"INFO\"", () => {
     const logger = new Logger();
     logger.setLevel("INFO");
-    expect(logger.getLevel()).to.eql("INFO");
+    expect(logger.getLevel()).toEqual("INFO");
   });
 
   it("should be able to change the logger level to \"DEBUG\"", () => {
     const logger = new Logger();
     logger.setLevel("DEBUG");
-    expect(logger.getLevel()).to.eql("DEBUG");
+    expect(logger.getLevel()).toEqual("DEBUG");
   });
 
   it("should be able to update the logger level multiple times", () => {
     const logger = new Logger();
     logger.setLevel("DEBUG");
-    expect(logger.getLevel()).to.eql("DEBUG");
+    expect(logger.getLevel()).toEqual("DEBUG");
     logger.setLevel("WARNING");
-    expect(logger.getLevel()).to.eql("WARNING");
+    expect(logger.getLevel()).toEqual("WARNING");
     logger.setLevel("ERROR");
-    expect(logger.getLevel()).to.eql("ERROR");
+    expect(logger.getLevel()).toEqual("ERROR");
     logger.setLevel("INFO");
-    expect(logger.getLevel()).to.eql("INFO");
+    expect(logger.getLevel()).toEqual("INFO");
     logger.setLevel("WARNING");
-    expect(logger.getLevel()).to.eql("WARNING");
+    expect(logger.getLevel()).toEqual("WARNING");
     logger.setLevel("ERROR");
-    expect(logger.getLevel()).to.eql("ERROR");
+    expect(logger.getLevel()).toEqual("ERROR");
   });
 
   it("should default unrecognized logger levels to \"NONE\"", () => {
     const logger = new Logger();
     logger.setLevel("TOTO");
-    expect(logger.getLevel()).to.eql("NONE");
+    expect(logger.getLevel()).toEqual("NONE");
     logger.setLevel("DEBUG"); // initialize to another thing than "NONE"
     logger.setLevel("TITI");
-    expect(logger.getLevel()).to.eql("NONE");
+    expect(logger.getLevel()).toEqual("NONE");
   });
 
   it("should never call console.* functions if logger level is set to \"NONE\"", () => {
-    const consoleLogSpy = sinon.stub(console, "log");
-    const consoleErrorSpy = sinon.stub(console, "error");
-    const consoleWarnSpy = sinon.stub(console, "warn");
-    const consoleInfoSpy = sinon.stub(console, "info");
-    const consoleDebugSpy = sinon.stub(console, "debug");
+    const logSpy = jest.spyOn(console, "log").mockImplementation(jest.fn());
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(jest.fn());
+    const warnSpy = jest.spyOn(console, "warn").mockImplementation(jest.fn());
+    const infoSpy = jest.spyOn(console, "info").mockImplementation(jest.fn());
+    const debugSpy = jest.spyOn(console, "debug").mockImplementation(jest.fn());
 
     const logger = new Logger();
     logger.error("test");
     logger.warn("test");
     logger.info("test");
     logger.debug("test");
-    expect(consoleLogSpy.called).to.eql(false);
-    expect(consoleErrorSpy.called).to.eql(false);
-    expect(consoleWarnSpy.called).to.eql(false);
-    expect(consoleInfoSpy.called).to.eql(false);
-    expect(consoleDebugSpy.called).to.eql(false);
-
-    consoleLogSpy.restore();
-    consoleErrorSpy.restore();
-    consoleWarnSpy.restore();
-    consoleInfoSpy.restore();
-    consoleDebugSpy.restore();
+    expect(logSpy).not.toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(infoSpy).not.toHaveBeenCalled();
+    expect(debugSpy).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+    errorSpy.mockRestore();
+    warnSpy.mockRestore();
+    infoSpy.mockRestore();
+    debugSpy.mockRestore();
   });
 
   it("should only call console.error if logger level is set to \"ERROR\"", () => {
-    const consoleLogSpy = sinon.stub(console, "log");
-    const consoleErrorSpy = sinon.stub(console, "error");
-    const consoleWarnSpy = sinon.stub(console, "warn");
-    const consoleInfoSpy = sinon.stub(console, "info");
-    const consoleDebugSpy = sinon.stub(console, "debug");
+    const logSpy = jest.spyOn(console, "log").mockImplementation(jest.fn());
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(jest.fn());
+    const warnSpy = jest.spyOn(console, "warn").mockImplementation(jest.fn());
+    const infoSpy = jest.spyOn(console, "info").mockImplementation(jest.fn());
+    const debugSpy = jest.spyOn(console, "debug").mockImplementation(jest.fn());
 
     const logger = new Logger();
     logger.setLevel("ERROR");
@@ -126,25 +123,24 @@ describe("utils - Logger", () => {
     logger.warn("test");
     logger.info("test");
     logger.debug("test");
-    expect(consoleLogSpy.called).to.eql(false);
-    expect(consoleErrorSpy.called).to.eql(true);
-    expect(consoleWarnSpy.called).to.eql(false);
-    expect(consoleInfoSpy.called).to.eql(false);
-    expect(consoleDebugSpy.called).to.eql(false);
-
-    consoleLogSpy.restore();
-    consoleErrorSpy.restore();
-    consoleWarnSpy.restore();
-    consoleInfoSpy.restore();
-    consoleDebugSpy.restore();
+    expect(logSpy).not.toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalled();
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(infoSpy).not.toHaveBeenCalled();
+    expect(debugSpy).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+    errorSpy.mockRestore();
+    warnSpy.mockRestore();
+    infoSpy.mockRestore();
+    debugSpy.mockRestore();
   });
 
   it("should call console.{error,warn} if logger level is set to \"WARNING\"", () => {
-    const consoleLogSpy = sinon.stub(console, "log");
-    const consoleErrorSpy = sinon.stub(console, "error");
-    const consoleWarnSpy = sinon.stub(console, "warn");
-    const consoleInfoSpy = sinon.stub(console, "info");
-    const consoleDebugSpy = sinon.stub(console, "debug");
+    const logSpy = jest.spyOn(console, "log").mockImplementation(jest.fn());
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(jest.fn());
+    const warnSpy = jest.spyOn(console, "warn").mockImplementation(jest.fn());
+    const infoSpy = jest.spyOn(console, "info").mockImplementation(jest.fn());
+    const debugSpy = jest.spyOn(console, "debug").mockImplementation(jest.fn());
 
     const logger = new Logger();
     logger.setLevel("WARNING");
@@ -152,25 +148,24 @@ describe("utils - Logger", () => {
     logger.warn("test");
     logger.info("test");
     logger.debug("test");
-    expect(consoleLogSpy.called).to.eql(false);
-    expect(consoleErrorSpy.called).to.eql(true);
-    expect(consoleWarnSpy.called).to.eql(true);
-    expect(consoleInfoSpy.called).to.eql(false);
-    expect(consoleDebugSpy.called).to.eql(false);
-
-    consoleLogSpy.restore();
-    consoleErrorSpy.restore();
-    consoleWarnSpy.restore();
-    consoleInfoSpy.restore();
-    consoleDebugSpy.restore();
+    expect(logSpy).not.toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalled();
+    expect(infoSpy).not.toHaveBeenCalled();
+    expect(debugSpy).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+    errorSpy.mockRestore();
+    warnSpy.mockRestore();
+    infoSpy.mockRestore();
+    debugSpy.mockRestore();
   });
 
   it("should call console.{error,warn,info} if logger level is set to \"INFO\"", () => {
-    const consoleLogSpy = sinon.stub(console, "log");
-    const consoleErrorSpy = sinon.stub(console, "error");
-    const consoleWarnSpy = sinon.stub(console, "warn");
-    const consoleInfoSpy = sinon.stub(console, "info");
-    const consoleDebugSpy = sinon.stub(console, "debug");
+    const logSpy = jest.spyOn(console, "log").mockImplementation(jest.fn());
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(jest.fn());
+    const warnSpy = jest.spyOn(console, "warn").mockImplementation(jest.fn());
+    const infoSpy = jest.spyOn(console, "info").mockImplementation(jest.fn());
+    const debugSpy = jest.spyOn(console, "debug").mockImplementation(jest.fn());
 
     const logger = new Logger();
     logger.setLevel("INFO");
@@ -178,27 +173,26 @@ describe("utils - Logger", () => {
     logger.warn("test");
     logger.info("test");
     logger.debug("test");
-    expect(consoleLogSpy.called).to.eql(false);
-    expect(consoleErrorSpy.called).to.eql(true);
-    expect(consoleWarnSpy.called).to.eql(true);
-    expect(consoleInfoSpy.called).to.eql(true);
-    expect(consoleDebugSpy.called).to.eql(false);
-
-    consoleLogSpy.restore();
-    consoleErrorSpy.restore();
-    consoleWarnSpy.restore();
-    consoleInfoSpy.restore();
-    consoleDebugSpy.restore();
+    expect(logSpy).not.toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalled();
+    expect(infoSpy).toHaveBeenCalled();
+    expect(debugSpy).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+    errorSpy.mockRestore();
+    warnSpy.mockRestore();
+    infoSpy.mockRestore();
+    debugSpy.mockRestore();
   });
 
   /* tslint:disable max-line-length */
   it("should call console.{error,warn,info, log} if logger level is set to \"DEBUG\"", () => {
   /* tslint:enable max-line-length */
-    const consoleLogSpy = sinon.stub(console, "log");
-    const consoleErrorSpy = sinon.stub(console, "error");
-    const consoleWarnSpy = sinon.stub(console, "warn");
-    const consoleInfoSpy = sinon.stub(console, "info");
-    const consoleDebugSpy = sinon.stub(console, "debug");
+    const logSpy = jest.spyOn(console, "log").mockImplementation(jest.fn());
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(jest.fn());
+    const warnSpy = jest.spyOn(console, "warn").mockImplementation(jest.fn());
+    const infoSpy = jest.spyOn(console, "info").mockImplementation(jest.fn());
+    const debugSpy = jest.spyOn(console, "debug").mockImplementation(jest.fn());
 
     const logger = new Logger();
     logger.setLevel("DEBUG");
@@ -206,16 +200,15 @@ describe("utils - Logger", () => {
     logger.warn("test");
     logger.info("test");
     logger.debug("test");
-    expect(consoleLogSpy.called).to.eql(true);
-    expect(consoleErrorSpy.called).to.eql(true);
-    expect(consoleWarnSpy.called).to.eql(true);
-    expect(consoleInfoSpy.called).to.eql(true);
-    expect(consoleDebugSpy.called).to.eql(false);
-
-    consoleLogSpy.restore();
-    consoleErrorSpy.restore();
-    consoleWarnSpy.restore();
-    consoleInfoSpy.restore();
-    consoleDebugSpy.restore();
+    expect(logSpy).toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalled();
+    expect(infoSpy).toHaveBeenCalled();
+    expect(debugSpy).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+    errorSpy.mockRestore();
+    warnSpy.mockRestore();
+    infoSpy.mockRestore();
+    debugSpy.mockRestore();
   });
 });

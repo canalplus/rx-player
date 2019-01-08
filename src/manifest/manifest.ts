@@ -28,6 +28,7 @@ import Period, {
   IPeriodArguments,
 } from "./period";
 import { StaticRepresentationIndex } from "./representation_index";
+import updatePeriodInPlace from "./update_period";
 
 const generateNewId = idGenerator();
 
@@ -81,20 +82,21 @@ export default class Manifest extends EventEmitter<"manifestUpdate", null> {
    * ID uniquely identifying this Manifest.
    * @type {string}
    */
-  public readonly id : string;
+  public id : string;
 
   /**
-   * Type of transport used by this Manifest (e.g. `"dash"` or `"smooth`".
+   * Type of transport used by this Manifest (e.g. `"dash"` or `"smooth"`.
    * @type {string}
    */
-  public readonly transport : string;
+  public transport : string;
 
   /**
    * Every `Adaptations` for the first `Period` of the Manifest.
+   * Deprecated. Please use manifest.periods[0].adaptations instead.
    * @deprecated
    * @type {Object}
    */
-  public readonly adaptations : ManifestAdaptations;
+  public adaptations : ManifestAdaptations;
 
   /**
    * List every `Period` in that Manifest chronologically (from its start time).
@@ -111,7 +113,7 @@ export default class Manifest extends EventEmitter<"manifestUpdate", null> {
    * TODO Handle that case?
    * @type {Boolean}
    */
-  public readonly isLive : boolean;
+  public isLive : boolean;
 
   /**
    * Every URI linking to that Manifest, used for refreshing it.
@@ -123,7 +125,7 @@ export default class Manifest extends EventEmitter<"manifestUpdate", null> {
   /**
    * Suggested delay from the "live edge" the content is suggested to start
    * from.
-   * This only applies for live contents.
+   * This only applies to live contents.
    * @type {number|undefined}
    */
   public suggestedPresentationDelay? : number;
@@ -201,13 +203,13 @@ export default class Manifest extends EventEmitter<"manifestUpdate", null> {
     } = options;
     this.parsingErrors = [];
     this.id = args.id;
-    this.transport = args.transportType || "";
+    this.transport = args.transportType;
 
     this.periods = args.periods.map((period) => {
       const parsedPeriod = new Period(period, representationFilter);
       this.parsingErrors.push(...parsedPeriod.parsingErrors);
       return parsedPeriod;
-    });
+    }).sort((a, b) => a.start - b.start);
 
     /**
      * @deprecated It is here to ensure compatibility with the way the
@@ -228,7 +230,7 @@ export default class Manifest extends EventEmitter<"manifestUpdate", null> {
     this.timeShiftBufferDepth = args.timeShiftBufferDepth;
     this.baseURL = args.baseURL;
 
-    if (args.isLive && args.duration == null) {
+    if (!args.isLive && args.duration == null) {
       log.warn("Manifest: non live content and duration is null.");
     }
     this._duration = args.duration;
@@ -336,68 +338,58 @@ export default class Manifest extends EventEmitter<"manifestUpdate", null> {
   }
 
   /**
-   * @param {number} delta
-   * TODO Remove?
-   */
-  updateLiveGap(delta : number) : void {
-    if (this.isLive) {
-      if (this.presentationLiveGap) {
-        this.presentationLiveGap += delta;
-      } else {
-        this.presentationLiveGap = delta;
-      }
-    }
-  }
-
-  /**
    * Update the current manifest properties
    * @param {Object} Manifest
    */
   update(newManifest : Manifest) : void {
     this._duration = newManifest.getDuration();
+
+    /* tslint:disable:deprecation */
+    this.adaptations = newManifest.adaptations;
+    /* tslint:enable:deprecation */
+
     this.availabilityStartTime = newManifest.availabilityStartTime;
+    this.baseURL = newManifest.baseURL;
+    this.id = newManifest.id;
+    this.isLive = newManifest.isLive;
     this.lifetime = newManifest.lifetime;
     this.minimumTime = newManifest.minimumTime;
     this.parsingErrors = newManifest.parsingErrors;
+    this.presentationLiveGap = newManifest.presentationLiveGap;
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
     this.timeShiftBufferDepth = newManifest.timeShiftBufferDepth;
+    this.transport = newManifest.transport;
     this.uris = newManifest.uris;
 
     const oldPeriods = this.periods;
     const newPeriods = newManifest.periods;
 
-    for (let i = 0; i < oldPeriods.length; i++) {
-      const oldPeriod = oldPeriods[i];
-      const newPeriod =
-        arrayFind(newPeriods, a => a.id === oldPeriod.id);
+    let oldPeriodCounter = 0;
+    let newPeriodCounter = 0;
 
-      if (!newPeriod) {
-        log.info(`Period ${oldPeriod.id} not found after update. Removing.`);
-        oldPeriods.splice(i, 1);
-        i--;
+    // 2 - Update Periods in both Manifests
+    while (oldPeriodCounter < oldPeriods.length) {
+      const newPeriod = newPeriods[newPeriodCounter];
+      const oldPeriod = oldPeriods[oldPeriodCounter];
+
+      if (newPeriod == null) {
+        log.info(`Manifest: Period ${oldPeriod.id} not found after update. Removing.`);
+        oldPeriods.splice(oldPeriodCounter, 1);
+        oldPeriodCounter--;
+      } else if (newPeriod.id === oldPeriod.id) {
+        updatePeriodInPlace(oldPeriod, newPeriod);
       } else {
-        updatePeriodInPlace(newPeriod, oldPeriod);
+        log.info(`Manifest: Adding new Period ${newPeriod.id} after update.`);
+        this.periods.splice(oldPeriodCounter, 0, newPeriod);
       }
+      oldPeriodCounter++;
+      newPeriodCounter++;
     }
 
     // adding - perhaps - new Period[s]
-    if (newPeriods.length > oldPeriods.length) {
-      const lastOldPeriod = oldPeriods[oldPeriods.length - 1];
-      if (lastOldPeriod) {
-        for (let i = 0; i < newPeriods.length - 1; i++) {
-          const newPeriod = newPeriods[i];
-          if (newPeriod.start > lastOldPeriod.start) {
-            log.info(`Adding new period ${newPeriod.id}`);
-            this.periods.push(newPeriod);
-          }
-        }
-      } else {
-        for (let i = 0; i < newPeriods.length - 1; i++) {
-          const newPeriod = newPeriods[i];
-          log.info(`Adding new period ${newPeriod.id}`);
-          this.periods.push(newPeriod);
-        }
-      }
+    if (newPeriodCounter < newPeriods.length) {
+      log.info("Manifest: Adding new periods after update.");
+      this.periods.push(...newPeriods.slice(newPeriodCounter));
     }
     this.trigger("manifestUpdate", null);
   }
@@ -537,55 +529,6 @@ export default class Manifest extends EventEmitter<"manifestUpdate", null> {
       const { adaptations } = this.periods[0];
       adaptations.text = adaptations.text ?
         adaptations.text.concat(newTextAdaptations) : newTextAdaptations;
-    }
-  }
-}
-
-/**
- * Update oldPeriod attributes with the one from newPeriod (e.g. when updating
- * the Manifest).
- * @param {Object} oldPeriod
- * @param {Object} newPeriod
- */
-function updatePeriodInPlace(
-  oldPeriod : Period,
-  newPeriod : Period
-) : void {
-  oldPeriod.start = newPeriod.start;
-  oldPeriod.end = newPeriod.end;
-  oldPeriod.duration = newPeriod.duration;
-
-  const oldAdaptations = oldPeriod.getAdaptations();
-  const newAdaptations = newPeriod.getAdaptations();
-
-  for (let j = 0; j < oldAdaptations.length; j++) {
-    const oldAdaptation = oldAdaptations[j];
-    const newAdaptation =
-      arrayFind(newAdaptations, a => a.id === oldAdaptation.id);
-
-    if (!newAdaptation) {
-      log.warn(
-        `manifest: adaptation "${oldAdaptations[j].id}" not found when merging.`
-      );
-    } else {
-      const oldRepresentations = oldAdaptations[j].representations;
-      const newRepresentations = newAdaptation.representations;
-
-      for (let k = 0; k < oldRepresentations.length; k++) {
-        const oldRepresentation = oldRepresentations[k];
-        const newRepresentation = arrayFind(newRepresentations,
-          representation => representation.id === oldRepresentation.id);
-
-        if (!newRepresentation) {
-          /* tslint:disable:max-line-length */
-          log.warn(
-            `manifest: representation "${oldRepresentations[k].id}" not found when merging.`
-          );
-          /* tslint:enable:max-line-length */
-        } else {
-          oldRepresentations[k].index._update(newRepresentation.index);
-        }
-      }
     }
   }
 }

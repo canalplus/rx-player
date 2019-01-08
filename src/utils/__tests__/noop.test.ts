@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import noop from "../noop";
 
 describe("utils - noop", () => {
     it("should do nothing at all", () => {
-        expect(noop()).to.equal(undefined);
+        expect(noop()).toBe(undefined);
     });
 });

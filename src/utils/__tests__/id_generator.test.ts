@@ -14,34 +14,33 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import idGenerator from "../id_generator";
 
 describe("utils - idGenerator", () => {
   it("should increment an ID", () => {
     const generateNewID = idGenerator();
-    expect(generateNewID()).to.equal("0");
-    expect(generateNewID()).to.equal("1");
-    expect(generateNewID()).to.equal("2");
-    expect(generateNewID()).to.equal("3");
-    expect(generateNewID()).to.equal("4");
-    expect(generateNewID()).to.equal("5");
+    expect(generateNewID()).toBe("0");
+    expect(generateNewID()).toBe("1");
+    expect(generateNewID()).toBe("2");
+    expect(generateNewID()).toBe("3");
+    expect(generateNewID()).toBe("4");
+    expect(generateNewID()).toBe("5");
   });
   it("should allow multiple incremental ID at the same time", () => {
     const generateNewID1 = idGenerator();
     const generateNewID2 = idGenerator();
     const generateNewID3 = idGenerator();
-    expect(generateNewID1()).to.equal("0");
-    expect(generateNewID1()).to.equal("1");
-    expect(generateNewID2()).to.equal("0");
-    expect(generateNewID1()).to.equal("2");
-    expect(generateNewID1()).to.equal("3");
-    expect(generateNewID2()).to.equal("1");
-    expect(generateNewID2()).to.equal("2");
-    expect(generateNewID1()).to.equal("4");
-    expect(generateNewID1()).to.equal("5");
-    expect(generateNewID2()).to.equal("3");
-    expect(generateNewID2()).to.equal("4");
-    expect(generateNewID3()).to.equal("0");
+    expect(generateNewID1()).toBe("0");
+    expect(generateNewID1()).toBe("1");
+    expect(generateNewID2()).toBe("0");
+    expect(generateNewID1()).toBe("2");
+    expect(generateNewID1()).toBe("3");
+    expect(generateNewID2()).toBe("1");
+    expect(generateNewID2()).toBe("2");
+    expect(generateNewID1()).toBe("4");
+    expect(generateNewID1()).toBe("5");
+    expect(generateNewID2()).toBe("3");
+    expect(generateNewID2()).toBe("4");
+    expect(generateNewID3()).toBe("0");
   });
 });

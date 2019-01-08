@@ -14,53 +14,66 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import EWMA from "../ewma";
 
 describe("ABR - EWMA", () => {
   it("should return the last bitrate if half-life is at 0", () => {
     const ewma = new EWMA(0);
     ewma.addSample(8000, 1000000);
-    expect(ewma.getEstimate()).to.equal(1000000);
+    expect(ewma.getEstimate()).toBe(1000000);
     ewma.addSample(4000, 7000000);
-    expect(ewma.getEstimate()).to.equal(7000000);
+    expect(ewma.getEstimate()).toBe(7000000);
     ewma.addSample(1000, 6666600);
-    expect(ewma.getEstimate()).to.equal(6666600);
+    expect(ewma.getEstimate()).toBe(6666600);
   });
 
   it("should returns the correct value bitrate for a given positive half-life", () => {
     // "slow" evolution
     const ewma1 = new EWMA(15);
     ewma1.addSample(1, 50);
-    expect(ewma1.getEstimate()).to.be.closeTo(50, 0.1);
+    expect(ewma1.getEstimate()).toBeLessThan(50 + 0.1);
+    expect(ewma1.getEstimate()).toBeGreaterThan(50 - 0.1);
     ewma1.addSample(5, 100);
-    expect(ewma1.getEstimate()).to.be.closeTo(92, 1);
+    expect(ewma1.getEstimate()).toBeLessThan(92 + 1);
+    expect(ewma1.getEstimate()).toBeGreaterThan(92 - 1);
     ewma1.addSample(3, 1);
-    expect(ewma1.getEstimate()).to.be.closeTo(58, 1);
+    expect(ewma1.getEstimate()).toBeLessThan(58 + 1);
+    expect(ewma1.getEstimate()).toBeGreaterThan(58 - 1);
     ewma1.addSample(8, 45);
-    expect(ewma1.getEstimate()).to.be.closeTo(50, 1);
+    expect(ewma1.getEstimate()).toBeLessThan(50 + 1);
+    expect(ewma1.getEstimate()).toBeGreaterThan(50 - 1);
     ewma1.addSample(9, 45);
-    expect(ewma1.getEstimate()).to.be.closeTo(48, 1);
+    expect(ewma1.getEstimate()).toBeLessThan(48 + 1);
+    expect(ewma1.getEstimate()).toBeGreaterThan(48 - 1);
     ewma1.addSample(200, 300);
-    expect(ewma1.getEstimate()).to.be.closeTo(300, 0.1);
+    expect(ewma1.getEstimate()).toBeLessThan(300 + 0.1);
+    expect(ewma1.getEstimate()).toBeGreaterThan(300 - 0.1);
     ewma1.addSample(10, 1);
-    expect(ewma1.getEstimate()).to.be.closeTo(189, 1);
+    expect(ewma1.getEstimate()).toBeLessThan(189 + 1);
+    expect(ewma1.getEstimate()).toBeGreaterThan(189 - 1);
 
     // fast evolution
     const ewma2 = new EWMA(2);
-    ewma2.addSample(1, 50);
-    expect(ewma2.getEstimate()).to.be.closeTo(50, 0.1);
+    ewma2.addSample(1, +50);
+    expect(ewma2.getEstimate()).toBeLessThan(50 + 0.1);
+    expect(ewma2.getEstimate()).toBeGreaterThan(50 - 0.1);
     ewma2.addSample(5, 100);
-    expect(ewma2.getEstimate()).to.be.closeTo(97, 0.1);
+    expect(ewma2.getEstimate()).toBeLessThan(97 + 0.1);
+    expect(ewma2.getEstimate()).toBeGreaterThan(97 - 0.1);
     ewma2.addSample(3, 1);
-    expect(ewma2.getEstimate()).to.be.closeTo(32, 0.1);
+    expect(ewma2.getEstimate()).toBeLessThan(32 + 0.1);
+    expect(ewma2.getEstimate()).toBeGreaterThan(32 - 0.1);
     ewma2.addSample(8, 45);
-    expect(ewma2.getEstimate()).to.be.closeTo(44, 1);
+    expect(ewma2.getEstimate()).toBeLessThan(44 + 1);
+    expect(ewma2.getEstimate()).toBeGreaterThan(44 - 1);
     ewma2.addSample(9, 45);
-    expect(ewma2.getEstimate()).to.be.closeTo(45, 0.1);
+    expect(ewma2.getEstimate()).toBeLessThan(45 + 0.1);
+    expect(ewma2.getEstimate()).toBeGreaterThan(45 - 0.1);
     ewma2.addSample(200, 300);
-    expect(ewma2.getEstimate()).to.be.closeTo(300, 0.1);
+    expect(ewma2.getEstimate()).toBeLessThan(300 + 0.1);
+    expect(ewma2.getEstimate()).toBeGreaterThan(300 - 0.1);
     ewma2.addSample(10, 1);
-    expect(ewma2.getEstimate()).to.be.closeTo(10, 0.5);
+    expect(ewma2.getEstimate()).toBeLessThan(10 + 0.5);
+    expect(ewma2.getEstimate()).toBeGreaterThan(10 - 0.5);
   });
 });

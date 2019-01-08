@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import parseCueBlock from "../parse_cue";
 
 const cueBlock1 = [
@@ -56,7 +55,7 @@ const notCueBlock3 = [
 
 describe("parsers - srt - parseCueBlocks", () => {
   it("should correctly parse regular cue blocks", () => {
-    expect(parseCueBlock(cueBlock1, 0)).to.eql({
+    expect(parseCueBlock(cueBlock1, 0)).toEqual({
       start: 31.08,
       end: 452.2,
       payload: [
@@ -65,19 +64,19 @@ describe("parsers - srt - parseCueBlocks", () => {
         "Je ne peux pas me effroyer",
       ],
     });
-    expect(parseCueBlock(cueBlock2, 0)).to.eql({
+    expect(parseCueBlock(cueBlock2, 0)).toEqual({
       start: 1075.52,
       end: 1077.64,
       payload: [
         "Je suis le petit chevalier",
       ],
     });
-    expect(parseCueBlock(cueBlock3, 0)).to.eql({
+    expect(parseCueBlock(cueBlock3, 0)).toEqual({
       start: 1081,
       end: 1089,
       payload: [],
     });
-    expect(parseCueBlock(cueBlock4, 0)).to.eql({
+    expect(parseCueBlock(cueBlock4, 0)).toEqual({
       start: 1111.08,
       end: 1112.2,
       payload: [],
@@ -85,7 +84,7 @@ describe("parsers - srt - parseCueBlocks", () => {
   });
 
   it("should add timeOffset in seconds", () => {
-    expect(parseCueBlock(cueBlock1, 10.1)).to.eql({
+    expect(parseCueBlock(cueBlock1, 10.1)).toEqual({
       start: 41.18,
       end: 462.3,
       payload: [
@@ -94,19 +93,19 @@ describe("parsers - srt - parseCueBlocks", () => {
         "Je ne peux pas me effroyer",
       ],
     });
-    expect(parseCueBlock(cueBlock2, 6)).to.eql({
+    expect(parseCueBlock(cueBlock2, 6)).toEqual({
       start: 1081.52,
       end: 1083.64,
       payload: [
         "Je suis le petit chevalier",
       ],
     });
-    expect(parseCueBlock(cueBlock3, -1.5)).to.eql({
+    expect(parseCueBlock(cueBlock3, -1.5)).toEqual({
       start: 1079.5,
       end: 1087.5,
       payload: [],
     });
-    expect(parseCueBlock(cueBlock4, -1)).to.eql({
+    expect(parseCueBlock(cueBlock4, -1)).toEqual({
       start: 1110.08,
       end: 1111.2,
       payload: [],
@@ -114,11 +113,11 @@ describe("parsers - srt - parseCueBlocks", () => {
   });
 
   it("should return null for invalid cue blocks", () => {
-    expect(parseCueBlock(notCueBlock1, 0)).to.eql(null);
-    expect(parseCueBlock(notCueBlock1, 5)).to.eql(null);
-    expect(parseCueBlock(notCueBlock2, 0)).to.eql(null);
-    expect(parseCueBlock(notCueBlock2, 9)).to.eql(null);
-    expect(parseCueBlock(notCueBlock3, 0)).to.eql(null);
-    expect(parseCueBlock(notCueBlock3, 21)).to.eql(null);
+    expect(parseCueBlock(notCueBlock1, 0)).toEqual(null);
+    expect(parseCueBlock(notCueBlock1, 5)).toEqual(null);
+    expect(parseCueBlock(notCueBlock2, 0)).toEqual(null);
+    expect(parseCueBlock(notCueBlock2, 9)).toEqual(null);
+    expect(parseCueBlock(notCueBlock3, 0)).toEqual(null);
+    expect(parseCueBlock(notCueBlock3, 21)).toEqual(null);
   });
 });

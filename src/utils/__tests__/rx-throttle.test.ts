@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import {
   concat,
   Observable,
@@ -45,9 +44,9 @@ describe("utils - throttle (RxJS)", () => {
       () => { receivedItemFrom2 = true; },
       undefined,
       () => {
-        expect(receivedItemFrom1).to.equal(true);
-        expect(has1Completed).to.equal(true);
-        expect(receivedItemFrom2).to.equal(true);
+        expect(receivedItemFrom1).toBe(true);
+        expect(has1Completed).toBe(true);
+        expect(receivedItemFrom2).toBe(true);
         done();
       }
     );
@@ -72,8 +71,8 @@ describe("utils - throttle (RxJS)", () => {
       () => { itemsReceivedFrom1++; },
       undefined,
       () => {
-        expect(itemsReceivedFrom1).to.equal(2);
-        expect(itemsReceivedFrom2).to.equal(0);
+        expect(itemsReceivedFrom1).toBe(2);
+        expect(itemsReceivedFrom2).toBe(0);
         done();
       }
     );
@@ -84,8 +83,8 @@ describe("utils - throttle (RxJS)", () => {
       () => { has2Completed = true; }
     );
 
-    expect(itemsReceivedFrom2).to.equal(0);
-    expect(has2Completed).to.equal(true);
+    expect(itemsReceivedFrom2).toBe(0);
+    expect(has2Completed).toBe(true);
 
     sub1.next();
     sub2.complete();
@@ -123,9 +122,9 @@ describe("utils - throttle (RxJS)", () => {
       () => { itemsReceivedFrom3++; },
       undefined,
       () => {
-        expect(has1Completed).to.equal(true);
-        expect(itemsReceivedFrom1).to.equal(1);
-        expect(itemsReceivedFrom3).to.equal(1);
+        expect(has1Completed).toBe(true);
+        expect(itemsReceivedFrom1).toBe(1);
+        expect(itemsReceivedFrom3).toBe(1);
         done();
       }
     );
@@ -157,7 +156,7 @@ describe("utils - throttle (RxJS)", () => {
     Obs1.subscribe(
       () => { itemsReceivedFrom1++; },
       (e) => {
-        expect(e).to.equal("titi");
+        expect(e).toBe("titi");
         has1Errored = true;
       }
     );
@@ -166,10 +165,10 @@ describe("utils - throttle (RxJS)", () => {
     Obs3.subscribe(
       () => { itemsReceivedFrom3++; },
       (e) => {
-        expect(e).to.equal(error);
-        expect(has1Errored).to.equal(true);
-        expect(itemsReceivedFrom1).to.equal(1);
-        expect(itemsReceivedFrom3).to.equal(1);
+        expect(e).toBe(error);
+        expect(has1Errored).toBe(true);
+        expect(itemsReceivedFrom1).toBe(1);
+        expect(itemsReceivedFrom3).toBe(1);
         done();
       }
     );
@@ -210,9 +209,9 @@ describe("utils - throttle (RxJS)", () => {
       () => { itemsReceivedFrom3++; },
       undefined,
       () => {
-        expect(has1Completed).to.equal(true);
-        expect(itemsReceivedFrom1).to.equal(1);
-        expect(itemsReceivedFrom3).to.equal(1);
+        expect(has1Completed).toBe(true);
+        expect(itemsReceivedFrom1).toBe(1);
+        expect(itemsReceivedFrom3).toBe(1);
         sub2.complete();
         done();
       }
@@ -241,8 +240,8 @@ describe("utils - throttle (RxJS)", () => {
       () => { itemsReceivedFrom1++; },
       undefined,
       () => {
-        expect(itemsReceivedFrom1).to.equal(2);
-        expect(itemsReceivedFrom2).to.equal(1);
+        expect(itemsReceivedFrom1).toBe(2);
+        expect(itemsReceivedFrom2).toBe(1);
         done();
       }
     );
@@ -253,8 +252,8 @@ describe("utils - throttle (RxJS)", () => {
       () => { has2Completed = true; }
     );
 
-    expect(itemsReceivedFrom2).to.equal(1);
-    expect(has2Completed).to.equal(false);
+    expect(itemsReceivedFrom2).toBe(1);
+    expect(has2Completed).toBe(false);
 
     sub1.next();
     sub2.complete();

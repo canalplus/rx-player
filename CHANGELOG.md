@@ -1,5 +1,23 @@
 # Changelog
 
+## v3.10.2 (2019/01/08)
+
+### Bug fixes
+
+  - dash/smooth: fix manifest updates for some DASH contents (SegmentTimeline without SegmentTemplate) and for some Smooth usages
+  - compat/drm: adopt a new strategy for malfunctioning CENC PSSH on Edge by moving them at the end of the initialization data
+  - dash/smooth: update deprecated Manifest.adaptations property when updating the manifest
+
+
+## Other improvements
+
+  - dash: refresh the MPD less often
+  - dash/smooth: improve precision of `getMaximumPosition` when the Manifest is updated
+  - tests: use the Jest library for unit tests
+  - tests: add a lot of unit tests to sensitive code (from a coverage of 13% in the v3.10.1 to 22% in the v3.10.2)
+  - npm: reduce size of the npm package
+
+
 ## v3.10.1 (2019/01/03)
 
 ### Bug fixes

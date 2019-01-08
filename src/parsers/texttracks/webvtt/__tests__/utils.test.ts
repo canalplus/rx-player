@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import {
   findEndOfCueBlock,
   getFirstLineAfterHeader,
@@ -141,262 +140,262 @@ const webvtt6 = [
 describe("parsers - webvtt - utils", () => {
   describe("getFirstLineAfterHeader", () => {
     it("should give the second line after the WEBVTT one if no header", () => {
-      expect(getFirstLineAfterHeader(webvtt1)).to.equal(2);
-      expect(getFirstLineAfterHeader(webvtt2)).to.equal(3);
-      expect(getFirstLineAfterHeader(webvtt3)).to.equal(2);
-      expect(getFirstLineAfterHeader(webvtt4)).to.equal(2);
-      expect(getFirstLineAfterHeader(webvtt5)).to.equal(4);
+      expect(getFirstLineAfterHeader(webvtt1)).toBe(2);
+      expect(getFirstLineAfterHeader(webvtt2)).toBe(3);
+      expect(getFirstLineAfterHeader(webvtt3)).toBe(2);
+      expect(getFirstLineAfterHeader(webvtt4)).toBe(2);
+      expect(getFirstLineAfterHeader(webvtt5)).toBe(4);
     });
 
     it("should give the line after the line break after the header if one", () => {
-      expect(getFirstLineAfterHeader(webvtt5)).to.equal(4);
+      expect(getFirstLineAfterHeader(webvtt5)).toBe(4);
     });
 
     it("should give the second line if there is an empty line on top", () => {
-      expect(getFirstLineAfterHeader(webvtt6)).to.equal(1);
+      expect(getFirstLineAfterHeader(webvtt6)).toBe(1);
     });
 
     it("should return 0 if there is no content", () => {
       const webvttFile : string[] = [];
-      expect(getFirstLineAfterHeader(webvttFile)).to.equal(0);
+      expect(getFirstLineAfterHeader(webvttFile)).toBe(0);
     });
   });
 
   describe("isStartOfCueBlock", () => {
     it("should return false if called on a note block", () => {
-      expect(isStartOfCueBlock(webvtt1, 9)).to.equal(false);
-      expect(isStartOfCueBlock(webvtt1, 19)).to.equal(false);
-      expect(isStartOfCueBlock(webvtt1, 19)).to.equal(false);
-      expect(isStartOfCueBlock(webvtt6, 5)).to.equal(false);
+      expect(isStartOfCueBlock(webvtt1, 9)).toBe(false);
+      expect(isStartOfCueBlock(webvtt1, 19)).toBe(false);
+      expect(isStartOfCueBlock(webvtt1, 19)).toBe(false);
+      expect(isStartOfCueBlock(webvtt6, 5)).toBe(false);
     });
 
     it("should return false if called on a region block", () => {
-      expect(isStartOfCueBlock(["REGION SOMETHING", ""], 0)).to.equal(false);
-      expect(isStartOfCueBlock(["REGION SOMETHING", "a"], 0)).to.equal(false);
-      expect(isStartOfCueBlock(["REGION", "SOMETHING"], 0)).to.equal(false);
+      expect(isStartOfCueBlock(["REGION SOMETHING", ""], 0)).toBe(false);
+      expect(isStartOfCueBlock(["REGION SOMETHING", "a"], 0)).toBe(false);
+      expect(isStartOfCueBlock(["REGION", "SOMETHING"], 0)).toBe(false);
     });
 
     it("should return false if called on a style block", () => {
-      expect(isStartOfCueBlock(webvtt1, 2)).to.equal(false);
-      expect(isStartOfCueBlock(webvtt1, 11)).to.equal(false);
+      expect(isStartOfCueBlock(webvtt1, 2)).toBe(false);
+      expect(isStartOfCueBlock(webvtt1, 11)).toBe(false);
     });
 
     it("should return false if called on an empty line", () => {
-      expect(isStartOfCueBlock(webvtt1, 15)).to.equal(false);
-      expect(isStartOfCueBlock(webvtt1, 20)).to.equal(false);
-      expect(isStartOfCueBlock(webvtt2, 3)).to.equal(false);
+      expect(isStartOfCueBlock(webvtt1, 15)).toBe(false);
+      expect(isStartOfCueBlock(webvtt1, 20)).toBe(false);
+      expect(isStartOfCueBlock(webvtt2, 3)).toBe(false);
     });
 
     it("should return true if the line has timings in it", () => {
-      expect(isStartOfCueBlock(webvtt1, 16)).to.equal(true);
-      expect(isStartOfCueBlock(webvtt3, 3)).to.equal(true);
-      expect(isStartOfCueBlock(webvtt3, 12)).to.equal(true);
-      expect(isStartOfCueBlock(webvtt6, 2)).to.equal(true);
+      expect(isStartOfCueBlock(webvtt1, 16)).toBe(true);
+      expect(isStartOfCueBlock(webvtt3, 3)).toBe(true);
+      expect(isStartOfCueBlock(webvtt3, 12)).toBe(true);
+      expect(isStartOfCueBlock(webvtt6, 2)).toBe(true);
     });
 
     it("should return true for cue identifier followed by timings", () => {
-      expect(isStartOfCueBlock(webvtt3, 2)).to.equal(true);
-      expect(isStartOfCueBlock(webvtt3, 16)).to.equal(true);
-      expect(isStartOfCueBlock(webvtt3, 21)).to.equal(true);
-      expect(isStartOfCueBlock(webvtt4, 2)).to.equal(true);
-      expect(isStartOfCueBlock(webvtt5, 6)).to.equal(true);
+      expect(isStartOfCueBlock(webvtt3, 2)).toBe(true);
+      expect(isStartOfCueBlock(webvtt3, 16)).toBe(true);
+      expect(isStartOfCueBlock(webvtt3, 21)).toBe(true);
+      expect(isStartOfCueBlock(webvtt4, 2)).toBe(true);
+      expect(isStartOfCueBlock(webvtt5, 6)).toBe(true);
     });
   });
 
   describe("isStartOfNoteBlock", () => {
     it("should return true if called on a `NOTE` line followed by timings", () => {
-      expect(isStartOfNoteBlock(webvtt2, 2)).to.equal(false);
+      expect(isStartOfNoteBlock(webvtt2, 2)).toBe(false);
     });
 
     it("should return true if called on a `NOTE` line not followed by timings", () => {
-      expect(isStartOfNoteBlock(webvtt6, 5)).to.equal(true);
-      expect(isStartOfNoteBlock(webvtt3, 18)).to.equal(true); // This is actually bad
+      expect(isStartOfNoteBlock(webvtt6, 5)).toBe(true);
+      expect(isStartOfNoteBlock(webvtt3, 18)).toBe(true); // This is actually bad
     });
 
     it("should return true if called on line containing `NOTE` and spaces", () => {
-      expect(isStartOfNoteBlock(["NOTE    "], 0)).to.equal(true);
-      expect(isStartOfNoteBlock(["", "NOTE ", "TOTO"], 1)).to.equal(true);
+      expect(isStartOfNoteBlock(["NOTE    "], 0)).toBe(true);
+      expect(isStartOfNoteBlock(["", "NOTE ", "TOTO"], 1)).toBe(true);
     });
 
     /* tslint:disable max-line-length */
     it("should return true if called on line containing `NOTE` and spaces and text", () => {
     /* tslint:enable max-line-length */
-      expect(isStartOfNoteBlock(webvtt1, 9)).to.equal(true);
-      expect(isStartOfNoteBlock(webvtt1, 19)).to.equal(true);
+      expect(isStartOfNoteBlock(webvtt1, 9)).toBe(true);
+      expect(isStartOfNoteBlock(webvtt1, 19)).toBe(true);
     });
 
     /* tslint:disable max-line-length */
     it("should return false if called on a line containing `NOTE` and text attached", () => {
     /* tslint:enable max-line-length */
-      expect(isStartOfNoteBlock(["NOTEdsj f"], 0)).to.equal(false);
-      expect(isStartOfNoteBlock(["aaa", "NOTEoej ewj ", "aaa"], 1)).to.equal(false);
+      expect(isStartOfNoteBlock(["NOTEdsj f"], 0)).toBe(false);
+      expect(isStartOfNoteBlock(["aaa", "NOTEoej ewj ", "aaa"], 1)).toBe(false);
     });
 
     it("should return false if called on a region block", () => {
-      expect(isStartOfNoteBlock(["REGION SOMETHING"], 0)).to.equal(false);
+      expect(isStartOfNoteBlock(["REGION SOMETHING"], 0)).toBe(false);
     });
 
     it("should return false if called on a style block", () => {
-      expect(isStartOfNoteBlock(["STYLE SOMETHING"], 0)).to.equal(false);
-      expect(isStartOfCueBlock(webvtt1, 2)).to.equal(false);
-      expect(isStartOfCueBlock(webvtt1, 11)).to.equal(false);
+      expect(isStartOfNoteBlock(["STYLE SOMETHING"], 0)).toBe(false);
+      expect(isStartOfCueBlock(webvtt1, 2)).toBe(false);
+      expect(isStartOfCueBlock(webvtt1, 11)).toBe(false);
     });
 
     it("should return false if called on an empty line", () => {
-      expect(isStartOfNoteBlock(["", "NOTE"], 0)).to.equal(false);
-      expect(isStartOfCueBlock(webvtt1, 18)).to.equal(false);
-      expect(isStartOfCueBlock(webvtt3, 1)).to.equal(false);
+      expect(isStartOfNoteBlock(["", "NOTE"], 0)).toBe(false);
+      expect(isStartOfCueBlock(webvtt1, 18)).toBe(false);
+      expect(isStartOfCueBlock(webvtt3, 1)).toBe(false);
     });
   });
 
   describe("isStartOfRegionBlock", () => {
     it("should return true if called on a `REGION` line", () => {
-      expect(isStartOfRegionBlock(["REGION"], 0)).to.equal(true);
+      expect(isStartOfRegionBlock(["REGION"], 0)).toBe(true);
     });
 
     it("should return true if called on line containing `REGION` and spaces", () => {
-      expect(isStartOfRegionBlock(["REGION "], 0)).to.equal(true);
-      expect(isStartOfRegionBlock(["REGION  "], 0)).to.equal(true);
-      expect(isStartOfRegionBlock(["REGION         "], 0)).to.equal(true);
+      expect(isStartOfRegionBlock(["REGION "], 0)).toBe(true);
+      expect(isStartOfRegionBlock(["REGION  "], 0)).toBe(true);
+      expect(isStartOfRegionBlock(["REGION         "], 0)).toBe(true);
     });
 
     /* tslint:disable max-line-length */
     it("should return true if called on line containing `REGION` and spaces and text", () => {
     /* tslint:enable max-line-length */
-      expect(isStartOfRegionBlock(["REGION dsj f"], 0)).to.equal(true);
-      expect(isStartOfRegionBlock(["REGION   oej ewj "], 0)).to.equal(true);
-      expect(isStartOfRegionBlock(["REGION         eowj pogj qpeoj"], 0)).to.equal(true);
+      expect(isStartOfRegionBlock(["REGION dsj f"], 0)).toBe(true);
+      expect(isStartOfRegionBlock(["REGION   oej ewj "], 0)).toBe(true);
+      expect(isStartOfRegionBlock(["REGION         eowj pogj qpeoj"], 0)).toBe(true);
     });
 
     /* tslint:disable max-line-length */
     it("should return false if called on a line containing `REGION` and text attached", () => {
     /* tslint:enable max-line-length */
-      expect(isStartOfRegionBlock(["REGIONdsj f"], 0)).to.equal(false);
-      expect(isStartOfRegionBlock(["REGIONoej ewj "], 0)).to.equal(false);
-      expect(isStartOfRegionBlock(["REGIONeowj pogj qpeoj"], 0)).to.equal(false);
-      expect(isStartOfRegionBlock(["REGIONREGION"], 0)).to.equal(false);
+      expect(isStartOfRegionBlock(["REGIONdsj f"], 0)).toBe(false);
+      expect(isStartOfRegionBlock(["REGIONoej ewj "], 0)).toBe(false);
+      expect(isStartOfRegionBlock(["REGIONeowj pogj qpeoj"], 0)).toBe(false);
+      expect(isStartOfRegionBlock(["REGIONREGION"], 0)).toBe(false);
     });
 
     it("should return false if called on a note block", () => {
-      expect(isStartOfRegionBlock(["NOTE SOMETHING"], 0)).to.equal(false);
+      expect(isStartOfRegionBlock(["NOTE SOMETHING"], 0)).toBe(false);
     });
 
     it("should return false if called on a style block", () => {
-      expect(isStartOfRegionBlock(["STYLE SOMETHING"], 0)).to.equal(false);
+      expect(isStartOfRegionBlock(["STYLE SOMETHING"], 0)).toBe(false);
     });
 
     it("should return false if called on an empty line", () => {
-      expect(isStartOfRegionBlock([""], 0)).to.equal(false);
+      expect(isStartOfRegionBlock([""], 0)).toBe(false);
     });
 
     it("should return false for any other cases", () => {
-      expect(isStartOfRegionBlock(["1"], 0)).to.equal(false);
-      expect(isStartOfRegionBlock(["ababa abs"], 0)).to.equal(false);
-      expect(isStartOfRegionBlock(["a"], 0)).to.equal(false);
-      expect(isStartOfRegionBlock([" "], 0)).to.equal(false);
-      expect(isStartOfRegionBlock(["NOTESOMETHING"], 0)).to.equal(false);
-      expect(isStartOfRegionBlock(["REGIONSOMETHING"], 0)).to.equal(false);
-      expect(isStartOfRegionBlock(["STYLESOMETHING"], 0)).to.equal(false);
+      expect(isStartOfRegionBlock(["1"], 0)).toBe(false);
+      expect(isStartOfRegionBlock(["ababa abs"], 0)).toBe(false);
+      expect(isStartOfRegionBlock(["a"], 0)).toBe(false);
+      expect(isStartOfRegionBlock([" "], 0)).toBe(false);
+      expect(isStartOfRegionBlock(["NOTESOMETHING"], 0)).toBe(false);
+      expect(isStartOfRegionBlock(["REGIONSOMETHING"], 0)).toBe(false);
+      expect(isStartOfRegionBlock(["STYLESOMETHING"], 0)).toBe(false);
     });
   });
 
   describe("isStartOfStyleBlock", () => {
     it("should return true if called on a `STYLE` line", () => {
-      expect(isStartOfStyleBlock(["STYLE"], 0)).to.equal(true);
+      expect(isStartOfStyleBlock(["STYLE"], 0)).toBe(true);
     });
 
     it("should return true if called on line containing `STYLE` and spaces", () => {
-      expect(isStartOfStyleBlock(["STYLE "], 0)).to.equal(true);
-      expect(isStartOfStyleBlock(["STYLE  "], 0)).to.equal(true);
-      expect(isStartOfStyleBlock(["STYLE         "], 0)).to.equal(true);
+      expect(isStartOfStyleBlock(["STYLE "], 0)).toBe(true);
+      expect(isStartOfStyleBlock(["STYLE  "], 0)).toBe(true);
+      expect(isStartOfStyleBlock(["STYLE         "], 0)).toBe(true);
     });
 
     /* tslint:disable max-line-length */
     it("should return true if called on line containing `STYLE` and spaces and text", () => {
     /* tslint:enable max-line-length */
-      expect(isStartOfStyleBlock(["STYLE dsj f"], 0)).to.equal(true);
-      expect(isStartOfStyleBlock(["STYLE   oej ewj "], 0)).to.equal(true);
-      expect(isStartOfStyleBlock(["STYLE         eowj pogj qpeoj"], 0)).to.equal(true);
+      expect(isStartOfStyleBlock(["STYLE dsj f"], 0)).toBe(true);
+      expect(isStartOfStyleBlock(["STYLE   oej ewj "], 0)).toBe(true);
+      expect(isStartOfStyleBlock(["STYLE         eowj pogj qpeoj"], 0)).toBe(true);
     });
 
     /* tslint:disable max-line-length */
     it("should return false if called on a line containing `STYLE` and text attached", () => {
     /* tslint:enable max-line-length */
-      expect(isStartOfStyleBlock(["STYLEdsj f"], 0)).to.equal(false);
-      expect(isStartOfStyleBlock(["STYLEoej ewj "], 0)).to.equal(false);
-      expect(isStartOfStyleBlock(["STYLEeowj pogj qpeoj"], 0)).to.equal(false);
-      expect(isStartOfStyleBlock(["STYLESTYLE"], 0)).to.equal(false);
+      expect(isStartOfStyleBlock(["STYLEdsj f"], 0)).toBe(false);
+      expect(isStartOfStyleBlock(["STYLEoej ewj "], 0)).toBe(false);
+      expect(isStartOfStyleBlock(["STYLEeowj pogj qpeoj"], 0)).toBe(false);
+      expect(isStartOfStyleBlock(["STYLESTYLE"], 0)).toBe(false);
     });
 
     it("should return false if called on a note block", () => {
-      expect(isStartOfStyleBlock(["NOTE SOMETHING"], 0)).to.equal(false);
+      expect(isStartOfStyleBlock(["NOTE SOMETHING"], 0)).toBe(false);
     });
 
     it("should return false if called on a region block", () => {
-      expect(isStartOfStyleBlock(["REGION SOMETHING"], 0)).to.equal(false);
+      expect(isStartOfStyleBlock(["REGION SOMETHING"], 0)).toBe(false);
     });
 
     it("should return false if called on an empty line", () => {
-      expect(isStartOfStyleBlock([""], 0)).to.equal(false);
+      expect(isStartOfStyleBlock([""], 0)).toBe(false);
     });
 
     it("should return false for any other cases", () => {
-      expect(isStartOfStyleBlock(["1"], 0)).to.equal(false);
-      expect(isStartOfStyleBlock(["ababa abs"], 0)).to.equal(false);
-      expect(isStartOfStyleBlock(["a"], 0)).to.equal(false);
-      expect(isStartOfStyleBlock([" "], 0)).to.equal(false);
-      expect(isStartOfStyleBlock(["NOTESOMETHING"], 0)).to.equal(false);
-      expect(isStartOfStyleBlock(["REGIONSOMETHING"], 0)).to.equal(false);
-      expect(isStartOfStyleBlock(["STYLESOMETHING"], 0)).to.equal(false);
+      expect(isStartOfStyleBlock(["1"], 0)).toBe(false);
+      expect(isStartOfStyleBlock(["ababa abs"], 0)).toBe(false);
+      expect(isStartOfStyleBlock(["a"], 0)).toBe(false);
+      expect(isStartOfStyleBlock([" "], 0)).toBe(false);
+      expect(isStartOfStyleBlock(["NOTESOMETHING"], 0)).toBe(false);
+      expect(isStartOfStyleBlock(["REGIONSOMETHING"], 0)).toBe(false);
+      expect(isStartOfStyleBlock(["STYLESOMETHING"], 0)).toBe(false);
     });
   });
 
   describe("findEndOfCueBlock", () => {
     it("should return an index immediately after the end of a cue block", () => {
-      expect(findEndOfCueBlock(webvtt1, 16)).to.equal(18);
-      expect(findEndOfCueBlock(webvtt1, 17)).to.equal(18);
-      expect(findEndOfCueBlock(webvtt1, 21)).to.equal(23);
-      expect(findEndOfCueBlock(webvtt1, 22)).to.equal(23);
+      expect(findEndOfCueBlock(webvtt1, 16)).toBe(18);
+      expect(findEndOfCueBlock(webvtt1, 17)).toBe(18);
+      expect(findEndOfCueBlock(webvtt1, 21)).toBe(23);
+      expect(findEndOfCueBlock(webvtt1, 22)).toBe(23);
 
-      expect(findEndOfCueBlock(webvtt2, 0)).to.equal(2);
-      expect(findEndOfCueBlock(webvtt2, 1)).to.equal(2);
-      expect(findEndOfCueBlock(webvtt2, 4)).to.equal(7);
-      expect(findEndOfCueBlock(webvtt2, 5)).to.equal(7);
-      expect(findEndOfCueBlock(webvtt2, 6)).to.equal(7);
-      expect(findEndOfCueBlock(webvtt2, 8)).to.equal(10);
-      expect(findEndOfCueBlock(webvtt2, 9)).to.equal(10);
+      expect(findEndOfCueBlock(webvtt2, 0)).toBe(2);
+      expect(findEndOfCueBlock(webvtt2, 1)).toBe(2);
+      expect(findEndOfCueBlock(webvtt2, 4)).toBe(7);
+      expect(findEndOfCueBlock(webvtt2, 5)).toBe(7);
+      expect(findEndOfCueBlock(webvtt2, 6)).toBe(7);
+      expect(findEndOfCueBlock(webvtt2, 8)).toBe(10);
+      expect(findEndOfCueBlock(webvtt2, 9)).toBe(10);
 
-      expect(findEndOfCueBlock(webvtt3, 2)).to.equal(7);
-      expect(findEndOfCueBlock(webvtt3, 3)).to.equal(7);
-      expect(findEndOfCueBlock(webvtt3, 4)).to.equal(7);
-      expect(findEndOfCueBlock(webvtt3, 5)).to.equal(7);
-      expect(findEndOfCueBlock(webvtt3, 6)).to.equal(7);
-      expect(findEndOfCueBlock(webvtt3, 9)).to.equal(11);
-      expect(findEndOfCueBlock(webvtt3, 10)).to.equal(11);
-      expect(findEndOfCueBlock(webvtt3, 12)).to.equal(13);
-      expect(findEndOfCueBlock(webvtt3, 16)).to.equal(20);
-      expect(findEndOfCueBlock(webvtt3, 17)).to.equal(20);
-      expect(findEndOfCueBlock(webvtt3, 18)).to.equal(20);
-      expect(findEndOfCueBlock(webvtt3, 19)).to.equal(20);
-      expect(findEndOfCueBlock(webvtt3, 21)).to.equal(25);
-      expect(findEndOfCueBlock(webvtt3, 22)).to.equal(25);
-      expect(findEndOfCueBlock(webvtt3, 23)).to.equal(25);
-      expect(findEndOfCueBlock(webvtt3, 24)).to.equal(25);
+      expect(findEndOfCueBlock(webvtt3, 2)).toBe(7);
+      expect(findEndOfCueBlock(webvtt3, 3)).toBe(7);
+      expect(findEndOfCueBlock(webvtt3, 4)).toBe(7);
+      expect(findEndOfCueBlock(webvtt3, 5)).toBe(7);
+      expect(findEndOfCueBlock(webvtt3, 6)).toBe(7);
+      expect(findEndOfCueBlock(webvtt3, 9)).toBe(11);
+      expect(findEndOfCueBlock(webvtt3, 10)).toBe(11);
+      expect(findEndOfCueBlock(webvtt3, 12)).toBe(13);
+      expect(findEndOfCueBlock(webvtt3, 16)).toBe(20);
+      expect(findEndOfCueBlock(webvtt3, 17)).toBe(20);
+      expect(findEndOfCueBlock(webvtt3, 18)).toBe(20);
+      expect(findEndOfCueBlock(webvtt3, 19)).toBe(20);
+      expect(findEndOfCueBlock(webvtt3, 21)).toBe(25);
+      expect(findEndOfCueBlock(webvtt3, 22)).toBe(25);
+      expect(findEndOfCueBlock(webvtt3, 23)).toBe(25);
+      expect(findEndOfCueBlock(webvtt3, 24)).toBe(25);
 
-      expect(findEndOfCueBlock(webvtt4, 2)).to.equal(6);
-      expect(findEndOfCueBlock(webvtt4, 3)).to.equal(6);
-      expect(findEndOfCueBlock(webvtt4, 4)).to.equal(6);
-      expect(findEndOfCueBlock(webvtt4, 5)).to.equal(6);
+      expect(findEndOfCueBlock(webvtt4, 2)).toBe(6);
+      expect(findEndOfCueBlock(webvtt4, 3)).toBe(6);
+      expect(findEndOfCueBlock(webvtt4, 4)).toBe(6);
+      expect(findEndOfCueBlock(webvtt4, 5)).toBe(6);
 
-      expect(findEndOfCueBlock(webvtt5, 6)).to.equal(9);
-      expect(findEndOfCueBlock(webvtt5, 7)).to.equal(9);
-      expect(findEndOfCueBlock(webvtt5, 8)).to.equal(9);
-      expect(findEndOfCueBlock(webvtt5, 10)).to.equal(12);
-      expect(findEndOfCueBlock(webvtt5, 11)).to.equal(12);
+      expect(findEndOfCueBlock(webvtt5, 6)).toBe(9);
+      expect(findEndOfCueBlock(webvtt5, 7)).toBe(9);
+      expect(findEndOfCueBlock(webvtt5, 8)).toBe(9);
+      expect(findEndOfCueBlock(webvtt5, 10)).toBe(12);
+      expect(findEndOfCueBlock(webvtt5, 11)).toBe(12);
 
-      expect(findEndOfCueBlock(webvtt6, 1)).to.equal(4);
-      expect(findEndOfCueBlock(webvtt6, 2)).to.equal(4);
-      expect(findEndOfCueBlock(webvtt6, 3)).to.equal(4);
+      expect(findEndOfCueBlock(webvtt6, 1)).toBe(4);
+      expect(findEndOfCueBlock(webvtt6, 2)).toBe(4);
+      expect(findEndOfCueBlock(webvtt6, 3)).toBe(4);
     });
   });
 });

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import {
   Observable,
   Subject,
@@ -27,7 +26,7 @@ import noop from "../noop";
 describe("utils - castToObservable", () => {
   it("should return the argument if already an Observable", () => {
     const obs = new Observable<void>();
-    expect(castToObservable(obs)).to.equal(obs);
+    expect(castToObservable(obs)).toBe(obs);
   });
 
   it("should convert promise's then to next", (done) => {
@@ -40,9 +39,9 @@ describe("utils - castToObservable", () => {
     let numberOfItemEmitted = 0;
     castToObservable(prom).subscribe((x) => {
       numberOfItemEmitted++;
-      expect(x).to.equal(emitItem);
+      expect(x).toBe(emitItem);
     }, noop, () => {
-      expect(numberOfItemEmitted).to.equal(1);
+      expect(numberOfItemEmitted).toBe(1);
       done();
     });
 
@@ -63,8 +62,8 @@ describe("utils - castToObservable", () => {
     castToObservable(prom).subscribe(() => {
       numberOfItemEmitted++;
     }, (err) => {
-      expect(numberOfItemEmitted).to.equal(0);
-      expect(err).to.equal(errorItem);
+      expect(numberOfItemEmitted).toBe(0);
+      expect(err).toBe(errorItem);
       done();
     });
     if (!reject) {
@@ -100,13 +99,13 @@ describe("utils - castToObservable", () => {
       (num) => {
         switch (itemFromObs1++) {
           case 0:
-            expect(num).to.equal(1);
+            expect(num).toBe(1);
             break;
           case 1:
-            expect(num).to.equal(12);
+            expect(num).toBe(12);
             break;
           case 2:
-            expect(num).to.equal(5);
+            expect(num).toBe(5);
             break;
           default:
             throw new Error("Invalid item received");
@@ -114,13 +113,13 @@ describe("utils - castToObservable", () => {
       },
 
       (err : Error) => {
-        expect(err.message).to.equal("ffob");
-        expect(itemFromObs1).to.equal(3);
+        expect(err.message).toBe("ffob");
+        expect(itemFromObs1).toBe(3);
         rxObs2.subscribe(
           () => { itemFromObs2++; },
           undefined,
           () => {
-            expect(itemFromObs2).to.equal(0);
+            expect(itemFromObs2).toBe(0);
             done();
           }
         );
@@ -152,7 +151,7 @@ describe("utils - castToObservable", () => {
     const sub2 = rxObs.subscribe();
     sub1.unsubscribe();
     sub2.unsubscribe();
-    expect(disposeHasBeenCalled).to.equal(2);
+    expect(disposeHasBeenCalled).toBe(2);
 
     // reset counter
     disposeHasBeenCalled = 0;
@@ -162,7 +161,7 @@ describe("utils - castToObservable", () => {
     const sharedSub2 = sharedRxObs.subscribe();
     sharedSub1.unsubscribe();
     sharedSub2.unsubscribe();
-    expect(disposeHasBeenCalled).to.equal(1);
+    expect(disposeHasBeenCalled).toBe(1);
   });
 
   /* tslint:disable:max-line-length */
@@ -184,7 +183,7 @@ describe("utils - castToObservable", () => {
     const sub2 = rxObs.subscribe();
     sub1.unsubscribe();
     sub2.unsubscribe();
-    expect(disposeHasBeenCalled).to.equal(2);
+    expect(disposeHasBeenCalled).toBe(2);
 
     // reset counter
     disposeHasBeenCalled = 0;
@@ -194,7 +193,7 @@ describe("utils - castToObservable", () => {
     const sharedSub2 = sharedRxObs.subscribe();
     sharedSub1.unsubscribe();
     sharedSub2.unsubscribe();
-    expect(disposeHasBeenCalled).to.equal(1);
+    expect(disposeHasBeenCalled).toBe(1);
   });
 
   it("should wrap other values in an rxJS Observable", (done) =>  {
@@ -204,12 +203,12 @@ describe("utils - castToObservable", () => {
     obs.subscribe(
       (e) => {
         nextHasBeenCalled++;
-        expect(e).to.be.instanceof(Error);
-        expect(e.message).to.equal("TEST");
+        expect(e).toBeInstanceOf(Error);
+        expect(e.message).toBe("TEST");
       },
       undefined,
       () => {
-        expect(nextHasBeenCalled).to.equal(1);
+        expect(nextHasBeenCalled).toBe(1);
         done();
       }
     );

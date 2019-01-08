@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import normalizeLanguage, {
   normalizeAudioTrack,
   normalizeTextTrack,
@@ -22,44 +21,44 @@ import normalizeLanguage, {
 
 describe("utils - normalizeLanguage", () => {
   it("should translate an empty string to an empty string", () => {
-    expect(normalizeLanguage("")).to.equal("");
+    expect(normalizeLanguage("")).toBe("");
   });
 
   it("should translate ISO639-1 to ISO639-3", () => {
-    expect(normalizeLanguage("fr")).to.equal("fra");
-    expect(normalizeLanguage("hy")).to.equal("hye");
-    expect(normalizeLanguage("de")).to.equal("deu");
-    expect(normalizeLanguage("ff")).to.equal("ful");
+    expect(normalizeLanguage("fr")).toBe("fra");
+    expect(normalizeLanguage("hy")).toBe("hye");
+    expect(normalizeLanguage("de")).toBe("deu");
+    expect(normalizeLanguage("ff")).toBe("ful");
   });
 
   it("should translate ISO639-2 to ISO639-3", () => {
-    expect(normalizeLanguage("fre")).to.equal("fra");
-    expect(normalizeLanguage("alb")).to.equal("sqi");
-    expect(normalizeLanguage("ger")).to.equal("deu");
+    expect(normalizeLanguage("fre")).toBe("fra");
+    expect(normalizeLanguage("alb")).toBe("sqi");
+    expect(normalizeLanguage("ger")).toBe("deu");
   });
 
   it("should translate IETF language tags to ISO639-3", () => {
-    expect(normalizeLanguage("fr-FR")).to.equal("fra");
-    expect(normalizeLanguage("en-US")).to.equal("eng");
-    expect(normalizeLanguage("pt-BR")).to.equal("por");
+    expect(normalizeLanguage("fr-FR")).toBe("fra");
+    expect(normalizeLanguage("en-US")).toBe("eng");
+    expect(normalizeLanguage("pt-BR")).toBe("por");
   });
 
   it("should not translate languages it doesn't know", () => {
-    expect(normalizeLanguage("ggg")).to.equal("ggg");
+    expect(normalizeLanguage("ggg")).toBe("ggg");
   });
 });
 
 describe("utils - normalizeAudioTrack", () => {
   it("should return null if language is `null`", () => {
-    expect(normalizeAudioTrack(null)).to.equal(null);
+    expect(normalizeAudioTrack(null)).toBe(null);
   });
 
   it("should return undefined if language is `undefined`", () => {
-    expect(normalizeAudioTrack(undefined)).to.equal(undefined);
+    expect(normalizeAudioTrack(undefined)).toBe(undefined);
   });
 
   it("should format a normalized audio track for an empty string", () => {
-    expect(normalizeAudioTrack("")).to.eql({
+    expect(normalizeAudioTrack("")).toEqual({
       language: "",
       audioDescription: false,
       normalized: "",
@@ -67,17 +66,17 @@ describe("utils - normalizeAudioTrack", () => {
   });
 
   it("should format a normalized audio track for a given language", () => {
-    expect(normalizeAudioTrack("fre")).to.eql({
+    expect(normalizeAudioTrack("fre")).toEqual({
       language: "fre",
       audioDescription: false,
       normalized: "fra",
     });
-    expect(normalizeAudioTrack("en")).to.eql({
+    expect(normalizeAudioTrack("en")).toEqual({
       language: "en",
       audioDescription: false,
       normalized: "eng",
     });
-    expect(normalizeAudioTrack("pt-BR")).to.eql({
+    expect(normalizeAudioTrack("pt-BR")).toEqual({
       language: "pt-BR",
       audioDescription: false,
       normalized: "por",
@@ -85,17 +84,17 @@ describe("utils - normalizeAudioTrack", () => {
   });
 
   it("should accept an object indicating the language", () => {
-    expect(normalizeAudioTrack({ language: "fre" })).to.eql({
+    expect(normalizeAudioTrack({ language: "fre" })).toEqual({
       language: "fre",
       audioDescription: false,
       normalized: "fra",
     });
-    expect(normalizeAudioTrack({ language: "en" })).to.eql({
+    expect(normalizeAudioTrack({ language: "en" })).toEqual({
       language: "en",
       audioDescription: false,
       normalized: "eng",
     });
-    expect(normalizeAudioTrack({ language: "pt-BR" })).to.eql({
+    expect(normalizeAudioTrack({ language: "pt-BR" })).toEqual({
       language: "pt-BR",
       audioDescription: false,
       normalized: "por",
@@ -106,7 +105,7 @@ describe("utils - normalizeAudioTrack", () => {
     expect(normalizeAudioTrack({
       language: "fre",
       audioDescription: false,
-    })).to.eql({
+    })).toEqual({
       language: "fre",
       audioDescription: false,
       normalized: "fra",
@@ -114,7 +113,7 @@ describe("utils - normalizeAudioTrack", () => {
     expect(normalizeAudioTrack({
       language: "en",
       audioDescription: false,
-    })).to.eql({
+    })).toEqual({
       language: "en",
       audioDescription: false,
       normalized: "eng",
@@ -122,7 +121,7 @@ describe("utils - normalizeAudioTrack", () => {
     expect(normalizeAudioTrack({
       language: "pt-BR",
       audioDescription: false,
-    })).to.eql({
+    })).toEqual({
       language: "pt-BR",
       audioDescription: false,
       normalized: "por",
@@ -133,7 +132,7 @@ describe("utils - normalizeAudioTrack", () => {
     expect(normalizeAudioTrack({
       language: "fre",
       audioDescription: true,
-    })).to.eql({
+    })).toEqual({
       language: "fre",
       audioDescription: true,
       normalized: "fra",
@@ -141,7 +140,7 @@ describe("utils - normalizeAudioTrack", () => {
     expect(normalizeAudioTrack({
       language: "en",
       audioDescription: true,
-    })).to.eql({
+    })).toEqual({
       language: "en",
       audioDescription: true,
       normalized: "eng",
@@ -149,7 +148,7 @@ describe("utils - normalizeAudioTrack", () => {
     expect(normalizeAudioTrack({
       language: "pt-BR",
       audioDescription: true,
-    })).to.eql({
+    })).toEqual({
       language: "pt-BR",
       audioDescription: true,
       normalized: "por",
@@ -159,15 +158,15 @@ describe("utils - normalizeAudioTrack", () => {
 
 describe("utils - normalizeTextTrack", () => {
   it("should return null if language is `null`", () => {
-    expect(normalizeTextTrack(null)).to.equal(null);
+    expect(normalizeTextTrack(null)).toBe(null);
   });
 
   it("should return undefined if language is `undefined`", () => {
-    expect(normalizeTextTrack(undefined)).to.equal(undefined);
+    expect(normalizeTextTrack(undefined)).toBe(undefined);
   });
 
   it("should format a normalized audio track for an empty string", () => {
-    expect(normalizeTextTrack("")).to.eql({
+    expect(normalizeTextTrack("")).toEqual({
       language: "",
       closedCaption: false,
       normalized: "",
@@ -175,17 +174,17 @@ describe("utils - normalizeTextTrack", () => {
   });
 
   it("should format a normalized audio track for a given language", () => {
-    expect(normalizeTextTrack("fre")).to.eql({
+    expect(normalizeTextTrack("fre")).toEqual({
       language: "fre",
       closedCaption: false,
       normalized: "fra",
     });
-    expect(normalizeTextTrack("en")).to.eql({
+    expect(normalizeTextTrack("en")).toEqual({
       language: "en",
       closedCaption: false,
       normalized: "eng",
     });
-    expect(normalizeTextTrack("pt-BR")).to.eql({
+    expect(normalizeTextTrack("pt-BR")).toEqual({
       language: "pt-BR",
       closedCaption: false,
       normalized: "por",
@@ -193,17 +192,17 @@ describe("utils - normalizeTextTrack", () => {
   });
 
   it("should accept an object indicating the language", () => {
-    expect(normalizeTextTrack({ language: "fre" })).to.eql({
+    expect(normalizeTextTrack({ language: "fre" })).toEqual({
       language: "fre",
       closedCaption: false,
       normalized: "fra",
     });
-    expect(normalizeTextTrack({ language: "en" })).to.eql({
+    expect(normalizeTextTrack({ language: "en" })).toEqual({
       language: "en",
       closedCaption: false,
       normalized: "eng",
     });
-    expect(normalizeTextTrack({ language: "pt-BR" })).to.eql({
+    expect(normalizeTextTrack({ language: "pt-BR" })).toEqual({
       language: "pt-BR",
       closedCaption: false,
       normalized: "por",
@@ -214,7 +213,7 @@ describe("utils - normalizeTextTrack", () => {
     expect(normalizeTextTrack({
       language: "fre",
       closedCaption: false,
-    })).to.eql({
+    })).toEqual({
       language: "fre",
       closedCaption: false,
       normalized: "fra",
@@ -222,7 +221,7 @@ describe("utils - normalizeTextTrack", () => {
     expect(normalizeTextTrack({
       language: "en",
       closedCaption: false,
-    })).to.eql({
+    })).toEqual({
       language: "en",
       closedCaption: false,
       normalized: "eng",
@@ -230,7 +229,7 @@ describe("utils - normalizeTextTrack", () => {
     expect(normalizeTextTrack({
       language: "pt-BR",
       closedCaption: false,
-    })).to.eql({
+    })).toEqual({
       language: "pt-BR",
       closedCaption: false,
       normalized: "por",
@@ -241,7 +240,7 @@ describe("utils - normalizeTextTrack", () => {
     expect(normalizeTextTrack({
       language: "fre",
       closedCaption: true,
-    })).to.eql({
+    })).toEqual({
       language: "fre",
       closedCaption: true,
       normalized: "fra",
@@ -249,7 +248,7 @@ describe("utils - normalizeTextTrack", () => {
     expect(normalizeTextTrack({
       language: "en",
       closedCaption: true,
-    })).to.eql({
+    })).toEqual({
       language: "en",
       closedCaption: true,
       normalized: "eng",
@@ -257,7 +256,7 @@ describe("utils - normalizeTextTrack", () => {
     expect(normalizeTextTrack({
       language: "pt-BR",
       closedCaption: true,
-    })).to.eql({
+    })).toEqual({
       language: "pt-BR",
       closedCaption: true,
       normalized: "por",

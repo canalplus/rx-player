@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
 import {
   getBackedoffDelay,
   getFuzzedDelay,
@@ -24,13 +23,13 @@ describe("utils - getFuzzedDelay", () => {
   it("should return the delay given multiplied by [0.3, 0.7]", () => {
     for (let i = 0; i < 1000; i++) {
       const fuzzed = getFuzzedDelay(1);
-      expect(fuzzed).to.be.at.least(0.7);
-      expect(fuzzed).to.be.at.most(1.3);
+      expect(fuzzed).toBeGreaterThanOrEqual(0.7);
+      expect(fuzzed).toBeLessThanOrEqual(1.3);
     }
     for (let i = 0; i < 1000; i++) {
       const fuzzed = getFuzzedDelay(98);
-      expect(fuzzed).to.be.at.least(98 * 0.7);
-      expect(fuzzed).to.be.at.most(98 * 1.3);
+      expect(fuzzed).toBeGreaterThanOrEqual(98 * 0.7);
+      expect(fuzzed).toBeLessThanOrEqual(98 * 1.3);
     }
   });
 });
@@ -39,25 +38,25 @@ describe("utils - getBackedoffDelay", () => {
   it("should work like getFuzzedDelay without retryCount", () => {
     for (let i = 0; i < 1000; i++) {
       const delay = getBackedoffDelay(1);
-      expect(delay).to.be.at.least(0.7);
-      expect(delay).to.be.at.most(1.3);
+      expect(delay).toBeGreaterThanOrEqual(0.7);
+      expect(delay).toBeLessThanOrEqual(1.3);
     }
     for (let i = 0; i < 1000; i++) {
       const delay = getBackedoffDelay(98);
-      expect(delay).to.be.at.least(98 * 0.7);
-      expect(delay).to.be.at.most(98 * 1.3);
+      expect(delay).toBeGreaterThanOrEqual(98 * 0.7);
+      expect(delay).toBeLessThanOrEqual(98 * 1.3);
     }
   });
   it("should work like getFuzzedDelay with a retryCount of 1", () => {
     for (let i = 0; i < 1000; i++) {
       const delay = getBackedoffDelay(1, 1);
-      expect(delay).to.be.at.least(0.7);
-      expect(delay).to.be.at.most(1.3);
+      expect(delay).toBeGreaterThanOrEqual(0.7);
+      expect(delay).toBeLessThanOrEqual(1.3);
     }
     for (let i = 0; i < 1000; i++) {
       const delay = getBackedoffDelay(98, 1);
-      expect(delay).to.be.at.least(98 * 0.7);
-      expect(delay).to.be.at.most(98 * 1.3);
+      expect(delay).toBeGreaterThanOrEqual(98 * 0.7);
+      expect(delay).toBeLessThanOrEqual(98 * 1.3);
     }
   });
   it("should return the delay augmented exponentially based on retryCount", () => {
@@ -65,13 +64,13 @@ describe("utils - getBackedoffDelay", () => {
     const pow2 = getBackedoffDelay(2, 2);
     const pow3 = getBackedoffDelay(2, 3);
     const pow4 = getBackedoffDelay(2, 4);
-    expect(pow1).to.be.at.least(0.7 * 2);
-    expect(pow1).to.be.at.most(1.3 * 2);
-    expect(pow2).to.be.at.least(0.7 * 4);
-    expect(pow2).to.be.at.most(1.3 * 4);
-    expect(pow3).to.be.at.least(0.7 * 8);
-    expect(pow3).to.be.at.most(1.3 * 8);
-    expect(pow4).to.be.at.least(0.7 * 16);
-    expect(pow4).to.be.at.most(1.3 * 16);
+    expect(pow1).toBeGreaterThanOrEqual(0.7 * 2);
+    expect(pow1).toBeLessThanOrEqual(1.3 * 2);
+    expect(pow2).toBeGreaterThanOrEqual(0.7 * 4);
+    expect(pow2).toBeLessThanOrEqual(1.3 * 4);
+    expect(pow3).toBeGreaterThanOrEqual(0.7 * 8);
+    expect(pow3).toBeLessThanOrEqual(1.3 * 8);
+    expect(pow4).toBeGreaterThanOrEqual(0.7 * 16);
+    expect(pow4).toBeLessThanOrEqual(1.3 * 16);
   });
 });

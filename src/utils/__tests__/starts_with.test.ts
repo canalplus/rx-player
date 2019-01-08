@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
-import * as sinon from "sinon";
 import startsWith from "../starts_with";
 
 /* tslint:disable no-unbound-method */
@@ -23,41 +21,40 @@ const initialStartsWith = String.prototype.startsWith;
 /* tslint:enable no-unbound-method */
 
 describe("utils - starts-with", () => {
-  before(() => {
+  beforeEach(() => {
     (String.prototype as any).startsWith = undefined;
   });
 
-  after(() => {
+  afterEach(() => {
     String.prototype.startsWith = initialStartsWith;
   });
 
   it("should mirror String.prototype.startsWith behavior", () => {
-    expect(startsWith("Kindred", "Kin")).to.eql(true);
-    expect(startsWith("Loner", "one", 1)).to.eql(true);
-    expect(startsWith("Ashtray Wasp", " ", 7)).to.eql(true);
+    expect(startsWith("Kindred", "Kin")).toEqual(true);
+    expect(startsWith("Loner", "one", 1)).toEqual(true);
+    expect(startsWith("Ashtray Wasp", " ", 7)).toEqual(true);
 
-    expect(startsWith("Rival Dealer", "riv")).to.eql(false);
-    expect(startsWith("Hiders", "Hid", 1)).to.eql(false);
+    expect(startsWith("Rival Dealer", "riv")).toEqual(false);
+    expect(startsWith("Hiders", "Hid", 1)).toEqual(false);
 
-    expect(startsWith("Come Down To Us", "")).to.eql(true);
-    expect(startsWith("Rough Sleeper", "Ro", -5)).to.eql(true);
-    expect(startsWith("", "")).to.eql(true);
+    expect(startsWith("Come Down To Us", "")).toEqual(true);
+    expect(startsWith("Rough Sleeper", "Ro", -5)).toEqual(true);
+    expect(startsWith("", "")).toEqual(true);
   });
 
   if (typeof initialStartsWith === "function") {
     it("should call the original startsWith function if available", () => {
       String.prototype.startsWith = initialStartsWith;
-      const startsWithSpy = sinon.spy(String.prototype, "startsWith");
+      const startsWithSpy = jest.spyOn(String.prototype, "startsWith");
       const str = "Street Halo";
-      expect(startsWith(str, "Stree")).to.equal(true);
-      expect(startsWith(str, "Halo")).to.equal(false);
-      expect(startsWith(str, "Stree", 1)).to.equal(false);
+      expect(startsWith(str, "Stree")).toBe(true);
+      expect(startsWith(str, "Halo")).toBe(false);
+      expect(startsWith(str, "Stree", 1)).toBe(false);
 
-      expect(startsWithSpy.callCount).to.equal(3);
-      expect(startsWithSpy.calledWith("Stree")).to.equal(true);
-      expect(startsWithSpy.calledWith("Halo")).to.equal(true);
-      expect(startsWithSpy.calledWith("Stree", 1)).to.equal(true);
-      startsWithSpy.restore();
+      expect(startsWithSpy).toHaveBeenCalledTimes(3);
+      expect(startsWithSpy).toHaveBeenNthCalledWith(1, "Stree", undefined);
+      expect(startsWithSpy).toHaveBeenNthCalledWith(2, "Halo", undefined);
+      expect(startsWithSpy).toHaveBeenNthCalledWith(3, "Stree", 1);
     });
   }
 });
