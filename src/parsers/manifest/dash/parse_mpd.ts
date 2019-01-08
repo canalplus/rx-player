@@ -25,7 +25,7 @@ import checkManifestIDs from "../utils/check_manifest_ids";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
 import getLastTimeReference from "./get_last_time_reference";
-import getPresentationLiveGap from "./get_presentation_live_gap";
+import getTimeLimits from "./get_time_limits";
 import {
   createMPDIntermediateRepresentation,
   IMPDIntermediateRepresentation,
@@ -191,13 +191,6 @@ function parseCompleteIntermediateRepresentation(
   };
 
   // -- add optional fields --
-
-  if (rootAttributes.type !== "static" && rootAttributes.availabilityEndTime != null) {
-    parsedMPD.availabilityEndTime = rootAttributes.availabilityEndTime;
-  }
-  if (rootAttributes.timeShiftBufferDepth != null) {
-    parsedMPD.timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
-  }
   if (rootAttributes.minimumUpdatePeriod != null
       && rootAttributes.minimumUpdatePeriod > 0) {
     parsedMPD.lifetime = rootAttributes.minimumUpdatePeriod;
@@ -221,15 +214,21 @@ function parseCompleteIntermediateRepresentation(
                 throw new Error("DASH parser: wrong number of loaded ressources.");
               }
               parsedMPD.clockOffset = getClockOffset(loadedRessources[0]);
-              parsedMPD.presentationLiveGap =
-                getPresentationLiveGap(parsedMPD, lastTimeReference);
+              const timeLimits = getTimeLimits(
+                parsedMPD, lastTimeReference, rootAttributes.timeShiftBufferDepth);
+              parsedMPD.minimumTime = timeLimits[0];
+              parsedMPD.maximumTime = timeLimits[1];
               return { type: "done", value: parsedMPD };
             },
           },
         };
       }
+    } else {
+      const timeLimits = getTimeLimits(
+        parsedMPD, lastTimeReference, rootAttributes.timeShiftBufferDepth);
+      parsedMPD.minimumTime = timeLimits[0];
+      parsedMPD.maximumTime = timeLimits[1];
     }
-    parsedMPD.presentationLiveGap = getPresentationLiveGap(parsedMPD, lastTimeReference);
   }
 
   return { type: "done", value: parsedMPD };

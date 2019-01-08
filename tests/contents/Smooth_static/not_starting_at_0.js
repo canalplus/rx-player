@@ -71,9 +71,9 @@ const manifestInfos = {
   transport: "smooth",
   isLive: false,
   duration: 75.0079999 + 9,
-  timeShiftBufferDepth: undefined,
+  minimumPosition: 9,
+  maximumPosition: 75.0079999 + 9,
   availabilityStartTime: 0,
-  minimumTime: 9,
   periods: [
     {
       start: 0,

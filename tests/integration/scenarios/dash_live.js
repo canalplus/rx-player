@@ -44,8 +44,6 @@ describe("DASH live content (SegmentTimeline)", function () {
     expect(typeof manifest.id).to.equal("string");
     expect(manifest.isLive).to.equal(true);
     expect(manifest.suggestedPresentationDelay).to.equal(10);
-    expect(manifest.timeShiftBufferDepth)
-      .to.equal(manifestInfos.timeShiftBufferDepth);
     expect(manifest.getUrl()).to.equal(manifestInfos.url);
     expect(manifest.availabilityStartTime)
       .to.equal(manifestInfos.availabilityStartTime);
