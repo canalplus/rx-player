@@ -19859,12 +19859,15 @@ object-assign
    * @returns {Boolean}
    */ , _proto.shouldRefresh = function shouldRefresh(_start, end) {
                 if (!this._index.isDynamic || 0 === this._index.timeline.length) return !1;
-                var timeline = this._index.timeline, scaledTo = toIndexTime(this._index, end), lastItem = timeline[timeline.length - 1];
-                return !(null == lastItem || lastItem.repeatCount < 0) && (lastItem.duration < 0 && (lastItem = {
+                var timeline = this._index.timeline, lastItem = timeline[timeline.length - 1];
+                if (null == lastItem || lastItem.repeatCount < 0) return !1;
+                lastItem.duration < 0 && (lastItem = {
                     start: lastItem.start,
                     duration: 0,
                     repeatCount: lastItem.repeatCount
-                }), scaledTo > getIndexSegmentEnd(lastItem, null, this._index.timelineEnd));
+                });
+                var scaledStart = toIndexTime(this._index, _start), indexEnd = getIndexSegmentEnd(lastItem, null, this._index.timelineEnd);
+                return indexEnd <= scaledStart || toIndexTime(this._index, end) - lastItem.duration > indexEnd;
             }
             /**
    * Returns first position in index.
