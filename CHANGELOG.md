@@ -1,6 +1,6 @@
 # Changelog
 
-## v3.10.2 (2019/01/07)
+## v3.10.2 (2019/01/08)
 
 ### Bug fixes
 
@@ -11,6 +11,7 @@
 
 ## Other improvements
 
+  - dash: refresh the MPD less often
   - dash/smooth: improve precision of `getMaximumPosition` when the Manifest is updated
   - tests: use the Jest library for unit tests
   - tests: add a lot of unit tests to sensitive code (from a coverage of 13% in the v3.10.1 to 22% in the v3.10.2)
