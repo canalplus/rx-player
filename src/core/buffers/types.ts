@@ -30,6 +30,7 @@ export interface IBufferEventAddedSegment<T> {
   value : {
     bufferType : IBufferType; // The type of the Representation
     segment : ISegment; // The concerned Segment
+    buffered : TimeRanges; // TimeRanges of the concerned SourceBUffer
     segmentData : T; // The data pushed
   };
 }

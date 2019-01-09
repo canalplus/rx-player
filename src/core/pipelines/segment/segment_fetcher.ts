@@ -131,6 +131,7 @@ export default function createSegmentFetcher<T>(
                 value: {
                   size,
                   duration,
+                  content,
                 },
               });
             }
@@ -218,7 +219,7 @@ export default function createSegmentFetcher<T>(
               .pipe(catchError((error) => {
                 const formattedError = isKnownError(error) ?
                   error : new OtherError("PIPELINE_PARSING_ERROR", error, true);
-                  throw formattedError;
+                throw formattedError;
               }));
           },
         };

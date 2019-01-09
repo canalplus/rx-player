@@ -187,7 +187,8 @@ export default function InitializeOnMediaSource({
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".
-  const abrManager = new ABRManager(requestsInfos$, network$, adaptiveOptions);
+  const abrManager =
+    new ABRManager(mediaElement, requestsInfos$, network$, adaptiveOptions);
 
   // Create EME Manager, an observable which will manage every EME-related
   // issue.

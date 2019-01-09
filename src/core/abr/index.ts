@@ -19,7 +19,10 @@ import ABRManager, {
   IABRMetric,
   IABRRequest,
 } from "./abr_manager";
-export { IABREstimation } from "./representation_chooser";
+export {
+  IABRBufferEvents,
+  IABREstimation,
+} from "./representation_chooser";
 
 export default ABRManager;
 export {

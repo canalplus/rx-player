@@ -2248,10 +2248,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     }
 
     const bitrate = representation && representation.bitrate;
-    if (bitrate != null) {
-      this._priv_bitrateInfos.lastBitrates[type] = bitrate;
-    }
-
     if (period != null && currentPeriod != null && currentPeriod.id === period.id) {
       if (type === "video") {
         this._priv_triggerContentEvent("videoBitrate", bitrate != null ? bitrate : -1);
@@ -2276,6 +2272,10 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     type : IBufferType;
     bitrate : number|undefined;
   }) : void {
+    if (bitrate != null) {
+      this._priv_bitrateInfos.lastBitrates[type] = bitrate;
+    }
+
     this._priv_triggerContentEvent("bitrateEstimation", { type, bitrate });
   }
 
