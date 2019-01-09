@@ -16,6 +16,7 @@
 
 import { ICustomError } from "../errors";
 import log from "../log";
+import { IParsedManifest } from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
@@ -24,9 +25,7 @@ import Adaptation, {
   IAdaptationType,
   IRepresentationFilter,
 } from "./adaptation";
-import Period, {
-  IPeriodArguments,
-} from "./period";
+import Period from "./period";
 import { StaticRepresentationIndex } from "./representation_index";
 import updatePeriodInPlace from "./update_period";
 
@@ -46,36 +45,6 @@ interface ISupplementaryTextTrack {
   language? : string; // ISO639-{1,2,3} code for the language of the track
   languages? : string[]; // TODO remove
   closedCaption : boolean; // if true, the track are closed captions
-}
-
-interface IManifestArguments {
-  // required
-  id : string; // Unique ID for the manifest.
-  isLive : boolean; // If true, this Manifest describes a content not finished yet.
-  periods : IPeriodArguments[]; // Periods contained in this manifest.
-  transportType : string; // "smooth", "dash" etc.
-
-  // optional
-  availabilityStartTime? : number; // Base time from which the segments arge generated.
-  baseURL? : string; // Base URL for relative URLs given in that Manifest.
-  clockOffset? : number;
-  duration? : number; // Last time in the content. Only useful for non-live contents.
-  lifetime? : number; // Duration of the validity of this Manifest, after which it
-                      // should be refreshed.
-  maximumTime? : { // Informations on the maximum seekable position.
-    isContinuous : boolean; // Whether this value linearly evolves over time.
-    value : number; // Maximum seekable time in milliseconds calculated at `time`.
-    time : number; // `Performance.now()` output at the time `value` was calculated.
-  };
-  minimumTime? : { // Informations on the minimum seekable position.
-    isContinuous : boolean; // Whether this value linearly evolves over time.
-    value : number; // minimum seekable time in milliseconds calculated at `time`.
-    time : number; // `Performance.now()` output at the time `value` was calculated.
-  };
-  suggestedPresentationDelay? : number; // Suggested delay from the last position.
-                                        // the player should start from by default.
-  uris? : string[]; // URIs where the manifest can be refreshed.
-                    // By order of importance.
 }
 
 interface IManifestParsingOptions {
@@ -169,7 +138,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   /**
    * @param {Object} args
    */
-  constructor(args : IManifestArguments, options : IManifestParsingOptions) {
+  constructor(args : IParsedManifest, options : IManifestParsingOptions) {
     super();
     const { supplementaryTextTracks = [],
             supplementaryImageTracks = [],
@@ -428,16 +397,16 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
       const adaptationID = "gen-image-ada-" + generateNewId();
       const representationID = "gen-image-rep-" + generateNewId();
-      const newAdaptation =
-        new Adaptation({ id: adaptationID,
-                         type: "image",
-                         manuallyAdded: true,
-                         representations: [{
-                           bitrate: 0,
-                           id: representationID,
-                           mimeType,
-                           index: new StaticRepresentationIndex({ media: url }),
-                         }], });
+      const newAdaptation = new Adaptation({
+        id: adaptationID,
+        type: "image",
+        representations: [{
+          bitrate: 0,
+          id: representationID,
+          mimeType,
+          index: new StaticRepresentationIndex({ media: url }),
+        }],
+      }, { isManuallyAdded: true });
       this.parsingErrors.push(...newAdaptation.parsingErrors);
       return newAdaptation;
     });
@@ -473,19 +442,19 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       return allSubs.concat(langsToMapOn.map((_language) => {
         const adaptationID = "gen-text-ada-" + generateNewId();
         const representationID = "gen-text-rep-" + generateNewId();
-        const newAdaptation =
-          new Adaptation({ id: adaptationID,
-                           type: "text",
-                           language: _language,
-                           closedCaption,
-                           manuallyAdded: true,
-                           representations: [{
-                             bitrate: 0,
-                             id: representationID,
-                             mimeType,
-                             codecs,
-                             index: new StaticRepresentationIndex({ media: url }),
-                           }], });
+        const newAdaptation = new Adaptation({
+          id: adaptationID,
+          type: "text",
+          language: _language,
+          closedCaption,
+          representations: [{
+            bitrate: 0,
+            id: representationID,
+            mimeType,
+            codecs,
+            index: new StaticRepresentationIndex({ media: url }),
+          }],
+        }, { isManuallyAdded: true });
         this.parsingErrors.push(...newAdaptation.parsingErrors);
         return newAdaptation;
       }));
@@ -501,7 +470,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
 }
 
 export {
-  IManifestArguments,
   IManifestParsingOptions,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,

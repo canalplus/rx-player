@@ -19,13 +19,13 @@ import {
   MediaError,
 } from "../errors";
 import log from "../log";
+import { IParsedAdaptation } from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
+import arrayIncludes from "../utils/array_includes";
 import normalizeLanguage from "../utils/languages";
 import uniq from "../utils/uniq";
 import filterSupportedRepresentations from "./filter_supported_representations";
-import Representation, {
-  IRepresentationArguments,
-} from "./representation";
+import Representation from "./representation";
 
 export type IAdaptationType = "video" | "audio" | "text" | "image";
 
@@ -34,6 +34,12 @@ export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] = [ "audio",
                                                                "text",
                                                                "image" ];
 
+function isSupportedAdaptationType(
+  adaptationType : string
+) : adaptationType is IAdaptationType {
+  return arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, adaptationType);
+}
+
 export interface IRepresentationInfos { bufferType: IAdaptationType;
                                         language?: string;
                                         isAudioDescription? : boolean;
@@ -41,17 +47,8 @@ export interface IRepresentationInfos { bufferType: IAdaptationType;
                                         normalizedLanguage? : string; }
 
 export type IRepresentationFilter = (representation: Representation,
-                                     adaptationInfos: IRepresentationInfos) => boolean;
-
-export interface IAdaptationArguments { id : string;
-                                        representations : IRepresentationArguments[];
-                                        type : IAdaptationType;
-
-                                        // -- optional
-                                        audioDescription? : boolean;
-                                        closedCaption? : boolean;
-                                        language? : string;
-                                        manuallyAdded? : boolean; }
+                                     adaptationInfos: IRepresentationInfos)
+                                    => boolean;
 
 /**
  * Normalized Adaptation structure.
@@ -94,39 +91,48 @@ export default class Adaptation {
   public readonly parsingErrors : Array<Error|ICustomError>;
 
   /**
-   * @param {Object} args
-   * @param {Function|undefined} [representationFilter]
+   * @constructor
+   * @param {Object} parsedAdaptation
+   * @param {Object|undefined} [options]
    */
-  constructor(
-    args : IAdaptationArguments,
-    representationFilter? : IRepresentationFilter
-  ) {
+  constructor(parsedAdaptation : IParsedAdaptation, options : {
+    representationFilter? : IRepresentationFilter;
+    isManuallyAdded? : boolean;
+  } = {}) {
+    const { representationFilter, isManuallyAdded } = options;
     this.parsingErrors = [];
-    this.id = args.id;
-    this.type = args.type;
+    this.id = parsedAdaptation.id;
 
-    const hadRepresentations = !!args.representations.length;
-    const argsRepresentations = filterSupportedRepresentations(args.type,
-                                                               args.representations);
+    if (!isSupportedAdaptationType(parsedAdaptation.type)) {
+      log.info("Manifest: Not supported adaptation type", parsedAdaptation.type);
+      throw new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE",
+        `"${parsedAdaptation.type}" is not a valid Adaptation type.`, true);
+    }
+    this.type = parsedAdaptation.type;
+
+    const hadRepresentations = !!parsedAdaptation.representations.length;
+    const argsRepresentations =
+      filterSupportedRepresentations(parsedAdaptation.type,
+                                     parsedAdaptation.representations);
 
     if (hadRepresentations && argsRepresentations.length === 0) {
-      log.warn("Incompatible codecs for adaptation", args);
+      log.warn("Incompatible codecs for adaptation", parsedAdaptation);
       const error = new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
                                    "An Adaptation contains only incompatible codecs.",
                                    false);
       this.parsingErrors.push(error);
     }
 
-    if (args.language != null) {
-      this.language = args.language;
-      this.normalizedLanguage = normalizeLanguage(args.language);
+    if (parsedAdaptation.language != null) {
+      this.language = parsedAdaptation.language;
+      this.normalizedLanguage = normalizeLanguage(parsedAdaptation.language);
     }
 
-    if (args.closedCaption != null) {
-      this.isClosedCaption = args.closedCaption;
+    if (parsedAdaptation.closedCaption != null) {
+      this.isClosedCaption = parsedAdaptation.closedCaption;
     }
-    if (args.audioDescription != null) {
-      this.isAudioDescription = args.audioDescription;
+    if (parsedAdaptation.audioDescription != null) {
+      this.isAudioDescription = parsedAdaptation.audioDescription;
     }
 
     this.representations = argsRepresentations
@@ -145,7 +151,7 @@ export default class Adaptation {
       });
 
     // for manuallyAdded adaptations (not in the manifest)
-    this.manuallyAdded = !!args.manuallyAdded;
+    this.manuallyAdded = !!isManuallyAdded;
   }
 
   /**
