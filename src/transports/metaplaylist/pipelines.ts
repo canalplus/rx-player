@@ -129,7 +129,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
 
   const manifestPipeline = {
     loader({ url } : IManifestLoaderArguments) : ILoaderObservable<string> {
-      return request({ url, responseType: "text" });
+      return request({ url, responseType: "text", sendProgressEvents: false });
     },
 
     parser(
