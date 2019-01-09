@@ -17,7 +17,6 @@
 export interface IParsedContentProtection {
   schemeIdUri?: string;
   value?: string;
-  keyId?: string;
 }
 
 /**
@@ -30,7 +29,6 @@ export default function parseContentProtection(
 ) : IParsedContentProtection|undefined {
   let schemeIdUri : string|undefined;
   let value : string|undefined;
-  let keyId : string|undefined;
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
 
@@ -41,8 +39,6 @@ export default function parseContentProtection(
       case "value":
         value = attribute.value;
         break;
-      case "cenc:default_KID":
-        keyId = attribute.value.toString().split("-").join("").toUpperCase();
     }
   }
 
@@ -54,9 +50,5 @@ export default function parseContentProtection(
   //   }
   // }
 
-  return {
-    schemeIdUri,
-    value,
-    keyId,
-  };
+  return { schemeIdUri, value };
 }
