@@ -50,7 +50,6 @@ import {
 } from "rxjs/operators";
 import config from "../../config";
 import log from "../../log";
-import assert from "../../utils/assert";
 import EventEmitter, {
   fromEvent,
 } from "../../utils/event_emitter";
@@ -2277,10 +2276,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     type : IBufferType;
     bitrate : number|undefined;
   }) : void {
-    if (__DEV__) {
-      assert(type != null);
-      assert(bitrate != null);
-    }
     this._priv_triggerContentEvent("bitrateEstimation", { type, bitrate });
   }
 
