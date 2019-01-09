@@ -195,7 +195,8 @@ export default function InitializeOnMediaSource({
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".
-  const abrManager = new ABRManager(requestsInfos$, network$, adaptiveOptions);
+  const abrManager =
+    new ABRManager(mediaElement, requestsInfos$, network$, adaptiveOptions);
 
   // Create and open a new MediaSource object on the given media element.
   const openMediaSource$ = openMediaSource(mediaElement).pipe(

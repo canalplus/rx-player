@@ -126,7 +126,7 @@ export default function createSegmentFetcher<T>(
             // format it for ABR Handling
             if (size != null && duration != null) {
               network$.next({ type: bufferType,
-                              value: { size, duration } });
+                              value: { size, duration, content } });
             }
             break;
           }

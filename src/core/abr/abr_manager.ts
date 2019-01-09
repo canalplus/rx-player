@@ -23,16 +23,24 @@ import {
   takeUntil,
 } from "rxjs/operators";
 import log from "../../log";
-import { Representation } from "../../manifest";
+import {
+  Adaptation,
+  ISegment,
+  Representation,
+} from "../../manifest";
 import { IBufferType } from "../source_buffers";
 import RepresentationChooser, {
+  IABRBufferEvents,
   IABREstimation,
   IRepresentationChooserClockTick,
   IRequest,
 } from "./representation_chooser";
 
 interface IMetricValue { duration: number;
-                         size: number; }
+                         size: number;
+                         content: { representation: Representation;
+                                    adaptation: Adaptation;
+                                    segment: ISegment; }; }
 
 interface IMetric { type : IBufferType;
                     value : IMetricValue; }
@@ -64,9 +72,11 @@ const defaultChooserOptions = { limitWidth: {},
  */
 const createChooser = (
   type : IBufferType,
+  mediaElement : HTMLMediaElement,
   options : IRepresentationChoosersOptions
 ) : RepresentationChooser => {
-  return new RepresentationChooser({ limitWidth$: options.limitWidth[type],
+  return new RepresentationChooser(mediaElement,
+                                   { limitWidth$: options.limitWidth[type],
                                      throttle$: options.throttle[type],
                                      throttleBitrate$: options.throttleBitrate[type],
                                      initialBitrate: options.initialBitrates[type],
@@ -86,8 +96,10 @@ export default class ABRManager {
 
   private _choosers:  Partial<Record<IBufferType, RepresentationChooser>>;
   private _chooserInstanceOptions: IRepresentationChoosersOptions;
+  private _mediaElement : HTMLMediaElement;
 
   /**
+   * @param {HTMLMediaElement} mediaElement
    * @param {Observable} requests$ - Emit requests infos as they begin, progress
    * and end.
    * Allows to know if a request take too much time to be finished in
@@ -140,7 +152,7 @@ export default class ABRManager {
    * a new segment for a given buffer type. Allows to obtain informations about
    * the user's bitrate.
    *
-   * The items emitted are object with the following keys:
+   * The items emitted are objects with the following keys:
    *   - type {string}: the buffer type (example: "video")
    *   - value {Object}:
    *     - duration {number}: duration of the request, in seconds.
@@ -149,10 +161,13 @@ export default class ABRManager {
    * @param {Object|undefined} options
    */
   constructor(
+    mediaElement : HTMLMediaElement,
     requests$: Observable<Observable<IRequest>>,
     metrics$: Observable<IMetric>,
     options : IRepresentationChoosersOptions = defaultChooserOptions
   ) {
+    this._mediaElement = mediaElement;
+
     // Subject emitting and completing on dispose.
     // Used to clean up every created observables.
     this._dispose$ = new Subject();
@@ -165,7 +180,6 @@ export default class ABRManager {
 
     // Will contain options used when (lazily) instantiating a
     // RepresentationChooser
-
     this._chooserInstanceOptions = {
       initialBitrates: options.initialBitrates || {},
       manualBitrates: options.manualBitrates || {},
@@ -179,8 +193,8 @@ export default class ABRManager {
       .pipe(takeUntil(this._dispose$))
       .subscribe(({ type, value }) => {
         const chooser = this._lazilyCreateChooser(type);
-        const { duration, size } = value;
-        chooser.addEstimate(duration, size);
+        const { duration, size, content } = value;
+        chooser.addEstimate(duration, size, content);
       });
 
     requests$
@@ -217,16 +231,19 @@ export default class ABRManager {
    * observable emitting the best representation (given the network/buffer
    * state).
    * @param {string} type
-   * @param {Observable<Object>} clock$
    * @param {Array.<Representation>|undefined} representations
+   * @param {Observable<Object>} clock$
+   * @param {Observable<Object>} bufferEvents$
    * @returns {Observable}
    */
   public get$(
     type : IBufferType,
-    clock$: Observable<IABRClockTick>,
-    representations: Representation[] = []
+    representations : Representation[] = [],
+    clock$ : Observable<IABRClockTick>,
+    bufferEvents$ : Observable<IABRBufferEvents>
   ) : Observable<IABREstimation> {
-    return this._lazilyCreateChooser(type).get$(clock$, representations);
+    return this._lazilyCreateChooser(type)
+      .get$(representations, clock$, bufferEvents$);
   }
 
   /**
@@ -321,6 +338,7 @@ export default class ABRManager {
     if (!this._choosers[bufferType]) {
       log.debug("ABR: Creating new buffer for ", bufferType);
       this._choosers[bufferType] = createChooser(bufferType,
+                                                 this._mediaElement,
                                                  this._chooserInstanceOptions);
     }
     return this._choosers[bufferType] as RepresentationChooser;

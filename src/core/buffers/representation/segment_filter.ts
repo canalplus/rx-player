@@ -49,7 +49,8 @@ export default function shouldDownloadSegment(
   },
   segmentBookkeeper: SegmentBookkeeper,
   wantedRange : { start : number; end : number },
-  segmentIDsToIgnore : SimpleSet
+  segmentIDsToIgnore : SimpleSet,
+  lastStableBitrate? : number
 ) : boolean {
   const { period, adaptation, representation } = content;
   const shouldIgnore = segmentIDsToIgnore.test(segment.id);
@@ -89,9 +90,11 @@ export default function shouldDownloadSegment(
     return true;
   }
 
-  // only re-load comparatively-poor bitrates for the same adaptation.
-  const bitrateCeil = currentSegment.infos.representation.bitrate *
-                      BITRATE_REBUFFERING_RATIO;
-
-  return representation.bitrate > bitrateCeil;
+  if (lastStableBitrate == null) {
+    // only re-load comparatively-poor bitrates for the same adaptation.
+    const bitrateCeil = currentSegment.infos.representation.bitrate *
+                        BITRATE_REBUFFERING_RATIO;
+    return representation.bitrate > bitrateCeil;
+  }
+  return currentSegment.infos.representation.bitrate < lastStableBitrate;
 }
