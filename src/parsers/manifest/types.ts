@@ -70,7 +70,7 @@ export interface IParsedManifest {
   transportType: string; // "smooth", "dash" etc.
 
   // optional
-  availabilityStartTime? : number; // Base time from which the segments arge generated.
+  availabilityStartTime? : number; // Base time from which the segments are generated.
   baseURL? : string; // Base URL for relative URLs given in that Manifest.
   duration? : number; // Last time in the content. Only useful for non-live contents.
   lifetime?: number; // Duration of the validity of this Manifest, after which it

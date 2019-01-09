@@ -20,7 +20,6 @@ import Adaptation, {
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "./adaptation";
 import Manifest, {
-  IManifestArguments,
   IManifestParsingOptions,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
@@ -40,7 +39,6 @@ export {
 
   // types
   IAdaptationType,
-  IManifestArguments,
   IManifestParsingOptions,
   IRepresentationFilter,
   IRepresentationIndex,
