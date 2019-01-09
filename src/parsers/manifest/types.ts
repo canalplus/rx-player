@@ -70,7 +70,7 @@ export interface IParsedManifest {
   transportType: string; // "smooth", "dash" etc.
 
   // optional
-  availabilityStartTime? : number; // Base time from which the segments arge generated.
+  availabilityStartTime? : number; // Base time from which the segments are generated.
   baseURL? : string; // Base URL for relative URLs given in that Manifest.
   clockOffset?: number; // Offset, in milliseconds, the client's clock has
                         // relatively to the server's

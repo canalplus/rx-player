@@ -17,34 +17,16 @@ import {
   ICustomError,
   MediaError,
 } from "../errors";
-import log from "../log";
+import { IParsedPeriod } from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
-import arrayIncludes from "../utils/array_includes";
 import objectValues from "../utils/object_values";
 import Adaptation, {
-  IAdaptationArguments,
   IAdaptationType,
   IRepresentationFilter,
-  SUPPORTED_ADAPTATIONS_TYPE,
 } from "./adaptation";
 
 // Structure listing every `Adaptation` in a Period.
 export type IManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
-
-export type IAdaptationsArguments =
-  Partial<Record<IAdaptationType, IAdaptationArguments[]>>;
-
-// Arguments constitutive of a new Period.
-export interface IPeriodArguments {
-  // required
-  id : string; // unique ID for that Period.
-  adaptations : IAdaptationsArguments; // "Tracks" in that Period.
-  start : number; // start time of the Period, in seconds.
-
-  // optional
-  duration? : number; // duration of the Period, in seconds.
-                      // Can be undefined for a still-running one.
-}
 
 /**
  * Class representing a single `Period` of the Manifest.
@@ -79,7 +61,10 @@ export default class Period {
    * @param {Object} args
    * @param {function|undefined} [representationFilter]
    */
-  constructor(args : IPeriodArguments, representationFilter? : IRepresentationFilter) {
+  constructor(
+    args : IParsedPeriod,
+    representationFilter? : IRepresentationFilter
+  ) {
     this.parsingErrors = [];
     this.id = args.id;
     this.adaptations = (Object.keys(args.adaptations) as IAdaptationType[])
@@ -89,26 +74,24 @@ export default class Period {
           return acc;
         }
         const filteredAdaptations = adaptationsForType
-          .filter((adaptation) => {
-            if (!arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, adaptation.type)) {
-              log.info("not supported adaptation type", adaptation.type);
-              const error = new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE",
-                                           "An Adaptation has an unknown and " +
-                                           "unsupported type: " +
-                                           adaptation.type,
-                                           false);
-              this.parsingErrors.push(error);
-              return false;
-            } else {
-              return true;
+          .map((adaptation) : Adaptation|null => {
+            let newAdaptation : Adaptation|null = null;
+            try {
+              newAdaptation = new Adaptation(adaptation, { representationFilter });
+            } catch (err) {
+              if (err.code === "MANIFEST_UNSUPPORTED_ADAPTATION_TYPE") {
+                err.fatal = false;
+                this.parsingErrors.push(err);
+                return null;
+              }
+              throw err;
             }
-          })
-          .map((adaptation) => {
-            const newAdaptation = new Adaptation(adaptation, representationFilter);
             this.parsingErrors.push(...newAdaptation.parsingErrors);
             return newAdaptation;
           })
-          .filter((adaptation) => adaptation.representations.length);
+          .filter((adaptation) : adaptation is Adaptation =>
+            adaptation != null && adaptation.representations.length > 0
+          );
         if (filteredAdaptations.length === 0 &&
             adaptationsForType.length > 0 &&
             (type === "video" || type === "audio")

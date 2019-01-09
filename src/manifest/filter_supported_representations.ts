@@ -15,7 +15,7 @@
  */
 
 import { isCodecSupported } from "../compat";
-import { IRepresentationArguments } from "./representation";
+import { IParsedRepresentation } from "../parsers/manifest";
 
 /**
  * Only keep Representations for which the codec is currently supported.
@@ -25,8 +25,8 @@ import { IRepresentationArguments } from "./representation";
  */
 export default function filterSupportedRepresentations(
   adaptationType : string,
-  representations : IRepresentationArguments[]
-) : IRepresentationArguments[] {
+  representations : IParsedRepresentation[]
+) : IParsedRepresentation[] {
   if (adaptationType === "audio" || adaptationType === "video") {
     return representations
       .filter((representation) => isCodecSupported(getCodec(representation)));
@@ -40,7 +40,7 @@ export default function filterSupportedRepresentations(
  * @param {Object} representation
  * @returns {string}
  */
-function getCodec(representation : IRepresentationArguments) : string {
+function getCodec(representation : IParsedRepresentation) : string {
   const { codecs = "", mimeType = "" } = representation;
   return `${mimeType};codecs="${codecs}"`;
 }

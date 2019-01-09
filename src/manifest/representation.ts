@@ -14,22 +14,11 @@
  * limitations under the License.
  */
 
+import { IParsedRepresentation } from "../parsers/manifest";
 import IRepresentationIndex from "./representation_index";
 
 interface IContentProtection { keyId?: string;
                                systemId?: string; }
-
-export interface IRepresentationArguments { bitrate : number;
-                                            id : string;
-                                            index : IRepresentationIndex;
-
-                                            // -- optional
-                                            codecs? : string;
-                                            contentProtections? : IContentProtection[];
-                                            frameRate? : string;
-                                            height? : number;
-                                            mimeType? : string;
-                                            width? : number; }
 
 /**
  * Normalized Representation structure.
@@ -61,7 +50,7 @@ class Representation {
   /**
    * @param {Object} args
    */
-  constructor(args : IRepresentationArguments) {
+  constructor(args : IParsedRepresentation) {
     this.id = args.id;
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
