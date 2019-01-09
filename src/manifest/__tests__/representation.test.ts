@@ -111,9 +111,7 @@ describe("Manifest - Representation", () => {
       bitrate: 12,
       id: "test",
       index: minimalIndex,
-      contentProtections: [{
-        keyId: new Uint8Array([45]),
-      }],
+      contentProtections: [{ keyId: new Uint8Array([65, 65, 67, 67]) }],
     };
     const representation = new Representation(args);
     expect(representation.id).toBe("test");
