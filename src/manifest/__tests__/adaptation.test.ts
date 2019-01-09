@@ -43,7 +43,7 @@ describe("Manifest - Adaptation", () => {
     jest.mock("../filter_supported_representations", () => ({ default: filterSpy }));
 
     const Adaptation = require("../adaptation").default;
-    const args = { id: "12", representations: [], type: "video" as "video" };
+    const args = { id: "12", representations: [], type: "video" };
     const adaptation = new Adaptation(args);
     expect(adaptation.id).toBe("12");
     expect(adaptation.representations).toEqual([]);
@@ -60,6 +60,29 @@ describe("Manifest - Adaptation", () => {
     expect(representationSpy).not.toHaveBeenCalled();
   });
 
+  it("should throw if the given adaptation type is not supported", () => {
+    const representationSpy = jest.fn(arg => arg);
+    const filterSpy = jest.fn((_type, arg) => arg);
+
+    jest.mock("../representation", () => ({ default: representationSpy }));
+    jest.mock("../filter_supported_representations", () => ({ default: filterSpy }));
+
+    const Adaptation = require("../adaptation").default;
+    const args = { id: "12", representations: [], type: "foo" };
+    let adaptation = null;
+    let error = null;
+    try {
+      adaptation = new Adaptation(args);
+    } catch (err) {
+      error = err;
+    }
+    expect(adaptation).toBe(null);
+    expect(error).not.toBe(null);
+    expect(error.code).toEqual("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE");
+    expect(error.type).toEqual("MEDIA_ERROR");
+    expect(error.fatal).toEqual(true);
+  });
+
   it("should normalize a given language", () => {
     const representationSpy = jest.fn(arg => arg);
     const filterSpy = jest.fn((_type, arg) => arg);
@@ -74,7 +97,7 @@ describe("Manifest - Adaptation", () => {
       id: "12",
       representations: [],
       language: "fr",
-      type: "video" as "video",
+      type: "video"as "video",
     };
     const adaptation1 = new Adaptation(args1);
     expect(adaptation1.language).toBe("fr");
@@ -87,7 +110,7 @@ describe("Manifest - Adaptation", () => {
       id: "12",
       representations: [],
       language: "toto",
-      type: "video" as "video",
+      type: "video",
     };
     const adaptation2 = new Adaptation(args2);
     expect(adaptation2.language).toBe("toto");
@@ -109,7 +132,7 @@ describe("Manifest - Adaptation", () => {
     const args1 = {
       id: "12",
       representations: [],
-      type: "video" as "video",
+      type: "video",
     };
     const adaptation1 = new Adaptation(args1);
     expect(adaptation1.language).toBe(undefined);
@@ -176,7 +199,7 @@ describe("Manifest - Adaptation", () => {
       return true;
     });
     const args = { id: "12", language: "fr", representations, type: "text" as "text" };
-    const adaptation = new Adaptation(args, representationFilter);
+    const adaptation = new Adaptation(args, { representationFilter });
 
     const parsedRepresentations = adaptation.representations;
     expect(representationFilter).toHaveBeenCalledTimes(6);
@@ -247,7 +270,7 @@ describe("Manifest - Adaptation", () => {
       id: "12",
       representations: [],
       closedCaption: false,
-      type: "video" as "video",
+      type: "video",
     };
     const adaptation1 = new Adaptation(args1);
     expect(adaptation1.language).toBe(undefined);
@@ -259,7 +282,7 @@ describe("Manifest - Adaptation", () => {
       id: "12",
       representations: [],
       closedCaption: true,
-      type: "video" as "video",
+      type: "video",
     };
     const adaptation2 = new Adaptation(args2);
     expect(adaptation2.language).toBe(undefined);
@@ -283,7 +306,7 @@ describe("Manifest - Adaptation", () => {
       id: "12",
       representations: [],
       audioDescription: false,
-      type: "video" as "video",
+      type: "video",
     };
     const adaptation1 = new Adaptation(args1);
     expect(adaptation1.language).toBe(undefined);
@@ -295,7 +318,7 @@ describe("Manifest - Adaptation", () => {
       id: "12",
       representations: [],
       audioDescription: true,
-      type: "video" as "video",
+      type: "video",
     };
     const adaptation2 = new Adaptation(args2);
     expect(adaptation2.language).toBe(undefined);
@@ -318,10 +341,9 @@ describe("Manifest - Adaptation", () => {
     const args1 = {
       id: "12",
       representations: [],
-      manuallyAdded: false,
-      type: "video" as "video",
+      type: "video",
     };
-    const adaptation1 = new Adaptation(args1);
+    const adaptation1 = new Adaptation(args1, { isManuallyAdded: false });
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(adaptation1.manuallyAdded).toEqual(false);
@@ -330,10 +352,9 @@ describe("Manifest - Adaptation", () => {
     const args2 = {
       id: "12",
       representations: [],
-      manuallyAdded: true,
-      type: "video" as "video",
+      type: "video",
     };
-    const adaptation2 = new Adaptation(args2);
+    const adaptation2 = new Adaptation(args2, { isManuallyAdded: true });
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
     expect(adaptation2.manuallyAdded).toEqual(true);
