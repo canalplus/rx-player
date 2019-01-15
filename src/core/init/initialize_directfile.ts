@@ -25,9 +25,11 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
+  filter,
   ignoreElements,
   map,
   mergeMap,
+  take,
 } from "rxjs/operators";
 import {
   clearElementSrc,
@@ -159,18 +161,26 @@ export default function initializeDirectfileContent({
   const stalled$ = getStalledEvents(mediaElement, clock$)
     .pipe(map(EVENTS.stalled));
 
+  const initiatedEME$ = emeManager$.pipe(
+    filter(({ type }) => type === "eme-init" || type === "eme-disabled"),
+    take(1)
+  );
+
   // Manage "loaded" event and warn if autoplay is blocked on the current browser
-  const loadedEvent$ = load$
-    .pipe(mergeMap((evt) => {
-      if (evt === "autoplay-blocked") {
-        const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
-        return observableOf(EVENTS.warning(error), EVENTS.loaded());
-      } else if (evt === "not-loaded-metadata") {
-        const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA", null, false);
-        return observableOf(EVENTS.warning(error));
-      }
-      return observableOf(EVENTS.loaded());
-    }));
+  const loadedEvent$ = initiatedEME$.pipe(
+    mergeMap(() => load$
+        .pipe(mergeMap((evt) => {
+          if (evt === "autoplay-blocked") {
+            const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
+            return observableOf(EVENTS.warning(error), EVENTS.loaded());
+          } else if (evt === "not-loaded-metadata") {
+            const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA", null, false);
+            return observableOf(EVENTS.warning(error));
+          }
+          return observableOf(EVENTS.loaded());
+        }))
+    )
+  );
 
   // Start everything! (Just put the URL in the element's src).
   const linkURL$ = setElementSrc$(mediaElement, url).pipe(ignoreElements());

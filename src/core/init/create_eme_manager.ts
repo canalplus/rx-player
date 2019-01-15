@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
+import {
+  concat as observableConcat,
+  Observable,
+  of as observableOf,
+} from "rxjs";
 import { map } from "rxjs/operators";
 import {
   events,
@@ -24,6 +28,7 @@ import { EncryptedMediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
 import {
+  IEMEInitEvent,
   IEMEManagerEvent,
   IKeySystemOption,
 } from "../eme";
@@ -41,25 +46,28 @@ export default function createEMEManager(
   mediaElement : HTMLMediaElement,
   keySystems : IKeySystemOption[]
 ) : Observable<IEMEManagerEvent> {
+
+  // emit disabled event and handle unexpected encrypted event
+  function handleDisabledEME(logMessage: string): Observable<IEMEInitEvent> {
+    return observableConcat(
+      observableOf({ type: "eme-disabled" as "eme-disabled" }),
+      onEncrypted$(mediaElement).pipe(map(() => {
+        log.error(logMessage);
+        throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
+      }))
+    );
+  }
+
   if (features.emeManager == null) {
-    return onEncrypted$(mediaElement).pipe(map(() => {
-      log.error("Init: Encrypted event but EME feature not activated");
-      throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
-    }));
+    return handleDisabledEME("Init: Encrypted event but EME feature not activated");
   }
 
   if (!keySystems || !keySystems.length) {
-    return onEncrypted$(mediaElement).pipe(map(() => {
-      log.error("Init: Ciphered media and no keySystem passed");
-      throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
-    }));
+    return handleDisabledEME("Init: Ciphered media and no keySystem passed");
   }
 
   if (!hasEMEAPIs()) {
-    return onEncrypted$(mediaElement).pipe(map(() => {
-      log.error("Init: Encrypted event but no EME API available");
-      throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
-    }));
+    return handleDisabledEME("Init: Encrypted event but no EME API available");
   }
 
   log.debug("Init: Creating EMEManager");

@@ -27,12 +27,14 @@ import {
   timer as observableTimer,
 } from "rxjs";
 import {
+  filter,
   ignoreElements,
   map,
   mergeMap,
   share,
   startWith,
   switchMap,
+  take,
   takeUntil,
   tap,
 } from "rxjs/operators";
@@ -203,9 +205,15 @@ export default function InitializeOnMediaSource({
     sendingTime? : number;
   }>(1);
 
+  const initiatedEME$ = emeManager$.pipe(
+    filter(({ type }) => type === "eme-init" || type === "eme-disabled"),
+    take(1)
+  );
+
   const loadContent$ = observableCombineLatest(
     openMediaSource(mediaElement),
-    fetchManifest(url)
+    fetchManifest(url),
+    initiatedEME$
   ).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
 
     /**
