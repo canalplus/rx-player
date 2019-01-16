@@ -15,127 +15,23 @@
  */
 
 import assert from "../../../../utils/assert";
+import {
+  areNearlyEqual,
+  getCuesAfter,
+  getCuesBefore,
+  removeCuesInfosBetween,
+} from "./utils";
 
-interface IHTMLCue {
+export interface IHTMLCue {
   start : number;
   end : number;
   element : HTMLElement;
 }
 
-interface ICuesGroup {
+export interface ICuesGroup {
   start : number;
   end : number;
   cues : IHTMLCue[];
-}
-
-/**
- * Maximum time difference, in seconds, between two text segment's start times
- * and/or end times for them to be considered the same in the custom text's
- * SourceBuffer used for the "html" textTrackMode.
- *
- * For example for two segments s1 and s2 which have a start time respectively
- * of st1 and st2 and end time of et1 and et2:
- *   - if both the absolute difference between st1 and st2 AND the one between
- *     et1 and et2 is inferior or equal to the MAX_DELTA_BUFFER_TIME, s1 and s2
- *     are considered to target the exact same time. As a consequence, if s2 is
- *     added after s1 in the SourceBuffer, s1 will be completely replaced by
- *     it and vice-versa.
- *   - if only one of the two (absolute difference between st1 and st2 OR et1
- *     and et2) is inferior to the MAX_DELTA_BUFFER_TIME then the last added
- *     is not completely considered the same. It WILL still replace - either
- *     partially or completely (depending on the sign of the other difference) -
- *     the previously added segment.
- *   - if both differences are strictly superior to the MAX_DELTA_BUFFER_TIME,
- *     then they are not considered to have the same start nor the same end.
- *     They can still overlap however, and MIGHT thus still replace partially
- *     or completely each other.
- *
- * Setting a value too low might lead to two segments targeting the same time,
- * both being present in the SourceBuffer. In worst case scenarios, this could
- * lead to indicate that an unwanted text track is still here (theorically
- * though, this is a case that should never happen for reasons that might be too
- * long to explain here).
- *
- * Setting a value too high might lead to two segments targeting different times
- * to be wrongly believed to target the same time. In worst case scenarios, this
- * could lead to wanted text tracks being removed.
- * @type Number
- */
-const MAX_DELTA_BUFFER_TIME = 0.2;
-
-/**
- * @see MAX_DELTA_BUFFER_TIME
- * @param {Number} a
- * @param {Number} b
- * @returns {Boolean}
- */
-function areNearlyEqual(a : number, b : number) : boolean {
-  return Math.abs(a - b) <= MAX_DELTA_BUFFER_TIME;
-}
-
-/**
- * Get all cues strictly before the given time.
- * @param {Object} cues
- * @param {Number} time
- * @returns {Array.<Object>}
- */
-function getCuesBefore(cues : IHTMLCue[], time : number) : IHTMLCue[] {
-  for (let i = 0; i < cues.length; i++) {
-    const cue = cues[i];
-    if (time < cue.end) {
-      if (time >= cue.start) {
-        return cues.slice(0, i);
-      }
-      return cues.slice(0, i + 1);
-    }
-  }
-  return cues.slice();
-}
-
-/**
- * Get all cues strictly after the given time.
- * @param {Object} cues
- * @param {Number} time
- * @returns {Array.<Object>}
- */
-function getCuesAfter(cues : IHTMLCue[], time : number) : IHTMLCue[] {
-  for (let i = 0; i < cues.length; i++) {
-    const cue = cues[i];
-    if (time < cue.end) {
-      if (time >= cue.start) {
-        return cues.slice(i + 1, cues.length);
-      }
-      return cues.slice(i, cues.length);
-    }
-  }
-  return [];
-}
-
-/**
- * @param {Object} cuesInfos
- * @param {Number} start
- * @param {Number} end
- * @returns {Array.<Object>}
- */
-function removeCuesInfosBetween(
-  cuesInfos : ICuesGroup,
-  start : number,
-  end : number
-) : [ICuesGroup, ICuesGroup] {
-  const end1 = Math.max(cuesInfos.start, start);
-  const cuesInfos1 = {
-    start: cuesInfos.start,
-    end: end1,
-    cues: getCuesBefore(cuesInfos.cues, start),
-  };
-
-  const start2 = Math.min(end, cuesInfos.end);
-  const cuesInfos2 = {
-    start: start2,
-    end: cuesInfos.end,
-    cues: getCuesAfter(cuesInfos.cues, end),
-  };
-  return [cuesInfos1, cuesInfos2];
 }
 
 /**
