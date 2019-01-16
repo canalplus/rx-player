@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import log from "../../log";
-
 describe("Manifest - Manifest", () => {
   beforeEach(() => {
     jest.resetModules();
   });
 
   it("should create a normalized Manifest structure", () => {
+    const log = { warn: () => undefined };
+    jest.mock("../../log", () =>  ({ default: log }));
     const simpleFakeManifest = {
       id: "man",
       isLive: false,
@@ -56,6 +56,9 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should create a Period for each manifest.periods given", () => {
+    const log = { warn: () => undefined };
+    jest.mock("../../log", () =>  ({ default: log }));
+
     const period1 = { id: "0" };
     const period2 = { id: "1" };
     const simpleFakeManifest = {
@@ -89,6 +92,9 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should pass a `representationFilter` to the Period if given", () => {
+    const log = { warn: () => undefined };
+    jest.mock("../../log", () =>  ({ default: log }));
+
     const period1 = { id: "0" };
     const period2 = { id: "1" };
     const simpleFakeManifest = {
@@ -120,6 +126,9 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should expose the adaptations of the first period if set", () => {
+    const log = { warn: () => undefined };
+    jest.mock("../../log", () =>  ({ default: log }));
+
     const adapP1 = {};
     const adapP2 = {};
     const period1 = { id: "0", adaptations: adapP1 };
@@ -155,6 +164,9 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should push any parsing errors from the Period parsing", () => {
+    const log = { warn: () => undefined };
+    jest.mock("../../log", () =>  ({ default: log }));
+
     const period1 = { id: "0" };
     const period2 = { id: "1" };
     const simpleFakeManifest = {
@@ -184,7 +196,10 @@ describe("Manifest - Manifest", () => {
   });
 
   // TODO inspect why it doesn't pass. It makes no sense to me for now
-  xit("should warn if no duration is given for non-live contents", () => {
+  it("should warn if no duration is given for non-live contents", () => {
+    const log = { warn: () => undefined };
+    jest.mock("../../log", () =>  ({ default: log }));
+
     const period1 = { id: "0" };
     const period2 = { id: "1" };
     const simpleFakeManifest = {
@@ -212,6 +227,9 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should not warn if no duration is given for live contents", () => {
+    const log = { warn: () => undefined };
+    jest.mock("../../log", () =>  ({ default: log }));
+
     const period1 = { id: "0" };
     const period2 = { id: "1" };
     const simpleFakeManifest = {
@@ -237,6 +255,9 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should correctly parse every manifest informations given", () => {
+    const log = { warn: () => undefined };
+    jest.mock("../../log", () =>  ({ default: log }));
+
     const oldPeriod1 = { id: "0" };
     const oldPeriod2 = { id: "1" };
     const oldManifestArgs = {
@@ -287,6 +308,9 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should return the first URL given with `getUrl`", () => {
+    const log = { warn: () => undefined };
+    jest.mock("../../log", () =>  ({ default: log }));
+
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
     const fakePeriod = jest.fn((period) => {
       return { ...period, id: "foo" + period.id, parsingErrors: [period.id] };
@@ -336,6 +360,9 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should update with a new Manifest when calling `update`", () => {
+    const log = { warn: () => undefined };
+    jest.mock("../../log", () =>  ({ default: log }));
+
     const oldManifestArgs = {
       availabilityStartTime: 5,
       baseURL: "test",
@@ -423,6 +450,9 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should prepend older Periods when calling `update`", () => {
+    const log = { warn: () => undefined, info: () => undefined };
+    jest.mock("../../log", () =>  ({ default: log }));
+
     const oldManifestArgs = {
       availabilityStartTime: 5,
       baseURL: "test",
@@ -498,6 +528,9 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should append newer Periods when calling `update`", () => {
+    const log = { warn: () => undefined, info: () => undefined };
+    jest.mock("../../log", () =>  ({ default: log }));
+
     const oldManifestArgs = {
       availabilityStartTime: 5,
       baseURL: "test",
@@ -571,6 +604,9 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should replace different Periods when calling `update`", () => {
+    const log = { warn: () => undefined, info: () => undefined };
+    jest.mock("../../log", () =>  ({ default: log }));
+
     const oldManifestArgs = {
       availabilityStartTime: 5,
       baseURL: "test",
@@ -640,6 +676,9 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should merge overlapping Periods when calling `update`", () => {
+    const log = { warn: () => undefined, info: () => undefined };
+    jest.mock("../../log", () =>  ({ default: log }));
+
     const oldManifestArgs = {
       availabilityStartTime: 5,
       baseURL: "test",
