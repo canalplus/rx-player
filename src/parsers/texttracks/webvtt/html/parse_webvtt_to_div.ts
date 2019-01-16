@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import arrayFlat from "../../../../utils/array_flat";
 import getCueBlocks from "../get_cue_blocks";
 import getStyleBlocks from "../get_style_blocks";
 import parseCueBlock from "../parse_cue_block";
@@ -21,7 +22,7 @@ import { getFirstLineAfterHeader } from "../utils";
 import convertPayloadToHTML from "./convert_payload_to_html";
 import createDefaultStyleElements from "./create_default_style_elements";
 import parseStyleBlock, {
-  IStyleElement,
+  IStyleElements
 } from "./parse_style_block";
 
 export interface IVTTHTMLCue {
@@ -55,7 +56,7 @@ export default function parseWebVTT(
   }
 
   const cuesArray : IVTTHTMLCue[] = [];
-  const styleElements : IStyleElement[] = [...createDefaultStyleElements()];
+  const defaultStyleElements : IStyleElements = createDefaultStyleElements();
   if (!linified[0].match(/^WEBVTT( |\t|\n|\r|$)/)) {
     throw new Error("Can't parse WebVTT: Invalid File.");
   }
@@ -64,10 +65,10 @@ export default function parseWebVTT(
   const styleBlocks = getStyleBlocks(linified, firstLineAfterHeader);
   const cueBlocks = getCueBlocks(linified, firstLineAfterHeader);
 
-  for (let i = 0; i < styleBlocks.length; i++) {
-    const parsedStyles = parseStyleBlock(styleBlocks[i]);
-    styleElements.push(...parsedStyles);
-  }
+  const styleElements = parseStyleBlock(
+    arrayFlat<string>(styleBlocks),
+    defaultStyleElements
+  );
 
   for (let i = 0; i < cueBlocks.length; i++) {
     const cueObject = parseCueBlock(cueBlocks[i], timeOffset);
@@ -101,7 +102,7 @@ function toHTML(
     header? : string;
     payload : string[];
   },
-  styleElements : IStyleElement[]
+  styleElements : IStyleElements
 ) : IVTTHTMLCue|undefined {
   const { start, end, header, payload } = cueObj;
 
@@ -132,11 +133,11 @@ function toHTML(
     "color:white;";
   spanElement.setAttributeNode(attr);
 
-  const styles = styleElements
-    .filter(styleElement =>
-      (styleElement.className === header && !styleElement.isGlobalStyle) ||
-      styleElement.isGlobalStyle
-    ).map(styleElement => styleElement.styleContent);
+  const styles = Object.entries(styleElements)
+    .filter(([ className, { isGlobalStyle } ]) =>
+      (className === header && !isGlobalStyle) ||
+      isGlobalStyle
+    ).map(([_, { styleContent }]) => styleContent);
 
   attr.value += styles.join();
   spanElement.setAttributeNode(attr);
