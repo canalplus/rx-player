@@ -19,86 +19,72 @@ import createDefaultStyleElements from "../html/create_default_style_elements";
 describe("parsers - webvtt - createDefaultStyleElements", () => {
   it("should return expected default style elements", () => {
     expect(createDefaultStyleElements()).toEqual(
-      [
-        {
-          className: "white",
+      {
+        white: {
           isGlobalStyle: false,
           styleContent: "color: #ffffff",
         },
-        {
-          className: "bg_white",
+        bg_white: {
           isGlobalStyle: false,
           styleContent: "background-color: #ffffff",
         },
-        {
-          className: "lime",
+        lime: {
           isGlobalStyle: false,
           styleContent: "color: #00ff00",
-        }, {
-          className: "bg_lime",
+        },
+        bg_lime: {
           isGlobalStyle: false,
           styleContent: "background-color: #00ff00",
         },
-        {
-          className: "cyan",
+        cyan: {
           isGlobalStyle: false,
           styleContent: "color: #00ffff",
         },
-        {
-          className: "bg_cyan",
+        bg_cyan: {
           isGlobalStyle: false,
           styleContent: "background-color: #00ffff",
         },
-        {
-          className: "red",
+        red: {
           isGlobalStyle: false,
           styleContent: "color: #ff0000",
         },
-        {
-          className: "bg_red",
+        bg_red: {
           isGlobalStyle: false,
           styleContent: "background-color: #ff0000",
-        }, {
-          className: "yellow",
+        },
+        yellow: {
           isGlobalStyle: false,
           styleContent: "color: #ffff00",
         },
-        {
-          className: "bg_yellow",
+        bg_yellow: {
           isGlobalStyle: false,
           styleContent: "background-color: #ffff00",
         },
-        {
-          className: "magenta",
+        magenta: {
           isGlobalStyle: false,
           styleContent: "color: #ff00ff",
         },
-        {
-          className: "bg_magenta",
+        bg_magenta: {
           isGlobalStyle: false,
           styleContent: "background-color: #ff00ff",
         },
-        {
-          className: "blue",
+        blue: {
           isGlobalStyle: false,
           styleContent: "color: #0000ff",
         },
-        {
-          className: "bg_blue",
+        bg_blue: {
           isGlobalStyle: false,
           styleContent: "background-color: #0000ff",
         },
-        {
-          className: "black",
+        black: {
           isGlobalStyle: false,
           styleContent: "color: #000000",
         },
-        {
-          className: "bg_black",
+        bg_black: {
           isGlobalStyle: false,
           styleContent: "background-color: #000000",
         },
-      ]
+      }
     );
   });
 });

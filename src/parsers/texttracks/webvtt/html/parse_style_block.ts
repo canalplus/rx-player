@@ -20,14 +20,24 @@ export interface IStyleElement {
   styleContent : string;
 }
 
+export interface IStyleElements {
+  [className : string]: {
+    isGlobalStyle : boolean;
+    styleContent : string;
+  };
+}
+
 /**
  *
  * Parse style element from WebVTT.
  * @param {Array.<string>} styleBlock
+ * @param {Object} baseStyleElements
  * @return {Array.<Object>} styleElements
  */
-export default function parseStyleBlock(styleBlock : string[]) : IStyleElement[] {
-  const styleElements : IStyleElement[] = [];
+export default function parseStyleBlock(
+  styleBlock : string[],
+  baseStyleElements : IStyleElements = {}
+) : IStyleElements {
   let index = 1;
   const classNames : Array<{
     isGlobalStyle : boolean;
@@ -35,41 +45,49 @@ export default function parseStyleBlock(styleBlock : string[]) : IStyleElement[]
   }> = [];
 
   if (styleBlock.length < 2) {
-    return [];
+    return {};
   }
 
-  if (styleBlock[1].match(/::cue {/)) {
-    classNames.push({ isGlobalStyle: true });
-    index++;
-  } else {
-    let cueClassLine;
+  while (styleBlock[index]) {
+    if (styleBlock[1].match(/::cue {/)) {
+      classNames.push({ isGlobalStyle: true });
+      index++;
+    } else {
+      let cueClassLine;
+      while (
+        styleBlock[index] &&
+        (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/))
+      ) {
+        classNames.push({
+          className: cueClassLine[1],
+          isGlobalStyle: false,
+        });
+        index++;
+      }
+    }
+
+    let styleContent = "";
+
     while (
       styleBlock[index] &&
-      (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/))
+      (!(styleBlock[index].match(/}/) || styleBlock[index].length === 0))
     ) {
-      classNames.push({
-        className: cueClassLine[1],
-        isGlobalStyle: false,
-      });
+      styleContent +=  styleBlock[index];
       index++;
     }
-  }
-
-  let styleContent = "";
-
-  while (
-    styleBlock[index] &&
-    (!(styleBlock[index].match(/}/) || styleBlock[index].length === 0))
-  ) {
-    styleContent +=  styleBlock[index];
-    index++;
-  }
-  classNames.forEach(name => {
-    styleElements.push({
-      className: name.className,
-      isGlobalStyle: name.isGlobalStyle,
-      styleContent: styleContent.replace(/\s/g, ""),
+    classNames.forEach(name => {
+      if (name.className) {
+        const styleElement = baseStyleElements[name.className];
+        if (!styleElement) {
+          baseStyleElements[name.className] = {
+            isGlobalStyle: name.isGlobalStyle,
+            styleContent: styleContent.replace(/\s/g, ""),
+          };
+        } else {
+          styleElement.styleContent += styleContent.replace(/\s/g, "");
+        }
+      }
     });
-  });
-  return styleElements;
+  }
+  return baseStyleElements;
 }
