@@ -10,13 +10,13 @@ const karmaConf = {
   basePath: ".",
 
   browsers: [
-    "FirefoxAutoPlay",
+    "FirefoxHeadlessAutoPlay",
     "ChromeAutoPlay",
   ],
 
   customLaunchers: {
-    FirefoxAutoPlay: {
-      base: "Firefox",
+    FirefoxHeadlessAutoPlay: {
+      base: "FirefoxHeadless",
       prefs: {
         "media.autoplay.default": 0,
         "media.autoplay.enabled.user-gestures-needed": false,
