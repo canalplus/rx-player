@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import arrayFlat from "../../../../utils/array_flat";
 import getCueBlocks from "../get_cue_blocks";
 import getStyleBlocks from "../get_style_blocks";
 import parseCueBlock from "../parse_cue_block";
@@ -67,10 +66,7 @@ export default function parseWebVTT(
   const styleBlocks = getStyleBlocks(linified, firstLineAfterHeader);
   const cueBlocks = getCueBlocks(linified, firstLineAfterHeader);
 
-  const styleElements = parseStyleBlock(
-    arrayFlat<string>(styleBlocks),
-    defaultStyleElements
-  );
+  const styleElements = parseStyleBlock(styleBlocks, defaultStyleElements);
 
   for (let i = 0; i < cueBlocks.length; i++) {
     const cueObject = parseCueBlock(cueBlocks[i], timeOffset);

@@ -13,13 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-export interface IStyleElement {
-  className? : string;
-  isGlobalStyle : boolean;
-  styleContent : string;
-}
-
 export interface IStyleElements {
   [className : string]: {
     isGlobalStyle : boolean;
@@ -35,59 +28,57 @@ export interface IStyleElements {
  * @return {Array.<Object>} styleElements
  */
 export default function parseStyleBlock(
-  styleBlock : string[],
+  styleBlocks : string[][],
   baseStyleElements : IStyleElements = {}
 ) : IStyleElements {
-  let index = 1;
-  const classNames : Array<{
-    isGlobalStyle : boolean;
-    className? : string;
-  }> = [];
+  styleBlocks.forEach((styleBlock) => {
+    let index = 1;
+    const classNames : Array<{
+      isGlobalStyle : boolean;
+      className? : string;
+    }> = [];
 
-  if (styleBlock.length < 2) {
-    return {};
-  }
-
-  while (styleBlock[index]) {
-    if (styleBlock[1].match(/::cue {/)) {
-      classNames.push({ isGlobalStyle: true });
-      index++;
-    } else {
-      let cueClassLine;
-      while (
-        styleBlock[index] &&
-        (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/))
-      ) {
-        classNames.push({
-          className: cueClassLine[1],
-          isGlobalStyle: false,
-        });
+    if (styleBlock.length >= 2) {
+      if (styleBlock[1].match(/::cue {/)) {
+        classNames.push({ isGlobalStyle: true });
         index++;
-      }
-    }
-
-    let styleContent = "";
-
-    while (
-      styleBlock[index] &&
-      (!(styleBlock[index].match(/}/) || styleBlock[index].length === 0))
-    ) {
-      styleContent +=  styleBlock[index];
-      index++;
-    }
-    classNames.forEach(name => {
-      if (name.className) {
-        const styleElement = baseStyleElements[name.className];
-        if (!styleElement) {
-          baseStyleElements[name.className] = {
-            isGlobalStyle: name.isGlobalStyle,
-            styleContent: styleContent.replace(/\s/g, ""),
-          };
-        } else {
-          styleElement.styleContent += styleContent.replace(/\s/g, "");
+      } else {
+        let cueClassLine;
+        while (
+          styleBlock[index] &&
+          (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/))
+        ) {
+          classNames.push({
+            className: cueClassLine[1],
+            isGlobalStyle: false,
+          });
+          index++;
         }
       }
-    });
-  }
+
+      let styleContent = "";
+
+      while (
+        styleBlock[index] &&
+        (!(styleBlock[index].match(/}/) || styleBlock[index].length === 0))
+      ) {
+        styleContent +=  styleBlock[index];
+        index++;
+      }
+      classNames.forEach(name => {
+        if (name.className) {
+          const styleElement = baseStyleElements[name.className];
+          if (!styleElement) {
+            baseStyleElements[name.className] = {
+              isGlobalStyle: name.isGlobalStyle,
+              styleContent: styleContent.replace(/\s/g, ""),
+            };
+          } else {
+            styleElement.styleContent += styleContent.replace(/\s/g, "");
+          }
+        }
+      });
+    }
+  });
   return baseStyleElements;
 }
