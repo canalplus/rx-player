@@ -18,17 +18,10 @@ const colorMap: { [colorName: string]: string } = {
   black: "#000000",
 };
 
-export default function createDefaultStyleElements() {
+export default function createDefaultStyleElements(): IStyleElements {
   return Object.keys(colorMap).reduce<IStyleElements>((result, key) => {
-    result[key] = {
-      isGlobalStyle: false,
-      styleContent: `color: ${colorMap[key]}`,
-    };
-    result[`bg_${key}`] = {
-      isGlobalStyle: false,
-      styleContent: `background-color: ${colorMap[key]}`,
-    };
-
+    result[key] = `color: ${colorMap[key]}`;
+    result[`bg_${key}`] = `background-color: ${colorMap[key]}`;
     return result;
   }, {});
 }

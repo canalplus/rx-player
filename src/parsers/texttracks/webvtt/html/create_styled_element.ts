@@ -51,15 +51,15 @@ export default function createStyledElement(
       }
     } else {
       const nodeClasses = baseNode.nodeName.toLowerCase().split(".");
-      const classes : Array<{ styleContent: string }> = [];
+      const styleContents : string[] = [];
       nodeClasses.forEach(nodeClass => {
         if (styleElements[nodeClass]) {
-          classes.push(styleElements[nodeClass]);
+          styleContents.push(styleElements[nodeClass]);
         }
       });
-      if (classes.length !== 0) { // If style must be applied
+      if (styleContents.length !== 0) { // If style must be applied
         const attr = document.createAttribute("style");
-        classes.forEach(({ styleContent }) => {
+        styleContents.forEach((styleContent) => {
           attr.value += styleContent;
         });
         const nameClass = arrayIncludes(HTMLTags, mainNodeName) ?
