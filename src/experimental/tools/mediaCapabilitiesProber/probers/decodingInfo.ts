@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import PPromise from "../../../../../utils/promise";
+import PPromise from "../../../../utils/promise";
 import {
   IMediaConfiguration,
   ProberStatus,
-} from "../../types";
+} from "../types";
 
 export interface IDecodingInfos {
   supported: boolean;
@@ -76,15 +76,13 @@ export default function probeDecodingInfos(
       "Not enough arguments for calling mediaCapabilites.");
     }
 
-    if (hasVideoConfig || hasAudioConfig) {
-      return (navigator as any).mediaCapabilities.decodingInfo(config)
-        .then((result: IDecodingInfos) => {
-          return [
-            result.supported ? ProberStatus.Supported : ProberStatus.NotSupported,
-          ];
-        }).catch(() => {
-          return [ProberStatus.NotSupported];
-        });
-    }
+    return (navigator as any).mediaCapabilities.decodingInfo(config)
+      .then((result: IDecodingInfos) => {
+        return [
+          result.supported ? ProberStatus.Supported : ProberStatus.NotSupported,
+        ];
+      }).catch(() => {
+        return [ProberStatus.NotSupported];
+      });
   });
 }

@@ -14,40 +14,48 @@
  * limitations under the License.
  */
 
-import PPromise from "../../../../../utils/promise";
+import { MediaSource_ } from "../../../../compat";
+import PPromise from "../../../../utils/promise";
 import {
   IMediaConfiguration,
   ProberStatus,
-} from "../../types";
+} from "../types";
 
 /**
  * @param {Object} config
  * @returns {Promise}
  */
-export default function probeMatchMedia(
+export default function probeContentType(
   config: IMediaConfiguration
 ): Promise<[ProberStatus]> {
   return new PPromise((resolve) => {
+    if (MediaSource_ == null) {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "MediaSource API not available");
+    }
     /* tslint:disable no-unbound-method */
-    if (typeof window.matchMedia !== "function") {
+    if (typeof MediaSource_.isTypeSupported !== "function") {
     /* tslint:enable no-unbound-method */
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "matchMedia not available");
+        "isTypeSupported not available");
     }
-    if (config.display == null || !config.display.colorSpace) {
+    const contentTypes: string[] = [];
+    if (config.video && config.video.contentType) {
+      contentTypes.push(config.video.contentType);
+    }
+    if (config.audio && config.audio.contentType) {
+      contentTypes.push(config.audio.contentType);
+    }
+    if (contentTypes.length === 0) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "Not enough arguments for calling matchMedia.");
+        "Not enough arguments for calling isTypeSupported.");
     }
-
-    const match = window.matchMedia(`(color-gamut: ${config.display.colorSpace})`);
-    if (match.media === "not all") {
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "Bad arguments for calling matchMedia.");
+    for (let i = 0; i < contentTypes.length; i++) {
+      if (!MediaSource_.isTypeSupported(contentTypes[i])) {
+        resolve([ProberStatus.NotSupported]);
+        return;
+      }
     }
-
-    const result : [ProberStatus] = [
-      match.matches ? ProberStatus.Supported : ProberStatus.NotSupported,
-    ];
-    resolve(result);
+    resolve([ProberStatus.Supported]);
   });
 }
