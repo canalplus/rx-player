@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IHTMLCue } from "../buffer_manager";
+import { IHTMLCue } from "../types";
 import {
   areNearlyEqual,
   getCuesAfter,

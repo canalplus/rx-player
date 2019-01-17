@@ -17,7 +17,7 @@
 import {
   ICuesGroup,
   IHTMLCue,
-} from "./buffer_manager";
+} from "./types";
 
 /**
  * Maximum time difference, in seconds, between two text segment's start times
