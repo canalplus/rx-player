@@ -20,70 +20,22 @@ describe("parsers - webvtt - createDefaultStyleElements", () => {
   it("should return expected default style elements", () => {
     expect(createDefaultStyleElements()).toEqual(
       {
-        white: {
-          isGlobalStyle: false,
-          styleContent: "color: #ffffff",
-        },
-        bg_white: {
-          isGlobalStyle: false,
-          styleContent: "background-color: #ffffff",
-        },
-        lime: {
-          isGlobalStyle: false,
-          styleContent: "color: #00ff00",
-        },
-        bg_lime: {
-          isGlobalStyle: false,
-          styleContent: "background-color: #00ff00",
-        },
-        cyan: {
-          isGlobalStyle: false,
-          styleContent: "color: #00ffff",
-        },
-        bg_cyan: {
-          isGlobalStyle: false,
-          styleContent: "background-color: #00ffff",
-        },
-        red: {
-          isGlobalStyle: false,
-          styleContent: "color: #ff0000",
-        },
-        bg_red: {
-          isGlobalStyle: false,
-          styleContent: "background-color: #ff0000",
-        },
-        yellow: {
-          isGlobalStyle: false,
-          styleContent: "color: #ffff00",
-        },
-        bg_yellow: {
-          isGlobalStyle: false,
-          styleContent: "background-color: #ffff00",
-        },
-        magenta: {
-          isGlobalStyle: false,
-          styleContent: "color: #ff00ff",
-        },
-        bg_magenta: {
-          isGlobalStyle: false,
-          styleContent: "background-color: #ff00ff",
-        },
-        blue: {
-          isGlobalStyle: false,
-          styleContent: "color: #0000ff",
-        },
-        bg_blue: {
-          isGlobalStyle: false,
-          styleContent: "background-color: #0000ff",
-        },
-        black: {
-          isGlobalStyle: false,
-          styleContent: "color: #000000",
-        },
-        bg_black: {
-          isGlobalStyle: false,
-          styleContent: "background-color: #000000",
-        },
+        white: "color: #ffffff",
+        bg_white: "background-color: #ffffff",
+        lime: "color: #00ff00",
+        bg_lime: "background-color: #00ff00",
+        cyan: "color: #00ffff",
+        bg_cyan: "background-color: #00ffff",
+        red: "color: #ff0000",
+        bg_red: "background-color: #ff0000",
+        yellow: "color: #ffff00",
+        bg_yellow: "background-color: #ffff00",
+        magenta: "color: #ff00ff",
+        bg_magenta: "background-color: #ff00ff",
+        blue: "color: #0000ff",
+        bg_blue: "background-color: #0000ff",
+        black: "color: #000000",
+        bg_black: "background-color: #000000",
       }
     );
   });

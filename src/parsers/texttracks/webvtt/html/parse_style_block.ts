@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 export interface IStyleElements {
-  [className : string]: {
-    isGlobalStyle : boolean;
-    styleContent : string;
-  };
+  [className : string]: string;
 }
 
 /**
@@ -33,14 +31,11 @@ export default function parseStyleBlock(
 ) : IStyleElements {
   styleBlocks.forEach((styleBlock) => {
     let index = 1;
-    const classNames : Array<{
-      isGlobalStyle : boolean;
-      className? : string;
-    }> = [];
+    const classNames : string[] = [];
 
     if (styleBlock.length >= 2) {
       if (styleBlock[1].match(/::cue {/)) {
-        classNames.push({ isGlobalStyle: true });
+        classNames.push("__global__");
         index++;
       } else {
         let cueClassLine;
@@ -48,10 +43,7 @@ export default function parseStyleBlock(
           styleBlock[index] &&
           (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/))
         ) {
-          classNames.push({
-            className: cueClassLine[1],
-            isGlobalStyle: false,
-          });
+          classNames.push(cueClassLine[1]);
           index++;
         }
       }
@@ -65,17 +57,12 @@ export default function parseStyleBlock(
         styleContent +=  styleBlock[index];
         index++;
       }
-      classNames.forEach(name => {
-        if (name.className) {
-          const styleElement = baseStyleElements[name.className];
-          if (!styleElement) {
-            baseStyleElements[name.className] = {
-              isGlobalStyle: name.isGlobalStyle,
-              styleContent: styleContent.replace(/\s/g, ""),
-            };
-          } else {
-            styleElement.styleContent += styleContent.replace(/\s/g, "");
-          }
+      classNames.forEach((className) => {
+        const styleElement = baseStyleElements[className];
+        if (!styleElement) {
+          baseStyleElements[className] = styleContent.replace(/\s/g, "");
+        } else {
+          baseStyleElements[className] += styleContent.replace(/\s/g, "");
         }
       });
     }

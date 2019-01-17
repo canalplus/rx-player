@@ -73,12 +73,10 @@ export default function toHTML(
     "color:white;";
   spanElement.setAttributeNode(attr);
 
-  const styles = Object.entries(styleElements)
-    .filter(([className, { isGlobalStyle }]) => {
-      return className === header && !isGlobalStyle ||
-        isGlobalStyle;
-    })
-    .map(([_, { styleContent }]) => styleContent)
+  const localStyle = header ? styleElements[header] : undefined;
+  const globalStyle = styleElements.__global__;
+  const styles = [localStyle, globalStyle]
+    .filter((s) => !!s)
     .join();
 
   attr.value += styles;
