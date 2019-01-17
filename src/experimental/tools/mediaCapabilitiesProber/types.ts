@@ -71,3 +71,5 @@ export enum ProberStatus {
   Unknown,
   Supported,
 }
+
+export type ICapabilities = Array<(string|{ [key: string]: ICapabilities })>;
