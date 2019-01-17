@@ -73,9 +73,7 @@ export default function parseWebVTT(
 
     if (cueObject != null) {
       const htmlCue = toHTML(cueObject, styleElements);
-      if (htmlCue) {
-        cuesArray.push(htmlCue);
-      }
+      cuesArray.push(htmlCue);
     }
   }
   return cuesArray;
