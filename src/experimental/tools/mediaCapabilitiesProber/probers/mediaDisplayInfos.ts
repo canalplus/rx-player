@@ -14,48 +14,40 @@
  * limitations under the License.
  */
 
-import { MediaSource_ } from "../../../../../compat";
-import PPromise from "../../../../../utils/promise";
+import PPromise from "../../../../utils/promise";
 import {
   IMediaConfiguration,
   ProberStatus,
-} from "../../types";
+} from "../types";
 
 /**
  * @param {Object} config
  * @returns {Promise}
  */
-export default function probeContentType(
+export default function probeMatchMedia(
   config: IMediaConfiguration
 ): Promise<[ProberStatus]> {
   return new PPromise((resolve) => {
-    if (MediaSource_ == null) {
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "MediaSource API not available");
-    }
     /* tslint:disable no-unbound-method */
-    if (typeof MediaSource_.isTypeSupported !== "function") {
+    if (typeof window.matchMedia !== "function") {
     /* tslint:enable no-unbound-method */
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "isTypeSupported not available");
+        "matchMedia not available");
     }
-    const contentTypes: string[] = [];
-    if (config.video && config.video.contentType) {
-      contentTypes.push(config.video.contentType);
-    }
-    if (config.audio && config.audio.contentType) {
-      contentTypes.push(config.audio.contentType);
-    }
-    if (contentTypes.length === 0) {
+    if (config.display == null || !config.display.colorSpace) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "Not enough arguments for calling isTypeSupported.");
+        "Not enough arguments for calling matchMedia.");
     }
-    for (let i = 0; i < contentTypes.length; i++) {
-      if (!MediaSource_.isTypeSupported(contentTypes[i])) {
-        resolve([ProberStatus.NotSupported]);
-        return;
-      }
+
+    const match = window.matchMedia(`(color-gamut: ${config.display.colorSpace})`);
+    if (match.media === "not all") {
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
+        "Bad arguments for calling matchMedia.");
     }
-    resolve([ProberStatus.Supported]);
+
+    const result : [ProberStatus] = [
+      match.matches ? ProberStatus.Supported : ProberStatus.NotSupported,
+    ];
+    resolve(result);
   });
 }

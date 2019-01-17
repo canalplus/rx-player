@@ -37,12 +37,17 @@ export function extend(target: ICapabilities, objects: ICapabilities[]): ICapabi
         const entry = Object.entries(element)[0];
         const [ key, value ] = entry;
         const foundTargetElement = arrayFind(target, (targetElement) =>
-          typeof targetElement !== "string" && !!targetElement[key]);
+          typeof targetElement !== "string" && !!targetElement[key]) as (
+            undefined|
+            {
+              [key: string]: ICapabilities;
+            }
+          );
         if (!foundTargetElement) {
           const toPush: { [key: string]: ICapabilities } = {};
           toPush[key] = extend([], [value]);
           target.push(toPush);
-        } else if (typeof foundTargetElement !== "string") {
+        } else {
           const targetElementToExtend: {
             [key: string]: ICapabilities;
           } = foundTargetElement;
