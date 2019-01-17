@@ -52,9 +52,6 @@ export default function parseWebVTT(
 ) : IVTTHTMLCue[] {
   const newLineChar = /\r\n|\n|\r/g;
   const linified = text.split(newLineChar);
-  if (!linified.length) {
-    return [];
-  }
 
   const cuesArray : IVTTHTMLCue[] = [];
   const defaultStyleElements : IStyleElements = createDefaultStyleElements();
