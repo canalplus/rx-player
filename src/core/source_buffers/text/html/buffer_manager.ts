@@ -16,23 +16,15 @@
 
 import assert from "../../../../utils/assert";
 import {
+  ICuesGroup,
+  IHTMLCue,
+} from "./types";
+import {
   areNearlyEqual,
   getCuesAfter,
   getCuesBefore,
   removeCuesInfosBetween,
 } from "./utils";
-
-export interface IHTMLCue {
-  start : number;
-  end : number;
-  element : HTMLElement;
-}
-
-export interface ICuesGroup {
-  start : number;
-  end : number;
-  cues : IHTMLCue[];
-}
 
 /**
  * Manage the buffer of the HTML text Sourcebuffer.
