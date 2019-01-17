@@ -19,11 +19,13 @@ import getCueBlocks from "../get_cue_blocks";
 import getStyleBlocks from "../get_style_blocks";
 import parseCueBlock from "../parse_cue_block";
 import { getFirstLineAfterHeader } from "../utils";
-import convertPayloadToHTML from "./convert_payload_to_html";
 import createDefaultStyleElements from "./create_default_style_elements";
 import parseStyleBlock, {
   IStyleElements
 } from "./parse_style_block";
+import toHTML, {
+  IVTTHTMLCue
+} from "./to_html";
 
 export interface IVTTHTMLCue {
   start : number;
@@ -81,78 +83,4 @@ export default function parseWebVTT(
     }
   }
   return cuesArray;
-}
-
-/**
- * Parse cue block into an object with the following properties:
- *   - start {number}: start time at which the cue should be displayed
- *   - end {number}: end time at which the cue should be displayed
- *   - element {HTMLElement}: the cue text, translated into an HTMLElement
- *
- * Returns undefined if the cue block could not be parsed.
- * @param {Array.<string>} cueBlock
- * @param {Number} timeOffset
- * @param {Array.<Object>} styleElements
- * @returns {Object|undefined}
- */
-function toHTML(
-  cueObj : {
-    start : number;
-    end : number;
-    header? : string;
-    payload : string[];
-  },
-  styleElements : IStyleElements
-) : IVTTHTMLCue|undefined {
-  const { start, end, header, payload } = cueObj;
-
-  const region = document.createElement("div");
-  const regionAttr = document.createAttribute("style");
-  regionAttr.value =
-    "width:100%;" +
-    "height:100%;" +
-    "display:flex;" +
-    "flex-direction:column;" +
-    "justify-content:flex-end;" +
-    "align-items:center;";
-  region.setAttributeNode(regionAttr);
-
-  // Get content, format and apply style.
-  const pElement = document.createElement("p");
-  const pAttr = document.createAttribute("style");
-  pAttr.value = "text-align:center";
-  pElement.setAttributeNode(pAttr);
-
-  const spanElement = document.createElement("span");
-  const attr = document.createAttribute("style");
-
-  // set color and background-color default values, as indicated in:
-  // https://www.w3.org/TR/webvtt1/#applying-css-properties
-  attr.value =
-    "background-color:rgba(0,0,0,0.8);" +
-    "color:white;";
-  spanElement.setAttributeNode(attr);
-
-  const styles = Object.entries(styleElements)
-    .filter(([ className, { isGlobalStyle } ]) =>
-      (className === header && !isGlobalStyle) ||
-      isGlobalStyle
-    ).map(([_, { styleContent }]) => styleContent);
-
-  attr.value += styles.join();
-  spanElement.setAttributeNode(attr);
-
-  convertPayloadToHTML(payload.join("\n"), styleElements)
-    .forEach(element => {
-      spanElement.appendChild(element);
-    });
-
-  region.appendChild(pElement) ;
-  pElement.appendChild(spanElement);
-
-  return {
-    start,
-    end,
-    element: region,
-  };
 }
