@@ -27,7 +27,7 @@ describe("Features - initializeFeaturesObject", () => {
     jest.mock("../index", () => ({ default: feat }));
     const initializeFeaturesObject = require("../initialize_features").default;
     initializeFeaturesObject();
-    expect(feat).toEqual({});
+    expect<unknown>(feat).toEqual({});
     delete (window as any).__FEATURES__;
   });
 
