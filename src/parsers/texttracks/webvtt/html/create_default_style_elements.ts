@@ -19,7 +19,7 @@ const colorMap: { [colorName: string]: string } = {
 };
 
 export default function createDefaultStyleElements() {
-  return Object.keys(colorMap).reduce((result, key) => {
+  return Object.keys(colorMap).reduce<IStyleElement[]>((result, key) => {
     result.push({
       className: key,
       isGlobalStyle: false,
@@ -33,5 +33,5 @@ export default function createDefaultStyleElements() {
     });
 
     return result;
-  }, [] as IStyleElement[]);
+  }, []);
 }
