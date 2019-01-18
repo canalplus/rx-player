@@ -28,7 +28,6 @@ import {
   filter,
   ignoreElements,
   map,
-  mapTo,
   mergeMap,
   multicast,
   refCount,
@@ -44,18 +43,16 @@ import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import { assertInterface } from "../../utils/assert";
 import noop from "../../utils/noop";
-import attachMediaKeys from "./attach_media_keys";
 import disposeMediaKeys from "./dispose_media_keys";
-import getMediaKeysInfos from "./get_media_keys";
 import getSession from "./get_session";
 import handleSessionEvents from "./handle_session_events";
+import initMediaKeys from "./init_media_keys";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 import setServerCertificate from "./set_server_certificate";
 import {
   IEMEInitEvent,
   IEMEWarningEvent,
   IKeySystemOption,
-  IMediaKeysInfos,
 } from "./types";
 import InitDataStore from "./utils/init_data_store";
 
@@ -88,28 +85,6 @@ function clearEMESession(mediaElement : HTMLMediaElement) : Observable<never> {
 export type IEMEManagerEvent =
   IEMEWarningEvent |
   IEMEInitEvent;
-
-/**
- * Get media keys infos from key system configs then attach media keys to media element.
- * @param {HTMLMediaElement} mediaElement
- * @param {Array.<Object>} keySystemsConfigs
- * @param {Object} currentMediaKeysInfos
- * @returns {Observable}
- */
-function initMediaKeys(
-  mediaElement : HTMLMediaElement,
-  keySystemsConfigs: IKeySystemOption[],
-  currentMediaKeysInfos : MediaKeysInfosStore
-): Observable<IMediaKeysInfos> {
-  return getMediaKeysInfos(
-    mediaElement, keySystemsConfigs, currentMediaKeysInfos
-  ).pipe(
-    mergeMap((mediaKeysInfos) =>
-      attachMediaKeys(mediaKeysInfos, mediaElement, currentMediaKeysInfos)
-        .pipe(mapTo(mediaKeysInfos))
-    )
-  );
-}
 
 /**
  * EME abstraction and event handler used to communicate with the Content-
