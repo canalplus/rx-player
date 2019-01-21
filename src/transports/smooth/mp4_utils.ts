@@ -154,7 +154,6 @@ function createAtomWithChildren(
 }
 
 const atoms = {
-
   /**
    * @param {string} name - "avc1" or "encv"
    * @param {Number} drefIdx - shall be 1
@@ -733,10 +732,12 @@ function moovChildren(
 }
 
 /**
+ * Update the data_offset in the given trun box
  * /!\ Mutates given segment
- * @param {Uint8Array} segment
- * @param {Number} trunoffset
- * @param {Number} dataoffset
+ * @param {Uint8Array} segment - The whole segment
+ * @param {Number} trunoffset - Offset at which the trun begins in that segment
+ * @param {Number} dataoffset - Offset at which the data of the corresponding
+ * "mdat" begins in that segment.
  */
 function patchTrunDataOffset(
   segment : Uint8Array,
@@ -748,11 +749,17 @@ function patchTrunDataOffset(
 }
 
 /**
- * @param {Uint8Array} segment
- * @param {Uint8Array} newmoof
- * @param {Uint8Array} oldmoof
- * @param {Number} trunoffset
- * @returns {Uint8Array}
+ * Create a new segment from the data of an old one.
+ * /!\ Mutates given segment
+ * FIXME This code seems to assume that an ISOBMFF directly begins with a moof
+ * box followed directly with an mdat. For the moment this seems to always be
+ * the case but it would be safer to perform some checks before.
+ * @param {Uint8Array} segment - Current segment
+ * @param {Uint8Array} newmoof - New "moof" box that will be used.
+ * @param {Uint8Array} oldmoof - Current moof box in that segment.
+ * @param {Number} trunoffset - Offset at which the `trun` begins in that
+ * segment.
+ * @returns {Uint8Array} - Created segment with the replaced moof
  */
 function createNewSegment(
   segment : Uint8Array,
@@ -767,7 +774,7 @@ function createNewSegment(
   const newSegment = new Uint8Array(newmooflen + (segmentlen - oldmooflen));
   newSegment.set(newmoof, 0);
   newSegment.set(mdat, newmooflen);
-  patchTrunDataOffset(newSegment, trunoffset, newmoof.length + 8);
+  patchTrunDataOffset(newSegment, trunoffset, newmooflen + 8);
   return newSegment;
 }
 
