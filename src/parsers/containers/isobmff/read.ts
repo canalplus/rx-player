@@ -18,12 +18,43 @@ import assert from "../../../utils/assert";
 import { be4toi } from "../../../utils/byte_parsing";
 
 /**
+ * Returns the content of a box based on its name.
+ * `null` if not found.
+ * /!\ does not work with UUID boxes
  * @param {Uint8Array} buf - the isobmff structure
- * @param {Number} boxName - the 'name' of the box (e.g. 'sidx' or 'moov'),
- * hexa encoded
+ * @param {Number} boxName - the 4-letter 'name' of the box (e.g. 'sidx' or
+ * 'moov'), hexa encoded
+ * @returns {UInt8Array|null}
+ */
+function getBoxContent(buf : Uint8Array, boxName : number) : Uint8Array|null {
+  const offsets = getBoxOffsets(buf, boxName);
+  return offsets != null ? buf.subarray(offsets[0] + 8, offsets[1]) : null;
+}
+
+/**
+ * Returns an ISOBMFF box based on its name.
+ * `null` if not found.
+ * /!\ does not work with UUID boxes
+ * @param {Uint8Array} buf - the isobmff structure
+ * @param {Number} boxName - the 4-letter 'name' of the box (e.g. 'sidx' or
+ * 'moov'), hexa encoded
  * @returns {UInt8Array|null}
  */
 function getBox(buf : Uint8Array, boxName : number) : Uint8Array|null {
+  const offsets = getBoxOffsets(buf, boxName);
+  return offsets != null ? buf.subarray(offsets[0], offsets[1]) : null;
+}
+
+/**
+ * Returns start and end offset for a given box.
+ * `null` if not found.
+ * /!\ does not work with UUID boxes
+ * @param {Uint8Array} buf - the isobmff structure
+ * @param {Number} boxName - the 4-letter 'name' of the box (e.g. 'sidx' or
+ * 'moov'), hexa encoded
+ * @returns {Array.<number>|null}
+ */
+function getBoxOffsets(buf : Uint8Array, boxName : number) : [number, number]|null {
   const l = buf.length;
   let i = 0;
 
@@ -41,7 +72,7 @@ function getBox(buf : Uint8Array, boxName : number) : Uint8Array|null {
   }
 
   if (i < l) {
-    return buf.subarray(i + 8, i + size);
+    return [i, i + size];
   } else {
     return null;
   }
@@ -54,11 +85,11 @@ function getBox(buf : Uint8Array, boxName : number) : Uint8Array|null {
  * @returns {Uint8Array|null}
  */
 function getTRAF(buffer : Uint8Array) : Uint8Array|null {
-  const moof = getBox(buffer, 0x6d6f6f66 /* moof */);
+  const moof = getBoxContent(buffer, 0x6d6f6f66 /* moof */);
   if (!moof) {
     return null;
   }
-  return getBox(moof, 0x74726166 /* traf */);
+  return getBoxContent(moof, 0x74726166 /* traf */);
 }
 
 /**
@@ -68,7 +99,7 @@ function getTRAF(buffer : Uint8Array) : Uint8Array|null {
  * @returns {Uint8Array|null}
  */
 function getMDAT(buf : Uint8Array) : Uint8Array|null {
-  return getBox(buf, 0x6D646174 /* "mdat" */);
+  return getBoxContent(buf, 0x6D646174 /* "mdat" */);
 }
 
 /**
@@ -78,20 +109,23 @@ function getMDAT(buf : Uint8Array) : Uint8Array|null {
  * @returns {Uint8Array|null}
  */
 function getMDIA(buf : Uint8Array) : Uint8Array|null {
-  const moov = getBox(buf, 0x6d6f6f76 /* moov */);
+  const moov = getBoxContent(buf, 0x6d6f6f76 /* moov */);
   if (!moov) {
     return null;
   }
 
-  const trak = getBox(moov, 0x7472616b /* "trak" */);
+  const trak = getBoxContent(moov, 0x7472616b /* "trak" */);
   if (!trak) {
     return null;
   }
 
-  return getBox(trak, 0x6d646961 /* "mdia" */);
+  return getBoxContent(trak, 0x6d646961 /* "mdia" */);
 }
 
 export {
+  getBox,
+  getBoxContent,
+  getBoxOffsets,
   getTRAF,
   getMDAT,
   getMDIA,

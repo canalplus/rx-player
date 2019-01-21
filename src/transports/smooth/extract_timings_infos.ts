@@ -16,7 +16,10 @@
 
 import log from "../../log";
 import { ISegment } from "../../manifest";
-import { getDurationFromTrun } from "../../parsers/containers/isobmff";
+import {
+  getDurationFromTrun,
+  getTRAF,
+} from "../../parsers/containers/isobmff";
 import {
   INextSegmentsInfos,
   ISegmentTimingInfos,
@@ -26,7 +29,6 @@ import mp4Utils, {
 } from "./mp4_utils";
 
 const {
-  getTraf,
   parseTfrf,
   parseTfxd,
 } = mp4Utils;
@@ -45,7 +47,7 @@ export default function extractTimingsInfos(
   let tfxdSegment : IISOBMFFBasicSegment|undefined;
   let tfrfSegments : IISOBMFFBasicSegment[]|undefined;
   if (isLive) {
-    const traf = getTraf(responseData);
+    const traf = getTRAF(responseData);
     if (traf) {
       tfrfSegments = parseTfrf(traf);
       tfxdSegment = parseTfxd(traf);
