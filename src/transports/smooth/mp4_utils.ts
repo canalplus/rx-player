@@ -100,7 +100,7 @@ function boxName(str : string) : Uint8Array {
  * @param {Uint8Array} buff - content of the box
  * @returns {Uint8Array} - The entire ISOBMFF box (length+name+content)
  */
-function Atom(name : string, buff : Uint8Array) : Uint8Array {
+function createAtom(name : string, buff : Uint8Array) : Uint8Array {
   if (__DEV__) {
     assert(name.length === 4);
   }
@@ -150,7 +150,7 @@ function createAtomWithChildren(
   name : string,
   children : Uint8Array[]
 ) : Uint8Array {
-  return Atom(name, concat(...children));
+  return createAtom(name, concat(...children));
 }
 
 const atoms = {
@@ -185,7 +185,7 @@ const atoms = {
       assert(name === "avc1" || name === "encv", "should be avc1 or encv atom");
       assert(name !== "encv" || sinf instanceof Uint8Array);
     }
-    return Atom(name, concat(
+    return createAtom(name, concat(
       6,                      // 6 bytes reserved
       itobe2(drefIdx), 16,    // drefIdx + QuickTime reserved, zeroes
       itobe2(width),          // size 2 w
@@ -220,7 +220,7 @@ const atoms = {
     const h264CompatibleProfile = sps[2];
     const h264Level = sps[3];
 
-    return Atom("avcC", concat(
+    return createAtom("avcC", concat(
       [
         1,
         h264Profile,
@@ -240,7 +240,7 @@ const atoms = {
    */
   dref(url : Uint8Array) : Uint8Array {
     // only one description here... FIXME
-    return Atom("dref", concat(7, [1], url));
+    return createAtom("dref", concat(7, [1], url));
   },
 
   /**
@@ -250,7 +250,7 @@ const atoms = {
    * @returns {Uint8Array}
    */
   esds(stream : number, codecPrivateData : string) : Uint8Array {
-    return Atom("esds", concat(
+    return createAtom("esds", concat(
       4,
       [0x03, 0x19],
       itobe2(stream),
@@ -269,7 +269,7 @@ const atoms = {
     if (__DEV__) {
       assert(dataFormat.length === 4, "wrong data format length");
     }
-    return Atom("frma", strToBytes(dataFormat));
+    return createAtom("frma", strToBytes(dataFormat));
   },
 
   /**
@@ -277,7 +277,7 @@ const atoms = {
    * @returns {Uint8Array}
    */
   free(length : number) : Uint8Array {
-    return Atom("free", new Uint8Array(length - 8));
+    return createAtom("free", new Uint8Array(length - 8));
   },
 
   /**
@@ -286,7 +286,7 @@ const atoms = {
    * @returns {Uint8Array}
    */
   ftyp(majorBrand : string, brands : string[]) : Uint8Array {
-    return Atom("ftyp", concat.apply(null, [
+    return createAtom("ftyp", concat.apply(null, [
       strToBytes(majorBrand),
       [0, 0, 0, 1],
     ].concat(brands.map(strToBytes))));
@@ -315,7 +315,7 @@ const atoms = {
       break;
     }
 
-    return Atom("hdlr", concat(
+    return createAtom("hdlr", concat(
       8,
       strToBytes(name), 12,
       strToBytes(handlerName),
@@ -328,7 +328,7 @@ const atoms = {
    * @returns {Uint8Array}
    */
   mdhd(timescale : number) : Uint8Array {
-    return Atom("mdhd", concat(12, itobe4(timescale), 8));
+    return createAtom("mdhd", concat(12, itobe4(timescale), 8));
   },
 
   /**
@@ -365,7 +365,7 @@ const atoms = {
     if (__DEV__) {
       assert(name !== "enca" || sinf instanceof Uint8Array);
     }
-    return Atom(name, concat(
+    return createAtom(name, concat(
       6,
       itobe2(drefIdx), 8,
       itobe2(channelsCount),
@@ -383,7 +383,7 @@ const atoms = {
    * @returns {Uint8Array}
    */
   mvhd(timescale : number, trackId : number) : Uint8Array {
-    return Atom("mvhd", concat(
+    return createAtom("mvhd", concat(
       12,
       itobe4(timescale), 4,
       [0, 1],  2,         // we assume rate = 1;
@@ -423,7 +423,7 @@ const atoms = {
       kidList = [];
     }
 
-    return Atom("pssh", concat(
+    return createAtom("pssh", concat(
       [version, 0, 0, 0],
       hexToBytes(_systemId),
       kidList,
@@ -445,7 +445,7 @@ const atoms = {
     tfdt : Uint8Array,
     trun : Uint8Array
   ) : Uint8Array {
-    return Atom("saio", concat(
+    return createAtom("saio", concat(
       4, [0, 0, 0, 1], // ??
       itobe4(
         mfhd.length +
@@ -463,7 +463,7 @@ const atoms = {
    */
   saiz(senc : Uint8Array) : Uint8Array {
     if (senc.length === 0) {
-      return Atom("saiz", new Uint8Array(0));
+      return createAtom("saiz", new Uint8Array(0));
     }
 
     const flags   = be4toi(senc, 0);
@@ -491,7 +491,7 @@ const atoms = {
       i++;
     }
 
-    return Atom("saiz", arr);
+    return createAtom("saiz", arr);
   },
 
   /**
@@ -503,7 +503,7 @@ const atoms = {
     if (__DEV__) {
       assert(schemeType.length === 4, "wrong scheme type length");
     }
-    return Atom("schm", concat(
+    return createAtom("schm", concat(
       4,
       strToBytes(schemeType),
       itobe4(schemeVersion)
@@ -515,14 +515,14 @@ const atoms = {
    * @returns {Uint8Array}
    */
   senc(buf : Uint8Array) : Uint8Array {
-    return Atom("senc", buf);
+    return createAtom("senc", buf);
   },
 
   /**
    * @returns {Uint8Array}
    */
   smhd() : Uint8Array {
-    return Atom("smhd", new Uint8Array(8));
+    return createAtom("smhd", new Uint8Array(8));
   },
 
   /**
@@ -533,7 +533,7 @@ const atoms = {
   stsd(reps : Uint8Array[]) : Uint8Array {
     // only one description here... FIXME
     const arrBase : Array<Uint8Array|number[]|number> = [7, [reps.length]];
-    return Atom("stsd", concat(...arrBase.concat(reps)));
+    return createAtom("stsd", concat(...arrBase.concat(reps)));
   },
 
   /**
@@ -543,7 +543,7 @@ const atoms = {
    * @returns {Uint8Array}
    */
   tkhd(width : number, height : number, trackId : number) : Uint8Array {
-    return Atom("tkhd", concat(
+    return createAtom("tkhd", concat(
       itobe4(1 + 2 + 4), 8, // we assume track is enabled,
                             // in media and in preview.
       itobe4(trackId),  20, // we assume trackId = 1;
@@ -562,7 +562,7 @@ const atoms = {
    */
   trex(trackId : number) : Uint8Array {
     // default sample desc idx = 1
-    return Atom("trex", concat(
+    return createAtom("trex", concat(
       4,
       itobe4(trackId),
       [0, 0, 0, 1], 12
@@ -574,7 +574,7 @@ const atoms = {
    * @returns {Uint8Array}
    */
   tfdt(decodeTime : number) : Uint8Array {
-    return Atom("tfdt", concat(
+    return createAtom("tfdt", concat(
       [1, 0, 0, 0],
       itobe8(decodeTime)
     ));
@@ -590,7 +590,7 @@ const atoms = {
     if (__DEV__) {
       assert(keyId.length === 32, "wrong default KID length");
     }
-    return Atom("tenc", concat(
+    return createAtom("tenc", concat(
       6,
       [algId, ivSize],
       hexToBytes(keyId)
@@ -651,7 +651,7 @@ const atoms = {
   vmhd() : Uint8Array {
     const arr = new Uint8Array(12);
     arr[3] = 1; // QuickTime...
-    return Atom("vmhd", arr);
+    return createAtom("vmhd", arr);
   },
 };
 
@@ -815,13 +815,13 @@ function createInitSegment(
 
   const stbl = createAtomWithChildren("stbl", [
     stsd,
-    Atom("stts", new Uint8Array(0x08)),
-    Atom("stsc", new Uint8Array(0x08)),
-    Atom("stsz", new Uint8Array(0x0c)),
-    Atom("stco", new Uint8Array(0x08)),
+    createAtom("stts", new Uint8Array(0x08)),
+    createAtom("stsc", new Uint8Array(0x08)),
+    createAtom("stsz", new Uint8Array(0x0c)),
+    createAtom("stco", new Uint8Array(0x08)),
   ]);
 
-  const url  = Atom("url ", new Uint8Array([0, 0, 0, 1]));
+  const url  = createAtom("url ", new Uint8Array([0, 0, 0, 1]));
   const dref = atoms.dref(url);
   const dinf = createAtomWithChildren("dinf", [dref]);
   const minf = createAtomWithChildren("minf", [mhd, dinf, stbl]);
