@@ -141,16 +141,19 @@ function readUuid(
   }
 }
 
-const atoms = {
+/**
+ * @param {string} name
+ * @param {Array.<Uint8Array>} children
+ * @returns {Uint8Array}
+ */
+function createAtomWithChildren(
+  name : string,
+  children : Uint8Array[]
+) : Uint8Array {
+  return Atom(name, concat(...children));
+}
 
-  /**
-   * @param {string} name
-   * @param {Array.<Uint8Array>} children
-   * @returns {Uint8Array}
-   */
-  mult(name : string, children : Uint8Array[]) : Uint8Array {
-    return Atom(name, concat.apply(null, children));
-  },
+const atoms = {
 
   /**
    * @param {string} name - "avc1" or "encv"
@@ -334,7 +337,7 @@ const atoms = {
    * @returns {Uint8Array}
    */
   moof(mfhd : Uint8Array, traf : Uint8Array) : Uint8Array {
-    return atoms.mult("moof", [mfhd, traf]);
+    return createAtomWithChildren("moof", [mfhd, traf]);
   },
 
   /**
@@ -617,7 +620,7 @@ const atoms = {
         atoms.saio(mfhd, tfhd, tfdt, trun)
       );
     }
-    return atoms.mult("traf", trafs);
+    return createAtomWithChildren("traf", trafs);
   },
 
   /**
@@ -810,7 +813,7 @@ function createInitSegment(
   pssList : IPSSList
 ) : Uint8Array {
 
-  const stbl = atoms.mult("stbl", [
+  const stbl = createAtomWithChildren("stbl", [
     stsd,
     Atom("stts", new Uint8Array(0x08)),
     Atom("stsc", new Uint8Array(0x08)),
@@ -820,19 +823,19 @@ function createInitSegment(
 
   const url  = Atom("url ", new Uint8Array([0, 0, 0, 1]));
   const dref = atoms.dref(url);
-  const dinf = atoms.mult("dinf", [dref]);
-  const minf = atoms.mult("minf", [mhd, dinf, stbl]);
+  const dinf = createAtomWithChildren("dinf", [dref]);
+  const minf = createAtomWithChildren("minf", [mhd, dinf, stbl]);
   const hdlr = atoms.hdlr(type);
   const mdhd = atoms.mdhd(timescale); // this one is really important
-  const mdia = atoms.mult("mdia", [mdhd, hdlr, minf]);
+  const mdia = createAtomWithChildren("mdia", [mdhd, hdlr, minf]);
   const tkhd = atoms.tkhd(width, height, 1);
-  const trak = atoms.mult("trak", [tkhd, mdia]);
+  const trak = createAtomWithChildren("trak", [tkhd, mdia]);
   const trex = atoms.trex(1);
-  const mvex = atoms.mult("mvex", [trex]);
+  const mvex = createAtomWithChildren("mvex", [trex]);
   const mvhd = atoms.mvhd(timescale, 1); // in fact, we don't give a sh** about
                                          // this value :O
 
-  const moov = atoms.mult("moov", moovChildren(mvhd, mvex, trak, pssList));
+  const moov = createAtomWithChildren("moov", moovChildren(mvhd, mvex, trak, pssList));
   const ftyp = atoms.ftyp("isom", ["isom", "iso2", "iso6", "avc1", "dash"]);
 
   return concat(ftyp, moov);
@@ -938,10 +941,10 @@ export default {
     }
     else {
       const tenc = atoms.tenc(1, 8, keyId);
-      const schi = atoms.mult("schi", [tenc]);
+      const schi = createAtomWithChildren("schi", [tenc]);
       const schm = atoms.schm("cenc", 65536);
       const frma = atoms.frma("avc1");
-      const sinf = atoms.mult("sinf", [frma, schm, schi]);
+      const sinf = createAtomWithChildren("sinf", [frma, schm, schi]);
       const encv = atoms.avc1encv(
         "encv",
         1,
@@ -1006,10 +1009,10 @@ export default {
     }
     else {
       const tenc = atoms.tenc(1, 8, keyId);
-      const schi = atoms.mult("schi", [tenc]);
+      const schi = createAtomWithChildren("schi", [tenc]);
       const schm = atoms.schm("cenc", 65536);
       const frma = atoms.frma("mp4a");
-      const sinf = atoms.mult("sinf", [frma, schm, schi]);
+      const sinf = createAtomWithChildren("sinf", [frma, schm, schi]);
       const enca = atoms.mp4aenca(
         "enca",
         1,
