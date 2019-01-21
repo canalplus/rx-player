@@ -24,6 +24,9 @@ export {
   patchPssh,
 } from "./utils";
 export {
+  getBox,
+  getBoxContent,
+  getBoxOffsets,
   getMDAT,
   getMDIA,
   getTRAF,

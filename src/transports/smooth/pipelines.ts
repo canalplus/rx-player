@@ -25,6 +25,7 @@ import Manifest, {
   Adaptation,
   Representation,
 } from "../../manifest";
+import { getMDAT } from "../../parsers/containers/isobmff";
 import createSmoothManifestParser from "../../parsers/manifest/smooth";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
@@ -58,7 +59,6 @@ import {
 
 const {
   patchSegment,
-  getMdat,
 } = mp4Utils;
 
 const WSX_REG = /\.wsx?(\?token=\S+)?/;
@@ -323,7 +323,7 @@ export default function(
           throw new Error(
             `could not find a text-track parser for the type ${mimeType}`);
         }
-        const mdat = getMdat(parsedResponse as Uint8Array);
+        const mdat = getMDAT(parsedResponse as Uint8Array);
         _sdData = stringFromUTF8(mdat);
 
       } else {
