@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import getStyleContent from "./get_style_content";
+
 export interface IStyleElements {
   [className : string]: string;
 }
@@ -28,15 +30,20 @@ export interface IStyleElements {
 export default function parseStyleBlock(
   styleBlocks : string[][],
   baseStyleElements : IStyleElements = {}
-) : IStyleElements {
+) : {
+  styleElements: IStyleElements;
+  globalStyle?: string;
+} {
+  let globalStyle : undefined|string;
+
   styleBlocks.forEach((styleBlock) => {
     let index = 1;
     const classNames : string[] = [];
 
     if (styleBlock.length >= 2) {
       if (styleBlock[1].match(/::cue {/)) {
-        classNames.push("__global__");
         index++;
+        globalStyle = getStyleContent(styleBlock.slice(index));
       } else {
         let cueClassLine;
         while (
@@ -46,26 +53,20 @@ export default function parseStyleBlock(
           classNames.push(cueClassLine[1]);
           index++;
         }
+        const styleContent = getStyleContent(styleBlock.slice(index));
+        classNames.forEach((className) => {
+          const styleElement = baseStyleElements[className];
+          if (!styleElement) {
+            baseStyleElements[className] = styleContent;
+          } else {
+            baseStyleElements[className] += styleContent;
+          }
+        });
       }
-
-      let styleContent = "";
-
-      while (
-        styleBlock[index] &&
-        (!(styleBlock[index].match(/}/) || styleBlock[index].length === 0))
-      ) {
-        styleContent +=  styleBlock[index];
-        index++;
-      }
-      classNames.forEach((className) => {
-        const styleElement = baseStyleElements[className];
-        if (!styleElement) {
-          baseStyleElements[className] = styleContent;
-        } else {
-          baseStyleElements[className] += styleContent;
-        }
-      });
     }
   });
-  return baseStyleElements;
+  return {
+    styleElements: baseStyleElements,
+    globalStyle,
+  };
 }
