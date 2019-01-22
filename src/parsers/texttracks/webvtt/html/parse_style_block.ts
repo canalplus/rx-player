@@ -60,9 +60,9 @@ export default function parseStyleBlock(
       classNames.forEach((className) => {
         const styleElement = baseStyleElements[className];
         if (!styleElement) {
-          baseStyleElements[className] = styleContent.replace(/\s/g, "");
+          baseStyleElements[className] = styleContent;
         } else {
-          baseStyleElements[className] += styleContent.replace(/\s/g, "");
+          baseStyleElements[className] += styleContent;
         }
       });
     }
