@@ -19,6 +19,7 @@ import getStyleBlocks from "../get_style_blocks";
 import parseCueBlock from "../parse_cue_block";
 import { getFirstLineAfterHeader } from "../utils";
 import convertPayloadToHTML from "./convert_payload_to_html";
+import createDefaultStyleElements from "./create_default_style_elements";
 import parseStyleBlock, {
   IStyleElement,
 } from "./parse_style_block";
@@ -54,7 +55,7 @@ export default function parseWebVTT(
   }
 
   const cuesArray : IVTTHTMLCue[] = [];
-  const styleElements : IStyleElement[] = [];
+  const styleElements : IStyleElement[] = [...createDefaultStyleElements()];
   if (!linified[0].match(/^WEBVTT( |\t|\n|\r|$)/)) {
     throw new Error("Can't parse WebVTT: Invalid File.");
   }
