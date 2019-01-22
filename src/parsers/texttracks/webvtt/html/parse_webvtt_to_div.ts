@@ -63,13 +63,13 @@ export default function parseWebVTT(
   const styleBlocks = getStyleBlocks(linified, firstLineAfterHeader);
   const cueBlocks = getCueBlocks(linified, firstLineAfterHeader);
 
-  const styleElements = parseStyleBlock(styleBlocks, defaultStyleElements);
+  const parsedStyleBlock = parseStyleBlock(styleBlocks, defaultStyleElements);
 
   for (let i = 0; i < cueBlocks.length; i++) {
     const cueObject = parseCueBlock(cueBlocks[i], timeOffset);
 
     if (cueObject != null) {
-      const htmlCue = toHTML(cueObject, styleElements);
+      const htmlCue = toHTML(cueObject, parsedStyleBlock);
       cuesArray.push(htmlCue);
     }
   }

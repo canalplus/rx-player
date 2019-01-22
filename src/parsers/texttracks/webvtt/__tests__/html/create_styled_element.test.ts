@@ -29,7 +29,7 @@ describe("parsers - webvtt - createStyledElement", () => {
 
     const styleElements = {
       u: "color: yellow",
-      i: "color: green",
+      i: "  color: green",
       b: "color: red",
       c: "color: blue",
     };
@@ -38,7 +38,7 @@ describe("parsers - webvtt - createStyledElement", () => {
     expect(element.outerHTML).toEqual(
       "<span>" +
         "<u style=\"color: yellow\"></u>" +
-        "<i style=\"color: green\"></i>" +
+        "<i style=\"  color: green\"></i>" +
         "<b style=\"color: red\"></b>" +
         "<span style=\"color: blue\"></span>" +
       "</span>"

@@ -41,7 +41,7 @@ describe("parsers - webvtt - toHTML", () => {
 
     const styleElements: IStyleElements = {};
 
-    const { element, start, end } = toHTML(cueObject, styleElements);
+    const { element, start, end } = toHTML(cueObject, { styleElements });
     expect(start).toBe(0);
     expect(end).toBe(100);
     expect(element.outerHTML).toBe(
@@ -83,7 +83,7 @@ describe("parsers - webvtt - toHTML", () => {
       b: "color:yellow;",
     };
 
-    const { element, start, end } = toHTML(cueObject, styleElements);
+    const { element, start, end } = toHTML(cueObject, { styleElements });
     expect(start).toBe(0);
     expect(end).toBe(100);
     expect(element.outerHTML).toBe(
@@ -121,11 +121,10 @@ describe("parsers - webvtt - toHTML", () => {
       payload: ["<body><b></b><p>Hello<p><body>"],
     };
 
-    const styleElements: IStyleElements = {
-      __global__: "color:yellow;",
-    };
+    const styleElements: IStyleElements = {};
+    const globalStyle = "color:yellow;";
 
-    const { element, start, end } = toHTML(cueObject, styleElements);
+    const { element, start, end } = toHTML(cueObject, { styleElements, globalStyle });
     expect(start).toBe(0);
     expect(end).toBe(100);
     expect(element.outerHTML).toBe(
@@ -161,7 +160,7 @@ describe("parsers - webvtt - toHTML", () => {
 
     const styleElements: IStyleElements = {};
 
-    const { element, start, end } = toHTML(cueObject, styleElements);
+    const { element, start, end } = toHTML(cueObject, { styleElements });
     expect(start).toBe(0);
     expect(end).toBe(100);
     expect(element.outerHTML).toBe(

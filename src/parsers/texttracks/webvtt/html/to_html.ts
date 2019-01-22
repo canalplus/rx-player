@@ -42,7 +42,10 @@ export default function toHTML(
     header? : string;
     payload : string[];
   },
-  styleElements : IStyleElements
+  parsedStyleBlock : {
+    styleElements: IStyleElements;
+    globalStyle?: string;
+  }
 ) : IVTTHTMLCue {
   const { start, end, header, payload } = cueObj;
 
@@ -73,8 +76,8 @@ export default function toHTML(
     "color:white;";
   spanElement.setAttributeNode(attr);
 
+  const { globalStyle, styleElements } = parsedStyleBlock;
   const localStyle = header ? styleElements[header] : undefined;
-  const globalStyle = styleElements.__global__;
   const styles = [localStyle, globalStyle]
     .filter((s) => !!s)
     .join();
