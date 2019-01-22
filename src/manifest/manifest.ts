@@ -429,7 +429,7 @@ export default class Manifest extends EventEmitter<"manifestUpdate", null> {
     const BUFFER_DEPTH_SECURITY = 5;
 
     const ast = this.availabilityStartTime || 0;
-    const minimumTime = this.minimumTime != null ? this.minimumTime : ast;
+    const minimumTime = this.minimumTime != null ? this.minimumTime : 0;
     if (!this.isLive) {
       const duration = this.getDuration();
       const maximumTime = duration == null ? Infinity : duration;
