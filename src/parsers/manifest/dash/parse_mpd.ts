@@ -34,11 +34,16 @@ import parsePeriods from "./parse_periods";
 
 const generateManifestID = idGenerator();
 
+export type IResource = {
+  type: 'xlink' | 'http-iso';
+  url: string;
+};
+
 export type IParserResponse<T> =
   {
     type : "needs-ressources";
     value : {
-      ressources : string[];
+      ressources : IResource[];
       continue : (loadedRessources : string[]) => IParserResponse<T>;
     };
   } |
@@ -79,7 +84,11 @@ function loadExternalRessourcesAndParse(
     }
   }
 
-  if (xlinksToLoad.length === 0) {
+  const utcTimingsToLoad = mpdIR.children.utcTimings.filter(utcTiming =>
+    utcTiming.schemeIdUri === 'urn:mpeg:dash:utc:http-iso:2014'
+  );
+
+  if (xlinksToLoad.length === 0 && utcTimingsToLoad.length === 0) {
     const parsedManifest = parseCompleteIntermediateRepresentation(mpdIR, uri);
     return { type: "done", value: parsedManifest };
   }
@@ -87,15 +96,18 @@ function loadExternalRessourcesAndParse(
   return {
     type: "needs-ressources",
     value: {
-      ressources: xlinksToLoad.map(({ ressource }) => ressource),
+      ressources: [
+        ...xlinksToLoad.map<IResource>(({ ressource }) => ({ type: 'xlink', url: ressource})),
+        ...utcTimingsToLoad.map<IResource>(({ value }) => ({ type: 'http-iso', url: value || ''}))
+      ],
       continue: function continueParsingMPD(loadedRessources : string[]) {
-        if (loadedRessources.length !== xlinksToLoad.length) {
+        if (loadedRessources.length !== (xlinksToLoad.length + utcTimingsToLoad.length)) {
           throw new Error("DASH parser: wrong number of loaded ressources.");
         }
 
         // Note: It is important to go from the last index to the first index in
         // the resulting array, as we will potentially add elements to the array
-        for (let i = loadedRessources.length - 1; i >= 0; i--) {
+        for (let i = xlinksToLoad.length - 1; i >= 0; i--) {
           const index = xlinksToLoad[i].index;
           const xlinkData = loadedRessources[i];
           const wrappedData = "<root>" + xlinkData + "</root>";
@@ -114,6 +126,14 @@ function loadExternalRessourcesAndParse(
           // replace original "xlinked" periods by the real deal
           mpdIR.children.periods.splice(index, 1, ...periodsIR);
         }
+
+        for (let j = 0; j < utcTimingsToLoad.length; j++) {
+          const utcTiming = utcTimingsToLoad[j];
+          utcTiming.schemeIdUri = 'urn:mpeg:dash:utc:direct:2014';
+
+          utcTiming.value = loadedRessources[xlinksToLoad.length + j];
+        }
+
         return loadExternalRessourcesAndParse(mpdIR, uri);
       },
     },
@@ -181,6 +201,7 @@ function parseCompleteIntermediateRepresentation(
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay != null ?
       rootAttributes.suggestedPresentationDelay :
       config.DEFAULT_SUGGESTED_PRESENTATION_DELAY.DASH,
+    utcTimings: rootChildren.utcTimings,
   };
 
   // -- add optional fields --

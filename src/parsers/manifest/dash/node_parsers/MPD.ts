@@ -19,8 +19,10 @@ import {
   IPeriodIntermediateRepresentation,
 } from "./Period";
 import {
+  IScheme,
   parseDateTime,
   parseDuration,
+  parseScheme,
 } from "./utils";
 
 export interface IMPDIntermediateRepresentation {
@@ -34,6 +36,7 @@ export interface IMPDChildren {
   baseURL : string; // BaseURL for the contents. Empty string if not defined
   locations : string[]; // Location(s) at which the Manifest can be refreshed
   periods : IPeriodIntermediateRepresentation[];
+  utcTimings : IScheme[];
 }
 
 // intermediate representation for the root's attributes
@@ -54,12 +57,14 @@ export interface IMPDAttributes {
   maxSubsegmentDuration? : number;
 }
 
+// TODO: unused interface?
 export interface IParsedMPD {
   // required
   availabilityStartTime : number;
   duration : number;
   id : string;
   periods : IPeriodIntermediateRepresentation[];
+  utcTimings : IScheme[];
   transportType : string;
   type : string;
   uris : string[];
@@ -86,6 +91,7 @@ function parseMPDChildren(mpdChildren : NodeList) : IMPDChildren {
   let baseURL = "";
   const locations : string[] = [];
   const periods : IPeriodIntermediateRepresentation[] = [];
+  const utcTimings : IScheme[] = [];
 
   for (let i = 0; i < mpdChildren.length; i++) {
     if (mpdChildren[i].nodeType === Node.ELEMENT_NODE) {
@@ -105,11 +111,16 @@ function parseMPDChildren(mpdChildren : NodeList) : IMPDChildren {
             createPeriodIntermediateRepresentation(currentNode);
           periods.push(period);
           break;
+
+        case "UTCTiming":
+          const utcTiming = parseScheme(currentNode);
+          utcTimings.push(utcTiming);
+          break;
       }
     }
   }
 
-  return { baseURL, locations, periods };
+  return { baseURL, locations, periods, utcTimings };
 }
 
 /**
