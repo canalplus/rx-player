@@ -23,7 +23,6 @@ import {
   filter,
   map,
   mergeMap,
-  tap
 } from "rxjs/operators";
 import features from "../../features";
 import Manifest from "../../manifest";
@@ -82,7 +81,6 @@ function requestHttpIso(url : string) : Observable<string> {
     ignoreProgressEvents: true,
   }).pipe(
     filter((e) => e.type === "response"),
-    tap(a => console.log(a)),
     map((e) => e.value.responseData)
   );
 }
