@@ -65,6 +65,10 @@ interface IManifestArguments {
   suggestedPresentationDelay? : number;
   timeShiftBufferDepth? : number;
   uris? : string[];
+  utcTimings? : {
+    schemaIdUri?: string,
+    value?: string
+  }[]
 }
 
 interface IManifestParsingOptions {
@@ -194,6 +198,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   private _duration : number|undefined;
 
+  private _clockOffset : number|undefined;
+
   /**
    * @constructor
    * @param {Object} args
@@ -214,6 +220,11 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       this.parsingErrors.push(...parsedPeriod.parsingErrors);
       return parsedPeriod;
     }).sort((a, b) => a.start - b.start);
+
+    if (args.utcTimings && args.utcTimings.length > 0 && args.utcTimings[0].value) {
+      this._clockOffset = Date.now() - Date.parse(args.utcTimings[0].value);
+      log.info(`Manifest: Clock offset set to ${this._clockOffset}.`);
+    }
 
     /**
      * @deprecated It is here to ensure compatibility with the way the
@@ -398,6 +409,10 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.trigger("manifestUpdate", null);
   }
 
+  private getTime() {
+    return Date.now() - (this._clockOffset || 0);
+  }
+
   /**
    * Get minimum position currently defined by the Manifest, in seconds.
    * @returns {number}
@@ -419,7 +434,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     }
     const ast = this.availabilityStartTime || 0;
     const plg = this.presentationLiveGap || 0;
-    const now = Date.now() / 1000;
+    const now = this.getTime() / 1000;
     return now - ast - plg;
   }
 
@@ -432,7 +447,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     // TODO use RTT for the manifest request? (+ 3 or something)
     const BUFFER_DEPTH_SECURITY = 5;
 
-    const ast = this.availabilityStartTime || 0;
     const minimumTime = this.minimumTime != null ? this.minimumTime : 0;
     if (!this.isLive) {
       const duration = this.getDuration();
@@ -440,11 +454,13 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       return [minimumTime, maximumTime];
     }
 
+    const ast = this.availabilityStartTime || 0;
     const plg = this.presentationLiveGap || 0;
     const tsbd = this.timeShiftBufferDepth || 0;
 
-    const now = Date.now() / 1000;
+    const now = this.getTime() / 1000;
     const max = now - ast - plg;
+
     return [
       Math.min(
         max,
