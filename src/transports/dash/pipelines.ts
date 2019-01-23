@@ -23,6 +23,7 @@ import {
   filter,
   map,
   mergeMap,
+  tap
 } from "rxjs/operators";
 import features from "../../features";
 import Manifest from "../../manifest";
@@ -74,6 +75,18 @@ function requestXLink(xlinkURL : string) : Observable<string> {
   );
 }
 
+function requestHttpIso(url : string) : Observable<string> {
+  return request({
+    url: url,
+    responseType: "text",
+    ignoreProgressEvents: true,
+  }).pipe(
+    filter((e) => e.type === "response"),
+    tap(a => console.log(a)),
+    map((e) => e.value.responseData)
+  );
+}
+
 /**
  * Returns pipelines used for DASH streaming.
  * @param {Object} options
@@ -105,9 +118,9 @@ export default function(
         response.responseData;
 
       const parsedManifest = dashManifestParser(data, url);
-      return loadExternalRessources(parsedManifest);
+      return loadExternalResources(parsedManifest);
 
-      function loadExternalRessources(
+      function loadExternalResources(
         parserResponse : IMPDParserResponse
       ) : IManifestParserObservable {
         if (parserResponse.type === "done") {
@@ -116,12 +129,13 @@ export default function(
         }
 
         const { ressources, continue: continueParsing } = parserResponse.value;
-        const externalXlinks$ = ressources.map(ressourceURL =>
-          scheduleRequest(() => requestXLink(ressourceURL))
-        );
-        return observableCombineLatest(externalXlinks$)
-          .pipe(mergeMap(loadedRessources =>
-            loadExternalRessources(continueParsing(loadedRessources))
+
+        const externalResources$ = ressources
+          .map(resource => scheduleRequest(() => resource.type === 'xlink' ? requestXLink(resource.url) : requestHttpIso(resource.url)));
+
+        return observableCombineLatest(externalResources$)
+          .pipe(mergeMap(loadedResources =>
+            loadExternalResources(continueParsing(loadedResources))
           ));
       }
     },
