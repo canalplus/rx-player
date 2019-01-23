@@ -20,8 +20,8 @@ const colorMap: { [colorName: string]: string } = {
 
 export default function createDefaultStyleElements(): IStyleElements {
   return Object.keys(colorMap).reduce<IStyleElements>((result, key) => {
-    result[key] = `color: ${colorMap[key]}`;
-    result[`bg_${key}`] = `background-color: ${colorMap[key]}`;
+    result[key] = `color: ${colorMap[key]};`;
+    result[`bg_${key}`] = `background-color: ${colorMap[key]};`;
     return result;
   }, {});
 }
