@@ -113,7 +113,7 @@ was finally chosen because:
 ## What we have done ###########################################################
 
 When we began to really consider switching the source to TypeScript, we set one
-goal before the release: The whole Rx-Player should work under TypeScript's
+goal before the release: The whole RxPlayer should work under TypeScript's
 "strict" mode, and the code should look enough like idiomatic TypeScript to be
 presented as a _TypeScript project_ (and not as a _ported JavaScript_ one).
 
