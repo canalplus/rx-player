@@ -61,7 +61,7 @@ repository as a dependency. You can do it via npm:
 npm install --save rx-player
 ```
 
-You can then directly import and use the Rx-Player in your code:
+You can then directly import and use the RxPlayer in your code:
 ```js
 // import it ES6 style:
 import RxPlayer from "rx-player";
