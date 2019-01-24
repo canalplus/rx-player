@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import { parseRatio } from "./utils";
-
 export interface IParsedContentComponent {
   id?: string;
   language?: string;
@@ -45,7 +43,7 @@ export default function parseContentComponent(root: Element) : IParsedContentCom
         ret.contentType = attribute.value;
         break;
       case "par":
-        ret.par = parseRatio(attribute.value);
+        ret.par = attribute.value;
         break;
     }
   }

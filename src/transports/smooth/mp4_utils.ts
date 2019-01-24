@@ -110,6 +110,7 @@ function Atom(name : string, buff : Uint8Array) : Uint8Array {
 }
 
 /**
+ * Gives the content of a specific UUID with its attached ID
  * @param {Uint8Array} buf
  * @param {Number} id1
  * @param {Number} id2
@@ -124,10 +125,9 @@ function readUuid(
   id3 : number,
   id4 : number
 ) : Uint8Array|undefined {
+  let len : number;
   const l = buf.length;
-  let i = 0;
-  let len;
-  while (i < l) {
+  for (let i = 0; i < l; i += len) {
     len = be4toi(buf, i);
     if (
       be4toi(buf, i +  4) === 0x75756964 /* === "uuid" */ &&
@@ -138,7 +138,6 @@ function readUuid(
     ) {
       return buf.subarray(i + 24, i + len);
     }
-    i += len;
   }
 }
 
