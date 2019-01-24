@@ -32,5 +32,8 @@ describe("parsers - webvtt - parseTimestamp", () => {
   it("should return undefined for invalid textual time", () => {
     expect(parseTimestamp(notTime1)).toEqual(undefined);
     expect(parseTimestamp(notTime2)).toEqual(undefined);
+    expect(parseTimestamp("bb:44:12.0")).toEqual(undefined);
+    expect(parseTimestamp("11:cc:12.0")).toEqual(undefined);
+    expect(parseTimestamp("11:44:dd.c")).toEqual(undefined);
   });
 });

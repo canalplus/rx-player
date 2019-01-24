@@ -39,11 +39,11 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
     };
 
     const spy = jest.fn();
-    jest.mock("../../html/create_styled_element", () => ({
+    jest.mock("../create_styled_element", () => ({
       default: spy,
     }));
 
-    const convertPayloadToHTML = require("../../html/convert_payload_to_html").default;
+    const convertPayloadToHTML = require("../convert_payload_to_html").default;
     expect(convertPayloadToHTML("", {})).toEqual([]);
     expect(spyParseFromString).toHaveBeenCalledTimes(1);
     expect(spy).not.toHaveBeenCalled();
@@ -71,7 +71,7 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
         return span;
       }
     });
-    jest.mock("../../html/create_styled_element", () => ({
+    jest.mock("../create_styled_element", () => ({
       default: spyCreateStyledElement,
     }));
 
@@ -85,7 +85,7 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
       }
     };
 
-    const convertPayloadToHTML = require("../../html/convert_payload_to_html").default;
+    const convertPayloadToHTML = require("../convert_payload_to_html").default;
     expect(convertPayloadToHTML(innerText, {})).toEqual([bNode, span]);
     expect(spyParseFromString).toHaveBeenCalledTimes(1);
     expect(spyCreateStyledElement).toHaveBeenCalledTimes(2);

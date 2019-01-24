@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import createDefaultStyleElements from "../html/create_default_style_elements";
+import createDefaultStyleElements from "../create_default_style_elements";
 
 describe("parsers - webvtt - createDefaultStyleElements", () => {
   it("should return expected default style elements", () => {

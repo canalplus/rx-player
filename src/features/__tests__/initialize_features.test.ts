@@ -42,7 +42,7 @@ describe("Features - initializeFeaturesObject", () => {
       SMOOTH: "../transports/smooth/index.ts",
       DASH: "../transports/dash/index.ts",
       NATIVE_TEXT_BUFFER: "../core/source_buffers/text/native/index.ts",
-      NATIVE_VTT: "../parsers/texttracks/webvtt/native.ts",
+      NATIVE_VTT: "../parsers/texttracks/webvtt/native/index.ts",
       NATIVE_SRT: "../parsers/texttracks/srt/native.ts",
       NATIVE_TTML: "../parsers/texttracks/ttml/native/index.ts",
       NATIVE_SAMI: "../parsers/texttracks/sami/native.ts",
@@ -79,7 +79,7 @@ describe("Features - initializeFeaturesObject", () => {
       nativeTextTracksBuffer: require("../../core/source_buffers/text/native/index")
         .default,
       nativeTextTracksParsers: {
-        vtt: require("../../parsers/texttracks/webvtt/native").default,
+        vtt: require("../../parsers/texttracks/webvtt/native/index").default,
         ttml: require("../../parsers/texttracks/ttml/native/index").default,
         sami: require("../../parsers/texttracks/sami/native").default,
         srt: require("../../parsers/texttracks/srt/native").default,
@@ -222,7 +222,7 @@ describe("Features - initializeFeaturesObject", () => {
     });
     (window as any).__RELATIVE_PATH__ = {
       NATIVE_TEXT_BUFFER: "../core/source_buffers/text/native/index",
-      NATIVE_VTT: "../parsers/texttracks/webvtt/native",
+      NATIVE_VTT: "../parsers/texttracks/webvtt/native/index",
     };
     const feat = {
       nativeTextTracksBuffer: null,
@@ -235,7 +235,7 @@ describe("Features - initializeFeaturesObject", () => {
       nativeTextTracksBuffer: require("../../core/source_buffers/text/native/index")
         .default,
       nativeTextTracksParsers: {
-        vtt: require("../../parsers/texttracks/webvtt/native").default,
+        vtt: require("../../parsers/texttracks/webvtt/native/index").default,
       },
     });
 

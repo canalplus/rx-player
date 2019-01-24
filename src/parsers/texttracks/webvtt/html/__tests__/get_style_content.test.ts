@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import getStyleContent from "../../html/get_style_content";
+import getStyleContent from "../get_style_content";
 
 describe("parsers - webvtt - getStyleContent", () => {
   it("should correclty get style contents", () => {

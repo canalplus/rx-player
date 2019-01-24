@@ -37,10 +37,10 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       "color: papayawhip;";
     });
 
-    jest.mock("../../html/get_style_content", () => ({
+    jest.mock("../get_style_content", () => ({
       default: mockGetStyleContent,
     }));
-    const parseStyleBlock = require("../../html/parse_style_block").default;
+    const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
         styleElements: {},
@@ -65,10 +65,10 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       return "  color: peachpuff;";
     });
 
-    jest.mock("../../html/get_style_content", () => ({
+    jest.mock("../get_style_content", () => ({
       default: mockGetStyleContent,
     }));
-    const parseStyleBlock = require("../../html/parse_style_block").default;
+    const parseStyleBlock = require("../parse_style_block").default;
 
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
@@ -107,10 +107,10 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       }
     });
 
-    jest.mock("../../html/get_style_content", () => ({
+    jest.mock("../get_style_content", () => ({
       default: mockGetStyleContent,
     }));
-    const parseStyleBlock = require("../../html/parse_style_block").default;
+    const parseStyleBlock = require("../parse_style_block").default;
 
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
@@ -141,10 +141,10 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       return "  color: peachpuff;";
     });
 
-    jest.mock("../../html/get_style_content", () => ({
+    jest.mock("../get_style_content", () => ({
       default: mockGetStyleContent,
     }));
-    const parseStyleBlock = require("../../html/parse_style_block").default;
+    const parseStyleBlock = require("../parse_style_block").default;
 
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
@@ -180,10 +180,10 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       return "  background-color: dark;";
     });
 
-    jest.mock("../../html/get_style_content", () => ({
+    jest.mock("../get_style_content", () => ({
       default: mockGetStyleContent,
     }));
-    const parseStyleBlock = require("../../html/parse_style_block").default;
+    const parseStyleBlock = require("../parse_style_block").default;
 
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
@@ -200,10 +200,10 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     const webvttStyle: string[][] = [];
 
     const mockGetStyleContent = jest.fn(() => ({}));
-    jest.mock("../../html/get_style_content", () => ({
+    jest.mock("../get_style_content", () => ({
       default: mockGetStyleContent,
     }));
-    const parseStyleBlock = require("../../html/parse_style_block").default;
+    const parseStyleBlock = require("../parse_style_block").default;
 
     expect(parseStyleBlock(webvttStyle)).toEqual({
       styleElements: {},
