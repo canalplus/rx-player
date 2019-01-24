@@ -33,8 +33,8 @@ export default function parseInitialization(root: Element) : IParsedInitializati
     const attribute = root.attributes[i];
     switch (attribute.name) {
       case "range": {
-        const range = parseByteRange(attribute.value) || undefined;
-        if (!range) {
+        const range = parseByteRange(attribute.value);
+        if (range == null) {
           log.warn(`DASH: invalid range ("${attribute.value}")`);
         } else {
           parsedInitialization.range = range;

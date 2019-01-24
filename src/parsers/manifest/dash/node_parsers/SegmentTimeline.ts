@@ -33,9 +33,7 @@ export default function parseSegmentTimeline(root: Element) : IParsedTimeline {
 
       if (currentElement.nodeName === "S") {
         const s = parseS(currentElement);
-        if (s) {
-          parsedS.push(s);
-        }
+        parsedS.push(s);
       }
     }
   }
