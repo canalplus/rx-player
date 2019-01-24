@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import { requestMediaKeySystemAccess } from "../../../../../compat";
-import PPromise from "../../../../../utils/promise";
+import { requestMediaKeySystemAccess } from "../../../../compat";
+import PPromise from "../../../../utils/promise";
 import {
   IMediaConfiguration,
   ProberStatus,
-} from "../../types";
+} from "../types";
 
 export type IMediaKeyStatus =
   "usable" |
