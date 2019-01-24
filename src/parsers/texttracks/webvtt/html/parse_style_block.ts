@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import createDefaultStyleElements from "./create_default_style_elements";
 import getStyleContent from "./get_style_content";
 
 export interface IStyleElements {
@@ -25,16 +26,14 @@ export interface IStyleElements {
  * Parse style element from WebVTT.
  * @param {Array.<string>} styleBlock
  * @param {Object} baseStyleElements
- * @return {Array.<Object>} styleElements
+ * @return {Array.<Object>} classes
  */
-export default function parseStyleBlock(
-  styleBlocks : string[][],
-  baseStyleElements : IStyleElements = {}
-) : {
-  styleElements: IStyleElements;
-  globalStyle?: string;
+export default function parseStyleBlocks(styleBlocks : string[][]) : {
+  classes : IStyleElements;
+  global : string;
 } {
-  let globalStyle : undefined|string;
+  const classes : IStyleElements = createDefaultStyleElements();
+  let global = "";
 
   styleBlocks.forEach((styleBlock) => {
     let index = 1;
@@ -43,9 +42,9 @@ export default function parseStyleBlock(
     if (styleBlock.length >= 2) {
       if (styleBlock[1].match(/::cue {/)) {
         index++;
-        globalStyle = getStyleContent(styleBlock.slice(index));
+        global += getStyleContent(styleBlock.slice(index));
       } else {
-        let cueClassLine;
+        let cueClassLine : string[]|null;
         while (
           styleBlock[index] &&
           (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/))
@@ -55,18 +54,15 @@ export default function parseStyleBlock(
         }
         const styleContent = getStyleContent(styleBlock.slice(index));
         classNames.forEach((className) => {
-          const styleElement = baseStyleElements[className];
-          if (!styleElement) {
-            baseStyleElements[className] = styleContent;
+          const styleForClass = classes[className];
+          if (styleForClass == null) {
+            classes[className] = styleContent;
           } else {
-            baseStyleElements[className] += styleContent;
+            classes[className] += styleContent;
           }
         });
       }
     }
   });
-  return {
-    styleElements: baseStyleElements,
-    globalStyle,
-  };
+  return { classes, global };
 }

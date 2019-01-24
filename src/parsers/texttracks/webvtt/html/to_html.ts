@@ -32,7 +32,7 @@ export interface IVTTHTMLCue {
  * Returns undefined if the cue block could not be parsed.
  * @param {Array.<string>} cueBlock
  * @param {Number} timeOffset
- * @param {Array.<Object>} styleElements
+ * @param {Array.<Object>} classes
  * @returns {Object|undefined}
  */
 export default function toHTML(
@@ -42,10 +42,7 @@ export default function toHTML(
     header? : string;
     payload : string[];
   },
-  parsedStyleBlock : {
-    styleElements: IStyleElements;
-    globalStyle?: string;
-  }
+  styling : { classes : IStyleElements; global? : string }
 ) : IVTTHTMLCue {
   const { start, end, header, payload } = cueObj;
 
@@ -76,16 +73,16 @@ export default function toHTML(
     "color:white;";
   spanElement.setAttributeNode(attr);
 
-  const { globalStyle, styleElements } = parsedStyleBlock;
-  const localStyle = header ? styleElements[header] : undefined;
-  const styles = [localStyle, globalStyle]
+  const { global, classes } = styling;
+  const localStyle = header ? classes[header] : undefined;
+  const styles = [global, localStyle]
     .filter((s) => !!s)
-    .join();
+    .join("");
 
   attr.value += styles;
   spanElement.setAttributeNode(attr);
 
-  convertPayloadToHTML(payload.join("\n"), styleElements)
+  convertPayloadToHTML(payload.join("\n"), classes)
     .forEach(element => {
       spanElement.appendChild(element);
     });

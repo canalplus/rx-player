@@ -18,10 +18,7 @@ import getCueBlocks from "../get_cue_blocks";
 import getStyleBlocks from "../get_style_blocks";
 import parseCueBlock from "../parse_cue_block";
 import { getFirstLineAfterHeader } from "../utils";
-import createDefaultStyleElements from "./create_default_style_elements";
-import parseStyleBlock, {
-  IStyleElements
-} from "./parse_style_block";
+import parseStyleBlocks from "./parse_style_block";
 import toHTML, {
   IVTTHTMLCue
 } from "./to_html";
@@ -41,20 +38,19 @@ export interface IVTTHTMLCue {
  * Global style is parsed and applied to div element.
  * Specific style is parsed and applied to class element.
  *
- * @param {string} text
- * @param {Number} timeOffset
- * @return {Array.<Object>}
  * @throws Error - Throws if the given WebVTT string is invalid.
+ * @param {string} text - The whole webvtt subtitles to parse
+ * @param {Number} timeOffset - Offset to add to start and end times, in seconds
+ * @return {Array.<Object>}
  */
 export default function parseWebVTT(
   text : string,
   timeOffset : number
 ) : IVTTHTMLCue[] {
-  const newLineChar = /\r\n|\n|\r/g;
+  const newLineChar = /\r\n|\n|\r/g; // CRLF|LF|CR
   const linified = text.split(newLineChar);
 
   const cuesArray : IVTTHTMLCue[] = [];
-  const defaultStyleElements : IStyleElements = createDefaultStyleElements();
   if (!linified[0].match(/^WEBVTT( |\t|\n|\r|$)/)) {
     throw new Error("Can't parse WebVTT: Invalid File.");
   }
@@ -63,13 +59,13 @@ export default function parseWebVTT(
   const styleBlocks = getStyleBlocks(linified, firstLineAfterHeader);
   const cueBlocks = getCueBlocks(linified, firstLineAfterHeader);
 
-  const parsedStyleBlock = parseStyleBlock(styleBlocks, defaultStyleElements);
+  const styles = parseStyleBlocks(styleBlocks);
 
   for (let i = 0; i < cueBlocks.length; i++) {
     const cueObject = parseCueBlock(cueBlocks[i], timeOffset);
 
     if (cueObject != null) {
-      const htmlCue = toHTML(cueObject, parsedStyleBlock);
+      const htmlCue = toHTML(cueObject, styles);
       cuesArray.push(htmlCue);
     }
   }
