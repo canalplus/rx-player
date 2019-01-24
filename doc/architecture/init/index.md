@@ -3,7 +3,7 @@
 
 ## Overview ####################################################################
 
-Even if the API is the front-facing block of code in the Rx-player, the Init
+Even if the API is the front-facing block of code in the RxPlayer, the Init
 is the part of the code actually starting the logic behind playing a content.
 
 Its code is written in the ``src/core/init`` directory. More specifically,
