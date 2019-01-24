@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IStyleElements } from "../../html/parse_style_block";
+import { IStyleElements } from "../parse_style_block";
 
 describe("parsers - webvtt - toHTML", () => {
   beforeEach(() => {
@@ -22,7 +22,7 @@ describe("parsers - webvtt - toHTML", () => {
   });
 
   it("should include payload HTML", () => {
-    jest.mock("../../html/convert_payload_to_html", () => ({
+    jest.mock("../convert_payload_to_html", () => ({
       default: () => {
         return [
           document.createElement("b"),
@@ -31,7 +31,7 @@ describe("parsers - webvtt - toHTML", () => {
       },
     }));
 
-    const toHTML = require("../../html/to_html").default;
+    const toHTML = require("../to_html").default;
     const cueObject = {
       start: 0,
       end: 100,
@@ -62,7 +62,7 @@ describe("parsers - webvtt - toHTML", () => {
   });
 
   it("should include payload HTML and apply correclty style class element", () => {
-    jest.mock("../../html/convert_payload_to_html", () => ({
+    jest.mock("../convert_payload_to_html", () => ({
       default: () => {
         return [
           document.createElement("b"),
@@ -71,7 +71,7 @@ describe("parsers - webvtt - toHTML", () => {
       },
     }));
 
-    const toHTML = require("../../html/to_html").default;
+    const toHTML = require("../to_html").default;
     const cueObject = {
       start: 0,
       end: 100,
@@ -104,7 +104,7 @@ describe("parsers - webvtt - toHTML", () => {
   });
 
   it("should include payload HTML and apply correclty global style element", () => {
-    jest.mock("../../html/convert_payload_to_html", () => ({
+    jest.mock("../convert_payload_to_html", () => ({
       default: () => {
         return [
           document.createElement("b"),
@@ -113,7 +113,7 @@ describe("parsers - webvtt - toHTML", () => {
       },
     }));
 
-    const toHTML = require("../../html/to_html").default;
+    const toHTML = require("../to_html").default;
     const cueObject = {
       start: 0,
       end: 100,
@@ -145,13 +145,13 @@ describe("parsers - webvtt - toHTML", () => {
   });
 
   it("should return default element if no payload", () => {
-    jest.mock("../../html/convert_payload_to_html", () => ({
+    jest.mock("../convert_payload_to_html", () => ({
       default: () => {
         return [];
       },
     }));
 
-    const toHTML = require("../../html/to_html").default;
+    const toHTML = require("../to_html").default;
     const cueObject = {
       start: 0,
       end: 100,

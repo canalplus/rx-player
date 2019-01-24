@@ -20,13 +20,13 @@ describe("parsers - webvtt - parseWebVTT", () => {
   });
 
   it("should throw if text is empty", () => {
-    const parseWebVTT = require("../../html/parse_webvtt_to_div").default;
+    const parseWebVTT = require("../parse_webvtt_to_div").default;
     expect(() => parseWebVTT("", 0))
       .toThrowError("Can't parse WebVTT: Invalid File.");
   });
 
   it("should throw if file seems to be invalid", () => {
-    const parseWebVTT = require("../../html/parse_webvtt_to_div").default;
+    const parseWebVTT = require("../parse_webvtt_to_div").default;
     expect(() => parseWebVTT("WEBWTT\n", 0))
       .toThrowError("Can't parse WebVTT: Invalid File.");
   });
@@ -64,7 +64,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
         styleContent: "color:blue;",
       },
     }));
-    jest.mock("../../html/parse_style_block", () => ({
+    jest.mock("../parse_style_block", () => ({
       default: spyParseStyleBlock,
     }));
 
@@ -73,7 +73,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       end: 100,
       element: document.createElement("div"),
     }));
-    jest.mock("../../html/to_html", () => ({
+    jest.mock("../to_html", () => ({
       default: spyToHTML,
     }));
 
@@ -82,7 +82,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       getFirstLineAfterHeader: spyGetFirstLineAfterHeader,
     }));
 
-    const parseWebVTT = require("../../html/parse_webvtt_to_div").default;
+    const parseWebVTT = require("../parse_webvtt_to_div").default;
     expect(parseWebVTT("WEBVTT\n", 0)).toEqual(
       [
         {
@@ -132,7 +132,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
         styleContent: "color:blue;",
       },
     }));
-    jest.mock("../../html/parse_style_block", () => ({
+    jest.mock("../parse_style_block", () => ({
       default: spyParseStyleBlock,
     }));
 
@@ -141,7 +141,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       end: 100,
       element: document.createElement("div"),
     }));
-    jest.mock("../../html/to_html", () => ({
+    jest.mock("../to_html", () => ({
       default: spyToHTML,
     }));
 
@@ -150,7 +150,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       getFirstLineAfterHeader: spyGetFirstLineAfterHeader,
     }));
 
-    const parseWebVTT = require("../../html/parse_webvtt_to_div").default;
+    const parseWebVTT = require("../parse_webvtt_to_div").default;
     expect(parseWebVTT("WEBVTT\n", 0)).toEqual([]);
     expect(spyGetFirstLineAfterHeader).toHaveBeenCalledTimes(1);
     expect(spyGetStyleBlock).toHaveBeenCalledTimes(1);

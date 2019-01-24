@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import createStyledElement from "../../html/create_styled_element";
+import createStyledElement from "../create_styled_element";
 
 describe("parsers - webvtt - createStyledElement", () => {
   it("should apply style for authorized elements", () => {
