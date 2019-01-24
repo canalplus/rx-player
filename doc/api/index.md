@@ -1,4 +1,4 @@
-# Rx-Player API ################################################################
+# RxPlayer API ################################################################
 
 
 ## Table of Contents ###########################################################
@@ -84,7 +84,7 @@
 <a name="overview"></a>
 ## Overview ####################################################################
 
-The Rx-player has a complete API allowing you to:
+The RxPlayer has a complete API allowing you to:
   - load and stop video or audio contents
   - perform trickmodes (play, pause, seek, etc.) as a content is loaded.
   - get multiple informations on the current content and on the player's state.
