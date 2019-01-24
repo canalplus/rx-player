@@ -20,9 +20,6 @@
  */
 
 import parseWebVTTToDiv from "./parse_webvtt_to_div";
-import { IVTTHTMLCue } from "./to_html";
+export { IVTTHTMLCue } from "./to_html";
 
 export default parseWebVTTToDiv;
-export {
-  IVTTHTMLCue,
-};

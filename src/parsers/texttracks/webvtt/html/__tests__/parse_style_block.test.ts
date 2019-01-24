@@ -37,18 +37,27 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       "color: papayawhip;";
     });
 
+    jest.mock("../create_default_style_elements", () => ({
+      default: () => ({}),
+    }));
     jest.mock("../get_style_content", () => ({
       default: mockGetStyleContent,
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
-        styleElements: {},
-        globalStyle: "background-image: linear-gradient(to bottom, dimgray, lightgray);" +
+        classes: {},
+        global: "background-image: linear-gradient(to bottom, dimgray, lightgray);" +
           "color: papayawhip;",
       }
     );
     expect(mockGetStyleContent).toHaveBeenCalledTimes(1);
+    expect(mockGetStyleContent)
+      .toHaveBeenCalledWith([
+        "background-image: linear-gradient(to bottom, dimgray, lightgray);",
+        "color: papayawhip;",
+        "}",
+      ]);
   });
 
   it("should parse class style", () => {
@@ -65,6 +74,10 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       return "  color: peachpuff;";
     });
 
+    jest.mock("../create_default_style_elements", () => ({
+      default: () => ({}),
+    }));
+
     jest.mock("../get_style_content", () => ({
       default: mockGetStyleContent,
     }));
@@ -72,13 +85,18 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
-        styleElements: {
+        classes: {
           b: "  color: peachpuff;",
         },
-        globalStyle: undefined,
+        global: "",
       }
     );
     expect(mockGetStyleContent).toHaveBeenCalledTimes(1);
+    expect(mockGetStyleContent)
+      .toHaveBeenCalledWith([
+        "  color: peachpuff;",
+        "}",
+      ]);
   });
 
   it("should parse both global and class style", () => {
@@ -107,6 +125,10 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       }
     });
 
+    jest.mock("../create_default_style_elements", () => ({
+      default: () => ({}),
+    }));
+
     jest.mock("../get_style_content", () => ({
       default: mockGetStyleContent,
     }));
@@ -114,14 +136,137 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
-        globalStyle: "background-image: linear-gradient(to bottom, dimgray, lightgray);" +
+        global: "background-image: linear-gradient(to bottom, dimgray, lightgray);" +
           "color: papayawhip;",
-        styleElements: {
+        classes: {
           b: "  color: peachpuff;",
         },
       }
     );
     expect(mockGetStyleContent).toHaveBeenCalledTimes(2);
+    expect(mockGetStyleContent)
+      .toHaveBeenCalledWith([
+        "background-image: linear-gradient(to bottom, dimgray, lightgray);",
+        "color: papayawhip;",
+        "}",
+      ]);
+    expect(mockGetStyleContent)
+      .toHaveBeenCalledWith([
+        "  color: peachpuff;",
+        "}",
+      ]);
+  });
+
+  it("should parse multiple global styles and class style", () => {
+    const webvttStyle = [
+      [
+        "STYLE",
+        "::cue {",
+          "background-image: linear-gradient(to bottom, dimgray, lightgray);",
+          "color: papayawhip;",
+        "}",
+      ],
+      [
+        "STYLE",
+        "::cue(b) {",
+        "  color: peachpuff;",
+        "}",
+      ],
+      [
+        "STYLE",
+        "::cue {",
+        "a: b;",
+        "}",
+      ],
+    ];
+
+    let i = 0;
+    const mockGetStyleContent = jest.fn(() => {
+      return "" + i++;
+    });
+
+    jest.mock("../create_default_style_elements", () => ({
+      default: () => ({}),
+    }));
+
+    jest.mock("../get_style_content", () => ({
+      default: mockGetStyleContent,
+    }));
+    const parseStyleBlock = require("../parse_style_block").default;
+
+    expect(parseStyleBlock(webvttStyle)).toEqual(
+      { global: "02", classes: { b: "1" } }
+    );
+    expect(mockGetStyleContent).toHaveBeenCalledTimes(3);
+    expect(mockGetStyleContent)
+      .toHaveBeenCalledWith([
+        "background-image: linear-gradient(to bottom, dimgray, lightgray);",
+        "color: papayawhip;",
+        "}",
+      ]);
+    expect(mockGetStyleContent)
+      .toHaveBeenCalledWith([
+        "  color: peachpuff;",
+        "}",
+      ]);
+    expect(mockGetStyleContent)
+      .toHaveBeenCalledWith([
+        "a: b;",
+        "}",
+      ]);
+  });
+
+  it("should parse multiple classes in a single style block", () => {
+    const webvttStyle = [
+      [
+        "STYLE",
+        "::cue {",
+          "background-image: linear-gradient(to bottom, dimgray, lightgray);",
+          "color: papayawhip;",
+        "}",
+        "::cue(b) {",
+        "  color: peachpuff;",
+        "}",
+        "::cue {",
+        "a: b;",
+        "}",
+      ],
+    ];
+
+    let i = 0;
+    const mockGetStyleContent = jest.fn(() => {
+      return "" + i++;
+    });
+
+    jest.mock("../create_default_style_elements", () => ({
+      default: () => ({}),
+    }));
+
+    jest.mock("../get_style_content", () => ({
+      default: mockGetStyleContent,
+    }));
+    const parseStyleBlock = require("../parse_style_block").default;
+
+    expect(parseStyleBlock(webvttStyle)).toEqual(
+      { global: "02", classes: { b: "1" } }
+    );
+    expect(mockGetStyleContent).toHaveBeenCalledTimes(3);
+    expect(mockGetStyleContent)
+      .toHaveBeenCalledWith([
+        "background-image: linear-gradient(to bottom, dimgray, lightgray);",
+        "color: papayawhip;",
+        "}",
+      ]);
+    expect(mockGetStyleContent)
+      .toHaveBeenCalledWith([
+        "  color: peachpuff;",
+        "}",
+      ]);
+    expect(mockGetStyleContent)
+      .toHaveBeenCalledWith([
+        "a: b;",
+        "}",
+      ]);
   });
 
   it("should not parse unformed styles", () => {
@@ -141,6 +286,10 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       return "  color: peachpuff;";
     });
 
+    jest.mock("../create_default_style_elements", () => ({
+      default: () => ({}),
+    }));
+
     jest.mock("../get_style_content", () => ({
       default: mockGetStyleContent,
     }));
@@ -148,10 +297,10 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
-        styleElements: {
+        classes: {
           b: "  color: peachpuff;",
         },
-        globalStyle: undefined,
+        global: "",
       }
     );
     expect(mockGetStyleContent).toHaveBeenCalledTimes(1);
@@ -180,6 +329,10 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       return "  background-color: dark;";
     });
 
+    jest.mock("../create_default_style_elements", () => ({
+      default: () => ({}),
+    }));
+
     jest.mock("../get_style_content", () => ({
       default: mockGetStyleContent,
     }));
@@ -187,10 +340,10 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
-        styleElements: {
+        classes: {
           b: "  color: peachpuff;  background-color: dark;",
         },
-        globalStyle: undefined,
+        global: "",
       }
     );
     expect(mockGetStyleContent).toHaveBeenCalledTimes(2);
@@ -200,15 +353,62 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     const webvttStyle: string[][] = [];
 
     const mockGetStyleContent = jest.fn(() => ({}));
+
+    jest.mock("../create_default_style_elements", () => ({
+      default: () => ({}),
+    }));
     jest.mock("../get_style_content", () => ({
       default: mockGetStyleContent,
     }));
     const parseStyleBlock = require("../parse_style_block").default;
 
     expect(parseStyleBlock(webvttStyle)).toEqual({
-      styleElements: {},
-      globalStyle: undefined,
+      classes: {},
+      global: "",
     });
     expect(mockGetStyleContent).toHaveBeenCalledTimes(0);
+  });
+
+  it("should add the default style elements to the result", () => {
+    const webvttStyle = [
+      [
+        "STYLE",
+        "::cue(b) {",
+        "  color: peachpuff;",
+        "}",
+      ],
+      [
+        "STYLE",
+        "::cue(b) {",
+        "  background-color: dark;",
+        "}",
+      ],
+    ];
+
+    const mockGetStyleContent = jest.fn((styleBlock: string[]) => {
+      if (startsWith(styleBlock[0], "  color")) {
+        return "  color: peachpuff;";
+      }
+      return "  background-color: dark;";
+    });
+
+    jest.mock("../create_default_style_elements", () => ({
+      default: () => ({ b: "foo: bar;" }),
+    }));
+
+    jest.mock("../get_style_content", () => ({
+      default: mockGetStyleContent,
+    }));
+    const parseStyleBlock = require("../parse_style_block").default;
+
+    expect(parseStyleBlock(webvttStyle)).toEqual(
+      {
+        classes: {
+          b: "foo: bar;  color: peachpuff;  background-color: dark;",
+        },
+        global: "",
+      }
+    );
+    expect(mockGetStyleContent).toHaveBeenCalledTimes(2);
   });
 });
