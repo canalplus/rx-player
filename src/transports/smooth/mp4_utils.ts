@@ -16,8 +16,9 @@
 
 import { canPatchISOBMFFSegment } from "../../compat";
 import {
-  getMDAT,
-  getTRAF,
+  getBox,
+  getBoxContent,
+  getBoxOffsets,
 } from "../../parsers/containers/isobmff";
 import assert from "../../utils/assert";
 import {
@@ -25,7 +26,6 @@ import {
   be4toi,
   be8toi,
   bytesToHex,
-  bytesToStr,
   concat,
   hexToBytes,
   itobe2,
@@ -100,7 +100,7 @@ function boxName(str : string) : Uint8Array {
  * @param {Uint8Array} buff - content of the box
  * @returns {Uint8Array} - The entire ISOBMFF box (length+name+content)
  */
-function Atom(name : string, buff : Uint8Array) : Uint8Array {
+function createAtom(name : string, buff : Uint8Array) : Uint8Array {
   if (__DEV__) {
     assert(name.length === 4);
   }
@@ -118,7 +118,7 @@ function Atom(name : string, buff : Uint8Array) : Uint8Array {
  * @param {Number} id4
  * @returns {Uint8Array|undefined}
  */
-function readUuid(
+function getUuidContent(
   buf : Uint8Array,
   id1 : number,
   id2 : number,
@@ -141,17 +141,19 @@ function readUuid(
   }
 }
 
+/**
+ * @param {string} name
+ * @param {Array.<Uint8Array>} children
+ * @returns {Uint8Array}
+ */
+function createAtomWithChildren(
+  name : string,
+  children : Uint8Array[]
+) : Uint8Array {
+  return createAtom(name, concat(...children));
+}
+
 const atoms = {
-
-  /**
-   * @param {string} name
-   * @param {Array.<Uint8Array>} children
-   * @returns {Uint8Array}
-   */
-  mult(name : string, children : Uint8Array[]) : Uint8Array {
-    return Atom(name, concat.apply(null, children));
-  },
-
   /**
    * @param {string} name - "avc1" or "encv"
    * @param {Number} drefIdx - shall be 1
@@ -182,7 +184,7 @@ const atoms = {
       assert(name === "avc1" || name === "encv", "should be avc1 or encv atom");
       assert(name !== "encv" || sinf instanceof Uint8Array);
     }
-    return Atom(name, concat(
+    return createAtom(name, concat(
       6,                      // 6 bytes reserved
       itobe2(drefIdx), 16,    // drefIdx + QuickTime reserved, zeroes
       itobe2(width),          // size 2 w
@@ -217,7 +219,7 @@ const atoms = {
     const h264CompatibleProfile = sps[2];
     const h264Level = sps[3];
 
-    return Atom("avcC", concat(
+    return createAtom("avcC", concat(
       [
         1,
         h264Profile,
@@ -237,7 +239,7 @@ const atoms = {
    */
   dref(url : Uint8Array) : Uint8Array {
     // only one description here... FIXME
-    return Atom("dref", concat(7, [1], url));
+    return createAtom("dref", concat(7, [1], url));
   },
 
   /**
@@ -247,7 +249,7 @@ const atoms = {
    * @returns {Uint8Array}
    */
   esds(stream : number, codecPrivateData : string) : Uint8Array {
-    return Atom("esds", concat(
+    return createAtom("esds", concat(
       4,
       [0x03, 0x19],
       itobe2(stream),
@@ -266,15 +268,7 @@ const atoms = {
     if (__DEV__) {
       assert(dataFormat.length === 4, "wrong data format length");
     }
-    return Atom("frma", strToBytes(dataFormat));
-  },
-
-  /**
-   * @param {Number} length
-   * @returns {Uint8Array}
-   */
-  free(length : number) : Uint8Array {
-    return Atom("free", new Uint8Array(length - 8));
+    return createAtom("frma", strToBytes(dataFormat));
   },
 
   /**
@@ -283,7 +277,7 @@ const atoms = {
    * @returns {Uint8Array}
    */
   ftyp(majorBrand : string, brands : string[]) : Uint8Array {
-    return Atom("ftyp", concat.apply(null, [
+    return createAtom("ftyp", concat.apply(null, [
       strToBytes(majorBrand),
       [0, 0, 0, 1],
     ].concat(brands.map(strToBytes))));
@@ -312,7 +306,7 @@ const atoms = {
       break;
     }
 
-    return Atom("hdlr", concat(
+    return createAtom("hdlr", concat(
       8,
       strToBytes(name), 12,
       strToBytes(handlerName),
@@ -325,16 +319,7 @@ const atoms = {
    * @returns {Uint8Array}
    */
   mdhd(timescale : number) : Uint8Array {
-    return Atom("mdhd", concat(12, itobe4(timescale), 8));
-  },
-
-  /**
-   * @param {Uint8Array} mfhd
-   * @param {Uint8Array} traf
-   * @returns {Uint8Array}
-   */
-  moof(mfhd : Uint8Array, traf : Uint8Array) : Uint8Array {
-    return atoms.mult("moof", [mfhd, traf]);
+    return createAtom("mdhd", concat(12, itobe4(timescale), 8));
   },
 
   /**
@@ -362,7 +347,7 @@ const atoms = {
     if (__DEV__) {
       assert(name !== "enca" || sinf instanceof Uint8Array);
     }
-    return Atom(name, concat(
+    return createAtom(name, concat(
       6,
       itobe2(drefIdx), 8,
       itobe2(channelsCount),
@@ -380,7 +365,7 @@ const atoms = {
    * @returns {Uint8Array}
    */
   mvhd(timescale : number, trackId : number) : Uint8Array {
-    return Atom("mvhd", concat(
+    return createAtom("mvhd", concat(
       12,
       itobe4(timescale), 4,
       [0, 1],  2,         // we assume rate = 1;
@@ -420,7 +405,7 @@ const atoms = {
       kidList = [];
     }
 
-    return Atom("pssh", concat(
+    return createAtom("pssh", concat(
       [version, 0, 0, 0],
       hexToBytes(_systemId),
       kidList,
@@ -442,7 +427,7 @@ const atoms = {
     tfdt : Uint8Array,
     trun : Uint8Array
   ) : Uint8Array {
-    return Atom("saio", concat(
+    return createAtom("saio", concat(
       4, [0, 0, 0, 1], // ??
       itobe4(
         mfhd.length +
@@ -455,16 +440,16 @@ const atoms = {
   },
 
   /**
-   * @param {Uint8Array} sencData - including 8 bytes flags and entries count
+   * @param {Uint8Array} sencContent - including 8 bytes flags and entries count
    * @returns {Uint8Array}
    */
-  saiz(senc : Uint8Array) : Uint8Array {
-    if (senc.length === 0) {
-      return Atom("saiz", new Uint8Array(0));
+  saiz(sencContent : Uint8Array) : Uint8Array {
+    if (sencContent.length === 0) {
+      return createAtom("saiz", new Uint8Array(0));
     }
 
-    const flags   = be4toi(senc, 0);
-    const entries = be4toi(senc, 4);
+    const flags   = be4toi(sencContent, 0);
+    const entries = be4toi(sencContent, 4);
 
     const arr = new Uint8Array(entries + 9);
     arr.set(itobe4(entries), 5);
@@ -473,12 +458,12 @@ const atoms = {
     let j = 8;
     let pairsCnt;
     let pairsLen;
-    while (j < senc.length) {
+    while (j < sencContent.length) {
       j += 8; // assuming IV is 8 bytes TODO handle 16 bytes IV
               // if we have extradata for each entry
       if ((flags & 0x2) === 0x2) {
         pairsLen = 2;
-        pairsCnt = be2toi(senc, j);
+        pairsCnt = be2toi(sencContent, j);
         j += (pairsCnt * 6) + 2;
       } else {
         pairsCnt = 0;
@@ -488,7 +473,7 @@ const atoms = {
       i++;
     }
 
-    return Atom("saiz", arr);
+    return createAtom("saiz", arr);
   },
 
   /**
@@ -500,7 +485,7 @@ const atoms = {
     if (__DEV__) {
       assert(schemeType.length === 4, "wrong scheme type length");
     }
-    return Atom("schm", concat(
+    return createAtom("schm", concat(
       4,
       strToBytes(schemeType),
       itobe4(schemeVersion)
@@ -508,18 +493,10 @@ const atoms = {
   },
 
   /**
-   * @param {Uint8Array} buf
-   * @returns {Uint8Array}
-   */
-  senc(buf : Uint8Array) : Uint8Array {
-    return Atom("senc", buf);
-  },
-
-  /**
    * @returns {Uint8Array}
    */
   smhd() : Uint8Array {
-    return Atom("smhd", new Uint8Array(8));
+    return createAtom("smhd", new Uint8Array(8));
   },
 
   /**
@@ -530,7 +507,7 @@ const atoms = {
   stsd(reps : Uint8Array[]) : Uint8Array {
     // only one description here... FIXME
     const arrBase : Array<Uint8Array|number[]|number> = [7, [reps.length]];
-    return Atom("stsd", concat(...arrBase.concat(reps)));
+    return createAtom("stsd", concat(...arrBase.concat(reps)));
   },
 
   /**
@@ -540,7 +517,7 @@ const atoms = {
    * @returns {Uint8Array}
    */
   tkhd(width : number, height : number, trackId : number) : Uint8Array {
-    return Atom("tkhd", concat(
+    return createAtom("tkhd", concat(
       itobe4(1 + 2 + 4), 8, // we assume track is enabled,
                             // in media and in preview.
       itobe4(trackId),  20, // we assume trackId = 1;
@@ -559,21 +536,10 @@ const atoms = {
    */
   trex(trackId : number) : Uint8Array {
     // default sample desc idx = 1
-    return Atom("trex", concat(
+    return createAtom("trex", concat(
       4,
       itobe4(trackId),
       [0, 0, 0, 1], 12
-    ));
-  },
-
-  /**
-   * @param {Number} decodeTime
-   * @returns {Uint8Array}
-   */
-  tfdt(decodeTime : number) : Uint8Array {
-    return Atom("tfdt", concat(
-      [1, 0, 0, 0],
-      itobe8(decodeTime)
     ));
   },
 
@@ -587,37 +553,11 @@ const atoms = {
     if (__DEV__) {
       assert(keyId.length === 32, "wrong default KID length");
     }
-    return Atom("tenc", concat(
+    return createAtom("tenc", concat(
       6,
       [algId, ivSize],
       hexToBytes(keyId)
     ));
-  },
-
-  /**
-   * @param {Uint8Array} tfhd
-   * @param {Uint8Array} tfdt
-   * @param {Uint8Array} trun
-   * @param {Uint8Array} senc
-   * @param {Uint8Array} mfhd
-   * @returns {Uint8Array}
-   */
-  traf(
-    tfhd : Uint8Array,
-    tfdt : Uint8Array,
-    trun : Uint8Array,
-    mfhd : Uint8Array,
-    senc?: Uint8Array
-  ) : Uint8Array {
-    const trafs = [tfhd, tfdt, trun];
-    if (senc) {
-      trafs.push(
-        atoms.senc(senc),
-        atoms.saiz(senc),
-        atoms.saio(mfhd, tfhd, tfdt, trun)
-      );
-    }
-    return atoms.mult("traf", trafs);
   },
 
   /**
@@ -648,36 +588,7 @@ const atoms = {
   vmhd() : Uint8Array {
     const arr = new Uint8Array(12);
     arr[3] = 1; // QuickTime...
-    return Atom("vmhd", arr);
-  },
-};
-
-const reads = {
-  /**
-   * Extract senc data (derived from UUID MS Atom)
-   * @param {Uint8Array} traf
-   * @returns {Uint8Array|undefined}
-   */
-  senc(traf : Uint8Array) : Uint8Array|undefined {
-    return readUuid(traf, 0xA2394F52, 0x5A9B4F14, 0xA2446C42, 0x7C648DF4);
-  },
-
-  /**
-   * Extract tfxd data (derived from UUID MS Atom)
-   * @param {Uint8Array} traf
-   * @returns {Uint8Array|undefined}
-   */
-  tfxd(traf : Uint8Array) : Uint8Array|undefined {
-    return readUuid(traf, 0x6D1D9B05, 0x42D544E6, 0x80E2141D, 0xAFF757B2);
-  },
-
-  /**
-   * Extract tfrf data (derived from UUID MS Atom)
-   * @param {Uint8Array} traf
-   * @returns {Uint8Array|undefined}
-   */
-  tfrf(traf : Uint8Array) : Uint8Array|undefined {
-    return readUuid(traf, 0xD4807EF2, 0XCA394695, 0X8E5426CB, 0X9E46A79F);
+    return createAtom("vmhd", arr);
   },
 };
 
@@ -730,66 +641,7 @@ function moovChildren(
 }
 
 /**
- * /!\ Mutates given segment
- * @param {Uint8Array} segment
- * @param {Number} trunoffset
- * @param {Number} dataoffset
- */
-function patchTrunDataOffset(
-  segment : Uint8Array,
-  trunoffset : number,
-  dataOffset : number
-) : void {
-  // patch trun dataoffset with new moof atom size
-  segment.set(itobe4(dataOffset), trunoffset + 16);
-}
-
-/**
- * @param {Uint8Array} segment
- * @param {Uint8Array} newmoof
- * @param {Uint8Array} oldmoof
- * @param {Number} trunoffset
- * @returns {Uint8Array}
- */
-function createNewSegment(
-  segment : Uint8Array,
-  newmoof : Uint8Array,
-  oldmoof : Uint8Array,
-  trunoffset : number
-) : Uint8Array {
-  const segmentlen = segment.length;
-  const newmooflen = newmoof.length;
-  const oldmooflen = oldmoof.length;
-  const mdat = segment.subarray(oldmooflen, segmentlen);
-  const newSegment = new Uint8Array(newmooflen + (segmentlen - oldmooflen));
-  newSegment.set(newmoof, 0);
-  newSegment.set(mdat, newmooflen);
-  patchTrunDataOffset(newSegment, trunoffset, newmoof.length + 8);
-  return newSegment;
-}
-
-/**
- * /!\ Mutates given segment
- * @param {Uint8Array} segment
- * @param {Uint8Array} newmoof
- * @param {Uint8Array} oldmoof
- * @param {Number} trunoffset
- * @returns {Uint8Array}
- */
-function patchSegmentInPlace(
-  segment : Uint8Array,
-  newmoof : Uint8Array,
-  oldmoof : Uint8Array,
-  trunoffset : number
-) : Uint8Array {
-  const free = oldmoof.length - newmoof.length;
-  segment.set(newmoof, 0);
-  segment.set(atoms.free(free), newmoof.length);
-  patchTrunDataOffset(segment, trunoffset, newmoof.length + 8 + free);
-  return segment;
-}
-
-/**
+ * Create an initialization segment with the informations given.
  * @param {Number} timescale
  * @param {string} type
  * @param {Uint8Array} stsd
@@ -810,44 +662,140 @@ function createInitSegment(
   pssList : IPSSList
 ) : Uint8Array {
 
-  const stbl = atoms.mult("stbl", [
+  const stbl = createAtomWithChildren("stbl", [
     stsd,
-    Atom("stts", new Uint8Array(0x08)),
-    Atom("stsc", new Uint8Array(0x08)),
-    Atom("stsz", new Uint8Array(0x0c)),
-    Atom("stco", new Uint8Array(0x08)),
+    createAtom("stts", new Uint8Array(0x08)),
+    createAtom("stsc", new Uint8Array(0x08)),
+    createAtom("stsz", new Uint8Array(0x0c)),
+    createAtom("stco", new Uint8Array(0x08)),
   ]);
 
-  const url  = Atom("url ", new Uint8Array([0, 0, 0, 1]));
+  const url  = createAtom("url ", new Uint8Array([0, 0, 0, 1]));
   const dref = atoms.dref(url);
-  const dinf = atoms.mult("dinf", [dref]);
-  const minf = atoms.mult("minf", [mhd, dinf, stbl]);
+  const dinf = createAtomWithChildren("dinf", [dref]);
+  const minf = createAtomWithChildren("minf", [mhd, dinf, stbl]);
   const hdlr = atoms.hdlr(type);
   const mdhd = atoms.mdhd(timescale); // this one is really important
-  const mdia = atoms.mult("mdia", [mdhd, hdlr, minf]);
+  const mdia = createAtomWithChildren("mdia", [mdhd, hdlr, minf]);
   const tkhd = atoms.tkhd(width, height, 1);
-  const trak = atoms.mult("trak", [tkhd, mdia]);
+  const trak = createAtomWithChildren("trak", [tkhd, mdia]);
   const trex = atoms.trex(1);
-  const mvex = atoms.mult("mvex", [trex]);
+  const mvex = createAtomWithChildren("mvex", [trex]);
   const mvhd = atoms.mvhd(timescale, 1); // in fact, we don't give a sh** about
                                          // this value :O
 
-  const moov = atoms.mult("moov", moovChildren(mvhd, mvex, trak, pssList));
+  const moov = createAtomWithChildren("moov", moovChildren(mvhd, mvex, trak, pssList));
   const ftyp = atoms.ftyp("isom", ["isom", "iso2", "iso6", "avc1", "dash"]);
 
   return concat(ftyp, moov);
 }
 
-export default {
-  getMdat: getMDAT,
-  getTraf: getTRAF,
+/**
+ * Create tfdt box from a decoding time.
+ * @param {number} decodeTime
+ * @returns {Uint8Array}
+ */
+function createTfdtBox(decodeTime : number) : Uint8Array {
+  return createAtom("tfdt", concat([1, 0, 0, 0], itobe8(decodeTime)));
+}
 
+/**
+ * @param {Uint8Array} trun
+ * @returns {Uint8Array}
+ */
+function addDataOffsetInTrun(trun : Uint8Array) : Uint8Array {
+  const lastFlags = trun[11];
+  const hasDataOffset = lastFlags & 0x01;
+  if (hasDataOffset) {
+    return trun;
+  }
+
+  // If no dataoffset is present, we add one
+  const newTrun = new Uint8Array(trun.length + 4);
+  newTrun.set(itobe4(trun.length + 4), 0); // original length + data_offset size
+  newTrun.set(trun.subarray(4, 16), 4); // name + (version + flags) + samplecount
+  newTrun[11] = newTrun[11] | 0x01; // add data_offset flag
+  newTrun.set([0, 0, 0, 0], 16); // add data offset
+  newTrun.set(trun.subarray(16, trun.length), 20);
+  return newTrun;
+}
+
+/**
+ * @param {Number} length
+ * @returns {Uint8Array}
+ */
+function createFreeBox(length : number) : Uint8Array {
+  return createAtom("free", new Uint8Array(length - 8));
+}
+
+function createTrafBox(
+  tfhd : Uint8Array,
+  tfdt : Uint8Array,
+  trun : Uint8Array,
+  mfhd : Uint8Array,
+  senc?: Uint8Array
+) : Uint8Array {
+  const trafs = [tfhd, tfdt, trun];
+  if (senc) {
+    trafs.push(
+      createAtom("senc", senc),
+      atoms.saiz(senc),
+      atoms.saio(mfhd, tfhd, tfdt, trun)
+    );
+  }
+  return createAtomWithChildren("traf", trafs);
+}
+
+/**
+ * Replace a moof in a segment by a new one.
+ * @param {Uint8Array} segment
+ * @param {Uint8Array} newMoof
+ * @param {Array.<number>} moofOffsets
+ * @param {number} trunOffsetInMoof
+ * @returns {Uint8Array}
+ */
+function replaceMoofInSegment(
+  segment : Uint8Array,
+  newMoof : Uint8Array,
+  moofOffsets : [number, number],
+  trunOffsetInMoof : number
+) : Uint8Array {
+  const oldMoofLength = moofOffsets[1] - moofOffsets[0];
+  const moofDelta = newMoof.length - oldMoofLength;
+
+  const mdatOffsets = getBoxOffsets(segment, 0x6D646174 /* "mdat" */);
+  if (mdatOffsets == null) {
+    throw new Error("Smooth: Invalid ISOBMFF given");
+  }
+  if (canPatchISOBMFFSegment() && (moofDelta === 0 || moofDelta <= -8)) {
+    // patch trun data_offset
+    newMoof.set(itobe4(mdatOffsets[0] + 8), trunOffsetInMoof + 16);
+    segment.set(newMoof, moofOffsets[0]);
+
+    if (moofDelta <= -8) {
+      segment.set(createFreeBox(-moofDelta), newMoof.length);
+    }
+    return segment;
+  }
+
+  // patch trun data_offset
+  newMoof.set(itobe4(mdatOffsets[0] + moofDelta + 8), trunOffsetInMoof + 16);
+  const newSegment = new Uint8Array(segment.length + moofDelta);
+  const beforeMoof = segment.subarray(0, moofOffsets[0]);
+  const afterMoof = segment.subarray(moofOffsets[1], segment.length);
+  newSegment.set(beforeMoof, 0);
+  newSegment.set(newMoof, beforeMoof.length);
+  newSegment.set(afterMoof, beforeMoof.length + newMoof.length);
+  return newSegment;
+}
+
+export default {
   /**
    * @param {Uint8Array} traf
    * @returns {Array.<Object>}
    */
   parseTfrf(traf : Uint8Array) : IISOBMFFBasicSegment[] {
-    const tfrf = reads.tfrf(traf);
+    const tfrf = getUuidContent(traf, 0xD4807EF2, 0XCA394695, 0X8E5426CB, 0X9E46A79F);
     if (!tfrf) {
       return [];
     }
@@ -878,13 +826,14 @@ export default {
    * @returns {Object|undefined}
    */
   parseTfxd(traf : Uint8Array) : IISOBMFFBasicSegment|undefined {
-    const tfxd = reads.tfxd(traf);
-    if (tfxd) {
-      return {
-        duration:  be8toi(tfxd, 12),
-        time: be8toi(tfxd,  4),
-      };
+    const tfxd = getUuidContent(traf, 0x6D1D9B05, 0x42D544E6, 0x80E2141D, 0xAFF757B2);
+    if (tfxd == null) {
+      return undefined;
     }
+    return {
+      duration:  be8toi(tfxd, 12),
+      time: be8toi(tfxd,  4),
+    };
   },
 
   /**
@@ -938,10 +887,10 @@ export default {
     }
     else {
       const tenc = atoms.tenc(1, 8, keyId);
-      const schi = atoms.mult("schi", [tenc]);
+      const schi = createAtomWithChildren("schi", [tenc]);
       const schm = atoms.schm("cenc", 65536);
       const frma = atoms.frma("avc1");
-      const sinf = atoms.mult("sinf", [frma, schm, schi]);
+      const sinf = createAtomWithChildren("sinf", [frma, schm, schi]);
       const encv = atoms.avc1encv(
         "encv",
         1,
@@ -1006,10 +955,10 @@ export default {
     }
     else {
       const tenc = atoms.tenc(1, 8, keyId);
-      const schi = atoms.mult("schi", [tenc]);
+      const schi = createAtomWithChildren("schi", [tenc]);
       const schm = atoms.schm("cenc", 65536);
       const frma = atoms.frma("mp4a");
-      const sinf = atoms.mult("sinf", [frma, schm, schi]);
+      const sinf = createAtomWithChildren("sinf", [frma, schm, schi]);
       const enca = atoms.mp4aenca(
         "enca",
         1,
@@ -1029,53 +978,43 @@ export default {
   },
 
   /**
-   * Add decodeTime info in a segment (tfdt box)
+   * Patch ISOBMFF Segment downloaded in Smooth Streaming.
    * @param {Uint8Array} segment
    * @param {Number} decodeTime
    * @return {Uint8Array}
    */
   patchSegment(segment : Uint8Array, decodeTime : number) : Uint8Array {
-    if (__DEV__) {
-      // TODO handle segments with styp/free...
-      const name = bytesToStr(segment.subarray(4, 8));
-      assert(name === "moof");
+    const moofOffsets = getBoxOffsets(segment, 0x6d6f6f66 /* moof */);
+    if (moofOffsets == null) {
+      throw new Error("Smooth: Invalid ISOBMFF given");
+    }
+    const moofContent = segment.subarray(moofOffsets[0] + 8, moofOffsets[1]);
+
+    const mfhdBox = getBox(moofContent, 0x6d666864 /* mfhd */);
+    const trafContent = getBoxContent(moofContent, 0x74726166 /* traf */);
+    if (trafContent == null || mfhdBox == null) {
+      throw new Error("Smooth: Invalid ISOBMFF given");
     }
 
-    const oldmoof = segment.subarray(0, be4toi(segment, 0));
-    const newtfdt = atoms.tfdt(decodeTime);
-
-    // reads [moof[mfhd|traf[tfhd|trun|..]]]
-    const tfdtlen = newtfdt.length;
-    const mfhdlen = be4toi(oldmoof, 8);
-    const traflen = be4toi(oldmoof, mfhdlen + 8);
-    const tfhdlen = be4toi(oldmoof, mfhdlen + 8 + 8);
-    const trunlen = be4toi(oldmoof, mfhdlen + 8 + 8 + tfhdlen);
-    const oldmfhd = oldmoof.subarray(8, mfhdlen + 8);
-    const oldtraf = oldmoof
-      .subarray(mfhdlen + 8 + 8, mfhdlen + 8 + 8 + traflen - 8);
-    const oldtfhd = oldtraf.subarray(0, tfhdlen);
-    const oldtrun = oldtraf.subarray(tfhdlen, tfhdlen + trunlen);
+    const tfhdBox = getBox(trafContent, 0x74666864 /* tfhd */);
+    const trunBox = getBox(trafContent, 0x7472756e /* trun */);
+    if (tfhdBox == null || trunBox == null) {
+      throw new Error("Smooth: Invalid ISOBMFF given");
+    }
 
     // force trackId=1 since trackIds are not always reliable...
-    oldtfhd.set([0, 0, 0, 1], 12);
+    tfhdBox.set([0, 0, 0, 1], 12);
 
-    // TODO fallback?
-    const oldsenc = reads.senc(oldtraf);
+    const tfdtBox = createTfdtBox(decodeTime);
+    const newTrunBox = addDataOffsetInTrun(trunBox);
+    const sencContent = getUuidContent(trafContent,
+      0xA2394F52, 0x5A9B4F14, 0xA2446C42, 0x7C648DF4);
+    const newTrafBox = createTrafBox(tfhdBox, tfdtBox, newTrunBox, mfhdBox, sencContent);
+    const newMoof = createAtomWithChildren("moof", [mfhdBox, newTrafBox]);
+    const trunOffsetInMoof = mfhdBox.length + tfhdBox.length + tfdtBox.length +
+      8 /* moof size + name */ +
+      8 /* traf size + name */;
 
-    // writes [moof[mfhd|traf[tfhd|tfdt|trun|senc|saiz|saio]]]
-    const newtrun = atoms.trun(oldtrun);
-    const newtraf = atoms.traf(oldtfhd, newtfdt, newtrun, oldmfhd, oldsenc);
-    const newmoof = atoms.moof(oldmfhd, newtraf);
-
-    const trunoffset = mfhdlen + 8 + 8 + tfhdlen + tfdtlen;
-    if (!canPatchISOBMFFSegment()) {
-      return createNewSegment(segment, newmoof, oldmoof, trunoffset);
-    } else {
-      if (oldmoof.length - newmoof.length >= 8 /* minimum "free" atom size */) {
-        return patchSegmentInPlace(segment, newmoof, oldmoof, trunoffset);
-      } else {
-        return createNewSegment(segment, newmoof, oldmoof, trunoffset);
-      }
-    }
+    return replaceMoofInSegment(segment, newMoof, moofOffsets, trunOffsetInMoof);
   },
 };

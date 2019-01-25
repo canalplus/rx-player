@@ -43,7 +43,7 @@ interface IISOBMFFKeySystem {
  * @param {Number} wantedName
  * @returns {Number} - Offset where the box begins. -1 if not found.
  */
-function findBox(buf : Uint8Array, wantedName : number) {
+function findBox(buf : Uint8Array, wantedName : number) : number {
   const len = buf.length;
   let i = 0;
   while (i + 8 < len) {
