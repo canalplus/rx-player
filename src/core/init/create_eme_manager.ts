@@ -49,28 +49,34 @@ export default function createEMEManager(
   mediaElement : HTMLMediaElement,
   keySystems : IKeySystemOption[]
 ) : Observable<IEMEManagerEvent|IEMEDisabledEvent> {
-
-  // emit disabled event and handle unexpected encrypted event
-  function handleDisabledEME(logMessage: string): Observable<IEMEDisabledEvent> {
+  if (features.emeManager == null) {
     return observableConcat(
       observableOf({ type: "eme-disabled" as "eme-disabled" }),
       onEncrypted$(mediaElement).pipe(map(() => {
-        log.error(logMessage);
-        throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
-      }))
-    );
-  }
-
-  if (features.emeManager == null) {
-    return handleDisabledEME("Init: Encrypted event but EME feature not activated");
+        log.error("Init: Encrypted event but EME feature not activated");
+        const err = new Error("EME feature not activated");
+        throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", err, true);
+      })));
   }
 
   if (!keySystems || !keySystems.length) {
-    return handleDisabledEME("Init: Ciphered media and no keySystem passed");
+    return observableConcat(
+      observableOf({ type: "eme-disabled" as "eme-disabled" }),
+      onEncrypted$(mediaElement).pipe(map(() => {
+        log.error("Init: Ciphered media and no keySystem passed");
+        const err = new Error("Media is encrypted and no `keySystems` given");
+        throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", err, true);
+      })));
   }
 
   if (!hasEMEAPIs()) {
-    return handleDisabledEME("Init: Encrypted event but no EME API available");
+    return observableConcat(
+      observableOf({ type: "eme-disabled" as "eme-disabled" }),
+      onEncrypted$(mediaElement).pipe(map(() => {
+        log.error("Init: Encrypted event but no EME API available");
+        const err = new Error("Encryption APIs not found.");
+        throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", err, true);
+      })));
   }
 
   log.debug("Init: Creating EMEManager");
