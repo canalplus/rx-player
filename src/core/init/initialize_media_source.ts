@@ -209,7 +209,7 @@ export default function InitializeOnMediaSource({
     sendingTime? : number;
   }>(1);
 
-  const initiatedEME$ = emeManager$.pipe(
+  const emeInitialized$ = emeManager$.pipe(
     filter(({ type }) => type === "eme-init" || type === "eme-disabled"),
     take(1)
   );
@@ -217,7 +217,7 @@ export default function InitializeOnMediaSource({
   const loadContent$ = observableCombineLatest(
     openMediaSource(mediaElement),
     fetchManifest(url),
-    initiatedEME$
+    emeInitialized$
   ).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
 
     /**
