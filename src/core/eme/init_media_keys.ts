@@ -39,10 +39,9 @@ export default function initMediaKeys(
   keySystemsConfigs: IKeySystemOption[],
   currentMediaKeysInfos : MediaKeysInfosStore
 ): Observable<IMediaKeysInfos> {
-  return getMediaKeysInfos(
-    mediaElement, keySystemsConfigs, currentMediaKeysInfos
-  ).pipe(mergeMap((mediaKeysInfos) =>
-    attachMediaKeys(mediaKeysInfos, mediaElement, currentMediaKeysInfos)
-      .pipe(mapTo(mediaKeysInfos))
-  ));
+  return getMediaKeysInfos(mediaElement, keySystemsConfigs, currentMediaKeysInfos)
+    .pipe(mergeMap((mediaKeysInfos) =>
+      attachMediaKeys(mediaKeysInfos, mediaElement, currentMediaKeysInfos)
+        .pipe(mapTo(mediaKeysInfos))
+    ));
 }
