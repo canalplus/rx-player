@@ -28,12 +28,15 @@ import { EncryptedMediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
 import {
-  IEMEInitEvent,
   IEMEManagerEvent,
   IKeySystemOption,
 } from "../eme";
 
 const { onEncrypted$ } = events;
+
+export interface IEMEDisabledEvent {
+  type: "eme-disabled";
+}
 
 /**
  * Create EMEManager if possible (has the APIs and configuration).
@@ -45,10 +48,10 @@ const { onEncrypted$ } = events;
 export default function createEMEManager(
   mediaElement : HTMLMediaElement,
   keySystems : IKeySystemOption[]
-) : Observable<IEMEManagerEvent> {
+) : Observable<IEMEManagerEvent|IEMEDisabledEvent> {
 
   // emit disabled event and handle unexpected encrypted event
-  function handleDisabledEME(logMessage: string): Observable<IEMEInitEvent> {
+  function handleDisabledEME(logMessage: string): Observable<IEMEDisabledEvent> {
     return observableConcat(
       observableOf({ type: "eme-disabled" as "eme-disabled" }),
       onEncrypted$(mediaElement).pipe(map(() => {
