@@ -19,6 +19,25 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     jest.resetModules();
   });
 
+  it("should correctly handle empty style blocks", () => {
+    const webvttStyle = [
+      ["STYLE"],
+      [],
+    ];
+
+    const mockCreateDefaultStyleElements = jest.fn(() => ({}));
+    jest.mock("../create_default_style_elements", () => ({
+      default: () => { return mockCreateDefaultStyleElements(); },
+    }));
+    const parseStyleBlock = require("../parse_style_block").default;
+    expect(parseStyleBlock(webvttStyle)).toEqual(
+      {
+        classes: {},
+        global: "",
+      }
+    );
+  });
+
   it("should parse global style", () => {
     const webvttStyle = [
       [
