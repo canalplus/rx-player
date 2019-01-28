@@ -4,7 +4,6 @@
 
 ## Bug fixes
 
- - drm: handle mix of encrypted and unencrypted contents in chrome by always attaching the MediaKeys to the media element before beginning the content
  - dash/api: fix ``getMinimumPosition`` for MPDs with an availabilityStartTime superior to unix epoch
  - smooth: be more tolerant on downloaded segments (accept ISOBMFF with boxes in any order)
  - subtitles/webvtt: support default classes in the WebVTT specification
