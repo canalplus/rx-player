@@ -389,12 +389,10 @@ describe("DASH live content (SegmentTimeline)", function () {
         url: manifestInfos.url,
         transport:manifestInfos.transport,
       });
-      expect(player.getAvailableVideoTracks()).to.eql([]);
 
-      await sleep(1);
-      expect(player.getAvailableVideoTracks()).to.eql([]);
+      await sleep(10);
       fakeServer.respond();
-      await sleep(1);
+      await sleep(10);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1527507767, 1);
     });
@@ -408,12 +406,10 @@ describe("DASH live content (SegmentTimeline)", function () {
         url: manifestInfos.url,
         transport:manifestInfos.transport,
       });
-      expect(player.getAvailableVideoTracks()).to.eql([]);
 
-      await sleep(1);
-      expect(player.getAvailableVideoTracks()).to.eql([]);
+      await sleep(10);
       fakeServer.respond();
-      await sleep(1);
+      await sleep(10);
       expect(player.getMaximumPosition()).to.be
         .closeTo(1527508062, 1);
     });
