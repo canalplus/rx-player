@@ -401,7 +401,7 @@ describe("DASH live content (SegmentTimeline)", function () {
   });
 
   describe.only("getMaximumPosition", () => {
-    it("should return the last position minus the TimeShift window", async () => {
+    it("should return the last playable position", async () => {
       mockRequests(fakeServer, URLs);
 
       player.loadVideo({
