@@ -27,16 +27,12 @@ import {
   timer as observableTimer,
 } from "rxjs";
 import {
-  filter,
   ignoreElements,
   map,
   mergeMap,
-  multicast,
-  refCount,
   share,
   startWith,
   switchMap,
-  take,
   takeUntil,
   tap,
 } from "rxjs/operators";
@@ -199,13 +195,7 @@ export default function InitializeOnMediaSource({
 
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
-  const emeManager$ = createEMEManager(mediaElement, keySystems).pipe(
-    // equivalent to a sane shareReplay:
-    // https://github.com/ReactiveX/rxjs/issues/3336
-    // XXX TODO Replace it when that issue is resolved
-    multicast(() => new ReplaySubject(1)),
-    refCount()
-  );
+  const emeManager$ = createEMEManager(mediaElement, keySystems);
 
   // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.
@@ -217,15 +207,9 @@ export default function InitializeOnMediaSource({
     sendingTime? : number;
   }>(1);
 
-  const emeInitialized$ = emeManager$.pipe(
-    filter(({ type }) => type === "eme-init" || type === "eme-disabled"),
-    take(1)
-  );
-
   const loadContent$ = observableCombineLatest(
     openMediaSource(mediaElement),
-    fetchManifest(url),
-    emeInitialized$
+    fetchManifest(url)
   ).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
 
     /**
