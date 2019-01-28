@@ -23,6 +23,7 @@ import {
   merge as observableMerge,
   Observable,
   of as observableOf,
+  ReplaySubject,
 } from "rxjs";
 import {
   filter,
@@ -30,6 +31,8 @@ import {
   map,
   mergeMap,
   mergeMapTo,
+  multicast,
+  refCount,
   take,
 } from "rxjs/operators";
 import {
@@ -145,7 +148,13 @@ export default function initializeDirectfileContent({
 
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
-  const emeManager$ = createEMEManager(mediaElement, keySystems);
+  const emeManager$ = createEMEManager(mediaElement, keySystems).pipe(
+    // equivalent to a sane shareReplay:
+    // https://github.com/ReactiveX/rxjs/issues/3336
+    // XXX TODO Replace it when that issue is resolved
+    multicast(() => new ReplaySubject(1)),
+    refCount()
+  );
 
   // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.

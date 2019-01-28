@@ -31,6 +31,8 @@ import {
   ignoreElements,
   map,
   mergeMap,
+  multicast,
+  refCount,
   share,
   startWith,
   switchMap,
@@ -197,7 +199,13 @@ export default function InitializeOnMediaSource({
 
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
-  const emeManager$ = createEMEManager(mediaElement, keySystems);
+  const emeManager$ = createEMEManager(mediaElement, keySystems).pipe(
+    // equivalent to a sane shareReplay:
+    // https://github.com/ReactiveX/rxjs/issues/3336
+    // XXX TODO Replace it when that issue is resolved
+    multicast(() => new ReplaySubject(1)),
+    refCount()
+  );
 
   // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.
