@@ -18,7 +18,10 @@ import {
   defer as observableDefer,
   Observable
 } from "rxjs";
+import { mergeMap } from "rxjs/operators";
 import castToObservable from "../../utils/cast_to_observable";
+import { isIEOrEdge } from "../browser_detection";
+import { onLoadedMetadata$ } from "../event_listeners";
 import CustomMediaKeys, {
   ICustomMediaKeys,
 } from "./custom_media_keys";
@@ -69,5 +72,17 @@ export default function setMediaKeys$(
   elt : HTMLMediaElement,
   mediaKeys : MediaKeys|ICustomMediaKeys|null
 ) : Observable<unknown> {
-  return observableDefer(() => castToObservable(_setMediaKeys(elt, mediaKeys)));
+  return observableDefer(() => {
+    const _setMediaKeys$ = observableDefer(() =>
+      castToObservable(_setMediaKeys(elt, mediaKeys)));
+
+    // IE11/Edge requires that the media element readyState >= 1 before mediaKeys can be
+    // set, so wait for loadedmetadata
+    if (isIEOrEdge && elt.readyState < 1) {
+      return onLoadedMetadata$(elt).pipe(
+        mergeMap(() => _setMediaKeys$)
+      );
+    }
+    return _setMediaKeys$;
+  });
 }
