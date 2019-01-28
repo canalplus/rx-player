@@ -14,62 +14,61 @@
  * limitations under the License.
  */
 
-export interface IStyleElement {
-  className? : string;
-  isGlobalStyle : boolean;
-  styleContent : string;
+import createDefaultStyleElements from "./create_default_style_elements";
+
+export interface IStyleElements {
+  [className : string]: string;
 }
 
 /**
  *
  * Parse style element from WebVTT.
  * @param {Array.<string>} styleBlock
- * @return {Array.<Object>} styleElements
+ * @param {Object} baseStyleElements
+ * @return {Array.<Object>} classes
  */
-export default function parseStyleBlock(styleBlock : string[]) : IStyleElement[] {
-  const styleElements : IStyleElement[] = [];
-  let index = 1;
-  const classNames : Array<{
-    isGlobalStyle : boolean;
-    className? : string;
-  }> = [];
+export default function parseStyleBlocks(styleBlocks : string[][]) : {
+  classes : IStyleElements;
+  global : string;
+} {
+  const classes : IStyleElements = createDefaultStyleElements();
+  let global = "";
 
-  if (styleBlock.length < 2) {
-    return [];
-  }
+  styleBlocks.forEach((styleBlock) => {
+    if (styleBlock.length >= 2) {
+      for (let index = 1; index < styleBlock.length; index++) {
+        let line = styleBlock[index];
+        if (line.match(/::cue {/)) {
+          line = styleBlock[++index];
+          while (line && (!(line.match(/}/) || line.length === 0))) {
+            global += line;
+            line = styleBlock[++index];
+          }
+        } else {
+          const classNames : string[] = [];
+          let cueClassLine;
+          while (line && (cueClassLine = line.match(/::cue\(\.?(.*?)\)(?:,| {)/))) {
+            classNames.push(cueClassLine[1]);
+            line = styleBlock[++index];
+          }
 
-  if (styleBlock[1].match(/::cue {/)) {
-    classNames.push({ isGlobalStyle: true });
-    index++;
-  } else {
-    let cueClassLine;
-    while (
-      styleBlock[index] &&
-      (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/))
-    ) {
-      classNames.push({
-        className: cueClassLine[1],
-        isGlobalStyle: false,
-      });
-      index++;
+          let styleContent = "";
+          while (line && (!(line.match(/}/) || line.length === 0))) {
+            styleContent += line;
+            line = styleBlock[++index];
+          }
+
+          classNames.forEach((className) => {
+            const styleElement = classes[className];
+            if (!styleElement) {
+              classes[className] = styleContent;
+            } else {
+              classes[className] += styleContent;
+            }
+          });
+        }
+      }
     }
-  }
-
-  let styleContent = "";
-
-  while (
-    styleBlock[index] &&
-    (!(styleBlock[index].match(/}/) || styleBlock[index].length === 0))
-  ) {
-    styleContent +=  styleBlock[index];
-    index++;
-  }
-  classNames.forEach(name => {
-    styleElements.push({
-      className: name.className,
-      isGlobalStyle: name.isGlobalStyle,
-      styleContent: styleContent.replace(/\s/g, ""),
-    });
   });
-  return styleElements;
+  return { classes, global };
 }

@@ -14,74 +14,8 @@
  * limitations under the License.
  */
 
-/**
- * /!\ This file is feature-switchable.
- * It always should be imported through the `features` object.
- */
-
-import {
-  ICompatVTTCue,
-  isVTTCue,
-  makeVTTCue,
-} from "../../../compat/index";
-import arrayIncludes from "../../../utils/array_includes";
-import getCueBlocks from "./get_cue_blocks";
-import parseCueBlock from "./parse_cue_block";
-import { getFirstLineAfterHeader } from "./utils";
-
-// Simple VTT to ICompatVTTCue parser:
-// Just parse cues and associated settings.
-// Does not take into consideration STYLE and REGION blocks.
-
-/**
- * Parse whole WEBVTT file into an array of cues, to be inserted in a video's
- * TrackElement.
- * @param {string} vttStr
- * @param {Number} timeOffset
- * @returns {Array.<ICompatVTTCue|TextTrackCue>}
- */
-export default function parseVTTStringToVTTCues(
-  vttStr : string,
-  timeOffset : number
-) : Array<TextTrackCue|ICompatVTTCue> {
-  // WEBVTT authorize CRLF, LF or CR as line terminators
-  const lines = vttStr.split(/\r\n|\n|\r/);
-
-  if (!(/^WEBVTT($| |\t)/.test(lines[0]))) {
-    throw new Error("Can't parse WebVTT: Invalid file.");
-  }
-
-  const firstLineAfterHeader = getFirstLineAfterHeader(lines);
-  const cueBlocks : string[][] = getCueBlocks(lines, firstLineAfterHeader);
-  const cues : Array<ICompatVTTCue|TextTrackCue> = [];
-  for (let i = 0; i < cueBlocks.length; i++) {
-    const cueObject = parseCueBlock(cueBlocks[i], timeOffset);
-    if (cueObject != null) {
-      const nativeCue = toNativeCue(cueObject);
-      if (nativeCue != null) {
-        if (isVTTCue(nativeCue)) {
-          setSettingsOnCue(cueObject.settings, nativeCue);
-        }
-        cues.push(nativeCue);
-      }
-    }
-  }
-  return cues;
-}
-
-/**
- * @param {Object} cue Object
- * @returns {TextTrackCue|ICompatVTTCue|null}
- */
-function toNativeCue(cueObj : {
-  start : number;
-  end : number;
-  payload : string[];
-}) : ICompatVTTCue|TextTrackCue|null {
-  const { start, end, payload } = cueObj;
-  const text = payload.join("\n");
-  return makeVTTCue(start, end, text);
-}
+import { ICompatVTTCue } from "../../../../compat/index";
+import arrayIncludes from "../../../../utils/array_includes";
 
 /**
  * Add the corresponding settings on the given cue.
@@ -89,7 +23,7 @@ function toNativeCue(cueObj : {
  * @param {Object} settings - settings for the cue, as a key-value object.
  * @param {ICompatVTTCue|TextTrackCue} cue
  */
-function setSettingsOnCue(
+export default function setSettingsOnCue(
   settings : Partial<Record<string, string>>,
   cue : ICompatVTTCue
 ) : void {

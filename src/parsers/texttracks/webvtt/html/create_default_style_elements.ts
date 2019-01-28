@@ -1,5 +1,5 @@
 /* tslint:disable file-header */
-import { IStyleElement } from "./parse_style_block";
+import { IStyleElements } from "./parse_style_block";
 
 /**
  * Creates default classes defined in the W3 specification
@@ -18,20 +18,10 @@ const colorMap: { [colorName: string]: string } = {
   black: "#000000",
 };
 
-export default function createDefaultStyleElements() {
-  return Object.keys(colorMap).reduce<IStyleElement[]>((result, key) => {
-    result.push({
-      className: key,
-      isGlobalStyle: false,
-      styleContent: `color: ${colorMap[key]}`,
-    });
-
-    result.push({
-      className: `bg_${key}`,
-      isGlobalStyle: false,
-      styleContent: `background-color: ${colorMap[key]}`,
-    });
-
+export default function createDefaultStyleElements(): IStyleElements {
+  return Object.keys(colorMap).reduce<IStyleElements>((result, key) => {
+    result[key] = `color: ${colorMap[key]};`;
+    result[`bg_${key}`] = `background-color: ${colorMap[key]};`;
     return result;
-  }, []);
+  }, {});
 }

@@ -46,7 +46,7 @@ const config = {
         SMOOTH: JSON.stringify("../transports/smooth/index.ts"),
         DASH: JSON.stringify("../transports/dash/index.ts"),
         NATIVE_TEXT_BUFFER: JSON.stringify("../core/source_buffers/text/native/index.ts"),
-        NATIVE_VTT: JSON.stringify("../parsers/texttracks/webvtt/native.ts"),
+        NATIVE_VTT: JSON.stringify("../parsers/texttracks/webvtt/native/index.ts"),
         NATIVE_SRT: JSON.stringify("../parsers/texttracks/srt/native.ts"),
         NATIVE_TTML: JSON.stringify("../parsers/texttracks/ttml/native/index.ts"),
         NATIVE_SAMI: JSON.stringify("../parsers/texttracks/sami/native.ts"),

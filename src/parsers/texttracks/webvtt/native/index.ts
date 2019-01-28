@@ -19,7 +19,5 @@
  * It always should be imported through the `features` object.
  */
 
-import parseWebVTTToDiv from "./parse_webvtt_to_div";
-export { IVTTHTMLCue } from "./to_html";
-
-export default parseWebVTTToDiv;
+import parseVTTStringToVTTCues from "./parse_vtt_to_cues";
+export default parseVTTStringToVTTCues;

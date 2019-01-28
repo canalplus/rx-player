@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
+import {
+  ICompatVTTCue,
+  makeVTTCue,
+} from "../../../../compat/index";
+
 /**
- * /!\ This file is feature-switchable.
- * It always should be imported through the `features` object.
+ * @param {Object} cue Object
+ * @returns {TextTrackCue|ICompatVTTCue|null}
  */
-
-import parseWebVTTToDiv from "./parse_webvtt_to_div";
-export { IVTTHTMLCue } from "./to_html";
-
-export default parseWebVTTToDiv;
+export default function toNativeCue(cueObj : {
+  start : number;
+  end : number;
+  payload : string[];
+}) : ICompatVTTCue|TextTrackCue|null {
+  const { start, end, payload } = cueObj;
+  const text = payload.join("\n");
+  return makeVTTCue(start, end, text);
+}
