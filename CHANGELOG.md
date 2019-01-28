@@ -2,7 +2,7 @@
 
 ## v3.10.3 (2019/01/28)
 
-## Bug fixes
+### Bug fixes
 
  - dash/api: fix ``getMinimumPosition`` for MPDs with an availabilityStartTime superior to unix epoch
  - smooth: be more tolerant on downloaded segments (accept ISOBMFF with boxes in any order)
@@ -12,7 +12,7 @@
  - subtitles/webvtt: do not remove whitespaces in styles to keep a sane formatting for some complex values
  - subtitles: fix bug in the clean-up logic of subtitles in the `"html"` texttrack mode that would lead to removed subtitles still being displayed
 
-## Other improvements
+### Other improvements
 
   - dash: warn through logs when fields are not in the expected format
   - drm: throw more explicative error messages when DRM are not supported in the current target
