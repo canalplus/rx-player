@@ -381,7 +381,7 @@ describe("DASH live content (SegmentTimeline)", function () {
     });
   });
 
-  describe.only("getMinimumPosition", () => {
+  describe("getMinimumPosition", () => {
     it("should return the last position minus the TimeShift window", async () => {
       mockRequests(fakeServer, URLs);
 
@@ -398,7 +398,7 @@ describe("DASH live content (SegmentTimeline)", function () {
     });
   });
 
-  describe.only("getMaximumPosition", () => {
+  describe("getMaximumPosition", () => {
     it("should return the last playable position", async () => {
       mockRequests(fakeServer, URLs);
 
