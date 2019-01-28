@@ -35,37 +35,29 @@ export default function parseStyleBlocks(styleBlocks : string[][]) : {
   let global = "";
 
   styleBlocks.forEach((styleBlock) => {
-    let index = 1;
-
     if (styleBlock.length >= 2) {
-      while (index < styleBlock.length) {
-        if (styleBlock[index].match(/::cue {/)) {
-          index++;
-          while (
-            styleBlock[index] &&
-            (!(styleBlock[index].match(/}/) || styleBlock[index].length === 0))
-          ) {
-            global += styleBlock[index];
-            index++;
+      for (let index = 1; index < styleBlock.length; index++) {
+        let line = styleBlock[index];
+        if (line.match(/::cue {/)) {
+          line = styleBlock[++index];
+          while (line && (!(line.match(/}/) || line.length === 0))) {
+            global += line;
+            line = styleBlock[++index];
           }
         } else {
           const classNames : string[] = [];
           let cueClassLine;
-          while (
-            styleBlock[index] &&
-            (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/))
-          ) {
+          while (line && (cueClassLine = line.match(/::cue\(\.?(.*?)\)(?:,| {)/))) {
             classNames.push(cueClassLine[1]);
-            index++;
+            line = styleBlock[++index];
           }
+
           let styleContent = "";
-          while (
-            styleBlock[index] &&
-            (!(styleBlock[index].match(/}/) || styleBlock[index].length === 0))
-          ) {
-            styleContent += styleBlock[index];
-            index++;
+          while (line && (!(line.match(/}/) || line.length === 0))) {
+            styleContent += line;
+            line = styleBlock[++index];
           }
+
           classNames.forEach((className) => {
             const styleElement = classes[className];
             if (!styleElement) {
@@ -75,7 +67,6 @@ export default function parseStyleBlocks(styleBlocks : string[][]) : {
             }
           });
         }
-        index++;
       }
     }
   });
