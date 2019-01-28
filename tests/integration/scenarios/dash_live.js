@@ -380,4 +380,42 @@ describe("DASH live content (SegmentTimeline)", function () {
       }
     });
   });
+
+  describe.only("getMinimumPosition", () => {
+    it("should return the last position minus the TimeShift window", async () => {
+      mockRequests(fakeServer, URLs);
+
+      player.loadVideo({
+        url: manifestInfos.url,
+        transport:manifestInfos.transport,
+      });
+      expect(player.getAvailableVideoTracks()).to.eql([]);
+
+      await sleep(1);
+      expect(player.getAvailableVideoTracks()).to.eql([]);
+      fakeServer.respond();
+      await sleep(1);
+      expect(player.getMinimumPosition()).to.be
+        .closeTo(1527507767, 1);
+    });
+  });
+
+  describe.only("getMaximumPosition", () => {
+    it("should return the last playable position", async () => {
+      mockRequests(fakeServer, URLs);
+
+      player.loadVideo({
+        url: manifestInfos.url,
+        transport:manifestInfos.transport,
+      });
+      expect(player.getAvailableVideoTracks()).to.eql([]);
+
+      await sleep(1);
+      expect(player.getAvailableVideoTracks()).to.eql([]);
+      fakeServer.respond();
+      await sleep(1);
+      expect(player.getMaximumPosition()).to.be
+        .closeTo(1527508062, 1);
+    });
+  });
 });
