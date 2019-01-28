@@ -15,7 +15,6 @@
  */
 
 import createDefaultStyleElements from "./create_default_style_elements";
-import getStyleContent from "./get_style_content";
 
 export interface IStyleElements {
   [className : string]: string;
@@ -37,30 +36,46 @@ export default function parseStyleBlocks(styleBlocks : string[][]) : {
 
   styleBlocks.forEach((styleBlock) => {
     let index = 1;
-    const classNames : string[] = [];
 
     if (styleBlock.length >= 2) {
-      if (styleBlock[1].match(/::cue {/)) {
-        index++;
-        global += getStyleContent(styleBlock.slice(index));
-      } else {
-        let cueClassLine : string[]|null;
-        while (
-          styleBlock[index] &&
-          (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/))
-        ) {
-          classNames.push(cueClassLine[1]);
+      while (index < styleBlock.length) {
+        if (styleBlock[index].match(/::cue {/)) {
           index++;
-        }
-        const styleContent = getStyleContent(styleBlock.slice(index));
-        classNames.forEach((className) => {
-          const styleForClass = classes[className];
-          if (styleForClass == null) {
-            classes[className] = styleContent;
-          } else {
-            classes[className] += styleContent;
+          while (
+            styleBlock[index] &&
+            (!(styleBlock[index].match(/}/) || styleBlock[index].length === 0))
+          ) {
+            global += styleBlock[index];
+            index++;
           }
-        });
+        } else {
+          const classNames : string[] = [];
+          let cueClassLine;
+          while (
+            styleBlock[index] &&
+            (cueClassLine = styleBlock[index].match(/::cue\(\.?(.*?)\)(?:,| {)/))
+          ) {
+            classNames.push(cueClassLine[1]);
+            index++;
+          }
+          let styleContent = "";
+          while (
+            styleBlock[index] &&
+            (!(styleBlock[index].match(/}/) || styleBlock[index].length === 0))
+          ) {
+            styleContent += styleBlock[index];
+            index++;
+          }
+          classNames.forEach((className) => {
+            const styleElement = classes[className];
+            if (!styleElement) {
+              classes[className] = styleContent;
+            } else {
+              classes[className] += styleContent;
+            }
+          });
+        }
+        index++;
       }
     }
   });
