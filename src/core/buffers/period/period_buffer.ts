@@ -207,7 +207,6 @@ export default function PeriodBuffer({
     const adaptationBufferClock$ = clock$.pipe(map(tick => {
       const buffered = qSourceBuffer.getBuffered();
       return objectAssign({}, tick, {
-        buffered,
         bufferGap: getLeftSizeOfRange(buffered, tick.currentTime),
       });
     }));
