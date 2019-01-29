@@ -30,10 +30,6 @@ export interface IEMEWarningEvent {
   value : ICustomError|Error;
 }
 
-export interface IEMEInitEvent {
-  type: "eme-init";
-}
-
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {
   keySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;

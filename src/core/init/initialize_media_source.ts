@@ -46,10 +46,7 @@ import ABRManager, {
   IABRMetric,
   IABRRequest,
 } from "../abr";
-import {
-  IEMEManagerEvent,
-  IKeySystemOption,
-} from "../eme";
+import { IKeySystemOption } from "../eme";
 import {
   createManifestPipeline,
   IPipelineOptions,
@@ -60,7 +57,7 @@ import {
   ITextTrackSourceBufferOptions,
 } from "../source_buffers";
 import createEMEManager, {
-  IEMEDisabledEvent,
+  IEMEManagerEvent,
 } from "./create_eme_manager";
 import openMediaSource from "./create_media_source";
 import EVENTS from "./events_generators";
@@ -133,7 +130,6 @@ export type IInitEvent =
   IManifestReadyEvent |
   IMediaSourceLoaderEvent |
   IEMEManagerEvent |
-  IEMEDisabledEvent |
   IReloadingMediaSourceEvent |
   IWarningEvent;
 
