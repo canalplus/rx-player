@@ -24,6 +24,7 @@
  * download and push segments for a single Representation.
  */
 
+import nextTick from "next-tick";
 import objectAssign from "object-assign";
 import {
   concat as observableConcat,
@@ -156,12 +157,19 @@ export default function AdaptationBuffer<T>(
     ),
 
     tap((estimation) => {
+      if (currentRepresentation == null) { // no buffer pending
+        return;
+      }
       if (estimation.urgent) {
         log.info("Buffer: urgent Representation switch", adaptation.type);
-        killCurrentBuffer$.next();
+
+        // kill current buffer after concatMapLatest has been called
+        nextTick(() => { killCurrentBuffer$.next(); });
       } else {
         log.info("Buffer: slow Representation switch", adaptation.type);
-        terminateCurrentBuffer$.next();
+
+        // terminate current buffer after concatMapLatest has been called
+        nextTick(() => { terminateCurrentBuffer$.next(); });
       }
     }),
 
