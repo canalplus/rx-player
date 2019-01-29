@@ -14027,7 +14027,7 @@ object-assign
                 segmentInfos: null,
                 segmentOffset: 0
             } : null, startQueue$ = new ReplaySubject.a(1), downloadQueue = [], finishedDownloadQueue$ = new Subject.a(), currentSegmentRequest = null, sourceBufferWaitingQueue = new simple_set.a(), status$ = Object(combineLatest.a)(clock$, wantedBufferAhead$, terminate$.pipe(Object(take.a)(1), Object(mapTo.a)(!0), Object(startWith.a)(!1)), finishedDownloadQueue$.pipe(Object(startWith.a)(void 0))).pipe(Object(map.a)(function getCurrentStatus(_ref2) {
-                var timing = _ref2[0], bufferGoal = _ref2[1], terminate = _ref2[2], buffered = timing.buffered;
+                var timing = _ref2[0], bufferGoal = _ref2[1], terminate = _ref2[2], buffered = queuedSourceBuffer.getBuffered();
                 segmentBookkeeper.synchronizeBuffered(buffered);
                 var neededRange = getWantedRange(period, buffered, timing, bufferGoal, paddings), discontinuity = timing.stalled && manifest.isLive ? representation.index.checkDiscontinuity(timing.currentTime) : -1, shouldRefreshManifest = representation.index.shouldRefresh(neededRange.start, neededRange.end), neededSegments = getSegmentsNeeded(representation, neededRange).filter(function(segment) {
                     return shouldDownloadSegment(segment, neededRange);
@@ -14522,7 +14522,6 @@ object-assign
                 var manifest = content.manifest, segmentBookkeeper = segmentBookkeepers.get(qSourceBuffer), pipelineOptions = getPipelineOptions(bufferType, options.segmentRetry, options.offlineRetry), pipeline = segmentPipelinesManager.createPipeline(bufferType, pipelineOptions), adaptationBufferClock$ = clock$.pipe(Object(map.a)(function(tick) {
                     var buffered = qSourceBuffer.getBuffered();
                     return object_assign_default()({}, tick, {
-                        buffered: buffered,
                         bufferGap: Object(utils_ranges.c)(buffered, tick.currentTime)
                     });
                 }));
