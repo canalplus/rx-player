@@ -137,6 +137,7 @@ export default class NativeTextSourceBuffer
 
   _abort() : void {
     log.debug("NTSB: Aborting native text track SourceBuffer");
+    this._remove(0, Infinity);
     const {
       _trackElement,
       _videoElement,

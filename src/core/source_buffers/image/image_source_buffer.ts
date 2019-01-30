@@ -65,6 +65,7 @@ class ImageSourceBuffer
 
   _abort() {
     log.debug("ImageSourceBuffer: aborting image SourceBuffer");
+    this._remove(0, Infinity);
   }
 }
 

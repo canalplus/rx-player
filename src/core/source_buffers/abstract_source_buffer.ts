@@ -68,7 +68,6 @@ export default abstract class AbstractSourceBuffer<T>
    * Mimic the SourceBuffer _abort_ method.
    */
   abort() : void {
-    this.remove(0, Infinity);
     this.updating = false;
     this.readyState = "closed";
     this._abort();
