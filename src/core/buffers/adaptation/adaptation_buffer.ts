@@ -24,7 +24,6 @@
  * download and push segments for a single Representation.
  */
 
-import nextTick from "next-tick";
 import objectAssign from "object-assign";
 import {
   concat as observableConcat,
@@ -37,10 +36,10 @@ import {
 import {
   distinctUntilChanged,
   filter,
+  ignoreElements,
   map,
   shareReplay,
   takeUntil,
-  tap,
 } from "rxjs/operators";
 import log from "../../../log";
 import Manifest, {
@@ -144,43 +143,44 @@ export default function AdaptationBuffer<T>(
     })
   );
 
-  const adaptationBuffer$ = abr$.pipe(
-    distinctUntilChanged((a, b) =>
+  const newRepresentation$ = abr$
+    .pipe(distinctUntilChanged((a, b) =>
       a.manual === b.manual && a.representation.id === b.representation.id
-    ),
+    ));
 
-    tap((estimation) => {
-      if (currentRepresentation == null) { // no buffer pending
+  const adaptationBuffer$ = observableMerge(
+    newRepresentation$
+      .pipe(concatMapLatest((estimate, i) : Observable<IAdaptationBufferEvent<T>> => {
+        const { representation } = estimate;
+        currentRepresentation = representation;
+
+        // Manual switch needs an immediate feedback.
+        // To do that properly, we need to reload the MediaSource
+        if (directManualBitrateSwitching && estimate.manual && i !== 0) {
+          return observableOf(EVENTS.needsMediaSourceReload());
+        }
+        const representationChange$ = observableOf(
+          EVENTS.representationChange(adaptation.type, period, representation));
+        const representationBuffer$ = createRepresentationBuffer(representation)
+          .pipe(takeUntil(killCurrentBuffer$));
+        return observableConcat(representationChange$, representationBuffer$);
+      })),
+    newRepresentation$.pipe(map((estimation, i) => {
+      if (i === 0) { // no buffer pending
         return;
       }
       if (estimation.urgent) {
         log.info("Buffer: urgent Representation switch", adaptation.type);
 
         // kill current buffer after concatMapLatest has been called
-        nextTick(() => { killCurrentBuffer$.next(); });
+        killCurrentBuffer$.next();
       } else {
         log.info("Buffer: slow Representation switch", adaptation.type);
 
         // terminate current buffer after concatMapLatest has been called
-        nextTick(() => { terminateCurrentBuffer$.next(); });
+        terminateCurrentBuffer$.next();
       }
-    }),
-
-    concatMapLatest((estimate, i) : Observable<IAdaptationBufferEvent<T>> => {
-      const { representation } = estimate;
-      currentRepresentation = representation;
-
-      // Manual switch needs an immediate feedback.
-      // To do that properly, we need to reload the MediaSource
-      if (directManualBitrateSwitching && estimate.manual && i !== 0) {
-        return observableOf(EVENTS.needsMediaSourceReload());
-      }
-      const representationChange$ = observableOf(
-        EVENTS.representationChange(adaptation.type, period, representation));
-      const representationBuffer$ = createRepresentationBuffer(representation)
-        .pipe(takeUntil(killCurrentBuffer$));
-      return observableConcat(representationChange$, representationBuffer$);
-    })
+    }), ignoreElements())
   );
 
   return observableMerge(adaptationBuffer$, bitrateEstimate$);
