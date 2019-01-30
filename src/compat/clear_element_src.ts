@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { isFirefox } from "./browser_detection";
+
 /**
  * Clear element's src attribute.
  *
@@ -23,6 +25,17 @@
  * @param {HTMLMediaElement} element
  */
 export default function clearElementSrc(element : HTMLMediaElement) : void {
+  if (isFirefox) {
+    const { textTracks } = element;
+    for (let i = 0; i < textTracks.length; i++) {
+      element.childNodes.forEach((node) => {
+        if (node.nodeName === "track") {
+          element.removeChild(node);
+        }
+      });
+      textTracks[i].mode = "disabled";
+    }
+  }
   element.src = "";
   element.removeAttribute("src");
 }
