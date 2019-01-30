@@ -133,7 +133,7 @@ export function fromEvent<T extends string, U>(
   target : IEventEmitter<T, U>,
   eventName : T
 ) : Observable<U> {
-  return Observable.create((obs : Observer<U>) => {
+  return new Observable((obs : Observer<U>) => {
     function handler(event : U) {
       obs.next(event);
     }

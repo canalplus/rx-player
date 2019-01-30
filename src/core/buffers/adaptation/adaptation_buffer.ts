@@ -32,15 +32,13 @@ import {
   merge as observableMerge,
   Observable,
   of as observableOf,
-  ReplaySubject,
   Subject,
 } from "rxjs";
 import {
   distinctUntilChanged,
   filter,
   map,
-  multicast,
-  refCount,
+  shareReplay,
   takeUntil,
   tap,
 } from "rxjs/operators";
@@ -127,13 +125,8 @@ export default function AdaptationBuffer<T>(
   }));
 
   const abr$ : Observable<IABREstimation> =
-    abrManager.get$(adaptation.type, abrClock$, adaptation.representations).pipe(
-      // equivalent to a sane shareReplay:
-      // https://github.com/ReactiveX/rxjs/issues/3336
-      // XXX TODO Replace it when that issue is resolved
-      multicast(() => new ReplaySubject(1)),
-      refCount()
-    );
+    abrManager.get$(adaptation.type, abrClock$, adaptation.representations)
+      .pipe(shareReplay({ refCount: true }));
 
   // emit when the current RepresentationBuffer should be stopped right now
   const killCurrentBuffer$ = new Subject<void>();

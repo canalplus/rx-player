@@ -35,21 +35,19 @@ describe("utils - throttle (RxJS)", () => {
     let has1Completed = false;
     let receivedItemFrom2 = false;
 
-    Obs1.subscribe(
-      () => { receivedItemFrom1 = true; },
-      undefined,
-      () => { has1Completed = true; }
-    );
-    Obs2.subscribe(
-      () => { receivedItemFrom2 = true; },
-      undefined,
-      () => {
+    Obs1.subscribe({
+      next() { receivedItemFrom1 = true; },
+      complete() { has1Completed = true; },
+    });
+    Obs2.subscribe({
+      next() { receivedItemFrom2 = true; },
+      complete() {
         expect(receivedItemFrom1).toBe(true);
         expect(has1Completed).toBe(true);
         expect(receivedItemFrom2).toBe(true);
         done();
-      }
-    );
+      },
+    });
   });
 
   it("should complete new Observable if one is already pending", (done) => {
@@ -67,21 +65,19 @@ describe("utils - throttle (RxJS)", () => {
 
     let has2Completed = false;
 
-    Obs1.subscribe(
-      () => { itemsReceivedFrom1++; },
-      undefined,
-      () => {
+    Obs1.subscribe({
+      next() { itemsReceivedFrom1++; },
+      complete() {
         expect(itemsReceivedFrom1).toBe(2);
         expect(itemsReceivedFrom2).toBe(0);
         done();
-      }
-    );
+      },
+    });
 
-    Obs2.subscribe(
-      () => { itemsReceivedFrom2++; },
-      undefined,
-      () => { has2Completed = true; }
-    );
+    Obs2.subscribe({
+      next() { itemsReceivedFrom2++; },
+      complete() { has2Completed = true; },
+    });
 
     expect(itemsReceivedFrom2).toBe(0);
     expect(has2Completed).toBe(true);
@@ -111,23 +107,21 @@ describe("utils - throttle (RxJS)", () => {
     Obs2.subscribe();
     sub2.complete();
 
-    Obs1.subscribe(
-      () => { itemsReceivedFrom1++; },
-      undefined,
-      () => { has1Completed = true; }
-    );
+    Obs1.subscribe({
+      next() { itemsReceivedFrom1++; },
+      complete() { has1Completed = true; },
+    });
     sub1.complete();
 
-    Obs3.subscribe(
-      () => { itemsReceivedFrom3++; },
-      undefined,
-      () => {
+    Obs3.subscribe({
+      next() { itemsReceivedFrom3++; },
+      complete() {
         expect(has1Completed).toBe(true);
         expect(itemsReceivedFrom1).toBe(1);
         expect(itemsReceivedFrom3).toBe(1);
         done();
-      }
-    );
+      },
+    });
 
     sub3.complete();
   });
@@ -198,24 +192,22 @@ describe("utils - throttle (RxJS)", () => {
     const subscription2 = Obs2.subscribe();
     subscription2.unsubscribe();
 
-    Obs1.subscribe(
-      () => { itemsReceivedFrom1++; },
-      undefined,
-      () => { has1Completed = true; }
-    );
+    Obs1.subscribe({
+      next() { itemsReceivedFrom1++; },
+      complete() { has1Completed = true; },
+    });
     sub1.complete();
 
-    Obs3.subscribe(
-      () => { itemsReceivedFrom3++; },
-      undefined,
-      () => {
+    Obs3.subscribe({
+      next() { itemsReceivedFrom3++; },
+      complete() {
         expect(has1Completed).toBe(true);
         expect(itemsReceivedFrom1).toBe(1);
         expect(itemsReceivedFrom3).toBe(1);
         sub2.complete();
         done();
-      }
-    );
+      },
+    });
 
     sub3.complete();
   });
@@ -236,21 +228,19 @@ describe("utils - throttle (RxJS)", () => {
 
     let has2Completed = false;
 
-    Obs1.subscribe(
-      () => { itemsReceivedFrom1++; },
-      undefined,
-      () => {
+    Obs1.subscribe({
+      next() { itemsReceivedFrom1++; },
+      complete() {
         expect(itemsReceivedFrom1).toBe(2);
         expect(itemsReceivedFrom2).toBe(1);
         done();
-      }
-    );
+      },
+    });
 
-    Obs2.subscribe(
-      () => { itemsReceivedFrom2++; },
-      undefined,
-      () => { has2Completed = true; }
-    );
+    Obs2.subscribe({
+      next() { itemsReceivedFrom2++; },
+      complete() { has2Completed = true; },
+    });
 
     expect(itemsReceivedFrom2).toBe(1);
     expect(has2Completed).toBe(false);

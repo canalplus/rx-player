@@ -314,7 +314,7 @@ export default class QueuedSourceBuffer<T> {
    * @returns {Observable}
    */
   private _addToQueue(order : IQSBOrders<T>) : Observable<unknown> {
-    return Observable.create((obs : Observer<unknown>) => {
+    return new Observable((obs : Observer<unknown>) => {
       const shouldRestartQueue = this._queue.length === 0 && this._currentOrder == null;
       let queueItem : IQSBQueueItems<T>;
       const subject = new Subject<unknown>();

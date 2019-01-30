@@ -153,7 +153,7 @@ export default function PeriodBuffer({
 
       const newBuffer$ = clock$.pipe(
         take(1),
-        mergeMap<IPeriodBufferClockTick, IPeriodBufferEvent>((tick) => {
+        mergeMap((tick) => {
           const qSourceBuffer = createOrReuseQueuedSourceBuffer(
             sourceBuffersManager, bufferType, adaptation, options);
           const strategy = getAdaptationSwitchStrategy(

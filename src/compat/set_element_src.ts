@@ -34,7 +34,7 @@ export default function setElementSrc$(
   mediaElement : HTMLMediaElement,
   url : string
 ) : Observable<void> {
-  return Observable.create((observer : Observer<void>) => {
+  return new Observable((observer : Observer<void>) => {
     log.info("Setting URL to Element", url, mediaElement);
 
     mediaElement.src = url;

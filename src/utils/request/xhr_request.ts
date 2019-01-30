@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Observable ,  Observer } from "rxjs";
+import { Observable } from "rxjs";
 import config from "../../config";
 import { RequestError, RequestErrorTypes } from "../../errors";
 
@@ -202,9 +202,7 @@ function request<T>(
       DEFAULT_REQUEST_TIMEOUT : options.timeout,
   };
 
-  return Observable.create((
-    obs : Observer<IRequestResponse<T, string>|IRequestProgress>
-  ) => {
+  return new Observable((obs) => {
     const {
       url,
       headers,

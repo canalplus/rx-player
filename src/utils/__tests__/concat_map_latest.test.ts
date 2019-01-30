@@ -39,12 +39,15 @@ describe("utils - concatMapLatest", () => {
       /* tslint:disable no-unnecessary-callback-wrapper */
       concatMapLatest((i: number) => observableOf(i))
       /* tslint:enable no-unnecessary-callback-wrapper */
-    ).subscribe((res: number) => {
-      expect(res).toBe(0);
-      itemReceived = true;
-    }, undefined, () => {
-      expect(itemReceived).toBe(true);
-      done();
+    ).subscribe({
+      next(res: number) {
+        expect(res).toBe(0);
+        itemReceived = true;
+      },
+      complete() {
+        expect(itemReceived).toBe(true);
+        done();
+      },
     });
   });
 
@@ -63,15 +66,18 @@ describe("utils - concatMapLatest", () => {
         return observableOf(i);
       })
       /* tslint:enable no-unnecessary-callback-wrapper */
-    ).subscribe((res: number) => {
-      const expectedResult = innerValues.shift();
-      expect(res).toBe(expectedResult);
-    }, undefined, () => {
-      if (innerValues.length !== 0) {
-        throw new Error("Not all values were received.");
-      }
-      expect(lastCount).toBe(innerValuesLength - 1);
-      done();
+    ).subscribe({
+      next(res: number) {
+        const expectedResult = innerValues.shift();
+        expect(res).toBe(expectedResult);
+      },
+      complete() {
+        if (innerValues.length !== 0) {
+          throw new Error("Not all values were received.");
+        }
+        expect(lastCount).toBe(innerValuesLength - 1);
+        done();
+      },
     });
   });
 
@@ -92,15 +98,18 @@ describe("utils - concatMapLatest", () => {
         return observableOf(i);
       })
       /* tslint:enable no-unnecessary-callback-wrapper */
-    ).subscribe((res: number) => {
-      const expectedResult = innerValues.shift();
-      expect(res).toBe(expectedResult);
-    }, undefined, () => {
-      if (innerValues.length !== 0) {
-        throw new Error("Not all values were received.");
-      }
-      expect(lastCount).toBe(innerValuesLength - 1);
-      done();
+    ).subscribe({
+      next(res: number) {
+        const expectedResult = innerValues.shift();
+        expect(res).toBe(expectedResult);
+      },
+      complete() {
+        if (innerValues.length !== 0) {
+          throw new Error("Not all values were received.");
+        }
+        expect(lastCount).toBe(innerValuesLength - 1);
+        done();
+      },
     });
   });
 
@@ -119,25 +128,28 @@ describe("utils - concatMapLatest", () => {
         lastCount = count;
         return timer(230).pipe(mapTo(i));
       })
-    ).subscribe((result: number) => {
-      switch (itemProcessedCounter++) {
-        case 0:
-          expect(result).toBe(0);
-          counter$.next(3); // should be ignored
-          counter$.next(4);
-          break;
-        case 1:
-          expect(result).toBe(4);
-          counter$.complete();
-          break;
-        default:
-          throw new Error("Should not have emitted that item");
-      }
-    }, undefined, () => {
-      expect(itemEmittedCounter).toBe(5);
-      expect(itemProcessedCounter).toBe(2);
-      expect(lastCount).toBe(itemProcessedCounter - 1);
-      done();
+    ).subscribe({
+      next(result: number) {
+        switch (itemProcessedCounter++) {
+          case 0:
+            expect(result).toBe(0);
+            counter$.next(3); // should be ignored
+            counter$.next(4);
+            break;
+          case 1:
+            expect(result).toBe(4);
+            counter$.complete();
+            break;
+          default:
+            throw new Error("Should not have emitted that item");
+        }
+      },
+      complete() {
+        expect(itemEmittedCounter).toBe(5);
+        expect(itemProcessedCounter).toBe(2);
+        expect(lastCount).toBe(itemProcessedCounter - 1);
+        done();
+      },
     });
 
     counter$.next(0);
@@ -165,12 +177,13 @@ describe("utils - concatMapLatest", () => {
         expect(counter).toBe(wantedCounter);
         return obs$;
       })
-    ).subscribe(() => {
-      nextCount++;
-    }, undefined, () => {
-      expect(itemProcessed).toBe(3);
-      expect(nextCount).toBe(3 + 2 + 4);
-      done();
+    ).subscribe({
+      next() { nextCount++; },
+      complete() {
+        expect(itemProcessed).toBe(3);
+        expect(nextCount).toBe(3 + 2 + 4);
+        done();
+      },
     });
   });
 
@@ -181,12 +194,15 @@ describe("utils - concatMapLatest", () => {
     function validateThroughMerge() {
       let nextCount = 0;
       return new Promise<void>(res => {
-        observableMerge(counter$, counter$, counter$).subscribe((item) => {
-          expect(item).toBe(Math.floor(nextCount / 3));
-          nextCount++;
-        }, undefined, () => {
-          expect(nextCount).toBe(30);
-          res();
+        observableMerge(counter$, counter$, counter$).subscribe({
+          next(item) {
+            expect(item).toBe(Math.floor(nextCount / 3));
+            nextCount++;
+          },
+          complete() {
+            expect(nextCount).toBe(30);
+            res();
+          },
         });
       });
     }
@@ -194,12 +210,15 @@ describe("utils - concatMapLatest", () => {
     function validateThroughConcat() {
       let nextCount = 0;
       return new Promise<void>(res => {
-        observableConcat(counter$, counter$, counter$).subscribe((item) => {
-          expect(item).toBe(nextCount % 10);
-          nextCount++;
-        }, undefined, () => {
-          expect(nextCount).toBe(30);
-          res();
+        observableConcat(counter$, counter$, counter$).subscribe({
+          next(item) {
+            expect(item).toBe(nextCount % 10);
+            nextCount++;
+          },
+          complete() {
+            expect(nextCount).toBe(30);
+            res();
+          },
         });
       });
     }

@@ -18,7 +18,6 @@ import {
   defer as observableDefer,
   Observable,
   of as observableOf,
-  Subject,
   Subscription,
 } from "rxjs";
 import {
@@ -254,7 +253,7 @@ export default function getMediaKeySystemAccess(
   keySystemsConfigs: IKeySystemOption[],
   currentMediaKeysInfos: MediaKeysInfosStore
 ) : Observable<IFoundMediaKeySystemAccessEvent> {
-  return observableDefer(() => {
+  return observableDefer<Observable<IFoundMediaKeySystemAccessEvent>>(() => {
     const currentState = currentMediaKeysInfos.getState(mediaElement);
     if (currentState) {
       // Fast way to find a compatible keySystem if the currently loaded
@@ -307,7 +306,7 @@ export default function getMediaKeySystemAccess(
       }
       , []);
 
-    return Observable.create((obs: Subject<ICreateMediaKeySystemAccessEvent>) => {
+    return new Observable((obs) => {
       let disposed = false;
       let sub: Subscription|null;
 

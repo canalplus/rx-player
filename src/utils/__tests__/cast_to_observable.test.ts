@@ -117,7 +117,7 @@ describe("utils - castToObservable", () => {
         expect(itemFromObs1).toBe(3);
         rxObs2.subscribe(
           () => { itemFromObs2++; },
-          undefined,
+          noop,
           () => {
             expect(itemFromObs2).toBe(0);
             done();
@@ -206,7 +206,7 @@ describe("utils - castToObservable", () => {
         expect(e).toBeInstanceOf(Error);
         expect(e.message).toBe("TEST");
       },
-      undefined,
+      noop,
       () => {
         expect(nextHasBeenCalled).toBe(1);
         done();

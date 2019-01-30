@@ -96,7 +96,7 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
     return regularSegmentLoader(args);
   }
 
-  return Observable.create((obs : ILoaderObserver<Uint8Array|ArrayBuffer>) => {
+  return new Observable((obs : ILoaderObserver<Uint8Array|ArrayBuffer>) => {
     let hasFinished = false;
     let hasFallbacked = false;
 

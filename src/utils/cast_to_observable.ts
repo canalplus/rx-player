@@ -66,7 +66,7 @@ function castToObservable<T>(value? : any) : Observable<T> {
   }
 
   if (value && typeof value.then === "function") {
-    return observableFrom(value);
+    return observableFrom(value as Promise<T>);
   }
 
   return observableOf(value);

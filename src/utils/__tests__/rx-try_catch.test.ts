@@ -44,7 +44,7 @@ describe("utils - tryCatch (RxJS)", () => {
       expect(a).toBe(4);
       throw new Error();
     }
-    tryCatch(func, 4).subscribe(undefined, () => { done(); });
+    tryCatch(func, 4).subscribe({ error() { done(); } });
   });
 
   /* tslint:disable max-line-length */
@@ -55,8 +55,8 @@ describe("utils - tryCatch (RxJS)", () => {
     }
 
     let itemsReceived = 0;
-    tryCatch(func, undefined).subscribe(
-      (i) => {
+    tryCatch(func, undefined).subscribe({
+      next(i) {
         switch (itemsReceived++) {
           case 0:
             expect(i).toBe(1);
@@ -71,12 +71,11 @@ describe("utils - tryCatch (RxJS)", () => {
             throw new Error("Too much items emitted");
         }
       },
-      undefined,
-      () => {
+      complete() {
         expect(itemsReceived).toBe(3);
         done();
-      }
-    );
+      },
+    });
   });
 
   it("should throw when the returned Observable throws", (done) => {
