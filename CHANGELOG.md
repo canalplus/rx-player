@@ -19,6 +19,7 @@
   - drm: throw more explicative error messages when DRM are not supported in the current target
   - dash/smooth: get more precize duration from ISOBMFF by better handling the default duration taken from the tfhd box
   - tests: continue unit test coverage improvements (from 22% in the ``v3.10.2`` to 31.4%)
+  - demo: fix initial text-track selection
 
 
 ## v3.10.2 (2019/01/08)
