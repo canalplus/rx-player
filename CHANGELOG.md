@@ -1,6 +1,6 @@
 # Changelog
 
-## v3.10.3 (2019/01/29)
+## v3.10.3 (2019/01/30)
 
 ### Bug fixes
 
@@ -19,7 +19,7 @@
   - dash: warn through logs when fields are not in the expected format
   - drm: throw more explicative error messages when DRM are not supported in the current target
   - dash/smooth: get more precize duration from ISOBMFF by better handling the default duration taken from the tfhd box
-  - tests: continue unit test coverage improvements (from 22% in the ``v3.10.2`` to 31.4%)
+  - tests: continue unit test coverage improvements (from 22% in the ``v3.10.2`` to 33.6%)
   - demo: fix initial text-track selection
 
 
