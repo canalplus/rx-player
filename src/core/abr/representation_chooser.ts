@@ -29,6 +29,7 @@ import {
   startWith,
   switchMap,
   takeUntil,
+  withLatestFrom,
 } from "rxjs/operators";
 import {
   ISegment,
@@ -311,15 +312,16 @@ export default class RepresentationChooser {
       // (basically, each time a segment is added)
       const bufferBasedClock$ = bufferEvents$.pipe(
         filter((e) : e is IBufferEventAddedSegment => e.type === "added-segment"),
-        map((addedSegmentEvt) => {
-          const { currentTime, playbackRate } = this._mediaElement;
+        withLatestFrom(clock$),
+        map(([addedSegmentEvt, { speed } ]) => {
+          const { currentTime } = this._mediaElement;
           const timeRanges = addedSegmentEvt.value.buffered;
           const bufferGap = getLeftSizeOfRange(timeRanges, currentTime);
           const currentBitrate = currentRepresentation == null ?
             undefined : currentRepresentation.bitrate;
           const currentScore = this._scoreEstimator == null ?
             undefined : this._scoreEstimator.getEstimate();
-          return { bufferGap, currentBitrate, currentScore, playbackRate };
+          return { bufferGap, currentBitrate, currentScore, speed };
         })
       );
 

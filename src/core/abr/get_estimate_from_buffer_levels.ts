@@ -21,7 +21,7 @@ export interface IBufferBasedChooserClockTick {
   bufferGap : number;
   currentBitrate? : number;
   currentScore? : number;
-  playbackRate : number;
+  speed : number;
 }
 
 /**
@@ -36,7 +36,7 @@ export default function getEstimateFromBufferLevels(
   bitrates : number[],
   bufferLevels : number[]
 ) : number|undefined {
-  const { bufferGap, currentBitrate, currentScore, playbackRate } = clockTick;
+  const { bufferGap, currentBitrate, currentScore, speed } = clockTick;
   if (currentBitrate == null) {
     return undefined;
   }
@@ -48,7 +48,7 @@ export default function getEstimateFromBufferLevels(
 
   let scaledScore : number|undefined;
   if (currentScore != null) {
-    scaledScore = playbackRate === 0 ? currentScore : (currentScore / playbackRate);
+    scaledScore = speed === 0 ? currentScore : (currentScore / speed);
   }
 
   if (scaledScore != null && scaledScore > 1) {
