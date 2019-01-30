@@ -11,6 +11,7 @@
  - subtitles/webvtt: fix styling issues when both styles applied globally and styles applied on a selector are defined
  - subtitles/webvtt: do not remove whitespaces in styles to keep a sane formatting for some complex values
  - subtitles: fix bug in the clean-up logic of subtitles in the `"html"` texttrack mode that would lead to removed subtitles still being displayed
+ - compat/subtitles: work-around firefox issue in the `"native"` texttrack mode to ensure track cues are removed when the content is stopped
  - buffers/abr: fix issue infrequently leading to a delay in quality changes
 
 ### Other improvements
