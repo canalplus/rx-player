@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import log from "../../../../log";
+
 export interface IParsedS {
   start? : number;
   repeatCount? : number; // Amount of repetition(s)
@@ -27,24 +29,37 @@ export interface IParsedS {
  * @returns {Object}
  */
 export default function parseS(root : Element) : IParsedS {
-  let start : number|undefined;
-  let duration : number|undefined;
-  let repeatCount : number|undefined;
+  const parsedS : IParsedS = {};
 
   for (let j = 0; j < root.attributes.length; j++) {
     const attribute = root.attributes[j];
 
     switch (attribute.name) {
       case "t":
-        start = parseInt(attribute.value, 10);
+        const start = parseInt(attribute.value, 10);
+        if (isNaN(start)) {
+          log.warn(`DASH: invalid t ("${attribute.value}")`);
+        } else {
+          parsedS.start = start;
+        }
         break;
       case "d":
-        duration = parseInt(attribute.value, 10);
+        const duration = parseInt(attribute.value, 10);
+        if (isNaN(duration)) {
+          log.warn(`DASH: invalid d ("${attribute.value}")`);
+        } else {
+          parsedS.duration = duration;
+        }
         break;
       case "r":
-        repeatCount = parseInt(attribute.value, 10);
+        const repeatCount = parseInt(attribute.value, 10);
+        if (isNaN(repeatCount)) {
+          log.warn(`DASH: invalid r ("${attribute.value}")`);
+        } else {
+          parsedS.repeatCount = repeatCount;
+        }
         break;
     }
   }
-  return { start, duration, repeatCount };
+  return parsedS;
 }

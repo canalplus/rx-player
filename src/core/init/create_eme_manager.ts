@@ -44,21 +44,24 @@ export default function createEMEManager(
   if (features.emeManager == null) {
     return onEncrypted$(mediaElement).pipe(map(() => {
       log.error("Init: Encrypted event but EME feature not activated");
-      throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
+      const err = new Error("EME feature not activated");
+      throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", err, true);
     }));
   }
 
   if (!keySystems || !keySystems.length) {
     return onEncrypted$(mediaElement).pipe(map(() => {
       log.error("Init: Ciphered media and no keySystem passed");
-      throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
+      const err = new Error("Media is encrypted and no `keySystems` given");
+      throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", err, true);
     }));
   }
 
   if (!hasEMEAPIs()) {
     return onEncrypted$(mediaElement).pipe(map(() => {
       log.error("Init: Encrypted event but no EME API available");
-      throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", null, true);
+      const err = new Error("Encryption APIs not found.");
+      throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", err, true);
     }));
   }
 

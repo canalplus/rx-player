@@ -43,7 +43,7 @@ interface IISOBMFFKeySystem {
  * @param {Number} wantedName
  * @returns {Number} - Offset where the box begins. -1 if not found.
  */
-function findBox(buf : Uint8Array, wantedName : number) {
+function findBox(buf : Uint8Array, wantedName : number) : number {
   const len = buf.length;
   let i = 0;
   while (i + 8 < len) {
@@ -216,7 +216,7 @@ function getDefaultDurationFromTFHDInTRAF(traf : Uint8Array) : number {
 
   let pos = index + /* size */4 + /* name */4 + /* version */ 1;
 
-  const flags = be3toi(traf, pos);
+  const flags = be3toi(traf, pos); pos += 3;
 
   const hasBaseDataOffset = flags & 0x000001;
   const hasSampleDescriptionIndex = flags & 0x000002;
@@ -251,7 +251,7 @@ function getDurationFromTrun(buffer : Uint8Array) : number {
     return -1;
   }
 
-  const index = findBox(traf, 0x7472756e /* tfdt */);
+  const index = findBox(traf, 0x7472756e /* trun */);
   if (index === -1) {
     return -1;
   }
@@ -267,10 +267,9 @@ function getDurationFromTrun(buffer : Uint8Array) : number {
   let defaultDuration = 0;
   if (!hasSampleDuration) {
     defaultDuration = getDefaultDurationFromTFHDInTRAF(traf);
-    if (defaultDuration >= 0) {
-      return defaultDuration;
+    if (defaultDuration < 0) {
+      return -1;
     }
-    return -1;
   }
 
   const hasDataOffset = flags & 0x000001;

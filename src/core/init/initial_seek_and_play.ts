@@ -18,15 +18,13 @@ import {
   concat as observableConcat,
   Observable,
   of as observableOf,
-  ReplaySubject,
 } from "rxjs";
 import {
   catchError,
   filter,
   mapTo,
   mergeMap,
-  multicast,
-  refCount,
+  shareReplay,
   take,
   tap,
 } from "rxjs/operators";
@@ -134,15 +132,10 @@ export default function seekAndLoadOnMediaEvents(
       mediaElement.currentTime = typeof startTime === "function" ?
         startTime() : startTime;
     }),
-
-    // equivalent to a sane shareReplay:
-    // https://github.com/ReactiveX/rxjs/issues/3336
-    // XXX TODO Replace it when that issue is resolved
-    multicast(() => new ReplaySubject(1)),
-    refCount()
+    shareReplay({ refCount: true })
   );
 
-  const load$ = seek$.pipe(
+  const load$ : Observable<ILoadEvents> = seek$.pipe(
     mergeMap(() => {
       return canPlay(clock$, mediaElement).pipe(
         tap(() => log.info("Init: Can begin to play content")),
@@ -157,12 +150,7 @@ export default function seekAndLoadOnMediaEvents(
         })
       );
     }),
-
-    // equivalent to a sane shareReplay:
-    // https://github.com/ReactiveX/rxjs/issues/3336
-    // XXX TODO Replace it when that issue is resolved
-    multicast(() => new ReplaySubject(1)),
-    refCount()
+    shareReplay({ refCount: true })
   );
 
   return { seek$, load$ };

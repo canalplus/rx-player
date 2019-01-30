@@ -201,6 +201,7 @@ export default class HTMLTextSourceBuffer
    */
   _abort() : void {
     log.debug("HTSB: Aborting html text track SourceBuffer");
+    this._remove(0, Infinity);
     this._destroy$.next();
     this._destroy$.complete();
     safelyRemoveChild(this._textTrackElement, this._currentElement);

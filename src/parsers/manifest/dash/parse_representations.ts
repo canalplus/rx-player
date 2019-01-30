@@ -17,10 +17,7 @@
 import log from "../../../log";
 import IRepresentationIndex from "../../../manifest/representation_index";
 import resolveURL from "../../../utils/resolve_url";
-import {
-  IContentProtection,
-  IParsedRepresentation,
-} from "../types";
+import { IParsedRepresentation } from "../types";
 import BaseRepresentationIndex from "./indexes/base";
 import ListRepresentationIndex from "./indexes/list";
 import TemplateRepresentationIndex from "./indexes/template";
@@ -203,18 +200,6 @@ export default function parseRepresentations(
     } else if (adaptation.attributes.width != null) {
       parsedRepresentation.width =
         adaptation.attributes.width;
-    }
-    if (adaptation.children.contentProtections) {
-      const contentProtections : IContentProtection[] = [];
-      for (let k = 0; k < adaptation.children.contentProtections.length; k++) {
-        const protection = adaptation.children.contentProtections[k];
-        if (protection.keyId != null) {
-          contentProtections.push({ keyId: protection.keyId });
-        }
-      }
-      if (contentProtections.length) {
-        parsedRepresentation.contentProtections = contentProtections;
-      }
     }
     return parsedRepresentation;
   });

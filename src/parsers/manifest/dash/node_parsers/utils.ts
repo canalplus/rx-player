@@ -19,8 +19,6 @@
 // <http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd>
 /* tslint:enable:max-line-length */
 
-import assert from "../../../../utils/assert";
-
 export interface IScheme {
   schemeIdUri? : string;
   value? : string;
@@ -29,15 +27,6 @@ export interface IScheme {
 const iso8601Duration =
   /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
 const rangeRe = /([0-9]+)-([0-9]+)/;
-
-/**
- * Parse MPD string attributes.
- * @param {string} str
- * @returns {string} - the same string
- */
-function parseString(str : string) : string {
-  return str;
-}
 
 /**
  * Parse MPD boolean attributes.
@@ -83,7 +72,9 @@ function parseDuration(date : string) : number {
   }
 
   const match = iso8601Duration.exec(date) as RegExpExecArray;
-  assert(!!match, `${date} is not a valid ISO8601 duration`);
+  if (match == null) {
+    throw new Error(`${date} is not a valid ISO8601 duration`);
+  }
 
   return (
     parseFloat(match[2]  || "0") * 365 * 24 * 60 * 60 +
@@ -93,15 +84,6 @@ function parseDuration(date : string) : number {
     parseFloat(match[10] || "0") * 60 +
     parseFloat(match[12] || "0")
   );
-}
-
-/**
- * Parse MPD ratio attributes.
- * @param {string} str
- * @returns {string}
- */
-function parseRatio(str : string) : string {
-  return str;
 }
 
 /**
@@ -151,7 +133,5 @@ export {
   parseDateTime,
   parseDuration,
   parseIntOrBoolean,
-  parseRatio,
   parseScheme,
-  parseString,
 };

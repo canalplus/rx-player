@@ -380,4 +380,38 @@ describe("DASH live content (SegmentTimeline)", function () {
       }
     });
   });
+
+  describe("getMinimumPosition", () => {
+    it("should return the last position minus the TimeShift window", async () => {
+      mockRequests(fakeServer, URLs);
+
+      player.loadVideo({
+        url: manifestInfos.url,
+        transport:manifestInfos.transport,
+      });
+
+      await sleep(10);
+      fakeServer.respond();
+      await sleep(10);
+      expect(player.getMinimumPosition()).to.be
+        .closeTo(1527507767, 1);
+    });
+  });
+
+  describe("getMaximumPosition", () => {
+    it("should return the last playable position", async () => {
+      mockRequests(fakeServer, URLs);
+
+      player.loadVideo({
+        url: manifestInfos.url,
+        transport:manifestInfos.transport,
+      });
+
+      await sleep(10);
+      fakeServer.respond();
+      await sleep(10);
+      expect(player.getMaximumPosition()).to.be
+        .closeTo(1527508062, 1);
+    });
+  });
 });

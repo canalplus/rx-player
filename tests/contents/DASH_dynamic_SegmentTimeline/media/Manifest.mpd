@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<MPD availabilityStartTime="1970-01-01T00:00:00Z" id="Config part of url maybe?" minBufferTime="PT2S" minimumUpdatePeriod="PT0S" profiles="urn:mpeg:dash:profile:isoff-live:2011,urn:com:dashif:dash264" publishTime="2018-05-28T11:47:45Z" timeShiftBufferDepth="PT5M" type="dynamic" ns1:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd" xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:ns1="http://www.w3.org/2001/XMLSchema-instance">
+<MPD availabilityStartTime="2012-01-01T00:00:00Z" id="Config part of url maybe?" minBufferTime="PT2S" minimumUpdatePeriod="PT0S" profiles="urn:mpeg:dash:profile:isoff-live:2011,urn:com:dashif:dash264" publishTime="2018-05-28T11:47:45Z" timeShiftBufferDepth="PT5M" type="dynamic" ns1:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd" xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:ns1="http://www.w3.org/2001/XMLSchema-instance">
    <ProgramInformation>
       <Title>Media Presentation Description by MobiTV. Powered by MDL Team@Sweden.</Title>
    </ProgramInformation>
    <BaseURL>http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/</BaseURL>
-<Period id="p0" start="PT0S" ns2:publishTime="1970-01-01T00:00:00Z" xmlns:ns2="urn:mobitv">
+<Period id="p0" start="PT0S" ns2:publishTime="2012-01-01T00:00:00Z" xmlns:ns2="urn:mobitv">
       <AdaptationSet contentType="audio" lang="eng" mimeType="audio/mp4" segmentAlignment="true" startWithSAP="1" ns2:qualityLevel="SD">
          <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
          <SegmentTemplate initialization="$RepresentationID$/init.mp4" media="$RepresentationID$/t$Time$.m4s" timescale="48000">

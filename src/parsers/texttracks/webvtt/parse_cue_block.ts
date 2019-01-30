@@ -107,7 +107,7 @@ export default function parseCueBlock(
   timeOffset : number
 ) : IVTTCueObject | null {
   const timingRegexp = /-->/;
-  let timeString;
+  let timeString : string;
   let payload;
   let header : string|undefined;
 
@@ -122,10 +122,6 @@ export default function parseCueBlock(
   } else {
     timeString = cueLines[0];
     payload = cueLines.slice(1, cueLines.length);
-  }
-
-  if (!timeString) {
-    return null;
   }
 
   const timeAndSettings = parseTimeAndSettings(timeString);

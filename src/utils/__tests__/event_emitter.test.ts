@@ -570,17 +570,20 @@ describe("utils - fromEvent", () => {
     const eventEmitter = new EventEmitter<string, undefined|string|number>();
     fromEvent(eventEmitter, "fooba")
       .pipe(take(6))
-      .subscribe((item) => {
-        if (typeof item === "number") {
-          numberItemsReceived++;
-        } else if (typeof item === "string") {
-          stringItemsReceived++;
-        }
-      }, undefined, () => {
-        eventEmitter.trigger("fooba", 6);
-        expect(numberItemsReceived).toBe(2);
-        expect(stringItemsReceived).toBe(3);
-        done();
+      .subscribe({
+        next(item) {
+          if (typeof item === "number") {
+            numberItemsReceived++;
+          } else if (typeof item === "string") {
+            stringItemsReceived++;
+          }
+        },
+        complete() {
+          eventEmitter.trigger("fooba", 6);
+          expect(numberItemsReceived).toBe(2);
+          expect(stringItemsReceived).toBe(3);
+          done();
+        },
       });
 
     eventEmitter.trigger("test", undefined);

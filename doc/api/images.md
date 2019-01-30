@@ -15,7 +15,7 @@
 <a name="overview"></a>
 ## Overview ####################################################################
 
-The Rx-player defines its own image playlist format, the ``bif`` format.
+The RxPlayer defines its own image playlist format, the ``bif`` format.
 
 This format allows to transmit playlist of thumbnails for linear (live) and
 non-linear (VOD) contents. The usecase is mostly to allow an improved "seeking"

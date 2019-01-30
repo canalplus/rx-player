@@ -50,7 +50,6 @@ import {
 } from "rxjs/operators";
 import config from "../../config";
 import log from "../../log";
-import assert from "../../utils/assert";
 import EventEmitter, {
   fromEvent,
 } from "../../utils/event_emitter";
@@ -519,7 +518,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.10.2";
+    this.version = /*PLAYER_VERSION*/"3.10.3";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -2277,10 +2276,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     type : IBufferType;
     bitrate : number|undefined;
   }) : void {
-    if (__DEV__) {
-      assert(type != null);
-      assert(bitrate != null);
-    }
     this._priv_triggerContentEvent("bitrateEstimation", { type, bitrate });
   }
 
@@ -2373,6 +2368,6 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this.trigger("positionUpdate", positionData);
   }
 }
-Player.version = /*PLAYER_VERSION*/"3.10.2";
+Player.version = /*PLAYER_VERSION*/"3.10.3";
 
 export default Player;

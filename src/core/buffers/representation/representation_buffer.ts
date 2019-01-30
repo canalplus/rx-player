@@ -80,7 +80,6 @@ import segmentFilter from "./segment_filter";
 
 // Item emitted by the Buffer's clock$
 export interface IRepresentationBufferClockTick {
-  buffered : TimeRanges; // buffered ranged of the SourceBuffer
   currentTime : number; // the current position we are in the video in s
   liveGap? : number; // gap between the current position and the live edge of
                      // the content. Not set for non-live contents
@@ -204,7 +203,7 @@ export default function RepresentationBuffer<T>({
       neededSegments : IQueuedSegment[];
       shouldRefreshManifest : boolean;
     } {
-      const { buffered } = timing;
+      const buffered = queuedSourceBuffer.getBuffered();
       segmentBookkeeper.synchronizeBuffered(buffered);
 
       const neededRange =

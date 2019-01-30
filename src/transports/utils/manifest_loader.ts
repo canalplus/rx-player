@@ -53,7 +53,7 @@ const manifestPreLoader = (
       return regularManifestLoader(url, ignoreProgressEvents);
     }
 
-    return Observable.create((obs: ILoaderObserver<Document|string>) => {
+    return new Observable((obs: ILoaderObserver<Document|string>) => {
       let hasFinished = false;
       let hasFallbacked = false;
 

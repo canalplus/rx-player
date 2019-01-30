@@ -1,5 +1,30 @@
 # Changelog
 
+## v3.10.3 (2019/01/30)
+
+### Bug fixes
+
+ - dash/api: fix ``getMinimumPosition`` for MPDs with an availabilityStartTime superior to unix epoch
+ - smooth: be more tolerant on downloaded segments (accept ISOBMFF with boxes in any order)
+ - buffers/abr: fix issue infrequently leading to a delay in quality changes
+ - buffers: improve synchronisation to the SourceBuffer's buffer to avoid cases where the same segment could be downloaded multiple times
+ - subtitles: fix bug in the clean-up logic of subtitles in the `"html"` texttrack mode that would lead to removed subtitles still being displayed
+ - pipelines: retry a segment request with a backoff instead of stopping when receiving a HTTP 412
+ - compat/subtitles: work-around firefox issue in the `"native"` texttrack mode to ensure track cues are removed when the content is stopped
+ - subtitles/webvtt: support default classes in the WebVTT specification
+ - subtitles/webvtt: multiple styles for the same element are now merged into one (instead of considering only the last one)
+ - subtitles/webvtt: fix styling issues when both styles applied globally and styles applied on a selector are defined
+ - subtitles/webvtt: do not remove whitespaces in styles to keep a sane formatting for some complex values
+
+### Other improvements
+
+  - dash: warn through logs when fields are not in the expected format
+  - drm: throw more explicative error messages when DRM are not supported in the current target
+  - dash/smooth: get more precize duration from ISOBMFF by better handling the default duration taken from the tfhd box
+  - tests: continue unit test coverage improvements (from 22% in the ``v3.10.2`` to 33.6%)
+  - demo: fix initial text-track selection
+
+
 ## v3.10.2 (2019/01/08)
 
 ### Bug fixes

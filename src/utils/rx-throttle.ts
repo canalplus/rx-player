@@ -46,7 +46,7 @@ export default function throttle<T, U>(
   let isPending = false;
 
   return (...args : T[]) : Observable<U> => {
-    return Observable.create((obs : Observer<U>) => {
+    return new Observable((obs : Observer<U>) => {
       let hasErroredOrCompleted = false;
       if (isPending) {
         hasErroredOrCompleted = true;

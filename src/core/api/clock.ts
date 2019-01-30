@@ -318,7 +318,7 @@ function createClock(
   mediaElement : HTMLMediaElement,
   { withMediaSource } : { withMediaSource : boolean }
 ) : Observable<IClockTick> {
-  return Observable.create((obs : Observer<IClockTick>) => {
+  return new Observable((obs : Observer<IClockTick>) => {
     let lastTimings : IClockTick = objectAssign(getMediaInfos(mediaElement, "init"),
       { stalled: null }
     );

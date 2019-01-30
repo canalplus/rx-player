@@ -68,7 +68,7 @@ export default function getSession(
   handledInitData : InitDataStore,
   mediaKeysInfos : IMediaKeysInfos
 ) : Observable<IHandledEncryptedEvent> {
-  return observableDefer<IHandledEncryptedEvent>(() => {
+  return observableDefer(() => {
     const {
       initData,
       initDataType,
