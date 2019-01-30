@@ -125,11 +125,13 @@ export default class NativeTextSourceBuffer
     log.debug("NTSB: Removing native text track data", from, to);
     const track = this._track;
     const cues = track.cues;
-    for (let i = cues.length - 1; i >= 0; i--) {
-      const cue = cues[i];
-      const { startTime, endTime } = cue;
-      if (startTime >= from && startTime <= to && endTime <= to) {
-        track.removeCue(cue);
+    if (cues != null) {
+      for (let i = cues.length - 1; i >= 0; i--) {
+        const cue = cues[i];
+        const { startTime, endTime } = cue;
+        if (startTime >= from && startTime <= to && endTime <= to) {
+          track.removeCue(cue);
+        }
       }
     }
     this.buffered.remove(from, to);
