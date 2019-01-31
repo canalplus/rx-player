@@ -33,6 +33,7 @@ import {
   switchMap,
   take,
 } from "rxjs/operators";
+import shouldDisposeSourceBuffer from "../../../compat/should_dispose_source_buffer";
 import config from "../../../config";
 import log from "../../../log";
 import Manifest, {
@@ -133,14 +134,16 @@ export default function PeriodBuffer({
       if (adaptation == null) {
         log.info(`Buffer: Set no ${bufferType} Adaptation`, period);
         const previousQSourceBuffer = sourceBuffersManager.get(bufferType);
-        let cleanBuffer$ : Observable<unknown>;
+        let cleanBuffer$ : Observable<unknown> = observableOf(null);
 
         if (previousQSourceBuffer != null) {
           log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
-          cleanBuffer$ = previousQSourceBuffer
-            .removeBuffer(period.start, period.end || Infinity);
-        } else {
-          cleanBuffer$ = observableOf(null);
+          if (shouldDisposeSourceBuffer(bufferType)) {
+            sourceBuffersManager.disposeSourceBuffer(bufferType);
+          } else {
+            cleanBuffer$ = previousQSourceBuffer
+              .removeBuffer(period.start, period.end || Infinity);
+          }
         }
 
         return observableConcat<IPeriodBufferEvent>(
