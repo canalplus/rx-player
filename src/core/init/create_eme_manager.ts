@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
+import {
+  concat as observableConcat,
+  Observable,
+  of as observableOf,
+} from "rxjs";
 import { map } from "rxjs/operators";
 import {
   events,
@@ -30,6 +34,10 @@ import {
 
 const { onEncrypted$ } = events;
 
+export interface IEMEDisabledEvent {
+  type: "eme-disabled";
+}
+
 /**
  * Create EMEManager if possible (has the APIs and configuration).
  * Else, return an Observable throwing at the next encrypted event encountered.
@@ -40,29 +48,35 @@ const { onEncrypted$ } = events;
 export default function createEMEManager(
   mediaElement : HTMLMediaElement,
   keySystems : IKeySystemOption[]
-) : Observable<IEMEManagerEvent> {
+) : Observable<IEMEManagerEvent|IEMEDisabledEvent> {
   if (features.emeManager == null) {
-    return onEncrypted$(mediaElement).pipe(map(() => {
-      log.error("Init: Encrypted event but EME feature not activated");
-      throw new EncryptedMediaError(
-        "MEDIA_IS_ENCRYPTED_ERROR", "EME feature not activated", true);
-    }));
+    return observableConcat(
+      observableOf({ type: "eme-disabled" as "eme-disabled" }),
+      onEncrypted$(mediaElement).pipe(map(() => {
+        log.error("Init: Encrypted event but EME feature not activated");
+        throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
+          "Media is encrypted and no `keySystems` given", true);
+      })));
   }
 
   if (!keySystems || !keySystems.length) {
-    return onEncrypted$(mediaElement).pipe(map(() => {
-      log.error("Init: Ciphered media and no keySystem passed");
-      throw new EncryptedMediaError(
-        "MEDIA_IS_ENCRYPTED_ERROR", "Media is encrypted and no `keySystems` given", true);
-    }));
+    return observableConcat(
+      observableOf({ type: "eme-disabled" as "eme-disabled" }),
+      onEncrypted$(mediaElement).pipe(map(() => {
+        log.error("Init: Ciphered media and no keySystem passed");
+        throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
+          "Media is encrypted and no `keySystems` given", true);
+      })));
   }
 
   if (!hasEMEAPIs()) {
-    return onEncrypted$(mediaElement).pipe(map(() => {
-      log.error("Init: Encrypted event but no EME API available");
-      throw new EncryptedMediaError(
-        "MEDIA_IS_ENCRYPTED_ERROR", "Encryption APIs not found.", true);
-    }));
+    return observableConcat(
+      observableOf({ type: "eme-disabled" as "eme-disabled" }),
+      onEncrypted$(mediaElement).pipe(map(() => {
+        log.error("Init: Encrypted event but no EME API available");
+        throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
+          "Encryption APIs not found.", true);
+      })));
   }
 
   log.debug("Init: Creating EMEManager");
