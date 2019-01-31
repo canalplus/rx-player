@@ -1,15 +1,18 @@
-/node_modules
-/*.log
 /*.keys
+/*.log
+/.scannerwork
+/localhost.crt
+/localhost.key
+/node_modules
+/test-output.xml
 
 /demo/full/bundle.js
 /demo/full/lib.js
 /demo/standalone/lib.js
 /demo/bundle.js
 
-/test-output.xml
-
-/.scannerwork
+/tests/integration/coverage
+/coverage
 
 /dist/*.d.ts
 /dist/_esm5.processed
@@ -19,9 +22,3 @@
 /minimal
 /experimental
 /types
-
-/localhost.key
-/localhost.crt
-
-/tests/integration/coverage
-/coverage
