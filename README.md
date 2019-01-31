@@ -114,15 +114,10 @@ We will try our best to answer them as quickly as possible.
 
 ## Contribute ##################################################################
 
-You can help and contribute either by:
+Details on how to contribute is written in the [CONTRIBUTING.md
+file](./CONTRIBUTING.md) at the root of this repository.
 
-  - reporting bugs directly on the [issues
-    tab](https://github.com/canalplus/rx-player/issues) on top of this page.
-
-  - adding new features / fixing bugs and doing a pull request (please open an
-    issue first for that).
-
-If you have any questions about contributing, you can ask it in our [gitter
+If you need more informations, you can contact us via our [gitter
 room](https://gitter.im/canalplus/rx-player).
 
 We also began to add a little architecture documentation [here
@@ -130,8 +125,6 @@ We also began to add a little architecture documentation [here
 Those pages are automatically generated from the content of [the
 ``doc/architecture`` directory.
 ](https://github.com/canalplus/rx-player/tree/master/doc/architecture)
-
-More is coming soon!
 
 
 ### Dependencies ###############################################################
