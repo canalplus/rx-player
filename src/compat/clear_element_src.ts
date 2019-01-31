@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../log";
 import { isFirefox } from "./browser_detection";
 
 /**
@@ -34,7 +35,11 @@ export default function clearElementSrc(element : HTMLMediaElement) : void {
       const { childNodes } = element;
       for (let j = childNodes.length - 1; j >= 0; j--) {
         if (childNodes[j].nodeName === "track") {
-          element.removeChild(childNodes[j]);
+          try {
+            element.removeChild(childNodes[j]);
+          } catch (err) {
+            log.warn("Could not remove text track child from element.");
+          }
         }
       }
     }
