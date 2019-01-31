@@ -27,12 +27,15 @@ import {
   timer as observableTimer,
 } from "rxjs";
 import {
+  filter,
   ignoreElements,
   map,
   mergeMap,
   share,
+  shareReplay,
   startWith,
   switchMap,
+  take,
   takeUntil,
   tap,
 } from "rxjs/operators";
@@ -46,7 +49,10 @@ import ABRManager, {
   IABRMetric,
   IABRRequest,
 } from "../abr";
-import { IKeySystemOption } from "../eme";
+import {
+  IEMEManagerEvent,
+  IKeySystemOption,
+} from "../eme";
 import {
   createManifestPipeline,
   IPipelineOptions,
@@ -57,7 +63,7 @@ import {
   ITextTrackSourceBufferOptions,
 } from "../source_buffers";
 import createEMEManager, {
-  IEMEManagerEvent,
+  IEMEDisabledEvent,
 } from "./create_eme_manager";
 import openMediaSource from "./create_media_source";
 import EVENTS from "./events_generators";
@@ -130,6 +136,7 @@ export type IInitEvent =
   IManifestReadyEvent |
   IMediaSourceLoaderEvent |
   IEMEManagerEvent |
+  IEMEDisabledEvent |
   IReloadingMediaSourceEvent |
   IWarningEvent;
 
@@ -191,7 +198,9 @@ export default function InitializeOnMediaSource({
 
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
-  const emeManager$ = createEMEManager(mediaElement, keySystems);
+  const emeManager$ = createEMEManager(mediaElement, keySystems).pipe(
+    shareReplay({ refCount: true })
+  );
 
   // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.
@@ -203,9 +212,15 @@ export default function InitializeOnMediaSource({
     sendingTime? : number;
   }>(1);
 
+  const emeInitialized$ = emeManager$.pipe(
+    filter(({ type }) => type === "eme-init" || type === "eme-disabled"),
+    take(1)
+  );
+
   const loadContent$ = observableCombineLatest(
     openMediaSource(mediaElement),
-    fetchManifest(url)
+    fetchManifest(url),
+    emeInitialized$
   ).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
 
     /**
