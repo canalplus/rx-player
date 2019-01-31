@@ -28,12 +28,15 @@ export default function clearElementSrc(element : HTMLMediaElement) : void {
   if (isFirefox) {
     const { textTracks } = element;
     for (let i = 0; i < textTracks.length; i++) {
-      element.childNodes.forEach((node) => {
-        if (node.nodeName === "track") {
-          element.removeChild(node);
-        }
-      });
       textTracks[i].mode = "disabled";
+    }
+    if (element.hasChildNodes()) {
+      const { childNodes } = element;
+      for (let j = childNodes.length - 1; j >= 0; j--) {
+        if (childNodes[j].nodeName === "track") {
+          element.removeChild(childNodes[j]);
+        }
+      }
     }
   }
   element.src = "";
