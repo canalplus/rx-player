@@ -20,7 +20,7 @@ const POSITION_UPDATES_INTERVAL = 100;
  */
 const linkPlayerEventsToState = (player, state, $destroy) => {
   const fromPlayerEvent = (event) =>
-    Observable.create(obs => {
+    new Observable(obs => {
       const func = (payload) => obs.next(payload);
       player.addEventListener(event, func);
 
