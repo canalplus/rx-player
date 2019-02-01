@@ -48,7 +48,7 @@ import {
 } from "../types";
 import generateManifestLoader from "../utils/manifest_loader";
 import extractTimingsInfos from "./extract_timings_infos";
-import mp4Utils from "./mp4_utils";
+import { patchSegment } from "./isobmff";
 import generateSegmentLoader from "./segment_loader";
 import {
   extractISML,
@@ -56,10 +56,6 @@ import {
   replaceToken,
   resolveManifest,
 } from "./utils";
-
-const {
-  patchSegment,
-} = mp4Utils;
 
 const WSX_REG = /\.wsx?(\?token=\S+)?/;
 

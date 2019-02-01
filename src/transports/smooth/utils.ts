@@ -21,6 +21,7 @@ const TOKEN_REG = /\?token=(\S+)/;
 
 /**
  * TODO Remove this logic completely from the player
+ * @param {Document} doc
  * @returns {string|null}
  */
 function extractISML(doc : Document) : string|null {

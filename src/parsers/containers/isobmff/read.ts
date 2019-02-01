@@ -14,69 +14,7 @@
  * limitations under the License.
  */
 
-import assert from "../../../utils/assert";
-import { be4toi } from "../../../utils/byte_parsing";
-
-/**
- * Returns the content of a box based on its name.
- * `null` if not found.
- * /!\ does not work with UUID boxes
- * @param {Uint8Array} buf - the isobmff structure
- * @param {Number} boxName - the 4-letter 'name' of the box (e.g. 'sidx' or
- * 'moov'), hexa encoded
- * @returns {UInt8Array|null}
- */
-function getBoxContent(buf : Uint8Array, boxName : number) : Uint8Array|null {
-  const offsets = getBoxOffsets(buf, boxName);
-  return offsets != null ? buf.subarray(offsets[0] + 8, offsets[1]) : null;
-}
-
-/**
- * Returns an ISOBMFF box based on its name.
- * `null` if not found.
- * /!\ does not work with UUID boxes
- * @param {Uint8Array} buf - the isobmff structure
- * @param {Number} boxName - the 4-letter 'name' of the box (e.g. 'sidx' or
- * 'moov'), hexa encoded
- * @returns {UInt8Array|null}
- */
-function getBox(buf : Uint8Array, boxName : number) : Uint8Array|null {
-  const offsets = getBoxOffsets(buf, boxName);
-  return offsets != null ? buf.subarray(offsets[0], offsets[1]) : null;
-}
-
-/**
- * Returns start and end offset for a given box.
- * `null` if not found.
- * /!\ does not work with UUID boxes
- * @param {Uint8Array} buf - the isobmff structure
- * @param {Number} boxName - the 4-letter 'name' of the box (e.g. 'sidx' or
- * 'moov'), hexa encoded
- * @returns {Array.<number>|null}
- */
-function getBoxOffsets(buf : Uint8Array, boxName : number) : [number, number]|null {
-  const l = buf.length;
-  let i = 0;
-
-  let name : number;
-  let size : number = 0;
-  while (i + 8 < l) {
-    size = be4toi(buf, i);
-    name = be4toi(buf, i + 4);
-    assert(size > 0, "out of range size");
-    if (name === boxName) {
-      break;
-    } else {
-      i += size;
-    }
-  }
-
-  if (i < l) {
-    return [i, i + size];
-  } else {
-    return null;
-  }
-}
+import { getBoxContent } from "./get_box";
 
 /**
  * Returns TRAF Box from the whole ISOBMFF File.
@@ -123,9 +61,6 @@ function getMDIA(buf : Uint8Array) : Uint8Array|null {
 }
 
 export {
-  getBox,
-  getBoxContent,
-  getBoxOffsets,
   getTRAF,
   getMDAT,
   getMDIA,
