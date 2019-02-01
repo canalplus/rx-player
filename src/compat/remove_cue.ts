@@ -16,17 +16,33 @@
 
 import log from "../log";
 import { isFirefox } from "./browser_detection";
-import isActiveCue from "./is_active_cue";
+
+/**
+ * Return true if given cue is active.
+ * @param {TextTrack} track
+ * @param {TextTrackCue} cue
+ * @returns {boolean}
+ */
+function isActiveCue(track: TextTrack, cue: TextTrackCue): boolean {
+  const { activeCues } = track;
+  for (let i = 0; i < activeCues.length; i++) {
+    if (activeCues[i] === cue) {
+      return true;
+    }
+  }
+  return false;
+}
 
 /**
  * Remove cue from text track.
- * On Firefox, cue doesn't dissapear when it is removed from track. Track should
- * be hidden, and shown again after removing cue, in order to definitely clean the cue.
  * @param {TextTrack} track
  * @param {TextTrackCue} cue
  */
 export default function removeCue(track: TextTrack, cue: TextTrackCue): void {
-  if (isFirefox && isActiveCue(track.activeCues, cue)) {
+  // On Firefox, cue doesn't dissapear when it is removed from track. Track
+  // should be hidden, and shown again after removing cue, in order to
+  // definitely clean the cue.
+  if (isFirefox && isActiveCue(track, cue)) {
     const trackMode = track.mode;
     track.mode = "hidden";
     try {
