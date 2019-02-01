@@ -16,7 +16,7 @@ git:
 branches: 
   only:
     - master
-    - /^release\/.*$/
+    - next
 
 cache:
   directories:
