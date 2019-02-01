@@ -16,6 +16,7 @@
 
 import log from "../log";
 import { isFirefox } from "./browser_detection";
+import isActiveCue from "./is_active_cue";
 
 /**
  * Remove cue from text track.
@@ -25,7 +26,7 @@ import { isFirefox } from "./browser_detection";
  * @param {TextTrackCue} cue
  */
 export default function removeCue(track: TextTrack, cue: TextTrackCue): void {
-  if (isFirefox) {
+  if (isFirefox && isActiveCue(track.activeCues, cue)) {
     const trackMode = track.mode;
     track.mode = "hidden";
     try {

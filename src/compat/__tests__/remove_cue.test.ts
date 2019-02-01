@@ -23,6 +23,7 @@ describe("compat - removeCue", () => {
 
   it("should remove cue from track if not on firefox", () => {
     const fakeTrackCues = [{ id: "1" }];
+
     const mockSanelyRemoveCue = jest.fn((cue: { id: string }) => {
       const idx = arrayFindIndex(fakeTrackCues, (c) => {
         return c.id === cue.id;
@@ -31,20 +32,25 @@ describe("compat - removeCue", () => {
         fakeTrackCues.splice(idx, 1);
       }
     });
-
     const mockGetMode = jest.fn(() => "showing");
     const mockSetMode = jest.fn(() => null);
+    const mockIsActiveCue = jest.fn(() => false);
 
     const fakeTrack = {
       get mode() { return mockGetMode(); },
       set mode(_) { mockSetMode(); },
       cues: fakeTrackCues,
+      activeCues: [],
       removeCue: mockSanelyRemoveCue,
     };
 
     jest.mock("../browser_detection", () => ({
       isFirefox: false,
     }));
+    jest.mock("../is_active_cue", () => ({
+      default: mockIsActiveCue,
+    }));
+
     const removeCue = require("../remove_cue").default;
     removeCue(fakeTrack as any, { id: "1" } as any);
 
@@ -52,12 +58,15 @@ describe("compat - removeCue", () => {
     expect(mockSanelyRemoveCue).toHaveBeenCalledTimes(1);
     expect(mockGetMode).not.toHaveBeenCalled();
     expect(mockSetMode).not.toHaveBeenCalled();
+    expect(mockIsActiveCue).not.toHaveBeenCalled();
     expect(fakeTrack.mode).toBe("showing");
     expect(mockSanelyRemoveCue).toHaveBeenLastCalledWith({ id: "1" });
   });
 
-  it("should remove cue from track if on firefox", () => {
+  it("should remove cue from track if on firefox and is active cue", () => {
     const fakeTrackCues = [{ id: "1" }];
+    let fakeMode = "showing";
+
     const mockSanelyRemoveCue = jest.fn((cue: { id: string }) => {
       const idx = arrayFindIndex(fakeTrackCues, (c) => {
         return c.id === cue.id;
@@ -66,24 +75,27 @@ describe("compat - removeCue", () => {
         fakeTrackCues.splice(idx, 1);
       }
     });
-
-    let fakeMode = "showing";
     const mockGetMode = jest.fn(() => {
       return fakeMode;
     });
     const mockSetMode = jest.fn((newMode: string) => {
       fakeMode = newMode;
     });
+    const mockIsActiveCue = jest.fn(() => true);
 
     const fakeTrack = {
       get mode() { return mockGetMode(); },
       set mode(newMode: string) { mockSetMode(newMode); },
       cues: fakeTrackCues,
+      activeCues: [{ id: "1" }],
       removeCue: mockSanelyRemoveCue,
     };
 
     jest.mock("../browser_detection", () => ({
       isFirefox: true,
+    }));
+    jest.mock("../is_active_cue", () => ({
+      default: mockIsActiveCue,
     }));
 
     const removeCue = require("../remove_cue").default;
@@ -93,24 +105,65 @@ describe("compat - removeCue", () => {
     expect(mockSanelyRemoveCue).toHaveBeenCalledTimes(1);
     expect(mockGetMode).toHaveBeenCalledTimes(1);
     expect(mockSetMode).toHaveBeenCalledTimes(2);
+    expect(mockIsActiveCue).toHaveBeenCalled();
     expect(fakeTrack.mode).toBe("showing");
     expect(mockSanelyRemoveCue).toHaveBeenLastCalledWith({ id: "1" });
   });
 
-  it("should log if removeCue throws if on firefox", () => {
-    const mockSanelyRemoveCue = jest.fn(() => {
-      throw new Error();
+  it("should remove cue from track if on firefox and is not active cue", () => {
+    const fakeTrackCue = [{ id: "1" }];
+    let fakeMode = "showing";
+
+    const mockSanelyRemoveCue = jest.fn((cue: { id: string }) => {
+      const idx = arrayFindIndex(fakeTrackCue, (c) => {
+        return c.id === cue.id;
+      });
+      if (idx >= 0) {
+        fakeTrackCue.splice(idx, 1);
+      }
     });
+    const mockGetMode = jest.fn(() => {
+      return fakeMode;
+    });
+    const mockSetMode = jest.fn((newMode: string) => {
+      fakeMode = newMode;
+    });
+    const mockIsActiveCue = jest.fn(() => false);
 
     const fakeTrack = {
-      mode: "showing",
-      cues: [
-        { id: "1" },
-      ],
+      get mode() { return mockGetMode(); },
+      set mode(newMode: string) { mockSetMode(newMode); },
+      cues: fakeTrackCue,
+      activeCues: [{ id: "1" }],
       removeCue: mockSanelyRemoveCue,
     };
 
+    jest.mock("../browser_detection", () => ({
+      isFirefox: true,
+    }));
+    jest.mock("../is_active_cue", () => ({
+      default: mockIsActiveCue,
+    }));
+
+    const removeCue = require("../remove_cue").default;
+    removeCue(fakeTrack as any, { id: "1" } as any);
+
+    expect(fakeTrack.cues.length).toBe(0);
+    expect(mockSanelyRemoveCue).toHaveBeenCalledTimes(1);
+    expect(mockGetMode).not.toHaveBeenCalled();
+    expect(mockSetMode).not.toHaveBeenCalled();
+    expect(mockIsActiveCue).toHaveBeenCalled();
+    expect(mockIsActiveCue).toHaveBeenCalledWith([{ id: "1" }], { id: "1" });
+    expect(fakeTrack.mode).toBe("showing");
+    expect(mockSanelyRemoveCue).toHaveBeenLastCalledWith({ id: "1" });
+  });
+
+  it("should log if removeCue throws if on firefox and is active cue", () => {
+    const mockSanelyRemoveCue = jest.fn(() => {
+      throw new Error();
+    });
     const mockLog = jest.fn((message) => message);
+    const mockIsActiveCue = jest.fn(() => true);
 
     jest.mock("../browser_detection", () => ({
       isFirefox: true,
@@ -120,6 +173,17 @@ describe("compat - removeCue", () => {
         warn: mockLog,
       },
     }));
+    jest.mock("../is_active_cue", () => ({
+      default: mockIsActiveCue,
+    }));
+
+    const fakeTrack = {
+      mode: "showing",
+      cues: [
+        { id: "1" },
+      ],
+      removeCue: mockSanelyRemoveCue,
+    };
 
     const removeCue = require("../remove_cue").default;
     removeCue(fakeTrack as any, { id: "1" } as any);
@@ -133,19 +197,10 @@ describe("compat - removeCue", () => {
   });
 
   it("should log if removeCue throws if not on firefox", () => {
+    const mockLog = jest.fn((message) => message);
     const mockSanelyRemoveCue = jest.fn(() => {
       throw new Error();
     });
-
-    const fakeTrack = {
-      mode: "showing",
-      cues: [
-        { id: "1" },
-      ],
-      removeCue: mockSanelyRemoveCue,
-    };
-
-    const mockLog = jest.fn((message) => message);
 
     jest.mock("../browser_detection", () => ({
       isFirefox: false,
@@ -155,6 +210,14 @@ describe("compat - removeCue", () => {
         warn: mockLog,
       },
     }));
+
+    const fakeTrack = {
+      mode: "showing",
+      cues: [
+        { id: "1" },
+      ],
+      removeCue: mockSanelyRemoveCue,
+    };
 
     const removeCue = require("../remove_cue").default;
     removeCue(fakeTrack as any, { id: "1" } as any);
