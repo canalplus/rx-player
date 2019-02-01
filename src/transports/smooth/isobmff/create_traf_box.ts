@@ -14,27 +14,29 @@
  * limitations under the License.
  */
 
-export {
+import {
   createBox,
   createBoxWithChildren,
-} from "./create_box";
-export {
-  getBox,
-  getBoxContent,
-  getBoxOffsets,
-  getUuidContent,
-} from "./get_box";
-export {
-  getMDAT,
-  getMDIA,
-  getTRAF,
-} from "./read";
-export {
-  getMDHDTimescale,
-  getPlayReadyKIDFromPrivateData,
-  getTrackFragmentDecodeTime,
-  getDurationFromTrun,
-  getSegmentsFromSidx,
-  ISidxSegment,
-  patchPssh,
-} from "./utils";
+} from "../../../parsers/containers/isobmff";
+import {
+  createSAIOBox,
+  createSAIZBox,
+} from "./create_boxes";
+
+export default function createTrafBox(
+  tfhd : Uint8Array,
+  tfdt : Uint8Array,
+  trun : Uint8Array,
+  mfhd : Uint8Array,
+  senc?: Uint8Array
+) : Uint8Array {
+  const trafs = [tfhd, tfdt, trun];
+  if (senc) {
+    trafs.push(
+      createBox("senc", senc),
+      createSAIZBox(senc),
+      createSAIOBox(mfhd, tfhd, tfdt, trun)
+    );
+  }
+  return createBoxWithChildren("traf", trafs);
+}

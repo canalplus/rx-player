@@ -24,14 +24,11 @@ import {
   INextSegmentsInfos,
   ISegmentTimingInfos,
 } from "../types";
-import mp4Utils, {
+import {
   IISOBMFFBasicSegment,
-} from "./mp4_utils";
-
-const {
   parseTfrf,
   parseTfxd,
-} = mp4Utils;
+} from "./isobmff";
 
 export default function extractTimingsInfos(
   responseData : Uint8Array,

@@ -14,27 +14,25 @@
  * limitations under the License.
  */
 
-export {
-  createBox,
-  createBoxWithChildren,
-} from "./create_box";
-export {
-  getBox,
-  getBoxContent,
-  getBoxOffsets,
-  getUuidContent,
-} from "./get_box";
-export {
-  getMDAT,
-  getMDIA,
-  getTRAF,
-} from "./read";
-export {
-  getMDHDTimescale,
-  getPlayReadyKIDFromPrivateData,
-  getTrackFragmentDecodeTime,
-  getDurationFromTrun,
-  getSegmentsFromSidx,
-  ISidxSegment,
-  patchPssh,
-} from "./utils";
+import { getUuidContent } from "../../../parsers/containers/isobmff";
+import { be8toi } from "../../../utils/byte_parsing";
+
+export interface IISOBMFFBasicSegment {
+  time : number;
+  duration : number;
+}
+
+/**
+ * @param {Uint8Array} traf
+ * @returns {Object|undefined}
+ */
+export default function parseTfxd(traf : Uint8Array) : IISOBMFFBasicSegment|undefined {
+  const tfxd = getUuidContent(traf, 0x6D1D9B05, 0x42D544E6, 0x80E2141D, 0xAFF757B2);
+  if (tfxd == null) {
+    return undefined;
+  }
+  return {
+    duration:  be8toi(tfxd, 12),
+    time: be8toi(tfxd,  4),
+  };
+}

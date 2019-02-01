@@ -27,12 +27,10 @@ import {
   ISegmentLoaderArguments,
 } from "../types";
 import byteRange from "../utils/byte_range";
-import mp4Utils from "./mp4_utils";
-
-const {
-  createVideoInitSegment,
+import {
   createAudioInitSegment,
-} = mp4Utils;
+  createVideoInitSegment,
+} from "./isobmff";
 
 interface IRegularSegmentLoaderArguments extends ISegmentLoaderArguments {
   url : string;
