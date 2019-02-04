@@ -196,10 +196,14 @@ export default function InitializeOnMediaSource({
   // given "Adaptation".
   const abrManager = new ABRManager(requestsInfos$, network$, adaptiveOptions);
 
+  // Create and open a new MediaSource object on the given media element.
+  const openMediaSource$ = openMediaSource(mediaElement)
+    .pipe(shareReplay({ refCount: true }));
+
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
-  const emeManager$ = createEMEManager(mediaElement, keySystems).pipe(
-    shareReplay({ refCount: true })
+  const emeManager$ = openMediaSource$.pipe(
+    mergeMap(() => createEMEManager(mediaElement, keySystems))
   );
 
   // Translate errors coming from the media element into RxPlayer errors
@@ -218,7 +222,7 @@ export default function InitializeOnMediaSource({
   );
 
   const loadContent$ = observableCombineLatest(
-    openMediaSource(mediaElement),
+    openMediaSource$,
     fetchManifest(url),
     emeInitialized$
   ).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {

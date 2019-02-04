@@ -112,8 +112,10 @@ export default function EMEManager(
   const handledInitData = new InitDataStore();
 
   const mediaKeysInfos$ = // store the mediaKeys when ready
-    initMediaKeys(mediaElement, keySystemsConfigs, attachedMediaKeysInfos)
-      .pipe(take(1), shareReplay());
+    initMediaKeys(mediaElement, keySystemsConfigs, attachedMediaKeysInfos).pipe(
+      take(1),
+      shareReplay()
+    );
 
   const initEvent$ = mediaKeysInfos$
     .pipe(mapTo({ type: "eme-init" as "eme-init" }));
