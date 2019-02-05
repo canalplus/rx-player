@@ -64,9 +64,10 @@ function setServerCertificate(
   return observableDefer(() => {
     return castToObservable(
       (mediaKeys as MediaKeys).setServerCertificate(serverCertificate)
-    ).pipe(catchError((error) => {
+    ).pipe(catchError((error: Error) => {
       log.warn("EME: mediaKeys.setServerCertificate returned an error", error);
-      throw new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", error, true);
+      throw new EncryptedMediaError(
+        "LICENSE_SERVER_CERTIFICATE_ERROR", error.message, true);
     }));
   });
 }

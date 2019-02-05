@@ -35,7 +35,7 @@ export {
   ErrorCodes,
   ErrorTypes,
   ICustomError,
-  MediaError,
+  MediaError as MediaError,
   NetworkError,
   OtherError,
   RequestError,

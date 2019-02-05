@@ -215,9 +215,9 @@ export default function createSegmentFetcher<T>(
           parse(init? : ISegmentTimingInfos) : Observable<IParsedSegment<T>> {
             const parserArg = objectAssign({ response: response.value, init }, content);
             return segmentParser(parserArg)
-              .pipe(catchError((error) => {
+              .pipe(catchError((error: Error) => {
                 const formattedError = isKnownError(error) ?
-                  error : new OtherError("PIPELINE_PARSING_ERROR", error, true);
+                  error : new OtherError("PIPELINE_PARSING_ERROR", error.message, true);
                   throw formattedError;
               }));
           },

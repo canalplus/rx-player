@@ -24,14 +24,11 @@
 export default function errorMessage(
   name : string,
   code : string,
-  reason? : Error|string|Event|null
+  reason? : string|null
 ) : string {
    if (reason == null) {
      return `${name} (${code})`;
-   } else if (typeof reason === "string") {
-     return `${name} (${code}) ${reason}`;
    } else {
-     const message = reason instanceof Event ? reason.type : reason.message;
-     return `${name} (${code}) ${message}`;
+     return `${name} (${code}) ${reason}`;
    }
  }

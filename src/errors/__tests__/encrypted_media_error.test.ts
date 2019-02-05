@@ -29,24 +29,24 @@ describe("errors - EncryptedMediaError", () => {
   });
 
   it("should be able to give a reason", () => {
-    const error = new Error("test");
-    const encryptedMediaError = new EncryptedMediaError("foo", error);
+    const reason = "test";
+    const encryptedMediaError = new EncryptedMediaError("foo", reason);
     expect(encryptedMediaError).toBeInstanceOf(Error);
     expect(encryptedMediaError.name).toBe("EncryptedMediaError");
     expect(encryptedMediaError.type).toBe("ENCRYPTED_MEDIA_ERROR");
-    expect(encryptedMediaError.reason).toBe(error);
+    expect(encryptedMediaError.reason).toBe(reason);
     expect(encryptedMediaError.code).toBe("");
     expect(encryptedMediaError.fatal).toBe(false);
     expect(encryptedMediaError.message).toBe("EncryptedMediaError () test");
   });
 
   it("should be able to set it as fatal", () => {
-    const error = new Error("test");
-    const encryptedMediaError = new EncryptedMediaError("foo", error, true);
+    const reason = "test";
+    const encryptedMediaError = new EncryptedMediaError("foo", reason, true);
     expect(encryptedMediaError).toBeInstanceOf(Error);
     expect(encryptedMediaError.name).toBe("EncryptedMediaError");
     expect(encryptedMediaError.type).toBe("ENCRYPTED_MEDIA_ERROR");
-    expect(encryptedMediaError.reason).toBe(error);
+    expect(encryptedMediaError.reason).toBe(reason);
     expect(encryptedMediaError.code).toBe("");
     expect(encryptedMediaError.fatal).toBe(true);
     expect(encryptedMediaError.message).toBe("EncryptedMediaError () test");
@@ -67,12 +67,13 @@ describe("errors - EncryptedMediaError", () => {
   /* tslint:disable max-line-length */
   it("should set a complete error message if both a valid code and a reason is given", () => {
   /* tslint:enable max-line-length */
-    const error = new Error("test");
-    const encryptedMediaError = new EncryptedMediaError("MEDIA_ERR_NETWORK", error, true);
+    const reason = "test";
+    const encryptedMediaError =
+      new EncryptedMediaError("MEDIA_ERR_NETWORK", reason, true);
     expect(encryptedMediaError).toBeInstanceOf(Error);
     expect(encryptedMediaError.name).toBe("EncryptedMediaError");
     expect(encryptedMediaError.type).toBe("ENCRYPTED_MEDIA_ERROR");
-    expect(encryptedMediaError.reason).toBe(error);
+    expect(encryptedMediaError.reason).toBe(reason);
     expect(encryptedMediaError.code).toBe("MEDIA_ERR_NETWORK");
     expect(encryptedMediaError.fatal).toBe(true);
     expect(encryptedMediaError.message)

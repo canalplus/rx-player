@@ -31,7 +31,7 @@ export default class MediaError extends Error {
   public readonly type : string;
   public readonly message : string;
   public readonly code : string;
-  public readonly reason? : Error|string|null;
+  public readonly reason? : string|null;
   public fatal : boolean;
 
   /**
@@ -39,7 +39,7 @@ export default class MediaError extends Error {
    * @param {Error|null} [reason]
    * @param {Boolean} [fatal]
    */
-  constructor(code : string, reason? : Error|null, fatal? : boolean) {
+  constructor(code : string, reason? : string|null, fatal? : boolean) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, MediaError.prototype);

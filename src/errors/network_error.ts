@@ -33,7 +33,7 @@ export default class NetworkError extends Error {
   public readonly type : string;
   public readonly message : string;
   public readonly code : string|undefined;
-  public readonly reason : RequestError;
+  public readonly reason : string|null;
   public readonly xhr : XMLHttpRequest;
   public readonly url : string;
   public readonly status : number;
@@ -58,7 +58,7 @@ export default class NetworkError extends Error {
     this.status = requestError.status;
     this.errorType = requestError.type;
 
-    this.reason = requestError;
+    this.reason = requestError.message;
     this.code = ErrorCodes.hasOwnProperty(code) ?
       (ErrorCodes as Record<string, string>)[code] : "";
     this.fatal = !!fatal;

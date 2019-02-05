@@ -20,8 +20,7 @@ import {
 } from "./error_codes";
 import errorMessage from "./error_message";
 
-type IEncryptedMediaErrorReason =
-  Error|Event|string|null;
+type IEncryptedMediaErrorReason = string|null;
 
 /**
  * Error linked to the encryption of the media.

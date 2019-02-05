@@ -21,7 +21,8 @@ describe("errors - NetworkError", () => {
   it("should format an OtherError when called with minimal arguments", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
-    const requestError = new RequestError(xhr, "foo", "bar");
+    const reason = "bar";
+    const requestError = new RequestError(xhr, "foo", reason);
     const networkError = new NetworkError("foo", requestError);
     expect(networkError).toBeInstanceOf(Error);
     expect(networkError.name).toBe("NetworkError");
@@ -29,7 +30,7 @@ describe("errors - NetworkError", () => {
     expect(networkError.xhr).toBe(requestError.xhr);
     expect(networkError.status).toBe(requestError.status);
     expect(networkError.errorType).toBe(requestError.type);
-    expect(networkError.reason).toBe(requestError);
+    expect(networkError.reason).toBe(reason);
     expect(networkError.code).toBe("");
     expect(networkError.fatal).toBe(false);
     expect(networkError.message).toBe("NetworkError () bar");
@@ -38,7 +39,8 @@ describe("errors - NetworkError", () => {
   it("should be able to set it as fatal", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
-    const requestError = new RequestError(xhr, "foo", "bar");
+    const reason = "bar";
+    const requestError = new RequestError(xhr, "foo", reason);
     const networkError = new NetworkError("foo", requestError, true);
     expect(networkError).toBeInstanceOf(Error);
     expect(networkError.name).toBe("NetworkError");
@@ -46,7 +48,7 @@ describe("errors - NetworkError", () => {
     expect(networkError.xhr).toBe(requestError.xhr);
     expect(networkError.status).toBe(requestError.status);
     expect(networkError.errorType).toBe(requestError.type);
-    expect(networkError.reason).toBe(requestError);
+    expect(networkError.reason).toBe(reason);
     expect(networkError.code).toBe("");
     expect(networkError.fatal).toBe(true);
     expect(networkError.message).toBe("NetworkError () bar");
@@ -55,7 +57,8 @@ describe("errors - NetworkError", () => {
   it("should filter in a valid error code", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
-    const requestError = new RequestError(xhr, "foo", "bar");
+    const reason = "bar";
+    const requestError = new RequestError(xhr, "foo", reason);
     const networkError = new NetworkError("MEDIA_ERR_NETWORK", requestError, true);
     expect(networkError).toBeInstanceOf(Error);
     expect(networkError.name).toBe("NetworkError");
@@ -63,7 +66,7 @@ describe("errors - NetworkError", () => {
     expect(networkError.xhr).toBe(requestError.xhr);
     expect(networkError.status).toBe(requestError.status);
     expect(networkError.errorType).toBe(requestError.type);
-    expect(networkError.reason).toBe(requestError);
+    expect(networkError.reason).toBe(reason);
     expect(networkError.code).toBe("MEDIA_ERR_NETWORK");
     expect(networkError.fatal).toBe(true);
     expect(networkError.message).toBe("NetworkError (MEDIA_ERR_NETWORK) bar");
