@@ -18,29 +18,14 @@ import errorMessage from "../error_message";
 
 describe("Errors - generateErrorMessage", () => {
   it("should format a certain way when only a name and a code is given", () => {
-    expect(errorMessage("foo", "bar"))
-      .toBe("foo (bar)");
+    expect(errorMessage("foo", "bar")).toBe("foo (bar)");
   });
 
   it("should format a certain way if the reason given is null", () => {
-    expect(errorMessage("foo", "bar", "baz"))
-      .toBe("foo (bar) baz");
+    expect(errorMessage("foo", "bar", null)).toBe("foo (bar)");
   });
 
   it("should format a certain way if the reason given is a string", () => {
-    expect(errorMessage("foo", "bar", "baz"))
-      .toBe("foo (bar) baz");
-  });
-
-  it("should format a certain way if the reason given is an Error", () => {
-    const err = new Error("idk");
-    expect(errorMessage("foo", "bar", err))
-      .toBe("foo (bar) idk");
-  });
-
-  it("should format a certain way if the reason given is an Event", () => {
-    const evt = new Event("test");
-    expect(errorMessage("foo", "bar", evt))
-      .toBe("foo (bar) test");
+    expect(errorMessage("foo", "bar", "baz")).toBe("foo (bar) baz");
   });
 });

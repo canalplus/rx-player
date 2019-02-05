@@ -132,8 +132,8 @@ export default class Period {
           adaptationsForType.length > 0 &&
           (type === "video" || type === "audio")
         ) {
-          const error = new Error("No supported " + type + " adaptations");
-          throw new MediaError("MANIFEST_PARSE_ERROR", error, true);
+          throw new MediaError(
+            "MANIFEST_PARSE_ERROR", "No supported " + type + " adaptations", true);
         }
 
         if (filteredAdaptations.length) {
@@ -143,8 +143,8 @@ export default class Period {
       }, {});
 
     if (!this.adaptations.video && !this.adaptations.audio) {
-      const error = new Error("No supported audio and video tracks.");
-      throw new MediaError("MANIFEST_PARSE_ERROR", error, true);
+      throw new MediaError(
+        "MANIFEST_PARSE_ERROR", "No supported audio and video tracks.", true);
     }
 
     this.duration = args.duration;

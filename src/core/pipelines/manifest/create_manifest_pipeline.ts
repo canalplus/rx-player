@@ -77,7 +77,7 @@ function errorSelector(code : string, error : Error, fatal : boolean) : ICustomE
     if (error instanceof RequestError) {
       return new NetworkError(code, error, fatal);
     }
-    return new OtherError(code, error, fatal);
+    return new OtherError(code, error.message, fatal);
   }
   return error;
 }
@@ -153,9 +153,9 @@ export default function createManifestPipeline(
       mergeMap(({ value }) => {
         const { sendingTime } = value;
         return parser({ response: value, url, scheduleRequest }).pipe(
-          catchError((error) => {
+          catchError((error: Error) => {
             const formattedError = isKnownError(error) ?
-              error : new OtherError("PIPELINE_PARSING_ERROR", error, true);
+              error : new OtherError("PIPELINE_PARSING_ERROR", error.message, true);
             throw formattedError;
           }),
           map(({ manifest }) => {

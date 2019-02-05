@@ -180,8 +180,9 @@ export default function EMEManager(
                 sessionStorage.add(initData, initDataType, mediaKeySession);
               }
             }),
-            catchError((error) => {
-              throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR", error, false);
+            catchError((error: Error) => {
+              throw new EncryptedMediaError(
+                "KEY_GENERATE_REQUEST_ERROR", error.message, false);
             }),
             ignoreElements()
           ) : EMPTY

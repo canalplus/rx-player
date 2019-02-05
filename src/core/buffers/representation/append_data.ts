@@ -50,14 +50,14 @@ export default function appendDataToSourceBufferWithRetries<T>(
   return append$.pipe(
     catchError((appendError : Error) => {
       if (!appendError || appendError.name !== "QuotaExceededError") {
-        throw new MediaError("BUFFER_APPEND_ERROR", appendError, true);
+        throw new MediaError("BUFFER_APPEND_ERROR", appendError.message, true);
       }
 
       return forceGarbageCollection(clock$, queuedSourceBuffer).pipe(
         mergeMapTo(append$),
         catchError((forcedGCError : Error) => {
           // (weird Typing either due to TypeScript or RxJS bug)
-          throw new MediaError("BUFFER_FULL_ERROR", forcedGCError, true);
+          throw new MediaError("BUFFER_FULL_ERROR", forcedGCError.message, true);
         }));
     }));
 }

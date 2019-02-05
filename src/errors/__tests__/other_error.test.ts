@@ -29,24 +29,24 @@ describe("errors - OtherError", () => {
   });
 
   it("should be able to give a reason", () => {
-    const error = new Error("test");
-    const otherError = new OtherError("foo", error);
+    const reason = "test";
+    const otherError = new OtherError("foo", reason);
     expect(otherError).toBeInstanceOf(Error);
     expect(otherError.name).toBe("OtherError");
     expect(otherError.type).toBe("OTHER_ERROR");
-    expect(otherError.reason).toBe(error);
+    expect(otherError.reason).toBe(reason);
     expect(otherError.code).toBe("");
     expect(otherError.fatal).toBe(false);
     expect(otherError.message).toBe("OtherError () test");
   });
 
   it("should be able to set it as fatal", () => {
-    const error = new Error("test");
-    const otherError = new OtherError("foo", error, true);
+    const reason = "test";
+    const otherError = new OtherError("foo", reason, true);
     expect(otherError).toBeInstanceOf(Error);
     expect(otherError.name).toBe("OtherError");
     expect(otherError.type).toBe("OTHER_ERROR");
-    expect(otherError.reason).toBe(error);
+    expect(otherError.reason).toBe(reason);
     expect(otherError.code).toBe("");
     expect(otherError.fatal).toBe(true);
     expect(otherError.message).toBe("OtherError () test");
@@ -66,12 +66,12 @@ describe("errors - OtherError", () => {
   /* tslint:disable max-line-length */
   it("should set a complete error message if both a valid code and a reason is given", () => {
   /* tslint:enable max-line-length */
-    const error = new Error("test");
-    const otherError = new OtherError("MEDIA_ERR_NETWORK", error, true);
+    const reason = "test";
+    const otherError = new OtherError("MEDIA_ERR_NETWORK", reason, true);
     expect(otherError).toBeInstanceOf(Error);
     expect(otherError.name).toBe("OtherError");
     expect(otherError.type).toBe("OTHER_ERROR");
-    expect(otherError.reason).toBe(error);
+    expect(otherError.reason).toBe(reason);
     expect(otherError.code).toBe("MEDIA_ERR_NETWORK");
     expect(otherError.fatal).toBe(true);
     expect(otherError.message).toBe("OtherError (MEDIA_ERR_NETWORK) test");

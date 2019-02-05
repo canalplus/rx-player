@@ -29,24 +29,24 @@ describe("errors - MediaError", () => {
   });
 
   it("should be able to give a reason", () => {
-    const error = new Error("test");
-    const mediaError = new MediaError("foo", error);
+    const reason = "test";
+    const mediaError = new MediaError("foo", reason);
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");
-    expect(mediaError.reason).toBe(error);
+    expect(mediaError.reason).toBe(reason);
     expect(mediaError.code).toBe("");
     expect(mediaError.fatal).toBe(false);
     expect(mediaError.message).toBe("MediaError () test");
   });
 
   it("should be able to set it as fatal", () => {
-    const error = new Error("test");
-    const mediaError = new MediaError("foo", error, true);
+    const reason = "test";
+    const mediaError = new MediaError("foo", reason, true);
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");
-    expect(mediaError.reason).toBe(error);
+    expect(mediaError.reason).toBe(reason);
     expect(mediaError.code).toBe("");
     expect(mediaError.fatal).toBe(true);
     expect(mediaError.message).toBe("MediaError () test");
@@ -66,12 +66,12 @@ describe("errors - MediaError", () => {
   /* tslint:disable max-line-length */
   it("should set a complete error message if both a valid code and a reason is given", () => {
   /* tslint:enable max-line-length */
-    const error = new Error("test");
-    const mediaError = new MediaError("MEDIA_ERR_NETWORK", error, true);
+    const reason = "test";
+    const mediaError = new MediaError("MEDIA_ERR_NETWORK", reason, true);
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");
-    expect(mediaError.reason).toBe(error);
+    expect(mediaError.reason).toBe(reason);
     expect(mediaError.code).toBe("MEDIA_ERR_NETWORK");
     expect(mediaError.fatal).toBe(true);
     expect(mediaError.message).toBe("MediaError (MEDIA_ERR_NETWORK) test");

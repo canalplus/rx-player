@@ -106,7 +106,7 @@ function licenseErrorSelector(
       return error;
     }
   }
-  return new EncryptedMediaError("KEY_LOAD_ERROR", error, fatal);
+  return new EncryptedMediaError("KEY_LOAD_ERROR", error.message, fatal);
 }
 
 /**
@@ -137,7 +137,7 @@ export default function handleSessionEvents(
 
   const keyErrors: Observable<never> = onKeyError$(session)
     .pipe(map((error) => {
-      throw new EncryptedMediaError("KEY_ERROR", error, true);
+      throw new EncryptedMediaError("KEY_ERROR", error.type, true);
     }));
 
   const keyStatusesChanges : Observable<IMediaKeySessionEvents|IEMEWarningEvent> =
@@ -177,7 +177,8 @@ export default function handleSessionEvents(
         }, undefined).pipe() // TS or RxJS Bug?
           .pipe(
             catchError((error: Error) => {
-              throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", error, true);
+              throw new EncryptedMediaError(
+                "KEY_STATUS_CHANGE_ERROR", error.message, true);
             }),
             map((licenseObject) => ({
               type: "key-status-change" as "key-status-change",
@@ -233,8 +234,8 @@ export default function handleSessionEvents(
 
           log.debug("EME: Update session", evt);
           return castToObservable((session as any).update(license)).pipe(
-            catchError((error) => {
-              throw new EncryptedMediaError("KEY_UPDATE_ERROR", error, true);
+            catchError((error: Error) => {
+              throw new EncryptedMediaError("KEY_UPDATE_ERROR", error.message, true);
             }),
             mapTo({
               type: evt.type,
