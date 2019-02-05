@@ -17,11 +17,9 @@
 import PPromise from "../../utils/promise";
 
 describe("compat - play", () => {
-  it("should start to play", (done) => {
+  it("should call play and returns an Observable if play returns a Promise", (done) => {
     const mockPlay = jest.fn(() => PPromise.resolve());
-    const fakeMediaElement = {
-      play: mockPlay,
-    };
+    const fakeMediaElement = { play: mockPlay };
 
     const play$ = require("../play").default;
     play$(fakeMediaElement).subscribe(() => {
@@ -30,14 +28,36 @@ describe("compat - play", () => {
     });
   });
 
-  it("should fail to start to play", (done) => {
+  it("should return an Observable even if play does not return a promise", (done) => {
+    const mockPlay = jest.fn();
+    const fakeMediaElement = { play: mockPlay };
+
+    const play$ = require("../play").default;
+    play$(fakeMediaElement).subscribe(() => {
+      done();
+    });
+  });
+
+  it("should throw through an Observable if the `play` promise is rejected", (done) => {
     const notAllowedError = new Error("NotAllowedError: Can't play");
     const mockPlay = jest.fn(() => {
       return PPromise.reject(notAllowedError);
     });
-    const fakeMediaElement = {
-      play: mockPlay,
-    };
+    const fakeMediaElement = { play: mockPlay };
+
+    const play$ = require("../play").default;
+    play$(fakeMediaElement).subscribe(() => null, (err: any) => {
+      expect(err).toBe(notAllowedError);
+      done();
+    });
+  });
+
+  it("should throw through an Observable if `play` throws", (done) => {
+    const notAllowedError = new Error("NotAllowedError: Can't play");
+    const mockPlay = jest.fn(() => {
+      throw notAllowedError;
+    });
+    const fakeMediaElement = { play: mockPlay };
 
     const play$ = require("../play").default;
     play$(fakeMediaElement).subscribe(() => null, (err: any) => {
