@@ -15,4 +15,22 @@
  */
 
 import Player from "./public_api";
+export {
+  IConstructorOptions,
+  ILoadVideoOptions,
+
+  // loadVideo arguments:
+  ITransportOptions,
+  IKeySystemOption,
+  ISupplementaryTextTrackOption,
+  ISupplementaryImageTrackOption,
+  IDefaultAudioTrackOption,
+  IDefaultTextTrackOption,
+  INetworkConfigOption,
+  IStartAtOption,
+} from "./option_parsers";
+export {
+  IAudioTrackPreference,
+  ITextTrackPreference,
+} from "./track_manager";
 export default Player;
