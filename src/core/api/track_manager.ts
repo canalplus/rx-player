@@ -19,7 +19,10 @@
  * switching for an easier API management.
  */
 
-import { Subject } from "rxjs";
+import {
+  BehaviorSubject,
+  Subject,
+} from "rxjs";
 import log from "../../log";
 import {
   Adaptation,
@@ -136,7 +139,7 @@ export default class TrackManager {
    * @type {Array.<Object>}
    * @private
    */
-  private _preferredAudioTracks : IAudioTrackPreference[];
+  private _preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
 
   /**
    * Array of preferred languages for text tracks.
@@ -144,7 +147,7 @@ export default class TrackManager {
    * @type {Array.<Object>}
    * @private
    */
-  private _preferredTextTracks : ITextTrackPreference[];
+  private _preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
 
   /**
    * Memoization of the previously-chosen audio Adaptation for each Period.
@@ -168,21 +171,18 @@ export default class TrackManager {
    * @param {Object} defaults
    */
   constructor(defaults : {
-    preferredAudioTracks? : IAudioTrackPreference[];
-    preferredTextTracks? : ITextTrackPreference[];
-  } = {}) {
-    const {
-      preferredAudioTracks,
-      preferredTextTracks,
-    } = defaults;
+    preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
+    preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
+  }) {
+    const { preferredAudioTracks, preferredTextTracks } = defaults;
     this._periods = new SortedList((a, b) => a.period.start - b.period.start);
 
     this._audioChoiceMemory = new WeakMap();
     this._textChoiceMemory = new WeakMap();
     this._videoChoiceMemory = new WeakMap();
 
-    this._preferredAudioTracks = preferredAudioTracks || [];
-    this._preferredTextTracks = preferredTextTracks || [];
+    this._preferredAudioTracks = preferredAudioTracks;
+    this._preferredTextTracks = preferredTextTracks;
   }
 
   /**
@@ -276,7 +276,7 @@ export default class TrackManager {
       throw new Error("TrackManager: Given Period not found.");
     }
 
-    const preferredAudioTracks = this._preferredAudioTracks;
+    const preferredAudioTracks = this._preferredAudioTracks.getValue();
     const audioAdaptations = period.adaptations.audio || [];
     const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
 
@@ -309,7 +309,7 @@ export default class TrackManager {
       throw new Error("TrackManager: Given Period not found.");
     }
 
-    const preferredTextTracks = this._preferredTextTracks;
+    const preferredTextTracks = this._preferredTextTracks.getValue();
     const textAdaptations = period.adaptations.text || [];
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
     if (
@@ -664,7 +664,7 @@ export default class TrackManager {
   }
 
   private _updateAudioTrackChoices() {
-    const preferredAudioTracks = this._preferredAudioTracks;
+    const preferredAudioTracks = this._preferredAudioTracks.getValue();
 
     const recursiveUpdateAudioTrack = (index : number) : void => {
       if (index >= this._periods.length()) {
@@ -712,7 +712,7 @@ export default class TrackManager {
   }
 
   private _updateTextTrackChoices() {
-    const preferredTextTracks = this._preferredTextTracks;
+    const preferredTextTracks = this._preferredTextTracks.getValue();
 
     const recursiveUpdateTextTrack = (index : number) : void => {
       if (index >= this._periods.length()) {
