@@ -514,6 +514,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       maxBufferAhead,
       maxBufferBehind,
       maxVideoBitrate,
+      preferredAudioTracks,
+      preferredTextTracks,
       throttleWhenHidden,
       videoElement,
       wantedBufferAhead,
@@ -611,8 +613,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_setPlayerState(PLAYER_STATES.STOPPED);
 
-    this._priv_preferredAudioTracks = new BehaviorSubject<IAudioTrackPreference[]>([]);
-    this._priv_preferredTextTracks = new BehaviorSubject<ITextTrackPreference[]>([]);
+    this._priv_preferredAudioTracks = new BehaviorSubject(preferredAudioTracks);
+    this._priv_preferredTextTracks = new BehaviorSubject(preferredTextTracks);
   }
 
   /**

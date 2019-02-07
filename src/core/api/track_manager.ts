@@ -31,19 +31,18 @@ import {
 } from "../../manifest";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
+import normalizeLanguage from "../../utils/languages";
 import SortedList from "../../utils/sorted_list";
 
 // single preference for an audio track Adaptation
 export type IAudioTrackPreference = null | {
   language : string;
-  normalized : string;
   audioDescription : boolean;
 };
 
 // single preference for a text track Adaptation
 export type ITextTrackPreference = null | {
   language : string;
-  normalized : string;
   closedCaption : boolean;
 };
 
@@ -117,6 +116,42 @@ interface ITMPeriodInfos {
   audio? : ITMPeriodAudioInfos;
   text? : ITMPeriodTextInfos;
   video? : ITMPeriodVideoInfos;
+}
+
+type INormalizedAudioTrack = null | {
+  normalized : string;
+  audioDescription : boolean;
+};
+
+type INormalizedTextTrack = null | {
+  normalized : string;
+  closedCaption : boolean;
+};
+
+/**
+ * @param {Array.<Object>}
+ * @returns {Array.<Object>}
+ */
+function normalizeAudioTracks(
+  tracks : IAudioTrackPreference[]
+) : INormalizedAudioTrack[] {
+  return tracks.map(t => t && {
+    normalized: normalizeLanguage(t.language),
+    audioDescription: t.audioDescription,
+  });
+}
+
+/**
+ * @param {Array.<Object>}
+ * @returns {Array.<Object>}
+ */
+function normalizeTextTracks(
+  tracks : ITextTrackPreference[]
+) : INormalizedTextTrack[] {
+  return tracks.map(t => t && {
+    normalized: normalizeLanguage(t.language),
+    closedCaption: t.closedCaption,
+  });
 }
 
 /**
@@ -284,8 +319,9 @@ export default class TrackManager {
       chosenAudioAdaptation === undefined ||
       !arrayIncludes(audioAdaptations, chosenAudioAdaptation)
     ) {
-      const optimalAdaptation = findFirstOptimalAudioAdaptation(
-        audioAdaptations, preferredAudioTracks);
+      const normalizedTracks = normalizeAudioTracks(preferredAudioTracks);
+      const optimalAdaptation =
+        findFirstOptimalAudioAdaptation(audioAdaptations, normalizedTracks);
 
       this._audioChoiceMemory.set(period, optimalAdaptation);
       audioInfos.adaptation$.next(optimalAdaptation);
@@ -316,8 +352,9 @@ export default class TrackManager {
       chosenTextAdaptation === undefined ||
       !arrayIncludes(textAdaptations, chosenTextAdaptation)
     ) {
-      const optimalAdaptation = findFirstOptimalTextAdaptation(
-        textAdaptations, preferredTextTracks);
+      const normalizedTracks = normalizeTextTracks(preferredTextTracks);
+      const optimalAdaptation =
+        findFirstOptimalTextAdaptation(textAdaptations, normalizedTracks);
 
       this._textChoiceMemory.set(period, optimalAdaptation);
       textInfos.adaptation$.next(optimalAdaptation);
@@ -665,6 +702,7 @@ export default class TrackManager {
 
   private _updateAudioTrackChoices() {
     const preferredAudioTracks = this._preferredAudioTracks.getValue();
+    const normalizedTracks = normalizeAudioTracks(preferredAudioTracks);
 
     const recursiveUpdateAudioTrack = (index : number) : void => {
       if (index >= this._periods.length()) {
@@ -698,8 +736,8 @@ export default class TrackManager {
         return;
       }
 
-      const optimalAdaptation = findFirstOptimalAudioAdaptation(
-        audioAdaptations, preferredAudioTracks);
+      const optimalAdaptation =
+        findFirstOptimalAudioAdaptation(audioAdaptations, normalizedTracks);
 
       this._audioChoiceMemory.set(period, optimalAdaptation);
       audioItem.adaptation$.next(optimalAdaptation);
@@ -713,6 +751,7 @@ export default class TrackManager {
 
   private _updateTextTrackChoices() {
     const preferredTextTracks = this._preferredTextTracks.getValue();
+    const normalizedTracks = normalizeTextTracks(preferredTextTracks);
 
     const recursiveUpdateTextTrack = (index : number) : void => {
       if (index >= this._periods.length()) {
@@ -746,8 +785,8 @@ export default class TrackManager {
         return;
       }
 
-      const optimalAdaptation = findFirstOptimalTextAdaptation(
-        textAdaptations, preferredTextTracks);
+      const optimalAdaptation =
+        findFirstOptimalTextAdaptation(textAdaptations, normalizedTracks);
 
       this._textChoiceMemory.set(period, optimalAdaptation);
       textItem.adaptation$.next(optimalAdaptation);
@@ -865,7 +904,7 @@ export default class TrackManager {
  */
 function findFirstOptimalAudioAdaptation(
   audioAdaptations : Adaptation[],
-  preferredAudioTracks : IAudioTrackPreference[]
+  preferredAudioTracks : Array<{ normalized: string; audioDescription: boolean }|null>
 ) : Adaptation|null {
   if (!audioAdaptations.length) {
     return null;
@@ -953,7 +992,7 @@ function findFirstOptimalAudioAdaptation(
  */
 function findFirstOptimalTextAdaptation(
   textAdaptations : Adaptation[],
-  preferredTextTracks : ITextTrackPreference[]
+  preferredTextTracks : Array<{ normalized: string; closedCaption: boolean }|null>
 ) : Adaptation|null {
   if (!textAdaptations.length) {
     return null;
