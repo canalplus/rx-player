@@ -1274,7 +1274,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     return playPromise.catch((error: Error) => {
       if (error.name === "NotAllowedError") {
         const warning =
-          new MediaError("MEDIA_ERR_PLAY_NOT_ALLOWED", error.message, false);
+          new MediaError("MEDIA_ERR_PLAY_NOT_ALLOWED", error.toString(), false);
         this.trigger("warning", warning);
       }
       throw error;
