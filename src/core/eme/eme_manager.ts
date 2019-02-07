@@ -182,7 +182,7 @@ export default function EMEManager(
             }),
             catchError((error: Error) => {
               throw new EncryptedMediaError(
-                "KEY_GENERATE_REQUEST_ERROR", error.message, false);
+                "KEY_GENERATE_REQUEST_ERROR", error.toString(), false);
             }),
             ignoreElements()
           ) : EMPTY

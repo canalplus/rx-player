@@ -106,7 +106,7 @@ function licenseErrorSelector(
       return error;
     }
   }
-  return new EncryptedMediaError("KEY_LOAD_ERROR", error.message, fatal);
+  return new EncryptedMediaError("KEY_LOAD_ERROR", error.toString(), fatal);
 }
 
 /**
@@ -178,7 +178,7 @@ export default function handleSessionEvents(
           .pipe(
             catchError((error: Error) => {
               throw new EncryptedMediaError(
-                "KEY_STATUS_CHANGE_ERROR", error.message, true);
+                "KEY_STATUS_CHANGE_ERROR", error.toString(), true);
             }),
             map((licenseObject) => ({
               type: "key-status-change" as "key-status-change",
@@ -235,7 +235,7 @@ export default function handleSessionEvents(
           log.debug("EME: Update session", evt);
           return castToObservable((session as any).update(license)).pipe(
             catchError((error: Error) => {
-              throw new EncryptedMediaError("KEY_UPDATE_ERROR", error.message, true);
+              throw new EncryptedMediaError("KEY_UPDATE_ERROR", error.toString(), true);
             }),
             mapTo({
               type: evt.type,

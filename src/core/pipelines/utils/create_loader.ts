@@ -110,7 +110,7 @@ function errorSelector(code : string, error : Error, fatal : boolean) : ICustomE
     if (error instanceof RequestError) {
       return new NetworkError(code, error, fatal);
     }
-    return new OtherError(code, error.message, fatal);
+    return new OtherError(code, error.toString(), fatal);
   }
   return error;
 }

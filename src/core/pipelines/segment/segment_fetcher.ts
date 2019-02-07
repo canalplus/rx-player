@@ -217,7 +217,8 @@ export default function createSegmentFetcher<T>(
             return segmentParser(parserArg)
               .pipe(catchError((error: Error) => {
                 const formattedError = isKnownError(error) ?
-                  error : new OtherError("PIPELINE_PARSING_ERROR", error.message, true);
+                  error : new OtherError(
+                    "PIPELINE_PARSING_ERROR", error.toString(), true);
                   throw formattedError;
               }));
           },
