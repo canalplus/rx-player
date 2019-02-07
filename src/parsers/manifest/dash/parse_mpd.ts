@@ -176,6 +176,7 @@ function parseCompleteIntermediateRepresentation(
       rootAttributes.id : "gen-dash-manifest-" + generateManifestID(),
     periods: parsedPeriods,
     transportType: "dash",
+    lifetime: rootAttributes.minimumUpdatePeriod,
     isLive: isDynamic,
     uris: [uri, ...rootChildren.locations],
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay != null ?
