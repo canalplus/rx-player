@@ -34,10 +34,10 @@ function waitForLoadedStateAfterLoadVideo(player) {
  * @param {Array.<string>} [whitelist]
  * @returns {Promise}
  */
-export default function waitForState(player, state, whitelist) {
+export default function waitForState(player, wantedState, whitelist) {
   return new Promise((resolve, reject) => {
     function onPlayerStateChange(state) {
-      if (state === state) {
+      if (wantedState === state) {
         player.removeEventListener("playerStateChange", onPlayerStateChange);
         resolve();
       } else if (whitelist && !whitelist.includes(state)) {
