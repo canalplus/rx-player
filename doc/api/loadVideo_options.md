@@ -11,8 +11,6 @@
     - [autoPlay](#prop-autoPlay)
     - [startAt](#prop-startAt)
     - [transportOptions](#prop-transportOptions)
-    - [defaultAudioTrack](#prop-defaultAudioTrack)
-    - [defaultTextTrack](#prop-defaultTextTrack)
     - [textTrackMode](#prop-textTrackMode)
     - [textTrackElement](#prop-textTrackElement)
     - [manualBitrateSwitchingMode](#prop-manualBitrateSwitchingMode)
@@ -20,6 +18,9 @@
     - [supplementaryImageTracks](#prop-supplementaryImageTracks)
     - [hideNativeSubtitle](#prop-hideNativeSubtitle)
     - [networkConfig](#prop-networkConfig)
+    - [defaultAudioTrack (deprecated)](#prop-defaultAudioTrack)
+    - [defaultTextTrack (deprecated)](#prop-defaultTextTrack)
+        Add three new events: availableAudioTracksChange, availableTextTracksChange, availableVideoTracksChange
 
 
 
@@ -396,74 +397,6 @@ considered stable:
 
 
 
-<a name="prop-defaultAudioTrack"></a>
-### defaultAudioTrack ##########################################################
-
-_type_: ``Object|string|undefined``
-
----
-
-:warning: This option is not available in _DirectFile_ mode (see [transport
-option](#prop-transport)).
-
----
-
-The starting default audio track.
-
-This can be under the form of an object with the following properties:
-```js
-const defaultAudioTrack = {
-  language: "fra", // {string} The wanted language
-                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
-  audioDescription: false // {Boolean} Whether the audio track should be an
-                          // audio description for the visually impaired
-};
-```
-or under the form of the language string directly, in which case the
-``"audioDescription"`` option is inferred to be false.
-```js
-// equivalent to the previous example
-const defaultAudioTrack = "fra";
-```
-
-If the corresponding audio track is not found, the first track defined will be
-taken instead.
-
-
-<a name="prop-defaultTextTrack"></a>
-### defaultTextTrack ###########################################################
-
-_type_: ``Object|string|undefined``
-
----
-
-:warning: This option is not available in _DirectFile_ mode (see [transport
-option](#prop-transport)).
-
----
-
-The starting default text track.
-
-This can be under the form of an object with the following properties:
-```js
-const defaultTextTrack = {
-  language: "fra", // {string} The wanted language
-                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
-  closedCaption: false // {Boolean} Whether the text track should be a closed
-                       // caption for the hard of hearing
-};
-```
-or under the form of the language string directly, in which case the
-``"closedCaption"`` option is inferred to be false:
-```js
-// equivalent to the previous example
-const defaultTextTrack = "fra";
-```
-
-If the corresponding text track is not found, the first track defined will be
-taken instead.
-
-
 <a name="prop-textTrackMode"></a>
 ### textTrackMode ##############################################################
 
@@ -756,3 +689,95 @@ This object can take the following properties (all are optional):
 
   - the request failed because of an unknown XHR error (might be a
     parsing/interface error)
+
+
+<a name="prop-defaultAudioTrack"></a>
+### defaultAudioTrack ##########################################################
+
+---
+
+:warning: This option is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+Please use the [`preferredAudioTracks` constructor
+option](./player_options.md#prop-preferredAudioTracks) or the
+[`setPreferredAudioTracks` method](./index.md#meth-setPreferredAudioTracks)
+instead.
+
+---
+
+_type_: ``Object|string|undefined``
+
+The starting default audio track.
+
+This can be under the form of an object with the following properties:
+```js
+const defaultAudioTrack = {
+  language: "fra", // {string} The wanted language
+                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
+  audioDescription: false // {Boolean} Whether the audio track should be an
+                          // audio description for the visually impaired
+};
+```
+or under the form of the language string directly, in which case the
+``"audioDescription"`` option is inferred to be false.
+```js
+// equivalent to the previous example
+const defaultAudioTrack = "fra";
+```
+
+If the corresponding audio track is not found, the first track defined will be
+taken instead.
+
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+
+<a name="prop-defaultTextTrack"></a>
+### defaultTextTrack ###########################################################
+
+---
+
+:warning: This option is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+Please use the [`preferredTextTracks` constructor
+option](./player_options.md#prop-preferredTextTracks) or the
+[`setPreferredTextTracks` method](./index.md#meth-setPreferredTextTracks)
+instead.
+
+---
+
+_type_: ``Object|string|undefined``
+
+The starting default text track.
+
+This can be under the form of an object with the following properties:
+```js
+const defaultTextTrack = {
+  language: "fra", // {string} The wanted language
+                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
+  closedCaption: false // {Boolean} Whether the text track should be a closed
+                       // caption for the hard of hearing
+};
+```
+or under the form of the language string directly, in which case the
+``"closedCaption"`` option is inferred to be false:
+```js
+// equivalent to the previous example
+const defaultTextTrack = "fra";
+```
+
+If the corresponding text track is not found, the first track defined will be
+taken instead.
+
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---

@@ -100,3 +100,11 @@ exported:
 
   - ``IStartAtOption``: type for the ``startAt`` property optionally given to
     ``loadVideo``.
+
+Two constructor options have also their type definition exported, those are:
+
+  - `IAudioTrackPreference`: which is the type of a single element in the
+    `preferredAudioTracks` array.
+
+  - `ITextTrackPreference`: which is the type of a single element in the
+    `preferredTextTracks` array.
