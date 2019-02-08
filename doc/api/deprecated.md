@@ -34,7 +34,6 @@ The fullscreen logic should now be entirely on the application-side. Replacement
 code is provided for each of those APIs below.
 
 
-
 ## RxPlayer Methods ############################################################
 
 The following RxPlayer methods are deprecated.
@@ -193,6 +192,90 @@ mediaElement.addEventListener("fullscreenChange", () => {
 ```
 
 
+## loadVideo options ###########################################################
+
+The following loadVideo options are deprecated.
+
+
+### defaultAudioTrack ##########################################################
+
+[The `preferredAudioTracks` loadVideo
+option](./loadVideo_options.md#prop-preferredAudioTracks) is now the preferred
+(no pun intended) solution to set the default audio track.
+This new option allows to handle much more complex use cases and can even be
+updated at any time through [the `setPreferredAudioTracks`
+method](./index.md#meth-setPreferredAudioTracks).
+
+#### How to replace that function
+
+It is very easy to replace `defaultAudioTrack` by `preferredAudioTracks`.
+
+For example, if you want to have a default french audio language, you probably
+previously did:
+```js
+player.loadVideo({
+  url: myURL,
+  transport: myTransport,
+
+  defaultAudioTrack: { language: "fra", audioDescription: false },
+  // or just `defaultAudioTrack: "fra"`, both are equivalent
+})
+```
+
+Now you will have to set it through an array either when creating a new
+RxPlayer:
+```js
+const player = new RxPlayer({
+  preferredAudioTracks: [{ language: "fra", audioDescription: false }],
+})
+```
+
+Or at any time, through the `setPreferredAudioTracks` method:
+```js
+player.setPreferredAudioTracks([{ language: "fra", audioDescription: false }]);
+```
+
+
+### defaultTextTrack ##########################################################
+
+`defaultTextTrack` is replaced by [the `preferredTextTracks` constructor
+option](./loadVideo_options.md#prop-preferredTextTracks) for the same reason
+than `defaultAudioTrack`.
+
+#### How to replace that function
+
+It is very easy to replace `defaultTextTrack` by `preferredTextTracks`.
+
+For example, if you want to have a default swedish subtitle language, you
+probably previously did:
+```js
+player.loadVideo({
+  url: myURL,
+  transport: myTransport,
+
+  defaultTextTrack: { language: "swe", closedCaption: false },
+  // or just `defaultTextTrack: "swe"`, both are equivalent
+})
+```
+
+Now you will have to set it through an array either when creating a new
+RxPlayer:
+```js
+const player = new RxPlayer({
+  preferredTextTracks: [{ language: "swe", closedCaption: false }],
+})
+```
+
+Or at any time, through the `setPreferredTextTracks` method:
+```js
+player.setPreferredTextTracks([{ language: "fra", closedCaption: false }]);
+```
+
+
+## Other properties ############################################################
+
+Some very specific properties from various methods are deprecated.
+You will find them here.
 
 ## Other properties ############################################################
 

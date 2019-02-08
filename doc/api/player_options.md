@@ -10,6 +10,8 @@
     - [maxVideoBitrate](#prop-maxVideoBitrate)
     - [maxAudioBitrate](#prop-maxAudioBitrate)
     - [wantedBufferAhead](#prop-wantedBufferAhead)
+    - [preferredAudioTracks](#prop-preferredAudioTracks)
+    - [preferredTextTracks](#prop-preferredTextTracks)
     - [maxBufferAhead](#prop-maxBufferAhead)
     - [maxBufferBehind](#prop-maxBufferBehind)
     - [limitVideoWidth](#prop-limitVideoWidth)
@@ -209,6 +211,113 @@ seconds.
 
 Once this size of buffer is reached, the player won't try to download new video
 segments anymore.
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
+
+<a name="prop-preferredAudioTracks"></a>
+### preferredAudioTracks #######################################################
+
+_type_: ``Array.<Object>``
+
+_defaults_: ``[]``
+
+Set the initial audio tracks preferences.
+
+This option takes an array of objects describing the languages wanted:
+```js
+{
+  language: "fra", // {string} The wanted language
+                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
+  audioDescription: false // {Boolean} Whether the audio track should be an
+                          // audio description for the visually impaired
+}
+```
+
+All elements in that Array should be set in preference order: from the most
+preferred to the least preferred.
+
+When loading a content, the RxPlayer will then try to choose its audio track by
+comparing what is available with your current preferences (i.e. if the most
+preferred is not available, it will look if the second one etc.).
+
+This array of preferrences can be updated at any time through the
+``setPreferredAudioTracks`` method, documented
+[here](./index.md#meth-getPreferredAudioTracks).
+
+#### Example
+
+Let's imagine that you prefer to have french or italian over all other audio
+languages. If not found, you want to fallback to english:
+
+```js
+const player = new RxPlayer({
+  preferredAudioTracks: [
+    { language: "fra", audioDescription: false },
+    { language: "ita", audioDescription: false },
+    { language: "eng", audioDescription: false }
+  ]
+});
+```
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
+
+<a name="prop-preferredTextTracks"></a>
+### preferredTextTracks ########################################################
+
+_type_: ``Array.<Object>``
+
+_defaults_: ``[]``
+
+Set the initial text track languages preferences.
+
+This option takes an array of objects describing the languages wanted for
+subtitles:
+```js
+{
+  language: "fra", // {string} The wanted language
+                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
+  closedCaption: false // {Boolean} Whether the text track should be a closed
+                       // caption for the hard of hearing
+}
+```
+
+All elements in that Array should be set in preference order: from the most
+preferred to the least preferred. You can set `null` for no subtitles.
+
+When loading a content, the RxPlayer will then try to choose its text track by
+comparing what is available with your current preferences (i.e. if the most
+preferred is not available, it will look if the second one etc.).
+
+This array of preferrences can be updated at any time through the
+``setPreferredTextTracks`` method, documented
+[here](./index.md#meth-getPreferredTextTracks).
+
+#### Example
+
+Let's imagine that you prefer to have french or italian subtitles.If not found,
+you want no subtitles at all.
+
+```js
+const player = new RxPlayer({
+  preferredTextTracks: [
+    { language: "fra", closedCaption: false },
+    { language: "ita", closedCaption: false },
+    null
+  ]
+});
+```
 
 ---
 
