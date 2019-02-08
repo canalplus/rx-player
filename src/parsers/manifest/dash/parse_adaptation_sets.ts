@@ -17,11 +17,13 @@
 import log from "../../../log";
 import arrayFind from "../../../utils/array_find";
 import arrayIncludes from "../../../utils/array_includes";
+import idGenerator from "../../../utils/id_generator";
 import resolveURL from "../../../utils/resolve_url";
 import {
   IParsedAdaptation,
   IParsedAdaptations,
   IParsedRepresentation,
+  IParsedTrickmodeAdaptation,
 } from "../types";
 import inferAdaptationType from "./infer_adaptation_type";
 import {
@@ -165,6 +167,33 @@ function getAdaptationSetSwitchingIDs(
 }
 
 /**
+ * Attach trickmode adaptations to corresponding adaptations.
+ * @param {Object} adaptations
+ * @param {Array.<Object>} trickmodeAdaptations
+ */
+function attachTrickModesToAdaptations(
+  adaptations: IParsedAdaptations,
+  trickmodeAdaptations: IParsedTrickmodeAdaptation[]
+): IParsedAdaptations {
+  trickmodeAdaptations.forEach((trickmodeAdaptation) => {
+    const videoAdaptations = adaptations.video;
+    if (videoAdaptations) {
+      const { isTrickmodeFor } = trickmodeAdaptation;
+      videoAdaptations.forEach((adaptation) => {
+        if (adaptation.id === isTrickmodeFor) {
+          if (adaptation.trickModeTrack != null) {
+            log.warn("DASH: Overriding trickmode adaptation for adaptation " +
+              adaptation.id);
+          }
+          adaptation.trickModeTrack = trickmodeAdaptation;
+        }
+      });
+    }
+  });
+  return adaptations;
+}
+
+/**
  * Process intermediate periods to create final parsed periods.
  * @param {Array.<Object>} periodsIR
  * @param {Object} manifestInfos
@@ -174,8 +203,10 @@ export default function parseAdaptationSets(
   adaptationsIR : IAdaptationSetIntermediateRepresentation[],
   periodInfos : IPeriodInfos
 ): IParsedAdaptations {
-  return adaptationsIR
-    .reduce<{ adaptations : IParsedAdaptations;
+  const generateNewTrickmodeId = idGenerator("trickmode-");
+  const { adaptations, trickmodeAdaptations} = adaptationsIR
+    .reduce<{ trickmodeAdaptations : IParsedTrickmodeAdaptation[];
+              adaptations : IParsedAdaptations;
               adaptationSwitchingInfos : IAdaptationSwitchingInfos;
               videoMainAdaptation : IParsedAdaptation|null; }>
     ((acc, adaptation) => {
@@ -194,6 +225,25 @@ export default function parseAdaptationSets(
       const representations = parseRepresentations(representationsIR,
                                                    adaptation,
                                                    adaptationInfos);
+
+       const trickModeProperty = adaptation.children.essentialProperties ? arrayFind(
+        adaptation.children.essentialProperties,
+        (scheme) => {
+          return scheme.schemeIdUri === "http://dashif.org/guidelines/trickmode";
+        }
+      ) : undefined;
+
+      const isTrickmodeFor = trickModeProperty ? trickModeProperty.value : undefined;
+      if (isTrickmodeFor != null) {
+        const trickmodeAdaptation: IParsedTrickmodeAdaptation = {
+          id: generateNewTrickmodeId(),
+          representations,
+          isTrickmodeFor,
+        };
+        acc.trickmodeAdaptations.push(trickmodeAdaptation);
+        return acc;
+      }
+
       const adaptationMimeType = adaptation.attributes.mimeType;
       const adaptationCodecs = adaptation.attributes.codecs;
       const representationMimeTypes = representations
@@ -311,11 +361,17 @@ export default function parseAdaptationSets(
                                                      adaptationSetSwitchingIDs };
       }
 
-      return { adaptations: parsedAdaptations,
+      return { trickmodeAdaptations: acc.trickmodeAdaptations,
+               adaptations: parsedAdaptations,
                adaptationSwitchingInfos: acc.adaptationSwitchingInfos,
                videoMainAdaptation: acc.videoMainAdaptation };
-    }, { adaptations: {},
+    }, { trickmodeAdaptations: [],
+         adaptations: {},
          videoMainAdaptation: null,
          adaptationSwitchingInfos: {} }
-    ).adaptations;
+    );
+
+    const adaptationsWithTrickmodes: IParsedAdaptations =
+      attachTrickModesToAdaptations(adaptations, trickmodeAdaptations);
+    return adaptationsWithTrickmodes;
 }

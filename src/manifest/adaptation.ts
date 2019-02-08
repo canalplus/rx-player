@@ -40,18 +40,35 @@ export interface IRepresentationInfos { bufferType: IAdaptationType;
                                         isClosedCaption? : boolean;
                                         normalizedLanguage? : string; }
 
-export type IRepresentationFilter = (representation: Representation,
-                                     adaptationInfos: IRepresentationInfos) => boolean;
+export type IRepresentationFilter = (
+  representation: Representation,
+  adaptationInfos: IRepresentationInfos
+) => boolean;
 
-export interface IAdaptationArguments { id : string;
-                                        representations : IRepresentationArguments[];
-                                        type : IAdaptationType;
+export interface ITrickModeTrackArguments {
+  // required
+  id: string;
+  representations: IRepresentationArguments[];
+}
 
-                                        // -- optional
-                                        audioDescription? : boolean;
-                                        closedCaption? : boolean;
-                                        language? : string;
-                                        manuallyAdded? : boolean; }
+export interface IAdaptationArguments {
+  // -- required
+  id : string;
+  representations : IRepresentationArguments[];
+  type : IAdaptationType;
+
+  // -- optional
+  trickModeTrack? : ITrickModeTrackArguments;
+  audioDescription? : boolean;
+  closedCaption? : boolean;
+  language? : string;
+  manuallyAdded? : boolean;
+}
+
+interface ITrickModeTrack {
+  id: string;
+  representations: Representation[];
+}
 
 /**
  * Normalized Adaptation structure.
@@ -93,6 +110,8 @@ export default class Adaptation {
   // created, in the order they have happened.
   public readonly parsingErrors : ICustomError[];
 
+  public readonly trickModeTrack? : ITrickModeTrack;
+
   /**
    * @param {Object} args
    * @param {Function|undefined} [representationFilter]
@@ -126,6 +145,28 @@ export default class Adaptation {
     }
     if (args.audioDescription != null) {
       this.isAudioDescription = args.audioDescription;
+    }
+
+    if (args.trickModeTrack != null) {
+      const trickmodeRepresentations = args.trickModeTrack.representations
+        .map(representation => new Representation(representation))
+        .sort((a, b) => a.bitrate - b.bitrate)
+        .filter(representation => {
+          if (representationFilter == null) {
+            return true;
+          }
+          return representationFilter(representation, {
+            bufferType: this.type,
+            language: this.language,
+            normalizedLanguage: this.normalizedLanguage,
+            isClosedCaption: this.isClosedCaption,
+            isAudioDescription: this.isAudioDescription,
+          });
+        });
+      this.trickModeTrack = {
+        id: args.trickModeTrack.id,
+        representations: trickmodeRepresentations,
+      };
     }
 
     this.representations = argsRepresentations

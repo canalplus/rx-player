@@ -16,11 +16,12 @@
 
 /**
  * Creates an ID generator which generates an ID each time you call it.
+ * @param {string|undefined} prefix
  * @returns {Function}
  */
-export default function idGenerator() : () => string {
+export default function idGenerator(prefix?: string) : () => string {
   let lastID = 0;
   return function generateNewId() : string {
-    return "" + lastID++;
+    return (prefix || "") + lastID++;
   };
 }
