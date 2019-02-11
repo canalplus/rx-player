@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
+import { hexToBytes } from "../../../../utils/byte_parsing";
+
 export interface IParsedContentProtection {
-  schemeIdUri?: string;
-  value?: string;
+  schemeIdUri? : string;
+  value? : string;
+  keyId? : Uint8Array;
 }
 
 /**
@@ -29,6 +32,7 @@ export default function parseContentProtection(
 ) : IParsedContentProtection|undefined {
   let schemeIdUri : string|undefined;
   let value : string|undefined;
+  let keyId : Uint8Array|undefined;
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
 
@@ -39,16 +43,10 @@ export default function parseContentProtection(
       case "value":
         value = attribute.value;
         break;
+      case "cenc:default_KID":
+        keyId = hexToBytes(attribute.value.replace(/-/g, ""));
     }
   }
 
-  // TODO Take systemId from PSSH?
-  // for (let i = 0; i < root.childElementCount; i++) {
-  //   const child = root.children[i];
-  //   if (child.nodeName === "cenc:pssh" && child.textContent) {
-  //     pssh = atob(child.textContent);
-  //   }
-  // }
-
-  return { schemeIdUri, value };
+  return { schemeIdUri, value, keyId };
 }
