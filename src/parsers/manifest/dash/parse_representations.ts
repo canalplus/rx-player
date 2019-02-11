@@ -201,6 +201,20 @@ export default function parseRepresentations(
       parsedRepresentation.width =
         adaptation.attributes.width;
     }
+
+    if (adaptation.children.contentProtections != null) {
+      const contentProtections = adaptation.children.contentProtections
+        .reduce<Array<{ keyId : Uint8Array }>>((acc, cp) => {
+          if (cp.keyId != null) {
+            acc.push({ keyId: cp.keyId });
+          }
+          return acc;
+        }, []);
+      if (contentProtections.length > 0) {
+        parsedRepresentation.contentProtections = contentProtections;
+      }
+    }
+
     return parsedRepresentation;
   });
 }

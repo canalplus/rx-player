@@ -268,7 +268,7 @@ interface ISmoothInitSegmentPrivateInfos {
   packetSize? : number;
   samplingRate? : number;
   protection? : {
-    keyId : string;
+    keyId : Uint8Array;
     keySystems: Array<{
       systemId : string;
       privateData : Uint8Array;
@@ -295,7 +295,7 @@ export default class SmoothRepresentationIndex
       packetSize? : number;
       samplingRate? : number;
       protection? : {
-        keyId : string;
+        keyId : Uint8Array;
         keySystems: Array<{
           systemId : string;
           privateData : Uint8Array;
