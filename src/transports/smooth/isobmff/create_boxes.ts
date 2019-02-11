@@ -489,11 +489,8 @@ function createTKHDBox(width : number, height : number, trackId : number) : Uint
  * @param {string} keyId - Hex KID 93789920e8d6520098577df8f2dd5546
  * @returns {Uint8Array}
  */
-function createTENCBox(algId : number, ivSize : number, keyId : string) : Uint8Array {
-  return createBox("tenc", concat(
-    6,
-    [algId, ivSize],
-    hexToBytes(keyId)
+function createTENCBox(algId : number, ivSize : number, keyId : Uint8Array) : Uint8Array {
+  return createBox("tenc", concat(6, [algId, ivSize], keyId
   ));
 }
 

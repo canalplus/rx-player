@@ -44,7 +44,7 @@ type IPSSList = Array<{
  * @param {Number} vRes
  * @param {Number} nalLength (1, 2 or 4)
  * @param {string} codecPrivateData
- * @param {string} keyId - hex string representing the key Id,
+ * @param {Uint8Array} keyId - hex string representing the key Id,
  * 32 chars. eg. a800dbed49c12c4cb8e0b25643844b9b
  * @param {Array.<Object>} [pssList] - List of dict, example:
  * {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF}
@@ -58,7 +58,7 @@ export default function createVideoInitSegment(
   vRes : number,
   nalLength : number,
   codecPrivateData : string,
-  keyId? : string,
+  keyId? : Uint8Array,
   pssList? : IPSSList
 ) : Uint8Array {
   const _pssList = pssList || [];
