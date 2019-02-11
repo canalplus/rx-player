@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import parseContentProtection from "../ContentProtection";
-
 function testStringAttribute(attributeName : string, variableName? : string) : void {
   const _variableName = variableName == null ? attributeName : variableName;
 
   /* tslint:disable max-line-length */
   it(`should correctly parse a ContentProtection element with a correct ${attributeName} attribute`, () => {
   /* tslint:enable max-line-length */
+
+    const parseContentProtection = require("../ContentProtection").default;
     const element1 = new DOMParser()
       .parseFromString(`<ContentProtection ${attributeName}="foobar" />`, "text/xml")
       .childNodes[0] as Element;
@@ -37,7 +37,12 @@ function testStringAttribute(attributeName : string, variableName? : string) : v
 }
 
 describe("DASH Node Parsers - ContentProtection", () => {
+  beforeEach(() => {
+    jest.resetModules();
+  });
+
   it("should correctly parse a ContentProtection element without attributes", () => {
+    const parseContentProtection = require("../ContentProtection").default;
     const element = new DOMParser().parseFromString("<ContentProtection />", "text/xml")
       .childNodes[0] as Element;
     expect(parseContentProtection(element)).toEqual({});
@@ -46,7 +51,43 @@ describe("DASH Node Parsers - ContentProtection", () => {
   testStringAttribute("schemeIdUri");
   testStringAttribute("value");
 
+  /* tslint:disable max-line-length */
+  it("should correctly parse a ContentProtection element with a correct cenc:default_KID attribute", () => {
+  /* tslint:enable max-line-length */
+
+    const keyId = new Uint8Array([0, 1, 2, 3]);
+    const hexToBytesSpy = jest.fn().mockImplementation(() => {
+      return keyId;
+    });
+    jest.mock("../../../../../utils/byte_parsing", () => ({
+      hexToBytes: hexToBytesSpy,
+    }));
+    const parseContentProtection = require("../ContentProtection").default;
+    const element1 = new DOMParser()
+      /* tslint:disable max-line-length */
+      .parseFromString(`<?xml version="1.0" encoding="utf-8"?>
+<MPD
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+  xmlns:cenc="urn:mpeg:cenc:2013"
+  xmlns:mspr="urn:microsoft:playready"
+  xmlns:scte35="urn:scte:scte35:2014:xml+bin">
+
+  <ContentProtection cenc:default_KID=\"dead-beef\" />
+</MPD>
+`, "text/xml")
+      /* tslint:enable max-line-length */
+      .getElementsByTagName("ContentProtection")[0];
+
+    expect(parseContentProtection(element1))
+      .toEqual({ keyId });
+    expect(hexToBytesSpy).toHaveBeenCalledTimes(1);
+    expect(hexToBytesSpy).toHaveBeenCalledWith("deadbeef");
+  });
+
   it("should correctly parse a ContentProtection with every attributes", () => {
+    const parseContentProtection = require("../ContentProtection").default;
     const element = new DOMParser()
       .parseFromString(`<ContentProtection
         schemeIdUri="foo"

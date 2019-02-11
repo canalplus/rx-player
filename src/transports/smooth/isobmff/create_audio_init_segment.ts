@@ -42,7 +42,7 @@ type IPSSList = Array<{
  * @param {Number} packetSize
  * @param {Number} sampleRate
  * @param {string} codecPrivateData
- * @param {string} keyId - hex string representing the key Id, 32 chars.
+ * @param {Uint8Array} keyId - hex string representing the key Id, 32 chars.
  * eg. a800dbed49c12c4cb8e0b25643844b9b
  * @param {Array.<Object>} [pssList]
  * @returns {Uint8Array}
@@ -54,7 +54,7 @@ export default function createAudioInitSegment(
   packetSize : number,
   sampleRate : number,
   codecPrivateData : string,
-  keyId? : string,
+  keyId? : Uint8Array,
   pssList : IPSSList = []
 ) : Uint8Array {
   const _codecPrivateData = codecPrivateData ||

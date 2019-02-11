@@ -27,7 +27,7 @@ export interface IKeySystem {
 }
 
 export interface IContentProtectionSmooth {
-  keyId : string;
+  keyId : Uint8Array;
   keySystems: IKeySystem[];
 }
 
@@ -68,7 +68,7 @@ export default function parseProtectionNode(
   const systemId = (header.getAttribute("SystemID") || "").toLowerCase()
     .replace(/\{|\}/g, "");
   return {
-    keyId: keyIdHex,
+    keyId: keyIdBytes,
     keySystems: [
       {
         systemId,
