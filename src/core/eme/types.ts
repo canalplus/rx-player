@@ -52,8 +52,12 @@ export interface ISessionUpdatedEvent { type: "session-updated";
                                                           ICustomMediaKeySession;
                                                  license: ILicense|null; }; }
 
+export interface IBlacklistKeyEvent { type : "blacklist-key";
+                                      value: ArrayBuffer[]; }
+
 export type IMediaKeySessionHandledEvents = IKeyMessageHandledEvent |
                                             IKeyStatusChangeHandledEvent |
+                                            IBlacklistKeyEvent |
                                             ISessionUpdatedEvent;
 
 export type IEMEManagerEvent = IEMEWarningEvent |
@@ -128,4 +132,6 @@ export interface IKeySystemOption {
   audioRobustnesses?: Array<string|undefined>;
   throwOnLicenseExpiration? : boolean;
   disableMediaKeysAttachmentLock? : boolean;
+  fallbackOn? : { keyInternalError? : boolean;
+                  keyOutputRestricted? : boolean; };
 }
