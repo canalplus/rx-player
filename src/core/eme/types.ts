@@ -52,8 +52,12 @@ export interface ISessionUpdatedEvent { type: "session-updated";
                                                           ICustomMediaKeySession;
                                                  license: ILicense|null; }; }
 
+export interface IBlacklistKeyEvent { type : "blacklist-key";
+                                      value: ArrayBuffer[]; }
+
 export type IMediaKeySessionHandledEvents = IKeyMessageHandledEvent |
                                             IKeyStatusChangeHandledEvent |
+                                            IBlacklistKeyEvent |
                                             ISessionUpdatedEvent;
 
 export type IEMEManagerEvent = IEMEWarningEvent |
@@ -128,16 +132,6 @@ export interface IKeySystemOption {
   audioRobustnesses?: Array<string|undefined>;
   throwOnLicenseExpiration? : boolean;
   disableMediaKeysAttachmentLock? : boolean;
+  fallbackOn? : { keyInternalError? : boolean;
+                  keyOutputRestricted? : boolean; };
 }
-
-// Keys are the different key statuses possible.
-// Values are ``true`` if such key status defines an error
-/* tslint:disable no-object-literal-type-assertion */
-export const KEY_STATUS_ERRORS = { "internal-error": true,
-                                   expired: false,
-                                   released: false,
-                                   "output-restricted": false,
-                                   "output-downscaled": false,
-                                   "status-pending": false,
-                                 } as Partial<Record<string, boolean>>;
-/* tslint:enable no-object-literal-type-assertion */

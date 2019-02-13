@@ -53,7 +53,6 @@ import {
   IEMEWarningEvent,
   IKeySystemOption,
   IMediaKeySessionHandledEvents,
-  KEY_STATUS_ERRORS,
   TypedArray,
 } from "./types";
 
@@ -61,7 +60,9 @@ const { onKeyError$,
         onKeyMessage$,
         onKeyStatusesChange$ } = events;
 
-const KEY_STATUS_EXPIRED = "expired";
+const KEY_STATUSES = { EXPIRED: "expired",
+                       INTERNAL_ERROR: "internal-error",
+                       OUTPUT_RESTRICTED: "output-restricted" };
 
 /**
  * @param {Error|Object} error
@@ -94,7 +95,7 @@ export default function handleSessionEvents(
   log.debug("EME: Handle message events", session);
 
   const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
-  const { getLicenseConfig = {} } = keySystem;
+  const { getLicenseConfig = {}, fallbackOn = {} } = keySystem;
   const getLicenseRetryOptions = { totalRetry: getLicenseConfig.retry != null ?
                                                  getLicenseConfig.retry :
                                                  2,
@@ -118,35 +119,61 @@ export default function handleSessionEvents(
       .pipe(mergeMap((keyStatusesEvent: Event) => {
         log.debug("EME: keystatuseschange event", session, keyStatusesEvent);
 
-        // find out possible errors associated with this event
         const warnings : IEMEWarningEvent[] = [];
-        (session.keyStatuses as any).forEach((keyStatus : string, keyId : string) => {
-          // Hack present because the order of the arguments has changed in spec
-          // and is not the same between some versions of Edge and Chrome.
-          if (keyStatus === KEY_STATUS_EXPIRED || keyId === KEY_STATUS_EXPIRED) {
-            const { throwOnLicenseExpiration } = keySystem;
-            const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                                  "A decryption key expired");
+        const blacklistedKeyIDs : ArrayBuffer[] = [];
+        (session.keyStatuses as any).forEach((_arg1 : unknown, _arg2 : unknown) => {
+          const [keyStatus, keyId] = (() => {
+            return (typeof _arg1  === "string" ? [_arg1, _arg2] :
+                                                 [_arg2, _arg1]
+                   ) as [MediaKeyStatus, ArrayBuffer];
+          })();
 
-            if (throwOnLicenseExpiration !== false) {
-              throw error;
+          switch (keyStatus) {
+            case KEY_STATUSES.EXPIRED: {
+              const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
+                                                    "A decryption key expired");
+
+              if (keySystem.throwOnLicenseExpiration !== false) {
+                throw error;
+              }
+              warnings.push({ type: "warning", value: error });
+              break;
             }
-            warnings.push({ type: "warning", value: error });
-          }
 
-          if (KEY_STATUS_ERRORS[keyId]) {
-            throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                          "An invalid key status has been " +
-                                          "encountered: " + keyId);
-          } else if (KEY_STATUS_ERRORS[keyStatus]) {
-            throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                          "An invalid key status has been " +
-                                          "encountered: " + keyStatus);
+            case KEY_STATUSES.INTERNAL_ERROR: {
+              const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
+                                                    "An invalid key status has been " +
+                                                    "encountered: " + keyStatus);
+              if (fallbackOn.keyInternalError !== true) {
+                throw error;
+              }
+              warnings.push({ type: "warning", value: error });
+              blacklistedKeyIDs.push(keyId);
+              break;
+            }
+
+            case KEY_STATUSES.OUTPUT_RESTRICTED: {
+              const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
+                                                    "An invalid key status has been " +
+                                                    "encountered: " + keyStatus);
+              if (fallbackOn.keyOutputRestricted !== true) {
+                throw error;
+              }
+              warnings.push({ type: "warning", value: error });
+              blacklistedKeyIDs.push(keyId);
+              break;
+            }
           }
         });
 
         const warnings$ = warnings.length ? observableOf(...warnings) :
                                             EMPTY;
+
+        const blackListUpdate$ = blacklistedKeyIDs.length > 0 ?
+          observableOf({ type: "blacklist-key" as const,
+                         value: blacklistedKeyIDs }) :
+          EMPTY;
+
         const handledKeyStatusesChange$ = tryCatch(() => {
           return keySystem && keySystem.onKeyStatusesChange ?
                    castToObservable(
@@ -154,10 +181,8 @@ export default function handleSessionEvents(
                    ) as Observable<TypedArray|ArrayBuffer|null> :
                    EMPTY;
         }, undefined).pipe(
-          map(licenseObject => ({
-            type: "key-status-change-handled" as const,
-            value : { session, license: licenseObject },
-          })),
+          map(licenseObject => ({ type: "key-status-change-handled" as const,
+                                  value : { session, license: licenseObject } })),
           catchError((error: unknown) => {
             let message;
             if (error instanceof Error) {
@@ -172,7 +197,7 @@ export default function handleSessionEvents(
             throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", message);
           })
         );
-        return observableConcat(warnings$, handledKeyStatusesChange$);
+        return observableConcat(warnings$, blackListUpdate$, handledKeyStatusesChange$);
       }));
 
   const keyMessages$ : Observable<IMediaKeySessionHandledEvents> =
