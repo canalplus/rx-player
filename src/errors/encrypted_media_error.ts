@@ -35,7 +35,7 @@ export default class EncryptedMediaError extends Error {
 
   /**
    * @param {string} code
-   * @param {Object} reason
+   * @param {string} reason
    * @Param {Boolean} fatal
    */
   constructor(code : string, reason : string, fatal : boolean) {
