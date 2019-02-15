@@ -22,7 +22,10 @@ import EventEmitter, {
 
 describe("utils - EventEmitter", () => {
   it("should be able to call synchronously a callback on a given event", () => {
-    const eventEmitter = new EventEmitter<string, undefined>();
+    const eventEmitter = new EventEmitter<{
+      something : undefined;
+      nope : undefined;
+    }>();
     let wasCalled = 0;
     eventEmitter.addEventListener("something", () => {
       wasCalled++;
@@ -37,10 +40,10 @@ describe("utils - EventEmitter", () => {
   });
 
   it("should communicate the given payload", () => {
-    const eventEmitter = new EventEmitter<
-      string,
-      undefined|"a"|{ a: string }
-      >();
+    const eventEmitter = new EventEmitter<{
+      something: undefined|"a"|{ a: string };
+      nope: undefined|"a"|{ a: string };
+    }>();
     let wasCalledWithString = 0;
     let wasCalledWithObject = 0;
     eventEmitter.addEventListener("something",
@@ -88,10 +91,10 @@ describe("utils - EventEmitter", () => {
   });
 
   it("should be able to remove the listener for a given event", () => {
-    const eventEmitter = new EventEmitter<
-      string,
-      undefined|"a"|{ a: string }
-      >();
+    const eventEmitter = new EventEmitter<{
+      something: undefined|"a"|{ a: string };
+      nope: undefined|"a"|{ a: string };
+    }>();
     let wasCalledWithString = 0;
     let wasCalledWithObject = 0;
     const callback = (payload : undefined|"a"|{ a: string }) => {
@@ -145,10 +148,10 @@ describe("utils - EventEmitter", () => {
   });
 
   it("should be able to register multiple callbacks for the same event", () => {
-    const eventEmitter = new EventEmitter<
-      string,
-      undefined|"a"|{ a: string }
-      >();
+    const eventEmitter = new EventEmitter<{
+      something: undefined|"a"|{ a: string };
+      nope: undefined|"a"|{ a: string };
+    }>();
     let wasCalledWithString1 = 0;
     let wasCalledWithObject1 = 0;
     let wasCalledWithString2 = 0;
@@ -273,10 +276,10 @@ describe("utils - EventEmitter", () => {
   /* tslint:disable max-line-length */
   it("should remove every callback for an event if no callback is provided to removeEventListener", () => {
   /* tslint:enable max-line-length */
-    const eventEmitter = new EventEmitter<
-      string,
-      undefined|"a"|{ a: string }
-      >();
+    const eventEmitter = new EventEmitter<{
+      something: undefined|"a"|{ a: string };
+      nope: undefined|"a"|{ a: string };
+    }>();
     let wasCalledWithString1 = 0;
     let wasCalledWithObject1 = 0;
     let wasCalledWithString2 = 0;
@@ -401,10 +404,10 @@ describe("utils - EventEmitter", () => {
   /* tslint:disable max-line-length */
   it("should remove every callback for any event if no callback and no event is provided to removeEventListener", () => {
   /* tslint:enable max-line-length */
-    const eventEmitter = new EventEmitter<
-      string,
-      undefined|"a"|{ a: string }
-      >();
+    const eventEmitter = new EventEmitter<{
+      something: undefined|"a"|{ a: string };
+      nope: undefined|"a"|{ a: string };
+    }>();
     let wasCalledWithString1 = 0;
     let wasCalledWithObject1 = 0;
     let wasCalledWithString2 = 0;
@@ -527,7 +530,11 @@ describe("utils - EventEmitter", () => {
   });
 
   it("should allow removing event listener that do not exist", () => {
-    const eventEmitter = new EventEmitter<string, never>();
+    const eventEmitter = new EventEmitter<{
+      test: undefined|"a"|{ a: string };
+      something: undefined|"a"|{ a: string };
+      nope: undefined|"a"|{ a: string };
+    }>();
     const cb1 = function() {
       throw new Error("Should not be called");
     };
@@ -545,7 +552,11 @@ describe("utils - EventEmitter", () => {
   });
 
   it("should log if an event listener throws", () => {
-    const eventEmitter = new EventEmitter<string, void>();
+    const eventEmitter = new EventEmitter<{
+      t: undefined|"a"|{ a: string };
+      something: undefined|"a"|{ a: string };
+      nope: undefined|"a"|{ a: string };
+    }>();
     const err = new Error("Should not be called");
     const cb = function() {
       throw err;
@@ -567,7 +578,10 @@ describe("utils - fromEvent", () => {
   it("should subscribe to a given event", (done) => {
     let stringItemsReceived = 0;
     let numberItemsReceived = 0;
-    const eventEmitter = new EventEmitter<string, undefined|string|number>();
+    const eventEmitter = new EventEmitter<{
+      test: undefined|"a"|{ a: string };
+      fooba: undefined|number|"a"|"b"|"c"|{ a: string };
+    }>();
     fromEvent(eventEmitter, "fooba")
       .pipe(take(6))
       .subscribe({
@@ -601,7 +615,10 @@ describe("utils - fromEvent", () => {
   it("should remove the event listener on unsubscription", () => {
     let stringItemsReceived = 0;
     let numberItemsReceived = 0;
-    const eventEmitter = new EventEmitter<string, undefined|string|number>();
+    const eventEmitter = new EventEmitter<{
+      test: undefined|"a"|{ a: string };
+      fooba: undefined|number|"a"|"b"|"c"|{ a: string };
+    }>();
     const subscription = fromEvent(eventEmitter, "fooba")
       .pipe(take(6))
       .subscribe((item) => {

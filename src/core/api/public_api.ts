@@ -72,6 +72,7 @@ import {
 import {
   ErrorCodes,
   ErrorTypes,
+  ICustomError,
   MediaError,
 } from "../../errors";
 import features from "../../features";
@@ -146,29 +147,29 @@ interface IBitrateEstimate {
   bitrate : number|undefined;
 }
 
-type PLAYER_EVENT_STRINGS =
-  "playerStateChange" |
-  "positionUpdate" |
-  "audioTrackChange" |
-  "textTrackChange" |
-  "videoTrackChange" |
-  "audioBitrateChange" |
-  "videoBitrateChange" |
-  "imageTrackUpdate" |
-  "fullscreenChange" |
-  "bitrateEstimationChange" |
-  "volumeChange" |
-  "error" |
-  "warning" |
-  "nativeTextTracksChange" |
-  "manifestUpdate" |
-  "periodChange";
+interface IPublicAPIEvent {
+  playerStateChange : string;
+  positionUpdate : IPositionUpdateItem;
+  audioTrackChange : ITMAudioTrack | null;
+  textTrackChange : ITMTextTrack | null;
+  videoTrackChange : ITMVideoTrack | null;
+  audioBitrateChange : number;
+  videoBitrateChange : number;
+  imageTrackUpdate : { data: IBifThumbnail[] };
+  fullscreenChange : boolean;
+  bitrateEstimationChange : IBitrateEstimate;
+  volumeChange : number;
+  error : ICustomError | Error;
+  warning : ICustomError | Error;
+  nativeTextTracksChange : TextTrack[];
+  periodChange : Period;
+}
 
 /**
  * @class Player
  * @extends EventEmitter
  */
-class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
+class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * Current version of the RxPlayer.
@@ -443,14 +444,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @type {Object}
    */
   private _priv_contentEventsMemory : {
-    period: null|Period; // current Period
-    audioTrack: null|ITMAudioTrack; // audioTrack for the current Period
-    textTrack: null|ITMTextTrack; // textTrack for the current Period
-    videoTrack: null|ITMVideoTrack; // videoTrack for the current Period
-    videoBitrate: null|number; // audioBitrate for the current Period
-    audioBitrate: null|number; // videoBitrate for the current Period
-    bitrateEstimation: undefined|IBitrateEstimate; // last calculated bitrate
-                                                   // estimation for a type
+    [P in keyof IPublicAPIEvent]? : IPublicAPIEvent[P];
   };
 
   /**
@@ -599,15 +593,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     this._priv_currentError = null;
     this._priv_contentInfos = null;
 
-    this._priv_contentEventsMemory = {
-      period: null,
-      videoTrack: null,
-      audioTrack: null,
-      textTrack: null,
-      videoBitrate: null,
-      audioBitrate: null,
-      bitrateEstimation: undefined,
-    };
+    this._priv_contentEventsMemory = {};
 
     this._priv_stopAtEnd = stopAtEnd;
 
@@ -1790,15 +1776,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       this._priv_abrManager = null;
     }
 
-    this._priv_contentEventsMemory = {
-      period: null,
-      videoTrack: null,
-      audioTrack: null,
-      textTrack: null,
-      videoBitrate: null,
-      audioBitrate: null,
-      bitrateEstimation: undefined,
-    };
+    this._priv_contentEventsMemory = {};
 
     // EME cleaning
     const freeUpContentLock = () => {
@@ -1818,51 +1796,18 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * Store and emit new player state (e.g. text track, videoBitrate...).
    * We check for deep equality to avoid emitting 2 consecutive times the same
    * state.
-   * @param {string} type - the type of the updated state (videoBitrate...)
+   * @param {string} eventName
    * @param {*} value - its new value
    * @private
    */
-  private _priv_triggerContentEvent(
-    type : "videoTrack",
-    value : ITMVideoTrack|null
-  ) : void;
-  private _priv_triggerContentEvent(
-    type : "audioTrack",
-    value : ITMAudioTrack|null
-  ) : void;
-  private _priv_triggerContentEvent(
-    type : "textTrack",
-    value : ITMTextTrack|null
-  ) : void;
-  private _priv_triggerContentEvent(
-    type : "period",
-    value : Period
-  ) : void;
-  private _priv_triggerContentEvent(
-    type : "bitrateEstimation",
-    value : IBitrateEstimate
-  ) : void;
-  private _priv_triggerContentEvent(
-    type : "videoBitrate"|"audioBitrate",
-    value : number|null
-  ) : void;
-  private _priv_triggerContentEvent(
-    type :
-      "videoTrack" |
-      "audioTrack" |
-      "textTrack" |
-      "period" |
-      "videoBitrate" |
-      "audioBitrate" |
-      "bitrateEstimation",
-    value : ITMVideoTrack|ITMAudioTrack|ITMTextTrack|Period|IBitrateEstimate|number|null
+  private _priv_triggerContentEvent<TEventName extends keyof IPublicAPIEvent>(
+    eventName : TEventName,
+    value : IPublicAPIEvent[TEventName]
   ) : void {
-    const prev = this._priv_contentEventsMemory[type];
+    const prev = this._priv_contentEventsMemory[eventName];
     if (!deepEqual(prev, value)) {
-      this._priv_contentEventsMemory[type] = value;
-
-      // SAD
-      this.trigger(type + "Change" as PLAYER_EVENT_STRINGS, value);
+      this._priv_contentEventsMemory[eventName] = value;
+      this.trigger(eventName, value);
     }
   }
 
@@ -1933,7 +1878,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
    * @param {Error} error
    * @private
    */
-  private _priv_onPlaybackError(error : Error) : void {
+  private _priv_onPlaybackError(error : ICustomError | Error) : void {
     this._priv_stopCurrentContent$.next();
     this._priv_cleanUpCurrentContentState();
     this._priv_currentError = error;
@@ -2020,7 +1965,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       return;
     }
     this._priv_contentInfos.currentPeriod = period;
-    this._priv_triggerContentEvent("period", period);
+    this._priv_triggerContentEvent("periodChange", period);
 
     // Emit intial events for the Period
     if (this._priv_trackManager) {
@@ -2028,29 +1973,31 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       const textTrack = this._priv_trackManager.getChosenTextTrack(period);
       const videoTrack = this._priv_trackManager.getChosenVideoTrack(period);
 
-      this._priv_triggerContentEvent("audioTrack", audioTrack);
-      this._priv_triggerContentEvent("textTrack", textTrack);
-      this._priv_triggerContentEvent("videoTrack", videoTrack);
+      this._priv_triggerContentEvent("audioTrackChange", audioTrack);
+      this._priv_triggerContentEvent("textTrackChange", textTrack);
+      this._priv_triggerContentEvent("videoTrackChange", videoTrack);
     } else {
-      this._priv_triggerContentEvent("audioTrack", null);
-      this._priv_triggerContentEvent("textTrack", null);
-      this._priv_triggerContentEvent("videoTrack", null);
+      this._priv_triggerContentEvent("audioTrackChange", null);
+      this._priv_triggerContentEvent("textTrackChange", null);
+      this._priv_triggerContentEvent("videoTrackChange", null);
     }
 
     const activeAudioRepresentations = this.getCurrentRepresentations();
     if (activeAudioRepresentations && activeAudioRepresentations.audio != null) {
       const bitrate = activeAudioRepresentations.audio.bitrate;
-      this._priv_triggerContentEvent("audioBitrate", bitrate != null ? bitrate : -1);
+      this._priv_triggerContentEvent("audioBitrateChange",
+        bitrate != null ? bitrate : -1);
     } else {
-      this._priv_triggerContentEvent("audioBitrate", null);
+      this._priv_triggerContentEvent("audioBitrateChange", -1);
     }
 
     const activeVideoRepresentations = this.getCurrentRepresentations();
     if (activeVideoRepresentations && activeVideoRepresentations.video != null) {
       const bitrate = activeVideoRepresentations.video.bitrate;
-      this._priv_triggerContentEvent("videoBitrate", bitrate != null ? bitrate : -1);
+      this._priv_triggerContentEvent("videoBitrateChange",
+        bitrate != null ? bitrate : -1);
     } else {
-      this._priv_triggerContentEvent("videoBitrate", null);
+      this._priv_triggerContentEvent("videoBitrateChange", -1);
     }
   }
 
@@ -2197,15 +2144,15 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
       switch (type) {
         case "audio":
           const audioTrack = this._priv_trackManager.getChosenAudioTrack(currentPeriod);
-          this._priv_triggerContentEvent("audioTrack", audioTrack);
+          this._priv_triggerContentEvent("audioTrackChange", audioTrack);
           break;
         case "text":
           const textTrack = this._priv_trackManager.getChosenTextTrack(currentPeriod);
-          this._priv_triggerContentEvent("textTrack", textTrack);
+          this._priv_triggerContentEvent("textTrackChange", textTrack);
           break;
         case "video":
           const videoTrack = this._priv_trackManager.getChosenVideoTrack(currentPeriod);
-          this._priv_triggerContentEvent("videoTrack", videoTrack);
+          this._priv_triggerContentEvent("videoTrackChange", videoTrack);
           break;
       }
     }
@@ -2254,9 +2201,11 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
 
     if (period != null && currentPeriod != null && currentPeriod.id === period.id) {
       if (type === "video") {
-        this._priv_triggerContentEvent("videoBitrate", bitrate != null ? bitrate : -1);
+        this._priv_triggerContentEvent("videoBitrateChange",
+          bitrate != null ? bitrate : -1);
       } else if (type === "audio") {
-        this._priv_triggerContentEvent("audioBitrate", bitrate != null ? bitrate : -1);
+        this._priv_triggerContentEvent("audioBitrateChange",
+          bitrate != null ? bitrate : -1);
       }
     }
   }
@@ -2276,7 +2225,7 @@ class Player extends EventEmitter<PLAYER_EVENT_STRINGS, any> {
     type : IBufferType;
     bitrate : number|undefined;
   }) : void {
-    this._priv_triggerContentEvent("bitrateEstimation", { type, bitrate });
+    this._priv_triggerContentEvent("bitrateEstimationChange", { type, bitrate });
   }
 
   /**

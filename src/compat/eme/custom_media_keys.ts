@@ -70,16 +70,6 @@ type TypedArray =
   Float32Array |
   Float64Array;
 
-type MEDIA_KEY_SESSION_EVENTS =
-  string;
-  // "keymessage" |
-  // "message" |
-  // "keyadded" |
-  // "ready" |
-  // "keyerror" |
-  // "error";
-//
-
 interface ICustomMediaKeyStatusMap {
     readonly size: number;
     forEach(callback: (status : MediaKeyStatus) => void, thisArg?: any): void;
@@ -113,9 +103,17 @@ interface ICustomMediaKeyStatusMap {
       ) : boolean;
 }
 
-export interface ICustomMediaKeySession
-  extends IEventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
-{
+interface IMediaKeySessionEvents {
+  [key : string] : MediaKeyMessageEvent|Event;
+  // "keymessage"
+  // "message"
+  // "keyadded"
+  // "ready"
+  // "keyerror"
+  // "error"
+}
+
+export interface ICustomMediaKeySession extends IEventEmitter<IMediaKeySessionEvents> {
   // Attributes
   readonly closed: Promise<void>;
   expiration: number;
@@ -217,7 +215,7 @@ if (navigator.requestMediaKeySystemAccess) {
   // This is for Chrome with unprefixed EME api
   if (isOldWebkitMediaElement(HTMLVideoElement.prototype)) {
     class WebkitMediaKeySession
-    extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent|Event>
+    extends EventEmitter<IMediaKeySessionEvents>
       implements ICustomMediaKeySession
     {
       public readonly update : (
@@ -449,7 +447,7 @@ if (navigator.requestMediaKeySystemAccess) {
       typeof MediaKeys_.prototype.createSession === "function"
     ) {
       class IE11MediaKeySession
-      extends EventEmitter<MEDIA_KEY_SESSION_EVENTS, MediaKeyMessageEvent | Event>
+      extends EventEmitter<IMediaKeySessionEvents>
       implements ICustomMediaKeySession {
         public readonly update: (
           license: ArrayBuffer,

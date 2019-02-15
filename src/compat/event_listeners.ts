@@ -100,7 +100,7 @@ export interface IEventEmitterLike {
 export type IEventTargetLike =
   HTMLElement |
   IEventEmitterLike |
-  IEventEmitter<string, any>;
+  IEventEmitter<any>;
 
 /**
  * @param {Array.<string>} eventNames
