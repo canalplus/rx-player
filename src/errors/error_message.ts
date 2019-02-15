@@ -24,11 +24,7 @@
 export default function errorMessage(
   name : string,
   code : string,
-  reason? : string|null
+  reason : string
 ) : string {
-   if (reason == null) {
-     return `${name} (${code})`;
-   } else {
-     return `${name} (${code}) ${reason}`;
-   }
+  return `${name} (${code}) ${reason}`;
  }

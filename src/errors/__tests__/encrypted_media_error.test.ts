@@ -17,24 +17,12 @@
 import EncryptedMediaError from "../encrypted_media_error";
 
 describe("errors - EncryptedMediaError", () => {
-  it("should format an EncryptedMediaError when called with minimal arguments", () => {
-    const encryptedMediaError = new EncryptedMediaError("foo", null);
-    expect(encryptedMediaError).toBeInstanceOf(Error);
-    expect(encryptedMediaError.name).toBe("EncryptedMediaError");
-    expect(encryptedMediaError.type).toBe("ENCRYPTED_MEDIA_ERROR");
-    expect(encryptedMediaError.reason).toBe(null);
-    expect(encryptedMediaError.code).toBe("");
-    expect(encryptedMediaError.fatal).toBe(false);
-    expect(encryptedMediaError.message).toBe("EncryptedMediaError ()");
-  });
-
-  it("should be able to give a reason", () => {
+  it("should format an EncryptedMediaError", () => {
     const reason = "test";
-    const encryptedMediaError = new EncryptedMediaError("foo", reason);
+    const encryptedMediaError = new EncryptedMediaError("foo", reason, false);
     expect(encryptedMediaError).toBeInstanceOf(Error);
     expect(encryptedMediaError.name).toBe("EncryptedMediaError");
     expect(encryptedMediaError.type).toBe("ENCRYPTED_MEDIA_ERROR");
-    expect(encryptedMediaError.reason).toBe(reason);
     expect(encryptedMediaError.code).toBe("");
     expect(encryptedMediaError.fatal).toBe(false);
     expect(encryptedMediaError.message).toBe("EncryptedMediaError () test");
@@ -46,22 +34,9 @@ describe("errors - EncryptedMediaError", () => {
     expect(encryptedMediaError).toBeInstanceOf(Error);
     expect(encryptedMediaError.name).toBe("EncryptedMediaError");
     expect(encryptedMediaError.type).toBe("ENCRYPTED_MEDIA_ERROR");
-    expect(encryptedMediaError.reason).toBe(reason);
     expect(encryptedMediaError.code).toBe("");
     expect(encryptedMediaError.fatal).toBe(true);
     expect(encryptedMediaError.message).toBe("EncryptedMediaError () test");
-  });
-
-  it("should filter in a valid error code", () => {
-    const encryptedMediaError = new EncryptedMediaError("MEDIA_ERR_NETWORK", null, true);
-    expect(encryptedMediaError).toBeInstanceOf(Error);
-    expect(encryptedMediaError.name).toBe("EncryptedMediaError");
-    expect(encryptedMediaError.type).toBe("ENCRYPTED_MEDIA_ERROR");
-    expect(encryptedMediaError.reason).toBe(null);
-    expect(encryptedMediaError.code).toBe("MEDIA_ERR_NETWORK");
-    expect(encryptedMediaError.fatal).toBe(true);
-    expect(encryptedMediaError.message)
-      .toBe("EncryptedMediaError (MEDIA_ERR_NETWORK)");
   });
 
   /* tslint:disable max-line-length */
@@ -73,7 +48,6 @@ describe("errors - EncryptedMediaError", () => {
     expect(encryptedMediaError).toBeInstanceOf(Error);
     expect(encryptedMediaError.name).toBe("EncryptedMediaError");
     expect(encryptedMediaError.type).toBe("ENCRYPTED_MEDIA_ERROR");
-    expect(encryptedMediaError.reason).toBe(reason);
     expect(encryptedMediaError.code).toBe("MEDIA_ERR_NETWORK");
     expect(encryptedMediaError.fatal).toBe(true);
     expect(encryptedMediaError.message)

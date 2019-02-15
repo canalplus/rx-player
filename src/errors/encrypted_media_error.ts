@@ -20,8 +20,6 @@ import {
 } from "./error_codes";
 import errorMessage from "./error_message";
 
-type IEncryptedMediaErrorReason = string|null;
-
 /**
  * Error linked to the encryption of the media.
  *
@@ -33,19 +31,14 @@ export default class EncryptedMediaError extends Error {
   public readonly type : string;
   public readonly message : string;
   public readonly code : string;
-  public readonly reason? : IEncryptedMediaErrorReason;
   public fatal : boolean;
 
   /**
    * @param {string} code
-   * @param {Object} [reason]
-   * @Param {Boolean} [fatal]
+   * @param {Object} reason
+   * @Param {Boolean} fatal
    */
-  constructor(
-    code : string,
-    reason? : IEncryptedMediaErrorReason,
-    fatal? : boolean
-  ) {
+  constructor(code : string, reason : string, fatal : boolean) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, EncryptedMediaError.prototype);
@@ -53,10 +46,9 @@ export default class EncryptedMediaError extends Error {
     this.name = "EncryptedMediaError";
     this.type = ErrorTypes.ENCRYPTED_MEDIA_ERROR;
 
-    this.reason = reason;
     this.code = ErrorCodes.hasOwnProperty(code) ?
       (ErrorCodes as Record<string, string>)[code] : "";
     this.fatal = !!fatal;
-    this.message = errorMessage(this.name, this.code, this.reason);
+    this.message = errorMessage(this.name, this.code, reason);
   }
 }
