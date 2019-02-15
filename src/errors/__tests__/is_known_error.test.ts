@@ -41,7 +41,7 @@ describe("Errors - isKnownError", () => {
   });
 
   it("should return true for an OtherError", () => {
-    const otherError = new OtherError("foo", null, false);
+    const otherError = new OtherError("foo", "tata", false);
     expect(isKnownError(otherError)).toBe(true);
   });
 
