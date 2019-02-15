@@ -49,7 +49,7 @@ describe("Errors - isKnownError", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
     const requestError = new RequestError(xhr, "foo", "bar");
-    const networkError = new NetworkError("foo", requestError);
+    const networkError = new NetworkError("foo", requestError, false);
     expect(isKnownError(networkError)).toBe(true);
   });
 
