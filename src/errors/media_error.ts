@@ -31,15 +31,14 @@ export default class MediaError extends Error {
   public readonly type : string;
   public readonly message : string;
   public readonly code : string;
-  public readonly reason? : string|null;
   public fatal : boolean;
 
   /**
    * @param {string} code
-   * @param {Error|null} [reason]
-   * @param {Boolean} [fatal]
+   * @param {string} reason
+   * @param {Boolean} fatal
    */
-  constructor(code : string, reason? : string|null, fatal? : boolean) {
+  constructor(code : string, reason : string, fatal : boolean) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, MediaError.prototype);
@@ -47,10 +46,9 @@ export default class MediaError extends Error {
     this.name = "MediaError";
     this.type = ErrorTypes.MEDIA_ERROR;
 
-    this.reason = reason;
     this.code = ErrorCodes.hasOwnProperty(code) ?
       (ErrorCodes as Record<string, string>)[code] : "";
     this.fatal = !!fatal;
-    this.message = errorMessage(this.name, this.code, this.reason);
+    this.message = errorMessage(this.name, this.code, reason);
   }
 }

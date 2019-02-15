@@ -205,7 +205,8 @@ export default class SourceBuffersManager {
     }
 
     log.error("SB: Unknown buffer type:", bufferType);
-    throw new MediaError("BUFFER_TYPE_UNKNOWN", null, true);
+    throw new MediaError("BUFFER_TYPE_UNKNOWN",
+      "The player wants to create a SourceBuffer of an unknown type.", true);
   }
 
   /**

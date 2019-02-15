@@ -122,7 +122,8 @@ export default function createMediaSourceLoader({
 
     const initialPeriod = manifest.getPeriodForTime(initialTime);
     if (initialPeriod == null) {
-      throw new MediaError("MEDIA_STARTING_TIME_NOT_FOUND", null, true);
+      throw new MediaError("MEDIA_STARTING_TIME_NOT_FOUND",
+        "Wanted starting time not found in the Manifest.", true);
     }
 
     // Creates SourceBuffersManager allowing to create and keep track of a
@@ -194,10 +195,14 @@ export default function createMediaSourceLoader({
     const loadedEvent$ = load$
       .pipe(mergeMap((evt) => {
         if (evt === "autoplay-blocked") {
-          const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", null, false);
+          const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY",
+            "Cannot trigger auto-play automatically: your browser does not allow it.",
+            false);
           return observableOf(EVENTS.warning(error), EVENTS.loaded());
         } else if (evt === "not-loaded-metadata") {
-          const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA", null, false);
+          const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
+            "Cannot load automatically: your browser falsely announced having loaded" +
+            "the content.", false);
           return observableOf(EVENTS.warning(error));
         }
         log.debug("Init: The current content is loaded.");

@@ -20,7 +20,6 @@ import {
 } from "rxjs";
 import { mergeMap } from "rxjs/operators";
 import { MediaError } from "../../errors";
-import log from "../../log";
 
 /**
  * Returns an observable which throws the right MediaError as soon an "error"
@@ -35,26 +34,24 @@ export default function throwOnMediaError(
   return observableFromEvent(mediaElement, "error")
     .pipe(mergeMap(() => {
       const errorCode = mediaElement.error && mediaElement.error.code;
-      let errorDetail;
-
       switch (errorCode) {
         case 1:
-          errorDetail = "MEDIA_ERR_ABORTED";
-          break;
+          throw new MediaError("MEDIA_ERR_ABORTED",
+            "The fetching of the associated resource was aborted by the " +
+            "user's request.", true);
         case 2:
-          errorDetail = "MEDIA_ERR_NETWORK";
-          break;
+          throw new MediaError("MEDIA_ERR_NETWORK",
+            "A network error occurred which prevented the media from being " +
+            "successfully fetched", true);
         case 3:
-          errorDetail = "MEDIA_ERR_DECODE";
-          break;
+          throw new MediaError("MEDIA_ERR_DECODE",
+            "An error occurred while trying to decode the media resource", true);
         case 4:
-          errorDetail = "MEDIA_ERR_SRC_NOT_SUPPORTED";
-          break;
+          throw new MediaError("MEDIA_ERR_SRC_NOT_SUPPORTED",
+            "The media resource has been found to be unsuitable.", true);
         default:
-          errorDetail = "MEDIA_ERR_UNKNOWN";
-          break;
+          throw new MediaError("MEDIA_ERR_UNKNOWN",
+            "The HTMLMediaElement errored due to an unknown reason.", true);
       }
-      log.error(`Init: Media element MEDIA_ERR(${errorDetail})`);
-      throw new MediaError(errorDetail, null, true);
     }));
 }

@@ -107,7 +107,8 @@ const MediaKeys_ : ICompatMediaKeysConstructor|undefined =
     public readonly setServerCertificate : () => never;
     constructor() {
       const noMediaKeys = () => {
-        throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED", null, true);
+        throw new MediaError(
+          "MEDIA_KEYS_NOT_SUPPORTED", "No MSE API for a MediaKeys Object", true);
       };
       this.create = noMediaKeys;
       this.createSession = noMediaKeys;

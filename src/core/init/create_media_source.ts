@@ -118,7 +118,8 @@ function createMediaSource(
 ) : Observable<MediaSource> {
   return new Observable((observer : Observer<MediaSource>) => {
     if (!MediaSource_) {
-      throw new MediaError("MEDIA_SOURCE_NOT_SUPPORTED", null, true);
+      throw new MediaError("MEDIA_SOURCE_NOT_SUPPORTED",
+        "No MediaSource Object was found in the current browser.", true);
     }
 
     // make sure the media has been correctly reset

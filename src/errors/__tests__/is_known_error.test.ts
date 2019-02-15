@@ -41,7 +41,7 @@ describe("Errors - isKnownError", () => {
   });
 
   it("should return true for an OtherError", () => {
-    const otherError = new OtherError("foo", null);
+    const otherError = new OtherError("foo", null, false);
     expect(isKnownError(otherError)).toBe(true);
   });
 
@@ -54,12 +54,12 @@ describe("Errors - isKnownError", () => {
   });
 
   it("should return true for a MediaError", () => {
-    const mediaError = new MediaError("foo", null);
+    const mediaError = new MediaError("foo", "toto", false);
     expect(isKnownError(mediaError)).toBe(true);
   });
 
   it("should return true for an EncryptedMediaError", () => {
-    const encryptedMediaError = new EncryptedMediaError("foo", null);
+    const encryptedMediaError = new EncryptedMediaError("foo", "toto", false);
     expect(isKnownError(encryptedMediaError)).toBe(true);
   });
 });
