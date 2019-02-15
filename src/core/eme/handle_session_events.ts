@@ -153,7 +153,7 @@ export default function handleSessionEvents(
           if (keyStatus === KEY_STATUS_EXPIRED || keyId === KEY_STATUS_EXPIRED) {
             const { throwOnLicenseExpiration } = keySystem;
             const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-              "A key is expired", false);
+              "A decryption key expired", false);
 
             if (throwOnLicenseExpiration !== false) {
               throw error;
@@ -162,9 +162,11 @@ export default function handleSessionEvents(
           }
 
           if (KEY_STATUS_ERRORS[keyId]) {
-            throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyId, true);
+            throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
+              "An invalid key status has been encountered: " + keyId, true);
           } else if (KEY_STATUS_ERRORS[keyStatus]) {
-            throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", keyStatus, true);
+            throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
+              "An invalid key status has been encountered: " + keyStatus, true);
           }
         });
 

@@ -230,12 +230,12 @@ export default function BufferOrchestrator(
       mergeMap(({ currentTime, wantedTimeOffset }) => {
         const position = wantedTimeOffset + currentTime;
         if (position < manifest.getMinimumPosition()) {
-          const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST",
-            "The current position is behind the earliest time known.", false);
+          const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST", "The current " +
+            "position is behind the earliest time announced in the Manifest.", false);
           return observableOf(EVENTS.warning(warning));
         } else if (position > manifest.getMaximumPosition()) {
-          const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST",
-            "The current position is after the latest time known.", false);
+          const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST", "The current " +
+            "position is after the latest time announced in the Manifest.", false);
           return observableOf(EVENTS.warning(warning));
         }
         return EMPTY;

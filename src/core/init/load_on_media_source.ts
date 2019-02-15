@@ -201,8 +201,8 @@ export default function createMediaSourceLoader({
           return observableOf(EVENTS.warning(error), EVENTS.loaded());
         } else if (evt === "not-loaded-metadata") {
           const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
-            "Cannot load automatically: your browser falsely announced having loaded" +
-            "the content.", false);
+            "Cannot load automatically: your browser falsely announced having " +
+            "loaded the content.", false);
           return observableOf(EVENTS.warning(error));
         }
         log.debug("Init: The current content is loaded.");
