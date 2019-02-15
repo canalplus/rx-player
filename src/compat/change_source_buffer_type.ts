@@ -15,13 +15,17 @@
  */
 
 import log from "../log";
+import { IEventEmitter } from "../utils/event_emitter";
 
-export interface ICustomSourceBuffer<T> {
-  addEventListener : (eventName : string, cb : (arg : any) => void) => void;
-  removeEventListener : (
-    eventName : string,
-    callback : (arg : any) => void
-  ) => void;
+interface ICustomSourceBufferEvents {
+  updatestart : Event|undefined;
+  update : Event|undefined;
+  updateend : Event|undefined;
+  error : Event;
+}
+
+export interface ICustomSourceBuffer<T>
+  extends IEventEmitter<ICustomSourceBufferEvents> {
   buffered : TimeRanges;
   changeType? : (type: string) => void;
   updating : boolean;

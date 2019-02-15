@@ -20,29 +20,43 @@ import {
 } from "rxjs";
 import log from "../log";
 
-type IListeners<T extends string, U> =
-  Partial<Record<
-    T,
-    Array<listenerFunction<U>>
-  >>;
-type listenerFunction<U> = (payload : U) => void;
-
-export interface IEventEmitter<T extends string, U> {
-  addEventListener(evt : T, fn : listenerFunction<U>) : void;
-  removeEventListener(evt? : T, fn? : listenerFunction<U>) : void;
+export interface IEventEmitter<T> {
+  addEventListener<TEventName extends keyof T>(
+    evt : TEventName,
+    fn : IListener<T, TEventName>
+  ) : void;
+  removeEventListener<TEventName extends keyof T>(
+    evt : TEventName,
+    fn : IListener<T, TEventName>
+  ) : void;
+  trigger?<TEventName extends keyof T>(
+    evt : TEventName,
+    arg : IArgs<T, TEventName>
+  ) : void;
 }
 
+// Type of the argument in the listener's callback
+type IArgs<TEventRecord, TEventName extends keyof TEventRecord> =
+  TEventRecord[TEventName];
+
+// Type of the listener function
+type IListener<TEventRecord, TEventName extends keyof TEventRecord> =
+  (args: IArgs<TEventRecord, TEventName>) => void;
+
+type IListeners<TEventRecord> = {
+  [P in keyof TEventRecord]? : Array<IListener<TEventRecord, P>>
+};
+
 /**
- * Simple EventEmitted implementation.
+ * Simple but fully type-safe EventEmitter implementation.
  * @class EventEmitter
  */
-export default class EventEmitter<T extends string, U>
-  implements IEventEmitter<T, U> {
+export default class EventEmitter<T> implements IEventEmitter<T> {
   /**
    * @type {Object}
    * @private
    */
-  private _listeners : IListeners<T, U>;
+  private _listeners : IListeners<T>;
 
   constructor() {
     this._listeners = {};
@@ -56,11 +70,13 @@ export default class EventEmitter<T extends string, U>
    * The callback will take as argument the eventual payload of the event
    * (single argument).
    */
-  public addEventListener(evt : T, fn : listenerFunction<U>) : void {
+  public addEventListener<TEventName extends keyof T>(
+    evt : TEventName,
+    fn : IListener<T, TEventName>
+  ) : void {
     const listeners = this._listeners[evt];
     if (!listeners) {
-      // TS Bug?
-      (this._listeners[evt] as Array<listenerFunction<U>>) = [fn];
+      this._listeners[evt] = [fn];
     } else {
       listeners.push(fn);
     }
@@ -75,7 +91,10 @@ export default class EventEmitter<T extends string, U>
    * or undefined while the evt argument is set, all callbacks linked to that
    * event will be unregistered.
    */
-  public removeEventListener(evt? : T, fn? : listenerFunction<U>) : void {
+  public removeEventListener<TEventName extends keyof T>(
+    evt? : TEventName,
+    fn? : IListener<T, TEventName>
+  ) : void {
     if (evt == null) {
       this._listeners = {};
       return;
@@ -106,7 +125,10 @@ export default class EventEmitter<T extends string, U>
    * @param {*} arg - The eventual payload for that event. All triggered
    * callbacks will recieve this payload as argument.
    */
-  public trigger(evt : T, arg : U) : void {
+  public trigger<TEventName extends keyof T>(
+    evt : TEventName,
+    arg : IArgs<T, TEventName>
+  ) : void {
     const listeners = this._listeners[evt];
     if (!listeners) {
       return;
@@ -129,12 +151,12 @@ export default class EventEmitter<T extends string, U>
  * @param {string} eventName
  * @returns {Observable}
  */
-export function fromEvent<T extends string, U>(
-  target : IEventEmitter<T, U>,
-  eventName : T
-) : Observable<U> {
-  return new Observable((obs : Observer<U>) => {
-    function handler(event : U) {
+export function fromEvent<T, TEventName extends keyof T>(
+  target : IEventEmitter<T>,
+  eventName : TEventName
+) : Observable<IArgs<T, TEventName>> {
+  return new Observable((obs : Observer<IArgs<T, TEventName>>) => {
+    function handler(event : IArgs<T, TEventName>) {
       obs.next(event);
     }
     target.addEventListener(eventName, handler);

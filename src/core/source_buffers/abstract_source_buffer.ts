@@ -24,13 +24,20 @@ import EventEmitter from "../../utils/event_emitter";
 import tryCatch from "../../utils/rx-try_catch";
 import ManualTimeRanges from "./time_ranges";
 
+interface IAbstractSourceBufferEvent {
+  updatestart : undefined;
+  update : undefined;
+  updateend : undefined;
+  error : Event;
+}
+
 /**
  * Abstract class for a custom SourceBuffer implementation.
  * @class AbstractSourceBuffer
  * @extends EventEmitter
  */
 export default abstract class AbstractSourceBuffer<T>
-  extends EventEmitter<string, any>
+  extends EventEmitter<IAbstractSourceBufferEvent>
   implements ICustomSourceBuffer<T>
 {
   public timestampOffset : number;

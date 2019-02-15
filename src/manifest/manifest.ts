@@ -73,11 +73,15 @@ interface IManifestParsingOptions {
   representationFilter? : IRepresentationFilter;
 }
 
+export interface IManifestEvents {
+  manifestUpdate : null;
+}
+
 /**
  * Normalized Manifest structure.
  * @class Manifest
  */
-export default class Manifest extends EventEmitter<"manifestUpdate", null> {
+export default class Manifest extends EventEmitter<IManifestEvents> {
   /**
    * ID uniquely identifying this Manifest.
    * @type {string}
