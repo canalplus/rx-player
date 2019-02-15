@@ -114,7 +114,9 @@ export default class Period {
             if (!arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, adaptation.type)) {
               log.info("not supported adaptation type", adaptation.type);
               const error =
-                new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE", null, false);
+                new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE",
+                  "An Adaptation has an unknown and unsupported type: " +
+                  adaptation.type, false);
               this.parsingErrors.push(error);
               return false;
             } else {

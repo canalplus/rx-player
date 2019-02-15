@@ -17,24 +17,12 @@
 import MediaError from "../media_error";
 
 describe("errors - MediaError", () => {
-  it("should format a MediaError when called with minimal arguments", () => {
-    const mediaError = new MediaError("foo", null);
-    expect(mediaError).toBeInstanceOf(Error);
-    expect(mediaError.name).toBe("MediaError");
-    expect(mediaError.type).toBe("MEDIA_ERROR");
-    expect(mediaError.reason).toBe(null);
-    expect(mediaError.code).toBe("");
-    expect(mediaError.fatal).toBe(false);
-    expect(mediaError.message).toBe("MediaError ()");
-  });
-
-  it("should be able to give a reason", () => {
+  it("should format a MediaError", () => {
     const reason = "test";
-    const mediaError = new MediaError("foo", reason);
+    const mediaError = new MediaError("foo", reason, false);
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");
-    expect(mediaError.reason).toBe(reason);
     expect(mediaError.code).toBe("");
     expect(mediaError.fatal).toBe(false);
     expect(mediaError.message).toBe("MediaError () test");
@@ -46,32 +34,18 @@ describe("errors - MediaError", () => {
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");
-    expect(mediaError.reason).toBe(reason);
     expect(mediaError.code).toBe("");
     expect(mediaError.fatal).toBe(true);
     expect(mediaError.message).toBe("MediaError () test");
   });
 
   it("should filter in a valid error code", () => {
-    const mediaError = new MediaError("MEDIA_ERR_NETWORK", null, true);
-    expect(mediaError).toBeInstanceOf(Error);
-    expect(mediaError.name).toBe("MediaError");
-    expect(mediaError.type).toBe("MEDIA_ERROR");
-    expect(mediaError.reason).toBe(null);
-    expect(mediaError.code).toBe("MEDIA_ERR_NETWORK");
-    expect(mediaError.fatal).toBe(true);
-    expect(mediaError.message).toBe("MediaError (MEDIA_ERR_NETWORK)");
-  });
-
-  /* tslint:disable max-line-length */
-  it("should set a complete error message if both a valid code and a reason is given", () => {
   /* tslint:enable max-line-length */
     const reason = "test";
     const mediaError = new MediaError("MEDIA_ERR_NETWORK", reason, true);
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");
-    expect(mediaError.reason).toBe(reason);
     expect(mediaError.code).toBe("MEDIA_ERR_NETWORK");
     expect(mediaError.fatal).toBe(true);
     expect(mediaError.message).toBe("MediaError (MEDIA_ERR_NETWORK) test");

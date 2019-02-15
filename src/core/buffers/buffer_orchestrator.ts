@@ -230,10 +230,12 @@ export default function BufferOrchestrator(
       mergeMap(({ currentTime, wantedTimeOffset }) => {
         const position = wantedTimeOffset + currentTime;
         if (position < manifest.getMinimumPosition()) {
-          const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST", null, false);
+          const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST",
+            "The current position is behind the earliest time known.", false);
           return observableOf(EVENTS.warning(warning));
         } else if (position > manifest.getMaximumPosition()) {
-          const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST", null, false);
+          const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST",
+            "The current position is after the latest time known.", false);
           return observableOf(EVENTS.warning(warning));
         }
         return EMPTY;
@@ -260,7 +262,8 @@ export default function BufferOrchestrator(
         const newInitialPeriod = manifest
           .getPeriodForTime(currentTime + wantedTimeOffset);
         if (newInitialPeriod == null) {
-          throw new MediaError("MEDIA_TIME_NOT_FOUND", null, true);
+          throw new MediaError("MEDIA_TIME_NOT_FOUND",
+            "The wanted position is not found in the Manifest.", true);
         } else {
         // Note: For this to work, manageEveryBuffers should always emit the
         // "periodBufferReady" event for the new InitialPeriod synchronously
