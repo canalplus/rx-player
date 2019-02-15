@@ -152,8 +152,8 @@ export default function handleSessionEvents(
           // and is not the same between some versions of Edge and Chrome.
           if (keyStatus === KEY_STATUS_EXPIRED || keyId === KEY_STATUS_EXPIRED) {
             const { throwOnLicenseExpiration } = keySystem;
-            const error =
-              new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", "expired", false);
+            const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
+              "A key is expired", false);
 
             if (throwOnLicenseExpiration !== false) {
               throw error;
@@ -202,7 +202,8 @@ export default function handleSessionEvents(
             timeout(10 * 1000),
             catchError((error : Error) : never => {
               throw error instanceof TimeoutError ?
-                new EncryptedMediaError("KEY_LOAD_TIMEOUT", null, false) :
+                new EncryptedMediaError("KEY_LOAD_TIMEOUT",
+                  "The license server took more than 10 seconds to respond.", false) :
                 error;
             })
         );
