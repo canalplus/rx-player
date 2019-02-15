@@ -18,25 +18,7 @@ import NetworkError from "../network_error";
 import RequestError from "../request_error";
 
 describe("errors - NetworkError", () => {
-  it("should format an OtherError when called with minimal arguments", () => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://www.example.com");
-    const reason = "bar";
-    const requestError = new RequestError(xhr, "foo", reason);
-    const networkError = new NetworkError("foo", requestError);
-    expect(networkError).toBeInstanceOf(Error);
-    expect(networkError.name).toBe("NetworkError");
-    expect(networkError.type).toBe("NETWORK_ERROR");
-    expect(networkError.xhr).toBe(requestError.xhr);
-    expect(networkError.status).toBe(requestError.status);
-    expect(networkError.errorType).toBe(requestError.type);
-    expect(networkError.reason).toBe(reason);
-    expect(networkError.code).toBe("");
-    expect(networkError.fatal).toBe(false);
-    expect(networkError.message).toBe("NetworkError () bar");
-  });
-
-  it("should be able to set it as fatal", () => {
+  it("should format an OtherError", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
     const reason = "bar";
@@ -48,7 +30,6 @@ describe("errors - NetworkError", () => {
     expect(networkError.xhr).toBe(requestError.xhr);
     expect(networkError.status).toBe(requestError.status);
     expect(networkError.errorType).toBe(requestError.type);
-    expect(networkError.reason).toBe(reason);
     expect(networkError.code).toBe("");
     expect(networkError.fatal).toBe(true);
     expect(networkError.message).toBe("NetworkError () bar");
@@ -66,7 +47,6 @@ describe("errors - NetworkError", () => {
     expect(networkError.xhr).toBe(requestError.xhr);
     expect(networkError.status).toBe(requestError.status);
     expect(networkError.errorType).toBe(requestError.type);
-    expect(networkError.reason).toBe(reason);
     expect(networkError.code).toBe("MEDIA_ERR_NETWORK");
     expect(networkError.fatal).toBe(true);
     expect(networkError.message).toBe("NetworkError (MEDIA_ERR_NETWORK) bar");
