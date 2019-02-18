@@ -25,9 +25,13 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
+  filter,
   ignoreElements,
   map,
   mergeMap,
+  mergeMapTo,
+  shareReplay,
+  take,
 } from "rxjs/operators";
 import {
   clearElementSrc,
@@ -35,8 +39,11 @@ import {
 } from "../../compat";
 import { MediaError } from "../../errors";
 import log from "../../log";
-import { IKeySystemOption } from "../eme";
-import createEMEManager from "./create_eme_manager";
+import {
+  IEMEManagerEvent,
+  IKeySystemOption,
+} from "../eme";
+import createEMEManager, { IEMEDisabledEvent } from "./create_eme_manager";
 import EVENTS from "./events_generators";
 import { IInitialTimeOptions } from "./get_initial_time";
 import getStalledEvents from "./get_stalled_events";
@@ -112,7 +119,9 @@ export type IDirectfileEvent =
   ISpeedChangedEvent |
   IStalledEvent |
   ILoadedEvent |
-  IWarningEvent;
+  IWarningEvent |
+  IEMEManagerEvent |
+  IEMEDisabledEvent;
 
 /**
  * Launch a content in "Directfile mode".
@@ -130,6 +139,9 @@ export default function initializeDirectfileContent({
 } : IDirectFileOptions) : Observable<IDirectfileEvent> {
   clearElementSrc(mediaElement);
 
+  // Start everything! (Just put the URL in the element's src).
+  const linkURL$ = setElementSrc$(mediaElement, url).pipe(take(1));
+
   log.debug("Init: Calculating initial time");
   const initialTime = () =>
     getDirectFileInitialTime(mediaElement, startAt);
@@ -140,7 +152,10 @@ export default function initializeDirectfileContent({
 
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
-  const emeManager$ = createEMEManager(mediaElement, keySystems);
+  const emeManager$ = linkURL$.pipe(
+    mergeMap(() => createEMEManager(mediaElement, keySystems)),
+    shareReplay({ refCount: true })
+  );
 
   // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.
@@ -158,8 +173,11 @@ export default function initializeDirectfileContent({
     .pipe(map(EVENTS.stalled));
 
   // Manage "loaded" event and warn if autoplay is blocked on the current browser
-  const loadedEvent$ = load$
-    .pipe(mergeMap((evt) => {
+  const loadedEvent$ = emeManager$.pipe(
+    filter(({ type }) => type === "eme-init" || type === "eme-disabled"),
+    take(1),
+    mergeMapTo(load$),
+    mergeMap((evt) => {
       if (evt === "autoplay-blocked") {
         const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY",
           "Cannot trigger auto-play automatically: your browser does not allow it.",
@@ -174,9 +192,6 @@ export default function initializeDirectfileContent({
       return observableOf(EVENTS.loaded());
     }));
 
-  // Start everything! (Just put the URL in the element's src).
-  const linkURL$ = setElementSrc$(mediaElement, url).pipe(ignoreElements());
-
   const initialSeek$ = seek$.pipe(ignoreElements());
 
   return observableMerge(
@@ -185,7 +200,6 @@ export default function initializeDirectfileContent({
     emeManager$,
     mediaError$,
     playbackRate$,
-    stalled$,
-    linkURL$
+    stalled$
   );
 }
