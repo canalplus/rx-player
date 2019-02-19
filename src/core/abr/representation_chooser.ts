@@ -414,7 +414,7 @@ export default class RepresentationChooser {
       );
     }
 
-    // Emit restrictions on the pools of available representations to choose
+    // Emit restrictions on the pools of available Representations to choose
     // from.
     const deviceEvents$ : Observable<IFilters> = _deviceEventsArray.length ?
       observableCombineLatest(..._deviceEventsArray)

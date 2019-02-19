@@ -78,11 +78,14 @@ const {
  *
  *   - Create or dispose SourceBuffers depending on the chosen adaptations.
  *
+ *   - Push the right segments to those SourceBuffers depending on the user's
+ *     preferences, the current position, the bandwidth, the decryption
+ *     conditions...
+ *
  *   - Concatenate Buffers for adaptation from separate Periods at the right
  *     time, to allow smooth transitions between periods.
  *
- *   - Emit events as Period or Adaptations change or as new Period are
- *     prepared.
+ *   - Emit various events to notify of its health and issues
  *
  * Here multiple buffers can be created at the same time to allow smooth
  * transitions between periods.
@@ -199,7 +202,7 @@ export default function BufferOrchestrator(
     bufferType : IBufferType,
     basePeriod : Period
   ) : Observable<IMultiplePeriodBuffersEvent> {
-    // Each Period currently considered, chronologically
+    // Each Period for which there is currently a Buffer, chronologically
     const periodList = new SortedList<Period>((a, b) => a.start - b.start);
 
     /**

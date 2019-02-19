@@ -39,11 +39,11 @@ interface IBufferedSegmentInfos {
 }
 
 interface IBufferedSegment {
-  bufferedEnd : number|undefined;
-  bufferedStart : number|undefined;
-  end : number;
-  infos : IBufferedSegmentInfos;
-  start : number;
+  bufferedEnd : number|undefined; // Last inferred end in the SourceBuffer
+  bufferedStart : number|undefined; // Last inferred start in the SourceBuffer
+  end : number; // Supposed end the segment should reach
+  infos : IBufferedSegmentInfos; // Informations on what this segment is
+  start : number; // Supposed start the segment should start from
 }
 
 /**
@@ -79,16 +79,10 @@ export default class SegmentBookkeeper {
     const { inventory } = this;
     const ranges = convertToRanges(buffered);
 
-    /**
-     * Current inventory index considered.
-     * @type {Number}
-     */
+    // Current inventory index considered.
     let inventoryIndex = 0;
 
-    /**
-     * Current segmentInfos considered
-     * @type {Object}
-     */
+    // Current segmentInfos considered
     let thisSegment = inventory[0];
 
     const rangesLength = ranges.length;
@@ -109,11 +103,8 @@ export default class SegmentBookkeeper {
         continue;
       }
 
-      /**
-       * Inventory index of the last segment not contained in the current range.
-       * Will be used to know how many segments have been garbage collected.
-       * @type {Number}
-       */
+      // Inventory index of the last segment not contained in the current range.
+      // Will be used to know how many segments have been garbage collected.
       const indexBefore = inventoryIndex;
 
       // Find the first segment either within this TimeRange or past it:
@@ -130,14 +121,11 @@ export default class SegmentBookkeeper {
         thisSegment = inventory[++inventoryIndex];
       }
 
-      /**
-       * Contains the end of the last garbage-collected segment before
-       * thisSegment.
-       * Might be useful to infer later the bufferedStart of thisSegment.
-       *
-       * -1 if no segment have been garbage-collected before thisSegment.
-       * @type {Number}
-       */
+      // Contains the end of the last garbage-collected segment before
+      // thisSegment.
+      // Might be useful to infer later the bufferedStart of thisSegment.
+      //
+      // -1 if no segment have been garbage-collected before thisSegment.
       let lastDeletedSegmentEnd = -1;
 
       // remove garbage-collected segments
