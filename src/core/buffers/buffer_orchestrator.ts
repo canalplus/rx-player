@@ -204,6 +204,30 @@ export default function BufferOrchestrator(
   ) : Observable<IMultiplePeriodBuffersEvent> {
     // Each Period for which there is currently a Buffer, chronologically
     const periodList = new SortedList<Period>((a, b) => a.start - b.start);
+    const destroyBuffers$ = new Subject<void>();
+    let hasLoadedABuffer = false; // true after the first PeriodBuffer is ready
+
+    /**
+     * @param {Object} period
+     * @returns {Observable}
+     */
+    function launchConsecutiveBuffersForPeriod(
+      period : Period
+    ) : Observable<IMultiplePeriodBuffersEvent> {
+      return manageConsecutivePeriodBuffers(bufferType, period, destroyBuffers$).pipe(
+        tap((message) => {
+          if (message.type === "periodBufferReady") {
+            if (!hasLoadedABuffer) {
+              hasLoadedABuffer = true;
+            }
+            periodList.add(message.value.period);
+          } else if (message.type === "periodBufferCleared") {
+            periodList.removeElement(message.value.period);
+          }
+        }),
+        share() // as always, with side-effects
+      );
+    }
 
     /**
      * Returns true if the given time is either:
@@ -220,12 +244,6 @@ export default function BufferOrchestrator(
       }
       return head.start > time || (last.end || Infinity) < time;
     }
-
-    // Destroy the current set of consecutive buffers.
-    // Used when the clocks goes out of the bounds of those, e.g. when the user
-    // seeks.
-    // We can then re-create consecutive buffers, from the new point in time.
-    const destroyCurrentBuffers = new Subject<void>();
 
     // trigger warnings when the wanted time is before or after the manifest's
     // segments
@@ -247,47 +265,32 @@ export default function BufferOrchestrator(
 
     // Restart the current buffer when the wanted time is in another period
     // than the ones already considered
-    const restartBuffers$ = clock$.pipe(
+    const restartBuffersWhenOutOfBounds$ = clock$.pipe(
       filter(({ currentTime, wantedTimeOffset }) => {
-        return !!manifest.getPeriodForTime(wantedTimeOffset + currentTime) &&
+        return hasLoadedABuffer &&
+          !!manifest.getPeriodForTime(wantedTimeOffset + currentTime) &&
           isOutOfPeriodList(wantedTimeOffset + currentTime);
       }),
-
-      take(1),
-
-      tap(({ currentTime, wantedTimeOffset }) => {
+      mergeMap(({ currentTime, wantedTimeOffset }) => {
         log.info("Buffer: Current position out of the bounds of the active periods," +
           "re-creating buffers.", bufferType, currentTime + wantedTimeOffset);
-        destroyCurrentBuffers.next();
-      }),
-
-      mergeMap(({ currentTime, wantedTimeOffset }) => {
+        hasLoadedABuffer = false;
+        destroyBuffers$.next();
         const newInitialPeriod = manifest
           .getPeriodForTime(currentTime + wantedTimeOffset);
         if (newInitialPeriod == null) {
           throw new MediaError("MEDIA_TIME_NOT_FOUND",
             "The wanted position is not found in the Manifest.", true);
-        } else {
-        // Note: For this to work, manageEveryBuffers should always emit the
-        // "periodBufferReady" event for the new InitialPeriod synchronously
-        return manageEveryBuffers(bufferType, newInitialPeriod);
         }
+        return launchConsecutiveBuffersForPeriod(newInitialPeriod);
       })
     );
 
-    const currentBuffers$ = manageConsecutivePeriodBuffers(
-      bufferType, basePeriod, destroyCurrentBuffers).pipe(
-        tap((message) => {
-          if (message.type === "periodBufferReady") {
-            periodList.add(message.value.period);
-          } else if (message.type === "periodBufferCleared") {
-            periodList.removeElement(message.value.period);
-          }
-        }),
-        share() // as always, with side-effects
-      );
-
-    return observableMerge(currentBuffers$, restartBuffers$, outOfManifest$);
+    return observableMerge(
+      launchConsecutiveBuffersForPeriod(basePeriod),
+      restartBuffersWhenOutOfBounds$,
+      outOfManifest$
+    );
   }
 
   /**
