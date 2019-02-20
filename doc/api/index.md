@@ -1315,7 +1315,7 @@ preferred to the least preferred.
 When encountering a new Period or a new content, the RxPlayer will then try to
 choose its audio track by comparing what is available with your current
 preferences (i.e. if the most preferred is not available, it will look if the
-second one etc.).
+second one is etc.).
 
 Please note that those preferences will only apply either to the next loaded
 content or to the next newly encountered Period.
@@ -1396,7 +1396,7 @@ preferred to the least preferred. You can set `null` for no subtitles.
 When encountering a new Period or a new content, the RxPlayer will then try to
 choose its text track by comparing what is available with your current
 preferences (i.e. if the most preferred is not available, it will look if the
-second one etc.).
+second one is etc.).
 
 Please note that those preferences will only apply either to the next loaded
 content or to the next newly encountered Period.
