@@ -225,7 +225,7 @@ export default function BufferOrchestrator(
             periodList.removeElement(message.value.period);
           }
         }),
-        share() // as always, with side-effects
+        share()
       );
     }
 
@@ -271,11 +271,13 @@ export default function BufferOrchestrator(
           !!manifest.getPeriodForTime(wantedTimeOffset + currentTime) &&
           isOutOfPeriodList(wantedTimeOffset + currentTime);
       }),
-      mergeMap(({ currentTime, wantedTimeOffset }) => {
+      tap(({ currentTime, wantedTimeOffset }) => {
         log.info("Buffer: Current position out of the bounds of the active periods," +
           "re-creating buffers.", bufferType, currentTime + wantedTimeOffset);
         hasLoadedABuffer = false;
         destroyBuffers$.next();
+      }),
+      mergeMap(({ currentTime, wantedTimeOffset }) => {
         const newInitialPeriod = manifest
           .getPeriodForTime(currentTime + wantedTimeOffset);
         if (newInitialPeriod == null) {
