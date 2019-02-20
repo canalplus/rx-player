@@ -45,19 +45,12 @@ export default function createBufferClock(
   speed$ : Observable<number>,
   startTime : number
 ) : Observable<IBufferOrchestratorClockTick> {
-  /**
-   * wantedTimeOffset is an offset to add to the timing's current time to have
-   * the "real" wanted position.
-   * For now, this is seen when the media element has not yet seeked to its
-   * initial position, the currentTime will most probably be 0 where the
-   * effective starting position will be _startTime_.
-   * Thus we initially set a wantedTimeOffset equal to startTime.
-   * @type {Number}
-   */
-  let wantedTimeOffset = startTime;
+  let initialSeekPerformed = false;
   const updateTimeOffset$ = initialSeek$.pipe(
     take(1),
-    tap(() => { wantedTimeOffset = 0; }), // (initial seek performed)
+    tap(() => {
+      initialSeekPerformed = true;
+    }),
     ignoreElements()
   );
 
@@ -69,7 +62,14 @@ export default function createBufferClock(
           liveGap: manifest.isLive ?
             manifest.getMaximumPosition() - tick.currentTime :
             Infinity,
-          wantedTimeOffset,
+
+          // wantedTimeOffset is an offset to add to the timing's current time to have
+          // the "real" wanted position.
+          // For now, this is seen when the media element has not yet seeked to its
+          // initial position, the currentTime will most probably be 0 where the
+          // effective starting position will be _startTime_.
+          // Thus we initially set a wantedTimeOffset equal to startTime.
+          wantedTimeOffset: initialSeekPerformed ? 0 : startTime - tick.currentTime,
           speed,
         }, tick);
       }));
