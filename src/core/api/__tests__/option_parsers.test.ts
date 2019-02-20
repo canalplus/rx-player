@@ -15,9 +15,6 @@
  */
 
 import config from "../../../config";
-import {
-  parseConstructorOptions,
-} from "../option_parsers";
 
 const {
   // DEFAULT_AUTO_PLAY,
@@ -34,6 +31,10 @@ const {
 } = config;
 
 describe("API - parseConstructorOptions", () => {
+  beforeEach(() => {
+    jest.resetModules();
+  });
+
   const videoElement = document.createElement("video");
 
   const defaultConstructorOptions = {
@@ -48,12 +49,16 @@ describe("API - parseConstructorOptions", () => {
     maxAudioBitrate: DEFAULT_MAX_BITRATES.audio,
     maxVideoBitrate: DEFAULT_MAX_BITRATES.video,
     stopAtEnd: true,
+    preferredAudioTracks: [],
+    preferredTextTracks: [],
   };
   it("should create default values if no option is given", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({})).toEqual(defaultConstructorOptions);
   });
 
   it("should authorize setting a maxBufferAhead", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ maxBufferAhead: 0 })).toEqual({
       ...defaultConstructorOptions,
       maxBufferAhead: 0,
@@ -69,6 +74,7 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting a maxBufferBehind", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ maxBufferBehind: 0 })).toEqual({
       ...defaultConstructorOptions,
       maxBufferBehind: 0,
@@ -84,6 +90,7 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting a wantedBufferAhead", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ wantedBufferAhead: 0 })).toEqual({
       ...defaultConstructorOptions,
       wantedBufferAhead: 0,
@@ -99,6 +106,7 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting a limitVideoWidth option", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ limitVideoWidth: false })).toEqual({
       ...defaultConstructorOptions,
       limitVideoWidth: false,
@@ -110,6 +118,7 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting a throttleWhenHidden option", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ throttleWhenHidden: false })).toEqual({
       ...defaultConstructorOptions,
       throttleWhenHidden: false,
@@ -122,6 +131,7 @@ describe("API - parseConstructorOptions", () => {
 
   /* tslint:disable:max-line-length */
   it("should authorize setting a videoElement option which can be any media element", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
   /* tslint:enable:max-line-length */
     const _videoElement = document.createElement("video");
     const parsed1 = parseConstructorOptions({ videoElement: _videoElement });
@@ -141,6 +151,7 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting an initialVideoBitrate", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ initialVideoBitrate: -1 })).toEqual({
       ...defaultConstructorOptions,
       initialVideoBitrate: -1,
@@ -160,6 +171,7 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting an initialAudioBitrate", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ initialAudioBitrate: -1 })).toEqual({
       ...defaultConstructorOptions,
       initialAudioBitrate: -1,
@@ -179,6 +191,7 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting a maxVideoBitrate", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ maxVideoBitrate: -1 })).toEqual({
       ...defaultConstructorOptions,
       maxVideoBitrate: -1,
@@ -198,6 +211,7 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting a maxAudioBitrate", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ maxAudioBitrate: -1 })).toEqual({
       ...defaultConstructorOptions,
       maxAudioBitrate: -1,
@@ -217,6 +231,7 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting a stopAtEnd option", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ stopAtEnd: false })).toEqual({
       ...defaultConstructorOptions,
       stopAtEnd: false,
@@ -227,25 +242,53 @@ describe("API - parseConstructorOptions", () => {
     });
   });
 
+  it("should authorize setting a preferredAudioTracks option", () => {
+    const preferredAudioTracks = [
+      { language: "fra", audioDescription: false },
+      null,
+    ];
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
+    expect(parseConstructorOptions({ preferredAudioTracks })).toEqual({
+      ...defaultConstructorOptions,
+      preferredAudioTracks,
+    });
+  });
+
+  it("should authorize setting a preferredTextTracks option", () => {
+    const preferredTextTracks = [
+      { language: "fra", closedCaption: false },
+      null,
+    ];
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
+    expect(parseConstructorOptions({ preferredTextTracks })).toEqual({
+      ...defaultConstructorOptions,
+      preferredTextTracks,
+    });
+  });
+
   it("should throw if the maxBufferAhead given is not a number", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(() => parseConstructorOptions({ maxBufferAhead: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ maxBufferAhead: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ maxBufferAhead: {} as any })).toThrow();
   });
 
   it("should throw if the maxBufferBehind given is not a number", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(() => parseConstructorOptions({ maxBufferBehind: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ maxBufferBehind: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ maxBufferBehind: {} as any })).toThrow();
   });
 
   it("should throw if the wantedBufferAhead given is not a number", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(() => parseConstructorOptions({ wantedBufferAhead: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ wantedBufferAhead: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ wantedBufferAhead: {} as any })).toThrow();
   });
 
   it("should throw if the videoElement given is not an HTMLMediaElement", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(() => parseConstructorOptions({ videoElement: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ videoElement: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ videoElement: {} as any })).toThrow();
@@ -257,24 +300,28 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should throw if the initialVideoBitrate given is not a number", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(() => parseConstructorOptions({ initialVideoBitrate: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ initialVideoBitrate: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ initialVideoBitrate: {} as any })).toThrow();
   });
 
   it("should throw if the initialAudioBitrate given is not a number", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(() => parseConstructorOptions({ initialAudioBitrate: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ initialAudioBitrate: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ initialAudioBitrate: {} as any })).toThrow();
   });
 
   it("should throw if the maxVideoBitrate given is not a number", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(() => parseConstructorOptions({ maxVideoBitrate: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ maxVideoBitrate: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ maxVideoBitrate: {} as any })).toThrow();
   });
 
   it("should throw if the maxAudioBitrate given is not a number", () => {
+    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(() => parseConstructorOptions({ maxAudioBitrate: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ maxAudioBitrate: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ maxAudioBitrate: {} as any })).toThrow();
