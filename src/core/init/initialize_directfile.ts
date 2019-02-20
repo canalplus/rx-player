@@ -140,7 +140,7 @@ export default function initializeDirectfileContent({
   clearElementSrc(mediaElement);
 
   // Start everything! (Just put the URL in the element's src).
-  const linkURL$ = setElementSrc$(mediaElement, url).pipe(take(1));
+  const linkURL$ = setElementSrc$(mediaElement, url);
 
   log.debug("Init: Calculating initial time");
   const initialTime = () =>
