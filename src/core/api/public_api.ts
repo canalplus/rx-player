@@ -163,6 +163,11 @@ interface IPublicAPIEvent {
   warning : ICustomError | Error;
   nativeTextTracksChange : TextTrack[];
   periodChange : Period;
+  availableAudioBitratesChange : number[];
+  availableVideoBitratesChange : number[];
+  availableAudioTracksChange : ITMAudioTrackListItem[];
+  availableTextTracksChange : ITMTextTrackListItem[];
+  availableVideoTracksChange : ITMVideoTrackListItem[];
 }
 
 /**
@@ -1966,7 +1971,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
     this._priv_contentInfos.currentPeriod = period;
+
     this._priv_triggerContentEvent("periodChange", period);
+    this._priv_triggerContentEvent("availableAudioTracksChange",
+      this.getAvailableAudioTracks());
+    this._priv_triggerContentEvent("availableTextTracksChange",
+      this.getAvailableTextTracks());
+    this._priv_triggerContentEvent("availableVideoTracksChange",
+      this.getAvailableVideoTracks());
 
     // Emit intial events for the Period
     if (this._priv_trackManager) {
@@ -1982,6 +1994,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_triggerContentEvent("textTrackChange", null);
       this._priv_triggerContentEvent("videoTrackChange", null);
     }
+
+    this._priv_triggerContentEvent("availableAudioBitratesChange",
+      this.getAvailableAudioBitrates());
+    this._priv_triggerContentEvent("availableVideoBitratesChange",
+      this.getAvailableVideoBitrates());
 
     const activeAudioRepresentations = this.getCurrentRepresentations();
     if (activeAudioRepresentations && activeAudioRepresentations.audio != null) {
@@ -2146,6 +2163,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         case "audio":
           const audioTrack = this._priv_trackManager.getChosenAudioTrack(currentPeriod);
           this._priv_triggerContentEvent("audioTrackChange", audioTrack);
+          this._priv_triggerContentEvent("availableAudioBitratesChange",
+            this.getAvailableVideoBitrates());
           break;
         case "text":
           const textTrack = this._priv_trackManager.getChosenTextTrack(currentPeriod);
@@ -2154,6 +2173,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         case "video":
           const videoTrack = this._priv_trackManager.getChosenVideoTrack(currentPeriod);
           this._priv_triggerContentEvent("videoTrackChange", videoTrack);
+          this._priv_triggerContentEvent("availableVideoBitratesChange",
+            this.getAvailableVideoBitrates());
           break;
       }
     }
