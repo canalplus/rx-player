@@ -31,7 +31,6 @@ import {
   mapTo,
   mergeMap,
   shareReplay,
-  take,
   tap,
 } from "rxjs/operators";
 import {
@@ -113,7 +112,6 @@ export default function EMEManager(
 
   const mediaKeysInfos$ = // store the mediaKeys when ready
     initMediaKeys(mediaElement, keySystemsConfigs, attachedMediaKeysInfos).pipe(
-      take(1),
       shareReplay()
     );
 
