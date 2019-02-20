@@ -41,6 +41,12 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
   linkPlayerEventToState("audioBitrateChange", "audioBitrate");
   linkPlayerEventToState("error", "error");
   linkPlayerEventToState("volumeChange", "volume");
+  linkPlayerEventToState("availableAudioTracksChange", "availableLanguages");
+  linkPlayerEventToState("availableVideoTracksChange", "availableVideoTracks");
+  linkPlayerEventToState("availableTextTracksChange", "availableSubtitles");
+  linkPlayerEventToState("availableAudioBitratesChange", "availableAudioBitrates");
+  linkPlayerEventToState("availableVideoBitratesChange", "availableVideoBitrates");
+
 
   fromPlayerEvent("imageTrackUpdate").pipe(
     distinctUntilChanged(),
@@ -117,32 +123,6 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
 
     state.set(stateUpdates);
   });
-
-  fromPlayerEvent("periodChange")
-    .pipe(takeUntil($destroy))
-    .subscribe(() => {
-      state.set({
-        availableVideoTracks: player.getAvailableVideoTracks(),
-        availableLanguages: player.getAvailableAudioTracks(),
-        availableSubtitles: player.getAvailableTextTracks(),
-      });
-    });
-
-  fromPlayerEvent("audioTrackChange")
-    .pipe(takeUntil($destroy))
-    .subscribe(() => {
-      state.set({
-        availableAudioBitrates: player.getAvailableAudioBitrates(),
-      });
-    });
-
-  fromPlayerEvent("videoTrackChange")
-    .pipe(takeUntil($destroy))
-    .subscribe(() => {
-      state.set({
-        availableVideoBitrates: player.getAvailableVideoBitrates(),
-      });
-    });
 
   fromPlayerEvent("warning").pipe(
     takeUntil($destroy)
