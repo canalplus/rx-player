@@ -7,9 +7,14 @@
 - [Events](#events)
     - [playerStateChange](#events-playerStateChange)
     - [positionUpdate](#events-positionUpdate)
+    - [availableAudioTracksChange](#events-availableAudioTracksChange)
+    - [availableTextTracksChange](#events-availableTextTracksChange)
+    - [availableVideoTracksChange](#events-availableVideoTracksChange)
     - [audioTrackChange](#events-audioTrackChange)
     - [textTrackChange](#events-textTrackChange)
     - [videoTrackChange](#events-videoTrackChange)
+    - [availableAudioBitratesChange](#events-availableAudioBitratesChange)
+    - [availableVideoBitratesChange](#events-availableVideoBitratesChange)
     - [audioBitrateChange](#events-audioBitrateChange)
     - [videoBitrateChange](#events-videoBitrateChange)
     - [imageTrackUpdate](#events-imageTrackUpdate)
@@ -94,6 +99,123 @@ The object emitted as the following properties:
     current time converted to wall-clock time in seconds.
     That is the real live position (and not the position as announced by the
     video element).
+
+
+
+<a name="events-availableAudioTracksChange"></a>
+### availableAudioTracksChange #################################################
+
+_payload type_: ``Array.<Object>``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Triggered when the currently available audio tracks change (e.g.: at the
+beginning of the content, when period changes...).
+
+The array emitted contains object describing each available audio track:
+
+  - ``id`` (``string``): The id used to identify the track. Use it for
+    setting the track via ``setAudioTrack``.
+
+  - ``language`` (``string``): The language the audio track is in, as set in
+    the [Manifest](../terms.md#manifest).
+
+  - ``normalized`` (``string``): An attempt to translate the ``language``
+    property into an ISO 639-3 language code (for now only support translations
+    from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
+    fails (no corresponding ISO 639-3 language code is found), it will equal the
+    value of ``language``
+
+  - ``audioDescription`` (``Boolean``): Whether the track is an audio
+    description (for the visually impaired or not).
+
+  - ``active`` (``Boolean``): Whether the track is the one currently active or
+    not.
+
+
+
+<a name="events-availableVideoTracksChange"></a>
+### availableVideoTracksChange #################################################
+
+_payload type_: ``Array.<Object>``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Triggered when the currently available video tracks change (e.g.: at the
+beginning of the content, when period changes...).
+
+The array emitted contains object describing each available video track:
+
+  - ``id`` (``string``): The id used to identify the track. Use it for
+    setting the track via ``setVideoTrack``.
+
+  - ``active`` (``Boolean``): Whether this track is the one currently
+    active or not.
+
+  - ``representations`` (``Array.<Object>``):
+    [Representations](../terms.md#representation) of this video track, with
+    attributes:
+
+    - ``id`` (``string``): The id used to identify this Representation.
+
+    - ``bitrate`` (``Number``): The bitrate of this Representation, in bits per
+      seconds.
+
+    - ``width`` (``Number|undefined``): The width of video, in pixels.
+
+    - ``height`` (``Number|undefined``): The height of video, in pixels.
+
+    - ``codec`` (``string|undefined``): The codec given in standard MIME type
+      format.
+
+    - ``frameRate`` (``string|undefined``): The video framerate.
+
+
+
+<a name="events-availableVideoTracksChange"></a>
+### availableTextTracksChange ##################################################
+
+_payload type_: ``Array.<Object>``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Triggered when the currently available text tracks change (e.g.: at the
+beginning of the content, when period changes...).
+
+The array emitted contains object describing each available text track:
+
+  - ``id`` (``string``): The id used to identify the track. Use it for
+    setting the track via ``setTextTrack``.
+
+  - ``language`` (``string``): The language the text track is in, as set in the
+    [Manifest](../terms.md#manifest).
+
+  - ``normalized`` (``string``): An attempt to translate the ``language``
+    property into an ISO 639-3 language code (for now only support translations
+    from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
+    fails (no corresponding ISO 639-3 language code is found), it will equal the
+    value of ``language``
+
+  - ``closedCaption`` (``Boolean``): Whether the track is specially adapted for
+    the hard of hearing or not.
+
+  - ``active`` (``Boolean``): Whether the track is the one currently active or
+    not.
 
 
 
@@ -182,6 +304,68 @@ properties:
       format.
 
     - ``frameRate`` (``string|undefined``): The video framerate.
+
+
+
+<a name="events-availableAudioBitratesChange"></a>
+### availableAudioBitratesChange ###############################################
+
+_payload type_: ``Array.<Number>``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Triggered when the currently available audio bitrates change (e.g.: at the
+beginning of the content, when switching the current audio track, when period
+changes...).
+
+The payload is an array of the different bitrates available, in bits per
+seconds.
+
+
+<a name="events-availableVideoBitratesChange"></a>
+### availableVideoBitratesChange ###############################################
+
+_payload type_: ``Array.<Number>``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Triggered when the currently available video bitrates change (e.g.: at the
+beginning of the content, when switching the current video track, when period
+changes...).
+
+The payload is an array of the different bitrates available, in bits per
+seconds.
+
+
+<a name="events-availableAudioBitratesChange"></a>
+### availableAudioBitratesChange ###############################################
+
+_payload type_: ``Array.<Number>|null``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Triggered when the currently available audio bitrates change (e.g.: at the
+beginning of the content, when switching the current audio track, when period
+changes...).
+
+The payload is an array of the different bitrates available, in bits per
+seconds.
+
 
 
 <a name="events-audioBitrateChange"></a>
