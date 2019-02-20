@@ -49,8 +49,12 @@ export default function appendDataToSourceBufferWithRetries<T>(
 
   return append$.pipe(
     catchError((appendError : Error) => {
-      if (!appendError || appendError.name !== "QuotaExceededError") {
-        throw new MediaError("BUFFER_APPEND_ERROR", appendError.toString(), true);
+      if (appendError && appendError.name !== "QuotaExceededError") {
+        const reason = appendError instanceof Error ?
+          appendError.toString() :
+          "Couldn't append buffer";
+
+        throw new MediaError("BUFFER_APPEND_ERROR", reason, true);
       }
 
       return forceGarbageCollection(clock$, queuedSourceBuffer).pipe(
