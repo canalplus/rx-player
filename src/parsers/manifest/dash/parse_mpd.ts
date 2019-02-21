@@ -176,7 +176,6 @@ function parseCompleteIntermediateRepresentation(
       rootAttributes.id : "gen-dash-manifest-" + generateManifestID(),
     periods: parsedPeriods,
     transportType: "dash",
-    lifetime: rootAttributes.minimumUpdatePeriod,
     isLive: isDynamic,
     uris: [uri, ...rootChildren.locations],
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay != null ?
@@ -191,6 +190,9 @@ function parseCompleteIntermediateRepresentation(
   }
   if (rootAttributes.timeShiftBufferDepth != null) {
     parsedMPD.timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
+  }
+  if (rootAttributes.minimumUpdatePeriod != null && rootAttributes.minimumUpdatePeriod > 0) {
+    parsedMPD.lifetime = rootAttributes.minimumUpdatePeriod;
   }
 
   checkManifestIDs(parsedMPD);
