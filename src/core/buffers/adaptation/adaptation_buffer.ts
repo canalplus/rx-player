@@ -40,6 +40,7 @@ import {
   ignoreElements,
   map,
   observeOn,
+  share,
   takeUntil,
 } from "rxjs/operators";
 import log from "../../../log";
@@ -126,7 +127,7 @@ export default function AdaptationBuffer<T>(
 
   const abr$ : Observable<IABREstimation> =
     abrManager.get$(adaptation.type, abrClock$, adaptation.representations)
-      .pipe(observeOn(asapScheduler));
+      .pipe(observeOn(asapScheduler), share());
 
   // emit when the current RepresentationBuffer should be stopped right now
   const killCurrentBuffer$ = new Subject<void>();

@@ -197,16 +197,16 @@ export default function InitializeOnMediaSource({
   const abrManager = new ABRManager(requestsInfos$, network$, adaptiveOptions);
 
   // Create and open a new MediaSource object on the given media element.
-  const openMediaSource$ = openMediaSource(mediaElement)
-    .pipe(observeOn(asapScheduler)); // to launch subscriptions only when all
-                                     // Observables here are linked
+  const openMediaSource$ = openMediaSource(mediaElement).pipe(
+    observeOn(asapScheduler), // to launch subscriptions only when all
+    share());                 // Observables here are linked
 
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
   const emeManager$ = openMediaSource$.pipe(
     mergeMap(() => createEMEManager(mediaElement, keySystems)),
-    observeOn(asapScheduler) // to launch subscriptions only when all
-  );                         // Observables here are linked
+    observeOn(asapScheduler), // to launch subscriptions only when all
+    share());                 // Observables here are linked
 
   // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.

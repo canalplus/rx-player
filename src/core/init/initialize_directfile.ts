@@ -32,6 +32,7 @@ import {
   mergeMap,
   mergeMapTo,
   observeOn,
+  share,
   take,
 } from "rxjs/operators";
 import {
@@ -155,7 +156,8 @@ export default function initializeDirectfileContent({
   // issue.
   const emeManager$ = linkURL$.pipe(
     mergeMap(() => createEMEManager(mediaElement, keySystems)),
-    observeOn(asapScheduler) // multiple Observables here are based on this one
+    observeOn(asapScheduler), // multiple Observables here are based on this one
+    share()
   );
 
   // Translate errors coming from the media element into RxPlayer errors
