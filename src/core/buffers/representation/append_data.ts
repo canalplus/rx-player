@@ -48,25 +48,16 @@ export default function appendDataToSourceBufferWithRetries<T>(
   const append$ = queuedSourceBuffer.appendBuffer(dataInfos);
 
   return append$.pipe(
-    catchError((appendError : Error|Event) => {
-      if (
-        appendError &&
-        appendError instanceof Event ||
-        appendError.name !== "QuotaExceededError"
-      ) {
-        const reason = appendError instanceof Error ?
-          appendError.toString() : "Couldn't append buffer";
-
-        throw new MediaError("BUFFER_APPEND_ERROR", reason, true);
+    catchError((appendError : Error) => {
+      if (appendError.name !== "QuotaExceededError") {
+        throw new MediaError("BUFFER_APPEND_ERROR", appendError.toString(), true);
       }
 
       return forceGarbageCollection(clock$, queuedSourceBuffer).pipe(
         mergeMapTo(append$),
-        catchError((forcedGCError : Error|Event) => {
+        catchError((forcedGCError : Error) => {
           // (weird Typing either due to TypeScript or RxJS bug)
-          const reason = forcedGCError instanceof Error ?
-            forcedGCError.toString() : "Couldn't append buffer";
-          throw new MediaError("BUFFER_FULL_ERROR", reason, true);
+          throw new MediaError("BUFFER_FULL_ERROR", forcedGCError.toString(), true);
         }));
     }));
 }
