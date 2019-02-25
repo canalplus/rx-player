@@ -199,7 +199,7 @@ export default class QueuedSourceBuffer<T> {
     this._lastInitSegment = null;
     this._currentCodec = codec;
 
-    this.__onAppendEventError = this._onAppendEventError.bind(this);
+    this.__onAppendEventError = this._onErrorEvent.bind(this);
     this.__onUpdateEnd = this._onUpdateEnd.bind(this);
     this._sourceBuffer.addEventListener("error", this.__onAppendEventError);
     this._sourceBuffer.addEventListener("updateend", this.__onUpdateEnd);
@@ -305,10 +305,17 @@ export default class QueuedSourceBuffer<T> {
 
   /**
    * Handle error events from SourceBuffers.
-   * According to w3c, these events are emitted when an error occurred during the append.
+   * @private
+   * @param {Error|Event} err
    */
-  private _onAppendEventError() : void {
-    this._onError(new Error("Couldn't append buffer."));
+  private _onErrorEvent(err: Error|Event) : void {
+    this._onError(
+      err instanceof Error ?
+        err :
+        // According to w3c, these events are emitted when an error occurred during
+        // the append.
+        new Error("An unknown error occured when appending buffer")
+    );
   }
 
   /**
