@@ -65,10 +65,7 @@ interface IManifestArguments {
   suggestedPresentationDelay? : number;
   timeShiftBufferDepth? : number;
   uris? : string[];
-  utcTimings? : {
-    schemaIdUri?: string,
-    value?: string
-  }[]
+  clockOffset?: number;
 }
 
 interface IManifestParsingOptions {
@@ -214,17 +211,13 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.parsingErrors = [];
     this.id = args.id;
     this.transport = args.transportType;
+    this._clockOffset = args.clockOffset;
 
     this.periods = args.periods.map((period) => {
       const parsedPeriod = new Period(period, representationFilter);
       this.parsingErrors.push(...parsedPeriod.parsingErrors);
       return parsedPeriod;
     }).sort((a, b) => a.start - b.start);
-
-    if (args.utcTimings && args.utcTimings.length > 0 && args.utcTimings[0].value) {
-      this._clockOffset = Date.now() - Date.parse(args.utcTimings[0].value);
-      log.info(`Manifest: Clock offset set to ${this._clockOffset}.`);
-    }
 
     /**
      * @deprecated It is here to ensure compatibility with the way the
@@ -409,10 +402,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.trigger("manifestUpdate", null);
   }
 
-  private getTime() {
-    return Date.now() - (this._clockOffset || 0);
-  }
-
   /**
    * Get minimum position currently defined by the Manifest, in seconds.
    * @returns {number}
@@ -468,6 +457,10 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       ),
       max,
     ];
+  }
+
+  private getTime() {
+    return Date.now() - (this._clockOffset || 0);
   }
 
   /**
