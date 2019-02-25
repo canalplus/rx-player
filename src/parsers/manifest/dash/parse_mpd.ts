@@ -15,6 +15,8 @@
  */
 
 import config from "../../../config";
+import log from "../../../log";
+import arrayFind from "../../../utils/array_find";
 import idGenerator from "../../../utils/id_generator";
 import resolveURL, {
   normalizeBaseURL,
@@ -30,14 +32,15 @@ import {
   createPeriodIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
 } from "./node_parsers/Period";
+import { IScheme } from "./node_parsers/utils";
 import parsePeriods from "./parse_periods";
 
 const generateManifestID = idGenerator();
 
-export type IResource = {
-  type: 'xlink' | 'http-iso';
+export interface IResource {
+  type: "xlink" | "http-iso";
   url: string;
-};
+}
 
 export type IParserResponse<T> =
   {
@@ -85,7 +88,7 @@ function loadExternalRessourcesAndParse(
   }
 
   const utcTimingsToLoad = mpdIR.children.utcTimings.filter(utcTiming =>
-    utcTiming.schemeIdUri === 'urn:mpeg:dash:utc:http-iso:2014'
+    utcTiming.schemeIdUri === "urn:mpeg:dash:utc:http-iso:2014"
   );
 
   if (xlinksToLoad.length === 0 && utcTimingsToLoad.length === 0) {
@@ -97,8 +100,12 @@ function loadExternalRessourcesAndParse(
     type: "needs-ressources",
     value: {
       ressources: [
-        ...xlinksToLoad.map<IResource>(({ ressource }) => ({ type: 'xlink', url: ressource})),
-        ...utcTimingsToLoad.map<IResource>(({ value }) => ({ type: 'http-iso', url: value || ''}))
+        ...xlinksToLoad.map<IResource>(
+          ({ ressource }) => ({ type: "xlink", url: ressource})
+        ),
+        ...utcTimingsToLoad.map<IResource>(
+          ({ value }) => ({ type: "http-iso", url: value || ""})
+        ),
       ],
       continue: function continueParsingMPD(loadedRessources : string[]) {
         if (loadedRessources.length !== (xlinksToLoad.length + utcTimingsToLoad.length)) {
@@ -129,7 +136,7 @@ function loadExternalRessourcesAndParse(
 
         for (let j = 0; j < utcTimingsToLoad.length; j++) {
           const utcTiming = utcTimingsToLoad[j];
-          utcTiming.schemeIdUri = 'urn:mpeg:dash:utc:direct:2014';
+          utcTiming.schemeIdUri = "urn:mpeg:dash:utc:direct:2014";
 
           utcTiming.value = loadedRessources[xlinksToLoad.length + j];
         }
@@ -188,6 +195,23 @@ function parseCompleteIntermediateRepresentation(
     return undefined;
   })();
 
+  const getClockOffsetFromUTCTimings = (utcTimings: IScheme[]) => {
+    const firstDirectUTCTiming = arrayFind(
+      utcTimings,
+      (utcTiming) => utcTiming.schemeIdUri === "urn:mpeg:dash:utc:direct:2014"
+    );
+
+    if (firstDirectUTCTiming && firstDirectUTCTiming.value) {
+      try {
+        return Date.now() - Date.parse(firstDirectUTCTiming.value);
+      } catch (e) {
+        log.warn("Failed to parse first direct UTC Timing in dash manifest:", e);
+      }
+    }
+
+    return undefined;
+  };
+
   const parsedMPD : IParsedManifest = {
     availabilityStartTime,
     baseURL,
@@ -201,7 +225,7 @@ function parseCompleteIntermediateRepresentation(
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay != null ?
       rootAttributes.suggestedPresentationDelay :
       config.DEFAULT_SUGGESTED_PRESENTATION_DELAY.DASH,
-    utcTimings: rootChildren.utcTimings,
+    clockOffset: getClockOffsetFromUTCTimings(rootChildren.utcTimings),
   };
 
   // -- add optional fields --

@@ -76,7 +76,7 @@ function requestXLink(xlinkURL : string) : Observable<string> {
 
 function requestHttpIso(url : string) : Observable<string> {
   return request({
-    url: url,
+    url,
     responseType: "text",
     ignoreProgressEvents: true,
   }).pipe(
@@ -129,7 +129,11 @@ export default function(
         const { ressources, continue: continueParsing } = parserResponse.value;
 
         const externalResources$ = ressources
-          .map(resource => scheduleRequest(() => resource.type === 'xlink' ? requestXLink(resource.url) : requestHttpIso(resource.url)));
+          .map(resource => scheduleRequest(() =>
+            resource.type === "xlink" ?
+              requestXLink(resource.url) :
+              requestHttpIso(resource.url)
+          ));
 
         return observableCombineLatest(externalResources$)
           .pipe(mergeMap(loadedResources =>
