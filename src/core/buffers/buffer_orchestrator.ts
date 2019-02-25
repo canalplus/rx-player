@@ -123,7 +123,7 @@ export default function BufferOrchestrator(
   }
 ) : Observable<IBufferOrchestratorEvent> {
   const { manifest, initialPeriod } = content;
-  const { maxBufferAhead$, maxBufferBehind$ } = options;
+  const { maxBufferAhead$, maxBufferBehind$, wantedBufferAhead$ } = options;
 
   // Keep track of a unique BufferGarbageCollector created per
   // QueuedSourceBuffer.
@@ -378,6 +378,7 @@ export default function BufferOrchestrator(
       segmentPipelinesManager,
       sourceBuffersManager,
       options,
+      wantedBufferAhead$,
     }).pipe(
       mergeMap((
         evt : IPeriodBufferEvent
