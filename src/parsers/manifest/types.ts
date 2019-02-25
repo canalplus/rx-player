@@ -79,9 +79,6 @@ export interface IParsedManifest {
   presentationLiveGap?: number;
   suggestedPresentationDelay?: number;
   timeShiftBufferDepth?: number;
-  utcTimings?: {
-    schemaIdUri?: string;
-    value?: string;
-  }[];
+  clockOffset?: number;
   uris?: string[]; // uris where the manifest can be refreshed
 }
