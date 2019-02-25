@@ -144,12 +144,26 @@ export default function BufferOrchestrator(
       });
     });
 
-  // Keep track of a unique segmentBookkeeper created per
-  // QueuedSourceBuffer.
-  const segmentBookkeepers =
-    new WeakMapMemory<QueuedSourceBuffer<unknown>, SegmentBookkeeper>(() =>
-      new SegmentBookkeeper()
-    );
+  // Keep track of a unique segmentBookkeeper created per QueuedSourceBuffer.
+  const segmentBookkeepers = new WeakMapMemory<QueuedSourceBuffer<unknown>,
+    SegmentBookkeeper>(() => new SegmentBookkeeper());
+
+  // trigger warnings when the wanted time is before or after the manifest's
+  // segments
+  const outOfManifest$ = clock$.pipe(
+    mergeMap(({ currentTime, wantedTimeOffset }) => {
+      const position = wantedTimeOffset + currentTime;
+      if (position < manifest.getMinimumPosition()) {
+        const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST", "The current " +
+          "position is behind the earliest time announced in the Manifest.", false);
+        return observableOf(EVENTS.warning(warning));
+      } else if (position > manifest.getMaximumPosition()) {
+        const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST", "The current " +
+          "position is after the latest time announced in the Manifest.", false);
+        return observableOf(EVENTS.warning(warning));
+      }
+      return EMPTY;
+    }));
 
   const addPeriodBuffer$ = new Subject<IPeriodBufferInfos>();
   const removePeriodBuffer$ = new Subject<IPeriodBufferInfos>();
@@ -186,7 +200,12 @@ export default function BufferOrchestrator(
       areComplete ? EVENTS.endOfStream() : EVENTS.resumeStream()
     ));
 
-  return observableMerge(activePeriodChanged$, ...buffersArray, endOfStream$);
+  return observableMerge(
+    activePeriodChanged$,
+    ...buffersArray,
+    endOfStream$,
+    outOfManifest$
+  );
 
   /**
    * Manage creation and removal of Buffers for every Periods.
@@ -245,24 +264,6 @@ export default function BufferOrchestrator(
       return head.start > time || (last.end || Infinity) < time;
     }
 
-    // trigger warnings when the wanted time is before or after the manifest's
-    // segments
-    const outOfManifest$ = clock$.pipe(
-      mergeMap(({ currentTime, wantedTimeOffset }) => {
-        const position = wantedTimeOffset + currentTime;
-        if (position < manifest.getMinimumPosition()) {
-          const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST", "The current " +
-            "position is behind the earliest time announced in the Manifest.", false);
-          return observableOf(EVENTS.warning(warning));
-        } else if (position > manifest.getMaximumPosition()) {
-          const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST", "The current " +
-            "position is after the latest time announced in the Manifest.", false);
-          return observableOf(EVENTS.warning(warning));
-        }
-        return EMPTY;
-      })
-    );
-
     // Restart the current buffer when the wanted time is in another period
     // than the ones already considered
     const restartBuffersWhenOutOfBounds$ = clock$.pipe(
@@ -290,8 +291,7 @@ export default function BufferOrchestrator(
 
     return observableMerge(
       launchConsecutiveBuffersForPeriod(basePeriod),
-      restartBuffersWhenOutOfBounds$,
-      outOfManifest$
+      restartBuffersWhenOutOfBounds$
     );
   }
 
