@@ -16,6 +16,7 @@
 
 import objectAssign from "object-assign";
 import {
+  asapScheduler,
   combineLatest as observableCombineLatest,
   concat as observableConcat,
   EMPTY,
@@ -31,8 +32,8 @@ import {
   ignoreElements,
   map,
   mergeMap,
+  observeOn,
   share,
-  shareReplay,
   startWith,
   switchMap,
   take,
@@ -169,7 +170,6 @@ export default function InitializeOnMediaSource({
   pipelines,
   url,
 } : IInitializeOptions) : Observable<IInitEvent> {
-  // Subject through which warnings will be sent
   const warning$ = new Subject<Error|ICustomError>();
 
   // Fetch and parse the manifest from the URL given.
@@ -197,15 +197,16 @@ export default function InitializeOnMediaSource({
   const abrManager = new ABRManager(requestsInfos$, network$, adaptiveOptions);
 
   // Create and open a new MediaSource object on the given media element.
-  const openMediaSource$ = openMediaSource(mediaElement)
-    .pipe(shareReplay({ refCount: true }));
+  const openMediaSource$ = openMediaSource(mediaElement).pipe(
+    observeOn(asapScheduler), // to launch subscriptions only when all
+    share());                 // Observables here are linked
 
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
   const emeManager$ = openMediaSource$.pipe(
     mergeMap(() => createEMEManager(mediaElement, keySystems)),
-    shareReplay({ refCount: true })
-  );
+    observeOn(asapScheduler), // to launch subscriptions only when all
+    share());                 // Observables here are linked
 
   // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.

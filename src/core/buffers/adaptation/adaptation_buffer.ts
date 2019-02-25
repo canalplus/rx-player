@@ -26,6 +26,7 @@
 
 import objectAssign from "object-assign";
 import {
+  asapScheduler,
   concat as observableConcat,
   defer as observableDefer,
   merge as observableMerge,
@@ -38,7 +39,8 @@ import {
   filter,
   ignoreElements,
   map,
-  shareReplay,
+  observeOn,
+  share,
   takeUntil,
 } from "rxjs/operators";
 import log from "../../../log";
@@ -125,7 +127,7 @@ export default function AdaptationBuffer<T>(
 
   const abr$ : Observable<IABREstimation> =
     abrManager.get$(adaptation.type, abrClock$, adaptation.representations)
-      .pipe(shareReplay({ refCount: true }));
+      .pipe(observeOn(asapScheduler), share());
 
   // emit when the current RepresentationBuffer should be stopped right now
   const killCurrentBuffer$ = new Subject<void>();

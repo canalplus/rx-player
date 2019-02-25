@@ -124,6 +124,7 @@ export default function seekAndLoadOnMediaEvents(
   mustAutoPlay : boolean
 ) : { seek$ : Observable<unknown>; load$ : Observable<ILoadEvents> } {
   const seek$ = whenLoadedMetadata$(mediaElement).pipe(
+    take(1),
     tap(() => {
       log.info("Init: Set initial time", startTime);
       mediaElement.currentTime = typeof startTime === "function" ?
