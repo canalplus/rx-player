@@ -86,10 +86,7 @@ export interface IPeriodBufferArguments {
   abrManager : ABRManager;
   bufferType : IBufferType;
   clock$ : Observable<IPeriodBufferClockTick>;
-  content : {
-    manifest : Manifest;
-    period : Period;
-  };
+  content : { manifest : Manifest; period : Period };
   garbageCollectors : WeakMapMemory<QueuedSourceBuffer<unknown>, Observable<never>>;
   segmentBookkeepers : WeakMapMemory<QueuedSourceBuffer<unknown>, SegmentBookkeeper>;
   segmentPipelinesManager : SegmentPipelinesManager<any>;
@@ -99,8 +96,8 @@ export interface IPeriodBufferArguments {
     offlineRetry? : number;
     segmentRetry? : number;
     textTrackOptions? : ITextTrackSourceBufferOptions;
-    wantedBufferAhead$ : Observable<number>;
   };
+  wantedBufferAhead$ : Observable<number>;
 }
 
 /**
@@ -122,9 +119,9 @@ export default function PeriodBuffer({
   segmentPipelinesManager,
   sourceBuffersManager,
   options,
+  wantedBufferAhead$,
 } : IPeriodBufferArguments) : Observable<IPeriodBufferEvent> {
   const { period } = content;
-  const { wantedBufferAhead$ } = options;
 
   // Emits the chosen adaptation for the current type.
   const adaptation$ = new ReplaySubject<Adaptation|null>(1);
