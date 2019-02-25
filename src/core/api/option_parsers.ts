@@ -459,7 +459,7 @@ function parseLoadVideoOptions(
       "`setPreferredTextTracks` method instead");
   }
   const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
-  const hideNativeSubtitle = (options as any).hidenativeSubtitle == null ?
+  const hideNativeSubtitle = (options as any).hideNativeSubtitle == null ?
     !DEFAULT_SHOW_NATIVE_SUBTITLE : !!(options as any).hideNativeSubtitle;
   const manualBitrateSwitchingMode =
     (options as any).manualBitrateSwitchingMode == null ?
