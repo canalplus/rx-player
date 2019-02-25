@@ -327,3 +327,755 @@ describe("API - parseConstructorOptions", () => {
     expect(() => parseConstructorOptions({ maxAudioBitrate: {} as any })).toThrow();
   });
 });
+
+describe("API - parseLoadVideoOptions", () => {
+  beforeEach(() => {
+    jest.resetModules();
+  });
+
+  const defaultLoadVideoOptions = {
+    autoPlay: false,
+    defaultAudioTrack: undefined,
+    defaultTextTrack: undefined,
+    hideNativeSubtitle: false,
+    keySystems: [],
+    manualBitrateSwitchingMode: false,
+    networkConfig: {},
+    startAt: undefined,
+    supplementaryImageTracks: [],
+    supplementaryTextTracks: [],
+    textTrackElement: undefined,
+    textTrackMode: "native",
+    transportOptions: {},
+  };
+
+  it("should throw if no option is given", () => {
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    let err;
+    let opt;
+    try {
+      opt = parseLoadVideoOptions();
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeDefined();
+    expect(opt).not.toBeDefined();
+    expect(err.message).toEqual("No url set on loadVideo");
+  });
+
+  it("should throw if no url is given", () => {
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    let err1;
+    let opt1;
+    let err2;
+    let opt2;
+    try {
+      opt1 = parseLoadVideoOptions({});
+    } catch (e) {
+      err1 = e;
+    }
+    try {
+      opt2 = parseLoadVideoOptions({ transport: "dash" });
+    } catch (e) {
+      err2 = e;
+    }
+    expect(err1).toBeDefined();
+    expect(opt1).not.toBeDefined();
+    expect(err1.message).toEqual("No url set on loadVideo");
+    expect(err2).toBeDefined();
+    expect(opt2).not.toBeDefined();
+    expect(err2.message).toEqual("No url set on loadVideo");
+  });
+
+  it("should throw if no transport is given", () => {
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    let err;
+    let opt;
+    try {
+      opt = parseLoadVideoOptions({ url: "foo" });
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeDefined();
+    expect(opt).not.toBeDefined();
+    expect(err.message).toEqual("No transport set on loadVideo");
+  });
+
+  it("should set a default object if both an url and transport is given", () => {
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+    });
+  });
+
+  it("should authorize setting a autoPlay option", () => {
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    expect(parseLoadVideoOptions({
+      autoPlay: false,
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      autoPlay: false,
+    });
+    expect(parseLoadVideoOptions({
+      autoPlay: true,
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      autoPlay: true,
+    });
+  });
+
+  it("should normalize a defaultAudioTrack given but anounce its deprecation", () => {
+    const warnOnceSpy = jest.fn();
+    jest.mock("../../../utils/warn_once", () => ({ default: warnOnceSpy }));
+    const track = { normalized: "fra", audioDescription: true };
+    const normalizeAudioTrackSpy = jest.fn(() => track);
+    const normalizeTextTrackSpy = jest.fn(() => undefined);
+    jest.mock("../../../utils/languages", () => ({
+      normalizeAudioTrack: normalizeAudioTrackSpy,
+      normalizeTextTrack: normalizeTextTrackSpy,
+    }));
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+      defaultAudioTrack: "Kankyō Ongaku",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      defaultAudioTrack: track,
+    });
+    expect(normalizeAudioTrackSpy).toHaveBeenCalledTimes(1);
+    expect(normalizeAudioTrackSpy).toHaveBeenCalledWith("Kankyō Ongaku");
+    expect(normalizeTextTrackSpy).toHaveBeenCalledTimes(1);
+    expect(normalizeTextTrackSpy).toHaveBeenCalledWith(undefined);
+    expect(warnOnceSpy).toHaveBeenCalledTimes(1);
+    expect(warnOnceSpy).toHaveBeenCalledWith("The `defaultAudioTrack` loadVideo " +
+      "option is deprecated.\n" +
+      "Please use the `preferredAudioTracks` constructor option or the" +
+      "`setPreferredAudioTracks` method instead");
+    normalizeTextTrackSpy.mockReset();
+    normalizeAudioTrackSpy.mockReset();
+    warnOnceSpy.mockReset();
+  });
+
+  it("should normalize a defaultTextTrack given but anounce its deprecation", () => {
+    const warnOnceSpy = jest.fn();
+    jest.mock("../../../utils/warn_once", () => ({ default: warnOnceSpy }));
+    const track = { normalized: "fra", closedCaption: true };
+    const normalizeTextTrackSpy = jest.fn(() => track);
+    const normalizeAudioTrackSpy = jest.fn(() => undefined);
+    jest.mock("../../../utils/languages", () => ({
+      normalizeAudioTrack: normalizeAudioTrackSpy,
+      normalizeTextTrack: normalizeTextTrackSpy,
+    }));
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+      defaultTextTrack: "Laurie Spiegel",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      defaultTextTrack: track,
+    });
+    expect(normalizeTextTrackSpy).toHaveBeenCalledTimes(1);
+    expect(normalizeTextTrackSpy).toHaveBeenCalledWith("Laurie Spiegel");
+    expect(normalizeAudioTrackSpy).toHaveBeenCalledTimes(1);
+    expect(normalizeAudioTrackSpy).toHaveBeenCalledWith(undefined);
+    expect(warnOnceSpy).toHaveBeenCalledTimes(1);
+    expect(warnOnceSpy).toHaveBeenCalledWith("The `defaultTextTrack` loadVideo " +
+      "option is deprecated.\n" +
+      "Please use the `preferredTextTracks` constructor option or the" +
+      "`setPreferredTextTracks` method instead");
+    normalizeTextTrackSpy.mockReset();
+    normalizeAudioTrackSpy.mockReset();
+    warnOnceSpy.mockReset();
+  });
+
+  it("should authorize setting a hideNativeSubtitle option", () => {
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    expect(parseLoadVideoOptions({
+      hideNativeSubtitle: false,
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      hideNativeSubtitle: false,
+    });
+    expect(parseLoadVideoOptions({
+      hideNativeSubtitle: true,
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      hideNativeSubtitle: true,
+    });
+  });
+
+  it("should authorize setting a keySystem option", () => {
+    const keySystem1 = {
+      type: "foo",
+      getLicense: () => { /* noop */},
+    };
+    const keySystem2 = {
+      type: "bar",
+      getLicense: () => { /* noop */},
+    };
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    expect(parseLoadVideoOptions({
+      keySystems: keySystem1,
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      keySystems: [keySystem1],
+    });
+    expect(parseLoadVideoOptions({
+      keySystems: [keySystem1, keySystem2],
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      keySystems: [keySystem1, keySystem2],
+    });
+  });
+
+  it("should throw when setting an invalid keySystems option", () => {
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    {
+      let err;
+      let opt;
+      try {
+        opt = parseLoadVideoOptions({
+          url: "foo",
+          transport: "bar",
+          keySystems: {},
+        });
+      } catch (e) {
+        err = e;
+      }
+      expect(err).toBeDefined();
+      expect(opt).not.toBeDefined();
+      expect(err.message).toEqual(
+        "Invalid key system given: Missing type string or getLicense callback");
+    }
+    {
+      let err;
+      let opt;
+      try {
+        opt = parseLoadVideoOptions({
+          url: "foo",
+          transport: "bar",
+          keySystems: { type: "test" },
+        });
+      } catch (e) {
+        err = e;
+      }
+      expect(err).toBeDefined();
+      expect(opt).not.toBeDefined();
+      expect(err.message).toEqual(
+        "Invalid key system given: Missing type string or getLicense callback");
+    }
+    {
+      let err;
+      let opt;
+      try {
+        opt = parseLoadVideoOptions({
+          url: "foo",
+          transport: "bar",
+          keySystems: { getLicense: () => { /* noop */ } },
+        });
+      } catch (e) {
+        err = e;
+      }
+      expect(err).toBeDefined();
+      expect(opt).not.toBeDefined();
+      expect(err.message).toEqual(
+        "Invalid key system given: Missing type string or getLicense callback");
+    }
+  });
+
+  it("should authorize setting a valid manualBitrateSwitchingMode option", () => {
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    expect(parseLoadVideoOptions({
+      manualBitrateSwitchingMode: "foo",
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      manualBitrateSwitchingMode: "foo",
+    });
+
+    expect(parseLoadVideoOptions({
+      manualBitrateSwitchingMode: "bar",
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      manualBitrateSwitchingMode: "bar",
+    });
+  });
+
+  it("should authorize setting a networkConfig", () => {
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+      networkConfig: {},
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      networkConfig: {},
+    });
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+      networkConfig: { manifestRetry: 4 },
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      networkConfig: { manifestRetry: 4 },
+    });
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+      networkConfig: { offlineRetry: 7 },
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      networkConfig: { offlineRetry: 7 },
+    });
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+      networkConfig: { segmentRetry: 3 },
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      networkConfig: { segmentRetry: 3 },
+    });
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+      networkConfig: {
+        offlineRetry: 10,
+        segmentRetry: 3,
+        manifestRetry: 5,
+      },
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      networkConfig: {
+        offlineRetry: 10,
+        segmentRetry: 3,
+        manifestRetry: 5,
+      },
+    });
+  });
+
+  // TODO There is something wrong with the object-assign dependency and jest
+  // I did not take time to debug it yet
+  xit("should authorize setting a valid startAt option", () => {
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+      startAt: { a: 12 },
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      startAt: { a: 12 },
+    });
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+      startAt: { wallClockTime: 19 },
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      startAt: { wallClockTime: 19 },
+    });
+    const a = new Date();
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+      startAt: { wallClockTime: a },
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      startAt: { wallClockTime: a.getTime() / 1000 },
+    });
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+      startAt: { position: 4, wallClockTime: a },
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      startAt: { position: 4, wallClockTime: a.getTime() / 1000 },
+    });
+  });
+
+  it("should authorize setting a supplementaryImageTracks option", () => {
+    const supplementaryImageTracks1 = {
+      url: "foo",
+      mimeType: "bar/baz",
+    };
+    const supplementaryImageTracks2 = {
+      url: "bar",
+      mimeType: "toto",
+    };
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    expect(parseLoadVideoOptions({
+      supplementaryImageTracks: supplementaryImageTracks1,
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      supplementaryImageTracks: [supplementaryImageTracks1],
+    });
+    expect(parseLoadVideoOptions({
+      supplementaryImageTracks: [supplementaryImageTracks1, supplementaryImageTracks2],
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      supplementaryImageTracks: [supplementaryImageTracks1, supplementaryImageTracks2],
+    });
+  });
+
+  it("should throw when setting an invalid supplementaryImageTracks option", () => {
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    {
+      let err;
+      let opt;
+      try {
+        opt = parseLoadVideoOptions({
+          url: "foo",
+          transport: "bar",
+          supplementaryImageTracks: {},
+        });
+      } catch (e) {
+        err = e;
+      }
+      expect(err).toBeDefined();
+      expect(opt).not.toBeDefined();
+      expect(err.message).toEqual(
+        "Invalid supplementary image track given. Missing either mimetype or url");
+    }
+    {
+      let err;
+      let opt;
+      try {
+        opt = parseLoadVideoOptions({
+          url: "foo",
+          transport: "bar",
+          supplementaryImageTracks: { url: "test" },
+        });
+      } catch (e) {
+        err = e;
+      }
+      expect(err).toBeDefined();
+      expect(opt).not.toBeDefined();
+      expect(err.message).toEqual(
+        "Invalid supplementary image track given. Missing either mimetype or url");
+    }
+    {
+      let err;
+      let opt;
+      try {
+        opt = parseLoadVideoOptions({
+          url: "foo",
+          transport: "bar",
+          supplementaryImageTracks: { mimeType: "test" },
+        });
+      } catch (e) {
+        err = e;
+      }
+      expect(err).toBeDefined();
+      expect(opt).not.toBeDefined();
+      expect(err.message).toEqual(
+        "Invalid supplementary image track given. Missing either mimetype or url");
+    }
+  });
+
+  it("should authorize setting a supplementaryTextTracks option", () => {
+    const supplementaryTextTracks1 = {
+      url: "foo",
+      mimeType: "bar/baz",
+      language: "fr",
+    };
+    const supplementaryTextTracks2 = {
+      url: "bar",
+      mimeType: "toto",
+      language: "en",
+    };
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    expect(parseLoadVideoOptions({
+      supplementaryTextTracks: supplementaryTextTracks1,
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      supplementaryTextTracks: [supplementaryTextTracks1],
+    });
+    expect(parseLoadVideoOptions({
+      supplementaryTextTracks: [supplementaryTextTracks1, supplementaryTextTracks2],
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      supplementaryTextTracks: [supplementaryTextTracks1, supplementaryTextTracks2],
+    });
+  });
+
+  it("should throw when setting an invalid supplementaryTextTracks option", () => {
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    {
+      let err;
+      let opt;
+      try {
+        opt = parseLoadVideoOptions({
+          url: "foo",
+          transport: "bar",
+          supplementaryTextTracks: {},
+        });
+      } catch (e) {
+        err = e;
+      }
+      expect(err).toBeDefined();
+      expect(opt).not.toBeDefined();
+      expect(err.message).toEqual(
+        "Invalid supplementary text track given." +
+        " Missing either language, mimetype or url");
+    }
+    {
+      let err;
+      let opt;
+      try {
+        opt = parseLoadVideoOptions({
+          url: "foo",
+          transport: "bar",
+          supplementaryTextTracks: { url: "test", language: "toto" },
+        });
+      } catch (e) {
+        err = e;
+      }
+      expect(err).toBeDefined();
+      expect(opt).not.toBeDefined();
+      expect(err.message).toEqual(
+        "Invalid supplementary text track given." +
+        " Missing either language, mimetype or url");
+    }
+    {
+      let err;
+      let opt;
+      try {
+        opt = parseLoadVideoOptions({
+          url: "foo",
+          transport: "bar",
+          supplementaryTextTracks: { mimeType: "test", language: "toto" },
+        });
+      } catch (e) {
+        err = e;
+      }
+      expect(err).toBeDefined();
+      expect(opt).not.toBeDefined();
+      expect(err.message).toEqual(
+        "Invalid supplementary text track given." +
+        " Missing either language, mimetype or url");
+    }
+    {
+      let err;
+      let opt;
+      try {
+        opt = parseLoadVideoOptions({
+          url: "foo",
+          transport: "bar",
+          supplementaryTextTracks: { url: "test", mimeType: "toto" },
+        });
+      } catch (e) {
+        err = e;
+      }
+      expect(err).toBeDefined();
+      expect(opt).not.toBeDefined();
+      expect(err.message).toEqual(
+        "Invalid supplementary text track given." +
+        " Missing either language, mimetype or url");
+    }
+  });
+
+  it("should authorize setting a transportOptions option", () => {
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    expect(parseLoadVideoOptions({
+      transportOptions: { a: 4 },
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      transportOptions: { a: 4 },
+    });
+  });
+
+  it("should authorize setting a valid textTrackMode option", () => {
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    expect(parseLoadVideoOptions({
+      textTrackMode: "native",
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      textTrackMode: "native",
+    });
+
+    const textTrackElement = document.createElement("div");
+    expect(parseLoadVideoOptions({
+      textTrackMode: "html",
+      url: "foo",
+      transport: "bar",
+      textTrackElement,
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      textTrackMode: "html",
+      textTrackElement,
+    });
+  });
+
+  it("should throw when setting an invalid textTrackMode option", () => {
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    let err;
+    let opt;
+    try {
+      opt = parseLoadVideoOptions({
+        textTrackMode: "toto",
+        url: "foo",
+        transport: "bar",
+      });
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeDefined();
+    expect(opt).not.toBeDefined();
+    expect(err.message).toEqual("Invalid textTrackMode.");
+  });
+
+  /* tslint:disable max-line-length */
+  it("should throw when setting an html textTrackMode option with no textTrackElement", () => {
+  /* tslint:enable max-line-length */
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    let err;
+    let opt;
+    try {
+      opt = parseLoadVideoOptions({
+        textTrackMode: "html",
+        url: "foo",
+        transport: "bar",
+      });
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeDefined();
+    expect(opt).not.toBeDefined();
+    expect(err.message)
+      .toEqual("You have to provide a textTrackElement in \"html\" textTrackMode.");
+  });
+
+  /* tslint:disable max-line-length */
+  it("should throw when setting an html textTrackMode option with no textTrackElement", () => {
+  /* tslint:enable max-line-length */
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    let err;
+    let opt;
+    const textTrackElement = {};
+    try {
+      opt = parseLoadVideoOptions({
+        textTrackMode: "html",
+        url: "foo",
+        transport: "bar",
+        textTrackElement,
+      });
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeDefined();
+    expect(opt).not.toBeDefined();
+    expect(err.message)
+      .toEqual("textTrackElement should be an HTMLElement.");
+  });
+
+  it("should warn when setting a textTrackElement with a `native` textTrackMode", () => {
+    const warnSpy = jest.fn();
+    jest.mock("../../../log", () => ({ default: { warn: warnSpy } }));
+    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    const textTrackElement = document.createElement("div");
+
+    parseLoadVideoOptions({ textTrackMode: "native", url: "foo", transport: "bar" });
+    expect(warnSpy).not.toHaveBeenCalled();
+
+    expect(parseLoadVideoOptions({
+      textTrackMode: "native",
+      url: "foo",
+      transport: "bar",
+      textTrackElement,
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      textTrackMode: "native",
+    });
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledWith("API: You have set a textTrackElement " +
+      "without being in an \"html\" textTrackMode. It will be ignored.");
+  });
+});
