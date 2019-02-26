@@ -49,7 +49,7 @@ export default function appendDataToSourceBufferWithRetries<T>(
 
   return append$.pipe(
     catchError((appendError : Error) => {
-      if (!appendError || appendError.name !== "QuotaExceededError") {
+      if (appendError.name !== "QuotaExceededError") {
         throw new MediaError("BUFFER_APPEND_ERROR", appendError.toString(), true);
       }
 
