@@ -16,7 +16,6 @@ module.exports = {
     __DEV__: true,
     "ts-jest": {
       tsConfig: {
-        allowJs: true,
         target: "es2017",
         lib: ["es2017", "dom"],
         forceConsistentCasingInFileNames: true,
@@ -28,8 +27,9 @@ module.exports = {
         noUnusedParameters: true,
         noUnusedLocals: true,
         types: ["rxjs", "node", "jest"],
-        module: "commonjs",
+        module: "es2015",
         moduleResolution: "node",
+        esModuleInterop: true,
         typeRoots: [
           "./src/typings",
           "./node_modules/@types",

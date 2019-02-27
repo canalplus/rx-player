@@ -104,7 +104,7 @@ describe("compat - addTextTrack", () => {
     };
 
     const spyOnCreateElement = jest.spyOn(document, "createElement")
-      .mockImplementation(() => fakeTextTrackElement);
+      .mockImplementation(() => fakeTextTrackElement as unknown as HTMLElement);
 
     const addTextTrack = require("../add_text_track").default;
     const { track, trackElement } = addTextTrack(fakeMediaElement, true);
@@ -148,7 +148,7 @@ describe("compat - addTextTrack", () => {
     };
 
     const spyOnCreateElement = jest.spyOn(document, "createElement")
-      .mockImplementation(() => fakeTextTrackElement);
+      .mockImplementation(() => fakeTextTrackElement as unknown as HTMLElement);
 
     const addTextTrack = require("../add_text_track").default;
     const { track, trackElement } = addTextTrack(fakeMediaElement, false);

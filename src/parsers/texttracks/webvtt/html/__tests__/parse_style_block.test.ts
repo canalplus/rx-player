@@ -27,7 +27,9 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
+      /* tslint:disable no-inferred-empty-object-type */
       default: () => { return mockCreateDefaultStyleElements(); },
+      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -51,7 +53,9 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
+      /* tslint:disable no-inferred-empty-object-type */
       default: () => { return mockCreateDefaultStyleElements(); },
+      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -75,7 +79,9 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
+      /* tslint:disable no-inferred-empty-object-type */
       default: () => { return mockCreateDefaultStyleElements(); },
+      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -107,7 +113,9 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
+      /* tslint:disable no-inferred-empty-object-type */
       default: () => { return mockCreateDefaultStyleElements(); },
+      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -136,7 +144,9 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
+      /* tslint:disable no-inferred-empty-object-type */
       default: () => { return mockCreateDefaultStyleElements(); },
+      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -167,7 +177,9 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
+      /* tslint:disable no-inferred-empty-object-type */
       default: () => { return mockCreateDefaultStyleElements(); },
+      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -195,7 +207,9 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
+      /* tslint:disable no-inferred-empty-object-type */
       default: () => { return mockCreateDefaultStyleElements(); },
+      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -229,7 +243,9 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
+      /* tslint:disable no-inferred-empty-object-type */
       default: () => { return mockCreateDefaultStyleElements(); },
+      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -262,7 +278,9 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
+      /* tslint:disable no-inferred-empty-object-type */
       default: () => { return mockCreateDefaultStyleElements(); },
+      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -295,7 +313,9 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
+      /* tslint:disable no-inferred-empty-object-type */
       default: () => { return mockCreateDefaultStyleElements(); },
+      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
@@ -315,7 +335,9 @@ describe("parsers - webvtt - parseStyleBlock", () => {
 
     const mockCreateDefaultStyleElements = jest.fn(() => ({}));
     jest.mock("../create_default_style_elements", () => ({
+      /* tslint:disable no-inferred-empty-object-type */
       default: () => { return mockCreateDefaultStyleElements(); },
+      /* tslint:enable no-inferred-empty-object-type */
     }));
     const parseStyleBlock = require("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual({
