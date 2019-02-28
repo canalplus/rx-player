@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
-describe("Features list - HTML TTML Parser", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
+import ttmlParser from "../../../parsers/texttracks/ttml/html";
+import addHTMLttmlFeature from "../html_ttml_parser";
 
-  it("should add an HTML TTML Parser in the current features", () => {
-    const feat = {};
-    jest.mock("../../../parsers/texttracks/ttml/html", () => ({ default: feat }));
-    const addHTMLTTMLFeature = require("../html_ttml_parser").default;
+jest.mock("../../../parsers/texttracks/ttml/html", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
 
-    const featureObject : {
-      htmlTextTracksParsers : { [featureName : string] : unknown };
-    } = { htmlTextTracksParsers: {} };
-    addHTMLTTMLFeature(featureObject);
+describe("Features list - HTML ttml Parser", () => {
+  it("should add an HTML ttml Parser in the current features", () => {
+    const featureObject : any = { htmlTextTracksParsers: {} };
+    addHTMLttmlFeature(featureObject);
     expect(featureObject).toEqual({
-      htmlTextTracksParsers: { ttml: {} },
+      htmlTextTracksParsers: { ttml: ttmlParser },
     });
-    expect(featureObject.htmlTextTracksParsers.ttml).toBe(feat);
+    expect(featureObject.htmlTextTracksParsers.ttml).toBe(ttmlParser);
   });
 });

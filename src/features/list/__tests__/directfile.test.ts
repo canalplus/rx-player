@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
+import directfile from "../../../core/init/initialize_directfile";
+import addDirectfileFeature from "../directfile";
+
+jest.mock("../../../core/init/initialize_directfile", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
 describe("Features list - Directfile", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
-
   it("should add Directfile in the current features", () => {
-    const feat = {};
-    jest.mock("../../../core/init/initialize_directfile", () => ({ default: feat }));
-    const addDirectfileFeature = require("../directfile").default;
-
-    const featureObject : { [featureName : string] : unknown } = {};
+    const featureObject : any = {};
     addDirectfileFeature(featureObject);
-    expect(featureObject).toEqual({ directfile: {} });
-    expect(featureObject.directfile).toBe(feat);
+    expect(featureObject).toEqual({ directfile });
+    expect(featureObject.directfile).toBe(directfile);
   });
 });

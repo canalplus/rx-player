@@ -21,7 +21,10 @@ describe("Features - addFeatures", () => {
 
   it("should do nothing if an empty array is given", () => {
     const feat = {};
-    jest.mock("../index", () => ({ default: feat }));
+    jest.mock("../index", () => ({
+      __esModule: true,
+      default: feat,
+    }));
     const addFeatures = require("../add_features").default;
 
     expect(() => addFeatures([])).not.toThrow();
@@ -29,7 +32,10 @@ describe("Features - addFeatures", () => {
 
   it("should throw if something different than a function is given", () => {
     const feat = {};
-    jest.mock("../index", () => ({ default: feat }));
+    jest.mock("../index", () => ({
+      __esModule: true,
+      default: feat,
+    }));
     const addFeatures = require("../add_features").default;
 
     expect(() => addFeatures([ 5 ])).toThrow(new Error("Unrecognized feature"));
@@ -39,7 +45,10 @@ describe("Features - addFeatures", () => {
 
   it("should call the given functions with the features object in argument", () => {
     const feat = { a: 412 };
-    jest.mock("../index", () => ({ default: feat }));
+    jest.mock("../index", () => ({
+      __esModule: true,
+      default: feat,
+    }));
     const addFeatures = require("../add_features").default;
 
     const fakeFeat1 = jest.fn();

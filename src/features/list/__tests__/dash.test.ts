@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
+import DASHFeature from "../../../transports/dash";
+import addDASHFeature from "../dash";
+
+jest.mock("../../../transports/dash", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
 describe("Features list - DASH", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
-
   it("should add DASH in the current features", () => {
-    const feat = {};
-    jest.mock("../../../transports/dash", () => ({ default: feat }));
-    const addDASHFeature = require("../dash").default;
-
-    const featureObject : {
-      transports : { [featureName : string] : unknown };
-    } = { transports: {} };
+    const featureObject : any = { transports: {} };
     addDASHFeature(featureObject);
-    expect(featureObject).toEqual({ transports: { dash: {} } });
-    expect(featureObject.transports.dash).toBe(feat);
+    expect(featureObject).toEqual({ transports: { dash: DASHFeature } });
+    expect(featureObject.transports.dash).toBe(DASHFeature);
   });
 });

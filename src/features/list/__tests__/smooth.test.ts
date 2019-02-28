@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
+import SmoothFeature from "../../../transports/smooth";
+import addSmoothFeature from "../smooth";
+
+jest.mock("../../../transports/smooth", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
 describe("Features list - Smooth", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
-
   it("should add Smooth in the current features", () => {
-    const feat = {};
-    jest.mock("../../../transports/smooth", () => ({ default: feat }));
-    const addSmoothFeature = require("../smooth").default;
-
-    const featureObject : {
-      transports : { [featureName : string] : unknown };
-    } = { transports: {} };
+    const featureObject : any = { transports: {} };
     addSmoothFeature(featureObject);
-    expect(featureObject).toEqual({ transports: { smooth: {} } });
-    expect(featureObject.transports.smooth).toBe(feat);
+    expect(featureObject).toEqual({ transports: { smooth: SmoothFeature } });
+    expect(featureObject.transports.smooth).toBe(SmoothFeature);
   });
 });

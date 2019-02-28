@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
-describe("Features list - native VTT Parser", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
+import vttParser from "../../../parsers/texttracks/webvtt/native";
+import addNativevttFeature from "../native_vtt_parser";
 
-  it("should add a native VTT Parser in the current features", () => {
-    const feat = {};
-    jest.mock("../../../parsers/texttracks/webvtt/native", () => ({ default: feat }));
-    const addNativeVTTFeature = require("../native_vtt_parser").default;
+jest.mock("../../../parsers/texttracks/webvtt/native", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
 
-    const featureObject : {
-      nativeTextTracksParsers : { [featureName : string] : unknown };
-    } = { nativeTextTracksParsers: {} };
-    addNativeVTTFeature(featureObject);
+describe("Features list - native vtt Parser", () => {
+  it("should add an native vtt Parser in the current features", () => {
+    const featureObject : any = { nativeTextTracksParsers: {} };
+    addNativevttFeature(featureObject);
     expect(featureObject).toEqual({
-      nativeTextTracksParsers: { vtt: {} },
+      nativeTextTracksParsers: { vtt: vttParser },
     });
-    expect(featureObject.nativeTextTracksParsers.vtt).toBe(feat);
+    expect(featureObject.nativeTextTracksParsers.vtt).toBe(vttParser);
   });
 });
