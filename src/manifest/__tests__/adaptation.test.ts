@@ -39,8 +39,14 @@ describe("Manifest - Adaptation", () => {
     const representationSpy = jest.fn(arg => arg);
     const filterSpy = jest.fn((_type, arg) => arg);
 
-    jest.mock("../representation", () => ({ default: representationSpy }));
-    jest.mock("../filter_supported_representations", () => ({ default: filterSpy }));
+    jest.mock("../representation", () => ({
+      __esModule: true,
+      default: representationSpy,
+    }));
+    jest.mock("../filter_supported_representations", () => ({
+      __esModule: true,
+      default: filterSpy,
+    }));
 
     const Adaptation = require("../adaptation").default;
     const args = { id: "12", representations: [], type: "video" as "video" };
@@ -65,9 +71,18 @@ describe("Manifest - Adaptation", () => {
     const filterSpy = jest.fn((_type, arg) => arg);
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
 
-    jest.mock("../representation", () => ({ default: representationSpy }));
-    jest.mock("../filter_supported_representations", () => ({ default: filterSpy }));
-    jest.mock("../../utils/languages", () => ({ default: normalizeSpy }));
+    jest.mock("../representation", () => ({
+      __esModule: true,
+      default: representationSpy,
+    }));
+    jest.mock("../filter_supported_representations", () => ({
+      __esModule: true,
+      default: filterSpy,
+    }));
+    jest.mock("../../utils/languages", () => ({
+      __esModule: true,
+      default: normalizeSpy,
+    }));
 
     const Adaptation = require("../adaptation").default;
     const args1 = {
@@ -101,9 +116,18 @@ describe("Manifest - Adaptation", () => {
     const filterSpy = jest.fn((_type, arg) => arg);
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
 
-    jest.mock("../representation", () => ({ default: representationSpy }));
-    jest.mock("../filter_supported_representations", () => ({ default: filterSpy }));
-    jest.mock("../../utils/languages", () => ({ default: normalizeSpy }));
+    jest.mock("../representation", () => ({
+      __esModule: true,
+      default: representationSpy,
+    }));
+    jest.mock("../filter_supported_representations", () => ({
+      __esModule: true,
+      default: filterSpy,
+    }));
+    jest.mock("../../utils/languages", () => ({
+      __esModule: true,
+      default: normalizeSpy,
+    }));
 
     const Adaptation = require("../adaptation").default;
     const args1 = {
@@ -121,8 +145,14 @@ describe("Manifest - Adaptation", () => {
     const representationSpy = jest.fn(arg => arg);
     const filterSpy = jest.fn((_type, arg) => arg);
 
-    jest.mock("../representation", () => ({ default: representationSpy }));
-    jest.mock("../filter_supported_representations", () => ({ default: filterSpy }));
+    jest.mock("../representation", () => ({
+      __esModule: true,
+      default: representationSpy,
+    }));
+    jest.mock("../filter_supported_representations", () => ({
+      __esModule: true,
+      default: filterSpy,
+    }));
 
     const Adaptation = require("../adaptation").default;
     const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
@@ -154,8 +184,14 @@ describe("Manifest - Adaptation", () => {
     const representationSpy = jest.fn(arg => arg);
     const filterSpy = jest.fn((_type, arg) => arg);
 
-    jest.mock("../representation", () => ({ default: representationSpy }));
-    jest.mock("../filter_supported_representations", () => ({ default: filterSpy }));
+    jest.mock("../representation", () => ({
+      __esModule: true,
+      default: representationSpy,
+    }));
+    jest.mock("../filter_supported_representations", () => ({
+      __esModule: true,
+      default: filterSpy,
+    }));
 
     const Adaptation = require("../adaptation").default;
     const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
@@ -196,8 +232,14 @@ describe("Manifest - Adaptation", () => {
     const representationSpy = jest.fn(arg => arg);
     const filterSpy = jest.fn(() => []);
 
-    jest.mock("../representation", () => ({ default: representationSpy }));
-    jest.mock("../filter_supported_representations", () => ({ default: filterSpy }));
+    jest.mock("../representation", () => ({
+      __esModule: true,
+      default: representationSpy,
+    }));
+    jest.mock("../filter_supported_representations", () => ({
+      __esModule: true,
+      default: filterSpy,
+    }));
 
     const Adaptation = require("../adaptation").default;
     const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
@@ -220,8 +262,14 @@ describe("Manifest - Adaptation", () => {
     const representationSpy = jest.fn(arg => arg);
     const filterSpy = jest.fn(() => []);
 
-    jest.mock("../representation", () => ({ default: representationSpy }));
-    jest.mock("../filter_supported_representations", () => ({ default: filterSpy }));
+    jest.mock("../representation", () => ({
+      __esModule: true,
+      default: representationSpy,
+    }));
+    jest.mock("../filter_supported_representations", () => ({
+      __esModule: true,
+      default: filterSpy,
+    }));
 
     const Adaptation = require("../adaptation").default;
     const args = { id: "12", representations: [], type: "text" as "text" };
@@ -237,9 +285,18 @@ describe("Manifest - Adaptation", () => {
     const filterSpy = jest.fn((_type, arg) => arg);
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
 
-    jest.mock("../representation", () => ({ default: representationSpy }));
-    jest.mock("../filter_supported_representations", () => ({ default: filterSpy }));
-    jest.mock("../../utils/languages", () => ({ default: normalizeSpy }));
+    jest.mock("../representation", () => ({
+      __esModule: true,
+      default: representationSpy,
+    }));
+    jest.mock("../filter_supported_representations", () => ({
+      __esModule: true,
+      default: filterSpy,
+    }));
+    jest.mock("../../utils/languages", () => ({
+      __esModule: true,
+      default: normalizeSpy,
+    }));
 
     const Adaptation = require("../adaptation").default;
 
@@ -273,9 +330,18 @@ describe("Manifest - Adaptation", () => {
     const filterSpy = jest.fn((_type, arg) => arg);
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
 
-    jest.mock("../representation", () => ({ default: representationSpy }));
-    jest.mock("../filter_supported_representations", () => ({ default: filterSpy }));
-    jest.mock("../../utils/languages", () => ({ default: normalizeSpy }));
+    jest.mock("../representation", () => ({
+      __esModule: true,
+      default: representationSpy,
+    }));
+    jest.mock("../filter_supported_representations", () => ({
+      __esModule: true,
+      default: filterSpy,
+    }));
+    jest.mock("../../utils/languages", () => ({
+      __esModule: true,
+      default: normalizeSpy,
+    }));
 
     const Adaptation = require("../adaptation").default;
 
@@ -309,9 +375,18 @@ describe("Manifest - Adaptation", () => {
     const filterSpy = jest.fn((_type, arg) => arg);
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
 
-    jest.mock("../representation", () => ({ default: representationSpy }));
-    jest.mock("../filter_supported_representations", () => ({ default: filterSpy }));
-    jest.mock("../../utils/languages", () => ({ default: normalizeSpy }));
+    jest.mock("../representation", () => ({
+      __esModule: true,
+      default: representationSpy,
+    }));
+    jest.mock("../filter_supported_representations", () => ({
+      __esModule: true,
+      default: filterSpy,
+    }));
+    jest.mock("../../utils/languages", () => ({
+      __esModule: true,
+      default: normalizeSpy,
+    }));
 
     const Adaptation = require("../adaptation").default;
 
@@ -348,9 +423,18 @@ describe("Manifest - Adaptation", () => {
     const filterSpy = jest.fn((_type, arg) => arg);
     const uniqSpy = jest.fn(() => [45, 92]);
 
-    jest.mock("../../utils/uniq", () => ({ default: uniqSpy }));
-    jest.mock("../representation", () => ({ default: representationSpy }));
-    jest.mock("../filter_supported_representations", () => ({ default: filterSpy }));
+    jest.mock("../../utils/uniq", () => ({
+      __esModule: true,
+      default: uniqSpy,
+    }));
+    jest.mock("../representation", () => ({
+      __esModule: true,
+      default: representationSpy,
+    }));
+    jest.mock("../filter_supported_representations", () => ({
+      __esModule: true,
+      default: filterSpy,
+    }));
 
     const Adaptation = require("../adaptation").default;
     const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
@@ -376,8 +460,14 @@ describe("Manifest - Adaptation", () => {
     const representationSpy = jest.fn(arg => arg);
     const filterSpy = jest.fn((_type, arg) => arg);
 
-    jest.mock("../representation", () => ({ default: representationSpy }));
-    jest.mock("../filter_supported_representations", () => ({ default: filterSpy }));
+    jest.mock("../representation", () => ({
+      __esModule: true,
+      default: representationSpy,
+    }));
+    jest.mock("../filter_supported_representations", () => ({
+      __esModule: true,
+      default: filterSpy,
+    }));
 
     const Adaptation = require("../adaptation").default;
     const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
@@ -398,8 +488,14 @@ describe("Manifest - Adaptation", () => {
     const representationSpy = jest.fn(arg => arg);
     const filterSpy = jest.fn((_type, arg) => arg);
 
-    jest.mock("../representation", () => ({ default: representationSpy }));
-    jest.mock("../filter_supported_representations", () => ({ default: filterSpy }));
+    jest.mock("../representation", () => ({
+      __esModule: true,
+      default: representationSpy,
+    }));
+    jest.mock("../filter_supported_representations", () => ({
+      __esModule: true,
+      default: filterSpy,
+    }));
 
     const Adaptation = require("../adaptation").default;
     const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
