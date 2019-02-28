@@ -216,7 +216,10 @@ describe("parsers - srt - parseCueBlocks", () => {
   it("should return null if parseTimestamp returns null either for the starting timestamp", () => {
   /* tslint:enable max-line-length */
     const parseTimestamp = jest.fn((arg) => arg === "00:00:31.080" ? null : 10);
-    jest.mock("../parse_timestamp", () => ({ default: parseTimestamp }));
+    jest.mock("../parse_timestamp", () => ({
+      __esModule: true,
+      default: parseTimestamp,
+    }));
     const parseCueBlock = require("../parse_cue_block").default;
 
     expect(parseCueBlock(cueBlock1, 0)).toEqual(null);
@@ -227,7 +230,10 @@ describe("parsers - srt - parseCueBlocks", () => {
   it("should return null if parseTimestamp returns null either for the ending timestamp", () => {
   /* tslint:enable max-line-length */
     const parseTimestamp = jest.fn((arg) => arg === "00:07:32.200" ? null : 10);
-    jest.mock("../parse_timestamp", () => ({ default: parseTimestamp }));
+    jest.mock("../parse_timestamp", () => ({
+      __esModule: true,
+      default: parseTimestamp,
+    }));
     const parseCueBlock = require("../parse_cue_block").default;
 
     expect(parseCueBlock(cueBlock1, 0)).toEqual(null);

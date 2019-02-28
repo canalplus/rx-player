@@ -22,24 +22,27 @@ describe("compat - setElementSrc", () => {
   });
 
   it("should set element src and clear it when unsubscribe", (done) => {
-    const fakeMediaElement = {
-      src: undefined,
+    const fakeMediaElement: any = {
+      src: "",
+      removeAttribute: () => null,
     };
 
     const mockLogInfo = jest.fn((message) => message);
     jest.mock("../../log", () => ({
+      __esModule: true,
       default: {
         info: mockLogInfo,
       },
     }));
     const mockClearElementSrc = jest.fn(() => {
-      fakeMediaElement.src = undefined;
+      fakeMediaElement.src = "";
     });
     jest.mock("../clear_element_src", () => ({
+      __esModule: true,
       default: mockClearElementSrc,
     }));
-
     const fakeURL = "blob:http://fakeURL";
+
     const setElementSrc = require("../set_element_src").default;
 
     const setElementSrc$ = setElementSrc(fakeMediaElement, fakeURL);
@@ -54,7 +57,7 @@ describe("compat - setElementSrc", () => {
 
     setTimeout(() => {
       subscribe.unsubscribe();
-      expect(fakeMediaElement.src).toBe(undefined);
+      expect(fakeMediaElement.src).toBe("");
       done();
     }, 200);
   });

@@ -14,7 +14,28 @@
  * limitations under the License.
  */
 
+// import objectAssign from "object-assign";
 import config from "../../../config";
+import log from "../../../log";
+import {
+  normalizeAudioTrack,
+  normalizeTextTrack,
+} from "../../../utils/languages";
+import warnOnce from "../../../utils/warn_once";
+import {
+  parseConstructorOptions,
+  parseLoadVideoOptions,
+} from "../option_parsers";
+
+jest.mock("../../../log");
+jest.mock("../../../utils/languages");
+jest.mock("../../../utils/warn_once");
+const warnOnceMock = warnOnce as jest.Mock<ReturnType<typeof warnOnce>>;
+const normalizeAudioTrackMock = normalizeAudioTrack as
+  jest.Mock<ReturnType<typeof normalizeAudioTrack>>;
+const normalizeTextTrackMock = normalizeTextTrack as
+  jest.Mock<ReturnType<typeof normalizeTextTrack>>;
+const logWarnMock = log.warn as jest.Mock<ReturnType<typeof log.warn>>;
 
 const {
   // DEFAULT_AUTO_PLAY,
@@ -35,6 +56,13 @@ describe("API - parseConstructorOptions", () => {
     jest.resetModules();
   });
 
+  afterEach(() => {
+    warnOnceMock.mockReset();
+    normalizeAudioTrackMock.mockReset();
+    normalizeTextTrackMock.mockReset();
+    logWarnMock.mockReset();
+  });
+
   const videoElement = document.createElement("video");
 
   const defaultConstructorOptions = {
@@ -52,13 +80,12 @@ describe("API - parseConstructorOptions", () => {
     preferredAudioTracks: [],
     preferredTextTracks: [],
   };
+
   it("should create default values if no option is given", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({})).toEqual(defaultConstructorOptions);
   });
 
   it("should authorize setting a maxBufferAhead", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ maxBufferAhead: 0 })).toEqual({
       ...defaultConstructorOptions,
       maxBufferAhead: 0,
@@ -74,7 +101,6 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting a maxBufferBehind", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ maxBufferBehind: 0 })).toEqual({
       ...defaultConstructorOptions,
       maxBufferBehind: 0,
@@ -90,7 +116,6 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting a wantedBufferAhead", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ wantedBufferAhead: 0 })).toEqual({
       ...defaultConstructorOptions,
       wantedBufferAhead: 0,
@@ -106,7 +131,6 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting a limitVideoWidth option", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ limitVideoWidth: false })).toEqual({
       ...defaultConstructorOptions,
       limitVideoWidth: false,
@@ -118,7 +142,6 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting a throttleWhenHidden option", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ throttleWhenHidden: false })).toEqual({
       ...defaultConstructorOptions,
       throttleWhenHidden: false,
@@ -131,7 +154,6 @@ describe("API - parseConstructorOptions", () => {
 
   /* tslint:disable:max-line-length */
   it("should authorize setting a videoElement option which can be any media element", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
   /* tslint:enable:max-line-length */
     const _videoElement = document.createElement("video");
     const parsed1 = parseConstructorOptions({ videoElement: _videoElement });
@@ -151,7 +173,6 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting an initialVideoBitrate", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ initialVideoBitrate: -1 })).toEqual({
       ...defaultConstructorOptions,
       initialVideoBitrate: -1,
@@ -171,7 +192,6 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting an initialAudioBitrate", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ initialAudioBitrate: -1 })).toEqual({
       ...defaultConstructorOptions,
       initialAudioBitrate: -1,
@@ -191,7 +211,6 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting a maxVideoBitrate", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ maxVideoBitrate: -1 })).toEqual({
       ...defaultConstructorOptions,
       maxVideoBitrate: -1,
@@ -211,7 +230,6 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting a maxAudioBitrate", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ maxAudioBitrate: -1 })).toEqual({
       ...defaultConstructorOptions,
       maxAudioBitrate: -1,
@@ -231,7 +249,6 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting a stopAtEnd option", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ stopAtEnd: false })).toEqual({
       ...defaultConstructorOptions,
       stopAtEnd: false,
@@ -247,7 +264,6 @@ describe("API - parseConstructorOptions", () => {
       { language: "fra", audioDescription: false },
       null,
     ];
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ preferredAudioTracks })).toEqual({
       ...defaultConstructorOptions,
       preferredAudioTracks,
@@ -259,7 +275,6 @@ describe("API - parseConstructorOptions", () => {
       { language: "fra", closedCaption: false },
       null,
     ];
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(parseConstructorOptions({ preferredTextTracks })).toEqual({
       ...defaultConstructorOptions,
       preferredTextTracks,
@@ -267,28 +282,24 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should throw if the maxBufferAhead given is not a number", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(() => parseConstructorOptions({ maxBufferAhead: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ maxBufferAhead: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ maxBufferAhead: {} as any })).toThrow();
   });
 
   it("should throw if the maxBufferBehind given is not a number", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(() => parseConstructorOptions({ maxBufferBehind: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ maxBufferBehind: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ maxBufferBehind: {} as any })).toThrow();
   });
 
   it("should throw if the wantedBufferAhead given is not a number", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(() => parseConstructorOptions({ wantedBufferAhead: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ wantedBufferAhead: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ wantedBufferAhead: {} as any })).toThrow();
   });
 
   it("should throw if the videoElement given is not an HTMLMediaElement", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(() => parseConstructorOptions({ videoElement: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ videoElement: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ videoElement: {} as any })).toThrow();
@@ -300,28 +311,24 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should throw if the initialVideoBitrate given is not a number", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(() => parseConstructorOptions({ initialVideoBitrate: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ initialVideoBitrate: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ initialVideoBitrate: {} as any })).toThrow();
   });
 
   it("should throw if the initialAudioBitrate given is not a number", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(() => parseConstructorOptions({ initialAudioBitrate: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ initialAudioBitrate: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ initialAudioBitrate: {} as any })).toThrow();
   });
 
   it("should throw if the maxVideoBitrate given is not a number", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(() => parseConstructorOptions({ maxVideoBitrate: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ maxVideoBitrate: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ maxVideoBitrate: {} as any })).toThrow();
   });
 
   it("should throw if the maxAudioBitrate given is not a number", () => {
-    const parseConstructorOptions = require("../option_parsers").parseConstructorOptions;
     expect(() => parseConstructorOptions({ maxAudioBitrate: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ maxAudioBitrate: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ maxAudioBitrate: {} as any })).toThrow();
@@ -331,6 +338,12 @@ describe("API - parseConstructorOptions", () => {
 describe("API - parseLoadVideoOptions", () => {
   beforeEach(() => {
     jest.resetModules();
+  });
+
+  afterEach(() => {
+    warnOnceMock.mockReset();
+    normalizeAudioTrackMock.mockReset();
+    normalizeTextTrackMock.mockReset();
   });
 
   const defaultLoadVideoOptions = {
@@ -350,11 +363,10 @@ describe("API - parseLoadVideoOptions", () => {
   };
 
   it("should throw if no option is given", () => {
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     let err;
     let opt;
     try {
-      opt = parseLoadVideoOptions();
+      opt = (parseLoadVideoOptions as any)();
     } catch (e) {
       err = e;
     }
@@ -364,18 +376,17 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   it("should throw if no url is given", () => {
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     let err1;
     let opt1;
     let err2;
     let opt2;
     try {
-      opt1 = parseLoadVideoOptions({});
+      opt1 = (parseLoadVideoOptions as any)({});
     } catch (e) {
       err1 = e;
     }
     try {
-      opt2 = parseLoadVideoOptions({ transport: "dash" });
+      opt2 = (parseLoadVideoOptions as any)({ transport: "dash" });
     } catch (e) {
       err2 = e;
     }
@@ -388,11 +399,10 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   it("should throw if no transport is given", () => {
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     let err;
     let opt;
     try {
-      opt = parseLoadVideoOptions({ url: "foo" });
+      opt = (parseLoadVideoOptions as any)({ url: "foo" });
     } catch (e) {
       err = e;
     }
@@ -402,7 +412,6 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   it("should set a default object if both an url and transport is given", () => {
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
@@ -414,7 +423,6 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   it("should authorize setting a autoPlay option", () => {
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     expect(parseLoadVideoOptions({
       autoPlay: false,
       url: "foo",
@@ -438,77 +446,59 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   it("should normalize a defaultAudioTrack given but anounce its deprecation", () => {
-    const warnOnceSpy = jest.fn();
-    jest.mock("../../../utils/warn_once", () => ({ default: warnOnceSpy }));
-    const track = { normalized: "fra", audioDescription: true };
-    const normalizeAudioTrackSpy = jest.fn(() => track);
-    const normalizeTextTrackSpy = jest.fn(() => undefined);
-    jest.mock("../../../utils/languages", () => ({
-      normalizeAudioTrack: normalizeAudioTrackSpy,
-      normalizeTextTrack: normalizeTextTrackSpy,
-    }));
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    const track = { normalized: "fra", audioDescription: true, language: "fr" };
+    warnOnceMock.mockReturnValue(undefined);
+    normalizeAudioTrackMock.mockReturnValue(track);
+    normalizeTextTrackMock.mockReturnValue(undefined);
+
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      defaultAudioTrack: "Kankyō Ongaku",
+      defaultAudioTrack: "Kankyō Ongaku" as any,
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
       defaultAudioTrack: track,
     });
-    expect(normalizeAudioTrackSpy).toHaveBeenCalledTimes(1);
-    expect(normalizeAudioTrackSpy).toHaveBeenCalledWith("Kankyō Ongaku");
-    expect(normalizeTextTrackSpy).toHaveBeenCalledTimes(1);
-    expect(normalizeTextTrackSpy).toHaveBeenCalledWith(undefined);
-    expect(warnOnceSpy).toHaveBeenCalledTimes(1);
-    expect(warnOnceSpy).toHaveBeenCalledWith("The `defaultAudioTrack` loadVideo " +
+    expect(normalizeAudioTrackMock).toHaveBeenCalledTimes(1);
+    expect(normalizeAudioTrackMock).toHaveBeenCalledWith("Kankyō Ongaku");
+    expect(normalizeTextTrackMock).toHaveBeenCalledTimes(1);
+    expect(normalizeTextTrackMock).toHaveBeenCalledWith(undefined);
+    expect(warnOnceMock).toHaveBeenCalledTimes(1);
+    expect(warnOnceMock).toHaveBeenCalledWith("The `defaultAudioTrack` loadVideo " +
       "option is deprecated.\n" +
       "Please use the `preferredAudioTracks` constructor option or the" +
       "`setPreferredAudioTracks` method instead");
-    normalizeTextTrackSpy.mockReset();
-    normalizeAudioTrackSpy.mockReset();
-    warnOnceSpy.mockReset();
   });
 
   it("should normalize a defaultTextTrack given but anounce its deprecation", () => {
-    const warnOnceSpy = jest.fn();
-    jest.mock("../../../utils/warn_once", () => ({ default: warnOnceSpy }));
-    const track = { normalized: "fra", closedCaption: true };
-    const normalizeTextTrackSpy = jest.fn(() => track);
-    const normalizeAudioTrackSpy = jest.fn(() => undefined);
-    jest.mock("../../../utils/languages", () => ({
-      normalizeAudioTrack: normalizeAudioTrackSpy,
-      normalizeTextTrack: normalizeTextTrackSpy,
-    }));
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    const track = { normalized: "fra", closedCaption: true, language: "fr" };
+    warnOnceMock.mockReturnValue(undefined);
+    normalizeAudioTrackMock.mockReturnValue(undefined);
+    normalizeTextTrackMock.mockReturnValue(track);
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      defaultTextTrack: "Laurie Spiegel",
+      defaultTextTrack: "Laurie Spiegel" as any,
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
       defaultTextTrack: track,
     });
-    expect(normalizeTextTrackSpy).toHaveBeenCalledTimes(1);
-    expect(normalizeTextTrackSpy).toHaveBeenCalledWith("Laurie Spiegel");
-    expect(normalizeAudioTrackSpy).toHaveBeenCalledTimes(1);
-    expect(normalizeAudioTrackSpy).toHaveBeenCalledWith(undefined);
-    expect(warnOnceSpy).toHaveBeenCalledTimes(1);
-    expect(warnOnceSpy).toHaveBeenCalledWith("The `defaultTextTrack` loadVideo " +
+    expect(normalizeTextTrackMock).toHaveBeenCalledTimes(1);
+    expect(normalizeTextTrackMock).toHaveBeenCalledWith("Laurie Spiegel");
+    expect(normalizeAudioTrackMock).toHaveBeenCalledTimes(1);
+    expect(normalizeAudioTrackMock).toHaveBeenCalledWith(undefined);
+    expect(warnOnceMock).toHaveBeenCalledTimes(1);
+    expect(warnOnceMock).toHaveBeenCalledWith("The `defaultTextTrack` loadVideo " +
       "option is deprecated.\n" +
       "Please use the `preferredTextTracks` constructor option or the" +
       "`setPreferredTextTracks` method instead");
-    normalizeTextTrackSpy.mockReset();
-    normalizeAudioTrackSpy.mockReset();
-    warnOnceSpy.mockReset();
   });
 
   it("should authorize setting a hideNativeSubtitle option", () => {
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     expect(parseLoadVideoOptions({
       hideNativeSubtitle: false,
       url: "foo",
@@ -534,15 +524,14 @@ describe("API - parseLoadVideoOptions", () => {
   it("should authorize setting a keySystem option", () => {
     const keySystem1 = {
       type: "foo",
-      getLicense: () => { /* noop */},
+      getLicense: () => { return new Uint8Array([]); },
     };
     const keySystem2 = {
       type: "bar",
-      getLicense: () => { /* noop */},
+      getLicense: () => { return new Uint8Array([]); },
     };
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     expect(parseLoadVideoOptions({
-      keySystems: keySystem1,
+      keySystems: keySystem1 as any,
       url: "foo",
       transport: "bar",
     })).toEqual({
@@ -564,7 +553,6 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   it("should throw when setting an invalid keySystems option", () => {
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     {
       let err;
       let opt;
@@ -572,7 +560,7 @@ describe("API - parseLoadVideoOptions", () => {
         opt = parseLoadVideoOptions({
           url: "foo",
           transport: "bar",
-          keySystems: {},
+          keySystems: {} as any,
         });
       } catch (e) {
         err = e;
@@ -589,7 +577,7 @@ describe("API - parseLoadVideoOptions", () => {
         opt = parseLoadVideoOptions({
           url: "foo",
           transport: "bar",
-          keySystems: { type: "test" },
+          keySystems: { type: "test" } as any,
         });
       } catch (e) {
         err = e;
@@ -606,7 +594,7 @@ describe("API - parseLoadVideoOptions", () => {
         opt = parseLoadVideoOptions({
           url: "foo",
           transport: "bar",
-          keySystems: { getLicense: () => { /* noop */ } },
+          keySystems: { getLicense: () => { return new Uint8Array([]); } } as any ,
         });
       } catch (e) {
         err = e;
@@ -619,32 +607,30 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   it("should authorize setting a valid manualBitrateSwitchingMode option", () => {
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     expect(parseLoadVideoOptions({
-      manualBitrateSwitchingMode: "foo",
+      manualBitrateSwitchingMode: "direct",
       url: "foo",
       transport: "bar",
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      manualBitrateSwitchingMode: "foo",
+      manualBitrateSwitchingMode: "direct",
     });
 
     expect(parseLoadVideoOptions({
-      manualBitrateSwitchingMode: "bar",
+      manualBitrateSwitchingMode: "seamless",
       url: "foo",
       transport: "bar",
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      manualBitrateSwitchingMode: "bar",
+      manualBitrateSwitchingMode: "seamless",
     });
   });
 
   it("should authorize setting a networkConfig", () => {
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
@@ -705,14 +691,11 @@ describe("API - parseLoadVideoOptions", () => {
     });
   });
 
-  // TODO There is something wrong with the object-assign dependency and jest
-  // I did not take time to debug it yet
-  xit("should authorize setting a valid startAt option", () => {
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+  it("should authorize setting a valid startAt option", () => {
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      startAt: { a: 12 },
+      startAt: { a: 12 } as any,
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
@@ -761,9 +744,8 @@ describe("API - parseLoadVideoOptions", () => {
       url: "bar",
       mimeType: "toto",
     };
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     expect(parseLoadVideoOptions({
-      supplementaryImageTracks: supplementaryImageTracks1,
+      supplementaryImageTracks: supplementaryImageTracks1 as any,
       url: "foo",
       transport: "bar",
     })).toEqual({
@@ -785,7 +767,6 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   it("should throw when setting an invalid supplementaryImageTracks option", () => {
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     {
       let err;
       let opt;
@@ -793,7 +774,7 @@ describe("API - parseLoadVideoOptions", () => {
         opt = parseLoadVideoOptions({
           url: "foo",
           transport: "bar",
-          supplementaryImageTracks: {},
+          supplementaryImageTracks: {} as any,
         });
       } catch (e) {
         err = e;
@@ -810,7 +791,7 @@ describe("API - parseLoadVideoOptions", () => {
         opt = parseLoadVideoOptions({
           url: "foo",
           transport: "bar",
-          supplementaryImageTracks: { url: "test" },
+          supplementaryImageTracks: { url: "test" } as any,
         });
       } catch (e) {
         err = e;
@@ -827,7 +808,7 @@ describe("API - parseLoadVideoOptions", () => {
         opt = parseLoadVideoOptions({
           url: "foo",
           transport: "bar",
-          supplementaryImageTracks: { mimeType: "test" },
+          supplementaryImageTracks: { mimeType: "test" } as any,
         });
       } catch (e) {
         err = e;
@@ -850,9 +831,8 @@ describe("API - parseLoadVideoOptions", () => {
       mimeType: "toto",
       language: "en",
     };
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     expect(parseLoadVideoOptions({
-      supplementaryTextTracks: supplementaryTextTracks1,
+      supplementaryTextTracks: supplementaryTextTracks1 as any,
       url: "foo",
       transport: "bar",
     })).toEqual({
@@ -862,7 +842,10 @@ describe("API - parseLoadVideoOptions", () => {
       supplementaryTextTracks: [supplementaryTextTracks1],
     });
     expect(parseLoadVideoOptions({
-      supplementaryTextTracks: [supplementaryTextTracks1, supplementaryTextTracks2],
+      supplementaryTextTracks: [
+        supplementaryTextTracks1,
+        supplementaryTextTracks2,
+      ] as any,
       url: "foo",
       transport: "bar",
     })).toEqual({
@@ -874,7 +857,6 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   it("should throw when setting an invalid supplementaryTextTracks option", () => {
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     {
       let err;
       let opt;
@@ -882,7 +864,7 @@ describe("API - parseLoadVideoOptions", () => {
         opt = parseLoadVideoOptions({
           url: "foo",
           transport: "bar",
-          supplementaryTextTracks: {},
+          supplementaryTextTracks: {} as any,
         });
       } catch (e) {
         err = e;
@@ -900,7 +882,7 @@ describe("API - parseLoadVideoOptions", () => {
         opt = parseLoadVideoOptions({
           url: "foo",
           transport: "bar",
-          supplementaryTextTracks: { url: "test", language: "toto" },
+          supplementaryTextTracks: { url: "test", language: "toto" } as any,
         });
       } catch (e) {
         err = e;
@@ -918,7 +900,7 @@ describe("API - parseLoadVideoOptions", () => {
         opt = parseLoadVideoOptions({
           url: "foo",
           transport: "bar",
-          supplementaryTextTracks: { mimeType: "test", language: "toto" },
+          supplementaryTextTracks: { mimeType: "test", language: "toto" } as any,
         });
       } catch (e) {
         err = e;
@@ -936,7 +918,7 @@ describe("API - parseLoadVideoOptions", () => {
         opt = parseLoadVideoOptions({
           url: "foo",
           transport: "bar",
-          supplementaryTextTracks: { url: "test", mimeType: "toto" },
+          supplementaryTextTracks: { url: "test", mimeType: "toto" } as any,
         });
       } catch (e) {
         err = e;
@@ -950,21 +932,20 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   it("should authorize setting a transportOptions option", () => {
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    const func = jest.fn();
     expect(parseLoadVideoOptions({
-      transportOptions: { a: 4 },
+      transportOptions: { segmentLoader: func },
       url: "foo",
       transport: "bar",
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      transportOptions: { a: 4 },
+      transportOptions: { segmentLoader: func },
     });
   });
 
   it("should authorize setting a valid textTrackMode option", () => {
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     expect(parseLoadVideoOptions({
       textTrackMode: "native",
       url: "foo",
@@ -992,12 +973,11 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   it("should throw when setting an invalid textTrackMode option", () => {
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     let err;
     let opt;
     try {
       opt = parseLoadVideoOptions({
-        textTrackMode: "toto",
+        textTrackMode: "toto" as any,
         url: "foo",
         transport: "bar",
       });
@@ -1012,7 +992,6 @@ describe("API - parseLoadVideoOptions", () => {
   /* tslint:disable max-line-length */
   it("should throw when setting an html textTrackMode option with no textTrackElement", () => {
   /* tslint:enable max-line-length */
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     let err;
     let opt;
     try {
@@ -1033,7 +1012,6 @@ describe("API - parseLoadVideoOptions", () => {
   /* tslint:disable max-line-length */
   it("should throw when setting an html textTrackMode option with no textTrackElement", () => {
   /* tslint:enable max-line-length */
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
     let err;
     let opt;
     const textTrackElement = {};
@@ -1042,7 +1020,7 @@ describe("API - parseLoadVideoOptions", () => {
         textTrackMode: "html",
         url: "foo",
         transport: "bar",
-        textTrackElement,
+        textTrackElement: textTrackElement as any,
       });
     } catch (e) {
       err = e;
@@ -1054,13 +1032,11 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   it("should warn when setting a textTrackElement with a `native` textTrackMode", () => {
-    const warnSpy = jest.fn();
-    jest.mock("../../../log", () => ({ default: { warn: warnSpy } }));
-    const parseLoadVideoOptions = require("../option_parsers").parseLoadVideoOptions;
+    logWarnMock.mockReturnValue(undefined);
     const textTrackElement = document.createElement("div");
 
     parseLoadVideoOptions({ textTrackMode: "native", url: "foo", transport: "bar" });
-    expect(warnSpy).not.toHaveBeenCalled();
+    expect(logWarnMock).not.toHaveBeenCalled();
 
     expect(parseLoadVideoOptions({
       textTrackMode: "native",
@@ -1074,8 +1050,8 @@ describe("API - parseLoadVideoOptions", () => {
       textTrackMode: "native",
     });
 
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy).toHaveBeenCalledWith("API: You have set a textTrackElement " +
+    expect(logWarnMock).toHaveBeenCalledTimes(1);
+    expect(logWarnMock).toHaveBeenCalledWith("API: You have set a textTrackElement " +
       "without being in an \"html\" textTrackMode. It will be ignored.");
   });
 });

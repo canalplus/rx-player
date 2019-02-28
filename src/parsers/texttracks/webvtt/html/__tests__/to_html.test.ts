@@ -23,6 +23,7 @@ describe("parsers - webvtt - toHTML", () => {
 
   it("should include payload HTML", () => {
     jest.mock("../convert_payload_to_html", () => ({
+      __esModule: true,
       default: () => {
         return [
           document.createElement("b"),
@@ -63,6 +64,7 @@ describe("parsers - webvtt - toHTML", () => {
 
   it("should include payload HTML and apply correclty style class element", () => {
     jest.mock("../convert_payload_to_html", () => ({
+      __esModule: true,
       default: () => {
         return [
           document.createElement("b"),
@@ -105,6 +107,7 @@ describe("parsers - webvtt - toHTML", () => {
 
   it("should include payload HTML and apply correctly global style element", () => {
     jest.mock("../convert_payload_to_html", () => ({
+      __esModule: true,
       default: () => {
         return [
           document.createElement("b"),
@@ -146,6 +149,7 @@ describe("parsers - webvtt - toHTML", () => {
 
   it("should apply both the global style element and a given class", () => {
     jest.mock("../convert_payload_to_html", () => ({
+      __esModule: true,
       default: () => {
         return [
           document.createElement("b"),
@@ -188,6 +192,7 @@ describe("parsers - webvtt - toHTML", () => {
 
   it("should return default element if no payload", () => {
     jest.mock("../convert_payload_to_html", () => ({
+      __esModule: true,
       default: () => {
         return [];
       },

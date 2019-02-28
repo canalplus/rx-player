@@ -24,7 +24,10 @@ describe("compat - hasEMEAPIs", () => {
   /* tslint:enable max-line-length */
 
     jest.mock("../eme", () => {
-      return { requestMediaKeySystemAccess: () => null };
+      return {
+        __esModule: true,
+        requestMediaKeySystemAccess: () => null,
+      };
     });
     const hasEMEAPIs = require("../has_eme_apis");
     expect(hasEMEAPIs.default()).toBe(true);
@@ -35,7 +38,10 @@ describe("compat - hasEMEAPIs", () => {
   /* tslint:enable max-line-length */
 
     jest.mock("../eme", () => {
-      return { requestMediaKeySystemAccess: null };
+      return {
+        __esModule: true,
+        requestMediaKeySystemAccess: null,
+      };
     });
     const hasEMEAPIs = require("../has_eme_apis");
     expect(hasEMEAPIs.default()).toBe(false);

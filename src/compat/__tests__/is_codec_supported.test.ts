@@ -21,7 +21,10 @@ describe("Compat - isCodecSupported", () => {
 
   it("should return false if MediaSource is not supported in the current device", () => {
     jest.mock("../browser_compatibility_types", () => {
-      return { MediaSource_: undefined };
+      return {
+        __esModule: true,
+        MediaSource_: undefined,
+      };
     });
     const isCodecSupported = require("../is_codec_supported").default;
     expect(isCodecSupported("foo")).toEqual(false);
@@ -32,7 +35,10 @@ describe("Compat - isCodecSupported", () => {
   it("should return true in any case if the MediaSource does not have the right function", () => {
   /* tslint:enable max-line-length */
     jest.mock("../browser_compatibility_types", () => {
-      return { MediaSource_: { isTypeSupported: undefined } };
+      return {
+        __esModule: true,
+        MediaSource_: { isTypeSupported: undefined },
+      };
     });
     const isCodecSupported = require("../is_codec_supported").default;
     expect(isCodecSupported("foo")).toEqual(true);
@@ -41,7 +47,10 @@ describe("Compat - isCodecSupported", () => {
 
   it("should return true if MediaSource.isTypeSupported returns true", () => {
     jest.mock("../browser_compatibility_types", () => {
-      return { MediaSource_: { isTypeSupported(_codec : string) { return true; } } };
+      return {
+        __esModule: true,
+        MediaSource_: { isTypeSupported(_codec : string) { return true; } },
+      };
     });
     const isCodecSupported = require("../is_codec_supported").default;
     expect(isCodecSupported("foo")).toEqual(true);
@@ -50,7 +59,10 @@ describe("Compat - isCodecSupported", () => {
 
   it("should return false if MediaSource.isTypeSupported returns false", () => {
     jest.mock("../browser_compatibility_types", () => {
-      return { MediaSource_: { isTypeSupported(_codec : string) { return false; } } };
+      return {
+        __esModule: true,
+        MediaSource_: { isTypeSupported(_codec : string) { return false; } },
+      };
     });
     const isCodecSupported = require("../is_codec_supported").default;
     expect(isCodecSupported("foo")).toEqual(false);
