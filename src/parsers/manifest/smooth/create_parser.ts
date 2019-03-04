@@ -327,7 +327,7 @@ function createSmoothStreamingParser(
       };
 
       const representation : IParsedRepresentation = objectAssign({}, qualityLevel, {
-        index: new RepresentationIndex(repIndex, initSegmentInfos),
+        index: new RepresentationIndex(repIndex, initSegmentInfos, isLive),
         mimeType,
         codecs,
         id,

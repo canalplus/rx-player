@@ -281,6 +281,7 @@ interface ISmoothInitSegmentPrivateInfos {
 export default class SmoothRepresentationIndex
   implements IRepresentationIndex {
 
+    private readonly _isDynamic : boolean;
     private _codecPrivateData? : string;
     private _bitsPerSample? : number;
     private _channels? : number;
@@ -304,7 +305,11 @@ export default class SmoothRepresentationIndex
 
     private _index : ITimelineIndex;
 
-    constructor(index : ITimelineIndex, infos : ISmoothInitSegmentPrivateInfos) {
+    constructor(
+      index : ITimelineIndex,
+      infos : ISmoothInitSegmentPrivateInfos,
+      isDynamic : boolean
+    ) {
       this._index = index;
       this._indexValidityTime = index.manifestReceivedTime || performance.now();
       this._bitsPerSample = infos.bitsPerSample;
@@ -313,6 +318,7 @@ export default class SmoothRepresentationIndex
       this._packetSize = infos.packetSize;
       this._samplingRate = infos.samplingRate;
       this._protection = infos.protection;
+      this._isDynamic = isDynamic;
 
       if (index.timeline.length) {
         const { start, duration } = index.timeline[index.timeline.length - 1];
@@ -395,7 +401,12 @@ export default class SmoothRepresentationIndex
         let segmentNumberInCurrentRange = getSegmentNumber(start, up, duration);
         let segmentTime = start + segmentNumberInCurrentRange *
           (duration == null ? 0 : duration);
-        while (segmentTime < to && segmentNumberInCurrentRange <= repeat) {
+
+        while (
+          segmentTime < to &&
+          this._isSegmentAvailableInTimeline(segmentTime, duration) &&
+          segmentNumberInCurrentRange <= repeat
+        ) {
           const time = segmentTime;
           const number = currentNumber != null ?
             currentNumber + segmentNumberInCurrentRange : undefined;
@@ -637,5 +648,21 @@ export default class SmoothRepresentationIndex
           }
         }
       }
+    }
+
+    /**
+     * Check if segment is available in timeline
+     * @param {number} time
+     * @param {number|undefined} duration
+     * @returns {boolean}
+     */
+    _isSegmentAvailableInTimeline(time: number, duration?: number): boolean {
+      const lastReference = this.getLastPosition();
+      return !(
+        this._isDynamic &&
+        duration &&
+        lastReference &&
+        time + duration > lastReference
+      );
     }
 }
