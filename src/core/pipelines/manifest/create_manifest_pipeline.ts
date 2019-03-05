@@ -56,6 +56,10 @@ export interface IRequestSchedulerOptions {
   maxRetryOffline : number;
 }
 
+export interface IFetchManifestOptions {
+  loadExternalUTCTimings: boolean;
+}
+
 type IPipelineManifestOptions =
   IPipelineLoaderOptions<IManifestLoaderArguments, Document|string>;
 
@@ -102,7 +106,7 @@ export default function createManifestPipeline(
   pipelines : ITransportPipelines,
   pipelineOptions : IPipelineManifestOptions,
   warning$ : Subject<Error|ICustomError>
-) : (url : string) => Observable<IFetchManifestResult> {
+) : (url : string, options : IFetchManifestOptions) => Observable<IFetchManifestResult> {
   const loader = createLoader<
     IManifestLoaderArguments, Document|string
   >(pipelines.manifest, pipelineOptions);
@@ -137,7 +141,7 @@ export default function createManifestPipeline(
    * @param {string} url - URL of the manifest
    * @returns {Observable}
    */
-  return function fetchManifest(url : string) : Observable<IFetchManifestResult> {
+  return function fetchManifest(url : string, options : IFetchManifestOptions) : Observable<IFetchManifestResult> {
     return loader({ url }).pipe(
 
       tap((arg) => {
@@ -152,7 +156,8 @@ export default function createManifestPipeline(
 
       mergeMap(({ value }) => {
         const { sendingTime } = value;
-        return parser({ response: value, url, scheduleRequest }).pipe(
+        const { loadExternalUTCTimings } = options;
+        return parser({ response: value, url, scheduleRequest, loadExternalUTCTimings }).pipe(
           catchError((error: Error) => {
             const formattedError = isKnownError(error) ?
               error : new OtherError("PIPELINE_PARSING_ERROR", error.toString(), true);
