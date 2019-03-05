@@ -29,15 +29,12 @@ import {
   tap,
 } from "rxjs/operators";
 import {
-  events,
   play$,
-  shouldValidateMetadata
+  shouldValidateMetadata,
+  whenLoadedMetadata$,
 } from "../../compat";
 import log from "../../log";
 import { IInitClockTick } from "./types";
-
-// XXX TODO Are we sure we shouldn't use whenLoadedMetadata here?
-const { onLoadedMetadata$ } = events;
 
 type ILoadEvents =
   "not-loaded-metadata" | // metadata are not loaded. Manual action required
@@ -126,7 +123,8 @@ export default function seekAndLoadOnMediaEvents(
   startTime : number|(() => number),
   mustAutoPlay : boolean
 ) : { seek$ : Observable<unknown>; load$ : Observable<ILoadEvents> } {
-  const seek$ = onLoadedMetadata$(mediaElement).pipe(
+  const seek$ = whenLoadedMetadata$(mediaElement).pipe(
+    take(1),
     tap(() => {
       log.info("Init: Set initial time", startTime);
       mediaElement.currentTime = typeof startTime === "function" ?

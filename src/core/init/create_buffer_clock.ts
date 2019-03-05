@@ -23,7 +23,6 @@ import {
 import {
   ignoreElements,
   map,
-  take,
   tap,
 } from "rxjs/operators";
 import Manifest from "../../manifest";
@@ -47,7 +46,6 @@ export default function createBufferClock(
 ) : Observable<IBufferOrchestratorClockTick> {
   let initialSeekPerformed = false;
   const updateTimeOffset$ = initialSeek$.pipe(
-    take(1),
     tap(() => {
       initialSeekPerformed = true;
     }),

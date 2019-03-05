@@ -236,6 +236,10 @@ function parseCompleteIntermediateRepresentation(
   if (rootAttributes.timeShiftBufferDepth != null) {
     parsedMPD.timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
   }
+  if (rootAttributes.minimumUpdatePeriod != null
+      && rootAttributes.minimumUpdatePeriod > 0) {
+    parsedMPD.lifetime = rootAttributes.minimumUpdatePeriod;
+  }
 
   checkManifestIDs(parsedMPD);
   if (parsedMPD.isLive) {

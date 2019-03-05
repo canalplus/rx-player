@@ -136,7 +136,7 @@ export default class QueuedSourceBuffer<T> {
 
   // Binded references to corresponding private methods.
   // Used for binding/removing an event listener.
-  private readonly __onError : (e : Event|Error) => void;
+  private readonly __onErrorEvent : (e : Event) => void;
   private readonly __onUpdateEnd : () => void;
 
   /**
@@ -199,9 +199,9 @@ export default class QueuedSourceBuffer<T> {
     this._lastInitSegment = null;
     this._currentCodec = codec;
 
-    this.__onError = this._onError.bind(this);
+    this.__onErrorEvent = this._onErrorEvent.bind(this);
     this.__onUpdateEnd = this._onUpdateEnd.bind(this);
-    this._sourceBuffer.addEventListener("error", this.__onError);
+    this._sourceBuffer.addEventListener("error", this.__onErrorEvent);
     this._sourceBuffer.addEventListener("updateend", this.__onUpdateEnd);
   }
 
@@ -256,7 +256,7 @@ export default class QueuedSourceBuffer<T> {
    * @private
    */
   public dispose() : void {
-    this._sourceBuffer.removeEventListener("error", this.__onError);
+    this._sourceBuffer.removeEventListener("error", this.__onErrorEvent);
     this._sourceBuffer.removeEventListener("updateend", this.__onUpdateEnd);
 
     if (this._currentOrder != null) {
@@ -296,11 +296,26 @@ export default class QueuedSourceBuffer<T> {
    * @private
    * @param {Event} error
    */
-  private _onError(error : Event|Error) : void {
+  private _onError(error : Error) : void {
     this._lastInitSegment = null; // initialize init segment as a security
     if (this._currentOrder != null) {
       this._currentOrder.subject.error(error);
     }
+  }
+
+  /**
+   * Handle error events from SourceBuffers.
+   * @private
+   * @param {Error|Event} err
+   */
+  private _onErrorEvent(err: Error|Event) : void {
+    this._onError(
+      err instanceof Error ?
+        err :
+        // According to w3c, these events are emitted when an error occurred during
+        // the append.
+        new Error("An unknown error occured when appending buffer")
+    );
   }
 
   /**
