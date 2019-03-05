@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
-describe("Features list - HTML SRT Parser", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
+import srtParser from "../../../parsers/texttracks/srt/html";
+import addHTMLsrtFeature from "../html_srt_parser";
 
-  it("should add an HTML SRT Parser in the current features", () => {
-    const feat = {};
-    jest.mock("../../../parsers/texttracks/srt/html", () => ({ default: feat }));
-    const addHTMLSRTFeature = require("../html_srt_parser").default;
+jest.mock("../../../parsers/texttracks/srt/html", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
 
-    const featureObject : {
-      htmlTextTracksParsers : { [featureName : string] : unknown };
-    } = { htmlTextTracksParsers: {} };
-    addHTMLSRTFeature(featureObject);
+describe("Features list - HTML srt Parser", () => {
+  it("should add an HTML srt Parser in the current features", () => {
+    const featureObject : any = { htmlTextTracksParsers: {} };
+    addHTMLsrtFeature(featureObject);
     expect(featureObject).toEqual({
-      htmlTextTracksParsers: { srt: {} },
+      htmlTextTracksParsers: { srt: srtParser },
     });
-    expect(featureObject.htmlTextTracksParsers.srt).toBe(feat);
+    expect(featureObject.htmlTextTracksParsers.srt).toBe(srtParser);
   });
 });

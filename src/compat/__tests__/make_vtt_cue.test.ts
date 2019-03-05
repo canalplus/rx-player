@@ -32,8 +32,14 @@ describe("Compat - makeVTTCue", () => {
 
   it("should throw if VTTCue are not available", () => {
     const logSpy = { warn: jest.fn() };
-    jest.mock("../browser_compatibility_types", () => ({ VTTCue_: undefined }));
-    jest.mock("../../log", () => ({ default: logSpy }));
+    jest.mock("../browser_compatibility_types", () => ({
+      __esModule: true,
+      VTTCue_: undefined,
+    }));
+    jest.mock("../../log", () => ({
+      __esModule: true,
+      default: logSpy,
+    }));
     const makeCue = require("../make_vtt_cue").default;
     let result;
     let error : Error|undefined;
@@ -50,8 +56,14 @@ describe("Compat - makeVTTCue", () => {
 
   it("should warn and not create anything if start time is after end time", () => {
     const logSpy = { warn: jest.fn() };
-    jest.mock("../browser_compatibility_types", () => ({ VTTCue_: MockVTTCue }));
-    jest.mock("../../log", () => ({ default: logSpy }));
+    jest.mock("../browser_compatibility_types", () => ({
+      __esModule: true,
+      VTTCue_: MockVTTCue,
+    }));
+    jest.mock("../../log", () => ({
+      __esModule: true,
+      default: logSpy,
+    }));
     const makeCue = require("../make_vtt_cue").default;
     const result = makeCue(12, 10, "toto");
     expect(result).toBeNull();
@@ -61,8 +73,14 @@ describe("Compat - makeVTTCue", () => {
 
   it("should create a new VTT Cue in other cases", () => {
     const logSpy = { warn: jest.fn() };
-    jest.mock("../browser_compatibility_types", () => ({ VTTCue_: MockVTTCue }));
-    jest.mock("../../log", () => ({ default: logSpy }));
+    jest.mock("../browser_compatibility_types", () => ({
+      __esModule: true,
+      VTTCue_: MockVTTCue,
+    }));
+    jest.mock("../../log", () => ({
+      __esModule: true,
+      default: logSpy,
+    }));
     const makeCue = require("../make_vtt_cue").default;
     const result = makeCue(10, 12, "toto");
     expect(result).toEqual(new MockVTTCue(10, 12, "toto"));

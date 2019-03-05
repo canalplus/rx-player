@@ -22,6 +22,7 @@ describe("Manifest - Period", () => {
   it("should throw if no adaptation is given", () => {
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
+      __esModule: true,
       default: adaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
@@ -47,6 +48,7 @@ describe("Manifest - Period", () => {
   it("should throw if no audio nor video adaptation is given", () => {
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
+      __esModule: true,
       default: adaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
     }));
@@ -79,6 +81,7 @@ describe("Manifest - Period", () => {
   it("should throw if only empty audio and/or video adaptations is given", () => {
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
+      __esModule: true,
       default: adaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
     }));
@@ -106,6 +109,7 @@ describe("Manifest - Period", () => {
   it("should throw if we are left with no audio representation", () => {
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
+      __esModule: true,
       default: adaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
     }));
@@ -138,6 +142,7 @@ describe("Manifest - Period", () => {
   it("should throw if we are left with no video representation", () => {
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
+      __esModule: true,
       default: adaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
     }));
@@ -170,6 +175,7 @@ describe("Manifest - Period", () => {
   it("should set a parsing error if an unsupported adaptation is given", () => {
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
+      __esModule: true,
       default: adaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
     }));
@@ -204,6 +210,7 @@ describe("Manifest - Period", () => {
   it("should not set a parsing error if an empty unsupported adaptation is given", () => {
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
+      __esModule: true,
       default: adaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
     }));
@@ -232,6 +239,7 @@ describe("Manifest - Period", () => {
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     const representationFilter = jest.fn();
     jest.mock("../adaptation", () => ({
+      __esModule: true,
       default: adaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
@@ -255,6 +263,7 @@ describe("Manifest - Period", () => {
   it("should combine parsing errors from the Period and from the Adaptations", () => {
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [arg.id] }));
     jest.mock("../adaptation", () => ({
+      __esModule: true,
       default: adaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
@@ -276,6 +285,7 @@ describe("Manifest - Period", () => {
   it("should set the given start", () => {
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
+      __esModule: true,
       default: adaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
@@ -294,6 +304,7 @@ describe("Manifest - Period", () => {
   it("should set a given duration", () => {
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
+      __esModule: true,
       default: adaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
@@ -312,6 +323,7 @@ describe("Manifest - Period", () => {
   it("should infer the end from the start and the duration", () => {
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
+      __esModule: true,
       default: adaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
@@ -330,6 +342,7 @@ describe("Manifest - Period", () => {
   it("should return every Adaptations combined with `getAdaptations`", () => {
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
+      __esModule: true,
       default: adaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
@@ -356,6 +369,7 @@ describe("Manifest - Period", () => {
   /* tslint:enable:max-line-length */
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
+      __esModule: true,
       default: adaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
@@ -389,6 +403,7 @@ describe("Manifest - Period", () => {
   /* tslint:enable:max-line-length */
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
+      __esModule: true,
       default: adaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
@@ -415,6 +430,7 @@ describe("Manifest - Period", () => {
   /* tslint:enable:max-line-length */
     const adaptationSpy = jest.fn(arg => ({ ...arg, parsingErrors: [] }));
     jest.mock("../adaptation", () => ({
+      __esModule: true,
       default: adaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));

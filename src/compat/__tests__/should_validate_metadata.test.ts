@@ -21,7 +21,10 @@ describe("compat - shouldValidateMetadata", () => {
 
   it("should return false if we are not on the Samsung browser", () => {
     jest.mock("../browser_detection", () => {
-      return { isSamsungBrowser: false };
+      return {
+        __esModule: true,
+        isSamsungBrowser: false,
+      };
     });
     const shouldValidateMetadata = require("../should_validate_metadata");
     expect(shouldValidateMetadata.default()).toBe(false);
@@ -29,7 +32,10 @@ describe("compat - shouldValidateMetadata", () => {
 
   it("should return true if we are on the Samsung browser", () => {
     jest.mock("../browser_detection", () => {
-      return { isSamsungBrowser: true };
+      return {
+        __esModule: true,
+        isSamsungBrowser: true,
+      };
     });
     const shouldValidateMetadata = require("../should_validate_metadata");
     expect(shouldValidateMetadata.default()).toBe(true);

@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
+import emeManager from "../../../core/eme";
+import addEMEFeature from "../eme";
+
+jest.mock("../../../core/eme", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
 describe("Features list - EME", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
-
   it("should add EME in the current features", () => {
-    const feat = {};
-    jest.mock("../../../core/eme", () => ({ default: feat }));
-    const addEMEFeature = require("../eme").default;
-
-    const featureObject : { [featureName : string] : unknown } = {};
+    const featureObject : any = {};
     addEMEFeature(featureObject);
-    expect(featureObject).toEqual({ emeManager: {} });
-    expect(featureObject.emeManager).toBe(feat);
+    expect(featureObject).toEqual({ emeManager });
+    expect(featureObject.emeManager).toBe(emeManager);
   });
 });

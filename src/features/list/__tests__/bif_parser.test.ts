@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
+import bifParser from "../../../parsers/images/bif";
+import addBIFParserFeature from "../bif_parser";
+
+jest.mock("../../../parsers/images/bif", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
 describe("Features list - BIF Parser", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
-
   it("should add the BIF Parser in the current features", () => {
-    const feat = {};
-    jest.mock("../../../parsers/images/bif", () => ({ default: feat }));
-    const addBIFParserFeature = require("../bif_parser").default;
-
-    const featureObject : { [featureName : string] : unknown } = {};
+    const featureObject : any = {};
     addBIFParserFeature(featureObject);
-    expect(featureObject).toEqual({ imageParser: {} });
-    expect(featureObject.imageParser).toBe(feat);
+    expect(featureObject).toEqual({ imageParser: bifParser });
+    expect(featureObject.imageParser).toBe(bifParser);
   });
 });

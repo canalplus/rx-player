@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
+import vttParser from "../../../parsers/texttracks/webvtt/html";
+import addHTMLVTTFeature from "../html_vtt_parser";
+
+jest.mock("../../../parsers/texttracks/webvtt/html", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
 describe("Features list - HTML VTT Parser", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
-
   it("should add an HTML VTT Parser in the current features", () => {
-    const feat = {};
-    jest.mock("../../../parsers/texttracks/webvtt/html", () => ({ default: feat }));
-    const addHTMLVTTFeature = require("../html_vtt_parser").default;
-
-    const featureObject : {
-      htmlTextTracksParsers : { [featureName : string] : unknown };
-    } = { htmlTextTracksParsers: {} };
+    const featureObject : any = { htmlTextTracksParsers: {} };
     addHTMLVTTFeature(featureObject);
     expect(featureObject).toEqual({
-      htmlTextTracksParsers: { vtt: {} },
+      htmlTextTracksParsers: { vtt: vttParser },
     });
-    expect(featureObject.htmlTextTracksParsers.vtt).toBe(feat);
+    expect(featureObject.htmlTextTracksParsers.vtt).toBe(vttParser);
   });
 });

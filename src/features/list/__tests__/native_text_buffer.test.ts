@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
+import nativeTextTracksBuffer from "../../../core/source_buffers/text/native";
+import addNativeTextBuffer from "../native_text_buffer";
+
+jest.mock("../../../core/source_buffers/text/native", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
 describe("Features list - native Text Buffer", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
-
   it("should add an native Text Buffer in the current features", () => {
-    const feat = {};
-    jest.mock("../../../core/source_buffers/text/native", () => ({ default: feat }));
-    const addNativeTextBuffer = require("../native_text_buffer").default;
-
-    const featureObject : { [featureName : string] : unknown } = {};
+    const featureObject : any = {};
     addNativeTextBuffer(featureObject);
-    expect(featureObject).toEqual({ nativeTextTracksBuffer: {} });
-    expect(featureObject.nativeTextTracksBuffer).toBe(feat);
+    expect(featureObject).toEqual({ nativeTextTracksBuffer });
+    expect(featureObject.nativeTextTracksBuffer).toBe(nativeTextTracksBuffer);
   });
 });
