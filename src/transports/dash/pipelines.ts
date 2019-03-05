@@ -107,7 +107,7 @@ export default function(
     },
 
     parser(
-      { response, url: loaderURL, scheduleRequest } :
+      { response, url: loaderURL, scheduleRequest, loadExternalUTCTimings } :
       IManifestParserArguments<Document|string, string>
     ) : IManifestParserObservable {
       const url = response.url == null ? loaderURL : response.url;
@@ -115,7 +115,7 @@ export default function(
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
 
-      const parsedManifest = dashManifestParser(data, url);
+      const parsedManifest = dashManifestParser(data, url, { ignoreUTCTiming: !loadExternalUTCTimings });
       return loadExternalResources(parsedManifest);
 
       function loadExternalResources(

@@ -42,6 +42,10 @@ export interface IResource {
   url: string;
 }
 
+export interface IParseOptions {
+  ignoreUTCTiming: boolean;
+}
+
 export type IParserResponse<T> =
   {
     type : "needs-ressources";
@@ -62,11 +66,12 @@ export type IParserResponse<T> =
  */
 export default function parseMPD(
   root : Element,
-  uri : string
+  uri : string,
+  options? : IParseOptions
 ) : IParserResponse<IParsedManifest> {
   // Transform whole MPD into a parsed JS object representation
   const mpdIR = createMPDIntermediateRepresentation(root);
-  return loadExternalRessourcesAndParse(mpdIR, uri);
+  return loadExternalRessourcesAndParse(mpdIR, uri, options);
 }
 
 /**
@@ -77,7 +82,8 @@ export default function parseMPD(
  */
 function loadExternalRessourcesAndParse(
   mpdIR : IMPDIntermediateRepresentation,
-  uri : string
+  uri : string,
+  options? : IParseOptions
 ) : IParserResponse<IParsedManifest> {
   const xlinksToLoad : Array<{ index : number; ressource : string }> = [];
   for (let i = 0; i < mpdIR.children.periods.length; i++) {
@@ -87,9 +93,10 @@ function loadExternalRessourcesAndParse(
     }
   }
 
-  const utcTimingsToLoad = mpdIR.children.utcTimings.filter(utcTiming =>
-    utcTiming.schemeIdUri === "urn:mpeg:dash:utc:http-iso:2014"
-  );
+  const utcTimingsToLoad = options && options.ignoreUTCTiming ? [] :
+      mpdIR.children.utcTimings.filter(utcTiming =>
+        utcTiming.schemeIdUri === "urn:mpeg:dash:utc:http-iso:2014"
+      );
 
   if (xlinksToLoad.length === 0 && utcTimingsToLoad.length === 0) {
     const parsedManifest = parseCompleteIntermediateRepresentation(mpdIR, uri);
