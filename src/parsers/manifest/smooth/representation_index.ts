@@ -286,9 +286,19 @@ export default class SmoothRepresentationIndex
     private _channels? : number;
     private _packetSize? : number;
     private _samplingRate? : number;
+
+    // (only calculated for live contents)
+    // Calculates the difference, in timescale, between the current time (as
+    // calculated via performance.now()) and the time of the last segment known
+    // to have been generated on the server-side.
+    // Useful to know if a segment present in the timeline has actually been
+    // generated on the server-side
+    private _scaledLiveGap? : number;
+
     // Defines the end of the latest available segment when this index was known to
     // be valid.
     private _initialLastPosition? : number;
+
     // Defines the earliest time when this index was known to be valid (that is, when
     // all segments declared in it are available). This means either:
     //   - the manifest downloading time, if known
@@ -305,8 +315,10 @@ export default class SmoothRepresentationIndex
     private _index : ITimelineIndex;
 
     constructor(index : ITimelineIndex, infos : ISmoothInitSegmentPrivateInfos) {
+      const estimatedReceivedTime = index.manifestReceivedTime == null ?
+        performance.now() : index.manifestReceivedTime;
       this._index = index;
-      this._indexValidityTime = index.manifestReceivedTime || performance.now();
+      this._indexValidityTime = estimatedReceivedTime;
       this._bitsPerSample = infos.bitsPerSample;
       this._channels = infos.channels;
       this._codecPrivateData = infos.codecPrivateData;
@@ -315,8 +327,14 @@ export default class SmoothRepresentationIndex
       this._protection = infos.protection;
 
       if (index.timeline.length) {
-        const { start, duration } = index.timeline[index.timeline.length - 1];
-        this._initialLastPosition = (start + duration) / index.timescale;
+        const lastItem = index.timeline[index.timeline.length - 1];
+        const scaledEnd = getTimelineRangeEnd(lastItem);
+        this._initialLastPosition = scaledEnd / index.timescale;
+
+        if (index.isLive) {
+          const scaledReceivedTime = (estimatedReceivedTime / 1000) * index.timescale;
+          this._scaledLiveGap = scaledReceivedTime - scaledEnd;
+        }
       }
     }
 
@@ -366,6 +384,9 @@ export default class SmoothRepresentationIndex
       // TODO(pierre): use @maxSegmentDuration if possible
       let maxEncounteredDuration = (timeline.length && timeline[0].duration) || 0;
 
+      const estimatedEnd = this._scaledLiveGap == null ?
+        undefined : ((performance.now() / 1000) * timescale) - this._scaledLiveGap;
+
       for (let i = 0; i < timelineLength; i++) {
         const segmentRange = timeline[i];
         const { duration, start } = segmentRange;
@@ -374,9 +395,11 @@ export default class SmoothRepresentationIndex
 
         // live-added segments have @d attribute equals to -1
         if (duration != null && duration < 0) {
-          // what? May be to play it safe and avoid adding segments which are
-          // not completely generated
-          if (start + maxEncounteredDuration < to) {
+          const approximateEnd = start + maxEncounteredDuration;
+          if (
+            approximateEnd < to &&
+            (estimatedEnd == null || approximateEnd <= estimatedEnd)
+          ) {
             const time = start;
             const segment = {
               id: "" + time,
@@ -395,7 +418,11 @@ export default class SmoothRepresentationIndex
         let segmentNumberInCurrentRange = getSegmentNumber(start, up, duration);
         let segmentTime = start + segmentNumberInCurrentRange *
           (duration == null ? 0 : duration);
-        while (segmentTime < to && segmentNumberInCurrentRange <= repeat) {
+        while (
+          segmentTime < to &&
+          segmentNumberInCurrentRange <= repeat &&
+          (estimatedEnd == null || (segmentTime + duration) <= estimatedEnd)
+        ) {
           const time = segmentTime;
           const number = currentNumber != null ?
             currentNumber + segmentNumberInCurrentRange : undefined;
@@ -469,7 +496,7 @@ export default class SmoothRepresentationIndex
     }
 
     /**
-     * Returns first position in the index.
+     * Returns first position available in the index.
      *
      * @param {Object} index
      * @returns {Number}
@@ -483,17 +510,27 @@ export default class SmoothRepresentationIndex
     }
 
     /**
-     * Returns last position in the index.
+     * Returns last position available in the index.
      * @param {Object} index
      * @returns {Number}
      */
     getLastPosition() : number|undefined {
       const index = this._index;
-      if (!index.timeline.length) {
-        return undefined;
+      for (let i = index.timeline.length - 1; i >= 0; i--) {
+        const lastTimelineElement = index.timeline[i];
+        if (this._scaledLiveGap == null) {
+          return getTimelineRangeEnd(lastTimelineElement) / index.timescale;
+        }
+        const timescaledNow = (performance.now() / 1000) * index.timescale;
+        const { start, duration, repeatCount } = lastTimelineElement;
+        for (let j = repeatCount; j >= 0; j--) {
+          const end = start + (duration * (j + 1));
+          if (end <= timescaledNow - this._scaledLiveGap) {
+            return end / index.timescale;
+          }
+        }
       }
-      const lastTimelineElement = index.timeline[index.timeline.length - 1];
-      return (getTimelineRangeEnd(lastTimelineElement) / index.timescale);
+      return undefined;
     }
 
     /**
@@ -556,6 +593,7 @@ export default class SmoothRepresentationIndex
       this._index = newIndex._index;
       this._initialLastPosition = newIndex._initialLastPosition;
       this._indexValidityTime = newIndex._indexValidityTime;
+      this._scaledLiveGap = newIndex._scaledLiveGap;
 
       if (!oldTimeline.length || !newTimeline.length || oldTimescale !== newTimescale) {
         return; // don't take risk, if something is off, take the new one
@@ -638,4 +676,4 @@ export default class SmoothRepresentationIndex
         }
       }
     }
-}
+  }
