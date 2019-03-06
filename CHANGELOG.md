@@ -27,6 +27,7 @@
 ### Other improvements
 
   - errors: set a readable error message for every error and warnings thrown
+  - tools/mediaCapabilitiesProber: set logs about unimportant missing APIs as debug-level instead of warn-level
   - types: provide type safety to `addEventListener` and `removeEventListener`
 
 
