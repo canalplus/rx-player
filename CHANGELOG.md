@@ -8,7 +8,7 @@
   - languages/api: add `setPreferredAudioTracks`, `getPreferredAudioTracks`, `setPreferredTextTracks` and `getPreferredTextTracks` methods
   - languages/api: add `availableAudioTracksChange`, `availableTextTracksChange` and `availableVideoTracksChange` events
   - abr/api: add `availableAudioBitratesChange` and `availableVideoBitratesChange` events
-  - eme: allow playback of mixed crypted and unencrypted contents on Chrome
+  - eme: allow playback of mixed encrypted and unencrypted contents on Chrome
   - types: export the new `IAudioTrackPreference` and `ITextTrackPreference` types
 
 ### Deprecated
