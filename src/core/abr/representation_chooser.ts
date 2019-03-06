@@ -368,7 +368,7 @@ export default class RepresentationChooser {
 
           const chosenRepFromBandwidth =
             fromBitrateCeil(_representations, Math.min(bitrateChosen, maxAutoBitrate)) ||
-            _representations[0];
+            _representations[0] || representations[0];
 
           if (forceBandwidthMode) {
             return {
@@ -395,7 +395,8 @@ export default class RepresentationChooser {
           }
           const limitedBitrate = Math.min(bufferBasedBitrate, maxAutoBitrate);
           const chosenRepresentation =
-            fromBitrateCeil(_representations, limitedBitrate) || _representations[0];
+            fromBitrateCeil(_representations, limitedBitrate) ||
+            _representations[0] || representations[0];
           return {
             bitrate: bandwidthEstimate,
             representation: chosenRepresentation,
