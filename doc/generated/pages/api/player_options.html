@@ -9,6 +9,8 @@
 <li><a href="#subchapter-maxVideoBitrate">maxVideoBitrate</a></li>
 <li><a href="#subchapter-maxAudioBitrate">maxAudioBitrate</a></li>
 <li><a href="#subchapter-wantedBufferAhead">wantedBufferAhead</a></li>
+<li><a href="#subchapter-preferredAudioTracks">preferredAudioTracks</a></li>
+<li><a href="#subchapter-preferredTextTracks">preferredTextTracks</a></li>
 <li><a href="#subchapter-maxBufferAhead">maxBufferAhead</a></li>
 <li><a href="#subchapter-maxBufferBehind">maxBufferBehind</a></li>
 <li><a href="#subchapter-limitVideoWidth">limitVideoWidth</a></li>
@@ -158,6 +160,81 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 seconds.</p>
 <p>Once this size of buffer is reached, the player won&#x2019;t try to download new video
 segments anymore.</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="prop-preferredAudioTracks"></a>
+<a name="subchapter-preferredAudioTracks"></a></p>
+<h3>preferredAudioTracks</h3>
+<p><em>type</em>: <code>Array.&lt;Object&gt;</code></p>
+<p><em>defaults</em>: <code>[]</code></p>
+<p>Set the initial audio tracks preferences.</p>
+<p>This option takes an array of objects describing the languages wanted:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+  audioDescription: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the audio track should be an</span>
+                          <span class="hljs-comment">// audio description for the visually impaired</span>
+}
+</code></pre>
+<p>All elements in that Array should be set in preference order: from the most
+preferred to the least preferred.</p>
+<p>When loading a content, the RxPlayer will then try to choose its audio track by
+comparing what is available with your current preferences (i.e. if the most
+preferred is not available, it will look if the second one etc.).</p>
+<p>This array of preferrences can be updated at any time through the
+<code>setPreferredAudioTracks</code> method, documented
+<a href="index.html#meth-getPreferredAudioTracks">here</a>.</p>
+<h4>Example</h4>
+<p>Let&#x2019;s imagine that you prefer to have french or italian over all other audio
+languages. If not found, you want to fallback to english:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> RxPlayer({
+  <span class="hljs-attr">preferredAudioTracks</span>: [
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;ita&quot;</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;eng&quot;</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }
+  ]
+});
+</code></pre>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="prop-preferredTextTracks"></a>
+<a name="subchapter-preferredTextTracks"></a></p>
+<h3>preferredTextTracks</h3>
+<p><em>type</em>: <code>Array.&lt;Object&gt;</code></p>
+<p><em>defaults</em>: <code>[]</code></p>
+<p>Set the initial text track languages preferences.</p>
+<p>This option takes an array of objects describing the languages wanted for
+subtitles:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+  closedCaption: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
+                       <span class="hljs-comment">// caption for the hard of hearing</span>
+}
+</code></pre>
+<p>All elements in that Array should be set in preference order: from the most
+preferred to the least preferred. You can set <code>null</code> for no subtitles.</p>
+<p>When loading a content, the RxPlayer will then try to choose its text track by
+comparing what is available with your current preferences (i.e. if the most
+preferred is not available, it will look if the second one etc.).</p>
+<p>This array of preferrences can be updated at any time through the
+<code>setPreferredTextTracks</code> method, documented
+<a href="index.html#meth-getPreferredTextTracks">here</a>.</p>
+<h4>Example</h4>
+<p>Let&#x2019;s imagine that you prefer to have french or italian subtitles.If not found,
+you want no subtitles at all.</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> RxPlayer({
+  <span class="hljs-attr">preferredTextTracks</span>: [
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;ita&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
+    <span class="hljs-literal">null</span>
+  ]
+});
+</code></pre>
 <hr>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
 mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
