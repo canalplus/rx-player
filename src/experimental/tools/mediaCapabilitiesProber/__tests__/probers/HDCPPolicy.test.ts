@@ -30,7 +30,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
     const probeHDCPPolicy = require("../../probers/HDCPPolicy").default;
     /* tslint:disable no-floating-promises */
     expect(probeHDCPPolicy({})).rejects.toThrowError(
-      "API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: API not available");
+      "MediaCapabilitiesProber >>> API_CALL: API not available");
     /* tslint:enable no-floating-promises */
   });
 
