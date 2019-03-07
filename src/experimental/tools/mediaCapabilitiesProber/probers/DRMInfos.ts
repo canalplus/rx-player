@@ -47,7 +47,7 @@ export default function probeDRMInfos(
     const result: ICompatibleKeySystem = { type, configuration };
 
     if (requestMediaKeySystemAccess == null) {
-      log.warn("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
+      log.debug("MediaCapabilitiesProber >>> API_CALL: " +
         "Your browser has no API to request a media key system access.");
       // In that case, the API lack means that no EME workflow may be started.
       // So, the DRM configuration is not supported.

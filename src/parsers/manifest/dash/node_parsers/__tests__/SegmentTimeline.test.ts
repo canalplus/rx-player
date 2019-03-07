@@ -21,7 +21,10 @@ describe("DASH Node parsers - SegmentTimeline", () => {
 
   it("should do nothing if no childNode is present", () => {
     const parseS = jest.fn();
-    jest.mock("../S", () => ({ default: parseS }));
+    jest.mock("../S", () => ({
+      __esModule: true,
+      default: parseS,
+    }));
     const parseSegmentTimeline = require("../SegmentTimeline").default;
 
     const element = new DOMParser()
@@ -34,7 +37,10 @@ describe("DASH Node parsers - SegmentTimeline", () => {
 
   it("should do nothing with childNodes if no S is present", () => {
     const parseS = jest.fn();
-    jest.mock("../S", () => ({ default: parseS }));
+    jest.mock("../S", () => ({
+      __esModule: true,
+      default: parseS,
+    }));
     const parseSegmentTimeline = require("../SegmentTimeline").default;
 
     const aElement = new DOMParser()
@@ -56,7 +62,10 @@ describe("DASH Node parsers - SegmentTimeline", () => {
 
   it("should parse S elements", () => {
     const parseS = jest.fn((s) => ({ start: +s.innerHTML }));
-    jest.mock("../S", () => ({ default: parseS }));
+    jest.mock("../S", () => ({
+      __esModule: true,
+      default: parseS,
+    }));
     const parseSegmentTimeline = require("../SegmentTimeline").default;
 
     const sElement1 = new DOMParser()

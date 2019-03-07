@@ -94,9 +94,7 @@ function probeMediaConfiguration(
               break;
           }
         }
-      }).catch((err) => {
-        log.warn(err);
-      }));
+      }).catch((error: Error) => log.debug(error.message || error)));
     }
   }
 
@@ -117,7 +115,7 @@ function probeMediaConfiguration(
       if (areUnprobedCapabilities) {
         log.warn("MediaCapabilitiesProber >>> PROBER: Some capabilities " +
           "could not be probed, due to the incompatibility of browser APIs, or the " +
-          "lack of arguments to call them.");
+          "lack of arguments to call them. See debug logs for more details.");
       }
 
       log.info("MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",

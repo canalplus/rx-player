@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
-describe("Features list - native TTML Parser", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
+import ttmlParser from "../../../parsers/texttracks/ttml/native";
+import addNativettmlFeature from "../native_ttml_parser";
 
-  it("should add a native TTML Parser in the current features", () => {
-    const feat = {};
-    jest.mock("../../../parsers/texttracks/ttml/native", () => ({ default: feat }));
-    const addNativeTTMLFeature = require("../native_ttml_parser").default;
+jest.mock("../../../parsers/texttracks/ttml/native", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
 
-    const featureObject : {
-      nativeTextTracksParsers : { [featureName : string] : unknown };
-    } = { nativeTextTracksParsers: {} };
-    addNativeTTMLFeature(featureObject);
+describe("Features list - native ttml Parser", () => {
+  it("should add an native ttml Parser in the current features", () => {
+    const featureObject : any = { nativeTextTracksParsers: {} };
+    addNativettmlFeature(featureObject);
     expect(featureObject).toEqual({
-      nativeTextTracksParsers: { ttml: {} },
+      nativeTextTracksParsers: { ttml: ttmlParser },
     });
-    expect(featureObject.nativeTextTracksParsers.ttml).toBe(feat);
+    expect(featureObject.nativeTextTracksParsers.ttml).toBe(ttmlParser);
   });
 });

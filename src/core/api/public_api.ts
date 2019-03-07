@@ -163,6 +163,11 @@ interface IPublicAPIEvent {
   warning : ICustomError | Error;
   nativeTextTracksChange : TextTrack[];
   periodChange : Period;
+  availableAudioBitratesChange : number[];
+  availableVideoBitratesChange : number[];
+  availableAudioTracksChange : ITMAudioTrackListItem[];
+  availableTextTracksChange : ITMTextTrackListItem[];
+  availableVideoTracksChange : ITMVideoTrackListItem[];
 }
 
 /**
@@ -395,6 +400,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   };
 
   /**
+   * List of favorite audio tracks, in preference order.
+   * @type {Array.<Object>}
+   */
+  private _priv_preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
+
+  /**
+   * List of favorite text tracks, in preference order.
+   * @type {Array.<Object>}
+   */
+  private _priv_preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
+
+  /**
    * TrackManager instance linked to the current content.
    * Null if no content has been loaded or if the current content loaded
    * has no TrackManager.
@@ -502,6 +519,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       maxBufferAhead,
       maxBufferBehind,
       maxVideoBitrate,
+      preferredAudioTracks,
+      preferredTextTracks,
       throttleWhenHidden,
       videoElement,
       wantedBufferAhead,
@@ -512,7 +531,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.10.3";
+    this.version = /*PLAYER_VERSION*/"3.11.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -598,6 +617,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_stopAtEnd = stopAtEnd;
 
     this._priv_setPlayerState(PLAYER_STATES.STOPPED);
+
+    this._priv_preferredAudioTracks = new BehaviorSubject(preferredAudioTracks);
+    this._priv_preferredTextTracks = new BehaviorSubject(preferredTextTracks);
   }
 
   /**
@@ -1711,6 +1733,38 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Returns the current list of preferred audio tracks, in preference order.
+   * @returns {Array.<Object>}
+   */
+  getPreferredAudioTracks() : IAudioTrackPreference[] {
+    return this._priv_preferredAudioTracks.getValue();
+  }
+
+  /**
+   * Returns the current list of preferred text tracks, in preference order.
+   * @returns {Array.<Object>}
+   */
+  getPreferredTextTracks() : ITextTrackPreference[] {
+    return this._priv_preferredTextTracks.getValue();
+  }
+
+  /**
+   * Set the list of preferred audio tracks, in preference order.
+   * @param {Array.<Object>} tracks
+   */
+  setPreferredAudioTracks(tracks : IAudioTrackPreference[]) : void {
+    return this._priv_preferredAudioTracks.next(tracks);
+  }
+
+  /**
+   * Set the list of preferred text tracks, in preference order.
+   * @param {Array.<Object>} tracks
+   */
+  setPreferredTextTracks(tracks : ITextTrackPreference[]) : void {
+    return this._priv_preferredTextTracks.next(tracks);
+  }
+
+  /**
    * @returns {Array.<Object>|null}
    */
   getImageTrackData() : IBifThumbnail[] | null {
@@ -1938,9 +1992,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const { initialAudioTrack, initialTextTrack } = this._priv_contentInfos;
     this._priv_trackManager = new TrackManager({
       preferredAudioTracks: initialAudioTrack === undefined ?
-        undefined : [initialAudioTrack],
+        this._priv_preferredAudioTracks : new BehaviorSubject([initialAudioTrack]),
       preferredTextTracks: initialTextTrack === undefined ?
-        undefined : [initialTextTrack],
+        this._priv_preferredTextTracks : new BehaviorSubject([initialTextTrack]),
     });
 
     fromEvent(manifest, "manifestUpdate")
@@ -1966,7 +2020,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
     this._priv_contentInfos.currentPeriod = period;
+
     this._priv_triggerContentEvent("periodChange", period);
+    this._priv_triggerContentEvent("availableAudioTracksChange",
+      this.getAvailableAudioTracks());
+    this._priv_triggerContentEvent("availableTextTracksChange",
+      this.getAvailableTextTracks());
+    this._priv_triggerContentEvent("availableVideoTracksChange",
+      this.getAvailableVideoTracks());
 
     // Emit intial events for the Period
     if (this._priv_trackManager) {
@@ -1982,6 +2043,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_triggerContentEvent("textTrackChange", null);
       this._priv_triggerContentEvent("videoTrackChange", null);
     }
+
+    this._priv_triggerContentEvent("availableAudioBitratesChange",
+      this.getAvailableAudioBitrates());
+    this._priv_triggerContentEvent("availableVideoBitratesChange",
+      this.getAvailableVideoBitrates());
 
     const activeAudioRepresentations = this.getCurrentRepresentations();
     if (activeAudioRepresentations && activeAudioRepresentations.audio != null) {
@@ -2146,6 +2212,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         case "audio":
           const audioTrack = this._priv_trackManager.getChosenAudioTrack(currentPeriod);
           this._priv_triggerContentEvent("audioTrackChange", audioTrack);
+          this._priv_triggerContentEvent("availableAudioBitratesChange",
+            this.getAvailableVideoBitrates());
           break;
         case "text":
           const textTrack = this._priv_trackManager.getChosenTextTrack(currentPeriod);
@@ -2154,6 +2222,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         case "video":
           const videoTrack = this._priv_trackManager.getChosenVideoTrack(currentPeriod);
           this._priv_triggerContentEvent("videoTrackChange", videoTrack);
+          this._priv_triggerContentEvent("availableVideoBitratesChange",
+            this.getAvailableVideoBitrates());
           break;
       }
     }
@@ -2318,6 +2388,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.trigger("positionUpdate", positionData);
   }
 }
-Player.version = /*PLAYER_VERSION*/"3.10.3";
+Player.version = /*PLAYER_VERSION*/"3.11.0";
 
 export default Player;

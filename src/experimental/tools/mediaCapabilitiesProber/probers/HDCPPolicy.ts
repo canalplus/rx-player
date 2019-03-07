@@ -40,7 +40,7 @@ export default function probeHDCPPolicy(
 
   return new PPromise((resolve) => {
     if (requestMediaKeySystemAccess == null) {
-      throw new Error("API_AVAILABILITY: MediaCapabilitiesProber >>> API_CALL: " +
+      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "API not available");
     }
     if (config.hdcp == null) {

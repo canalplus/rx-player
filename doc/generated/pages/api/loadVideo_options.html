@@ -9,8 +9,6 @@
 <li><a href="#subchapter-autoPlay">autoPlay</a></li>
 <li><a href="#subchapter-startAt">startAt</a></li>
 <li><a href="#subchapter-transportOptions">transportOptions</a></li>
-<li><a href="#subchapter-defaultAudioTrack">defaultAudioTrack</a></li>
-<li><a href="#subchapter-defaultTextTrack">defaultTextTrack</a></li>
 <li><a href="#subchapter-textTrackMode">textTrackMode</a></li>
 <li><a href="#subchapter-textTrackElement">textTrackElement</a></li>
 <li><a href="#subchapter-manualBitrateSwitchingMode">manualBitrateSwitchingMode</a></li>
@@ -18,6 +16,8 @@
 <li><a href="#subchapter-supplementaryImageTracks">supplementaryImageTracks</a></li>
 <li><a href="#subchapter-hideNativeSubtitle">hideNativeSubtitle</a></li>
 <li><a href="#subchapter-networkConfig">networkConfig</a></li>
+<li><a href="#subchapter-defaultAudioTrack">defaultAudioTrack</a></li>
+<li><a href="#subchapter-defaultTextTrack">defaultTextTrack</a></li>
 </ul>
 </li>
 </ul>
@@ -382,54 +382,6 @@ them.
 More infos on it can be found <a href="plugins.html#representationFilter">here</a>.</p>
 </li>
 </ul>
-<p><a name="prop-defaultAudioTrack"></a>
-<a name="subchapter-defaultAudioTrack"></a></p>
-<h3>defaultAudioTrack</h3>
-<p><em>type</em>: <code>Object|string|undefined</code></p>
-<hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
-option</a>).</p>
-<hr>
-<p>The starting default audio track.</p>
-<p>This can be under the form of an object with the following properties:</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> defaultAudioTrack = {
-  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
-                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
-  audioDescription: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the audio track should be an</span>
-                          <span class="hljs-comment">// audio description for the visually impaired</span>
-};
-</code></pre>
-<p>or under the form of the language string directly, in which case the
-<code>&quot;audioDescription&quot;</code> option is inferred to be false.</p>
-<pre><code class="language-js"><span class="hljs-comment">// equivalent to the previous example</span>
-<span class="hljs-keyword">const</span> defaultAudioTrack = <span class="hljs-string">&quot;fra&quot;</span>;
-</code></pre>
-<p>If the corresponding audio track is not found, the first track defined will be
-taken instead.</p>
-<p><a name="prop-defaultTextTrack"></a>
-<a name="subchapter-defaultTextTrack"></a></p>
-<h3>defaultTextTrack</h3>
-<p><em>type</em>: <code>Object|string|undefined</code></p>
-<hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
-option</a>).</p>
-<hr>
-<p>The starting default text track.</p>
-<p>This can be under the form of an object with the following properties:</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> defaultTextTrack = {
-  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
-                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
-  closedCaption: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
-                       <span class="hljs-comment">// caption for the hard of hearing</span>
-};
-</code></pre>
-<p>or under the form of the language string directly, in which case the
-<code>&quot;closedCaption&quot;</code> option is inferred to be false:</p>
-<pre><code class="language-js"><span class="hljs-comment">// equivalent to the previous example</span>
-<span class="hljs-keyword">const</span> defaultTextTrack = <span class="hljs-string">&quot;fra&quot;</span>;
-</code></pre>
-<p>If the corresponding text track is not found, the first track defined will be
-taken instead.</p>
 <p><a name="prop-textTrackMode"></a>
 <a name="subchapter-textTrackMode"></a></p>
 <h3>textTrackMode</h3>
@@ -687,4 +639,68 @@ throw a fatal error.</p>
 parsing/interface error)</p>
 </li>
 </ul>
+<p><a name="prop-defaultAudioTrack"></a>
+<a name="subchapter-defaultAudioTrack"></a></p>
+<h3>defaultAudioTrack</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<p>Please use the <a href="player_options.html#prop-preferredAudioTracks"><code>preferredAudioTracks</code> constructor
+option</a> or the
+<a href="index.html#meth-setPreferredAudioTracks"><code>setPreferredAudioTracks</code> method</a>
+instead.</p>
+<hr>
+<p><em>type</em>: <code>Object|string|undefined</code></p>
+<p>The starting default audio track.</p>
+<p>This can be under the form of an object with the following properties:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> defaultAudioTrack = {
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+  audioDescription: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the audio track should be an</span>
+                          <span class="hljs-comment">// audio description for the visually impaired</span>
+};
+</code></pre>
+<p>or under the form of the language string directly, in which case the
+<code>&quot;audioDescription&quot;</code> option is inferred to be false.</p>
+<pre><code class="language-js"><span class="hljs-comment">// equivalent to the previous example</span>
+<span class="hljs-keyword">const</span> defaultAudioTrack = <span class="hljs-string">&quot;fra&quot;</span>;
+</code></pre>
+<p>If the corresponding audio track is not found, the first track defined will be
+taken instead.</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
+option</a>).</p>
+<hr>
+<p><a name="prop-defaultTextTrack"></a>
+<a name="subchapter-defaultTextTrack"></a></p>
+<h3>defaultTextTrack</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<p>Please use the <a href="player_options.html#prop-preferredTextTracks"><code>preferredTextTracks</code> constructor
+option</a> or the
+<a href="index.html#meth-setPreferredTextTracks"><code>setPreferredTextTracks</code> method</a>
+instead.</p>
+<hr>
+<p><em>type</em>: <code>Object|string|undefined</code></p>
+<p>The starting default text track.</p>
+<p>This can be under the form of an object with the following properties:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> defaultTextTrack = {
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+  closedCaption: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
+                       <span class="hljs-comment">// caption for the hard of hearing</span>
+};
+</code></pre>
+<p>or under the form of the language string directly, in which case the
+<code>&quot;closedCaption&quot;</code> option is inferred to be false:</p>
+<pre><code class="language-js"><span class="hljs-comment">// equivalent to the previous example</span>
+<span class="hljs-keyword">const</span> defaultTextTrack = <span class="hljs-string">&quot;fra&quot;</span>;
+</code></pre>
+<p>If the corresponding text track is not found, the first track defined will be
+taken instead.</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
+option</a>).</p>
+<hr>
 </body></html></div></div></div></body>

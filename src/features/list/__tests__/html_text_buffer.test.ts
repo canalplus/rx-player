@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
+import htmlTextTracksBuffer from "../../../core/source_buffers/text/html";
+import addHTMLTextBuffer from "../html_text_buffer";
+
+jest.mock("../../../core/source_buffers/text/html", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
 describe("Features list - HTML Text Buffer", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
-
   it("should add an HTML Text Buffer in the current features", () => {
-    const feat = {};
-    jest.mock("../../../core/source_buffers/text/html", () => ({ default: feat }));
-    const addHTMLTextBuffer = require("../html_text_buffer").default;
-
-    const featureObject : { [featureName : string] : unknown } = {};
+    const featureObject : any = {};
     addHTMLTextBuffer(featureObject);
-    expect(featureObject).toEqual({ htmlTextTracksBuffer: {} });
-    expect(featureObject.htmlTextTracksBuffer).toBe(feat);
+    expect(featureObject).toEqual({ htmlTextTracksBuffer });
+    expect(featureObject.htmlTextTracksBuffer).toBe(htmlTextTracksBuffer);
   });
 });

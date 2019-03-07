@@ -27,6 +27,7 @@ describe("Compat - clearElementSrc", () => {
       removeAttribute() { return null; },
     };
     jest.mock("../browser_detection.ts", () => ({
+      __esModule: true,
       isFirefox: false,
     }));
     const clearElementSrc = require("../clear_element_src").default;
@@ -44,6 +45,7 @@ describe("Compat - clearElementSrc", () => {
       removeAttribute() { throw new Error("Oups, can't remove attribute."); },
     };
     jest.mock("../browser_detection.ts", () => ({
+      __esModule: true,
       isFirefox: false,
     }));
     const clearElementSrc = require("../clear_element_src").default;
@@ -77,6 +79,7 @@ describe("Compat - clearElementSrc", () => {
     };
 
     jest.mock("../browser_detection.ts", () => ({
+      __esModule: true,
       isFirefox: true,
     }));
     const clearElementSrc = require("../clear_element_src").default;
@@ -118,14 +121,15 @@ describe("Compat - clearElementSrc", () => {
     };
 
     jest.mock("../browser_detection", () => ({
+      __esModule: true,
       isFirefox: true,
     }));
 
     const mockLogWarn = jest.fn((message) => message);
     jest.mock("../../log", () => ({
+      __esModule: true,
       default: { warn: mockLogWarn },
     }));
-
     const clearElementSrc = require("../clear_element_src").default;
 
     const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
@@ -164,6 +168,7 @@ describe("Compat - clearElementSrc", () => {
     };
 
     jest.mock("../browser_detection.ts", () => ({
+      __esModule: true,
       isFirefox: true,
     }));
     const clearElementSrc = require("../clear_element_src").default;
@@ -193,6 +198,7 @@ describe("Compat - clearElementSrc", () => {
     };
 
     jest.mock("../browser_detection.ts", () => ({
+      __esModule: true,
       isFirefox: true,
     }));
     const clearElementSrc = require("../clear_element_src").default;

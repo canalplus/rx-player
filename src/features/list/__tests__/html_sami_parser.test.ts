@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
+import samiParser from "../../../parsers/texttracks/sami/html";
+import addHTMLSAMIFeature from "../html_sami_parser";
+
+jest.mock("../../../parsers/texttracks/sami/html", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
 describe("Features list - HTML SAMI Parser", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
-
   it("should add an HTML SAMI Parser in the current features", () => {
-    const feat = {};
-    jest.mock("../../../parsers/texttracks/sami/html", () => ({ default: feat }));
-    const addHTMLSAMIFeature = require("../html_sami_parser").default;
-
-    const featureObject : {
-      htmlTextTracksParsers : { [featureName : string] : unknown };
-    } = { htmlTextTracksParsers: {} };
+    const featureObject : any = { htmlTextTracksParsers: {} };
     addHTMLSAMIFeature(featureObject);
     expect(featureObject).toEqual({
-      htmlTextTracksParsers: { sami: {} },
+      htmlTextTracksParsers: { sami: samiParser },
     });
-    expect(featureObject.htmlTextTracksParsers.sami).toBe(feat);
+    expect(featureObject.htmlTextTracksParsers.sami).toBe(samiParser);
   });
 });

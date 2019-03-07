@@ -29,7 +29,6 @@
     - [seekTo](#meth-seekTo)
     - [isLive](#meth-isLive)
     - [getUrl](#meth-getUrl)
-    - [isFullscreen](#meth-isFullscreen)
     - [getAvailableVideoBitrates](#meth-getAvailableVideoBitrates)
     - [getAvailableAudioBitrates](#meth-getAvailableAudioBitrates)
     - [getVideoBitrate](#meth-getVideoBitrate)
@@ -48,8 +47,6 @@
     - [getMaxBufferAhead](#meth-getMaxBufferAhead)
     - [setMaxVideoBitrate](#meth-setMaxVideoBitrate)
     - [setMaxAudioBitrate](#meth-setMaxAudioBitrate)
-    - [setFullscreen](#meth-setFullscreen)
-    - [exitFullscreen](#meth-exitFullscreen)
     - [setVolume](#meth-setVolume)
     - [mute](#meth-mute)
     - [unMute](#meth-unMute)
@@ -64,11 +61,13 @@
     - [setTextTrack](#meth-setTextTrack)
     - [disableTextTrack](#meth-disableTextTrack)
     - [setVideoTrack](#meth-setVideoTrack)
-    - [getManifest](#meth-getManifest)
+    - [setPreferredAudioTracks](#meth-setPreferredAudioTracks)
+    - [getPreferredAudioTracks](#meth-getPreferredAudioTracks)
+    - [setPreferredTextTracks](#meth-setPreferredTextTracks)
+    - [getPreferredTextTracks](#meth-getPreferredTextTracks)
     - [getCurrentAdaptations](#meth-getCurrentAdaptations)
     - [getCurrentRepresentations](#meth-getCurrentRepresentations)
     - [dispose](#meth-dispose)
-    - [getNativeTextTrack](#meth-getNativeTextTrack)
     - [getVideoLoadedTime](#meth-getVideoLoadedTime)
     - [getVideoPlayedTime](#meth-getVideoPlayedTime)
     - [getVideoBufferGap](#meth-getVideoBufferGap)
@@ -78,6 +77,10 @@
     - [getImageTrackData](#meth-getImageTrackData)
     - [getMinimumPosition](#meth-getMinimumPosition)
     - [getMaximumPosition](#meth-getMaximumPosition)
+    - [setFullscreen (deprecated)](#meth-setFullscreen)
+    - [exitFullscreen (deprecated)](#meth-exitFullscreen)
+    - [isFullscreen (deprecated)](#meth-isFullscreen)
+    - [getNativeTextTrack (deprecated)](#meth-getNativeTextTrack)
 
 
 
@@ -616,29 +619,6 @@ if (url) {
 ```
 
 
-<a name="meth-isFullscreen"></a>
-### isFullscreen ###############################################################
-
----
-
-:warning: This method is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
----
-
-_return value_: ``Boolean``
-
-Returns ``true`` if the video element is in fullscreen mode, ``false``
-otherwise.
-
-#### Example
-```js
-if (player.isFullscreen()) {
-  console.log("The player is in fullscreen mode");
-}
-```
-
-
 <a name="meth-getAvailableVideoBitrates"></a>
 ### getAvailableVideoBitrates ##################################################
 
@@ -999,43 +979,6 @@ _defaults_: ``Infinity``
 Returns the maximum kept buffer ahead of the current position, in seconds.
 
 
-<a name="meth-setFullscreen"></a>
-### setFullscreen ##############################################################
-
----
-
-:warning: This method is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
----
-
-_arguments_: ``Boolean``
-
-Switch or exit the ``<video>`` element to fullscreen mode. The argument is an
-optional boolean:
-  - if set:
-    - ``true``: enters fullscreen
-    - ``false``: exit fullscreen
-
-  - if not set: enter fullscreen
-
-Note that __only the video element will be set to fullscreen mode__. You might
-prefer to implement your own method to include your controls in the final UI.
-
-
-<a name="meth-exitFullscreen"></a>
-### exitFullscreen #############################################################
-
----
-
-:warning: This method is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
----
-
-Exit fullscreen mode. Same than ``setFullscreen(false)``.
-
-
 <a name="meth-setVolume"></a>
 ### setVolume ##################################################################
 
@@ -1349,6 +1292,171 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 ---
 
 
+<a name="meth-setPreferredAudioTracks"></a>
+### setPreferredAudioTracks ####################################################
+
+_arguments_: ``Array.<Object>``
+
+Update the audio language preferences at any time.
+
+This method takes an array of objects describing the languages wanted:
+```js
+{
+  language: "fra", // {string} The wanted language
+                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
+  audioDescription: false // {Boolean} Whether the audio track should be an
+                          // audio description for the visually impaired
+}
+```
+
+All elements in that Array should be set in preference order: from the most
+preferred to the least preferred.
+
+When encountering a new Period or a new content, the RxPlayer will then try to
+choose its audio track by comparing what is available with your current
+preferences (i.e. if the most preferred is not available, it will look if the
+second one is etc.).
+
+Please note that those preferences will only apply either to the next loaded
+content or to the next newly encountered Period.
+Simply put, once set this preference will be applied to all contents but:
+
+  - the current Period being played (or the current loaded content, in the case
+    of Smooth streaming). In that case, the current audio preference will stay
+    in place.
+
+  - the Periods which have already been played in the current loaded content.
+    Those will keep the last set audio preference at the time it was played.
+
+To update the current audio track in those cases, you should use the
+`setAudioTrack` method.
+
+#### Example
+
+Let's imagine that you prefer to have french or italian over all other audio
+languages. If not found, you want to fallback to english.
+You will thus call ``setPreferredAudioTracks`` that way.
+
+```js
+player.setPreferredAudioTracks([
+  { language: "fra", audioDescription: false },
+  { language: "ita", audioDescription: false },
+  { language: "eng", audioDescription: false }
+])
+```
+
+---
+
+:warning: This method will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
+
+<a name="meth-getPreferredAudioTracks"></a>
+### getPreferredAudioTracks ####################################################
+
+_return value_: ``Array.<Object>``
+
+Returns the current list of preferred audio tracks - by order of preference.
+
+This returns the data in the same format that it was given to either the
+`preferredAudioTracks` constructor option or the last `setPreferredAudioTracks`
+if it was called:
+```js
+{
+  language: "fra", // {string} The wanted language
+                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
+  audioDescription: false // {Boolean} Whether the audio track should be an
+                          // audio description for the visually impaired
+}
+```
+
+
+<a name="meth-setPreferredTextTracks"></a>
+### setPreferredTextTracks #####################################################
+
+_arguments_: ``Array.<Object|null>``
+
+Update the text track (or subtitles) preferences at any time.
+
+This method takes an array of objects describing the languages wanted:
+```js
+{
+  language: "fra", // {string} The wanted language
+                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
+  closedCaption: false // {Boolean} Whether the text track should be a closed
+                       // caption for the hard of hearing
+}
+```
+
+All elements in that Array should be set in preference order: from the most
+preferred to the least preferred. You can set `null` for no subtitles.
+
+When encountering a new Period or a new content, the RxPlayer will then try to
+choose its text track by comparing what is available with your current
+preferences (i.e. if the most preferred is not available, it will look if the
+second one is etc.).
+
+Please note that those preferences will only apply either to the next loaded
+content or to the next newly encountered Period.
+Simply put, once set this preference will be applied to all contents but:
+
+  - the current Period being played (or the current loaded content, in the case
+    of Smooth streaming). In that case, the current text track preference will
+    stay in place.
+
+  - the Periods which have already been played in the current loaded content.
+    Those will keep the last set text track preference at the time it was
+    played.
+
+To update the current text track in those cases, you should use the
+`setTextTrack` method.
+
+#### Example
+
+Let's imagine that you prefer to have french or italian subtitles.If not found,
+you want no subtitles at all.
+
+You will thus call ``setPreferredTextTracks`` that way.
+
+```js
+player.setPreferredTextTracks([
+  { language: "fra", closedCaption: false },
+  { language: "ita", closedCaption: false },
+  null
+])
+```
+
+---
+
+:warning: This method will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
+
+<a name="meth-getPreferredTextTracks"></a>
+### getPreferredTextTracks #####################################################
+
+_return value_: ``Array.<Object|null>``
+
+Returns the current list of preferred text tracks - by order of preference.
+
+This returns the data in the same format that it was given to either the
+`preferredTextTracks` constructor option or the last `setPreferredTextTracks` if
+it was called:
+
+```js
+{
+  language: "fra", // {string} The wanted language
+                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
+  closedCaption: false // {Boolean} Whether the text track should be a closed
+                       // caption for the hard of hearing
+}
+```
+
+
 <a name="meth-getManifest"></a>
 ### getManifest ################################################################
 
@@ -1410,27 +1518,6 @@ options](./loadVideo_options.md#prop-transport)).
 Free the ressources used by the player.
 
 !warning!: The player won't work correctly after calling this method.
-
-
-<a name="meth-getNativeTextTrack"></a>
-### getNativeTextTrack #########################################################
-
----
-
-:warning: This method is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
----
-
-_return value_: ``TextTrack|null``
-
-Returns the first text track of the video's element, null if none.
-
-This is equivalent to:
-```js
-const el = player.getVideoElement();
-const textTrack = el.textTracks.length ? el.textTracks[0] : null;
-```
 
 
 <a name="meth-getVideoLoadedTime"></a>
@@ -1539,4 +1626,85 @@ This method allows thus to seek directly at the live edge of the content.
 player.seekTo({
   position: player.getMaximumPosition()
 });
+```
+
+
+<a name="meth-setFullscreen"></a>
+### setFullscreen ##############################################################
+
+---
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
+_arguments_: ``Boolean``
+
+Switch or exit the ``<video>`` element to fullscreen mode. The argument is an
+optional boolean:
+  - if set:
+    - ``true``: enters fullscreen
+    - ``false``: exit fullscreen
+
+  - if not set: enter fullscreen
+
+Note that __only the video element will be set to fullscreen mode__. You might
+prefer to implement your own method to include your controls in the final UI.
+
+
+<a name="meth-exitFullscreen"></a>
+### exitFullscreen #############################################################
+
+---
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
+Exit fullscreen mode. Same than ``setFullscreen(false)``.
+
+
+<a name="meth-isFullscreen"></a>
+### isFullscreen ###############################################################
+
+---
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
+_return value_: ``Boolean``
+
+Returns ``true`` if the video element is in fullscreen mode, ``false``
+otherwise.
+
+#### Example
+```js
+if (player.isFullscreen()) {
+  console.log("The player is in fullscreen mode");
+}
+```
+
+
+<a name="meth-getNativeTextTrack"></a>
+### getNativeTextTrack #########################################################
+
+---
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
+_return value_: ``TextTrack|null``
+
+Returns the first text track of the video's element, null if none.
+
+This is equivalent to:
+```js
+const el = player.getVideoElement();
+const textTrack = el.textTracks.length ? el.textTracks[0] : null;
 ```

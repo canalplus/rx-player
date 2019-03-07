@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
-describe("Features list - native SRT Parser", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
+import srtParser from "../../../parsers/texttracks/srt/native";
+import addNativesrtFeature from "../native_srt_parser";
 
-  it("should add a native SRT Parser in the current features", () => {
-    const feat = {};
-    jest.mock("../../../parsers/texttracks/srt/native", () => ({ default: feat }));
-    const addNativeSRTFeature = require("../native_srt_parser").default;
+jest.mock("../../../parsers/texttracks/srt/native", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
 
-    const featureObject : {
-      nativeTextTracksParsers : { [featureName : string] : unknown };
-    } = { nativeTextTracksParsers: {} };
-    addNativeSRTFeature(featureObject);
+describe("Features list - native srt Parser", () => {
+  it("should add an native srt Parser in the current features", () => {
+    const featureObject : any = { nativeTextTracksParsers: {} };
+    addNativesrtFeature(featureObject);
     expect(featureObject).toEqual({
-      nativeTextTracksParsers: { srt: {} },
+      nativeTextTracksParsers: { srt: srtParser },
     });
-    expect(featureObject.nativeTextTracksParsers.srt).toBe(feat);
+    expect(featureObject.nativeTextTracksParsers.srt).toBe(srtParser);
   });
 });

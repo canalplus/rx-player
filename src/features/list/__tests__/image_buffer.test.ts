@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
+import imageBuffer from "../../../core/source_buffers/image";
+import addImageBufferFeature from "../image_buffer";
+
 describe("Features list - HTML Text Buffer", () => {
   beforeEach(() => {
     jest.resetModules();
   });
 
   it("should add an Image Buffer in the current features", () => {
-    const feat = {};
-    jest.mock("../../../core/source_buffers/image", () => ({ default: feat }));
-    const addImageBufferFeature = require("../image_buffer").default;
-
-    const featureObject : { [featureName : string] : unknown } = {};
+    const featureObject : any = {};
     addImageBufferFeature(featureObject);
-    expect(featureObject).toEqual({ imageBuffer: {} });
-    expect(featureObject.imageBuffer).toBe(feat);
+    expect(featureObject).toEqual({ imageBuffer });
+    expect(featureObject.imageBuffer).toBe(imageBuffer);
   });
 });

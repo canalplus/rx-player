@@ -1,5 +1,36 @@
 # Changelog
 
+## v3.11.0 (2019/03/07)
+
+### Features
+
+  - languages/api: add `preferredAudioTracks` and `preferredTextTracks` player options
+  - languages/api: add `setPreferredAudioTracks`, `getPreferredAudioTracks`, `setPreferredTextTracks` and `getPreferredTextTracks` methods
+  - languages/api: add `availableAudioTracksChange`, `availableTextTracksChange` and `availableVideoTracksChange` events
+  - abr/api: add `availableAudioBitratesChange` and `availableVideoBitratesChange` events
+  - eme: allow playback of mixed encrypted and unencrypted contents on Chrome
+  - types: export the new `IAudioTrackPreference` and `ITextTrackPreference` types
+
+### Deprecated
+
+  - languages/api: deprecate the `defaultAudioTrack` `loadVideo` option in favor of the `preferredAudioTracks` player option.
+  - languages/api: deprecate the `defaultTextTrack` `loadVideo` option in favor of the `preferredTextTracks` player option.
+
+### Bug fixes
+
+  - dash: fix `minimumUpdatePeriod` management for DASH contents
+  - smooth: better prevent 412 HTTP errors for smooth streaming contents
+  - subtitles: ensure subtitles are not visible in Firefox when disabling them in the `"native"` textTrack mode.
+  - errors: avoid sending multiple `MEDIA_TIME_BEFORE_MANIFEST` or `MEDIA_TIME_AFTER_MANIFEST` warnings instead of just one
+  - api: fix (deprecated) option `hideNativeSubtitles`
+
+### Other improvements
+
+  - errors: set a readable error message for every error and warnings thrown
+  - tools/mediaCapabilitiesProber: set logs about unimportant missing APIs as debug-level instead of warn-level
+  - types: provide type safety to `addEventListener` and `removeEventListener`
+
+
 ## v3.10.3 (2019/01/30)
 
 ### Bug fixes

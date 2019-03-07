@@ -5,9 +5,15 @@
 <ul>
 <li><a href="#subchapter-playerStateChange">playerStateChange</a></li>
 <li><a href="#subchapter-positionUpdate">positionUpdate</a></li>
+<li><a href="#subchapter-availableAudioTracksChange">availableAudioTracksChange</a></li>
+<li><a href="#subchapter-availableVideoTracksChange">availableVideoTracksChange</a></li>
+<li><a href="#subchapter-availableTextTracksChange">availableTextTracksChange</a></li>
 <li><a href="#subchapter-audioTrackChange">audioTrackChange</a></li>
 <li><a href="#subchapter-textTrackChange">textTrackChange</a></li>
 <li><a href="#subchapter-videoTrackChange">videoTrackChange</a></li>
+<li><a href="#subchapter-availableAudioBitratesChange">availableAudioBitratesChange</a></li>
+<li><a href="#subchapter-availableVideoBitratesChange">availableVideoBitratesChange</a></li>
+<li><a href="#subchapter-availableAudioBitratesChange">availableAudioBitratesChange</a></li>
 <li><a href="#subchapter-audioBitrateChange">audioBitrateChange</a></li>
 <li><a href="#subchapter-videoBitrateChange">videoBitrateChange</a></li>
 <li><a href="#subchapter-imageTrackUpdate">imageTrackUpdate</a></li>
@@ -92,6 +98,126 @@ That is the real live position (and not the position as announced by the
 video element).</p>
 </li>
 </ul>
+<p><a name="events-availableAudioTracksChange"></a>
+<a name="subchapter-availableAudioTracksChange"></a></p>
+<h3>availableAudioTracksChange</h3>
+<p><em>payload type</em>: <code>Array.&lt;Object&gt;</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Triggered when the currently available audio tracks change (e.g.: at the
+beginning of the content, when period changes&#x2026;).</p>
+<p>The array emitted contains object describing each available audio track:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
+setting the track via <code>setAudioTrack</code>.</p>
+</li>
+<li>
+<p><code>language</code> (<code>string</code>): The language the audio track is in, as set in
+the <a href="../terms.html#manifest">Manifest</a>.</p>
+</li>
+<li>
+<p><code>normalized</code> (<code>string</code>): An attempt to translate the <code>language</code>
+property into an ISO 639-3 language code (for now only support translations
+from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
+fails (no corresponding ISO 639-3 language code is found), it will equal the
+value of <code>language</code></p>
+</li>
+<li>
+<p><code>audioDescription</code> (<code>Boolean</code>): Whether the track is an audio
+description (for the visually impaired or not).</p>
+</li>
+<li>
+<p><code>active</code> (<code>Boolean</code>): Whether the track is the one currently active or
+not.</p>
+</li>
+</ul>
+<p><a name="events-availableVideoTracksChange"></a>
+<a name="subchapter-availableVideoTracksChange"></a></p>
+<h3>availableVideoTracksChange</h3>
+<p><em>payload type</em>: <code>Array.&lt;Object&gt;</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Triggered when the currently available video tracks change (e.g.: at the
+beginning of the content, when period changes&#x2026;).</p>
+<p>The array emitted contains object describing each available video track:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
+setting the track via <code>setVideoTrack</code>.</p>
+</li>
+<li>
+<p><code>active</code> (<code>Boolean</code>): Whether this track is the one currently
+active or not.</p>
+</li>
+<li>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>):
+<a href="../terms.html#representation">Representations</a> of this video track, with
+attributes:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number</code>): The bitrate of this Representation, in bits per
+seconds.</p>
+</li>
+<li>
+<p><code>width</code> (<code>Number|undefined</code>): The width of video, in pixels.</p>
+</li>
+<li>
+<p><code>height</code> (<code>Number|undefined</code>): The height of video, in pixels.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec given in standard MIME type
+format.</p>
+</li>
+<li>
+<p><code>frameRate</code> (<code>string|undefined</code>): The video framerate.</p>
+</li>
+</ul>
+</li>
+</ul>
+<p><a name="events-availableVideoTracksChange"></a>
+<a name="subchapter-availableTextTracksChange"></a></p>
+<h3>availableTextTracksChange</h3>
+<p><em>payload type</em>: <code>Array.&lt;Object&gt;</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Triggered when the currently available text tracks change (e.g.: at the
+beginning of the content, when period changes&#x2026;).</p>
+<p>The array emitted contains object describing each available text track:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
+setting the track via <code>setTextTrack</code>.</p>
+</li>
+<li>
+<p><code>language</code> (<code>string</code>): The language the text track is in, as set in the
+<a href="../terms.html#manifest">Manifest</a>.</p>
+</li>
+<li>
+<p><code>normalized</code> (<code>string</code>): An attempt to translate the <code>language</code>
+property into an ISO 639-3 language code (for now only support translations
+from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
+fails (no corresponding ISO 639-3 language code is found), it will equal the
+value of <code>language</code></p>
+</li>
+<li>
+<p><code>closedCaption</code> (<code>Boolean</code>): Whether the track is specially adapted for
+the hard of hearing or not.</p>
+</li>
+<li>
+<p><code>active</code> (<code>Boolean</code>): Whether the track is the one currently active or
+not.</p>
+</li>
+</ul>
 <p><a name="events-audioTrackChange"></a>
 <a name="subchapter-audioTrackChange"></a></p>
 <h3>audioTrackChange</h3>
@@ -173,6 +299,45 @@ format.</p>
 </ul>
 </li>
 </ul>
+<p><a name="events-availableAudioBitratesChange"></a>
+<a name="subchapter-availableAudioBitratesChange"></a></p>
+<h3>availableAudioBitratesChange</h3>
+<p><em>payload type</em>: <code>Array.&lt;Number&gt;</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Triggered when the currently available audio bitrates change (e.g.: at the
+beginning of the content, when switching the current audio track, when period
+changes&#x2026;).</p>
+<p>The payload is an array of the different bitrates available, in bits per
+seconds.</p>
+<p><a name="events-availableVideoBitratesChange"></a>
+<a name="subchapter-availableVideoBitratesChange"></a></p>
+<h3>availableVideoBitratesChange</h3>
+<p><em>payload type</em>: <code>Array.&lt;Number&gt;</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Triggered when the currently available video bitrates change (e.g.: at the
+beginning of the content, when switching the current video track, when period
+changes&#x2026;).</p>
+<p>The payload is an array of the different bitrates available, in bits per
+seconds.</p>
+<p><a name="events-availableAudioBitratesChange"></a>
+<a name="subchapter-availableAudioBitratesChange"></a></p>
+<h3>availableAudioBitratesChange</h3>
+<p><em>payload type</em>: <code>Array.&lt;Number&gt;|null</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Triggered when the currently available audio bitrates change (e.g.: at the
+beginning of the content, when switching the current audio track, when period
+changes&#x2026;).</p>
+<p>The payload is an array of the different bitrates available, in bits per
+seconds.</p>
 <p><a name="events-audioBitrateChange"></a>
 <a name="subchapter-audioBitrateChange"></a></p>
 <h3>audioBitrateChange</h3>

@@ -24,8 +24,8 @@ import {
   concat,
   hexToBytes,
   itobe4,
-  strToBytes,
 } from "../../../utils/byte_parsing";
+import { createBox } from "./create_box";
 import { getPlayReadyKIDFromPrivateData } from "./drm";
 import {
   getMDIA,
@@ -342,16 +342,6 @@ function getMDHDTimescale(buffer : Uint8Array) : number {
   } else {
     return -1;
   }
-}
-
-/**
- * Create a new ISOBMFF box.
- * @param {string} name - The box name (e.g. sidx, moov, pssh etc.)
- * @param {Uint8Array} buff - The box's content
- */
-function createBox(name : string, buff : Uint8Array) : Uint8Array {
-  const len = buff.length + 8;
-  return concat(itobe4(len), strToBytes(name), buff);
 }
 
 /**

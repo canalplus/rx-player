@@ -37,6 +37,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       ["STYLE", ""],
     ]);
     jest.mock("../../get_style_blocks", () => ({
+      __esModule: true,
       default: spyGetStyleBlock,
     }));
 
@@ -45,6 +46,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       ["CUE", ""],
     ]);
     jest.mock("../../get_cue_blocks", () => ({
+      __esModule: true,
       default: spyGetCueBlock,
     }));
 
@@ -56,6 +58,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       settings: {},
     }));
     jest.mock("../../parse_cue_block", () => ({
+      __esModule: true,
       default: spyParseCueBlock,
     }));
 
@@ -65,6 +68,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       },
     }));
     jest.mock("../parse_style_block", () => ({
+      __esModule: true,
       default: spyParseStyleBlock,
     }));
 
@@ -74,11 +78,13 @@ describe("parsers - webvtt - parseWebVTT", () => {
       element: document.createElement("div"),
     }));
     jest.mock("../to_html", () => ({
+      __esModule: true,
       default: spyToHTML,
     }));
 
     const spyGetFirstLineAfterHeader = jest.fn(() => 1);
     jest.mock("../../utils", () => ({
+      __esModule: true,
       getFirstLineAfterHeader: spyGetFirstLineAfterHeader,
     }));
 
@@ -111,6 +117,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       ["STYLE", ""],
     ]);
     jest.mock("../../get_style_blocks", () => ({
+      __esModule: true,
       default: spyGetStyleBlock,
     }));
 
@@ -119,11 +126,13 @@ describe("parsers - webvtt - parseWebVTT", () => {
       ["CUE", ""],
     ]);
     jest.mock("../../get_cue_blocks", () => ({
+      __esModule: true,
       default: spyGetCueBlock,
     }));
 
     const spyParseCueBlock = jest.fn(() => undefined);
     jest.mock("../../parse_cue_block", () => ({
+      __esModule: true,
       default: spyParseCueBlock,
     }));
 
@@ -133,6 +142,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       },
     }));
     jest.mock("../parse_style_block", () => ({
+      __esModule: true,
       default: spyParseStyleBlock,
     }));
 
@@ -142,11 +152,13 @@ describe("parsers - webvtt - parseWebVTT", () => {
       element: document.createElement("div"),
     }));
     jest.mock("../to_html", () => ({
+      __esModule: true,
       default: spyToHTML,
     }));
 
     const spyGetFirstLineAfterHeader = jest.fn(() => 1);
     jest.mock("../../utils", () => ({
+      __esModule: true,
       getFirstLineAfterHeader: spyGetFirstLineAfterHeader,
     }));
 

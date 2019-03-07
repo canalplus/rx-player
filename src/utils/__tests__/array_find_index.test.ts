@@ -82,7 +82,7 @@ describe("utils - arrayFindIndex", () => {
       const obj2 = {};
       const context = {};
       const arr = [obj2, obj1, obj2, obj1];
-      const spy = jest.spyOn(arr, "findIndex");
+      const spy = jest.spyOn(arr as any, "findIndex");
 
       let currentIndex = 0;
       const predicate = function(

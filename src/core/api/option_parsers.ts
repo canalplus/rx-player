@@ -31,7 +31,12 @@ import {
   normalizeAudioTrack,
   normalizeTextTrack,
 } from "../../utils/languages";
+import warnOnce from "../../utils/warn_once";
 import { IKeySystemOption } from "../eme";
+import {
+  IAudioTrackPreference,
+  ITextTrackPreference,
+} from "./track_manager";
 
 const {
   DEFAULT_AUTO_PLAY,
@@ -81,6 +86,11 @@ export interface IDefaultTextTrackOption {
   closedCaption : boolean;
 }
 
+export type ITextTrackPreference = null | {
+  language : string;
+  closedCaption : boolean;
+};
+
 export interface INetworkConfigOption {
   manifestRetry? : number;
   offlineRetry? : number;
@@ -109,6 +119,9 @@ export interface IConstructorOptions {
   limitVideoWidth? : boolean;
   throttleWhenHidden? : boolean;
 
+  preferredAudioTracks? : IAudioTrackPreference[];
+  preferredTextTracks? : ITextTrackPreference[];
+
   videoElement? : HTMLMediaElement;
   initialVideoBitrate? : number;
   initialAudioBitrate? : number;
@@ -124,6 +137,9 @@ export interface IParsedConstructorOptions {
 
   limitVideoWidth : boolean;
   throttleWhenHidden : boolean;
+
+  preferredAudioTracks : IAudioTrackPreference[];
+  preferredTextTracks : ITextTrackPreference[];
 
   videoElement : HTMLMediaElement;
   initialVideoBitrate : number;
@@ -161,8 +177,8 @@ interface IParsedLoadVideoOptionsBase {
   transportOptions : ITransportOptions;
   supplementaryTextTracks : ISupplementaryTextTrackOption[];
   supplementaryImageTracks : ISupplementaryImageTrackOption[];
-  defaultAudioTrack : IDefaultAudioTrackOption|null|undefined;
-  defaultTextTrack : IDefaultTextTrackOption|null|undefined;
+  defaultAudioTrack : IAudioTrackPreference|null|undefined;
+  defaultTextTrack : ITextTrackPreference|null|undefined;
   startAt : IParsedStartAtOption|undefined;
   manualBitrateSwitchingMode : "seamless"|"direct";
 }
@@ -199,6 +215,9 @@ function parseConstructorOptions(
 
   let limitVideoWidth : boolean;
   let throttleWhenHidden : boolean;
+
+  let preferredAudioTracks : IAudioTrackPreference[];
+  let preferredTextTracks : ITextTrackPreference[];
 
   let videoElement : HTMLMediaElement;
   let initialVideoBitrate : number;
@@ -241,6 +260,12 @@ function parseConstructorOptions(
 
   throttleWhenHidden = options.throttleWhenHidden == null ?
     DEFAULT_THROTTLE_WHEN_HIDDEN : !!options.throttleWhenHidden;
+
+  preferredAudioTracks = options.preferredAudioTracks == null ?
+    [] : options.preferredAudioTracks;
+
+  preferredTextTracks = options.preferredTextTracks == null ?
+    [] : options.preferredTextTracks;
 
   if (options.videoElement == null) {
     videoElement = document.createElement("video");
@@ -302,6 +327,8 @@ function parseConstructorOptions(
     videoElement,
     wantedBufferAhead,
     throttleWhenHidden,
+    preferredAudioTracks,
+    preferredTextTracks,
     initialAudioBitrate,
     initialVideoBitrate,
     maxAudioBitrate,
@@ -419,9 +446,20 @@ function parseLoadVideoOptions(
     textTrackMode = options.textTrackMode;
   }
 
+  if (options.defaultAudioTrack != null) {
+    warnOnce("The `defaultAudioTrack` loadVideo option is deprecated.\n" +
+      "Please use the `preferredAudioTracks` constructor option or the" +
+      "`setPreferredAudioTracks` method instead");
+  }
   const defaultAudioTrack = normalizeAudioTrack(options.defaultAudioTrack);
+
+  if (options.defaultTextTrack != null) {
+    warnOnce("The `defaultTextTrack` loadVideo option is deprecated.\n" +
+      "Please use the `preferredTextTracks` constructor option or the" +
+      "`setPreferredTextTracks` method instead");
+  }
   const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
-  const hideNativeSubtitle = (options as any).hidenativeSubtitle == null ?
+  const hideNativeSubtitle = (options as any).hideNativeSubtitle == null ?
     !DEFAULT_SHOW_NATIVE_SUBTITLE : !!(options as any).hideNativeSubtitle;
   const manualBitrateSwitchingMode =
     (options as any).manualBitrateSwitchingMode == null ?

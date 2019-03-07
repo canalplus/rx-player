@@ -32,6 +32,7 @@ describe("compat - addTextTrack", () => {
     };
 
     jest.mock("../browser_detection", () => ({
+      __esModule: true,
       isIEOrEdge: true,
     }));
 
@@ -61,6 +62,7 @@ describe("compat - addTextTrack", () => {
     };
 
     jest.mock("../browser_detection", () => ({
+      __esModule: true,
       isIEOrEdge: true,
     }));
 
@@ -76,6 +78,7 @@ describe("compat - addTextTrack", () => {
 
   it("should create showing trackElement and set track on mediaElement", () => {
     jest.mock("../browser_detection", () => ({
+      __esModule: true,
       isIEOrEdge: false,
     }));
 
@@ -104,7 +107,7 @@ describe("compat - addTextTrack", () => {
     };
 
     const spyOnCreateElement = jest.spyOn(document, "createElement")
-      .mockImplementation(() => fakeTextTrackElement);
+      .mockImplementation(() => fakeTextTrackElement as unknown as HTMLElement);
 
     const addTextTrack = require("../add_text_track").default;
     const { track, trackElement } = addTextTrack(fakeMediaElement, true);
@@ -120,6 +123,7 @@ describe("compat - addTextTrack", () => {
 
   it("should create hidden trackElement and set track on mediaElement", () => {
     jest.mock("../browser_detection", () => ({
+      __esModule: true,
       isIEOrEdge: false,
     }));
 
@@ -148,7 +152,7 @@ describe("compat - addTextTrack", () => {
     };
 
     const spyOnCreateElement = jest.spyOn(document, "createElement")
-      .mockImplementation(() => fakeTextTrackElement);
+      .mockImplementation(() => fakeTextTrackElement as unknown as HTMLElement);
 
     const addTextTrack = require("../add_text_track").default;
     const { track, trackElement } = addTextTrack(fakeMediaElement, false);

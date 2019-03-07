@@ -14,48 +14,27 @@
  * limitations under the License.
  */
 
-/**
- * @type {RegExp}
- * @example 00:00:40:07 (7 frames) or 00:00:40:07.1 (7 frames, 1 subframe)
- */
+// examples: 00:00:40:07 (7 frames) or 00:00:40:07.1 (7 frames, 1 subframe)
 const REGXP_TIME_COLON_FRAMES =
   /^(\d{2,}):(\d{2}):(\d{2}):(\d{2})\.?(\d+)?$/;
 
-/**
- * @type {RegExp}
- * @example 00:00:40:07 (7 frames) or 00:00:40:07.1 (7 frames, 1 subframe)
- */
+// examples: 00:00:40:07 (7 frames) or 00:00:40:07.1 (7 frames, 1 subframe)
 const REGXP_TIME_COLON = /^(?:(\d{2,}):)?(\d{2}):(\d{2})$/;
 
-/**
- * @type {RegExp}
- * @example 01:02:43.0345555 or 02:43.03
- */
+// examples: 01:02:43.0345555 or 02:43.03
 const REGXP_TIME_COLON_MS = /^(?:(\d{2,}):)?(\d{2}):(\d{2}\.\d{2,})$/;
 
-/**
- * @type {RegExp}
- * @example 75f or 75.5f
- */
+// examples: 75f or 75.5f
 const REGXP_TIME_FRAMES = /^(\d*\.?\d*)f$/;
 
-/**
- * @type {RegExp}
- * @example 50t or 50.5t
- */
+// examples: 50t or 50.5t
 const REGXP_TIME_TICK = /^(\d*\.?\d*)t$/;
 
-/**
- * @type {RegExp}
- * @example 3.45h, 3m or 4.20s
- */
+// examples: 3.45h, 3m or 4.20s
 const REGXP_TIME_HMS =
   /^(?:(\d*\.?\d*)h)?(?:(\d*\.?\d*)m)?(?:(\d*\.?\d*)s)?(?:(\d*\.?\d*)ms)?$/;
 
-/**
- * @type {RegExp}
- * @example 50% 10%
- */
+// examples: 50% 10%
 const REGXP_PERCENT_VALUES = /^(\d{1,2}|100)% (\d{1,2}|100)%$/;
 
 const REGXP_8_HEX_COLOR =

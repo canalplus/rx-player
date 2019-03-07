@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
+import samiParser from "../../../parsers/texttracks/sami/native";
+import addNativeSAMIFeature from "../native_sami_parser";
+
+jest.mock("../../../parsers/texttracks/sami/native", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
 describe("Features list - native SAMI Parser", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
-
-  it("should add a native SAMI Parser in the current features", () => {
-    const feat = {};
-    jest.mock("../../../parsers/texttracks/sami/native", () => ({ default: feat }));
-    const addNativeSAMIFeature = require("../native_sami_parser").default;
-
-    const featureObject : {
-      nativeTextTracksParsers : { [featureName : string] : unknown };
-    } = { nativeTextTracksParsers: {} };
+  it("should add an native SAMI Parser in the current features", () => {
+    const featureObject : any = { nativeTextTracksParsers: {} };
     addNativeSAMIFeature(featureObject);
     expect(featureObject).toEqual({
-      nativeTextTracksParsers: { sami: {} },
+      nativeTextTracksParsers: { sami: samiParser },
     });
-    expect(featureObject.nativeTextTracksParsers.sami).toBe(feat);
+    expect(featureObject.nativeTextTracksParsers.sami).toBe(samiParser);
   });
 });

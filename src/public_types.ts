@@ -32,4 +32,7 @@ export {
   IDefaultTextTrackOption,
   INetworkConfigOption,
   IStartAtOption,
-} from "./core/api/option_parsers";
+
+  IAudioTrackPreference,
+  ITextTrackPreference,
+} from "./core/api";

@@ -21,11 +21,9 @@ import {
   IStyleList,
   IStyleObject,
 } from "../get_styling";
-import {
-  REGXP_4_HEX_COLOR,
-  REGXP_8_HEX_COLOR,
-  REGXP_PERCENT_VALUES,
-} from "../regexps";
+import { REGXP_PERCENT_VALUES } from "../regexps";
+import generateCSSTextOutline from "./generate_css_test_outline";
+import ttmlColorToCSSColor from "./ttml_color_to_css_color";
 
 // Styling which can be applied to <span> from any level upper.
 // Added here as an optimization
@@ -43,54 +41,6 @@ const SPAN_LEVEL_ATTRIBUTES = [
   "visibility",
   "wrapOption",
 ];
-
-/**
- * Translate a color indicated in TTML-style to a CSS-style color.
- * @param {string} color
- * @returns {string} color
- */
-function ttmlColorToCSSColor(color : string) : string {
-  // TODO check all possible color fomats
-  let regRes;
-  regRes = REGXP_8_HEX_COLOR.exec(color);
-  if (regRes != null) {
-    return "rgba(" +
-      parseInt(regRes[1], 16) + "," +
-      parseInt(regRes[2], 16) + "," +
-      parseInt(regRes[3], 16) + "," +
-      parseInt(regRes[4], 16) / 255 + ")";
-  }
-  regRes = REGXP_4_HEX_COLOR.exec(color);
-
-  if (regRes != null) {
-    return "rgba(" +
-      parseInt(regRes[1] + regRes[1], 16) + "," +
-      parseInt(regRes[2] + regRes[2], 16) + "," +
-      parseInt(regRes[3] + regRes[3], 16) + "," +
-      parseInt(regRes[4] + regRes[4], 16) / 255 + ")";
-  }
-  return color;
-}
-
-/**
- * Try to replicate the textOutline TTML style property into CSS.
- *
- * We mock it throught the text-shadow property, translating the TTML thickness
- * into blur radius and the blur-radius into... nothing.
- *
- * @param {string} color
- * @param {string|number} thickness
- * @returns {string}
- */
-function generateCSSTextOutline(
-  color : string, thickness :
-  string|number
-) : string {
-  return `-1px -1px ${thickness} ${color},` +
-    `1px -1px ${thickness} ${color},` +
-    `-1px 1px ${thickness} ${color},` +
-    `1px 1px ${thickness} ${color}`;
-}
 
 // TODO
 // tts:showBackground (applies to region)
@@ -436,7 +386,7 @@ function generateTextContent(
   styles : IStyleObject[],
   paragraphStyle : Partial<Record<string, string>>,
   shouldTrimWhiteSpace : boolean
-) {
+) : HTMLElement[] {
   /**
    * Recursive function, taking a node in argument and returning the
    * corresponding array of HTMLElement in order.

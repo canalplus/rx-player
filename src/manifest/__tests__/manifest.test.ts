@@ -21,7 +21,10 @@ describe("Manifest - Manifest", () => {
 
   it("should create a normalized Manifest structure", () => {
     const log = { warn: () => undefined };
-    jest.mock("../../log", () =>  ({ default: log }));
+    jest.mock("../../log", () =>  ({
+      __esModule: true,
+      default: log,
+    }));
     const simpleFakeManifest = {
       id: "man",
       isLive: false,
@@ -57,10 +60,13 @@ describe("Manifest - Manifest", () => {
 
   it("should create a Period for each manifest.periods given", () => {
     const log = { warn: () => undefined };
-    jest.mock("../../log", () =>  ({ default: log }));
+    jest.mock("../../log", () =>  ({
+      __esModule: true,
+      default: log,
+    }));
 
-    const period1 = { id: "0" };
-    const period2 = { id: "1" };
+    const period1 = { id: "0", start: 4, adaptations: {} };
+    const period2 = { id: "1", start: 12, adaptations: {} };
     const simpleFakeManifest = {
       id: "man",
       isLive: false,
@@ -73,9 +79,12 @@ describe("Manifest - Manifest", () => {
       return { id: "foo" + period.id, parsingErrors: [] };
     });
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    jest.mock("../period", () =>  ({ default: fakePeriod }));
-    const Manifest = require("../manifest").default;
+    jest.mock("../period", () =>  ({
+      __esModule: true,
+      default: fakePeriod,
+    }));
 
+    const Manifest = require("../manifest").default;
     const manifest = new Manifest(simpleFakeManifest, {});
     expect(fakePeriod).toHaveBeenCalledTimes(2);
     expect(fakePeriod).toHaveBeenCalledWith(period1, undefined);
@@ -93,10 +102,13 @@ describe("Manifest - Manifest", () => {
 
   it("should pass a `representationFilter` to the Period if given", () => {
     const log = { warn: () => undefined };
-    jest.mock("../../log", () =>  ({ default: log }));
+    jest.mock("../../log", () =>  ({
+      __esModule: true,
+      default: log,
+    }));
 
-    const period1 = { id: "0" };
-    const period2 = { id: "1" };
+    const period1 = { id: "0", start: 4, adaptations: {} };
+    const period2 = { id: "1", start: 12, adaptations: {} };
     const simpleFakeManifest = {
       id: "man",
       isLive: false,
@@ -105,13 +117,16 @@ describe("Manifest - Manifest", () => {
       transportType: "foobar",
     };
 
-    const representationFilter = function() { /* noop */ };
+    const representationFilter = function() { return false; };
 
     const fakePeriod = jest.fn((period) => {
       return { id: "foo" + period.id, parsingErrors: [] };
     });
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    jest.mock("../period", () =>  ({ default: fakePeriod }));
+    jest.mock("../period", () =>  ({
+      __esModule: true,
+      default: fakePeriod,
+    }));
     const Manifest = require("../manifest").default;
 
     /* tslint:disable no-unused-expression */
@@ -127,12 +142,15 @@ describe("Manifest - Manifest", () => {
 
   it("should expose the adaptations of the first period if set", () => {
     const log = { warn: () => undefined };
-    jest.mock("../../log", () =>  ({ default: log }));
+    jest.mock("../../log", () =>  ({
+      __esModule: true,
+      default: log,
+    }));
 
     const adapP1 = {};
     const adapP2 = {};
-    const period1 = { id: "0", adaptations: adapP1 };
-    const period2 = { id: "1", adaptations: adapP2 };
+    const period1 = { id: "0", start: 4, adaptations: adapP1 };
+    const period2 = { id: "1", start: 12, adaptations: adapP2 };
     const simpleFakeManifest = {
       id: "man",
       isLive: false,
@@ -145,7 +163,10 @@ describe("Manifest - Manifest", () => {
       return { ...period, id: "foo" + period.id, parsingErrors: [] };
     });
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    jest.mock("../period", () =>  ({ default: fakePeriod }));
+    jest.mock("../period", () =>  ({
+      __esModule: true,
+      default: fakePeriod,
+    }));
     const Manifest = require("../manifest").default;
 
     const manifest = new Manifest(simpleFakeManifest, {});
@@ -154,8 +175,8 @@ describe("Manifest - Manifest", () => {
     expect(fakePeriod).toHaveBeenCalledWith(period2, undefined);
 
     expect(manifest.periods).toEqual([
-      { id: "foo0", parsingErrors: [], adaptations: adapP1 },
-      { id: "foo1", parsingErrors: [], adaptations: adapP2 },
+      { id: "foo0", parsingErrors: [], start: 4, adaptations: adapP1 },
+      { id: "foo1", parsingErrors: [], start: 12, adaptations: adapP2 },
     ]);
     expect(manifest.adaptations).toBe(adapP1);
 
@@ -165,10 +186,13 @@ describe("Manifest - Manifest", () => {
 
   it("should push any parsing errors from the Period parsing", () => {
     const log = { warn: () => undefined };
-    jest.mock("../../log", () =>  ({ default: log }));
+    jest.mock("../../log", () =>  ({
+      __esModule: true,
+      default: log,
+    }));
 
-    const period1 = { id: "0" };
-    const period2 = { id: "1" };
+    const period1 = { id: "0", start: 4, adaptations: {} };
+    const period2 = { id: "1", start: 12, adaptations: {} };
     const simpleFakeManifest = {
       id: "man",
       isLive: false,
@@ -178,18 +202,24 @@ describe("Manifest - Manifest", () => {
     };
 
     const fakePeriod = jest.fn((period) => {
-      return { id: "foo" + period.id, parsingErrors: ["a" + period.id, period.id] };
+      return {
+        id: "foo" + period.id,
+        parsingErrors: [new Error("a" + period.id), new Error(period.id)],
+      };
     });
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    jest.mock("../period", () =>  ({ default: fakePeriod }));
+    jest.mock("../period", () =>  ({
+      __esModule: true,
+      default: fakePeriod,
+    }));
     const Manifest = require("../manifest").default;
 
     const manifest = new Manifest(simpleFakeManifest, {});
     expect(manifest.parsingErrors).toHaveLength(4);
-    expect(manifest.parsingErrors).toContain("a0");
-    expect(manifest.parsingErrors).toContain("a1");
-    expect(manifest.parsingErrors).toContain("0");
-    expect(manifest.parsingErrors).toContain("1");
+    expect(manifest.parsingErrors).toContainEqual(new Error("a0"));
+    expect(manifest.parsingErrors).toContainEqual(new Error("a1"));
+    expect(manifest.parsingErrors).toContainEqual(new Error("0"));
+    expect(manifest.parsingErrors).toContainEqual(new Error("1"));
 
     expect(logSpy).not.toHaveBeenCalled();
     logSpy.mockRestore();
@@ -198,10 +228,13 @@ describe("Manifest - Manifest", () => {
   // TODO inspect why it doesn't pass. It makes no sense to me for now
   it("should warn if no duration is given for non-live contents", () => {
     const log = { warn: () => undefined };
-    jest.mock("../../log", () =>  ({ default: log }));
+    jest.mock("../../log", () =>  ({
+      __esModule: true,
+      default: log,
+    }));
 
-    const period1 = { id: "0" };
-    const period2 = { id: "1" };
+    const period1 = { id: "0", start: 4, adaptations: {} };
+    const period2 = { id: "1", start: 12, adaptations: {} };
     const simpleFakeManifest = {
       id: "man",
       isLive: false,
@@ -210,15 +243,21 @@ describe("Manifest - Manifest", () => {
     };
 
     const fakePeriod = jest.fn((period) => {
-      return { id: "foo" + period.id, parsingErrors: ["a" + period.id, period.id] };
+      return {
+        id: "foo" + period.id,
+        parsingErrors: [new Error("a" + period.id), new Error(period.id)],
+      };
     });
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    jest.mock("../period", () =>  ({ default: fakePeriod }));
+    jest.mock("../period", () =>  ({
+      __esModule: true,
+      default: fakePeriod,
+    }));
     const Manifest = require("../manifest").default;
 
     const manifest = new Manifest(simpleFakeManifest, {});
     expect(manifest.isLive).toEqual(false);
-    expect(manifest.duration).toEqual(undefined);
+    expect(manifest.getDuration()).toEqual(undefined);
 
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(logSpy).toHaveBeenCalledWith(
@@ -228,10 +267,13 @@ describe("Manifest - Manifest", () => {
 
   it("should not warn if no duration is given for live contents", () => {
     const log = { warn: () => undefined };
-    jest.mock("../../log", () =>  ({ default: log }));
+    jest.mock("../../log", () =>  ({
+      __esModule: true,
+      default: log,
+    }));
 
-    const period1 = { id: "0" };
-    const period2 = { id: "1" };
+    const period1 = { id: "0", start: 4, adaptations: {} };
+    const period2 = { id: "1", start: 12, adaptations: {} };
     const simpleFakeManifest = {
       id: "man",
       isLive: true,
@@ -240,15 +282,21 @@ describe("Manifest - Manifest", () => {
     };
 
     const fakePeriod = jest.fn((period) => {
-      return { id: "foo" + period.id, parsingErrors: ["a" + period.id, period.id] };
+      return {
+        id: "foo" + period.id,
+        parsingErrors: [new Error("a" + period.id), new Error(period.id)],
+      };
     });
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    jest.mock("../period", () =>  ({ default: fakePeriod }));
-    const Manifest = require("../manifest").default;
+    jest.mock("../period", () =>  ({
+      __esModule: true,
+      default: fakePeriod,
+    }));
 
+    const Manifest = require("../manifest").default;
     const manifest = new Manifest(simpleFakeManifest, {});
     expect(manifest.isLive).toEqual(true);
-    expect(manifest.duration).toEqual(undefined);
+    expect(manifest.getDuration()).toEqual(undefined);
 
     expect(logSpy).not.toHaveBeenCalled();
     logSpy.mockRestore();
@@ -256,10 +304,13 @@ describe("Manifest - Manifest", () => {
 
   it("should correctly parse every manifest informations given", () => {
     const log = { warn: () => undefined };
-    jest.mock("../../log", () =>  ({ default: log }));
+    jest.mock("../../log", () =>  ({
+      __esModule: true,
+      default: log,
+    }));
 
-    const oldPeriod1 = { id: "0" };
-    const oldPeriod2 = { id: "1" };
+    const oldPeriod1 = { id: "0", start: 4, adaptations: {} };
+    const oldPeriod2 = { id: "1", start: 12, adaptations: {} };
     const oldManifestArgs = {
       availabilityStartTime: 5,
       baseURL: "test",
@@ -268,7 +319,7 @@ describe("Manifest - Manifest", () => {
       isLive: false,
       lifetime: 13,
       minimumTime: 4,
-      parsingErrors: ["a", "b"],
+      parsingErrors: [new Error("a"), new Error("b")],
       periods: [oldPeriod1, oldPeriod2],
       presentationLiveGap: 18,
       suggestedPresentationDelay: 99,
@@ -279,9 +330,16 @@ describe("Manifest - Manifest", () => {
 
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
     const fakePeriod = jest.fn((period) => {
-      return { ...period, id: "foo" + period.id, parsingErrors: [period.id] };
+      return {
+        ...period,
+        id: "foo" + period.id,
+        parsingErrors: [new Error(period.id)],
+      };
     });
-    jest.mock("../period", () =>  ({ default: fakePeriod }));
+    jest.mock("../period", () =>  ({
+      __esModule: true,
+      default: fakePeriod,
+    }));
     const Manifest = require("../manifest").default;
     const manifest = new Manifest(oldManifestArgs, {});
 
@@ -293,10 +351,10 @@ describe("Manifest - Manifest", () => {
     expect(manifest.isLive).toEqual(false);
     expect(manifest.lifetime).toEqual(13);
     expect(manifest.minimumTime).toEqual(4);
-    expect(manifest.parsingErrors).toEqual(["0", "1"]);
+    expect(manifest.parsingErrors).toEqual([new Error("0"), new Error("1")]);
     expect(manifest.periods).toEqual([
-      { id: "foo0", parsingErrors: ["0"] },
-      { id: "foo1", parsingErrors: ["1"] },
+      { id: "foo0", parsingErrors: [new Error("0")], adaptations: {}, start: 4 },
+      { id: "foo1", parsingErrors: [new Error("1")], adaptations: {}, start: 12 },
     ]);
     expect(manifest.presentationLiveGap).toEqual(18);
     expect(manifest.suggestedPresentationDelay).toEqual(99);
@@ -309,13 +367,23 @@ describe("Manifest - Manifest", () => {
 
   it("should return the first URL given with `getUrl`", () => {
     const log = { warn: () => undefined };
-    jest.mock("../../log", () =>  ({ default: log }));
+    jest.mock("../../log", () =>  ({
+      __esModule: true,
+      default: log,
+    }));
 
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
     const fakePeriod = jest.fn((period) => {
-      return { ...period, id: "foo" + period.id, parsingErrors: [period.id] };
+      return {
+        ...period,
+        id: "foo" + period.id,
+        parsingErrors: [new Error(period.id)],
+      };
     });
-    jest.mock("../period", () =>  ({ default: fakePeriod }));
+    jest.mock("../period", () =>  ({
+      __esModule: true,
+      default: fakePeriod,
+    }));
     const Manifest = require("../manifest").default;
 
     const oldManifestArgs1 = {
@@ -326,14 +394,18 @@ describe("Manifest - Manifest", () => {
       isLive: false,
       lifetime: 13,
       minimumTime: 4,
-      parsingErrors: ["a", "b"],
-      periods: [{ id: "0" }, { id: "1" }],
+      parsingErrors: [new Error("a"), new Error("b")],
+      periods: [
+        { id: "0", start: 4, adaptations: {} },
+        { id: "1", start: 12, adaptations: {} },
+      ],
       presentationLiveGap: 18,
       suggestedPresentationDelay: 99,
       timeShiftBufferDepth: 2,
       transportType: "foobar",
       uris: ["url1", "url2"],
     };
+
     const manifest1 = new Manifest(oldManifestArgs1, {});
     expect(manifest1.getUrl()).toEqual("url1");
 
@@ -345,8 +417,11 @@ describe("Manifest - Manifest", () => {
       isLive: false,
       lifetime: 13,
       minimumTime: 4,
-      parsingErrors: ["a", "b"],
-      periods: [{ id: "0" }, { id: "1" }],
+      parsingErrors: [new Error("a"), new Error("b")],
+      periods: [
+        { id: "0", start: 4, adaptations: {} },
+        { id: "1", start: 12, adaptations: {} },
+      ],
       presentationLiveGap: 18,
       suggestedPresentationDelay: 99,
       timeShiftBufferDepth: 2,
@@ -361,7 +436,35 @@ describe("Manifest - Manifest", () => {
 
   it("should update with a new Manifest when calling `update`", () => {
     const log = { warn: () => undefined };
-    jest.mock("../../log", () =>  ({ default: log }));
+    jest.mock("../../log", () =>  ({
+      __esModule: true,
+      default: log,
+    }));
+
+    const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const fakePeriod = jest.fn((period) => {
+      return {
+        ...period,
+        id: "foo" + period.id,
+        parsingErrors: [new Error(period.id)],
+      };
+    });
+    const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
+      Object.keys(oldPeriod).forEach(key => {
+        delete oldPeriod[key];
+      });
+      oldPeriod.id = newPeriod.id;
+      oldPeriod.start = newPeriod.start;
+      oldPeriod.adaptations = newPeriod.adaptations;
+    });
+    jest.mock("../period", () =>  ({
+      __esModule: true,
+      default: fakePeriod,
+    }));
+    jest.mock("../update_period", () =>  ({
+      __esModule: true,
+      default: fakeUpdatePeriodInPlace,
+    }));
 
     const oldManifestArgs = {
       availabilityStartTime: 5,
@@ -371,8 +474,11 @@ describe("Manifest - Manifest", () => {
       isLive: false,
       lifetime: 13,
       minimumTime: 4,
-      parsingErrors: ["a", "b"],
-      periods: [{ id: "0" }, { id: "1" }],
+      parsingErrors: [new Error("a"), new Error("b")],
+      periods: [
+        { id: "0", start: 4, adaptations: {} },
+        { id: "1", start: 12, adaptations: {} },
+      ],
       presentationLiveGap: 18,
       suggestedPresentationDelay: 99,
       timeShiftBufferDepth: 2,
@@ -380,18 +486,6 @@ describe("Manifest - Manifest", () => {
       uris: ["url1", "url2"],
     };
 
-    const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    const fakePeriod = jest.fn((period) => {
-      return { ...period, id: "foo" + period.id, parsingErrors: [period.id] };
-    });
-    const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
-      Object.keys(oldPeriod).forEach(key => {
-        delete oldPeriod[key];
-      });
-      oldPeriod.id = newPeriod.id;
-    });
-    jest.mock("../period", () =>  ({ default: fakePeriod }));
-    jest.mock("../update_period", () =>  ({ default: fakeUpdatePeriodInPlace }));
     const Manifest = require("../manifest").default;
     const manifest = new Manifest(oldManifestArgs, {});
 
@@ -400,25 +494,25 @@ describe("Manifest - Manifest", () => {
     const [oldPeriod1, oldPeriod2] = manifest.periods;
 
     const newAdaptations = {};
-    const newPeriod1 = { id: "foo0" };
-    const newPeriod2 = { id: "foo1" };
-    const newManifest = {
-        _duration: 13,
+    const newPeriod1 = { id: "foo0", start: 4, adaptations: {} };
+    const newPeriod2 = { id: "foo1", start: 12, adaptations: {} };
+    const newManifest : any = {
+      _duration: 13,
       adaptations: newAdaptations,
       availabilityStartTime: 6,
       baseURL: "test2",
-      getDuration() { return 13; },
       id: "man2",
       isLive: true,
       lifetime: 14,
       minimumTime: 5,
-      parsingErrors: ["c", "d"],
+      parsingErrors: [new Error("c"), new Error("d")],
       presentationLiveGap: 19,
       suggestedPresentationDelay: 100,
       timeShiftBufferDepth: 3,
       periods: [newPeriod1, newPeriod2],
       transport: "foob",
       uris: ["url3", "url4"],
+      getDuration() { return 13; },
     };
 
     manifest.update(newManifest);
@@ -430,7 +524,7 @@ describe("Manifest - Manifest", () => {
     expect(manifest.isLive).toEqual(true);
     expect(manifest.lifetime).toEqual(14);
     expect(manifest.minimumTime).toEqual(5);
-    expect(manifest.parsingErrors).toEqual(["c", "d"]);
+    expect(manifest.parsingErrors).toEqual([new Error("c"), new Error("d")]);
     expect(manifest.presentationLiveGap).toEqual(19);
     expect(manifest.suggestedPresentationDelay).toEqual(100);
     expect(manifest.timeShiftBufferDepth).toEqual(3);
@@ -451,7 +545,10 @@ describe("Manifest - Manifest", () => {
 
   it("should prepend older Periods when calling `update`", () => {
     const log = { warn: () => undefined, info: () => undefined };
-    jest.mock("../../log", () =>  ({ default: log }));
+    jest.mock("../../log", () =>  ({
+      __esModule: true,
+      default: log,
+    }));
 
     const oldManifestArgs = {
       availabilityStartTime: 5,
@@ -461,8 +558,8 @@ describe("Manifest - Manifest", () => {
       isLive: false,
       lifetime: 13,
       minimumTime: 4,
-      parsingErrors: ["a", "b"],
-      periods: [{ id: "1" }],
+      parsingErrors: [new Error("a"), new Error("b")],
+      periods: [{ id: "1", start: 4, adaptations: {} }],
       presentationLiveGap: 18,
       suggestedPresentationDelay: 99,
       timeShiftBufferDepth: 2,
@@ -472,25 +569,53 @@ describe("Manifest - Manifest", () => {
 
     const logSpy = jest.spyOn(log, "info").mockImplementation(jest.fn());
     const fakePeriod = jest.fn((period) => {
-      return { ...period, id: "foo" + period.id, parsingErrors: [period.id] };
+      return {
+        ...period,
+        id: "foo" + period.id,
+        parsingErrors: [new Error(period.id)],
+      };
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
         delete oldPeriod[key];
       });
       oldPeriod.id = newPeriod.id;
+      oldPeriod.start = newPeriod.start;
+      oldPeriod.adaptations = newPeriod.adaptations;
+      oldPeriod.parsingErrors = newPeriod.parsingErrors;
     });
-    jest.mock("../period", () =>  ({ default: fakePeriod }));
-    jest.mock("../update_period", () =>  ({ default: fakeUpdatePeriodInPlace }));
+    jest.mock("../period", () =>  ({
+      __esModule: true,
+      default: fakePeriod,
+    }));
+    jest.mock("../update_period", () =>  ({
+      __esModule: true,
+      default: fakeUpdatePeriodInPlace,
+    }));
     const Manifest = require("../manifest").default;
     const manifest = new Manifest(oldManifestArgs, {});
     const [oldPeriod1] = manifest.periods;
 
     const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
 
-    const newPeriod1 = { id: "pre0" };
-    const newPeriod2 = { id: "pre1" };
-    const newPeriod3 = { id: "foo1" };
+    const newPeriod1 = {
+      id: "pre0",
+      start: 4,
+      adaptations: {},
+      parsingErrors: [],
+    };
+    const newPeriod2 = {
+      id: "pre1",
+      start: 12,
+      adaptations: {},
+      parsingErrors: [],
+    };
+    const newPeriod3 = {
+      id: "foo1",
+      start: 16,
+      adaptations: {},
+      parsingErrors: [],
+    };
     const newManifest = {
         _duration: 13,
       adaptations: {},
@@ -501,7 +626,7 @@ describe("Manifest - Manifest", () => {
       isLive: true,
       lifetime: 14,
       minimumTime: 5,
-      parsingErrors: ["c", "d"],
+      parsingErrors: [new Error("c"), new Error("d")],
       presentationLiveGap: 19,
       suggestedPresentationDelay: 100,
       timeShiftBufferDepth: 3,
@@ -510,7 +635,7 @@ describe("Manifest - Manifest", () => {
       uris: ["url3", "url4"],
     };
 
-    manifest.update(newManifest);
+    manifest.update(newManifest as any);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
@@ -529,7 +654,10 @@ describe("Manifest - Manifest", () => {
 
   it("should append newer Periods when calling `update`", () => {
     const log = { warn: () => undefined, info: () => undefined };
-    jest.mock("../../log", () =>  ({ default: log }));
+    jest.mock("../../log", () =>  ({
+      __esModule: true,
+      default: log,
+    }));
 
     const oldManifestArgs = {
       availabilityStartTime: 5,
@@ -539,7 +667,7 @@ describe("Manifest - Manifest", () => {
       isLive: false,
       lifetime: 13,
       minimumTime: 4,
-      parsingErrors: ["a", "b"],
+      parsingErrors: [new Error("a"), new Error("b")],
       periods: [{ id: "1" }],
       presentationLiveGap: 18,
       suggestedPresentationDelay: 99,
@@ -550,7 +678,11 @@ describe("Manifest - Manifest", () => {
 
     const logSpy = jest.spyOn(log, "info").mockImplementation(jest.fn());
     const fakePeriod = jest.fn((period) => {
-      return { ...period, id: "foo" + period.id, parsingErrors: [period.id] };
+      return {
+        ...period,
+        id: "foo" + period.id,
+        parsingErrors: [new Error(period.id)],
+      };
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
@@ -558,10 +690,16 @@ describe("Manifest - Manifest", () => {
       });
       oldPeriod.id = newPeriod.id;
     });
-    jest.mock("../period", () =>  ({ default: fakePeriod }));
-    jest.mock("../update_period", () =>  ({ default: fakeUpdatePeriodInPlace }));
+    jest.mock("../period", () =>  ({
+      __esModule: true,
+      default: fakePeriod,
+    }));
+    jest.mock("../update_period", () =>  ({
+      __esModule: true,
+      default: fakeUpdatePeriodInPlace,
+    }));
     const Manifest = require("../manifest").default;
-    const manifest = new Manifest(oldManifestArgs, {});
+    const manifest = new Manifest(oldManifestArgs as any, {});
     const [oldPeriod1] = manifest.periods;
 
     const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
@@ -579,7 +717,7 @@ describe("Manifest - Manifest", () => {
       isLive: true,
       lifetime: 14,
       minimumTime: 5,
-      parsingErrors: ["c", "d"],
+      parsingErrors: [new Error("c"), new Error("d")],
       presentationLiveGap: 19,
       suggestedPresentationDelay: 100,
       timeShiftBufferDepth: 3,
@@ -588,7 +726,7 @@ describe("Manifest - Manifest", () => {
       uris: ["url3", "url4"],
     };
 
-    manifest.update(newManifest);
+    manifest.update(newManifest as any);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
@@ -605,7 +743,10 @@ describe("Manifest - Manifest", () => {
 
   it("should replace different Periods when calling `update`", () => {
     const log = { warn: () => undefined, info: () => undefined };
-    jest.mock("../../log", () =>  ({ default: log }));
+    jest.mock("../../log", () =>  ({
+      __esModule: true,
+      default: log,
+    }));
 
     const oldManifestArgs = {
       availabilityStartTime: 5,
@@ -615,7 +756,7 @@ describe("Manifest - Manifest", () => {
       isLive: false,
       lifetime: 13,
       minimumTime: 4,
-      parsingErrors: ["a", "b"],
+      parsingErrors: [new Error("a"), new Error("b")],
       periods: [{ id: "1" }],
       presentationLiveGap: 18,
       suggestedPresentationDelay: 99,
@@ -626,7 +767,11 @@ describe("Manifest - Manifest", () => {
 
     const logSpy = jest.spyOn(log, "info").mockImplementation(jest.fn());
     const fakePeriod = jest.fn((period) => {
-      return { ...period, id: "foo" + period.id, parsingErrors: [period.id] };
+      return {
+        ...period,
+        id: "foo" + period.id,
+        parsingErrors: [new Error(period.id)],
+      };
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
@@ -634,10 +779,16 @@ describe("Manifest - Manifest", () => {
       });
       oldPeriod.id = newPeriod.id;
     });
-    jest.mock("../period", () =>  ({ default: fakePeriod }));
-    jest.mock("../update_period", () =>  ({ default: fakeUpdatePeriodInPlace }));
+    jest.mock("../period", () =>  ({
+      __esModule: true,
+      default: fakePeriod,
+    }));
+    jest.mock("../update_period", () =>  ({
+      __esModule: true,
+      default: fakeUpdatePeriodInPlace,
+    }));
     const Manifest = require("../manifest").default;
-    const manifest = new Manifest(oldManifestArgs, {});
+    const manifest = new Manifest(oldManifestArgs as any, {});
 
     const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
 
@@ -654,7 +805,7 @@ describe("Manifest - Manifest", () => {
       isLive: true,
       lifetime: 14,
       minimumTime: 5,
-      parsingErrors: ["c", "d"],
+      parsingErrors: [new Error("c"), new Error("d")],
       presentationLiveGap: 19,
       suggestedPresentationDelay: 100,
       timeShiftBufferDepth: 3,
@@ -663,7 +814,7 @@ describe("Manifest - Manifest", () => {
       uris: ["url3", "url4"],
     };
 
-    manifest.update(newManifest);
+    manifest.update(newManifest as any);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
@@ -677,7 +828,10 @@ describe("Manifest - Manifest", () => {
 
   it("should merge overlapping Periods when calling `update`", () => {
     const log = { warn: () => undefined, info: () => undefined };
-    jest.mock("../../log", () =>  ({ default: log }));
+    jest.mock("../../log", () =>  ({
+      __esModule: true,
+      default: log,
+    }));
 
     const oldManifestArgs = {
       availabilityStartTime: 5,
@@ -687,7 +841,7 @@ describe("Manifest - Manifest", () => {
       isLive: false,
       lifetime: 13,
       minimumTime: 4,
-      parsingErrors: ["a", "b"],
+      parsingErrors: [new Error("a"), new Error("b")],
       periods: [{ id: "1" }, { id: "2" }, { id: "3" }],
       presentationLiveGap: 18,
       suggestedPresentationDelay: 99,
@@ -698,7 +852,11 @@ describe("Manifest - Manifest", () => {
 
     const logSpy = jest.spyOn(log, "info").mockImplementation(jest.fn());
     const fakePeriod = jest.fn((period) => {
-      return { ...period, id: "foo" + period.id, parsingErrors: [period.id] };
+      return {
+        ...period,
+        id: "foo" + period.id,
+        parsingErrors: [new Error(period.id)],
+      };
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
@@ -706,10 +864,16 @@ describe("Manifest - Manifest", () => {
       });
       oldPeriod.id = newPeriod.id;
     });
-    jest.mock("../period", () =>  ({ default: fakePeriod }));
-    jest.mock("../update_period", () =>  ({ default: fakeUpdatePeriodInPlace }));
+    jest.mock("../period", () =>  ({
+      __esModule: true,
+      default: fakePeriod,
+    }));
+    jest.mock("../update_period", () =>  ({
+      __esModule: true,
+      default: fakeUpdatePeriodInPlace,
+    }));
     const Manifest = require("../manifest").default;
-    const manifest = new Manifest(oldManifestArgs, {});
+    const manifest = new Manifest(oldManifestArgs as any, {});
     const [oldPeriod1, oldPeriod2] = manifest.periods;
 
     const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
@@ -729,7 +893,7 @@ describe("Manifest - Manifest", () => {
       isLive: true,
       lifetime: 14,
       minimumTime: 5,
-      parsingErrors: ["c", "d"],
+      parsingErrors: [new Error("c"), new Error("d")],
       presentationLiveGap: 19,
       suggestedPresentationDelay: 100,
       timeShiftBufferDepth: 3,
@@ -738,7 +902,7 @@ describe("Manifest - Manifest", () => {
       uris: ["url3", "url4"],
     };
 
-    manifest.update(newManifest);
+    manifest.update(newManifest as any);
 
     expect(manifest.periods).toEqual([
       newPeriod1,

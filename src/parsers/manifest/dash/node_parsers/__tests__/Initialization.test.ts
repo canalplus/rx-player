@@ -20,8 +20,14 @@ describe("DASH Node Parsers - Initialization", () => {
   });
 
   it("should correctly parse an element with no known attribute", () => {
-    const utils = { parseByteRange: () => [0, 1] };
-    const log = { default: { warn: () => null } };
+    const utils = {
+      __esModule: true,
+      parseByteRange: () => [0, 1],
+    };
+    const log = {
+      __esModule: true,
+      default: { warn: () => null },
+    };
     jest.mock("../utils", () => utils);
     jest.mock("../../../../../log", () => log);
     const utilsSpy = jest.spyOn(utils, "parseByteRange");
@@ -45,8 +51,14 @@ describe("DASH Node Parsers - Initialization", () => {
   });
 
   it("should correctly parse an element with a well-formed `range` attribute", () => {
-    const utils = { parseByteRange: () => [0, 1] };
-    const log = { default: { warn: () => null } };
+    const utils = {
+      __esModule: true,
+      parseByteRange: () => [0, 1],
+    };
+    const log = {
+      __esModule: true,
+      default: { warn: () => null },
+    };
     jest.mock("../utils", () => utils);
     jest.mock("../../../../../log", () => log);
     const utilsSpy = jest.spyOn(utils, "parseByteRange");
@@ -75,8 +87,14 @@ describe("DASH Node Parsers - Initialization", () => {
   });
 
   it("should correctly parse an element with an incorrect `range` attribute", () => {
-    const utils = { parseByteRange: () => null };
-    const log = { default: { warn: () => null } };
+    const utils = {
+      __esModule: true,
+      parseByteRange: () => null,
+    };
+    const log = {
+      __esModule: true,
+      default: { warn: () => null },
+    };
     jest.mock("../utils", () => utils);
     jest.mock("../../../../../log", () => log);
     const utilsSpy = jest.spyOn(utils, "parseByteRange");
@@ -108,8 +126,14 @@ describe("DASH Node Parsers - Initialization", () => {
   });
 
   it("should correctly parse an element with a sourceURL attribute", () => {
-    const utils = { parseByteRange: () => [0, 1] };
-    const log = { default: { warn: () => null } };
+    const utils = {
+      __esModule: true,
+      parseByteRange: () => [0, 1],
+    };
+    const log = {
+      __esModule: true,
+      default: { warn: () => null },
+    };
     jest.mock("../utils", () => utils);
     jest.mock("../../../../../log", () => log);
     const utilsSpy = jest.spyOn(utils, "parseByteRange");
@@ -138,8 +162,14 @@ describe("DASH Node Parsers - Initialization", () => {
   /* tslint:disable max-line-length */
   it("should correctly parse an element with both a sourceURL and range attributes", () => {
   /* tslint:enable max-line-length */
-    const utils = { parseByteRange: () => [0, 1] };
-    const log = { default: { warn: () => null } };
+    const utils = {
+      __esModule: true,
+      parseByteRange: () => [0, 1],
+    };
+    const log = {
+      __esModule: true,
+      default: { warn: () => null },
+    };
     jest.mock("../utils", () => utils);
     jest.mock("../../../../../log", () => log);
     const utilsSpy = jest.spyOn(utils, "parseByteRange");

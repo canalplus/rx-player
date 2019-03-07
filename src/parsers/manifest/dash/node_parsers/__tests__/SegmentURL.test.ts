@@ -20,8 +20,14 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with no known attribute", () => {
-    const utils = { parseByteRange: () => [0, 1] };
-    const log = { default: { warn: () => null } };
+    const utils = {
+      __esModule: true,
+      parseByteRange: () => [0, 1],
+    };
+    const log = {
+      __esModule: true,
+      default: { warn: () => null },
+    };
     jest.mock("../utils", () => utils);
     jest.mock("../../../../../log", () => log);
     const utilsSpy = jest.spyOn(utils, "parseByteRange");
@@ -47,8 +53,14 @@ describe("DASH Node Parsers - SegmentURL", () => {
   /* tslint:disable max-line-length */
   it("should correctly parse an element with a well-formed `mediaRange` attribute", () => {
   /* tslint:enable max-line-length */
-    const utils = { parseByteRange: () => [0, 1] };
-    const log = { default: { warn: () => null } };
+    const utils = {
+      __esModule: true,
+      parseByteRange: () => [0, 1],
+    };
+    const log = {
+      __esModule: true,
+      default: { warn: () => null },
+    };
     jest.mock("../utils", () => utils);
     jest.mock("../../../../../log", () => log);
     const utilsSpy = jest.spyOn(utils, "parseByteRange");
@@ -77,8 +89,14 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with an incorrect `mediaRange` attribute", () => {
-    const utils = { parseByteRange: () => null };
-    const log = { default: { warn: () => null } };
+    const utils = {
+      __esModule: true,
+      parseByteRange: () => null,
+    };
+    const log = {
+      __esModule: true,
+      default: { warn: () => null },
+    };
     jest.mock("../utils", () => utils);
     jest.mock("../../../../../log", () => log);
     const utilsSpy = jest.spyOn(utils, "parseByteRange");
@@ -112,8 +130,14 @@ describe("DASH Node Parsers - SegmentURL", () => {
   /* tslint:disable max-line-length */
   it("should correctly parse an element with a well-formed `indexRange` attribute", () => {
   /* tslint:enable max-line-length */
-    const utils = { parseByteRange: () => [0, 1] };
-    const log = { default: { warn: () => null } };
+    const utils = {
+      __esModule: true,
+      parseByteRange: () => [0, 1],
+    };
+    const log = {
+      __esModule: true,
+      default: { warn: () => null },
+    };
     jest.mock("../utils", () => utils);
     jest.mock("../../../../../log", () => log);
     const utilsSpy = jest.spyOn(utils, "parseByteRange");
@@ -142,8 +166,14 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with an incorrect `indexRange` attribute", () => {
-    const utils = { parseByteRange: () => null };
-    const log = { default: { warn: () => null } };
+    const utils = {
+      __esModule: true,
+      parseByteRange: () => null,
+    };
+    const log = {
+      __esModule: true,
+      default: { warn: () => null },
+    };
     jest.mock("../utils", () => utils);
     jest.mock("../../../../../log", () => log);
     const utilsSpy = jest.spyOn(utils, "parseByteRange");
@@ -175,8 +205,14 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with a media attribute", () => {
-    const utils = { parseByteRange: () => [0, 1] };
-    const log = { default: { warn: () => null } };
+    const utils = {
+      __esModule: true,
+      parseByteRange: () => [0, 1],
+    };
+    const log = {
+      __esModule: true,
+      default: { warn: () => null },
+    };
     jest.mock("../utils", () => utils);
     jest.mock("../../../../../log", () => log);
     const utilsSpy = jest.spyOn(utils, "parseByteRange");
@@ -203,8 +239,14 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with a index attribute", () => {
-    const utils = { parseByteRange: () => [0, 1] };
-    const log = { default: { warn: () => null } };
+    const utils = {
+      __esModule: true,
+      parseByteRange: () => [0, 1],
+    };
+    const log = {
+      __esModule: true,
+      default: { warn: () => null },
+    };
     jest.mock("../utils", () => utils);
     jest.mock("../../../../../log", () => log);
     const utilsSpy = jest.spyOn(utils, "parseByteRange");

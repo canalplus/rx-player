@@ -15,6 +15,21 @@
  */
 
 export {
+  createBox,
+  createBoxWithChildren,
+} from "./create_box";
+export {
+  getBox,
+  getBoxContent,
+  getBoxOffsets,
+  getUuidContent,
+} from "./get_box";
+export {
+  getMDAT,
+  getMDIA,
+  getTRAF,
+} from "./read";
+export {
   getMDHDTimescale,
   getPlayReadyKIDFromPrivateData,
   getTrackFragmentDecodeTime,
@@ -23,11 +38,3 @@ export {
   ISidxSegment,
   patchPssh,
 } from "./utils";
-export {
-  getBox,
-  getBoxContent,
-  getBoxOffsets,
-  getMDAT,
-  getMDIA,
-  getTRAF,
-} from "./read";
