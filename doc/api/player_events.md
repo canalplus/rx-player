@@ -347,27 +347,6 @@ The payload is an array of the different bitrates available, in bits per
 seconds.
 
 
-<a name="events-availableAudioBitratesChange"></a>
-### availableAudioBitratesChange ###############################################
-
-_payload type_: ``Array.<Number>|null``
-
----
-
-:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
----
-
-Triggered when the currently available audio bitrates change (e.g.: at the
-beginning of the content, when switching the current audio track, when period
-changes...).
-
-The payload is an array of the different bitrates available, in bits per
-seconds.
-
-
-
 <a name="events-audioBitrateChange"></a>
 ### audioBitrateChange #########################################################
 
