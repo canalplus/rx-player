@@ -15,6 +15,13 @@
 </ul>
 </li>
 <li><a href="#chapter-fullscreenChange">fullscreenChange</a></li>
+<li><a href="#chapter-loadVideo%20options">loadVideo options</a>
+<ul>
+<li><a href="#subchapter-defaultAudioTrack">defaultAudioTrack</a></li>
+<li><a href="#subchapter-defaultTextTrack">defaultTextTrack</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Other%20properties">Other properties</a></li>
 <li><a href="#chapter-Other%20properties">Other properties</a>
 <ul>
 <li><a href="#subchapter-Manifest">Manifest</a></li>
@@ -179,6 +186,68 @@ mediaElement.addEventListener(<span class="hljs-string">&quot;fullscreenChange&q
   }
 });
 </code></pre>
+<p><a name="chapter-loadVideo%20options"></a></p>
+<h2>loadVideo options</h2>
+<p>The following loadVideo options are deprecated.</p>
+<p><a name="subchapter-defaultAudioTrack"></a></p>
+<h3>defaultAudioTrack</h3>
+<p><a href="loadVideo_options.html#prop-preferredAudioTracks">The <code>preferredAudioTracks</code> loadVideo
+option</a> is now the preferred
+(no pun intended) solution to set the default audio track.
+This new option allows to handle much more complex use cases and can even be
+updated at any time through <a href="index.html#meth-setPreferredAudioTracks">the <code>setPreferredAudioTracks</code>
+method</a>.</p>
+<h4>How to replace that function</h4>
+<p>It is very easy to replace <code>defaultAudioTrack</code> by <code>preferredAudioTracks</code>.</p>
+<p>For example, if you want to have a default french audio language, you probably
+previously did:</p>
+<pre><code class="language-js">player.loadVideo({
+  <span class="hljs-attr">url</span>: myURL,
+  <span class="hljs-attr">transport</span>: myTransport,
+
+  <span class="hljs-attr">defaultAudioTrack</span>: { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+  <span class="hljs-comment">// or just `defaultAudioTrack: &quot;fra&quot;`, both are equivalent</span>
+})
+</code></pre>
+<p>Now you will have to set it through an array either when creating a new
+RxPlayer:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> RxPlayer({
+  <span class="hljs-attr">preferredAudioTracks</span>: [{ <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }],
+})
+</code></pre>
+<p>Or at any time, through the <code>setPreferredAudioTracks</code> method:</p>
+<pre><code class="language-js">player.setPreferredAudioTracks([{ <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }]);
+</code></pre>
+<p><a name="subchapter-defaultTextTrack"></a></p>
+<h3>defaultTextTrack</h3>
+<p><code>defaultTextTrack</code> is replaced by <a href="loadVideo_options.html#prop-preferredTextTracks">the <code>preferredTextTracks</code> constructor
+option</a> for the same reason
+than <code>defaultAudioTrack</code>.</p>
+<h4>How to replace that function</h4>
+<p>It is very easy to replace <code>defaultTextTrack</code> by <code>preferredTextTracks</code>.</p>
+<p>For example, if you want to have a default swedish subtitle language, you
+probably previously did:</p>
+<pre><code class="language-js">player.loadVideo({
+  <span class="hljs-attr">url</span>: myURL,
+  <span class="hljs-attr">transport</span>: myTransport,
+
+  <span class="hljs-attr">defaultTextTrack</span>: { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;swe&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
+  <span class="hljs-comment">// or just `defaultTextTrack: &quot;swe&quot;`, both are equivalent</span>
+})
+</code></pre>
+<p>Now you will have to set it through an array either when creating a new
+RxPlayer:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> RxPlayer({
+  <span class="hljs-attr">preferredTextTracks</span>: [{ <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;swe&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> }],
+})
+</code></pre>
+<p>Or at any time, through the <code>setPreferredTextTracks</code> method:</p>
+<pre><code class="language-js">player.setPreferredTextTracks([{ <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> }]);
+</code></pre>
+<p><a name="chapter-Other%20properties"></a></p>
+<h2>Other properties</h2>
+<p>Some very specific properties from various methods are deprecated.
+You will find them here.</p>
 <p><a name="chapter-Other%20properties"></a></p>
 <h2>Other properties</h2>
 <p>Some very specific properties from various methods are deprecated.

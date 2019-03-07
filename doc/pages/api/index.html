@@ -33,7 +33,6 @@
 <li><a href="#subchapter-seekTo">seekTo</a></li>
 <li><a href="#subchapter-isLive">isLive</a></li>
 <li><a href="#subchapter-getUrl">getUrl</a></li>
-<li><a href="#subchapter-isFullscreen">isFullscreen</a></li>
 <li><a href="#subchapter-getAvailableVideoBitrates">getAvailableVideoBitrates</a></li>
 <li><a href="#subchapter-getAvailableAudioBitrates">getAvailableAudioBitrates</a></li>
 <li><a href="#subchapter-getVideoBitrate">getVideoBitrate</a></li>
@@ -52,8 +51,6 @@
 <li><a href="#subchapter-getMaxBufferBehind">getMaxBufferBehind</a></li>
 <li><a href="#subchapter-setMaxBufferAhead">setMaxBufferAhead</a></li>
 <li><a href="#subchapter-getMaxBufferAhead">getMaxBufferAhead</a></li>
-<li><a href="#subchapter-setFullscreen">setFullscreen</a></li>
-<li><a href="#subchapter-exitFullscreen">exitFullscreen</a></li>
 <li><a href="#subchapter-setVolume">setVolume</a></li>
 <li><a href="#subchapter-mute">mute</a></li>
 <li><a href="#subchapter-unMute">unMute</a></li>
@@ -68,11 +65,14 @@
 <li><a href="#subchapter-setTextTrack">setTextTrack</a></li>
 <li><a href="#subchapter-disableTextTrack">disableTextTrack</a></li>
 <li><a href="#subchapter-setVideoTrack">setVideoTrack</a></li>
+<li><a href="#subchapter-setPreferredAudioTracks">setPreferredAudioTracks</a></li>
+<li><a href="#subchapter-getPreferredAudioTracks">getPreferredAudioTracks</a></li>
+<li><a href="#subchapter-setPreferredTextTracks">setPreferredTextTracks</a></li>
+<li><a href="#subchapter-getPreferredTextTracks">getPreferredTextTracks</a></li>
 <li><a href="#subchapter-getManifest">getManifest</a></li>
 <li><a href="#subchapter-getCurrentAdaptations">getCurrentAdaptations</a></li>
 <li><a href="#subchapter-getCurrentRepresentations">getCurrentRepresentations</a></li>
 <li><a href="#subchapter-dispose">dispose</a></li>
-<li><a href="#subchapter-getNativeTextTrack">getNativeTextTrack</a></li>
 <li><a href="#subchapter-getVideoLoadedTime">getVideoLoadedTime</a></li>
 <li><a href="#subchapter-getVideoPlayedTime">getVideoPlayedTime</a></li>
 <li><a href="#subchapter-getVideoBufferGap">getVideoBufferGap</a></li>
@@ -82,6 +82,10 @@
 <li><a href="#subchapter-getImageTrackData">getImageTrackData</a></li>
 <li><a href="#subchapter-getMinimumPosition">getMinimumPosition</a></li>
 <li><a href="#subchapter-getMaximumPosition">getMaximumPosition</a></li>
+<li><a href="#subchapter-setFullscreen">setFullscreen</a></li>
+<li><a href="#subchapter-exitFullscreen">exitFullscreen</a></li>
+<li><a href="#subchapter-isFullscreen">isFullscreen</a></li>
+<li><a href="#subchapter-getNativeTextTrack">getNativeTextTrack</a></li>
 </ul>
 </li>
 </ul>
@@ -528,21 +532,6 @@ being played.</p>
   <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;We are playing the following content:&quot;</span>, url);
 }
 </code></pre>
-<p><a name="meth-isFullscreen"></a>
-<a name="subchapter-isFullscreen"></a></p>
-<h3>isFullscreen</h3>
-<hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
-release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
-<hr>
-<p><em>return value</em>: <code>Boolean</code></p>
-<p>Returns <code>true</code> if the video element is in fullscreen mode, <code>false</code>
-otherwise.</p>
-<h4>Example</h4>
-<pre><code class="language-js"><span class="hljs-keyword">if</span> (player.isFullscreen()) {
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The player is in fullscreen mode&quot;</span>);
-}
-</code></pre>
 <p><a name="meth-getAvailableVideoBitrates"></a>
 <a name="subchapter-getAvailableVideoBitrates"></a></p>
 <h3>getAvailableVideoBitrates</h3>
@@ -799,38 +788,6 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 <p><em>return value</em>: <code>Number</code>
 <em>defaults</em>: <code>Infinity</code></p>
 <p>Returns the maximum kept buffer ahead of the current position, in seconds.</p>
-<p><a name="meth-setFullscreen"></a>
-<a name="subchapter-setFullscreen"></a></p>
-<h3>setFullscreen</h3>
-<hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
-release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
-<hr>
-<p><em>arguments</em>: <code>Boolean</code></p>
-<p>Switch or exit the <code>&lt;video&gt;</code> element to fullscreen mode. The argument is an
-optional boolean:</p>
-<ul>
-<li>
-<p>if set:</p>
-<ul>
-<li><code>true</code>: enters fullscreen</li>
-<li><code>false</code>: exit fullscreen</li>
-</ul>
-</li>
-<li>
-<p>if not set: enter fullscreen</p>
-</li>
-</ul>
-<p>Note that <strong>only the video element will be set to fullscreen mode</strong>. You might
-prefer to implement your own method to include your controls in the final UI.</p>
-<p><a name="meth-exitFullscreen"></a>
-<a name="subchapter-exitFullscreen"></a></p>
-<h3>exitFullscreen</h3>
-<hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
-release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
-<hr>
-<p>Exit fullscreen mode. Same than <code>setFullscreen(false)</code>.</p>
 <p><a name="meth-setVolume"></a>
 <a name="subchapter-setVolume"></a></p>
 <h3>setVolume</h3>
@@ -1126,6 +1083,135 @@ Most notably:
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
 mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
 <hr>
+<p><a name="meth-setPreferredAudioTracks"></a>
+<a name="subchapter-setPreferredAudioTracks"></a></p>
+<h3>setPreferredAudioTracks</h3>
+<p><em>arguments</em>: <code>Array.&lt;Object&gt;</code></p>
+<p>Update the audio language preferences at any time.</p>
+<p>This method takes an array of objects describing the languages wanted:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+  audioDescription: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the audio track should be an</span>
+                          <span class="hljs-comment">// audio description for the visually impaired</span>
+}
+</code></pre>
+<p>All elements in that Array should be set in preference order: from the most
+preferred to the least preferred.</p>
+<p>When encountering a new Period or a new content, the RxPlayer will then try to
+choose its audio track by comparing what is available with your current
+preferences (i.e. if the most preferred is not available, it will look if the
+second one is etc.).</p>
+<p>Please note that those preferences will only apply either to the next loaded
+content or to the next newly encountered Period.
+Simply put, once set this preference will be applied to all contents but:</p>
+<ul>
+<li>
+<p>the current Period being played (or the current loaded content, in the case
+of Smooth streaming). In that case, the current audio preference will stay
+in place.</p>
+</li>
+<li>
+<p>the Periods which have already been played in the current loaded content.
+Those will keep the last set audio preference at the time it was played.</p>
+</li>
+</ul>
+<p>To update the current audio track in those cases, you should use the
+<code>setAudioTrack</code> method.</p>
+<h4>Example</h4>
+<p>Let&#x2019;s imagine that you prefer to have french or italian over all other audio
+languages. If not found, you want to fallback to english.
+You will thus call <code>setPreferredAudioTracks</code> that way.</p>
+<pre><code class="language-js">player.setPreferredAudioTracks([
+  { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+  { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;ita&quot;</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+  { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;eng&quot;</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }
+])
+</code></pre>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-getPreferredAudioTracks"></a>
+<a name="subchapter-getPreferredAudioTracks"></a></p>
+<h3>getPreferredAudioTracks</h3>
+<p><em>return value</em>: <code>Array.&lt;Object&gt;</code></p>
+<p>Returns the current list of preferred audio tracks - by order of preference.</p>
+<p>This returns the data in the same format that it was given to either the
+<code>preferredAudioTracks</code> constructor option or the last <code>setPreferredAudioTracks</code>
+if it was called:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+  audioDescription: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the audio track should be an</span>
+                          <span class="hljs-comment">// audio description for the visually impaired</span>
+}
+</code></pre>
+<p><a name="meth-setPreferredTextTracks"></a>
+<a name="subchapter-setPreferredTextTracks"></a></p>
+<h3>setPreferredTextTracks</h3>
+<p><em>arguments</em>: <code>Array.&lt;Object|null&gt;</code></p>
+<p>Update the text track (or subtitles) preferences at any time.</p>
+<p>This method takes an array of objects describing the languages wanted:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+  closedCaption: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
+                       <span class="hljs-comment">// caption for the hard of hearing</span>
+}
+</code></pre>
+<p>All elements in that Array should be set in preference order: from the most
+preferred to the least preferred. You can set <code>null</code> for no subtitles.</p>
+<p>When encountering a new Period or a new content, the RxPlayer will then try to
+choose its text track by comparing what is available with your current
+preferences (i.e. if the most preferred is not available, it will look if the
+second one is etc.).</p>
+<p>Please note that those preferences will only apply either to the next loaded
+content or to the next newly encountered Period.
+Simply put, once set this preference will be applied to all contents but:</p>
+<ul>
+<li>
+<p>the current Period being played (or the current loaded content, in the case
+of Smooth streaming). In that case, the current text track preference will
+stay in place.</p>
+</li>
+<li>
+<p>the Periods which have already been played in the current loaded content.
+Those will keep the last set text track preference at the time it was
+played.</p>
+</li>
+</ul>
+<p>To update the current text track in those cases, you should use the
+<code>setTextTrack</code> method.</p>
+<h4>Example</h4>
+<p>Let&#x2019;s imagine that you prefer to have french or italian subtitles.If not found,
+you want no subtitles at all.</p>
+<p>You will thus call <code>setPreferredTextTracks</code> that way.</p>
+<pre><code class="language-js">player.setPreferredTextTracks([
+  { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
+  { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;ita&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
+  <span class="hljs-literal">null</span>
+])
+</code></pre>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-getPreferredTextTracks"></a>
+<a name="subchapter-getPreferredTextTracks"></a></p>
+<h3>getPreferredTextTracks</h3>
+<p><em>return value</em>: <code>Array.&lt;Object|null&gt;</code></p>
+<p>Returns the current list of preferred text tracks - by order of preference.</p>
+<p>This returns the data in the same format that it was given to either the
+<code>preferredTextTracks</code> constructor option or the last <code>setPreferredTextTracks</code> if
+it was called:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+  closedCaption: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
+                       <span class="hljs-comment">// caption for the hard of hearing</span>
+}
+</code></pre>
 <p><a name="meth-getManifest"></a>
 <a name="subchapter-getManifest"></a></p>
 <h3>getManifest</h3>
@@ -1168,19 +1254,6 @@ options</a>).</p>
 <h3>dispose</h3>
 <p>Free the ressources used by the player.</p>
 <p>!warning!: The player won&#x2019;t work correctly after calling this method.</p>
-<p><a name="meth-getNativeTextTrack"></a>
-<a name="subchapter-getNativeTextTrack"></a></p>
-<h3>getNativeTextTrack</h3>
-<hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
-release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
-<hr>
-<p><em>return value</em>: <code>TextTrack|null</code></p>
-<p>Returns the first text track of the video&#x2019;s element, null if none.</p>
-<p>This is equivalent to:</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> el = player.getVideoElement();
-<span class="hljs-keyword">const</span> textTrack = el.textTracks.length ? el.textTracks[<span class="hljs-number">0</span>] : <span class="hljs-literal">null</span>;
-</code></pre>
 <p><a name="meth-getVideoLoadedTime"></a>
 <a name="subchapter-getVideoLoadedTime"></a></p>
 <h3>getVideoLoadedTime</h3>
@@ -1260,5 +1333,65 @@ This method allows thus to seek directly at the live edge of the content.</p>
 player.seekTo({
   <span class="hljs-attr">position</span>: player.getMaximumPosition()
 });
+</code></pre>
+<p><a name="meth-setFullscreen"></a>
+<a name="subchapter-setFullscreen"></a></p>
+<h3>setFullscreen</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
+<p><em>arguments</em>: <code>Boolean</code></p>
+<p>Switch or exit the <code>&lt;video&gt;</code> element to fullscreen mode. The argument is an
+optional boolean:</p>
+<ul>
+<li>
+<p>if set:</p>
+<ul>
+<li><code>true</code>: enters fullscreen</li>
+<li><code>false</code>: exit fullscreen</li>
+</ul>
+</li>
+<li>
+<p>if not set: enter fullscreen</p>
+</li>
+</ul>
+<p>Note that <strong>only the video element will be set to fullscreen mode</strong>. You might
+prefer to implement your own method to include your controls in the final UI.</p>
+<p><a name="meth-exitFullscreen"></a>
+<a name="subchapter-exitFullscreen"></a></p>
+<h3>exitFullscreen</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
+<p>Exit fullscreen mode. Same than <code>setFullscreen(false)</code>.</p>
+<p><a name="meth-isFullscreen"></a>
+<a name="subchapter-isFullscreen"></a></p>
+<h3>isFullscreen</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
+<p><em>return value</em>: <code>Boolean</code></p>
+<p>Returns <code>true</code> if the video element is in fullscreen mode, <code>false</code>
+otherwise.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">if</span> (player.isFullscreen()) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The player is in fullscreen mode&quot;</span>);
+}
+</code></pre>
+<p><a name="meth-getNativeTextTrack"></a>
+<a name="subchapter-getNativeTextTrack"></a></p>
+<h3>getNativeTextTrack</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
+<p><em>return value</em>: <code>TextTrack|null</code></p>
+<p>Returns the first text track of the video&#x2019;s element, null if none.</p>
+<p>This is equivalent to:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> el = player.getVideoElement();
+<span class="hljs-keyword">const</span> textTrack = el.textTracks.length ? el.textTracks[<span class="hljs-number">0</span>] : <span class="hljs-literal">null</span>;
 </code></pre>
 </body></html></div></div></div></body>
