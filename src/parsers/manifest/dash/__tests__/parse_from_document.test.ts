@@ -26,13 +26,13 @@ describe("parseFromDocument", () => {
     expect(function() {
       parseFromDocument(doc, {
         url: "",
-        ignoreUTCTiming: false,
+        loadExternalUTCTimings: false,
       });
     }).toThrow("document root should be MPD");
     expect(function() {
       parseFromDocument(doc, {
         url: "",
-        ignoreUTCTiming: true,
+        loadExternalUTCTimings: true,
       });
     }).toThrow("document root should be MPD");
   });
