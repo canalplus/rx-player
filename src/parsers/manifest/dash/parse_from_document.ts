@@ -16,6 +16,7 @@
 
 import { IParsedManifest } from "../types";
 import parseMPD, {
+  IParseOptions,
   IParserResponse,
 } from "./parse_mpd";
 
@@ -24,15 +25,17 @@ export type IMPDParserResponse = IParserResponse<IParsedManifest>;
 /**
  * @param {Document} manifest - Original manifest as returned by the server
  * @param {string} uri
+ * @param {Object} options - Parse options
  * @returns {Object} - parsed manifest
  */
 export default function parseFromDocument(
   document: Document,
-  uri : string
+  uri : string,
+  options? : IParseOptions
 ) : IMPDParserResponse {
   const root = document.documentElement;
   if (!root || root.nodeName !== "MPD") {
     throw new Error("DASH Parser: document root should be MPD");
   }
-  return parseMPD(root, uri);
+  return parseMPD(root, uri, options);
 }
