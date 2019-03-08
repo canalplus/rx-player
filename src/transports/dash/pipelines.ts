@@ -115,7 +115,7 @@ export default function(
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
 
-      const parsedManifest = dashManifestParser(data, url, { ignoreUTCTiming: !loadExternalUTCTimings });
+      const parsedManifest = dashManifestParser(data, url, { loadExternalUTCTimings });
       return loadExternalResources(parsedManifest);
 
       function loadExternalResources(

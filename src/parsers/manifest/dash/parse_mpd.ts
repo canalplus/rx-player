@@ -43,7 +43,7 @@ export interface IResource {
 }
 
 export interface IParseOptions {
-  ignoreUTCTiming: boolean;
+  loadExternalUTCTimings: boolean;
 }
 
 export type IParserResponse<T> =
@@ -83,7 +83,7 @@ export default function parseMPD(
 function loadExternalRessourcesAndParse(
   mpdIR : IMPDIntermediateRepresentation,
   uri : string,
-  options? : IParseOptions
+  options : IParseOptions = {loadExternalUTCTimings: true}
 ) : IParserResponse<IParsedManifest> {
   const xlinksToLoad : Array<{ index : number; ressource : string }> = [];
   for (let i = 0; i < mpdIR.children.periods.length; i++) {
@@ -93,10 +93,10 @@ function loadExternalRessourcesAndParse(
     }
   }
 
-  const utcTimingsToLoad = options && options.ignoreUTCTiming ? [] :
-      mpdIR.children.utcTimings.filter(utcTiming =>
+  const utcTimingsToLoad = options.loadExternalUTCTimings
+      ? mpdIR.children.utcTimings.filter(utcTiming =>
         utcTiming.schemeIdUri === "urn:mpeg:dash:utc:http-iso:2014"
-      );
+      ) : [];
 
   if (xlinksToLoad.length === 0 && utcTimingsToLoad.length === 0) {
     const parsedManifest = parseCompleteIntermediateRepresentation(mpdIR, uri);
