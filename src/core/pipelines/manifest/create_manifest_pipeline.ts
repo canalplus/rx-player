@@ -141,7 +141,10 @@ export default function createManifestPipeline(
    * @param {string} url - URL of the manifest
    * @returns {Observable}
    */
-  return function fetchManifest(url : string, options : IFetchManifestOptions) : Observable<IFetchManifestResult> {
+  return function fetchManifest(
+    url : string,
+    options : IFetchManifestOptions = {loadExternalUTCTimings: true}
+  ) : Observable<IFetchManifestResult> {
     return loader({ url }).pipe(
 
       tap((arg) => {
@@ -157,7 +160,12 @@ export default function createManifestPipeline(
       mergeMap(({ value }) => {
         const { sendingTime } = value;
         const { loadExternalUTCTimings } = options;
-        return parser({ response: value, url, scheduleRequest, loadExternalUTCTimings }).pipe(
+        return parser({
+          response: value,
+          url,
+          scheduleRequest,
+          loadExternalUTCTimings,
+        }).pipe(
           catchError((error: Error) => {
             const formattedError = isKnownError(error) ?
               error : new OtherError("PIPELINE_PARSING_ERROR", error.toString(), true);

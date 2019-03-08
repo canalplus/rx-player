@@ -119,7 +119,7 @@ export default function(
       const parsedManifest = parseMPD(data, {
         url,
         referenceDateTime,
-        ignoreUTCTiming: !loadExternalUTCTimings,
+        loadExternalUTCTimings,
       });
       return loadExternalResources(parsedManifest);
 
