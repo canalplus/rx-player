@@ -13,7 +13,6 @@
 <li><a href="#subchapter-videoTrackChange">videoTrackChange</a></li>
 <li><a href="#subchapter-availableAudioBitratesChange">availableAudioBitratesChange</a></li>
 <li><a href="#subchapter-availableVideoBitratesChange">availableVideoBitratesChange</a></li>
-<li><a href="#subchapter-availableAudioBitratesChange">availableAudioBitratesChange</a></li>
 <li><a href="#subchapter-audioBitrateChange">audioBitrateChange</a></li>
 <li><a href="#subchapter-videoBitrateChange">videoBitrateChange</a></li>
 <li><a href="#subchapter-imageTrackUpdate">imageTrackUpdate</a></li>
@@ -322,19 +321,6 @@ options</a>).</p>
 <hr>
 <p>Triggered when the currently available video bitrates change (e.g.: at the
 beginning of the content, when switching the current video track, when period
-changes&#x2026;).</p>
-<p>The payload is an array of the different bitrates available, in bits per
-seconds.</p>
-<p><a name="events-availableAudioBitratesChange"></a>
-<a name="subchapter-availableAudioBitratesChange"></a></p>
-<h3>availableAudioBitratesChange</h3>
-<p><em>payload type</em>: <code>Array.&lt;Number&gt;|null</code></p>
-<hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
-options</a>).</p>
-<hr>
-<p>Triggered when the currently available audio bitrates change (e.g.: at the
-beginning of the content, when switching the current audio track, when period
 changes&#x2026;).</p>
 <p>The payload is an array of the different bitrates available, in bits per
 seconds.</p>
