@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.11.1 (2019/03/11)
+
+### Bug fixes
+
+  - npm: publish package again. An error in the previous release led to some files missing on npm
+
+
 ## v3.11.0 (2019/03/07)
 
 ### Features
