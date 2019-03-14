@@ -24,40 +24,30 @@ import {
   map,
   mergeMap,
 } from "rxjs/operators";
-import features from "../../features";
 import Manifest from "../../manifest";
-import {
-  getMDHDTimescale,
-  getSegmentsFromSidx,
-} from "../../parsers/containers/isobmff";
-import {
-  getSegmentsFromCues,
-  getTimeCodeScale,
-} from "../../parsers/containers/matroska";
-import parseMPD, {
+import dashManifestParser, {
   IMPDParserResponse,
 } from "../../parsers/manifest/dash";
 import request from "../../utils/request";
 import {
-  IImageParserObservable,
   IManifestLoaderArguments,
   IManifestLoaderObservable,
   IManifestParserArguments,
   IManifestParserObservable,
-  ISegmentLoaderArguments,
-  ISegmentLoaderObservable,
-  ISegmentParserArguments,
-  ISegmentParserObservable,
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
 import generateManifestLoader from "../utils/manifest_loader";
-import getISOBMFFTimingInfos from "./isobmff_timing_infos";
+import generateSegmentLoader from "./generate_segment_loader";
+import {
+  imageLoader,
+  imageParser,
+} from "./image_pipelines";
+import segmentParser from "./segment_parser";
 import {
   loader as TextTrackLoader,
   parser as TextTrackParser,
-} from "./pipelines_text";
-import generateSegmentLoader from "./segment_loader";
+} from "./text_pipelines";
 
 /**
  * Request external "xlink" ressource from a MPD.
@@ -106,10 +96,11 @@ export default function(
                                                      "text/xml") :
                      response.responseData;
 
-      const parsedManifest = parseMPD(data,
-                                      { url,
-                                        referenceDateTime,
-                                        loadExternalClock: !hasClockSynchronization });
+      const parsedManifest = dashManifestParser(data, {
+        url,
+        referenceDateTime,
+        loadExternalClock: !hasClockSynchronization,
+      });
       return loadExternalResources(parsedManifest);
 
       function loadExternalResources(
@@ -132,120 +123,13 @@ export default function(
       }
     },
   };
-
-  const segmentPipeline = {
-    loader({ adaptation, manifest, period, representation, segment }
-      : ISegmentLoaderArguments
-    ) : ISegmentLoaderObservable<Uint8Array|ArrayBuffer|null> {
-      return segmentLoader({ adaptation,
-                             manifest,
-                             period,
-                             representation,
-                             segment });
-    },
-
-    parser({
-      segment,
-      representation,
-      response,
-      init,
-    } : ISegmentParserArguments< Uint8Array|ArrayBuffer|null >
-    ) : ISegmentParserObservable< Uint8Array | ArrayBuffer | null > {
-      const { responseData } = response;
-      if (responseData == null) {
-        return observableOf({ segmentData: null,
-                              segmentInfos: null,
-                              segmentOffset: 0 });
-      }
-      const segmentData : Uint8Array = responseData instanceof Uint8Array ?
-        responseData :
-        new Uint8Array(responseData);
-      const indexRange = segment.indexRange;
-      const isWEBM = representation.mimeType === "video/webm" ||
-                     representation.mimeType === "audio/webm";
-      const nextSegments = isWEBM ?
-        getSegmentsFromCues(segmentData, 0) :
-        getSegmentsFromSidx(segmentData, indexRange ? indexRange[0] : 0);
-
-      if (!segment.isInit) {
-        const segmentInfos = isWEBM ?
-          {
-            time: segment.time,
-            duration: segment.duration,
-            timescale: segment.timescale,
-          } :
-          getISOBMFFTimingInfos(segment, segmentData, nextSegments, init);
-        const segmentOffset = segment.timestampOffset || 0;
-        return observableOf({ segmentData, segmentInfos, segmentOffset });
-      }
-
-      if (nextSegments) {
-        representation.index._addSegments(nextSegments);
-      }
-      const timescale = isWEBM ?
-        getTimeCodeScale(segmentData, 0) :
-        getMDHDTimescale(segmentData);
-      return observableOf({
-        segmentData,
-        segmentInfos: timescale && timescale > 0 ?
-          { time: -1, duration: 0, timescale } : null,
-        segmentOffset: segment.timestampOffset || 0,
-      });
-    },
-  };
-
-  const textTrackPipeline = { loader: TextTrackLoader,
-                              parser: TextTrackParser };
-
-  const imageTrackPipeline = {
-    loader(
-      { segment } : ISegmentLoaderArguments
-    ) : ISegmentLoaderObservable<ArrayBuffer|null> {
-      if (segment.isInit || segment.mediaURL == null) {
-        return observableOf({ type: "data-created" as const,
-                              value: { responseData: null } });
-      }
-      const { mediaURL } = segment;
-      return request({ url: mediaURL,
-                       responseType: "arraybuffer",
-                       sendProgressEvents: true });
-    },
-
-    parser(
-      { response, segment } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : IImageParserObservable {
-      const { responseData } = response;
-
-      // TODO image Parsing should be more on the sourceBuffer side, no?
-      if (responseData === null || features.imageParser == null) {
-        return observableOf({
-          segmentData: null,
-          segmentInfos: segment.timescale > 0 ? {
-            duration: segment.isInit ? 0 : segment.duration,
-            time: segment.isInit ? -1 : segment.time,
-            timescale: segment.timescale,
-          } : null,
-          segmentOffset: segment.timestampOffset || 0,
-        });
-      }
-
-      const bifObject = features.imageParser(new Uint8Array(responseData));
-      const data = bifObject.thumbs;
-      return observableOf({ segmentData: { data,
-                                           start: 0,
-                                           end: Number.MAX_VALUE,
-                                           timescale: 1,
-                                           type: "bif" },
-                            segmentInfos: { time: 0,
-                                            duration: Number.MAX_VALUE,
-                                            timescale: bifObject.timescale },
-                            segmentOffset: segment.timestampOffset || 0 });
-    },
-  };
-
   return { manifest: manifestPipeline,
-           audio: segmentPipeline,
-           video: segmentPipeline,
-           text: textTrackPipeline,
-           image: imageTrackPipeline };
+           audio: { loader: segmentLoader,
+                    parser: segmentParser },
+           video: { loader: segmentLoader,
+                    parser: segmentParser },
+           text: { loader: TextTrackLoader,
+                   parser: TextTrackParser },
+           image: { loader: imageLoader,
+                    parser: imageParser } };
 }
