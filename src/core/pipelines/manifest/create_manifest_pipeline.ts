@@ -25,7 +25,6 @@ import {
   filter,
   map,
   mergeMap,
-  share,
   tap,
 } from "rxjs/operators";
 import config from "../../../config";
@@ -45,6 +44,7 @@ import backoff from "../utils/backoff";
 import createLoader, {
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
+  IPipelineLoaderResponseValue,
 } from "../utils/create_loader";
 
 const { MAX_BACKOFF_DELAY_BASE,
@@ -54,7 +54,7 @@ export interface IRequestSchedulerOptions { maxRetry : number;
                                             maxRetryOffline : number; }
 
 export interface IFetchManifestOptions {
-  url : string; // URL from which the manifest was requested
+  manifestURL : string; // URL from which the manifest was requested
   externalClockOffset? : number; // If set, offset to add to `performance.now()`
                                  // to obtain the current server's time
 }
@@ -83,6 +83,13 @@ function errorSelector(
   });
 }
 
+export interface ICoreManifestPipeline {
+  fetch(url : string) : Observable<IPipelineLoaderResponse<Document|string>>;
+  parse(response : IPipelineLoaderResponseValue<Document|string>,
+        url? : string,
+        externalClockOffset? : number) : Observable<IFetchManifestResult>;
+}
+
 /**
  * Create function allowing to easily fetch and parse the manifest from its URL.
  *
@@ -103,7 +110,7 @@ export default function createManifestPipeline(
   pipelines : ITransportPipelines,
   pipelineOptions : IPipelineManifestOptions,
   warning$ : Subject<ICustomError>
-) : (args : IFetchManifestOptions) => Observable<IFetchManifestResult> {
+) : ICoreManifestPipeline {
   const loader = createLoader<
     IManifestLoaderArguments, Document|string
   >(pipelines.manifest, pipelineOptions);
@@ -138,49 +145,57 @@ export default function createManifestPipeline(
       }));
   }
 
-  /**
-   * Fetch and parse the manifest corresponding to the URL given.
-   * @param {Object} options
-   * @returns {Observable}
-   */
-  return function fetchManifest(
-    { url, externalClockOffset } : IFetchManifestOptions
-  ) : Observable<IFetchManifestResult> {
-    return loader({ url }).pipe(
+  return {
+    /**
+     * Fetch the manifest corresponding to the URL given.
+     * @param {string} url - URL of the manifest
+     * @returns {Observable}
+     */
+    fetch(url : string) : Observable<IPipelineLoaderResponse<Document|string>> {
+      return loader({ url }).pipe(
+        tap((arg) => {
+          if (arg.type === "warning") {
+            warning$.next(arg.value); // TODO not through warning$
+          }
+        }),
+        filter((arg) : arg is IPipelineLoaderResponse<Document|string> =>
+          arg.type === "response"
+        )
+      );
+    },
 
-      tap((arg) => {
-        if (arg.type === "warning") {
-          warning$.next(arg.value);
-        }
-      }),
-
-      filter((arg) : arg is IPipelineLoaderResponse<Document|string> =>
-        arg.type === "response"
-      ),
-
-      mergeMap(({ value }) => {
-        const { sendingTime } = value;
-        return parser({ response: value,
-                        url,
-                        externalClockOffset,
-                        scheduleRequest }
-        ).pipe(
-          catchError((error: unknown) => {
-            throw formatError(error, {
-              defaultCode: "PIPELINE_PARSE_ERROR",
-              defaultReason: "Unknown error when parsing the Manifest",
-            });
-          }),
-          map(({ manifest }) => {
-            const warnings = manifest.parsingErrors;
-            for (let i = 0; i < warnings.length; i++) {
-              warning$.next(warnings[i]); // TODO not through warning$
-            }
-            return { manifest, sendingTime };
-          })
-        );
-      }),
-      share()
-    );
+    /**
+     * Fetch the manifest corresponding to the URL given.
+     * @param {Object} value - The Manifest document to parse.
+     * @param {string} [url] - URL of the manifest
+     * @param {number} [externalClockOffset]
+     * @returns {Observable}
+     */
+    parse(
+      value : IPipelineLoaderResponseValue<Document|string>,
+      fetchedURL? : string,
+      externalClockOffset? : number
+    ) : Observable<IFetchManifestResult> {
+      const { sendingTime } = value;
+      return parser({ response: value,
+                      url: fetchedURL,
+                      externalClockOffset,
+                      scheduleRequest,
+      }).pipe(
+        catchError((error: unknown) => {
+          throw formatError(error, {
+            defaultCode: "PIPELINE_PARSE_ERROR",
+            defaultReason: "Unknown error when parsing the Manifest",
+          });
+        }),
+        map(({ manifest }) => {
+          const warnings = manifest.parsingErrors;
+          for (let i = 0; i < warnings.length; i++) {
+            warning$.next(warnings[i]); // TODO not through warning$
+          }
+          return { manifest, sendingTime };
+        })
+      );
+    },
   };
 }

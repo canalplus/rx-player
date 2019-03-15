@@ -38,13 +38,13 @@ function regularManifestLoader(url: string) {
  */
 const manifestPreLoader = (
   { customManifestLoader } : { customManifestLoader?: CustomManifestLoader }
-) => (url: string) : IManifestLoaderObservable<string> => {
+) => (url: string) : IManifestLoaderObservable<Document|string> => {
     if (!customManifestLoader) {
       return regularManifestLoader(url);
     }
 
     const timeAPIsDelta = Date.now() - performance.now();
-    return new Observable((obs: IManifestLoaderObserver<string>) => {
+    return new Observable((obs: IManifestLoaderObserver<Document|string>) => {
       let hasFinished = false;
       let hasFallbacked = false;
 
@@ -52,7 +52,7 @@ const manifestPreLoader = (
        * Callback triggered when the custom manifest loader has a response.
        * @param {Object}
        */
-      const resolve = (_args : { data : string;
+      const resolve = (_args : { data : Document|string;
                                  size : number;
                                  duration : number;
                                  url? : string;

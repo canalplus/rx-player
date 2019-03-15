@@ -115,7 +115,7 @@ export type ISegmentLoaderObserver<T> = Observer<ISegmentLoaderEvent<T>>;
 
 export interface IManifestParserArguments<T, U> {
   response : ILoaderDataLoadedValue<T>; // Response from the loader
-  url : string; // URL originally requested
+  url? : string; // URL originally requested
   externalClockOffset? : number; // If set, offset to add to `performance.now()`
                                  // to obtain the current server's time
 
