@@ -30,6 +30,7 @@ const config = {
       "__FEATURES__": {
         SMOOTH: true,
         DASH: true,
+        LOCAL_MANIFEST: true,
         METAPLAYLIST: true,
         DIRECTFILE: true,
         NATIVE_TTML: true,
@@ -51,6 +52,7 @@ const config = {
         BIF_PARSER: JSON.stringify("../parsers/images/bif.ts"),
         SMOOTH: JSON.stringify("../transports/smooth/index.ts"),
         DASH: JSON.stringify("../transports/dash/index.ts"),
+        LOCAL_MANIFEST: JSON.stringify("../transports/local/index.ts"),
         METAPLAYLIST: JSON.stringify("../transports/metaplaylist/index.ts"),
         NATIVE_TEXT_BUFFER: JSON.stringify("../custom_source_buffers/text/native/index.ts"),
         NATIVE_VTT: JSON.stringify("../parsers/texttracks/webvtt/native/index.ts"),
