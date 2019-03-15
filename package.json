@@ -139,7 +139,7 @@
     "file-loader": "3.0.1",
     "highlight.js": "9.15.6",
     "istanbul-instrumenter-loader": "3.0.1",
-    "jest": "24.1.0",
+    "jest": "24.5.0",
     "jsx-loader": "0.13.2",
     "karma": "4.0.1",
     "karma-chrome-launcher": "2.2.0",
