@@ -41,7 +41,7 @@ export default function refreshManifest(
   }
 
   const externalClockOffset = manifest.getClockOffset();
-  return fetchManifest({ url: refreshURL, externalClockOffset })
+  return fetchManifest({ manifestURL: refreshURL, externalClockOffset })
     .pipe(tap(({ manifest: newManifest }) => {
             manifest.update(newManifest);
           }));

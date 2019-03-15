@@ -68,10 +68,12 @@ const generateManifestID = idGenerator();
  * Parse playlist string to JSON.
  * Returns an array of contents.
  * @param {string} data
+ * @param {string} url
+ * @returns {Object}
  */
 export default function parseMetaPlaylist(
   data: string,
-  url : string
+  url? : string
 ): IParserResponse<IParsedManifest> {
   let parsedData;
   try {
@@ -127,13 +129,15 @@ export default function parseMetaPlaylist(
  * which fakes live content playback.
  * Each content presents a start and end time, so that periods
  * boudaries could be adapted.
- * @param {Object} contents
+ * @param {Object} mplData
+ * @param {Array<Object>} manifest
  * @param {string} url
+ * @returns {Object}
  */
 function createManifest(
-  mplData: IMetaPlaylist,
+  mplData : IMetaPlaylist,
   manifests : Manifest[],
-  url: string
+  url? : string
 ): IParsedManifest {
   const generateAdaptationID = idGenerator();
   const generateRepresentationID = idGenerator();
@@ -218,13 +222,11 @@ function createManifest(
           closedCaption: track.closedCaption,
           manuallyAdded: true,
           representations: [
-            {
-              bitrate: 0,
+            { bitrate: 0,
               id: representationID,
               mimeType: track.mimeType,
               codecs: track.codecs,
-              index: new StaticRepresentationIndex({ media: url }),
-            },
+              index: new StaticRepresentationIndex({ media: track.url }) },
           ],
         };
       }, []);
@@ -279,7 +281,8 @@ function createManifest(
     periods,
     transportType: "metaplaylist",
     isLive,
-    uris: [url],
+    uris: url == null ? [] :
+                        [url],
     maximumTime: { isContinuous: false, value: maximumTime, time },
     minimumTime: { isContinuous: false, value: minimumTime, time },
     lifetime: mplData.pollInterval,
