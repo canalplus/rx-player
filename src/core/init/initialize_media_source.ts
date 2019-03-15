@@ -162,12 +162,24 @@ export default function InitializeOnMediaSource(
 ) : Observable<IInitEvent> {
   const warning$ = new Subject<ICustomError>();
 
+  const manifestPipelines =
+    createManifestPipeline(pipelines,
+                           getManifestPipelineOptions(networkConfig),
+                           warning$);
+
   // Fetch and parse the manifest from the URL given.
   // Throttled to avoid doing multiple simultaneous requests.
-  const manifestPipelineOptions = getManifestPipelineOptions(networkConfig);
-  const fetchManifest = throttle(createManifestPipeline(pipelines,
-                                                        manifestPipelineOptions,
-                                                        warning$));
+  const fetchManifest = throttle(
+    (args: { manifestURL: string; externalClockOffset?: number }) => {
+      const { manifestURL, externalClockOffset } = args;
+      return manifestPipelines.fetch(manifestURL).pipe(
+        mergeMap((response) =>
+          manifestPipelines.parse(response.value, manifestURL, externalClockOffset)
+        ),
+        share()
+      );
+    }
+  );
 
   // Creates pipelines for downloading segments.
   const segmentPipelinesManager = new SegmentPipelinesManager<any>(pipelines);
@@ -194,7 +206,7 @@ export default function InitializeOnMediaSource(
 
   const loadContent$ = observableCombineLatest([
     openMediaSource$,
-    fetchManifest({ url }),
+    fetchManifest({ manifestURL: url }),
     emeManager$.pipe(filter(isEMEReadyEvent), take(1)),
   ]).pipe(mergeMap(([ initialMediaSource, { manifest, sendingTime } ]) => {
 

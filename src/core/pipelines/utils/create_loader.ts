@@ -63,11 +63,14 @@ export interface IPipelineLoaderMetrics { type : "metrics";
 export interface IPipelineLoaderRequest<T> { type : "request";
                                              value : T; }
 
-// A response is available
-export interface IPipelineLoaderResponse<T> { type : "response";
-                                              value : { responseData : T;
-                                                        url? : string;
-                                                        sendingTime? : number; }; }
+export interface IPipelineLoaderResponse<T> {
+  type : "response";
+  value : IPipelineLoaderResponseValue<T>;
+}
+
+export interface IPipelineLoaderResponseValue<T> { responseData : T;
+                                                   url? : string;
+                                                   sendingTime? : number; }
 
 // Events a loader emits
 // Type parameters: T: Argument given to the loader
