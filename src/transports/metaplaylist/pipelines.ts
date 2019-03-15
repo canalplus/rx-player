@@ -146,25 +146,28 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
                                                supplementaryImageTracks: [] });
 
   const manifestPipeline = {
-    loader({ url } : IManifestLoaderArguments) : IManifestLoaderObservable<string> {
+    loader(
+      { url } : IManifestLoaderArguments
+    ) : IManifestLoaderObservable<Document | string> {
       return manifestLoader(url);
     },
 
     parser(
-      {
-        response,
+      { response,
         url: loaderURL,
         scheduleRequest,
         externalClockOffset,
       } : IManifestParserArguments< string | Document,
                                     ILoaderDataLoadedValue< string | Document > >
     ) : IManifestParserObservable {
+      const url = response.url == null ? loaderURL :
+                                         response.url;
       const { responseData } = response;
       if (typeof responseData !== "string") {
         throw new Error("MPL: Parser input must be string.");
       }
 
-      return handleParsedResult(parseMetaPlaylist(responseData, loaderURL));
+      return handleParsedResult(parseMetaPlaylist(responseData, url));
 
       function handleParsedResult(
         parsedResult : IMPLParserResponse<IParsedManifest>
