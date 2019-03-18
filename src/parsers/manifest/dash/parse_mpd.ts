@@ -42,7 +42,7 @@ const generateManifestID = idGenerator();
 export interface IMPDParserArguments {
   url : string; // URL of the manifest (post-redirection if one)
   referenceDateTime? : number; // Default base time, in seconds
-  loadExternalUTCTimings: boolean; // If true, we might need to synchronize the clock
+  loadExternalClock: boolean; // If true, we might need to synchronize the clock
 }
 
 export interface IResource {
@@ -95,7 +95,7 @@ function loadExternalRessourcesAndParse(
     }
   }
 
-  const utcTimingsToLoad = args.loadExternalUTCTimings ?
+  const utcTimingsToLoad = args.loadExternalClock ?
     mpdIR.children.utcTimings.filter(utcTiming =>
       utcTiming.schemeIdUri === "urn:mpeg:dash:utc:http-iso:2014"
     ) : [];

@@ -129,11 +129,17 @@ export type ILoaderObservable<T> = Observable<ILoaderEvent<T>>;
 export interface IManifestParserArguments<T, U> {
   response : ILoaderResponseValue<T>; // Response from the loader
   url : string; // URL originally requested
+  hasClockSynchronization : boolean; // If true, the current device is currently
+                                     // synchronized with the server's clock.
+                                     // If false, there may be a delay/advance
+                                     // between it and the client's clock.
+                                     // In the latter case, you might need to
+                                     // perform a synchronization step,
+                                     // depending on the type of
+                                     // Manifest.
 
   // allow the parser to load supplementary ressources (of type U)
   scheduleRequest : (request : () => Observable<U>) => Observable<U>;
-
-  loadExternalUTCTimings: boolean;
 }
 
 export interface ISegmentParserArguments<T> {

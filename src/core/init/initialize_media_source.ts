@@ -225,7 +225,7 @@ export default function InitializeOnMediaSource({
 
   const loadContent$ = observableCombineLatest(
     openMediaSource$,
-    fetchManifest(url, { loadExternalUTCTimings: true }),
+    fetchManifest({ url, hasClockSynchronization: false }),
     emeInitialized$
   ).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
 
@@ -240,7 +240,7 @@ export default function InitializeOnMediaSource({
         return EMPTY;
       }
 
-      return fetchManifest(refreshURL, { loadExternalUTCTimings: false }).pipe(
+      return fetchManifest({ url: refreshURL, hasClockSynchronization: true }).pipe(
         tap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
           manifest.update(newManifest);
           manifestRefreshed$.next({ manifest, sendingTime: newSendingTime });
