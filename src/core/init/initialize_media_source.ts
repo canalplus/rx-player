@@ -240,7 +240,8 @@ export default function InitializeOnMediaSource({
         return EMPTY;
       }
 
-      return fetchManifest({ url: refreshURL, hasClockSynchronization: true }).pipe(
+      const hasClockSynchronization = manifest.hasClockSynchronization();
+      return fetchManifest({ url: refreshURL, hasClockSynchronization }).pipe(
         tap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
           manifest.update(newManifest);
           manifestRefreshed$.next({ manifest, sendingTime: newSendingTime });
