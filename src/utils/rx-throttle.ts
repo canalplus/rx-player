@@ -40,12 +40,12 @@ import {
  * @returns {Function} - Function taking in argument the arguments you want
  * to give your function, and returning an Observable.
  */
-export default function throttle<T extends any[], U>(
-  func : (...args : T) => Observable<U>
-) : (...args : T) => Observable<U> {
+export default function throttle<T, U>(
+  func : (...args : T[]) => Observable<U>
+) : (...args : T[]) => Observable<U> {
   let isPending = false;
 
-  return (...args : T) : Observable<U> => {
+  return (...args : T[]) : Observable<U> => {
     return new Observable((obs : Observer<U>) => {
       let hasErroredOrCompleted = false;
       if (isPending) {
