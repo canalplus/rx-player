@@ -57,31 +57,6 @@ export interface IMPDAttributes {
   maxSubsegmentDuration? : number;
 }
 
-// TODO: unused interface?
-export interface IParsedMPD {
-  // required
-  availabilityStartTime : number;
-  duration : number;
-  id : string;
-  periods : IPeriodIntermediateRepresentation[];
-  utcTimings : IScheme[];
-  transportType : string;
-  type : string;
-  uris : string[];
-
-  // optional
-  profiles? : string;
-  availabilityEndTime? : number;
-  publishTime? : number;
-  minimumUpdatePeriod? : number;
-  minBufferTime? : number;
-  timeShiftBufferDepth? : number;
-  suggestedPresentationDelay? : number;
-  maxSegmentDuration? : number;
-  maxSubsegmentDuration? : number;
-  presentationLiveGap? : number;
-}
-
 /**
  * Parse children of the MPD's root into a simple object.
  * @param {NodeList} mpdChildren
