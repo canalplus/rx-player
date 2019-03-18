@@ -108,7 +108,7 @@ export default function(
     },
 
     parser(
-      { response, url: loaderURL, scheduleRequest, loadExternalUTCTimings } :
+      { response, url: loaderURL, scheduleRequest, hasClockSynchronization } :
       IManifestParserArguments<Document|string, string>
     ) : IManifestParserObservable {
       const url = response.url == null ? loaderURL : response.url;
@@ -119,7 +119,7 @@ export default function(
       const parsedManifest = parseMPD(data, {
         url,
         referenceDateTime,
-        loadExternalUTCTimings,
+        loadExternalClock: !hasClockSynchronization,
       });
       return loadExternalResources(parsedManifest);
 

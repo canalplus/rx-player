@@ -57,7 +57,8 @@ export interface IRequestSchedulerOptions {
 }
 
 export interface IFetchManifestOptions {
-  loadExternalUTCTimings: boolean;
+  url : string; // URL from which the manifest was requested
+  hasClockSynchronization: boolean;
 }
 
 type IPipelineManifestOptions =
@@ -106,7 +107,7 @@ export default function createManifestPipeline(
   pipelines : ITransportPipelines,
   pipelineOptions : IPipelineManifestOptions,
   warning$ : Subject<Error|ICustomError>
-) : (url : string, options : IFetchManifestOptions) => Observable<IFetchManifestResult> {
+) : (args : IFetchManifestOptions) => Observable<IFetchManifestResult> {
   const loader = createLoader<
     IManifestLoaderArguments, Document|string
   >(pipelines.manifest, pipelineOptions);
@@ -142,8 +143,7 @@ export default function createManifestPipeline(
    * @returns {Observable}
    */
   return function fetchManifest(
-    url : string,
-    options : IFetchManifestOptions = {loadExternalUTCTimings: true}
+    { url, hasClockSynchronization } : IFetchManifestOptions
   ) : Observable<IFetchManifestResult> {
     return loader({ url }).pipe(
 
@@ -159,12 +159,11 @@ export default function createManifestPipeline(
 
       mergeMap(({ value }) => {
         const { sendingTime } = value;
-        const { loadExternalUTCTimings } = options;
         return parser({
           response: value,
           url,
+          hasClockSynchronization,
           scheduleRequest,
-          loadExternalUTCTimings,
         }).pipe(
           catchError((error: Error) => {
             const formattedError = isKnownError(error) ?
