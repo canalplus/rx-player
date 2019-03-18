@@ -423,8 +423,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     }
     const ast = this.availabilityStartTime || 0;
     const plg = this.presentationLiveGap || 0;
-    const now = this.getTime() / 1000;
-    return now - ast - plg;
+    const now = Date.now() - (this._clockOffset || 0);
+    return (now / 1000) - ast - plg;
   }
 
   /**
@@ -447,8 +447,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     const plg = this.presentationLiveGap || 0;
     const tsbd = this.timeShiftBufferDepth || 0;
 
-    const now = this.getTime() / 1000;
-    const max = now - ast - plg;
+    const now = Date.now() - (this._clockOffset || 0);
+    const max = (now / 1000) - ast - plg;
 
     return [
       Math.min(
@@ -465,10 +465,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   public hasClockSynchronization() : boolean {
     return this._clockOffset != null;
-  }
-
-  private getTime() {
-    return Date.now() - (this._clockOffset || 0);
   }
 
   /**
