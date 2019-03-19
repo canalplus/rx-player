@@ -1,5 +1,11 @@
 export default [
   {
+    "name": "CNEWS with Trickmode Thumbnails",
+    "url": "http://dsh-s001-live-aka-canalplus.akamaized.net/live/disk/cnews-hd/dash-hdplus-clair2/cnews-hd.mpd",
+    "transport": "dash",
+    "live": true,
+  },
+  {
     "name": "DASH-IF - SegmentTimeline live stream",
     "url": "https://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
     "transport": "dash",

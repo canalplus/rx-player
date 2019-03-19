@@ -1,12 +1,26 @@
 import React from "react";
 import ProgressbarComponent from "../components/ProgressBar.jsx";
-import ImageTip from "../components/ImageTip.jsx";
+import VideoThumbnailTip from "../components/VideoThumbnailTip.jsx";
 import TimeIndicator from "../components/TimeIndicator.jsx";
 import withModulesState from "../lib/withModulesState.jsx";
 
 class Progressbar extends React.Component {
   constructor(...args) {
     super(...args);
+
+    this.thumbnailsElement = [];
+
+    setInterval(() => {
+      const manifest = window.player.getManifest();
+      if (manifest) {
+        const videoAdaptations = manifest.adaptations.video;
+        if (videoAdaptations) {
+          this.videoAdaptation = videoAdaptations[0];
+        }
+      }
+    }, 500);
+;
+
     this.state = {
       timeIndicatorVisible: false,
       timeIndicatorPosition: 0,
@@ -14,6 +28,7 @@ class Progressbar extends React.Component {
       imageTipVisible: false,
       imageTipPosition: 0,
       image: null,
+      imageTime: null,
     };
   }
 
@@ -51,24 +66,11 @@ class Progressbar extends React.Component {
   }
 
   showImageTip(ts, clientX) {
-    const { images } = this.props;
-    if (!images || !images.length) {
-      return;
-    }
-    const timestampToMs = ts * 1000;
-    const imageIndex = images.findIndex(image =>
-      image && image.ts > timestampToMs
-    );
-    const image = imageIndex === -1 ?
-      images[images.length - 1] :
-      images[imageIndex - 1];
-    if (!image) {
-      return;
-    }
+    const timestampToMs = ts;
     this.setState({
       imageTipVisible: true,
       imageTipPosition: clientX,
-      image: image.data,
+      imageTime: timestampToMs,
     });
   }
 
@@ -76,7 +78,7 @@ class Progressbar extends React.Component {
     this.setState({
       imageTipVisible: false,
       imageTipPosition: 0,
-      image: null,
+      imageTime: null,
     });
   }
 
@@ -84,7 +86,7 @@ class Progressbar extends React.Component {
     const {
       imageTipVisible,
       imageTipPosition,
-      image,
+      imageTime,
       timeIndicatorVisible,
       timeIndicatorPosition,
       timeIndicatorText,
@@ -136,9 +138,10 @@ class Progressbar extends React.Component {
         }
         {
           imageTipVisible ?
-            <ImageTip
+            <VideoThumbnailTip
               className="progress-tip"
-              image={image}
+              adaptation={this.videoAdaptation}
+              imageTime={imageTime}
               xPosition={imageTipPosition - tipsOffset}
             /> : null
         }

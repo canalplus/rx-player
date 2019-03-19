@@ -18,5 +18,8 @@
 // CommonJS mode.
 // TODO investigate
 /* tslint:disable no-var-requires */
-module.exports = require("./index.ts").default;
+module.exports = {
+  _RxPlayer: require("./index.ts").default,
+  tools: require("./experimental/tools"),
+};
 /* tslint:enable no-var-requires */

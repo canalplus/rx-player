@@ -8,10 +8,11 @@
 
 import { linkPlayerEventsToState } from "./events.js";
 
-const RxPlayer = window.RxPlayer;
+const { _RxPlayer, tools } = window.RxPlayer;
 
 const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
-  const player = new RxPlayer({
+  debugger;
+  const player = new _RxPlayer({
     limitVideoWidth: false,
     stopAtEnd: false,
     throttleVideoBitrateWhenHidden: true,
@@ -20,6 +21,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
 
   // facilitate DEV mode
   window.player = window.rxPlayer = player;
+  window.ThumbnailLoader = tools.ThumbnailLoader;
 
   // initial state. Written here to easily showcase it exhaustively
   state.set({
