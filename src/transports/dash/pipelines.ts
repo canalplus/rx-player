@@ -63,18 +63,7 @@ import generateSegmentLoader from "./segment_loader";
  * @param {string} xlinkURL
  * @returns {Observable}
  */
-function requestXLink(xlinkURL : string) : Observable<string> {
-  return request({
-    url: xlinkURL,
-    responseType: "text",
-    ignoreProgressEvents: true,
-  }).pipe(
-    filter((e) => e.type === "response"),
-    map((e) => e.value.responseData)
-  );
-}
-
-function requestHttpIso(url : string) : Observable<string> {
+function requestStringResource(url : string) : Observable<string> {
   return request({
     url,
     responseType: "text",
@@ -135,10 +124,8 @@ export default function(
 
         const externalResources$ = ressources
           .map(resource => scheduleRequest(() =>
-            resource.type === "xlink" ?
-              requestXLink(resource.url) :
-              requestHttpIso(resource.url)
-          ));
+            requestStringResource(resource.url))
+          );
 
         return observableCombineLatest(externalResources$)
           .pipe(mergeMap(loadedResources =>
