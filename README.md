@@ -210,5 +210,5 @@ Here is a basic list of supported platforms:
 [2] Android version >= 4.2
 
 And more. A good way to know if the browser should be supported by our player is
-to go on the page https://www.youtube.com/html5 and check support for MSE
-support.
+to go on the page https://www.youtube.com/html5 and check for "Media Source
+Extensions" support.
