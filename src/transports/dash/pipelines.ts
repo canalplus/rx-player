@@ -123,9 +123,7 @@ export default function(
         const { ressources, continue: continueParsing } = parserResponse.value;
 
         const externalResources$ = ressources
-          .map(resource => scheduleRequest(() =>
-            requestStringResource(resource.url))
-          );
+          .map(resource => scheduleRequest(() => requestStringResource(resource)));
 
         return observableCombineLatest(externalResources$)
           .pipe(mergeMap(loadedResources =>
