@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
+import overlayBuffer from "../../core/source_buffers/overlay";
+import overlayParser from "../../parsers/overlay/metaplaylist";
 import metaplaylist from "../../transports/metaplaylist";
 import { IFeaturesObject } from "../types";
 
 function addMetaPlaylistFeature(features: IFeaturesObject) {
   features.transports.metaplaylist = metaplaylist;
+  features.overlayBuffer = overlayBuffer;
+  features.overlayParsers.metaplaylist = overlayParser;
 }
 
 export { addMetaPlaylistFeature as METAPLAYLIST };

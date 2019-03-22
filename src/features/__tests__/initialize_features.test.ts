@@ -47,6 +47,8 @@ describe("Features - initializeFeaturesObject", () => {
       NATIVE_SRT: "../parsers/texttracks/srt/native.ts",
       NATIVE_TTML: "../parsers/texttracks/ttml/native/index.ts",
       NATIVE_SAMI: "../parsers/texttracks/sami/native.ts",
+      OVERLAY_BUFFER: "../core/source_buffers/overlay/index.ts",
+      OVERLAY_METAPLAYLIST: "../parsers/overlay/metaplaylist/index.ts",
       HTML_TEXT_BUFFER: "../core/source_buffers/text/html/index.ts",
       HTML_VTT: "../parsers/texttracks/webvtt/html/index.ts",
       HTML_SRT: "../parsers/texttracks/srt/html.ts",
@@ -88,6 +90,10 @@ describe("Features - initializeFeaturesObject", () => {
         ttml: require("../../parsers/texttracks/ttml/native/index").default,
         sami: require("../../parsers/texttracks/sami/native").default,
         srt: require("../../parsers/texttracks/srt/native").default,
+      },
+      overlayBuffer: require("../../core/source_buffers/overlay/index.ts").default,
+      overlayParsers: {
+        metaplaylist: require("../../parsers/overlay/metaplaylist/index.ts").default,
       },
       htmlTextTracksBuffer: require("../../core/source_buffers/text/html/index")
         .default,
