@@ -47,6 +47,8 @@ declare const __RELATIVE_PATH__ : {
   NATIVE_SRT: string;
   NATIVE_TTML: string;
   NATIVE_SAMI: string;
+  OVERLAY_BUFFER: string;
+  OVERLAY_METAPLAYLIST: string;
   HTML_TEXT_BUFFER: string;
   HTML_VTT: string;
   HTML_SRT: string;

@@ -20,18 +20,38 @@ describe("Features list - METAPLAYLIST", () => {
   });
 
   it("should add METAPLAYLIST in the current features", () => {
-    const feat = {};
+    const metaplaylistFeat = { a: 1 };
+    const overlayBufferFeat = { b: 2 };
+    const overlayParserFeat = { c: 3 };
     jest.mock("../../../transports/metaplaylist", () => ({
       __esModule: true,
-      default: feat,
+      default: metaplaylistFeat,
+    }));
+    jest.mock("../../../core/source_buffers/overlay", () => ({
+      __esModule: true,
+      default: overlayBufferFeat,
+    }));
+    jest.mock("../../../parsers/overlay/metaplaylist", () => ({
+      __esModule: true,
+      default: overlayParserFeat,
     }));
     const addDASHFeature = require("../metaplaylist").default;
 
     const featureObject : {
       transports : { [featureName : string] : unknown };
-    } = { transports: {} };
+      overlayParsers: { [featureName : string] : unknown };
+      overlayBuffer?: unknown;
+    } = { transports: {}, overlayParsers: {} };
     addDASHFeature(featureObject);
-    expect(featureObject).toEqual({ transports: { metaplaylist: {} } });
-    expect(featureObject.transports.metaplaylist).toBe(feat);
+    expect(featureObject).toEqual({
+      transports: { metaplaylist: { a: 1 } },
+      overlayBuffer: { b: 2 },
+      overlayParsers: {
+        metaplaylist: { c: 3 },
+      },
+    });
+    expect(featureObject.transports.metaplaylist).toBe(metaplaylistFeat);
+    expect(featureObject.overlayBuffer).toBe(overlayBufferFeat);
+    expect(featureObject.overlayParsers.metaplaylist).toBe(overlayParserFeat);
   });
 });
