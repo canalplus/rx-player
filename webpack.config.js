@@ -88,6 +88,8 @@ const plugins = [
       NATIVE_SRT: JSON.stringify("../parsers/texttracks/srt/native.ts"),
       NATIVE_TTML: JSON.stringify("../parsers/texttracks/ttml/native/index.ts"),
       NATIVE_SAMI: JSON.stringify("../parsers/texttracks/sami/native.ts"),
+      OVERLAY_BUFFER: JSON.stringify("../core/source_buffers/overlay/index.ts"),
+      OVERLAY_METAPLAYLIST: JSON.stringify("../parsers/overlay/metaplaylist/index.ts"),
       HTML_TEXT_BUFFER: JSON.stringify("../core/source_buffers/text/html/index.ts"),
       HTML_VTT: JSON.stringify("../parsers/texttracks/webvtt/html/index.ts"),
       HTML_SRT: JSON.stringify("../parsers/texttracks/srt/html.ts"),

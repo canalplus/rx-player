@@ -52,6 +52,13 @@ export default function initializeFeaturesObject() : void {
     features.transports.dash = require(__RELATIVE_PATH__.DASH).default;
     features.transports.smooth = require(__RELATIVE_PATH__.SMOOTH).default;
     features.transports.metaplaylist = require(__RELATIVE_PATH__.METAPLAYLIST).default;
+
+    if (features.overlayParsers == null) {
+      features.overlayParsers = {};
+    }
+    features.overlayParsers.metaplaylist =
+      require(__RELATIVE_PATH__.OVERLAY_METAPLAYLIST).default;
+    features.overlayBuffer = require(__RELATIVE_PATH__.OVERLAY_BUFFER).default;
   }
   /* tslint:enable no-var-requires */
 
@@ -118,10 +125,4 @@ export default function initializeFeaturesObject() : void {
     features.directfile = require(__RELATIVE_PATH__.DIRECTFILE).default;
   }
   /* tslint:enable no-var-requires */
-
-  // XXX TODO
-  features.overlayParsers = {
-    metaplaylist: require("../parsers/overlay/metaplaylist/index.ts").default,
-  };
-  features.overlayBuffer = require("../core/source_buffers/overlay/index.ts").default;
 }
