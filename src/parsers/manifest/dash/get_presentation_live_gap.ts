@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../../log";
 import { IParsedManifest } from "../types";
 
 /**
@@ -25,14 +26,15 @@ export default function getPresentationLiveGap(
   parsedMPD: IParsedManifest,
   lastTimeReference? : number
 ) : number {
-  const ast = parsedMPD.availabilityStartTime || 0;
-  const now = Date.now() - (parsedMPD.clockOffset || 0);
-
   if (lastTimeReference != null) {
+    const ast = parsedMPD.availabilityStartTime || 0;
+    const now = Date.now() - (parsedMPD.clockOffset || 0);
     return (now / 1000) - (lastTimeReference + ast);
   } else if (parsedMPD.clockOffset != null) {
     return 0;
   } else {
+    log.warn("DASH Parser: no clock synchronization mechanism found." +
+      "Setting a live gap of 10 seconds as a security.");
     return 10; // put 10 seconds as a security
   }
 }

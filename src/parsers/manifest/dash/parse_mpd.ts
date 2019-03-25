@@ -22,6 +22,8 @@ import resolveURL, {
 } from "../../../utils/resolve_url";
 import { IParsedManifest } from "../types";
 import checkManifestIDs from "../utils/check_manifest_ids";
+import getClockOffset from "./get_clock_offset";
+import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
 import getLastTimeReference from "./get_last_time_reference";
 import getPresentationLiveGap from "./get_presentation_live_gap";
 import {
@@ -123,7 +125,6 @@ function loadExternalRessourcesAndParse(
           // replace original "xlinked" periods by the real deal
           mpdIR.children.periods.splice(index, 1, ...periodsIR);
         }
-
         return loadExternalRessourcesAndParse(mpdIR, args);
       },
     },
@@ -217,9 +218,7 @@ function parseCompleteIntermediateRepresentation(
               if (loadedRessources.length !== 1) {
                 throw new Error("DASH parser: wrong number of loaded ressources.");
               }
-
-              const httpOffset = Date.now() - Date.parse(loadedRessources[0]);
-              parsedMPD.clockOffset = isNaN(httpOffset) ? undefined : httpOffset;
+              parsedMPD.clockOffset = getClockOffset(loadedRessources[0]);
               parsedMPD.presentationLiveGap =
                 getPresentationLiveGap(parsedMPD, lastTimeReference);
               return { type: "done", value: parsedMPD };
@@ -232,24 +231,4 @@ function parseCompleteIntermediateRepresentation(
   }
 
   return { type: "done", value: parsedMPD };
-}
-
-/**
- * @param {Object} mpdIR
- * @returns {string|undefined}
- */
-function getHTTPUTCTimingURL(
-  mpdIR : IMPDIntermediateRepresentation
-) : string|undefined {
-  const UTCTimingHTTP = mpdIR.children.utcTimings
-    .filter((utcTiming) : utcTiming is {
-      schemeIdUri : "urn:mpeg:dash:utc:http-iso:2014";
-      value : string;
-    } =>
-      utcTiming.schemeIdUri === "urn:mpeg:dash:utc:http-iso:2014" &&
-      utcTiming.value != null
-    );
-
-  return UTCTimingHTTP.length > 0 ?
-    UTCTimingHTTP[0].value : undefined;
 }

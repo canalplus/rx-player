@@ -58,7 +58,8 @@ export interface IRequestSchedulerOptions {
 
 export interface IFetchManifestOptions {
   url : string; // URL from which the manifest was requested
-  hasClockSynchronization: boolean;
+  hasClockSynchronization: boolean; // if true, the client's clock is
+                                    // synchronized with the server's
 }
 
 type IPipelineManifestOptions =
