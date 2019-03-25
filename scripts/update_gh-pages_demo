@@ -16,17 +16,28 @@
 #      Some user interactions will be needed to avoid doing unwanted commits.
 #
 #   5. That's it!
-#      A commit should have been pushed to master and gh-pages.
+#      A commit should have been pushed to the gh-pages.
 #
 ################################################################################
 
 set -e
 
 current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
+current_version=$(cat VERSION)
 
-if ! [ $current_branch == "master" ]; then
+if ! [ "$current_branch" == "master" ]; then
   echo $current_branch
   echo "ERROR: The current branch should be master"
+  exit 1;
+fi
+
+git stash
+
+# Generate demo
+npm run demo:min
+
+if [ -n "$(git status --porcelain doc)" ]; then
+  echo "ERROR: Please commit your modifications to master"
   exit 1;
 fi
 
@@ -38,8 +49,6 @@ tmpRxPlayerFile=$(mktemp)
 tmpIndexFile=$(mktemp)
 tmpFaviconFile=$(mktemp)
 
-# Generate demo
-npm run demo:min
 cp -r demo/full/fonts $tmpFontsDir -v
 cp -r demo/full/assets $tmpAssetsDir -v
 cp -r demo/full/styles $tmpStylesDir -v
@@ -48,72 +57,41 @@ cp demo/full/index.html $tmpIndexFile -v
 cp demo/full/plus.ico $tmpFaviconFile -v
 cp dist/rx-player.min.js $tmpRxPlayerFile -v
 
-if [ -n "$(git status --porcelain demo/full)" ]; then
-  echo "-- Current Status on master: --"
-  echo ""
-  git status demo/full
-
-  while : ; do
-    echo ""
-    echo "We will push the demo to master."
-    REPLY=""
-    read -p "do you want to continue [y/d/s/a/c/t/h] (h for help) ? " -n 1 -r
-    echo ""
-
-    if [[ $REPLY =~ ^[Hh](elp)?$ ]]; then
-      echo ""
-      echo ""
-      echo "+- help -------------------------------------------------+"
-      echo "| y: commit and continue                                 |"
-      echo "| d: see diff                                            |"
-      echo "| s: see status                                          |"
-      echo "| a: abort script from here                              |"
-      echo "| c: checkout from this commit and go to the next one    |"
-      echo "| t: stash this commit and go to the next one            |"
-      echo "| h: see this help                                       |"
-      echo "+--------------------------------------------------------+"
-    elif [[ $REPLY =~ ^[Aa]bort?$ ]]; then
-      echo "exiting"
-      rm -r $tmpFontsDir
-      rm -r $tmpAssetsDir
-      rm -r $tmpStylesDir
-      rm $tmpIndexFile
-      rm $tmpFaviconFile
-      rm $tmpRxPlayerFile $tmpDemoFile
-      exit 0
-    elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-      git add demo/full
-      git commit -m "update demo" -S
-      git push origin master
-      break
-    elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
-      git checkout demo/full
-      break
-    elif [[ $REPLY =~ ^[Ss](tatus)?$ ]]; then
-      git status demo/full
-    elif [[ $REPLY =~ ^([Tt]|([Ss]tash))?$ ]]; then
-      git stash -u push demo/full
-    elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
-      git diff demo/full || true # ignore when return 1
-    fi
-  done
-else
-  echo "nothing to do on the master branch"
-fi
-
 # update gh-pages
 git checkout gh-pages
 git pull origin gh-pages
+
+rm -rf "versions/$current_version/demo"
+mkdir -p "versions/$current_version/demo"
+rm index.html
+rm plus.ico
+rm lib.js
+rm bundle.js
 rm -rf fonts
 rm -rf assets
 rm -rf styles
-mv $tmpFontsDir/fonts .
-mv $tmpAssetsDir/assets .
-mv $tmpStylesDir/styles .
-mv $tmpIndexFile index.html
-mv $tmpFaviconFile plus.ico
-mv $tmpRxPlayerFile lib.js
-mv $tmpDemoFile bundle.js
+mv $tmpIndexFile "versions/$current_version/demo/index.html"
+mv $tmpFaviconFile "versions/$current_version/demo/plus.ico"
+mv $tmpRxPlayerFile "versions/$current_version/demo/lib.js"
+mv $tmpDemoFile "versions/$current_version/demo/bundle.js"
+mv $tmpFontsDir/fonts "versions/$current_version/demo/fonts"
+mv $tmpAssetsDir/assets "versions/$current_version/demo/assets"
+mv $tmpStylesDir/styles "versions/$current_version/demo/styles"
+ln -s "./versions/$current_version/demo/index.html" index.html
+ln -s "./versions/$current_version/demo/plus.ico" plus.ico
+ln -s "./versions/$current_version/demo/lib.js" lib.js
+ln -s "./versions/$current_version/demo/bundle.js" bundle.js
+ln -s "./versions/$current_version/demo/fonts" fonts
+ln -s "./versions/$current_version/demo/assets" assets
+ln -s "./versions/$current_version/demo/styles" styles
+
+rm -rf $tmpFontsDir
+rm -rf $tmpAssetsDir
+rm -rf $tmpStylesDir
+rm -rf $tmpIndexFile
+rm -rf $tmpFaviconFile
+rm -rf $tmpRxPlayerFile
+rm -rf $tmpDemoFile
 
 if [ -n "$(git status --porcelain demo/full)" ]; then
   echo "-- Current Status on gh-pages: --"
@@ -140,8 +118,8 @@ if [ -n "$(git status --porcelain demo/full)" ]; then
       echo "| h: see this help                                       |"
       echo "+--------------------------------------------------------+"
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-      git add lib.js bundle.js styles fonts assets index.html
-      git commit -m "update demo" -S
+      git add lib.js bundle.js styles fonts assets index.html plus.ico "versions/$current_version/demo"
+      git commit -m "demo: deploy $current_version to the gh-pages" -S
       git push origin gh-pages
       break
     elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
