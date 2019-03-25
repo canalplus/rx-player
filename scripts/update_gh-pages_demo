@@ -31,8 +31,6 @@ if ! [ "$current_branch" == "master" ]; then
   exit 1;
 fi
 
-git stash
-
 # Generate demo
 npm run demo:min
 
