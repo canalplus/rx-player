@@ -1,0 +1,152 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>The Stream - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-The%20Stream">The Stream</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-Usage">Usage</a>
+<ul>
+<li><a href="#subchapter-Communication%20between%20the%20API%20and%20the%20Stream">Communication between the API and the Stream</a></li>
+<li><a href="#subchapter-Emitted%20Events">Emitted Events</a></li>
+</ul>
+</li>
+<li><a href="#chapter-The%20SpeedManager">The SpeedManager</a>
+<ul>
+<li><a href="#subchapter-The%20StallingManager">The StallingManager</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-The%20Stream"></a></p>
+<h1>The Stream</h1>
+<p><a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>Even if the API is the front-facing block of code in the Rx-player, the Stream
+is the part of the code actually starting the logic behind playing a content.</p>
+<p>Its code is written in the <code>src/core/stream</code> directory. More specifically,
+all code needed in the rest of the code should be exported by its &#x201C;index file&#x201D;
+<code>src/core/stream/index.ts</code>.</p>
+<p>Every time you&#x2019;re calling the API to load a new video, the Stream function is
+called by it with a handful of arguments.</p>
+<p>The Stream does then the major part of the job and communicate back its progress
+to the API through events.</p>
+<pre><code>                 +-----------+
+ 1. LOAD VIDEO   |           |      2. CALLS
+---------------&gt; |    API    | -------------------+
+                 |           |                    |
+                 +-----------+                    |
+                       ^                          v
+                       |                    +--------------+
+                       |   3. EMIT EVENTS   |              |
+                       +------------------- |    STREAM    |
+                                            |              |
+                                            +--------------+
+</code></pre>
+<p>Basically, the job of the Stream is to:</p>
+<ul>
+<li>
+<p>initialize the content (creating the MediaSource, downloading the manifest)</p>
+</li>
+<li>
+<p>Connect most core parts of the player together, such as adaptive
+streaming management, segment pipelines, DRMs, speed management&#x2026;</p>
+</li>
+<li>
+<p>Call with the right argument the PeriodBufferManager, which will download
+and push segment to be decoded by the browser.</p>
+</li>
+</ul>
+<p>As such, during the various events happening on content playback, the Stream
+will create / destroy / update various player blocks. Such example of blocks
+are:</p>
+<ul>
+<li>
+<p>Adaptive streaming management</p>
+</li>
+<li>
+<p>DRM management</p>
+</li>
+<li>
+<p>Manifest loading, parsing and refreshing</p>
+</li>
+<li>
+<p>Buffer management</p>
+</li>
+<li>
+<p>&#x2026;</p>
+</li>
+</ul>
+<p><a name="chapter-Usage"></a></p>
+<h2>Usage</h2>
+<p>Concretely, the Stream is a function which returns an Observable.
+This Observable:</p>
+<ul>
+<li>
+<p>will automatically load the described content on subscription</p>
+</li>
+<li>
+<p>will automatically stop and clean-up infos related to the content on
+unsubscription</p>
+</li>
+<li>
+<p>communicate on various streaming events through emitted notifications</p>
+</li>
+<li>
+<p>throw in the case of a fatal error (i.e. an error interrupting playback)</p>
+</li>
+</ul>
+<p><a name="subchapter-Communication%20between%20the%20API%20and%20the%20Stream"></a></p>
+<h3>Communication between the API and the Stream</h3>
+<p>Objects emitted by the Observable is the only way the Stream should be able to
+communicate with the API.</p>
+<p>The API is then able to communicate back to the Stream, either:</p>
+<ul>
+<li>
+<p>by Observable provided by the API as arguments when the Stream function was
+called</p>
+</li>
+<li>
+<p>by emitting through Subject provided by the Stream, as a payload of one of
+its event</p>
+</li>
+</ul>
+<p>Thus, there is three ways the API and Stream can communicate:</p>
+<ul>
+<li>
+<p>API -&gt; Stream: When the Stream function is called (so a single time)</p>
+</li>
+<li>
+<p>Stream -&gt; API: Through events emitted by the returned Observable</p>
+</li>
+<li>
+<p>API -&gt; Stream: Through Observables/Subjects the Stream is in possession of.</p>
+</li>
+</ul>
+<p><a name="subchapter-Emitted%20Events"></a></p>
+<h3>Emitted Events</h3>
+<p>Events allows the Stream to reports milestones of the content playback, such as
+when the content is ready to play.</p>
+<p>It&#x2019;s also a way for the Stream to communicate informations about the content and
+give some controls to the user.</p>
+<p>For example, as available audio languages are only known after the manifest has
+been downloaded and parsed, and as it is most of all a user preference, the
+Stream can emit to the API, RxJS Subjects allowing the API to &#x201C;choose&#x201D; at any
+time the wanted language.</p>
+<p><a name="chapter-The%20SpeedManager"></a></p>
+<h2>The SpeedManager</h2>
+<p>The SpeedManager is the part of the Stream updating the playback speed of the
+content.</p>
+<p>Playback speed can be updated on two occasions:</p>
+<ul>
+<li>
+<p>the API set a new Speed (<code>speed$</code> Observable).</p>
+</li>
+<li>
+<p>the content needs to build its buffer.</p>
+<p>In which case, the playback speed will be set to 0 (paused) even if the
+API set another speed.
+The regular speed will be set when enough buffer is available.</p>
+</li>
+</ul>
+<p><a name="subchapter-The%20StallingManager"></a></p>
+<h3>The StallingManager</h3>
+<p>The StallingManager listens to various browser events and properties to detect
+when the player is &#x201C;stalled&#x201D; (i.e. stuck on the current position).</p>
+<p>It then try to adopt a strategy to easily get out of this situation if it can.</p>
+</body></html></div></div></div></body>
