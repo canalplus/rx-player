@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ################################################################################
-# This file allows to automatically update the generated documentation on
-# master and the gh-pages branch.
+# This file allows to automatically update the generated documentation on the
+# gh-pages branch.
 #
 # To use it:
 #
@@ -14,15 +14,16 @@
 #      Some user interactions will be needed to avoid doing unwanted commits.
 #
 #   4. That's it!
-#      A commit should have been pushed to gh-pages and master.
+#      A commit should have been pushed to the gh-pages.
 #
 ################################################################################
 
 set -e
 
 current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
+current_version=$(cat VERSION)
 
-if ! [ $current_branch == "master" ]; then
+if ! [ "$current_branch" == "master" ]; then
   echo $current_branch
   echo "ERROR: The current branch should be master"
   exit 1;
@@ -31,68 +32,30 @@ fi
 # Generate documentation
 npm run doc
 
-# update master
 if [ -n "$(git status --porcelain doc)" ]; then
-  echo "-- Current Status on master: --"
-  echo ""
-  git status doc
-
-  while : ; do
-    echo ""
-    echo "We will push the documentation to master."
-    REPLY=""
-    read -p "do you want to continue [y/d/s/a/c/t/h] (h for help) ? " -n 1 -r
-    echo ""
-
-    if [[ $REPLY =~ ^[Hh](elp)?$ ]]; then
-      echo ""
-      echo ""
-      echo "+- help -------------------------------------------------+"
-      echo "| y: commit and continue                                 |"
-      echo "| d: see diff                                            |"
-      echo "| s: see status                                          |"
-      echo "| a: abort script from here                              |"
-      echo "| c: checkout from this commit and go to the next one    |"
-      echo "| t: stash this commit and go to the next one            |"
-      echo "| h: see this help                                       |"
-      echo "+--------------------------------------------------------+"
-    elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-      git add doc
-      git commit -m "update documentation" -S
-      git push origin master
-      break
-    elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
-      git diff doc || true # ignore when return 1
-    elif [[ $REPLY =~ ^[Ss](tatus)?$ ]]; then
-      git status doc
-    elif [[ $REPLY =~ ^[Aa]bort?$ ]]; then
-      echo "exiting"
-      exit 0
-    elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
-      git checkout doc
-      break
-    elif [[ $REPLY =~ ^([Tt]|([Ss]tash))?$ ]]; then
-      git stash -u push doc
-    fi
-  done
-else
-  echo "nothing to do on the master branch"
+  echo "ERROR: Please commit your modifications to master"
+  exit 1;
 fi
 
 tmpDir=$(mktemp -d)
-cp -r doc/* $tmpDir
+cp -r doc/generated/* $tmpDir
 
 # update gh-pages
 git checkout gh-pages
 git pull origin gh-pages
+
+rm -rf "versions/$current_version/doc"
+mkdir -p "versions/$current_version/doc"
 rm -rf doc
-mv $tmpDir/generated doc
+mv $tmpDir/* "versions/$current_version/doc"
+ln -s "./versions/$current_version/doc" doc
+
 rm -rf $tmpDir
 
-if [ -n "$(git status --porcelain doc)" ]; then
+if [ -n "$(git status --porcelain)" ]; then
   echo "-- Current Status on gh-pages: --"
   echo ""
-  git status doc
+  git status doc "versions/$current_version/doc"
 
   while : ; do
     echo ""
@@ -114,21 +77,21 @@ if [ -n "$(git status --porcelain doc)" ]; then
       echo "| h: see this help                                       |"
       echo "+--------------------------------------------------------+"
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-      git add doc
-      git commit -m "update documentation" -S
+      git add doc "versions/$current_version/doc"
+      git commit -m "doc: deploy $current_version to the gh-pages" -S
       git push origin gh-pages
       break
     elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
-      git diff doc || true # ignore when return 1
+      git diff doc "versions/$current_version/doc" || true # ignore when return 1
     elif [[ $REPLY =~ ^[Ss](tatus)?$ ]]; then
-      git status doc
+      git status doc "versions/$current_version/doc"
     elif [[ $REPLY =~ ^[Aa](bort)?$ ]]; then
       echo "exiting"
       exit 0
     elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
-      git checkout doc
+      git checkout doc "versions/$current_version/doc"
     elif [[ $REPLY =~ ^([Tt]|([Ss]tash))?$ ]]; then
-      git stash -u push doc
+      git stash -u push doc "versions/$current_version/doc"
       break
     fi
   done
