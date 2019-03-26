@@ -1,0 +1,28 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>Buffer Garbage Collector - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Buffer%20Garbage%20Collector">Buffer Garbage Collector</a></p>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Buffer%20Garbage%20Collector"></a></p>
+<h1>Buffer Garbage Collector</h1>
+<p>The BufferGarbageCollector is a function used by the RxPlayer&#x2019;s Stream to
+periodically perform &#x201C;garbage collection&#x201D; manually on a given SourceBuffer.</p>
+<p>It is based on the following building bricks:</p>
+<ul>
+<li>
+<p>A clock, which is an observable emitting the current time (in seconds) when
+the garbage collection task should be performed</p>
+</li>
+<li>
+<p>The QueuedSourceBuffer on which the garbage collection task should run</p>
+</li>
+<li>
+<p>The maximum time margin authorized for the buffer behind the current
+position</p>
+</li>
+<li>
+<p>The maximum time margin authorized for the buffer ahead of the current
+position</p>
+</li>
+</ul>
+<p>Basically, each times the given clock ticks, the BufferGarbageCollector will
+ensure that the volume of data before and ahead of the current position does not
+grow into a larger value than what is configured.</p>
+<p>The Stream creates one of them per SourceBuffer created.</p>
+</body></html></div></div></div></body>
