@@ -1,0 +1,84 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>The SourceBuffers - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-The%20SourceBuffers">The SourceBuffers</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-SourceBuffersManager">SourceBuffersManager</a></li>
+<li><a href="#chapter-QueuedSourceBuffer">QueuedSourceBuffer</a></li>
+<li><a href="#chapter-BufferGarbageCollector">BufferGarbageCollector</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-The%20SourceBuffers"></a></p>
+<h1>The SourceBuffers</h1>
+<p><a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>Technically speaking <code>SourceBuffer</code>s are browser objects allowing JavaScript
+applications to &#x201C;append&#x201D; media segments for them to be decoded at the right time
+through their attached media element (e.g. <code>&lt;audio&gt;</code> or <code>&lt;video&gt;</code> media
+elements).</p>
+<p>Likewise in the RxPlayer code, the <code>core/source-buffer</code> directory contains the
+part of the code directly related to the insertion and removal of media
+segments.</p>
+<p>You&#x2019;ll find there:</p>
+<ul>
+<li>
+<p>code that interacts with browser <code>SourceBuffer</code> Objects.</p>
+</li>
+<li>
+<p>custom implementations of the <code>SourceBuffer</code> interface for <code>text</code>
+(subtitles) or <code>image</code> (thumbnails) buffers.</p>
+</li>
+<li>
+<p>decoders for the custom SourceBuffer implementation (e.g. the <code>text</code>
+decoder parse subtitles and display them on screen at the right time).</p>
+</li>
+<li>
+<p>functions which help to perform memory management on custom
+SourceBuffer implementations as well as native ones (this is mostly needed
+on some peculiar low-memory target with legacy browsers, but you might want
+to control at best your memory footprint even on a classical
+web-applications).</p>
+</li>
+</ul>
+<p><a name="chapter-SourceBuffersManager"></a></p>
+<h2>SourceBuffersManager</h2>
+<p>The <code>SourceBuffersManager</code> is the main export from there. It facilitates the
+creation and destruction of SourceBuffers.
+More specifically, it keep track of every <code>SourceBuffer</code> created for a given
+content.</p>
+<p>As a rule, only ONE <code>SourceBuffer</code> is allowed by type of buffer (e.g.
+<code>audio</code>, <code>video</code>, <code>text</code> (subtitles), <code>images</code> (thumbnails)).</p>
+<p><a name="chapter-QueuedSourceBuffer"></a></p>
+<h2>QueuedSourceBuffer</h2>
+<p>A <code>QueuedSourceBuffer</code> is a wrapper on top of a <code>SourceBuffer</code> (a native one
+or a custom RxPlayer implementation) that allows to push and remove segments
+sequentially.
+Basically, it waits for the previous action to be finished before going on the
+next step.</p>
+<p>It is the main interface the rest of the RxPlayer code has with SourceBuffers.
+As a wrapper it copy most of the original browser API to lower the cognitive
+complexity of using it.</p>
+<p><a name="chapter-BufferGarbageCollector"></a></p>
+<h2>BufferGarbageCollector</h2>
+<p>The BufferGarbageCollector is a function used by the RxPlayer to
+periodically perform &#x201C;garbage collection&#x201D; manually on a given SourceBuffer.</p>
+<p>It is based on the following building bricks:</p>
+<ul>
+<li>
+<p>A clock, which is an observable emitting the current time (in seconds) when
+the garbage collection task should be performed</p>
+</li>
+<li>
+<p>The QueuedSourceBuffer on which the garbage collection task should run</p>
+</li>
+<li>
+<p>The maximum time margin authorized for the buffer behind the current
+position</p>
+</li>
+<li>
+<p>The maximum time margin authorized for the buffer ahead of the current
+position</p>
+</li>
+</ul>
+<p>Basically, each times the given clock ticks, the BufferGarbageCollector will
+ensure that the volume of data before and ahead of the current position does not
+grow into a larger value than what is configured.</p>
+<p>One of them is created per SourceBuffer.</p>
+</body></html></div></div></div></body>
