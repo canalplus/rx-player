@@ -1,0 +1,231 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>File architecture - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-File%20architecture">File architecture</a></p>
+<ul>
+<li><a href="#chapter-The%20demo/%20directory:%20Demos%20of%20rx-player%20implementations">The demo/ directory: Demos of rx-player implementations</a></li>
+<li><a href="#chapter-The%20dist/%20directory:%20Player%20builds">The dist/ directory: Player builds</a></li>
+<li><a href="#chapter-The%20doc/%20directory:%20Player%20documentation">The doc/ directory: Player documentation</a></li>
+<li><a href="#chapter-The%20scripts/%20directory:%20scripts">The scripts/ directory: scripts</a></li>
+<li><a href="#chapter-The%20src/%20directory:%20the%20source%20code">The src/ directory: the source code</a>
+<ul>
+<li><a href="#subchapter-src/compat/:%20The%20compatibility%20files">src/compat/: The compatibility files</a></li>
+<li><a href="#subchapter-src/core/:%20The%20core%20files">src/core/: The core files</a></li>
+<li><a href="#subchapter-src/errors/:%20Error%20definitions">src/errors/: Error definitions</a></li>
+<li><a href="#subchapter-src/features/:%20Feature%20switching">src/features/: Feature switching</a></li>
+<li><a href="#subchapter-src/manifest/:%20The%20Manifest%20class">src/manifest/: The Manifest class</a></li>
+<li><a href="#subchapter-src/net/:%20The%20networking%20and%20files">src/net/: The networking and files</a></li>
+<li><a href="#subchapter-src/parsers/:%20The%20parsing%20files">src/parsers/: The parsing files</a></li>
+<li><a href="#subchapter-src/typings/:%20Typescript%20typings">src/typings/: Typescript typings</a></li>
+<li><a href="#subchapter-src/utils/:%20The%20utils">src/utils/: The utils</a></li>
+</ul>
+</li>
+<li><a href="#chapter-The%20src/core/%20directory">The src/core/ directory</a>
+<ul>
+<li><a href="#subchapter-src/core/abr/:%20The%20adaptive%20bitrate%20code">src/core/abr/: The adaptive bitrate code</a></li>
+<li><a href="#subchapter-src/core/api/:%20The%20API%20definition">src/core/api/: The API definition</a></li>
+<li><a href="#subchapter-src/core/buffer/:%20The%20Buffer%20management">src/core/buffer/: The Buffer management</a></li>
+<li><a href="#subchapter-src/core/eme/:%20Encryption%20management">src/core/eme/: Encryption management</a></li>
+<li><a href="#subchapter-src/core/pipelines/:%20The%20networking%20pipelines">src/core/pipelines/: The networking pipelines</a></li>
+<li><a href="#subchapter-src/core/source_buffers/:%20SourceBuffers%20definitions">src/core/source_buffers/: SourceBuffers definitions</a></li>
+<li><a href="#subchapter-src/core/stream/:%20Media%20streaming%20logic">src/core/stream/: Media streaming logic</a></li>
+</ul>
+</li>
+<li><a href="#chapter-The%20tests/%20directory:%20Test%20strategies%20and%20integration%20tests">The tests/ directory: Test strategies and integration tests</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-File%20architecture"></a></p>
+<h1>File architecture</h1>
+<p>This page describes how the player files are organized. Each chapter go through
+a single directory or subdirectory, in alphabetical order.</p>
+<p><a name="demo"></a>
+<a name="chapter-The%20demo/%20directory:%20Demos%20of%20rx-player%20implementations"></a></p>
+<h2>The demo/ directory: Demos of rx-player implementations</h2>
+<p>Demonstration of functional codebases implementing the rx-player.</p>
+<p>At the time of writing, there are two demos:</p>
+<ul>
+<li>
+<p><em>full</em>: Demo with a graphic interface, written with the React library, to
+showcase what the player can do</p>
+</li>
+<li>
+<p><em>standalone</em>: Just expose the rx-player in <code>window</code>, to allow scripted
+interactions with it in the console. The player is linked to a video tag in
+the displayed page.</p>
+</li>
+</ul>
+<p><a name="dist"></a>
+<a name="chapter-The%20dist/%20directory:%20Player%20builds"></a></p>
+<h2>The dist/ directory: Player builds</h2>
+<p>Store the player builds of the last version released.</p>
+<p>Contains two files: the minified (<code>rx-player.min.js</code>) and the non-minified
+files (<code>rx-player.js</code>). Both are automatically generated with scripts.</p>
+<p>Two directories, namely <code>_esm5.raw</code> and <code>_esm5.minimal</code> can also be
+generated in here if the right scripts are called.
+These allow to publish more modular codebases to npm.</p>
+<p><a name="doc"></a>
+<a name="chapter-The%20doc/%20directory:%20Player%20documentation"></a></p>
+<h2>The doc/ directory: Player documentation</h2>
+<p>Documentation, mostly in markdown, of various subjects related to the rx-player:</p>
+<ul>
+<li>
+<p>API documentation</p>
+</li>
+<li>
+<p>code architecture documentation</p>
+</li>
+<li>
+<p>documentation to help developpers (to use APIs, switch versions, know which
+APIs are deprecated)</p>
+</li>
+</ul>
+<p><a name="scripts"></a>
+<a name="chapter-The%20scripts/%20directory:%20scripts"></a></p>
+<h2>The scripts/ directory: scripts</h2>
+<p>Contains various scripts used to help the test and the management of the player
+code.</p>
+<p>For example:</p>
+<ul>
+<li>deploying the demo or doc to github pages</li>
+<li>updating the player version&#x2026;</li>
+</ul>
+<p><a name="src"></a>
+<a name="chapter-The%20src/%20directory:%20the%20source%20code"></a></p>
+<h2>The src/ directory: the source code</h2>
+<p>The src contains the entire source code of the rx-player.</p>
+<p>It is subdivized into subdirectories which are defined here.</p>
+<p><a name="src-compat"></a>
+<a name="subchapter-src/compat/:%20The%20compatibility%20files"></a></p>
+<h3>src/compat/: The compatibility files</h3>
+<p><code>src/compat</code> contains functions allowing to use browser APIs in a
+cross-browser manner.</p>
+<p>For example, if an event does not have the same name depending on the browser,
+the compat files will expose a simple function allowing to make sure the event
+is catched, taking the task of registering the right event on the callback
+given.</p>
+<p>Every functions needed in the rest of the code are exported in
+<code>compat/index.js</code>, making it easier to import (e.g. by just doing
+<code>import { whatINeed } from &quot;../compat&quot;;</code>)</p>
+<p><a name="src-core"></a>
+<a name="subchapter-src/core/:%20The%20core%20files"></a></p>
+<h3>src/core/: The core files</h3>
+<p>Defines the logic and behavior of the player, regardless of the browser and of
+the streaming technology used.</p>
+<p>That&#x2019;s where:</p>
+<ul>
+<li>the api is defined</li>
+<li>the buffer is managed</li>
+<li>the MSE and EME APIs are called and managed</li>
+<li>the segments are downloaded</li>
+<li>ABR strategies are set</li>
+</ul>
+<p>This directory contains other subdirectories which are listed in the next
+chapter.</p>
+<p><a name="src-errors"></a>
+<a name="subchapter-src/errors/:%20Error%20definitions"></a></p>
+<h3>src/errors/: Error definitions</h3>
+<p>Contains the definition of the error classes used in the rx-player and
+accessible through the API.</p>
+<p><a name="src-features"></a>
+<a name="subchapter-src/features/:%20Feature%20switching"></a></p>
+<h3>src/features/: Feature switching</h3>
+<p>This manage activated or deactivated features (e.g. DASH, TTML subtitles
+parsing).</p>
+<p>It exports an object defining the different activated features and provide utils
+to initialize and update them.</p>
+<p><a name="src-manifest"></a>
+<a name="subchapter-src/manifest/:%20The%20Manifest%20class"></a></p>
+<h3>src/manifest/: The Manifest class</h3>
+<p>Defines a common manifest class, regardless of the streaming technology (DASH,
+HSS&#x2026;).</p>
+<p><a name="src-net"></a>
+<a name="subchapter-src/net/:%20The%20networking%20and%20files"></a></p>
+<h3>src/net/: The networking and files</h3>
+<p>Defines a common interface for multiple streaming technologies (DASH, HSS).</p>
+<p>What is exported there are functions to load and parse:</p>
+<ul>
+<li>manifests</li>
+<li>video/audio segments</li>
+<li>subtitles tracks</li>
+<li>image tracks</li>
+</ul>
+<p>For different streaming technologies.</p>
+<p>As in most of the code of the rx-player, everything used in the other parts of
+the code is exported in the index.js file at the root of this directory.</p>
+<p><a name="src-parsers"></a>
+<a name="subchapter-src/parsers/:%20The%20parsing%20files"></a></p>
+<h3>src/parsers/: The parsing files</h3>
+<p>Functions to parse given formats (isobmff, ttml, sami etc.).</p>
+<p><a name="src-typings"></a>
+<a name="subchapter-src/typings/:%20Typescript%20typings"></a></p>
+<h3>src/typings/: Typescript typings</h3>
+<p>This directory contains only declaration files for TypeScript. It is
+automatically added as a <code>typeRoots</code> when the TypeScript code is transpiled.</p>
+<p><a name="src-utils"></a>
+<a name="subchapter-src/utils/:%20The%20utils"></a></p>
+<h3>src/utils/: The utils</h3>
+<p>This directory contains general helpers which are used in different parts of the
+rx-player code.</p>
+<p><a name="core"></a>
+<a name="chapter-The%20src/core/%20directory"></a></p>
+<h2>The src/core/ directory</h2>
+<p>As written in the previous chapter, this is the &#x201C;core&#x201D; of the player, where the
+logic is defined.</p>
+<p>As this directory is versatile and complicated, it also deserves its own chapter.</p>
+<p><a name="core-abr"></a>
+<a name="subchapter-src/core/abr/:%20The%20adaptive%20bitrate%20code"></a></p>
+<h3>src/core/abr/: The adaptive bitrate code</h3>
+<p>Defines an ABRManager class which manages the adaptive streaming part of the
+player.</p>
+<p>This manager takes various observables/options as inputs to record the current
+situation of the player, give an opinion about the best media tracks to choose,
+and provide methods allowing to get/set various ABR-related options.</p>
+<p>Despite containing several files and using several classes, only the ABRManager
+defined in <code>abr/index.js</code> should be needed by the rest of the core.
+This allows to isolate this complex part and facilitate future refactoring and
+improvements.</p>
+<p><a name="core-api"></a>
+<a name="subchapter-src/core/api/:%20The%20API%20definition"></a></p>
+<h3>src/core/api/: The API definition</h3>
+<p>Defines the rx-player API. This is the part the library user will directly
+interact with.</p>
+<p><a name="core-buffer"></a>
+<a name="subchapter-src/core/buffer/:%20The%20Buffer%20management"></a></p>
+<h3>src/core/buffer/: The Buffer management</h3>
+<p>Defines the part of the core directly handling the SourceBuffer management
+logic.</p>
+<p>The code there calculate which segments should be downloaded, ask for their
+download and push the segments into the sourceBuffers.</p>
+<p><a name="core-eme"></a>
+<a name="subchapter-src/core/eme/:%20Encryption%20management"></a></p>
+<h3>src/core/eme/: Encryption management</h3>
+<p>Defines functions allowing to handle encrypted contents through the EME APIs.</p>
+<p><a name="core-pipelines"></a>
+<a name="subchapter-src/core/pipelines/:%20The%20networking%20pipelines"></a></p>
+<h3>src/core/pipelines/: The networking pipelines</h3>
+<p>Handle the segment downloading pipelines (resolve/load/parse) as defined in the
+<code>src/net/</code> directory.</p>
+<p>This is the layer directly interacting with the transport part (HSS, DASH).
+It facilitates the role of loading manifest and new segments for the rest of the
+core.</p>
+<p><a name="core-sb"></a>
+<a name="subchapter-src/core/source_buffers/:%20SourceBuffers%20definitions"></a></p>
+<h3>src/core/source_buffers/: SourceBuffers definitions</h3>
+<p>Provide multiple abstraction to manage SourceBuffers, which are the objects
+through which media segments are added to the browser.</p>
+<p>In this directory, you have glue code for both SourceBuffer managed natively
+(i.e. Audio and Video SourceBuffers) and SourceBuffer implementations for other
+types of content (text, images etc.).</p>
+<p><a name="core-stream"></a>
+<a name="subchapter-src/core/stream/:%20Media%20streaming%20logic"></a></p>
+<h3>src/core/stream/: Media streaming logic</h3>
+<p>Main logic for media streaming.</p>
+<p>This is the central part which download manifests, initialize MSE and EME APIs,
+instanciate new buffers and link together most subparts of the player.</p>
+<p><a name="tests"></a>
+<a name="chapter-The%20tests/%20directory:%20Test%20strategies%20and%20integration%20tests"></a></p>
+<h2>The tests/ directory: Test strategies and integration tests</h2>
+<p>The rx-player contains both integration (test the whole player) and unit (test
+parts of the code) tests.</p>
+<p>Integration tests are entirely written in the <code>tests/integration</code>
+subdirectory.
+As for unit tests, they are written alongside the code, in <code>__tests__</code>
+directories, the <code>tests/unit</code> directory only contains the configuration files
+to launch them.</p>
+</body></html></div></div></div></body>
