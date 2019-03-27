@@ -85,7 +85,7 @@ const URLs = [
   // Manifest
   {
     url: baseURL + "dash.mpd",
-    data: require("raw-loader!./media/dash.mpd"),
+    data: require("raw-loader!./media/dash.mpd").default,
     contentType: "application/dash+xml",
   },
   ...mp4AudioSegments,
