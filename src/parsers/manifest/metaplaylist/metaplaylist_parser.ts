@@ -68,6 +68,7 @@ export interface IMetaPlaylist {
   version : string;
   dynamic? : boolean;
   overlays? : IMetaPlaylistOverlay[];
+  pollInterval? : number;
   contents: Array<{
     url: string;
     startTime: number;
@@ -290,6 +291,7 @@ function createManifest(
     uris: [url],
     maximumTime: { isContinuous: false, value: maximumTime, time },
     minimumTime: { isContinuous: false, value: minimumTime, time },
+    lifetime: mplData.pollInterval,
   };
 
   return manifest;
