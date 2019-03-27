@@ -65,7 +65,7 @@ const URLs = [
   // Manifest
   {
     url: baseURL + "ateam.mpd",
-    data: require("raw-loader!./media/ateam.mpd"),
+    data: require("raw-loader!./media/ateam.mpd").default,
     contentType: "application/dash+xml",
   },
 
