@@ -55,7 +55,7 @@ const URLs = [
   // Manifest
   {
     url: baseURL + "mp4-live-periods-mpd.mpd",
-    data: require("raw-loader!./media/mp4-live-periods-mpd.mpd"),
+    data: require("raw-loader!./media/mp4-live-periods-mpd.mpd").default,
     contentType: "application/dash+xml",
   },
   ...audioSegments, // remaining audio segments

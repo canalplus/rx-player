@@ -59,7 +59,7 @@ const videoSegments = flatMap(
 const URLs = [
   {
     url: baseURL + "Manifest",
-    data: require("raw-loader!./media/Manifest_Not_Starting_at_0.xml"),
+    data: require("raw-loader!./media/Manifest_Not_Starting_at_0.xml").default,
     contentType: "text/xml",
   },
   ...audioSegments,
