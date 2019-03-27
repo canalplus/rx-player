@@ -96,7 +96,10 @@ export default function parseMetaPlaylist(
     throw new Error("MPL Parser: Bad MetaPlaylist file. Expected JSON.");
   }
 
-  const { contents } = parsedData;
+  const { contents, version } = parsedData;
+  if (typeof version !== "string" || version.split(".")[0] !== "0") {
+    throw new Error("MPL Parser: Bad MetaPlaylist version");
+  }
 
   // quick checks
   if (contents == null || contents.length === 0) {
