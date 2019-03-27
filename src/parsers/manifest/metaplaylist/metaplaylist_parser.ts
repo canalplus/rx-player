@@ -65,6 +65,9 @@ export interface IMetaPlaylistOverlay {
 }
 
 export interface IMetaPlaylist {
+  version : string;
+  dynamic? : boolean;
+  overlays? : IMetaPlaylistOverlay[];
   contents: Array<{
     url: string;
     startTime: number;
@@ -72,11 +75,6 @@ export interface IMetaPlaylist {
     transport: string;
     textTracks?: IMetaPlaylistTextTrack[];
   }>;
-  attributes: {
-    version : string;
-    dynamic? : boolean;
-    overlays? : IMetaPlaylistOverlay[];
-  };
 }
 
 const generateManifestID = idGenerator();
@@ -148,7 +146,7 @@ function createManifest(
   const { contents } = mplData;
   const minimumTime = contents.length ? contents[0].startTime : 0;
   const maximumTime = contents.length ? contents[contents.length - 1].startTime : 0;
-  const isLive = mplData.attributes.dynamic === true;
+  const isLive = mplData.dynamic === true;
   let duration : number|undefined = 0;
 
   const periods : IParsedPeriod[] = [];
@@ -260,7 +258,7 @@ function createManifest(
     }
   }
 
-  const { overlays } = mplData.attributes;
+  const { overlays } = mplData;
   if (overlays != null && overlays.length > 0) {
     for (let i = 0; i < periods.length; i++) {
       const period = periods[i];
