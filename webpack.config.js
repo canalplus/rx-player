@@ -26,9 +26,7 @@ const plugins = [
         process.env.RXP_DASH === "true" :
         process.env.RXP_DASH !== "false",
 
-      METAPLAYLIST: isBarebone ?
-        process.env.RXP_METAPLAYLIST === "true" :
-        process.env.RXP_METAPLAYLIST !== "false",
+      METAPLAYLIST: process.env.RXP_METAPLAYLIST === "true",
 
       DIRECTFILE: isBarebone ?
         process.env.RXP_DIRECTFILE === "true" :
