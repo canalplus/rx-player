@@ -203,7 +203,7 @@ export default [
   },
   {
     "name": "Jeudi 4 avril - Canal + series",
-    "url": "https://developers.canal-plus.com/rx-player/canal_tech/jeudi_0404.bxf",
+    "url": "https://developers.canal-plus.com/rx-player/canaltech/jeudi_0404.bxf",
     "transport": "bxf",
     "live": false,
   },
