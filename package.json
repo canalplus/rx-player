@@ -98,7 +98,7 @@
     "test:memory": "karma start tests/memory/karma.conf.js",
     "test:memory:chrome:watch": "cross-env RXP_TESTS_WATCH=true karma start tests/memory/karma.conf.js --browsers ChromeMemory",
     "test:memory:travis": "karma start tests/memory/karma.travis.conf.js",
-    "test:travis": "npm run test:unit && npm run test:integration:travis && npm run test:memory:travis",
+    "test:travis": "npm run test:unit && npm run test:memory:travis",
     "test:unit": "jest",
     "test:unit:coverage": "cross-env RXP_COVERAGE=true jest",
     "update-version": "npm run version --git-tag-version=false",
