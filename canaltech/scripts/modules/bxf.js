@@ -259,16 +259,16 @@ const fillingLicenseURL = "https://secure-webtv.canal-bis.com/WebPortal-vabf/Tes
 const fillingTransportType = "smooth";
 const fillingDuration = 600;
 const pictos = {
-  "Interdit en salle -10": "https://drm.canal-plus.com:8443/bxf-parser2/tmp/picto10.png",
-  "Déconseillé -10ans": "https://drm.canal-plus.com:8443/bxf-parser2/tmp/picto10.png",
-  "Interdit en salle -12": "https://drm.canal-plus.com:8443/bxf-parser2/tmp/picto12.png",
-  "Déconseillé -12ans": "https://drm.canal-plus.com:8443/bxf-parser2/tmp/picto12.png",
-  "Interdit en salle -16": "https://drm.canal-plus.com:8443/bxf-parser2/tmp/picto16.png",
-  "Déconseillé -16ans": "https://drm.canal-plus.com:8443/bxf-parser2/tmp/picto16.png",
-  "Interdit en salle -18": "https://drm.canal-plus.com:8443/bxf-parser2/tmp/picto18.png",
-  "Déconseillé -18ans": "https://drm.canal-plus.com:8443/bxf-parser2/tmp/picto18.png",
+  "Interdit en salle -10": "https://developers.canal-plus.com/rx-player/canal_tech/bxf-parser2/tmp/picto10.png",
+  "Déconseillé -10ans": "https://developers.canal-plus.com/rx-player/canal_tech/bxf-parser2/tmp/picto10.png",
+  "Interdit en salle -12": "https://developers.canal-plus.com/rx-player/canal_tech/bxf-parser2/tmp/picto12.png",
+  "Déconseillé -12ans": "https://developers.canal-plus.com/rx-player/canal_tech/bxf-parser2/tmp/picto12.png",
+  "Interdit en salle -16": "https://developers.canal-plus.com/rx-player/canal_tech/bxf-parser2/tmp/picto16.png",
+  "Déconseillé -16ans": "https://developers.canal-plus.com/rx-player/canal_tech/bxf-parser2/tmp/picto16.png",
+  "Interdit en salle -18": "https://developers.canal-plus.com/rx-player/canal_tech/bxf-parser2/tmp/picto18.png",
+  "Déconseillé -18ans": "https://developers.canal-plus.com/rx-player/canal_tech/bxf-parser2/tmp/picto18.png",
 };
-const channelLogoURL = "https://drm.canal-plus.com:8443/bxf-parser2/tmp/series.png";
+const channelLogoURL = "https://developers.canal-plus.com/rx-player/canal_tech/bxf-parser2/tmp/series.png";
 const timeShiftBufferDepth = 60 * 60 * 8;
 
 function getURLForPicto(title) {

@@ -161,7 +161,7 @@ export default [
   },
   {
     "name": "Canal + - Mardi 26 juin Canal + series",
-    "url": "https://drm.canal-plus.com:8443/mardi.bxf",
+    "url": "https://developers.canal-plus.com/rx-player/canal_tech/mardi.bxf",
     "transport": "bxf",
     "live": false,
     "beginning": 1529996400,
@@ -203,7 +203,7 @@ export default [
   },
   {
     "name": "Jeudi 4 avril - Canal + series",
-    "url": "https://drm.canal-plus.com:8443/jeudi_0404.bxf",
+    "url": "https://developers.canal-plus.com/rx-player/canal_tech/jeudi_0404.bxf",
     "transport": "bxf",
     "live": false,
   },
