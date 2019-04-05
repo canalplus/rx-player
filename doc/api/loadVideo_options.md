@@ -20,8 +20,6 @@
     - [networkConfig](#prop-networkConfig)
     - [defaultAudioTrack (deprecated)](#prop-defaultAudioTrack)
     - [defaultTextTrack (deprecated)](#prop-defaultTextTrack)
-        Add three new events: availableAudioTracksChange, availableTextTracksChange, availableVideoTracksChange
-
 
 
 <a name="overview"></a>
