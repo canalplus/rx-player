@@ -256,6 +256,11 @@ function calculateRepeat(
   return repeatCount;
 }
 
+export interface ISmoothRIOptions {
+  segmentPrivateInfos : ISmoothInitSegmentPrivateInfos;
+  aggressiveMode : boolean;
+}
+
 interface ISmoothInitSegmentPrivateInfos {
   bitsPerSample? : number;
   channels? : number;
@@ -281,11 +286,26 @@ interface ISmoothInitSegmentPrivateInfos {
 export default class SmoothRepresentationIndex
   implements IRepresentationIndex {
 
-    private _codecPrivateData? : string;
-    private _bitsPerSample? : number;
-    private _channels? : number;
-    private _packetSize? : number;
-    private _samplingRate? : number;
+    // Informations needed to generate an initialization segment.
+    // Taken from the Manifest.
+    private _initSegmentInfos : {
+      codecPrivateData? : string;
+      bitsPerSample? : number;
+      channels? : number;
+      packetSize? : number;
+      samplingRate? : number;
+      protection? : {
+        keyId : string;
+        keySystems: Array<{
+          systemId : string;
+          privateData : Uint8Array;
+        }>;
+      };
+    };
+
+    // if true, this class will return segments even if we're not sure they had
+    // time to be generated on the server side.
+    private _isAggressiveMode? : boolean;
 
     // (only calculated for live contents)
     // Calculates the difference, in timescale, between the current time (as
@@ -304,27 +324,26 @@ export default class SmoothRepresentationIndex
     //   - the manifest downloading time, if known
     //   - else, the time of creation of this RepresentationIndex, as the best guess
     private _indexValidityTime : number;
-    private _protection? : {
-      keyId : string;
-      keySystems: Array<{
-        systemId : string;
-        privateData : Uint8Array;
-      }>;
-    };
 
     private _index : ITimelineIndex;
 
-    constructor(index : ITimelineIndex, infos : ISmoothInitSegmentPrivateInfos) {
+    constructor(index : ITimelineIndex, options : ISmoothRIOptions) {
+      const { aggressiveMode, segmentPrivateInfos } = options;
       const estimatedReceivedTime = index.manifestReceivedTime == null ?
         performance.now() : index.manifestReceivedTime;
       this._index = index;
       this._indexValidityTime = estimatedReceivedTime;
-      this._bitsPerSample = infos.bitsPerSample;
-      this._channels = infos.channels;
-      this._codecPrivateData = infos.codecPrivateData;
-      this._packetSize = infos.packetSize;
-      this._samplingRate = infos.samplingRate;
-      this._protection = infos.protection;
+
+      this._initSegmentInfos = {
+        bitsPerSample: segmentPrivateInfos.bitsPerSample,
+        channels: segmentPrivateInfos.channels,
+        codecPrivateData: segmentPrivateInfos.codecPrivateData,
+        packetSize: segmentPrivateInfos.packetSize,
+        samplingRate: segmentPrivateInfos.samplingRate,
+        protection: segmentPrivateInfos.protection,
+      };
+
+      this._isAggressiveMode = aggressiveMode;
 
       if (index.timeline.length) {
         const lastItem = index.timeline[index.timeline.length - 1];
@@ -351,14 +370,7 @@ export default class SmoothRepresentationIndex
         time: 0,
         timescale: index.timescale,
         privateInfos: {
-          smoothInit: {
-            bitsPerSample: this._bitsPerSample,
-            channels: this._channels,
-            codecPrivateData: this._codecPrivateData,
-            packetSize: this._packetSize,
-            samplingRate: this._samplingRate,
-            protection: this._protection,
-          },
+          smoothInit: this._initSegmentInfos,
         },
         mediaURL: null,
       };
@@ -384,7 +396,7 @@ export default class SmoothRepresentationIndex
       // TODO(pierre): use @maxSegmentDuration if possible
       let maxEncounteredDuration = (timeline.length && timeline[0].duration) || 0;
 
-      const estimatedEnd = this._scaledLiveGap == null ?
+      const maxPosition = this._isAggressiveMode || this._scaledLiveGap == null ?
         undefined : ((performance.now() / 1000) * timescale) - this._scaledLiveGap;
 
       for (let i = 0; i < timelineLength; i++) {
@@ -398,7 +410,7 @@ export default class SmoothRepresentationIndex
           const approximateEnd = start + maxEncounteredDuration;
           if (
             approximateEnd < to &&
-            (estimatedEnd == null || approximateEnd <= estimatedEnd)
+            (maxPosition == null || approximateEnd <= maxPosition)
           ) {
             const time = start;
             const segment = {
@@ -421,7 +433,7 @@ export default class SmoothRepresentationIndex
         while (
           segmentTime < to &&
           segmentNumberInCurrentRange <= repeat &&
-          (estimatedEnd == null || (segmentTime + duration) <= estimatedEnd)
+          (maxPosition == null || (segmentTime + duration) <= maxPosition)
         ) {
           const time = segmentTime;
           const number = currentNumber != null ?
@@ -518,7 +530,7 @@ export default class SmoothRepresentationIndex
       const index = this._index;
       for (let i = index.timeline.length - 1; i >= 0; i--) {
         const lastTimelineElement = index.timeline[i];
-        if (this._scaledLiveGap == null) {
+        if (this._isAggressiveMode || this._scaledLiveGap == null) {
           return getTimelineRangeEnd(lastTimelineElement) / index.timescale;
         }
         const timescaledNow = (performance.now() / 1000) * index.timescale;

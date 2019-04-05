@@ -395,6 +395,20 @@ considered stable:
     them.
     More infos on it can be found [here](./plugins.md#representationFilter).
 
+  - ``aggressiveMode`` (``Boolean``): If set to true, we will download live
+    contents in what we call the "aggressiveMode".
+
+    In that mode, we request segments we guess will be available without being
+    absolutely sure they had time to be generated. For the moment, this mode has
+    only an effect for Smooth streaming contents.
+
+    The upside is that you will have more segments close to the live edge.
+
+    The downside is that requests for segments which did not had time to
+    generate will trigger a `NetworkError`. Depending on your other settings
+    (especially the `networkConfig` loadVideo options), those errors might just
+    be sent as warnings and the corresponding requests be retried.
+
 
 
 <a name="prop-textTrackMode"></a>
