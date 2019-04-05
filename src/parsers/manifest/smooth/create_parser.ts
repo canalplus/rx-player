@@ -43,6 +43,13 @@ import parseBoolean from "./utils/parseBoolean";
 import reduceChildren from "./utils/reduceChildren";
 import { replaceRepresentationSmoothTokens } from "./utils/tokens";
 
+/**
+ * Default value for the aggressive `mode`.
+ * In this mode, segments will be returned even if we're not sure those had time
+ * to be generated.
+ */
+const DEFAULT_AGGRESSIVE_MODE = false;
+
 const generateManifestID = idGenerator();
 
 interface IAdaptationParserArguments {
@@ -74,6 +81,7 @@ const MIME_TYPES: Partial<Record<string, string>> = {
 };
 
 export interface IHSSParserConfiguration {
+  aggressiveMode? : boolean;
   suggestedPresentationDelay? : number;
   referenceDateTime? : number;
   minRepresentationBitrate? : number;
@@ -312,7 +320,7 @@ function createSmoothStreamingParser(
         });
       }
 
-      const initSegmentInfos = {
+      const segmentPrivateInfos = {
         bitsPerSample: qualityLevel.bitsPerSample,
         channels: qualityLevel.channels,
         codecPrivateData: qualityLevel.codecPrivateData || "",
@@ -327,7 +335,11 @@ function createSmoothStreamingParser(
       };
 
       const representation : IParsedRepresentation = objectAssign({}, qualityLevel, {
-        index: new RepresentationIndex(repIndex, initSegmentInfos),
+        index: new RepresentationIndex(repIndex, {
+                 segmentPrivateInfos,
+                 aggressiveMode: parserOptions.aggressiveMode == null ?
+                   DEFAULT_AGGRESSIVE_MODE : parserOptions.aggressiveMode,
+               }),
         mimeType,
         codecs,
         id,

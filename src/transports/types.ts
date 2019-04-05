@@ -267,16 +267,14 @@ interface IParsedKeySystem {
 }
 
 export interface ITransportOptions {
-  // every transports
-  segmentLoader? : CustomSegmentLoader;
+  aggressiveMode? : boolean;
+  keySystems? : (hex? : Uint8Array) => IParsedKeySystem[]; // TODO deprecate
   manifestLoader?: CustomManifestLoader;
-
-  // smooth only
-  suggestedPresentationDelay? : number;
+  minRepresentationBitrate? : number; // TODO deprecate
   referenceDateTime? : number;
-  minRepresentationBitrate? : number;
-  keySystems? : (hex? : Uint8Array) => IParsedKeySystem[];
   representationFilter? : IRepresentationFilter;
+  segmentLoader? : CustomSegmentLoader;
+  suggestedPresentationDelay? : number;
   supplementaryImageTracks? : ISupplementaryImageTrack[];
   supplementaryTextTracks? : ISupplementaryTextTrack[];
 }
