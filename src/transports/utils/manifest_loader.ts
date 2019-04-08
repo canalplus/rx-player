@@ -86,6 +86,8 @@ const manifestPreLoader = (
               size: _args.size,
               duration: _args.duration,
               url: _args.url,
+              receivedTime,
+              sendingTime,
             },
           });
           obs.complete();
