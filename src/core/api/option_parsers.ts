@@ -60,6 +60,7 @@ export interface ITransportOptions {
   manifestLoader? : CustomManifestLoader;
   segmentLoader? : CustomSegmentLoader;
   representationFilter? : IRepresentationFilter;
+  referenceDateTime? : number;
 }
 
 export interface ISupplementaryTextTrackOption {
