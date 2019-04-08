@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import parseFromDocument from "../index";
+import { IMPDAttributes } from "./node_parsers/MPD";
 
-describe("parseFromDocument", () => {
-  function setDocumentFromString(str : string) : Document {
-    return new DOMParser().parseFromString(str, "application/xml");
+export default function parseAvailabilityStartTime(
+  rootAttributes : IMPDAttributes,
+  referenceDateTime? : number
+) : number {
+  if (rootAttributes.type !== "dynamic") {
+    return 0;
   }
-
-  it("throws root if not MPD", function() {
-    const doc = setDocumentFromString("<foo></foo>");
-    expect(function() {
-      parseFromDocument(doc, { url: "" });
-    }).toThrow("document root should be MPD");
-  });
-});
+  if (rootAttributes.availabilityStartTime == null) {
+    return referenceDateTime == null ? 0 : referenceDateTime;
+  }
+  return rootAttributes.availabilityStartTime;
+}
