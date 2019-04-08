@@ -168,8 +168,9 @@ function parseCompleteIntermediateRepresentation(
   );
 
   // second condition not needed but TS did not help there, even with a `is`
-  const directClockOffset = directTiming != null && directTiming.value != null ?
-    Date.now() - Date.parse(directTiming.value) : undefined;
+  const clockOffsetFromDirectUTCTiming =
+    directTiming != null && directTiming.value != null ?
+      Date.now() - Date.parse(directTiming.value) : undefined;
 
   const parsedMPD : IParsedManifest = {
     availabilityStartTime,
@@ -184,8 +185,9 @@ function parseCompleteIntermediateRepresentation(
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay != null ?
       rootAttributes.suggestedPresentationDelay :
       config.DEFAULT_SUGGESTED_PRESENTATION_DELAY.DASH,
-    clockOffset: directClockOffset != null && !isNaN(directClockOffset) ?
-      directClockOffset : undefined,
+    clockOffset: clockOffsetFromDirectUTCTiming != null &&
+      !isNaN(clockOffsetFromDirectUTCTiming) ?
+        clockOffsetFromDirectUTCTiming : undefined,
   };
 
   // -- add optional fields --
@@ -205,8 +207,8 @@ function parseCompleteIntermediateRepresentation(
   if (parsedMPD.isLive) {
     const lastTimeReference = getLastTimeReference(parsedMPD);
     if (
-      directClockOffset == null && lastTimeReference == null &&
-      args.loadExternalClock
+      clockOffsetFromDirectUTCTiming == null &&
+      lastTimeReference == null && args.loadExternalClock
     ) {
       const UTCTimingHTTPURL = getHTTPUTCTimingURL(mpdIR);
       if (UTCTimingHTTPURL != null && UTCTimingHTTPURL.length > 0) {
