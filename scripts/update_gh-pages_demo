@@ -1,7 +1,10 @@
 #!/bin/bash
 
-################################################################################
-# This file allows to automatically update the full demo on the gh-pages branch.
+# Update gh-pages demo
+# ====================
+#
+# This script allows to automatically update the full demo on the gh-pages
+# branch.
 #
 # To use it:
 #
@@ -17,8 +20,6 @@
 #
 #   5. That's it!
 #      A commit should have been pushed to the gh-pages.
-#
-################################################################################
 
 set -e
 

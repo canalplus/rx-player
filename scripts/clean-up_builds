@@ -1,5 +1,11 @@
 #/!/bin/bash
 
+# Clean-up builds
+# =================
+#
+# This script removes the directories automatically generated when doing a
+# modular build.
+
 set -e
 rm -rf dist/_esm5.processed
 rm -rf dist/_esm5.raw

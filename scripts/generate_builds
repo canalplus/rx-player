@@ -1,4 +1,11 @@
 #!/bin/bash
+
+# Generate builds
+# ===============
+#
+# This script allows to automatically generate a modular build with all its
+# associated files and directories.
+
 set -e
 
 echo "cleaning previous builds..."
