@@ -20,6 +20,7 @@ import { IParsedManifest } from "../types";
 /**
  * Get presentation live gap from manifest informations.
  * @param {Object} manifest
+ * @param {number|undefined} lastTimeReference
  * @returns {number}
  */
 export default function getPresentationLiveGap(

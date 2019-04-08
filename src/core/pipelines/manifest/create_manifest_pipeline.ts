@@ -140,7 +140,7 @@ export default function createManifestPipeline(
 
   /**
    * Fetch and parse the manifest corresponding to the URL given.
-   * @param {string} url - URL of the manifest
+   * @param {Object} options
    * @returns {Observable}
    */
   return function fetchManifest(
