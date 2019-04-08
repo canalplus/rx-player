@@ -30,9 +30,16 @@ import {
   createPeriodIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
 } from "./node_parsers/Period";
+import parseAvailabilityStartTime from "./parse_availability_start_time";
+import parseDuration from "./parse_duration";
 import parsePeriods from "./parse_periods";
 
 const generateManifestID = idGenerator();
+
+export interface IMPDParserArguments {
+  url : string; // URL of the manifest (post-redirection if one)
+  referenceDateTime? : number; // Default base time, in seconds
+}
 
 export type IParserResponse<T> =
   {
@@ -49,27 +56,27 @@ export type IParserResponse<T> =
 
 /**
  * @param {Element} root - The MPD root.
- * @param {string} url - The url where the MPD is located
+ * @param {Object} args
  * @returns {Object}
  */
 export default function parseMPD(
   root : Element,
-  uri : string
+  args : IMPDParserArguments
 ) : IParserResponse<IParsedManifest> {
   // Transform whole MPD into a parsed JS object representation
   const mpdIR = createMPDIntermediateRepresentation(root);
-  return loadExternalRessourcesAndParse(mpdIR, uri);
+  return loadExternalRessourcesAndParse(mpdIR, args);
 }
 
 /**
  * Checks if xlinks needs to be loaded before actually parsing the manifest.
  * @param {Object} mpdIR
- * @param {string} uri
+ * @param {Object} args
  * @returns {Object}
  */
 function loadExternalRessourcesAndParse(
   mpdIR : IMPDIntermediateRepresentation,
-  uri : string
+  args : IMPDParserArguments
 ) : IParserResponse<IParsedManifest> {
   const xlinksToLoad : Array<{ index : number; ressource : string }> = [];
   for (let i = 0; i < mpdIR.children.periods.length; i++) {
@@ -80,7 +87,7 @@ function loadExternalRessourcesAndParse(
   }
 
   if (xlinksToLoad.length === 0) {
-    const parsedManifest = parseCompleteIntermediateRepresentation(mpdIR, uri);
+    const parsedManifest = parseCompleteIntermediateRepresentation(mpdIR, args);
     return { type: "done", value: parsedManifest };
   }
 
@@ -114,7 +121,7 @@ function loadExternalRessourcesAndParse(
           // replace original "xlinked" periods by the real deal
           mpdIR.children.periods.splice(index, 1, ...periodsIR);
         }
-        return loadExternalRessourcesAndParse(mpdIR, uri);
+        return loadExternalRessourcesAndParse(mpdIR, args);
       },
     },
   };
@@ -123,26 +130,24 @@ function loadExternalRessourcesAndParse(
 /**
  * Parse the MPD intermediate representation into a regular Manifest.
  * @param {Object} mpdIR
- * @param {string} uri
+ * @param {Object} args
  * @returns {Object}
  */
 function parseCompleteIntermediateRepresentation(
   mpdIR : IMPDIntermediateRepresentation,
-  uri : string
+  args : IMPDParserArguments
 ) : IParsedManifest {
   const {
     children: rootChildren,
     attributes: rootAttributes,
   } = mpdIR;
 
-  const baseURL = resolveURL(normalizeBaseURL(uri), rootChildren.baseURL);
+  const baseURL = resolveURL(normalizeBaseURL(args.url), rootChildren.baseURL);
+
+  const availabilityStartTime =
+    parseAvailabilityStartTime(rootAttributes, args.referenceDateTime);
 
   const isDynamic : boolean = rootAttributes.type === "dynamic";
-  const availabilityStartTime = (
-    rootAttributes.type === "static" ||
-    rootAttributes.availabilityStartTime == null
-  ) ?  0 : rootAttributes.availabilityStartTime;
-
   const parsedPeriods = parsePeriods(rootChildren.periods, {
     availabilityStartTime,
     duration: rootAttributes.duration,
@@ -150,24 +155,7 @@ function parseCompleteIntermediateRepresentation(
     baseURL,
   });
 
-  const duration : number|undefined = (() => {
-    if (rootAttributes.duration != null) {
-      return rootAttributes.duration;
-    }
-    if (isDynamic) {
-      return undefined;
-    }
-    if (parsedPeriods.length) {
-      const lastPeriod = parsedPeriods[parsedPeriods.length - 1];
-      if (lastPeriod.end != null) {
-        return lastPeriod.end;
-      } else if (lastPeriod.duration != null) {
-        return lastPeriod.start + lastPeriod.duration;
-      }
-    }
-    return undefined;
-  })();
-
+  const duration : number|undefined = parseDuration(rootAttributes, parsedPeriods);
   const parsedMPD : IParsedManifest = {
     availabilityStartTime,
     baseURL,
@@ -177,7 +165,7 @@ function parseCompleteIntermediateRepresentation(
     periods: parsedPeriods,
     transportType: "dash",
     isLive: isDynamic,
-    uris: [uri, ...rootChildren.locations],
+    uris: [args.url, ...rootChildren.locations],
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay != null ?
       rootAttributes.suggestedPresentationDelay :
       config.DEFAULT_SUGGESTED_PRESENTATION_DELAY.DASH,

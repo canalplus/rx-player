@@ -34,7 +34,7 @@ import {
   getSegmentsFromCues,
   getTimeCodeScale,
 } from "../../parsers/containers/matroska";
-import dashManifestParser, {
+import parseMPD, {
   IMPDParserResponse,
 } from "../../parsers/manifest/dash";
 import request from "../../utils/request";
@@ -87,6 +87,7 @@ export default function(
     customManifestLoader: options.manifestLoader,
   });
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
+  const { referenceDateTime } = options;
 
   const manifestPipeline = {
     loader(
@@ -104,7 +105,7 @@ export default function(
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
 
-      const parsedManifest = dashManifestParser(data, url);
+      const parsedManifest = parseMPD(data, { url, referenceDateTime });
       return loadExternalRessources(parsedManifest);
 
       function loadExternalRessources(
