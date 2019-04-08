@@ -580,7 +580,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_playing$ = new ReplaySubject(1);
     this._priv_speed$ = new BehaviorSubject(videoElement.playbackRate);
     this._priv_stopCurrentContent$ = new Subject();
-    this._priv_contentLock$ = new BehaviorSubject(false);
+    this._priv_contentLock$ = new BehaviorSubject<boolean>(false);
 
     this._priv_bufferOptions = {
       wantedBufferAhead$: new BehaviorSubject(wantedBufferAhead),
