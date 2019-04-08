@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Report build sizes
+# ==================
+#
+# This script allows to report the sizes of multiple rx-player bundles, each
+# with one feature disabled.
+
 npm run build:min
 echo -n "REGULAR: " > sizes
 stat -c %s dist/rx-player.min.js >> sizes

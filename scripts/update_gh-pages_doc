@@ -1,7 +1,9 @@
 #!/bin/bash
 
-################################################################################
-# This file allows to automatically update the generated documentation on the
+# Update gh-pages doc
+# ====================
+#
+# This script allows to automatically update the generated documentation on the
 # gh-pages branch.
 #
 # To use it:
@@ -15,8 +17,6 @@
 #
 #   4. That's it!
 #      A commit should have been pushed to the gh-pages.
-#
-################################################################################
 
 set -e
 

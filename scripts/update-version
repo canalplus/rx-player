@@ -1,4 +1,11 @@
 #!/bin/bash
+
+# Update version
+# ==============
+#
+# This script updates the version number in files where it is indicated and
+# builds the rx-player for this new version.
+
 set -e
 
 version=$1

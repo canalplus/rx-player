@@ -1,3 +1,11 @@
+#!/bin/bash
+
+# Generate certificate
+# ====================
+#
+# This script allows to create a self-signed ssl certificate easily.
+# One of the goal here, is to be able to easily test HTTPS pages.
+
 openssl req \
   -x509 \
   -out localhost.crt \
