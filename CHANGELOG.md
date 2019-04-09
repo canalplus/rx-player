@@ -1,5 +1,19 @@
 # Changelog
 
+## v3.12.0 (2019/04/09)
+
+### Features
+
+  - dash: add UTCTiming support
+  - smooth: add `aggressiveMode` transportOption to requests segments in advance
+  - dash/smooth: add `referenceDateTime` transportOption to set a default reference time for live contents
+
+### Other improvements
+
+  - dash/smooth: add optional `url`, `sendingTime` and `receivingTime` properties in the response given by manifestLoader transportOption
+  - misc: deploy documentation pages and demos from our previous versions
+
+
 ## v3.11.1 (2019/03/11)
 
 ### Bug fixes
