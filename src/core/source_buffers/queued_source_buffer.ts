@@ -15,10 +15,16 @@
  */
 
 import {
+  fromEvent,
+  interval,
   Observable,
   Observer,
   Subject,
 } from "rxjs";
+import {
+  takeUntil,
+  tap,
+} from "rxjs/operators";
 import {
   ICustomSourceBuffer,
   tryToChangeSourceBufferType,
@@ -134,10 +140,12 @@ export default class QueuedSourceBuffer<T> {
    */
   private readonly _sourceBuffer : ICustomSourceBuffer<T>;
 
-  // Binded references to corresponding private methods.
-  // Used for binding/removing an event listener.
-  private readonly __onErrorEvent : (e : Event) => void;
-  private readonly __onUpdateEnd : () => void;
+  /**
+   * Subject triggered when this QueuedSourceBuffer is disposed.
+   * Helps to clean-up Observables created at its creation.
+   * @type {Subject}
+   */
+  private _destroy$ : Subject<void>;
 
   /**
    * Queue of awaited buffer orders.
@@ -192,6 +200,7 @@ export default class QueuedSourceBuffer<T> {
     codec : string,
     sourceBuffer : ICustomSourceBuffer<T>
   ) {
+    this._destroy$ = new Subject<void>();
     this.bufferType = bufferType;
     this._sourceBuffer = sourceBuffer;
     this._queue = [];
@@ -199,10 +208,25 @@ export default class QueuedSourceBuffer<T> {
     this._lastInitSegment = null;
     this._currentCodec = codec;
 
-    this.__onErrorEvent = this._onErrorEvent.bind(this);
-    this.__onUpdateEnd = this._onUpdateEnd.bind(this);
-    this._sourceBuffer.addEventListener("error", this.__onErrorEvent);
-    this._sourceBuffer.addEventListener("updateend", this.__onUpdateEnd);
+    // Some browsers (happened with firefox) sometimes "forget" to send us
+    // `update` or `updateend` events.
+    // In that case, we're completely unable to continue the queue here and
+    // stay locked in a waiting state.
+    // This interval is here to check at regular intervals if the underlying
+    // SourceBuffer is currently updating.
+    interval(2000).pipe(
+      tap(() => this._flush()),
+      takeUntil(this._destroy$)
+    ).subscribe();
+
+    fromEvent(this._sourceBuffer, "error").pipe(
+      tap((err) => this._onErrorEvent(err)),
+      takeUntil(this._destroy$)
+    ).subscribe();
+    fromEvent(this._sourceBuffer, "updateend").pipe(
+      tap(() => this._flush()),
+      takeUntil(this._destroy$)
+    ).subscribe();
   }
 
   /**
@@ -260,8 +284,8 @@ export default class QueuedSourceBuffer<T> {
    * @private
    */
   public dispose() : void {
-    this._sourceBuffer.removeEventListener("error", this.__onErrorEvent);
-    this._sourceBuffer.removeEventListener("updateend", this.__onUpdateEnd);
+    this._destroy$.next();
+    this._destroy$.complete();
 
     if (this._currentOrder != null) {
       this._currentOrder.subject.complete();
@@ -288,14 +312,6 @@ export default class QueuedSourceBuffer<T> {
   }
 
   /**
-   * Callback used for the 'updateend' event, as a segment has been added/removed.
-   * @private
-   */
-  private _onUpdateEnd() : void {
-    this._flush();
-  }
-
-  /**
    * Callback used for the 'error' event from the SourceBuffer.
    * @private
    * @param {Event} error
@@ -312,7 +328,7 @@ export default class QueuedSourceBuffer<T> {
    * @private
    * @param {Error|Event} err
    */
-  private _onErrorEvent(err: Error|Event) : void {
+  private _onErrorEvent(err: unknown) : void {
     this._onError(
       err instanceof Error ?
         err :
