@@ -40,11 +40,11 @@ describe("Memory tests", () => {
     this.timeout(5 * 60 * 1000);
     mockRequests(fakeServer, URLs);
     fakeServer.respondWith("GET", IMAGE_URL, (xhr) => {
-      const res = require("raw-loader!../contents/imagetracks/example.bif");
+      const res = require("raw-loader!../contents/imagetracks/example.bif").default;
       xhr.respond(200, { "Content-Type": "application/bif" }, res);
     });
     fakeServer.respondWith("GET", TEXT_URL, (xhr) => {
-      const res = require("raw-loader!../contents/texttracks/subtitle_example.xml");
+      const res = require("raw-loader!../contents/texttracks/subtitle_example.xml").default;
       xhr.respond(200, { "Content-Type": "application/ttml+xml" }, res);
     });
     fakeServer.autoRespond = true;
@@ -111,11 +111,11 @@ describe("Memory tests", () => {
     this.timeout(5 * 60 * 1000);
     mockRequests(fakeServer, URLs);
     fakeServer.respondWith("GET", IMAGE_URL, (xhr) => {
-      const res = require("raw-loader!../contents/imagetracks/example.bif");
+      const res = require("raw-loader!../contents/imagetracks/example.bif").default;
       xhr.respond(200, { "Content-Type": "application/bif" }, res);
     });
     fakeServer.respondWith("GET", TEXT_URL, (xhr) => {
-      const res = require("raw-loader!../contents/texttracks/subtitle_example.xml");
+      const res = require("raw-loader!../contents/texttracks/subtitle_example.xml").default;
       xhr.respond(200, { "Content-Type": "application/ttml+xml" }, res);
     });
     fakeServer.autoRespond = true;
