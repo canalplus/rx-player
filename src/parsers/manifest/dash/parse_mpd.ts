@@ -15,12 +15,16 @@
  */
 
 import config from "../../../config";
+import arrayFind from "../../../utils/array_find";
 import idGenerator from "../../../utils/id_generator";
 import resolveURL, {
   normalizeBaseURL,
 } from "../../../utils/resolve_url";
 import { IParsedManifest } from "../types";
 import checkManifestIDs from "../utils/check_manifest_ids";
+import getClockOffset from "./get_clock_offset";
+import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
+import getLastTimeReference from "./get_last_time_reference";
 import getPresentationLiveGap from "./get_presentation_live_gap";
 import {
   createMPDIntermediateRepresentation,
@@ -39,6 +43,7 @@ const generateManifestID = idGenerator();
 export interface IMPDParserArguments {
   url : string; // URL of the manifest (post-redirection if one)
   referenceDateTime? : number; // Default base time, in seconds
+  loadExternalClock: boolean; // If true, we might need to synchronize the clock
 }
 
 export type IParserResponse<T> =
@@ -87,8 +92,7 @@ function loadExternalRessourcesAndParse(
   }
 
   if (xlinksToLoad.length === 0) {
-    const parsedManifest = parseCompleteIntermediateRepresentation(mpdIR, args);
-    return { type: "done", value: parsedManifest };
+    return parseCompleteIntermediateRepresentation(mpdIR, args);
   }
 
   return {
@@ -136,7 +140,7 @@ function loadExternalRessourcesAndParse(
 function parseCompleteIntermediateRepresentation(
   mpdIR : IMPDIntermediateRepresentation,
   args : IMPDParserArguments
-) : IParsedManifest {
+) : IParserResponse<IParsedManifest> {
   const {
     children: rootChildren,
     attributes: rootAttributes,
@@ -156,6 +160,18 @@ function parseCompleteIntermediateRepresentation(
   });
 
   const duration : number|undefined = parseDuration(rootAttributes, parsedPeriods);
+
+  const directTiming = arrayFind(rootChildren.utcTimings,
+    (utcTiming) =>
+      utcTiming.schemeIdUri === "urn:mpeg:dash:utc:direct:2014" &&
+      utcTiming.value != null
+  );
+
+  // second condition not needed but TS did not help there, even with a `is`
+  const clockOffsetFromDirectUTCTiming =
+    directTiming != null && directTiming.value != null ?
+      Date.now() - Date.parse(directTiming.value) : undefined;
+
   const parsedMPD : IParsedManifest = {
     availabilityStartTime,
     baseURL,
@@ -169,6 +185,9 @@ function parseCompleteIntermediateRepresentation(
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay != null ?
       rootAttributes.suggestedPresentationDelay :
       config.DEFAULT_SUGGESTED_PRESENTATION_DELAY.DASH,
+    clockOffset: clockOffsetFromDirectUTCTiming != null &&
+      !isNaN(clockOffsetFromDirectUTCTiming) ?
+        clockOffsetFromDirectUTCTiming : undefined,
   };
 
   // -- add optional fields --
@@ -186,7 +205,32 @@ function parseCompleteIntermediateRepresentation(
 
   checkManifestIDs(parsedMPD);
   if (parsedMPD.isLive) {
-    parsedMPD.presentationLiveGap = getPresentationLiveGap(parsedMPD);
+    const lastTimeReference = getLastTimeReference(parsedMPD);
+    if (
+      clockOffsetFromDirectUTCTiming == null &&
+      lastTimeReference == null && args.loadExternalClock
+    ) {
+      const UTCTimingHTTPURL = getHTTPUTCTimingURL(mpdIR);
+      if (UTCTimingHTTPURL != null && UTCTimingHTTPURL.length > 0) {
+        return {
+          type: "needs-ressources",
+          value: {
+            ressources: [UTCTimingHTTPURL],
+            continue: function continueParsingMPD(loadedRessources : string[]) {
+              if (loadedRessources.length !== 1) {
+                throw new Error("DASH parser: wrong number of loaded ressources.");
+              }
+              parsedMPD.clockOffset = getClockOffset(loadedRessources[0]);
+              parsedMPD.presentationLiveGap =
+                getPresentationLiveGap(parsedMPD, lastTimeReference);
+              return { type: "done", value: parsedMPD };
+            },
+          },
+        };
+      }
+    }
+    parsedMPD.presentationLiveGap = getPresentationLiveGap(parsedMPD, lastTimeReference);
   }
-  return parsedMPD;
+
+  return { type: "done", value: parsedMPD };
 }

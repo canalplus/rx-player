@@ -56,6 +56,12 @@ export interface IRequestSchedulerOptions {
   maxRetryOffline : number;
 }
 
+export interface IFetchManifestOptions {
+  url : string; // URL from which the manifest was requested
+  hasClockSynchronization: boolean; // if true, the client's clock is
+                                    // synchronized with the server's
+}
+
 type IPipelineManifestOptions =
   IPipelineLoaderOptions<IManifestLoaderArguments, Document|string>;
 
@@ -102,7 +108,7 @@ export default function createManifestPipeline(
   pipelines : ITransportPipelines,
   pipelineOptions : IPipelineManifestOptions,
   warning$ : Subject<Error|ICustomError>
-) : (url : string) => Observable<IFetchManifestResult> {
+) : (args : IFetchManifestOptions) => Observable<IFetchManifestResult> {
   const loader = createLoader<
     IManifestLoaderArguments, Document|string
   >(pipelines.manifest, pipelineOptions);
@@ -134,10 +140,12 @@ export default function createManifestPipeline(
 
   /**
    * Fetch and parse the manifest corresponding to the URL given.
-   * @param {string} url - URL of the manifest
+   * @param {Object} options
    * @returns {Observable}
    */
-  return function fetchManifest(url : string) : Observable<IFetchManifestResult> {
+  return function fetchManifest(
+    { url, hasClockSynchronization } : IFetchManifestOptions
+  ) : Observable<IFetchManifestResult> {
     return loader({ url }).pipe(
 
       tap((arg) => {
@@ -152,7 +160,12 @@ export default function createManifestPipeline(
 
       mergeMap(({ value }) => {
         const { sendingTime } = value;
-        return parser({ response: value, url, scheduleRequest }).pipe(
+        return parser({
+          response: value,
+          url,
+          hasClockSynchronization,
+          scheduleRequest,
+        }).pipe(
           catchError((error: Error) => {
             const formattedError = isKnownError(error) ?
               error : new OtherError("PIPELINE_PARSING_ERROR", error.toString(), true);
