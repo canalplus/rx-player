@@ -1,7 +1,10 @@
 #!/bin/bash
 
-################################################################################
-# This file allows to automatically update the full demo on the gh-pages branch.
+# Update gh-pages demo
+# ====================
+#
+# This script allows to automatically update the full demo on the gh-pages
+# branch.
 #
 # To use it:
 #
@@ -17,8 +20,6 @@
 #
 #   5. That's it!
 #      A commit should have been pushed to the gh-pages.
-#
-################################################################################
 
 set -e
 
@@ -46,6 +47,7 @@ tmpDemoFile=$(mktemp)
 tmpRxPlayerFile=$(mktemp)
 tmpIndexFile=$(mktemp)
 tmpFaviconFile=$(mktemp)
+tmpDemoList=$(mktemp)
 
 cp -r demo/full/fonts $tmpFontsDir -v
 cp -r demo/full/assets $tmpAssetsDir -v
@@ -54,6 +56,7 @@ cp demo/full/bundle.js $tmpDemoFile -v
 cp demo/full/index.html $tmpIndexFile -v
 cp demo/full/plus.ico $tmpFaviconFile -v
 cp dist/rx-player.min.js $tmpRxPlayerFile -v
+cp scripts/generate_demo_list.js $tmpDemoList -v
 
 # update gh-pages
 git checkout gh-pages
@@ -75,6 +78,7 @@ mv $tmpDemoFile "versions/$current_version/demo/bundle.js"
 mv $tmpFontsDir/fonts "versions/$current_version/demo/fonts"
 mv $tmpAssetsDir/assets "versions/$current_version/demo/assets"
 mv $tmpStylesDir/styles "versions/$current_version/demo/styles"
+mv $tmpDemoList generate_demo_list.js
 ln -s "./versions/$current_version/demo/index.html" index.html
 ln -s "./versions/$current_version/demo/plus.ico" plus.ico
 ln -s "./versions/$current_version/demo/lib.js" lib.js
@@ -83,18 +87,12 @@ ln -s "./versions/$current_version/demo/fonts" fonts
 ln -s "./versions/$current_version/demo/assets" assets
 ln -s "./versions/$current_version/demo/styles" styles
 
-rm -rf $tmpFontsDir
-rm -rf $tmpAssetsDir
-rm -rf $tmpStylesDir
-rm -rf $tmpIndexFile
-rm -rf $tmpFaviconFile
-rm -rf $tmpRxPlayerFile
-rm -rf $tmpDemoFile
+node generate_demo_list.js
 
 if [ -n "$(git status --porcelain)" ]; then
   echo "-- Current Status on gh-pages: --"
   echo ""
-  git status lib.js bundle.js styles fonts assets index.html "versions/$current_version/demo"
+  git status lib.js bundle.js styles fonts assets index.html "versions/$current_version/demo" demo_page_by_version.html
 
   while : ; do
     echo ""
@@ -116,21 +114,21 @@ if [ -n "$(git status --porcelain)" ]; then
       echo "| h: see this help                                       |"
       echo "+--------------------------------------------------------+"
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-      git add lib.js bundle.js styles fonts assets index.html plus.ico "versions/$current_version/demo"
+      git add lib.js bundle.js styles fonts assets index.html plus.ico "versions/$current_version/demo" demo_page_by_version.html
       git commit -m "demo: deploy $current_version to the gh-pages" -S
       git push origin gh-pages
       break
     elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
-      git diff lib.js bundle.js styles fonts assets index.html "versions/$current_version/demo" || true # ignore when return 1
+      git diff lib.js bundle.js styles fonts assets index.html "versions/$current_version/demo" demo_page_by_version.html || true # ignore when return 1
     elif [[ $REPLY =~ ^[Ss](tatus)?$ ]]; then
-      git status lib.js bundle.js styles fonts assets index.html "versions/$current_version/demo"
+      git status lib.js bundle.js styles fonts assets index.html "versions/$current_version/demo" demo_page_by_version.html
     elif [[ $REPLY =~ ^[Aa](bort)?$ ]]; then
       echo "exiting"
       exit 0
     elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
-      git checkout lib.js bundle.js styles fonts assets index.html "versions/$current_version/demo"
+      git checkout lib.js bundle.js styles fonts assets index.html "versions/$current_version/demo" demo_page_by_version.html
     elif [[ $REPLY =~ ^([Tt]|([Ss]tash))?$ ]]; then
-      git stash -u push lib.js bundle.js styles fonts assets index.html "versions/$current_version/demo"
+      git stash -u push lib.js bundle.js styles fonts assets index.html "versions/$current_version/demo" demo_page_by_version.html
       break
     fi
   done
