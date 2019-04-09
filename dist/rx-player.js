@@ -1484,6 +1484,45 @@ object-assign
     /* 10 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
+        /* harmony export (binding) */        
+        /**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+        /**
+ * Array.prototype.find ponyfill.
+ * @param {Array} arr
+ * @param {Function} predicate
+ * @param {*} context
+ * @returns {boolean}
+ */
+        function arrayFind(arr, predicate, thisArg) {
+            if ("function" == typeof Array.prototype.find) 
+            /* tslint:disable ban */
+            return arr.find(predicate, thisArg);
+            /* tslint:enable ban */            for (var len = arr.length >>> 0, i = 0; i < len; i++) {
+                var val = arr[i];
+                if (predicate.call(thisArg, val, i, arr)) return val;
+            }
+        }
+        /***/        __webpack_require__.d(__webpack_exports__, "a", function() {
+            return arrayFind;
+        });
+    }, 
+    /* 11 */
+    /***/ function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -1528,45 +1567,6 @@ object-assign
             emeManager: null,
             directfile: null
         };
-    }, 
-    /* 11 */
-    /***/ function(module, __webpack_exports__, __webpack_require__) {
-        "use strict";
-        /* harmony export (binding) */        
-        /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-        /**
- * Array.prototype.find ponyfill.
- * @param {Array} arr
- * @param {Function} predicate
- * @param {*} context
- * @returns {boolean}
- */
-        function arrayFind(arr, predicate, thisArg) {
-            if ("function" == typeof Array.prototype.find) 
-            /* tslint:disable ban */
-            return arr.find(predicate, thisArg);
-            /* tslint:enable ban */            for (var len = arr.length >>> 0, i = 0; i < len; i++) {
-                var val = arr[i];
-                if (predicate.call(thisArg, val, i, arr)) return val;
-            }
-        }
-        /***/        __webpack_require__.d(__webpack_exports__, "a", function() {
-            return arrayFind;
-        });
     }, 
     /* 12 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
@@ -1631,7 +1631,7 @@ object-assign
             /* tslint:disable ban */
             return arr.includes(searchElement, fromIndex);
             /* tslint:enable ban */            var len = arr.length >>> 0;
-            if (0 === len) return !1;
+            if (0 == len) return !1;
             for (var n = 0 | fromIndex, k = 0 <= n ? Math.min(n, len - 1) : Math.max(len + n, 0), areTheSame = function areTheSame(x, y) {
                 return x === y || // Viva las JavaScriptas!
                 "number" == typeof x && "number" == typeof y && isNaN(x) && isNaN(y);
@@ -2780,7 +2780,7 @@ object-assign
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./src/utils/array_find.ts
-                var array_find = __webpack_require__(11), array_includes = __webpack_require__(12);
+                var array_find = __webpack_require__(10), array_includes = __webpack_require__(12);
         // EXTERNAL MODULE: ./src/utils/array_includes.ts
                 // CONCATENATED MODULE: ./src/utils/starts_with.ts
         /**
@@ -5473,8 +5473,8 @@ object-assign
  * @param {string} ksType - Obtained via inversion
  * @returns {string|undefined} - Either the canonical name, or undefined.
  */        function findKeySystemCanonicalName(ksType) {
-            for (var _arr = Object.keys(EME_KEY_SYSTEMS), _i = 0; _i < _arr.length; _i++) {
-                var ksName = _arr[_i];
+            for (var _i = 0, _Object$keys = Object.keys(EME_KEY_SYSTEMS); _i < _Object$keys.length; _i++) {
+                var ksName = _Object$keys[_i];
                 if (Object(array_includes.a)(EME_KEY_SYSTEMS[ksName], ksType)) return ksName;
             }
         }
@@ -5619,7 +5619,7 @@ object-assign
             });
         }
         // EXTERNAL MODULE: ./src/utils/array_find.ts
-                var array_find = __webpack_require__(11), open_sessions_store_MediaKeySessionsStore = 
+                var array_find = __webpack_require__(10), open_sessions_store_MediaKeySessionsStore = 
         /* */
         function() {
             function MediaKeySessionsStore(mediaKeys) {
@@ -6978,7 +6978,7 @@ object-assign
  * @param {Number} retryDelay
  * @returns {Number}
  */        function getFuzzedDelay(retryDelay) {
-            return retryDelay * ((2 * Math.random() - 1) * FUZZ_FACTOR + 1);
+            return retryDelay * (1 + (2 * Math.random() - 1) * FUZZ_FACTOR);
  // Max 1.3 Min 0.7
                 }
         /**
@@ -7093,20 +7093,29 @@ object-assign
         /* harmony default export */ __webpack_exports__.a = function manifestPreLoader(options) {
             return function(url) {
                 var customManifestLoader = options.customManifestLoader, ignoreProgressEvents = options.ignoreProgressEvents;
-                return customManifestLoader ? new rxjs__WEBPACK_IMPORTED_MODULE_0__.a(function(obs) {
+                if (!customManifestLoader) return regularManifestLoader(url, ignoreProgressEvents);
+                var timeAPIsDelta = Date.now() - performance.now();
+                return new rxjs__WEBPACK_IMPORTED_MODULE_0__.a(function(obs) {
                     var hasFinished = !1, hasFallbacked = !1, abort = customManifestLoader(url, {
                         reject: function reject(err) {
                             void 0 === err && (err = {}), hasFallbacked || (hasFinished = !0, obs.error(err));
                         },
                         resolve: function resolve(_args) {
-                            hasFallbacked || (hasFinished = !0, obs.next({
-                                type: "response",
-                                value: {
-                                    responseData: _args.data,
-                                    size: _args.size,
-                                    duration: _args.duration
-                                }
-                            }), obs.complete());
+                            if (!hasFallbacked) {
+                                hasFinished = !0;
+                                var receivedTime = null != _args.receivingTime ? _args.receivingTime - timeAPIsDelta : void 0, sendingTime = null != _args.sendingTime ? _args.sendingTime - timeAPIsDelta : void 0;
+                                obs.next({
+                                    type: "response",
+                                    value: {
+                                        responseData: _args.data,
+                                        size: _args.size,
+                                        duration: _args.duration,
+                                        url: _args.url,
+                                        receivedTime: receivedTime,
+                                        sendingTime: sendingTime
+                                    }
+                                }), obs.complete();
+                            }
                         },
                         fallback: function fallback() {
                             hasFallbacked = !0, regularManifestLoader(url).subscribe(obs);
@@ -7115,7 +7124,7 @@ object-assign
                     return function() {
                         hasFinished || hasFallbacked || "function" != typeof abort || abort();
                     };
-                }) : regularManifestLoader(url, ignoreProgressEvents);
+                });
             };
         };
     }, 
@@ -7479,7 +7488,7 @@ object-assign
         /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return createEMEManager;
         });
-        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(112), rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(30), rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(34), _compat___WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(7), _compat___WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(117), _errors__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(122), _features__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(10), _log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(0), onEncrypted$ = _compat___WEBPACK_IMPORTED_MODULE_3__.a.onEncrypted$;
+        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(112), rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(30), rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(34), _compat___WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(7), _compat___WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(117), _errors__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(122), _features__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(11), _log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(0), onEncrypted$ = _compat___WEBPACK_IMPORTED_MODULE_3__.a.onEncrypted$;
         /* harmony import */        
         /**
  * Create EMEManager if possible (has the APIs and configuration).
@@ -7647,7 +7656,7 @@ object-assign
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./src/log.ts + 1 modules
-                var log = __webpack_require__(0), array_find = __webpack_require__(11), event_emitter = __webpack_require__(33), id_generator = __webpack_require__(48), warn_once = __webpack_require__(26), media_error = __webpack_require__(58), utils_languages = __webpack_require__(64);
+                var log = __webpack_require__(0), array_find = __webpack_require__(10), event_emitter = __webpack_require__(33), id_generator = __webpack_require__(48), warn_once = __webpack_require__(26), media_error = __webpack_require__(58), utils_languages = __webpack_require__(64);
         // EXTERNAL MODULE: ./src/utils/array_find.ts
                 /**
  * Returns the input array without duplicates values.
@@ -8004,7 +8013,7 @@ object-assign
                 _this = _EventEmitter.call(this) || this;
                 var _options$supplementar = options.supplementaryTextTracks, supplementaryTextTracks = void 0 === _options$supplementar ? [] : _options$supplementar, _options$supplementar2 = options.supplementaryImageTracks, supplementaryImageTracks = void 0 === _options$supplementar2 ? [] : _options$supplementar2, representationFilter = options.representationFilter;
                 return _this.parsingErrors = [], _this.id = args.id, _this.transport = args.transportType, 
-                _this.periods = args.periods.map(function(period) {
+                _this._clockOffset = args.clockOffset, _this.periods = args.periods.map(function(period) {
                     var _this$parsingErrors, parsedPeriod = new period_Period(period, representationFilter);
                     return (_this$parsingErrors = _this.parsingErrors).push.apply(_this$parsingErrors, parsedPeriod.parsingErrors), 
                     parsedPeriod;
@@ -8136,7 +8145,7 @@ object-assign
                     return null == duration ? Infinity : duration;
                 }
                 var ast = this.availabilityStartTime || 0, plg = this.presentationLiveGap || 0;
-                return Date.now() / 1e3 - ast - plg;
+                return (Date.now() - (this._clockOffset || 0)) / 1e3 - ast - plg;
             }
             /**
    * Get minimum AND maximum positions currently defined by the manifest, in
@@ -8144,13 +8153,19 @@ object-assign
    * @returns {Array.<number>}
    */ , _proto.getCurrentPositionLimits = function getCurrentPositionLimits() {
                 // TODO use RTT for the manifest request? (+ 3 or something)
-                var ast = this.availabilityStartTime || 0, minimumTime = null != this.minimumTime ? this.minimumTime : 0;
+                var minimumTime = null != this.minimumTime ? this.minimumTime : 0;
                 if (!this.isLive) {
                     var duration = this.getDuration();
                     return [ minimumTime, null == duration ? Infinity : duration ];
                 }
-                var plg = this.presentationLiveGap || 0, tsbd = this.timeShiftBufferDepth || 0, max = Date.now() / 1e3 - ast - plg;
+                var ast = this.availabilityStartTime || 0, plg = this.presentationLiveGap || 0, tsbd = this.timeShiftBufferDepth || 0, max = (Date.now() - (this._clockOffset || 0)) / 1e3 - ast - plg;
                 return [ Math.min(max, Math.max(minimumTime, max - tsbd + 5)), max ];
+            }
+            /**
+   * If true, this Manifest is currently synchronized with the server's clock.
+   * @returns {Boolean}
+   */ , _proto.hasClockSynchronization = function hasClockSynchronization() {
+                return null != this._clockOffset;
             }
             /**
    * Add supplementary image Adaptation(s) to the manifest.
@@ -11102,7 +11117,7 @@ object-assign
                     this.destination.error(err);
                 }
             }, SkipWhileSubscriber;
-        }(Subscriber.a), switchMapTo = __webpack_require__(184), mergeMapTo = __webpack_require__(169), catchError = __webpack_require__(171), config = __webpack_require__(2), log = __webpack_require__(0), event_emitter = __webpack_require__(33), noop = __webpack_require__(27), promise = __webpack_require__(28), utils_ranges = __webpack_require__(13), warn_once = __webpack_require__(26), compat = __webpack_require__(7), fullscreen = __webpack_require__(77), error_codes = __webpack_require__(21), media_error = __webpack_require__(58), features = __webpack_require__(10), eme_manager = __webpack_require__(70), asap = __webpack_require__(172), timer = __webpack_require__(181), observeOn = __webpack_require__(120), mergeMap = __webpack_require__(39), tap = __webpack_require__(123), ignoreElements = __webpack_require__(170), switchMap = __webpack_require__(119), Observable = __webpack_require__(6);
+        }(Subscriber.a), switchMapTo = __webpack_require__(184), mergeMapTo = __webpack_require__(169), catchError = __webpack_require__(171), config = __webpack_require__(2), log = __webpack_require__(0), event_emitter = __webpack_require__(33), noop = __webpack_require__(27), promise = __webpack_require__(28), utils_ranges = __webpack_require__(13), warn_once = __webpack_require__(26), compat = __webpack_require__(7), fullscreen = __webpack_require__(77), error_codes = __webpack_require__(21), media_error = __webpack_require__(58), features = __webpack_require__(11), eme_manager = __webpack_require__(70), asap = __webpack_require__(172), timer = __webpack_require__(181), observeOn = __webpack_require__(120), mergeMap = __webpack_require__(39), tap = __webpack_require__(123), ignoreElements = __webpack_require__(170), switchMap = __webpack_require__(119), Observable = __webpack_require__(6);
         // CONCATENATED MODULE: ./src/utils/rx-throttle.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -11161,7 +11176,7 @@ object-assign
             };
         }
         // EXTERNAL MODULE: ./src/utils/array_find.ts
-                var array_find = __webpack_require__(11), object_values = __webpack_require__(92), EWMA = 
+                var array_find = __webpack_require__(10), object_values = __webpack_require__(92), EWMA = 
         /* */
         function() {
             /**
@@ -12364,25 +12379,27 @@ object-assign
             }
             /**
    * Fetch and parse the manifest corresponding to the URL given.
-   * @param {string} url - URL of the manifest
+   * @param {Object} options
    * @returns {Observable}
-   */            return function fetchManifest(url) {
+   */            return function fetchManifest(_ref) {
+                var url = _ref.url, hasClockSynchronization = _ref.hasClockSynchronization;
                 return loader({
                     url: url
                 }).pipe(Object(tap.a)(function(arg) {
                     "error" === arg.type && warning$.next(arg.value);
                 }), Object(filter.a)(function(arg) {
                     return "response" === arg.type;
-                }), Object(mergeMap.a)(function(_ref) {
-                    var value = _ref.value, sendingTime = value.sendingTime;
+                }), Object(mergeMap.a)(function(_ref2) {
+                    var value = _ref2.value, sendingTime = value.sendingTime;
                     return parser({
                         response: value,
                         url: url,
+                        hasClockSynchronization: hasClockSynchronization,
                         scheduleRequest: scheduleRequest
                     }).pipe(Object(catchError.a)(function(error) {
                         throw Object(is_known_error.a)(error) ? error : new other_error_OtherError("PIPELINE_PARSING_ERROR", error.toString(), !0);
-                    }), Object(map.a)(function(_ref2) {
-                        for (var manifest = _ref2.manifest, warnings = manifest.parsingErrors, i = 0; i < warnings.length; i++) warning$.next(warnings[i]);
+                    }), Object(map.a)(function(_ref3) {
+                        for (var manifest = _ref3.manifest, warnings = manifest.parsingErrors, i = 0; i < warnings.length; i++) warning$.next(warnings[i]);
  // TODO not through warning$
                                                 return {
                             manifest: manifest,
@@ -14797,7 +14814,7 @@ object-assign
  * limitations under the License.
  */
         /* harmony default export */        var buffers_period = function PeriodBuffer(_ref) {
-            var abrManager = _ref.abrManager, bufferType = _ref.bufferType, clock$ = _ref.clock$, content = _ref.content, garbageCollectors = _ref.garbageCollectors, segmentBookkeepers = _ref.segmentBookkeepers, segmentPipelinesManager = _ref.segmentPipelinesManager, sourceBuffersManager = _ref.sourceBuffersManager, options = _ref.options, period = content.period, wantedBufferAhead$ = options.wantedBufferAhead$, adaptation$ = new ReplaySubject.a(1);
+            var abrManager = _ref.abrManager, bufferType = _ref.bufferType, clock$ = _ref.clock$, content = _ref.content, garbageCollectors = _ref.garbageCollectors, segmentBookkeepers = _ref.segmentBookkeepers, segmentPipelinesManager = _ref.segmentPipelinesManager, sourceBuffersManager = _ref.sourceBuffersManager, options = _ref.options, wantedBufferAhead$ = _ref.wantedBufferAhead$, period = content.period, adaptation$ = new ReplaySubject.a(1);
             return adaptation$.pipe(Object(switchMap.a)(function(adaptation) {
                 if (null == adaptation) {
                     log.a.info("Buffer: Set no " + bufferType + " Adaptation", period);
@@ -15289,7 +15306,7 @@ object-assign
  * periods.
  */
         function BufferOrchestrator(content, clock$, abrManager, sourceBuffersManager, segmentPipelinesManager, options) {
-            var manifest = content.manifest, initialPeriod = content.initialPeriod, maxBufferAhead$ = options.maxBufferAhead$, maxBufferBehind$ = options.maxBufferBehind$, garbageCollectors = new WeakMapMemory(function(qSourceBuffer) {
+            var manifest = content.manifest, initialPeriod = content.initialPeriod, maxBufferAhead$ = options.maxBufferAhead$, maxBufferBehind$ = options.maxBufferBehind$, wantedBufferAhead$ = options.wantedBufferAhead$, garbageCollectors = new WeakMapMemory(function(qSourceBuffer) {
                 var bufferType = qSourceBuffer.bufferType, defaultMaxBehind = null != MAXIMUM_MAX_BUFFER_BEHIND[bufferType] ? MAXIMUM_MAX_BUFFER_BEHIND[bufferType] : Infinity, defaultMaxAhead = null != MAXIMUM_MAX_BUFFER_AHEAD[bufferType] ? MAXIMUM_MAX_BUFFER_AHEAD[bufferType] : Infinity;
                 return BufferGarbageCollector({
                     queuedSourceBuffer: qSourceBuffer,
@@ -15431,7 +15448,8 @@ object-assign
                     segmentBookkeepers: segmentBookkeepers,
                     segmentPipelinesManager: segmentPipelinesManager,
                     sourceBuffersManager: sourceBuffersManager,
-                    options: options
+                    options: options,
+                    wantedBufferAhead$: wantedBufferAhead$
                 }).pipe(Object(mergeMap.a)(function(evt) {
                     var type = evt.type;
                     if ("full-buffer" === type) {
@@ -15817,21 +15835,29 @@ object-assign
             Object(share.a)()), mediaError$ = Object(throw_on_media_error.a)(mediaElement), manifestRefreshed$ = new ReplaySubject.a(1), emeInitialized$ = emeManager$.pipe(Object(filter.a)(function(_ref2) {
                 var type = _ref2.type;
                 return "eme-init" === type || "eme-disabled" === type;
-            }), Object(take.a)(1)), loadContent$ = Object(combineLatest.a)(openMediaSource$, fetchManifest(url), emeInitialized$).pipe(Object(mergeMap.a)(function(_ref3) {
+            }), Object(take.a)(1)), loadContent$ = Object(combineLatest.a)(openMediaSource$, fetchManifest({
+                url: url,
+                hasClockSynchronization: !1
+            }), emeInitialized$).pipe(Object(mergeMap.a)(function(_ref3) {
                 var mediaSource = _ref3[0], _ref3$ = _ref3[1], manifest = _ref3$.manifest, sendingTime = _ref3$.sendingTime;
                 /**
      * Refresh the manifest on subscription.
      * @returns {Observable}
      */                function refreshManifest() {
                     var refreshURL = manifest.getUrl();
-                    return refreshURL ? fetchManifest(refreshURL).pipe(Object(tap.a)(function(_ref4) {
+                    if (!refreshURL) return log.a.warn("Init: Cannot refresh the manifest: no url"), 
+                    empty.a;
+                    var hasClockSynchronization = manifest.hasClockSynchronization();
+                    return fetchManifest({
+                        url: refreshURL,
+                        hasClockSynchronization: hasClockSynchronization
+                    }).pipe(Object(tap.a)(function(_ref4) {
                         var newManifest = _ref4.manifest, newSendingTime = _ref4.sendingTime;
                         manifest.update(newManifest), manifestRefreshed$.next({
                             manifest: manifest,
                             sendingTime: newSendingTime
                         });
-                    }), Object(ignoreElements.a)(), Object(share.a)()) : (log.a.warn("Init: Cannot refresh the manifest: no url"), 
-                    empty.a);
+                    }), Object(ignoreElements.a)(), Object(share.a)());
                 }
                 var loadOnMediaSource = createMediaSourceLoader({
                     mediaElement: mediaElement,
@@ -16826,7 +16852,7 @@ object-assign
                 // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
                                 return videoElement.preload = "auto", _this.version = 
                 /*PLAYER_VERSION*/
-                "3.11.1", _this.log = log.a, _this.state = "STOPPED", _this.videoElement = videoElement, 
+                "3.12.0", _this.log = log.a, _this.state = "STOPPED", _this.videoElement = videoElement, 
                 _this._priv_destroy$ = new Subject.a(), 
                 /** @deprecated */
                 onFullscreenChange$(videoElement).pipe(Object(takeUntil.a)(_this._priv_destroy$))
@@ -17322,7 +17348,7 @@ object-assign
                 var positionWanted, _this$_priv_contentIn8 = this._priv_contentInfos, isDirectFile = _this$_priv_contentIn8.isDirectFile, manifest = _this$_priv_contentIn8.manifest;
                 if (!isDirectFile && null == manifest) throw new Error("player: the content did not load yet");
                 var typeOf = typeof time;
-                if ("number" === typeOf) positionWanted = time; else if ("object" === typeOf) {
+                if ("number" == typeOf) positionWanted = time; else if ("object" == typeOf) {
                     var currentTs = this.videoElement.currentTime;
                     if (null != time.relative) positionWanted = currentTs + time.relative; else if (null != time.position) positionWanted = time.position; else {
                         if (null == time.wallClockTime) throw new Error('invalid time object. You must set one of the following properties: "relative", "position" or "wallClockTime"');
@@ -17973,7 +17999,7 @@ object-assign
         }(event_emitter.a);
         public_api_Player.version = 
         /*PLAYER_VERSION*/
-        "3.11.1";
+        "3.12.0";
         /* harmony default export */ var api = public_api_Player;
         // CONCATENATED MODULE: ./src/core/api/index.ts
         /**
@@ -18054,7 +18080,7 @@ object-assign
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/of.js
-        var of = __webpack_require__(30), combineLatest = __webpack_require__(179), filter = __webpack_require__(139), map = __webpack_require__(34), mergeMap = __webpack_require__(39), features = __webpack_require__(10), src_manifest = __webpack_require__(104), utils = __webpack_require__(183), log = __webpack_require__(0), SEGMENT_ID = 408125543, INFO_ID = 357149030, TIMECODESCALE_ID = 2807729, DURATION_ID = 17545;
+        var of = __webpack_require__(30), combineLatest = __webpack_require__(179), filter = __webpack_require__(139), map = __webpack_require__(34), mergeMap = __webpack_require__(39), features = __webpack_require__(11), src_manifest = __webpack_require__(104), utils = __webpack_require__(183), log = __webpack_require__(0), SEGMENT_ID = 408125543, INFO_ID = 357149030, TIMECODESCALE_ID = 2807729, DURATION_ID = 17545;
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/combineLatest.js
                 /**
  * Find the offsets of the value linked to the given element ID.
@@ -18101,7 +18127,7 @@ object-assign
             var timeCodeScaleOffsets = findNextElement(DURATION_ID, [ SEGMENT_ID, INFO_ID ], buffer, [ initialOffset, buffer.length ]);
             if (null == timeCodeScaleOffsets) return null;
             var length = timeCodeScaleOffsets[1] - timeCodeScaleOffsets[0];
-            return 4 === length ? get_IEEE754_32Bits(buffer, timeCodeScaleOffsets[0]) : 8 === length ? get_IEEE754_64Bits(buffer, timeCodeScaleOffsets[0]) : null;
+            return 4 == length ? get_IEEE754_32Bits(buffer, timeCodeScaleOffsets[0]) : 8 == length ? get_IEEE754_64Bits(buffer, timeCodeScaleOffsets[0]) : null;
         }
         /**
  * @param {Uint8Array} buffer
@@ -18195,9 +18221,62 @@ object-assign
             return value;
         }
         // EXTERNAL MODULE: ./src/config.ts
-                var config = __webpack_require__(2), id_generator = __webpack_require__(48), resolve_url = __webpack_require__(32), check_manifest_ids = __webpack_require__(90);
-        // EXTERNAL MODULE: ./src/utils/id_generator.ts
-                // CONCATENATED MODULE: ./src/parsers/manifest/dash/get_presentation_live_gap.ts
+                var config = __webpack_require__(2), array_find = __webpack_require__(10), id_generator = __webpack_require__(48), resolve_url = __webpack_require__(32), check_manifest_ids = __webpack_require__(90);
+        // EXTERNAL MODULE: ./src/utils/array_find.ts
+                // CONCATENATED MODULE: ./src/parsers/manifest/dash/get_clock_offset.ts
+        /**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+        /**
+ * Get offset the client's has with the given time, in milliseconds.
+ * For example, a response of 1000 would mean that the client is currently 1
+ * second in advance when compared with the given time.
+ * @param {string} serverClock
+ * @returns {number|undefined}
+ */
+        function getClockOffset(serverClock) {
+            var httpOffset = Date.now() - Date.parse(serverClock);
+            if (!isNaN(httpOffset)) return httpOffset;
+            log.a.warn("DASH Parser: Invalid clock received: ", serverClock);
+        }
+        // CONCATENATED MODULE: ./src/parsers/manifest/dash/get_http_utc-timing_url.ts
+        /**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+        /**
+ * @param {Object} mpdIR
+ * @returns {string|undefined}
+ */        function getHTTPUTCTimingURL(mpdIR) {
+            var UTCTimingHTTP = mpdIR.children.utcTimings.filter(function(utcTiming) {
+                return "urn:mpeg:dash:utc:http-iso:2014" === utcTiming.schemeIdUri && null != utcTiming.value;
+            });
+            return 0 < UTCTimingHTTP.length ? UTCTimingHTTP[0].value : void 0;
+        }
+        // CONCATENATED MODULE: ./src/parsers/manifest/dash/get_last_time_reference.ts
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -18222,8 +18301,7 @@ object-assign
  * adaptation.
  * @param {Object} adaptation
  * @returns {Number|undefined}
- */
-        function getLastLiveTimeReference(adaptation) {
+ */        function getLastTimeReferenceFromAdaptation(adaptation) {
             // Here's how we do, for each possibility:
             //
             //  1. every representations have an index:
@@ -18235,14 +18313,14 @@ object-assign
             //  3. Invalid index found somewhere:
             //    - returns undefined
             if (adaptation) {
-                var lastLiveTimeReferences = (adaptation.representations || []).map(function(representation) {
+                var lastTimeReferences = (adaptation.representations || []).map(function(representation) {
                     var lastPosition = representation.index.getLastPosition();
                     return null != lastPosition ? lastPosition : void 0;
                 });
-                if (!lastLiveTimeReferences.some(function(x) {
+                if (!lastTimeReferences.some(function(x) {
                     return null == x;
                 })) {
-                    var representationsMin = Math.min.apply(Math, lastLiveTimeReferences);
+                    var representationsMin = Math.min.apply(Math, lastTimeReferences);
                     return isNaN(representationsMin) ? void 0 : representationsMin;
                 }
             }
@@ -18251,12 +18329,39 @@ object-assign
  * Get presentation live gap from manifest informations.
  * @param {Object} manifest
  * @returns {number}
- */        function getPresentationLiveGap(manifest) {
+ */        function getLastTimeReference(manifest) {
             if (0 === manifest.periods.length) throw new Error("DASH Parser: no period available for a live content");
             var lastPeriodAdaptations = manifest.periods[manifest.periods.length - 1].adaptations, firstAdaptationsFromLastPeriod = lastPeriodAdaptations.video || lastPeriodAdaptations.audio;
             if (!firstAdaptationsFromLastPeriod || !firstAdaptationsFromLastPeriod.length) throw new Error("DASH Parser: Can't find first adaptation from last period");
-            var lastRef = getLastLiveTimeReference(firstAdaptationsFromLastPeriod[0]), ast = manifest.availabilityStartTime || 0;
-            return null != lastRef ? Date.now() / 1e3 - (lastRef + ast) : 10;
+            var firstAdaptationFromLastPeriod = firstAdaptationsFromLastPeriod[0];
+            return null == firstAdaptationsFromLastPeriod ? void 0 : getLastTimeReferenceFromAdaptation(firstAdaptationFromLastPeriod);
+        }
+        // CONCATENATED MODULE: ./src/parsers/manifest/dash/get_presentation_live_gap.ts
+        /**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+        /**
+ * Get presentation live gap from manifest informations.
+ * @param {Object} manifest
+ * @param {number|undefined} lastTimeReference
+ * @returns {number}
+ */        function getPresentationLiveGap(parsedMPD, lastTimeReference) {
+            if (null == lastTimeReference) return null != parsedMPD.clockOffset ? 0 : (log.a.warn("DASH Parser: no clock synchronization mechanism found.Setting a live gap of 10 seconds as a security."), 
+            10);
+            var ast = parsedMPD.availabilityStartTime || 0;
+            return (Date.now() - (parsedMPD.clockOffset || 0)) / 1e3 - (lastTimeReference + ast);
         }
         // CONCATENATED MODULE: ./src/parsers/manifest/dash/node_parsers/ContentComponent.ts
         /**
@@ -19157,7 +19262,7 @@ object-assign
  * @param {NodeList} mpdChildren
  * @returns {Object}
  */        function parseMPDChildren(mpdChildren) {
-            for (var baseURL = "", locations = [], periods = [], i = 0; i < mpdChildren.length; i++) if (mpdChildren[i].nodeType === Node.ELEMENT_NODE) {
+            for (var baseURL = "", locations = [], periods = [], utcTimings = [], i = 0; i < mpdChildren.length; i++) if (mpdChildren[i].nodeType === Node.ELEMENT_NODE) {
                 var currentNode = mpdChildren[i];
                 switch (currentNode.nodeName) {
                   case "BaseURL":
@@ -19171,12 +19276,18 @@ object-assign
                   case "Period":
                     var period = createPeriodIntermediateRepresentation(currentNode);
                     periods.push(period);
+                    break;
+
+                  case "UTCTiming":
+                    var utcTiming = parseScheme(currentNode);
+                    utcTimings.push(utcTiming);
                 }
             }
             return {
                 baseURL: baseURL,
                 locations: locations,
-                periods: periods
+                periods: periods,
+                utcTimings: utcTimings
             };
         }
         /**
@@ -19246,6 +19357,47 @@ object-assign
                 attributes: parseMPDAttributes(root)
             };
         }
+        // CONCATENATED MODULE: ./src/parsers/manifest/dash/parse_availability_start_time.ts
+        /**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */        function parseAvailabilityStartTime(rootAttributes, referenceDateTime) {
+            return "dynamic" !== rootAttributes.type ? 0 : null == rootAttributes.availabilityStartTime ? null == referenceDateTime ? 0 : referenceDateTime : rootAttributes.availabilityStartTime;
+        }
+        // CONCATENATED MODULE: ./src/parsers/manifest/dash/parse_duration.ts
+        /**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */        function parse_duration_parseDuration(rootAttributes, parsedPeriods) {
+            if (null != rootAttributes.duration) return rootAttributes.duration;
+            if ("dynamic" !== rootAttributes.type && parsedPeriods.length) {
+                var lastPeriod = parsedPeriods[parsedPeriods.length - 1];
+                if (null != lastPeriod.end) return lastPeriod.end;
+                if (null != lastPeriod.duration) return lastPeriod.start + lastPeriod.duration;
+            }
+        }
         // CONCATENATED MODULE: ./src/parsers/manifest/dash/flatten_overlapping_periods.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -19297,10 +19449,25 @@ object-assign
             }
             return flattenedPeriods;
         }
-        // EXTERNAL MODULE: ./src/utils/array_find.ts
-                var array_find = __webpack_require__(11), array_includes = __webpack_require__(12), KNOWN_ADAPTATION_TYPES = [ "audio", "video", "text", "image" ], SUPPORTED_TEXT_TYPES = [ "subtitle", "caption" ];
         // EXTERNAL MODULE: ./src/utils/array_includes.ts
-                /**
+                var array_includes = __webpack_require__(12), KNOWN_ADAPTATION_TYPES = [ "audio", "video", "text", "image" ], SUPPORTED_TEXT_TYPES = [ "subtitle", "caption" ];
+        // CONCATENATED MODULE: ./src/parsers/manifest/dash/infer_adaptation_type.ts
+        /**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */        
+        /**
  * Infers the type of adaptation from codec and mimetypes found in it.
  *
  * This follows the guidelines defined by the DASH-IF IOP:
@@ -19947,7 +20114,7 @@ object-assign
  */        function getSegmentIndex(index, start) {
             for (var timeline = index.timeline, low = 0, high = timeline.length; low < high; ) {
                 var mid = low + high >>> 1;
-                timeline[mid].start < start ? low = mid + 1 : high = mid;
+                timeline[mid].start < start ? low = 1 + mid : high = mid;
             }
             return 0 < low ? low - 1 : low;
         }
@@ -20407,17 +20574,17 @@ object-assign
  */        var generateManifestID = Object(id_generator.a)();
         /**
  * @param {Element} root - The MPD root.
- * @param {string} url - The url where the MPD is located
+ * @param {Object} args
  * @returns {Object}
- */        function parseMPD(root, uri) {
-            return loadExternalRessourcesAndParse(createMPDIntermediateRepresentation(root), uri);
+ */        function parseMPD(root, args) {
+            return loadExternalRessourcesAndParse(createMPDIntermediateRepresentation(root), args);
         }
         /**
  * Checks if xlinks needs to be loaded before actually parsing the manifest.
  * @param {Object} mpdIR
- * @param {string} uri
+ * @param {Object} args
  * @returns {Object}
- */        function loadExternalRessourcesAndParse(mpdIR, uri) {
+ */        function loadExternalRessourcesAndParse(mpdIR, args) {
             for (var xlinksToLoad = [], i = 0; i < mpdIR.children.periods.length; i++) {
                 var _mpdIR$children$perio = mpdIR.children.periods[i].attributes, xlinkHref = _mpdIR$children$perio.xlinkHref, xlinkActuate = _mpdIR$children$perio.xlinkActuate;
                 null != xlinkHref && "onLoad" === xlinkActuate && xlinksToLoad.push({
@@ -20425,7 +20592,7 @@ object-assign
                     ressource: xlinkHref
                 });
             }
-            return 0 !== xlinksToLoad.length ? {
+            return 0 === xlinksToLoad.length ? parseCompleteIntermediateRepresentation(mpdIR, args) : {
                 type: "needs-ressources",
                 value: {
                     ressources: xlinksToLoad.map(function(_ref) {
@@ -20443,49 +20610,65 @@ object-assign
                                                         // replace original "xlinked" periods by the real deal
                             (_mpdIR$children$perio2 = mpdIR.children.periods).splice.apply(_mpdIR$children$perio2, [ index, 1 ].concat(periodsIR));
                         }
-                        return loadExternalRessourcesAndParse(mpdIR, uri);
+                        return loadExternalRessourcesAndParse(mpdIR, args);
                     }
                 }
-            } : {
-                type: "done",
-                value: parseCompleteIntermediateRepresentation(mpdIR, uri)
             };
         }
         /**
  * Parse the MPD intermediate representation into a regular Manifest.
  * @param {Object} mpdIR
- * @param {string} uri
+ * @param {Object} args
  * @returns {Object}
- */        function parseCompleteIntermediateRepresentation(mpdIR, uri) {
-            var rootChildren = mpdIR.children, rootAttributes = mpdIR.attributes, baseURL = Object(resolve_url.a)(Object(resolve_url.b)(uri), rootChildren.baseURL), isDynamic = "dynamic" === rootAttributes.type, availabilityStartTime = "static" === rootAttributes.type || null == rootAttributes.availabilityStartTime ? 0 : rootAttributes.availabilityStartTime, parsedPeriods = parsePeriods(rootChildren.periods, {
+ */        function parseCompleteIntermediateRepresentation(mpdIR, args) {
+            var rootChildren = mpdIR.children, rootAttributes = mpdIR.attributes, baseURL = Object(resolve_url.a)(Object(resolve_url.b)(args.url), rootChildren.baseURL), availabilityStartTime = parseAvailabilityStartTime(rootAttributes, args.referenceDateTime), isDynamic = "dynamic" === rootAttributes.type, parsedPeriods = parsePeriods(rootChildren.periods, {
                 availabilityStartTime: availabilityStartTime,
                 duration: rootAttributes.duration,
                 isDynamic: isDynamic,
                 baseURL: baseURL
-            }), parsedMPD = {
+            }), duration = parse_duration_parseDuration(rootAttributes, parsedPeriods), directTiming = Object(array_find.a)(rootChildren.utcTimings, function(utcTiming) {
+                return "urn:mpeg:dash:utc:direct:2014" === utcTiming.schemeIdUri && null != utcTiming.value;
+            }), clockOffsetFromDirectUTCTiming = null != directTiming && null != directTiming.value ? Date.now() - Date.parse(directTiming.value) : void 0, parsedMPD = {
                 availabilityStartTime: availabilityStartTime,
                 baseURL: baseURL,
-                duration: function() {
-                    if (null != rootAttributes.duration) return rootAttributes.duration;
-                    if (!isDynamic && parsedPeriods.length) {
-                        var lastPeriod = parsedPeriods[parsedPeriods.length - 1];
-                        if (null != lastPeriod.end) return lastPeriod.end;
-                        if (null != lastPeriod.duration) return lastPeriod.start + lastPeriod.duration;
-                    }
-                }(),
+                duration: duration,
                 id: null != rootAttributes.id ? rootAttributes.id : "gen-dash-manifest-" + generateManifestID(),
                 periods: parsedPeriods,
                 transportType: "dash",
                 isLive: isDynamic,
-                uris: [ uri ].concat(rootChildren.locations),
-                suggestedPresentationDelay: null != rootAttributes.suggestedPresentationDelay ? rootAttributes.suggestedPresentationDelay : config.a.DEFAULT_SUGGESTED_PRESENTATION_DELAY.DASH
+                uris: [ args.url ].concat(rootChildren.locations),
+                suggestedPresentationDelay: null != rootAttributes.suggestedPresentationDelay ? rootAttributes.suggestedPresentationDelay : config.a.DEFAULT_SUGGESTED_PRESENTATION_DELAY.DASH,
+                clockOffset: null == clockOffsetFromDirectUTCTiming || isNaN(clockOffsetFromDirectUTCTiming) ? void 0 : clockOffsetFromDirectUTCTiming
             };
-            // -- add optional fields --
-            return "static" !== rootAttributes.type && null != rootAttributes.availabilityEndTime && (parsedMPD.availabilityEndTime = rootAttributes.availabilityEndTime), 
+            if (// -- add optional fields --
+            "static" !== rootAttributes.type && null != rootAttributes.availabilityEndTime && (parsedMPD.availabilityEndTime = rootAttributes.availabilityEndTime), 
             null != rootAttributes.timeShiftBufferDepth && (parsedMPD.timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth), 
             null != rootAttributes.minimumUpdatePeriod && 0 < rootAttributes.minimumUpdatePeriod && (parsedMPD.lifetime = rootAttributes.minimumUpdatePeriod), 
-            Object(check_manifest_ids.a)(parsedMPD), parsedMPD.isLive && (parsedMPD.presentationLiveGap = getPresentationLiveGap(parsedMPD)), 
-            parsedMPD;
+            Object(check_manifest_ids.a)(parsedMPD), parsedMPD.isLive) {
+                var lastTimeReference = getLastTimeReference(parsedMPD);
+                if (null == clockOffsetFromDirectUTCTiming && null == lastTimeReference && args.loadExternalClock) {
+                    var UTCTimingHTTPURL = getHTTPUTCTimingURL(mpdIR);
+                    if (null != UTCTimingHTTPURL && 0 < UTCTimingHTTPURL.length) return {
+                        type: "needs-ressources",
+                        value: {
+                            ressources: [ UTCTimingHTTPURL ],
+                            continue: function continueParsingMPD(loadedRessources) {
+                                if (1 !== loadedRessources.length) throw new Error("DASH parser: wrong number of loaded ressources.");
+                                return parsedMPD.clockOffset = getClockOffset(loadedRessources[0]), parsedMPD.presentationLiveGap = getPresentationLiveGap(parsedMPD, lastTimeReference), 
+                                {
+                                    type: "done",
+                                    value: parsedMPD
+                                };
+                            }
+                        }
+                    };
+                }
+                parsedMPD.presentationLiveGap = getPresentationLiveGap(parsedMPD, lastTimeReference);
+            }
+            return {
+                type: "done",
+                value: parsedMPD
+            };
         }
         // CONCATENATED MODULE: ./src/parsers/manifest/dash/parse_from_document.ts
         /**
@@ -20505,7 +20688,7 @@ object-assign
  */
         /**
  * @param {Document} manifest - Original manifest as returned by the server
- * @param {string} uri
+ * @param {Object} args
  * @returns {Object} - parsed manifest
  */        
         // CONCATENATED MODULE: ./src/parsers/manifest/dash/index.ts
@@ -20524,10 +20707,10 @@ object-assign
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-        /* harmony default export */ var dash = function parseFromDocument(document, uri) {
+        /* harmony default export */ var dash = function parseFromDocument(document, args) {
             var root = document.documentElement;
             if (!root || "MPD" !== root.nodeName) throw new Error("DASH Parser: document root should be MPD");
-            return parseMPD(root, uri);
+            return parseMPD(root, args);
         }, request = __webpack_require__(23), manifest_loader = __webpack_require__(91);
         // EXTERNAL MODULE: ./src/utils/request/index.ts + 1 modules
                 /* harmony default export */ var isobmff_timing_infos = 
@@ -20876,9 +21059,9 @@ object-assign
  * @param {string} xlinkURL
  * @returns {Observable}
  */
-        function requestXLink(xlinkURL) {
+        function requestStringResource(url) {
             return Object(request.a)({
-                url: xlinkURL,
+                url: url,
                 responseType: "text",
                 ignoreProgressEvents: !0
             }).pipe(Object(filter.a)(function(e) {
@@ -20897,7 +21080,7 @@ object-assign
             void 0 === options && (options = {});
             var manifestLoader = Object(manifest_loader.a)({
                 customManifestLoader: options.manifestLoader
-            }), segmentLoader = segment_loader(options.segmentLoader), segmentPipeline = {
+            }), segmentLoader = segment_loader(options.segmentLoader), referenceDateTime = options.referenceDateTime, segmentPipeline = {
                 loader: function loader(_ref3) {
                     var adaptation = _ref3.adaptation, manifest = _ref3.manifest, period = _ref3.period, representation = _ref3.representation, segment = _ref3.segment;
                     return segmentLoader({
@@ -20948,8 +21131,8 @@ object-assign
                         return manifestLoader(url);
                     },
                     parser: function parser(_ref2) {
-                        var response = _ref2.response, loaderURL = _ref2.url, scheduleRequest = _ref2.scheduleRequest, url = null == response.url ? loaderURL : response.url, data = "string" == typeof response.responseData ? new DOMParser().parseFromString(response.responseData, "text/xml") : response.responseData;
-                        return function loadExternalRessources(parserResponse) {
+                        var response = _ref2.response, loaderURL = _ref2.url, scheduleRequest = _ref2.scheduleRequest, hasClockSynchronization = _ref2.hasClockSynchronization, url = null == response.url ? loaderURL : response.url, data = "string" == typeof response.responseData ? new DOMParser().parseFromString(response.responseData, "text/xml") : response.responseData;
+                        return function loadExternalResources(parserResponse) {
                             if ("done" === parserResponse.type) {
                                 var manifest = new src_manifest.a(parserResponse.value, options);
                                 return Object(of.a)({
@@ -20957,15 +21140,19 @@ object-assign
                                     url: url
                                 });
                             }
-                            var _parserResponse$value = parserResponse.value, ressources = _parserResponse$value.ressources, continueParsing = _parserResponse$value.continue, externalXlinks$ = ressources.map(function(ressourceURL) {
+                            var _parserResponse$value = parserResponse.value, ressources = _parserResponse$value.ressources, continueParsing = _parserResponse$value.continue, externalResources$ = ressources.map(function(resource) {
                                 return scheduleRequest(function() {
-                                    return requestXLink(ressourceURL);
+                                    return requestStringResource(resource);
                                 });
                             });
-                            return Object(combineLatest.a)(externalXlinks$).pipe(Object(mergeMap.a)(function(loadedRessources) {
-                                return loadExternalRessources(continueParsing(loadedRessources));
+                            return Object(combineLatest.a)(externalResources$).pipe(Object(mergeMap.a)(function(loadedResources) {
+                                return loadExternalResources(continueParsing(loadedResources));
                             }));
-                        }(dash(data, url));
+                        }(dash(data, {
+                            url: url,
+                            referenceDateTime: referenceDateTime,
+                            loadExternalClock: !hasClockSynchronization
+                        }));
                     }
                 },
                 audio: segmentPipeline,
@@ -21047,7 +21234,7 @@ object-assign
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/of.js
-        var of = __webpack_require__(30), map = __webpack_require__(34), features = __webpack_require__(10), log = __webpack_require__(0), src_manifest = __webpack_require__(104), read = __webpack_require__(111), object_assign = __webpack_require__(9), object_assign_default = /* */ __webpack_require__.n(object_assign), config = __webpack_require__(2), assert = __webpack_require__(16), id_generator = __webpack_require__(48), resolve_url = __webpack_require__(32), check_manifest_ids = __webpack_require__(90);
+        var of = __webpack_require__(30), map = __webpack_require__(34), features = __webpack_require__(11), log = __webpack_require__(0), src_manifest = __webpack_require__(104), read = __webpack_require__(111), object_assign = __webpack_require__(9), object_assign_default = /* */ __webpack_require__.n(object_assign), config = __webpack_require__(2), assert = __webpack_require__(16), id_generator = __webpack_require__(48), resolve_url = __webpack_require__(32), check_manifest_ids = __webpack_require__(90);
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/map.js
                 // CONCATENATED MODULE: ./src/parsers/manifest/smooth/get_codecs.ts
         /**
@@ -21290,7 +21477,7 @@ object-assign
  */        function getSegmentIndex(index, start) {
             for (var timeline = index.timeline, low = 0, high = timeline.length; low < high; ) {
                 var mid = low + high >>> 1;
-                timeline[mid].start < start ? low = mid + 1 : high = mid;
+                timeline[mid].start < start ? low = 1 + mid : high = mid;
             }
             return 0 < low ? low - 1 : low;
         }
@@ -21362,12 +21549,16 @@ object-assign
  */        var representation_index_SmoothRepresentationIndex = 
         /* */
         function() {
-            function SmoothRepresentationIndex(index, infos) {
-                var estimatedReceivedTime = null == index.manifestReceivedTime ? performance.now() : index.manifestReceivedTime;
-                if (this._index = index, this._indexValidityTime = estimatedReceivedTime, this._bitsPerSample = infos.bitsPerSample, 
-                this._channels = infos.channels, this._codecPrivateData = infos.codecPrivateData, 
-                this._packetSize = infos.packetSize, this._samplingRate = infos.samplingRate, this._protection = infos.protection, 
-                index.timeline.length) {
+            function SmoothRepresentationIndex(index, options) {
+                var aggressiveMode = options.aggressiveMode, segmentPrivateInfos = options.segmentPrivateInfos, estimatedReceivedTime = null == index.manifestReceivedTime ? performance.now() : index.manifestReceivedTime;
+                if (this._index = index, this._indexValidityTime = estimatedReceivedTime, this._initSegmentInfos = {
+                    bitsPerSample: segmentPrivateInfos.bitsPerSample,
+                    channels: segmentPrivateInfos.channels,
+                    codecPrivateData: segmentPrivateInfos.codecPrivateData,
+                    packetSize: segmentPrivateInfos.packetSize,
+                    samplingRate: segmentPrivateInfos.samplingRate,
+                    protection: segmentPrivateInfos.protection
+                }, this._isAggressiveMode = aggressiveMode, index.timeline.length) {
                     var scaledEnd = getTimelineRangeEnd(index.timeline[index.timeline.length - 1]);
                     if (this._initialLastPosition = scaledEnd / index.timescale, index.isLive) {
                         var scaledReceivedTime = estimatedReceivedTime / 1e3 * index.timescale;
@@ -21386,14 +21577,7 @@ object-assign
                     time: 0,
                     timescale: this._index.timescale,
                     privateInfos: {
-                        smoothInit: {
-                            bitsPerSample: this._bitsPerSample,
-                            channels: this._channels,
-                            codecPrivateData: this._codecPrivateData,
-                            packetSize: this._packetSize,
-                            samplingRate: this._samplingRate,
-                            protection: this._protection
-                        }
+                        smoothInit: this._initSegmentInfos
                     },
                     mediaURL: null
                 };
@@ -21405,12 +21589,12 @@ object-assign
    * @param {Number} _to
    * @returns {Array.<Object>}
    */ , _proto.getSegments = function getSegments(_up, _to) {
-                for (var currentNumber, index = this._index, _normalizeRange = normalizeRange(index, _up, _to), up = _normalizeRange.up, to = _normalizeRange.to, timeline = index.timeline, timescale = index.timescale, media = index.media, segments = [], timelineLength = timeline.length, maxEncounteredDuration = timeline.length && timeline[0].duration || 0, estimatedEnd = null == this._scaledLiveGap ? void 0 : performance.now() / 1e3 * timescale - this._scaledLiveGap, i = 0; i < timelineLength; i++) {
+                for (var currentNumber, index = this._index, _normalizeRange = normalizeRange(index, _up, _to), up = _normalizeRange.up, to = _normalizeRange.to, timeline = index.timeline, timescale = index.timescale, media = index.media, segments = [], timelineLength = timeline.length, maxEncounteredDuration = timeline.length && timeline[0].duration || 0, maxPosition = this._isAggressiveMode || null == this._scaledLiveGap ? void 0 : performance.now() / 1e3 * timescale - this._scaledLiveGap, i = 0; i < timelineLength; i++) {
                     var segmentRange = timeline[i], duration = segmentRange.duration, start = segmentRange.start;
                     // live-added segments have @d attribute equals to -1
                     if (maxEncounteredDuration = Math.max(maxEncounteredDuration, duration || 0), null != duration && duration < 0) {
                         var approximateEnd = start + maxEncounteredDuration;
-                        if (approximateEnd < to && (null == estimatedEnd || approximateEnd <= estimatedEnd)) {
+                        if (approximateEnd < to && (null == maxPosition || approximateEnd <= maxPosition)) {
                             var segment = {
                                 id: "" + start,
                                 time: start,
@@ -21423,7 +21607,7 @@ object-assign
                         }
                         return segments;
                     }
-                    for (var repeat = calculateRepeat(segmentRange, timeline[i + 1]), segmentNumberInCurrentRange = getSegmentNumber(start, up, duration), segmentTime = start + segmentNumberInCurrentRange * (null == duration ? 0 : duration); segmentTime < to && segmentNumberInCurrentRange <= repeat && (null == estimatedEnd || segmentTime + duration <= estimatedEnd); ) {
+                    for (var repeat = calculateRepeat(segmentRange, timeline[i + 1]), segmentNumberInCurrentRange = getSegmentNumber(start, up, duration), segmentTime = start + segmentNumberInCurrentRange * (null == duration ? 0 : duration); segmentTime < to && segmentNumberInCurrentRange <= repeat && (null == maxPosition || segmentTime + duration <= maxPosition); ) {
                         var _segment = {
                             id: "" + segmentTime,
                             time: segmentTime,
@@ -21472,7 +21656,7 @@ object-assign
    */ , _proto.getLastPosition = function getLastPosition() {
                 for (var index = this._index, i = index.timeline.length - 1; 0 <= i; i--) {
                     var lastTimelineElement = index.timeline[i];
-                    if (null == this._scaledLiveGap) return getTimelineRangeEnd(lastTimelineElement) / index.timescale;
+                    if (this._isAggressiveMode || null == this._scaledLiveGap) return getTimelineRangeEnd(lastTimelineElement) / index.timescale;
                     for (var timescaledNow = performance.now() / 1e3 * index.timescale, start = lastTimelineElement.start, duration = lastTimelineElement.duration, j = lastTimelineElement.repeatCount; 0 <= j; j--) {
                         var end = start + duration * (j + 1);
                         if (end <= timescaledNow - this._scaledLiveGap) return end / index.timescale;
@@ -21520,7 +21704,7 @@ object-assign
                             // adjust repeatCount + add supplementary segments
                             if (oldTimelineRange.duration !== lastNewTimelineElement.duration) return;
                             var rangeDuration = newEnd - oldTimelineRange.start;
-                            if (0 === rangeDuration) return log.a.warn("Smooth Parser: a discontinuity detected in the previous manifest has been resolved."), 
+                            if (0 == rangeDuration) return log.a.warn("Smooth Parser: a discontinuity detected in the previous manifest has been resolved."), 
                             void (this._index.timeline = this._index.timeline.concat(oldTimeline.slice(i)));
                             if (rangeDuration < 0 || rangeDuration % oldTimelineRange.duration != 0) return;
                             var repeatWithOld = rangeDuration / oldTimelineRange.duration - 1, relativeRepeat = oldTimelineRange.repeatCount - repeatWithOld;
@@ -21610,6 +21794,11 @@ object-assign
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ */
+        /**
+ * Default value for the aggressive `mode`.
+ * In this mode, segments will be returned even if we're not sure those had time
+ * to be generated.
  */        var generateManifestID = Object(id_generator.a)(), DEFAULT_MIME_TYPES = {
             audio: "audio/mp4",
             video: "video/mp4",
@@ -21736,7 +21925,7 @@ object-assign
                             });
                         });
                     }));
-                    var initSegmentInfos = {
+                    var segmentPrivateInfos = {
                         bitsPerSample: qualityLevel.bitsPerSample,
                         channels: qualityLevel.channels,
                         codecPrivateData: qualityLevel.codecPrivateData || "",
@@ -21748,7 +21937,10 @@ object-assign
                             keySystems: firstProtection.keySystems
                         } : void 0
                     }, representation = object_assign_default()({}, qualityLevel, {
-                        index: new representation_index_SmoothRepresentationIndex(repIndex, initSegmentInfos),
+                        index: new representation_index_SmoothRepresentationIndex(repIndex, {
+                            segmentPrivateInfos: segmentPrivateInfos,
+                            aggressiveMode: null != parserOptions.aggressiveMode && parserOptions.aggressiveMode
+                        }),
                         mimeType: mimeType,
                         codecs: codecs,
                         id: id
@@ -22337,7 +22529,7 @@ object-assign
             var oldMoofLength = moofOffsets[1] - moofOffsets[0], moofDelta = newMoof.length - oldMoofLength, mdatOffsets = Object(get_box.c)(segment, 1835295092
             /* "mdat" */);
             if (null == mdatOffsets) throw new Error("Smooth: Invalid ISOBMFF given");
-            if (Object(can_patch_isobmff.a)() && (0 === moofDelta || moofDelta <= -8)) 
+            if (Object(can_patch_isobmff.a)() && (0 == moofDelta || moofDelta <= -8)) 
             // patch trun data_offset
             return newMoof.set(Object(byte_parsing.l)(mdatOffsets[0] + 8), trunOffsetInMoof + 16), 
             segment.set(newMoof, moofOffsets[0]), moofDelta <= -8 && segment.set(createFreeBox(-moofDelta), newMoof.length), 
@@ -23274,7 +23466,7 @@ object-assign
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/object-assign/index.js
-        var object_assign = __webpack_require__(9), object_assign_default = /* */ __webpack_require__.n(object_assign), array_find = __webpack_require__(11), get_parameters = __webpack_require__(96), get_parent_elements_by_tag_name = __webpack_require__(65), get_styling = __webpack_require__(29), nodes = __webpack_require__(50), get_time_delimiters = __webpack_require__(110), regexps = __webpack_require__(18);
+        var object_assign = __webpack_require__(9), object_assign_default = /* */ __webpack_require__.n(object_assign), array_find = __webpack_require__(10), get_parameters = __webpack_require__(96), get_parent_elements_by_tag_name = __webpack_require__(65), get_styling = __webpack_require__(29), nodes = __webpack_require__(50), get_time_delimiters = __webpack_require__(110), regexps = __webpack_require__(18);
         // CONCATENATED MODULE: ./src/parsers/texttracks/ttml/html/generate_css_test_outline.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -24054,7 +24246,7 @@ object-assign
                 // These cues should be the last one
                                 cuesBuffer.push(cuesInfosToInsert);
             }, TextBufferManager;
-        }(), features = __webpack_require__(10);
+        }(), features = __webpack_require__(11);
         // EXTERNAL MODULE: ./src/features/index.ts
                 // CONCATENATED MODULE: ./src/core/source_buffers/text/html/parsers.ts
         /**
@@ -24262,7 +24454,7 @@ object-assign
             }
         }
         // EXTERNAL MODULE: ./src/core/source_buffers/abstract_source_buffer.ts + 1 modules
-                var abstract_source_buffer = __webpack_require__(66), features = __webpack_require__(10);
+                var abstract_source_buffer = __webpack_require__(66), features = __webpack_require__(11);
         // EXTERNAL MODULE: ./src/features/index.ts
                 // CONCATENATED MODULE: ./src/core/source_buffers/text/native/parsers.ts
         /**
@@ -24623,7 +24815,7 @@ object-assign
         "use strict";
         __webpack_require__.r(__webpack_exports__);
         // EXTERNAL MODULE: ./node_modules/object-assign/index.js
-        var object_assign = __webpack_require__(9), object_assign_default = /* */ __webpack_require__.n(object_assign), make_vtt_cue = __webpack_require__(95), is_vtt_cue = __webpack_require__(131), array_find = __webpack_require__(11), get_parameters = __webpack_require__(96), get_parent_elements_by_tag_name = __webpack_require__(65), get_styling = __webpack_require__(29), get_time_delimiters = __webpack_require__(110), nodes = __webpack_require__(50), regexps = __webpack_require__(18), WANTED_STYLE_ATTRIBUTES = [ "extent", "writingMode", "origin", "align" ], TEXT_ALIGN_TO_LIGN_ALIGN = {
+        var object_assign = __webpack_require__(9), object_assign_default = /* */ __webpack_require__.n(object_assign), make_vtt_cue = __webpack_require__(95), is_vtt_cue = __webpack_require__(131), array_find = __webpack_require__(10), get_parameters = __webpack_require__(96), get_parent_elements_by_tag_name = __webpack_require__(65), get_styling = __webpack_require__(29), get_time_delimiters = __webpack_require__(110), nodes = __webpack_require__(50), regexps = __webpack_require__(18), WANTED_STYLE_ATTRIBUTES = [ "extent", "writingMode", "origin", "align" ], TEXT_ALIGN_TO_LIGN_ALIGN = {
             left: "start",
             center: "center",
             right: "end",
@@ -25479,7 +25671,7 @@ object-assign
                 pos += 4;
                 var refSize = 2147483647 & refChunk;
                 // when set to 1 indicates that the reference is to a sidx, else to media
-                if (1 === (2147483648 & refChunk) >>> 31) throw new Error("not implemented");
+                if (1 == (2147483648 & refChunk) >>> 31) throw new Error("not implemented");
                 var duration = Object(_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_2__.c)(buf, pos);
                 pos += 4, // let sapChunk = be4toi(buf, pos + 8);
                 pos += 4, // TODO(pierre): handle sap
