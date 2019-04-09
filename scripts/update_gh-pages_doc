@@ -38,7 +38,10 @@ if [ -n "$(git status --porcelain doc)" ]; then
 fi
 
 tmpDir=$(mktemp -d)
+tmpDocList=$(mktemp)
+
 cp -r doc/generated/* $tmpDir
+cp scripts/generate_doc_list.js $tmpDocList -v
 
 # update gh-pages
 git checkout gh-pages
@@ -49,13 +52,14 @@ mkdir -p "versions/$current_version/doc"
 rm -rf doc
 mv $tmpDir/* "versions/$current_version/doc"
 ln -s "./versions/$current_version/doc" doc
+mv $tmpDocList  generate_doc_list.js
 
-rm -rf $tmpDir
+node generate_doc_list.js
 
 if [ -n "$(git status --porcelain)" ]; then
   echo "-- Current Status on gh-pages: --"
   echo ""
-  git status doc "versions/$current_version/doc"
+  git status doc "versions/$current_version/doc" documentation_pages_by_version.html
 
   while : ; do
     echo ""
@@ -77,21 +81,21 @@ if [ -n "$(git status --porcelain)" ]; then
       echo "| h: see this help                                       |"
       echo "+--------------------------------------------------------+"
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-      git add doc "versions/$current_version/doc"
+      git add doc "versions/$current_version/doc" documentation_pages_by_version.html
       git commit -m "doc: deploy $current_version to the gh-pages" -S
       git push origin gh-pages
       break
     elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
-      git diff doc "versions/$current_version/doc" || true # ignore when return 1
+      git diff doc "versions/$current_version/doc" documentation_pages_by_version.html || true # ignore when return 1
     elif [[ $REPLY =~ ^[Ss](tatus)?$ ]]; then
-      git status doc "versions/$current_version/doc"
+      git status doc "versions/$current_version/doc" documentation_pages_by_version.html
     elif [[ $REPLY =~ ^[Aa](bort)?$ ]]; then
       echo "exiting"
       exit 0
     elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
-      git checkout doc "versions/$current_version/doc"
+      git checkout doc "versions/$current_version/doc" documentation_pages_by_version.html
     elif [[ $REPLY =~ ^([Tt]|([Ss]tash))?$ ]]; then
-      git stash -u push doc "versions/$current_version/doc"
+      git stash -u push doc "versions/$current_version/doc" documentation_pages_by_version.html
       break
     fi
   done
