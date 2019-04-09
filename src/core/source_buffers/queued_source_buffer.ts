@@ -29,8 +29,11 @@ import {
   ICustomSourceBuffer,
   tryToChangeSourceBufferType,
 } from "../../compat";
+import config from "../../config";
 import log from "../../log";
 import ICustomTimeRanges from "./time_ranges";
+
+const { SOURCE_BUFFER_FLUSHING_INTERVAL } = config;
 
 // Every QueuedSourceBuffer types
 export type IBufferType = "audio"|"video"|"text"|"image";
@@ -214,7 +217,7 @@ export default class QueuedSourceBuffer<T> {
     // stay locked in a waiting state.
     // This interval is here to check at regular intervals if the underlying
     // SourceBuffer is currently updating.
-    interval(2000).pipe(
+    interval(SOURCE_BUFFER_FLUSHING_INTERVAL).pipe(
       tap(() => this._flush()),
       takeUntil(this._destroy$)
     ).subscribe();
