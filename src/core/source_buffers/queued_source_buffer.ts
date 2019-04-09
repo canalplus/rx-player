@@ -227,6 +227,8 @@ export default class QueuedSourceBuffer<T> {
    * @returns {Observable}
    */
   public appendBuffer(infos : IAppendBufferInfos<T>) : Observable<unknown> {
+    log.debug("QSB: receiving order to push data to the SourceBuffer",
+      this.bufferType);
     return this._addToQueue({ type: SourceBufferAction.Append, value: infos });
   }
 
@@ -237,6 +239,8 @@ export default class QueuedSourceBuffer<T> {
    * @returns {Observable}
    */
   public removeBuffer(start : number, end : number) : Observable<unknown> {
+    log.debug("QSB: receiving order to remove data from the SourceBuffer",
+      this.bufferType);
     return this._addToQueue({ type: SourceBufferAction.Remove, value: { start, end } });
   }
 
