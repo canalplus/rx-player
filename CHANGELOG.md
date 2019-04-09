@@ -8,6 +8,10 @@
   - smooth: add `aggressiveMode` transportOption to requests segments in advance
   - dash/smooth: add `referenceDateTime` transportOption to set a default reference time for live contents
 
+### Bug fixes
+
+  - buffer: work around firefox bug leading to infinite rebuffering sometimes when seeking multiple time in a content
+
 ### Other improvements
 
   - dash/smooth: add optional `url`, `sendingTime` and `receivingTime` properties in the response given by manifestLoader transportOption
