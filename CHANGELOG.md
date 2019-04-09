@@ -10,7 +10,7 @@
 
 ### Bug fixes
 
-  - buffer: work around firefox bug leading to infinite rebuffering sometimes when seeking multiple time in a content
+  - buffer: work around firefox bug leading to infinite rebuffering when seeking many times in a content
 
 ### Other improvements
 
