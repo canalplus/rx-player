@@ -739,4 +739,17 @@ export default {
     text: { before: 0, after: 0 }, // not managed natively, so no problem here
     image: { before: 0, after: 0 }, // not managed natively, so no problem here
   },
+
+  /**
+   * Interval, in milliseconds, at which we should manually flush
+   * SourceBuffers.
+   * Some browsers (happened with firefox) sometimes "forget" to send us
+   * `update` or `updateend` events.
+   * In that case, we're completely unable to continue the queue here and
+   * stay locked in a waiting state.
+   * This interval is here to check at regular intervals if the underlying
+   * SourceBuffer is currently updating.
+   * @type {Number}
+   */
+  SOURCE_BUFFER_FLUSHING_INTERVAL: 2000,
 };
