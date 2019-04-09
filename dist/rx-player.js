@@ -1075,7 +1075,19 @@
                     before: 0,
                     after: 0
                 }
-            }
+            },
+            /**
+   * Interval, in milliseconds, at which we should manually flush
+   * SourceBuffers.
+   * Some browsers (happened with firefox) sometimes "forget" to send us
+   * `update` or `updateend` events.
+   * In that case, we're completely unable to continue the queue here and
+   * stay locked in a waiting state.
+   * This interval is here to check at regular intervals if the underlying
+   * SourceBuffer is currently updating.
+   * @type {Number}
+   */
+            SOURCE_BUFFER_FLUSHING_INTERVAL: 2e3
         };
     }, 
     /* 3 */
@@ -13217,10 +13229,11 @@ object-assign
                 return log.a.debug("GC: cleaning range from SourceBuffer", range), qSourceBuffer.removeBuffer(range.start, range.end);
             })).pipe(Object(concatAll.a)(), Object(ignoreElements.a)());
         }
-        // EXTERNAL MODULE: ./src/compat/change_source_buffer_type.ts
-                var SourceBufferAction, change_source_buffer_type = __webpack_require__(133);
-        // CONCATENATED MODULE: ./src/core/source_buffers/queued_source_buffer.ts
-                function _defineProperties(target, props) {
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/interval.js
+                var observable_interval = __webpack_require__(177), fromEvent = __webpack_require__(166), change_source_buffer_type = __webpack_require__(133);
+        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/observable/fromEvent.js
+                // CONCATENATED MODULE: ./src/core/source_buffers/queued_source_buffer.ts
+        function _defineProperties(target, props) {
             for (var i = 0; i < props.length; i++) {
                 var descriptor = props[i];
                 descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0, 
@@ -13245,7 +13258,8 @@ object-assign
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */        !function(SourceBufferAction) {
+ */        var SourceBufferAction, SOURCE_BUFFER_FLUSHING_INTERVAL = config.a.SOURCE_BUFFER_FLUSHING_INTERVAL;
+        !function(SourceBufferAction) {
             SourceBufferAction[SourceBufferAction.Append = 0] = "Append", SourceBufferAction[SourceBufferAction.Remove = 1] = "Remove";
         }(SourceBufferAction || (SourceBufferAction = {}));
         /**
@@ -13267,10 +13281,22 @@ object-assign
    * @param {SourceBuffer} sourceBuffer
    */
             function QueuedSourceBuffer(bufferType, codec, sourceBuffer) {
-                this.bufferType = bufferType, this._sourceBuffer = sourceBuffer, this._queue = [], 
-                this._currentOrder = null, this._lastInitSegment = null, this._currentCodec = codec, 
-                this.__onErrorEvent = this._onErrorEvent.bind(this), this.__onUpdateEnd = this._onUpdateEnd.bind(this), 
-                this._sourceBuffer.addEventListener("error", this.__onErrorEvent), this._sourceBuffer.addEventListener("updateend", this.__onUpdateEnd);
+                var _this = this;
+                this._destroy$ = new Subject.a(), this.bufferType = bufferType, this._sourceBuffer = sourceBuffer, 
+                this._queue = [], this._currentOrder = null, this._lastInitSegment = null, this._currentCodec = codec, 
+                // Some browsers (happened with firefox) sometimes "forget" to send us
+                // `update` or `updateend` events.
+                // In that case, we're completely unable to continue the queue here and
+                // stay locked in a waiting state.
+                // This interval is here to check at regular intervals if the underlying
+                // SourceBuffer is currently updating.
+                Object(observable_interval.a)(SOURCE_BUFFER_FLUSHING_INTERVAL).pipe(Object(tap.a)(function() {
+                    return _this._flush();
+                }), Object(takeUntil.a)(this._destroy$)).subscribe(), Object(fromEvent.a)(this._sourceBuffer, "error").pipe(Object(tap.a)(function(err) {
+                    return _this._onErrorEvent(err);
+                }), Object(takeUntil.a)(this._destroy$)).subscribe(), Object(fromEvent.a)(this._sourceBuffer, "updateend").pipe(Object(tap.a)(function() {
+                    return _this._flush();
+                }), Object(takeUntil.a)(this._destroy$)).subscribe();
             }
             /**
    * Public access to the SourceBuffer's current codec.
@@ -13297,7 +13323,8 @@ object-assign
    * @param {Object} infos
    * @returns {Observable}
    */            return _proto.appendBuffer = function appendBuffer(infos) {
-                return this._addToQueue({
+                return log.a.debug("QSB: receiving order to push data to the SourceBuffer", this.bufferType), 
+                this._addToQueue({
                     type: SourceBufferAction.Append,
                     value: infos
                 });
@@ -13308,7 +13335,8 @@ object-assign
    * @param {number} end - end position, in seconds
    * @returns {Observable}
    */ , _proto.removeBuffer = function removeBuffer(start, end) {
-                return this._addToQueue({
+                return log.a.debug("QSB: receiving order to remove data from the SourceBuffer", this.bufferType), 
+                this._addToQueue({
                     type: SourceBufferAction.Remove,
                     value: {
                         start: start,
@@ -13329,8 +13357,8 @@ object-assign
    * function.
    * @private
    */ , _proto.dispose = function dispose() {
-                for (this._sourceBuffer.removeEventListener("error", this.__onErrorEvent), this._sourceBuffer.removeEventListener("updateend", this.__onUpdateEnd), 
-                null != this._currentOrder && (this._currentOrder.subject.complete(), this._currentOrder = null); this._queue.length; ) {
+                for (this._destroy$.next(), this._destroy$.complete(), null != this._currentOrder && (this._currentOrder.subject.complete(), 
+                this._currentOrder = null); this._queue.length; ) {
                     var nextElement = this._queue.shift();
                     null != nextElement && nextElement.subject.complete();
                 }
@@ -13343,12 +13371,6 @@ object-assign
    * @private
    */ , _proto.abort = function abort() {
                 this._sourceBuffer.abort();
-            }
-            /**
-   * Callback used for the 'updateend' event, as a segment has been added/removed.
-   * @private
-   */ , _proto._onUpdateEnd = function _onUpdateEnd() {
-                this._flush();
             }
             /**
    * Callback used for the 'error' event from the SourceBuffer.
@@ -13377,12 +13399,12 @@ object-assign
    * @param {Object} order
    * @returns {Observable}
    */ , _proto._addToQueue = function _addToQueue(order) {
-                var _this = this;
+                var _this2 = this;
                 return new Observable.a(function(obs) {
-                    var queueItem, shouldRestartQueue = 0 === _this._queue.length && null == _this._currentOrder, subject = new Subject.a();
+                    var queueItem, shouldRestartQueue = 0 === _this2._queue.length && null == _this2._currentOrder, subject = new Subject.a();
                     if (order.type === SourceBufferAction.Append) {
                         var _order$value = order.value, segment = _order$value.segment, initSegment = _order$value.initSegment, timestampOffset = _order$value.timestampOffset, codec = _order$value.codec;
-                        if (null === initSegment && null === segment) return log.a.warn("QSB: no segment to append.", _this.bufferType), 
+                        if (null === initSegment && null === segment) return log.a.warn("QSB: no segment to append.", _this2.bufferType), 
                         obs.next(null), void obs.complete();
                         queueItem = {
                             type: SourceBufferAction.Append,
@@ -13402,12 +13424,12 @@ object-assign
                             subject: subject
                         };
                     }
-                    _this._queue.push(queueItem);
+                    _this2._queue.push(queueItem);
                     var subscription = subject.subscribe(obs);
-                    return shouldRestartQueue && _this._flush(), function() {
+                    return shouldRestartQueue && _this2._flush(), function() {
                         subscription.unsubscribe();
-                        var index = _this._queue.indexOf(queueItem);
-                        0 <= index && _this._queue.splice(index, 1);
+                        var index = _this2._queue.indexOf(queueItem);
+                        0 <= index && _this2._queue.splice(index, 1);
                     };
                 });
             }
