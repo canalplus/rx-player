@@ -41,7 +41,7 @@ tmpDir=$(mktemp -d)
 tmpDocList=$(mktemp)
 
 cp -r doc/generated/* $tmpDir
-cp scripts/generate_doc_list.js $tmpDocList -v
+cp scripts/generate_documentation_list.js $tmpDocList -v
 
 # update gh-pages
 git checkout gh-pages
@@ -52,9 +52,9 @@ mkdir -p "versions/$current_version/doc"
 rm -rf doc
 mv $tmpDir/* "versions/$current_version/doc"
 ln -s "./versions/$current_version/doc" doc
-mv $tmpDocList  generate_doc_list.js
+mv $tmpDocList  generate_documentation_list.js
 
-node generate_doc_list.js
+node generate_documentation_list.js
 
 if [ -n "$(git status --porcelain)" ]; then
   echo "-- Current Status on gh-pages: --"
