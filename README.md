@@ -37,7 +37,10 @@ Its main goals are:
 We documented the API in every little details in [the API
 documentation](https://canalplus.github.io/rx-player/doc/pages/api/index.html).
 
-This documentation is automatically generated from the content of the
+You can also refer to the documentation of our previous versions
+[here](https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html)
+
+These documentation pages are automatically generated from the content of the
 [doc/api](./doc/api/index.md) directory in this repository.
 
 
@@ -51,6 +54,8 @@ This demo is a small application written in
 [React](https://github.com/facebook/react) demonstrating a simple usage of the
 player.
 
+Demo pages for our previous versions are also available
+[here](https://developers.canal-plus.com/rx-player/demo_page_by_version.html).
 
 
 ## How to use it? ##############################################################
