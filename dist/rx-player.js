@@ -1079,7 +1079,7 @@
             /**
    * Interval, in milliseconds, at which we should manually flush
    * SourceBuffers.
-   * Some browsers (happened with firefox) sometimes "forget" to send us
+   * Some browsers (happened with firefox 66) sometimes "forget" to send us
    * `update` or `updateend` events.
    * In that case, we're completely unable to continue the queue here and
    * stay locked in a waiting state.
@@ -13284,7 +13284,7 @@ object-assign
                 var _this = this;
                 this._destroy$ = new Subject.a(), this.bufferType = bufferType, this._sourceBuffer = sourceBuffer, 
                 this._queue = [], this._currentOrder = null, this._lastInitSegment = null, this._currentCodec = codec, 
-                // Some browsers (happened with firefox) sometimes "forget" to send us
+                // Some browsers (happened with firefox 66) sometimes "forget" to send us
                 // `update` or `updateend` events.
                 // In that case, we're completely unable to continue the queue here and
                 // stay locked in a waiting state.
