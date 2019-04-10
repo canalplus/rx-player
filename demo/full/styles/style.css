@@ -36,6 +36,12 @@ body {
   margin: 0px 15px 0px 0px;
 }
 
+.rxplayer-logo {
+  display: inline-block;
+  width: 150px;
+  margin: 5px 5px 0px 5px;
+}
+
 .title-wrapper .name {
   font-weight: bold;
   font-size: 25px;

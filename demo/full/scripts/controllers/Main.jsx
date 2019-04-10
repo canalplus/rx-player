@@ -7,7 +7,7 @@ export default () => (
       <section className="title-wrapper">
         <h1 className="title">
           <a href="https://github.com/canalplus/rx-player">
-            <span className="name">{"RxPlayer"}</span>
+            <img className="rxplayer-logo" alt="RxPlayer" src="./assets/logo_white.svg"/>
           </a>
           <a href="https://github.com/canalplus/rx-player/releases">
             <span className="version">{" v" + window.RxPlayer.version}</span>
