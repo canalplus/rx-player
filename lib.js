@@ -1,1 +1,1 @@
-./versions/3.11.1/demo/lib.js
+./versions/3.12.0/demo/lib.js
