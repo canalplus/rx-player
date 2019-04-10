@@ -16,6 +16,7 @@
 
   - dash/smooth: add optional `url`, `sendingTime` and `receivingTime` properties in the response given by manifestLoader transportOption
   - misc: deploy documentation pages and demos from our previous versions
+  - misc: add new RxPlayer logo to README.md and the demo
 
 
 ## v3.11.1 (2019/03/11)
