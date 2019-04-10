@@ -65,6 +65,7 @@ interface IManifestArguments {
   suggestedPresentationDelay? : number;
   timeShiftBufferDepth? : number;
   uris? : string[];
+  clockOffset?: number;
 }
 
 interface IManifestParsingOptions {
@@ -194,6 +195,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   private _duration : number|undefined;
 
+  private _clockOffset : number|undefined;
+
   /**
    * @constructor
    * @param {Object} args
@@ -208,6 +211,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.parsingErrors = [];
     this.id = args.id;
     this.transport = args.transportType;
+    this._clockOffset = args.clockOffset;
 
     this.periods = args.periods.map((period) => {
       const parsedPeriod = new Period(period, representationFilter);
@@ -419,8 +423,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     }
     const ast = this.availabilityStartTime || 0;
     const plg = this.presentationLiveGap || 0;
-    const now = Date.now() / 1000;
-    return now - ast - plg;
+    const now = Date.now() - (this._clockOffset || 0);
+    return (now / 1000) - ast - plg;
   }
 
   /**
@@ -432,7 +436,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     // TODO use RTT for the manifest request? (+ 3 or something)
     const BUFFER_DEPTH_SECURITY = 5;
 
-    const ast = this.availabilityStartTime || 0;
     const minimumTime = this.minimumTime != null ? this.minimumTime : 0;
     if (!this.isLive) {
       const duration = this.getDuration();
@@ -440,11 +443,13 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       return [minimumTime, maximumTime];
     }
 
+    const ast = this.availabilityStartTime || 0;
     const plg = this.presentationLiveGap || 0;
     const tsbd = this.timeShiftBufferDepth || 0;
 
-    const now = Date.now() / 1000;
-    const max = now - ast - plg;
+    const now = Date.now() - (this._clockOffset || 0);
+    const max = (now / 1000) - ast - plg;
+
     return [
       Math.min(
         max,
@@ -452,6 +457,14 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       ),
       max,
     ];
+  }
+
+  /**
+   * If true, this Manifest is currently synchronized with the server's clock.
+   * @returns {Boolean}
+   */
+  public hasClockSynchronization() : boolean {
+    return this._clockOffset != null;
   }
 
   /**

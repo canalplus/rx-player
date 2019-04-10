@@ -56,9 +56,11 @@ const {
 export { IKeySystemOption };
 
 export interface ITransportOptions {
+  aggressiveMode? : boolean;
   manifestLoader? : CustomManifestLoader;
   segmentLoader? : CustomSegmentLoader;
   representationFilter? : IRepresentationFilter;
+  referenceDateTime? : number;
 }
 
 export interface ISupplementaryTextTrackOption {

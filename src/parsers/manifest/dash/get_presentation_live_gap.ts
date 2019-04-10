@@ -14,70 +14,28 @@
  * limitations under the License.
  */
 
-import {
-  IParsedAdaptation,
-  IParsedManifest,
-} from "../types";
-
-/**
- * Returns "last time of reference" from the adaptation given, considering a
- * live content.
- * Undefined if a time could not be found.
- *
- * We consider the earliest last time from every representations in the given
- * adaptation.
- * @param {Object} adaptation
- * @returns {Number|undefined}
- */
-function getLastLiveTimeReference(adaptation: IParsedAdaptation) : number | undefined {
-  // Here's how we do, for each possibility:
-  //
-  //  1. every representations have an index:
-  //    - returns minimum for every representations
-  //
-  //  2. no index for 1+ representation(s):
-  //    - returns undefined
-  //
-  //  3. Invalid index found somewhere:
-  //    - returns undefined
-  if (!adaptation) {
-    return undefined;
-  }
-  const representations = adaptation.representations || [];
-  const lastLiveTimeReferences: Array<number | undefined> = representations
-    .map(representation => {
-      const lastPosition = representation.index.getLastPosition();
-      return lastPosition != null ? lastPosition : undefined;
-    });
-
-  if (lastLiveTimeReferences.some((x) => x == null)) {
-    return undefined;
-  }
-
-  const representationsMin = Math.min(...lastLiveTimeReferences as number[]);
-  return isNaN(representationsMin) ? undefined : representationsMin;
-}
+import log from "../../../log";
+import { IParsedManifest } from "../types";
 
 /**
  * Get presentation live gap from manifest informations.
  * @param {Object} manifest
+ * @param {number|undefined} lastTimeReference
  * @returns {number}
  */
 export default function getPresentationLiveGap(
-  manifest: IParsedManifest
+  parsedMPD: IParsedManifest,
+  lastTimeReference? : number
 ) : number {
-  if (manifest.periods.length === 0) {
-    throw new Error("DASH Parser: no period available for a live content");
+  if (lastTimeReference != null) {
+    const ast = parsedMPD.availabilityStartTime || 0;
+    const now = Date.now() - (parsedMPD.clockOffset || 0);
+    return (now / 1000) - (lastTimeReference + ast);
+  } else if (parsedMPD.clockOffset != null) {
+    return 0;
+  } else {
+    log.warn("DASH Parser: no clock synchronization mechanism found." +
+      "Setting a live gap of 10 seconds as a security.");
+    return 10; // put 10 seconds as a security
   }
-  const lastPeriodAdaptations =
-    manifest.periods[manifest.periods.length - 1].adaptations;
-  const firstAdaptationsFromLastPeriod =
-    lastPeriodAdaptations.video || lastPeriodAdaptations.audio;
-  if (!firstAdaptationsFromLastPeriod || !firstAdaptationsFromLastPeriod.length) {
-    throw new Error("DASH Parser: Can't find first adaptation from last period");
-  }
-  const firstAdaptationFromLastPeriod = firstAdaptationsFromLastPeriod[0];
-  const lastRef = getLastLiveTimeReference(firstAdaptationFromLastPeriod);
-  const ast = manifest.availabilityStartTime || 0;
-  return lastRef != null ? Date.now() / 1000 - (lastRef + ast) : 10;
 }

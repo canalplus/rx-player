@@ -381,6 +381,30 @@ info on it can be found <a href="plugins.html#manifestLoader">here</a>.</p>
 them.
 More infos on it can be found <a href="plugins.html#representationFilter">here</a>.</p>
 </li>
+<li>
+<p><code>aggressiveMode</code> (<code>Boolean</code>): If set to true, we will download live
+contents in what we call the &#x201C;aggressiveMode&#x201D;.</p>
+<p>In that mode, we request segments we guess will be available without being
+absolutely sure they had time to be generated. For the moment, this mode has
+only an effect for Smooth streaming contents.</p>
+<p>The upside is that you will have more segments close to the live edge.</p>
+<p>The downside is that requests for segments which did not had time to
+generate will trigger a <code>NetworkError</code>. Depending on your other settings
+(especially the <code>networkConfig</code> loadVideo options), those errors might just
+be sent as warnings and the corresponding requests be retried.</p>
+</li>
+<li>
+<p><code>referenceDateTime</code> (<code>Number</code>): Only useful for live contents. This is
+the default amount of time, in seconds, to add as an offset to a given media
+content&#x2019;s time, to obtain the real live time.
+For example, if the media has it&#x2019;s <code>0</code> time corresponding to the 30th of
+January 2010 at midnight, you can set the <code>referenceDateTime</code> to
+<code>new Date(2010-01-30) / 1000</code>. This value is useful to communicate back to
+you the &#x201C;live time&#x201D;, for example through the <code>getWallClockTime</code> method.</p>
+<p>This will only be taken into account for live contents, and if the
+Manifest / MPD does not already contain an offset (example: an
+availabilityStartTime in a DASH MPD).</p>
+</li>
 </ul>
 <p><a name="prop-textTrackMode"></a>
 <a name="subchapter-textTrackMode"></a></p>

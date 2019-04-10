@@ -53,6 +53,7 @@ const manifestPreLoader = (
       return regularManifestLoader(url, ignoreProgressEvents);
     }
 
+    const timeAPIsDelta = Date.now() - performance.now();
     return new Observable((obs: ILoaderObserver<Document|string>) => {
       let hasFinished = false;
       let hasFallbacked = false;
@@ -68,15 +69,25 @@ const manifestPreLoader = (
         data : Document|string;
         size : number;
         duration : number;
+        url? : string;
+        receivingTime? : number;
+        sendingTime? : number;
       }) => {
         if (!hasFallbacked) {
           hasFinished = true;
+          const receivedTime = _args.receivingTime != null ?
+            _args.receivingTime - timeAPIsDelta : undefined;
+          const sendingTime = _args.sendingTime != null ?
+            _args.sendingTime - timeAPIsDelta : undefined;
           obs.next({
             type: "response",
             value: {
               responseData: _args.data,
               size: _args.size,
               duration: _args.duration,
+              url: _args.url,
+              receivedTime,
+              sendingTime,
             },
           });
           obs.complete();

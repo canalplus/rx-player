@@ -1,5 +1,24 @@
 # Changelog
 
+## v3.12.0 (2019/04/10)
+
+### Features
+
+  - dash: add UTCTiming support
+  - smooth: add `aggressiveMode` transportOption to requests segments in advance
+  - dash/smooth: add `referenceDateTime` transportOption to set a default reference time for live contents
+
+### Bug fixes
+
+  - buffer: work around firefox bug leading to infinite rebuffering when seeking many times in a content
+
+### Other improvements
+
+  - dash/smooth: add optional `url`, `sendingTime` and `receivingTime` properties in the response given by manifestLoader transportOption
+  - misc: deploy documentation pages and demos from our previous versions
+  - misc: add new RxPlayer logo to README.md and the demo
+
+
 ## v3.11.1 (2019/03/11)
 
 ### Bug fixes

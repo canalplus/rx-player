@@ -34,7 +34,7 @@ import {
   getSegmentsFromCues,
   getTimeCodeScale,
 } from "../../parsers/containers/matroska";
-import dashManifestParser, {
+import parseMPD, {
   IMPDParserResponse,
 } from "../../parsers/manifest/dash";
 import request from "../../utils/request";
@@ -63,9 +63,9 @@ import generateSegmentLoader from "./segment_loader";
  * @param {string} xlinkURL
  * @returns {Observable}
  */
-function requestXLink(xlinkURL : string) : Observable<string> {
+function requestStringResource(url : string) : Observable<string> {
   return request({
-    url: xlinkURL,
+    url,
     responseType: "text",
     ignoreProgressEvents: true,
   }).pipe(
@@ -87,6 +87,7 @@ export default function(
     customManifestLoader: options.manifestLoader,
   });
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
+  const { referenceDateTime } = options;
 
   const manifestPipeline = {
     loader(
@@ -96,7 +97,7 @@ export default function(
     },
 
     parser(
-      { response, url: loaderURL, scheduleRequest } :
+      { response, url: loaderURL, scheduleRequest, hasClockSynchronization } :
       IManifestParserArguments<Document|string, string>
     ) : IManifestParserObservable {
       const url = response.url == null ? loaderURL : response.url;
@@ -104,10 +105,14 @@ export default function(
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
 
-      const parsedManifest = dashManifestParser(data, url);
-      return loadExternalRessources(parsedManifest);
+      const parsedManifest = parseMPD(data, {
+        url,
+        referenceDateTime,
+        loadExternalClock: !hasClockSynchronization,
+      });
+      return loadExternalResources(parsedManifest);
 
-      function loadExternalRessources(
+      function loadExternalResources(
         parserResponse : IMPDParserResponse
       ) : IManifestParserObservable {
         if (parserResponse.type === "done") {
@@ -116,12 +121,13 @@ export default function(
         }
 
         const { ressources, continue: continueParsing } = parserResponse.value;
-        const externalXlinks$ = ressources.map(ressourceURL =>
-          scheduleRequest(() => requestXLink(ressourceURL))
-        );
-        return observableCombineLatest(externalXlinks$)
-          .pipe(mergeMap(loadedRessources =>
-            loadExternalRessources(continueParsing(loadedRessources))
+
+        const externalResources$ = ressources
+          .map(resource => scheduleRequest(() => requestStringResource(resource)));
+
+        return observableCombineLatest(externalResources$)
+          .pipe(mergeMap(loadedResources =>
+            loadExternalResources(continueParsing(loadedResources))
           ));
       }
     },

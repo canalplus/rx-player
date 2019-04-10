@@ -393,6 +393,32 @@ considered stable:
     them.
     More infos on it can be found [here](./plugins.md#representationFilter).
 
+  - ``aggressiveMode`` (``Boolean``): If set to true, we will download live
+    contents in what we call the "aggressiveMode".
+
+    In that mode, we request segments we guess will be available without being
+    absolutely sure they had time to be generated. For the moment, this mode has
+    only an effect for Smooth streaming contents.
+
+    The upside is that you will have more segments close to the live edge.
+
+    The downside is that requests for segments which did not had time to
+    generate will trigger a `NetworkError`. Depending on your other settings
+    (especially the `networkConfig` loadVideo options), those errors might just
+    be sent as warnings and the corresponding requests be retried.
+
+  - ``referenceDateTime`` (``Number``): Only useful for live contents. This is
+    the default amount of time, in seconds, to add as an offset to a given media
+    content's time, to obtain the real live time.
+    For example, if the media has it's `0` time corresponding to the 30th of
+    January 2010 at midnight, you can set the `referenceDateTime` to
+    `new Date(2010-01-30) / 1000`. This value is useful to communicate back to
+    you the "live time", for example through the `getWallClockTime` method.
+
+    This will only be taken into account for live contents, and if the
+    Manifest / MPD does not already contain an offset (example: an
+    availabilityStartTime in a DASH MPD).
+
 
 
 <a name="prop-textTrackMode"></a>

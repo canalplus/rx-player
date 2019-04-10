@@ -23,8 +23,18 @@ describe("parseFromDocument", () => {
 
   it("throws root if not MPD", function() {
     const doc = setDocumentFromString("<foo></foo>");
+
     expect(function() {
-      parseFromDocument(doc, "");
+      parseFromDocument(doc, {
+        url: "",
+        loadExternalClock: false,
+      });
+    }).toThrow("document root should be MPD");
+    expect(function() {
+      parseFromDocument(doc, {
+        url: "",
+        loadExternalClock: true,
+      });
     }).toThrow("document root should be MPD");
   });
 });
