@@ -20,9 +20,8 @@ body {
 }
 
 .title-wrapper h1 {
-  display: inline-block;
+  display: flex;
   width: 100%;
-  text-align: center;
   line-height: 1.05;
 }
 
@@ -39,7 +38,6 @@ body {
 .rxplayer-logo {
   display: inline-block;
   width: 150px;
-  margin: 5px 5px 0px 5px;
 }
 
 .title-wrapper .name {
