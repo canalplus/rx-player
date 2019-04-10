@@ -211,7 +211,7 @@ export default class QueuedSourceBuffer<T> {
     this._lastInitSegment = null;
     this._currentCodec = codec;
 
-    // Some browsers (happened with firefox) sometimes "forget" to send us
+    // Some browsers (happened with firefox 66) sometimes "forget" to send us
     // `update` or `updateend` events.
     // In that case, we're completely unable to continue the queue here and
     // stay locked in a waiting state.
