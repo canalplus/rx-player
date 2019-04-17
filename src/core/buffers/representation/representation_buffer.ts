@@ -55,7 +55,6 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
-import { mergeContiguousRanges } from "../../../utils/ranges";
 import SimpleSet from "../../../utils/simple_set";
 import {
   IFetchedSegment,
@@ -363,72 +362,6 @@ export default function RepresentationBuffer<T>({
 
         const { segment, priority } = currentNeededSegment;
         const context = { manifest, period, adaptation, representation, segment };
-        const { adaptations } = period;
-
-        const enforcedAdaptations: Array<{
-          adaptation: Adaptation;
-          segments: any[];
-        }> = ["audio", "video", "text", "image", "overlay"]
-          .reduce((acc: Array<{ adaptation: Adaptation; segments: any[] }>, type) => {
-            const adaptationsByType =
-              adaptations[type as "video"|"audio"|"text"|"image"|"overlay"];
-            if (adaptationsByType && adaptationsByType.length) {
-              const enforcedAdaptationsByType = adaptationsByType
-                .filter(({ isEnforced }) => isEnforced)
-                .map((_a) => {
-                  const sb = getSegmentBookkeeper(_a.type);
-                  const segments = sb ? sb.inventory.filter(({ infos }) => {
-                    return infos.adaptation.id === _a.id;
-                  }) : [];
-
-                  return {
-                    adaptation: _a,
-                    segments,
-                  };
-                });
-              if (enforcedAdaptationsByType && enforcedAdaptationsByType.length) {
-                acc.push(...enforcedAdaptationsByType);
-              }
-            }
-            return acc;
-          }, []);
-
-        const enforcedTracksOutOfCurrent = enforcedAdaptations
-          .filter(({ adaptation: _adaptation }) => _adaptation.id !== adaptation.id);
-
-        if (enforcedTracksOutOfCurrent) {
-          for (let i = 0; i < enforcedTracksOutOfCurrent.length; i++) {
-
-            const enforcedTrack = enforcedTracksOutOfCurrent[i];
-            const loadedSegments = enforcedTrack.segments.slice();
-            const bufferedRanges = mergeContiguousRanges(loadedSegments);
-            const segmentStart = segment.time / segment.timescale;
-            const segmentEnd =
-              (segment.time + (segment.duration || 0)) / segment.timescale;
-            const segments = enforcedTrack.adaptation.representations[0].index
-              .getSegments(segmentStart, segmentEnd - segmentStart);
-
-            if (segments.length) {
-              const firstPos = segments[0].time;
-              const endPos = segments[segments.length - 1].time +
-                (segments[segments.length - 1].duration || 0);
-
-              const hasBufferedForSegments = (() => {
-                for (let k = 0; k < bufferedRanges.length; k++) {
-                  const range = bufferedRanges[k];
-                  if (range.start <= firstPos && range.end >= endPos) {
-                    return true;
-                  }
-                }
-                return false;
-              })();
-
-              if (!hasBufferedForSegments) {
-                return EMPTY;
-              }
-            }
-          }
-        }
 
         const request$ = segmentFetcher.createRequest(context, priority);
 
@@ -521,6 +454,7 @@ export default function RepresentationBuffer<T>({
                          content,
                          segmentBookkeeper,
                          neededRange,
-                         sourceBufferWaitingQueue);
+                         sourceBufferWaitingQueue,
+                         getSegmentBookkeeper);
   }
 }

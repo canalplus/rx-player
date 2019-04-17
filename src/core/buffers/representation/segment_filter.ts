@@ -15,12 +15,14 @@
  */
 
 import config from "../../../config";
+import log from "../../../log";
 import {
   Adaptation,
   ISegment,
   Period,
   Representation,
 } from "../../../manifest";
+import { mergeContiguousRanges } from "../../../utils/ranges";
 import SimpleSet from "../../../utils/simple_set";
 import SegmentBookkeeper from "../segment_bookkeeper";
 
@@ -28,6 +30,47 @@ const {
   BITRATE_REBUFFERING_RATIO,
   MINIMUM_SEGMENT_SIZE,
 } = config;
+
+type IAdaptationType = "video"|"audio"|"text"|"image"|"overlay";
+
+/**
+ * Get all adaptations from a given period
+ * @param {Object} period
+ * @param {Function} getSegmentBookkeeper
+ * @returns {Object}
+ */
+function getEnforcedAdaptationsFromPeriod(
+  period: Period,
+  getSegmentBookkeeper: (type: IAdaptationType) => SegmentBookkeeper|undefined
+): Array<{ adaptation: Adaptation; segments: Array<{ start: number; end: number }> }> {
+  return ["audio", "video", "text", "image", "overlay"]
+    .reduce((acc: Array<{
+      adaptation: Adaptation;
+      segments: Array<{ start: number; end: number }>;
+    }>, type) => {
+      const adaptationsByType =
+        period.adaptations[type as "video"|"audio"|"text"|"image"|"overlay"];
+      if (adaptationsByType && adaptationsByType.length) {
+        const enforcedAdaptationsByType = adaptationsByType
+          .filter(({ isEnforced }) => isEnforced)
+          .map((_a) => {
+            const sb = getSegmentBookkeeper(_a.type);
+            const segments = sb ? sb.inventory.filter(({ infos }) => {
+              return infos.adaptation.id === _a.id;
+            }) : [];
+
+            return {
+              adaptation: _a,
+              segments,
+            };
+          });
+        if (enforcedAdaptationsByType && enforcedAdaptationsByType.length) {
+          acc.push(...enforcedAdaptationsByType);
+        }
+      }
+      return acc;
+    }, []);
+}
 
 /**
  * Returns true if the given Segment should be downloaded.
@@ -49,13 +92,54 @@ export default function shouldDownloadSegment(
   },
   segmentBookkeeper: SegmentBookkeeper,
   wantedRange : { start : number; end : number },
-  segmentIDsToIgnore : SimpleSet
+  segmentIDsToIgnore : SimpleSet,
+  getSegmentBookkeeper : (type: IAdaptationType) => SegmentBookkeeper|undefined
 ) : boolean {
   const { period, adaptation, representation } = content;
   const shouldIgnore = segmentIDsToIgnore.test(segment.id);
 
   if (shouldIgnore) {
     return false;
+  }
+  const enforcedAdaptations =
+    getEnforcedAdaptationsFromPeriod(period, getSegmentBookkeeper);
+  const enforcedTracksOutOfCurrent = enforcedAdaptations
+    .filter(({ adaptation: _adaptation }) => _adaptation.id !== adaptation.id);
+
+  if (enforcedTracksOutOfCurrent) {
+    for (let i = 0; i < enforcedTracksOutOfCurrent.length; i++) {
+
+      const enforcedTrack = enforcedTracksOutOfCurrent[i];
+      const loadedSegments = enforcedTrack.segments.slice();
+      const bufferedRanges = mergeContiguousRanges(loadedSegments);
+      const segmentStart = segment.time / segment.timescale;
+      const segmentEnd =
+        (segment.time + (segment.duration || 0)) / segment.timescale;
+      const segments = enforcedTrack.adaptation.representations[0].index
+        .getSegments(segmentStart, segmentEnd - segmentStart);
+
+      if (segments.length) {
+        const firstPos = segments[0].time;
+        const endPos = segments[segments.length - 1].time +
+          (segments[segments.length - 1].duration || 0);
+
+        const hasBufferedForSegments = (() => {
+          for (let k = 0; k < bufferedRanges.length; k++) {
+            const range = bufferedRanges[k];
+            if (range.start <= firstPos && range.end >= endPos) {
+              return true;
+            }
+          }
+          return false;
+        })();
+
+        if (!hasBufferedForSegments) {
+          log.warn("Buffers: " + adaptation.type + " content will not update while " +
+            "enforced track(s) is/are unaivalable");
+          return false;
+        }
+      }
+    }
   }
 
   // segment without time info are usually init segments or some
