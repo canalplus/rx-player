@@ -46,6 +46,7 @@ import {
 import log from "../../../log";
 import Manifest, {
   Adaptation,
+  IAdaptationType,
   Period,
   Representation,
 } from "../../../manifest";
@@ -102,7 +103,8 @@ export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTi
 export default function AdaptationBuffer<T>(
   clock$ : Observable<IAdaptationBufferClockTick>,
   queuedSourceBuffer : QueuedSourceBuffer<T>,
-  segmentBookkeeper : SegmentBookkeeper,
+  segmentBookkeeper: SegmentBookkeeper,
+  getSegmentBookkeeper : (type: IAdaptationType) => SegmentBookkeeper|undefined,
   segmentFetcher : IPrioritizedSegmentFetcher<T>,
   wantedBufferAhead$ : Observable<number>,
   content : { manifest : Manifest;

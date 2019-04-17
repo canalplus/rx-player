@@ -37,6 +37,7 @@ import config from "../../../config";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
+  IAdaptationType,
   Period,
 } from "../../../manifest";
 import arrayIncludes from "../../../utils/array_includes";
@@ -123,6 +124,19 @@ export default function PeriodBuffer({
   wantedBufferAhead$,
 } : IPeriodBufferArguments) : Observable<IPeriodBufferEvent> {
   const { period } = content;
+
+  /**
+   * Get associated segment bookkeeper for a given adaptation
+   * @param {Object} adaptation
+   * @param {Object} - segment bookkeeper
+   */
+  function getSegmentBookkeeper(type: IAdaptationType): undefined|SegmentBookkeeper {
+    const currentQSourceBuffer = sourceBuffersManager.get(type);
+    if (currentQSourceBuffer != null) {
+      return segmentBookkeepers.get(currentQSourceBuffer);
+    }
+    return undefined;
+  }
 
   // Emits the chosen adaptation for the current type.
   const adaptation$ = new ReplaySubject<Adaptation|null>(1);
@@ -211,6 +225,7 @@ export default function PeriodBuffer({
     return AdaptationBuffer(adaptationBufferClock$,
                             qSourceBuffer,
                             segmentBookkeeper,
+                            getSegmentBookkeeper,
                             pipeline,
                             wantedBufferAhead$,
                             { manifest, period, adaptation },

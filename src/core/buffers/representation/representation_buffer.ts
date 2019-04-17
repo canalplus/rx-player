@@ -50,10 +50,12 @@ import {
 import log from "../../../log";
 import Manifest, {
   Adaptation,
+  IAdaptationType,
   ISegment,
   Period,
   Representation,
 } from "../../../manifest";
+import { mergeContiguousRanges } from "../../../utils/ranges";
 import SimpleSet from "../../../utils/simple_set";
 import {
   IFetchedSegment,
@@ -97,7 +99,8 @@ export interface IRepresentationBufferArguments<T> {
              period : Period;
              representation : Representation; };
   queuedSourceBuffer : QueuedSourceBuffer<T>;
-  segmentBookkeeper : SegmentBookkeeper;
+  segmentBookkeeper: SegmentBookkeeper;
+  getSegmentBookkeeper : (type: IAdaptationType) => SegmentBookkeeper|undefined;
   segmentFetcher : IPrioritizedSegmentFetcher<T>;
   terminate$ : Observable<void>;
   wantedBufferAhead$ : Observable<number>;
@@ -153,7 +156,8 @@ export default function RepresentationBuffer<T>({
   clock$, // emit current playback informations
   content, // all informations about the content we want to play
   queuedSourceBuffer, // allows to interact with the SourceBuffer
-  segmentBookkeeper, // keep track of what segments already are in the SourceBuffer
+  segmentBookkeeper,
+  getSegmentBookkeeper,
   segmentFetcher, // allows to download new segments
   terminate$, // signal the RepresentationBuffer that it should terminate
   wantedBufferAhead$, // emit the buffer goal
@@ -220,7 +224,8 @@ export default function RepresentationBuffer<T>({
                                            neededRange.end);
 
       let neededSegments = getSegmentsNeeded(representation, neededRange)
-        .filter((segment) => shouldDownloadSegment(segment, neededRange))
+        .filter((segment) =>
+          shouldDownloadSegment(segment, neededRange))
         .map((segment) => ({
           priority: getSegmentPriority(segment, timing),
           segment,
@@ -358,6 +363,73 @@ export default function RepresentationBuffer<T>({
 
         const { segment, priority } = currentNeededSegment;
         const context = { manifest, period, adaptation, representation, segment };
+        const { adaptations } = period;
+
+        const enforcedAdaptations: Array<{
+          adaptation: Adaptation;
+          segments: any[];
+        }> = ["audio", "video", "text", "image", "overlay"]
+          .reduce((acc: Array<{ adaptation: Adaptation; segments: any[] }>, type) => {
+            const adaptationsByType =
+              adaptations[type as "video"|"audio"|"text"|"image"|"overlay"];
+            if (adaptationsByType && adaptationsByType.length) {
+              const enforcedAdaptationsByType = adaptationsByType
+                .filter(({ isEnforced }) => isEnforced)
+                .map((_a) => {
+                  const sb = getSegmentBookkeeper(_a.type);
+                  const segments = sb ? sb.inventory.filter(({ infos }) => {
+                    return infos.adaptation.id === _a.id;
+                  }) : [];
+
+                  return {
+                    adaptation: _a,
+                    segments,
+                  };
+                });
+              if (enforcedAdaptationsByType && enforcedAdaptationsByType.length) {
+                acc.push(...enforcedAdaptationsByType);
+              }
+            }
+            return acc;
+          }, []);
+
+        const enforcedTracksOutOfCurrent = enforcedAdaptations
+          .filter(({ adaptation: _adaptation }) => _adaptation.id !== adaptation.id);
+
+        if (enforcedTracksOutOfCurrent) {
+          for (let i = 0; i < enforcedTracksOutOfCurrent.length; i++) {
+
+            const enforcedTrack = enforcedTracksOutOfCurrent[i];
+            const loadedSegments = enforcedTrack.segments.slice();
+            const bufferedRanges = mergeContiguousRanges(loadedSegments);
+            const segmentStart = segment.time / segment.timescale;
+            const segmentEnd =
+              (segment.time + (segment.duration || 0)) / segment.timescale;
+            const segments = enforcedTrack.adaptation.representations[0].index
+              .getSegments(segmentStart, segmentEnd - segmentStart);
+
+            if (segments.length) {
+              const firstPos = segments[0].time;
+              const endPos = segments[segments.length - 1].time +
+                (segments[segments.length - 1].duration || 0);
+
+              const hasBufferedForSegments = (() => {
+                for (let k = 0; k < bufferedRanges.length; k++) {
+                  const range = bufferedRanges[k];
+                  if (range.start <= firstPos && range.end >= endPos) {
+                    return true;
+                  }
+                }
+                return false;
+              })();
+
+              if (!hasBufferedForSegments) {
+                return EMPTY;
+              }
+            }
+          }
+        }
+
         const request$ = segmentFetcher.createRequest(context, priority);
 
         currentSegmentRequest = { segment, priority, request$ };
