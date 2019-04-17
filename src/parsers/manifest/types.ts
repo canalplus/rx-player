@@ -49,6 +49,7 @@ export interface IParsedAdaptation {
   audioDescription? : boolean;
   closedCaption? : boolean;
   language?: string;
+  isEnforced?: boolean;
 }
 
 export interface IParsedPeriod {
