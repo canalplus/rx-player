@@ -17,8 +17,26 @@
 import {
   IHTMLOverlay,
   IOverlayData,
+  IOverlayElement,
 } from "../types";
 import parseOverlays from "./parse_overlays";
+
+/**
+ * Get image dataURI data, from element
+ * @param {Object} element
+ * @returns {string}
+ */
+function getImageDataURI(element: IOverlayElement) {
+  const { base64data } = element;
+  if (base64data == null) {
+    throw new Error("Can't display unloaded overlay.");
+  }
+  const { format } = element;
+  if (format !== "png" && format !== "jpg") {
+    throw new Error("Unsupported overlay format");
+  }
+  return "data:image/" + format + ";base64," + base64data;
+}
 
 export default function createMetaPlaylistOverlays(
   overlays : IOverlayData[],
@@ -40,15 +58,12 @@ export default function createMetaPlaylistOverlays(
     for (let i = 0; i < overlayData.elements.length; i++) {
       const element = overlayData.elements[i];
       const img = document.createElement("img");
-      const { base64data } = element;
       img.style.position = "absolute";
       img.style.width = element.width;
       img.style.height = element.height;
       img.style.top = element.yAxis;
       img.style.left = element.xAxis;
-      img.src = (element.format === "png" && base64data) ?
-        "data:image/png;base64," + base64data :
-        element.url;
+      img.src = getImageDataURI(element);
       div.appendChild(img);
     }
 
