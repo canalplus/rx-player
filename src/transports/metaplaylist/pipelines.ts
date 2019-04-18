@@ -32,6 +32,7 @@ import parseMetaPlaylist, {
   IParserResponse as IMPLParserResponse,
 } from "../../parsers/manifest/metaplaylist";
 import { IParsedManifest } from "../../parsers/manifest/types";
+import { bytesToStr } from "../../utils/byte_parsing";
 import request from "../../utils/request";
 import DASHTransport from "../dash";
 import SmoothTransport from "../smooth";
@@ -291,19 +292,43 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
   };
 
   const overlayTrackPipeline = {
-    loader() : ILoaderObservable<Uint8Array|ArrayBuffer|null> {
+    loader(args: ISegmentLoaderArguments) : ILoaderObservable<string[]|null> {
       // For now, nothing is downloaded.
       // Everything is parsed from the segment
-      return observableOf({
-        type: "data" as "data",
-        value: { responseData: null },
+      const { segment } = args;
+      const { privateInfos } = segment;
+      if (!privateInfos || privateInfos.overlayInfos == null) {
+        throw new Error("An overlay segment should have private infos.");
+      }
+      const { overlayInfos } = privateInfos;
+      const loadedElements = overlayInfos.elements.map(({ url }) => {
+        return request({ url, responseType: "arraybuffer" }).pipe(
+          filter((r) => r.type === "response")
+        );
       });
+
+      return combineLatest(...loadedElements).pipe(
+        map((loadedImages) => {
+          const responseData: string[] = loadedImages
+            .filter(({ value }) => !!value.responseData)
+            .map(({ value: { responseData: rData } }) => rData)
+            .map((data) => {
+              const base64Data = btoa(
+                bytesToStr(data instanceof Uint8Array ? data : new Uint8Array(data)));
+              return base64Data;
+            });
+          return {
+            type: "data" as "data",
+            value: { responseData },
+          };
+        })
+      );
     },
 
     parser(
-      args : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
+      args : ISegmentParserArguments<string[]|null>
     ) : IOverlayParserObservable {
-      const { segment } = args;
+      const { segment, response: { responseData } } = args;
       const { privateInfos } = segment;
       if (!privateInfos || privateInfos.overlayInfos == null) {
         throw new Error("An overlay segment should have private infos.");
@@ -311,6 +336,14 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
       const { overlayInfos } = privateInfos;
       const end = segment.duration != null ?
         segment.duration + segment.time : overlayInfos.end;
+      overlayInfos.elements.forEach((element, i) => {
+        if (responseData) {
+          const base64Data = responseData[i];
+          if (base64Data) {
+            element.base64data = base64Data;
+          }
+        }
+      });
       return observableOf({
         segmentOffset: 0,
         segmentInfos: {

@@ -282,8 +282,8 @@ export interface ITransportImageSegmentPipeline {
 export interface ITransportOverlaySegmentPipeline {
   // Note: The segment's data can be null for init segments
   loader : (x : ISegmentLoaderArguments) =>
-    ILoaderObservable<Uint8Array|ArrayBuffer|null>;
-  parser : (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>) =>
+    ILoaderObservable<string[]|null>;
+  parser : (x : ISegmentParserArguments<string[]|null>) =>
     IOverlayParserObservable;
 }
 

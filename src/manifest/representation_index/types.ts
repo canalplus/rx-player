@@ -48,6 +48,7 @@ export interface IOverlaySegmentPrivateInfos {
   version : number;
   elements : Array<{
     url : string;
+    base64data?: string;
     format : string;
     xAxis : string;
     yAxis : string;

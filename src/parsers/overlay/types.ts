@@ -21,6 +21,7 @@ export type IOverlayParserFn =
   ) => IHTMLOverlay[];
 
 export interface IOverlayElement {
+  base64data? : string;
   url : string;
   format : string;
   xAxis : string;

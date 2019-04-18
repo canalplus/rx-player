@@ -40,12 +40,15 @@ export default function createMetaPlaylistOverlays(
     for (let i = 0; i < overlayData.elements.length; i++) {
       const element = overlayData.elements[i];
       const img = document.createElement("img");
+      const { base64data } = element;
       img.style.position = "absolute";
       img.style.width = element.width;
       img.style.height = element.height;
       img.style.top = element.yAxis;
       img.style.left = element.xAxis;
-      img.src = element.url;
+      img.src = (element.format === "png" && base64data) ?
+        "data:image/png;base64," + base64data :
+        element.url;
       div.appendChild(img);
     }
 
