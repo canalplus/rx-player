@@ -360,6 +360,7 @@ describe("API - parseLoadVideoOptions", () => {
     textTrackElement: undefined,
     textTrackMode: "native",
     transportOptions: {},
+    waitEMEInitToLoadContent: true,
   };
 
   it("should throw if no option is given", () => {

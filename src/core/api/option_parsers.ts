@@ -168,6 +168,7 @@ export interface ILoadVideoOptions {
   hideNativeSubtitle? : boolean;
   textTrackElement? : HTMLElement;
   manualBitrateSwitchingMode? : "seamless"|"direct";
+  waitEMEInitToLoadContent? : boolean;
 }
 
 interface IParsedLoadVideoOptionsBase {
@@ -183,6 +184,7 @@ interface IParsedLoadVideoOptionsBase {
   defaultTextTrack : ITextTrackPreference|null|undefined;
   startAt : IParsedStartAtOption|undefined;
   manualBitrateSwitchingMode : "seamless"|"direct";
+  waitEMEInitToLoadContent : boolean;
 }
 
 interface IParsedLoadVideoOptionsNative extends IParsedLoadVideoOptionsBase {
@@ -505,6 +507,11 @@ function parseLoadVideoOptions(
     segmentRetry: options.networkConfig.segmentRetry,
   };
 
+  let waitEMEInitToLoadContent = true;
+  if (options.waitEMEInitToLoadContent != null) {
+    waitEMEInitToLoadContent = !!options.waitEMEInitToLoadContent;
+  }
+
   // TODO without cast
   /* tslint:disable no-object-literal-type-assertion */
   return {
@@ -523,6 +530,7 @@ function parseLoadVideoOptions(
     transport,
     transportOptions,
     url,
+    waitEMEInitToLoadContent,
   } as IParsedLoadVideoOptions;
   /* tslint:enable no-object-literal-type-assertion */
 }

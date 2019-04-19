@@ -130,6 +130,7 @@ export interface IInitializeOptions {
   textTrackOptions : ITextTrackSourceBufferOptions;
   pipelines : ITransportPipelines;
   url : string;
+  waitEMEInitToLoadContent : boolean;
 }
 
 // Every events emitted by Init.
@@ -169,6 +170,7 @@ export default function InitializeOnMediaSource({
   textTrackOptions,
   pipelines,
   url,
+  waitEMEInitToLoadContent,
 } : IInitializeOptions) : Observable<IInitEvent> {
   const warning$ = new Subject<Error|ICustomError>();
 
@@ -226,7 +228,7 @@ export default function InitializeOnMediaSource({
   const loadContent$ = observableCombineLatest(
     openMediaSource$,
     fetchManifest({ url, hasClockSynchronization: false }),
-    emeInitialized$
+    waitEMEInitToLoadContent ? emeInitialized$ : observableOf(null)
   ).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
 
     /**

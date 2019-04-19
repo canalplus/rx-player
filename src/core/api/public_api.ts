@@ -689,6 +689,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       transport,
       transportOptions,
       url,
+      waitEMEInitToLoadContent,
     } = options;
 
     // Perform multiple checks on the given options
@@ -784,6 +785,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         startAt,
         textTrackOptions,
         url,
+        waitEMEInitToLoadContent,
       })
         .pipe(takeUntil(contentIsStopped$))
         .pipe(publish()) as ConnectableObservable<IInitEvent>;
@@ -799,6 +801,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         speed$: this._priv_speed$,
         startAt,
         url,
+        waitEMEInitToLoadContent,
       })
         .pipe(takeUntil(contentIsStopped$))
         .pipe(publish()) as ConnectableObservable<IInitEvent>;

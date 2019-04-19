@@ -114,6 +114,7 @@ export interface IDirectFileOptions {
   speed$ : Observable<number>;
   startAt? : IInitialTimeOptions;
   url : string;
+  waitEMEInitToLoadContent : boolean;
 }
 
 // Events emitted by `initializeDirectfileContent`
@@ -138,6 +139,7 @@ export default function initializeDirectfileContent({
   speed$,
   startAt,
   url,
+  waitEMEInitToLoadContent,
 } : IDirectFileOptions) : Observable<IDirectfileEvent> {
   clearElementSrc(mediaElement);
 
@@ -175,10 +177,16 @@ export default function initializeDirectfileContent({
   const stalled$ = getStalledEvents(mediaElement, clock$)
     .pipe(map(EVENTS.stalled));
 
-  // Manage "loaded" event and warn if autoplay is blocked on the current browser
-  const loadedEvent$ = emeManager$.pipe(
+  const emeInitialized$ = emeManager$.pipe(
     filter(({ type }) => type === "eme-init" || type === "eme-disabled"),
-    take(1),
+    take(1)
+  );
+
+  // Manage "loaded" event and warn if autoplay is blocked on the current browser
+  const loadedEvent$ = (waitEMEInitToLoadContent ?
+    emeInitialized$ :
+    observableOf<unknown>(null)
+  ).pipe(
     mergeMapTo(load$),
     mergeMap((evt) => {
       if (evt === "autoplay-blocked") {
