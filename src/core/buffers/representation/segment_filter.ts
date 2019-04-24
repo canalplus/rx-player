@@ -76,8 +76,16 @@ export default function shouldDownloadSegment(
     return false;
   }
 
-  const currentSegment =
-    segmentBookkeeper.hasPlayableSegment(wantedRange, { time, duration, timescale });
+  const scaledPosition = (time + duration) / timescale;
+  const indexLastPosition = representation.index.getLastPosition();
+
+  const isLastSegment =
+    indexLastPosition == null ? undefined : scaledPosition === indexLastPosition;
+
+  const currentSegment = segmentBookkeeper.hasPlayableSegment(
+    wantedRange,
+    { time, duration, timescale, isLastSegment }
+  );
 
   if (!currentSegment) {
     return true;

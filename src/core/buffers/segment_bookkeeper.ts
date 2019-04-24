@@ -490,12 +490,14 @@ export default class SegmentBookkeeper {
       time : number;
       duration : number;
       timescale : number;
+      isLastSegment? : boolean;
     }
   ) : IBufferedSegment|null {
     const {
       time,
       duration,
       timescale,
+      isLastSegment,
     } = segmentInfos;
     const { inventory } = this;
 
@@ -579,6 +581,14 @@ export default class SegmentBookkeeper {
       prevSegmentI : IBufferedSegment,
       nextSegmentI : IBufferedSegment
     ) : boolean {
+      if (
+        isLastSegment &&
+        currentSegmentI.bufferedStart &&
+        Math.abs(currentSegmentI.bufferedStart - currentSegmentI.start) < 0.01
+      ) {
+        return true;
+      }
+
       if (
         !prevSegmentI ||
         prevSegmentI.bufferedEnd == null ||
