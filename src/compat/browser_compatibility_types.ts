@@ -96,10 +96,10 @@ const MediaSource_ : typeof MediaSource|undefined = win.MediaSource ||
                                                     win.MSMediaSource;
 
 const MediaKeys_ : ICompatMediaKeysConstructor|undefined =
-  win.MediaKeys ||
+  win.MSMediaKeys ||
   win.MozMediaKeys ||
   win.WebKitMediaKeys ||
-  win.MSMediaKeys ||
+  win.MediaKeys ||
   class {
     public readonly create : () => never;
     public readonly isTypeSupported : () => never;

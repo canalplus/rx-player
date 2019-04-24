@@ -39,7 +39,10 @@ import {
 
   MediaKeys_,
 } from "../browser_compatibility_types";
-import { isIE11 } from "../browser_detection";
+import {
+  isIE11,
+  isSafari,
+} from "../browser_detection";
 import * as events from "../event_listeners";
 import CustomMediaKeySystemAccess from "./custom_key_system_access";
 
@@ -155,13 +158,24 @@ let CustomMediaKeys : IMockMediaKeysConstructor =
     }
   };
 
-if (navigator.requestMediaKeySystemAccess) {
-  requestMediaKeySystemAccess =
-    (a : string,
-     b : ICompatMediaKeySystemConfiguration[]
-    ) => castToObservable(navigator.requestMediaKeySystemAccess(a, b) as
-                            Promise<ICompatMediaKeySystemAccess>
-                         );
+/**
+ * Since Safari 12.1, EME APIs are available without webkit prefix.
+ * However, it seems that since fairplay CDM implementation within the browser is not
+ * standard with EME w3c current spec, the requestMediaKeySystemAccess API doesn't resolve
+ * positively, even if the drm (fairplay in most cases) is supported.
+ *
+ * Therefore, we prefer not to use requestMediaKeySystemAccess on Safari when webkit API
+ * is available.
+ */
+const preferWebKitAPIForSafari = isSafari &&
+  (window as any).WebKitMediaKeys &&
+  MediaKeys_ === (window as any).WebKitMediaKeys;
+
+if (navigator.requestMediaKeySystemAccess && !preferWebKitAPIForSafari) {
+  requestMediaKeySystemAccess = (a : string, b : ICompatMediaKeySystemConfiguration[]) =>
+    castToObservable(
+      navigator.requestMediaKeySystemAccess(a, b) as Promise<ICompatMediaKeySystemAccess>
+    );
 } else {
 
   type IWrappedUpdateFunction =
