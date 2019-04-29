@@ -52,6 +52,7 @@ export default function parseLocalManifest(
     duration: localManifest.duration,
     id: "local-manifest_" + generateManifestID(),
     transportType: "local",
+    isDynamic: !localManifest.isFinished,
     isLive: false,
     uris: [],
     periods: localManifest.periods

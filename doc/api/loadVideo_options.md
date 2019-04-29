@@ -338,22 +338,24 @@ can be either:
   - ``fromFirstPosition`` (``Number``): relative position from the minimum
     possible one, in seconds.
     That is:
-      - for live contents, from the beginning of the buffer depth (as defined
-        by the Manifest).
-      - for non-live contents, from the position ``0`` (this option should be
-        equivalent to ``position``)
+      - for dynamic (live) contents, from the beginning of the buffer depth (as
+        defined by the Manifest).
+      - for non-dynamic (vod) contents, from the position ``0`` (this option
+        should be equivalent to ``position``)
 
   - ``fromLastPosition`` (``Number``): relative position from the maximum
     possible one, in seconds. Should be a negative number:
-      - for live contents, it is the difference between the starting position
-        and the live edge (as defined by the manifest)
-      - for non-live contents, it is the difference between the starting
-        position and the end position of the content.
+      - for dynamic (e.g. live) contents, it is the difference between the
+        starting position and the currently last possible position, as defined
+        by the manifest.
+      - for VoD contents, it is the difference between the starting position and
+        the end position of the content.
 
   - ``percentage`` (``Number``): percentage of the wanted position. ``0`` being
-    the minimum position possible (0 for static content, buffer depth for live
-    contents) and ``100`` being the maximum position possible (``duration`` for
-    static content, live edge for live contents).
+    the minimum position possible (0 for static content, buffer depth for
+    dynamic contents) and ``100`` being the maximum position possible
+    (``duration`` for VoD content, last currently possible position for dynamic
+    contents).
 
 
 Note: Only one of those properties will be considered, in the same order of
@@ -367,19 +369,20 @@ More information on how the initial position is chosen can be found [in the
 specific documentation page on this subject](../infos/initial_position.md).
 
 
-#### Notes for live contents
-For live contents, ``startAt`` could work not as expected:
+#### Notes for dynamic contents
+
+For dynamic contents, ``startAt`` could work not as expected:
 
   - Depending on the type of Manifest, it will be more or less precize to guess
-    the live edge of the content. This will mostly affect the
+    the current last position of the content. This will mostly affect the
     ``fromLastPosition`` option.
 
   - If the Manifest does not allow to go far enough in the past (not enough
     buffer, server-side) to respect the position wanted, the maximum buffer
     depth will be used as a starting time instead.
 
-  - If the Manifest does not allow to go far enough in the future (live edge
-    sooner) to respect the position wanted, the live edge will be used to define
+  - If the Manifest does not allow to go far enough in the future to respect the
+    position wanted, the current last available position will be used to define
     the starting time instead.
 
 
@@ -418,8 +421,7 @@ player.loadVideo({
 player.loadVideo({
   // ...
   startAt: {
-    fromLastPosition: -60 // 1 minute before the end (before the live edge
-                          // for live contents)
+    fromLastPosition: -60 // 1 minute before the end
   }
 })
 ```
@@ -466,7 +468,7 @@ considered stable:
     some DASH contents relying on a number-based SegmentTemplate segment
     indexing scheme.
 
-    The upside is that you might have more segments close to the live edge.
+    The upside is that you will have the last segments sooner.
 
     The downside is that requests for segments which did not had time to
     generate might trigger a `NetworkError`. Depending on your other settings

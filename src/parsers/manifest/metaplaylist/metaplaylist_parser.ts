@@ -132,8 +132,7 @@ export default function parseMetaPlaylist(
 }
 
 /**
- * From several parsed manifests, generate a single manifest
- * which fakes live content playback.
+ * From several parsed manifests, generate a single bigger manifest.
  * Each content presents a start and end time, so that periods
  * boudaries could be adapted.
  * @param {Object} mplData
@@ -153,7 +152,7 @@ function createManifest(
                                         0;
   const maximumTime = contents.length ? contents[contents.length - 1].endTime :
                                         0;
-  const isLive = mplData.dynamic === true;
+  const isDynamic = mplData.dynamic === true;
   let duration : number|undefined = 0;
 
   const periods : IParsedPeriod[] = [];
@@ -273,7 +272,7 @@ function createManifest(
     }
     periods.push(...manifestPeriods);
 
-    if (!isLive && duration != null) {
+    if (!isDynamic && duration != null) {
       const currentDuration = currentManifest.getDuration();
       if (currentDuration == null) {
         duration = undefined;
@@ -287,11 +286,12 @@ function createManifest(
   const manifest = {
     availabilityStartTime: 0,
     suggestedPresentationDelay: 10,
-    duration: isLive ? undefined : duration,
+    duration: isDynamic ? undefined : duration,
     id: "gen-metaplaylist-man-" + generateManifestID(),
     periods,
     transportType: "metaplaylist",
-    isLive,
+    isLive: isDynamic,
+    isDynamic,
     uris: url == null ? [] :
                         [url],
     maximumTime: { isContinuous: false, value: maximumTime, time },

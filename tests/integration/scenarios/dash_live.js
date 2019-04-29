@@ -42,6 +42,7 @@ describe("DASH live content (SegmentTimeline)", function () {
     expect(manifest.transport)
       .to.equal(manifestInfos.transport);
     expect(typeof manifest.id).to.equal("string");
+    expect(manifest.isDynamic).to.equal(true);
     expect(manifest.isLive).to.equal(true);
     expect(manifest.getUrl()).to.equal(manifestInfos.url);
 

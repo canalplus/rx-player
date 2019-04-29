@@ -79,7 +79,8 @@ export interface IParsedPeriod {
 export interface IParsedManifest {
   // required
   id: string; // Unique ID for the manifest.
-  isLive : boolean; // If true, this Manifest describes a content not finished yet.
+  isDynamic : boolean; // If true, this Manifest can still evolve
+  isLive : boolean; // If true, this Manifest describes a "live" content
   periods: IParsedPeriod[]; // Periods contained in this manifest.
   transportType: string; // "smooth", "dash" etc.
 
@@ -89,7 +90,7 @@ export interface IParsedManifest {
   clockOffset?: number; // Offset, in milliseconds, the client's clock (in terms
                         // of `performance.now`) has relatively to the server's
   duration? : number; // Last time available in the content.
-                      // `undefined` for live contents.
+                      // `undefined` for dynamic contents whose end is unknown
   lifetime?: number; // Duration of the validity of this Manifest, after which it
                      // should be refreshed.
   maximumTime? : { // Information on the maximum seekable position.

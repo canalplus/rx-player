@@ -211,15 +211,13 @@ function createSmoothStreamingParser(
    * @returns {Object}
    */
   function parseAdaptation(args: IAdaptationParserArguments) : IParsedAdaptation|null {
-    const {
-      root,
-      timescale,
-      rootURL,
-      protections,
-      timeShiftBufferDepth,
-      manifestReceivedTime,
-      isLive,
-    } = args;
+    const { root,
+            timescale,
+            rootURL,
+            protections,
+            timeShiftBufferDepth,
+            manifestReceivedTime,
+            isLive } = args;
     const _timescale = root.hasAttribute("Timescale") ?
       +(root.getAttribute("Timescale") || 0) : timescale;
 
@@ -560,6 +558,7 @@ function createSmoothStreamingParser(
       duration,
       id: "gen-smooth-manifest-" + generateManifestID(),
       isLive,
+      isDynamic: isLive,
       maximumTime,
       minimumTime,
       periods: [{ adaptations,

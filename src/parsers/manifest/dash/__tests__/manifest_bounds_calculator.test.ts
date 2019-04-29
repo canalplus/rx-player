@@ -123,7 +123,7 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
   });
 
   /* tslint:disable max-line-length */
-  it("should authorize and handle multiple `setLastPositionOffset` calls for live contents", () => {
+  it("should authorize and handle multiple `setLastPositionOffset` calls for dynamic contents", () => {
   /* tslint:enable max-line-length */
     let date = 5000;
     const performanceSpy = jest.spyOn(performance, "now")

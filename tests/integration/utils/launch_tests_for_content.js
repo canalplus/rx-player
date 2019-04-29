@@ -14,6 +14,7 @@ import XHRMock from "../../utils/request_mock";
  * url {string}
  * transport {string}
  * duration {number}
+ * isDynamic {boolean}
  * isLive {boolean}
  * maximumPosition? {number}
  * minimumPosition? {number}
@@ -54,6 +55,7 @@ export default function launchTestsForContent(
   const {
     availabilityStartTime,
     duration,
+    isDynamic,
     isLive,
     maximumPosition,
     minimumPosition,
@@ -178,6 +180,7 @@ export default function launchTestsForContent(
           .equal(isLive ? Math.MAX_NUMBER : duration);
         expect(manifest.transport).to.equal(transport);
         expect(typeof manifest.id).to.equal("string");
+        expect(manifest.isDynamic).to.equal(isDynamic);
         expect(manifest.isLive).to.equal(isLive);
         expect(manifest.getUrl()).to.equal(manifestInfos.url);
 

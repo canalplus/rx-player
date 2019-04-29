@@ -10,6 +10,7 @@ const BASE_URL = "http://" +
 export default {
   url: BASE_URL + "Manifest.mpd",
   transport: "dash",
+  isDynamic: true,
   isLive: true,
   periods: [
     {

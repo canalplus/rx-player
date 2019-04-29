@@ -136,6 +136,7 @@ interface IPositionUpdateItem { position : number;
                                 duration : number;
                                 playbackRate : number;
                                 bufferGap : number;
+                                maximumBufferTime? : number;
                                 wallClockTime? : number;
                                 liveGap? : number; }
 
@@ -1115,9 +1116,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return this.videoElement.currentTime;
     }
     if (manifest != null) {
-      const currentTime = this.videoElement.currentTime;
-      return this.isLive() ? (currentTime + (manifest.availabilityStartTime || 0)) :
-                             currentTime;
+      return this.videoElement.currentTime + (manifest.availabilityStartTime || 0);
     }
     return 0;
   }
@@ -2344,10 +2343,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
 
+    const maximumPosition = manifest != null ?
+      manifest.getMaximumPosition() : undefined;
     const positionData : IPositionUpdateItem = {
       position: clockTick.currentTime,
       duration: clockTick.duration,
       playbackRate: clockTick.playbackRate,
+      maximumBufferTime: maximumPosition,
 
       // TODO fix higher up?
       bufferGap: isFinite(clockTick.bufferGap) ? clockTick.bufferGap :
@@ -2355,12 +2357,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     };
 
     if (manifest != null &&
+        maximumPosition != null &&
         manifest.isLive &&
         clockTick.currentTime > 0
     ) {
       positionData.wallClockTime = clockTick.currentTime +
-                                   (manifest.availabilityStartTime || 0);
-      positionData.liveGap = manifest.getMaximumPosition() - clockTick.currentTime;
+                                  (manifest.availabilityStartTime || 0);
+      positionData.liveGap = maximumPosition - clockTick.currentTime;
     }
 
     this.trigger("positionUpdate", positionData);

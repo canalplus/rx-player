@@ -90,10 +90,11 @@ The object emitted as the following properties:
   - ``maximumBufferTime`` (``Number|undefined``): The maximum time until which
     the buffer can currently be filled. That is:
 
-    - for non-live contents, the duration.
+    - for static contents (like VoD), the duration.
 
-    - for live contents, the live edge minus a security margin we added to avoid
-      buffering ahead of it.
+    - for dynamic contents (like live contents), the current maximum available
+      position (live edge for live contents) minus a security margin we added to
+      avoid buffering ahead of it.
 
   - ``wallClockTime`` (``Number|undefined``): Only for live contents. The
     current time converted to wall-clock time in seconds.

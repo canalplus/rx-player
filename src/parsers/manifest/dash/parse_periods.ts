@@ -151,12 +151,12 @@ export default function parsePeriods(
  * it would indicate a last position superior to the `minimumTime` given.
  *
  * This last part allows for example to detect which Period is likely to be the
- * "live" one in multi-periods contents. By giving the Period's start as a
- * `minimumTime`, you ensure that you will get a value only if the live time is
- * in that period.
+ * "current" one in multi-periods contents. By giving the Period's start as a
+ * `minimumTime`, you ensure that you will get a value only if the current time
+ * is in that period.
  *
  * This is useful as guessing the live time from the clock can be seen as a last
- * resort. By detecting that the live time is before the currently considered
+ * resort. By detecting that the current time is before the currently considered
  * Period, we can just parse and look at the previous Period. If we can guess
  * the live time more directly from that previous one, we might be better off
  * than just using the clock.

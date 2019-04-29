@@ -7,6 +7,7 @@ const BASE_URL = "http://" +
 export default {
   url: BASE_URL + "ateam.mpd",
   transport: "dash",
+  isDynamic: false,
   isLive: false,
   duration: 101.568367,
   minimumPosition: 0,

@@ -27,6 +27,7 @@ describe("Manifest - Manifest", () => {
     }));
     const simpleFakeManifest = {
       id: "man",
+      isDynamic: false,
       isLive: false,
       duration: 5,
       periods: [],
@@ -43,6 +44,7 @@ describe("Manifest - Manifest", () => {
     expect(manifest.baseURL).toEqual(undefined);
     expect(manifest.getDuration()).toEqual(5);
     expect(manifest.id).toEqual("man");
+    expect(manifest.isDynamic).toEqual(false);
     expect(manifest.isLive).toEqual(false);
     expect(manifest.lifetime).toEqual(undefined);
     expect(manifest.maximumTime).toEqual(undefined);
@@ -68,6 +70,7 @@ describe("Manifest - Manifest", () => {
     const period2 = { id: "1", start: 12, adaptations: {} };
     const simpleFakeManifest = {
       id: "man",
+      isDynamic: false,
       isLive: false,
       duration: 5,
       periods: [period1, period2],
@@ -110,6 +113,7 @@ describe("Manifest - Manifest", () => {
     const period2 = { id: "1", start: 12, adaptations: {} };
     const simpleFakeManifest = {
       id: "man",
+      isDynamic: false,
       isLive: false,
       duration: 5,
       periods: [period1, period2],
@@ -152,6 +156,7 @@ describe("Manifest - Manifest", () => {
     const period2 = { id: "1", start: 12, adaptations: adapP2 };
     const simpleFakeManifest = {
       id: "man",
+      isDynamic: false,
       isLive: false,
       duration: 5,
       periods: [period1, period2],
@@ -194,6 +199,7 @@ describe("Manifest - Manifest", () => {
     const period2 = { id: "1", start: 12, adaptations: {} };
     const simpleFakeManifest = {
       id: "man",
+      isDynamic: false,
       isLive: false,
       duration: 5,
       periods: [period1, period2],
@@ -225,7 +231,7 @@ describe("Manifest - Manifest", () => {
   });
 
   // TODO inspect why it doesn't pass. It makes no sense to me for now
-  it("should warn if no duration is given for non-live contents", () => {
+  it("should warn if no duration is given for non-dynamic contents", () => {
     const log = { warn: () => undefined };
     jest.mock("../../log", () =>  ({
       __esModule: true,
@@ -236,7 +242,8 @@ describe("Manifest - Manifest", () => {
     const period2 = { id: "1", start: 12, adaptations: {} };
     const simpleFakeManifest = {
       id: "man",
-      isLive: false,
+      isDynamic: false,
+      isLive: true,
       periods: [period1, period2],
       transportType: "foobar",
     };
@@ -255,16 +262,17 @@ describe("Manifest - Manifest", () => {
     const Manifest = require("../manifest").default;
 
     const manifest = new Manifest(simpleFakeManifest, {});
-    expect(manifest.isLive).toEqual(false);
+    expect(manifest.isDynamic).toEqual(false);
+    expect(manifest.isLive).toEqual(true);
     expect(manifest.getDuration()).toEqual(undefined);
 
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(logSpy).toHaveBeenCalledWith(
-      "Manifest: non live content and duration is null.");
+      "Manifest: non dynamic content and duration is null.");
     logSpy.mockRestore();
   });
 
-  it("should not warn if no duration is given for live contents", () => {
+  it("should not warn if no duration is given for dynamic contents", () => {
     const log = { warn: () => undefined };
     jest.mock("../../log", () =>  ({
       __esModule: true,
@@ -275,6 +283,7 @@ describe("Manifest - Manifest", () => {
     const period2 = { id: "1", start: 12, adaptations: {} };
     const simpleFakeManifest = {
       id: "man",
+      isDynamic: true,
       isLive: true,
       periods: [period1, period2],
       transportType: "foobar",
@@ -294,11 +303,50 @@ describe("Manifest - Manifest", () => {
 
     const Manifest = require("../manifest").default;
     const manifest = new Manifest(simpleFakeManifest, {});
+    expect(manifest.isDynamic).toEqual(true);
     expect(manifest.isLive).toEqual(true);
     expect(manifest.getDuration()).toEqual(undefined);
 
     expect(logSpy).not.toHaveBeenCalled();
     logSpy.mockRestore();
+  });
+
+  it("should have decorrelated isLive and isDynamic", () => {
+    const period1 = { id: "0", start: 4, adaptations: {} };
+    const period2 = { id: "1", start: 12, adaptations: {} };
+    const simpleFakeManifest1 = {
+      id: "man",
+      isDynamic: true,
+      isLive: false,
+      periods: [period1, period2],
+      transportType: "foobar",
+    };
+    const simpleFakeManifest2 = {
+      id: "man",
+      isDynamic: false,
+      isLive: true,
+      periods: [period1, period2],
+      transportType: "foobar",
+    };
+
+    const fakePeriod = jest.fn((period) => {
+      return {
+        id: "foo" + period.id,
+        parsingErrors: [new Error("a" + period.id), new Error(period.id)],
+      };
+    });
+    jest.mock("../period", () =>  ({
+      __esModule: true,
+      default: fakePeriod,
+    }));
+
+    const Manifest = require("../manifest").default;
+    const manifest1 = new Manifest(simpleFakeManifest1, {});
+    expect(manifest1.isDynamic).toEqual(true);
+    expect(manifest1.isLive).toEqual(false);
+    const manifest2 = new Manifest(simpleFakeManifest2, {});
+    expect(manifest2.isDynamic).toEqual(false);
+    expect(manifest2.isLive).toEqual(true);
   });
 
   it("should correctly parse every manifest information given", () => {
@@ -316,6 +364,7 @@ describe("Manifest - Manifest", () => {
       baseURL: "test",
       duration: 12,
       id: "man",
+      isDynamic: false,
       isLive: false,
       lifetime: 13,
       parsingErrors: [new Error("a"), new Error("b")],
@@ -347,6 +396,7 @@ describe("Manifest - Manifest", () => {
     expect(manifest.baseURL).toEqual("test");
     expect(manifest.getDuration()).toEqual(12);
     expect(manifest.id).toEqual("man");
+    expect(manifest.isDynamic).toEqual(false);
     expect(manifest.isLive).toEqual(false);
     expect(manifest.lifetime).toEqual(13);
     expect(manifest.parsingErrors).toEqual([new Error("0"), new Error("1")]);
@@ -389,6 +439,7 @@ describe("Manifest - Manifest", () => {
       baseURL: "test",
       duration: 12,
       id: "man",
+      isDynamic: false,
       isLive: false,
       lifetime: 13,
       parsingErrors: [new Error("a"), new Error("b")],
@@ -409,6 +460,7 @@ describe("Manifest - Manifest", () => {
       baseURL: "test",
       duration: 12,
       id: "man",
+      isDynamic: false,
       isLive: false,
       lifetime: 13,
       minimumTime: 4,
@@ -464,6 +516,7 @@ describe("Manifest - Manifest", () => {
       baseURL: "test",
       duration: 12,
       id: "man",
+      isDynamic: false,
       isLive: false,
       lifetime: 13,
       parsingErrors: [new Error("a"), new Error("b")],
@@ -496,6 +549,7 @@ describe("Manifest - Manifest", () => {
       availabilityStartTime: 6,
       baseURL: "test2",
       id: "man2",
+      isDynamic: true,
       isLive: true,
       lifetime: 14,
       parsingErrors: [new Error("c"), new Error("d")],
@@ -515,6 +569,7 @@ describe("Manifest - Manifest", () => {
     expect(manifest.baseURL).toEqual("test2");
     expect(manifest.getDuration()).toEqual(13);
     expect(manifest.id).toEqual("man2");
+    expect(manifest.isDynamic).toEqual(true);
     expect(manifest.isLive).toEqual(true);
     expect(manifest.lifetime).toEqual(14);
     expect(manifest.parsingErrors).toEqual([new Error("c"), new Error("d")]);
@@ -548,6 +603,7 @@ describe("Manifest - Manifest", () => {
       baseURL: "test",
       duration: 12,
       id: "man",
+      isDynamic: false,
       isLive: false,
       lifetime: 13,
       minimumTime: 4,
@@ -614,6 +670,7 @@ describe("Manifest - Manifest", () => {
       baseURL: "test2",
       getDuration() { return 13; },
       id: "man2",
+      isDynamic: false,
       isLive: true,
       lifetime: 14,
       minimumTime: 5,
@@ -653,6 +710,7 @@ describe("Manifest - Manifest", () => {
       baseURL: "test",
       duration: 12,
       id: "man",
+      isDynamic: false,
       isLive: false,
       lifetime: 13,
       minimumTime: 4,
@@ -701,6 +759,7 @@ describe("Manifest - Manifest", () => {
       baseURL: "test2",
       getDuration() { return 13; },
       id: "man2",
+      isDynamic: false,
       isLive: true,
       lifetime: 14,
       minimumTime: 5,
@@ -738,6 +797,7 @@ describe("Manifest - Manifest", () => {
       baseURL: "test",
       duration: 12,
       id: "man",
+      isDynamic: false,
       isLive: false,
       lifetime: 13,
       minimumTime: 4,
@@ -785,6 +845,7 @@ describe("Manifest - Manifest", () => {
       baseURL: "test2",
       getDuration() { return 13; },
       id: "man2",
+      isDynamic: false,
       isLive: true,
       lifetime: 14,
       minimumTime: 5,
@@ -819,6 +880,7 @@ describe("Manifest - Manifest", () => {
       baseURL: "test",
       duration: 12,
       id: "man",
+      isDynamic: false,
       isLive: false,
       lifetime: 13,
       minimumTime: 4,
@@ -869,6 +931,7 @@ describe("Manifest - Manifest", () => {
       baseURL: "test2",
       getDuration() { return 13; },
       id: "man2",
+      isDynamic: false,
       isLive: true,
       lifetime: 14,
       minimumTime: 5,

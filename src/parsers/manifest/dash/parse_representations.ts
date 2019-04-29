@@ -37,8 +37,8 @@ export interface IAdaptationInfos {
   baseURL? : string; // Eventual URL from which every relative URL will be based
                      // on
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
-                                                 // available position of a live
-                                                 // content
+                                                       // available position of a
+                                                       // dynamic content
   end? : number; // End time of the current period, in seconds
   isDynamic : boolean; // Whether the Manifest can evolve with time
   start : number; // Start time of the current period, in seconds
@@ -51,8 +51,8 @@ interface IIndexContext {
   aggressiveMode : boolean; // Whether we should request new segments even if
                             // they are not yet finished
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
-                                                       // available position of a live
-                                                       // content
+                                                       // available position of a
+                                                       // dynamic content
   isDynamic : boolean; // Whether the Manifest can evolve with time
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
