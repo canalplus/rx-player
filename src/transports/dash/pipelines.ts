@@ -30,6 +30,7 @@ import dashManifestParser, {
 } from "../../parsers/manifest/dash";
 import request from "../../utils/request";
 import {
+  ILoadedManifest,
   ILoaderDataLoadedValue,
   IManifestLoaderArguments,
   IManifestLoaderObservable,
@@ -84,21 +85,20 @@ export default function(
   const manifestPipeline = {
     loader(
       { url } : IManifestLoaderArguments
-    ) : IManifestLoaderObservable< Document | string > {
+    ) : IManifestLoaderObservable< ILoadedManifest > {
       return manifestLoader(url);
     },
 
     parser(
       { response, url: loaderURL, scheduleRequest, externalClockOffset } :
-      IManifestParserArguments< Document | string,
-                                ILoaderDataLoadedValue< Document | string > >
+      IManifestParserArguments
     ) : IManifestParserObservable {
       const url = response.url == null ? loaderURL :
                                          response.url;
       const data = typeof response.responseData === "string" ?
                      new DOMParser().parseFromString(response.responseData,
                                                      "text/xml") :
-                     response.responseData;
+                     response.responseData as Document;
 
       const parsedManifest = dashManifestParser(data, {
         externalClockOffset,

@@ -28,6 +28,7 @@ import Manifest, {
   Representation,
 } from "../manifest";
 import { IBifThumbnail } from "../parsers/images/bif";
+import { IMetaPlaylist } from "../parsers/manifest/metaplaylist";
 
 // Contains timings informations on a single segment.
 // Those variables expose the best guess we have on the effective duration and
@@ -113,14 +114,16 @@ export type ISegmentLoaderObserver<T> = Observer<ISegmentLoaderEvent<T>>;
 
 // -- arguments
 
-export interface IManifestParserArguments<T, U> {
-  response : ILoaderDataLoadedValue<T>; // Response from the loader
+export interface IManifestParserArguments {
+  response : ILoaderDataLoadedValue<unknown>; // Response from the loader
   url? : string; // URL originally requested
   externalClockOffset? : number; // If set, offset to add to `performance.now()`
                                  // to obtain the current server's time
 
   // allow the parser to load supplementary ressources (of type U)
-  scheduleRequest : (request : () => Observable<U>) => Observable<U>;
+  scheduleRequest : (request : () =>
+    Observable< ILoaderDataLoadedValue< Document | string > >) =>
+    Observable< ILoaderDataLoadedValue< Document | string > >;
 }
 
 export interface ISegmentParserArguments<T> {
@@ -212,12 +215,10 @@ export type IManifestResolverFunction =
   (x : IManifestLoaderArguments) => Observable<IManifestLoaderArguments>;
 
 export type IManifestLoaderFunction =
-  (x : IManifestLoaderArguments) => IManifestLoaderObservable< Document | string >;
+  (x : IManifestLoaderArguments) => IManifestLoaderObservable< ILoadedManifest >;
 
 export type IManifestParserFunction =
-  (x : IManifestParserArguments< Document | string,
-                                 ILoaderDataLoadedValue< Document | string > >) =>
-    IManifestParserObservable;
+  (x : IManifestParserArguments) => IManifestParserObservable;
 
 // TODO Remove resolver
 export interface ITransportManifestPipeline { resolver? : IManifestResolverFunction;
@@ -342,12 +343,16 @@ export type CustomSegmentLoader = (
   // returns either the aborting callback or nothing
   (() => void)|void;
 
+export type ILoadedManifest = Document |
+                              string |
+                              IMetaPlaylist;
+
 export type CustomManifestLoader = (
   // first argument: url of the manifest
-  url : string,
+  url : string | undefined,
 
   // second argument: callbacks
-  callbacks : { resolve : (args : { data : Document|string;
+  callbacks : { resolve : (args : { data : ILoadedManifest;
                                     sendingTime? : number;
                                     receivingTime? : number;
                                     size? : number;
