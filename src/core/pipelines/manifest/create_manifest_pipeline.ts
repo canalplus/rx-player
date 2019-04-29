@@ -84,7 +84,7 @@ function errorSelector(
 }
 
 export interface ICoreManifestPipeline {
-  fetch(url : string) : Observable<IPipelineLoaderResponse<Document|string>>;
+  fetch(url? : string) : Observable<IPipelineLoaderResponse<Document|string>>;
   parse(response : IPipelineLoaderResponseValue<Document|string>,
         url? : string,
         externalClockOffset? : number) : Observable<IFetchManifestResult>;
