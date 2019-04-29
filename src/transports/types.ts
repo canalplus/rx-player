@@ -60,7 +60,7 @@ export interface INextSegmentsInfos {
 
 // Arguments for the loader of the manifest pipeline
 export interface IManifestLoaderArguments {
-  url : string; // URL of the concerned manifest
+  url? : string; // URL of the concerned manifest
 }
 
 // Argument for the loader of the segment pipelines
