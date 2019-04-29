@@ -101,8 +101,12 @@ export interface ILoaderProgress { type : "progress";
                                              url : string;
                                              totalSize? : number; }; }
 
-export type IManifestLoaderObservable<T> = Observable<ILoaderDataLoaded<T>>;
-export type IManifestLoaderObserver<T> = Observer<ILoaderDataLoaded<T>>;
+export type ILoadedManifest = Document |
+                              string |
+                              IMetaPlaylist;
+
+export type IManifestLoaderObservable = Observable<ILoaderDataLoaded<ILoadedManifest>>;
+export type IManifestLoaderObserver = Observer<ILoaderDataLoaded<ILoadedManifest>>;
 
 export type ISegmentLoaderEvent<T> =  ILoaderProgress |
                                       ILoaderDataLoaded<T> |
@@ -215,7 +219,7 @@ export type IManifestResolverFunction =
   (x : IManifestLoaderArguments) => Observable<IManifestLoaderArguments>;
 
 export type IManifestLoaderFunction =
-  (x : IManifestLoaderArguments) => IManifestLoaderObservable< ILoadedManifest >;
+  (x : IManifestLoaderArguments) => IManifestLoaderObservable;
 
 export type IManifestParserFunction =
   (x : IManifestParserArguments) => IManifestParserObservable;
@@ -342,10 +346,6 @@ export type CustomSegmentLoader = (
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;
-
-export type ILoadedManifest = Document |
-                              string |
-                              IMetaPlaylist;
 
 export type CustomManifestLoader = (
   // first argument: url of the manifest

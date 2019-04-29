@@ -72,14 +72,21 @@ const generateManifestID = idGenerator();
  * @returns {Object}
  */
 export default function parseMetaPlaylist(
-  data : string,
+  data : unknown,
   url? : string
 ): IParserResponse<IParsedManifest> {
   let parsedData;
-  try {
-    parsedData = JSON.parse(data);
-  } catch (error) {
-    throw new Error("MPL Parser: Bad MetaPlaylist file. Expected JSON.");
+  if (typeof data === "object" && data != null) {
+    parsedData = data;
+  } else if (typeof data === "string") {
+    try {
+      parsedData = JSON.parse(data);
+    } catch (error) {
+      throw new Error("MPL Parser: Bad MetaPlaylist file. Expected JSON.");
+    }
+  } else {
+    throw new Error("MPL Parser: Parser input must be either a string " +
+                    "or the MetaPlaylist data directly.");
   }
 
   const { contents, version, type } = parsedData;
