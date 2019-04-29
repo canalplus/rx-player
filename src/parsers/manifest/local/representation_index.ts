@@ -93,7 +93,7 @@ export default function createRepresentationIndex(
      * @returns {Number|undefined}
      */
     getFirstPosition() : number|undefined {
-      if (!index.segments.length) {
+      if (index.segments.length === 0) {
         return undefined;
       }
       return index.segments[0].time;
@@ -103,7 +103,7 @@ export default function createRepresentationIndex(
      * @returns {Number|undefined}
      */
     getLastPosition() : number|undefined {
-      if (!index.segments.length) {
+      if (index.segments.length === 0) {
         return undefined;
       }
       return index.segments[index.segments.length - 1].time;

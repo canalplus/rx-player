@@ -52,12 +52,12 @@ function segmentLoader(
 ) : ISegmentLoaderObservable< ArrayBuffer | Uint8Array | null > {
   const privateInfos = segment.privateInfos;
   if (segment.isInit) {
-    if (!privateInfos || privateInfos.localManifestInitSegment == null) {
+    if (privateInfos === undefined || privateInfos.localManifestInitSegment == null) {
       throw new Error("Segment is not a local Manifest segment");
     }
     return loadInitSegment(privateInfos.localManifestInitSegment.load);
   }
-  if (!privateInfos || privateInfos.localManifestSegment == null) {
+  if (privateInfos === undefined || privateInfos.localManifestSegment == null) {
     throw new Error("Segment is not an local Manifest segment");
   }
   return loadSegment(privateInfos.localManifestSegment.segment,
