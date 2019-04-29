@@ -16,9 +16,9 @@
 
 import { Observable } from "rxjs";
 import request from "../../utils/request";
-
 import {
   CustomManifestLoader,
+  ILoadedManifest,
   IManifestLoaderObservable,
   IManifestLoaderObserver,
 } from "../types";
@@ -38,13 +38,13 @@ function regularManifestLoader(url: string) {
  */
 const manifestPreLoader = (
   { customManifestLoader } : { customManifestLoader?: CustomManifestLoader }
-) => (url: string) : IManifestLoaderObservable<Document|string> => {
+) => (url: string) : IManifestLoaderObservable<ILoadedManifest> => {
     if (!customManifestLoader) {
       return regularManifestLoader(url);
     }
 
     const timeAPIsDelta = Date.now() - performance.now();
-    return new Observable((obs: IManifestLoaderObserver<Document|string>) => {
+    return new Observable((obs: IManifestLoaderObserver<ILoadedManifest>) => {
       let hasFinished = false;
       let hasFallbacked = false;
 
@@ -52,9 +52,9 @@ const manifestPreLoader = (
        * Callback triggered when the custom manifest loader has a response.
        * @param {Object}
        */
-      const resolve = (_args : { data : Document|string;
-                                 size : number;
-                                 duration : number;
+      const resolve = (_args : { data : ILoadedManifest;
+                                 size? : number;
+                                 duration? : number;
                                  url? : string;
                                  receivingTime? : number;
                                  sendingTime? : number; }) =>
