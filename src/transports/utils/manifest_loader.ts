@@ -53,8 +53,8 @@ const manifestPreLoader = (
        * @param {Object}
        */
       const resolve = (_args : { data : Document | string;
-                                 size : number;
-                                 duration : number;
+                                 size? : number;
+                                 duration? : number;
                                  url? : string;
                                  receivingTime? : number;
                                  sendingTime? : number; }) =>
