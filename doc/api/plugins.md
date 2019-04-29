@@ -135,8 +135,9 @@ implementation does the same thing and more):
 /**
  * @param {string|undefined} url - the url the Manifest request should normally
  * be on.
- * Can be undefined in very specific conditions, like in some specific cases
- * when the `loadVideo` call had no defined URL.
+ * Can be undefined in very specific conditions, like in cases when the
+ * `loadVideo` call had no defined URL (e.g. "local" manifest, playing a locally
+ * crafted "Metaplaylist" content).
  * @param {Object} callbacks
  * @param {Function} callbacks.resolve - Callback to call when the request is
  * finished with success. It should be called with an object with at least 3
