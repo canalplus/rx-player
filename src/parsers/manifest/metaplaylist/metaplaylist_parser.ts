@@ -72,7 +72,7 @@ const generateManifestID = idGenerator();
  * @returns {Object}
  */
 export default function parseMetaPlaylist(
-  data: string,
+  data : string,
   url? : string
 ): IParserResponse<IParsedManifest> {
   let parsedData;
@@ -226,7 +226,8 @@ function createManifest(
               id: representationID,
               mimeType: track.mimeType,
               codecs: track.codecs,
-              index: new StaticRepresentationIndex({ media: track.url }) },
+              index: new StaticRepresentationIndex({ media: track.url }),
+            },
           ],
         };
       }, []);
