@@ -329,9 +329,12 @@ export type CustomSegmentLoader = (
            manifest : Manifest; },
 
   // second argument: callbacks
-  callbacks : { resolve : (args : { data : ArrayBuffer|Uint8Array;
-                                    size : number;
-                                    duration : number; }) => void;
+  callbacks : { resolve : (args : { data : ArrayBuffer | Uint8Array;
+                                    sendingTime? : number;
+                                    receivingTime? : number;
+                                    size? : number;
+                                    duration? : number; })
+                          => void;
 
                 reject : (err? : Error) => void;
                 fallback? : () => void; }
@@ -345,8 +348,11 @@ export type CustomManifestLoader = (
 
   // second argument: callbacks
   callbacks : { resolve : (args : { data : Document|string;
-                                    size : number;
-                                    duration : number; }) => void;
+                                    sendingTime? : number;
+                                    receivingTime? : number;
+                                    size? : number;
+                                    duration? : number; })
+                          => void;
 
                  reject : (err? : Error) => void;
                  fallback? : () => void; }
