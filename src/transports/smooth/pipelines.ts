@@ -91,10 +91,12 @@ export default function(
     resolver(
       { url } : IManifestLoaderArguments
     ) : Observable<IManifestLoaderArguments> {
-      let resolving;
-      const token = extractToken(url);
+      if (url == null) {
+        return observableOf({ url : undefined });
+      }
 
       // TODO Remove WSX logic
+      let resolving;
       if (WSX_REG.test(url)) {
         warnOnce("Giving WSX URL to loadVideo is deprecated." +
           " You should only give Manifest URLs.");
@@ -114,6 +116,7 @@ export default function(
         resolving = observableOf(url);
       }
 
+      const token = extractToken(url);
       return resolving
         .pipe(map((_url) => ({
           url: replaceToken(resolveManifest(_url), token),

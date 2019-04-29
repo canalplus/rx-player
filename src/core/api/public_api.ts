@@ -317,7 +317,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * URL of the content currently being played.
      * @type {string}
      */
-    url : string;
+    url? : string;
 
     /**
      * true if the current content is in DirectFile mode.
