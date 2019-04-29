@@ -33,7 +33,6 @@ import stringFromUTF8 from "../../utils/string_from_utf8";
 import warnOnce from "../../utils/warn_once";
 import {
   IImageParserObservable,
-  ILoadedManifest,
   IManifestLoaderArguments,
   IManifestLoaderObservable,
   IManifestParserArguments,
@@ -48,7 +47,7 @@ import {
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
-import generateManifestLoader from "../utils/manifest_loader";
+import generateManifestLoader from "../utils/document_manifest_loader";
 import extractTimingsInfos from "./extract_timings_infos";
 import { patchSegment } from "./isobmff";
 import generateSegmentLoader from "./segment_loader";
@@ -123,7 +122,7 @@ export default function(
 
     loader(
       { url } : IManifestLoaderArguments
-    ) : IManifestLoaderObservable<ILoadedManifest> {
+    ) : IManifestLoaderObservable {
       return manifestLoader(url);
     },
 
