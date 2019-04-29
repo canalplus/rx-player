@@ -517,6 +517,14 @@ export default class SegmentBookkeeper {
       }
 
       if (segment.time === _time && segment.duration === _duration) {
+        if (
+          isLastSegment &&
+          currentSegmentI.bufferedStart &&
+          Math.abs(currentSegmentI.bufferedStart - currentSegmentI.start) < 0.01
+        ) {
+          return currentSegmentI;
+        }
+
         // false negatives are better than false positives here.
         // When impossible to know, say the segment is not complete
         if (hasEnoughInfos(currentSegmentI, prevSegmentI, nextSegmentI)) {
@@ -581,14 +589,6 @@ export default class SegmentBookkeeper {
       prevSegmentI : IBufferedSegment,
       nextSegmentI : IBufferedSegment
     ) : boolean {
-      if (
-        isLastSegment &&
-        currentSegmentI.bufferedStart &&
-        Math.abs(currentSegmentI.bufferedStart - currentSegmentI.start) < 0.01
-      ) {
-        return true;
-      }
-
       if (
         !prevSegmentI ||
         prevSegmentI.bufferedEnd == null ||
