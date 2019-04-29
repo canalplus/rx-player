@@ -46,8 +46,10 @@ no use, as our implementation does the same thing and more):
  * finished with success. It should be called with an object with at least 3
  * properties:
  *   - data {ArrayBuffer} - the segment data
- *   - duration {Number} - the duration of the request, in ms
- *   - size {Number} - size, in bytes, of the total downloaded response.
+ *   - duration {Number|undefined} - the duration of the request, in
+ *     milliseconds.
+ *   - size {Number|undefined} - size, in bytes, of the total downloaded
+ *     response.
  * @param {Function} callbacks.reject - Callback to call when an error is
  * encountered. If you relied on an XHR, it is recommended to include it as an
  * object property named "xhr" in the argument.
@@ -138,8 +140,10 @@ implementation does the same thing and more):
  * finished with success. It should be called with an object with at least 3
  * properties:
  *   - data {Document|String} - the Manifest data
- *   - duration {Number} - the duration of the request, in milliseconds
- *   - size {Number} - size, in bytes, of the total downloaded response.
+ *   - duration {Number|undefined} - the duration of the request, in
+ *     milliseconds.
+ *   - size {Number|undefined} - size, in bytes, of the total downloaded
+ *     response.
  *   - url {string|undefined} - url of the Manifest (post redirection if one).
  *   - sendingTime {number|undefined} - Time at which the manifest request was
  *     done as a unix timestamp in milliseconds.

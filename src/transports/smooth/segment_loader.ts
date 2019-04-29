@@ -136,8 +136,8 @@ const generateSegmentLoader = (
        */
       const resolve = (_args : {
         data : ArrayBuffer|Uint8Array;
-        size : number;
-        duration : number;
+        size? : number;
+        duration? : number;
       }) => {
         if (!hasFallbacked) {
           hasFinished = true;
