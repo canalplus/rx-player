@@ -36,6 +36,7 @@ import parseMetaPlaylist, {
 import { IParsedManifest } from "../../parsers/manifest/types";
 import {
   IImageParserObservable,
+  ILoadedManifest,
   ILoaderDataLoaded,
   ILoaderDataLoadedValue,
   IManifestLoaderArguments,
@@ -148,7 +149,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
   const manifestPipeline = {
     loader(
       { url } : IManifestLoaderArguments
-    ) : IManifestLoaderObservable<Document | string> {
+    ) : IManifestLoaderObservable<ILoadedManifest> {
       return manifestLoader(url);
     },
 
@@ -156,9 +157,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
       { response,
         url: loaderURL,
         scheduleRequest,
-        externalClockOffset,
-      } : IManifestParserArguments< string | Document,
-                                    ILoaderDataLoadedValue< string | Document > >
+        externalClockOffset } : IManifestParserArguments
     ) : IManifestParserObservable {
       const url = response.url == null ? loaderURL :
                                          response.url;
