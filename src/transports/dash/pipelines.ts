@@ -30,7 +30,6 @@ import dashManifestParser, {
 } from "../../parsers/manifest/dash";
 import request from "../../utils/request";
 import {
-  ILoadedManifest,
   ILoaderDataLoadedValue,
   IManifestLoaderArguments,
   IManifestLoaderObservable,
@@ -39,7 +38,7 @@ import {
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
-import generateManifestLoader from "../utils/manifest_loader";
+import generateManifestLoader from "../utils/document_manifest_loader";
 import generateSegmentLoader from "./generate_segment_loader";
 import {
   imageLoader,
@@ -85,7 +84,7 @@ export default function(
   const manifestPipeline = {
     loader(
       { url } : IManifestLoaderArguments
-    ) : IManifestLoaderObservable< ILoadedManifest > {
+    ) : IManifestLoaderObservable {
       return manifestLoader(url);
     },
 
@@ -100,11 +99,9 @@ export default function(
                                                      "text/xml") :
                      response.responseData as Document;
 
-      const parsedManifest = dashManifestParser(data, {
-        url,
-        referenceDateTime,
-        externalClockOffset,
-      });
+      const parsedManifest = dashManifestParser(data, { url,
+                                                        referenceDateTime,
+                                                        externalClockOffset });
       return loadExternalResources(parsedManifest);
 
       function loadExternalResources(

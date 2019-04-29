@@ -15,21 +15,23 @@
  */
 
 import request from "../../utils/request";
+
 import {
   CustomManifestLoader,
   IManifestLoaderObservable,
 } from "../types";
-import callCustomManifestLoader from "../utils/call_custom_manifest_loader";
+import callCustomManifestLoader from "./call_custom_manifest_loader";
 
 /**
  * Manifest loader triggered if there was no custom-defined one in the API.
  * @param {string} url
+ * @returns {Observable}
  */
-function regularManifestLoader(url? : string) {
+function regularManifestLoader(url? : string) : IManifestLoaderObservable {
   if (url == null) {
     throw new Error("Cannot perform HTTP(s) request. URL not known");
   }
-  return request({ url, responseType: "text" });
+  return request({ url, responseType: "document" });
 }
 
 /**

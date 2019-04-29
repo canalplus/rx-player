@@ -36,7 +36,6 @@ import parseMetaPlaylist, {
 import { IParsedManifest } from "../../parsers/manifest/types";
 import {
   IImageParserObservable,
-  ILoadedManifest,
   ILoaderDataLoaded,
   ILoaderDataLoadedValue,
   IManifestLoaderArguments,
@@ -149,7 +148,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
   const manifestPipeline = {
     loader(
       { url } : IManifestLoaderArguments
-    ) : IManifestLoaderObservable<ILoadedManifest> {
+    ) : IManifestLoaderObservable {
       return manifestLoader(url);
     },
 
@@ -162,10 +161,6 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
       const url = response.url == null ? loaderURL :
                                          response.url;
       const { responseData } = response;
-      if (typeof responseData !== "string") {
-        throw new Error("MPL: Parser input must be string.");
-      }
-
       return handleParsedResult(parseMetaPlaylist(responseData, url));
 
       function handleParsedResult(
