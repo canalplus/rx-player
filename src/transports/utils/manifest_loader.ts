@@ -27,15 +27,8 @@ import {
  * Manifest loader triggered if there was no custom-defined one in the API.
  * @param {string} url
  */
-function regularManifestLoader(
-  url: string,
-  ignoreProgressEvents?: true
-) {
-  return request({
-    url,
-    responseType: "document",
-    ignoreProgressEvents,
-  });
+function regularManifestLoader(url: string) {
+  return request({ url, responseType: "document" });
 }
 
 /**
@@ -44,13 +37,10 @@ function regularManifestLoader(
  * @returns {Function}
  */
 const manifestPreLoader = (
-  options: {
-    customManifestLoader?: CustomManifestLoader;
-    ignoreProgressEvents?: true;
-  }) => (url: string) : ILoaderObservable<Document|string> => {
-    const { customManifestLoader, ignoreProgressEvents } = options;
+  { customManifestLoader } : { customManifestLoader?: CustomManifestLoader }
+) => (url: string) : ILoaderObservable<Document|string> => {
     if (!customManifestLoader) {
-      return regularManifestLoader(url, ignoreProgressEvents);
+      return regularManifestLoader(url);
     }
 
     const timeAPIsDelta = Date.now() - performance.now();
@@ -98,10 +88,10 @@ const manifestPreLoader = (
        * Callback triggered when the custom manifest loader fails
        * @param {*} err - The corresponding error encountered
        */
-      const reject = (err = {}) => {
+      const reject = (err : unknown) => {
         if (!hasFallbacked) {
           hasFinished = true;
-          obs.error(err);
+          obs.error(err == null ? {} : err);
         }
       };
 

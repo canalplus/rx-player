@@ -67,7 +67,6 @@ function requestStringResource(url : string) : Observable<string> {
   return request({
     url,
     responseType: "text",
-    ignoreProgressEvents: true,
   }).pipe(
     filter((e) => e.type === "response"),
     map((e) => e.value.responseData)
@@ -214,7 +213,11 @@ export default function(
         });
       }
       const { mediaURL } = segment;
-      return request({ url: mediaURL, responseType: "arraybuffer" });
+      return request({
+        url: mediaURL,
+        responseType: "arraybuffer",
+        sendProgressEvents: true,
+      });
     },
 
     parser(
