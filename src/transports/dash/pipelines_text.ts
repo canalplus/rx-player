@@ -77,6 +77,7 @@ function TextTrackLoader(
           Math.max(range[1], indexRange[1]),
         ]),
       },
+      sendProgressEvents: true,
     });
   }
   return request<ArrayBuffer|string>({
@@ -85,6 +86,7 @@ function TextTrackLoader(
     headers: range ? {
       Range: byteRange(range),
     } : null,
+    sendProgressEvents: true,
   });
 }
 

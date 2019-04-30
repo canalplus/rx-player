@@ -52,12 +52,14 @@ function regularSegmentLoader(
           Math.max(range[1], indexRange[1]),
         ]),
       },
+      sendProgressEvents: true,
     });
   }
   return request({
     url,
     responseType: "arraybuffer",
     headers: range ? { Range: byteRange(range) } : null,
+    sendProgressEvents: true,
   });
 }
 

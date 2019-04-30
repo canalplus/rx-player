@@ -56,6 +56,7 @@ function regularSegmentLoader(
     url,
     responseType: "arraybuffer",
     headers,
+    sendProgressEvents: true,
   });
 }
 

@@ -83,10 +83,7 @@ export default function(
   const smoothManifestParser = createSmoothManifestParser(options);
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
 
-  const manifestLoaderOptions = {
-    customManifestLoader: options.manifestLoader,
-    ignoreProgressEvents: true as true,
-  };
+  const manifestLoaderOptions = { customManifestLoader: options.manifestLoader };
   const manifestLoader = generateManifestLoader(manifestLoaderOptions);
 
   const manifestPipeline = {
@@ -103,7 +100,6 @@ export default function(
         resolving = request({
           url: replaceToken(url, ""),
           responseType: "document",
-          ignoreProgressEvents: true,
         }).pipe(
           map(({ value }) : string => {
             const extractedURL = extractISML(value.responseData);
@@ -218,7 +214,11 @@ export default function(
         });
       }
       const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" : "text";
-      return request({ url: segment.mediaURL, responseType });
+      return request({
+        url: segment.mediaURL,
+        responseType,
+        sendProgressEvents: true,
+      });
     },
 
     parser({
@@ -378,7 +378,11 @@ export default function(
         });
       }
 
-      return request({ url: segment.mediaURL, responseType: "arraybuffer" });
+      return request({
+        url: segment.mediaURL,
+        responseType: "arraybuffer",
+        sendProgressEvents: true,
+      });
     },
 
     parser(
