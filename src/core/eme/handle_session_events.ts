@@ -106,7 +106,9 @@ function licenseErrorSelector(
       return error;
     }
   }
-  return new EncryptedMediaError("KEY_LOAD_ERROR", error.toString(), fatal);
+
+  return new EncryptedMediaError(
+    "KEY_LOAD_ERROR", error.message || error.toString(), fatal);
 }
 
 /**
@@ -202,11 +204,11 @@ export default function handleSessionEvents(
         return (castToObservable(getLicense) as Observable<TypedArray|ArrayBuffer|null>)
           .pipe(
             timeout(10 * 1000),
-            catchError((error : Error) : never => {
+            catchError((error : Error|undefined) : never => {
               throw error instanceof TimeoutError ?
                 new EncryptedMediaError("KEY_LOAD_TIMEOUT",
                   "The license server took more than 10 seconds to respond.", false) :
-                error;
+                (error || new Error("Unknown error occured during license request."));
             })
         );
       });
