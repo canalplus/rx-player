@@ -204,11 +204,15 @@ export default function handleSessionEvents(
         return (castToObservable(getLicense) as Observable<TypedArray|ArrayBuffer|null>)
           .pipe(
             timeout(10 * 1000),
-            catchError((error : Error|undefined) : never => {
-              throw error instanceof TimeoutError ?
-                new EncryptedMediaError("KEY_LOAD_TIMEOUT",
-                  "The license server took more than 10 seconds to respond.", false) :
-                (error || new Error("Unknown error occured during license request."));
+            catchError((error : unknown) : never => {
+              if (error instanceof TimeoutError) {
+                throw new EncryptedMediaError("KEY_LOAD_TIMEOUT",
+                  "The license server took more than 10 seconds to respond.", false);
+              }
+              if (error instanceof Error) {
+                throw error;
+              }
+              throw new Error("An error occured during when calling `getLicense`.");
             })
         );
       });
