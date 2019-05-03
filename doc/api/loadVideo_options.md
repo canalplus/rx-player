@@ -198,12 +198,35 @@ This property is an array of objects with the following properties (only
     directly the license or `null` if it can be done synchronously.
 
   - ``closeSessionsOnStop`` (``Boolean|undefined``): If set to ``true``, the
-    ``MediaKeySession`` created for a content will be immediately closed when the
-    content stops its playback. This might be required by your key system
+    ``MediaKeySession`` created for a content will be immediately closed when
+    the content stops its playback. This might be required by your key system
     implementation (most often, it is not).
 
     If set to ``false`` or not set, the ``MediaKeySession`` can be reused if the
     same content needs to be re-decrypted.
+
+  - ``disableMediaKeysAttachmentLock`` (``Boolean|undefined``):
+    In regular conditions, we might want to wait for the media element to have
+    decryption capabilities (what we call here "MediaKeys attachment") before
+    beginning to load the actual content.
+
+    Waiting for that capability validation allows for example to play a content
+    which contains both encrypted and unencrypted data on the Chrome browser.
+
+    However, we found that in some peculiar devices (like some set-top boxes)
+    this can create a deadlock: the browser sometimes wait for some
+    content to be loaded before validating the media element's decryption
+    capabilities.
+
+    Because we didn't find a good enough compromise for now, we added the
+    `disableMediaKeysAttachmentLock` boolean.
+    By setting it to `true`, we won't wait for "MediaKeys attachment" before
+    pushing the first content. The downside being that content of mixed
+    unencrypted/encrypted data might not be playable with that configuration.
+
+    You can try that property if your encrypted contents seems to load
+    indefinitely on "exotic" targets.
+
 
 #### Example
 

@@ -28,7 +28,6 @@ import {
   filter,
   ignoreElements,
   map,
-  mapTo,
   mergeMap,
   shareReplay,
   tap,
@@ -40,7 +39,6 @@ import {
 } from "../../compat/";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
-import { assertInterface } from "../../utils/assert";
 import noop from "../../utils/noop";
 import disposeMediaKeys from "./dispose_media_keys";
 import getSession from "./get_session";
@@ -49,7 +47,7 @@ import initMediaKeys from "./init_media_keys";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 import setServerCertificate from "./set_server_certificate";
 import {
-  IEMEInitEvent,
+  IEMEManagerEvent,
   IEMEWarningEvent,
   IKeySystemOption,
 } from "./types";
@@ -80,10 +78,6 @@ function clearEMESession(mediaElement : HTMLMediaElement) : Observable<never> {
   });
 }
 
-// TODO More events
-export type IEMEManagerEvent = IEMEWarningEvent |
-                               IEMEInitEvent;
-
 /**
  * EME abstraction and event handler used to communicate with the Content-
  * Description-Module (CDM).
@@ -98,13 +92,6 @@ export default function EMEManager(
   mediaElement : HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[]
 ) : Observable<IEMEManagerEvent> {
-  if (__DEV__) {
-    keySystemsConfigs.forEach((config) =>
-      assertInterface(config,
-                      { getLicense: "function", type: "string" },
-                      "keySystem"));
-  }
-
    // Keep track of all initialization data handled here.
    // This is to avoid handling multiple times the same encrypted events.
   const handledInitData = new InitDataStore();
@@ -115,16 +102,20 @@ export default function EMEManager(
                                         attachedMediaKeysInfos)
                             .pipe(shareReplay()); // cache success
 
-  const initEvent$ = mediaKeysInfos$
-    .pipe(mapTo({ type: "eme-init" as "eme-init" }));
+  const attachedMediaKeys$ = mediaKeysInfos$.pipe(filter(evt => {
+    return evt.type === "attached-media-keys";
+  }));
 
-  const startEME$ = observableCombineLatest(onEncrypted$(mediaElement),
-                                            mediaKeysInfos$
+  const encryptedEvents$ = onEncrypted$(mediaElement).pipe(tap((encryptedEvent) => {
+    log.debug("EME: encrypted event received", encryptedEvent);
+  }));
+
+  const bindSession$ = observableCombineLatest(encryptedEvents$,
+                                               attachedMediaKeys$
   ).pipe(
     /* Attach server certificate and create/reuse MediaKeySession */
-    mergeMap(([encryptedEvent, mediaKeysInfos], i) => {
-      log.debug("EME: encrypted event received", encryptedEvent);
-
+    mergeMap(([encryptedEvent, mediaKeysEvent], i) => {
+      const mediaKeysInfos = mediaKeysEvent.value;
       const { keySystemOptions, mediaKeys } = mediaKeysInfos;
       const { serverCertificate } = keySystemOptions;
 
@@ -183,12 +174,12 @@ export default function EMEManager(
             }),
             ignoreElements()
           )
-      ).pipe(filter((sessionEvent) : sessionEvent is IEMEWarningEvent =>
-        sessionEvent.type === "warning"
-      ));
-    })
+      );
+    }),
+    filter((evt) : evt is IEMEWarningEvent => evt.type === "warning")
   );
-  return observableMerge(initEvent$, startEME$);
+
+  return observableMerge(mediaKeysInfos$, bindSession$);
 }
 
 /**
@@ -211,4 +202,5 @@ export {
   clearEMESession,
   disposeEME,
   getCurrentKeySystem,
+  IEMEManagerEvent,
 };

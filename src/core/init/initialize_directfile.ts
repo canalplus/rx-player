@@ -50,6 +50,7 @@ import EVENTS from "./events_generators";
 import { IInitialTimeOptions } from "./get_initial_time";
 import getStalledEvents from "./get_stalled_events";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
+import isEMEReadyEvent from "./is_eme_ready";
 import throwOnMediaError from "./throw_on_media_error";
 import {
   IInitClockTick,
@@ -174,7 +175,7 @@ export default function initializeDirectfileContent({
 
   // Manage "loaded" event and warn if autoplay is blocked on the current browser
   const loadedEvent$ = emeManager$.pipe(
-    filter(({ type }) => type === "eme-init" || type === "eme-disabled"),
+    filter(isEMEReadyEvent),
     take(1),
     mergeMapTo(load$),
     mergeMap((evt) => {

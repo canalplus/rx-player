@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
+import {
+  concat as observableConcat,
+  Observable,
+  of as observableOf,
+} from "rxjs";
 import {
   mapTo,
   mergeMap,
@@ -23,8 +27,9 @@ import attachMediaKeys from "./attach_media_keys";
 import getMediaKeysInfos from "./get_media_keys";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 import {
+  IAttachedMediaKeysEvent,
+  ICreatedMediaKeysEvent,
   IKeySystemOption,
-  IMediaKeysInfos,
 } from "./types";
 
 /**
@@ -38,10 +43,15 @@ export default function initMediaKeys(
   mediaElement : HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[],
   currentMediaKeysInfos : MediaKeysInfosStore
-): Observable<IMediaKeysInfos> {
+): Observable<ICreatedMediaKeysEvent|IAttachedMediaKeysEvent> {
   return getMediaKeysInfos(mediaElement, keySystemsConfigs, currentMediaKeysInfos)
-    .pipe(mergeMap((mediaKeysInfos) =>
-      attachMediaKeys(mediaKeysInfos, mediaElement, currentMediaKeysInfos)
-        .pipe(mapTo(mediaKeysInfos))
-    ));
+    .pipe(mergeMap((mediaKeysInfos) => {
+      return observableConcat(
+        observableOf({ type: "created-media-keys" as const,
+                       value: mediaKeysInfos }),
+        attachMediaKeys(mediaKeysInfos, mediaElement, currentMediaKeysInfos)
+          .pipe(mapTo({ type: "attached-media-keys" as const,
+                        value: mediaKeysInfos, }))
+      );
+    }));
 }
