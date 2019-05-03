@@ -212,7 +212,7 @@ export default function handleSessionEvents(
               if (error instanceof Error) {
                 throw error;
               }
-              throw new Error("An error occured during when calling `getLicense`.");
+              throw new Error("An error occured when calling `getLicense`.");
             })
         );
       });
