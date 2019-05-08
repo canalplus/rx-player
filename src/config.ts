@@ -46,7 +46,8 @@ export default {
    *     element. Can be useful to display richer TTML subtitles, for example.
    * @type {Object|null}
    */
-  DEFAULT_TEXT_TRACK_MODE: "native" as "native"|"html",
+  DEFAULT_TEXT_TRACK_MODE: "native" as "native" |
+                                       "html",
 
   /**
    * Strategy to adopt when manually setting the current bitrate.
@@ -58,7 +59,8 @@ export default {
    *     during a short moment.
    * @type {string}
    */
-  DEFAULT_MANUAL_BITRATE_SWITCHING_MODE: "seamless" as "seamless"|"direct",
+  DEFAULT_MANUAL_BITRATE_SWITCHING_MODE: "seamless" as "seamless" |
+                                                       "direct",
 
   /**
    * If set to true, video through loadVideo will auto play by default
@@ -578,18 +580,12 @@ export default {
    * @type {Object}
    */
   BUFFER_PADDING: {
-    audio: {
-      high: 1,
-      low: 1,
-    }, // only "audio" segments
-    video: {
-      high: 3,
-      low: 2,
-    }, // only "video" segments
-    other: {
-      high: 1,
-      low: 1,
-    }, // tracks which are not audio/video (text images).
+    audio: { high: 1,
+             low: 1 }, // only "audio" segments
+    video: { high: 3,
+             low: 2 }, // only "video" segments
+    other: { high: 1,
+             low: 1 }, // tracks which are not audio/video (text images).
   },
 
   /**
@@ -661,13 +657,11 @@ export default {
    * Defined in order of importance (first will be tested first etc.)
    * @type {Array.<string>}
    */
-  EME_DEFAULT_WIDEVINE_ROBUSTNESSES: [
-    "HW_SECURE_ALL",
-    "HW_SECURE_DECODE",
-    "HW_SECURE_CRYPTO",
-    "SW_SECURE_DECODE",
-    "SW_SECURE_CRYPTO",
-  ],
+  EME_DEFAULT_WIDEVINE_ROBUSTNESSES: [ "HW_SECURE_ALL",
+                                       "HW_SECURE_DECODE",
+                                       "HW_SECURE_CRYPTO",
+                                       "SW_SECURE_DECODE",
+                                       "SW_SECURE_CRYPTO" ],
 
   /**
    * Link canonical key systems names to their respective reverse domain name,
@@ -678,18 +672,12 @@ export default {
    */
   /* tslint:disable no-object-literal-type-assertion */
   EME_KEY_SYSTEMS: {
-    clearkey:  [
-      "webkit-org.w3.clearkey",
-      "org.w3.clearkey",
-    ],
-    widevine:  [
-      "com.widevine.alpha",
-    ],
-    playready: [
-      "com.microsoft.playready",
-      "com.chromecast.playready",
-      "com.youtube.playready",
-    ],
+    clearkey:  [ "webkit-org.w3.clearkey",
+                 "org.w3.clearkey" ],
+    widevine:  [ "com.widevine.alpha" ],
+    playready: [ "com.microsoft.playready",
+                 "com.chromecast.playready",
+                 "com.youtube.playready" ],
   } as Partial<Record<string, string[]>>,
   /* tslint:enable no-object-literal-type-assertion */
 

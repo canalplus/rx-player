@@ -27,36 +27,31 @@ import Representation, {
   IRepresentationArguments,
 } from "./representation";
 
-export type IAdaptationType = "video"|"audio"|"text"|"image";
+export type IAdaptationType = "video" | "audio" | "text" | "image";
 
-export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] =
-  ["audio", "video", "text", "image"];
+export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] = [ "audio",
+                                                               "video",
+                                                               "text",
+                                                               "image" ];
 
-export interface IRepresentationInfos {
-  bufferType: IAdaptationType;
-  language?: string;
-  isAudioDescription? : boolean;
-  isClosedCaption? : boolean;
-  normalizedLanguage? : string;
-}
+export interface IRepresentationInfos { bufferType: IAdaptationType;
+                                        language?: string;
+                                        isAudioDescription? : boolean;
+                                        isClosedCaption? : boolean;
+                                        normalizedLanguage? : string; }
 
-export type IRepresentationFilter = (
-  representation: Representation,
-  adaptationInfos: IRepresentationInfos
-) => boolean;
+export type IRepresentationFilter = (representation: Representation,
+                                     adaptationInfos: IRepresentationInfos) => boolean;
 
-export interface IAdaptationArguments {
-  // -- required
-  id : string;
-  representations : IRepresentationArguments[];
-  type : IAdaptationType;
+export interface IAdaptationArguments { id : string;
+                                        representations : IRepresentationArguments[];
+                                        type : IAdaptationType;
 
-  // -- optional
-  audioDescription? : boolean;
-  closedCaption? : boolean;
-  language? : string;
-  manuallyAdded? : boolean;
-}
+                                        // -- optional
+                                        audioDescription? : boolean;
+                                        closedCaption? : boolean;
+                                        language? : string;
+                                        manuallyAdded? : boolean; }
 
 /**
  * Normalized Adaptation structure.
@@ -68,66 +63,37 @@ export interface IAdaptationArguments {
  */
 export default class Adaptation {
 
-  /**
-   * ID uniquely identifying the Adaptation in the Period.
-   * TODO in the Manifest instead?
-   * @type {string}
-   */
+  // ID uniquely identifying the Adaptation in the Period.
   public readonly id : string;
 
-  /**
-   * Different `Representations` (e.g. qualities) this Adaptation is available
-   * in.
-   * @type {Array.<Object>}
-   */
+  // Different `Representations` (e.g. qualities) this Adaptation is available
+  // in.
   public readonly representations : Representation[];
 
-  /**
-   * Type of this Adaptation.
-   * @type {string}
-   */
+  // Type of this Adaptation.
   public readonly type : IAdaptationType;
 
-  /**
-   * Whether this track contains an audio description for the visually impaired.
-   * @type {Boolean}
-   */
+  // Whether this track contains an audio description for the visually impaired.
   public isAudioDescription? : boolean;
 
-  /**
-   * Whether this Adaptation contains closed captions for the hard-of-hearing.
-   * @type {Boolean}
-   */
+  // Whether this Adaptation contains closed captions for the hard-of-hearing.
   public isClosedCaption? : boolean;
 
-  /**
-   * Language this Adaptation is in, as announced in the original Manifest.
-   * @type {string|undefined}
-   */
+  // Language this Adaptation is in, as announced in the original Manifest.
   public language? : string;
 
-  /**
-   * Language this Adaptation is in, when translated into an ISO639-3 code.
-   * @type {string|undefined}
-   */
+  // Language this Adaptation is in, when translated into an ISO639-3 code.
   public normalizedLanguage? : string;
 
-  /**
-   * `true` if this Adaptation was not present in the original Manifest, but was
-   * manually added after through the corresponding APIs.
-   * @type {boolean}
-   */
+  // `true` if this Adaptation was not present in the original Manifest, but was
+  // manually added after through the corresponding APIs.
   public manuallyAdded : boolean;
 
-  /**
-   * Array containing every errors that happened when the Adaptation has been
-   * created, in the order they have happened.
-   * @type {Array.<Error>}
-   */
+  // Array containing every errors that happened when the Adaptation has been
+  // created, in the order they have happened.
   public readonly parsingErrors : Array<Error|ICustomError>;
 
   /**
-   * @constructor
    * @param {Object} args
    * @param {Function|undefined} [representationFilter]
    */
@@ -140,13 +106,14 @@ export default class Adaptation {
     this.type = args.type;
 
     const hadRepresentations = !!args.representations.length;
-    const argsRepresentations =
-      filterSupportedRepresentations(args.type, args.representations);
+    const argsRepresentations = filterSupportedRepresentations(args.type,
+                                                               args.representations);
 
     if (hadRepresentations && argsRepresentations.length === 0) {
       log.warn("Incompatible codecs for adaptation", args);
       const error = new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-        "An Adaptation contains only incompatible codecs.", false);
+                                   "An Adaptation contains only incompatible codecs.",
+                                   false);
       this.parsingErrors.push(error);
     }
 
@@ -169,13 +136,12 @@ export default class Adaptation {
         if (representationFilter == null) {
           return true;
         }
-        return representationFilter(representation, {
-          bufferType: this.type,
-          language: this.language,
-          normalizedLanguage: this.normalizedLanguage,
-          isClosedCaption: this.isClosedCaption,
-          isAudioDescription: this.isAudioDescription,
-        });
+        return representationFilter(representation,
+                                    { bufferType: this.type,
+                                      language: this.language,
+                                      normalizedLanguage: this.normalizedLanguage,
+                                      isClosedCaption: this.isClosedCaption,
+                                      isAudioDescription: this.isAudioDescription });
       });
 
     // for manuallyAdded adaptations (not in the manifest)
@@ -187,8 +153,7 @@ export default class Adaptation {
    * @returns {Array.<Number>}
    */
   getAvailableBitrates() : number[] {
-    const bitrates = this.representations
-      .map(representation => representation.bitrate);
+    const bitrates = this.representations.map(r => r.bitrate);
     return uniq(bitrates);
   }
 

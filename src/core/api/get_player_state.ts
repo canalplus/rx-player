@@ -22,17 +22,15 @@ const { FORCED_ENDED_THRESHOLD } = config;
  * Player state dictionnary
  * @type {Object}
  */
-export const PLAYER_STATES = {
-  STOPPED: "STOPPED",
-  LOADED: "LOADED",
-  LOADING: "LOADING",
-  PLAYING: "PLAYING",
-  PAUSED: "PAUSED",
-  ENDED: "ENDED",
-  BUFFERING: "BUFFERING",
-  SEEKING: "SEEKING",
-  RELOADING: "RELOADING",
-};
+export const PLAYER_STATES = { STOPPED: "STOPPED",
+                               LOADED: "LOADED",
+                               LOADING: "LOADING",
+                               PLAYING: "PLAYING",
+                               PAUSED: "PAUSED",
+                               ENDED: "ENDED",
+                               BUFFERING: "BUFFERING",
+                               SEEKING: "SEEKING",
+                               RELOADING: "RELOADING" };
 
 /**
  * Get state string for a _loaded_ content.
@@ -46,7 +44,10 @@ export const PLAYER_STATES = {
 export default function getLoadedContentState(
   mediaElement : HTMLMediaElement,
   isPlaying : boolean,
-  stalledStatus : { reason : "seeking" | "not-ready" | "buffering" }|null
+  stalledStatus : { reason : "seeking" |
+                             "not-ready" |
+                             "buffering"; } |
+                  null
 ) : string {
   if (mediaElement.ended) {
     return PLAYER_STATES.ENDED;
@@ -57,19 +58,17 @@ export default function getLoadedContentState(
     // emit an 'ended' event in some conditions. Detect if we
     // reached the end by comparing the current position and the
     // duration instead.
-    const gapBetweenDurationAndCurrentTime =
-      Math.abs(mediaElement.duration - mediaElement.currentTime);
-    if (
-      FORCED_ENDED_THRESHOLD != null &&
-      gapBetweenDurationAndCurrentTime < FORCED_ENDED_THRESHOLD
+    const gapBetweenDurationAndCurrentTime = Math.abs(mediaElement.duration -
+                                                      mediaElement.currentTime);
+    if (FORCED_ENDED_THRESHOLD != null &&
+        gapBetweenDurationAndCurrentTime < FORCED_ENDED_THRESHOLD
     ) {
       return PLAYER_STATES.ENDED;
     }
 
-    return stalledStatus.reason === "seeking" ?
-      PLAYER_STATES.SEEKING :
-      PLAYER_STATES.BUFFERING;
+    return stalledStatus.reason === "seeking" ? PLAYER_STATES.SEEKING :
+                                                PLAYER_STATES.BUFFERING;
   }
-  return isPlaying ? PLAYER_STATES.PLAYING : PLAYER_STATES.PAUSED;
-
+  return isPlaying ? PLAYER_STATES.PLAYING :
+                     PLAYER_STATES.PAUSED;
 }

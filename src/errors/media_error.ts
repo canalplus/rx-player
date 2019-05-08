@@ -47,7 +47,8 @@ export default class MediaError extends Error {
     this.type = ErrorTypes.MEDIA_ERROR;
 
     this.code = ErrorCodes.hasOwnProperty(code) ?
-      (ErrorCodes as Record<string, string>)[code] : "";
+                  (ErrorCodes as Record<string, string>)[code] :
+                  "";
     this.fatal = !!fatal;
     this.message = errorMessage(this.name, this.code, reason);
   }

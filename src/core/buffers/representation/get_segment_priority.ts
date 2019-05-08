@@ -31,19 +31,16 @@ const { SEGMENT_PRIORITIES_STEPS } = config;
  */
 export default function getSegmentPriority(
   segment : ISegment,
-  clockTick : {
-    currentTime : number;
-    wantedTimeOffset : number;
-  }
+  clockTick : { currentTime : number;
+                wantedTimeOffset : number; }
 ) : number {
   const currentTime = clockTick.currentTime + clockTick.wantedTimeOffset;
   const segmentStart = segment.time / segment.timescale;
   const distance = segmentStart - currentTime;
 
-  for (
-    let priority = 0;
-    priority < SEGMENT_PRIORITIES_STEPS.length;
-    priority++
+  for (let priority = 0;
+       priority < SEGMENT_PRIORITIES_STEPS.length;
+       priority++
   ) {
     if (distance < SEGMENT_PRIORITIES_STEPS[priority]) {
       return priority;

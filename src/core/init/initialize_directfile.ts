@@ -85,7 +85,7 @@ function getDirectFileInitialTime(
   const duration = mediaElement.duration;
   if (!duration || !isFinite(duration)) {
     log.warn("startAt.fromLastPosition set but no known duration, " +
-      "beginning at 0.");
+             "beginning at 0.");
     return 0;
   }
 
@@ -106,24 +106,21 @@ function getDirectFileInitialTime(
 }
 
 // Argument used by `initializeDirectfileContent`
-export interface IDirectFileOptions {
-  autoPlay : boolean;
-  clock$ : Observable<IInitClockTick>;
-  keySystems : IKeySystemOption[];
-  mediaElement : HTMLMediaElement;
-  speed$ : Observable<number>;
-  startAt? : IInitialTimeOptions;
-  url : string;
-}
+export interface IDirectFileOptions { autoPlay : boolean;
+                                      clock$ : Observable<IInitClockTick>;
+                                      keySystems : IKeySystemOption[];
+                                      mediaElement : HTMLMediaElement;
+                                      speed$ : Observable<number>;
+                                      startAt? : IInitialTimeOptions;
+                                      url : string; }
 
 // Events emitted by `initializeDirectfileContent`
-export type IDirectfileEvent =
-  ISpeedChangedEvent |
-  IStalledEvent |
-  ILoadedEvent |
-  IWarningEvent |
-  IEMEManagerEvent |
-  IEMEDisabledEvent;
+export type IDirectfileEvent = ISpeedChangedEvent |
+                               IStalledEvent |
+                               ILoadedEvent |
+                               IWarningEvent |
+                               IEMEManagerEvent |
+                               IEMEDisabledEvent;
 
 /**
  * Launch a content in "Directfile mode".
@@ -139,14 +136,14 @@ export default function initializeDirectfileContent({
   startAt,
   url,
 } : IDirectFileOptions) : Observable<IDirectfileEvent> {
+
   clearElementSrc(mediaElement);
 
   // Start everything! (Just put the URL in the element's src).
   const linkURL$ = setElementSrc$(mediaElement, url);
 
   log.debug("Init: Calculating initial time");
-  const initialTime = () =>
-    getDirectFileInitialTime(mediaElement, startAt);
+  const initialTime = () => getDirectFileInitialTime(mediaElement, startAt);
   log.debug("Init: Initial time calculated:", initialTime);
 
   const { seek$, load$ } =
@@ -166,9 +163,9 @@ export default function initializeDirectfileContent({
 
   // Set the speed set by the user on the media element while pausing a
   // little longer while the buffer is empty.
-  const playbackRate$ = updatePlaybackRate(mediaElement, speed$, clock$, {
-    pauseWhenStalled: true,
-  }).pipe(map(EVENTS.speedChanged));
+  const playbackRate$ =
+    updatePlaybackRate(mediaElement, speed$, clock$, { pauseWhenStalled: true })
+      .pipe(map(EVENTS.speedChanged));
 
   // Create Stalling Manager, an observable which will try to get out of
   // various infinite stalling issues
@@ -183,13 +180,15 @@ export default function initializeDirectfileContent({
     mergeMap((evt) => {
       if (evt === "autoplay-blocked") {
         const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY",
-          "Cannot trigger auto-play automatically: your browser does not allow it.",
-          false);
+                                     "Cannot trigger auto-play automatically: " +
+                                     "your browser does not allow it.",
+                                     false);
         return observableOf(EVENTS.warning(error), EVENTS.loaded());
       } else if (evt === "not-loaded-metadata") {
         const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
-          "Cannot load automatically: your browser falsely announced having loaded " +
-          "the content.", false);
+                                     "Cannot load automatically: your browser " +
+                                     "falsely announced having loaded the content.",
+                                     false);
         return observableOf(EVENTS.warning(error));
       }
       return observableOf(EVENTS.loaded());
@@ -197,12 +196,10 @@ export default function initializeDirectfileContent({
 
   const initialSeek$ = seek$.pipe(ignoreElements());
 
-  return observableMerge(
-    loadedEvent$,
-    initialSeek$,
-    emeManager$,
-    mediaError$,
-    playbackRate$,
-    stalled$
-  );
+  return observableMerge(loadedEvent$,
+                         initialSeek$,
+                         emeManager$,
+                         mediaError$,
+                         playbackRate$,
+                         stalled$);
 }

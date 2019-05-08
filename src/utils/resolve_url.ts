@@ -104,6 +104,4 @@ function normalizeBaseURL(url : string) : string {
   }
 }
 
-export {
-  normalizeBaseURL,
-};
+export { normalizeBaseURL };

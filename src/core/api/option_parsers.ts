@@ -38,99 +38,80 @@ import {
   ITextTrackPreference,
 } from "./track_manager";
 
-const {
-  DEFAULT_AUTO_PLAY,
-  DEFAULT_INITIAL_BITRATES,
-  DEFAULT_LIMIT_VIDEO_WIDTH,
-  DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
-  DEFAULT_MAX_BITRATES,
-  DEFAULT_MAX_BUFFER_AHEAD,
-  DEFAULT_MAX_BUFFER_BEHIND,
-  DEFAULT_SHOW_NATIVE_SUBTITLE,
-  DEFAULT_STOP_AT_END,
-  DEFAULT_TEXT_TRACK_MODE,
-  DEFAULT_THROTTLE_WHEN_HIDDEN,
-  DEFAULT_WANTED_BUFFER_AHEAD,
-} = config;
+const { DEFAULT_AUTO_PLAY,
+        DEFAULT_INITIAL_BITRATES,
+        DEFAULT_LIMIT_VIDEO_WIDTH,
+        DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
+        DEFAULT_MAX_BITRATES,
+        DEFAULT_MAX_BUFFER_AHEAD,
+        DEFAULT_MAX_BUFFER_BEHIND,
+        DEFAULT_SHOW_NATIVE_SUBTITLE,
+        DEFAULT_STOP_AT_END,
+        DEFAULT_TEXT_TRACK_MODE,
+        DEFAULT_THROTTLE_WHEN_HIDDEN,
+        DEFAULT_WANTED_BUFFER_AHEAD } = config;
 
 export { IKeySystemOption };
 
-export interface ITransportOptions {
-  aggressiveMode? : boolean;
-  manifestLoader? : CustomManifestLoader;
-  segmentLoader? : CustomSegmentLoader;
-  representationFilter? : IRepresentationFilter;
-  referenceDateTime? : number;
-}
+export interface ITransportOptions { aggressiveMode? : boolean;
+                                     manifestLoader? : CustomManifestLoader;
+                                     segmentLoader? : CustomSegmentLoader;
+                                     representationFilter? : IRepresentationFilter;
+                                     referenceDateTime? : number; }
 
-export interface ISupplementaryTextTrackOption {
-  url : string;
-  language : string;
-  closedCaption : boolean;
-  mimeType : string;
-  codecs? : string;
-}
+export interface ISupplementaryTextTrackOption { url : string;
+                                                 language : string;
+                                                 closedCaption : boolean;
+                                                 mimeType : string;
+                                                 codecs? : string; }
 
-export interface ISupplementaryImageTrackOption {
-  url : string;
-  mimeType : string;
-}
+export interface ISupplementaryImageTrackOption { url : string;
+                                                  mimeType : string; }
 
-export interface IDefaultAudioTrackOption {
-  language : string;
-  normalized : string;
-  audioDescription : boolean;
-}
+export interface IDefaultAudioTrackOption { language : string;
+                                            normalized : string;
+                                            audioDescription : boolean; }
 
-export interface IDefaultTextTrackOption {
-  language : string;
-  normalized : string;
-  closedCaption : boolean;
-}
+export interface IDefaultTextTrackOption { language : string;
+                                           normalized : string;
+                                           closedCaption : boolean; }
 
-export type ITextTrackPreference = null | {
-  language : string;
-  closedCaption : boolean;
-};
+export type ITextTrackPreference = null |
+                                   { language : string;
+                                     closedCaption : boolean; };
 
-export interface INetworkConfigOption {
-  manifestRetry? : number;
-  offlineRetry? : number;
-  segmentRetry? : number;
-}
+export interface INetworkConfigOption { manifestRetry? : number;
+                                        offlineRetry? : number;
+                                        segmentRetry? : number; }
 
-export type IStartAtOption =
-  { position : number } |
-  { wallClockTime : Date|number } |
-  { percentage : number } |
-  { fromLastPosition : number } |
-  { fromFirstPosition : number };
+export type IStartAtOption = { position : number } |
+                             { wallClockTime : Date|number } |
+                             { percentage : number } |
+                             { fromLastPosition : number } |
+                             { fromFirstPosition : number };
 
-type IParsedStartAtOption =
-  { position : number } |
-  { wallClockTime : number } |
-  { percentage : number } |
-  { fromLastPosition : number } |
-  { fromFirstPosition : number };
+type IParsedStartAtOption = { position : number } |
+                            { wallClockTime : number } |
+                            { percentage : number } |
+                            { fromLastPosition : number } |
+                            { fromFirstPosition : number };
 
-export interface IConstructorOptions {
-  maxBufferAhead? : number;
-  maxBufferBehind? : number;
-  wantedBufferAhead? : number;
+export interface IConstructorOptions { maxBufferAhead? : number;
+                                       maxBufferBehind? : number;
+                                       wantedBufferAhead? : number;
 
-  limitVideoWidth? : boolean;
-  throttleWhenHidden? : boolean;
+                                       limitVideoWidth? : boolean;
+                                       throttleWhenHidden? : boolean;
 
-  preferredAudioTracks? : IAudioTrackPreference[];
-  preferredTextTracks? : ITextTrackPreference[];
+                                       preferredAudioTracks? : IAudioTrackPreference[];
+                                       preferredTextTracks? : ITextTrackPreference[];
 
-  videoElement? : HTMLMediaElement;
-  initialVideoBitrate? : number;
-  initialAudioBitrate? : number;
-  maxAudioBitrate? : number;
-  maxVideoBitrate? : number;
-  stopAtEnd? : boolean;
-}
+                                       videoElement? : HTMLMediaElement;
+                                       initialVideoBitrate? : number;
+                                       initialAudioBitrate? : number;
+                                       maxAudioBitrate? : number;
+                                       maxVideoBitrate? : number;
+                                       stopAtEnd? : boolean; }
 
 export interface IParsedConstructorOptions {
   maxBufferAhead : number;
@@ -185,15 +166,13 @@ interface IParsedLoadVideoOptionsBase {
   manualBitrateSwitchingMode : "seamless"|"direct";
 }
 
-interface IParsedLoadVideoOptionsNative extends IParsedLoadVideoOptionsBase {
-  textTrackMode : "native";
-  hideNativeSubtitle : boolean;
-}
+interface IParsedLoadVideoOptionsNative
+          extends IParsedLoadVideoOptionsBase { textTrackMode : "native";
+                                                hideNativeSubtitle : boolean; }
 
-interface IParsedLoadVideoOptionsHTML extends IParsedLoadVideoOptionsBase {
-  textTrackMode : "html";
-  textTrackElement : HTMLElement;
-}
+interface IParsedLoadVideoOptionsHTML
+          extends IParsedLoadVideoOptionsBase { textTrackMode : "html";
+                                                textTrackElement : HTMLElement; }
 
 export type IParsedLoadVideoOptions =
   IParsedLoadVideoOptionsNative |
@@ -257,17 +236,20 @@ function parseConstructorOptions(
     }
   }
 
-  limitVideoWidth = options.limitVideoWidth == null ?
-    DEFAULT_LIMIT_VIDEO_WIDTH : !!options.limitVideoWidth;
+  limitVideoWidth = options.limitVideoWidth == null ? DEFAULT_LIMIT_VIDEO_WIDTH :
+                                                      !!options.limitVideoWidth;
 
   throttleWhenHidden = options.throttleWhenHidden == null ?
-    DEFAULT_THROTTLE_WHEN_HIDDEN : !!options.throttleWhenHidden;
+    DEFAULT_THROTTLE_WHEN_HIDDEN :
+    !!options.throttleWhenHidden;
 
   preferredAudioTracks = options.preferredAudioTracks == null ?
-    [] : options.preferredAudioTracks;
+    [] :
+    options.preferredAudioTracks;
 
   preferredTextTracks = options.preferredTextTracks == null ?
-    [] : options.preferredTextTracks;
+    [] :
+    options.preferredTextTracks;
 
   if (options.videoElement == null) {
     videoElement = document.createElement("video");
@@ -319,24 +301,22 @@ function parseConstructorOptions(
     }
   }
 
-  stopAtEnd = options.stopAtEnd == null ?
-    DEFAULT_STOP_AT_END : !!options.stopAtEnd;
+  stopAtEnd = options.stopAtEnd == null ? DEFAULT_STOP_AT_END :
+                                          !!options.stopAtEnd;
 
-  return {
-    maxBufferAhead,
-    maxBufferBehind,
-    limitVideoWidth,
-    videoElement,
-    wantedBufferAhead,
-    throttleWhenHidden,
-    preferredAudioTracks,
-    preferredTextTracks,
-    initialAudioBitrate,
-    initialVideoBitrate,
-    maxAudioBitrate,
-    maxVideoBitrate,
-    stopAtEnd,
-  };
+  return { maxBufferAhead,
+           maxBufferBehind,
+           limitVideoWidth,
+           videoElement,
+           wantedBufferAhead,
+           throttleWhenHidden,
+           preferredAudioTracks,
+           preferredTextTracks,
+           initialAudioBitrate,
+           initialVideoBitrate,
+           maxAudioBitrate,
+           maxVideoBitrate,
+           stopAtEnd };
 }
 
 /**
@@ -375,21 +355,20 @@ function parseLoadVideoOptions(
     transport = String(options.transport);
   }
 
-  const autoPlay = options.autoPlay == null ?
-    DEFAULT_AUTO_PLAY : !!options.autoPlay;
+  const autoPlay = options.autoPlay == null ? DEFAULT_AUTO_PLAY :
+                                              !!options.autoPlay;
 
   if (options.keySystems == null) {
     keySystems = [];
   } else {
-    keySystems = Array.isArray(options.keySystems) ?
-      options.keySystems : [options.keySystems];
+    keySystems = Array.isArray(options.keySystems) ? options.keySystems :
+                                                     [options.keySystems];
     for (const keySystem of keySystems) {
-      if (
-        typeof keySystem.type !== "string" ||
-        typeof keySystem.getLicense !== "function"
+      if (typeof keySystem.type !== "string" ||
+          typeof keySystem.getLicense !== "function"
       ) {
         throw new Error("Invalid key system given: Missing type string or " +
-          "getLicense callback");
+                        "getLicense callback");
       }
     }
   }
@@ -407,14 +386,12 @@ function parseLoadVideoOptions(
       if (typeof supplementaryTextTrack.closedCaption !== "boolean") {
         supplementaryTextTrack.closedCaption = !!supplementaryTextTrack.closedCaption;
       }
-      if (
-        typeof supplementaryTextTrack.language !== "string" ||
-        typeof supplementaryTextTrack.mimeType !== "string" ||
-        typeof supplementaryTextTrack.url !== "string"
+      if (typeof supplementaryTextTrack.language !== "string" ||
+          typeof supplementaryTextTrack.mimeType !== "string" ||
+          typeof supplementaryTextTrack.url !== "string"
       ) {
-        /* tslint:disable:max-line-length */
-        throw new Error("Invalid supplementary text track given. Missing either language, mimetype or url");
-        /* tslint:enable:max-line-length */
+        throw new Error("Invalid supplementary text track given. " +
+                        "Missing either language, mimetype or url");
       }
     }
   }
@@ -426,13 +403,11 @@ function parseLoadVideoOptions(
       Array.isArray(options.supplementaryImageTracks) ?
         options.supplementaryImageTracks : [options.supplementaryImageTracks];
     for (const supplementaryImageTrack of supplementaryImageTracks) {
-      if (
-        typeof supplementaryImageTrack.mimeType !== "string" ||
-        typeof supplementaryImageTrack.url !== "string"
+      if (typeof supplementaryImageTrack.mimeType !== "string" ||
+          typeof supplementaryImageTrack.url !== "string"
       ) {
-        /* tslint:disable:max-line-length */
-        throw new Error("Invalid supplementary image track given. Missing either mimetype or url");
-        /* tslint:enable:max-line-length */
+        throw new Error("Invalid supplementary image track given. " +
+                        "Missing either mimetype or url");
       }
     }
   }
@@ -440,9 +415,7 @@ function parseLoadVideoOptions(
   if (options.textTrackMode == null) {
     textTrackMode = DEFAULT_TEXT_TRACK_MODE;
   } else {
-    if (
-      options.textTrackMode !== "native" && options.textTrackMode !== "html"
-    ) {
+    if (options.textTrackMode !== "native" && options.textTrackMode !== "html") {
       throw new Error("Invalid textTrackMode.");
     }
     textTrackMode = options.textTrackMode;
@@ -450,19 +423,20 @@ function parseLoadVideoOptions(
 
   if (options.defaultAudioTrack != null) {
     warnOnce("The `defaultAudioTrack` loadVideo option is deprecated.\n" +
-      "Please use the `preferredAudioTracks` constructor option or the" +
-      "`setPreferredAudioTracks` method instead");
+             "Please use the `preferredAudioTracks` constructor option or the" +
+             "`setPreferredAudioTracks` method instead");
   }
   const defaultAudioTrack = normalizeAudioTrack(options.defaultAudioTrack);
 
   if (options.defaultTextTrack != null) {
     warnOnce("The `defaultTextTrack` loadVideo option is deprecated.\n" +
-      "Please use the `preferredTextTracks` constructor option or the" +
-      "`setPreferredTextTracks` method instead");
+             "Please use the `preferredTextTracks` constructor option or the" +
+             "`setPreferredTextTracks` method instead");
   }
   const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
   const hideNativeSubtitle = (options as any).hideNativeSubtitle == null ?
-    !DEFAULT_SHOW_NATIVE_SUBTITLE : !!(options as any).hideNativeSubtitle;
+    !DEFAULT_SHOW_NATIVE_SUBTITLE :
+    !!(options as any).hideNativeSubtitle;
   const manualBitrateSwitchingMode =
     (options as any).manualBitrateSwitchingMode == null ?
       !DEFAULT_MANUAL_BITRATE_SWITCHING_MODE :
@@ -471,59 +445,56 @@ function parseLoadVideoOptions(
   if (textTrackMode === "html") {
     // TODO Better way to express that in TypeScript?
     if ((options as any).textTrackElement == null) {
-      /* tslint:disable:max-line-length */
-      throw new Error("You have to provide a textTrackElement in \"html\" textTrackMode.");
-      /* tslint:enable:max-line-length */
+      throw new Error("You have to provide a textTrackElement " +
+                      "in \"html\" textTrackMode.");
     } else if (!((options as any).textTrackElement instanceof HTMLElement)) {
       throw new Error("textTrackElement should be an HTMLElement.");
     } else {
       textTrackElement = (options as any).textTrackElement;
     }
   } else if ((options as any).textTrackElement != null) {
-    /* tslint:disable:max-line-length */
-    log.warn("API: You have set a textTrackElement without being in an \"html\" textTrackMode. It will be ignored.");
-    /* tslint:enable:max-line-length */
+    log.warn("API: You have set a textTrackElement without being in " +
+             "an \"html\" textTrackMode. It will be ignored.");
   }
 
   if (options.startAt != null) {
     // TODO Better way to express that in TypeScript?
-    if (
-      (options.startAt as { wallClockTime? : Date|number }).wallClockTime
-      instanceof Date
+    if ((options.startAt as { wallClockTime? : Date|number }).wallClockTime
+           instanceof Date
     ) {
       const wallClockTime = (options.startAt as { wallClockTime : Date })
         .wallClockTime.getTime() / 1000;
-      startAt = objectAssign({}, options.startAt, { wallClockTime });
+      startAt = objectAssign({},
+                             options.startAt,
+                             { wallClockTime });
     } else {
       startAt = options.startAt as IParsedStartAtOption;
     }
   }
 
-  const networkConfig = options.networkConfig == null ? {} : {
-    manifestRetry: options.networkConfig.manifestRetry,
-    offlineRetry: options.networkConfig.offlineRetry,
-    segmentRetry: options.networkConfig.segmentRetry,
-  };
+  const networkConfig = options.networkConfig == null ?
+    {} :
+    { manifestRetry: options.networkConfig.manifestRetry,
+      offlineRetry: options.networkConfig.offlineRetry,
+      segmentRetry: options.networkConfig.segmentRetry };
 
   // TODO without cast
   /* tslint:disable no-object-literal-type-assertion */
-  return {
-    autoPlay,
-    defaultAudioTrack,
-    defaultTextTrack,
-    hideNativeSubtitle,
-    keySystems,
-    manualBitrateSwitchingMode,
-    networkConfig,
-    startAt,
-    supplementaryImageTracks,
-    supplementaryTextTracks,
-    textTrackElement,
-    textTrackMode,
-    transport,
-    transportOptions,
-    url,
-  } as IParsedLoadVideoOptions;
+  return { autoPlay,
+           defaultAudioTrack,
+           defaultTextTrack,
+           hideNativeSubtitle,
+           keySystems,
+           manualBitrateSwitchingMode,
+           networkConfig,
+           startAt,
+           supplementaryImageTracks,
+           supplementaryTextTracks,
+           textTrackElement,
+           textTrackMode,
+           transport,
+           transportOptions,
+           url } as IParsedLoadVideoOptions;
   /* tslint:enable no-object-literal-type-assertion */
 }
 

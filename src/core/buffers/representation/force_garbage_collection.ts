@@ -51,13 +51,11 @@ export default function forceGarbageCollection(
     mergeMap((timing) => {
       log.warn("Buffer: Running garbage collector");
       const buffered = bufferingQueue.getBuffered();
-      let cleanedupRanges =
-        selectGCedRanges(timing.currentTime, buffered, GC_GAP_CALM);
+      let cleanedupRanges = selectGCedRanges(timing.currentTime, buffered, GC_GAP_CALM);
 
       // more aggressive GC if we could not find any range to clean
       if (cleanedupRanges.length === 0) {
-        cleanedupRanges =
-          selectGCedRanges(timing.currentTime, buffered, GC_GAP_BEEFY);
+        cleanedupRanges = selectGCedRanges(timing.currentTime, buffered, GC_GAP_BEEFY);
       }
 
       log.debug("Buffer: GC cleaning", cleanedupRanges);
@@ -85,19 +83,11 @@ function selectGCedRanges(
   currentTime : number,
   buffered : TimeRanges,
   gcGap : number
-) : Array<{
-  start : number;
-  end : number;
-}> {
-  const { innerRange, outerRanges } = getInnerAndOuterTimeRanges(
-    buffered,
-    currentTime
-  );
-
-  const cleanedupRanges : Array<{
-    start : number;
-    end: number;
-  }> = [];
+) : Array<{ start : number; end : number }> {
+  const { innerRange, outerRanges } = getInnerAndOuterTimeRanges(buffered,
+                                                                 currentTime);
+  const cleanedupRanges : Array<{ start : number;
+                                  end: number; }> = [];
 
   // start by trying to remove all ranges that do not contain the
   // current time and respect the gcGap
@@ -116,19 +106,14 @@ function selectGCedRanges(
   if (innerRange) {
     log.debug("Buffer: GC removing part of inner range", cleanedupRanges);
     if (currentTime - gcGap > innerRange.start) {
-      cleanedupRanges.push({
-        start: innerRange.start,
-        end: currentTime - gcGap,
-      });
+      cleanedupRanges.push({ start: innerRange.start,
+                             end: currentTime - gcGap });
     }
 
     if (currentTime + gcGap < innerRange.end) {
-      cleanedupRanges.push({
-        start: currentTime + gcGap,
-        end: innerRange.end,
-      });
+      cleanedupRanges.push({ start: currentTime + gcGap,
+                             end: innerRange.end });
     }
   }
-
   return cleanedupRanges;
 }

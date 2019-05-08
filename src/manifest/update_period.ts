@@ -24,10 +24,9 @@ import Period from "./period";
  * @param {Object} oldPeriod
  * @param {Object} newPeriod
  */
-export default function updatePeriodInPlace(
-  oldPeriod : Period,
-  newPeriod : Period
-) : void {
+export default function updatePeriodInPlace(oldPeriod : Period,
+                                            newPeriod : Period) : void
+{
   oldPeriod.start = newPeriod.start;
   oldPeriod.end = newPeriod.end;
   oldPeriod.duration = newPeriod.duration;
@@ -37,28 +36,26 @@ export default function updatePeriodInPlace(
 
   for (let j = 0; j < oldAdaptations.length; j++) {
     const oldAdaptation = oldAdaptations[j];
-    const newAdaptation =
-      arrayFind(newAdaptations, a => a.id === oldAdaptation.id);
-
+    const newAdaptation = arrayFind(newAdaptations,
+                                    a => a.id === oldAdaptation.id);
     if (!newAdaptation) {
-      log.warn(
-        `Manifest: Adaptation "${oldAdaptations[j].id}" not found when merging.`
-      );
+      log.warn("Manifest: Adaptation \"" +
+               oldAdaptations[j].id +
+               "\" not found when merging.");
     } else {
       const oldRepresentations = oldAdaptations[j].representations;
       const newRepresentations = newAdaptation.representations;
 
       for (let k = 0; k < oldRepresentations.length; k++) {
         const oldRepresentation = oldRepresentations[k];
-        const newRepresentation = arrayFind(newRepresentations,
-          representation => representation.id === oldRepresentation.id);
+        const newRepresentation =
+          arrayFind(newRepresentations,
+                    representation => representation.id === oldRepresentation.id);
 
         if (!newRepresentation) {
-          /* tslint:disable:max-line-length */
-          log.warn(
-            `Manifest: Representation "${oldRepresentations[k].id}" not found when merging.`
-          );
-          /* tslint:enable:max-line-length */
+          log.warn("Manifest: Representation \"" +
+                   oldRepresentations[k].id +
+                   "\" not found when merging.");
         } else {
           oldRepresentation.index._update(newRepresentation.index);
         }

@@ -25,15 +25,11 @@ import {
 // Defines what is returned by the SegmentPipeline
 // See the function definition for documentation
 export interface IPrioritizedSegmentFetcher<T> {
-  createRequest : (
-    content : ISegmentLoaderArguments,
-    priority? : number
-  ) => Observable<IFetchedSegment<T>>;
+  createRequest : (content : ISegmentLoaderArguments,
+                   priority? : number) => Observable<IFetchedSegment<T>>;
 
-  updatePriority : (
-    observable : Observable<IFetchedSegment<T>>,
-    priority : number
-  ) => void;
+  updatePriority : (observable : Observable<IFetchedSegment<T>>,
+                    priority : number) => void;
 }
 
 /**

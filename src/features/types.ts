@@ -30,32 +30,25 @@ import {
 } from "../parsers/texttracks";
 import { ITransportFunction } from "../transports";
 
-export type IDirectFileInit =
-  (args : IDirectFileOptions) => Observable<IDirectfileEvent>;
+export type IDirectFileInit = (args : IDirectFileOptions) =>
+                                Observable<IDirectfileEvent>;
 
-export type IEMEManager = (
-  mediaElement : HTMLMediaElement,
-  keySystems: IKeySystemOption[]
-) => Observable<IEMEManagerEvent>;
+export type IEMEManager = (mediaElement : HTMLMediaElement,
+                           keySystems: IKeySystemOption[]) =>
+                             Observable<IEMEManagerEvent>;
 
 export type INativeTextTracksBuffer =
-  new(
-    mediaElement : HTMLMediaElement,
-    hideNativeSubtitle: boolean
-  ) => ICustomSourceBuffer<unknown>;
+  new(mediaElement : HTMLMediaElement,
+      hideNativeSubtitle: boolean) => ICustomSourceBuffer<unknown>;
 
 export type IHTMLTextTracksBuffer =
-  new(
-    mediaElement : HTMLMediaElement,
-    textTrackElement: HTMLElement
-  ) => ICustomSourceBuffer<unknown>;
+  new(mediaElement : HTMLMediaElement,
+      textTrackElement: HTMLElement) => ICustomSourceBuffer<unknown>;
 
-interface IBifThumbnail {
-  index : number;
-  duration : number;
-  ts : number;
-  data : Uint8Array;
-}
+interface IBifThumbnail { index : number;
+                          duration : number;
+                          ts : number;
+                          data : Uint8Array; }
 
 interface IImageTrackSegmentData {
   data : IBifThumbnail[]; // image track data, in the given type
@@ -65,21 +58,18 @@ interface IImageTrackSegmentData {
   type : string; // the type of the data (example: "bif")
 }
 
-interface IBifObject {
-  fileFormat : string;
-  version : string;
-  imageCount : number;
-  timescale : number;
-  format : string;
-  width : number;
-  height : number;
-  aspectRatio : string;
-  isVod : boolean;
-  thumbs : IBifThumbnail[];
-}
+interface IBifObject { fileFormat : string;
+                       version : string;
+                       imageCount : number;
+                       timescale : number;
+                       format : string;
+                       width : number;
+                       height : number;
+                       aspectRatio : string;
+                       isVod : boolean;
+                       thumbs : IBifThumbnail[]; }
 
-export type IImageBuffer =
-  new() => ICustomSourceBuffer<IImageTrackSegmentData>;
+export type IImageBuffer = new() => ICustomSourceBuffer<IImageTrackSegmentData>;
 
 export type IImageParser =
   ((buffer : Uint8Array) => IBifObject);

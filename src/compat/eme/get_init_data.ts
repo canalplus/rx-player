@@ -33,8 +33,8 @@ import { PSSH_TO_INTEGER } from "./constants";
  * concatenated (as it is usually the case).
  * If that's the case, it will filter duplicated PSSHs from it.
  *
- * @param {Uint8Array} initData
- * @returns {Uint8Array}
+ * @param {Uint8Array} initData - Raw initialization data
+ * @returns {Uint8Array} - Initialization data, "cleaned"
  */
 function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
   let resInitData = new Uint8Array();
@@ -42,9 +42,8 @@ function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
 
   let offset = 0;
   while (offset < initData.length) {
-    if (
-      initData.length < offset + 8 ||
-      be4toi(initData, offset + 4) !== PSSH_TO_INTEGER
+    if (initData.length < offset + 8 ||
+        be4toi(initData, offset + 4) !== PSSH_TO_INTEGER
     ) {
       log.warn("Compat: Unrecognized initialization data. Use as is.");
       return initData;
@@ -78,8 +77,9 @@ function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
  *   - the initialization Data
  *   - the initialization Data type
  *
- * @param {MediaEncryptedEvent} encryptedEvent
- * @returns {Object}
+ * @param {MediaEncryptedEvent} encryptedEvent - Payload received with an
+ * "encrypted" event.
+ * @returns {Object} - Initialization data and Initialization data type.
  * @throws {EncryptedMediaError} - Throws if no initialization data is
  * encountered in the given event.
  */
@@ -91,15 +91,12 @@ export default function getInitData(
 } {
   const initData = encryptedEvent.initData;
   if (initData == null) {
-    throw new EncryptedMediaError(
-      "INVALID_ENCRYPTED_EVENT",
-      "Compat: No init data found on media encrypted event.",
-      true
-    );
+    throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT",
+                                  "Compat: No init data found on media encrypted event.",
+                                  true);
   }
+
   const initDataBytes = new Uint8Array(initData);
-  return {
-    initData: cleanEncryptedEvent(initDataBytes),
-    initDataType: encryptedEvent.initDataType,
-  };
+  return { initData: cleanEncryptedEvent(initDataBytes),
+           initDataType: encryptedEvent.initDataType };
 }

@@ -16,55 +16,38 @@
 
 import IRepresentationIndex from "./representation_index";
 
-interface IContentProtection {
-  keyId?: string;
-  systemId?: string;
-}
+interface IContentProtection { keyId?: string;
+                               systemId?: string; }
 
-export interface IRepresentationArguments {
-  // -- required
-  bitrate : number;
-  id : string;
-  index : IRepresentationIndex;
+export interface IRepresentationArguments { bitrate : number;
+                                            id : string;
+                                            index : IRepresentationIndex;
 
-  // -- optional
-  codecs? : string;
-  contentProtections? : IContentProtection[];
-  frameRate? : string;
-  height? : number;
-  mimeType? : string;
-  width? : number;
-}
+                                            // -- optional
+                                            codecs? : string;
+                                            contentProtections? : IContentProtection[];
+                                            frameRate? : string;
+                                            height? : number;
+                                            mimeType? : string;
+                                            width? : number; }
 
 /**
  * Normalized Representation structure.
  * @class Representation
  */
 class Representation {
-  /**
-   * ID uniquely identifying the Representation in the Adaptation.
-   * TODO unique for the whole manifest?
-   * @type {string}
-   */
+  // ID uniquely identifying the Representation in the Adaptation.
+  // TODO unique for the whole manifest?
   public readonly id : string|number;
 
-  /**
-   * Interface allowing to request segments for specific times.
-   * @type {Object}
-   */
+  // Interface allowing to request segments for specific times.
   public index : IRepresentationIndex;
 
-  /**
-   * Bitrate this Representation is in, in bits per seconds.
-   * @type {number}
-   */
+  // Bitrate this Representation is in, in bits per seconds.
   public bitrate : number;
 
-  /**
-   * Frame-rate, when it can be applied, of this Representation, in any textual
-   * indication possible (often under a ratio form).
-   * @type {string}
-   */
+  // Frame-rate, when it can be applied, of this Representation, in any textual
+  // indication possible (often under a ratio form).
   public frameRate? : string;
 
   public codec? : string;
@@ -72,14 +55,10 @@ class Representation {
   public width? : number;
   public height? : number;
 
-  /**
-   * DRM Informations for this Representation.
-   * @type {Array.<Object>}
-   */
+  // DRM Informations for this Representation.
   public contentProtections? : IContentProtection[];
 
   /**
-   * @constructor
    * @param {Object} args
    */
   constructor(args : IRepresentationArguments) {

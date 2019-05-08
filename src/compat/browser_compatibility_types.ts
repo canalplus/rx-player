@@ -24,22 +24,21 @@ interface ICompatMediaKeysConstructor {
 
 // Regular VTTCue as present in most browsers
 // TODO open TypeScript issue about it?
-type ICompatVTTCueConstructor =
-  new(start : number, end : number, cueText : string) => ICompatVTTCue;
+type ICompatVTTCueConstructor = new(start : number,
+                                    end : number,
+                                    cueText : string) => ICompatVTTCue;
 
-interface ICompatVTTCue {
-  align : string;
-  endTime : number;
-  id : string;
-  line : number|"auto";
-  lineAlign : string;
-  position : number|"auto";
-  positionAlign : string;
-  size : number|string;
-  snapToLines : boolean;
-  startTime : number;
-  vertical : string;
-}
+interface ICompatVTTCue { align : string;
+                          endTime : number;
+                          id : string;
+                          line : number|"auto";
+                          lineAlign : string;
+                          position : number|"auto";
+                          positionAlign : string;
+                          size : number|string;
+                          snapToLines : boolean;
+                          startTime : number;
+                          vertical : string; }
 
 // surcharge TextTrack to allow adding ICompatVTTCue to it
 interface ICompatTextTrack extends TextTrack {
@@ -48,18 +47,16 @@ interface ICompatTextTrack extends TextTrack {
 }
 
 // Document with added optional functions for old browsers
-interface ICompatDocument extends Document {
-  mozCancelFullScreen? : () => void;
-  mozFullScreenElement? : HTMLElement;
-  mozHidden? : boolean;
-  msExitFullscreen? : () => void;
-  webkitExitFullscreen : () => void;
-  fullscreenElement : Element|null;
-  msFullscreenElement? : Element|null;
-  webkitFullscreenElement : Element|null;
-  msHidden? : boolean;
-  webkitHidden? : boolean;
-}
+interface ICompatDocument extends Document { mozCancelFullScreen? : () => void;
+                                             mozFullScreenElement? : HTMLElement;
+                                             mozHidden? : boolean;
+                                             msExitFullscreen? : () => void;
+                                             webkitExitFullscreen : () => void;
+                                             fullscreenElement : Element|null;
+                                             msFullscreenElement? : Element|null;
+                                             webkitFullscreenElement : Element|null;
+                                             msHidden? : boolean;
+                                             webkitHidden? : boolean; }
 
 // Element with added optional functions for old browsers
 interface ICompatHTMLMediaElement extends HTMLMediaElement {
@@ -85,15 +82,13 @@ interface ICompatMediaKeySystemConfiguration {
 
 const win = window as any;
 const HTMLElement_ : typeof HTMLElement = win.HTMLElement;
-const VTTCue_ : ICompatVTTCueConstructor|undefined =
-  win.VTTCue ||
-  win.TextTrackCue;
+const VTTCue_ : ICompatVTTCueConstructor|undefined = win.VTTCue ||
+                                                     win.TextTrackCue;
 
-const MediaSource_ : typeof MediaSource|undefined =
-  win.MediaSource ||
-  win.MozMediaSource ||
-  win.WebKitMediaSource ||
-  win.MSMediaSource;
+const MediaSource_ : typeof MediaSource|undefined = win.MediaSource ||
+                                                    win.MozMediaSource ||
+                                                    win.WebKitMediaSource ||
+                                                    win.MSMediaSource;
 
 const MediaKeys_ : ICompatMediaKeysConstructor|undefined =
   win.MediaKeys ||
@@ -117,13 +112,11 @@ const MediaKeys_ : ICompatMediaKeysConstructor|undefined =
     }
   };
 
-const READY_STATES = {
-  HAVE_NOTHING: 0,
-  HAVE_METADATA: 1,
-  HAVE_CURRENT_DATA: 2,
-  HAVE_FUTURE_DATA: 3,
-  HAVE_ENOUGH_DATA: 4,
-};
+const READY_STATES = { HAVE_NOTHING: 0,
+                       HAVE_METADATA: 1,
+                       HAVE_CURRENT_DATA: 2,
+                       HAVE_FUTURE_DATA: 3,
+                       HAVE_ENOUGH_DATA: 4 };
 
 export {
   HTMLElement_,

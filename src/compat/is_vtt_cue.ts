@@ -25,5 +25,5 @@ export default function isVTTCue(
   cue : ICompatVTTCue|TextTrackCue
 ) : cue is ICompatVTTCue {
   return typeof (window as any).VTTCue === "function" &&
-    cue instanceof (window as any).VTTCue;
+         cue instanceof (window as any).VTTCue;
 }

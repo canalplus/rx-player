@@ -47,7 +47,8 @@ export default class EncryptedMediaError extends Error {
     this.type = ErrorTypes.ENCRYPTED_MEDIA_ERROR;
 
     this.code = ErrorCodes.hasOwnProperty(code) ?
-      (ErrorCodes as Record<string, string>)[code] : "";
+                  (ErrorCodes as Record<string, string>)[code] :
+                  "";
     this.fatal = !!fatal;
     this.message = errorMessage(this.name, this.code, reason);
   }

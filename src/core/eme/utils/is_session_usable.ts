@@ -41,12 +41,11 @@ export default function isSessionUsable(
     keyStatuses.push(keyStatus);
   });
 
-  if (
-    keyStatuses.length > 0 &&
-    (
-      !arrayIncludes(keyStatuses, "expired") &&
-      !arrayIncludes(keyStatuses, "internal-error")
-    )
+  if (keyStatuses.length > 0 &&
+      (
+        !arrayIncludes(keyStatuses, "expired") &&
+        !arrayIncludes(keyStatuses, "internal-error")
+      )
   ) {
     log.debug("EME: Reuse loaded session", loadedSession.sessionId);
     return true;

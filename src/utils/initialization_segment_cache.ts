@@ -36,13 +36,9 @@ class InitializationSegmentCache<T> {
    * @param {*} response
    */
   public add(
-    {
-      representation,
-      segment,
-    } : {
-      representation : Representation;
-      segment : ISegment;
-    },
+    { representation,
+      segment } : { representation : Representation;
+                    segment : ISegment; },
     response : T
   ) : void {
     if (segment.isInit) {
@@ -55,13 +51,9 @@ class InitializationSegmentCache<T> {
    * @returns {*} response
    */
   public get(
-    {
-      representation,
-      segment,
-    } : {
-      representation : Representation;
-      segment : ISegment;
-    }
+    { representation,
+      segment } : { representation : Representation;
+                    segment : ISegment; }
   ) : T|null {
     if (segment.isInit) {
       const value = this._cache.get(representation);

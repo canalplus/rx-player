@@ -16,16 +16,15 @@
 
 import assert from "./assert";
 
-type TypedArray =
-  Int8Array |
-  Int16Array |
-  Int32Array |
-  Uint8Array |
-  Uint16Array |
-  Uint32Array |
-  Uint8ClampedArray |
-  Float32Array |
-  Float64Array;
+type TypedArray = Int8Array |
+                  Int16Array |
+                  Int32Array |
+                  Uint8Array |
+                  Uint16Array |
+                  Uint32Array |
+                  Uint8ClampedArray |
+                  Float32Array |
+                  Float64Array;
 
 /**
  * Convert a simple string to an Uint8Array containing the corresponding
@@ -144,9 +143,8 @@ function concat(...args : Array<TypedArray|number[]|number>) : Uint8Array {
  * @returns {Number}
  */
 function be2toi(bytes : Uint8Array, offset : number) : number {
-  return (
-    (bytes[offset + 0] << 8) +
-    (bytes[offset + 1] << 0));
+  return ((bytes[offset + 0] << 8) +
+          (bytes[offset + 1] << 0));
 }
 
 /**
@@ -156,11 +154,9 @@ function be2toi(bytes : Uint8Array, offset : number) : number {
  * @returns {Number}
  */
 function be3toi(bytes : Uint8Array, offset : number) : number {
-  return (
-    (bytes[offset + 0] * 0x0010000) +
-    (bytes[offset + 1] * 0x0000100) +
-    (bytes[offset + 2])
-  );
+  return ((bytes[offset + 0] * 0x0010000) +
+          (bytes[offset + 1] * 0x0000100) +
+          (bytes[offset + 2]));
 }
 
 /**
@@ -170,11 +166,10 @@ function be3toi(bytes : Uint8Array, offset : number) : number {
  * @returns {Number}
  */
 function be4toi(bytes : Uint8Array, offset : number) : number {
-  return (
-    (bytes[offset + 0] * 0x1000000) +
-    (bytes[offset + 1] * 0x0010000) +
-    (bytes[offset + 2] * 0x0000100) +
-    (bytes[offset + 3]));
+  return ((bytes[offset + 0] * 0x1000000) +
+          (bytes[offset + 1] * 0x0010000) +
+          (bytes[offset + 2] * 0x0000100) +
+          (bytes[offset + 3]));
 }
 
 /**
@@ -184,17 +179,16 @@ function be4toi(bytes : Uint8Array, offset : number) : number {
  * @returns {Number}
  */
 function be8toi(bytes : Uint8Array, offset : number) : number {
-  return (
-    (
-      (bytes[offset + 0] * 0x1000000) +
-      (bytes[offset + 1] * 0x0010000) +
-      (bytes[offset + 2] * 0x0000100) +
-       (bytes[offset + 3])
-     ) * 0x100000000 +
-     (bytes[offset + 4] * 0x1000000) +
-     (bytes[offset + 5] * 0x0010000) +
-     (bytes[offset + 6] * 0x0000100) +
-     (bytes[offset + 7]));
+  return (((bytes[offset + 0] * 0x1000000) +
+           (bytes[offset + 1] * 0x0010000) +
+           (bytes[offset + 2] * 0x0000100) +
+           (bytes[offset + 3])
+          ) * 0x100000000 +
+
+         (bytes[offset + 4] * 0x1000000) +
+         (bytes[offset + 5] * 0x0010000) +
+         (bytes[offset + 6] * 0x0000100) +
+         (bytes[offset + 7]));
 }
 
 /**
@@ -204,10 +198,8 @@ function be8toi(bytes : Uint8Array, offset : number) : number {
  * @returns {Uint8Array}
  */
 function itobe2(num : number) : Uint8Array {
-  return new Uint8Array([
-    (num >>> 8) & 0xFF,
-    (num)       & 0xFF,
-  ]);
+  return new Uint8Array([ (num >>> 8) & 0xFF,
+                          (num)       & 0xFF ]);
 }
 
 /**
@@ -217,12 +209,10 @@ function itobe2(num : number) : Uint8Array {
  * @returns {Uint8Array}
  */
 function itobe4(num : number) : Uint8Array {
-  return new Uint8Array([
-    (num >>> 24) & 0xFF,
-    (num >>> 16) & 0xFF,
-    (num >>>  8) & 0xFF,
-    (num)        & 0xFF,
-  ]);
+  return new Uint8Array([ (num >>> 24) & 0xFF,
+                          (num >>> 16) & 0xFF,
+                          (num >>>  8) & 0xFF,
+                          (num)        & 0xFF ]);
 }
 
 /**
@@ -236,16 +226,14 @@ function itobe4(num : number) : Uint8Array {
 function itobe8(num : number) : Uint8Array {
   const l = (num % 0x100000000);
   const h = (num - l) / 0x100000000;
-  return new Uint8Array([
-    (h >>> 24) & 0xFF,
-    (h >>> 16) & 0xFF,
-    (h >>>  8) & 0xFF,
-    (h)        & 0xFF,
-    (l >>> 24) & 0xFF,
-    (l >>> 16) & 0xFF,
-    (l >>>  8) & 0xFF,
-    (l)        & 0xFF,
-  ]);
+  return new Uint8Array([ (h >>> 24) & 0xFF,
+                          (h >>> 16) & 0xFF,
+                          (h >>>  8) & 0xFF,
+                          (h)        & 0xFF,
+                          (l >>> 24) & 0xFF,
+                          (l >>> 16) & 0xFF,
+                          (l >>>  8) & 0xFF,
+                          (l)        & 0xFF ]);
 }
 
 /**
@@ -255,9 +243,8 @@ function itobe8(num : number) : Uint8Array {
  * @returns {Number}
  */
 function le2toi(bytes : Uint8Array, offset : number) : number {
-  return (
-    (bytes[offset + 0] << 0) +
-    (bytes[offset + 1] << 8));
+  return ((bytes[offset + 0] << 0) +
+          (bytes[offset + 1] << 8));
 }
 
 /**
@@ -267,11 +254,10 @@ function le2toi(bytes : Uint8Array, offset : number) : number {
  * @returns {Number}
  */
 function le4toi(bytes : Uint8Array, offset : number) : number {
-  return (
-    (bytes[offset + 0]) +
-    (bytes[offset + 1] * 0x0000100) +
-    (bytes[offset + 2] * 0x0010000) +
-    (bytes[offset + 3] * 0x1000000));
+  return ((bytes[offset + 0]) +
+          (bytes[offset + 1] * 0x0000100) +
+          (bytes[offset + 2] * 0x0010000) +
+          (bytes[offset + 3] * 0x1000000));
 }
 
 /**
@@ -281,16 +267,16 @@ function le4toi(bytes : Uint8Array, offset : number) : number {
  * @returns {Number}
  */
 function le8toi(bytes : Uint8Array, offset : number) : number {
-  return (
-    (bytes[offset + 0]) +
-    (bytes[offset + 1] * 0x0000100) +
-    (bytes[offset + 2] * 0x0010000) +
-    (bytes[offset + 3] * 0x1000000) +
-   ((bytes[offset + 4]) +
-    (bytes[offset + 5] * 0x0000100) +
-    (bytes[offset + 6] * 0x0010000) +
-     (bytes[offset + 7] * 0x1000000)
-   ) * 0x100000000);
+  return (bytes[offset + 0]) +
+         (bytes[offset + 1] * 0x0000100) +
+         (bytes[offset + 2] * 0x0010000) +
+         (bytes[offset + 3] * 0x1000000) +
+         (
+           (bytes[offset + 4]) +
+           (bytes[offset + 5] * 0x0000100) +
+           (bytes[offset + 6] * 0x0010000) +
+           (bytes[offset + 7] * 0x1000000)
+         ) * 0x100000000;
 }
 
 /**
@@ -300,10 +286,8 @@ function le8toi(bytes : Uint8Array, offset : number) : number {
  * @returns {Uint8Array}
  */
 function itole2(num : number) : Uint8Array {
-  return new Uint8Array([
-    (num)       & 0xFF,
-    (num >>> 8) & 0xFF,
-  ]);
+  return new Uint8Array([ (num)       & 0xFF,
+                          (num >>> 8) & 0xFF ]);
 }
 
 /**
@@ -313,12 +297,10 @@ function itole2(num : number) : Uint8Array {
  * @returns {Uint8Array}
  */
 function itole4(num : number) : Uint8Array {
-  return new Uint8Array([
-    (num)        & 0xFF,
-    (num >>>  8) & 0xFF,
-    (num >>> 16) & 0xFF,
-    (num >>> 24) & 0xFF,
-  ]);
+  return new Uint8Array([ (num)        & 0xFF,
+                          (num >>>  8) & 0xFF,
+                          (num >>> 16) & 0xFF,
+                          (num >>> 24) & 0xFF ]);
 }
 
 /**

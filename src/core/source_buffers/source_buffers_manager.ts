@@ -22,19 +22,20 @@ import QueuedSourceBuffer, {
   IBufferType,
 } from "./queued_source_buffer";
 
-type TypedArray =
-  Int8Array |
-  Int16Array |
-  Int32Array |
-  Uint8Array |
-  Uint16Array |
-  Uint32Array |
-  Uint8ClampedArray |
-  Float32Array |
-  Float64Array;
+type TypedArray = Int8Array |
+                  Int16Array |
+                  Int32Array |
+                  Uint8Array |
+                  Uint16Array |
+                  Uint32Array |
+                  Uint8ClampedArray |
+                  Float32Array |
+                  Float64Array;
 
-const POSSIBLE_BUFFER_TYPES : IBufferType[] =
-  ["audio", "video", "text", "image"];
+const POSSIBLE_BUFFER_TYPES : IBufferType[] = [ "audio",
+                                                "video",
+                                                "text",
+                                                "image" ];
 
 /**
  * Get all currently available buffer types.
@@ -43,9 +44,8 @@ const POSSIBLE_BUFFER_TYPES : IBufferType[] =
  */
 export function getBufferTypes() : IBufferType[] {
   const bufferTypes : IBufferType[] = ["audio", "video"];
-  if (
-    features.nativeTextTracksBuffer != null ||
-    features.htmlTextTracksBuffer != null
+  if (features.nativeTextTracksBuffer != null ||
+      features.htmlTextTracksBuffer != null
   ) {
     bufferTypes.push("text");
   }
@@ -56,19 +56,13 @@ export function getBufferTypes() : IBufferType[] {
 }
 
 // Options available for a "text" SourceBuffer
-export type ITextTrackSourceBufferOptions =
-  {
-    textTrackMode? : "native";
-    hideNativeSubtitle? : boolean;
-  } |
-  {
-    textTrackMode : "html";
-    textTrackElement : HTMLElement;
-  };
+export type ITextTrackSourceBufferOptions = { textTrackMode? : "native";
+                                              hideNativeSubtitle? : boolean; } |
+                                            { textTrackMode : "html";
+                                              textTrackElement : HTMLElement; };
 
 // General Options available for any SourceBuffer
-export type ISourceBufferOptions =
-  ITextTrackSourceBufferOptions;
+export type ISourceBufferOptions = ITextTrackSourceBufferOptions;
 
 // Types of "native" SourceBuffers
 type INativeSourceBufferType = "audio" | "video";
@@ -152,15 +146,16 @@ export default class SourceBuffersManager {
       if (memorizedSourceBuffer) {
         if (memorizedSourceBuffer.codec !== codec) {
           log.warn("SB: Reusing native SourceBuffer with codec",
-            memorizedSourceBuffer.codec, "for codec", codec);
+                   memorizedSourceBuffer.codec, "for codec", codec);
         } else {
           log.info("SB: Reusing native SourceBuffer with codec", codec);
         }
         return memorizedSourceBuffer;
       }
       log.info("SB: Adding native SourceBuffer with codec", codec);
-      const nativeSourceBuffer =
-        createNativeQueuedSourceBuffer(bufferType, this._mediaSource, codec);
+      const nativeSourceBuffer = createNativeQueuedSourceBuffer(bufferType,
+                                                                this._mediaSource,
+                                                                codec);
       this._initializedSourceBuffers[bufferType] = nativeSourceBuffer;
       return nativeSourceBuffer;
     }
@@ -178,18 +173,19 @@ export default class SourceBuffersManager {
         if (features.htmlTextTracksBuffer == null) {
           throw new Error("HTML Text track feature not activated");
         }
-        sourceBuffer = new features
-          .htmlTextTracksBuffer(this._mediaElement, options.textTrackElement);
+        sourceBuffer = new features.htmlTextTracksBuffer(this._mediaElement,
+                                                         options.textTrackElement);
       } else {
         if (features.nativeTextTracksBuffer == null) {
           throw new Error("Native Text track feature not activated");
         }
-        sourceBuffer = new features
-          .nativeTextTracksBuffer(this._mediaElement, !!options.hideNativeSubtitle);
+        sourceBuffer = new features.nativeTextTracksBuffer(this._mediaElement,
+                                                           !!options.hideNativeSubtitle);
       }
 
-      const queuedSourceBuffer =
-        new QueuedSourceBuffer<unknown>("text", codec, sourceBuffer);
+      const queuedSourceBuffer = new QueuedSourceBuffer<unknown>("text",
+                                                                 codec,
+                                                                 sourceBuffer);
       this._initializedSourceBuffers.text = queuedSourceBuffer;
       return queuedSourceBuffer;
     } else if (bufferType === "image") {
@@ -198,15 +194,17 @@ export default class SourceBuffersManager {
       }
       log.info("SB: Creating a new image SourceBuffer with codec", codec);
       const sourceBuffer = new features.imageBuffer();
-      const queuedSourceBuffer =
-        new QueuedSourceBuffer<unknown>("image", codec, sourceBuffer);
+      const queuedSourceBuffer = new QueuedSourceBuffer<unknown>("image",
+                                                                 codec,
+                                                                 sourceBuffer);
       this._initializedSourceBuffers.image = queuedSourceBuffer;
       return queuedSourceBuffer;
     }
 
     log.error("SB: Unknown buffer type:", bufferType);
     throw new MediaError("BUFFER_TYPE_UNKNOWN",
-      "The player wants to create a SourceBuffer of an unknown type.", true);
+                         "The player wants to create a SourceBuffer of an unknown type.",
+                         true);
   }
 
   /**
@@ -222,9 +220,8 @@ export default class SourceBuffersManager {
 
     log.info("SB: Aborting SourceBuffer", bufferType);
     memorizedSourceBuffer.dispose();
-    if (
-      !shouldHaveNativeSourceBuffer(bufferType) ||
-      this._mediaSource.readyState === "open"
+    if (!shouldHaveNativeSourceBuffer(bufferType) ||
+        this._mediaSource.readyState === "open"
     ) {
       try {
         memorizedSourceBuffer.abort();

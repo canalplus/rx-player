@@ -24,6 +24,4 @@ import ImageSourceBuffer, {
 } from "./image_source_buffer";
 
 export default ImageSourceBuffer;
-export {
-  IImageTrackSegmentData,
-};
+export { IImageTrackSegmentData };

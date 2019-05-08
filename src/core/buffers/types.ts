@@ -53,9 +53,8 @@ export interface IBufferNeedsDiscontinuitySeek {
 }
 
 // Events communicating about actions that need to be taken
-export type IBufferNeededActions =
-  IBufferNeedsManifestRefresh |
-  IBufferNeedsDiscontinuitySeek;
+export type IBufferNeededActions = IBufferNeedsManifestRefresh |
+                                   IBufferNeedsDiscontinuitySeek;
 
 // State emitted when the Buffer is scheduling segments
 export interface IBufferStateActive {
@@ -74,129 +73,94 @@ export interface IBufferStateFull {
 }
 
 // State emitted when the buffer waits
-export type IRepresentationBufferStateEvent =
-  IBufferNeededActions |
-  IBufferStateFull |
-  IBufferStateActive;
+export type IRepresentationBufferStateEvent = IBufferNeededActions |
+                                              IBufferStateFull |
+                                              IBufferStateActive;
 
 // Events emitted by the Buffer
-export type IRepresentationBufferEvent<T> =
-  IBufferEventAddedSegment<T> |
-  IRepresentationBufferStateEvent;
+export type IRepresentationBufferEvent<T> = IBufferEventAddedSegment<T> |
+                                            IRepresentationBufferStateEvent;
 
 // Emitted as new bitrate estimations are done
 export interface IBitrateEstimationChangeEvent {
   type : "bitrateEstimationChange";
-  value : {
-    type : IBufferType;
-    bitrate : number|undefined;
-  };
+  value : { type : IBufferType;
+            bitrate : number|undefined; };
 }
 
 // Emitted when the current Representation considered changes
 export interface IRepresentationChangeEvent {
   type : "representationChange";
-  value : {
-    type : IBufferType;
-    period : Period;
-    representation : Representation|null;
-  };
+  value : { type : IBufferType;
+            period : Period;
+            representation : Representation |
+                             null; };
 }
 
 // Every events sent by the AdaptationBuffer
-export type IAdaptationBufferEvent<T> =
-  IRepresentationBufferEvent<T> |
-  IBitrateEstimationChangeEvent |
-  INeedsMediaSourceReload |
-  IRepresentationChangeEvent;
+export type IAdaptationBufferEvent<T> = IRepresentationBufferEvent<T> |
+                                        IBitrateEstimationChangeEvent |
+                                        INeedsMediaSourceReload |
+                                        IRepresentationChangeEvent;
 
 // The currently-downloaded Adaptation changed.
-export interface IAdaptationChangeEvent {
-  type : "adaptationChange";
-  value : {
-    type : IBufferType;
-    period : Period;
-    adaptation : Adaptation|null;
-  };
-}
-
+export interface IAdaptationChangeEvent { type : "adaptationChange";
+                                          value : { type : IBufferType;
+                                                    period : Period;
+                                                    adaptation : Adaptation |
+                                                                 null; }; }
 // Currently-playing Period changed.
-export interface IActivePeriodChangedEvent {
-  type: "activePeriodChanged";
-  value : {
-    period: Period;
-  };
-}
+export interface IActivePeriodChangedEvent { type: "activePeriodChanged";
+                                             value : { period: Period }; }
 
 // a new PeriodBuffer is ready, waiting for an adaptation/track choice.
 export interface IPeriodBufferReadyEvent {
   type : "periodBufferReady";
-  value : {
-    type : IBufferType;
-    period : Period;
-    adaptation$ : Subject<Adaptation|null>;
-  };
+  value : { type : IBufferType;
+            period : Period;
+            adaptation$ : Subject<Adaptation|null>; };
 }
 
 // A PeriodBuffer has been cleared (it is not used anymore). Can be used for
 // cleaning-up resources.
-export interface IPeriodBufferClearedEvent {
-  type : "periodBufferCleared";
-  value : {
-    type : IBufferType;
-    period : Period;
-  };
-}
+export interface IPeriodBufferClearedEvent { type : "periodBufferCleared";
+                                             value : { type : IBufferType;
+                                                       period : Period; }; }
 
 // The last PeriodBuffers from every type are full.
-export interface IEndOfStreamEvent {
-  type: "end-of-stream";
-  value: undefined;
-}
+export interface IEndOfStreamEvent { type: "end-of-stream";
+                                     value: undefined; }
 
 // A previously non-existent or full last PeriodBuffer resumed.
-export interface IResumeStreamEvent {
-  type: "resume-stream";
-  value: undefined;
-}
+export interface IResumeStreamEvent { type: "resume-stream";
+                                      value: undefined; }
 
 // The last PeriodBuffer of a given type is full.
-export interface ICompletedBufferEvent {
-  type: "complete-buffer";
-  value : {
-    type: IBufferType;
-  };
-}
+export interface ICompletedBufferEvent { type: "complete-buffer";
+                                         value : { type: IBufferType }; }
 
 // The MediaSource needs to be reloaded to continue
-export interface INeedsMediaSourceReload {
-  type: "needs-media-source-reload";
-  value: undefined;
-}
+export interface INeedsMediaSourceReload { type: "needs-media-source-reload";
+                                           value: undefined; }
 
 // Events coming from single PeriodBuffer
-export type IPeriodBufferEvent =
-  IPeriodBufferReadyEvent |
-  IAdaptationBufferEvent<unknown> |
-  IBufferWarningEvent |
-  INeedsMediaSourceReload |
-  IAdaptationChangeEvent;
+export type IPeriodBufferEvent = IPeriodBufferReadyEvent |
+                                 IAdaptationBufferEvent<unknown> |
+                                 IBufferWarningEvent |
+                                 INeedsMediaSourceReload |
+                                 IAdaptationChangeEvent;
 
 // Events coming from function(s) managing multiple PeriodBuffers.
-export type IMultiplePeriodBuffersEvent =
-  IPeriodBufferEvent |
-  IPeriodBufferClearedEvent |
-  ICompletedBufferEvent;
+export type IMultiplePeriodBuffersEvent = IPeriodBufferEvent |
+                                          IPeriodBufferClearedEvent |
+                                          ICompletedBufferEvent;
 
 // Every events sent by the BufferOrchestrator exported here.
-export type IBufferOrchestratorEvent =
-  IActivePeriodChangedEvent |
-  IMultiplePeriodBuffersEvent |
-  IEndOfStreamEvent |
-  IResumeStreamEvent;
+export type IBufferOrchestratorEvent = IActivePeriodChangedEvent |
+                                       IMultiplePeriodBuffersEvent |
+                                       IEndOfStreamEvent |
+                                       IResumeStreamEvent;
 
 // A minor error happened
-export interface IBufferWarningEvent {
-  type : "warning";
-  value : Error|ICustomError;
-}
+export interface IBufferWarningEvent { type : "warning";
+                                       value : Error | ICustomError; }

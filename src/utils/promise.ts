@@ -16,5 +16,5 @@
 
 import pinkie from "pinkie";
 
-export default typeof Promise === "function" ?
-  Promise : pinkie;
+export default typeof Promise === "function" ? Promise :
+                                               pinkie;

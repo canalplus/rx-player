@@ -40,7 +40,8 @@ export default class EWMA {
    */
   public addSample(weight : number, value : number) : void {
     const adjAlpha = Math.pow(this._alpha, weight);
-    const newEstimate = value * (1 - adjAlpha) + adjAlpha * this._lastEstimate;
+    const newEstimate = value * (1 - adjAlpha) +
+                        adjAlpha * this._lastEstimate;
     if (!isNaN(newEstimate)) {
       this._lastEstimate = newEstimate;
       this._totalWeight += weight;

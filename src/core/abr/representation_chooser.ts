@@ -41,13 +41,11 @@ import filterByBitrate from "./filter_by_bitrate";
 import filterByWidth from "./filter_by_width";
 import fromBitrateCeil from "./from_bitrate_ceil";
 
-const {
-  ABR_REGULAR_FACTOR,
-  ABR_STARVATION_DURATION_DELTA,
-  ABR_STARVATION_FACTOR,
-  ABR_STARVATION_GAP,
-  OUT_OF_STARVATION_GAP,
-} = config;
+const { ABR_REGULAR_FACTOR,
+        ABR_STARVATION_DURATION_DELTA,
+        ABR_STARVATION_FACTOR,
+        ABR_STARVATION_GAP,
+        OUT_OF_STARVATION_GAP } = config;
 
 // Adaptive BitRate estimation object
 export interface IABREstimation {
@@ -86,37 +84,28 @@ interface IRequestInfo {
   time: number; // time at which the corresponding segment begins, in seconds
 }
 
-type IRequest = IProgressRequest | IBeginRequest | IEndRequest;
+type IRequest = IProgressRequest |
+                IBeginRequest |
+                IEndRequest;
 
-interface IProgressRequest {
-  type: IBufferType;
-  event: "progress";
-  value: IProgressEventValue;
-}
+interface IProgressRequest { type: IBufferType;
+                             event: "progress";
+                             value: IProgressEventValue; }
 
-interface IBeginRequest {
-  type: IBufferType;
-  event: "requestBegin";
-  value: {
-    id: string|number;
-    time: number;
-    duration: number;
-    requestTimestamp: number;
-  };
-}
+interface IBeginRequest { type: IBufferType;
+                          event: "requestBegin";
+                          value: {
+                            id: string|number;
+                            time: number;
+                            duration: number;
+                            requestTimestamp: number; }; }
 
-interface IEndRequest {
-  type: IBufferType;
-  event: "requestEnd";
-  value: {
-    id: string|number;
-  };
-}
+interface IEndRequest { type: IBufferType;
+                        event: "requestEnd";
+                        value: { id: string|number }; }
 
-interface IFilters {
-  bitrate?: number;
-  width?: number;
-}
+interface IFilters { bitrate?: number;
+                     width?: number; }
 
 interface IRepresentationChooserOptions {
   limitWidth$?: Observable<number>; // Emit maximum useful width
@@ -244,13 +233,12 @@ function estimateStarvationModeBitrate(
   // first, try to do a quick estimate from progress events
   const bandwidthEstimate = estimateRequestBandwidth(concernedRequest);
   if (lastProgressEvent != null && bandwidthEstimate != null) {
-    const remainingTime =
-      estimateRemainingTime(lastProgressEvent, bandwidthEstimate) * 1.2;
+    const remainingTime = estimateRemainingTime(lastProgressEvent,
+                                                bandwidthEstimate) * 1.2;
 
     // if this remaining time is reliable and is not enough to avoid buffering
-    if (
-      (now - lastProgressEvent.timestamp) / 1000 <= remainingTime &&
-      remainingTime > (clock.bufferGap / clock.speed)
+    if ((now - lastProgressEvent.timestamp) / 1000 <= remainingTime &&
+        remainingTime > (clock.bufferGap / clock.speed)
     ) {
       return bandwidthEstimate;
     }
@@ -258,9 +246,8 @@ function estimateStarvationModeBitrate(
 
   const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
   const currentBitrate = clock.downloadBitrate;
-  if (
-    currentBitrate == null ||
-    requestElapsedTime <= ((chunkDuration * 1.5 + 1) / clock.speed)
+  if (currentBitrate == null ||
+      requestElapsedTime <= ((chunkDuration * 1.5 + 1) / clock.speed)
   ) {
     return undefined;
   }
@@ -286,12 +273,12 @@ function shouldDirectlySwitchToLowBitrate(
 ) : boolean {
   const nextNeededPosition = clock.currentTime + clock.bufferGap;
   const requests = objectValues(pendingRequests)
-    .filter((a) : a is IRequestInfo => !!a)
-    .sort((a, b) => a.time - b.time);
+                     .filter((a) : a is IRequestInfo => !!a)
+                     .sort((a, b) => a.time - b.time);
 
   const nextNeededRequest = arrayFind(requests, (r) =>
-    (r.time + r.duration) > nextNeededPosition
-  );
+                              (r.time + r.duration) > nextNeededPosition);
+
   if (!nextNeededRequest) {
     return true;
   }
@@ -308,9 +295,8 @@ function shouldDirectlySwitchToLowBitrate(
   }
 
   const remainingTime = estimateRemainingTime(lastProgressEvent, bandwidthEstimate);
-  if (
-    (now - lastProgressEvent.timestamp) / 1000 <= (remainingTime * 1.2) &&
-    remainingTime < ((clock.bufferGap / clock.speed) + ABR_STARVATION_GAP)
+  if ((now - lastProgressEvent.timestamp) / 1000 <= (remainingTime * 1.2) &&
+      remainingTime < ((clock.bufferGap / clock.speed) + ABR_STARVATION_GAP)
   ) {
     return false;
   }
@@ -357,15 +343,13 @@ export default class RepresentationChooser {
   constructor(options : IRepresentationChooserOptions) {
     this._dispose$ = new Subject();
 
-    this.manualBitrate$ = new BehaviorSubject(
-      options.manualBitrate != null ?
-      options.manualBitrate : -1
-    );
+    this.manualBitrate$ =
+      new BehaviorSubject(options.manualBitrate != null ? options.manualBitrate :
+                                                          -1);
 
-    this.maxAutoBitrate$ = new BehaviorSubject(
-      options.maxAutoBitrate != null ?
-      options.maxAutoBitrate : Infinity
-    );
+    this.maxAutoBitrate$ =
+      new BehaviorSubject(options.maxAutoBitrate != null ? options.maxAutoBitrate :
+                                                           Infinity);
 
     this.estimator = new BandwidthEstimator();
     this._currentRequests = {};
@@ -398,20 +382,18 @@ export default class RepresentationChooser {
       });
     }
 
-    const { manualBitrate$, maxAutoBitrate$, _initialBitrate }  = this;
+    const { manualBitrate$,
+            maxAutoBitrate$,
+            _initialBitrate }  = this;
     const _deviceEventsArray : Array<Observable<IFilters>> = [];
 
     if (this._limitWidth$) {
-      _deviceEventsArray.push(
-        this._limitWidth$
-          .pipe(map(width => ({ width })))
-      );
+      _deviceEventsArray.push(this._limitWidth$
+                                .pipe(map(width => ({ width }))));
     }
     if (this._throttle$) {
-      _deviceEventsArray.push(
-        this._throttle$
-          .pipe(map(bitrate => ({ bitrate })))
-      );
+      _deviceEventsArray.push(this._throttle$
+                                .pipe(map(bitrate => ({ bitrate }))));
     }
 
     // Emit restrictions on the pools of available Representations to choose
@@ -438,11 +420,10 @@ export default class RepresentationChooser {
 
       // -- AUTO mode --
       let inStarvationMode = false; // == buffer gap too low == panic mode
-      return observableCombineLatest(
-        clock$,
-        maxAutoBitrate$,
-        deviceEvents$,
-        this._reEstimate$.pipe(startWith(null))
+      return observableCombineLatest(clock$,
+                                     maxAutoBitrate$,
+                                     deviceEvents$,
+                                     this._reEstimate$.pipe(startWith(null))
       ).pipe(
         map(([ clock, maxAutoBitrate, deviceEvents ]) => {
           let newBitrateCeil; // bitrate ceil for the chosen Representation
@@ -467,8 +448,9 @@ export default class RepresentationChooser {
           // from the last requests.
           // If so, cancel previous estimations and replace it by the new one
           if (inStarvationMode) {
-            bandwidthEstimate = estimateStarvationModeBitrate(
-              this._currentRequests, clock, lastEstimatedBitrate);
+            bandwidthEstimate = estimateStarvationModeBitrate(this._currentRequests,
+                                                              clock,
+                                                              lastEstimatedBitrate);
 
             if (bandwidthEstimate != null) {
               log.info("ABR: starvation mode emergency estimate:", bandwidthEstimate);
@@ -486,13 +468,13 @@ export default class RepresentationChooser {
 
             let nextEstimate;
             if (bandwidthEstimate != null) {
-              nextEstimate = inStarvationMode ?
-                bandwidthEstimate * ABR_STARVATION_FACTOR :
-                bandwidthEstimate * ABR_REGULAR_FACTOR;
+              nextEstimate = bandwidthEstimate *
+                             (inStarvationMode ? ABR_STARVATION_FACTOR :
+                                                 ABR_REGULAR_FACTOR);
             } else if (lastEstimatedBitrate != null) {
-              nextEstimate = inStarvationMode ?
-                lastEstimatedBitrate * ABR_STARVATION_FACTOR :
-                lastEstimatedBitrate * ABR_REGULAR_FACTOR;
+              nextEstimate = lastEstimatedBitrate *
+                             (inStarvationMode ? ABR_STARVATION_FACTOR :
+                                                 ABR_REGULAR_FACTOR);
             } else {
               nextEstimate = _initialBitrate;
             }
@@ -503,11 +485,12 @@ export default class RepresentationChooser {
             newBitrateCeil /= clock.speed;
           }
 
-          const _representations =
-            getFilteredRepresentations(representations, deviceEvents);
+          const _representations = getFilteredRepresentations(representations,
+                                                              deviceEvents);
 
-          const chosenRepresentation =
-            fromBitrateCeil(_representations, newBitrateCeil) || representations[0];
+          const chosenRepresentation = fromBitrateCeil(_representations,
+                                                       newBitrateCeil) ||
+                                       representations[0];
 
           const urgent = (() => {
             if (clock.downloadBitrate == null) {
@@ -519,13 +502,10 @@ export default class RepresentationChooser {
             }
             return shouldDirectlySwitchToLowBitrate(this._currentRequests, clock);
           })();
-          return {
-            bitrate: bandwidthEstimate,
-            representation: chosenRepresentation,
-            manual: false,
-            urgent,
-          };
-
+          return { bitrate: bandwidthEstimate,
+                   representation: chosenRepresentation,
+                   manual: false,
+                   urgent };
         }),
 
         tap(({ bitrate }) => {
@@ -569,12 +549,10 @@ export default class RepresentationChooser {
       return;
     }
     const { time, duration, requestTimestamp } = payload.value;
-    this._currentRequests[id] = {
-      time,
-      duration,
-      requestTimestamp,
-      progress: [],
-    };
+    this._currentRequests[id] = { time,
+                                  duration,
+                                  requestTimestamp,
+                                  progress: [] };
   }
 
   /**

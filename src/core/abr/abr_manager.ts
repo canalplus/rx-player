@@ -31,15 +31,11 @@ import RepresentationChooser, {
   IRequest,
 } from "./representation_chooser";
 
-interface IMetricValue {
-  duration: number;
-  size: number;
-}
+interface IMetricValue { duration: number;
+                         size: number; }
 
-interface IMetric {
-  type : IBufferType;
-  value : IMetricValue;
-}
+interface IMetric { type : IBufferType;
+                    value : IMetricValue; }
 
 export type IABRClockTick = IRepresentationChooserClockTick;
 
@@ -52,13 +48,11 @@ interface IRepresentationChoosersOptions {
   maxAutoBitrates: Partial<Record<IBufferType, number>>;
 }
 
-const defaultChooserOptions = {
-  limitWidth: {},
-  throttle: {},
-  initialBitrates: {},
-  manualBitrates: {},
-  maxAutoBitrates: {},
-};
+const defaultChooserOptions = { limitWidth: {},
+                                throttle: {},
+                                initialBitrates: {},
+                                manualBitrates: {},
+                                maxAutoBitrates: {} };
 
 /**
  * Create the right RepresentationChooser instance, from the given data.
@@ -70,13 +64,11 @@ const createChooser = (
   type : IBufferType,
   options : IRepresentationChoosersOptions
 ) : RepresentationChooser => {
-  return new RepresentationChooser({
-    limitWidth$: options.limitWidth[type],
-    throttle$: options.throttle[type],
-    initialBitrate: options.initialBitrates[type],
-    manualBitrate: options.manualBitrates[type],
-    maxAutoBitrate: options.maxAutoBitrates[type],
-  });
+  return new RepresentationChooser({ limitWidth$: options.limitWidth[type],
+                                     throttle$: options.throttle[type],
+                                     initialBitrate: options.initialBitrates[type],
+                                     manualBitrate: options.manualBitrates[type],
+                                     maxAutoBitrate: options.maxAutoBitrates[type] });
 };
 
 /**
@@ -324,8 +316,8 @@ export default class ABRManager {
   private _lazilyCreateChooser(bufferType : IBufferType) : RepresentationChooser {
     if (!this._choosers[bufferType]) {
       log.debug("ABR: Creating new buffer for ", bufferType);
-      this._choosers[bufferType] =
-        createChooser(bufferType, this._chooserInstanceOptions);
+      this._choosers[bufferType] = createChooser(bufferType,
+                                                 this._chooserInstanceOptions);
     }
     return this._choosers[bufferType] as RepresentationChooser;
   }

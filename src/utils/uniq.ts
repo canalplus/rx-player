@@ -19,7 +19,7 @@
  * @param {Array.<*>} arr
  * @returns {Array.<*>}
  */
-function uniqFromFilter<T>(arr: T[]) {
+function uniqFromFilter<T>(arr: T[]) : T[] {
   return arr.filter((val, i, self) => self.indexOf(val) === i);
 }
 
@@ -28,7 +28,7 @@ function uniqFromFilter<T>(arr: T[]) {
  * @param {Array.<*>} arr
  * @returns {Array.<*>}
  */
-function uniqFromSet<T>(arr: T[]) {
+function uniqFromSet<T>(arr: T[]) : T[] {
   return Array.from(new Set(arr));
 }
 
@@ -38,9 +38,8 @@ function uniqFromSet<T>(arr: T[]) {
  * @param {Array.<*>} arr
  * @returns {Array.<*>}
  */
-export default typeof (window as any).Set === "function" ?
-  uniqFromSet : uniqFromFilter;
-
+export default typeof (window as any).Set === "function" ? uniqFromSet :
+                                                           uniqFromFilter;
 export {
   uniqFromFilter,
   uniqFromSet,

@@ -52,10 +52,8 @@ export default function createFakeAdaptationBuffer(
     ),
     map(() => {
       log.debug("Buffer: full FakeBuffer", bufferType);
-      return {
-        type: "full-buffer" as "full-buffer",
-        value: { bufferType },
-      };
+      return { type: "full-buffer" as "full-buffer",
+               value: { bufferType } };
     })
   );
 }

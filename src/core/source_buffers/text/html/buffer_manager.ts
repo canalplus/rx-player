@@ -103,10 +103,8 @@ export default class TextBufferManager {
 
         // ``to`` is within this segment
         if (startCuesInfos.end >= to) {
-          const [
-            cuesInfos1,
-            cuesInfos2,
-          ] = removeCuesInfosBetween(startCuesInfos, from, to);
+          const [ cuesInfos1,
+                  cuesInfos2 ] = removeCuesInfosBetween(startCuesInfos, from, to);
           this._cuesBuffer[i] = cuesInfos1;
           cuesBuffer.splice(i + 1, 0, cuesInfos2);
           return;
@@ -283,10 +281,8 @@ export default class TextBufferManager {
         // Which means:
         //   1. split current one in two parts based on our cue.
         //   2. insert our cue into it.
-        const [
-          cuesInfos1,
-          cuesInfos2,
-        ] = removeCuesInfosBetween(cuesInfos, start, end);
+        const [ cuesInfos1,
+                cuesInfos2 ] = removeCuesInfosBetween(cuesInfos, start, end);
         this._cuesBuffer[i] = cuesInfos1;
         cuesBuffer.splice(i + 1, 0, cuesInfosToInsert);
         cuesBuffer.splice(i + 2, 0, cuesInfos2);

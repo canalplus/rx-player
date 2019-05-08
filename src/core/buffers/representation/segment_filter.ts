@@ -51,12 +51,9 @@ export default function shouldDownloadSegment(
   wantedRange : { start : number; end : number },
   segmentIDsToIgnore : SimpleSet
 ) : boolean {
-  const {
-    period,
-    adaptation,
-    representation,
-  } = content;
+  const { period, adaptation, representation } = content;
   const shouldIgnore = segmentIDsToIgnore.test(segment.id);
+
   if (shouldIgnore) {
     return false;
   }
@@ -94,6 +91,7 @@ export default function shouldDownloadSegment(
 
   // only re-load comparatively-poor bitrates for the same adaptation.
   const bitrateCeil = currentSegment.infos.representation.bitrate *
-    BITRATE_REBUFFERING_RATIO;
+                      BITRATE_REBUFFERING_RATIO;
+
   return representation.bitrate > bitrateCeil;
 }

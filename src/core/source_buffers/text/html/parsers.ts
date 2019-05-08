@@ -17,11 +17,9 @@
 import features from "../../../../features";
 import log from "../../../../log";
 
-export interface IHTMLCue {
-  start : number;
-  end: number;
-  element : HTMLElement;
-}
+export interface IHTMLCue { start : number;
+                            end: number;
+                            element : HTMLElement; }
 
 /**
  * Convert text track data into timed HTML Cues.

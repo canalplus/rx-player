@@ -126,13 +126,9 @@ export default function createSegmentFetcher<T>(
 
             // format it for ABR Handling
             if (size != null && duration != null) {
-              network$.next({
-                type: bufferType,
-                value: {
-                  size,
-                  duration,
-                },
-              });
+              network$.next({ type: bufferType,
+                              value: { size,
+                                       duration } });
             }
             break;
           }
@@ -149,39 +145,30 @@ export default function createSegmentFetcher<T>(
               const duration = segment.duration / segment.timescale;
               const time = segment.time / segment.timescale;
               id = generateRequestID();
-              request$.next({
-                type: bufferType,
-                event: "requestBegin",
-                value: {
-                  duration,
-                  time,
-                  requestTimestamp: performance.now(),
-                  id,
-                },
-              });
+              request$.next({ type: bufferType,
+                              event: "requestBegin",
+                              value: { duration,
+                                       time,
+                                       requestTimestamp: performance.now(),
+                                       id } });
             }
             break;
           }
 
           case "progress": {
             const { value } = arg;
-            if (
-              value.totalSize != null &&
-              value.size < value.totalSize &&
-              id != null &&
-              request$ != null
+            if (value.totalSize != null &&
+                value.size < value.totalSize &&
+                id != null &&
+                request$ != null
             ) {
-              request$.next({
-                type: bufferType,
-                event: "progress",
-                value: {
-                  duration: value.duration,
-                  size: value.size,
-                  totalSize: value.totalSize,
-                  timestamp: performance.now(),
-                  id,
-                },
-              });
+              request$.next({ type: bufferType,
+                              event: "progress",
+                              value: { duration: value.duration,
+                                       size: value.size,
+                                       totalSize: value.totalSize,
+                                       timestamp: performance.now(),
+                                       id } });
             }
             break;
           }
@@ -195,11 +182,9 @@ export default function createSegmentFetcher<T>(
       finalize(() => {
         if (request$ != null) {
           if (id != null) {
-            request$.next({
-              type: bufferType,
-              event: "requestEnd",
-              value: { id },
-            });
+            request$.next({ type: bufferType,
+                            event: "requestEnd",
+                            value: { id } });
           }
           request$.complete();
         }
@@ -217,8 +202,10 @@ export default function createSegmentFetcher<T>(
             return segmentParser(parserArg)
               .pipe(catchError((error: Error) => {
                 const formattedError = isKnownError(error) ?
-                  error : new OtherError(
-                    "PIPELINE_PARSING_ERROR", error.toString(), true);
+                                         error :
+                                         new OtherError("PIPELINE_PARSING_ERROR",
+                                                        error.toString(),
+                                                        true);
                   throw formattedError;
               }));
           },

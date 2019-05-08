@@ -62,8 +62,10 @@ export default function getStalledEvents(
       // calculate a stalled state. This is useful for some
       // implementation that might drop an injected segment, or in
       // case of small discontinuity in the content.
-      if (
-        isPlaybackStuck(tick.currentTime, tick.currentRange, tick.state, !!tick.stalled)
+      if (isPlaybackStuck(tick.currentTime,
+                          tick.currentRange,
+                          tick.state,
+                          !!tick.stalled)
       ) {
         log.warn("Init: After freeze seek", currentTime, tick.currentRange);
         mediaElement.currentTime = currentTime;
@@ -76,8 +78,11 @@ export default function getStalledEvents(
     share(),
     map(tick => tick.stalled),
     distinctUntilChanged((wasStalled, isStalled) => {
-      return !wasStalled && !isStalled ||
-        (!!wasStalled && !!isStalled && wasStalled.reason === isStalled.reason);
+      return !wasStalled &&
+             !isStalled ||
+             (!!wasStalled &&
+              !!isStalled &&
+              wasStalled.reason === isStalled.reason);
     })
   );
 }

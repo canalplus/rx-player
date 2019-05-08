@@ -20,4 +20,4 @@ import {
 } from "../../utils/byte_parsing";
 
 // The way "pssh" will be written in ISOBMFF files
-export const PSSH_TO_INTEGER = be4toi(strToBytes("pssh"), 0);
+export const PSSH_TO_INTEGER : number = be4toi(strToBytes("pssh"), 0);

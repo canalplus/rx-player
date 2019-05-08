@@ -19,6 +19,4 @@ import AdaptationBuffer, {
 } from "./adaptation_buffer";
 
 export default AdaptationBuffer;
-export {
-  IAdaptationBufferClockTick,
-};
+export { IAdaptationBufferClockTick };

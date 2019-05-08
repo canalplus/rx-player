@@ -108,17 +108,15 @@ export function removeCuesInfosBetween(
   end : number
 ) : [ICuesGroup, ICuesGroup] {
   const end1 = Math.max(cuesInfos.start, start);
-  const cuesInfos1 = {
-    start: cuesInfos.start,
-    end: end1,
-    cues: getCuesBefore(cuesInfos.cues, start),
-  };
+  const cues1 = getCuesBefore(cuesInfos.cues, start);
+  const cuesInfos1 = { start: cuesInfos.start,
+                       end: end1,
+                       cues: cues1 };
 
   const start2 = Math.min(end, cuesInfos.end);
-  const cuesInfos2 = {
-    start: start2,
-    end: cuesInfos.end,
-    cues: getCuesAfter(cuesInfos.cues, end),
-  };
+  const cues2 = getCuesAfter(cuesInfos.cues, end);
+  const cuesInfos2 = { start: start2,
+                       end: cuesInfos.end,
+                       cues: cues2 };
   return [cuesInfos1, cuesInfos2];
 }

@@ -44,24 +44,21 @@ export default function attachMediaKeys(
 ) : Observable<unknown> {
   return observableDefer(() => {
     const previousState = currentMediaKeysInfos.getState(mediaElement);
-    const {
-      keySystemOptions,
-      mediaKeySystemAccess,
-      mediaKeys,
-      sessionsStore,
-    } = mediaKeysInfos;
+    const { keySystemOptions,
+            mediaKeySystemAccess,
+            mediaKeys,
+            sessionsStore } = mediaKeysInfos;
 
-    currentMediaKeysInfos.setState(mediaElement, {
-      keySystemOptions,
-      mediaKeySystemAccess,
-      mediaKeys,
-      sessionsStore,
-    });
+    currentMediaKeysInfos.setState(mediaElement,
+                                   { keySystemOptions,
+                                     mediaKeySystemAccess,
+                                     mediaKeys,
+                                     sessionsStore });
 
-    return (
-      previousState && previousState.sessionsStore !== sessionsStore ?
-        previousState.sessionsStore.closeAllSessions() :
-        observableOf(null)
+    return (previousState &&
+            previousState.sessionsStore !== sessionsStore ?
+              previousState.sessionsStore.closeAllSessions() :
+              observableOf(null)
     ).pipe(mergeMap(() => {
       if (mediaElement.mediaKeys === mediaKeys) {
         return observableOf(null);

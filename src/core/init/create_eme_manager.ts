@@ -34,9 +34,7 @@ import {
 
 const { onEncrypted$ } = events;
 
-export interface IEMEDisabledEvent {
-  type: "eme-disabled";
-}
+export interface IEMEDisabledEvent { type: "eme-disabled"; }
 
 /**
  * Create EMEManager if possible (has the APIs and configuration).
@@ -54,7 +52,8 @@ export default function createEMEManager(
       onEncrypted$(mediaElement).pipe(map(() => {
         log.error("Init: Encrypted event but EME feature not activated");
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
-          "EME feature not activated.", true);
+                                      "EME feature not activated.",
+                                      true);
       })),
       observableOf({ type: "eme-disabled" as "eme-disabled" }));
   }
@@ -64,7 +63,8 @@ export default function createEMEManager(
       onEncrypted$(mediaElement).pipe(map(() => {
         log.error("Init: Ciphered media and no keySystem passed");
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
-          "Media is encrypted and no `keySystems` given", true);
+                                      "Media is encrypted and no `keySystems` given",
+                                      true);
       })),
       observableOf({ type: "eme-disabled" as "eme-disabled" }));
   }
@@ -74,7 +74,8 @@ export default function createEMEManager(
       onEncrypted$(mediaElement).pipe(map(() => {
         log.error("Init: Encrypted event but no EME API available");
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
-          "Encryption APIs not found.", true);
+                                      "Encryption APIs not found.",
+                                      true);
       })),
       observableOf({ type: "eme-disabled" as "eme-disabled" }));
   }

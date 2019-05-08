@@ -32,16 +32,15 @@ import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
 import { IEMEWarningEvent } from "./types";
 
-type TypedArray =
-  Int8Array |
-  Int16Array |
-  Int32Array |
-  Uint8Array |
-  Uint16Array |
-  Uint32Array |
-  Uint8ClampedArray |
-  Float32Array |
-  Float64Array;
+type TypedArray = Int8Array |
+                  Int16Array |
+                  Int32Array |
+                  Uint8Array |
+                  Uint16Array |
+                  Uint32Array |
+                  Uint8ClampedArray |
+                  Float32Array |
+                  Float64Array;
 
 /**
  * Call the setServerCertificate API with the given certificate.
@@ -66,8 +65,9 @@ function setServerCertificate(
       (mediaKeys as MediaKeys).setServerCertificate(serverCertificate)
     ).pipe(catchError((error: Error) => {
       log.warn("EME: mediaKeys.setServerCertificate returned an error", error);
-      throw new EncryptedMediaError(
-        "LICENSE_SERVER_CERTIFICATE_ERROR", error.toString(), true);
+      throw new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR",
+                                    error.toString(),
+                                    true);
     }));
   });
 }
@@ -93,7 +93,7 @@ export default function trySettingServerCertificate(
       }));
   }
   log.warn("EME: Could not set the server certificate." +
-    " mediaKeys.setServerCertificate is not a function");
+           " mediaKeys.setServerCertificate is not a function");
   return EMPTY;
 }
 

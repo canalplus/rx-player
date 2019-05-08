@@ -43,32 +43,31 @@ import { isIE11 } from "../browser_detection";
 import * as events from "../event_listeners";
 import CustomMediaKeySystemAccess from "./custom_key_system_access";
 
-let requestMediaKeySystemAccess :
-(
-  (keyType : string, config : ICompatMediaKeySystemConfiguration[]) =>
-    Observable<ICompatMediaKeySystemAccess|CustomMediaKeySystemAccess>
-) | null = null;
+let requestMediaKeySystemAccess : null |
+                                  ((keyType : string,
+                                    config : ICompatMediaKeySystemConfiguration[])
+                                      => Observable<ICompatMediaKeySystemAccess |
+                                                    CustomMediaKeySystemAccess>)
+                                = null;
 
-let createSession : (
-  mediaKeys : MediaKeys|ICustomMediaKeys,
-  sessionType : MediaKeySessionType
-) => MediaKeySession|ICustomMediaKeySession = function createMediaKeysSession(
-    mediaKeys: MediaKeys | ICustomMediaKeys,
-    sessionType: MediaKeySessionType
-  ): MediaKeySession | ICustomMediaKeySession {
-    return mediaKeys.createSession(sessionType);
-  };
+function createMediaKeysSession(
+  mediaKeys: MediaKeys | ICustomMediaKeys,
+  sessionType: MediaKeySessionType
+): MediaKeySession | ICustomMediaKeySession {
+  return mediaKeys.createSession(sessionType);
+}
 
-type TypedArray =
-  Int8Array |
-  Int16Array |
-  Int32Array |
-  Uint8Array |
-  Uint16Array |
-  Uint32Array |
-  Uint8ClampedArray |
-  Float32Array |
-  Float64Array;
+let createSession = createMediaKeysSession;
+
+type TypedArray = Int8Array |
+                  Int16Array |
+                  Int32Array |
+                  Uint8Array |
+                  Uint16Array |
+                  Uint32Array |
+                  Uint8ClampedArray |
+                  Float32Array |
+                  Float64Array;
 
 interface ICustomMediaKeyStatusMap {
     readonly size: number;
@@ -103,15 +102,13 @@ interface ICustomMediaKeyStatusMap {
       ) : boolean;
 }
 
-interface IMediaKeySessionEvents {
-  [key : string] : MediaKeyMessageEvent|Event;
-  // "keymessage"
-  // "message"
-  // "keyadded"
-  // "ready"
-  // "keyerror"
-  // "error"
-}
+interface IMediaKeySessionEvents { [key : string] : MediaKeyMessageEvent|Event;
+                                   // "keymessage"
+                                   // "message"
+                                   // "keyadded"
+                                   // "ready"
+                                   // "keyerror"
+                                   /* "error" */ }
 
 export interface ICustomMediaKeySession extends IEventEmitter<IMediaKeySessionEvents> {
   // Attributes
@@ -125,10 +122,11 @@ export interface ICustomMediaKeySession extends IEventEmitter<IMediaKeySessionEv
   onkeystatusesChange? : (evt : Event) => void;
 
   // Functions
-  generateRequest(
-    initDataType: string,
-    initData: ArrayBuffer | TypedArray | DataView | null
-  ): Promise<void>;
+
+  generateRequest(initDataType: string,
+                  initData: ArrayBuffer | TypedArray | DataView | null)
+                 : Promise<void>;
+
   load(sessionId: string) : Promise<boolean>;
   update(response: ArrayBuffer | TypedArray | DataView | null): Promise<void>;
   close() : Promise<void>;
@@ -141,8 +139,7 @@ export interface ICustomMediaKeys {
   setServerCertificate(setServerCertificate : ArrayBuffer|TypedArray) : Promise<void>;
 }
 
-type IMockMediaKeysConstructor =
-  new(ks : string) => ICustomMediaKeys;
+type IMockMediaKeysConstructor = new(ks : string) => ICustomMediaKeys;
 
 // Default CustomMediaKeys implementation
 let CustomMediaKeys : IMockMediaKeysConstructor =
@@ -159,10 +156,12 @@ let CustomMediaKeys : IMockMediaKeysConstructor =
   };
 
 if (navigator.requestMediaKeySystemAccess) {
-  requestMediaKeySystemAccess = (a : string, b : ICompatMediaKeySystemConfiguration[]) =>
-    castToObservable(
-      navigator.requestMediaKeySystemAccess(a, b) as Promise<ICompatMediaKeySystemAccess>
-    );
+  requestMediaKeySystemAccess =
+    (a : string,
+     b : ICompatMediaKeySystemConfiguration[]
+    ) => castToObservable(navigator.requestMediaKeySystemAccess(a, b) as
+                            Promise<ICompatMediaKeySystemAccess>
+                         );
 } else {
 
   type IWrappedUpdateFunction =
@@ -214,25 +213,24 @@ if (navigator.requestMediaKeySystemAccess) {
 
   // This is for Chrome with unprefixed EME api
   if (isOldWebkitMediaElement(HTMLVideoElement.prototype)) {
-    class WebkitMediaKeySession
-    extends EventEmitter<IMediaKeySessionEvents>
-      implements ICustomMediaKeySession
+    class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
+                                implements ICustomMediaKeySession
     {
-      public readonly update : (
-        license : ArrayBuffer,
-        sessionId? : string
-      ) => Promise<void>;
+      public readonly update : (license : ArrayBuffer, sessionId? : string) =>
+                                 Promise<void>;
       public readonly closed: Promise<void>;
       public expiration: number;
       public keyStatuses: ICustomMediaKeyStatusMap;
       public sessionId : string;
 
-      private readonly _vid : HTMLMediaElement|IOldWebkitHTMLMediaElement;
+      private readonly _vid : HTMLMediaElement |
+                              IOldWebkitHTMLMediaElement;
       private readonly _key : string;
       private readonly _closeSession$ : Subject<void>;
 
       constructor(
-        mediaElement : HTMLMediaElement|IOldWebkitHTMLMediaElement,
+        mediaElement : HTMLMediaElement |
+                       IOldWebkitHTMLMediaElement,
         keySystem : string
       ) {
         super();
@@ -246,11 +244,10 @@ if (navigator.requestMediaKeySystemAccess) {
         });
         this.keyStatuses = new Map();
         this.expiration = NaN;
-        observableMerge(
-          events.onKeyMessage$(mediaElement),
-          events.onKeyAdded$(mediaElement),
-          events.onKeyError$(mediaElement)
-        )
+
+        observableMerge(events.onKeyMessage$(mediaElement),
+                        events.onKeyAdded$(mediaElement),
+                        events.onKeyError$(mediaElement))
           .pipe(takeUntil(this._closeSession$))
           .subscribe((evt : Event) => this.trigger(evt.type, evt));
 
@@ -259,8 +256,9 @@ if (navigator.requestMediaKeySystemAccess) {
             throw new Error("impossible to add a new key");
           }
           if (this._key.indexOf("clearkey") >= 0) {
-            const licenseTypedArray = license instanceof ArrayBuffer ?
-              new Uint8Array(license) : license;
+            const licenseTypedArray =
+              license instanceof ArrayBuffer ? new Uint8Array(license) :
+                                               license;
             const json = JSON.parse(bytesToStr(licenseTypedArray));
             const key = strToBytes(atob(json.keys[0].k));
             const kid = strToBytes(atob(json.keys[0].kid));
@@ -327,7 +325,7 @@ if (navigator.requestMediaKeySystemAccess) {
       // get any <video> element from the DOM or create one
       // and try the `canPlayType` method
       const videoElement = document.querySelector("video") ||
-        document.createElement("video");
+                           document.createElement("video");
       if (videoElement && videoElement.canPlayType) {
         return !!(videoElement as any).canPlayType("video/mp4", keyType);
       } else {
@@ -345,26 +343,24 @@ if (navigator.requestMediaKeySystemAccess) {
 
       for (let i = 0; i < keySystemConfigurations.length; i++) {
         const keySystemConfiguration = keySystemConfigurations[i];
-        const {
-          videoCapabilities,
-          audioCapabilities,
-          initDataTypes,
-          sessionTypes,
-          distinctiveIdentifier,
-          persistentState,
-        } = keySystemConfiguration;
+        const { videoCapabilities,
+                audioCapabilities,
+                initDataTypes,
+                sessionTypes,
+                distinctiveIdentifier,
+                persistentState } = keySystemConfiguration;
 
         let supported = true;
-        supported = supported && (
-          !initDataTypes ||
-          !!initDataTypes.filter((initDataType) => initDataType === "cenc")[0]
-        );
-        supported = supported && (
-          !sessionTypes ||
-          sessionTypes
-          .filter((sessionType) => sessionType === "temporary")
-            .length === sessionTypes.length
-        );
+        supported = supported &&
+                    (!initDataTypes ||
+                     !!initDataTypes
+                       .filter((initDataType) => initDataType === "cenc")[0]);
+
+        supported = supported &&
+                    (!sessionTypes ||
+                     sessionTypes
+                       .filter((sessionType) =>
+                         sessionType === "temporary").length === sessionTypes.length);
         supported = supported && (distinctiveIdentifier !== "required");
         supported = supported && (persistentState !== "required");
 
@@ -379,21 +375,18 @@ if (navigator.requestMediaKeySystemAccess) {
           };
 
           return observableOf(
-            new CustomMediaKeySystemAccess(
-              keyType,
-              new CustomMediaKeys(keyType),
-              keySystemConfigurationResponse
-            )
+            new CustomMediaKeySystemAccess(keyType,
+                                           new CustomMediaKeys(keyType),
+                                           keySystemConfigurationResponse)
           );
         }
       }
 
       return observableThrow(undefined);
     };
-  } else if (
-    MediaKeys_ &&
-    MediaKeys_.prototype &&
-    typeof MediaKeys_.isTypeSupported === "function"
+  } else if (MediaKeys_ &&
+             MediaKeys_.prototype &&
+             typeof MediaKeys_.isTypeSupported === "function"
   ) {
 
     requestMediaKeySystemAccess = function(
@@ -407,16 +400,15 @@ if (navigator.requestMediaKeySystemAccess) {
 
       for (let i = 0; i < keySystemConfigurations.length; i++) {
         const keySystemConfiguration = keySystemConfigurations[i];
-        const {
-          videoCapabilities,
-          audioCapabilities,
-          initDataTypes,
-          distinctiveIdentifier,
-        } = keySystemConfiguration;
+        const { videoCapabilities,
+                audioCapabilities,
+                initDataTypes,
+                distinctiveIdentifier } = keySystemConfiguration;
 
         let supported = true;
-        supported = supported && (!initDataTypes ||
-          !!initDataTypes.filter((idt) => idt === "cenc")[0]);
+        supported = supported &&
+                    (!initDataTypes ||
+                     !!initDataTypes.filter((idt) => idt === "cenc")[0]);
         supported = supported && (distinctiveIdentifier !== "required");
 
         if (supported) {
@@ -442,17 +434,14 @@ if (navigator.requestMediaKeySystemAccess) {
       return observableThrow(undefined);
     };
 
-    if (
-      isIE11 &&
-      typeof MediaKeys_.prototype.createSession === "function"
+    if (isIE11 &&
+        typeof MediaKeys_.prototype.createSession === "function"
     ) {
       class IE11MediaKeySession
       extends EventEmitter<IMediaKeySessionEvents>
       implements ICustomMediaKeySession {
-        public readonly update: (
-          license: ArrayBuffer,
-          sessionId?: string
-        ) => Promise<void>;
+        public readonly update: (license: ArrayBuffer,
+                                 sessionId?: string) => Promise<void>;
         public readonly closed: Promise<void>;
         public expiration: number;
         public keyStatuses: ICustomMediaKeyStatusMap;
@@ -480,15 +469,13 @@ if (navigator.requestMediaKeySystemAccess) {
         }
         generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
           return new PPromise((resolve) => {
-            this._ss = (this._mk as any)
-              .createSession("video/mp4", initData) as MediaKeySession;
-            observableMerge(
-              events.onKeyMessage$(this._ss),
-              events.onKeyAdded$(this._ss),
-              events.onKeyError$(this._ss)
-            )
-              .pipe(takeUntil(this._closeSession$))
-              .subscribe((evt: Event) => this.trigger(evt.type, evt));
+            this._ss = (this._mk as any).createSession("video/mp4",
+                                                       initData) as MediaKeySession;
+            observableMerge(events.onKeyMessage$(this._ss),
+                            events.onKeyAdded$(this._ss),
+                            events.onKeyError$(this._ss)
+            ).pipe(takeUntil(this._closeSession$))
+             .subscribe((evt: Event) => this.trigger(evt.type, evt));
             resolve();
           });
         }

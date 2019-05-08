@@ -53,43 +53,25 @@ export interface IPeriodArguments {
  * @class Period
  */
 export default class Period {
-  /**
-   * ID uniquely identifying the Period in the Manifest.
-   * @type {string}
-   */
+  // ID uniquely identifying the Period in the Manifest.
   public readonly id : string;
 
-  /**
-   * Every 'Adaptation' in that Period, per type of Adaptation.
-   * @type {Object}
-   */
+  // Every 'Adaptation' in that Period, per type of Adaptation.
   public adaptations : IManifestAdaptations;
 
-  /**
-   * Duration of this Period, in seconds.
-   * `undefined` for still-running Periods.
-   * @type {number|undefined}
-   */
+  // Duration of this Period, in seconds.
+  // `undefined` for still-running Periods.
   public duration? : number;
 
-  /**
-   * Absolute start time of the Period, in seconds.
-   * @type {number}
-   */
+  // Absolute start time of the Period, in seconds.
   public start : number;
 
-  /**
-   * Absolute end time of the Period, in seconds.
-   * `undefined` for still-running Periods.
-   * @type {number|undefined}
-   */
+  // Absolute end time of the Period, in seconds.
+  // `undefined` for still-running Periods.
   public end? : number;
 
-  /**
-   * Array containing every errors that happened when the Period has been
-   * created, in the order they have happened.
-   * @type {Array.<Error>}
-   */
+  // Array containing every errors that happened when the Period has been
+  // created, in the order they have happened.
   public readonly parsingErrors : Array<Error|ICustomError>;
 
   /**
@@ -97,10 +79,7 @@ export default class Period {
    * @param {Object} args
    * @param {function|undefined} [representationFilter]
    */
-  constructor(
-    args : IPeriodArguments,
-    representationFilter? : IRepresentationFilter
-  ) {
+  constructor(args : IPeriodArguments, representationFilter? : IRepresentationFilter) {
     this.parsingErrors = [];
     this.id = args.id;
     this.adaptations = (Object.keys(args.adaptations) as IAdaptationType[])
@@ -113,10 +92,11 @@ export default class Period {
           .filter((adaptation) => {
             if (!arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, adaptation.type)) {
               log.info("not supported adaptation type", adaptation.type);
-              const error =
-                new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE",
-                  "An Adaptation has an unknown and unsupported type: " +
-                  adaptation.type, false);
+              const error = new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE",
+                                           "An Adaptation has an unknown and " +
+                                           "unsupported type: " +
+                                           adaptation.type,
+                                           false);
               this.parsingErrors.push(error);
               return false;
             } else {
@@ -129,13 +109,13 @@ export default class Period {
             return newAdaptation;
           })
           .filter((adaptation) => adaptation.representations.length);
-        if (
-          filteredAdaptations.length === 0 &&
-          adaptationsForType.length > 0 &&
-          (type === "video" || type === "audio")
+        if (filteredAdaptations.length === 0 &&
+            adaptationsForType.length > 0 &&
+            (type === "video" || type === "audio")
         ) {
-          throw new MediaError(
-            "MANIFEST_PARSE_ERROR", "No supported " + type + " adaptations", true);
+          throw new MediaError("MANIFEST_PARSE_ERROR",
+                               "No supported " + type + " adaptations",
+                               true);
         }
 
         if (filteredAdaptations.length) {
@@ -145,8 +125,9 @@ export default class Period {
       }, {});
 
     if (!this.adaptations.video && !this.adaptations.audio) {
-      throw new MediaError(
-        "MANIFEST_PARSE_ERROR", "No supported audio and video tracks.", true);
+      throw new MediaError("MANIFEST_PARSE_ERROR",
+                           "No supported audio and video tracks.",
+                           true);
     }
 
     this.duration = args.duration;
@@ -167,7 +148,8 @@ export default class Period {
     return objectValues(adaptationsByType)
       .reduce<Adaptation[]>((acc, adaptations) =>
         // Note: the second case cannot happen. TS is just being dumb here
-        adaptations != null ? acc.concat(adaptations) : acc,
+        adaptations != null ? acc.concat(adaptations) :
+                              acc,
         []
     );
   }

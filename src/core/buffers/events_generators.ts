@@ -44,19 +44,13 @@ import {
 
 const EVENTS = {
   activeBuffer(bufferType: IBufferType) : IBufferStateActive {
-    return {
-      type: "active-buffer",
-      value: { bufferType },
-    };
+    return { type: "active-buffer",
+             value: { bufferType } };
   },
 
   activePeriodChanged(period : Period) : IActivePeriodChangedEvent {
-    return {
-      type : "activePeriodChanged",
-      value : {
-        period,
-      },
-    };
+    return { type : "activePeriodChanged",
+             value : { period } };
   },
 
   adaptationChange(
@@ -64,14 +58,10 @@ const EVENTS = {
     adaptation : Adaptation|null,
     period : Period
   ) : IAdaptationChangeEvent {
-    return {
-      type: "adaptationChange",
-      value : {
-        type: bufferType,
-        adaptation,
-        period,
-      },
-    };
+    return { type: "adaptationChange",
+             value : { type: bufferType,
+                       adaptation,
+                       period } };
   },
 
   addedSegment<T>(
@@ -79,63 +69,44 @@ const EVENTS = {
     segment : ISegment,
     segmentData : T
   ) : IBufferEventAddedSegment<T> {
-    return {
-      type : "added-segment",
-      value : { bufferType, segment, segmentData },
-    };
+    return { type : "added-segment",
+             value : { bufferType, segment, segmentData } };
   },
 
   bitrateEstimationChange(
     type : IBufferType,
     bitrate : number|undefined
   ) : IBitrateEstimationChangeEvent {
-    return {
-      type: "bitrateEstimationChange",
-      value: {
-        type,
-        bitrate,
-      },
-    };
+    return { type: "bitrateEstimationChange",
+             value: { type, bitrate } };
   },
 
   bufferComplete(bufferType: IBufferType) : ICompletedBufferEvent {
-    return {
-      type: "complete-buffer",
-      value: {
-        type: bufferType,
-      },
-    };
+    return { type: "complete-buffer",
+             value: { type: bufferType } };
   },
 
   discontinuityEncountered(
     bufferType : IBufferType,
     nextTime : number
   ) : IBufferNeedsDiscontinuitySeek {
-    return {
-      type : "discontinuity-encountered",
-      value : { bufferType, nextTime },
-    };
+    return { type : "discontinuity-encountered",
+             value : { bufferType, nextTime } };
   },
 
   endOfStream() : IEndOfStreamEvent {
-    return {
-      type: "end-of-stream",
-      value: undefined,
-    };
+    return { type: "end-of-stream",
+             value: undefined };
   },
 
   fullBuffer(bufferType : IBufferType) : IBufferStateFull {
-    return {
-      type: "full-buffer",
-      value: { bufferType },
-    };
+    return { type: "full-buffer",
+             value: { bufferType } };
   },
 
   needsManifestRefresh(bufferType : IBufferType) : IBufferNeedsManifestRefresh {
-    return {
-      type : "needs-manifest-refresh",
-      value : { bufferType },
-    };
+    return { type : "needs-manifest-refresh",
+             value : { bufferType } };
   },
 
   needsMediaSourceReload() : INeedsMediaSourceReload {
@@ -147,27 +118,16 @@ const EVENTS = {
     period : Period,
     adaptation$ : Subject<Adaptation|null>
   ) : IPeriodBufferReadyEvent {
-    return {
-      type: "periodBufferReady",
-      value: {
-        type,
-        period,
-        adaptation$,
-      },
-    };
+    return { type: "periodBufferReady",
+             value: { type, period, adaptation$ } };
   },
 
   periodBufferCleared(
     type : IBufferType,
     period : Period
   ) : IPeriodBufferClearedEvent {
-    return {
-      type: "periodBufferCleared",
-      value: {
-        type,
-        period,
-      },
-    };
+    return { type: "periodBufferCleared",
+             value: { type, period } };
   },
 
   representationChange(
@@ -175,28 +135,18 @@ const EVENTS = {
     period : Period,
     representation : Representation
   ) : IRepresentationChangeEvent {
-    return {
-      type: "representationChange",
-      value: {
-        type,
-        period,
-        representation,
-      },
-    };
+    return { type: "representationChange",
+             value: { type, period, representation } };
   },
 
   resumeStream() : IResumeStreamEvent {
-    return {
-      type: "resume-stream",
-      value: undefined,
-    };
+    return { type: "resume-stream",
+             value: undefined };
   },
 
   warning(value : Error | ICustomError) : IBufferWarningEvent {
-    return {
-      type: "warning",
-      value,
-    };
+    return { type: "warning",
+             value };
   },
 };
 

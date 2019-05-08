@@ -20,16 +20,13 @@ import {
   of as observableOf,
 } from "rxjs";
 
-interface IObservableLike<T> {
-  subscribe(
-    next : (i: T) => void,
-    error : (e: any) => void,
-    complete : () => void
-  ) : ({
-    dispose? : () => void;
-    unsubscribe? : () => void;
-  }|void);
-}
+interface IObservableLike<T> { subscribe(next : (i: T) => void,
+                                         error : (e: any) => void,
+                                         complete : () => void) :
+                                 (
+                                   { dispose? : () => void;
+                                     unsubscribe? : () => void; } |
+                                   void); }
 
 /**
  * Try to cast the given value into an observable.
@@ -48,12 +45,9 @@ function castToObservable<T>(value? : any) : Observable<T> {
   if (value && typeof value.subscribe === "function") {
     const valObsLike = value as IObservableLike<T>;
     return new Observable((obs) => {
-      const sub = valObsLike.subscribe(
-        (val : T)   => { obs.next(val); },
-        (err : any) => { obs.error(err); },
-        ()          => { obs.complete(); }
-      );
-
+      const sub = valObsLike.subscribe((val : T)   => { obs.next(val); },
+                                       (err : unknown) => { obs.error(err); },
+                                       () => { obs.complete(); });
       return () => {
         if (sub && sub.dispose) {
           sub.dispose();

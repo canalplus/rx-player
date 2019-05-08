@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import PPromise from "../../utils/promise";
 
 // XXX TODO remove when the issue is resolved
 // https://github.com/Microsoft/TypeScript/issues/19189
-import PPromise from "../../utils/promise";
 import { ICompatMediaKeySystemConfiguration } from "../browser_compatibility_types";
 import { ICustomMediaKeys } from "./custom_media_keys";
 
+// MediaKeySystemAccess implementation
 export interface ICustomMediaKeySystemAccess {
   readonly keySystem : string;
   getConfiguration() : ICompatMediaKeySystemConfiguration;
@@ -34,9 +35,11 @@ export interface ICustomMediaKeySystemAccess {
  */
 export default class CustomMediaKeySystemAccess implements ICustomMediaKeySystemAccess {
   /**
-   * @param {string} _keyType
-   * @param {Object} _mediaKeys
-   * @param {Object} _configuration
+   * @param {string} _keyType - type of key system (e.g. "widevine" or
+   * "com.widevine.alpha").
+   * @param {Object} _mediaKeys - MediaKeys implementation
+   * @param {Object} _configuration - Configuration accepted for this
+   * MediaKeySystemAccess.
    */
   constructor(
     private readonly _keyType : string,
@@ -45,21 +48,23 @@ export default class CustomMediaKeySystemAccess implements ICustomMediaKeySystem
   ) {}
 
   /**
-   * @returns {string}
+   * @returns {string} - current key system type (e.g. "widevine" or
+   * "com.widevine.alpha").
    */
   get keySystem() : string {
     return this._keyType;
   }
 
   /**
-   * @returns {Promise}
+   * @returns {Promise.<Object>} - Promise wrapping the MediaKeys for this
+   * MediaKeySystemAccess. Never rejects.
    */
   public createMediaKeys() : Promise<ICustomMediaKeys|MediaKeys> {
     return new PPromise((res) => res(this._mediaKeys));
   }
 
   /**
-   * @returns {Object}
+   * @returns {Object} - Configuration accepted for this MediaKeySystemAccess.
    */
   public getConfiguration() : ICompatMediaKeySystemConfiguration {
     return this._configuration;

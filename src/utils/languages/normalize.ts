@@ -17,26 +17,19 @@
 import ISO_MAP_1_TO_3 from "./ISO_639-1_to_ISO_639-3";
 import ISO_MAP_2_TO_3 from "./ISO_639-2_to_ISO_639-3";
 
-interface IMinimalAudioTrackObject {
-  language: string;
-  audioDescription?: boolean;
-}
+interface IMinimalAudioTrackObject { language: string;
+                                     audioDescription?: boolean; }
 
-interface IMinimalTextTrackObject {
-  language: string;
-  closedCaption?: boolean;
-}
+interface IMinimalTextTrackObject { language: string;
+                                    closedCaption?: boolean; }
 
-interface INormalizedAudioTrackObject extends IMinimalAudioTrackObject {
-  normalized: string;
-  audioDescription : boolean;
-}
+interface INormalizedAudioTrackObject
+          extends IMinimalAudioTrackObject { normalized: string;
+                                             audioDescription : boolean; }
 
-interface INormalizedTextTrackObject extends IMinimalTextTrackObject {
-  normalized: string;
-  closedCaption : boolean;
-}
-
+interface INormalizedTextTrackObject
+          extends IMinimalTextTrackObject { normalized: string;
+                                            closedCaption : boolean; }
 /**
  * Normalize language given.
  * Basically:
@@ -102,11 +95,9 @@ function normalizeTextTrack(
       closedCaption = !!_language.closedCaption;
     }
 
-    return {
-      language,
-      closedCaption,
-      normalized: normalizeLanguage(language),
-    };
+    return { language,
+             closedCaption,
+             normalized: normalizeLanguage(language) };
   }
 
   return _language;
@@ -136,11 +127,9 @@ function normalizeAudioTrack(
       audioDescription = !!_language.audioDescription;
     }
 
-    return {
-      language,
-      audioDescription,
-      normalized: normalizeLanguage(language),
-    };
+    return { language,
+             audioDescription,
+             normalized: normalizeLanguage(language) };
   }
 
   return _language;

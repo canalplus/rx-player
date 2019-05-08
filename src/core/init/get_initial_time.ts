@@ -19,13 +19,11 @@ import Manifest from "../../manifest";
 
 const { DEFAULT_LIVE_GAP } = config;
 
-export interface IInitialTimeOptions {
-  position? : number;
-  wallClockTime? : number;
-  fromFirstPosition? : number;
-  fromLastPosition? : number;
-  percentage? : number;
-}
+export interface IInitialTimeOptions { position? : number;
+                                       wallClockTime? : number;
+                                       fromFirstPosition? : number;
+                                       fromLastPosition? : number;
+                                       percentage? : number; }
 
 /**
  * Returns the calculated initial time for the content described by the given
@@ -57,13 +55,13 @@ export default function getInitialTime(
     }
     else if (startAt.fromFirstPosition != null) {
       const { fromFirstPosition } = startAt;
-      return fromFirstPosition <= 0 ?
-        min : Math.min(min + fromFirstPosition, max);
+      return fromFirstPosition <= 0 ? min :
+                                      Math.min(max, min + fromFirstPosition);
     }
     else if (startAt.fromLastPosition != null) {
       const { fromLastPosition } = startAt;
-      return fromLastPosition >= 0 ?
-        max : Math.max(min, max + fromLastPosition);
+      return fromLastPosition >= 0 ? max :
+                                     Math.max(min, max + fromLastPosition);
     } else if (startAt.percentage != null) {
       const { percentage } = startAt;
       if (percentage > 100) {
@@ -79,8 +77,8 @@ export default function getInitialTime(
 
   if (manifest.isLive) {
     const sgp = manifest.suggestedPresentationDelay;
-    return manifest.getMaximumPosition() -
-      (sgp == null ? DEFAULT_LIVE_GAP : sgp);
+    return manifest.getMaximumPosition() - (sgp == null ? DEFAULT_LIVE_GAP :
+                                                          sgp);
   }
 
   return manifest.getMinimumPosition();

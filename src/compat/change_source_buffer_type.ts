@@ -17,23 +17,21 @@
 import log from "../log";
 import { IEventEmitter } from "../utils/event_emitter";
 
-interface ICustomSourceBufferEvents {
-  updatestart : Event|undefined;
-  update : Event|undefined;
-  updateend : Event|undefined;
-  error : Event;
-}
+interface ICustomSourceBufferEvents { updatestart : Event|undefined;
+                                      update : Event|undefined;
+                                      updateend : Event|undefined;
+                                      error : Event; }
 
 export interface ICustomSourceBuffer<T>
   extends IEventEmitter<ICustomSourceBufferEvents> {
-  buffered : TimeRanges;
-  changeType? : (type: string) => void;
-  updating : boolean;
-  timestampOffset : number;
-  appendBuffer(data : T) : void;
-  remove(from : number, to : number) : void;
-  abort() : void;
-}
+    buffered : TimeRanges;
+    changeType? : (type: string) => void;
+    updating : boolean;
+    timestampOffset : number;
+    appendBuffer(data : T) : void;
+    remove(from : number, to : number) : void;
+    abort() : void;
+  }
 
 /**
  * If the changeType MSE API is implemented, update the current codec of the

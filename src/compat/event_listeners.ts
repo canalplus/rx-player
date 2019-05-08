@@ -87,9 +87,8 @@ function findSupportedEvent(
  */
 function eventPrefixed(eventNames : string[], prefixes? : string[]) : string[] {
   return eventNames.reduce((parent : string[], name : string) =>
-    parent
-      .concat((prefixes || BROWSER_PREFIXES)
-      .map((p) => p + name)), []);
+    parent.concat((prefixes || BROWSER_PREFIXES)
+          .map((p) => p + name)), []);
 }
 
 export interface IEventEmitterLike {
@@ -97,10 +96,9 @@ export interface IEventEmitterLike {
   removeEventListener: (eventName: string, handler: () => void) => void;
 }
 
-export type IEventTargetLike =
-  HTMLElement |
-  IEventEmitterLike |
-  IEventEmitter<any>;
+export type IEventTargetLike = HTMLElement |
+                               IEventEmitterLike |
+                               IEventEmitter<any>;
 
 /**
  * @param {Array.<string>} eventNames
@@ -125,11 +123,9 @@ function compatibleListener<T extends Event>(
         return observableFromEvent(element, mem) as Observable<T>;
       } else {
         if (__DEV__) {
-          /* tslint:disable:max-line-length */
-          log.warn(
-            `compat: element <${element.tagName}> does not support any of these events: ${prefixedEvents.join(", ")}`
-            /* tslint:enable:max-line-length */
-          );
+          log.warn(`compat: element ${element.tagName}` +
+                   " does not support any of these events: " +
+                   prefixedEvents.join(", "));
         }
         return NEVER;
       }
@@ -137,9 +133,8 @@ function compatibleListener<T extends Event>(
 
     // otherwise, we need to listen to all the events
     // and merge them into one observable sequence
-    return observableMerge(
-      ...prefixedEvents
-        .map(eventName => observableFromEvent(element, eventName))
+    return observableMerge(...prefixedEvents.map(eventName =>
+                             observableFromEvent(element, eventName))
     );
   };
 }
@@ -151,7 +146,7 @@ function compatibleListener<T extends Event>(
  * @returns {Observable}
  */
 function visibilityChange() : Observable<boolean> {
-  let prefix;
+  let prefix : string|undefined;
 
   const doc = document as ICompatDocument;
   if (doc.hidden != null) {
@@ -164,9 +159,10 @@ function visibilityChange() : Observable<boolean> {
     prefix = "webkit";
   }
 
-  const hidden = prefix ? prefix + "Hidden" : "hidden";
-  const visibilityChangeEvent = prefix + "visibilitychange";
-
+  const hidden = prefix ? prefix + "Hidden" :
+                          "hidden";
+  const visibilityChangeEvent = prefix ? prefix + "visibilitychange" :
+                                         "visibilitychange";
   return observableFromEvent(document, visibilityChangeEvent)
     .pipe(map(() => document[hidden as "hidden"]));
 }
@@ -191,7 +187,7 @@ const isHidden$ = visibilityChange()
 /**
  * @returns {Observable}
  */
-function isInBackground$() {
+function isInBackground$() : Observable<boolean> {
   return observableMerge(isVisible$, isHidden$)
     .pipe(startWith(false));
 }
@@ -257,10 +253,8 @@ const onFullscreenChange$ = compatibleListener(
  * @returns {Observable}
  */
 const onPlayPause$ = (mediaElement : HTMLMediaElement) : Observable<Event> =>
-  observableMerge(
-    compatibleListener(["play"])(mediaElement),
-    compatibleListener(["pause"])(mediaElement)
-  );
+  observableMerge(compatibleListener(["play"])(mediaElement),
+                  compatibleListener(["pause"])(mediaElement));
 
 /**
  * @param {HTMLMediaElement} mediaElement
@@ -268,10 +262,8 @@ const onPlayPause$ = (mediaElement : HTMLMediaElement) : Observable<Event> =>
  */
 const onTextTrackChanges$ =
   (textTrackList : TextTrackList) : Observable<TrackEvent> =>
-    observableMerge(
-      compatibleListener<TrackEvent>(["addtrack"])(textTrackList),
-      compatibleListener<TrackEvent>(["removetrack"])(textTrackList)
-    );
+    observableMerge(compatibleListener<TrackEvent>(["addtrack"])(textTrackList),
+                    compatibleListener<TrackEvent>(["removetrack"])(textTrackList));
 
 /**
  * @param {MediaSource} mediaSource

@@ -16,12 +16,11 @@
 
 import noop from "./noop";
 
-export type ILoggerLevel =
-  "NONE" |
-  "ERROR" |
-  "WARNING" |
-  "INFO" |
-  "DEBUG";
+export type ILoggerLevel = "NONE" |
+                           "ERROR" |
+                           "WARNING" |
+                           "INFO" |
+                           "DEBUG";
 
 type tConsoleFn = (...args : unknown[]) => void;
 
@@ -44,13 +43,11 @@ export default class Logger {
     this.warn = noop;
     this.info = noop;
     this.debug = noop;
-    this.LEVELS = {
-      NONE: 0,
-      ERROR: 1,
-      WARNING: 2,
-      INFO: 3,
-      DEBUG: 4,
-    };
+    this.LEVELS = { NONE: 0,
+                    ERROR: 1,
+                    WARNING: 2,
+                    INFO: 3,
+                    DEBUG: 4 };
     this.currentLevel = DEFAULT_LOG_LEVEL;
   }
 
@@ -70,14 +67,14 @@ export default class Logger {
 
     /* tslint:disable no-invalid-this */
     /* tslint:disable no-console */
-    this.error = (level >= this.LEVELS.ERROR) ?
-      console.error.bind(console) : noop;
-    this.warn = (level >= this.LEVELS.WARNING) ?
-      console.warn.bind(console) : noop;
-    this.info = (level >= this.LEVELS.INFO) ?
-      console.info.bind(console) : noop;
-    this.debug = (level >= this.LEVELS.DEBUG) ?
-      console.log.bind(console) : noop;
+    this.error = (level >= this.LEVELS.ERROR) ? console.error.bind(console) :
+                                                noop;
+    this.warn = (level >= this.LEVELS.WARNING) ? console.warn.bind(console) :
+                                                 noop;
+    this.info = (level >= this.LEVELS.INFO) ? console.info.bind(console) :
+                                              noop;
+    this.debug = (level >= this.LEVELS.DEBUG) ? console.log.bind(console) :
+                                                noop;
     /* tslint:enable no-console */
     /* tslint:enable no-invalid-this */
   }

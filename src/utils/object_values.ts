@@ -23,8 +23,8 @@ function objectValues<T>(o : { [s: string] : T } | ArrayLike<T>) : T[] {
 }
 
 /* tslint:disable no-unbound-method */
-export default typeof Object.values === "function" ?
-  Object.values : objectValues;
+export default typeof Object.values === "function" ? Object.values :
+                                                     objectValues;
 /* tslint:enable no-unbound-method */
 
 export {

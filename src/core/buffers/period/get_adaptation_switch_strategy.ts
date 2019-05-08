@@ -57,40 +57,39 @@ export default function getAdaptationSwitchStrategy(
   }
 
   const { currentTime } = clockTick;
-  if (
-    bufferType === "video" &&
-    clockTick.readyState > 1 &&
-    isTimeInRange({ start, end }, currentTime)
+  if (bufferType === "video" &&
+      clockTick.readyState > 1 &&
+      isTimeInRange({ start, end }, currentTime)
   ) {
     return { type: "needs-reload", value: undefined };
   }
 
   const paddingBefore = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].before || 0;
   const paddingAfter = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].after || 0;
-  if (
-    !paddingAfter && !paddingBefore ||
-    (currentTime - paddingBefore) >= end ||
-    (currentTime + paddingAfter) <= start
+
+  if (!paddingAfter && !paddingBefore ||
+      (currentTime - paddingBefore) >= end ||
+      (currentTime + paddingAfter) <= start
   ) {
-    return { type: "clean-buffer", value: [{ start, end }]};
+    return { type: "clean-buffer",
+             value: [{ start, end }]};
   }
+
   if (currentTime - paddingBefore <= start) {
-    return {
-      type: "clean-buffer",
-      value: [{ start: currentTime + paddingAfter, end }],
-    };
+    return { type: "clean-buffer",
+             value: [{ start: currentTime + paddingAfter,
+                       end }] };
   }
+
   if (currentTime + paddingAfter >= end) {
-    return {
-      type: "clean-buffer",
-      value: [{ start, end: currentTime - paddingBefore }],
-    };
+    return { type: "clean-buffer",
+             value: [{ start,
+                       end: currentTime - paddingBefore }] };
   }
-  return {
-    type: "clean-buffer",
-    value: [
-      { start, end: currentTime - paddingBefore },
-      { start: currentTime + paddingAfter, end },
-    ],
-  };
+
+  return { type: "clean-buffer",
+           value: [ { start,
+                      end: currentTime - paddingBefore },
+                    { start: currentTime + paddingAfter,
+                      end } ] };
 }

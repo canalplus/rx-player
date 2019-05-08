@@ -37,8 +37,8 @@ import { ICustomMediaKeySession } from "./custom_media_keys";
  *
  * If the initData is unrecognized or if a CENC PSSH is not found, this function
  * throws.
- * @param {Uint8Array} initData
- * @returns {Uint8Array}
+ * @param {Uint8Array} initData - Initialization data you want to patch
+ * @returns {Uint8Array} - Initialization data, patched
  */
 export function patchInitData(initData : Uint8Array) : Uint8Array {
   const initialLength = initData.byteLength;
@@ -48,9 +48,8 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
 
   let offset = 0;
   while (offset < initData.length) {
-    if (
-      initData.length < offset + 8 ||
-      be4toi(initData, offset + 4) !== PSSH_TO_INTEGER
+    if (initData.length < offset + 8 ||
+        be4toi(initData, offset + 4) !== PSSH_TO_INTEGER
     ) {
       log.warn("Compat: unrecognized initialization data. Cannot patch it.");
       throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
@@ -63,24 +62,23 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
     }
 
     const currentPSSH = initData.subarray(offset, offset + len);
-    if (
-      // yep
-      initData[offset + 12] === 0x10 &&
-      initData[offset + 13] === 0x77 &&
-      initData[offset + 14] === 0xef &&
-      initData[offset + 15] === 0xec &&
-      initData[offset + 16] === 0xc0 &&
-      initData[offset + 17] === 0xb2 &&
-      initData[offset + 18] === 0x4d &&
-      initData[offset + 19] === 0x02 &&
-      initData[offset + 20] === 0xac &&
-      initData[offset + 21] === 0xe3 &&
-      initData[offset + 22] === 0x3c &&
-      initData[offset + 23] === 0x1e &&
-      initData[offset + 24] === 0x52 &&
-      initData[offset + 25] === 0xe2 &&
-      initData[offset + 26] === 0xfb &&
-      initData[offset + 27] === 0x4b
+    // yep
+    if (initData[offset + 12] === 0x10 &&
+        initData[offset + 13] === 0x77 &&
+        initData[offset + 14] === 0xef &&
+        initData[offset + 15] === 0xec &&
+        initData[offset + 16] === 0xc0 &&
+        initData[offset + 17] === 0xb2 &&
+        initData[offset + 18] === 0x4d &&
+        initData[offset + 19] === 0x02 &&
+        initData[offset + 20] === 0xac &&
+        initData[offset + 21] === 0xe3 &&
+        initData[offset + 22] === 0x3c &&
+        initData[offset + 23] === 0x1e &&
+        initData[offset + 24] === 0x52 &&
+        initData[offset + 25] === 0xe2 &&
+        initData[offset + 26] === 0xfb &&
+        initData[offset + 27] === 0x4b
     ) {
       log.info("Compat: CENC PSSH found.");
       cencs = concat(cencs, currentPSSH);
@@ -104,11 +102,15 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
 
 /**
  * Generate a request from session.
- * @param {MediaKeySession} session
- * @param {Uint8Array} initData
- * @param {string} initDataType
- * @param {string} sessionType
- * @returns {Observable}
+ * @param {MediaKeySession} session - MediaKeySession on which the request will
+ * be done.
+ * @param {Uint8Array} initData - Initialization data given e.g. by the
+ * "encrypted" event for the corresponding request.
+ * @param {string} initDataType - Initialization data type given e.g. by the
+ * "encrypted" event for the corresponding request.
+ * @param {string} sessionType - Type of session you want to generate. Consult
+ * EME Specification for more information on session types.
+ * @returns {Observable} - Emit when done. Errors if fails.
  */
 export default function generateKeyRequest(
   session: MediaKeySession|ICustomMediaKeySession,
@@ -127,8 +129,7 @@ export default function generateKeyRequest(
     } else {
       patchedInit = initData;
     }
-    return castToObservable(
-      session.generateRequest(initDataType || "", patchedInit)
-    );
+    return castToObservable(session.generateRequest(initDataType || "",
+                                                    patchedInit));
   });
 }

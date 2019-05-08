@@ -21,64 +21,48 @@ import { IRepresentationChangeEvent } from "../buffers";
 import { IStallingItem } from "./get_stalled_events";
 
 // Object emitted when the clock ticks
-export interface IInitClockTick {
-  currentTime : number;
-  buffered : TimeRanges;
-  duration : number;
-  bufferGap : number;
-  state : string;
-  playbackRate : number;
-  currentRange : {
-    start : number;
-      end : number;
-  } | null;
-  readyState : number;
-  paused : boolean;
-  stalled : {
-    reason : "seeking" | "not-ready" | "buffering";
-    timestamp : number;
-  } | null;
-  seeking : boolean;
-}
+export interface IInitClockTick { currentTime : number;
+                                  buffered : TimeRanges;
+                                  duration : number;
+                                  bufferGap : number;
+                                  state : string;
+                                  playbackRate : number;
+                                  currentRange : { start : number;
+                                                   end : number; } |
+                                                 null;
+                                  readyState : number;
+                                  paused : boolean;
+                                  stalled : { reason : "seeking" |
+                                                       "not-ready" |
+                                                       "buffering";
+                                              timestamp : number; } |
+                                            null;
+                                  seeking : boolean; }
 
 // The manifest has been downloaded and parsed for the first time
-export interface IManifestReadyEvent {
-  type : "manifestReady";
-  value : {
-    abrManager : ABRManager;
-    manifest : Manifest;
-  };
-}
+export interface IManifestReadyEvent { type : "manifestReady";
+                                       value : { abrManager : ABRManager;
+                                                 manifest : Manifest; }; }
 
 // A minor error happened
-export interface IWarningEvent {
-  type : "warning";
-  value : Error|ICustomError;
-}
+export interface IWarningEvent { type : "warning";
+                                 value : Error | ICustomError; }
 
-export interface IReloadingMediaSourceEvent {
-  type: "reloading-media-source";
-  value: undefined;
-}
+export interface IReloadingMediaSourceEvent { type: "reloading-media-source";
+                                              value: undefined; }
 
 // The current playback rate changed.
 // Note: it can be a change wanted by the user or even a manual `0` speed
 // setting to build a buffer.
-export interface ISpeedChangedEvent {
-  type : "speedChanged";
-  value : number;
-}
+export interface ISpeedChangedEvent { type : "speedChanged";
+                                      value : number; }
 
 // The player stalled, leading to buffering.
-export interface IStalledEvent {
-  type : "stalled";
-  value : IStallingItem|null;
-}
+export interface IStalledEvent { type : "stalled";
+                                 value : IStallingItem|null; }
 
 // The content loaded
-export interface ILoadedEvent {
-  type : "loaded";
-  value : true;
-}
+export interface ILoadedEvent { type : "loaded";
+                                value : true; }
 
 export { IRepresentationChangeEvent };

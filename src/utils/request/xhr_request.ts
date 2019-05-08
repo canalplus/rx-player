@@ -23,41 +23,33 @@ const { DEFAULT_REQUEST_TIMEOUT } = config;
 const DEFAULT_RESPONSE_TYPE : XMLHttpRequestResponseType = "json";
 
 // Interface for "progress" events
-export interface IRequestProgress {
-  type : "progress";
-  value : {
-    currentTime : number;
-    duration : number;
-    size : number;
-    sendingTime : number;
-    url : string;
-    totalSize? : number;
-  };
+export interface IRequestProgress { type : "progress";
+                                    value : { currentTime : number;
+                                              duration : number;
+                                              size : number;
+                                              sendingTime : number;
+                                              url : string;
+                                              totalSize? : number; };
 }
 
 // Interface for "response" events
-export interface IRequestResponse<T, U> {
-  type : "response";
-  value : {
-    duration : number;
-    receivedTime : number;
-    responseData : T;
-    responseType : U;
-    sendingTime : number;
-    size : number;
-    status : number;
-    url : string;
-  };
-}
+export interface IRequestResponse<T, U> { type : "response";
+                                          value : { duration : number;
+                                                    receivedTime : number;
+                                                    responseData : T;
+                                                    responseType : U;
+                                                    sendingTime : number;
+                                                    size : number;
+                                                    status : number;
+                                                    url : string; }; }
 
 // Arguments for the "request" utils
-export interface IRequestOptions<T, U> {
-  url : string;
-  headers? : { [ header: string ] : string }|null;
-  responseType? : T;
-  timeout? : number;
-  sendProgressEvents? : U;
-}
+export interface IRequestOptions<T, U> { url : string;
+                                         headers? : { [ header: string ] : string } |
+                                                    null;
+                                         responseType? : T;
+                                         timeout? : number;
+                                         sendProgressEvents? : U; }
 
 /**
  * @param {string} data
@@ -154,64 +146,69 @@ function toJSONForIE(data : string) : unknown|null {
  */
 
 // overloading to the max
-function request(options : IRequestOptions<undefined|null|""|"text", false|undefined>) :
-  Observable<IRequestResponse<string, "text">>;
-function request(options :
-  IRequestOptions<undefined|null|""|"text", true>
-) : Observable<IRequestResponse<string, "text">|IRequestProgress>;
+function request(options : IRequestOptions<undefined|null|""|"text", false|undefined>)
+                : Observable<IRequestResponse<string, "text">>;
+function request(options : IRequestOptions<undefined|null|""|"text", true>)
+                : Observable<IRequestResponse<string, "text"> |
+                             IRequestProgress>;
 
-function request(options : IRequestOptions<"arraybuffer", false|undefined>) :
-  Observable<IRequestResponse<ArrayBuffer, "arraybuffer">>;
-function request(options : IRequestOptions<"arraybuffer", true>) :
-  Observable<IRequestResponse<ArrayBuffer, "arraybuffer">|IRequestProgress>;
+function request(options : IRequestOptions<"arraybuffer", false|undefined>)
+                : Observable<IRequestResponse<ArrayBuffer, "arraybuffer">>;
+function request(options : IRequestOptions<"arraybuffer", true>)
+                : Observable<IRequestResponse<ArrayBuffer, "arraybuffer"> |
+                             IRequestProgress>;
 
-function request(options : IRequestOptions<"document", false|undefined>) :
-  Observable<IRequestResponse<Document, "document">>;
-function request(options : IRequestOptions<"document", true>) :
-  Observable<IRequestResponse<Document, "document">|IRequestProgress>;
+function request(options : IRequestOptions<"document", false|undefined>)
+                : Observable<IRequestResponse<Document, "document">>;
+function request(options : IRequestOptions<"document", true>)
+                : Observable<IRequestResponse<Document, "document"> |
+                             IRequestProgress>;
 
-function request(options : IRequestOptions<"json", false|undefined>) :
-  Observable<IRequestResponse<object, "json">>;
-function request(options : IRequestOptions<"json", true>) :
-  Observable<IRequestResponse<object, "json">|IRequestProgress>;
+function request(options : IRequestOptions<"json", false|undefined>)
+                : Observable<IRequestResponse<object, "json">>;
+function request(options : IRequestOptions<"json", true>)
+                : Observable<IRequestResponse<object, "json"> |
+                             IRequestProgress>;
 
-function request(options : IRequestOptions<"blob", false|undefined>) :
-  Observable<IRequestResponse<Blob, "blob">>;
-function request(options : IRequestOptions<"blob", true>) :
-  Observable<IRequestResponse<Blob, "blob">|IRequestProgress>;
+function request(options : IRequestOptions<"blob", false|undefined>)
+                : Observable<IRequestResponse<Blob, "blob">>;
+function request(options : IRequestOptions<"blob", true>)
+                : Observable<IRequestResponse<Blob, "blob"> |
+                             IRequestProgress>;
 
 function request<T>(
-  options : IRequestOptions<XMLHttpRequestResponseType|null|undefined, false|undefined>
+  options : IRequestOptions<XMLHttpRequestResponseType | null | undefined,
+                            false | undefined>
 ) : Observable<IRequestResponse<T, XMLHttpRequestResponseType>>;
 function request<T>(
-  options : IRequestOptions<XMLHttpRequestResponseType|null|undefined, true>
-) : Observable<
-  IRequestResponse<T, XMLHttpRequestResponseType>|IRequestProgress
+  options : IRequestOptions<XMLHttpRequestResponseType | null | undefined,
+                            true>
+) : Observable<IRequestResponse<T, XMLHttpRequestResponseType> |
+               IRequestProgress
 >;
-
 function request<T>(
-  options : IRequestOptions<
-    XMLHttpRequestResponseType|null|undefined, boolean|undefined
-  >
-) : Observable<
-  IRequestResponse<T, XMLHttpRequestResponseType>|IRequestProgress
+  options : IRequestOptions<XMLHttpRequestResponseType |
+                            null |
+                            undefined,
+                            boolean |
+                            undefined>
+) : Observable<IRequestResponse<T, XMLHttpRequestResponseType> |
+               IRequestProgress
 > {
   const requestOptions = {
     url: options.url,
     headers: options.headers,
-    responseType: options.responseType == null ?
-      DEFAULT_RESPONSE_TYPE : options.responseType,
-    timeout: options.timeout == null ?
-      DEFAULT_REQUEST_TIMEOUT : options.timeout,
+    responseType: options.responseType == null ? DEFAULT_RESPONSE_TYPE :
+                                                 options.responseType,
+    timeout: options.timeout == null ? DEFAULT_REQUEST_TIMEOUT :
+                                       options.timeout,
   };
 
   return new Observable((obs) => {
-    const {
-      url,
-      headers,
-      responseType,
-      timeout,
-    } = requestOptions;
+    const { url,
+            headers,
+            responseType,
+            timeout } = requestOptions;
     const xhr = new XMLHttpRequest();
     xhr.open("GET", url, true);
 
@@ -249,17 +246,13 @@ function request<T>(
     if (options.sendProgressEvents === true) {
       xhr.onprogress = function onXHRProgress(event) {
         const currentTime = performance.now();
-        obs.next({
-          type: "progress",
-          value: {
-            url,
-            duration: currentTime - sendingTime,
-            sendingTime,
-            currentTime,
-            size: event.loaded,
-            totalSize: event.total,
-          },
-        });
+        obs.next({ type: "progress",
+                   value: { url,
+                            duration: currentTime - sendingTime,
+                            sendingTime,
+                            currentTime,
+                            size: event.loaded,
+                            totalSize: event.total } });
       };
     }
 
@@ -267,8 +260,9 @@ function request<T>(
       if (xhr.readyState === 4) {
         if (xhr.status >= 200 && xhr.status < 300) {
           const receivedTime = performance.now();
-          const totalSize = xhr.response instanceof ArrayBuffer ?
-           xhr.response.byteLength : event.total;
+          const totalSize = xhr.response instanceof
+                              ArrayBuffer ? xhr.response.byteLength :
+                                            event.total;
           const status = xhr.status;
           const loadedResponseType = xhr.responseType;
           const _url = xhr.responseURL || url;
@@ -276,8 +270,8 @@ function request<T>(
           let responseData : T;
           if (loadedResponseType === "json") {
             // IE bug where response is string with responseType json
-            responseData = xhr.response !== "string" ?
-              xhr.response : toJSONForIE(xhr.responseText);
+            responseData = xhr.response !== "string" ? xhr.response :
+                                                       toJSONForIE(xhr.responseText);
           } else {
             responseData = xhr.response;
           }
@@ -288,19 +282,15 @@ function request<T>(
             return;
           }
 
-          obs.next({
-            type: "response",
-            value: {
-              status,
-              url: _url,
-              responseType: loadedResponseType,
-              sendingTime,
-              receivedTime,
-              duration: receivedTime - sendingTime,
-              size: totalSize,
-              responseData,
-            },
-          });
+          obs.next({ type: "response",
+                     value: { status,
+                              url: _url,
+                              responseType: loadedResponseType,
+                              sendingTime,
+                              receivedTime,
+                              duration: receivedTime - sendingTime,
+                              size: totalSize,
+                              responseData, }, });
           obs.complete();
 
         } else {

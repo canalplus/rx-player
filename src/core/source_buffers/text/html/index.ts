@@ -24,6 +24,4 @@ import HTMLTextSourceBuffer, {
 } from "./html_text_source_buffer";
 
 export default HTMLTextSourceBuffer;
-export {
-  IHTMLTextTrackData,
-};
+export { IHTMLTextTrackData };

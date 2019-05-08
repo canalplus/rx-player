@@ -51,8 +51,8 @@ function getISOBMFFTimingInfos(
   const baseDecodeTime = getTrackFragmentDecodeTime(buffer);
   const trunDuration = getDurationFromTrun(buffer);
 
-  const timescale = initInfos && initInfos.timescale ?
-    initInfos.timescale : segment.timescale;
+  const timescale = initInfos && initInfos.timescale ? initInfos.timescale :
+                                                       segment.timescale;
 
   // we could always make a mistake when reading a container.
   // If the estimate is too far from what the segment seems to imply, take
@@ -64,36 +64,36 @@ function getISOBMFFTimingInfos(
   let segmentStart : number|undefined;
 
   if (timescale === segment.timescale) {
-    maxDecodeTimeDelta = Math.min(
-      timescale * 0.9,
-      segment.duration != null ? segment.duration / 4 : 0.25
-    );
+    maxDecodeTimeDelta = Math.min(timescale * 0.9,
+                                  segment.duration != null ? segment.duration / 4 :
+                                                             0.25);
     segmentStart = segment.time;
     segmentDuration = segment.duration;
   } else {
-    maxDecodeTimeDelta = Math.min(
-      timescale * 0.9,
-      segment.duration != null ?
-        ((segment.duration / segment.timescale) * timescale) / 4 : 0.25
+    maxDecodeTimeDelta =
+      Math.min(timescale * 0.9,
+               segment.duration != null ?
+                 ((segment.duration / segment.timescale) * timescale) / 4 :
+                   0.25
     );
     segmentStart = ((segment.time || 0) / segment.timescale) * timescale;
     segmentDuration = segment.duration != null ?
-      (segment.duration / segment.timescale) * timescale : undefined;
+                        (segment.duration / segment.timescale) * timescale :
+                        undefined;
   }
 
   if (baseDecodeTime >= 0) {
     startTime = segment.timestampOffset != null ?
-      baseDecodeTime + (segment.timestampOffset * timescale) :
-      baseDecodeTime;
+                  baseDecodeTime + (segment.timestampOffset * timescale) :
+                  baseDecodeTime;
   }
 
-  if (
-    trunDuration >= 0 &&
-    (
-      segmentDuration == null ||
-      Math.abs(trunDuration - segmentDuration) <= maxDecodeTimeDelta
-    )
-  ) {
+  if (trunDuration >= 0 &&
+      (
+        segmentDuration == null ||
+        Math.abs(trunDuration - segmentDuration) <= maxDecodeTimeDelta
+      ))
+  {
     duration = trunDuration;
   }
 
@@ -104,11 +104,13 @@ function getISOBMFFTimingInfos(
       const sidxStart = _sidxSegments[0].time;
       if (sidxStart >= 0) {
         const sidxTimescale = _sidxSegments[0].timescale;
-        const baseStartTime = sidxTimescale != null && sidxTimescale !== timescale ?
-          (sidxStart / sidxTimescale) * timescale : sidxStart;
+        const baseStartTime = sidxTimescale != null &&
+                              sidxTimescale !== timescale ?
+                                (sidxStart / sidxTimescale) * timescale :
+                                sidxStart;
         startTime = segment.timestampOffset != null ?
-          baseStartTime + (segment.timestampOffset * timescale) :
-          baseStartTime;
+                      baseStartTime + (segment.timestampOffset * timescale) :
+                      baseStartTime;
       } else {
         startTime = segmentStart;
       }
@@ -118,7 +120,8 @@ function getISOBMFFTimingInfos(
   if (duration == null) {
     if (_sidxSegments.length) {
       const sidxDuration = _sidxSegments.reduce((a, b) => a + (b.duration || 0), 0);
-      duration = sidxDuration >= 0 ? sidxDuration : segmentDuration;
+      duration = sidxDuration >= 0 ? sidxDuration :
+                                     segmentDuration;
     } else {
       duration = segmentDuration;
     }
@@ -129,11 +132,9 @@ function getISOBMFFTimingInfos(
     assert(duration != null);
   }
 
-  return {
-    timescale,
-    time: startTime || 0,
-    duration: duration || 0,
-  };
+  return { timescale,
+           time: startTime || 0,
+           duration: duration || 0 };
 }
 
 export default getISOBMFFTimingInfos;

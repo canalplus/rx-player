@@ -58,10 +58,8 @@ function manifestReady(
   abrManager : ABRManager,
   manifest : Manifest
 ) : IManifestReadyEvent {
-  return {
-    type: "manifestReady",
-    value: { abrManager, manifest },
-  };
+  return { type: "manifestReady",
+           value: { abrManager, manifest } };
 }
 
 /**
@@ -83,14 +81,10 @@ function nullRepresentation(
   type : IBufferType,
   period : Period
 ) : IRepresentationChangeEvent {
-  return {
-    type: "representationChange",
-    value: {
-      type,
-      representation: null,
-      period,
-    },
-  };
+  return { type: "representationChange",
+           value: { type,
+                    representation: null,
+                    period } };
 }
 
 /**
@@ -106,14 +100,12 @@ function reloadingMediaSource() : IReloadingMediaSourceEvent {
   return { type: "reloading-media-source", value: undefined };
 }
 
-const INIT_EVENTS = {
-  loaded,
-  manifestReady,
-  nullRepresentation,
-  reloadingMediaSource,
-  speedChanged,
-  stalled,
-  warning,
-};
+const INIT_EVENTS = { loaded,
+                      manifestReady,
+                      nullRepresentation,
+                      reloadingMediaSource,
+                      speedChanged,
+                      stalled,
+                      warning };
 
 export default INIT_EVENTS;

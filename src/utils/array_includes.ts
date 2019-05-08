@@ -76,10 +76,12 @@ export default function arrayIncludes<T>(
     Math.max(len + n, 0);
 
   const areTheSame = (x : T, y : T) =>
-    x === y ||
-      // Viva las JavaScriptas!
-      (typeof x === "number" && typeof y === "number"
-        && isNaN(x) && isNaN(y));
+                       x === y ||
+                       // Viva las JavaScriptas!
+                       (
+                         typeof x === "number" &&
+                         typeof y === "number" &&
+                         isNaN(x) && isNaN(y));
 
   while (k < len) {
     if (areTheSame(arr[k], searchElement)) {
