@@ -64,10 +64,8 @@ import {
 import createFakeBuffer from "./create_fake_buffer";
 import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
 
-const {
-  DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
-  DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE,
-} = config;
+const { DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
+        DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE } = config;
 
 export interface IPeriodBufferClockTick {
   currentTime : number; // the current position we are in the video in s
@@ -86,17 +84,16 @@ export interface IPeriodBufferArguments {
   abrManager : ABRManager;
   bufferType : IBufferType;
   clock$ : Observable<IPeriodBufferClockTick>;
-  content : { manifest : Manifest; period : Period };
+  content : { manifest : Manifest;
+              period : Period; };
   garbageCollectors : WeakMapMemory<QueuedSourceBuffer<unknown>, Observable<never>>;
   segmentBookkeepers : WeakMapMemory<QueuedSourceBuffer<unknown>, SegmentBookkeeper>;
   segmentPipelinesManager : SegmentPipelinesManager<any>;
   sourceBuffersManager : SourceBuffersManager;
-  options: {
-    manualBitrateSwitchingMode : "seamless"|"direct";
-    offlineRetry? : number;
-    segmentRetry? : number;
-    textTrackOptions? : ITextTrackSourceBufferOptions;
-  };
+  options: { manualBitrateSwitchingMode : "seamless" | "direct";
+             offlineRetry? : number;
+             segmentRetry? : number;
+             textTrackOptions? : ITextTrackSourceBufferOptions; };
   wantedBufferAhead$ : Observable<number>;
 }
 
@@ -169,10 +166,9 @@ export default function PeriodBuffer({
           const bufferGarbageCollector$ = garbageCollectors.get(qSourceBuffer);
           const adaptationBuffer$ = createAdaptationBuffer(adaptation, qSourceBuffer);
 
-          return observableConcat(
-            cleanBuffer$,
-            observableMerge(adaptationBuffer$, bufferGarbageCollector$)
-          );
+          return observableConcat(cleanBuffer$,
+                                  observableMerge(adaptationBuffer$,
+                                                  bufferGarbageCollector$));
         }));
 
       return observableConcat<IPeriodBufferEvent>(
@@ -203,19 +199,19 @@ export default function PeriodBuffer({
 
     const adaptationBufferClock$ = clock$.pipe(map(tick => {
       const buffered = qSourceBuffer.getBuffered();
-      return objectAssign({}, tick, {
-        bufferGap: getLeftSizeOfRange(buffered, tick.currentTime),
-      });
+      return objectAssign({},
+                          tick,
+                          { bufferGap: getLeftSizeOfRange(buffered,
+                                                          tick.currentTime) });
     }));
-    return AdaptationBuffer(
-      adaptationBufferClock$,
-      qSourceBuffer,
-      segmentBookkeeper,
-      pipeline,
-      wantedBufferAhead$,
-      { manifest, period, adaptation },
-      abrManager,
-      options
+    return AdaptationBuffer(adaptationBufferClock$,
+                            qSourceBuffer,
+                            segmentBookkeeper,
+                            pipeline,
+                            wantedBufferAhead$,
+                            { manifest, period, adaptation },
+                            abrManager,
+                            options
     ).pipe(catchError((error : Error) => {
       // non native buffer should not impact the stability of the
       // player. ie: if a text buffer sends an error, we want to
@@ -275,13 +271,11 @@ function getPipelineOptions(
   if (bufferType === "image") {
     maxRetry = 0; // Deactivate BIF fetching if it fails
   } else {
-    maxRetry = retry != null ?
-      retry : DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR;
+    maxRetry = retry != null ? retry :
+                               DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR;
   }
-
-  maxRetryOffline = offlineRetry != null ?
-    offlineRetry : DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE;
-
+  maxRetryOffline = offlineRetry != null ? offlineRetry :
+                                           DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE;
   return { cache, maxRetry, maxRetryOffline };
 }
 

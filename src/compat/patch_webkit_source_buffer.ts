@@ -17,22 +17,18 @@
 import nextTick from "next-tick";
 import EventEmitter from "../utils/event_emitter";
 
-type IWebKitSourceBufferConstructor =
-  new() => IWebKitSourceBuffer;
+type IWebKitSourceBufferConstructor = new() => IWebKitSourceBuffer;
 
-interface IWebKitSourceBuffer {
-  append(data : ArrayBuffer) : void;
-  remove(from : number, to : number) : void;
-}
+interface IWebKitSourceBuffer { append(data : ArrayBuffer) : void;
+                                remove(from : number, to : number) : void; }
 
 // TODO This is the last ugly side-effect here.
 // Either remove it or find the best way to implement that
 export default function patchWebkitSourceBuffer() {
   // old WebKit SourceBuffer implementation,
   // where a synchronous append is used instead of appendBuffer
-  if (
-    (window as any).WebKitSourceBuffer &&
-    !(window as any).WebKitSourceBuffer.prototype.addEventListener
+  if ((window as any).WebKitSourceBuffer &&
+      !(window as any).WebKitSourceBuffer.prototype.addEventListener
   ) {
 
     const sourceBufferWebkitRef : IWebKitSourceBufferConstructor =

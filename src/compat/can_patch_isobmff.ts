@@ -23,10 +23,8 @@ import { isIEOrEdge } from "./browser_detection";
  * Returns true if the current target is tolerant enough for us to
  * simply be able to "patch" an ISOBMFF segment or if we have to create a
  * new one from scratch instead.
- *
- * TODO understand what the fudge Pierre meant here
  * @returns {Boolean}
  */
-export default function canPatchISOBMFFSegment() {
+export default function canPatchISOBMFFSegment() : boolean {
   return !isIEOrEdge;
 }

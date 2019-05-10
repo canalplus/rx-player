@@ -25,67 +25,73 @@ import SessionsStore from "./utils/open_sessions_store";
 import PersistedSessionsStore from "./utils/persisted_session_store";
 
 // A minor error happened
-export interface IEMEWarningEvent {
-  type : "warning";
-  value : ICustomError|Error;
-}
+export interface IEMEWarningEvent { type : "warning";
+                                    value : ICustomError |
+                                            Error; }
 
-export interface IEMEInitEvent {
-  type: "eme-init";
-}
+export interface IEMEInitEvent { type: "eme-init"; }
 
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {
-  keySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
+  keySystemAccess: ICompatMediaKeySystemAccess |
+                   ICustomMediaKeySystemAccess;
   keySystemOptions: IKeySystemOption;
 }
 
 // Infos identyfing a single MediaKey
 export interface IMediaKeysInfos {
-  mediaKeySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
+  mediaKeySystemAccess: ICompatMediaKeySystemAccess |
+                        ICustomMediaKeySystemAccess;
   keySystemOptions: IKeySystemOption; // options set by the user
-  mediaKeys : MediaKeys|ICustomMediaKeys;
+  mediaKeys : MediaKeys |
+              ICustomMediaKeys;
   sessionsStore : SessionsStore;
   sessionStorage : PersistedSessionsStore|null;
 }
 
 // Data stored in a persistent MediaKeySession storage
-export interface IPersistedSessionData {
-  sessionId : string;
-  initData : number;
-  initDataType : string|undefined;
-}
+export interface IPersistedSessionData { sessionId : string;
+                                         initData : number;
+                                         initDataType : string|undefined; }
 
 // MediaKeySession storage interface
-export interface IPersistedSessionStorage {
-  load() : IPersistedSessionData[];
-  save(x : IPersistedSessionData[]) : void;
-}
+export interface IPersistedSessionStorage { load() : IPersistedSessionData[];
+                                            save(x : IPersistedSessionData[]) : void; }
 
-type TypedArray =
-  Int8Array |
-  Int16Array |
-  Int32Array |
-  Uint8Array |
-  Uint16Array |
-  Uint32Array |
-  Uint8ClampedArray |
-  Float32Array |
-  Float64Array;
+type TypedArray = Int8Array |
+                  Int16Array |
+                  Int32Array |
+                  Uint8Array |
+                  Uint16Array |
+                  Uint32Array |
+                  Uint8ClampedArray |
+                  Float32Array |
+                  Float64Array;
 
 // Options given by the caller
 export interface IKeySystemOption {
   type : string;
   getLicense : (message : Uint8Array, messageType : string)
-    => Promise<TypedArray|ArrayBuffer|null>|TypedArray|ArrayBuffer|null;
-  serverCertificate? : ArrayBuffer|TypedArray;
+                 => Promise<TypedArray |
+                            ArrayBuffer |
+                            null> |
+                    TypedArray |
+                    ArrayBuffer |
+                    null;
+  serverCertificate? : ArrayBuffer | TypedArray;
   persistentLicense? : boolean;
   licenseStorage? : IPersistedSessionStorage;
   persistentStateRequired? : boolean;
   distinctiveIdentifierRequired? : boolean;
   closeSessionsOnStop? : boolean;
-  onKeyStatusesChange? : (evt : Event, session : MediaKeySession|ICustomMediaKeySession)
-    => Promise<TypedArray|ArrayBuffer|null>|TypedArray|ArrayBuffer|null;
+  onKeyStatusesChange? : (evt : Event, session : MediaKeySession |
+                                                 ICustomMediaKeySession)
+                           => Promise<TypedArray |
+                                      ArrayBuffer |
+                                      null> |
+                              TypedArray |
+                              ArrayBuffer |
+                              null;
   videoRobustnesses?: Array<string|undefined>;
   audioRobustnesses?: Array<string|undefined>;
   throwOnLicenseExpiration? : boolean;
@@ -94,12 +100,11 @@ export interface IKeySystemOption {
 // Keys are the different key statuses possible.
 // Values are ``true`` if such key status defines an error
 /* tslint:disable no-object-literal-type-assertion */
-export const KEY_STATUS_ERRORS = {
-  "internal-error": true,
-  expired: false,
-  released: false,
-  "output-restricted": false,
-  "output-downscaled": false,
-  "status-pending": false,
-} as Partial<Record<string, boolean>>;
+export const KEY_STATUS_ERRORS = { "internal-error": true,
+                                   expired: false,
+                                   released: false,
+                                   "output-restricted": false,
+                                   "output-downscaled": false,
+                                   "status-pending": false,
+                                 } as Partial<Record<string, boolean>>;
 /* tslint:enable no-object-literal-type-assertion */

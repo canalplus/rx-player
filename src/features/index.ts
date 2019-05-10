@@ -39,17 +39,15 @@ import {
  * Initial features object, with no feature activated by default.
  * @type {Object}
  */
-const features : IFeaturesObject = {
-  transports: {},
-  imageBuffer: null,
-  imageParser: null,
-  nativeTextTracksBuffer: null,
-  nativeTextTracksParsers: {},
-  htmlTextTracksBuffer: null,
-  htmlTextTracksParsers: {},
-  emeManager: null,
-  directfile: null,
-};
+const features : IFeaturesObject = { transports: {},
+                                     imageBuffer: null,
+                                     imageParser: null,
+                                     nativeTextTracksBuffer: null,
+                                     nativeTextTracksParsers: {},
+                                     htmlTextTracksBuffer: null,
+                                     htmlTextTracksParsers: {},
+                                     emeManager: null,
+                                     directfile: null };
 
 export default features;
 export {

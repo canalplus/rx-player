@@ -36,11 +36,10 @@ export default function initializeFeaturesObject() : void {
   /* tslint:enable no-var-requires */
 
   // Feature switching the Native TextTrack implementation
-  const HAS_NATIVE_MODE =
-    __FEATURES__.NATIVE_VTT ||
-    __FEATURES__.NATIVE_SAMI ||
-    __FEATURES__.NATIVE_TTML ||
-    __FEATURES__.NATIVE_SRT;
+  const HAS_NATIVE_MODE = __FEATURES__.NATIVE_VTT ||
+                          __FEATURES__.NATIVE_SAMI ||
+                          __FEATURES__.NATIVE_TTML ||
+                          __FEATURES__.NATIVE_SRT;
 
   /* tslint:disable no-var-requires */
   if (__FEATURES__.SMOOTH) {
@@ -78,11 +77,10 @@ export default function initializeFeaturesObject() : void {
   /* tslint:enable no-var-requires */
 
   // Feature switching the HTML TextTrack implementation
-  const HAS_HTML_MODE =
-    __FEATURES__.HTML_VTT ||
-    __FEATURES__.HTML_SAMI ||
-    __FEATURES__.HTML_TTML ||
-    __FEATURES__.HTML_SRT;
+  const HAS_HTML_MODE = __FEATURES__.HTML_VTT ||
+                        __FEATURES__.HTML_SAMI ||
+                        __FEATURES__.HTML_TTML ||
+                        __FEATURES__.HTML_SRT;
 
   /* tslint:disable no-var-requires */
   if (HAS_HTML_MODE) {

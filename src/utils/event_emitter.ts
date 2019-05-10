@@ -21,27 +21,23 @@ import {
 import log from "../log";
 
 export interface IEventEmitter<T> {
-  addEventListener<TEventName extends keyof T>(
-    evt : TEventName,
-    fn : IListener<T, TEventName>
-  ) : void;
-  removeEventListener<TEventName extends keyof T>(
-    evt : TEventName,
-    fn : IListener<T, TEventName>
-  ) : void;
-  trigger?<TEventName extends keyof T>(
-    evt : TEventName,
-    arg : IArgs<T, TEventName>
-  ) : void;
+  addEventListener<TEventName extends keyof T>(evt : TEventName,
+                                               fn : IListener<T, TEventName>) :
+                                                void;
+  removeEventListener<TEventName extends keyof T>(evt : TEventName,
+                                                  fn : IListener<T, TEventName>) :
+                                                   void;
+  trigger?<TEventName extends keyof T>(evt : TEventName,
+                                       arg : IArgs<T, TEventName>) : void;
 }
 
 // Type of the argument in the listener's callback
-type IArgs<TEventRecord, TEventName extends keyof TEventRecord> =
-  TEventRecord[TEventName];
+type IArgs<TEventRecord, TEventName
+     extends keyof TEventRecord> = TEventRecord[TEventName];
 
 // Type of the listener function
-type IListener<TEventRecord, TEventName extends keyof TEventRecord> =
-  (args: IArgs<TEventRecord, TEventName>) => void;
+type IListener<TEventRecord, TEventName
+     extends keyof TEventRecord> = (args: IArgs<TEventRecord, TEventName>) => void;
 
 type IListeners<TEventRecord> = {
   [P in keyof TEventRecord]? : Array<IListener<TEventRecord, P>>

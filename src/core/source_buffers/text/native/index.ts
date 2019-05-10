@@ -24,6 +24,4 @@ import NativeTextSourceBuffer, {
 } from "./native_text_source_buffer";
 
 export default NativeTextSourceBuffer;
-export {
-  INativeTextTrackData,
-};
+export { INativeTextTrackData };

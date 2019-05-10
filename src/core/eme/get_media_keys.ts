@@ -50,8 +50,9 @@ function createSessionStorage(
 
   const { licenseStorage } = keySystemOptions;
   if (!licenseStorage) {
-    throw new EncryptedMediaError(
-      "INVALID_KEY_SYSTEM", "No license storage found for persistent license.", true);
+    throw new EncryptedMediaError("INVALID_KEY_SYSTEM",
+                                  "No license storage found for persistent license.",
+                                  true);
   }
 
   log.info("EME: Set the given license storage");
@@ -63,10 +64,9 @@ export default function getMediaKeysInfos(
   keySystemsConfigs: IKeySystemOption[],
   currentMediaKeysInfos : MediaKeysInfosStore
 ) : Observable<IMediaKeysInfos> {
-    return getMediaKeySystemAccess(
-      mediaElement,
-      keySystemsConfigs,
-      currentMediaKeysInfos
+    return getMediaKeySystemAccess(mediaElement,
+                                   keySystemsConfigs,
+                                   currentMediaKeysInfos
     ).pipe(mergeMap((evt) => {
       const { options, mediaKeySystemAccess } = evt.value;
       const currentState = currentMediaKeysInfos.getState(mediaElement);
@@ -74,23 +74,19 @@ export default function getMediaKeysInfos(
 
       if (currentState != null && evt.type === "reuse-media-key-system-access") {
         const { mediaKeys, sessionsStore } = currentState;
-        return observableOf({
-          mediaKeys,
-          sessionsStore,
-          mediaKeySystemAccess,
-          keySystemOptions: options,
-          sessionStorage,
-        });
+        return observableOf({ mediaKeys,
+                              sessionsStore,
+                              mediaKeySystemAccess,
+                              keySystemOptions: options,
+                              sessionStorage });
       }
 
       log.debug("EME: Calling createMediaKeys on the MediaKeySystemAccess");
       return castToObservable(mediaKeySystemAccess.createMediaKeys())
-        .pipe(map((mediaKeys) => ({
-          mediaKeys,
-          sessionsStore: new SessionsStore(mediaKeys),
-          mediaKeySystemAccess,
-          keySystemOptions: options,
-          sessionStorage,
-        })));
+        .pipe(map((mediaKeys) => ({ mediaKeys,
+                                    sessionsStore: new SessionsStore(mediaKeys),
+                                    mediaKeySystemAccess,
+                                    keySystemOptions: options,
+                                    sessionStorage })));
     }));
 }

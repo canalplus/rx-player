@@ -107,11 +107,9 @@ export default class ObservablePrioritizer<T> {
    * @type {Array.<Object>}
    * @private
    */
-  private _queue : Array<{
-    observable : Observable<T>;
-    trigger : Subject<void>;
-    priority : number;
-  }>;
+  private _queue : Array<{ observable : Observable<T>;
+                           trigger : Subject<void>;
+                           priority : number; }>;
 
   constructor() {
     this._pendingPriority = null;
@@ -167,10 +165,8 @@ export default class ObservablePrioritizer<T> {
    * @param {number} priority
    */
   public updatePriority(obs : Observable<T>, priority : number) : void {
-    const index = arrayFindIndex(
-      this._queue,
-      (elt) => elt.observable === obs
-    );
+    const index = arrayFindIndex(this._queue,
+                                 (elt) => elt.observable === obs);
 
     if (index < 0) {
       return;
@@ -203,8 +199,8 @@ export default class ObservablePrioritizer<T> {
 
       this._pendingPriority = this._queue
         .reduce((acc : number | null, elt) => {
-          return acc == null || acc > elt.priority ?
-            elt.priority : acc;
+          return acc == null || acc > elt.priority ? elt.priority :
+                                                     acc;
         }, null);
 
       for (let i = 0; i < this._queue.length; i++) {
@@ -220,6 +216,6 @@ export default class ObservablePrioritizer<T> {
 
     this._numberOfPendingObservables++;
     return obs
-      .pipe(finalize(onObservableFinish));
+             .pipe(finalize(onObservableFinish));
   }
 }

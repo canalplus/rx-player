@@ -64,10 +64,9 @@ import generateSegmentLoader from "./segment_loader";
  * @returns {Observable}
  */
 function requestStringResource(url : string) : Observable<string> {
-  return request({
-    url,
-    responseType: "text",
-  }).pipe(
+  return request({ url,
+                   responseType: "text" })
+  .pipe(
     filter((e) => e.type === "response"),
     map((e) => e.value.responseData)
   );
@@ -101,14 +100,14 @@ export default function(
     ) : IManifestParserObservable {
       const url = response.url == null ? loaderURL : response.url;
       const data = typeof response.responseData === "string" ?
-        new DOMParser().parseFromString(response.responseData, "text/xml") :
-        response.responseData;
+                     new DOMParser().parseFromString(response.responseData,
+                                                     "text/xml") :
+                     response.responseData;
 
-      const parsedManifest = parseMPD(data, {
-        url,
-        referenceDateTime,
-        loadExternalClock: !hasClockSynchronization,
-      });
+      const parsedManifest = parseMPD(data,
+                                      { url,
+                                        referenceDateTime,
+                                        loadExternalClock: !hasClockSynchronization });
       return loadExternalResources(parsedManifest);
 
       function loadExternalResources(

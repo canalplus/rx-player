@@ -22,12 +22,18 @@ import {
 import { IKeySystemOption } from "./types";
 import SessionsStore from "./utils/open_sessions_store";
 
-export type IMediaElementMediaKeysInfos = {
-  keySystemOptions : IKeySystemOption;
-  mediaKeySystemAccess : ICustomMediaKeySystemAccess|ICompatMediaKeySystemAccess;
-  mediaKeys : MediaKeys|ICustomMediaKeys;
-  sessionsStore : SessionsStore;
-}|null;
+export type IMediaElementMediaKeysInfos =
+  { keySystemOptions : IKeySystemOption;
+
+    mediaKeySystemAccess : ICustomMediaKeySystemAccess |
+                           ICompatMediaKeySystemAccess;
+
+    mediaKeys : MediaKeys |
+                ICustomMediaKeys;
+
+    sessionsStore : SessionsStore;
+  } |
+  null;
 
 /**
  * Store the MediaKeys infos attached to a media element.

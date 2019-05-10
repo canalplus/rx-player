@@ -52,10 +52,8 @@ export default class ManualTimeRanges implements TimeRanges {
       assert(start >= 0, "invalid start time");
       assert(end - start > 0, "invalid end time");
     }
-    const rangesToIntersect : Array<{
-      start : number;
-      end: number;
-    }> = [];
+    const rangesToIntersect : Array<{ start : number;
+                                      end: number; }> = [];
     if (start > 0) {
       rangesToIntersect.push({ start: 0, end: start });
     }

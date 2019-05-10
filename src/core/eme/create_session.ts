@@ -27,30 +27,26 @@ import {
 import { ICustomMediaKeySession } from "../../compat";
 import log from "../../log";
 import arrayIncludes from "../../utils/array_includes";
-import assert from "../../utils/assert";
 import castToObservable from "../../utils/cast_to_observable";
 import { IMediaKeysInfos } from "./types";
 import isSessionUsable from "./utils/is_session_usable";
 
 export interface INewSessionCreatedEvent {
   type : "created-session";
-  value : {
-    mediaKeySession : MediaKeySession|ICustomMediaKeySession;
-    sessionType : MediaKeySessionType;
-  };
+  value : { mediaKeySession : MediaKeySession |
+                              ICustomMediaKeySession;
+            sessionType : MediaKeySessionType; };
 }
 
 export interface IPersistentSessionRecoveryEvent {
   type : "loaded-persistent-session";
-  value : {
-    mediaKeySession : MediaKeySession|ICustomMediaKeySession;
-    sessionType : MediaKeySessionType;
-  };
+  value : { mediaKeySession : MediaKeySession |
+                              ICustomMediaKeySession;
+            sessionType : MediaKeySessionType; };
 }
 
-export type ICreateSessionEvent =
-  INewSessionCreatedEvent |
-  IPersistentSessionRecoveryEvent;
+export type ICreateSessionEvent = INewSessionCreatedEvent |
+                                  IPersistentSessionRecoveryEvent;
 
 /**
  * If session creating fails, retry once session creation/loading.
@@ -90,24 +86,21 @@ export default function createSession(
   mediaKeysInfos: IMediaKeysInfos
 ) : Observable<ICreateSessionEvent> {
   return observableDefer(() => {
-    const {
-      keySystemOptions,
-      mediaKeySystemAccess,
-      sessionsStore,
-      sessionStorage,
-    } = mediaKeysInfos;
+    const { keySystemOptions,
+            mediaKeySystemAccess,
+            sessionsStore,
+            sessionStorage } = mediaKeysInfos;
 
     const mksConfig = mediaKeySystemAccess.getConfiguration();
     const sessionTypes = mksConfig.sessionTypes;
-    const hasPersistence = (
-      sessionTypes && arrayIncludes(sessionTypes, "persistent-license")
-    );
+    const hasPersistence = sessionTypes &&
+                           arrayIncludes(sessionTypes, "persistent-license");
 
-    const sessionType : MediaKeySessionType =
-      hasPersistence &&
-      sessionStorage &&
-      keySystemOptions.persistentLicense ?
-      "persistent-license" : "temporary";
+    const sessionType : MediaKeySessionType = hasPersistence &&
+                                              sessionStorage &&
+                                              keySystemOptions.persistentLicense ?
+                                                "persistent-license" :
+                                                "temporary";
 
     log.debug(`EME: Create a new ${sessionType} session`);
 
@@ -115,24 +108,14 @@ export default function createSession(
 
     // Re-check for Dumb typescript
     if (!hasPersistence || !sessionStorage || !keySystemOptions.persistentLicense) {
-      if (__DEV__) {
-        assert(sessionType === "temporary");
-      }
-      return observableOf({
-        type: "created-session" as "created-session",
-        value: { mediaKeySession: session, sessionType },
-      });
-    }
-    if (__DEV__) {
-      assert(sessionType === "persistent-license");
+      return observableOf({ type: "created-session" as "created-session",
+                            value: { mediaKeySession: session, sessionType } });
     }
 
     const storedEntry = sessionStorage.get(initData, initDataType);
     if (!storedEntry) {
-      return observableOf({
-        type: "created-session" as "created-session",
-        value: { mediaKeySession: session, sessionType },
-      });
+      return observableOf({ type: "created-session" as "created-session",
+                            value: { mediaKeySession: session, sessionType } });
     }
 
     /**
@@ -147,12 +130,11 @@ export default function createSession(
       }
       return sessionsStore.deleteAndCloseSession(session)
         .pipe(map(() => {
-          const newSession =
-            sessionsStore.createSession(initData, initDataType, sessionType);
-          return {
-            type: "created-session" as "created-session",
-            value: { mediaKeySession: newSession, sessionType },
-          };
+          const newSession = sessionsStore.createSession(initData,
+                                                         initDataType,
+                                                         sessionType);
+          return { type: "created-session" as "created-session",
+                   value: { mediaKeySession: newSession, sessionType } };
         }));
     };
 
@@ -161,19 +143,15 @@ export default function createSession(
         if (!hasLoadedSession) {
           log.warn("EME: No data stored for the loaded session");
           sessionStorage.delete(initData, initDataType);
-          return observableOf({
-            type: "created-session" as "created-session",
-            value: { mediaKeySession: session, sessionType },
-          });
+          return observableOf({ type: "created-session" as "created-session",
+                                value: { mediaKeySession: session, sessionType } });
         }
 
         if (hasLoadedSession && isSessionUsable(session)) {
           sessionStorage.add(initData, initDataType, session);
           log.info("EME: Succeeded to load persistent session.");
-          return observableOf({
-            type: "loaded-persistent-session" as "loaded-persistent-session",
-            value: { mediaKeySession: session, sessionType },
-          });
+          return observableOf({ type: "loaded-persistent-session" as const,
+                                value: { mediaKeySession: session, sessionType } });
         }
 
         // Unusable persistent session: recreate a new session from scratch.

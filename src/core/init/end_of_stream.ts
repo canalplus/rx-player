@@ -31,20 +31,16 @@ import {
 import { events } from "../../compat";
 import log from "../../log";
 
-const {
-  onRemoveSourceBuffers$,
-  onSourceOpen$,
-  onUpdate$,
-} = events;
+const { onRemoveSourceBuffers$,
+        onSourceOpen$,
+        onUpdate$ } = events;
 
 /**
  * Get "updating" SourceBuffers from a SourceBufferList.
  * @param {SourceBufferList} sourceBuffers
  * @returns {Array.<SourceBuffer>}
  */
-function getUpdatingSourceBuffers(
-  sourceBuffers : SourceBufferList
-) : SourceBuffer[] {
+function getUpdatingSourceBuffers(sourceBuffers : SourceBufferList) : SourceBuffer[] {
   const updatingSourceBuffers : SourceBuffer[] = [];
   for (let i = 0; i < sourceBuffers.length; i++) {
     const SourceBuffer = sourceBuffers[i];
@@ -52,7 +48,6 @@ function getUpdatingSourceBuffers(
         updatingSourceBuffers.push(SourceBuffer);
     }
   }
-
   return updatingSourceBuffers;
 }
 

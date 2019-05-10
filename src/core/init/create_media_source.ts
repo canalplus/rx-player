@@ -42,9 +42,8 @@ export function setDurationToMediaSource(
   mediaSource : MediaSource,
   duration : number
 ) : void {
-  const newDuration : number = duration === Infinity ?
-    Number.MAX_VALUE : duration;
-
+  const newDuration = duration === Infinity ? Number.MAX_VALUE :
+                                              duration;
   if (mediaSource.duration !== newDuration) {
     log.info("Init: Setting duration", newDuration);
     mediaSource.duration = newDuration;
@@ -74,7 +73,6 @@ function resetMediaSource(
           log.info("Init: Removing SourceBuffer from mediaSource", sourceBuffer);
           sourceBuffer.abort();
         }
-
         mediaSource.removeSourceBuffer(sourceBuffer);
       }
       catch (e) {
@@ -119,7 +117,8 @@ function createMediaSource(
   return new Observable((observer : Observer<MediaSource>) => {
     if (!MediaSource_) {
       throw new MediaError("MEDIA_SOURCE_NOT_SUPPORTED",
-        "No MediaSource Object was found in the current browser.", true);
+                           "No MediaSource Object was found in the current browser.",
+                           true);
     }
 
     // make sure the media has been correctly reset

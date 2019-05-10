@@ -36,7 +36,7 @@ export interface IImageTrackSegmentData {
  * @class ImageSourceBuffer
  */
 class ImageSourceBuffer
-  extends AbstractSourceBuffer<IImageTrackSegmentData>
+      extends AbstractSourceBuffer<IImageTrackSegmentData>
 {
   /**
    * @param {Object} data
@@ -44,10 +44,9 @@ class ImageSourceBuffer
   _append(data : IImageTrackSegmentData) {
     log.debug("ImageSourceBuffer: appending new data.");
     const { start, end, timescale } = data;
-    this.buffered.insert(
-      start / timescale,
-      end == null ? Number.MAX_VALUE : end / timescale
-    );
+    this.buffered.insert(start / timescale,
+                         end == null ? Number.MAX_VALUE :
+                                       end / timescale);
   }
 
   /**

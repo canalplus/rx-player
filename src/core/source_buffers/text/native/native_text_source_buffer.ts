@@ -24,14 +24,12 @@ import log from "../../../../log";
 import AbstractSourceBuffer from "../../abstract_source_buffer";
 import parseTextTrackToCues from "./parsers";
 
-export interface INativeTextTrackData {
-  data : string;
-  language : string;
-  timescale : number;
-  start: number;
-  end? : number;
-  type : string;
-}
+export interface INativeTextTrackData { data : string;
+                                        language : string;
+                                        timescale : number;
+                                        start: number;
+                                        end? : number;
+                                        type : string; }
 
 /**
  * SourceBuffer to display TextTracks in a <track> element, in the given
@@ -40,8 +38,8 @@ export interface INativeTextTrackData {
  * @extends AbstractSourceBuffer
  */
 export default class NativeTextSourceBuffer
-  extends AbstractSourceBuffer<INativeTextTrackData>
-  implements ICustomSourceBuffer<INativeTextTrackData>
+               extends AbstractSourceBuffer<INativeTextTrackData>
+               implements ICustomSourceBuffer<INativeTextTrackData>
 {
   private readonly _videoElement : HTMLMediaElement;
   private readonly _track : ICompatTextTrack;
@@ -57,10 +55,8 @@ export default class NativeTextSourceBuffer
   ) {
     log.debug("NTSB: Creating native text track SourceBuffer");
     super();
-    const {
-      track,
-      trackElement,
-    } = addTextTrack(videoElement, hideNativeSubtitle);
+    const { track,
+            trackElement } = addTextTrack(videoElement, hideNativeSubtitle);
 
     this._videoElement = videoElement;
     this._track = track;
@@ -88,9 +84,13 @@ export default class NativeTextSourceBuffer
     }
 
     const startTime = timescaledStart / timescale;
-    const endTime = timescaledEnd != null ? timescaledEnd / timescale : undefined;
+    const endTime = timescaledEnd != null ? timescaledEnd / timescale :
+                                            undefined;
 
-    const cues = parseTextTrackToCues(type, dataString, this.timestampOffset, language);
+    const cues = parseTextTrackToCues(type,
+                                      dataString,
+                                      this.timestampOffset,
+                                      language);
     if (cues.length > 0) {
       const firstCue = cues[0];
 
@@ -109,10 +109,9 @@ export default class NativeTextSourceBuffer
       for (let i = 0; i < cues.length; i++) {
         this._track.addCue(cues[i]);
       }
-      this.buffered.insert(
-        startTime,
-        endTime != null ? endTime : cues[cues.length - 1].endTime
-      );
+      this.buffered.insert(startTime,
+                           endTime != null ? endTime :
+                                             cues[cues.length - 1].endTime);
     } else if (endTime != null) {
       this.buffered.insert(startTime, endTime);
     }
@@ -141,14 +140,11 @@ export default class NativeTextSourceBuffer
   _abort() : void {
     log.debug("NTSB: Aborting native text track SourceBuffer");
     this._remove(0, Infinity);
-    const {
-      _trackElement,
-      _videoElement,
-    } = this;
+    const { _trackElement,
+            _videoElement } = this;
 
-    if (
-      _trackElement && _videoElement &&
-      _videoElement.hasChildNodes()
+    if (_trackElement && _videoElement &&
+        _videoElement.hasChildNodes()
     ) {
       try {
         _videoElement.removeChild(_trackElement);

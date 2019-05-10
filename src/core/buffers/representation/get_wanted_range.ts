@@ -16,7 +16,7 @@
 
 import { getLeftSizeOfRange } from "../../../utils/ranges";
 
-export interface ITimingData {
+export interface IClockTick {
   currentTime : number;
   wantedTimeOffset : number;
   liveGap? : number;
@@ -27,7 +27,7 @@ export interface ITimingData {
  *
  * @param {Object} hardLimits
  * @param {TimeRanges} buffered
- * @param {Object} timing
+ * @param {Object} tick
  * @param {number} bufferGoal
  * @param {Object} paddings
  * @returns {Object}
@@ -35,14 +35,14 @@ export interface ITimingData {
 export default function getWantedRange(
   hardLimits : { start? : number; end? : number },
   buffered : TimeRanges,
-  timing : ITimingData,
+  tick : IClockTick,
   bufferGoal : number,
   paddings : { low : number; high : number }
 ) : { start : number; end : number } {
-  const currentTime = timing.currentTime + timing.wantedTimeOffset;
-  const limitEnd = timing.liveGap == null ?
-    hardLimits.end :
-    Math.min(hardLimits.end || Infinity, timing.currentTime + timing.liveGap);
+  const currentTime = tick.currentTime + tick.wantedTimeOffset;
+  const limitEnd = tick.liveGap == null ? hardLimits.end :
+                                          Math.min(hardLimits.end || Infinity,
+                                                   tick.currentTime + tick.liveGap);
   const boundedLimits = {
     start: Math.max(hardLimits.start || 0, currentTime),
     end: limitEnd,
@@ -56,17 +56,15 @@ export default function getWantedRange(
   // the timestamp padding is the time offset that we want to apply to our
   // current start in order to calculate the starting point of the list of
   // segments to inject.
-  const timestampPadding = bufferGap > lowPadding && bufferGap < Infinity ?
-    Math.min(bufferGap, highPadding) : 0;
-
+  const timestampPadding = bufferGap > lowPadding &&
+                           bufferGap < Infinity ? Math.min(bufferGap, highPadding) :
+                                                  0;
   return {
-
-    start: Math.min(
-      Math.max(currentTime + timestampPadding, boundedLimits.start),
-      boundedLimits.end || Infinity),
-
-    end: Math.min(
-      Math.max(currentTime + bufferGoal, boundedLimits.start),
-      boundedLimits.end || Infinity),
+    start: Math.min(boundedLimits.end || Infinity,
+                    Math.max(currentTime + timestampPadding,
+                             boundedLimits.start)),
+    end: Math.min(boundedLimits.end || Infinity,
+                  Math.max(currentTime + bufferGoal,
+                           boundedLimits.start)),
   };
 }

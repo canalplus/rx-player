@@ -56,7 +56,8 @@ export default function areBuffersComplete(
     .map((buffer) => {
       return buffer.pipe(
         filter((evt) => {
-          return evt.type === "complete-buffer" || evt.type === "active-buffer";
+          return evt.type === "complete-buffer" ||
+                 evt.type === "active-buffer";
         }),
         map((evt) => evt.type === "complete-buffer"),
         startWith(false),

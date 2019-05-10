@@ -48,54 +48,49 @@ import castToObservable from "../../../utils/cast_to_observable";
 import tryCatch from "../../../utils/rx-try_catch";
 import downloadingBackoff from "./backoff";
 
-interface IPipelineLoaderCache<T> {
-  type : "cache";
-  value : ILoaderResponseValue<T>;
+// Data comes from a local cache (no request was done)
+interface IPipelineLoaderCache<T> { type : "cache";
+                                    value : ILoaderResponseValue<T>; }
+
+// An Error happened while loading (usually a request error)
+export interface IPipelineLoaderError { type : "error";
+                                        value : Error | ICustomError; }
+
+// Request metrics are available
+export interface IPipelineLoaderMetrics { type : "metrics";
+                                          value : { size? : number;
+                                                    duration? : number; }; }
+
+// The request begins to be done
+export interface IPipelineLoaderRequest<T> { type : "request";
+                                             value : T; }
+
+// A response is available
+export interface IPipelineLoaderResponse<T> { type : "response";
+                                              value : { responseData : T;
+                                                        url? : string;
+                                                        sendingTime? : number; }; }
+
+// Events a loader emits
+// Type parameters: T: Argument given to the loader
+//                  U: ResponseType of the request
+export type IPipelineLoaderEvent<T, U> = IPipelineLoaderRequest<T> |
+                                         IPipelineLoaderResponse<U> |
+                                         ILoaderProgress |
+                                         IPipelineLoaderError |
+                                         IPipelineLoaderMetrics;
+
+// Options you can pass on to the loader
+export interface IPipelineLoaderOptions<T, U> {
+  cache? : { add : (obj : T, arg : ILoaderResponseValue<U>) => void;
+             get : (obj : T) => ILoaderResponseValue<U>; }; // Caching logic
+  maxRetry : number; // Maximum number of time a request on error will be retried
+  maxRetryOffline : number; // Maximum number of time a request be retried when
+                            // the user is offline
 }
 
-export interface IPipelineLoaderError {
-  type : "error";
-  value : Error|ICustomError;
-}
-
-export interface IPipelineLoaderMetrics {
-  type : "metrics";
-  value : {
-    size? : number;
-    duration? : number;
-  };
-}
-
-export interface IPipelineLoaderRequest<T> {
-  type : "request";
-  value : T;
-}
-
-export interface IPipelineLoaderResponse<T> {
-  type : "response";
-  value : {
-    responseData : T;
-    url? : string;
-    sendingTime? : number;
-  };
-}
-
-/**
- * Type parameters:
- *   T: Argument given to the loader
- *   U: ResponseType of the request
- */
-export type IPipelineLoaderEvent<T, U> =
-  IPipelineLoaderRequest<T> |
-  IPipelineLoaderResponse<U> |
-  ILoaderProgress |
-  IPipelineLoaderError |
-  IPipelineLoaderMetrics;
-
-const {
-  MAX_BACKOFF_DELAY_BASE,
-  INITIAL_BACKOFF_DELAY_BASE,
-} = config;
+const { MAX_BACKOFF_DELAY_BASE,
+        INITIAL_BACKOFF_DELAY_BASE } = config;
 
 /**
  * Generate a new error from the infos given.
@@ -115,15 +110,6 @@ function errorSelector(code : string, error : Error, fatal : boolean) : ICustomE
   return error;
 }
 
-export interface IPipelineLoaderOptions<T, U> {
-  cache? : {
-    add : (obj : T, arg : ILoaderResponseValue<U>) => void;
-    get : (obj : T) => ILoaderResponseValue<U>;
-  };
-  maxRetry : number;
-  maxRetryOffline : number;
-}
-
 /**
  * Returns function allowing to download the wanted data through a
  * resolver -> loader pipeline.
@@ -136,12 +122,12 @@ export interface IPipelineLoaderOptions<T, U> {
  *
  *   - each time a request begins (type "request").
  *     This is not emitted if the value is retrieved from a local js cache.
- *     This one emit the payload as a value.
+ *     This event emits the payload as a value.
  *
  *   - as the request progresses (type "progress").
  *
  *   - each time a request ends (type "metrics").
- *     This one contains informations about the metrics of the request.
+ *     This event contains informations about the metrics of the request.
  *
  *   - each time a minor request error is encountered (type "error").
  *     With the error as a value.
@@ -157,10 +143,11 @@ export interface IPipelineLoaderOptions<T, U> {
  * This observable will complete after emitting the data.
  *
  * Type parameters:
- *   T: Argument given to the loader
- *   U: ResponseType of the request
+ *   - T: Argument given to the loader
+ *   - U: ResponseType of the request
  *
- * @param {Object} transportPipeline
+ * @param {Object} transportPipeline - Pipelines declared by the corresponding
+ * transport protocol
  * @param {Object} options
  * @returns {Function}
  */
@@ -173,23 +160,22 @@ export default function createLoader<T, U>(
 
   // TODO Remove the resolver completely
   const resolver = (transportPipeline as any).resolver != null ?
-    (transportPipeline as any).resolver : observableOf.bind(Observable);
+                     (transportPipeline as any).resolver :
+                     observableOf.bind(Observable);
 
   // Subject that will emit non-fatal errors.
   const retryErrorSubject : Subject<Error> = new Subject();
 
   // Backoff options given to the backoff retry done with the loader function.
-  const backoffOptions = {
-    baseDelay: INITIAL_BACKOFF_DELAY_BASE,
-    maxDelay: MAX_BACKOFF_DELAY_BASE,
-    maxRetryRegular: maxRetry,
-    maxRetryOffline,
-    onRetry: (error : Error) => {
-      retryErrorSubject
-        .next(errorSelector("PIPELINE_LOAD_ERROR", error, false));
-    },
-  };
-
+  const backoffOptions = { baseDelay: INITIAL_BACKOFF_DELAY_BASE,
+                           maxDelay: MAX_BACKOFF_DELAY_BASE,
+                           maxRetryRegular: maxRetry,
+                           maxRetryOffline,
+                           onRetry: (error : Error) => {
+                             retryErrorSubject.next(
+                               errorSelector("PIPELINE_LOAD_ERROR",
+                                             error,
+                                             false)); } };
   /**
    * Call the transport's resolver - if it exists - with the given data.
    *
@@ -239,20 +225,19 @@ export default function createLoader<T, U>(
       );
 
       return observableConcat(
-        observableOf({ type: "request" as "request", value: loaderArgument }),
+        observableOf({ type: "request" as const, value: loaderArgument }),
         request$
       );
     }
 
-    const dataFromCache = cache ? cache.get(loaderArgument) : null;
+    const dataFromCache = cache != null ? cache.get(loaderArgument) :
+                                          null;
 
     if (dataFromCache != null) {
       return castToObservable(dataFromCache).pipe(
         map(response => {
-          return {
-            type: "cache" as "cache",
-            value: response,
-          };
+          return { type: "cache" as "cache",
+                   value: response };
         }),
         catchError(startLoaderWithBackoff)
       );
@@ -283,22 +268,21 @@ export default function createLoader<T, U>(
                 const response$ = observableOf({
                   type: "response" as "response",
                   value: objectAssign({}, resolverResponse, {
-                    url: arg.type === "response" ? arg.value.url : undefined,
                     responseData: arg.value.responseData,
-                    sendingTime: arg.type === "response" ?
-                      arg.value.sendingTime : undefined,
-                    receivedTime: arg.type === "response" ?
-                      arg.value.receivedTime : undefined,
+                    url: arg.type === "response" ? arg.value.url :
+                                                   undefined,
+                    sendingTime: arg.type === "response" ? arg.value.sendingTime :
+                                                           undefined,
+                    receivedTime: arg.type === "response" ? arg.value.receivedTime :
+                                                            undefined,
                   }),
                 });
                 const metrics$ = arg.type !== "response" ?
-                  EMPTY : observableOf({
-                    type: "metrics" as "metrics",
-                    value: {
-                      size: arg.value.size,
-                      duration: arg.value.duration,
-                    },
-                  });
+                                   EMPTY :
+                                   observableOf({
+                                     type: "metrics" as const,
+                                     value: { size: arg.value.size,
+                                              duration: arg.value.duration } });
                 return observableConcat(response$, metrics$);
               default:
                 return observableOf(arg);

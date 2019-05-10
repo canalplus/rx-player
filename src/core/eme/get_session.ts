@@ -40,19 +40,16 @@ import isSessionUsable from "./utils/is_session_usable";
 
 export interface IHandledEncryptedEvent {
   type : "created-session" |
-    "loaded-open-session" |
-    "loaded-persistent-session";
-  value : {
-    mediaKeySession : MediaKeySession|ICustomMediaKeySession;
-    sessionType : MediaKeySessionType;
-    initData : Uint8Array; // assiociated initialization data
-    initDataType : string|undefined; // type of the associated initialization data
-  };
-}
+         "loaded-open-session" |
+         "loaded-persistent-session";
+  value : { mediaKeySession : MediaKeySession |
+                              ICustomMediaKeySession;
+            sessionType : MediaKeySessionType;
+            initData : Uint8Array; // assiociated initialization data
+            initDataType : string | // type of the associated initialization data
+                           undefined; }; }
 
-const {
-  EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS: MAX_SESSIONS,
-} = config;
+const { EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS: MAX_SESSIONS } = config;
 
 /**
  * Handle MediaEncryptedEvents sent by a HTMLMediaElement:
@@ -69,10 +66,8 @@ export default function getSession(
   mediaKeysInfos : IMediaKeysInfos
 ) : Observable<IHandledEncryptedEvent> {
   return observableDefer(() => {
-    const {
-      initData,
-      initDataType,
-    } = getInitData(encryptedEvent);
+    const { initData,
+            initDataType } = getInitData(encryptedEvent);
 
     if (handledInitData.has(initData, initDataType)) {
       log.debug("EME: Init data already received. Skipping it.");
@@ -88,15 +83,11 @@ export default function getSession(
       previousLoadedSession = entry.session;
       if (isSessionUsable(previousLoadedSession)) {
         log.debug("EME: Reuse loaded session", previousLoadedSession.sessionId);
-        return observableOf({
-          type: "loaded-open-session" as "loaded-open-session",
-          value: {
-            mediaKeySession: previousLoadedSession,
-            sessionType: entry.sessionType,
-            initData,
-            initDataType,
-          },
-        });
+        return observableOf({ type: "loaded-open-session" as "loaded-open-session",
+                              value: { mediaKeySession: previousLoadedSession,
+                                       sessionType: entry.sessionType,
+                                       initData,
+                                       initDataType } });
       } else if (mediaKeysInfos.sessionStorage) {
         mediaKeysInfos.sessionStorage.delete(new Uint8Array(initData), initDataType);
       }
@@ -119,15 +110,12 @@ export default function getSession(
       return observableConcat(
         observableMerge(...cleaningOldSessions$).pipe(ignoreElements()),
         createSession(initData, initDataType, mediaKeysInfos)
-          .pipe(map((evt) => ({
-            type: evt.type,
-            value: {
-              mediaKeySession: evt.value.mediaKeySession,
-              sessionType: evt.value.sessionType,
-              initData,
-              initDataType,
-            },
-          })))
+          .pipe(map((evt) => ({ type: evt.type,
+                                value: {
+                                  mediaKeySession: evt.value.mediaKeySession,
+                                  sessionType: evt.value.sessionType,
+                                  initData,
+                                  initDataType, } })))
       );
     }));
   });

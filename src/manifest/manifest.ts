@@ -83,131 +83,85 @@ export interface IManifestEvents {
  * @class Manifest
  */
 export default class Manifest extends EventEmitter<IManifestEvents> {
-  /**
-   * ID uniquely identifying this Manifest.
-   * @type {string}
-   */
+  // ID uniquely identifying this Manifest.
   public id : string;
 
-  /**
-   * Type of transport used by this Manifest (e.g. `"dash"` or `"smooth"`.
-   * @type {string}
-   */
+  // Type of transport used by this Manifest (e.g. `"dash"` or `"smooth"`.
   public transport : string;
 
-  /**
-   * Every `Adaptations` for the first `Period` of the Manifest.
-   * Deprecated. Please use manifest.periods[0].adaptations instead.
-   * @deprecated
-   * @type {Object}
-   */
+  // Every `Adaptations` for the first `Period` of the Manifest.
+  // Deprecated. Please use manifest.periods[0].adaptations instead.
+  // @deprecated
   public adaptations : ManifestAdaptations;
 
-  /**
-   * List every `Period` in that Manifest chronologically (from its start time).
-   * A `Period` contains content informations about the content available for
-   * a specific period in time.
-   * @type {Array.<Object>}
-   */
+  // List every `Period` in that Manifest chronologically (from its start time).
+  // A `Period` contains content informations about the content available for
+  // a specific period in time.
   public readonly periods : Period[];
 
-  /**
-   * If true, this Manifest describes a content still running live.
-   * If false, this Manifest describes a finished content.
-   * At the moment this specificity cannot change with time.
-   * TODO Handle that case?
-   * @type {Boolean}
-   */
+  // If true, this Manifest describes a content still running live.
+  // If false, this Manifest describes a finished content.
+  // At the moment this specificity cannot change with time.
+  // TODO Handle that case?
   public isLive : boolean;
 
-  /**
-   * Every URI linking to that Manifest, used for refreshing it.
-   * Listed from the most important to the least important.
-   * @type {Array.<string>}
-   */
+  // Every URI linking to that Manifest, used for refreshing it.
+  // Listed from the most important to the least important.
   public uris : string[];
 
-  /**
-   * Suggested delay from the "live edge" the content is suggested to start
-   * from.
-   * This only applies to live contents.
-   * @type {number|undefined}
-   */
+  // Suggested delay from the "live edge" the content is suggested to start
+  // from.
+  // This only applies to live contents.
   public suggestedPresentationDelay? : number;
 
-  /**
-   * Base URL from which relative segment's URLs will be relative to.
-   * @param {string}
-   */
+  // Base URL from which relative segment's URLs will be relative to.
+  // @param {string}
   public baseURL? : string;
 
-  /**
-   * Amount of time, in seconds, this Manifest is valid from its fetching time.
-   * If not valid, you will need to refresh and update this Manifest (the latter
-   * can be done through the `update` method).
-   * If no lifetime is set, this Manifest does not become invalid after an
-   * amount of time.
-   * @type {number|undefined}
-   */
+  // Amount of time, in seconds, this Manifest is valid from its fetching time.
+  // If not valid, you will need to refresh and update this Manifest (the latter
+  // can be done through the `update` method).
+  // If no lifetime is set, this Manifest does not become invalid after an
+  // amount of time.
   public lifetime? : number;
 
-  /**
-   * Minimum time, in seconds, at which the segment defined in the Manifest
-   * begins.
-   * @type {number|undefined}
-   */
+  // Minimum time, in seconds, at which the segment defined in the Manifest
+  // begins.
   public availabilityStartTime? : number;
 
-  /**
-   * Minimum time in this Manifest we can seek to, in seconds.
-   * @type {number|undefined}
-   */
+  // Minimum time in this Manifest we can seek to, in seconds.
   public minimumTime? : number;
 
-  /**
-   * Estimated difference between Date.now() and the real live edge of the
-   * content.
-   * Note: this is sometimes really hard to estimate.
-   * @type {number|undefined}
-   */
+  // Estimated difference between Date.now() and the real live edge of the
+  // content.
+  // Note: this is sometimes really hard to estimate.
   public presentationLiveGap? : number;
 
-  /**
-   * Time - relative to the last available position - in seconds from when
-   * the first segment is available.
-   * Every segments before that time can be considered as unavailable.
-   * This is also sometimes called the `TimeShift window`.
-   * @type {number|undefined}
-   */
+  // Time - relative to the last available position - in seconds from when
+  // the first segment is available.
+  // Every segments before that time can be considered as unavailable.
+  // This is also sometimes called the `TimeShift window`.
+  // @type {number|undefined}
   public timeShiftBufferDepth? : number;
 
-  /**
-   * Array containing every errors that happened when the Manifest has been
-   * created, in the order they have happened.
-   * @type {Array.<Error>}
-   */
+  // Array containing every errors that happened when the Manifest has been
+  // created, in the order they have happened.
   public parsingErrors : Array<Error|ICustomError>;
 
-  /**
-   * Whole duration anounced in the Manifest.
-   * @private
-   * @type {number}
-   */
+  // Whole duration anounced in the Manifest.
   private _duration : number|undefined;
 
+  // Offset the client's clock has over the server's, in milliseconds
   private _clockOffset : number|undefined;
 
   /**
-   * @constructor
    * @param {Object} args
    */
   constructor(args : IManifestArguments, options : IManifestParsingOptions) {
     super();
-    const {
-      supplementaryTextTracks = [],
-      supplementaryImageTracks = [],
-      representationFilter,
-    } = options;
+    const { supplementaryTextTracks = [],
+            supplementaryImageTracks = [],
+            representationFilter } = options;
     this.parsingErrors = [];
     this.id = args.id;
     this.transport = args.transportType;
@@ -260,7 +214,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   getPeriodForTime(time : number) : Period|undefined {
     return arrayFind(this.periods, (period) => {
       return time >= period.start &&
-        (period.end == null || period.end > time);
+             (period.end == null || period.end > time);
     });
   }
 
@@ -302,7 +256,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   getAdaptations() : Adaptation[] {
     warnOnce("manifest.getAdaptations() is deprecated." +
-      " Please use manifest.period[].getAdaptations() instead");
+             " Please use manifest.period[].getAdaptations() instead");
     const firstPeriod = this.periods[0];
     if (!firstPeriod) {
       return [];
@@ -325,7 +279,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
     warnOnce("manifest.getAdaptationsForType(type) is deprecated." +
-      " Please use manifest.period[].getAdaptationsForType(type) instead");
+             " Please use manifest.period[].getAdaptationsForType(type) instead");
     const firstPeriod = this.periods[0];
     if (!firstPeriod) {
       return [];
@@ -339,7 +293,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   getAdaptation(wantedId : number|string) : Adaptation|undefined {
     warnOnce("manifest.getAdaptation(id) is deprecated." +
-      " Please use manifest.period[].getAdaptation(id) instead");
+             " Please use manifest.period[].getAdaptation(id) instead");
     /* tslint:disable:deprecation */
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
     /* tslint:enable:deprecation */
@@ -479,25 +433,25 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
       const adaptationID = "gen-image-ada-" + generateNewId();
       const representationID = "gen-image-rep-" + generateNewId();
-      const newAdaptation = new Adaptation({
-        id: adaptationID,
-        type: "image",
-        manuallyAdded: true,
-        representations: [{
-          bitrate: 0,
-          id: representationID,
-          mimeType,
-          index: new StaticRepresentationIndex({ media: url }),
-        }],
-      });
+      const newAdaptation =
+        new Adaptation({ id: adaptationID,
+                         type: "image",
+                         manuallyAdded: true,
+                         representations: [{
+                           bitrate: 0,
+                           id: representationID,
+                           mimeType,
+                           index: new StaticRepresentationIndex({ media: url }),
+                         }], });
       this.parsingErrors.push(...newAdaptation.parsingErrors);
       return newAdaptation;
     });
 
     if (newImageTracks.length && this.periods.length) {
       const { adaptations } = this.periods[0];
-      adaptations.image = adaptations.image ?
-        adaptations.image.concat(newImageTracks) : newImageTracks;
+      adaptations.image =
+        adaptations.image ? adaptations.image.concat(newImageTracks) :
+                            newImageTracks;
     }
   }
 
@@ -518,25 +472,25 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       languages,
       closedCaption,
     }) => {
-      const langsToMapOn : string[] = language ? [language] : languages || [];
+      const langsToMapOn : string[] = language ? [language] :
+                                                 languages || [];
 
       return allSubs.concat(langsToMapOn.map((_language) => {
         const adaptationID = "gen-text-ada-" + generateNewId();
         const representationID = "gen-text-rep-" + generateNewId();
-        const newAdaptation = new Adaptation({
-          id: adaptationID,
-          type: "text",
-          language: _language,
-          closedCaption,
-          manuallyAdded: true,
-          representations: [{
-            bitrate: 0,
-            id: representationID,
-            mimeType,
-            codecs,
-            index: new StaticRepresentationIndex({ media: url }),
-          }],
-        });
+        const newAdaptation =
+          new Adaptation({ id: adaptationID,
+                           type: "text",
+                           language: _language,
+                           closedCaption,
+                           manuallyAdded: true,
+                           representations: [{
+                             bitrate: 0,
+                             id: representationID,
+                             mimeType,
+                             codecs,
+                             index: new StaticRepresentationIndex({ media: url }),
+                           }], });
         this.parsingErrors.push(...newAdaptation.parsingErrors);
         return newAdaptation;
       }));
@@ -544,8 +498,9 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
 
     if (newTextAdaptations.length && this.periods.length) {
       const { adaptations } = this.periods[0];
-      adaptations.text = adaptations.text ?
-        adaptations.text.concat(newTextAdaptations) : newTextAdaptations;
+      adaptations.text =
+        adaptations.text ? adaptations.text.concat(newTextAdaptations) :
+                           newTextAdaptations;
     }
   }
 }

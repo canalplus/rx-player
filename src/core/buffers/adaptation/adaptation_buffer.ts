@@ -105,12 +105,10 @@ export default function AdaptationBuffer<T>(
   segmentBookkeeper : SegmentBookkeeper,
   segmentFetcher : IPrioritizedSegmentFetcher<T>,
   wantedBufferAhead$ : Observable<number>,
-  content : {
-    manifest : Manifest;
-    period : Period; adaptation : Adaptation;
-  },
+  content : { manifest : Manifest;
+              period : Period; adaptation : Adaptation; },
   abrManager : ABRManager,
-  options : { manualBitrateSwitchingMode : "seamless"|"direct" }
+  options : { manualBitrateSwitchingMode : "seamless" | "direct" }
 ) : Observable<IAdaptationBufferEvent<T>> {
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
@@ -120,8 +118,8 @@ export default function AdaptationBuffer<T>(
   let currentRepresentation : Representation|null = null;
 
   const abrClock$ = clock$.pipe(map((tick) => {
-    const downloadBitrate = currentRepresentation ?
-      currentRepresentation.bitrate : undefined;
+    const downloadBitrate = currentRepresentation ? currentRepresentation.bitrate :
+                                                    undefined;
     return objectAssign({ downloadBitrate }, tick);
   }));
 
@@ -146,9 +144,8 @@ export default function AdaptationBuffer<T>(
   );
 
   const newRepresentation$ = abr$
-    .pipe(distinctUntilChanged((a, b) =>
-      a.manual === b.manual && a.representation.id === b.representation.id
-    ));
+    .pipe(distinctUntilChanged((a, b) => a.manual === b.manual &&
+                                         a.representation.id === b.representation.id));
 
   const adaptationBuffer$ = observableMerge(
     newRepresentation$
@@ -198,20 +195,16 @@ export default function AdaptationBuffer<T>(
   ) : Observable<IRepresentationBufferEvent<T>> {
     return observableDefer(() => {
       log.info("Buffer: changing representation", adaptation.type, representation);
-      return RepresentationBuffer({
-        clock$,
-        content: {
-          representation,
-          adaptation,
-          period,
-          manifest,
-        },
-        queuedSourceBuffer,
-        segmentBookkeeper,
-        segmentFetcher,
-        terminate$: terminateCurrentBuffer$,
-        wantedBufferAhead$,
-      });
+      return RepresentationBuffer({ clock$,
+                                    content: { representation,
+                                               adaptation,
+                                               period,
+                                               manifest },
+                                    queuedSourceBuffer,
+                                    segmentBookkeeper,
+                                    segmentFetcher,
+                                    terminate$: terminateCurrentBuffer$,
+                                    wantedBufferAhead$, });
     });
   }
 }

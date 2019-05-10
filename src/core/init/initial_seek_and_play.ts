@@ -59,9 +59,14 @@ function canPlay(
     filter((tick) => {
       const { seeking, stalled, readyState, currentRange } = tick;
       return !seeking &&
-        stalled == null &&
-        (readyState === 4 || readyState === 3 && currentRange != null) &&
-        (!shouldValidateMetadata() || mediaElement.duration > 0);
+             stalled == null &&
+            (
+              readyState === 4 ||
+              readyState === 3 &&
+              currentRange != null) &&
+            (
+              !shouldValidateMetadata() ||
+              mediaElement.duration > 0);
     }),
     take(1),
     mapTo("can-play" as "can-play")
@@ -91,7 +96,7 @@ function autoPlay$(
       if (error.name === "NotAllowedError") {
         // auto-play was probably prevented.
         log.warn("Init: Media element can't play." +
-          " It may be due to browser auto-play policies.");
+                 " It may be due to browser auto-play policies.");
         return observableOf("autoplay-blocked" as "autoplay-blocked");
       } else {
         throw error;
@@ -127,8 +132,8 @@ export default function seekAndLoadOnMediaEvents(
     take(1),
     tap(() => {
       log.info("Init: Set initial time", startTime);
-      mediaElement.currentTime = typeof startTime === "function" ?
-        startTime() : startTime;
+      mediaElement.currentTime = typeof startTime === "function" ? startTime() :
+                                                                   startTime;
     }),
     shareReplay({ refCount: true })
   );

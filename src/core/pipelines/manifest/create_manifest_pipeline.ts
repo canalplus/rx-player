@@ -46,15 +46,11 @@ import createLoader, {
   IPipelineLoaderResponse,
 } from "../utils/create_loader";
 
-const {
-  MAX_BACKOFF_DELAY_BASE,
-  INITIAL_BACKOFF_DELAY_BASE,
-} = config;
+const { MAX_BACKOFF_DELAY_BASE,
+        INITIAL_BACKOFF_DELAY_BASE } = config;
 
-export interface IRequestSchedulerOptions {
-  maxRetry : number;
-  maxRetryOffline : number;
-}
+export interface IRequestSchedulerOptions { maxRetry : number;
+                                            maxRetryOffline : number; }
 
 export interface IFetchManifestOptions {
   url : string; // URL from which the manifest was requested
@@ -65,10 +61,8 @@ export interface IFetchManifestOptions {
 type IPipelineManifestOptions =
   IPipelineLoaderOptions<IManifestLoaderArguments, Document|string>;
 
-export interface IFetchManifestResult {
-  manifest : Manifest;
-  sendingTime? : number;
-}
+export interface IFetchManifestResult { manifest : Manifest;
+                                        sendingTime? : number; }
 
 /**
  * Generate a new error from the infos given.
@@ -123,15 +117,15 @@ export default function createManifestPipeline(
   function scheduleRequest<T>(request : () => Observable<T>) : Observable<T> {
     const { maxRetry, maxRetryOffline } = pipelineOptions;
 
-    const backoffOptions = {
-      baseDelay: INITIAL_BACKOFF_DELAY_BASE,
-      maxDelay: MAX_BACKOFF_DELAY_BASE,
-      maxRetryRegular: maxRetry,
-      maxRetryOffline,
-      onRetry: (error : Error) => {
-        warning$.next(errorSelector("PIPELINE_LOAD_ERROR", error, false));
-      },
-    };
+    const backoffOptions = { baseDelay: INITIAL_BACKOFF_DELAY_BASE,
+                             maxDelay: MAX_BACKOFF_DELAY_BASE,
+                             maxRetryRegular: maxRetry,
+                             maxRetryOffline,
+                             onRetry: (error : Error) => {
+                               warning$.next(errorSelector("PIPELINE_LOAD_ERROR",
+                                                           error,
+                                                           false)); } };
+
     return downloadingBackoff(tryCatch(request, undefined), backoffOptions).pipe(
       catchError((error : Error) : Observable<never> => {
         throw errorSelector("PIPELINE_LOAD_ERROR", error, true);
@@ -160,15 +154,17 @@ export default function createManifestPipeline(
 
       mergeMap(({ value }) => {
         const { sendingTime } = value;
-        return parser({
-          response: value,
-          url,
-          hasClockSynchronization,
-          scheduleRequest,
-        }).pipe(
+        return parser({ response: value,
+                        url,
+                        hasClockSynchronization,
+                        scheduleRequest }
+        ).pipe(
           catchError((error: Error) => {
             const formattedError = isKnownError(error) ?
-              error : new OtherError("PIPELINE_PARSING_ERROR", error.toString(), true);
+                                     error :
+                                     new OtherError("PIPELINE_PARSING_ERROR",
+                                                    error.toString(),
+                                                    true);
             throw formattedError;
           }),
           map(({ manifest }) => {

@@ -46,9 +46,7 @@ export default function createBufferClock(
 ) : Observable<IBufferOrchestratorClockTick> {
   let initialSeekPerformed = false;
   const updateTimeOffset$ = initialSeek$.pipe(
-    tap(() => {
-      initialSeekPerformed = true;
-    }),
+    tap(() => { initialSeekPerformed = true; }),
     ignoreElements()
   );
 
@@ -67,7 +65,8 @@ export default function createBufferClock(
           // initial position, the currentTime will most probably be 0 where the
           // effective starting position will be _startTime_.
           // Thus we initially set a wantedTimeOffset equal to startTime.
-          wantedTimeOffset: initialSeekPerformed ? 0 : startTime - tick.currentTime,
+          wantedTimeOffset: initialSeekPerformed ? 0 :
+                                                   startTime - tick.currentTime,
           speed,
         }, tick);
       }));

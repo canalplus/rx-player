@@ -27,16 +27,16 @@ import { isFirefox } from "./browser_detection";
  */
 export default function isPlaybackStuck(
   time : number,
-  currentRange : {
-    start: number;
-    end: number;
-  }|null,
+  currentRange : { start: number;
+                   end: number; } |
+                 null,
   state : string,
   isStalled : boolean
 ) : boolean {
   const FREEZE_THRESHOLD = 10; // freeze threshold in seconds
-  return (
-    isFirefox && isStalled && state === "timeupdate" &&
-    !!currentRange && currentRange.end - time > FREEZE_THRESHOLD
-  );
+  return (isFirefox &&
+          isStalled &&
+          state === "timeupdate" &&
+          !!currentRange &&
+          currentRange.end - time > FREEZE_THRESHOLD);
 }

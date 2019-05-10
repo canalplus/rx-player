@@ -27,11 +27,9 @@ import {
 } from "../types";
 
 function checkStorage(storage : IPersistedSessionStorage) : void {
-  assertInterface(
-    storage,
-    { save: "function", load: "function" },
-    "licenseStorage"
-  );
+  assertInterface(storage,
+                  { save: "function", load: "function" },
+                  "licenseStorage");
 }
 
 /**
@@ -77,9 +75,9 @@ export default class PersistedSessionsStore {
   ) : IPersistedSessionData|null {
     const hash = hashBuffer(initData);
     const entry = arrayFind(this._entries, (e) =>
-      e.initData === hash &&
-      e.initDataType === initDataType
-    );
+                    e.initData === hash &&
+                    e.initDataType === initDataType
+                  );
     return entry || null;
   }
 
@@ -107,11 +105,9 @@ export default class PersistedSessionsStore {
     }
 
     log.info("EME-PSS: Add new session", sessionId, session);
-    this._entries.push({
-      sessionId,
-      initData: hashBuffer(initData),
-      initDataType,
-    });
+    this._entries.push({ sessionId,
+                         initData: hashBuffer(initData),
+                         initDataType });
     this._save();
   }
 
@@ -127,9 +123,9 @@ export default class PersistedSessionsStore {
     const hash = hashBuffer(initData);
 
     const entry = arrayFind(this._entries, (e) =>
-      e.initData === hash &&
-      e.initDataType === initDataType
-    );
+                    e.initData === hash &&
+                    e.initDataType === initDataType
+                  );
     if (entry) {
       log.warn("EME-PSS: Delete session from store", entry);
 

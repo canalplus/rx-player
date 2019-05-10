@@ -26,7 +26,9 @@ import {
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
 import { IPipelineLoaderOptions } from "../utils/create_loader";
-import applyPrioritizerToSegmentFetcher from "./prioritized_segment_fetcher";
+import applyPrioritizerToSegmentFetcher, {
+  IPrioritizedSegmentFetcher,
+} from "./prioritized_segment_fetcher";
 import ObservablePrioritizer from "./prioritizer";
 import createSegmentFetcher, {
   IFetchedSegment,
@@ -107,20 +109,16 @@ export default class SegmentPipelinesManager<T> {
   createPipeline(
     bufferType : IBufferType,
     options : IPipelineLoaderOptions<ISegmentLoaderArguments, T>
-  ) {
-    const segmentFetcher = createSegmentFetcher<T>(
-      bufferType,
-      this._transport,
-      this._metrics$,
-      this._requestsInfos$,
-      this._warning$,
-      options
-    );
+  ) : IPrioritizedSegmentFetcher<T> {
+    const segmentFetcher = createSegmentFetcher<T>(bufferType,
+                                                   this._transport,
+                                                   this._metrics$,
+                                                   this._requestsInfos$,
+                                                   this._warning$,
+                                                   options);
 
     return applyPrioritizerToSegmentFetcher<T>(this._prioritizer, segmentFetcher);
   }
 }
 
-export {
-  IPipelineLoaderOptions as IPipelineOptions,
-};
+export { IPipelineLoaderOptions as IPipelineOptions };

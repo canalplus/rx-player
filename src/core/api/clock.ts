@@ -38,80 +38,71 @@ import {
   getRange,
 } from "../../utils/ranges";
 
-export type IMediaInfosState =
-  "init" |
-  "canplay" |
-  "play" |
-  "progress" |
-  "seeking" |
-  "seeked" |
-  "loadedmetadata" |
-  "ratechange" |
-  "timeupdate";
+export type IMediaInfosState = "init" |
+                               "canplay" |
+                               "play" |
+                               "progress" |
+                               "seeking" |
+                               "seeked" |
+                               "loadedmetadata" |
+                               "ratechange" |
+                               "timeupdate";
 
 // Informations recuperated on the media element on each clock
 // tick
-interface IMediaInfos {
-  bufferGap : number;
-  buffered : TimeRanges;
-  currentRange : {
-    start : number;
-    end : number;
-  }|null;
-  currentTime : number;
-  duration : number;
-  ended: boolean;
-  paused : boolean;
-  playbackRate : number;
-  readyState : number;
-  seeking : boolean;
-  state : IMediaInfosState;
-}
+interface IMediaInfos { bufferGap : number;
+                        buffered : TimeRanges;
+                        currentRange : { start : number;
+                                         end : number; } |
+                                       null;
+                        currentTime : number;
+                        duration : number;
+                        ended: boolean;
+                        paused : boolean;
+                        playbackRate : number;
+                        readyState : number;
+                        seeking : boolean;
+                        state : IMediaInfosState; }
 
 type stalledStatus = {
-  reason : "seeking" | "not-ready" | "buffering";
-  timestamp : number;
-} | null;
+                       reason : "seeking" | "not-ready" | "buffering";
+                       timestamp : number;
+                     } |
+                     null;
 
 // Global informations emitted on each clock tick
-export interface IClockTick extends IMediaInfos {
-  stalled : stalledStatus;
-}
+export interface IClockTick extends IMediaInfos { stalled : stalledStatus; }
 
 function isMediaInfoState(state : string) : state is IMediaInfosState {
   return state === "init" ||
-    state === "canplay" ||
-    state === "play" ||
-    state === "progress" ||
-    state === "seeking" ||
-    state === "seeked" ||
-    state === "loadedmetadata" ||
-    state === "ratechange" ||
-    state ===   "timeupdate";
+         state === "canplay" ||
+         state === "play" ||
+         state === "progress" ||
+         state === "seeking" ||
+         state === "seeked" ||
+         state === "loadedmetadata" ||
+         state === "ratechange" ||
+         state ===   "timeupdate";
 }
 
-const {
-  SAMPLING_INTERVAL_MEDIASOURCE,
-  SAMPLING_INTERVAL_NO_MEDIASOURCE,
-  RESUME_GAP_AFTER_SEEKING,
-  RESUME_GAP_AFTER_NOT_ENOUGH_DATA,
-  RESUME_GAP_AFTER_BUFFERING,
-  STALL_GAP,
-} = config;
+const { SAMPLING_INTERVAL_MEDIASOURCE,
+        SAMPLING_INTERVAL_NO_MEDIASOURCE,
+        RESUME_GAP_AFTER_SEEKING,
+        RESUME_GAP_AFTER_NOT_ENOUGH_DATA,
+        RESUME_GAP_AFTER_BUFFERING,
+        STALL_GAP } = config;
 
 /**
  * HTMLMediaElement Events for which timings are calculated and emitted.
  * @type {Array.<string>}
  */
-const SCANNED_MEDIA_ELEMENTS_EVENTS = [
-  "canplay",
-  "play",
-  "progress",
-  "seeking",
-  "seeked",
-  "loadedmetadata",
-  "ratechange",
-];
+const SCANNED_MEDIA_ELEMENTS_EVENTS = [ "canplay",
+                                        "play",
+                                        "progress",
+                                        "seeking",
+                                        "seeked",
+                                        "loadedmetadata",
+                                        "ratechange" ];
 
 /**
  * Returns the amount of time in seconds the buffer should have ahead of the
@@ -144,7 +135,8 @@ function hasLoadedUntilTheEnd(
   currentRange : { start : number; end : number }|null,
   duration : number
 ) : boolean {
-  return currentRange != null && (duration - currentRange.end) <= STALL_GAP;
+  return currentRange != null &&
+         (duration - currentRange.end) <= STALL_GAP;
 }
 
 /**
@@ -158,30 +150,26 @@ function getMediaInfos(
   mediaElement : HTMLMediaElement,
   currentState : IMediaInfosState
 ) : IMediaInfos {
-  const {
-    buffered,
-    currentTime,
-    duration,
-    ended,
-    paused,
-    playbackRate,
-    readyState,
-    seeking,
-  } = mediaElement;
+  const { buffered,
+          currentTime,
+          duration,
+          ended,
+          paused,
+          playbackRate,
+          readyState,
+          seeking } = mediaElement;
 
-  return {
-    bufferGap: getLeftSizeOfRange(buffered, currentTime),
-    buffered,
-    currentRange: getRange(buffered, currentTime),
-    currentTime,
-    duration,
-    ended,
-    paused,
-    playbackRate,
-    readyState,
-    seeking,
-    state: currentState,
-  };
+  return { bufferGap: getLeftSizeOfRange(buffered, currentTime),
+           buffered,
+           currentRange: getRange(buffered, currentTime),
+           currentTime,
+           duration,
+           ended,
+           paused,
+           playbackRate,
+           readyState,
+           seeking,
+           state: currentState };
 }
 
 /**
@@ -201,46 +189,38 @@ function getStalledStatus(
   currentTimings : IMediaInfos,
   withMediaSource : boolean
 ) : stalledStatus {
-  const {
-    state: currentState,
-    currentTime,
-    bufferGap,
-    currentRange,
-    duration,
-    paused,
-    readyState,
-    ended,
-  } = currentTimings;
+  const { state: currentState,
+          currentTime,
+          bufferGap,
+          currentRange,
+          duration,
+          paused,
+          readyState,
+          ended } = currentTimings;
 
-  const {
-    stalled: prevStalled,
-    state: prevState,
-    currentTime: prevTime,
-  } = prevTimings;
+  const { stalled: prevStalled,
+          state: prevState,
+          currentTime: prevTime } = prevTimings;
 
   const fullyLoaded = hasLoadedUntilTheEnd(currentRange, duration);
 
-  const canStall = (
-    readyState >= 1 &&
-    currentState !== "loadedmetadata" &&
-    !prevStalled &&
-    !(fullyLoaded || ended)
-  );
+  const canStall = (readyState >= 1 &&
+                    currentState !== "loadedmetadata" &&
+                    !prevStalled &&
+                    !(fullyLoaded || ended));
 
   let shouldStall;
   let shouldUnstall;
 
   if (withMediaSource) {
-    if (
-      canStall &&
-      (bufferGap <= STALL_GAP || bufferGap === Infinity || readyState === 1)
+    if (canStall &&
+        (bufferGap <= STALL_GAP || bufferGap === Infinity || readyState === 1)
     ) {
       shouldStall = true;
-    } else if (
-      prevStalled &&
-      readyState > 1 &&
-      bufferGap < Infinity &&
-      (bufferGap > getResumeGap(prevStalled) || fullyLoaded || ended)
+    } else if (prevStalled &&
+               readyState > 1 &&
+               bufferGap < Infinity &&
+               (bufferGap > getResumeGap(prevStalled) || fullyLoaded || ended)
     ) {
       shouldUnstall = true;
     }
@@ -250,20 +230,17 @@ function getStalledStatus(
   // own, so we only try to detect when the media timestamp has not changed
   // between two consecutive timeupdates
   else {
-    if (
-      canStall &&
-      (!paused && currentState === "timeupdate" &&
-        prevState === "timeupdate" && currentTime === prevTime ||
-        currentState === "seeking" && bufferGap === Infinity)
+    if (canStall &&
+        (!paused && currentState === "timeupdate" &&
+         prevState === "timeupdate" && currentTime === prevTime ||
+         currentState === "seeking" && bufferGap === Infinity)
     ) {
       shouldStall = true;
-    } else if (
-      prevStalled &&
-      (currentState !== "seeking" && currentTime !== prevTime ||
-        currentState === "canplay" ||
-        bufferGap < Infinity &&
-        (bufferGap > getResumeGap(prevStalled) || fullyLoaded || ended)
-      )
+    } else if (prevStalled &&
+               (currentState !== "seeking" && currentTime !== prevTime ||
+                currentState === "canplay" ||
+                bufferGap < Infinity &&
+                (bufferGap > getResumeGap(prevStalled) || fullyLoaded || ended))
     ) {
       shouldUnstall = true;
     }
@@ -278,10 +255,8 @@ function getStalledStatus(
     } else {
       reason = "buffering";
     }
-    return {
-      reason,
-      timestamp: performance.now(),
-    };
+    return { reason,
+             timestamp: performance.now() };
   }
   else if (shouldUnstall) {
     return null;
@@ -320,8 +295,7 @@ function createClock(
 ) : Observable<IClockTick> {
   return new Observable((obs : Observer<IClockTick>) => {
     let lastTimings : IClockTick = objectAssign(getMediaInfos(mediaElement, "init"),
-      { stalled: null }
-    );
+                                                { stalled: null });
 
     /**
      * Emit timings sample.
@@ -329,33 +303,34 @@ function createClock(
      * @param {Event} [evt] - The Event which triggered the callback, if one.
      */
     function emitSample(evt? : Event) {
-      const state : IMediaInfosState = evt && isMediaInfoState(evt.type) ?
-        evt.type : "timeupdate";
+      const state : IMediaInfosState = evt &&
+                                       isMediaInfoState(evt.type) ? evt.type :
+                                                                    "timeupdate";
       const mediaTimings = getMediaInfos(mediaElement, state);
       const stalledState = getStalledStatus(lastTimings, mediaTimings, withMediaSource);
 
       // /!\ Mutate mediaTimings
       lastTimings = objectAssign(mediaTimings,
-        { stalled: stalledState }
-      );
+                                 { stalled: stalledState });
       log.debug("API: new clock tick", lastTimings);
       obs.next(lastTimings);
     }
 
-    const interval = withMediaSource
-      ? SAMPLING_INTERVAL_MEDIASOURCE
-      : SAMPLING_INTERVAL_NO_MEDIASOURCE;
+    const interval = withMediaSource ? SAMPLING_INTERVAL_MEDIASOURCE :
+                                       SAMPLING_INTERVAL_NO_MEDIASOURCE;
 
     const intervalID = setInterval(emitSample, interval);
-    SCANNED_MEDIA_ELEMENTS_EVENTS.forEach((eventName) =>
-      mediaElement.addEventListener(eventName, emitSample));
+    SCANNED_MEDIA_ELEMENTS_EVENTS
+      .forEach((eventName) =>
+        mediaElement.addEventListener(eventName, emitSample));
 
     obs.next(lastTimings);
 
     return () => {
       clearInterval(intervalID);
-      SCANNED_MEDIA_ELEMENTS_EVENTS.forEach((eventName) =>
-        mediaElement.removeEventListener(eventName, emitSample));
+      SCANNED_MEDIA_ELEMENTS_EVENTS
+        .forEach((eventName) =>
+          mediaElement.removeEventListener(eventName, emitSample));
     };
   }).pipe(
     multicast(() => new ReplaySubject<IClockTick>(1)), // Always emit the last

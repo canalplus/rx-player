@@ -19,22 +19,21 @@ import IRepresentationIndex, {
   ISegment,
 } from "./types";
 
-export interface IStaticRepresentationIndexInfos {
-  media: string;
-}
+export interface IStaticRepresentationIndexInfos { media: string; }
 
 /**
  * Simple RepresentationIndex implementation for static files.
  * @class StaticRepresentationIndex
  */
 export default class StaticRepresentationIndex implements IRepresentationIndex {
-  private readonly _media: string;
+  // URL of the content
+  private readonly _mediaURL: string;
 
   /**
    * @param {Object} infos
    */
   constructor(infos : IStaticRepresentationIndexInfos) {
-    this._media = infos.media;
+    this._mediaURL = infos.media;
   }
 
   /**
@@ -51,15 +50,13 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    * @returns {Array.<Object>}
    */
   getSegments() : ISegment[] {
-    return [{
-      id: "0",
-      isInit: false,
-      number: 0,
-      time: 0,
-      duration: Number.MAX_VALUE,
-      timescale: 1,
-      mediaURL: this._media,
-    }];
+    return [{ id: "0",
+              isInit: false,
+              number: 0,
+              time: 0,
+              duration: Number.MAX_VALUE,
+              timescale: 1,
+              mediaURL: this._mediaURL }];
   }
 
   /**

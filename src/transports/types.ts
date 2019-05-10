@@ -83,18 +83,12 @@ export interface ILoaderResponseValue<T> {
 }
 
 // A loader gave a response after a request
-export interface ILoaderResponse<T> {
-  type : "response";
-  value : ILoaderResponseValue<T>;
-}
+export interface ILoaderResponse<T> { type : "response";
+                                      value : ILoaderResponseValue<T>; }
 
 // A loader gave a response without doing any request
-interface ILoaderData<T> {
-  type : "data";
-  value : {
-    responseData : T;
-  };
-}
+interface ILoaderData<T> { type : "data";
+                           value : { responseData : T }; }
 
 // items emitted by loaders on xhr progress events
 export interface ILoaderProgress {
@@ -102,21 +96,18 @@ export interface ILoaderProgress {
   value : {
     duration : number;
     size : number;
-    totalSize? : number; // undefined if the total size is not known
     url : string;
+    totalSize? : number; // undefined if the total size is not known
   };
 }
 
 // items emitted by loaders on xhr response events
-interface ILoaderData<T> {
-  type : "data";
-  value : {
-    responseData : T;
-  };
-}
+interface ILoaderData<T> { type : "data";
+                           value : { responseData : T }; }
 
-export type ILoaderEvent<T> =
-  ILoaderProgress|ILoaderResponse<T>|ILoaderData<T>;
+export type ILoaderEvent<T> = ILoaderProgress |
+                              ILoaderResponse<T> |
+                              ILoaderData<T>;
 
 export type ILoaderObserver<T> = Observer<ILoaderEvent<T>>;
 
@@ -216,12 +207,10 @@ export type ImageParserObservable = Observable<{
 
 export interface ITransportManifestPipeline {
   // TODO Remove resolver
-  resolver? : (x : IManifestLoaderArguments) =>
-    Observable<IManifestLoaderArguments>;
-  loader : (x : IManifestLoaderArguments) =>
-    ILoaderObservable<Document|string>;
-  parser : (x : IManifestParserArguments<Document|string, string>) =>
-    IManifestParserObservable;
+  resolver? : (x : IManifestLoaderArguments) => Observable<IManifestLoaderArguments>;
+  loader : (x : IManifestLoaderArguments) => ILoaderObservable<Document|string>;
+  parser : (x : IManifestParserArguments< Document |
+                                          string, string>) => IManifestParserObservable;
 }
 
 interface ITransportSegmentPipelineBase<T> {
@@ -237,42 +226,42 @@ export type ITransportAudioSegmentPipeline =
 
 export interface ITransportTextSegmentPipeline {
   // Note: The segment's data can be null for init segments
-  loader : (x : ISegmentLoaderArguments) =>
-    ILoaderObservable<Uint8Array|ArrayBuffer|string|null>;
-  parser : (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|string|null>) =>
-    TextTrackParserObservable;
+  loader : (x : ISegmentLoaderArguments) => ILoaderObservable< Uint8Array |
+                                                               ArrayBuffer |
+                                                               string |
+                                                               null >;
+  parser : (x : ISegmentParserArguments< Uint8Array |
+                                         ArrayBuffer |
+                                         string |
+                                         null >) => TextTrackParserObservable;
 }
 
 export interface ITransportImageSegmentPipeline {
   // Note: The segment's data can be null for init segments
-  loader : (x : ISegmentLoaderArguments) =>
-    ILoaderObservable<Uint8Array|ArrayBuffer|null>;
-  parser : (x : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>) =>
-    ImageParserObservable;
+  loader : (x : ISegmentLoaderArguments) => ILoaderObservable< Uint8Array |
+                                                               ArrayBuffer |
+                                                               null >;
+  parser : (x : ISegmentParserArguments< Uint8Array |
+                                         ArrayBuffer |
+                                         null >) => ImageParserObservable;
 }
 
-export type ITransportSegmentPipeline =
-  ITransportAudioSegmentPipeline |
-  ITransportVideoSegmentPipeline |
-  ITransportTextSegmentPipeline |
-  ITransportImageSegmentPipeline;
+export type ITransportSegmentPipeline = ITransportAudioSegmentPipeline |
+                                        ITransportVideoSegmentPipeline |
+                                        ITransportTextSegmentPipeline |
+                                        ITransportImageSegmentPipeline;
 
-export type ITransportPipeline =
-  ITransportManifestPipeline |
-  ITransportSegmentPipeline;
+export type ITransportPipeline = ITransportManifestPipeline |
+                                 ITransportSegmentPipeline;
 
-export interface ITransportPipelines {
-  manifest : ITransportManifestPipeline;
-  audio : ITransportAudioSegmentPipeline;
-  video : ITransportVideoSegmentPipeline;
-  text : ITransportTextSegmentPipeline;
-  image : ITransportImageSegmentPipeline;
-}
+export interface ITransportPipelines { manifest : ITransportManifestPipeline;
+                                       audio : ITransportAudioSegmentPipeline;
+                                       video : ITransportVideoSegmentPipeline;
+                                       text : ITransportTextSegmentPipeline;
+                                       image : ITransportImageSegmentPipeline; }
 
-interface IParsedKeySystem {
-  systemId : string;
-  privateData : Uint8Array;
-}
+interface IParsedKeySystem { systemId : string;
+                             privateData : Uint8Array; }
 
 export interface ITransportOptions {
   aggressiveMode? : boolean;
@@ -288,30 +277,24 @@ export interface ITransportOptions {
 }
 
 export type ITransportFunction = (options? : ITransportOptions) =>
-  ITransportPipelines;
+                                   ITransportPipelines;
 
 export type CustomSegmentLoader = (
   // first argument: infos on the segment
-  args : {
-    adaptation : Adaptation;
-    representation : Representation;
-    segment : ISegment;
-    transport : string;
-    url : string;
-    manifest : Manifest;
-  },
+  args : { adaptation : Adaptation;
+           representation : Representation;
+           segment : ISegment;
+           transport : string;
+           url : string;
+           manifest : Manifest; },
 
   // second argument: callbacks
-  callbacks : {
-    resolve : (args : {
-      data : ArrayBuffer|Uint8Array;
-      size : number;
-      duration : number;
-    }) => void;
+  callbacks : { resolve : (args : { data : ArrayBuffer|Uint8Array;
+                                    size : number;
+                                    duration : number; }) => void;
 
-    reject : (err? : Error) => void;
-    fallback? : () => void;
-  }
+                reject : (err? : Error) => void;
+                fallback? : () => void; }
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;
@@ -321,16 +304,12 @@ export type CustomManifestLoader = (
   url : string,
 
   // second argument: callbacks
-  callbacks : {
-    resolve : (args : {
-      data : Document|string;
-      size : number;
-      duration : number;
-    }) => void;
+  callbacks : { resolve : (args : { data : Document|string;
+                                    size : number;
+                                    duration : number; }) => void;
 
-    reject : (err? : Error) => void;
-    fallback? : () => void;
-  }
+                 reject : (err? : Error) => void;
+                 fallback? : () => void; }
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;

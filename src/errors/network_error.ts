@@ -58,7 +58,8 @@ export default class NetworkError extends Error {
     this.errorType = requestError.type;
 
     this.code = ErrorCodes.hasOwnProperty(code) ?
-      (ErrorCodes as Record<string, string>)[code] : "";
+                  (ErrorCodes as Record<string, string>)[code] :
+                  "";
     this.fatal = !!fatal;
     this.message = errorMessage(this.name, this.code, requestError.message);
   }
@@ -69,9 +70,7 @@ export default class NetworkError extends Error {
    * @returns {Boolean}
    */
   isHttpError(httpErrorCode : number) : boolean {
-    return (
-      this.errorType === RequestErrorTypes.ERROR_HTTP_CODE &&
-      this.status === httpErrorCode
-    );
+    return this.errorType === RequestErrorTypes.ERROR_HTTP_CODE &&
+           this.status === httpErrorCode;
   }
 }

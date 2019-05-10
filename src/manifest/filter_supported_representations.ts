@@ -28,9 +28,8 @@ export default function filterSupportedRepresentations(
   representations : IRepresentationArguments[]
 ) : IRepresentationArguments[] {
   if (adaptationType === "audio" || adaptationType === "video") {
-    return representations.filter((representation) => {
-      return isCodecSupported(getCodec(representation));
-    });
+    return representations
+      .filter((representation) => isCodecSupported(getCodec(representation)));
   }
 
   return representations; // TODO for the other types?

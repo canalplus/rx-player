@@ -32,10 +32,8 @@
 // Factor for rounding errors
 const EPSILON = 1 / 60;
 
-interface IRange {
-  start : number;
-  end : number;
-}
+interface IRange { start : number;
+                   end : number; }
 
 /**
  * Check equality with a tolerance of EPSILON.
@@ -134,8 +132,8 @@ function isTimeInRange({ start, end } : IRange, time : number) : boolean {
  */
 function areRangesOverlapping(range1 : IRange, range2 : IRange) : boolean {
   return isTimeInRange(range1, range2.start) ||
-    range1.start < range2.end && range2.end < range1.end ||
-    isTimeInRange(range2, range1.start);
+         range1.start < range2.end && range2.end < range1.end ||
+         isTimeInRange(range2, range1.start);
 }
 
 /**
@@ -146,7 +144,7 @@ function areRangesOverlapping(range1 : IRange, range2 : IRange) : boolean {
  */
 function areRangesNearlyContiguous(range1 : IRange, range2 : IRange) : boolean {
   return nearlyEqual(range2.start, range1.end) ||
-    nearlyEqual(range2.end, range1.start);
+         nearlyEqual(range2.end, range1.start);
 }
 
 /**
@@ -157,10 +155,8 @@ function areRangesNearlyContiguous(range1 : IRange, range2 : IRange) : boolean {
 function convertToRanges(timeRanges : TimeRanges) : IRange[] {
   const ranges : IRange[] = [];
   for (let i = 0; i < timeRanges.length; i++) {
-    ranges.push({
-      start: timeRanges.start(i),
-      end: timeRanges.end(i),
-    });
+    ranges.push({ start: timeRanges.start(i),
+                  end: timeRanges.end(i) });
   }
   return ranges;
 }
@@ -176,10 +172,8 @@ function getRange(timeRanges : TimeRanges, time : number) : IRange|null {
     if (time >= start) {
       const end = timeRanges.end(i);
       if (time < end) {
-        return {
-          start,
-          end,
-        };
+        return { start,
+                 end };
       }
     }
   }
@@ -241,9 +235,8 @@ function getSizeOfRange(
   currentTime : number
 ) : number {
   const range = getRange(timeRanges, currentTime);
-  return range
-    ? range.end - range.start
-    : 0;
+  return range ? range.end - range.start :
+                 0;
 }
 
 /**
@@ -258,9 +251,8 @@ function getPlayedSizeOfRange(
   currentTime : number
 ) : number {
   const range = getRange(timeRanges, currentTime);
-  return range
-    ? currentTime - range.start
-    : 0;
+  return range ? currentTime - range.start :
+                 0;
 }
 
 /**
@@ -275,9 +267,8 @@ function getLeftSizeOfRange(
   currentTime : number
 ) : number {
   const range = getRange(timeRanges, currentTime);
-  return range
-    ? range.end - currentTime
-    : Infinity;
+  return range ? range.end - currentTime :
+                 Infinity;
 }
 
 /**
@@ -377,10 +368,8 @@ function keepRangeIntersection(
     if (overlappingRanges.length) {
       for (let j = 0; j < overlappingRanges.length; j++) {
         const overlappingRange = overlappingRanges[j];
-        result.push({
-          start: Math.max(range.start, overlappingRange.start),
-          end: Math.min(range.end, overlappingRange.end),
-        });
+        result.push({ start: Math.max(range.start, overlappingRange.start),
+                      end: Math.min(range.end, overlappingRange.end) });
       }
     }
   }

@@ -30,9 +30,7 @@ import {
 import log from "../../log";
 import { IInitClockTick } from "./types";
 
-export interface IPlaybackRateOptions {
-  pauseWhenStalled? : boolean;
-}
+export interface IPlaybackRateOptions { pauseWhenStalled? : boolean; }
 
 /**
  * Manage playback speed.
@@ -66,9 +64,8 @@ export default function updatePlaybackRate(
         map(([prevTiming, timing]) => {
           const isStalled = timing.stalled;
           const wasStalled = prevTiming.stalled;
-          if (
-            !wasStalled !== !isStalled || // xor
-            (wasStalled && isStalled && wasStalled.reason !== isStalled.reason)
+          if (!wasStalled !== !isStalled || // xor
+              (wasStalled && isStalled && wasStalled.reason !== isStalled.reason)
           ) {
             return !wasStalled;
           }

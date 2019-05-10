@@ -20,6 +20,4 @@ import BufferOrchestrator, {
 export * from "./types";
 
 export default BufferOrchestrator;
-export {
-  IBufferOrchestratorClockTick,
-};
+export { IBufferOrchestratorClockTick };

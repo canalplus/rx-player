@@ -17,12 +17,10 @@
 import config from "../../config";
 import EWMA from "./ewma";
 
-const {
-  ABR_MINIMUM_TOTAL_BYTES,
-  ABR_MINIMUM_CHUNK_SIZE,
-  ABR_FAST_EMA,
-  ABR_SLOW_EMA,
-} = config;
+const { ABR_MINIMUM_TOTAL_BYTES,
+        ABR_MINIMUM_CHUNK_SIZE,
+        ABR_FAST_EMA,
+        ABR_SLOW_EMA } = config;
 
 /**
  * Calculate a mean bandwidth based on the bytes downloaded and the amount
@@ -88,7 +86,8 @@ export default class BandwidthEstimator {
 
     // Take the minimum of these two estimates.  This should have the effect of
     // adapting down quickly, but up more slowly.
-    return Math.min(this._fastEWMA.getEstimate(), this._slowEWMA.getEstimate());
+    return Math.min(this._fastEWMA.getEstimate(),
+                    this._slowEWMA.getEstimate());
   }
 
   /**

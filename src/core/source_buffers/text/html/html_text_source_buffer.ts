@@ -35,24 +35,18 @@ import AbstractSourceBuffer from "../../abstract_source_buffer";
 import TextBufferManager from "./buffer_manager";
 import parseTextTrackToElements from "./parsers";
 
-const {
-  onEnded$,
-  onSeeked$,
-  onSeeking$,
-} = events;
+const { onEnded$,
+        onSeeked$,
+        onSeeking$ } = events;
 
-export interface IHTMLTextTrackData {
-  timescale : number;
-  start : number;
-  end? : number;
-  data : string;
-  type : string;
-  language : string;
-}
+export interface IHTMLTextTrackData { timescale : number;
+                                      start : number;
+                                      end? : number;
+                                      data : string;
+                                      type : string;
+                                      language : string; }
 
-const {
-  MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL,
-} = config;
+const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL } = config;
 
 /**
  * Generate the clock at which TextTrack HTML Cues should be refreshed.
@@ -66,18 +60,13 @@ function generateClock(videoElement : HTMLMediaElement) : Observable<boolean> {
 
   const manualRefresh$ = observableMerge(seeked$, ended$);
   const autoRefresh$ = observableInterval(MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL)
-    .pipe(startWith(null));
+                         .pipe(startWith(null));
 
   return manualRefresh$.pipe(
     startWith(null),
-    switchMapTo(
-      observableConcat(
-        autoRefresh$
-          .pipe(mapTo(true), takeUntil(seeking$)),
-        observableOf(false)
-      )
-    )
-  );
+    switchMapTo(observableConcat(autoRefresh$
+                                   .pipe(mapTo(true), takeUntil(seeking$)),
+                                 observableOf(false))));
 }
 
 /**
@@ -99,7 +88,7 @@ function safelyRemoveChild(element : Element, child : Element|null) {
  * @class HTMLTextSourceBuffer
  */
 export default class HTMLTextSourceBuffer
-  extends AbstractSourceBuffer<IHTMLTextTrackData>
+               extends AbstractSourceBuffer<IHTMLTextTrackData>
 {
   private readonly _videoElement : HTMLMediaElement;
   private readonly _destroy$ : Subject<void>;
@@ -137,7 +126,8 @@ export default class HTMLTextSourceBuffer
         // As the clock is also based on real video events, we cannot just
         // divide by two the regular interval.
         const time = Math.max(this._videoElement.currentTime -
-          MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL / 2000, 0);
+                              MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL / 2000,
+                              0);
         const cue = this._buffer.get(time);
         if (!cue) {
           safelyRemoveChild(textTrackElement, this._currentElement);
@@ -175,13 +165,16 @@ export default class HTMLTextSourceBuffer
     }
 
     const startTime = timescaledStart / timescale;
-    const endTime = timescaledEnd != null ?
-      timescaledEnd / timescale : undefined;
+    const endTime = timescaledEnd != null ? timescaledEnd / timescale :
+                                            undefined;
 
-    const cues = parseTextTrackToElements(
-      type, dataString, this.timestampOffset, language);
+    const cues = parseTextTrackToElements(type,
+                                          dataString,
+                                          this.timestampOffset,
+                                          language);
     const start = startTime;
-    const end = endTime != null ? endTime : cues[cues.length - 1].end;
+    const end = endTime != null ? endTime :
+                                  cues[cues.length - 1].end;
     this._buffer.insert(cues, start, end);
     this.buffered.insert(start, end);
   }

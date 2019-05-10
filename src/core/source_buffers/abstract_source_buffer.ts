@@ -24,12 +24,10 @@ import EventEmitter from "../../utils/event_emitter";
 import tryCatch from "../../utils/rx-try_catch";
 import ManualTimeRanges from "./time_ranges";
 
-interface IAbstractSourceBufferEvent {
-  updatestart : undefined;
-  update : undefined;
-  updateend : undefined;
-  error : Event;
-}
+interface IAbstractSourceBufferEvent { updatestart : undefined;
+                                       update : undefined;
+                                       updateend : undefined;
+                                       error : Event; }
 
 /**
  * Abstract class for a custom SourceBuffer implementation.
@@ -37,8 +35,8 @@ interface IAbstractSourceBufferEvent {
  * @extends EventEmitter
  */
 export default abstract class AbstractSourceBuffer<T>
-  extends EventEmitter<IAbstractSourceBufferEvent>
-  implements ICustomSourceBuffer<T>
+                        extends EventEmitter<IAbstractSourceBufferEvent>
+                        implements ICustomSourceBuffer<T>
 {
   public timestampOffset : number;
   public updating : boolean;
@@ -101,17 +99,15 @@ export default abstract class AbstractSourceBuffer<T>
       func();
       return observableOf(undefined);
     }, undefined);
-    result.subscribe(
-      ()  => nextTick(() => {
-        this.updating = false;
-        this.trigger("update", undefined);
-        this.trigger("updateend", undefined);
-      }),
-      (e) => nextTick(() => {
-        this.updating = false;
-        this.trigger("error", e);
-        this.trigger("updateend", undefined);
-      })
-    );
+    result.subscribe(()  => nextTick(() => {
+                       this.updating = false;
+                       this.trigger("update", undefined);
+                       this.trigger("updateend", undefined);
+                     }),
+                     (e) => nextTick(() => {
+                       this.updating = false;
+                       this.trigger("error", e);
+                       this.trigger("updateend", undefined);
+                     }));
   }
 }

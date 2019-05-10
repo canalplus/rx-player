@@ -67,10 +67,8 @@ import {
 
 export type IBufferOrchestratorClockTick = IPeriodBufferClockTick;
 
-const {
-  MAXIMUM_MAX_BUFFER_AHEAD,
-  MAXIMUM_MAX_BUFFER_BEHIND,
-} = config;
+const { MAXIMUM_MAX_BUFFER_AHEAD,
+        MAXIMUM_MAX_BUFFER_BEHIND } = config;
 
 /**
  * Create and manage the various Buffer Observables needed for the content to
@@ -104,23 +102,19 @@ const {
  * periods.
  */
 export default function BufferOrchestrator(
-  content : {
-    manifest : Manifest;
-    initialPeriod : Period;
-  },
+  content : { manifest : Manifest;
+              initialPeriod : Period; },
   clock$ : Observable<IBufferOrchestratorClockTick>,
   abrManager : ABRManager,
   sourceBuffersManager : SourceBuffersManager,
   segmentPipelinesManager : SegmentPipelinesManager<any>,
-  options: {
-    wantedBufferAhead$ : Observable<number>;
-    maxBufferAhead$ : Observable<number>;
-    maxBufferBehind$ : Observable<number>;
-    segmentRetry? : number;
-    offlineRetry? : number;
-    textTrackOptions? : ITextTrackSourceBufferOptions;
-    manualBitrateSwitchingMode : "seamless"|"direct";
-  }
+  options: { wantedBufferAhead$ : Observable<number>;
+             maxBufferAhead$ : Observable<number>;
+             maxBufferBehind$ : Observable<number>;
+             segmentRetry? : number;
+             offlineRetry? : number;
+             textTrackOptions? : ITextTrackSourceBufferOptions;
+             manualBitrateSwitchingMode : "seamless" | "direct"; }
 ) : Observable<IBufferOrchestratorEvent> {
   const { manifest, initialPeriod } = content;
   const { maxBufferAhead$, maxBufferBehind$, wantedBufferAhead$ } = options;
@@ -131,22 +125,25 @@ export default function BufferOrchestrator(
     new WeakMapMemory((qSourceBuffer : QueuedSourceBuffer<unknown>) => {
       const { bufferType } = qSourceBuffer;
       const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] != null ?
-        MAXIMUM_MAX_BUFFER_BEHIND[bufferType] as number : Infinity;
+                                 MAXIMUM_MAX_BUFFER_BEHIND[bufferType] as number :
+                                 Infinity;
       const defaultMaxAhead = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] != null ?
-        MAXIMUM_MAX_BUFFER_AHEAD[bufferType] as number : Infinity;
+                                MAXIMUM_MAX_BUFFER_AHEAD[bufferType] as number :
+                                Infinity;
       return BufferGarbageCollector({
         queuedSourceBuffer: qSourceBuffer,
         clock$: clock$.pipe(map(tick => tick.currentTime)),
         maxBufferBehind$: maxBufferBehind$
-          .pipe(map(val => Math.min(val, defaultMaxBehind))),
+                            .pipe(map(val => Math.min(val, defaultMaxBehind))),
         maxBufferAhead$: maxBufferAhead$
-          .pipe(map(val => Math.min(val, defaultMaxAhead))),
+                           .pipe(map(val => Math.min(val, defaultMaxAhead))),
       });
     });
 
   // Keep track of a unique segmentBookkeeper created per QueuedSourceBuffer.
-  const segmentBookkeepers = new WeakMapMemory<QueuedSourceBuffer<unknown>,
-    SegmentBookkeeper>(() => new SegmentBookkeeper());
+  const segmentBookkeepers =
+    new WeakMapMemory<QueuedSourceBuffer<unknown>, SegmentBookkeeper>(() =>
+      new SegmentBookkeeper());
 
   // trigger warnings when the wanted time is before or after the manifest's
   // segments
@@ -154,12 +151,16 @@ export default function BufferOrchestrator(
     mergeMap(({ currentTime, wantedTimeOffset }) => {
       const position = wantedTimeOffset + currentTime;
       if (position < manifest.getMinimumPosition()) {
-        const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST", "The current " +
-          "position is behind the earliest time announced in the Manifest.", false);
+        const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST",
+                                       "The current position is behind the " +
+                                       "earliest time announced in the Manifest.",
+                                       false);
         return observableOf(EVENTS.warning(warning));
       } else if (position > manifest.getMaximumPosition()) {
-        const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST", "The current " +
-          "position is after the latest time announced in the Manifest.", false);
+        const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST",
+                                       "The current position is after the latest " +
+                                       "time announced in the Manifest.",
+                                       false);
         return observableOf(EVENTS.warning(warning));
       }
       return EMPTY;
@@ -200,12 +201,10 @@ export default function BufferOrchestrator(
       areComplete ? EVENTS.endOfStream() : EVENTS.resumeStream()
     ));
 
-  return observableMerge(
-    activePeriodChanged$,
-    ...buffersArray,
-    endOfStream$,
-    outOfManifest$
-  );
+  return observableMerge(activePeriodChanged$,
+                         ...buffersArray,
+                         endOfStream$,
+                         outOfManifest$);
 
   /**
    * Manage creation and removal of Buffers for every Periods.
@@ -261,7 +260,8 @@ export default function BufferOrchestrator(
       if (head == null || last == null) { // if no period
         return true;
       }
-      return head.start > time || (last.end || Infinity) < time;
+      return head.start > time ||
+            (last.end || Infinity) < time;
     }
 
     // Restart the current buffer when the wanted time is in another period
@@ -269,12 +269,14 @@ export default function BufferOrchestrator(
     const restartBuffersWhenOutOfBounds$ = clock$.pipe(
       filter(({ currentTime, wantedTimeOffset }) => {
         return hasLoadedABuffer &&
-          !!manifest.getPeriodForTime(wantedTimeOffset + currentTime) &&
-          isOutOfPeriodList(wantedTimeOffset + currentTime);
+               !!manifest.getPeriodForTime(wantedTimeOffset + currentTime) &&
+               isOutOfPeriodList(wantedTimeOffset + currentTime);
       }),
       tap(({ currentTime, wantedTimeOffset }) => {
         log.info("Buffer: Current position out of the bounds of the active periods," +
-          "re-creating buffers.", bufferType, currentTime + wantedTimeOffset);
+                 "re-creating buffers.",
+                 bufferType,
+                 currentTime + wantedTimeOffset);
         hasLoadedABuffer = false;
         destroyBuffers$.next();
       }),
@@ -283,16 +285,15 @@ export default function BufferOrchestrator(
           .getPeriodForTime(currentTime + wantedTimeOffset);
         if (newInitialPeriod == null) {
           throw new MediaError("MEDIA_TIME_NOT_FOUND",
-            "The wanted position is not found in the Manifest.", true);
+                               "The wanted position is not found in the Manifest.",
+                               true);
         }
         return launchConsecutiveBuffersForPeriod(newInitialPeriod);
       })
     );
 
-    return observableMerge(
-      launchConsecutiveBuffersForPeriod(basePeriod),
-      restartBuffersWhenOutOfBounds$
-    );
+    return observableMerge(launchConsecutiveBuffersForPeriod(basePeriod),
+                           restartBuffersWhenOutOfBounds$);
   }
 
   /**
@@ -339,8 +340,8 @@ export default function BufferOrchestrator(
     // Emits when the current position goes over the end of the current buffer.
     const endOfCurrentBuffer$ = clock$
       .pipe(filter(({ currentTime, wantedTimeOffset }) =>
-        !!basePeriod.end && (currentTime + wantedTimeOffset) >= basePeriod.end
-      ));
+                     !!basePeriod.end &&
+                    (currentTime + wantedTimeOffset) >= basePeriod.end));
 
     // Create Period Buffer for the next Period.
     const nextPeriodBuffer$ = createNextPeriodBuffer$
@@ -368,21 +369,18 @@ export default function BufferOrchestrator(
     // Will emit when the current buffer should be destroyed.
     const killCurrentBuffer$ = observableMerge(endOfCurrentBuffer$, destroyAll$);
 
-    const periodBuffer$ = PeriodBuffer({
-      abrManager,
-      bufferType,
-      clock$,
-      content: { manifest, period: basePeriod },
-      garbageCollectors,
-      segmentBookkeepers,
-      segmentPipelinesManager,
-      sourceBuffersManager,
-      options,
-      wantedBufferAhead$,
-    }).pipe(
-      mergeMap((
-        evt : IPeriodBufferEvent
-      ) : Observable<IMultiplePeriodBuffersEvent> => {
+    const periodBuffer$ = PeriodBuffer({ abrManager,
+                                         bufferType,
+                                         clock$,
+                                         content: { manifest, period: basePeriod },
+                                         garbageCollectors,
+                                         segmentBookkeepers,
+                                         segmentPipelinesManager,
+                                         sourceBuffersManager,
+                                         options,
+                                         wantedBufferAhead$, }
+    ).pipe(
+      mergeMap((evt : IPeriodBufferEvent) : Observable<IMultiplePeriodBuffersEvent> => {
         const { type } = evt;
         if (type === "full-buffer") {
           const nextPeriod = manifest.getPeriodAfter(basePeriod);
@@ -411,10 +409,8 @@ export default function BufferOrchestrator(
           }))
         );
 
-    return observableMerge(
-      currentBuffer$,
-      nextPeriodBuffer$,
-      destroyAll$.pipe(ignoreElements())
-    );
+    return observableMerge(currentBuffer$,
+                           nextPeriodBuffer$,
+                           destroyAll$.pipe(ignoreElements()));
   }
 }

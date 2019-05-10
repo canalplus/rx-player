@@ -71,12 +71,10 @@ function exitFullscreen() : void {
  */
 function isFullscreen() : boolean {
   const doc = document as ICompatDocument;
-  return !!(
-    doc.fullscreenElement ||
-    doc.mozFullScreenElement ||
-    doc.webkitFullscreenElement ||
-    doc.msFullscreenElement
-  );
+  return !!(doc.fullscreenElement ||
+            doc.mozFullScreenElement ||
+            doc.webkitFullscreenElement ||
+            doc.msFullscreenElement);
 }
 
 export {

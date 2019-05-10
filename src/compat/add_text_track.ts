@@ -40,9 +40,10 @@ export default function addTextTrack(
   const kind = "subtitles";
   if (isIEOrEdge) {
     const tracksLength = mediaElement.textTracks.length;
-    track = tracksLength > 0 ?
-      mediaElement.textTracks[tracksLength - 1] : mediaElement.addTextTrack(kind);
-    track.mode = hidden ? track.HIDDEN : track.SHOWING;
+    track = tracksLength > 0 ? mediaElement.textTracks[tracksLength - 1] :
+                               mediaElement.addTextTrack(kind);
+    track.mode = hidden ? track.HIDDEN :
+                          track.SHOWING;
   } else {
     trackElement = document.createElement("track");
     mediaElement.appendChild(trackElement);

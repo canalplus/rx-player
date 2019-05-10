@@ -25,18 +25,14 @@ import {
 import { convertToRanges } from "../../utils/ranges";
 import takeFirstSet from "../../utils/take_first_set";
 
-const {
-  MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,
-  MAX_BUFFERED_DISTANCE,
-  MINIMUM_SEGMENT_SIZE,
-} = config;
+const { MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,
+        MAX_BUFFERED_DISTANCE,
+        MINIMUM_SEGMENT_SIZE } = config;
 
-interface IBufferedSegmentInfos {
-  adaptation : Adaptation;
-  period : Period;
-  representation : Representation;
-  segment : ISegment;
-}
+interface IBufferedSegmentInfos { adaptation : Adaptation;
+                                  period : Period;
+                                  representation : Representation;
+                                  segment : ISegment; }
 
 interface IBufferedSegment {
   bufferedEnd : number|undefined; // Last inferred end in the SourceBuffer
@@ -110,13 +106,12 @@ export default class SegmentBookkeeper {
       // Find the first segment either within this TimeRange or past it:
       // skip until first segment with at least MINIMUM_SEGMENT_SIZE past the
       // start of that range.
-      while (
-        thisSegment &&
+      while (thisSegment &&
 
-        // TODO better way to indicate to typescript that all is well here
-        (takeFirstSet(thisSegment.bufferedEnd, thisSegment.end) as number
-          - rangeStart)
-        < MINIMUM_SEGMENT_SIZE
+             // TODO better way to indicate to typescript that all is well here
+            (takeFirstSet(thisSegment.bufferedEnd, thisSegment.end) as number
+              - rangeStart
+            ) < MINIMUM_SEGMENT_SIZE
       ) {
         thisSegment = inventory[++inventoryIndex];
       }
@@ -137,9 +132,8 @@ export default class SegmentBookkeeper {
           inventory[indexBefore + numberOfSegmentToDelete - 1];
 
         // TODO better way to indicate to typescript that all is well here
-        lastDeletedSegmentEnd = takeFirstSet(
-          lastDeletedSegment.bufferedEnd, lastDeletedSegment.end) as number;
-
+        lastDeletedSegmentEnd = takeFirstSet(lastDeletedSegment.bufferedEnd,
+                                             lastDeletedSegment.end) as number;
         // mutate inventory
         inventory.splice(indexBefore, numberOfSegmentToDelete);
         inventoryIndex = indexBefore;
@@ -155,12 +149,11 @@ export default class SegmentBookkeeper {
       //
       // If the current segment is actually completely outside that range (it
       // is contained in one of the next one), skip that part.
-      if (
-        rangeEnd -
+      if (rangeEnd -
 
-        // TODO better way to indicate to typescript that all is well here
-        (takeFirstSet(thisSegment.bufferedStart, thisSegment.start) as number)
-        >= MINIMUM_SEGMENT_SIZE
+          // TODO better way to indicate to typescript that all is well here
+          (takeFirstSet(thisSegment.bufferedStart, thisSegment.start) as number)
+            >= MINIMUM_SEGMENT_SIZE
       ) {
         // set the bufferedStart of the first segment in that range
         if (
@@ -171,10 +164,9 @@ export default class SegmentBookkeeper {
           // Update bufferedStart
           thisSegment.bufferedStart = rangeStart;
         } else if (thisSegment.bufferedStart == null) {
-          if (
-            lastDeletedSegmentEnd !== -1 &&
-            lastDeletedSegmentEnd > rangeStart &&
-            thisSegment.start - lastDeletedSegmentEnd <= MAX_BUFFERED_DISTANCE
+          if (lastDeletedSegmentEnd !== -1 &&
+              lastDeletedSegmentEnd > rangeStart &&
+              thisSegment.start - lastDeletedSegmentEnd <= MAX_BUFFERED_DISTANCE
           ) {
             thisSegment.bufferedStart = lastDeletedSegmentEnd;
           } else if (thisSegment.start - rangeStart <= MAX_BUFFERED_DISTANCE) {
@@ -189,16 +181,12 @@ export default class SegmentBookkeeper {
         // Make contiguous until first segment outside that range
         // (i.e until the start of the next segment can not constitute a segment
         // in that range == less than MINIMUM_SEGMENT_SIZE into that range)
-        while (
-          thisSegment &&
-          (
-            rangeEnd -
-
-            // TODO better way to indicate to typescript that all is well here
-            (takeFirstSet(thisSegment.bufferedStart, thisSegment.start) as
-              number)
-          )
-          >= MINIMUM_SEGMENT_SIZE
+        while (thisSegment &&
+               (
+                 rangeEnd -
+                    // TODO better way to indicate to typescript that all is well here
+                   (takeFirstSet(thisSegment.bufferedStart, thisSegment.start) as number)
+                ) >= MINIMUM_SEGMENT_SIZE
         ) {
           const prevSegment = inventory[inventoryIndex - 1];
 
@@ -216,9 +204,8 @@ export default class SegmentBookkeeper {
       // update the bufferedEnd of the last segment in that range
       const lastSegmentInRange = inventory[inventoryIndex - 1];
       if (lastSegmentInRange) {
-        if (
-          lastSegmentInRange.bufferedEnd != null &&
-          lastSegmentInRange.bufferedEnd > rangeEnd
+        if (lastSegmentInRange.bufferedEnd != null &&
+            lastSegmentInRange.bufferedEnd > rangeEnd
         ) {
           // the segment appears to have been partially garbage collected:
           // Update bufferedEnd
@@ -282,18 +269,14 @@ export default class SegmentBookkeeper {
     // const start = segment.time / segment.timescale;
     // const end = (segment.time + segment.duration) / segment.timescale;
 
-    const newSegment = {
-      start,
-      end,
-      bufferedStart: undefined,
-      bufferedEnd: undefined,
-      infos: {
-        segment,
-        period,
-        adaptation,
-        representation,
-      },
-    };
+    const newSegment = { start,
+                         end,
+                         bufferedStart: undefined,
+                         bufferedEnd: undefined,
+                         infos: { segment,
+                                  period,
+                                  adaptation,
+                                  representation } };
 
     // begin by the end as in most use cases this will be faster
     for (let i = inventory.length - 1; i >= 0; i--) {
@@ -492,11 +475,7 @@ export default class SegmentBookkeeper {
       timescale : number;
     }
   ) : IBufferedSegment|null {
-    const {
-      time,
-      duration,
-      timescale,
-    } = segmentInfos;
+    const { time, duration, timescale } = segmentInfos;
     const { inventory } = this;
 
     for (let i = inventory.length - 1; i >= 0; i--) {
@@ -518,13 +497,10 @@ export default class SegmentBookkeeper {
         // false negatives are better than false positives here.
         // When impossible to know, say the segment is not complete
         if (hasEnoughInfos(currentSegmentI, prevSegmentI, nextSegmentI)) {
-          if (
-            hasWantedRange(
-              wantedRange,
-              currentSegmentI,
-              prevSegmentI,
-              nextSegmentI
-            )
+          if (hasWantedRange(wantedRange,
+                             currentSegmentI,
+                             prevSegmentI,
+                             nextSegmentI)
           ) {
             return currentSegmentI;
           }
@@ -548,13 +524,13 @@ export default class SegmentBookkeeper {
       nextSegmentI : IBufferedSegment
     ) : boolean {
       if ((prevSegmentI && prevSegmentI.bufferedEnd == null) ||
-        currentSegmentI.bufferedStart == null
+          currentSegmentI.bufferedStart == null
       ) {
         return false;
       }
 
       if ((nextSegmentI && nextSegmentI.bufferedStart == null) ||
-        currentSegmentI.bufferedEnd == null
+          currentSegmentI.bufferedEnd == null
       ) {
         return false;
       }
@@ -579,11 +555,10 @@ export default class SegmentBookkeeper {
       prevSegmentI : IBufferedSegment,
       nextSegmentI : IBufferedSegment
     ) : boolean {
-      if (
-        !prevSegmentI ||
-        prevSegmentI.bufferedEnd == null ||
-        currentSegmentI.bufferedStart == null ||
-        prevSegmentI.bufferedEnd < currentSegmentI.bufferedStart
+      if (!prevSegmentI ||
+          prevSegmentI.bufferedEnd == null ||
+          currentSegmentI.bufferedStart == null ||
+          prevSegmentI.bufferedEnd < currentSegmentI.bufferedStart
       ) {
         if (currentSegmentI.bufferedStart == null) {
           return false;
@@ -594,13 +569,13 @@ export default class SegmentBookkeeper {
           if (wantedDiff > 0 && timeDiff
             > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             log.debug("SB: The wanted segment has been garbage collected",
-              currentSegmentI);
+                      currentSegmentI);
             return false;
           }
         } else {
           if (timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             log.debug("SB: The wanted segment has been garbage collected",
-              currentSegmentI);
+                      currentSegmentI);
             return false;
           }
         }
@@ -608,11 +583,10 @@ export default class SegmentBookkeeper {
 
       if (currentSegmentI.end === null) {
         return false;
-      } else if (
-          !nextSegmentI ||
-          nextSegmentI.bufferedStart == null ||
-          currentSegmentI.bufferedEnd == null ||
-          nextSegmentI.bufferedStart > currentSegmentI.bufferedEnd
+      } else if (!nextSegmentI ||
+                 nextSegmentI.bufferedStart == null ||
+                 currentSegmentI.bufferedEnd == null ||
+                 nextSegmentI.bufferedStart > currentSegmentI.bufferedEnd
       ) {
         if (currentSegmentI.bufferedEnd == null) {
           return false;
@@ -623,13 +597,13 @@ export default class SegmentBookkeeper {
           if (wantedDiff > 0 && timeDiff
             > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             log.debug("SB: The wanted segment has been garbage collected",
-              currentSegmentI);
+                      currentSegmentI);
             return false;
           }
         } else {
           if (timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             log.debug("SB: The wanted segment has been garbage collected",
-              currentSegmentI);
+                      currentSegmentI);
             return false;
           }
         }

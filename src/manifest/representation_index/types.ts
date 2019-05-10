@@ -15,24 +15,20 @@
  */
 
 // privateInfos specific to Smooth Initialization Segments
-export interface ISmoothInitSegmentPrivateInfos {
-  codecPrivateData? : string;
-  bitsPerSample? : number;
-  channels? : number;
-  packetSize? : number;
-  samplingRate? : number;
-  protection? : {
-    keyId : string;
-    keySystems : Array<{
-      systemId : string;
-      privateData : Uint8Array;
-    }>;
-  };
-}
+export interface ISmoothInitSegmentPrivateInfos { codecPrivateData? : string;
+                                                  bitsPerSample? : number;
+                                                  channels? : number;
+                                                  packetSize? : number;
+                                                  samplingRate? : number;
+                                                  protection? : {
+                                                    keyId : string;
+                                                    keySystems : Array<{
+                                                      systemId : string;
+                                                      privateData : Uint8Array;
+                                                    }>;
+                                                  }; }
 
-export interface IPrivateInfos {
-  smoothInit? : ISmoothInitSegmentPrivateInfos;
-}
+export interface IPrivateInfos { smoothInit? : ISmoothInitSegmentPrivateInfos; }
 
 // ISegment Object.
 // Represent a single Segment from a Representation.
@@ -58,11 +54,9 @@ export interface ISegment {
                                  // Segment for later downloading/parsing
 }
 
-export interface IRepresentationIndexSegmentInfos {
-  duration : number;
-  time : number;
-  timescale : number;
-}
+export interface IRepresentationIndexSegmentInfos { duration : number;
+                                                    time : number;
+                                                    timescale : number; }
 
 // Interface that should be implemented by any Representation's index
 export default interface IRepresentationIndex {
@@ -136,17 +130,13 @@ export default interface IRepresentationIndex {
    * @param {Object} currentSegment
    */
   _addSegments(
-    nextSegments : Array<{
-      time : number;
-      duration : number;
-      timescale : number;
-      count? : number;
-      range? : [number, number];
-    }>,
-    currentSegment? : {
-      duration? : number;
-      time : number;
-      timescale? : number;
-    }
+    nextSegments : Array<{ time : number;
+                           duration : number;
+                           timescale : number;
+                           count? : number;
+                           range? : [number, number]; }>,
+    currentSegment? : { duration? : number;
+                        time : number;
+                        timescale? : number; }
   ) : void;
 }

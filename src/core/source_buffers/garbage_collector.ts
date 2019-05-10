@@ -50,12 +50,10 @@ export default function BufferGarbageCollector({
 }) : Observable<never> {
   return observableCombineLatest(clock$, maxBufferBehind$, maxBufferAhead$).pipe(
     mergeMap(([currentTime, maxBufferBehind, maxBufferAhead]) => {
-      return clearBuffer(
-        queuedSourceBuffer,
-        currentTime,
-        maxBufferBehind,
-        maxBufferAhead
-      );
+      return clearBuffer(queuedSourceBuffer,
+                         currentTime,
+                         maxBufferBehind,
+                         maxBufferAhead);
     }));
 }
 
@@ -85,14 +83,11 @@ function clearBuffer(
     return EMPTY;
   }
 
-  const cleanedupRanges : Array<{
-    start : number;
-    end: number;
-  }> = [];
-  const { innerRange, outerRanges } = getInnerAndOuterTimeRanges(
-    qSourceBuffer.getBuffered(),
-    position
-  );
+  const cleanedupRanges : Array<{ start : number;
+                                  end: number; }> = [];
+  const { innerRange, outerRanges } =
+    getInnerAndOuterTimeRanges(qSourceBuffer.getBuffered(),
+                               position);
 
   const collectBufferBehind = () => {
     if (!isFinite(maxBufferBehind)) {
@@ -105,23 +100,18 @@ function clearBuffer(
       if (position - maxBufferBehind >= outerRange.end) {
         cleanedupRanges.push(outerRange);
       }
-      else if (
-        position >= outerRange.end &&
-        position - maxBufferBehind > outerRange.start &&
-        position - maxBufferBehind < outerRange.end
+      else if (position >= outerRange.end &&
+               position - maxBufferBehind > outerRange.start &&
+               position - maxBufferBehind < outerRange.end
       ) {
-        cleanedupRanges.push({
-          start: outerRange.start,
-          end: position - maxBufferBehind,
-        });
+        cleanedupRanges.push({ start: outerRange.start,
+                               end: position - maxBufferBehind });
       }
     }
     if (innerRange) {
       if (position - maxBufferBehind > innerRange.start) {
-        cleanedupRanges.push({
-          start: innerRange.start,
-          end: position - maxBufferBehind,
-        });
+        cleanedupRanges.push({ start: innerRange.start,
+                               end: position - maxBufferBehind });
       }
     }
   };
@@ -137,23 +127,18 @@ function clearBuffer(
       if (position + maxBufferAhead <= outerRange.start) {
         cleanedupRanges.push(outerRange);
       }
-      else if (
-        position <= outerRange.start &&
-        position + maxBufferAhead < outerRange.end &&
-        position + maxBufferAhead > outerRange.start
+      else if (position <= outerRange.start &&
+               position + maxBufferAhead < outerRange.end &&
+               position + maxBufferAhead > outerRange.start
       ) {
-        cleanedupRanges.push({
-          start: position + maxBufferAhead,
-          end: outerRange.end,
-        });
+        cleanedupRanges.push({ start: position + maxBufferAhead,
+                               end: outerRange.end });
       }
     }
     if (innerRange) {
       if (position + maxBufferAhead < innerRange.end) {
-        cleanedupRanges.push({
-          start: position + maxBufferAhead,
-          end: innerRange.end,
-        });
+        cleanedupRanges.push({ start: position + maxBufferAhead,
+                               end: innerRange.end });
       }
     }
   };

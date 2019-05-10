@@ -20,11 +20,10 @@ import MediaError from "./media_error";
 import NetworkError from "./network_error";
 import OtherError from "./other_error";
 
-export type ICustomError =
-  EncryptedMediaError |
-  MediaError |
-  OtherError |
-  NetworkError;
+export type ICustomError = EncryptedMediaError |
+                           MediaError |
+                           OtherError |
+                           NetworkError;
 
 /**
  * Whether the error given is a ICustomError.
@@ -32,9 +31,7 @@ export type ICustomError =
  * @returns {Boolean}
  */
 export default function isKnownError(error : any) : error is ICustomError {
-  return (
-    !!error &&
-    !!error.type &&
-    Object.keys(ErrorTypes).indexOf(error.type) >= 0
-  );
+  return !!error &&
+         !!error.type &&
+         Object.keys(ErrorTypes).indexOf(error.type) >= 0;
 }

@@ -37,18 +37,15 @@ import castToObservable from "../../../utils/cast_to_observable";
 import hashBuffer from "../../../utils/hash_buffer";
 
 // Cached data for a single MediaKeySession
-interface IStoreSessionEntry {
-  initData : number;
-  initDataType: string|undefined;
-  session : MediaKeySession|ICustomMediaKeySession;
-  sessionType : MediaKeySessionType;
-}
+interface IStoreSessionEntry { initData : number;
+                               initDataType: string|undefined;
+                               session : MediaKeySession|ICustomMediaKeySession;
+                               sessionType : MediaKeySessionType; }
 
 // What is returned by the cache
-export interface IStoreSessionData {
-  session : MediaKeySession|ICustomMediaKeySession;
-  sessionType : MediaKeySessionType;
-}
+export interface IStoreSessionData { session : MediaKeySession |
+                                               ICustomMediaKeySession;
+                                     sessionType : MediaKeySessionType; }
 
 /**
  * Create and store MediaKeySessions linked to a single MediaKeys
@@ -123,12 +120,10 @@ export default class MediaKeySessionsStore {
     }
 
     const session = createSession(this._mediaKeys, sessionType);
-    const entry = {
-      session,
-      sessionType,
-      initData: hashBuffer(initData),
-      initDataType,
-    };
+    const entry = { session,
+                    sessionType,
+                    initData: hashBuffer(initData),
+                    initDataType };
     if (session.closed !== null) {
       session.closed
         .then(() => {

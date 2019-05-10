@@ -39,17 +39,13 @@ import {
 } from "../source_buffers";
 
 // PeriodBuffer informations emitted to the ActivePeriodEmitted
-export interface IPeriodBufferInfos {
-  period: Period;
-  type: IBufferType;
-}
+export interface IPeriodBufferInfos { period: Period;
+                                      type: IBufferType; }
 
 // structure used internally to keep track of which Period has which
 // PeriodBuffer
-interface IPeriodItem {
-  period: Period;
-  buffers: Set<IBufferType>;
-}
+interface IPeriodItem { period: Period;
+                        buffers: Set<IBufferType>; }
 
 /**
  * Emit the active Period each times it changes.
@@ -101,10 +97,8 @@ export default function ActivePeriodEmitter(
       // add or update the periodItem
       let periodItem = periodsList.findFirst(p => p.period === period);
       if (!periodItem) {
-        periodItem = {
-          period,
-          buffers: new Set<IBufferType>(),
-        };
+        periodItem = { period,
+                       buffers: new Set<IBufferType>() };
         periodsList.add(periodItem);
       }
 

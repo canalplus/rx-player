@@ -50,9 +50,11 @@ export default function concatMapLatest<T, U>(
         isExhausting = true;
         return callback(value, counter++).pipe(
           tap({ complete: () => isExhausting = false }),
-          (s: Observable<U>) => observableConcat(s, observableDefer(() =>
-            hasValuePending ? next(valuePending) : EMPTY
-          ))
+          (s: Observable<U>) =>
+            observableConcat(s,
+                             observableDefer(() =>
+                               hasValuePending ? next(valuePending) :
+                                                 EMPTY))
         );
       });
     }

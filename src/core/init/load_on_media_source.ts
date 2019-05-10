@@ -79,12 +79,11 @@ export interface IMediaSourceLoaderArguments {
 }
 
 // Events emitted when loading content in the MediaSource
-export type IMediaSourceLoaderEvent =
-  IStalledEvent |
-  ISpeedChangedEvent |
-  ILoadedEvent |
-  IWarningEvent |
-  IBufferOrchestratorEvent;
+export type IMediaSourceLoaderEvent = IStalledEvent |
+                                      ISpeedChangedEvent |
+                                      ILoadedEvent |
+                                      IWarningEvent |
+                                      IBufferOrchestratorEvent;
 
 /**
  * Returns a function allowing to load or reload the content in arguments into
@@ -118,12 +117,14 @@ export default function createMediaSourceLoader({
   ) {
     // TODO Update the duration if it evolves?
     const duration = manifest.getDuration();
-    setDurationToMediaSource(mediaSource, duration == null ?  Infinity : duration);
+    setDurationToMediaSource(mediaSource, duration == null ? Infinity :
+                                                             duration);
 
     const initialPeriod = manifest.getPeriodForTime(initialTime);
     if (initialPeriod == null) {
       throw new MediaError("MEDIA_STARTING_TIME_NOT_FOUND",
-        "Wanted starting time not found in the Manifest.", true);
+                           "Wanted starting time not found in the Manifest.",
+                           true);
     }
 
     // Creates SourceBuffersManager allowing to create and keep track of a
@@ -151,20 +152,20 @@ export default function createMediaSourceLoader({
     const cancelEndOfStream$ = new Subject<null>();
 
     // Creates Observable which will manage every Buffer for the given Content.
-    const buffers$ = BufferOrchestrator(
-      { manifest, initialPeriod },
-      bufferClock$,
-      abrManager,
-      sourceBuffersManager,
-      segmentPipelinesManager,
-      bufferOptions
+    const buffers$ = BufferOrchestrator({ manifest, initialPeriod },
+                                        bufferClock$,
+                                        abrManager,
+                                        sourceBuffersManager,
+                                        segmentPipelinesManager,
+                                        bufferOptions
     ).pipe(
       mergeMap((evt) : Observable<IMediaSourceLoaderEvent> => {
         switch (evt.type) {
           case "end-of-stream":
             log.debug("Init: end-of-stream order received.");
-            return maintainEndOfStream(mediaSource)
-              .pipe(ignoreElements(), takeUntil(cancelEndOfStream$));
+            return maintainEndOfStream(mediaSource).pipe(
+              ignoreElements(),
+              takeUntil(cancelEndOfStream$));
           case "resume-stream":
             log.debug("Init: resume-stream order received.");
             cancelEndOfStream$.next(null);
@@ -183,9 +184,9 @@ export default function createMediaSourceLoader({
 
     // update the speed set by the user on the media element while pausing a
     // little longer while the buffer is empty.
-    const playbackRate$ = updatePlaybackRate(mediaElement, speed$, clock$, {
-      pauseWhenStalled: true,
-    }).pipe(map(EVENTS.speedChanged));
+    const playbackRate$ =
+      updatePlaybackRate(mediaElement, speed$, clock$, { pauseWhenStalled: true })
+        .pipe(map(EVENTS.speedChanged));
 
     // Create Stalling Manager, an observable which will try to get out of
     // various infinite stalling issues
@@ -196,13 +197,15 @@ export default function createMediaSourceLoader({
       .pipe(mergeMap((evt) => {
         if (evt === "autoplay-blocked") {
           const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY",
-            "Cannot trigger auto-play automatically: your browser does not allow it.",
-            false);
+                                       "Cannot trigger auto-play automatically: " +
+                                       "your browser does not allow it.",
+                                       false);
           return observableOf(EVENTS.warning(error), EVENTS.loaded());
         } else if (evt === "not-loaded-metadata") {
           const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
-            "Cannot load automatically: your browser falsely announced having " +
-            "loaded the content.", false);
+                                       "Cannot load automatically: your browser " +
+                                       "falsely announced having loaded the content.",
+                                       false);
           return observableOf(EVENTS.warning(error));
         }
         log.debug("Init: The current content is loaded.");
@@ -234,8 +237,9 @@ function createNativeSourceBuffersForPeriod(
   Object.keys(period.adaptations).forEach(bufferType => {
     if (SourceBuffersManager.isNative(bufferType)) {
       const adaptations = period.adaptations[bufferType] || [];
-      const representations = adaptations != null && adaptations.length ?
-        adaptations[0].representations : [];
+      const representations = adaptations != null &&
+                              adaptations.length ? adaptations[0].representations :
+                                                   [];
       if (representations.length) {
         const codec = representations[0].getMimeTypeString();
         sourceBuffersManager.createSourceBuffer(bufferType, codec);
