@@ -206,7 +206,8 @@ export default function AdaptationBuffer<T>(
                                     segmentBookkeeper,
                                     segmentFetcher,
                                     terminate$: terminateCurrentBuffer$,
-                                    wantedBufferAhead$, });
+                                    wantedBufferAhead$,
+                                    getSegmentBookkeeper, });
     });
   }
 }
