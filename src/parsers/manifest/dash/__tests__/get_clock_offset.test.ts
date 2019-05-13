@@ -19,7 +19,7 @@ describe("DASH Parser - getClockOffset", () => {
     jest.resetModules();
   });
 
-  it("should calculate a millisecond offset relatively to Date.now", () => {
+  it("should calculate a millisecond offset relatively to performance.now", () => {
     const warnSpy = jest.fn();
     jest.mock("../../../../log", () => ({
       __esModule: true,
@@ -27,8 +27,8 @@ describe("DASH Parser - getClockOffset", () => {
     }));
 
     const getClockOffset = require("../get_clock_offset").default;
-    const dateSpy = jest.spyOn(Date, "now")
-      .mockReturnValue(Date.parse("2019-03-26T11:00:00Z")); // 30s
+    const dateSpy = jest.spyOn(performance, "now")
+      .mockReturnValue(Date.parse("2019-03-24T13:00:00Z"));
 
     expect(getClockOffset("2019-03-25T12:00:00Z")).toEqual(82800000);
     expect(warnSpy).not.toHaveBeenCalled();

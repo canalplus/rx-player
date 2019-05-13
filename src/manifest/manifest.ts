@@ -160,7 +160,10 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   // Whole duration anounced in the Manifest.
   private _duration : number|undefined;
 
-  // Offset the client's clock has over the server's, in milliseconds
+  // Difference between the server's clock in ms and the return of the JS
+  // function `performance.now`.
+  // This property allows to calculate the server time at any moment.
+  // `undefined` if we did not obtain the server's time
   private _clockOffset : number|undefined;
 
   /**
@@ -391,8 +394,12 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     const { maximumTime } = this;
     if (maximumTime == null) {
       const ast = this.availabilityStartTime || 0;
-      const now = Date.now() - (this._clockOffset || 0);
-      return (now / 1000) - ast;
+      if (this._clockOffset == null) {
+        // server's time not known, rely on user's clock
+        return (Date.now() / 1000) - ast;
+     }
+      const serverTime = performance.now() + this._clockOffset;
+      return (serverTime / 1000) - ast;
     }
     if (!maximumTime.isContinuous) {
       return maximumTime.value;

@@ -46,19 +46,12 @@ export interface IMPDParserArguments {
   loadExternalClock: boolean; // If true, we might need to synchronize the clock
 }
 
-export type IParserResponse<T> =
-  {
-    type : "needs-ressources";
-    value : {
-      ressources : string[];
-      continue : (loadedRessources : string[]) => IParserResponse<T>;
-    };
-  } |
-  {
-    type : "done";
-    value : T;
-  };
-
+export type IParserResponse<T> = { type : "needs-ressources";
+                                   value : { ressources : string[];
+                                             continue : (loadedRessources : string[])
+                                                        => IParserResponse<T>; }; } |
+                                 { type : "done";
+                                   value : T; };
 /**
  * @param {Element} root - The MPD root.
  * @param {Object} args
@@ -141,53 +134,51 @@ function parseCompleteIntermediateRepresentation(
   mpdIR : IMPDIntermediateRepresentation,
   args : IMPDParserArguments
 ) : IParserResponse<IParsedManifest> {
-  const {
-    children: rootChildren,
-    attributes: rootAttributes,
-  } = mpdIR;
+  const { children: rootChildren,
+          attributes: rootAttributes } = mpdIR;
 
-  const baseURL = resolveURL(normalizeBaseURL(args.url), rootChildren.baseURL);
+  const baseURL = resolveURL(normalizeBaseURL(args.url),
+                             rootChildren.baseURL);
 
-  const availabilityStartTime =
-    parseAvailabilityStartTime(rootAttributes, args.referenceDateTime);
+  const availabilityStartTime = parseAvailabilityStartTime(rootAttributes,
+                                                           args.referenceDateTime);
 
   const isDynamic : boolean = rootAttributes.type === "dynamic";
-  const parsedPeriods = parsePeriods(rootChildren.periods, {
-    availabilityStartTime,
-    duration: rootAttributes.duration,
-    isDynamic,
-    baseURL,
-  });
+  const parsedPeriods = parsePeriods(rootChildren.periods,
+                                     { availabilityStartTime,
+                                       duration: rootAttributes.duration,
+                                       isDynamic,
+                                       baseURL });
 
   const duration : number|undefined = parseDuration(rootAttributes, parsedPeriods);
 
-  const directTiming = arrayFind(rootChildren.utcTimings,
-    (utcTiming) =>
-      utcTiming.schemeIdUri === "urn:mpeg:dash:utc:direct:2014" &&
-      utcTiming.value != null
-  );
+  const directTiming = arrayFind(rootChildren.utcTimings, (utcTiming) =>
+                         utcTiming.schemeIdUri === "urn:mpeg:dash:utc:direct:2014" &&
+                         utcTiming.value != null);
 
   // second condition not needed but TS did not help there, even with a `is`
   const clockOffsetFromDirectUTCTiming =
-    directTiming != null && directTiming.value != null ?
-      Date.now() - Date.parse(directTiming.value) : undefined;
+    directTiming != null &&
+    directTiming.value != null ? getClockOffset(directTiming.value) :
+                                 undefined;
 
   const parsedMPD : IParsedManifest = {
     availabilityStartTime,
     baseURL,
     duration,
-    id: rootAttributes.id != null ?
-      rootAttributes.id : "gen-dash-manifest-" + generateManifestID(),
+    id: rootAttributes.id != null ? rootAttributes.id :
+                                    "gen-dash-manifest-" + generateManifestID(),
     periods: parsedPeriods,
     transportType: "dash",
     isLive: isDynamic,
     uris: [args.url, ...rootChildren.locations],
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay != null ?
-      rootAttributes.suggestedPresentationDelay :
-      config.DEFAULT_SUGGESTED_PRESENTATION_DELAY.DASH,
+                                  rootAttributes.suggestedPresentationDelay :
+                                  config.DEFAULT_SUGGESTED_PRESENTATION_DELAY.DASH,
     clockOffset: clockOffsetFromDirectUTCTiming != null &&
-      !isNaN(clockOffsetFromDirectUTCTiming) ?
-        clockOffsetFromDirectUTCTiming : undefined,
+                 !isNaN(clockOffsetFromDirectUTCTiming) ?
+                   clockOffsetFromDirectUTCTiming :
+                   undefined,
   };
 
   // -- add optional fields --
@@ -199,9 +190,9 @@ function parseCompleteIntermediateRepresentation(
   checkManifestIDs(parsedMPD);
   if (parsedMPD.isLive) {
     const lastTimeReference = getLastTimeReference(parsedMPD);
-    if (
-      clockOffsetFromDirectUTCTiming == null &&
-      lastTimeReference == null && args.loadExternalClock
+    if (clockOffsetFromDirectUTCTiming == null &&
+        lastTimeReference == null &&
+        args.loadExternalClock
     ) {
       const UTCTimingHTTPURL = getHTTPUTCTimingURL(mpdIR);
       if (UTCTimingHTTPURL != null && UTCTimingHTTPURL.length > 0) {
