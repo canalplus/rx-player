@@ -17,6 +17,7 @@ function ControlBar({
   currentTime,
   duration,
   toggleSettings,
+  toggleInfos
 }) {
   const positionElement = (() => {
     if (!isContentLoaded) {
@@ -35,24 +36,34 @@ function ControlBar({
     toggleSettings();
   };
 
+  const onClickInfos = () => {
+    toggleInfos();
+  };
+
+  const enableDisplayInfos = isLive && isContentLoaded;
+
   return (
     <div className="controls-bar-container">
       <Progressbar player={player} />
-      <div className="controls-bar">
+      <div className="controls-bar vjs-fade-out">
         <PlayPauseButton
           className={"control-button"}
           player={player}
         />
         { positionElement }
         <div className="controls-right-side">
-          <div>
-            <Button
-              disabled={!isContentLoaded}
-              className='control-button'
-              onClick={onClickSettings}
-              value={String.fromCharCode(0xf013)}
-            />
-          </div>
+          <Button
+            disabled={!enableDisplayInfos}
+            className='control-button'
+            onClick={onClickInfos}
+            value={String.fromCharCode(0xf05a)}
+          />
+          <Button
+            disabled={!isContentLoaded}
+            className='control-button'
+            onClick={onClickSettings}
+            value={String.fromCharCode(0xf013)}
+          />
           <div className="volume">
             <VolumeButton
               className="control-button"

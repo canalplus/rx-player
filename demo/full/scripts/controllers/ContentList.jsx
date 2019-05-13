@@ -80,6 +80,7 @@ class ContentList extends React.Component {
       manifestUrl: "",
       drm: DRM_TYPES[0],
       autoPlay: true,
+      showOptions: false,
     };
   }
 
@@ -206,6 +207,7 @@ class ContentList extends React.Component {
       drm,
       displayDRMSettings,
       autoPlay,
+      showOptions,
     } = this.state;
     const { isStopped } = this.props;
     const contentsToSelect = CONTENTS_PER_TYPE[transportType];
@@ -221,6 +223,12 @@ class ContentList extends React.Component {
       const index = +evt.target.value;
       this.changeContentIndex(index);
     };
+
+    const onClickOptions = () => {
+      this.setState({
+        showOptions: !showOptions
+      });
+    }
 
     const onClickLoad = () => {
       if (choiceIndex === contentsToSelect.length - 1) {
@@ -254,6 +262,10 @@ class ContentList extends React.Component {
       this.onToggleAutoPlay(evt);
 
     const shouldDisableEncryptedContent = !HAS_EME_APIs && !IS_HTTPS;
+    const optionPanelClassName = "option-panel" + (showOptions ? " fade-in-out" : "");
+    const optionsButtonClassName =
+      "choice-input choice-input-button options-button" + (showOptions ? " clicked" : "");
+
 
     return (
       <div className="choice-inputs-wrapper">
@@ -272,14 +284,28 @@ class ContentList extends React.Component {
             />
           </div>
           <div className="choice-input-button-wrapper">
-            <div className="autoplay-checkbox">
-              Auto Play
-              <input
-                name="displayBufferSizeChart"
-                type="checkbox"
-                checked={autoPlay}
-                onChange={onAutoPlayCheckbox}
-              />
+            <Button
+              className={optionsButtonClassName}
+              onClick={onClickOptions}
+              value="Options"
+            />
+            <div class={optionPanelClassName}>
+            <tr>
+              <td>
+                Auto Play 
+              </td>
+              <td>
+                <label class="switch">
+                  <input
+                    name="displayBufferSizeChart"
+                    type="checkbox"
+                    checked={autoPlay}
+                    onChange={onAutoPlayCheckbox}
+                  />
+                  <span class="slider round"></span>
+                </label>
+              </td>  
+            </tr>
             </div>
             <Button
               className="choice-input choice-input-button load-button"
@@ -309,40 +335,46 @@ class ContentList extends React.Component {
                     ) + (IS_HTTPS ? " (HTTPS only if mixed contents disabled)" : "")
                   }
                 />
-                <span className={"encryption-checkbox" + (shouldDisableEncryptedContent ? " disabled" : "")}>
-                  {(shouldDisableEncryptedContent ? "[HTTPS only] " : "") + "Encrypted content"}
-                  <input
-                    disabled={shouldDisableEncryptedContent}
-                    name="displayDRMSettingsTextInput"
-                    type="checkbox"
-                    checked={displayDRMSettings}
-                    onChange={onDisplayDRMSettings} />
-                </span>
-                {
-                  displayDRMSettings ?
-                    <div className="drm-settings">
-                      <div>
-                        <Select
-                          className="choice-input white-select"
-                          onChange={onDRMChange}
-                          options={DRM_TYPES}
-                        />
+                <div className="player-box">
+                  <span className={"encryption-checkbox" + (shouldDisableEncryptedContent ? " disabled" : "")}>
+                    {(shouldDisableEncryptedContent ? "[HTTPS only] " : "") + "Encrypted content"}
+                    <label class="switch">
+                      <input
+                        disabled={shouldDisableEncryptedContent}
+                        name="displayDRMSettingsTextInput"
+                        type="checkbox"
+                        checked={displayDRMSettings}
+                        onChange={onDisplayDRMSettings}
+                      />
+                      <span class="slider round"></span>
+                    </label>
+                  </span>
+                  {
+                    displayDRMSettings ?
+                      <div className="drm-settings">
+                        <div>
+                          <Select
+                            className="choice-input white-select"
+                            onChange={onDRMChange}
+                            options={DRM_TYPES}
+                          />
+                          <TextInput
+                            className="choice-input text-input"
+                            onChange={onLicenseServerInput}
+                            value={licenseServerUrl}
+                            placeholder={"License server URL"}
+                          />
+                        </div>
                         <TextInput
                           className="choice-input text-input"
-                          onChange={onLicenseServerInput}
-                          value={licenseServerUrl}
-                          placeholder={"License server URL"}
+                          onChange={onServerCertificateInput}
+                          value={serverCertificateUrl}
+                          placeholder={"Server certificate URL (optional)"}
                         />
-                      </div>
-                      <TextInput
-                        className="choice-input text-input"
-                        onChange={onServerCertificateInput}
-                        value={serverCertificateUrl}
-                        placeholder={"Server certificate URL (optional)"}
-                      />
-                    </div> :
-                    null
-                }
+                      </div> :
+                      null
+                  }
+                </div>
               </div>
             ) : null
         }

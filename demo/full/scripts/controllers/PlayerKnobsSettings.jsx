@@ -7,7 +7,7 @@ import SubtitlesKnob from "./knobs/Subtitles.jsx";
 import VideoTrack from "./knobs/VideoTrack.jsx";
 import PlaybackRateKnob from "./knobs/SpeedKnob.jsx";
 
-const PlayerKnobs = ({
+const PlayerKnobsSettings = ({
   shouldDisplay,
   close,
   player,
@@ -32,7 +32,7 @@ const PlayerKnobs = ({
           {String.fromCharCode(0xf00d)}
         </span>
       </div>
-      <div className="player-knobs-knobs">
+      <div className="player-knobs-content">
         <PlaybackRateKnob className="black-knob" player={player} />
         <AudioBitrateKnob className="black-knob" player={player} />
         <VideoBitrateKnob className="black-knob" player={player} />
@@ -53,4 +53,4 @@ export default withModulesState({
     isContentLoaded: "isContentLoaded",
     availableVideoTracks: "availableVideoTracks",
   },
-})(PlayerKnobs);
+})(PlayerKnobsSettings);

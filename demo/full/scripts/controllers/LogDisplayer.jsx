@@ -1,5 +1,6 @@
 import React from "react";
 import { Subject } from "rxjs";
+import Button from "../components/Button.jsx";
 import {
   skip,
   takeUntil,
@@ -196,19 +197,26 @@ class LogDisplayer extends React.Component {
         date={date}
       />
     );
+
+    const clearLogs = () => {
+      this.state.logs = [];
+      this.setState({ logs: this.state.logs });
+    }
+
     return (
-      <div
-        className="player-logs-wrapper"
-      >
-        <div
-          className="player-logs-wrapper-title"
-        >
+      <div className="player-logs-wrapper">
+        <div className="player-logs-wrapper-title">
           Logs
         </div>
         <div
           className="player-logs"
           ref={el => this.element = el}
         >
+          <Button
+            className="player-logs-wrapper-trash"
+            onClick={clearLogs}
+            value={String.fromCharCode(0xf05e)}
+          />
           {logTexts}
         </div>
       </div>

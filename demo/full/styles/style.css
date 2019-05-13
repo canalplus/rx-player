@@ -25,6 +25,14 @@ body {
   line-height: 1.05;
 }
 
+.title-wrapper a:hover {
+  color: rgb(128, 128, 128);
+}
+
+.title-wrapper a span:hover {
+  color: rgb(128, 128, 128);
+}
+
 .title > * {
   text-decoration: none !important;
 }
@@ -47,8 +55,13 @@ body {
 
 .title-wrapper .version {
   font-weight: normal;
-  font-size: 18px;
+  font-size: 15px;
   color: rgb(200,200,200);
+}
+
+.player-logs-wrapper-bar {
+  display: flex;
+  flex-direction: row;
 }
 
 #player-container {
@@ -70,6 +83,7 @@ body {
 .white-select select {
   /* styling */
   background-color: white;
+  color: #1d1d1d;
   display: inline-block;
   font: inherit;
   height: 41px;
@@ -89,7 +103,8 @@ body {
   background-repeat: no-repeat;
   background-position: calc(100% - 8px) 50%;
 
-  border: 1px solid #a9a9a9;
+  border-radius: 3px;
+  border: 1px solid #d1d1d1;
 }
 
 .white-select option {
@@ -97,7 +112,7 @@ body {
 }
 
 .choice-inputs-wrapper {
-  margin: 10px auto 5px auto;
+  margin: 10px auto 10px auto;
   padding: 0 0 5px 0;
 }
 
@@ -110,7 +125,7 @@ body {
 .content-inputs > * {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
 }
 
 .choice-input {
@@ -132,7 +147,8 @@ body {
   margin-bottom: 12px;
   margin-top: 12px;
   padding: 10px 25px 10px 15px;
-  border: 1px solid #a9a9a9;
+  border: 1px solid #d1d1d1;
+  border-radius: 3px;
   display: flex;
   background-color: white;
   -webkit-box-sizing: border-box;
@@ -152,8 +168,6 @@ body {
 .video-player-wrapper {
   background-color: #000;
   margin: auto;
-  border: 1px solid black;
-  box-shadow: 0px 0px 30px 0px rgba(10, 10, 10, 0.75);
 }
 
 .video-player-wrapper video {
@@ -320,16 +334,41 @@ body {
   justify-content: flex-end;
   align-items: center;
   flex-grow: 1;
+  margin-right: 6px;
+}
+
+.option-panel {
+  background-color: white;
+  position: absolute;
+  padding: 5px 10px 5px 20px;
+  border-radius: 3px;
+  z-index: 101;
+  transition: all 200ms;
+  opacity: 0;
+  transform: translate(-7px, 42px);
+  pointer-events: none;
+}
+
+.option-panel.fade-in-out {
+  opacity: 1;
+  transform: translate(-7px, 50px);
+  pointer-events: auto;
+  box-shadow: 0px 0px 20px 4px #0000001a;
 }
 
 .choice-input-button-wrapper {
   margin-right: -5px;
 }
 
+.choice-input-button-wrapper > button {
+  border-radius: 3px;
+}
+
 .choice-input-button {
+  color: #444;
   font-family: "icons", sans-serif;
-  font-size: 1.3rem;
-  border: solid 1px #a9a9a9;
+  font-size: 1.4rem;
+  border: solid 1px #d1d1d1;
   margin: 5px;
   height: 41px;
   width: 60px;
@@ -337,14 +376,12 @@ body {
 }
 
 .choice-input-button:hover {
-  background-color: #fff;
   color: #000;
   box-shadow: 0px 0px 30px 0px rgba(245, 245, 255, 0.75);
 }
 
 .choice-input-button:disabled {
-  background-color: #fbfbfb;
-  color: #888;
+  color: #999;
 }
 
 .choice-input-button:disabled:hover {
@@ -361,7 +398,7 @@ body {
   font-size: 1.2em;
   cursor: pointer;
   outline: 0;
-  margin: 0 9px;
+  margin: 0 3px 0 3px;
 }
 
 .control-button:hover {
@@ -378,6 +415,17 @@ body {
   width: 45px;
 }
 
+.options-button {
+  font-size: 1.1rem;
+  width: 90px;
+  border: solid 1px #d1d1d1;
+  background-color: #e2e2e2;
+}
+
+.options-button.clicked {
+  background-color:#cacaca;
+}
+
 .position-infos {
   margin: auto;
   font-size: 0.8em;
@@ -391,6 +439,7 @@ body {
 .volume {
   position: relative;
   display: flex;
+  padding: 1px 8px;
 }
 
 .volume-button {
@@ -480,7 +529,7 @@ body {
   color: #ffffff;
 }
 
-.player-knobs-knobs {
+.player-knobs-content {
   padding: 10px 20px 10px 20px;
   display: flex;
   flex-direction: column;
@@ -557,8 +606,19 @@ body {
   margin-top: 30px;
 }
 
+.player-box {
+  background-color: white;
+  border-radius: 5px;
+  padding: 10px;
+}
+
 .encryption-checkbox {
   margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0px 5px;
+  font-size: 0.9rem;
 }
 
 .encryption-checkbox.disabled {
@@ -570,22 +630,93 @@ body {
 }
 
 .chart-checkbox {
+  color: #1d1d1d;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   margin: 0px 5px;
+  font-size: 0.9rem;
 }
 
 .chart-checkbox > input {
   margin: 10px;
 }
 
-.autoplay-checkbox {
-  margin: 5px;
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 30px;
+  height: 17px;
+  margin: 10px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .2s;
+  transition: .2s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 13px;
+  width: 13px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  -webkit-transition: .2s;
+  transition: .2s;
+}
+
+input:checked + .slider {
+  background-color: rgb(0, 255, 0);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(13px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+.checkbox {
+  color: #1d1d1d;
   text-align: center;
-  font-style: italic;
   font-size: 0.9rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+}
+
+.checkbox > input {
+  margin: 10px;
 }
 
 .player-logs-wrapper {
@@ -593,13 +724,27 @@ body {
 }
 
 .player-logs-wrapper-title {
-  margin: 10px 0px;
+  color: #242424;
+  margin: 10px;
   width: 100%;
-  border-bottom: 1px dotted black;
+}
+
+.player-logs-wrapper-trash {
+  font-family: "icons", sans-serif;
+  color: gray;
+  border: none;
+  background: none;
+  font-size: 1.3rem;
+  float: right;
+}
+
+.player-logs-wrapper-trash:hover {
+  color: white;
 }
 
 .player-logs {
-  background-color: #111111;
+  background-color: #242424;
+  border-radius: 3px;
   color: #cccccc;
   font-size: 0.8em;
   padding: 10px;
@@ -630,7 +775,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 0 15px 0 15px;
-  background-color: #222424;
+  background-color: #323435;
   color: #ffffff;
 }
 
@@ -640,7 +785,7 @@ body {
 
 .header-links-buttons {
   display: flex;
-  align-items: center;
+  align-items: baseline;
 }
 
 .header-links-buttons > * {
@@ -655,11 +800,6 @@ body {
   background: #ffffff;
   padding: 14px 14px 2px 14px;
   margin: 12px 0 12px 0;
-  border: solid 1px #a9a9a9;
-}
-
-.drm-settings .input {
-  border: solid 1px #a9a9a9;
 }
 
 @media only screen and (max-width: 660px) {
