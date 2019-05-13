@@ -214,21 +214,20 @@ function parseCompleteIntermediateRepresentation(
                 throw new Error("DASH parser: wrong number of loaded ressources.");
               }
               parsedMPD.clockOffset = getClockOffset(loadedRessources[0]);
-              const timeLimits = getTimeLimits(
+              const [ minimumTime, maximumTime ] = getTimeLimits(
                 parsedMPD, lastTimeReference, rootAttributes.timeShiftBufferDepth);
-              parsedMPD.minimumTime = timeLimits[0];
-              parsedMPD.maximumTime = timeLimits[1];
+              parsedMPD.minimumTime = minimumTime;
+              parsedMPD.maximumTime = maximumTime;
               return { type: "done", value: parsedMPD };
             },
           },
         };
       }
-    } else {
-      const timeLimits = getTimeLimits(
-        parsedMPD, lastTimeReference, rootAttributes.timeShiftBufferDepth);
-      parsedMPD.minimumTime = timeLimits[0];
-      parsedMPD.maximumTime = timeLimits[1];
     }
+    const timeLimits = getTimeLimits(
+      parsedMPD, lastTimeReference, rootAttributes.timeShiftBufferDepth);
+    parsedMPD.minimumTime = timeLimits[0];
+    parsedMPD.maximumTime = timeLimits[1];
   }
 
   return { type: "done", value: parsedMPD };
