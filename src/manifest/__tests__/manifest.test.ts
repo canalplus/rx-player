@@ -38,21 +38,20 @@ describe("Manifest - Manifest", () => {
     const Manifest = require("../manifest").default;
     const manifest = new Manifest(simpleFakeManifest, {});
 
-    expect(manifest.parsingErrors).toEqual([]);
-    expect(manifest.id).toEqual("man");
-    expect(manifest.transport).toEqual("foobar");
-    expect(manifest.periods).toEqual([]);
     expect(manifest.adaptations).toEqual({});
-    expect(manifest.minimumTime).toEqual(undefined);
-    expect(manifest.isLive).toEqual(false);
-    expect(manifest.uris).toEqual([]);
-    expect(manifest.lifetime).toEqual(undefined);
-    expect(manifest.suggestedPresentationDelay).toEqual(undefined);
     expect(manifest.availabilityStartTime).toEqual(undefined);
-    expect(manifest.presentationLiveGap).toEqual(undefined);
-    expect(manifest.timeShiftBufferDepth).toEqual(undefined);
     expect(manifest.baseURL).toEqual(undefined);
     expect(manifest.getDuration()).toEqual(5);
+    expect(manifest.id).toEqual("man");
+    expect(manifest.isLive).toEqual(false);
+    expect(manifest.lifetime).toEqual(undefined);
+    expect(manifest.maximumTime).toEqual(undefined);
+    expect(manifest.minimumTime).toEqual(undefined);
+    expect(manifest.parsingErrors).toEqual([]);
+    expect(manifest.periods).toEqual([]);
+    expect(manifest.suggestedPresentationDelay).toEqual(undefined);
+    expect(manifest.transport).toEqual("foobar");
+    expect(manifest.uris).toEqual([]);
 
     expect(logSpy).not.toHaveBeenCalled();
     logSpy.mockRestore();
@@ -311,6 +310,7 @@ describe("Manifest - Manifest", () => {
 
     const oldPeriod1 = { id: "0", start: 4, adaptations: {} };
     const oldPeriod2 = { id: "1", start: 12, adaptations: {} };
+    const time = performance.now();
     const oldManifestArgs = {
       availabilityStartTime: 5,
       baseURL: "test",
@@ -318,12 +318,11 @@ describe("Manifest - Manifest", () => {
       id: "man",
       isLive: false,
       lifetime: 13,
-      minimumTime: 4,
       parsingErrors: [new Error("a"), new Error("b")],
       periods: [oldPeriod1, oldPeriod2],
-      presentationLiveGap: 18,
+      maximumTime: { isContinuous: false, value: 10, time },
+      minimumTime: { isContinuous: true, value: 5, time },
       suggestedPresentationDelay: 99,
-      timeShiftBufferDepth: 2,
       transportType: "foobar",
       uris: ["url1", "url2"],
     };
@@ -350,15 +349,14 @@ describe("Manifest - Manifest", () => {
     expect(manifest.id).toEqual("man");
     expect(manifest.isLive).toEqual(false);
     expect(manifest.lifetime).toEqual(13);
-    expect(manifest.minimumTime).toEqual(4);
     expect(manifest.parsingErrors).toEqual([new Error("0"), new Error("1")]);
+    expect(manifest.maximumTime).toEqual({ isContinuous: false, value: 10, time });
+    expect(manifest.minimumTime).toEqual({ isContinuous: true, value: 5, time });
     expect(manifest.periods).toEqual([
       { id: "foo0", parsingErrors: [new Error("0")], adaptations: {}, start: 4 },
       { id: "foo1", parsingErrors: [new Error("1")], adaptations: {}, start: 12 },
     ]);
-    expect(manifest.presentationLiveGap).toEqual(18);
     expect(manifest.suggestedPresentationDelay).toEqual(99);
-    expect(manifest.timeShiftBufferDepth).toEqual(2);
     expect(manifest.transport).toEqual("foobar");
     expect(manifest.uris).toEqual(["url1", "url2"]);
     expect(logSpy).not.toHaveBeenCalled();
@@ -393,15 +391,12 @@ describe("Manifest - Manifest", () => {
       id: "man",
       isLive: false,
       lifetime: 13,
-      minimumTime: 4,
       parsingErrors: [new Error("a"), new Error("b")],
       periods: [
         { id: "0", start: 4, adaptations: {} },
         { id: "1", start: 12, adaptations: {} },
       ],
-      presentationLiveGap: 18,
       suggestedPresentationDelay: 99,
-      timeShiftBufferDepth: 2,
       transportType: "foobar",
       uris: ["url1", "url2"],
     };
@@ -422,9 +417,7 @@ describe("Manifest - Manifest", () => {
         { id: "0", start: 4, adaptations: {} },
         { id: "1", start: 12, adaptations: {} },
       ],
-      presentationLiveGap: 18,
       suggestedPresentationDelay: 99,
-      timeShiftBufferDepth: 2,
       transportType: "foobar",
       uris: [],
     };
@@ -473,15 +466,14 @@ describe("Manifest - Manifest", () => {
       id: "man",
       isLive: false,
       lifetime: 13,
-      minimumTime: 4,
       parsingErrors: [new Error("a"), new Error("b")],
       periods: [
         { id: "0", start: 4, adaptations: {} },
         { id: "1", start: 12, adaptations: {} },
       ],
-      presentationLiveGap: 18,
+      maximumTime: { isContinuous: false, value: 10, time: 30000 },
+      minimumTime: { isContinuous: true, value: 7, time: 10000 },
       suggestedPresentationDelay: 99,
-      timeShiftBufferDepth: 2,
       transportType: "foobar",
       uris: ["url1", "url2"],
     };
@@ -493,6 +485,8 @@ describe("Manifest - Manifest", () => {
 
     const [oldPeriod1, oldPeriod2] = manifest.periods;
 
+    const newMinimumTime = { isContinuous: false, value: 1, time: 5000000 };
+    const newMaximumTime = { isContinuous: true, value: 3, time: 4000000 };
     const newAdaptations = {};
     const newPeriod1 = { id: "foo0", start: 4, adaptations: {} };
     const newPeriod2 = { id: "foo1", start: 12, adaptations: {} };
@@ -504,11 +498,11 @@ describe("Manifest - Manifest", () => {
       id: "man2",
       isLive: true,
       lifetime: 14,
-      minimumTime: 5,
       parsingErrors: [new Error("c"), new Error("d")],
-      presentationLiveGap: 19,
       suggestedPresentationDelay: 100,
       timeShiftBufferDepth: 3,
+      maximumTime: newMaximumTime,
+      minimumTime: newMinimumTime,
       periods: [newPeriod1, newPeriod2],
       transport: "foob",
       uris: ["url3", "url4"],
@@ -523,11 +517,10 @@ describe("Manifest - Manifest", () => {
     expect(manifest.id).toEqual("man2");
     expect(manifest.isLive).toEqual(true);
     expect(manifest.lifetime).toEqual(14);
-    expect(manifest.minimumTime).toEqual(5);
     expect(manifest.parsingErrors).toEqual([new Error("c"), new Error("d")]);
-    expect(manifest.presentationLiveGap).toEqual(19);
+    expect(manifest.maximumTime).toEqual(newMaximumTime);
+    expect(manifest.minimumTime).toEqual(newMinimumTime);
     expect(manifest.suggestedPresentationDelay).toEqual(100);
-    expect(manifest.timeShiftBufferDepth).toEqual(3);
     expect(manifest.transport).toEqual("foob");
     expect(manifest.uris).toEqual(["url3", "url4"]);
 
@@ -560,9 +553,7 @@ describe("Manifest - Manifest", () => {
       minimumTime: 4,
       parsingErrors: [new Error("a"), new Error("b")],
       periods: [{ id: "1", start: 4, adaptations: {} }],
-      presentationLiveGap: 18,
       suggestedPresentationDelay: 99,
-      timeShiftBufferDepth: 2,
       transportType: "foobar",
       uris: ["url1", "url2"],
     };
@@ -627,9 +618,7 @@ describe("Manifest - Manifest", () => {
       lifetime: 14,
       minimumTime: 5,
       parsingErrors: [new Error("c"), new Error("d")],
-      presentationLiveGap: 19,
       suggestedPresentationDelay: 100,
-      timeShiftBufferDepth: 3,
       periods: [newPeriod1, newPeriod2, newPeriod3],
       transport: "foob",
       uris: ["url3", "url4"],
@@ -669,9 +658,7 @@ describe("Manifest - Manifest", () => {
       minimumTime: 4,
       parsingErrors: [new Error("a"), new Error("b")],
       periods: [{ id: "1" }],
-      presentationLiveGap: 18,
       suggestedPresentationDelay: 99,
-      timeShiftBufferDepth: 2,
       transportType: "foobar",
       uris: ["url1", "url2"],
     };
@@ -718,9 +705,7 @@ describe("Manifest - Manifest", () => {
       lifetime: 14,
       minimumTime: 5,
       parsingErrors: [new Error("c"), new Error("d")],
-      presentationLiveGap: 19,
       suggestedPresentationDelay: 100,
-      timeShiftBufferDepth: 3,
       periods: [newPeriod1, newPeriod2, newPeriod3],
       transport: "foob",
       uris: ["url3", "url4"],
@@ -758,9 +743,7 @@ describe("Manifest - Manifest", () => {
       minimumTime: 4,
       parsingErrors: [new Error("a"), new Error("b")],
       periods: [{ id: "1" }],
-      presentationLiveGap: 18,
       suggestedPresentationDelay: 99,
-      timeShiftBufferDepth: 2,
       transportType: "foobar",
       uris: ["url1", "url2"],
     };
@@ -806,9 +789,7 @@ describe("Manifest - Manifest", () => {
       lifetime: 14,
       minimumTime: 5,
       parsingErrors: [new Error("c"), new Error("d")],
-      presentationLiveGap: 19,
       suggestedPresentationDelay: 100,
-      timeShiftBufferDepth: 3,
       periods: [newPeriod1, newPeriod2, newPeriod3],
       transport: "foob",
       uris: ["url3", "url4"],
@@ -843,9 +824,7 @@ describe("Manifest - Manifest", () => {
       minimumTime: 4,
       parsingErrors: [new Error("a"), new Error("b")],
       periods: [{ id: "1" }, { id: "2" }, { id: "3" }],
-      presentationLiveGap: 18,
       suggestedPresentationDelay: 99,
-      timeShiftBufferDepth: 2,
       transportType: "foobar",
       uris: ["url1", "url2"],
     };
@@ -894,9 +873,7 @@ describe("Manifest - Manifest", () => {
       lifetime: 14,
       minimumTime: 5,
       parsingErrors: [new Error("c"), new Error("d")],
-      presentationLiveGap: 19,
       suggestedPresentationDelay: 100,
-      timeShiftBufferDepth: 3,
       periods: [newPeriod1, newPeriod2, newPeriod3, newPeriod4, newPeriod5],
       transport: "foob",
       uris: ["url3", "url4"],

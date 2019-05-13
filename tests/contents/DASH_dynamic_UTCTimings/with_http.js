@@ -213,7 +213,6 @@ const manifestInfos = {
   url: BASE_URL + "Manifest_with_http.mpd",
   transport: "dash",
   isLive: true,
-  timeShiftBufferDepth: 300,
   availabilityStartTime: 0,
   periods: [
     {

@@ -19,7 +19,8 @@ import { waitForLoadedStateAfterLoadVideo } from "../utils/waitForPlayerState";
  * transport {string}
  * duration {number}
  * isLive {boolean}
- * timeShiftBufferDepth? {number}
+ * maximumPosition? {number}
+ * minimumPosition? {number}
  * availabilityStartTime? {number}
  * periods[]
  *          .adaptations.{
@@ -56,15 +57,14 @@ export default function launchTestsForContent(
   let fakeServer;
 
   const {
-    transport,
+    availabilityStartTime,
     duration,
     isLive,
+    maximumPosition,
+    minimumPosition,
     periods: periodsInfos,
-    timeShiftBufferDepth,
-    availabilityStartTime,
+    transport,
   } = manifestInfos;
-
-  const minimumTime = manifestInfos.minimumTime || 0;
 
   const firstPeriodIndex = isLive ? periodsInfos.length - 1 : 0;
   const videoRepresentationsForFirstPeriod =
@@ -196,9 +196,9 @@ export default function launchTestsForContent(
         expect(manifest.isLive).to.equal(isLive);
         expect(manifest.getUrl()).to.equal(manifestInfos.url);
 
-        expect(manifest.timeShiftBufferDepth).to.equal(timeShiftBufferDepth);
+        expect(manifest.getMaximumPosition()).to.equal(maximumPosition);
+        expect(manifest.getMinimumPosition()).to.equal(minimumPosition);
         expect(manifest.availabilityStartTime).to.equal(availabilityStartTime);
-        expect(manifest.minimumTime).to.equal(manifestInfos.minimumTime);
 
         expect(manifest.periods.length).to.equal(periodsInfos.length);
         for (
@@ -632,11 +632,11 @@ export default function launchTestsForContent(
         await sleep(100);
 
         const bufferGap = player.getVideoBufferGap();
-        expect(player.getPosition()).to.be.closeTo(minimumTime, 0.1);
+        expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.1);
         expect(player.getVideoLoadedTime()).to.be.closeTo(bufferGap, 0.1);
 
         fakeServer.autoRespond = false;
-        player.seekTo(minimumTime + 5);
+        player.seekTo(minimumPosition + 5);
         await sleep(100);
         expect(player.getVideoLoadedTime()).to.be.closeTo(bufferGap, 0.1);
 
@@ -645,7 +645,7 @@ export default function launchTestsForContent(
         await sleep(300);
         expect(player.getVideoLoadedTime()).to.be.closeTo(bufferGap + 5, 10);
 
-        player.seekTo( minimumTime + 50);
+        player.seekTo( minimumPosition + 50);
         await sleep(300);
         expect(player.getVideoLoadedTime()).to.be.closeTo(10, 10);
       });
@@ -668,11 +668,11 @@ export default function launchTestsForContent(
         await waitForLoadedStateAfterLoadVideo(player);
         await sleep(100);
 
-        expect(player.getPosition()).to.equal(minimumTime);
+        expect(player.getPosition()).to.equal(minimumPosition);
         expect(player.getVideoPlayedTime()).to.equal(0);
 
         fakeServer.autoRespond = false;
-        player.seekTo(minimumTime + 5);
+        player.seekTo(minimumPosition + 5);
         await sleep(100);
         expect(player.getVideoPlayedTime()).to.equal(5);
 
@@ -681,12 +681,12 @@ export default function launchTestsForContent(
         await sleep(300);
         expect(player.getVideoPlayedTime()).to.equal(5);
 
-        player.seekTo(minimumTime + 30);
+        player.seekTo(minimumPosition + 30);
         await sleep(300);
         const initialLoadedTime = player.getVideoPlayedTime();
         expect(initialLoadedTime).to.be.closeTo(0, 4);
 
-        player.seekTo(minimumTime + 30 + 5);
+        player.seekTo(minimumPosition + 30 + 5);
         expect(player.getVideoPlayedTime()).to.be
           .closeTo(initialLoadedTime + 5, 1);
       });
@@ -704,7 +704,7 @@ export default function launchTestsForContent(
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getWallClockTime()).to.equal(minimumTime);
+        expect(player.getWallClockTime()).to.equal(minimumPosition);
       });
 
       it("should return the starting position if one", async () => {
@@ -714,10 +714,10 @@ export default function launchTestsForContent(
         player.loadVideo({
           url: manifestInfos.url,
           transport,
-          startAt: { position: minimumTime + 4 },
+          startAt: { position: minimumPosition + 4 },
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getWallClockTime()).to.equal(minimumTime + 4);
+        expect(player.getWallClockTime()).to.equal(minimumPosition + 4);
       });
 
       it("should update as soon as we seek", async () => {
@@ -746,7 +746,7 @@ export default function launchTestsForContent(
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition()).to.equal(minimumTime);
+        expect(player.getPosition()).to.equal(minimumPosition);
       });
 
       it("should return the starting position if one", async () => {
@@ -756,10 +756,10 @@ export default function launchTestsForContent(
         player.loadVideo({
           url: manifestInfos.url,
           transport,
-          startAt: { position: minimumTime + 4 },
+          startAt: { position: minimumPosition + 4 },
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition()).to.equal(minimumTime + 4);
+        expect(player.getPosition()).to.equal(minimumPosition + 4);
       });
 
       it("should update as soon as we seek", async () => {
@@ -829,12 +829,12 @@ export default function launchTestsForContent(
         });
 
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition()).to.equal(minimumTime);
+        expect(player.getPosition()).to.equal(minimumPosition);
         player.setPlaybackRate(1);
         player.play();
         await sleep(900);
         const initialPosition = player.getPosition();
-        expect(initialPosition).to.be.closeTo(minimumTime + 0.900, 0.150);
+        expect(initialPosition).to.be.closeTo(minimumPosition + 0.900, 0.150);
 
         player.setPlaybackRate(3);
         await sleep(2000);
@@ -1171,9 +1171,9 @@ export default function launchTestsForContent(
           autoPlay: true,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition()).to.be.below(minimumTime + 0.1);
-        player.seekTo(minimumTime + 50);
-        expect(player.getPosition()).to.be.closeTo(minimumTime + 50, 0.5);
+        expect(player.getPosition()).to.be.below(minimumPosition + 0.1);
+        player.seekTo(minimumPosition + 50);
+        expect(player.getPosition()).to.be.closeTo(minimumPosition + 50, 0.5);
       });
     });
 
@@ -1795,55 +1795,55 @@ export default function launchTestsForContent(
         await sleep(200);
         let buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(1);
-        expect(buffered.start(0)).to.equal(minimumTime);
+        expect(buffered.start(0)).to.equal(minimumPosition);
         let endOfCurrentRange = buffered.end(0);
         expect(endOfCurrentRange).to.be
-          .at.least(minimumTime + 9.7);
+          .at.least(minimumPosition + 9.7);
         expect(endOfCurrentRange).to.be
-          .at.most(minimumTime + 10 + 10);
+          .at.most(minimumPosition + 10 + 10);
 
         player.setWantedBufferAhead(20);
         expect(player.getWantedBufferAhead()).to.equal(20);
         await sleep(300);
         buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(1);
-        expect(buffered.start(0)).to.equal(minimumTime);
+        expect(buffered.start(0)).to.equal(minimumPosition);
         endOfCurrentRange = buffered.end(0);
         expect(endOfCurrentRange).to.be
-          .at.least(minimumTime + 19.7);
+          .at.least(minimumPosition + 19.7);
         expect(endOfCurrentRange).to.be
-          .at.most(minimumTime + 20 + 10);
+          .at.most(minimumPosition + 20 + 10);
 
-        player.seekTo(minimumTime + 10);
+        player.seekTo(minimumPosition + 10);
         await sleep(300);
         buffered = player.getVideoElement().buffered;
         expect(player.getWantedBufferAhead()).to.equal(20);
         expect(buffered.length).to.equal(1);
-        expect(buffered.start(0)).to.equal(minimumTime);
+        expect(buffered.start(0)).to.equal(minimumPosition);
         endOfCurrentRange = buffered.end(0);
         expect(endOfCurrentRange).to.be
           .at.least(Math.min(
-            minimumTime + 10 + 19.7,
+            minimumPosition + 10 + 19.7,
             player.getMaximumPosition() - 2
           ));
         expect(endOfCurrentRange).to.be
-          .at.most(minimumTime + 10 + 20 + 10);
+          .at.most(minimumPosition + 10 + 20 + 10);
 
-        player.seekTo(minimumTime + 10 + 20 + 10 + 10);
+        player.seekTo(minimumPosition + 10 + 20 + 10 + 10);
         await sleep(500);
         buffered = player.getVideoElement().buffered;
         expect(player.getWantedBufferAhead()).to.equal(20);
         expect(buffered.length).to.equal(2);
         expect(buffered.start(1)).to.be
-          .at.most(minimumTime + 10 + 20 + 10 + 10);
+          .at.most(minimumPosition + 10 + 20 + 10 + 10);
         endOfCurrentRange = buffered.end(1);
         expect(endOfCurrentRange).to.be
           .at.least(Math.min(
-            minimumTime + 10 + 20 + 10 +10 + 19.4,
+            minimumPosition + 10 + 20 + 10 +10 + 19.4,
             player.getMaximumPosition() - 2
           ));
         expect(endOfCurrentRange).to.be
-          .at.most(minimumTime + 10 + 20 + 10 +10 + 20 + 10);
+          .at.most(minimumPosition + 10 + 20 + 10 +10 + 20 + 10);
 
         player.setWantedBufferAhead(Infinity);
         expect(player.getWantedBufferAhead()).to.equal(Infinity);
@@ -1851,7 +1851,7 @@ export default function launchTestsForContent(
         buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(2);
         expect(buffered.start(1)).to.be
-          .at.most(minimumTime + 10 + 20 + 10 + 10);
+          .at.most(minimumPosition + 10 + 20 + 10 + 10);
         endOfCurrentRange = buffered.end(1);
         expect(endOfCurrentRange).to.be
           .at.least(player.getMaximumPosition() - 2);

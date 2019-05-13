@@ -120,7 +120,6 @@ const manifestInfos = {
   url: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
   transport: "dash",
   isLive: true,
-  timeShiftBufferDepth: 300,
   availabilityStartTime: 1325376000,
   periods: [
     {
