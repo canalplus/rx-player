@@ -225,7 +225,7 @@ This property is an array of objects with the following properties (only
     unencrypted/encrypted data might not be playable with that configuration.
 
     You can try that property if your encrypted contents seems to load
-    indefinitely on "exotic" targets.
+    indefinitely on peculiar targets.
 
 
 #### Example
