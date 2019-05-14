@@ -112,6 +112,7 @@ body {
 .choice-input > select {
   display: flex;
   background-color: white;
+  border-radius: 3px;
 }
 
 .choice-input.white-select select {
@@ -378,7 +379,7 @@ body {
   border: solid 1px #d1d1d1;
   margin: 5px;
   height: 41px;
-  color: #000;
+  color: #2f3132;
   background-color: #fff;
 }
 
