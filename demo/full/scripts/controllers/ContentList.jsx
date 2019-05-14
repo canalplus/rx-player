@@ -217,11 +217,6 @@ class ContentList extends React.Component {
     const onServerCertificateInput = (evt) =>
       this.setState({ serverCertificateUrl: evt.target.value });
 
-    const onDRMChange = (evt) => {
-      const index = evt.target.value;
-      this.setState({ drm: DRM_TYPES[index] });
-    };
-
     const onDisplayDRMSettings = (evt) =>
       this.onDisplayDRMSettings(evt);
 
@@ -229,7 +224,21 @@ class ContentList extends React.Component {
       this.onAutoPlayClick(evt);
     };
 
+    const onDRMTypeClick = (type) => {
+      this.setState({ drm: type });
+    };
+
     const shouldDisableEncryptedContent = !HAS_EME_APIs && !IS_HTTPS;
+
+    const generateDRMButtons = () => {
+      return DRM_TYPES.map(type =>
+        <Button
+          className={"choice-input-button drm-button" +
+            (drm === type ? " selected" : "")}
+          onClick={() => onDRMTypeClick(type)}
+          value={type}
+        />);
+    };
 
     return (
       <div className="choice-inputs-wrapper">
@@ -294,12 +303,10 @@ class ContentList extends React.Component {
                   {
                     displayDRMSettings ?
                       <div className="drm-settings">
+                        <div className="drm-choice">
+                          {generateDRMButtons()}
+                        </div>
                         <div>
-                          <Select
-                            className="choice-input white-select"
-                            onChange={onDRMChange}
-                            options={DRM_TYPES}
-                          />
                           <TextInput
                             className="choice-input text-input"
                             onChange={onLicenseServerInput}

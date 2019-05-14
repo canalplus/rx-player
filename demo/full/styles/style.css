@@ -375,7 +375,8 @@ body {
 }
 
 .auto-play {
-  margin-right: 15px;
+  margin-left: 8px;
+  margin-right: 8px;
   flex-direction: row;
   display: flex;
   align-items: center;
@@ -648,9 +649,8 @@ body {
   margin-bottom: 10px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   margin: 0px 5px;
-  font-size: 0.9rem;
 }
 
 .encryption-checkbox.disabled {
@@ -720,7 +720,7 @@ input:checked + .slider {
 }
 
 input:focus + .slider {
-  box-shadow: 0 0 1px #2196F3;
+  box-shadow: 0 0 1px #ec3655;
 }
 
 input:checked + .slider:before {
@@ -828,10 +828,26 @@ input:checked + .slider:before {
   margin: 5px;
 }
 
+.drm-button {
+  font-size: 1em;
+  padding: 10px;
+  border-radius: 3px;
+}
+
+.drm-button.selected {
+  background-color: #ec3655;
+  color: #000;
+}
+
+.drm-button.selected:hover {
+  background-color: #ec3655;
+  color: #000;
+}
+
 .drm-settings {
   background: #ffffff;
-  padding: 12px 14px 2px 14px;
-  margin: 12px 0 12px 0;
+  padding: 5px 14px 0px 14px;
+  margin: 4px 0 4px 0;
 }
 
 @media only screen and (max-width: 660px) {
