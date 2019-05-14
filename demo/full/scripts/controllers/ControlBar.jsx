@@ -17,7 +17,7 @@ function ControlBar({
   currentTime,
   duration,
   toggleSettings,
-  toggleInfos
+  toggleInfos,
 }) {
   const positionElement = (() => {
     if (!isContentLoaded) {

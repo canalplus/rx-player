@@ -201,7 +201,7 @@ class LogDisplayer extends React.Component {
     const clearLogs = () => {
       this.state.logs = [];
       this.setState({ logs: this.state.logs });
-    }
+    };
 
     return (
       <div className="player-logs-wrapper">

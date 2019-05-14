@@ -225,10 +225,8 @@ class ContentList extends React.Component {
     };
 
     const onClickOptions = () => {
-      this.setState({
-        showOptions: !showOptions
-      });
-    }
+      this.setState({ showOptions: !showOptions });
+    };
 
     const onClickLoad = () => {
       if (choiceIndex === contentsToSelect.length - 1) {
@@ -290,22 +288,22 @@ class ContentList extends React.Component {
               value="Options"
             />
             <div class={optionPanelClassName}>
-            <tr>
-              <td>
-                Auto Play 
-              </td>
-              <td>
-                <label class="switch">
-                  <input
-                    name="displayBufferSizeChart"
-                    type="checkbox"
-                    checked={autoPlay}
-                    onChange={onAutoPlayCheckbox}
-                  />
-                  <span class="slider round"></span>
-                </label>
-              </td>  
-            </tr>
+              <tr>
+                <td>
+                  Auto Play
+                </td>
+                <td>
+                  <label class="switch">
+                    <input
+                      name="displayBufferSizeChart"
+                      type="checkbox"
+                      checked={autoPlay}
+                      onChange={onAutoPlayCheckbox}
+                    />
+                    <span class="slider round"></span>
+                  </label>
+                </td>
+              </tr>
             </div>
             <Button
               className="choice-input choice-input-button load-button"
