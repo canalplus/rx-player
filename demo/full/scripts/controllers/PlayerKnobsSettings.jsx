@@ -19,7 +19,7 @@ const PlayerKnobsSettings = ({
     return null;
   }
 
-  const className = "player-knobs" + (shouldDisplay ? " fade-in-out" : "");
+  const className = "player-knobs settings" + (shouldDisplay ? " fade-in-out" : "");
 
   return (
     <div className={className}>

@@ -488,14 +488,22 @@ body {
   min-width: 280px;
   color: white;
   position: absolute;
-  bottom: 10px;
-  right: 10px;
   background-color: #000000;
   opacity: 0;
   transform: scale(0.9);
   transition: opacity 200ms;
   z-index: 1010;
   pointer-events:none;
+}
+
+.player-knobs.settings {
+  bottom: 10px;
+  right: 10px;
+}
+
+.player-knobs.infos {
+  top: 10px;
+  left: 10px;
 }
 
 .player-knobs.fade-in-out {

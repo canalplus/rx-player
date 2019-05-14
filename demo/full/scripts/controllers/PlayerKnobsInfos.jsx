@@ -12,7 +12,7 @@ const PlayerKnobsInfos = ({
     return null;
   }
 
-  const className = "player-knobs" + (shouldDisplay ? " fade-in-out" : "");
+  const className = "player-knobs infos" + (shouldDisplay ? " fade-in-out" : "");
   const displayedLiveGap = Math.round(liveGap * 100) / 100;
   return (
     <div className={className}>
