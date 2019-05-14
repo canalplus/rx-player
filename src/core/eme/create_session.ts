@@ -29,7 +29,7 @@ import log from "../../log";
 import arrayIncludes from "../../utils/array_includes";
 import castToObservable from "../../utils/cast_to_observable";
 import { IMediaKeysInfos } from "./types";
-import isSessionUsable from "./utils/is_session_usable";
+// import isSessionUsable from "./utils/is_session_usable";
 
 export interface INewSessionCreatedEvent {
   type : "created-session";
@@ -147,16 +147,20 @@ export default function createSession(
                                 value: { mediaKeySession: session, sessionType } });
         }
 
-        if (hasLoadedSession && isSessionUsable(session)) {
-          sessionStorage.add(initData, initDataType, session);
-          log.info("EME: Succeeded to load persistent session.");
-          return observableOf({ type: "loaded-persistent-session" as const,
-                                value: { mediaKeySession: session, sessionType } });
-        }
+        // TODO From our tests, we only get empty MediaKeyStatusesMap.
+        // Find out if that's normal, and if we can bring back to life an
+        // expired or internal-errored session.
+        // If both are true, we can safely remove that part.
+        // if (!isSessionUsable(session)) {
+        //   // Unusable persistent session: recreate a new session from scratch.
+        //   log.warn("EME: Previous persistent session not usable anymore.");
+        //   return recreatePersistentSession();
+        // }
 
-        // Unusable persistent session: recreate a new session from scratch.
-        log.warn("EME: Previous persistent session not usable anymore.");
-        return recreatePersistentSession();
+        sessionStorage.add(initData, initDataType, session);
+        log.info("EME: Succeeded to load persistent session.");
+        return observableOf({ type: "loaded-persistent-session" as const,
+                              value: { mediaKeySession: session, sessionType } });
       }),
       catchError(() : Observable<INewSessionCreatedEvent> => {
         log.warn("EME: Unable to load persistent session.");
