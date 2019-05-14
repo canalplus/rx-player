@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Map each element using a mapping function, then flat the result into
+ * a new array.
+ * @param {Array.<*>} originalArray
+ * @param {Function} fn
+ */
 export default function flatMap<T, U>(
   originalArray : T[],
   fn: (arg: T) => U[]|U
