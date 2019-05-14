@@ -29,8 +29,6 @@ export interface IEMEWarningEvent { type : "warning";
                                     value : ICustomError |
                                             Error; }
 
-export interface IEMEInitEvent { type: "eme-init"; }
-
 export interface ICreatedMediaKeysEvent { type: "created-media-keys";
                                           value: IMediaKeysInfos; }
 
