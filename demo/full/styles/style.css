@@ -349,6 +349,12 @@ body {
   pointer-events: none;
 }
 
+.option-panel > tr {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
 .option-panel.fade-in-out {
   opacity: 1;
   transform: translate(-7px, 50px);
