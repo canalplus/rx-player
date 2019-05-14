@@ -22,15 +22,12 @@ export default function getTimeLimits(
   parsedMPD : IParsedManifest,
   lastTimeReference? : number,
   timeShiftBufferDepth? : number
-) : [
-  { isContinuous : boolean; value : number; time : number }, // minimum
-  { isContinuous : boolean; value : number; time : number } // maximum
-] {
+) : [ { isContinuous : boolean; value : number; time : number }, // minimum
+      { isContinuous : boolean; value : number; time : number } /* maximum */ ]
+{
   const time = performance.now();
   const maximumTime = getMaximumTime(parsedMPD, lastTimeReference);
   const minimumTime = getMinimumTime(maximumTime, timeShiftBufferDepth);
-  return [
-    { isContinuous: true, value: minimumTime, time },
-    { isContinuous: true, value: maximumTime, time },
-  ];
+  return [ { isContinuous: true, value: minimumTime, time },
+           { isContinuous: true, value: maximumTime, time } ];
 }

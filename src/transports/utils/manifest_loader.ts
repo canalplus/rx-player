@@ -50,36 +50,29 @@ const manifestPreLoader = (
 
       /**
        * Callback triggered when the custom manifest loader has a response.
-       * @param {Object} args - Which contains:
-       *   - data {*} - The manifest data
-       *   - size {Number} - The manifest size
-       *   - duration {Number} - The duration of the request, in ms
+       * @param {Object}
        */
-      const resolve = (_args : {
-        data : Document|string;
-        size : number;
-        duration : number;
-        url? : string;
-        receivingTime? : number;
-        sendingTime? : number;
-      }) => {
+      const resolve = (_args : { data : Document | string;
+                                 size : number;
+                                 duration : number;
+                                 url? : string;
+                                 receivingTime? : number;
+                                 sendingTime? : number; }) =>
+      {
         if (!hasFallbacked) {
           hasFinished = true;
-          const receivedTime = _args.receivingTime != null ?
-            _args.receivingTime - timeAPIsDelta : undefined;
-          const sendingTime = _args.sendingTime != null ?
-            _args.sendingTime - timeAPIsDelta : undefined;
-          obs.next({
-            type: "response",
-            value: {
-              responseData: _args.data,
-              size: _args.size,
-              duration: _args.duration,
-              url: _args.url,
-              receivedTime,
-              sendingTime,
-            },
-          });
+          const receivedTime =
+            _args.receivingTime != null ? _args.receivingTime - timeAPIsDelta :
+                                          undefined;
+          const sendingTime =
+            _args.sendingTime != null ? _args.sendingTime - timeAPIsDelta :
+                                        undefined;
+          obs.next({ type: "response",
+                     value: { responseData: _args.data,
+                              size: _args.size,
+                              duration: _args.duration,
+                              url: _args.url,
+                              receivedTime, sendingTime } });
           obs.complete();
         }
       };

@@ -36,11 +36,11 @@ export default function getMaximumTime(
   const ast = parsedMPD.availabilityStartTime || 0;
   if (parsedMPD.clockOffset == null) {
     log.warn("DASH Parser: no clock synchronization mechanism found." +
-      "Setting a live gap of 10 seconds as a security.");
+             " Setting a live gap of 10 seconds as a security.");
     const now = Date.now() - 10000;
     return now / 1000 - ast;
   } else {
-    const now = Date.now() - parsedMPD.clockOffset;
+    const now = performance.now() + parsedMPD.clockOffset;
     return now / 1000 - ast;
   }
 }

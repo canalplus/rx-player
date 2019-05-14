@@ -66,11 +66,11 @@ const customSegmentLoader = (infos, callbacks) => {
   }
 
   const xhr = new XMLHttpRequest();
-  const sendingTime = Date.now();
+  const sendingTime = performance.now();
 
   xhr.onload = (r) => {
     if (200 <= xhr.status && xhr.status < 300) {
-      const duration = Date.now() - sendingTime;
+      const duration = performance.now() - sendingTime;
       const size = r.total;
       const data = xhr.response;
       callbacks.resolve({ duration, size, data });
@@ -156,14 +156,33 @@ implementation does the same thing and more):
  */
 const customManifestLoader = (url, callbacks) => {
   const xhr = new XMLHttpRequest();
-  const sendingTime = Date.now();
+  const baseTime = performance.now();
 
   xhr.onload = (r) => {
     if (200 <= xhr.status && xhr.status < 300) {
-      const duration = Date.now() - sendingTime;
+      const duration = performance.now() - baseTime;
+
+      const now = Date.now();
+      const receivingTime = now
+
+      // Note: We could have calculated `sendingTime` before the request, but
+      // that date would be wrong if the user updated the clock while the
+      // request was pending.
+      // `performance.now` doesn't depend on the user's clock. It is thus a
+      // better candidate here.
+      // This is why we re-calculate the sendingTime a posteriori, we are now
+      // sure to be aligned with the current clock.
+      const sendingTime = now - duration;
+
       const size = r.total;
       const data = xhr.response;
-      callbacks.resolve({ duration, size, data });
+      callbacks.resolve({
+        sendingTime,
+        receivingTime,
+        duration,
+        size,
+        data,
+      });
     } else {
       const err = new Error("didn't work");
       err.xhr = xhr;

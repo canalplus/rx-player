@@ -17,16 +17,22 @@
 import log from "../../../log";
 
 /**
- * Get offset the client's has with the given time, in milliseconds.
- * For example, a response of 1000 would mean that the client is currently 1
- * second in advance when compared with the given time.
+ * Get difference between the server's clock, in milliseconds and the return of
+ * the JS function `performance.now`.
+ * This property allows to calculate the server time at any moment.
+ *
+ * `undefined` if we could not define such offset (in which case, you could have
+ * to rely on the user's clock instead).
+ *
+ * For example, a response of 1000 would mean that performance.now() is 1 second
+ * behind the server's time.
  * @param {string} serverClock
  * @returns {number|undefined}
  */
 export default function getClockOffset(
   serverClock : string
 ) : number|undefined {
-  const httpOffset = Date.now() - Date.parse(serverClock);
+  const httpOffset = Date.parse(serverClock) - performance.now();
   if (isNaN(httpOffset)) {
     log.warn("DASH Parser: Invalid clock received: ",  serverClock);
     return undefined;
