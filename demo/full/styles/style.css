@@ -374,6 +374,19 @@ body {
   border-radius: 3px;
 }
 
+.auto-play {
+  margin-right: 15px;
+  flex-direction: row;
+  display: flex;
+  align-items: center;
+  font-size: 1.1em;
+  color: #2b2e2f;
+  border: dashed 1px #d1d1d1;
+  height: 39px;
+  padding: 0 0 0 10px;
+  border-radius: 3px;
+}
+
 .choice-input-button {
   font-family: "icons", sans-serif;
   border: solid 1px #d1d1d1;

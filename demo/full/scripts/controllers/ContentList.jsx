@@ -80,7 +80,6 @@ class ContentList extends React.Component {
       manifestUrl: "",
       drm: DRM_TYPES[0],
       autoPlay: true,
-      showOptions: false,
     };
   }
 
@@ -180,7 +179,6 @@ class ContentList extends React.Component {
       licenseServerUrl,
       manifestUrl,
       serverCertificateUrl,
-      showOptions,
       transportType,
     } = this.state;
     const contentsToSelect = CONTENTS_PER_TYPE[transportType];
@@ -195,10 +193,6 @@ class ContentList extends React.Component {
     const onContentChange = (evt) => {
       const index = +evt.target.value;
       this.changeContentIndex(index);
-    };
-
-    const onClickOptions = () => {
-      this.setState({ showOptions: !showOptions });
     };
 
     const onClickLoad = () => {
@@ -236,9 +230,6 @@ class ContentList extends React.Component {
     };
 
     const shouldDisableEncryptedContent = !HAS_EME_APIs && !IS_HTTPS;
-    const optionPanelClassName = "option-panel" + (showOptions ? " fade-in-out" : "");
-    const optionsButtonClassName =
-      "choice-input-button options-button" + (showOptions ? " clicked" : "");
 
     return (
       <div className="choice-inputs-wrapper">
@@ -257,20 +248,12 @@ class ContentList extends React.Component {
             />
           </div>
           <div className="choice-input-button-wrapper">
-            <Button
-              className={optionsButtonClassName}
-              onClick={onClickOptions}
-              value="Options"
-            />
-            <div class={optionPanelClassName}>
-              <tr>
-                <td>Auto Play</td>
-                <td>
-                  <OptionPanelCheckBox
-                    checked={autoPlay}
-                    onChange={onAutoPlayClick} />
-                </td>
-              </tr>
+            <div class="auto-play">
+              AutoPlay
+              <label class="input switch">
+                <input type="checkbox" checked={autoPlay} onChange={onAutoPlayClick} />
+                <span class="slider round"></span>
+              </label>
             </div>
             <Button
               className="choice-input-button load-button"
@@ -340,15 +323,6 @@ class ContentList extends React.Component {
       </div>
     );
   }
-}
-
-function OptionPanelCheckBox({ checked, onChange }) {
-  return (
-    <label class="input switch">
-      <input type="checkbox" checked={checked} onChange={onChange} />
-      <span class="slider round"></span>
-    </label>
-  );
 }
 
 export default ContentList;
