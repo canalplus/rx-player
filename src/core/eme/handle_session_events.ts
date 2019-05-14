@@ -246,7 +246,7 @@ export default function handleSessionEvents(
           }
 
           log.debug("EME: Update session", evt);
-          return castToObservable((session as any).update(license)).pipe(
+          return castToObservable(session.update(license)).pipe(
             catchError((error: Error) => {
               throw new EncryptedMediaError("KEY_UPDATE_ERROR", error.toString(), true);
             }),

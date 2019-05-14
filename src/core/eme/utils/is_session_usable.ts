@@ -27,15 +27,13 @@ import arrayIncludes from "../../../utils/array_includes";
  * @returns {MediaKeySession}
  */
 export default function isSessionUsable(
-  loadedSession : MediaKeySession|ICustomMediaKeySession
+  loadedSession : MediaKeySession | ICustomMediaKeySession
 ) : boolean {
   if (loadedSession.sessionId === "") {
     return false;
   }
 
-  // TODO TypeScript f*cked something up, normally there should be no need to
-  // add this "as".
-  const keyStatusesMap = (loadedSession as ICustomMediaKeySession).keyStatuses;
+  const keyStatusesMap = loadedSession.keyStatuses;
   const keyStatuses: string[] = [];
   keyStatusesMap.forEach((keyStatus) => {
     keyStatuses.push(keyStatus);

@@ -106,7 +106,7 @@ export default function createSession(
 
     const session = sessionsStore.createSession(initData, initDataType, sessionType);
 
-    // Re-check for Dumb typescript
+    // Re-check for Dumb typescript. Equivalent to `sessionType === "temporary"`.
     if (!hasPersistence || !sessionStorage || !keySystemOptions.persistentLicense) {
       return observableOf({ type: "created-session" as "created-session",
                             value: { mediaKeySession: session, sessionType } });
