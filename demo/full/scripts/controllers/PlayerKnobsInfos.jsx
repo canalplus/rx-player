@@ -7,7 +7,6 @@ const PlayerKnobsInfos = ({
   liveGap,
   isContentLoaded,
 }) => {
-
   if (!isContentLoaded) {
     return null;
   }

@@ -34,46 +34,32 @@ function ControlBar({
     }
   })();
 
-  const onClickSettings = () => {
-    toggleSettings();
-  };
-
-  const onClickStop = () => {
-    stopVideo();
-  }
-
-  const onClickInfos = () => {
-    toggleInfos();
-  };
-
-  const enableDisplayInfos = isLive && isContentLoaded;
-
   return (
     <div className="controls-bar-container">
       <Progressbar player={player} />
-      <div className="controls-bar vjs-fade-out">
+      <div className="controls-bar">
         <PlayPauseButton
           className={"control-button"}
           player={player}
         />
         <Button
           className={"control-button"}
-          onClick={onClickStop}
+          onClick={stopVideo}
           value={String.fromCharCode(0xf04d)}
           disabled={isStopped}
         />
         { positionElement }
         <div className="controls-right-side">
           <Button
-            disabled={!enableDisplayInfos}
+            disabled={!isContentLoaded}
             className='control-button'
-            onClick={onClickInfos}
+            onClick={toggleInfos}
             value={String.fromCharCode(0xf05a)}
           />
           <Button
             disabled={!isContentLoaded}
             className='control-button'
-            onClick={onClickSettings}
+            onClick={toggleSettings}
             value={String.fromCharCode(0xf013)}
           />
           <div className="volume">

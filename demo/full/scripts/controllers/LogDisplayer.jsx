@@ -18,37 +18,31 @@ const LogElement = ({ text, date }) => (
 class LogDisplayer extends React.Component {
   constructor(...args) {
     super(...args);
-    this.state = {
-      logs: [],
-    };
+    this.state = { logs: [] };
+
+    // A weird React behavior obligates me to mutate a this._logs array instead
+    // of calling setState directly to allow multiple setState in a row before
+    // rendering.
+    // The case seen was that this.state.logs would not change right after
+    // setState, so the last addLog call would be the only one really considered
+    this._logs = [];
 
     // Only scroll to bottom if already scrolled to bottom
     this.hasScrolledToBottom = true;
   }
 
   addLog(text) {
-    // A weird React behavior obligates me to mutate this.state directly
-    // to allow multiple setState in a row before rendering.
-    // The case seen was that this.state.logs would not change right after
-    // setState, so the last addLog call would be the only one really considered
-
-    // TODO What would be cleaner would be to give it to a module or copy the
-    // pending state in a context variable.
-
-    // previous version, do not work
-    // this.setState({
-    //   logs: this.state.logs.concat({
-    //     text,
-    //     date: new Date(),
-    //   }),
-    // });
-
-    this.state.logs = [...this.state.logs, {
+    this._logs = [...this._logs, {
       text,
       date: new Date(),
     }];
 
-    this.setState({ logs: this.state.logs });
+    this.setState({ logs: this._logs.slice() });
+  }
+
+  resetLogs() {
+    this._logs = [];
+    this.setState({ logs: [] });
   }
 
   componentDidMount() {
@@ -198,11 +192,7 @@ class LogDisplayer extends React.Component {
       />
     );
 
-    const clearLogs = () => {
-      this.state.logs = [];
-      this.setState({ logs: this.state.logs });
-    };
-
+    const clearLogs = () => this.resetLogs();
     return (
       <div className="player-logs-wrapper">
         <div className="player-logs-wrapper-title">

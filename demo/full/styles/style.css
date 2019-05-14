@@ -85,8 +85,6 @@ body {
   color: #1d1d1d;
   display: inline-block;
   font: inherit;
-  height: 41px;
-  padding: 10px 25px 10px 15px;
 
   /* reset */
 
@@ -102,8 +100,23 @@ body {
   background-repeat: no-repeat;
   background-position: calc(100% - 8px) 50%;
 
-  border-radius: 3px;
   border: 1px solid #d1d1d1;
+  padding: 2px 18px 2px 5px;
+}
+
+.choice-input {
+  margin: 0px;
+  display: inline;
+}
+
+.choice-input > select {
+  display: flex;
+  background-color: white;
+}
+
+.choice-input.white-select select {
+  height: 41px;
+  padding: 10px 25px 10px 15px;
 }
 
 .white-select option {
@@ -150,6 +163,11 @@ body {
   margin: 0 5px;
   width: 100%;
 }
+
+.content-choice select {
+  width: 100%;
+}
+
 .video-player-wrapper {
   background-color: #000;
   margin: auto;
@@ -356,16 +374,16 @@ body {
 }
 
 .choice-input-button {
-  color: #444;
   font-family: "icons", sans-serif;
   border: solid 1px #d1d1d1;
   margin: 5px;
   height: 41px;
-  background-color: #f9f9f9;
+  color: #000;
+  background-color: #fff;
 }
 
 .choice-input-button:hover {
-  color: #000;
+  color: #ec3655;
   box-shadow: 0px 0px 30px 0px rgba(245, 245, 255, 0.75);
 }
 
@@ -409,7 +427,7 @@ body {
 }
 
 .load-button {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   width: 60px;
 }
 
@@ -684,7 +702,7 @@ body {
 }
 
 input:checked + .slider {
-  background-color: rgb(0, 255, 0);
+  background-color: #ec3655;
 }
 
 input:focus + .slider {
@@ -798,7 +816,7 @@ input:checked + .slider:before {
 
 .drm-settings {
   background: #ffffff;
-  padding: 14px 14px 2px 14px;
+  padding: 12px 14px 2px 14px;
   margin: 12px 0 12px 0;
 }
 
