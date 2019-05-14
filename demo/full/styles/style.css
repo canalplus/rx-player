@@ -425,11 +425,11 @@ body {
   font-size: 1.1rem;
   width: 90px;
   border: solid 1px #d1d1d1;
-  background-color: #e2e2e2;
+  background-color: #f9f9f9;
 }
 
 .options-button.clicked {
-  background-color:#cacaca;
+  background-color: #c6c6c6;
 }
 
 .position-infos {
