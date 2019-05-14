@@ -71,7 +71,6 @@ body {
 .video-player-section {
   background-color: #ececec;
   padding: 25px 4px;
-  text-align: center;
 }
 
 .video-player-content {
@@ -128,17 +127,7 @@ body {
   align-items: center;
 }
 
-.choice-input {
-  margin: 0px;
-  display: inline;
-}
-
-.choice-input > select {
-  display: flex;
-  background-color: white;
-}
-
-.choice-input.text-input {
+.text-input {
   font-family: CanalDemiRomain, "Open Sans", sans-serif;
   font-size: 1rem;
   width: 100%;
@@ -159,12 +148,8 @@ body {
 .content-choice {
   flex: 1;
   margin: 0 5px;
-}
-
-.content-choice select {
   width: 100%;
 }
-
 .video-player-wrapper {
   background-color: #000;
   margin: auto;
@@ -373,11 +358,9 @@ body {
 .choice-input-button {
   color: #444;
   font-family: "icons", sans-serif;
-  font-size: 1.4rem;
   border: solid 1px #d1d1d1;
   margin: 5px;
   height: 41px;
-  width: 60px;
   background-color: #f9f9f9;
 }
 
@@ -396,12 +379,12 @@ body {
 }
 
 .control-button {
-  width: 2em;
+  font-size: 1.2em;
+  width: 35px;
   border: none;
   font-family: "icons", sans-serif;
   color: #ccc;
   background: transparent;
-  font-size: 1.2em;
   cursor: pointer;
   outline: 0;
   margin: 0 3px 0 3px;
@@ -416,16 +399,18 @@ body {
 }
 
 .play-pause-button {
+  margin-left: 14px;
   position: relative;
-  font-size: 1em;
-  width: 45px;
 }
 
 .options-button {
   font-size: 1.1rem;
   width: 90px;
-  border: solid 1px #d1d1d1;
-  background-color: #f9f9f9;
+}
+
+.load-button {
+  font-size: 1.4rem;
+  width: 60px;
 }
 
 .options-button.clicked {
@@ -434,6 +419,7 @@ body {
 
 .position-infos {
   margin: auto;
+  margin-left: 10px;
   font-size: 0.8em;
   flex-grow: 1;
 }

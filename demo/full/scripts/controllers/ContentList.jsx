@@ -209,7 +209,6 @@ class ContentList extends React.Component {
       autoPlay,
       showOptions,
     } = this.state;
-    const { isStopped } = this.props;
     const contentsToSelect = CONTENTS_PER_TYPE[transportType];
 
     const onTechChange = (evt) => {
@@ -241,11 +240,6 @@ class ContentList extends React.Component {
       }
     };
 
-    const onClickStop = () => {
-      const { stopVideo } = this.props;
-      stopVideo();
-    };
-
     const onManifestInput = (evt) =>
       this.onManifestInput(evt);
     const onLicenseServerInput = (evt) =>
@@ -262,7 +256,7 @@ class ContentList extends React.Component {
     const shouldDisableEncryptedContent = !HAS_EME_APIs && !IS_HTTPS;
     const optionPanelClassName = "option-panel" + (showOptions ? " fade-in-out" : "");
     const optionsButtonClassName =
-      "choice-input choice-input-button options-button" + (showOptions ? " clicked" : "");
+      "choice-input-button options-button" + (showOptions ? " clicked" : "");
 
 
     return (
@@ -270,12 +264,12 @@ class ContentList extends React.Component {
         <div className="content-inputs">
           <div className="content-inputs-selects">
             <Select
-              className="choice-input transport-type-choice white-select"
+              className="transport-type-choice white-select"
               onChange={onTechChange}
               options={TRANSPORT_TYPES}
             />
             <Select
-              className="choice-input content-choice white-select"
+              className="content-choice white-select"
               onChange={onContentChange}
               options={contentsToSelect}
               selected={choiceIndex}
@@ -306,24 +300,18 @@ class ContentList extends React.Component {
               </tr>
             </div>
             <Button
-              className="choice-input choice-input-button load-button"
+              className="choice-input-button load-button"
               onClick={onClickLoad}
               value={String.fromCharCode(0xf144)}
-            />
-            <Button
-              className="choice-input choice-input-button stop-load-button"
-              onClick={onClickStop}
-              value={String.fromCharCode(0xf04d)}
-              disabled={isStopped}
             />
           </div>
         </div>
         {
           hasTextInput ?
             (
-              <div className="choice-input custom-input-wrapper">
+              <div className="custom-input-wrapper">
                 <TextInput
-                  className="choice-input text-input"
+                  className="text-input"
                   onChange={onManifestInput}
                   value={manifestUrl}
                   placeholder={
@@ -352,19 +340,19 @@ class ContentList extends React.Component {
                       <div className="drm-settings">
                         <div>
                           <Select
-                            className="choice-input white-select"
+                            className="white-select"
                             onChange={onDRMChange}
                             options={DRM_TYPES}
                           />
                           <TextInput
-                            className="choice-input text-input"
+                            className="text-input"
                             onChange={onLicenseServerInput}
                             value={licenseServerUrl}
                             placeholder={"License server URL"}
                           />
                         </div>
                         <TextInput
-                          className="choice-input text-input"
+                          className="text-input"
                           onChange={onServerCertificateInput}
                           value={serverCertificateUrl}
                           placeholder={"Server certificate URL (optional)"}

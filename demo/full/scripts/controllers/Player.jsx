@@ -116,7 +116,6 @@ class Player extends React.Component {
         <div className="video-player-content">
           <ContentList
             loadVideo={loadVideo}
-            stopVideo={stopVideo}
             isStopped={isStopped}
           />
           <div
@@ -164,6 +163,7 @@ class Player extends React.Component {
                   videoElement={this.playerWrapperElement}
                   toggleSettings={toggleSettings}
                   toggleInfos={toggleInfos}
+                  stopVideo={stopVideo}
                 /> : null}
           </div>
           {player ?  <ChartsManager player={player} /> : null }

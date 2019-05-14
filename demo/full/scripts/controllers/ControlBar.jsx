@@ -14,10 +14,12 @@ function ControlBar({
   videoElement,
   isContentLoaded,
   isLive,
+  isStopped,
   currentTime,
   duration,
   toggleSettings,
   toggleInfos,
+  stopVideo,
 }) {
   const positionElement = (() => {
     if (!isContentLoaded) {
@@ -36,6 +38,10 @@ function ControlBar({
     toggleSettings();
   };
 
+  const onClickStop = () => {
+    stopVideo();
+  }
+
   const onClickInfos = () => {
     toggleInfos();
   };
@@ -49,6 +55,12 @@ function ControlBar({
         <PlayPauseButton
           className={"control-button"}
           player={player}
+        />
+        <Button
+          className={"control-button"}
+          onClick={onClickStop}
+          value={String.fromCharCode(0xf04d)}
+          disabled={isStopped}
         />
         { positionElement }
         <div className="controls-right-side">
@@ -91,5 +103,6 @@ export default withModulesState({
     isLive: "isLive",
     currentTime: "currentTime",
     duration: "duration",
+    isStopped: "isStopped",
   },
 })(ControlBar);
