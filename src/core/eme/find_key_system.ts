@@ -34,6 +34,7 @@ import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import arrayIncludes from "../../utils/array_includes";
+import flatMap from "../../utils/flat_map";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 import { IKeySystemOption } from "./types";
 
@@ -187,14 +188,18 @@ function buildKeySystemConfigurations(
   // More details here:
   // https://storage.googleapis.com/wvdocs/Chrome_EME_Changes_and_Best_Practices.pdf
   // https://www.w3.org/TR/encrypted-media/#get-supported-configuration-and-consent
-  const videoCapabilities: IMediaCapability[] = videoRobustnesses.map(robustness => ({
-    contentType: "video/mp4;codecs=\"avc1.4d401e\"", // standard mp4 codec
-    robustness,
-  }));
-  const audioCapabilities: IMediaCapability[] = audioRobustnesses.map(robustness => ({
-    contentType: "audio/mp4;codecs=\"mp4a.40.2\"", // standard mp4 codec
-    robustness,
-  }));
+  const videoCapabilities: IMediaCapability[] =
+    flatMap(videoRobustnesses,
+            robustness => [{ contentType: "video/mp4;codecs=\"avc1.4d401e\"",
+                             robustness },
+                           { contentType: "video/mp4;codecs=\"avc1.42e01e\"",
+                             robustness },
+                           { contentType: "video/mp4;codecs=\"vp8\"",
+                             robustness } ]);
+
+  const audioCapabilities: IMediaCapability[] =
+    audioRobustnesses.map(robustness => ({ contentType: "audio/mp4;codecs=\"mp4a.40.2\"",
+                                           robustness }));
 
   // TODO Re-test with a set contentType but an undefined robustness on the
   // STBs on which this problem was found.
