@@ -17890,8 +17890,14 @@ object-assign
  // Clean-up stored Representation and Adaptation information
                                 if (null != this._priv_contentInfos) {
                     var _this$_priv_contentIn11 = this._priv_contentInfos, activeAdaptations = _this$_priv_contentIn11.activeAdaptations, activeRepresentations = _this$_priv_contentIn11.activeRepresentations;
-                    activeAdaptations && activeAdaptations[period.id] && delete activeAdaptations[period.id], 
-                    activeRepresentations && activeRepresentations[period.id] && delete activeRepresentations[period.id];
+                    if (activeAdaptations && activeAdaptations[period.id]) {
+                        var activePeriodAdaptations = activeAdaptations[period.id];
+                        delete activePeriodAdaptations[type], Object.keys(activePeriodAdaptations).length || delete activeAdaptations[period.id];
+                    }
+                    if (activeRepresentations && activeRepresentations[period.id]) {
+                        var activePeriodRepresentations = activeRepresentations[period.id];
+                        delete activePeriodRepresentations[type], Object.keys(activePeriodRepresentations).length || delete activeRepresentations[period.id];
+                    }
                 }
             }
             /**
