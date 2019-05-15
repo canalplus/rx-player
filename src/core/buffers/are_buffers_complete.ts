@@ -65,9 +65,8 @@ export default function areBuffersComplete(
       );
     });
 
-  return observableCombineLatest(...isCompleteArray)
-    .pipe(
-      map((areComplete) => areComplete.every((isComplete) => isComplete)),
-      distinctUntilChanged()
-    );
+  return observableCombineLatest(isCompleteArray).pipe(
+    map((areComplete) => areComplete.every((isComplete) => isComplete)),
+    distinctUntilChanged()
+  );
 }

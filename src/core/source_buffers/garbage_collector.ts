@@ -48,7 +48,7 @@ export default function BufferGarbageCollector({
   maxBufferBehind$ : Observable<number>;
   maxBufferAhead$ : Observable<number>;
 }) : Observable<never> {
-  return observableCombineLatest(clock$, maxBufferBehind$, maxBufferAhead$).pipe(
+  return observableCombineLatest([clock$, maxBufferBehind$, maxBufferAhead$]).pipe(
     mergeMap(([currentTime, maxBufferBehind, maxBufferAhead]) => {
       return clearBuffer(queuedSourceBuffer,
                          currentTime,

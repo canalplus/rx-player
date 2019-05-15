@@ -46,7 +46,7 @@ export default function createFakeAdaptationBuffer(
   content : { period : Period }
 ) : Observable<IBufferStateFull> {
   const { period } = content;
-  return observableCombineLatest(bufferClock$, wantedBufferAhead$).pipe(
+  return observableCombineLatest([bufferClock$, wantedBufferAhead$]).pipe(
     filter(([clockTick, wantedBufferAhead]) =>
       period.end != null && clockTick.currentTime + wantedBufferAhead >= period.end
     ),

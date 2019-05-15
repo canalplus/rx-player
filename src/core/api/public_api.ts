@@ -814,12 +814,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const seekingEvent$ = onSeeking$(videoElement);
 
     // State updates when the content is considered "loaded"
-    const loadedStateUpdates$ = observableCombineLatest(
+    const loadedStateUpdates$ = observableCombineLatest([
       this._priv_playing$,
       stalled$.pipe(startWith(null)),
       endedEvent$.pipe(startWith(null)),
-      seekingEvent$.pipe(startWith(null))
-    ).pipe(
+      seekingEvent$.pipe(startWith(null)),
+    ]).pipe(
       takeUntil(this._priv_stopCurrentContent$),
       map(([isPlaying, stalledStatus]) =>
         getPlayerState(videoElement, isPlaying, stalledStatus)

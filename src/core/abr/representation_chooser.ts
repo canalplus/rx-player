@@ -399,7 +399,7 @@ export default class RepresentationChooser {
     // Emit restrictions on the pools of available Representations to choose
     // from.
     const deviceEvents$ : Observable<IFilters> = _deviceEventsArray.length ?
-      observableCombineLatest(..._deviceEventsArray)
+      observableCombineLatest(_deviceEventsArray)
         .pipe(map((args : IFilters[]) => objectAssign({}, ...args))) :
       observableOf({});
 
@@ -420,10 +420,10 @@ export default class RepresentationChooser {
 
       // -- AUTO mode --
       let inStarvationMode = false; // == buffer gap too low == panic mode
-      return observableCombineLatest(clock$,
-                                     maxAutoBitrate$,
-                                     deviceEvents$,
-                                     this._reEstimate$.pipe(startWith(null))
+      return observableCombineLatest([ clock$,
+                                       maxAutoBitrate$,
+                                       deviceEvents$,
+                                       this._reEstimate$.pipe(startWith(null)) ]
       ).pipe(
         map(([ clock, maxAutoBitrate, deviceEvents ]) => {
           let newBitrateCeil; // bitrate ceil for the chosen Representation

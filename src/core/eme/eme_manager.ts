@@ -110,8 +110,8 @@ export default function EMEManager(
     log.debug("EME: encrypted event received", encryptedEvent);
   }));
 
-  const bindSession$ = observableCombineLatest(encryptedEvents$,
-                                               attachedMediaKeys$
+  const bindSession$ = observableCombineLatest([encryptedEvents$,
+                                                attachedMediaKeys$]
   ).pipe(
     /* Attach server certificate and create/reuse MediaKeySession */
     mergeMap(([encryptedEvent, mediaKeysEvent], i) => {
