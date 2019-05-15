@@ -1,5 +1,6 @@
 import React from "react";
 import { Subject } from "rxjs";
+import Button from "../components/Button.jsx";
 import {
   skip,
   takeUntil,
@@ -17,37 +18,31 @@ const LogElement = ({ text, date }) => (
 class LogDisplayer extends React.Component {
   constructor(...args) {
     super(...args);
-    this.state = {
-      logs: [],
-    };
+    this.state = { logs: [] };
+
+    // A weird React behavior obligates me to mutate a this._logs array instead
+    // of calling setState directly to allow multiple setState in a row before
+    // rendering.
+    // The case seen was that this.state.logs would not change right after
+    // setState, so the last addLog call would be the only one really considered
+    this._logs = [];
 
     // Only scroll to bottom if already scrolled to bottom
     this.hasScrolledToBottom = true;
   }
 
   addLog(text) {
-    // A weird React behavior obligates me to mutate this.state directly
-    // to allow multiple setState in a row before rendering.
-    // The case seen was that this.state.logs would not change right after
-    // setState, so the last addLog call would be the only one really considered
-
-    // TODO What would be cleaner would be to give it to a module or copy the
-    // pending state in a context variable.
-
-    // previous version, do not work
-    // this.setState({
-    //   logs: this.state.logs.concat({
-    //     text,
-    //     date: new Date(),
-    //   }),
-    // });
-
-    this.state.logs = [...this.state.logs, {
+    this._logs = [...this._logs, {
       text,
       date: new Date(),
     }];
 
-    this.setState({ logs: this.state.logs });
+    this.setState({ logs: this._logs.slice() });
+  }
+
+  resetLogs() {
+    this._logs = [];
+    this.setState({ logs: [] });
   }
 
   componentDidMount() {
@@ -196,19 +191,22 @@ class LogDisplayer extends React.Component {
         date={date}
       />
     );
+
+    const clearLogs = () => this.resetLogs();
     return (
-      <div
-        className="player-logs-wrapper"
-      >
-        <div
-          className="player-logs-wrapper-title"
-        >
+      <div className="player-logs-wrapper">
+        <div className="player-logs-wrapper-title">
           Logs
         </div>
         <div
           className="player-logs"
           ref={el => this.element = el}
         >
+          <Button
+            className="player-logs-wrapper-trash"
+            onClick={clearLogs}
+            value={String.fromCharCode(0xf05e)}
+          />
           {logTexts}
         </div>
       </div>

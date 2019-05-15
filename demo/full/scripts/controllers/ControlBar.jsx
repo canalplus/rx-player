@@ -14,9 +14,11 @@ function ControlBar({
   videoElement,
   isContentLoaded,
   isLive,
+  isStopped,
   currentTime,
   duration,
   toggleSettings,
+  stopVideo,
 }) {
   const positionElement = (() => {
     if (!isContentLoaded) {
@@ -31,10 +33,6 @@ function ControlBar({
     }
   })();
 
-  const onClickSettings = () => {
-    toggleSettings();
-  };
-
   return (
     <div className="controls-bar-container">
       <Progressbar player={player} />
@@ -43,16 +41,20 @@ function ControlBar({
           className={"control-button"}
           player={player}
         />
+        <Button
+          className={"control-button"}
+          onClick={stopVideo}
+          value={String.fromCharCode(0xf04d)}
+          disabled={isStopped}
+        />
         { positionElement }
         <div className="controls-right-side">
-          <div>
-            <Button
-              disabled={!isContentLoaded}
-              className='control-button'
-              onClick={onClickSettings}
-              value={String.fromCharCode(0xf013)}
-            />
-          </div>
+          <Button
+            disabled={!isContentLoaded}
+            className='control-button'
+            onClick={toggleSettings}
+            value={String.fromCharCode(0xf013)}
+          />
           <div className="volume">
             <VolumeButton
               className="control-button"
@@ -80,5 +82,6 @@ export default withModulesState({
     isLive: "isLive",
     currentTime: "currentTime",
     duration: "duration",
+    isStopped: "isStopped",
   },
 })(ControlBar);

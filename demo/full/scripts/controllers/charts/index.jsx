@@ -66,15 +66,19 @@ class ChartsManager extends React.Component {
       });
     };
     return (
-      <div className="player-charts">
+      <div className="player-charts player-box">
         <div className="chart-checkboxes">
           <div className="chart-checkbox" >
             Buffer size chart
-            <input
-              name="displayBufferSizeChart"
-              type="checkbox"
-              checked={this.state.displayBufferSizeChart}
-              onChange={onBufferSizeCheckBoxChange} />
+            <label class="switch">
+              <input
+                name="displayBufferSizeChart"
+                type="checkbox"
+                checked={this.state.displayBufferSizeChart}
+                onChange={onBufferSizeCheckBoxChange}
+              />
+              <span class="slider round"></span>
+            </label>
           </div>
           {
             // <div className="chart-checkbox" >

@@ -73,7 +73,7 @@ class ContentList extends React.Component {
 
     this.state = {
       transportType: TRANSPORT_TYPES[0],
-      choiceIndex: firstEnabledContentIndex,
+      contentChoiceIndex: firstEnabledContentIndex,
       hasTextInput: CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]].length - 1 ===
         firstEnabledContentIndex,
       displayDRMSettings: false,
@@ -85,6 +85,7 @@ class ContentList extends React.Component {
 
   loadContent(content) {
     const { loadVideo, stopVideo } = this.props;
+    const { autoPlay } = this.state;
     if (content == null) {
       stopVideo();
       return;
@@ -95,7 +96,6 @@ class ContentList extends React.Component {
       transport,
       supplementaryImageTracks,
       supplementaryTextTracks,
-      textTrackMode,
       drmInfos = [],
     } = content;
 
@@ -104,10 +104,10 @@ class ContentList extends React.Component {
         loadVideo({
           url,
           transport,
-          autoPlay: !(this.state.autoPlay === false),
+          autoPlay,
           supplementaryImageTracks,
           supplementaryTextTracks,
-          textTrackMode,
+          textTrackMode: "html",
           keySystems,
         });
       });
@@ -137,7 +137,7 @@ class ContentList extends React.Component {
       contents.findIndex((content) => !content.disabled);
     this.setState({
       transportType,
-      choiceIndex: firstEnabledContentIndex,
+      contentChoiceIndex: firstEnabledContentIndex,
       hasTextInput: CONTENTS_PER_TYPE[transportType].length - 1 ===
         firstEnabledContentIndex,
     });
@@ -148,33 +148,9 @@ class ContentList extends React.Component {
     const hasTextInput = CONTENTS_PER_TYPE[transportType].length - 1 === index;
 
     this.setState({
-      choiceIndex: index,
+      contentChoiceIndex: index,
       hasTextInput,
     });
-  }
-
-  // TODO Better event?
-  onManifestInput(evt) {
-    this.setState({
-      manifestUrl: evt.target.value,
-    });
-  }
-
-  onLicenseServerInput(evt) {
-    this.setState({
-      licenseServerUrl: evt.target.value,
-    });
-  }
-
-  onServerCertificateInput(evt) {
-    this.setState({
-      serverCertificateUrl: evt.target.value,
-    });
-  }
-
-  onDRMChange(evt) {
-    const index = evt.target.value;
-    this.setState({ drm: DRM_TYPES[index] });
   }
 
   onDisplayDRMSettings(evt) {
@@ -186,28 +162,25 @@ class ContentList extends React.Component {
     });
   }
 
-  onToggleAutoPlay(evt) {
+  onAutoPlayClick(evt) {
     const { target } = evt;
     const value = target.type === "checkbox" ?
       target.checked : target.value;
-    this.setState({
-      autoPlay: value,
-    });
+    this.setState({ autoPlay: value });
   }
 
   render() {
     const {
-      transportType,
-      choiceIndex,
-      hasTextInput,
-      manifestUrl,
-      licenseServerUrl,
-      serverCertificateUrl,
-      drm,
-      displayDRMSettings,
       autoPlay,
+      contentChoiceIndex,
+      displayDRMSettings,
+      drm,
+      hasTextInput,
+      licenseServerUrl,
+      manifestUrl,
+      serverCertificateUrl,
+      transportType,
     } = this.state;
-    const { isStopped } = this.props;
     const contentsToSelect = CONTENTS_PER_TYPE[transportType];
 
     const onTechChange = (evt) => {
@@ -223,7 +196,7 @@ class ContentList extends React.Component {
     };
 
     const onClickLoad = () => {
-      if (choiceIndex === contentsToSelect.length - 1) {
+      if (contentChoiceIndex === contentsToSelect.length - 1) {
         const drmInfos = [{
           licenseServerUrl,
           serverCertificateUrl,
@@ -231,29 +204,41 @@ class ContentList extends React.Component {
         }];
         this.loadUrl(manifestUrl, drmInfos, autoPlay);
       } else {
-        this.loadContent(contentsToSelect[choiceIndex].content);
+        this.loadContent(contentsToSelect[contentChoiceIndex].content);
       }
     };
 
-    const onClickStop = () => {
-      const { stopVideo } = this.props;
-      stopVideo();
-    };
-
     const onManifestInput = (evt) =>
-      this.onManifestInput(evt);
+      this.setState({ manifestUrl: evt.target.value });
+
     const onLicenseServerInput = (evt) =>
-      this.onLicenseServerInput(evt);
+      this.setState({ licenseServerUrl: evt.target.value });
+
     const onServerCertificateInput = (evt) =>
-      this.onServerCertificateInput(evt);
-    const onDRMChange = (evt) =>
-      this.onDRMChange(evt);
+      this.setState({ serverCertificateUrl: evt.target.value });
+
     const onDisplayDRMSettings = (evt) =>
       this.onDisplayDRMSettings(evt);
-    const onAutoPlayCheckbox = (evt) =>
-      this.onToggleAutoPlay(evt);
+
+    const onAutoPlayClick = (evt) => {
+      this.onAutoPlayClick(evt);
+    };
+
+    const onDRMTypeClick = (type) => {
+      this.setState({ drm: type });
+    };
 
     const shouldDisableEncryptedContent = !HAS_EME_APIs && !IS_HTTPS;
+
+    const generateDRMButtons = () => {
+      return DRM_TYPES.map(type =>
+        <Button
+          className={"choice-input-button drm-button" +
+            (drm === type ? " selected" : "")}
+          onClick={() => onDRMTypeClick(type)}
+          value={type}
+        />);
+    };
 
     return (
       <div className="choice-inputs-wrapper">
@@ -268,38 +253,30 @@ class ContentList extends React.Component {
               className="choice-input content-choice white-select"
               onChange={onContentChange}
               options={contentsToSelect}
-              selected={choiceIndex}
+              selected={contentChoiceIndex}
             />
           </div>
           <div className="choice-input-button-wrapper">
-            <div className="autoplay-checkbox">
-              Auto Play
-              <input
-                name="displayBufferSizeChart"
-                type="checkbox"
-                checked={autoPlay}
-                onChange={onAutoPlayCheckbox}
-              />
+            <div class="auto-play">
+              AutoPlay
+              <label class="input switch">
+                <input type="checkbox" checked={autoPlay} onChange={onAutoPlayClick} />
+                <span class="slider round"></span>
+              </label>
             </div>
             <Button
-              className="choice-input choice-input-button load-button"
+              className="choice-input-button load-button"
               onClick={onClickLoad}
               value={String.fromCharCode(0xf144)}
-            />
-            <Button
-              className="choice-input choice-input-button stop-load-button"
-              onClick={onClickStop}
-              value={String.fromCharCode(0xf04d)}
-              disabled={isStopped}
             />
           </div>
         </div>
         {
           hasTextInput ?
             (
-              <div className="choice-input custom-input-wrapper">
+              <div className="custom-input-wrapper">
                 <TextInput
-                  className="choice-input text-input"
+                  className="text-input"
                   onChange={onManifestInput}
                   value={manifestUrl}
                   placeholder={
@@ -309,40 +286,44 @@ class ContentList extends React.Component {
                     ) + (IS_HTTPS ? " (HTTPS only if mixed contents disabled)" : "")
                   }
                 />
-                <span className={"encryption-checkbox" + (shouldDisableEncryptedContent ? " disabled" : "")}>
-                  {(shouldDisableEncryptedContent ? "[HTTPS only] " : "") + "Encrypted content"}
-                  <input
-                    disabled={shouldDisableEncryptedContent}
-                    name="displayDRMSettingsTextInput"
-                    type="checkbox"
-                    checked={displayDRMSettings}
-                    onChange={onDisplayDRMSettings} />
-                </span>
-                {
-                  displayDRMSettings ?
-                    <div className="drm-settings">
-                      <div>
-                        <Select
-                          className="choice-input white-select"
-                          onChange={onDRMChange}
-                          options={DRM_TYPES}
-                        />
+                <div className="player-box">
+                  <span className={"encryption-checkbox" + (shouldDisableEncryptedContent ? " disabled" : "")}>
+                    {(shouldDisableEncryptedContent ? "[HTTPS only] " : "") + "Encrypted content"}
+                    <label class="switch">
+                      <input
+                        disabled={shouldDisableEncryptedContent}
+                        name="displayDRMSettingsTextInput"
+                        type="checkbox"
+                        checked={displayDRMSettings}
+                        onChange={onDisplayDRMSettings}
+                      />
+                      <span class="slider round"></span>
+                    </label>
+                  </span>
+                  {
+                    displayDRMSettings ?
+                      <div className="drm-settings">
+                        <div className="drm-choice">
+                          {generateDRMButtons()}
+                        </div>
+                        <div>
+                          <TextInput
+                            className="choice-input text-input"
+                            onChange={onLicenseServerInput}
+                            value={licenseServerUrl}
+                            placeholder={"License server URL"}
+                          />
+                        </div>
                         <TextInput
                           className="choice-input text-input"
-                          onChange={onLicenseServerInput}
-                          value={licenseServerUrl}
-                          placeholder={"License server URL"}
+                          onChange={onServerCertificateInput}
+                          value={serverCertificateUrl}
+                          placeholder={"Server certificate URL (optional)"}
                         />
-                      </div>
-                      <TextInput
-                        className="choice-input text-input"
-                        onChange={onServerCertificateInput}
-                        value={serverCertificateUrl}
-                        placeholder={"Server certificate URL (optional)"}
-                      />
-                    </div> :
-                    null
-                }
+                      </div> :
+                      null
+                  }
+                </div>
               </div>
             ) : null
         }

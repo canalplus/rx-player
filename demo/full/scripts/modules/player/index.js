@@ -57,6 +57,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
     videoBitrate: undefined,
     volume: player.getVolume(),
     wallClockDiff: undefined,
+    liveGap: undefined,
   });
 
   linkPlayerEventsToState(player, state, $destroy);
