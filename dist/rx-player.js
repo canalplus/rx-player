@@ -5592,15 +5592,18 @@ object-assign
                         contentType: 'video/mp4;codecs="avc1.42e01e"',
                         robustness: robustness
                     }, {
-                        contentType: 'video/mp4;codecs="vp8"',
+                        contentType: 'video/webm;codecs="vp8"',
                         robustness: robustness
                     } ];
                 }),
-                audioCapabilities: audioRobustnesses.map(function(robustness) {
-                    return {
+                audioCapabilities: flatMap(audioRobustnesses, function(robustness) {
+                    return [ {
                         contentType: 'audio/mp4;codecs="mp4a.40.2"',
                         robustness: robustness
-                    };
+                    }, {
+                        contentType: "audio/webm;codecs=opus",
+                        robustness: robustness
+                    } ];
                 }),
                 distinctiveIdentifier: distinctiveIdentifier,
                 persistentState: persistentState,
