@@ -829,6 +829,7 @@ input:checked + .slider:before {
 }
 
 .drm-button {
+  margin: 5px 10px 5px 0;
   font-size: 1em;
   padding: 10px;
   border-radius: 3px;
