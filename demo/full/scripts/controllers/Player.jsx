@@ -8,7 +8,6 @@ import ContentList from "./ContentList.jsx";
 import ErrorDisplayer from "./ErrorDisplayer.jsx";
 import LogDisplayer from "./LogDisplayer.jsx";
 import ChartsManager from "./charts/index.jsx";
-import PlayerKnobsInfos from "./PlayerKnobsInfos.jsx";
 import PlayerKnobsSettings from "./PlayerKnobsSettings.jsx";
 
 // time in ms while seeking/loading/buffering after which the spinner is shown
@@ -21,7 +20,6 @@ class Player extends React.Component {
       player: null,
       displaySpinner: false,
       displaySettings: false,
-      displayInfos: false,
       isStopped: true,
     };
   }
@@ -101,14 +99,8 @@ class Player extends React.Component {
     const closeSettings = () => {
       this.setState({ displaySettings: false });
     };
-    const closeInfos = () => {
-      this.setState({ displayInfos: false });
-    };
     const toggleSettings = () => {
       this.setState({ displaySettings: !this.state.displaySettings });
-    };
-    const toggleInfos = () => {
-      this.setState({ displayInfos: !this.state.displayInfos });
     };
 
     return (
@@ -143,13 +135,6 @@ class Player extends React.Component {
                 <video ref={element => this.videoElement = element }/>
 
               </div>
-
-              <PlayerKnobsInfos
-                close={closeInfos}
-                shouldDisplay={this.state.displayInfos}
-                player={player}
-              />
-
               <PlayerKnobsSettings
                 close={closeSettings}
                 shouldDisplay={this.state.displaySettings}
@@ -162,7 +147,6 @@ class Player extends React.Component {
                   player={player}
                   videoElement={this.playerWrapperElement}
                   toggleSettings={toggleSettings}
-                  toggleInfos={toggleInfos}
                   stopVideo={stopVideo}
                 /> : null}
           </div>
