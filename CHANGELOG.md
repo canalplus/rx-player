@@ -1,5 +1,23 @@
 # Changelog
 
+## v3.13.0 (2019/05/15)
+
+### Features
+
+eme: add `disableMediaKeysAttachmentLock` key system option to bypass a deadlock (with possible tradeoffs) when playing encrypted contents on some peculiar devices
+
+### Bug fixes
+
+dash/smooth: never rely on Date.now when calculating time differences to avoid issues when the user adjusts the system clock while playing a live content
+eme: throw a better error (avoid `toString is not a function` messages) for a `KEY_LOAD_ERROR` when the `getLicense` function provided fails without a proper error
+
+### Other improvements
+
+eme: add other default contentTypes when calling requestMediaKeySystemAccess to improve device support
+demo: update the demo UI
+code: change indentation style of a big chunk of the code to increase readability
+
+
 ## v3.12.0 (2019/04/10)
 
 ### Features
