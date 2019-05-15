@@ -836,12 +836,12 @@ input:checked + .slider:before {
 
 .drm-button.selected {
   background-color: #ec3655;
-  color: #000;
+  color: #fff;
 }
 
 .drm-button.selected:hover {
   background-color: #ec3655;
-  color: #000;
+  color: #fff;
 }
 
 .drm-settings {
