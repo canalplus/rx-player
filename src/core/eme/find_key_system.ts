@@ -196,7 +196,7 @@ function buildKeySystemConfigurations(
                              robustness },
                            { contentType: "video/mp4;codecs=\"avc1.42e01e\"",
                              robustness },
-                           { contentType: "video/mp4;codecs=\"vp8\"",
+                           { contentType: "video/webm;codecs=\"vp8\"",
                              robustness } ]);
 
   const audioCapabilities: IMediaCapability[] =
