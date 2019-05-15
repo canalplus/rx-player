@@ -2134,11 +2134,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     const { activeAdaptations, activeRepresentations } = this._priv_contentInfos;
     if (activeAdaptations && activeAdaptations[period.id]) {
-      delete activeAdaptations[period.id];
+      const activePeriodAdaptations = activeAdaptations[period.id];
+      delete activePeriodAdaptations[type];
+      if (!Object.keys(activePeriodAdaptations).length) {
+        delete activeAdaptations[period.id];
+      }
     }
 
     if (activeRepresentations && activeRepresentations[period.id]) {
-      delete activeRepresentations[period.id];
+      const activePeriodRepresentations = activeRepresentations[period.id];
+      delete activePeriodRepresentations[type];
+      if (!Object.keys(activePeriodRepresentations).length) {
+        delete activeRepresentations[period.id];
+      }
     }
   }
 
