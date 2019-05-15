@@ -10,6 +10,7 @@
 
   - dash/smooth: never rely on Date.now when calculating time differences to avoid issues when the user adjusts the system clock while playing a live content
   - eme: throw a better error (avoid `toString is not a function` messages) for a `KEY_LOAD_ERROR` when the `getLicense` function provided fails without a proper error
+  - api: fix rare situation with DASH multi-period contents where we reported no available bitrate, Adaptation nor Representation when switching to another Period.
 
 ### Other improvements
 
