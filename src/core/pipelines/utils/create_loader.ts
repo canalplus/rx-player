@@ -161,7 +161,9 @@ export default function createLoader<T, U>(
   // TODO Remove the resolver completely
   const resolver = (transportPipeline as any).resolver != null ?
                      (transportPipeline as any).resolver :
-                     observableOf.bind(Observable);
+                     /* tslint:disable:deprecation */
+                     observableOf; // TS Issue triggers an Rx deprecation
+                     /* tslint:enable:deprecation */
 
   // Subject that will emit non-fatal errors.
   const retryErrorSubject : Subject<Error> = new Subject();

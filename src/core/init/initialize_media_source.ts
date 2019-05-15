@@ -211,11 +211,11 @@ export default function InitializeOnMediaSource({
   const manifestRefreshed$ =
     new ReplaySubject<{ manifest : Manifest; sendingTime? : number }>(1);
 
-  const loadContent$ = observableCombineLatest(
+  const loadContent$ = observableCombineLatest([
     openMediaSource$,
     fetchManifest({ url, hasClockSynchronization: false }),
-    emeManager$.pipe(filter(isEMEReadyEvent), take(1))
-  ).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
+    emeManager$.pipe(filter(isEMEReadyEvent), take(1)),
+  ]).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
 
     /**
      * Refresh the manifest on subscription.

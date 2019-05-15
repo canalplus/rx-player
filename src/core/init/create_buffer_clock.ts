@@ -51,7 +51,7 @@ export default function createBufferClock(
   );
 
   const clock$ : Observable<IBufferOrchestratorClockTick> =
-    observableCombineLatest(initClock$, speed$)
+    observableCombineLatest([initClock$, speed$])
       .pipe(map(([tick, speed]) => {
         return objectAssign({
           isLive: manifest.isLive,

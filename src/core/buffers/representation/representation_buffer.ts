@@ -189,13 +189,13 @@ export default function RepresentationBuffer<T>({
   // SourceBuffer.
   const sourceBufferWaitingQueue = new SimpleSet();
 
-  const status$ = observableCombineLatest(
+  const status$ = observableCombineLatest([
     clock$,
     wantedBufferAhead$,
     terminate$.pipe(take(1),
                     mapTo(true),
                     startWith(false)),
-    finishedDownloadQueue$.pipe(startWith(undefined))
+    finishedDownloadQueue$.pipe(startWith(undefined)) ]
   ).pipe(
     map(function getCurrentStatus([timing, bufferGoal, terminate]) : {
       discontinuity : number;
