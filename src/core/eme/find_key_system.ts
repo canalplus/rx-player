@@ -196,12 +196,15 @@ function buildKeySystemConfigurations(
                              robustness },
                            { contentType: "video/mp4;codecs=\"avc1.42e01e\"",
                              robustness },
-                           { contentType: "video/mp4;codecs=\"vp8\"",
+                           { contentType: "video/webm;codecs=\"vp8\"",
                              robustness } ]);
 
   const audioCapabilities: IMediaCapability[] =
-    audioRobustnesses.map(robustness => ({ contentType: "audio/mp4;codecs=\"mp4a.40.2\"",
-                                           robustness }));
+    flatMap(audioRobustnesses,
+            robustness => [{ contentType: "audio/mp4;codecs=\"mp4a.40.2\"",
+                             robustness },
+                           { contentType: "audio/webm;codecs=opus",
+                             robustness } ]);
 
   // TODO Re-test with a set contentType but an undefined robustness on the
   // STBs on which this problem was found.

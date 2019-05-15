@@ -193,11 +193,30 @@ directly the license or <code>null</code> if it can be done synchronously.</p>
 </li>
 <li>
 <p><code>closeSessionsOnStop</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, the
-<code>MediaKeySession</code> created for a content will be immediately closed when the
-content stops its playback. This might be required by your key system
+<code>MediaKeySession</code> created for a content will be immediately closed when
+the content stops its playback. This might be required by your key system
 implementation (most often, it is not).</p>
 <p>If set to <code>false</code> or not set, the <code>MediaKeySession</code> can be reused if the
 same content needs to be re-decrypted.</p>
+</li>
+<li>
+<p><code>disableMediaKeysAttachmentLock</code> (<code>Boolean|undefined</code>):
+In regular conditions, we might want to wait for the media element to have
+decryption capabilities (what we call here &#x201C;MediaKeys attachment&#x201D;) before
+beginning to load the actual content.</p>
+<p>Waiting for that capability validation allows for example to play a content
+which contains both encrypted and unencrypted data on the Chrome browser.</p>
+<p>However, we found that in some peculiar devices (like some set-top boxes)
+this can create a deadlock: the browser sometimes wait for some
+content to be loaded before validating the media element&#x2019;s decryption
+capabilities.</p>
+<p>Because we didn&#x2019;t find a good enough compromise for now, we added the
+<code>disableMediaKeysAttachmentLock</code> boolean.
+By setting it to <code>true</code>, we won&#x2019;t wait for &#x201C;MediaKeys attachment&#x201D; before
+pushing the first content. The downside being that content of mixed
+unencrypted/encrypted data might not be playable with that configuration.</p>
+<p>You can try that property if your encrypted contents seems to load
+indefinitely on peculiar targets.</p>
 </li>
 </ul>
 <h4>Example</h4>

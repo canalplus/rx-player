@@ -528,7 +528,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.12.0";
+    this.version = /*PLAYER_VERSION*/"3.13.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -2134,11 +2134,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     const { activeAdaptations, activeRepresentations } = this._priv_contentInfos;
     if (activeAdaptations && activeAdaptations[period.id]) {
-      delete activeAdaptations[period.id];
+      const activePeriodAdaptations = activeAdaptations[period.id];
+      delete activePeriodAdaptations[type];
+      if (!Object.keys(activePeriodAdaptations).length) {
+        delete activeAdaptations[period.id];
+      }
     }
 
     if (activeRepresentations && activeRepresentations[period.id]) {
-      delete activeRepresentations[period.id];
+      const activePeriodRepresentations = activeRepresentations[period.id];
+      delete activePeriodRepresentations[type];
+      if (!Object.keys(activePeriodRepresentations).length) {
+        delete activeRepresentations[period.id];
+      }
     }
   }
 
@@ -2368,6 +2376,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.trigger("positionUpdate", positionData);
   }
 }
-Player.version = /*PLAYER_VERSION*/"3.12.0";
+Player.version = /*PLAYER_VERSION*/"3.13.0";
 
 export default Player;

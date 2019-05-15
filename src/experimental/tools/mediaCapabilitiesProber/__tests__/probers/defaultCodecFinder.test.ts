@@ -21,8 +21,9 @@ describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
 
   it("should find default video codec", () => {
     const mockIsTypeSupported = jest.fn((codec: string) => {
-      return codec === "video/mp4; codecs=\"avc1.4D401E\"" ||
-        codec === "video/webm; codecs=\"vp09.00.10.08\"";
+      return codec === "video/mp4;codecs=\"avc1.4d401e\"" ||
+        codec === "video/mp4;codecs=\"avc1.42e01e\"" ||
+        codec === "video/webm;codecs=\"vp8\"";
     });
     jest.mock("../../../../../compat", () => ({
       MediaSource_: {
@@ -30,7 +31,7 @@ describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
       },
     }));
     const { findDefaultVideoCodec } = require("../../probers/defaultCodecsFinder");
-    expect(findDefaultVideoCodec()).toBe("video/mp4; codecs=\"avc1.4D401E\"");
+    expect(findDefaultVideoCodec()).toBe("video/mp4;codecs=\"avc1.4d401e\"");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
 
@@ -44,7 +45,7 @@ describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
     const { findDefaultVideoCodec } = require("../../probers/defaultCodecsFinder");
     expect(() => { findDefaultVideoCodec(); }).toThrowError(
       "No default video codec found.");
-    expect(mockIsTypeSupported).toHaveBeenCalledTimes(2);
+    expect(mockIsTypeSupported).toHaveBeenCalledTimes(3);
   });
 
   it("should throw because no MediaSource", () => {
@@ -73,8 +74,8 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
 
   it("should find default audio codec", () => {
     const mockIsTypeSupported = jest.fn((codec: string) => {
-      return codec === "audio/webm; codecs=opus" ||
-        codec === "audio/mp4; codecs=\"mp4a.40.2\"";
+      return codec === "audio/mp4;codecs=\"mp4a.40.2\"" ||
+        codec === "audio/webm;codecs=opus";
     });
     jest.mock("../../../../../compat", () => ({
       MediaSource_: {
@@ -82,7 +83,7 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
       },
     }));
     const { findDefaultAudioCodec } = require("../../probers/defaultCodecsFinder");
-    expect(findDefaultAudioCodec()).toBe("audio/webm; codecs=opus");
+    expect(findDefaultAudioCodec()).toBe("audio/mp4;codecs=\"mp4a.40.2\"");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
 

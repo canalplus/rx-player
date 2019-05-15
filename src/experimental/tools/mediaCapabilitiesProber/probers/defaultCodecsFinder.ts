@@ -24,8 +24,9 @@ import { MediaSource_ } from "../../../../compat";
   */
 export function findDefaultVideoCodec(): string {
   const videoCodecs = [
-    "video/mp4; codecs=\"avc1.4D401E\"",
-    "video/webm; codecs=\"vp09.00.10.08\"",
+    "video/mp4;codecs=\"avc1.4d401e\"",
+    "video/mp4;codecs=\"avc1.42e01e\"",
+    "video/webm;codecs=\"vp8\"",
   ];
   /* tslint:disable no-unbound-method */
   if (MediaSource_ == null || typeof MediaSource_.isTypeSupported !== "function") {
@@ -48,8 +49,8 @@ export function findDefaultVideoCodec(): string {
  */
 export function findDefaultAudioCodec(): string {
   const audioCodecs = [
-    "audio/webm; codecs=opus",
-    "audio/mp4; codecs=\"mp4a.40.2\"",
+    "audio/mp4;codecs=\"mp4a.40.2\"",
+    "audio/webm;codecs=opus",
   ];
   /* tslint:disable no-unbound-method */
   if (MediaSource_ == null || typeof MediaSource_.isTypeSupported !== "function") {
