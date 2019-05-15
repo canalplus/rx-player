@@ -42,18 +42,20 @@ type MediaKeysRequirement = "optional" |
                             "required" |
                             "not-allowed";
 
+export interface IMediaKeySystemAccessInfos {
+  mediaKeySystemAccess: ICompatMediaKeySystemAccess |
+                        ICustomMediaKeySystemAccess;
+  options: IKeySystemOption;
+}
+
 export interface IReuseMediaKeySystemAccessEvent {
   type: "reuse-media-key-system-access";
-  value: { mediaKeySystemAccess: ICompatMediaKeySystemAccess |
-                                 ICustomMediaKeySystemAccess;
-           options: IKeySystemOption; };
+  value: IMediaKeySystemAccessInfos;
 }
 
 export interface ICreateMediaKeySystemAccessEvent {
   type: "create-media-key-system-access";
-  value: { mediaKeySystemAccess: ICompatMediaKeySystemAccess |
-                                 ICustomMediaKeySystemAccess;
-           options: IKeySystemOption; };
+  value: IMediaKeySystemAccessInfos;
 }
 
 export type IFoundMediaKeySystemAccessEvent = IReuseMediaKeySystemAccessEvent |

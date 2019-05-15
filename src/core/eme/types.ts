@@ -29,7 +29,15 @@ export interface IEMEWarningEvent { type : "warning";
                                     value : ICustomError |
                                             Error; }
 
-export interface IEMEInitEvent { type: "eme-init"; }
+export interface ICreatedMediaKeysEvent { type: "created-media-keys";
+                                          value: IMediaKeysInfos; }
+
+export interface IAttachedMediaKeysEvent { type: "attached-media-keys";
+                                           value: IMediaKeysInfos; }
+
+export type IEMEManagerEvent = IEMEWarningEvent |
+                               ICreatedMediaKeysEvent |
+                               IAttachedMediaKeysEvent;
 
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {
@@ -95,6 +103,7 @@ export interface IKeySystemOption {
   videoRobustnesses?: Array<string|undefined>;
   audioRobustnesses?: Array<string|undefined>;
   throwOnLicenseExpiration? : boolean;
+  disableMediaKeysAttachmentLock? : boolean;
 }
 
 // Keys are the different key statuses possible.

@@ -70,6 +70,7 @@ import EVENTS from "./events_generators";
 import getInitialTime, {
   IInitialTimeOptions,
 } from "./get_initial_time";
+import isEMEReadyEvent from "./is_eme_ready";
 import createMediaSourceLoader, {
   IMediaSourceLoaderEvent,
 } from "./load_on_media_source";
@@ -210,15 +211,10 @@ export default function InitializeOnMediaSource({
   const manifestRefreshed$ =
     new ReplaySubject<{ manifest : Manifest; sendingTime? : number }>(1);
 
-  const emeInitialized$ = emeManager$.pipe(
-    filter(({ type }) => type === "eme-init" || type === "eme-disabled"),
-    take(1)
-  );
-
   const loadContent$ = observableCombineLatest(
     openMediaSource$,
     fetchManifest({ url, hasClockSynchronization: false }),
-    emeInitialized$
+    emeManager$.pipe(filter(isEMEReadyEvent), take(1))
   ).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
 
     /**

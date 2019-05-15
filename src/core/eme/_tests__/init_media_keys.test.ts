@@ -18,10 +18,51 @@ import {
   of as observableOf,
   throwError,
 } from "rxjs";
+import { skip, take } from "rxjs/operators";
 
 describe("core - eme - initMediaKeys", () => {
   beforeEach(() => {
     jest.resetModules();
+  });
+
+  it("should emit `created-media-keys` event once MediaKeys has been created", done => {
+    const falseMediaKeys = { key: "test" };
+    const spyGetMediaKeysInfos = jest.fn(() => {
+      return observableOf(falseMediaKeys);
+    });
+    jest.mock("../get_media_keys", () => ({
+      __esModule: true,
+      default: spyGetMediaKeysInfos,
+    }));
+    const spyAttachMediaKeys = jest.fn(() => {
+      return observableOf(undefined);
+    });
+    jest.mock("../attach_media_keys", () => ({
+      __esModule: true,
+      default: spyAttachMediaKeys,
+    }));
+    const initMediaKeys = require("../init_media_keys").default;
+
+    const mediaElement = document.createElement("video");
+    const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
+    const currentMediaKeysInfos = { foo: "bar" };
+    initMediaKeys(mediaElement, keySystemsConfigs, currentMediaKeysInfos)
+      .pipe(take(1))
+      .subscribe((result : unknown) => {
+        expect(result).toEqual({
+          type: "created-media-keys",
+          value: falseMediaKeys,
+        });
+
+        expect(spyGetMediaKeysInfos).toHaveBeenCalledTimes(1);
+        expect(spyGetMediaKeysInfos)
+          .toHaveBeenCalledWith(mediaElement, keySystemsConfigs, currentMediaKeysInfos);
+
+        expect(spyAttachMediaKeys).toHaveBeenCalledTimes(1);
+        expect(spyAttachMediaKeys)
+          .toHaveBeenCalledWith(falseMediaKeys, mediaElement, currentMediaKeysInfos);
+        done();
+      });
   });
 
   it("should return mediaKeysInfos after media keys has been attached", (done) => {
@@ -46,8 +87,12 @@ describe("core - eme - initMediaKeys", () => {
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
     const currentMediaKeysInfos = { foo: "bar" };
     initMediaKeys(mediaElement, keySystemsConfigs, currentMediaKeysInfos)
+      .pipe(skip(1))
       .subscribe((result : unknown) => {
-        expect(result).toBe(falseMediaKeys);
+        expect(result).toEqual({
+          type: "attached-media-keys",
+          value: falseMediaKeys,
+        });
 
         expect(spyGetMediaKeysInfos).toHaveBeenCalledTimes(1);
         expect(spyGetMediaKeysInfos)
@@ -115,8 +160,17 @@ describe("core - eme - initMediaKeys", () => {
     const mediaElement = document.createElement("video");
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
     const currentMediaKeysInfos = { foo: "bar" };
+
+    let eventReceived = false;
     initMediaKeys(mediaElement, keySystemsConfigs, currentMediaKeysInfos)
-      .subscribe(null, (e : Error) => {
+      .subscribe((evt : unknown) => {
+        expect(evt).toEqual({
+          type: "created-media-keys",
+          value: falseMediaKeys,
+        });
+        eventReceived = true;
+      }, (e : Error) => {
+        expect(eventReceived).toEqual(true);
         expect(e).toBe(err);
 
         expect(spyAttachMediaKeys).toHaveBeenCalledTimes(1);
@@ -129,5 +183,5 @@ describe("core - eme - initMediaKeys", () => {
 
         done();
       });
-  });
+ });
 });
