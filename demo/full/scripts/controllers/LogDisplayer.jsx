@@ -148,6 +148,47 @@ class LogDisplayer extends React.Component {
         "The current content is not seeking anymore";
       this.addLog(text);
     });
+
+    player.$get("availableLanguages").pipe(
+      skip(1), // skip initial value
+      takeUntil(this.destructionSubject)
+    ).subscribe(() => {
+      const text = "The audio track list has changed";
+      this.addLog(text);
+    });
+
+    player.$get("availableSubtitles").pipe(
+      skip(1), // skip initial value
+      takeUntil(this.destructionSubject)
+    ).subscribe(() => {
+      const text = "The text track list has changed";
+      this.addLog(text);
+    });
+
+    player.$get("availableVideoTracks").pipe(
+      skip(1), // skip initial value
+      takeUntil(this.destructionSubject)
+    ).subscribe(() => {
+      const text = "The video track list has changed";
+      this.addLog(text);
+    });
+
+    player.$get("availableAudioBitrates").pipe(
+      skip(1), // skip initial value
+      takeUntil(this.destructionSubject)
+    ).subscribe(() => {
+      const text = "The audio bitrate list has changed";
+      this.addLog(text);
+    });
+
+    player.$get("availableVideoBitrates").pipe(
+      skip(1), // skip initial value
+      takeUntil(this.destructionSubject)
+    ).subscribe(() => {
+      const text = "The video bitrate list has changed";
+      this.addLog(text);
+    });
+
     this.scrollToBottom();
 
     const onScroll = () => {
