@@ -43,7 +43,6 @@ export const PLAYER_STATES = { STOPPED: "STOPPED",
  */
 export default function getLoadedContentState(
   mediaElement : HTMLMediaElement,
-  isPlaying : boolean,
   stalledStatus : { reason : "seeking" |
                              "not-ready" |
                              "buffering"; } |
@@ -69,6 +68,6 @@ export default function getLoadedContentState(
     return stalledStatus.reason === "seeking" ? PLAYER_STATES.SEEKING :
                                                 PLAYER_STATES.BUFFERING;
   }
-  return isPlaying ? PLAYER_STATES.PLAYING :
-                     PLAYER_STATES.PAUSED;
+  return mediaElement.paused ? PLAYER_STATES.PAUSED :
+                               PLAYER_STATES.PLAYING;
 }

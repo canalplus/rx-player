@@ -817,14 +817,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     // State updates when the content is considered "loaded"
     const loadedStateUpdates$ = observableCombineLatest([
-      this._priv_playing$,
       stalled$.pipe(startWith(null)),
       endedEvent$.pipe(startWith(null)),
       seekingEvent$.pipe(startWith(null)),
+      onPlayPause$(videoElement).pipe(startWith(null)),
     ]).pipe(
       takeUntil(this._priv_stopCurrentContent$),
-      map(([isPlaying, stalledStatus]) =>
-        getPlayerState(videoElement, isPlaying, stalledStatus)
+      map(([stalledStatus]) =>
+        getPlayerState(videoElement, stalledStatus)
       )
     );
 
@@ -864,10 +864,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           playbackSubscription.unsubscribe();
         }
       });
-
-    onPlayPause$(videoElement)
-      .pipe(takeUntil(this._priv_stopCurrentContent$))
-      .subscribe(e => this._priv_onPlayPauseNext(e.type === "play"), noop);
 
     clock$
       .pipe(takeUntil(this._priv_stopCurrentContent$))
@@ -2287,22 +2283,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         bitrate : number|undefined; }
   ) : void {
     this._priv_triggerContentEvent("bitrateEstimationChange", { type, bitrate });
-  }
-
-  /**
-   * Triggered each time the videoElement alternates between play and pause.
-   *
-   * Emit the info through the right Subject.
-   *
-   * @param {Boolean} isPlaying
-   * @private
-   */
-  private _priv_onPlayPauseNext(isPlaying : boolean) : void {
-    if (!this.videoElement) {
-      throw new Error("Disposed player");
-    }
-
-    this._priv_playing$.next(isPlaying);
   }
 
   /**

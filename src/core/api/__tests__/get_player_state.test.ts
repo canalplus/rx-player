@@ -23,30 +23,39 @@ describe("API - getLoadedContentState", () => {
       ended: true,
       duration: 100000,
       currentTime: 0,
+      paused: false,
     };
     const mediaElement = fakeProps as HTMLMediaElement;
 
     // we can just do every possibility here
-    expect(getLoadedContentState(mediaElement, true, null))
+    fakeProps.paused = false;
+    expect(getLoadedContentState(mediaElement, null))
       .toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, false, null))
+    fakeProps.paused = true;
+    expect(getLoadedContentState(mediaElement, null))
       .toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, true, {
+    fakeProps.paused = false;
+    expect(getLoadedContentState(mediaElement, {
       reason: "seeking",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, true, {
+    fakeProps.paused = false;
+    expect(getLoadedContentState(mediaElement, {
       reason: "not-ready",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, true, {
+    fakeProps.paused = false;
+    expect(getLoadedContentState(mediaElement, {
       reason: "buffering",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, false, {
+    fakeProps.paused = true;
+    expect(getLoadedContentState(mediaElement, {
       reason: "seeking",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, false, {
+    fakeProps.paused = true;
+    expect(getLoadedContentState(mediaElement, {
       reason: "not-ready",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, false, {
+    fakeProps.paused = true;
+    expect(getLoadedContentState(mediaElement, {
       reason: "buffering",
     })).toBe("ENDED");
   });
@@ -56,9 +65,10 @@ describe("API - getLoadedContentState", () => {
       ended: false,
       duration: 10,
       currentTime: 10, // worst case -> currentTime === duration
+      paused: false,
     };
     const mediaElement = fakeProps as HTMLMediaElement;
-    expect(getLoadedContentState(mediaElement, true, null))
+    expect(getLoadedContentState(mediaElement, null))
       .toBe("PLAYING");
   });
 
@@ -67,9 +77,10 @@ describe("API - getLoadedContentState", () => {
       ended: false,
       duration: 10,
       currentTime: 10, // worst case -> currentTime === duration
+      paused: true,
     };
     const mediaElement = fakeProps as HTMLMediaElement;
-    expect(getLoadedContentState(mediaElement, false, null))
+    expect(getLoadedContentState(mediaElement, null))
       .toBe("PAUSED");
   });
 
@@ -78,12 +89,14 @@ describe("API - getLoadedContentState", () => {
       ended: false,
       duration: 10,
       currentTime: 5,
+      paused: false,
     };
     const mediaElement = fakeProps as HTMLMediaElement;
-    expect(getLoadedContentState(mediaElement, true, {
+    expect(getLoadedContentState(mediaElement, {
       reason: "buffering",
     })).toBe("BUFFERING");
-    expect(getLoadedContentState(mediaElement, false, {
+    fakeProps.paused = true;
+    expect(getLoadedContentState(mediaElement, {
       reason: "buffering",
     })).toBe("BUFFERING");
   });
@@ -93,12 +106,14 @@ describe("API - getLoadedContentState", () => {
       ended: false,
       duration: 10,
       currentTime: 5,
+      paused: false,
     };
     const mediaElement = fakeProps as HTMLMediaElement;
-    expect(getLoadedContentState(mediaElement, true, {
+    expect(getLoadedContentState(mediaElement, {
       reason: "not-ready",
     })).toBe("BUFFERING");
-    expect(getLoadedContentState(mediaElement, false, {
+    fakeProps.paused = true;
+    expect(getLoadedContentState(mediaElement, {
       reason: "not-ready",
     })).toBe("BUFFERING");
   });
@@ -108,12 +123,14 @@ describe("API - getLoadedContentState", () => {
       ended: false,
       duration: 10,
       currentTime: 5,
+      paused: false,
     };
     const mediaElement = fakeProps as HTMLMediaElement;
-    expect(getLoadedContentState(mediaElement, true, {
+    expect(getLoadedContentState(mediaElement, {
       reason: "seeking",
     })).toBe("SEEKING");
-    expect(getLoadedContentState(mediaElement, false, {
+    fakeProps.paused = true;
+    expect(getLoadedContentState(mediaElement, {
       reason: "seeking",
     })).toBe("SEEKING");
   });
@@ -123,24 +140,30 @@ describe("API - getLoadedContentState", () => {
       ended: false,
       duration: 10,
       currentTime: 10,
+      paused: false,
     };
     const mediaElement = fakeProps as HTMLMediaElement;
-    expect(getLoadedContentState(mediaElement, true, {
+    expect(getLoadedContentState(mediaElement, {
       reason: "seeking",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, false, {
+    fakeProps.paused = true;
+    expect(getLoadedContentState(mediaElement, {
       reason: "seeking",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, true, {
+    fakeProps.paused = false;
+    expect(getLoadedContentState(mediaElement, {
       reason: "buffering",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, false, {
+    fakeProps.paused = true;
+    expect(getLoadedContentState(mediaElement, {
       reason: "buffering",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, true, {
+    fakeProps.paused = false;
+    expect(getLoadedContentState(mediaElement, {
       reason: "not-ready",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, false, {
+    fakeProps.paused = true;
+    expect(getLoadedContentState(mediaElement, {
       reason: "not-ready",
     })).toBe("ENDED");
   });
@@ -150,24 +173,30 @@ describe("API - getLoadedContentState", () => {
       ended: false,
       duration: 10,
       currentTime: 10 - config.FORCED_ENDED_THRESHOLD,
+      paused: false,
     };
     const mediaElement = fakeProps as HTMLMediaElement;
-    expect(getLoadedContentState(mediaElement, true, {
+    expect(getLoadedContentState(mediaElement, {
       reason: "seeking",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, false, {
+    fakeProps.paused = true;
+    expect(getLoadedContentState(mediaElement, {
       reason: "seeking",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, true, {
+    fakeProps.paused = false;
+    expect(getLoadedContentState(mediaElement, {
       reason: "buffering",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, false, {
+    fakeProps.paused = true;
+    expect(getLoadedContentState(mediaElement, {
       reason: "buffering",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, true, {
+    fakeProps.paused = false;
+    expect(getLoadedContentState(mediaElement, {
       reason: "not-ready",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement, false, {
+    fakeProps.paused = true;
+    expect(getLoadedContentState(mediaElement, {
       reason: "not-ready",
     })).toBe("ENDED");
   });
@@ -177,24 +206,30 @@ describe("API - getLoadedContentState", () => {
       ended: false,
       duration: 10,
       currentTime: 10 - config.FORCED_ENDED_THRESHOLD,
+      paused: false,
     };
     const mediaElement1 = fakeProps1 as HTMLMediaElement;
-    expect(getLoadedContentState(mediaElement1, true, {
+    expect(getLoadedContentState(mediaElement1, {
       reason: "seeking",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement1, false, {
+    fakeProps1.paused = true;
+    expect(getLoadedContentState(mediaElement1, {
       reason: "seeking",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement1, true, {
+    fakeProps1.paused = false;
+    expect(getLoadedContentState(mediaElement1, {
       reason: "buffering",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement1, false, {
+    fakeProps1.paused = true;
+    expect(getLoadedContentState(mediaElement1, {
       reason: "buffering",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement1, true, {
+    fakeProps1.paused = false;
+    expect(getLoadedContentState(mediaElement1, {
       reason: "not-ready",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement1, false, {
+    fakeProps1.paused = true;
+    expect(getLoadedContentState(mediaElement1, {
       reason: "not-ready",
     })).toBe("ENDED");
 
@@ -202,24 +237,30 @@ describe("API - getLoadedContentState", () => {
       ended: false,
       duration: 10,
       currentTime: config.FORCED_ENDED_THRESHOLD + 10,
+      paused: false,
     };
     const mediaElement2 = fakeProps2 as HTMLMediaElement;
-    expect(getLoadedContentState(mediaElement2, true, {
+    expect(getLoadedContentState(mediaElement2, {
       reason: "seeking",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement2, false, {
+    fakeProps2.paused = true;
+    expect(getLoadedContentState(mediaElement2, {
       reason: "seeking",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement2, true, {
+    fakeProps2.paused = false;
+    expect(getLoadedContentState(mediaElement2, {
       reason: "buffering",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement2, false, {
+    fakeProps2.paused = true;
+    expect(getLoadedContentState(mediaElement2, {
       reason: "buffering",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement2, true, {
+    fakeProps2.paused = false;
+    expect(getLoadedContentState(mediaElement2, {
       reason: "not-ready",
     })).toBe("ENDED");
-    expect(getLoadedContentState(mediaElement2, false, {
+    fakeProps2.paused = true;
+    expect(getLoadedContentState(mediaElement2, {
       reason: "not-ready",
     })).toBe("ENDED");
   });
