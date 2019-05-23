@@ -678,7 +678,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             supplementaryTextTracks,
             transport,
             transportOptions,
-            url } = options;
+            url,
+            handlePlaybackError } = options;
 
     // Perform multiple checks on the given options
     if (!this.videoElement) {
@@ -769,6 +770,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         startAt,
         textTrackOptions,
         url,
+        handlePlaybackError,
       })
         .pipe(takeUntil(contentIsStopped$))
         .pipe(publish()) as ConnectableObservable<IInitEvent>;

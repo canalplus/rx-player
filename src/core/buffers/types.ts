@@ -143,6 +143,10 @@ export interface ICompletedBufferEvent { type: "complete-buffer";
 export interface INeedsMediaSourceReload { type: "needs-media-source-reload";
                                            value: undefined; }
 
+// The buffer crashed and needs to be reloaded or to throw an error
+export interface ICrashedBufferEvent { type: "buffer-error-event";
+                                       value: MediaError; }
+
 // Events coming from single PeriodBuffer
 export type IPeriodBufferEvent = IPeriodBufferReadyEvent |
                                  IAdaptationBufferEvent<unknown> |
@@ -153,13 +157,15 @@ export type IPeriodBufferEvent = IPeriodBufferReadyEvent |
 // Events coming from function(s) managing multiple PeriodBuffers.
 export type IMultiplePeriodBuffersEvent = IPeriodBufferEvent |
                                           IPeriodBufferClearedEvent |
-                                          ICompletedBufferEvent;
+                                          ICompletedBufferEvent |
+                                          ICrashedBufferEvent;
 
 // Every events sent by the BufferOrchestrator exported here.
 export type IBufferOrchestratorEvent = IActivePeriodChangedEvent |
                                        IMultiplePeriodBuffersEvent |
                                        IEndOfStreamEvent |
-                                       IResumeStreamEvent;
+                                       IResumeStreamEvent |
+                                       ICrashedBufferEvent;
 
 // A minor error happened
 export interface IBufferWarningEvent { type : "warning";

@@ -224,7 +224,7 @@ export default function PeriodBuffer({
           createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { period })
         );
       }
-      log.error(`Buffer: Native ${bufferType} buffer crashed. Stopping playback.`, error);
+      log.error(`Buffer: Native ${bufferType} buffer crashed.`, error);
       throw error;
     }));
   }

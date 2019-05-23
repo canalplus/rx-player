@@ -39,6 +39,7 @@ import {
   take,
   takeUntil,
   tap,
+  withLatestFrom,
 } from "rxjs/operators";
 import config from "../../config";
 import { ICustomError } from "../../errors";
@@ -70,17 +71,22 @@ import EVENTS from "./events_generators";
 import getInitialTime, {
   IInitialTimeOptions,
 } from "./get_initial_time";
+import getMediaError from "./get_media_error";
 import isEMEReadyEvent from "./is_eme_ready";
 import createMediaSourceLoader, {
   IMediaSourceLoaderEvent,
 } from "./load_on_media_source";
-import throwOnMediaError from "./throw_on_media_error";
 import {
   IInitClockTick,
   IManifestReadyEvent,
   IReloadingMediaSourceEvent,
   IWarningEvent,
 } from "./types";
+
+import { IHandledPlaybackError } from "../api/option_parsers";
+
+type IReloadInstructions = null | { reloadAt: number;
+                                    autoPlay: boolean; };
 
 const { DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
         DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR } = config;
@@ -125,6 +131,7 @@ export interface IInitializeOptions {
   textTrackOptions : ITextTrackSourceBufferOptions;
   pipelines : ITransportPipelines;
   url : string;
+  handlePlaybackError? : ((mediaState: IInitClockTick) => IHandledPlaybackError);
 }
 
 // Every events emitted by Init.
@@ -163,6 +170,7 @@ export default function InitializeOnMediaSource({
   textTrackOptions,
   pipelines,
   url,
+  handlePlaybackError,
 } : IInitializeOptions) : Observable<IInitEvent> {
   const warning$ = new Subject<Error|ICustomError>();
 
@@ -204,8 +212,8 @@ export default function InitializeOnMediaSource({
     share());                 // Observables here are linked
 
   // Translate errors coming from the media element into RxPlayer errors
-  // through a throwing Observable.
-  const mediaError$ = throwOnMediaError(mediaElement);
+  // through an Observable.
+  const mediaError$ = getMediaError(mediaElement);
 
   // Emit each time the manifest is refreshed.
   const manifestRefreshed$ =
@@ -256,15 +264,30 @@ export default function InitializeOnMediaSource({
     const initialTime = getInitialTime(manifest, startAt);
     log.debug("Init: Initial time calculated:", initialTime);
 
-    const reloadMediaSource$ = new Subject<void>();
+    const reloadMediaSource$ = new Subject<IReloadInstructions>();
+    const buffersError$ = new Subject<MediaError>();
+
     const onEvent = createEventListener(reloadMediaSource$,
+                                        buffersError$,
                                         refreshManifest);
     const handleReloads$ : Observable<IInitEvent> = reloadMediaSource$.pipe(
-      switchMap(() => {
-        const currentPosition = mediaElement.currentTime;
-        const isPaused = mediaElement.paused;
+      switchMap((reloadInstruction) => {
+        const reloadAt: number = (() => {
+          if (reloadInstruction) {
+            return reloadInstruction.reloadAt;
+          }
+          return mediaElement.currentTime;
+        })();
+
+        const reloadAutoPlay: boolean = (() => {
+          if (reloadInstruction) {
+            return reloadInstruction.autoPlay;
+          }
+          return !mediaElement.paused;
+        })();
+
         return openMediaSource(mediaElement).pipe(
-          mergeMap(newMS => loadOnMediaSource(newMS, currentPosition, !isPaused)),
+          mergeMap(newMS => loadOnMediaSource(newMS, reloadAt, reloadAutoPlay)),
           mergeMap(onEvent),
           startWith(EVENTS.reloadingMediaSource())
         );
@@ -294,11 +317,36 @@ export default function InitializeOnMediaSource({
       })
     ).pipe(mergeMap(refreshManifest));
 
-    return observableMerge(loadOnMediaSource$, handleReloads$, manifestAutoRefresh$);
+    /**
+     * Catches errors from media element and media buffers.
+     * If a 'handlePlaybackError' callback is defined, use it to determine
+     * whether the player should throw or reload content.
+     */
+    const mediaErrorsHandler$ = observableMerge(
+      mediaError$,
+      buffersError$
+    ).pipe(
+      withLatestFrom(clock$),
+      mergeMap(([err, clock]) => {
+        if (handlePlaybackError) {
+          const handledDecodeError = handlePlaybackError(clock);
+          if (handledDecodeError && handledDecodeError.type === "reload") {
+            reloadMediaSource$.next(handledDecodeError.value);
+            return EMPTY;
+          }
+        }
+        throw err;
+      })
+    );
+
+    return observableMerge(loadOnMediaSource$,
+                           handleReloads$,
+                           manifestAutoRefresh$,
+                           mediaErrorsHandler$
+    );
   }));
 
   return observableMerge(loadContent$,
-                         mediaError$,
                          emeManager$,
                          warning$.pipe(map(EVENTS.warning))
   );
@@ -311,7 +359,8 @@ export default function InitializeOnMediaSource({
  * @returns {Function}
  */
 function createEventListener(
-  reloadMediaSource$ : Subject<void>,
+  reloadMediaSource$ : Subject<IReloadInstructions>,
+  buffersError$ : Subject<MediaError>,
   refreshManifest : () => Observable<never>
 ) : (evt : IMediaSourceLoaderEvent) => Observable<IInitEvent> {
   /**
@@ -321,8 +370,11 @@ function createEventListener(
    */
   return function onEvent(evt : IMediaSourceLoaderEvent) {
     switch (evt.type) {
+      case "buffer-error-event":
+        buffersError$.next(evt.value);
+        break;
       case "needs-media-source-reload":
-        reloadMediaSource$.next();
+        reloadMediaSource$.next(null);
         break;
 
       case "needs-manifest-refresh":

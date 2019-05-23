@@ -37,6 +37,7 @@ import {
   IAudioTrackPreference,
   ITextTrackPreference,
 } from "./track_manager";
+import { IMediaInfos } from "./clock";
 
 const { DEFAULT_AUTO_PLAY,
         DEFAULT_INITIAL_BITRATES,
@@ -132,6 +133,14 @@ export interface IParsedConstructorOptions {
   stopAtEnd : boolean;
 }
 
+export type IHandledPlaybackError = { type: "throw";
+                                      value: undefined; } |
+                                    { type: "reload";
+                                      value: {
+                                        reloadAt: number;
+                                        autoPlay: boolean;
+                                      }; };
+
 export interface ILoadVideoOptions {
   url : string;
   transport : string;
@@ -149,6 +158,7 @@ export interface ILoadVideoOptions {
   hideNativeSubtitle? : boolean;
   textTrackElement? : HTMLElement;
   manualBitrateSwitchingMode? : "seamless"|"direct";
+  handlePlaybackError? : ((mediaState: IMediaInfos) => IHandledPlaybackError);
 }
 
 interface IParsedLoadVideoOptionsBase {
@@ -164,6 +174,8 @@ interface IParsedLoadVideoOptionsBase {
   defaultTextTrack : ITextTrackPreference|null|undefined;
   startAt : IParsedStartAtOption|undefined;
   manualBitrateSwitchingMode : "seamless"|"direct";
+  handlePlaybackError : undefined |
+                        ((mediaState: IMediaInfos) => IHandledPlaybackError);
 }
 
 interface IParsedLoadVideoOptionsNative
@@ -342,6 +354,8 @@ function parseLoadVideoOptions(
   let textTrackMode : "native"|"html";
   let textTrackElement : HTMLElement|undefined;
   let startAt : IParsedStartAtOption|undefined;
+  let handlePlaybackError: undefined |
+                           ((mediaState: IMediaInfos) => IHandledPlaybackError);
 
   if (!options || options.url == null) {
     throw new Error("No url set on loadVideo");
@@ -472,6 +486,10 @@ function parseLoadVideoOptions(
     }
   }
 
+  if (options.handlePlaybackError && typeof options.handlePlaybackError === "function") {
+    handlePlaybackError = options.handlePlaybackError;
+  }
+
   const networkConfig = options.networkConfig == null ?
     {} :
     { manifestRetry: options.networkConfig.manifestRetry,
@@ -494,7 +512,8 @@ function parseLoadVideoOptions(
            textTrackMode,
            transport,
            transportOptions,
-           url } as IParsedLoadVideoOptions;
+           url,
+           handlePlaybackError } as IParsedLoadVideoOptions;
   /* tslint:enable no-object-literal-type-assertion */
 }
 
