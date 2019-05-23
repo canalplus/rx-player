@@ -17,6 +17,7 @@
 import { ICustomError } from "../../errors";
 import Manifest from "../../manifest";
 import ABRManager from "../abr";
+import { IMediaInfosState } from "../api/clock";
 import { IRepresentationChangeEvent } from "../buffers";
 import { IStallingItem } from "./get_stalled_events";
 
@@ -25,7 +26,8 @@ export interface IInitClockTick { currentTime : number;
                                   buffered : TimeRanges;
                                   duration : number;
                                   bufferGap : number;
-                                  state : string;
+                                  state : IMediaInfosState;
+                                  ended: boolean;
                                   playbackRate : number;
                                   currentRange : { start : number;
                                                    end : number; } |

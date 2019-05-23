@@ -50,19 +50,19 @@ export type IMediaInfosState = "init" |
 
 // Informations recuperated on the media element on each clock
 // tick
-interface IMediaInfos { bufferGap : number;
-                        buffered : TimeRanges;
-                        currentRange : { start : number;
-                                         end : number; } |
-                                       null;
-                        currentTime : number;
-                        duration : number;
-                        ended: boolean;
-                        paused : boolean;
-                        playbackRate : number;
-                        readyState : number;
-                        seeking : boolean;
-                        state : IMediaInfosState; }
+export interface IMediaInfos { bufferGap : number;
+                               buffered : TimeRanges;
+                               currentRange : { start : number;
+                                                end : number; } |
+                                              null;
+                               currentTime : number;
+                               duration : number;
+                               ended: boolean;
+                               paused : boolean;
+                               playbackRate : number;
+                               readyState : number;
+                               seeking : boolean;
+                               state : IMediaInfosState; }
 
 type stalledStatus = {
                        reason : "seeking" | "not-ready" | "buffering";

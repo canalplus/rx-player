@@ -48,10 +48,10 @@ import {
 import createEMEManager, { IEMEDisabledEvent } from "./create_eme_manager";
 import EVENTS from "./events_generators";
 import { IInitialTimeOptions } from "./get_initial_time";
+import getMediaError from "./get_media_error";
 import getStalledEvents from "./get_stalled_events";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
 import isEMEReadyEvent from "./is_eme_ready";
-import throwOnMediaError from "./throw_on_media_error";
 import {
   IInitClockTick,
   ILoadedEvent,
@@ -160,7 +160,9 @@ export default function initializeDirectfileContent({
 
   // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.
-  const mediaError$ = throwOnMediaError(mediaElement);
+  const mediaError$ = getMediaError(mediaElement).pipe(
+    map((e) => { throw e; })
+  );
 
   // Set the speed set by the user on the media element while pausing a
   // little longer while the buffer is empty.

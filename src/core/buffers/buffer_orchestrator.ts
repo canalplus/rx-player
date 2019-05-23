@@ -23,6 +23,7 @@ import {
   Subject,
 } from "rxjs";
 import {
+  catchError,
   exhaustMap,
   filter,
   ignoreElements,
@@ -179,6 +180,15 @@ export default function BufferOrchestrator(
         } else if (evt.type === "periodBufferCleared") {
           removePeriodBuffer$.next(evt.value);
         }
+      }),
+      catchError((e) => {
+        if (e && e.code === "BUFFER_APPEND_ERROR") {
+          return observableOf({
+            type: "buffer-error-event" as "buffer-error-event",
+            value: e,
+          });
+        }
+        throw e;
       }),
       share()
     );
