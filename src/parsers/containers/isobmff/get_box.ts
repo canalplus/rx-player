@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../../log";
 import { be4toi } from "../../../utils/byte_parsing";
 
 /**
@@ -63,7 +64,8 @@ function getBoxOffsets(buf : Uint8Array, boxName : number) : [number, number]|nu
     size = be4toi(buf, i);
     name = be4toi(buf, i + 4);
     if (size <= 0) {
-      throw new Error("ISOBMFF: Size out of range");
+      log.error("ISOBMFF: Size out of range");
+      return null;
     }
     if (name === boxName) {
       break;
