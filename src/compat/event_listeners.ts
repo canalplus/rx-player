@@ -20,26 +20,40 @@
  */
 
 import {
+  combineLatest as observableCombineLatest,
   fromEvent as observableFromEvent,
   interval as observableInterval,
   merge as observableMerge,
   NEVER,
   Observable,
+  of as observableOf,
 } from "rxjs";
 import {
+  catchError,
   debounceTime,
   distinctUntilChanged,
   filter,
   map,
+  mapTo,
+  mergeMap,
   startWith,
+  switchMap,
 } from "rxjs/operators";
 import config from "../config";
 import log from "../log";
+import castToObservable from "../utils/cast_to_observable";
 import { IEventEmitter } from "../utils/event_emitter";
 import {
   HTMLElement_,
   ICompatDocument,
 } from "./browser_compatibility_types";
+
+// Draft from W3C https://wicg.github.io/picture-in-picture/#pictureinpicturewindow
+interface IPictureInPictureWindow {
+  width: number;
+  height: number;
+  on(event: "resize", listener: () => unknown): this;
+}
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
@@ -174,6 +188,16 @@ function videoSizeChange() : Observable<unknown> {
   return observableFromEvent(window, "resize");
 }
 
+/**
+ * @param {Object} pipWindow
+ * @returns {Observable}
+ */
+function pictureInPictureSizeChange(
+  pipWindow: IPictureInPictureWindow
+) : Observable<unknown> {
+  return observableFromEvent(pipWindow as any, "resize");
+}
+
 const isVisible$ = visibilityChange()
   .pipe(filter((x) => !x)); // emit false when visible
 
@@ -193,16 +217,90 @@ function isInBackground$() : Observable<boolean> {
 }
 
 /**
+ * Send, through an observable :
+ * - The Picture-in-Picture window if activated
+ * - A null object if not
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
+function getPictureInPictureWindow$(
+  mediaElement: HTMLMediaElement
+) : Observable<null|IPictureInPictureWindow> {
+
+  /**
+   * Try to get Picture-in-Picture window if it is activated on RxPlayer media element,
+   * by trying to request again Picture-in-Picture.
+   */
+  const initialPIPWindow: Observable<null|IPictureInPictureWindow> = (() => {
+    if (
+      (document as any).pictureInPictureElement != null &&
+      (document as any).pictureInPictureElement === mediaElement &&
+      typeof (mediaElement as any).requestPictureInPicture === "function"
+    ) {
+      return compatibleListener(["loadeddata"])(mediaElement).pipe(
+        mergeMap(() => {
+          return castToObservable((mediaElement as any).requestPictureInPicture());
+        }),
+        startWith(null),
+        catchError(() => {
+          log.warn("Compat: Couldn't get back Picture-in-Picture window.");
+          return observableOf(null);
+        })
+      );
+    }
+    return observableOf(null);
+  })();
+
+  return initialPIPWindow.pipe(
+    mergeMap((pipWindow) => {
+      return observableMerge(
+        observableFromEvent(mediaElement, "enterpictureinpicture").pipe(
+          map((evt: any) => evt.pictureInPictureWindow)
+        ),
+        observableFromEvent(mediaElement, "leavepictureinpicture").pipe(mapTo(null))
+      ).pipe(startWith(pipWindow));
+    })
+  );
+}
+
+/**
+ * Get video width from Picture-in-Picture window
+ * @param {HTMLMediaElement} mediaElement
+ * @param {Object} pipWindow
+ * @returns {number}
+ */
+function getVideoWidthFromPIPWindow(
+  mediaElement: HTMLMediaElement,
+  pipWindow: IPictureInPictureWindow
+): number {
+  const { width, height } = pipWindow;
+  const videoRatio = mediaElement.clientHeight / mediaElement.clientWidth;
+  const calcWidth = height / videoRatio;
+  return Math.min(width, calcWidth);
+}
+
+/**
+ * Get video width from HTML video element, or video estimated dimensions
+ * when Picture-in-Picture is activated.
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
 function videoWidth$(mediaElement : HTMLMediaElement) : Observable<number> {
-  return observableMerge(
-    observableInterval(20000),
-    videoSizeChange().pipe(debounceTime(500))
-  ).pipe(
-    startWith(null), // emit on subscription
-    map(() => mediaElement.clientWidth * pixelRatio),
+  return observableCombineLatest([
+    getPictureInPictureWindow$(mediaElement),
+    observableInterval(20000).pipe(startWith(null)),
+    videoSizeChange().pipe(debounceTime(500), startWith(null)),
+  ]).pipe(
+    switchMap(([ pipWindow ]) => {
+      if (pipWindow != null) {
+        const firstWidth = getVideoWidthFromPIPWindow(mediaElement, pipWindow);
+        return pictureInPictureSizeChange(pipWindow).pipe(
+          startWith(firstWidth * pixelRatio),
+          map(() => getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio)
+        );
+      }
+      return observableOf(mediaElement.clientWidth * pixelRatio);
+    }),
     distinctUntilChanged()
   );
 }
