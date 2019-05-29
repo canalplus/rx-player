@@ -30,6 +30,7 @@ import {
   map,
   mapTo,
   mergeMap,
+  startWith,
   takeUntil,
   timeout,
 } from "rxjs/operators";
@@ -48,8 +49,10 @@ import castToObservable from "../../utils/cast_to_observable";
 import retryObsWithBackoff from "../../utils/rx-retry_with_backoff";
 import tryCatch from "../../utils/rx-try_catch";
 import {
+  IEMESessionEvents,
   IEMEWarningEvent,
   IKeySystemOption,
+  IMediaKeySessionEvents,
   KEY_STATUS_ERRORS,
 } from "./types";
 
@@ -66,22 +69,6 @@ type TypedArray = Int8Array |
                   Uint8ClampedArray |
                   Float32Array |
                   Float64Array;
-
-export type ILicense = TypedArray |
-                       ArrayBuffer;
-
-interface IMediaKeySessionEvents { type: MediaKeyMessageType |
-                                         "key-status-change";
-                                   value: { license: ILicense |
-                                                     null; }; }
-
-export interface IMediaKeySessionHandledEvents {
-  type : MediaKeyMessageType |
-         "key-status-change";
-  value : { session : MediaKeySession |
-                      ICustomMediaKeySession;
-            license: ILicense; };
-}
 
 const KEY_STATUS_EXPIRED = "expired";
 
@@ -117,7 +104,7 @@ function licenseErrorSelector(
 export default function handleSessionEvents(
   session: MediaKeySession|ICustomMediaKeySession,
   keySystem: IKeySystemOption
-) : Observable<IMediaKeySessionHandledEvents|IEMEWarningEvent> {
+) : Observable<IEMESessionEvents|IEMEWarningEvent> {
   log.debug("EME: Handle message events", session);
 
   const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
@@ -233,7 +220,7 @@ export default function handleSessionEvents(
   const sessionUpdates = observableMerge(keyMessages$, keyStatusesChanges)
     .pipe(
       concatMap((evt : IMediaKeySessionEvents|IEMEWarningEvent) :
-        Observable<IMediaKeySessionHandledEvents|IEMEWarningEvent> => {
+        Observable<IEMESessionEvents|IEMEWarningEvent> => {
           if (evt.type === "warning") {
             return observableOf(evt);
           }
@@ -250,11 +237,13 @@ export default function handleSessionEvents(
             catchError((error: Error) => {
               throw new EncryptedMediaError("KEY_UPDATE_ERROR", error.toString(), true);
             }),
-            mapTo({ type: evt.type,
-                    value: { session, license }, }));
+            mapTo({ type: "session-updated" as "session-updated",
+                    value: { session, license }, }),
+            startWith(evt)
+          );
         }));
 
-  const sessionEvents : Observable<IMediaKeySessionHandledEvents|IEMEWarningEvent> =
+  const sessionEvents : Observable<IEMESessionEvents|IEMEWarningEvent> =
     observableMerge(sessionUpdates, keyErrors, sessionWarningSubject$);
 
   return session.closed ?

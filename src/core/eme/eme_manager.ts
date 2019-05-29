@@ -48,7 +48,6 @@ import MediaKeysInfosStore from "./media_keys_infos_store";
 import setServerCertificate from "./set_server_certificate";
 import {
   IEMEManagerEvent,
-  IEMEWarningEvent,
   IKeySystemOption,
 } from "./types";
 import InitDataStore from "./utils/init_data_store";
@@ -175,8 +174,7 @@ export default function EMEManager(
             ignoreElements()
           )
       );
-    }),
-    filter((evt) : evt is IEMEWarningEvent => evt.type === "warning")
+    })
   );
 
   return observableMerge(mediaKeysInfos$, bindSession$);

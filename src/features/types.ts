@@ -18,6 +18,7 @@ import { Observable } from "rxjs";
 import { ICustomSourceBuffer } from "../compat";
 import {
   IEMEManagerEvent,
+  IEMESessionEvents,
   IKeySystemOption,
 } from "../core/eme";
 import {
@@ -35,7 +36,7 @@ export type IDirectFileInit = (args : IDirectFileOptions) =>
 
 export type IEMEManager = (mediaElement : HTMLMediaElement,
                            keySystems: IKeySystemOption[]) =>
-                             Observable<IEMEManagerEvent>;
+                             Observable<IEMESessionEvents|IEMEManagerEvent>;
 
 export type INativeTextTracksBuffer =
   new(mediaElement : HTMLMediaElement,
