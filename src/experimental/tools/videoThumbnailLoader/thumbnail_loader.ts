@@ -82,7 +82,6 @@ const MAXIMUM_MEDIA_BUFFERED = 2;
  */
 export default class VideoThumbnailLoader {
   private readonly _thumbnailVideoElement : HTMLVideoElement;
-  private readonly _onlyTrickMode : boolean;
   private readonly _videoSourceInfos: Promise<{
     videoSourceBuffer: QueuedSourceBuffer<ArrayBuffer>;
     disposeMediaSource: () => void;
@@ -99,17 +98,15 @@ export default class VideoThumbnailLoader {
 
   constructor(
     videoElement: HTMLVideoElement,
-    adaptation: Adaptation,
-    onlyTrickmode: boolean = true
+    trickModeTrack: Adaptation
   ) {
     // readonly
     this._thumbnailVideoElement = videoElement;
-    this._onlyTrickMode = onlyTrickmode;
     this._bufferedDataRanges = [];
 
     // nullable
     this._initSegment = null;
-    this._thumbnailTrack = this.updateThumbnailTrack(adaptation);
+    this._thumbnailTrack = this.updateThumbnailTrack(trickModeTrack);
     this._currentCallback = null;
     this._nextCallback = null;
 
@@ -215,12 +212,7 @@ export default class VideoThumbnailLoader {
    * @param {Object} adaptation
    * @returns {Object}
    */
-  public updateThumbnailTrack(adaptation: Adaptation): IThumbnailTrack {
-    if (this._onlyTrickMode && !adaptation.trickModeTrack) {
-      throw new Error("VideoThumbnailLoaderError: No provided trick mode track.");
-    }
-
-    const trickModeTrack = adaptation.trickModeTrack || adaptation;
+  public updateThumbnailTrack(trickModeTrack: Adaptation): IThumbnailTrack {
     if (trickModeTrack.representations.length === 0) {
       throw new Error(
         "VideoThumbnailLoaderError: No representations in trick mode track.");
