@@ -59,11 +59,9 @@ module.exports = async function constructPageList(filesToConvert, outputDir) {
       for (; i < splittedPath.length - 1; i++) {
         const key = splittedPath[i];
         if (typeof consideredObj.subdirs[key] === "undefined") {
-          consideredObj.subdirs[key] = {
-            subdirs: {},
-            files: [],
-            index: null,
-          };
+          consideredObj.subdirs[key] = { subdirs: {},
+                                         files: [],
+                                         index: null };
         }
         consideredObj = consideredObj.subdirs[key];
       }
@@ -76,42 +74,34 @@ module.exports = async function constructPageList(filesToConvert, outputDir) {
         consideredObj.files.push({ link, title });
       }
       return acc;
-    }, {
-      subdirs: {},
-      files: [],
-      index: null,
-    });
+    }, { subdirs: {},
+         files: [],
+         index: null });
 
   const listArr = [];
   listArr.push("# Page list");
   listArr.push("");
   listArr.push("Here is an exhaustive list of all the pages you can read in " +
-    "this generated documentation:");
+               "this generated documentation:");
 
   let indentationLevel = 0;
   function parseDir(obj) {
     if (obj.index != null) {
-      listArr.push(
-        " ".repeat(indentationLevel * 2) +
-        "- [" + obj.index.title + "]" +
-        "(" + obj.index.link + ")"
-      );
+      listArr.push(" ".repeat(indentationLevel * 2) +
+                   "- [" + obj.index.title + "]" +
+                   "(" + obj.index.link + ")");
       indentationLevel += 1;
     } else if (obj.files.length || indentationLevel > 0) {
-      listArr.push(
-        " ".repeat(indentationLevel * 2) +
-        "- Undocumented section"
-      );
+      listArr.push(" ".repeat(indentationLevel * 2) +
+                   "- Undocumented section");
       indentationLevel += 1;
     }
 
     if (obj.files.length) {
       obj.files.forEach(file => {
-        listArr.push(
-          " ".repeat(indentationLevel * 2) +
-          "- [" + file.title + "]" +
-          "(" + file.link + ")"
-        );
+        listArr.push(" ".repeat(indentationLevel * 2) +
+                     "- [" + file.title + "]" +
+                     "(" + file.link + ")");
       });
     }
 

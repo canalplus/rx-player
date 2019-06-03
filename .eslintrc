@@ -110,6 +110,9 @@
     ],
 
     "indent": [1, 2, {
+      "ArrayExpression": "first",
+      "ObjectExpression": "first",
+      "CallExpression": { arguments: "first" },
       "SwitchCase": 1,
       "ignoreComments": true
     }],

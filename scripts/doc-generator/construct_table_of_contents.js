@@ -37,5 +37,6 @@ module.exports = function constructTableOfContents(md) {
     }
     newContent.push(lines[i]);
   }
-  return { toc: tocLines.join("\n"), content: newContent.join("\n") };
+  return { toc: tocLines.join("\n"),
+           content: newContent.join("\n") };
 };
