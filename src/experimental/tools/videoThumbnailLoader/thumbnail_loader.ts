@@ -19,6 +19,10 @@ import Adaptation from "../../../manifest/adaptation";
 import arrayFind from "../../../utils/array_find";
 import arrayFindIndex from "../../../utils/array_find_index";
 import PPromise from "../../../utils/promise";
+import {
+  convertToRanges,
+  isTimeInRange
+} from "../../../utils/ranges";
 import appendInitSegment from "./append_init_segment";
 import loadArrayBufferData from "./load_array_buffer_data";
 import prepareSourceBuffer from "./media_source";
@@ -36,6 +40,37 @@ interface IThumbnailTrack {
 }
 
 const MAXIMUM_MEDIA_BUFFERED = 2;
+
+  /**
+   * Get segment data from cache or load it.
+   * @param {number} time
+   * @param {string} mediaURL
+   * @param {HTMLMediaElement} mediaElement
+   */
+  function getSegmentData(
+    time: number,
+    mediaURL: string,
+    mediaElement: HTMLMediaElement
+  ): Promise<{ data?: ArrayBuffer; fromNetwork: boolean }> {
+
+    const mediaRanges = convertToRanges(mediaElement.buffered);
+    for (let i = 0; i < mediaRanges.length; i++) {
+      const mediaRange = mediaRanges[i];
+      if (isTimeInRange(mediaRange, time)) {
+        return PPromise.resolve({
+          fromNetwork: false,
+        });
+      }
+    }
+
+    const loadedData = loadArrayBufferData(mediaURL);
+    return loadedData.then((data) => {
+      return {
+        data,
+        fromNetwork: true,
+      };
+    });
+  }
 
 /**
  * This tool, as a supplement to the RxPlayer, intent to help creating thumbnails
@@ -55,7 +90,6 @@ export default class VideoThumbnailLoader {
   private readonly _bufferedDataCache: Array<{
     start: number;
     end: number;
-    data: ArrayBuffer;
   }>;
 
   private  _initSegment: ArrayBuffer|null;
@@ -127,33 +161,36 @@ export default class VideoThumbnailLoader {
                   "VideoThumbnailLoaderError: Couldn't find thumbnail.");
               }
 
-              return this.getSegmentData(time, thumbnail.mediaURL).then(({
+              return getSegmentData(time,
+                                    thumbnail.mediaURL,
+                                    this._thumbnailVideoElement
+              ).then(({
                 data,
                 fromNetwork,
               }) => {
-                return videoSourceBuffer
-                  .appendBuffer({
-                    segment: data,
-                    initSegment: this._initSegment,
-                    codec: "null",
-                    timestampOffset: 0,
-                  }).toPromise(PPromise).then(() => {
-                    if (fromNetwork) {
+                if (data && fromNetwork) {
+                  return videoSourceBuffer
+                    .appendBuffer({
+                      segment: data,
+                      initSegment: this._initSegment,
+                      codec: "null",
+                      timestampOffset: 0,
+                    }).toPromise(PPromise).then(() => {
                       this._bufferedDataCache.push({
                         start: thumbnail.start,
                         end: thumbnail.start + thumbnail.duration,
-                        data,
                       });
-                    }
-                    this._thumbnailVideoElement.currentTime = time;
-                    resolveOnSetTime(this._thumbnailVideoElement.currentTime);
-                    return;
-                  }).catch((err) => {
-                    throw new Error(
-                      "VideoThumbnailLoaderError: Couldn't append buffer :" +
-                      err.message || err
-                    );
-                  });
+                      this._thumbnailVideoElement.currentTime = time;
+                      resolveOnSetTime(this._thumbnailVideoElement.currentTime);
+                      return;
+                    }).catch((err) => {
+                      throw new Error(
+                        "VideoThumbnailLoaderError: Couldn't append buffer :" +
+                        err.message || err
+                      );
+                    });
+                }
+                return PPromise.resolve();
               });
             });
           }
@@ -244,32 +281,6 @@ export default class VideoThumbnailLoader {
   }
 
   /**
-   * Get segment data from cache or load it.
-   * @param {number} time
-   * @param {string} mediaURL
-   */
-  private getSegmentData(
-    time: number,
-    mediaURL: string
-  ): Promise<{ data: ArrayBuffer; fromNetwork: boolean }> {
-    const bufferIdx = arrayFindIndex(this._bufferedDataCache, ({ start, end }) => {
-      return start <= time && end > time;
-    });
-
-    const fromNetwork = bufferIdx === -1;
-    const loadedData = fromNetwork ?
-      loadArrayBufferData(mediaURL) :
-      PPromise.resolve(this._bufferedDataCache[bufferIdx].data);
-
-    return loadedData.then((data) => {
-      return {
-        data,
-        fromNetwork,
-      };
-    });
-  }
-
-  /**
    * @param {Object} videoSourceBuffer
    * @returns {Promise}
    */
@@ -280,7 +291,6 @@ export default class VideoThumbnailLoader {
     const bufferToRemove: Array<{
       start: number;
       end: number;
-      data: ArrayBuffer;
     }> = [];
     while (this._bufferedDataCache.length > MAXIMUM_MEDIA_BUFFERED) {
       const newBuffer = this._bufferedDataCache.shift();
