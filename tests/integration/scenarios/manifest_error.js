@@ -6,8 +6,10 @@ import RxPlayer from "../../../src";
 
 import {
   manifestInfos,
-  Manifest_URL,
+  URLs,
 } from "../../contents/DASH_dynamic_SegmentTimeline";
+
+const MANIFEST_URL_INFOS = URLs[0];
 
 /**
  *  Workaround to provide a "real" sleep function, which does not depend on
@@ -47,7 +49,7 @@ describe("manifest error management", function () {
 
   it("should retry to download the manifest 5 times", async () => {
     const clock = sinon.useFakeTimers();
-    fakeServer.respondWith("GET", Manifest_URL.url, res =>
+    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, res =>
       res.respond(500));
 
     player.loadVideo({
@@ -98,12 +100,12 @@ describe("manifest error management", function () {
     const clock = sinon.useFakeTimers();
 
     let requestCounter = 0;
-    fakeServer.respondWith("GET", Manifest_URL.url, (xhr) => {
+    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
       return ++requestCounter >= 2 ?
         xhr.respond(
           200,
-          { "Content-Type": Manifest_URL.contentType },
-          Manifest_URL.data
+          { "Content-Type": MANIFEST_URL_INFOS.contentType },
+          MANIFEST_URL_INFOS.data
         ) :
         xhr.respond(500);
     });
@@ -135,12 +137,12 @@ describe("manifest error management", function () {
     const clock = sinon.useFakeTimers();
 
     let requestCounter = 0;
-    fakeServer.respondWith("GET", Manifest_URL.url, (xhr) => {
+    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
       return ++requestCounter >= 3 ?
         xhr.respond(
           200,
-          { "Content-Type": Manifest_URL.contentType },
-          Manifest_URL.data
+          { "Content-Type": MANIFEST_URL_INFOS.contentType },
+          MANIFEST_URL_INFOS.data
         ) :
         xhr.respond(500);
     });
@@ -178,12 +180,12 @@ describe("manifest error management", function () {
     const clock = sinon.useFakeTimers();
 
     let requestCounter = 0;
-    fakeServer.respondWith("GET", Manifest_URL.url, (xhr) => {
+    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
       return ++requestCounter >= 4 ?
         xhr.respond(
           200,
-          { "Content-Type": Manifest_URL.contentType },
-          Manifest_URL.data
+          { "Content-Type": MANIFEST_URL_INFOS.contentType },
+          MANIFEST_URL_INFOS.data
         ) :
         xhr.respond(500);
     });
@@ -227,12 +229,12 @@ describe("manifest error management", function () {
     const clock = sinon.useFakeTimers();
 
     let requestCounter = 0;
-    fakeServer.respondWith("GET", Manifest_URL.url, (xhr) => {
+    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
       return ++requestCounter >= 5 ?
         xhr.respond(
           200,
-          { "Content-Type": Manifest_URL.contentType },
-          Manifest_URL.data
+          { "Content-Type": MANIFEST_URL_INFOS.contentType },
+          MANIFEST_URL_INFOS.data
         ) :
         xhr.respond(500);
     });
