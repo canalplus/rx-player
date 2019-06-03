@@ -15,7 +15,7 @@
  */
 
 import { QueuedSourceBuffer } from "../../../core/source_buffers";
-import Adaptation from "../../../manifest/adaptation";
+import { Representation } from "../../../manifest";
 import arrayFind from "../../../utils/array_find";
 import arrayFindIndex from "../../../utils/array_find_index";
 import PPromise from "../../../utils/promise";
@@ -98,7 +98,7 @@ export default class VideoThumbnailLoader {
 
   constructor(
     videoElement: HTMLVideoElement,
-    trickModeTrack: Adaptation
+    trickModeTrack: Representation
   ) {
     // readonly
     this._thumbnailVideoElement = videoElement;
@@ -212,13 +212,8 @@ export default class VideoThumbnailLoader {
    * @param {Object} adaptation
    * @returns {Object}
    */
-  public updateThumbnailTrack(trickModeTrack: Adaptation): IThumbnailTrack {
-    if (trickModeTrack.representations.length === 0) {
-      throw new Error(
-        "VideoThumbnailLoaderError: No representations in trick mode track.");
-    }
-
-    const trackIndex = trickModeTrack.representations[0].index;
+  public updateThumbnailTrack(trickModeTrack: Representation): IThumbnailTrack {
+    const trackIndex = trickModeTrack.index;
     const indexStart = trackIndex.getFirstPosition();
     const indexEnd = trackIndex.getLastPosition();
 
@@ -235,10 +230,10 @@ export default class VideoThumbnailLoader {
           };
         });
       const initSegment =
-        trickModeTrack.representations[0].index.getInitSegment();
+        trickModeTrack.index.getInitSegment();
       return {
         thumbnailInfos,
-        codec: trickModeTrack.representations[0].getMimeTypeString(),
+        codec: trickModeTrack.getMimeTypeString(),
         initURL: initSegment ? (initSegment.mediaURL || "") : "",
       };
     } else {
