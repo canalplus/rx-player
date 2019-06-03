@@ -87,7 +87,7 @@ export default class VideoThumbnailLoader {
     videoSourceBuffer: QueuedSourceBuffer<ArrayBuffer>;
     disposeMediaSource: () => void;
   }>;
-  private readonly _bufferedDataCache: Array<{
+  private readonly _bufferedDataRanges: Array<{
     start: number;
     end: number;
   }>;
@@ -105,7 +105,7 @@ export default class VideoThumbnailLoader {
     // readonly
     this._thumbnailVideoElement = videoElement;
     this._onlyTrickMode = onlyTrickmode;
-    this._bufferedDataCache = [];
+    this._bufferedDataRanges = [];
 
     // nullable
     this._initSegment = null;
@@ -176,7 +176,7 @@ export default class VideoThumbnailLoader {
                       codec: "null",
                       timestampOffset: 0,
                     }).toPromise(PPromise).then(() => {
-                      this._bufferedDataCache.push({
+                      this._bufferedDataRanges.push({
                         start: thumbnail.start,
                         end: thumbnail.start + thumbnail.duration,
                       });
@@ -292,8 +292,8 @@ export default class VideoThumbnailLoader {
       start: number;
       end: number;
     }> = [];
-    while (this._bufferedDataCache.length > MAXIMUM_MEDIA_BUFFERED) {
-      const newBuffer = this._bufferedDataCache.shift();
+    while (this._bufferedDataRanges.length > MAXIMUM_MEDIA_BUFFERED) {
+      const newBuffer = this._bufferedDataRanges.shift();
       if (newBuffer) {
         bufferToRemove.push(newBuffer);
       }
@@ -304,11 +304,11 @@ export default class VideoThumbnailLoader {
       const prm = videoSourceBuffer.removeBuffer(start, end)
         .toPromise(PPromise).then(() => {
           const bufferIdx =
-            arrayFindIndex(this._bufferedDataCache, ({ start: s, end: e }) => {
+            arrayFindIndex(this._bufferedDataRanges, ({ start: s, end: e }) => {
               return s <= time && e > time;
             });
           if (bufferIdx > -1) {
-            this._bufferedDataCache.splice(bufferIdx, 1);
+            this._bufferedDataRanges.splice(bufferIdx, 1);
           }
         });
       removeBufferActions$.push(prm);
