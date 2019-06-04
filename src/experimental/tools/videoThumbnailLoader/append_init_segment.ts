@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
+import { Observable } from "rxjs";
+import {
+  mapTo,
+  mergeMap,
+} from "rxjs/operators";
 import { QueuedSourceBuffer } from "../../../core/source_buffers";
-import PPromise from "../../../utils/promise";
-import loadArrayBufferData from "./load_array_buffer_data";
+import request from "../../../utils/request";
 
 /**
  * Load and append data from init segment.
@@ -29,13 +33,16 @@ export default function appendInitSegment(
   url: string,
   codec: string,
   videoSourceBuffer: QueuedSourceBuffer<ArrayBuffer>
-): Promise<ArrayBuffer> {
-  return loadArrayBufferData(url).then((e) => {
-    return videoSourceBuffer.appendBuffer({
-      initSegment : e,
-      segment: null,
-      codec,
-      timestampOffset: 0,
-    }).toPromise(PPromise).then(() => e);
-  });
+): Observable<ArrayBuffer> {
+  return request({ url, sendProgressEvents: false, responseType: "arraybuffer" }).pipe(
+    mergeMap((e) => {
+      const { value: { responseData }} = e;
+      return videoSourceBuffer.appendBuffer({
+        initSegment : responseData,
+        segment: null,
+        codec,
+        timestampOffset: 0,
+      }).pipe(mapTo(responseData));
+    })
+  );
 }

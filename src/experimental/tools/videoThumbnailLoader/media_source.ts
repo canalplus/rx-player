@@ -14,92 +14,25 @@
  * limitations under the License.
  */
 
-import { MediaSource_ } from "../../../compat";
+import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
+import openMediaSource from "../../../core/init/create_media_source";
 import { QueuedSourceBuffer } from "../../../core/source_buffers";
-import log from "../../../log";
-import PPromise from "../../../utils/promise";
-
-function resetMediaSource(
-  elt : HTMLMediaElement,
-  mediaSource? : MediaSource|null,
-  mediaSourceURL? : string|null
-) : void {
-  if (mediaSource && mediaSource.readyState !== "closed") {
-    const { readyState, sourceBuffers } = mediaSource;
-    for (let i = sourceBuffers.length - 1; i >= 0; i--) {
-      const sourceBuffer = sourceBuffers[i];
-      try {
-        if (readyState === "open") {
-          log.info("ImageLoader: Removing SourceBuffer from mediaSource", sourceBuffer);
-          sourceBuffer.abort();
-        }
-
-        mediaSource.removeSourceBuffer(sourceBuffer);
-      }
-      catch (e) {
-        log.warn("ImageLoader: Error while disposing SourceBuffer", e);
-      }
-    }
-    if (sourceBuffers.length) {
-      log.warn("ImageLoader: Not all SourceBuffers could have been removed.");
-    }
-  }
-
-  elt.src = "";
-  elt.removeAttribute("src");
-
-  if (mediaSourceURL) {
-    try {
-      log.debug("ImageLoader: Revoking previous URL");
-      URL.revokeObjectURL(mediaSourceURL);
-    } catch (e) {
-      log.warn("ImageLoader: Error while revoking the media source URL", e);
-    }
-  }
-}
-
-function createMediaSource(elt: HTMLVideoElement): MediaSource {
-  if (!MediaSource_) {
-    throw new Error("");
-  }
-
-  // make sure the media has been correctly reset
-  resetMediaSource(elt, null, elt.src || null);
-
-  const mediaSource = new MediaSource_();
-  const objectURL = URL.createObjectURL(mediaSource);
-  elt.src = objectURL;
-  return mediaSource;
-}
-
-function openMediaSource(elt: HTMLVideoElement): Promise<MediaSource> {
-  return new PPromise((resolve, reject) => {
-    try {
-      const mediaSource = createMediaSource(elt);
-      mediaSource.addEventListener("sourceopen", () => {
-        resolve(mediaSource);
-      });
-    } catch (err) {
-      reject(err);
-    }
-  });
-}
 
 export default function prepareSourceBuffer(
-  elt: HTMLVideoElement, codec: string): Promise<{
+  elt: HTMLVideoElement, codec: string
+): Observable<{
   mediaSource: MediaSource;
   videoSourceBuffer: QueuedSourceBuffer<any>;
-  disposeMediaSource: () => void;
 }> {
-  return openMediaSource(elt).then((mediaSource) => {
-    const sourceBuffer = mediaSource.addSourceBuffer(codec);
-    return {
-      mediaSource,
-      videoSourceBuffer:
-        new QueuedSourceBuffer("video", codec, sourceBuffer),
-      disposeMediaSource: () => {
-        resetMediaSource(elt, mediaSource, elt.src || null);
-      },
-    };
-  });
+  return openMediaSource(elt).pipe(
+    map((mediaSource) => {
+      const sourceBuffer = mediaSource.addSourceBuffer(codec);
+      return {
+        mediaSource,
+        videoSourceBuffer:
+          new QueuedSourceBuffer("video", codec, sourceBuffer),
+      };
+    })
+  );
 }

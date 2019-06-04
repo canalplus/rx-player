@@ -13,18 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import { QueuedSourceBuffer } from "../../../core/source_buffers";
+import {
+  Observable,
+  of as observableOf,
+  Subject,
+  Subscription,
+} from "rxjs";
+import {
+  catchError,
+  distinctUntilChanged,
+  map,
+  mergeMap,
+  shareReplay,
+  take,
+} from "rxjs/operators";
+import { QueuedSourceBuffer } from "../../../core/source_buffers";
 import { Representation } from "../../../manifest";
 import arrayFind from "../../../utils/array_find";
 import arrayFindIndex from "../../../utils/array_find_index";
+import castToObservable from "../../../utils/cast_to_observable";
+import concatMapLatest from "../../../utils/concat_map_latest";
 import PPromise from "../../../utils/promise";
 import {
   convertToRanges,
   isTimeInRange
 } from "../../../utils/ranges";
+import request from "../../../utils/request";
 import appendInitSegment from "./append_init_segment";
-import loadArrayBufferData from "./load_array_buffer_data";
 import prepareSourceBuffer from "./media_source";
 
 interface IThumbnailInfo {
@@ -41,36 +56,41 @@ interface IThumbnailTrack {
 
 const MAXIMUM_MEDIA_BUFFERED = 2;
 
-  /**
-   * Get segment data from cache or load it.
-   * @param {number} time
-   * @param {string} mediaURL
-   * @param {HTMLMediaElement} mediaElement
-   */
-  function getSegmentData(
-    time: number,
-    mediaURL: string,
-    mediaElement: HTMLMediaElement
-  ): Promise<{ data?: ArrayBuffer; fromNetwork: boolean }> {
+/**
+ * Get segment data from cache or load it.
+ * @param {number} time
+ * @param {string} mediaURL
+ * @param {HTMLMediaElement} mediaElement
+ */
+function getSegmentData(
+  time: number,
+  mediaURL: string,
+  mediaElement: HTMLMediaElement
+): Observable<{ data?: ArrayBuffer; fromNetwork: boolean }> {
 
-    const mediaRanges = convertToRanges(mediaElement.buffered);
-    for (let i = 0; i < mediaRanges.length; i++) {
-      const mediaRange = mediaRanges[i];
-      if (isTimeInRange(mediaRange, time)) {
-        return PPromise.resolve({
-          fromNetwork: false,
-        });
-      }
+  const mediaRanges = convertToRanges(mediaElement.buffered);
+  for (let i = 0; i < mediaRanges.length; i++) {
+    const mediaRange = mediaRanges[i];
+    if (isTimeInRange(mediaRange, time)) {
+      return observableOf({ fromNetwork: false });
     }
+  }
 
-    const loadedData = loadArrayBufferData(mediaURL);
-    return loadedData.then((data) => {
+  const loadedData = request({
+    url: mediaURL,
+    sendProgressEvents: false,
+    responseType: "arraybuffer",
+  });
+  return loadedData.pipe(
+    map(({ value: { responseData } }) => {
       return {
-        data,
+        data: responseData,
         fromNetwork: true,
       };
-    });
-  }
+    }),
+    take(1)
+  );
+}
 
 /**
  * This tool, as a supplement to the RxPlayer, intent to help creating thumbnails
@@ -81,20 +101,19 @@ const MAXIMUM_MEDIA_BUFFERED = 2;
  * or direclty from the media content.
  */
 export default class VideoThumbnailLoader {
-  private readonly _thumbnailVideoElement : HTMLVideoElement;
-  private readonly _videoSourceInfos: Promise<{
-    videoSourceBuffer: QueuedSourceBuffer<ArrayBuffer>;
-    disposeMediaSource: () => void;
-  }>;
+  private readonly _thumbnailVideoElement: HTMLVideoElement;
   private readonly _bufferedDataRanges: Array<{
     start: number;
     end: number;
   }>;
 
-  private  _initSegment: ArrayBuffer|null;
-  private _thumbnailTrack : IThumbnailTrack;
-  private _currentCallback: Promise<unknown>|null;
-  private _nextCallback: null|(() => Promise<unknown>);
+  private _thumbnailTrack: IThumbnailTrack;
+
+  private _currentCallback: Observable<unknown> | null;
+  private _nextCallback: null | Observable<unknown>;
+
+  private _setTime$: Subject<number>;
+  private _setTimeSubscription$: Subscription;
 
   constructor(
     videoElement: HTMLVideoElement,
@@ -105,26 +124,104 @@ export default class VideoThumbnailLoader {
     this._bufferedDataRanges = [];
 
     // nullable
-    this._initSegment = null;
     this._thumbnailTrack = this.updateThumbnailTrack(trickModeTrack);
     this._currentCallback = null;
     this._nextCallback = null;
+    this._setTime$ = new Subject();
 
-    this._videoSourceInfos = prepareSourceBuffer(
+    const videoSourceInfos$ = prepareSourceBuffer(
       this._thumbnailVideoElement,
       this._thumbnailTrack.codec
-    ).then(({ videoSourceBuffer, disposeMediaSource }) => {
-      const { initURL: init, codec } = this._thumbnailTrack;
-      return appendInitSegment(init, codec, videoSourceBuffer).then((initSegment) => {
-        this._initSegment = initSegment;
-        return {
-          videoSourceBuffer,
-          disposeMediaSource,
-        };
-      });
-    }).catch(() => {
-      throw new Error("VideoThumbnailLoaderError: Couldn't open media source.");
-    });
+    ).pipe(
+      mergeMap(({ videoSourceBuffer }) => {
+        const { initURL: init, codec } = this._thumbnailTrack;
+        return appendInitSegment(init, codec, videoSourceBuffer).pipe(
+          map(() => {
+            return videoSourceBuffer;
+          })
+        );
+      }),
+      catchError(() => {
+        throw new Error("VideoThumbnailLoaderError: Couldn't open media source.");
+      }),
+      shareReplay()
+    );
+
+    this._setTimeSubscription$ = this._setTime$.pipe(
+      distinctUntilChanged(),
+      concatMapLatest((time) => {
+        if (time !== this._thumbnailVideoElement.currentTime) {
+          const setTimeCallback: () => Observable<null> = () => {
+            return videoSourceInfos$.pipe(
+              mergeMap((videoSourceBuffer) => {
+                return castToObservable(this.removeBuffers(videoSourceBuffer, time)).pipe(
+                  mergeMap(() => {
+                    if (!this._thumbnailTrack) {
+                      throw new Error(
+                        "VideoThumbnailLoaderError: No thumbnail track given.");
+                    }
+
+                    const thumbnail: IThumbnailInfo | undefined =
+                      arrayFind(this._thumbnailTrack.thumbnailInfos, (t) => {
+                        return t.start
+                          <= time && (t.duration + t.start) > time;
+                      });
+
+                    if (!thumbnail) {
+                      throw new Error(
+                        "VideoThumbnailLoaderError: Couldn't find thumbnail.");
+                    }
+
+                    return getSegmentData(time,
+                      thumbnail.mediaURL,
+                      this._thumbnailVideoElement
+                    ).pipe(
+                      mergeMap(({
+                        data,
+                        fromNetwork,
+                      }) => {
+                        if (data && fromNetwork) {
+                          return videoSourceBuffer
+                            .appendBuffer({
+                              segment: data,
+                              initSegment: null,
+                              codec: "null",
+                              timestampOffset: 0,
+                            }).pipe(
+                              mergeMap(() => {
+                                this._bufferedDataRanges.push({
+                                  start: thumbnail.start,
+                                  end: thumbnail.start + thumbnail.duration,
+                                });
+                                this._thumbnailVideoElement.currentTime = time;
+                                return observableOf(null);
+                              }),
+                              catchError((err) => {
+                                throw new Error(
+                                  "VideoThumbnailLoaderError: Couldn't append buffer :" +
+                                  err.message || err
+                                );
+                              })
+                            );
+                        }
+                        return observableOf(null);
+                      })
+                    );
+                  }));
+              })
+            );
+          };
+          this._nextCallback = setTimeCallback();
+          return this.flush().pipe(
+            catchError((err) => {
+              this.dispose();
+              throw err;
+            })
+          );
+        }
+        return observableOf(null);
+      })
+    ).subscribe();
   }
 
   /**
@@ -134,77 +231,11 @@ export default class VideoThumbnailLoader {
    * - Load data
    * - Append data
    * Resolves when time is set.
-   * @param {number} time
+   * @param {number} time, this._thumbnailVideoElement.currentTime
    * @returns {Promise}
    */
-  setTime(time: number): Promise<number> {
-    return new Promise((resolveOnSetTime, rejectOnSetTime) => {
-      const setTimeCallback: () => Promise<unknown> = () => {
-        return this._videoSourceInfos.then(({ videoSourceBuffer }) => {
-          if (time !== this._thumbnailVideoElement.currentTime) {
-            return this.removeBuffers(videoSourceBuffer, time).then(() => {
-              if (!this._thumbnailTrack) {
-                return rejectOnSetTime(
-                  "VideoThumbnailLoaderError: No thumbnail track given.");
-              }
-
-              const thumbnail: IThumbnailInfo|undefined =
-                arrayFind(this._thumbnailTrack.thumbnailInfos, (t) => {
-                  return t.start <= time && (t.duration + t.start) > time;
-                });
-
-              if (!thumbnail) {
-                return rejectOnSetTime(
-                  "VideoThumbnailLoaderError: Couldn't find thumbnail.");
-              }
-
-              return getSegmentData(time,
-                                    thumbnail.mediaURL,
-                                    this._thumbnailVideoElement
-              ).then(({
-                data,
-                fromNetwork,
-              }) => {
-                if (data && fromNetwork) {
-                  return videoSourceBuffer
-                    .appendBuffer({
-                      segment: data,
-                      initSegment: this._initSegment,
-                      codec: "null",
-                      timestampOffset: 0,
-                    }).toPromise(PPromise).then(() => {
-                      this._bufferedDataRanges.push({
-                        start: thumbnail.start,
-                        end: thumbnail.start + thumbnail.duration,
-                      });
-                      this._thumbnailVideoElement.currentTime = time;
-                      resolveOnSetTime(this._thumbnailVideoElement.currentTime);
-                      return;
-                    }).catch((err) => {
-                      throw new Error(
-                        "VideoThumbnailLoaderError: Couldn't append buffer :" +
-                        err.message || err
-                      );
-                    });
-                }
-                return PPromise.resolve();
-              });
-            });
-          }
-          return resolveOnSetTime(this._thumbnailVideoElement.currentTime);
-        });
-      };
-      this._nextCallback = setTimeCallback;
-      /* tslint:disable no-floating-promises */
-      try {
-        this.flush();
-      } catch (e) {
-        return this.dispose().then(() => {
-          throw e;
-        });
-      }
-      /* tslint:enable no-floating-promises */
-    });
+  setTime(time: number) {
+    this._setTime$.next(time);
   }
 
   /**
@@ -224,9 +255,9 @@ export default class VideoThumbnailLoader {
         .filter((s) => s.duration != null && s.mediaURL != null)
         .map((s) => {
           return {
-            duration: (s.duration || 0) / s.timescale,
+            duration: (s.duration || 0) / s.timescale,
             start: s.time / s.timescale,
-            mediaURL: s.mediaURL || "",
+            mediaURL: s.mediaURL || "",
           };
         });
       const initSegment =
@@ -234,7 +265,7 @@ export default class VideoThumbnailLoader {
       return {
         thumbnailInfos,
         codec: trickModeTrack.getMimeTypeString(),
-        initURL: initSegment ? (initSegment.mediaURL || "") : "",
+        initURL: initSegment ? (initSegment.mediaURL || "") : "",
       };
     } else {
       throw new Error(
@@ -247,24 +278,9 @@ export default class VideoThumbnailLoader {
    * @param {Function|undefined} _resolve
    * @returns {Promise}
    */
-  dispose(_retry?: number): Promise<unknown> {
-    let retry = _retry || 0;
-    const maxRetry = 5;
-    const delayInMs = 100;
-
-    return this._videoSourceInfos.then(({ disposeMediaSource }) => {
-      return (this._currentCallback || PPromise.resolve()).then(() => {
-        if (this._nextCallback != null) {
-          if (retry > maxRetry) {
-            throw new Error("VideoThumbnailLoaderError: Error while disposing.");
-          }
-          return new Promise<unknown>((resolve) => {
-            setTimeout(() => resolve(this.dispose(retry++)), delayInMs * retry);
-          });
-        }
-        return disposeMediaSource();
-      });
-    });
+  dispose(_retry?: number): void {
+    this._setTimeSubscription$.unsubscribe();
+    return;
   }
 
   /**
@@ -287,11 +303,11 @@ export default class VideoThumbnailLoader {
     }
 
     const removeBufferActions$: Array<Promise<void>> = [];
-    bufferToRemove.forEach(({ start, end }) => {
+    bufferToRemove.forEach(({ start, end }) => {
       const prm = videoSourceBuffer.removeBuffer(start, end)
         .toPromise(PPromise).then(() => {
           const bufferIdx =
-            arrayFindIndex(this._bufferedDataRanges, ({ start: s, end: e }) => {
+            arrayFindIndex(this._bufferedDataRanges, ({ start: s, end: e }) => {
               return s <= time && e > time;
             });
           if (bufferIdx > -1) {
@@ -307,21 +323,19 @@ export default class VideoThumbnailLoader {
    * Flush buffer promises.
    * Resolves when no buffered operations.
    */
-  private flush(): Promise<unknown> {
-    if (this._currentCallback) {
-      return this._currentCallback.then(() => {
-        this._currentCallback = null;
-        return this.flush();
-      });
-    } else {
-      const setTime = this._nextCallback;
-      if (setTime) {
-        this._nextCallback = null;
-        this._currentCallback = setTime();
-        return this._currentCallback
-          .then(() => this.flush());
-      }
-      return PPromise.resolve();
+  private flush(): Observable<unknown> {
+    if (!this._currentCallback && this._nextCallback) {
+      this._currentCallback = this._nextCallback;
+      this._nextCallback = null;
+      return this._currentCallback
+        .pipe(
+          mergeMap(() => {
+            this._currentCallback = null;
+            return this.flush();
+          }),
+          take(1)
+        );
     }
+    return observableOf(null);
   }
 }
