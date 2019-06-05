@@ -185,7 +185,7 @@ export default class VideoThumbnailLoader {
                             .appendBuffer({
                               segment: data,
                               initSegment: null,
-                              codec: "null",
+                              codec: this._thumbnailTrack.codec,
                               timestampOffset: 0,
                             }).pipe(
                               mergeMap(() => {
