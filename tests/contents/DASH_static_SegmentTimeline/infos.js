@@ -1,5 +1,11 @@
+const BASE_URL = "http://" +
+               /* eslint-disable no-undef */
+               __TEST_CONTENT_SERVER__.URL + ":" +
+               __TEST_CONTENT_SERVER__.PORT +
+               /* eslint-enable no-undef */
+               "/DASH_static_SegmentTimeline/media/";
 export default {
-  url: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/ateam.mpd",
+  url: BASE_URL + "ateam.mpd",
   transport: "dash",
   isLive: false,
   duration: 101.568367,
@@ -23,26 +29,26 @@ export default {
                 mimeType: "audio/mp4",
                 index: {
                   init: {
-                    mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-audio=128000.dash",
+                    mediaURL: BASE_URL + "dash/ateam-audio=128000.dash",
                   },
                   segments: [
                     {
                       time: 0,
                       timescale: 44100,
                       duration: 177341,
-                      mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-audio=128000-0.dash",
+                      mediaURL: BASE_URL + "dash/ateam-audio=128000-0.dash",
                     },
                     {
                       time: 177341,
                       timescale: 44100,
                       duration: 176128,
-                      mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-audio=128000-177341.dash",
+                      mediaURL: BASE_URL + "dash/ateam-audio=128000-177341.dash",
                     },
                     {
                       time: 353469,
                       timescale: 44100,
                       duration: 177152,
-                      mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-audio=128000-353469.dash",
+                      mediaURL: BASE_URL + "dash/ateam-audio=128000-353469.dash",
                     },
                   ],
                   // ...
@@ -63,26 +69,26 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=400000.dash",
+                    mediaURL: BASE_URL + "dash/ateam-video=400000.dash",
                   },
                   segments: [
                     {
                       time: 0,
                       timescale: 1000,
                       duration: 4004,
-                      mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=400000-0.dash",
+                      mediaURL: BASE_URL + "dash/ateam-video=400000-0.dash",
                     },
                     {
                       time: 4004,
                       timescale: 1000,
                       duration: 4004,
-                      mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=400000-360360.dash",
+                      mediaURL: BASE_URL + "dash/ateam-video=400000-360360.dash",
                     },
                     {
                       time: 8008,
                       timescale: 1000,
                       duration: 4004,
-                      mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=400000-720720.dash",
+                      mediaURL: BASE_URL + "dash/ateam-video=400000-720720.dash",
                     },
                     // ...
                   ],
@@ -97,26 +103,26 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=795000.dash",
+                    mediaURL: BASE_URL + "dash/ateam-video=795000.dash",
                   },
                   segments: [
                     {
                       time: 0,
                       timescale: 1000,
                       duration: 4004,
-                      mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=795000-0.dash",
+                      mediaURL: BASE_URL + "dash/ateam-video=795000-0.dash",
                     },
                     {
                       time: 4004,
                       timescale: 1000,
                       duration: 4004,
-                      mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=795000-360360.dash",
+                      mediaURL: BASE_URL + "dash/ateam-video=795000-360360.dash",
                     },
                     {
                       time: 8008,
                       timescale: 1000,
                       duration: 4004,
-                      mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=795000-720720.dash",
+                      mediaURL: BASE_URL + "dash/ateam-video=795000-720720.dash",
                     },
                     // ...
                   ],
@@ -131,26 +137,26 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=1193000.dash",
+                    mediaURL: BASE_URL + "dash/ateam-video=1193000.dash",
                   },
                   segments: [
                     {
                       time: 0,
                       timescale: 1000,
                       duration: 4004,
-                      mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=1193000-0.dash",
+                      mediaURL: BASE_URL + "dash/ateam-video=1193000-0.dash",
                     },
                     {
                       time: 4004,
                       timescale: 1000,
                       duration: 4004,
-                      mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=1193000-360360.dash",
+                      mediaURL: BASE_URL + "dash/ateam-video=1193000-360360.dash",
                     },
                     {
                       time: 8008,
                       timescale: 1000,
                       duration: 4004,
-                      mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=1193000-720720.dash",
+                      mediaURL: BASE_URL + "dash/ateam-video=1193000-720720.dash",
                     },
                     // ...
                   ],
@@ -165,26 +171,26 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=1996000.dash",
+                    mediaURL: BASE_URL + "dash/ateam-video=1996000.dash",
                   },
                   segments: [
                     {
                       time: 0,
                       timescale: 1000,
                       duration: 4004,
-                      mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=1996000-0.dash",
+                      mediaURL: BASE_URL + "dash/ateam-video=1996000-0.dash",
                     },
                     {
                       time: 4004,
                       timescale: 1000,
                       duration: 4004,
-                      mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=1996000-360360.dash",
+                      mediaURL: BASE_URL + "dash/ateam-video=1996000-360360.dash",
                     },
                     {
                       time: 8008,
                       timescale: 1000,
                       duration: 4004,
-                      mediaURL: "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/dash/ateam-video=1996000-720720.dash",
+                      mediaURL: BASE_URL + "dash/ateam-video=1996000-720720.dash",
                     },
                     // ...
                   ],

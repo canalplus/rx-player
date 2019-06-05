@@ -2,20 +2,34 @@
 
 const path = require("path");
 
-const BASE_URL = "/DASH_dynamic_SegmentTemplate/media/";
-const Manifest_URL = {
-  url: BASE_URL + "Manifest.mpd",
-  path: path.join(__dirname, "./media/Manifest.mpd"),
-  contentType: "application/dash+xml",
-};
+const BASE_URL = "/DASH_dynamic_UTCTimings/media/";
 
 /**
  * URLs for which the request should be stubbed.
  * @type {Array.<Object>}
  */
 module.exports = [
-  // manifest
-  Manifest_URL,
+  // Manifests
+  {
+    url: BASE_URL + "Manifest_without_timings.mpd",
+    path: path.join(__dirname, "./media/Manifest_without_timings.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
+    url: BASE_URL + "Manifest_with_direct.mpd",
+    path: path.join(__dirname, "./media/Manifest_with_direct.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
+    url: BASE_URL + "Manifest_with_http.mpd",
+    path: path.join(__dirname, "./media/Manifest_with_http.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
+    url: BASE_URL + "Manifest_with_direct_and_http.mpd",
+    path: path.join(__dirname, "./media/Manifest_with_direct_and_http.mpd"),
+    contentType: "application/dash+xml",
+  },
 
   // Audio initialization segment
   {

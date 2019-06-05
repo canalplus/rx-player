@@ -15,21 +15,17 @@
  */
 
 import { expect } from "chai";
-
 import RxPlayer from "../../../src";
-
+import directfileInfos from "../../contents/directfile_webm";
 import sleep from "../../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 
-const WebMFile = require("arraybuffer-loader!../../contents/DirectFile.webm");
-
+const WebMURL = directfileInfos.url;
 describe("basic playback use cases: direct file", function () {
   let player;
-  let WebMURL;
 
   beforeEach(() => {
     player = new RxPlayer();
-    WebMURL = URL.createObjectURL(new Blob([WebMFile], { type: "video/webm" }));
   });
 
   afterEach(() => {

@@ -1,30 +1,20 @@
 import { expect } from "chai";
-import sinon from "sinon";
 import RxPlayer from "../../src";
-import {
-  manifestInfos,
-  URLs,
-} from "../contents/DASH_static_SegmentTimeline";
-import mockRequests from "../utils/mock_requests.js";
+import { manifestInfos } from "../contents/DASH_static_SegmentTimeline";
+import textTrackInfos from "../contents/texttracks";
+import imageInfos from "../contents/imagetracks";
 import sleep from "../utils/sleep.js";
 import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../utils/waitForPlayerState";
 
 let player;
-let fakeServer;
-
-const TEXT_URL = "https://gist.githubusercontent.com/anotherhale/676a72edc84ca3a37c0c/raw/710ab345757a84c11194b9c6608bc4737bab6b2d/subtitle_example.xml";
-const IMAGE_URL = "http://dash-vod-aka-test.canal-bis.com/test/bif/index.bif";
 
 describe("Memory tests", () => {
-  beforeEach(() => {
-    fakeServer = sinon.fakeServer.create();
-  });
-
   afterEach(() => {
-    player.dispose();
-    fakeServer.restore();
+    if (player != null) {
+      player.dispose();
+    }
   });
 
   it("should not have a sensible memory leak after playing a content", async function() {
@@ -38,17 +28,6 @@ describe("Memory tests", () => {
       return;
     }
     this.timeout(5 * 60 * 1000);
-    mockRequests(fakeServer, URLs);
-    fakeServer.respondWith("GET", IMAGE_URL, (xhr) => {
-      const res = require("raw-loader!../contents/imagetracks/example.bif").default;
-      xhr.respond(200, { "Content-Type": "application/bif" }, res);
-    });
-    fakeServer.respondWith("GET", TEXT_URL, (xhr) => {
-      const res = require("raw-loader!../contents/texttracks/subtitle_example.xml").default;
-      xhr.respond(200, { "Content-Type": "application/ttml+xml" }, res);
-    });
-    fakeServer.autoRespond = true;
-
     player = new RxPlayer({
       initialVideoBitrate: Infinity,
       initialAudioBitrate: Infinity,
@@ -64,22 +43,20 @@ describe("Memory tests", () => {
         closedCaption: true,
       },
       supplementaryTextTracks: [{
-        url: "",
+        url: textTrackInfos.url,
         language: "fra",
         mimeType: "application/ttml+xml",
         closedCaption: true,
       }],
       supplementaryImageTracks: [{
         mimeType: "application/bif",
-        url: "",
+        url: imageInfos.url,
       }],
       autoPlay: true,
     });
     player.setPlaybackRate(4);
     await waitForPlayerState(player, "ENDED");
 
-    fakeServer.restore();
-    fakeServer.reset();
     await sleep(1000);
     window.gc();
     await sleep(1000);
@@ -109,17 +86,6 @@ describe("Memory tests", () => {
       return;
     }
     this.timeout(5 * 60 * 1000);
-    mockRequests(fakeServer, URLs);
-    fakeServer.respondWith("GET", IMAGE_URL, (xhr) => {
-      const res = require("raw-loader!../contents/imagetracks/example.bif").default;
-      xhr.respond(200, { "Content-Type": "application/bif" }, res);
-    });
-    fakeServer.respondWith("GET", TEXT_URL, (xhr) => {
-      const res = require("raw-loader!../contents/texttracks/subtitle_example.xml").default;
-      xhr.respond(200, { "Content-Type": "application/ttml+xml" }, res);
-    });
-    fakeServer.autoRespond = true;
-
     player = new RxPlayer({
       initialVideoBitrate: Infinity,
       initialAudioBitrate: Infinity,
@@ -136,14 +102,14 @@ describe("Memory tests", () => {
           closedCaption: true,
         }],
         supplementaryTextTracks: [{
-          url: "",
+          url: textTrackInfos.url,
           language: "fra",
           mimeType: "application/ttml+xml",
           closedCaption: true,
         }],
         supplementaryImageTracks: [{
           mimeType: "application/bif",
-          url: "",
+          url: imageInfos.url,
         }],
         autoPlay: true,
       });
@@ -151,8 +117,6 @@ describe("Memory tests", () => {
     }
     player.stop();
 
-    fakeServer.restore();
-    fakeServer.reset();
     await sleep(1000);
     window.gc();
     await sleep(1000);

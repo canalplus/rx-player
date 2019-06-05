@@ -15,34 +15,26 @@
  */
 
 import { expect } from "chai";
-import sinon from "sinon";
-
 import RxPlayer from "../../../src";
-
-import {
-  manifestInfos,
-  URLs,
-} from "../../contents/DASH_static_SegmentTimeline";
+import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep.js";
-import mockRequests from "../../utils/mock_requests";
 import /* waitForState, */ {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState";
+import XHRLocker from "../../utils/xhr_locker";
 
 describe("loadVideo Options", () => {
   let player;
-  let fakeServer;
+  let xhrLocker;
 
   beforeEach(() => {
     player = new RxPlayer();
-    fakeServer = sinon.fakeServer.create();
-    fakeServer.autoRespond = true;
-    mockRequests(fakeServer, URLs);
+    xhrLocker = XHRLocker();
   });
 
   afterEach(() => {
     player.dispose();
-    fakeServer.restore();
+    xhrLocker.restore();
   });
 
   describe("url", () => {
@@ -56,6 +48,7 @@ describe("loadVideo Options", () => {
     });
 
     it("should request the URL if one is given", async () => {
+      xhrLocker.lock();
       player.loadVideo({
         url: manifestInfos.url,
         transport: "dash",
@@ -64,8 +57,8 @@ describe("loadVideo Options", () => {
 
       await sleep(0);
 
-      expect(fakeServer.requests.length).to.equal(1);
-      expect(fakeServer.requests[0].url).to.equal(manifestInfos.url);
+      expect(xhrLocker.getLockedXHR().length).to.equal(1);
+      expect(xhrLocker.getLockedXHR()[0].url).to.equal(manifestInfos.url);
     });
   });
 
@@ -393,26 +386,39 @@ describe("loadVideo Options", () => {
       };
 
       it("should pass through the custom segmentLoader for segment requests", async () => {
+        xhrLocker.lock();
+        let nbVideoSegmentRequests = 0;
         player.loadVideo({
           transport: manifestInfos.transport,
           url: manifestInfos.url,
           transportOptions: { segmentLoader: customSegmentLoader },
         });
-        await waitForLoadedStateAfterLoadVideo(player);
 
-        // should be every one of the requests done minus the manifest request
+        await sleep(1);
+        await xhrLocker.flush(); // Manifest request
+        await sleep(1);
         expect(numberOfTimeCustomSegmentLoaderWasCalled)
-          .to.equal(fakeServer.requests.length - 1);
+          .to.equal(2); // Segment requests
+        nbVideoSegmentRequests += xhrLocker.getLockedXHR()
+          .filter(r => r.url && r.url.includes("ateam-video"))
+          .length;
+        await xhrLocker.flush();
+        await sleep(1);
         expect(numberOfTimeCustomSegmentLoaderWasCalled)
-          .to.be.above(1);
-
-        const videoSegmentRequests = fakeServer.requests
-          .filter(r => r.url && r.url.includes("ateam-video"));
-
+          .to.equal(4); // Segment requests
+        nbVideoSegmentRequests += xhrLocker.getLockedXHR()
+          .filter(r => r.url && r.url.includes("ateam-video"))
+          .length;
+        await xhrLocker.flush();
+        await sleep(1);
+        expect(numberOfTimeCustomSegmentLoaderWasCalled)
+          .to.equal(6); // Segment requests
+        nbVideoSegmentRequests += xhrLocker.getLockedXHR()
+          .filter(r => r.url && r.url.includes("ateam-video"))
+          .length;
         expect(numberOfTimeCustomSegmentLoaderWentThrough)
-          .to.equal(videoSegmentRequests.length);
-        expect(numberOfTimeCustomSegmentLoaderWentThrough)
-          .to.be.above(0);
+          .to.equal(nbVideoSegmentRequests);
+        expect(nbVideoSegmentRequests).to.be.above(0);
       });
     });
 

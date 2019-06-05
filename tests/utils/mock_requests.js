@@ -10,8 +10,9 @@ function mockRequest(fakeServer, { url, data, contentType }) {
       xhr.respond(200, { "Content-Type": contentType }, res);
     });
   } else {
-    fakeServer.respondWith("GET", url,
-      [200, { "Content-Type": contentType }, data]);
+    fakeServer.respondWith("GET",
+                           url,
+                           [200, { "Content-Type": contentType }, data]);
   }
 }
 

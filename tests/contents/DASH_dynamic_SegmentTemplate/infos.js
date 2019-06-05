@@ -1,4 +1,9 @@
-const BASE_URL = "https://vm2.dashif.org/livesim-dev/periods_1/testpic_2s/";
+const BASE_URL = "http://" +
+               /* eslint-disable no-undef */
+               __TEST_CONTENT_SERVER__.URL + ":" +
+               __TEST_CONTENT_SERVER__.PORT +
+               /* eslint-enable no-undef */
+               "/DASH_dynamic_SegmentTemplate/media/";
 
 // Provide infos on this content under JSON.
 // Useful for integration tests on DASH parsers.

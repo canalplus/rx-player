@@ -1,5 +1,4 @@
 import { expect } from "chai";
-import sinon from "sinon";
 import RxPlayer from "../../../src";
 import {
   WithDirect,
@@ -7,36 +6,36 @@ import {
   WithHTTP,
   WithoutTimings,
 } from "../../contents/DASH_dynamic_UTCTimings";
-import mockRequests from "../../utils/mock_requests.js";
 import sleep from "../../utils/sleep.js";
+import XHRLocker from "../../utils/xhr_locker.js";
 
 describe("DASH live - UTCTimings", () => {
   describe("DASH live content (SegmentTemplate + Direct UTCTiming)", function () {
-    const { manifestInfos, URLs } = WithDirect;
+    const { manifestInfos } = WithDirect;
     let player;
-    let fakeServer;
+    let xhrLocker;
 
     beforeEach(() => {
       player = new RxPlayer();
-      fakeServer = sinon.createFakeServer();
+      xhrLocker = XHRLocker();
     });
 
     afterEach(() => {
       player.dispose();
-      fakeServer.restore();
+      xhrLocker.restore();
     });
 
     it("should calculate the right bounds", async () => {
-      mockRequests(fakeServer, URLs);
+      xhrLocker.lock();
 
       player.loadVideo({
         url: manifestInfos.url,
         transport:manifestInfos.transport,
       });
 
-      await sleep(10);
-      fakeServer.respond();
-      await sleep(10);
+      await sleep(1);
+      await xhrLocker.flush();
+      await sleep(1);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1553517853, 1);
       expect(player.getMaximumPosition()).to.be
@@ -45,59 +44,61 @@ describe("DASH live - UTCTimings", () => {
   });
 
   describe("DASH live content (SegmentTemplate + HTTP UTCTiming)", function () {
-    const { manifestInfos, URLs } = WithHTTP;
+    const { manifestInfos } = WithHTTP;
     let player;
-    let fakeServer;
+    let xhrLocker;
+    const requests = [];
 
     beforeEach(() => {
       player = new RxPlayer();
-      fakeServer = sinon.createFakeServer();
+      xhrLocker = XHRLocker();
     });
 
     afterEach(() => {
+      requests.length = 0;
       player.dispose();
-      fakeServer.restore();
+      xhrLocker.restore();
     });
 
     it("should fetch the clock and then calculate the right bounds", async () => {
-      mockRequests(fakeServer, URLs);
+      const url = URL.createObjectURL(new Blob(["2019-03-25T12:49:08.014Z"]));
+      xhrLocker.redirect("https://time.akamai.com/?iso", url);
+      xhrLocker.lock();
 
       player.loadVideo({
         url: manifestInfos.url,
         transport:manifestInfos.transport,
       });
 
-      await sleep(10);
-      fakeServer.respond(); // Once for UTCTiming
-      await sleep(10);
-      fakeServer.respond(); // Once for the init segment
-      await sleep(10);
+      await sleep(1);
+      await xhrLocker.flush(); // Manifest request
+      await sleep(1);
+      await xhrLocker.flush(); // time request
+      await sleep(1);
+      await xhrLocker.flush(); // Once for the init segment
+      await sleep(1);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1553517853, 1);
-
-      const requestsDone = fakeServer.requests.map(r => r.url);
-      expect(requestsDone)
-        .to.include("https://time.akamai.com/?iso");
     });
   });
 
   describe("DASH live content (SegmentTemplate + Without Timing)", function() {
-    const { manifestInfos, URLs } = WithoutTimings;
+    const { manifestInfos } = WithoutTimings;
     let player;
-    let fakeServer;
+    let xhrLocker;
 
     beforeEach(() => {
       player = new RxPlayer();
-      fakeServer = sinon.createFakeServer();
+      xhrLocker = XHRLocker();
     });
 
     afterEach(() => {
       player.dispose();
-      fakeServer.restore();
+      xhrLocker.restore();
     });
 
     it("should calculate the right bounds", async () => {
-      mockRequests(fakeServer, URLs);
+      xhrLocker.lock();
 
       player.loadVideo({
         url: manifestInfos.url,
@@ -105,7 +106,7 @@ describe("DASH live - UTCTimings", () => {
       });
 
       await sleep(10);
-      fakeServer.respond();
+      await xhrLocker.flush();
       await sleep(10);
 
       const { availabilityStartTime } = player.getManifest();
@@ -122,34 +123,35 @@ describe("DASH live - UTCTimings", () => {
   });
 
   describe("DASH live content (SegmentTemplate + Direct & HTTP UTCTiming)", function () {
-    const { manifestInfos, URLs } = WithDirectAndHTTP;
+    const { manifestInfos } = WithDirectAndHTTP;
     let player;
-    let fakeServer;
+    let xhrLocker;
 
     beforeEach(() => {
       player = new RxPlayer();
-      fakeServer = sinon.createFakeServer();
+      xhrLocker = XHRLocker();
     });
 
     afterEach(() => {
       player.dispose();
-      fakeServer.restore();
+      xhrLocker.restore();
     });
 
     it("should not fetch the clock but still calculate the right bounds", async () => {
-      mockRequests(fakeServer, URLs);
+      xhrLocker.lock();
 
       player.loadVideo({
         url: manifestInfos.url,
         transport:manifestInfos.transport,
       });
 
-      fakeServer.respond();
-      await sleep(10);
+      await sleep(1);
+      await xhrLocker.flush();
+      await sleep(1);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1553517853, 1);
 
-      const requestsDone = fakeServer.requests.map(r => r.url);
+      const requestsDone = xhrLocker.getLockedXHR().map(r => r.url);
       expect(requestsDone)
         .not.to.include("https://time.akamai.com/?iso");
     });

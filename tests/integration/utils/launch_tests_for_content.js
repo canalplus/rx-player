@@ -1,16 +1,12 @@
 import { expect } from "chai";
-import sinon from "sinon";
-
-import RxPlayer from "../../src";
-
-import mockRequests from "../utils/mock_requests.js";
-import sleep from "../utils/sleep.js";
-import { waitForLoadedStateAfterLoadVideo } from "../utils/waitForPlayerState";
+import RxPlayer from "../../../src";
+import sleep from "../../utils/sleep.js";
+import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
+import XHRLocker from "../../utils/xhr_locker";
 
 /**
  * Performs a serie of basic tests on a content.
  *
- * @param {Array.<Object>} URLs
  * @param {Object} manifestInfos - informations about what should be found in
  * the manifest.
  * Structure of manifestInfos:
@@ -50,11 +46,10 @@ import { waitForLoadedStateAfterLoadVideo } from "../utils/waitForPlayerState";
  * ```
  */
 export default function launchTestsForContent(
-  URLs,
   manifestInfos
 ) {
   let player;
-  let fakeServer;
+  let xhrLocker;
 
   const {
     availabilityStartTime,
@@ -84,17 +79,17 @@ export default function launchTestsForContent(
   describe("API tests", () => {
     beforeEach(() => {
       player = new RxPlayer();
-      fakeServer = sinon.fakeServer.create();
+      xhrLocker = XHRLocker();
     });
 
     afterEach(() => {
       player.dispose();
-      fakeServer.restore();
+      xhrLocker.restore();
     });
 
     describe("loadVideo", () => {
       it("should fetch the manifest then the init segments", async function () {
-        mockRequests(fakeServer, URLs);
+        xhrLocker.lock();
 
         // set the lowest bitrate to facilitate the test
         player.setVideoBitrate(0);
@@ -103,12 +98,12 @@ export default function launchTestsForContent(
         player.loadVideo({ url: manifestInfos.url, transport });
 
         // should only have the manifest for now
-        expect(fakeServer.requests.length).to.equal(1);
-        expect(fakeServer.requests[0].url).to.equal(manifestInfos.url);
+        expect(xhrLocker.getLockedXHR().length).to.equal(1);
+        expect(xhrLocker.getLockedXHR()[0].url).to.equal(manifestInfos.url);
 
-        await sleep(50);
-        fakeServer.respond(); // only wait for the manifest request
-        await sleep(50);
+        await sleep(1);
+        await xhrLocker.flush(); // only wait for the manifest request
+        await sleep(1);
 
         const firstPeriodAdaptationsInfos = periodsInfos[firstPeriodIndex]
           .adaptations;
@@ -129,34 +124,24 @@ export default function launchTestsForContent(
             (audioRepresentationInfos && audioRepresentationInfos.index.init) &&
             (videoRepresentationInfos && videoRepresentationInfos.index.init)
           ) {
-            expect(fakeServer.requests.length).to.be.equal(3);
+            expect(xhrLocker.getLockedXHR().length).to.equal(2);
             const requestsDone = [
-              fakeServer.requests[1].url,
-              fakeServer.requests[2].url,
+              xhrLocker.getLockedXHR()[0].url,
+              xhrLocker.getLockedXHR()[1].url,
             ];
             expect(requestsDone)
               .to.include(videoRepresentationInfos.index.init.mediaURL);
             expect(requestsDone)
               .to.include(audioRepresentationInfos.index.init.mediaURL);
-
-            // TODO Do the init segment and the first needed segment in parallel
-            // expect(fakeServer.requests.length).to.equal(5);
-
-            // const requestsDone = [
-            //   fakeServer.requests[1].url,
-            //   fakeServer.requests[2].url,
-            //   fakeServer.requests[3].url,
-            //   fakeServer.requests[4].url,
-            // ];
           } else if (!(
             audioRepresentationInfos && audioRepresentationInfos.index.init)
           ) {
-            expect(fakeServer.requests.length).to.equal(2);
-            expect(fakeServer.requests[1].url).to
+            expect(xhrLocker.getLockedXHR().length).to.equal(1);
+            expect(xhrLocker.getLockedXHR()[0].url).to
               .equal(videoRepresentationInfos.index.init.mediaURL);
           } else {
-            expect(fakeServer.requests.length).to.equal(2);
-            expect(fakeServer.requests[1].url).to
+            expect(xhrLocker.getLockedXHR().length).to.equal(1);
+            expect(xhrLocker.getLockedXHR()[0].url).to
               .equal(audioRepresentationInfos.index.init.mediaURL);
           }
         }
@@ -165,9 +150,6 @@ export default function launchTestsForContent(
 
     describe("getError", () => {
       it("should return null if no fatal error has happened", async function() {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -180,11 +162,12 @@ export default function launchTestsForContent(
 
     describe("getManifest", () => {
       it("should returns the manifest correctly parsed", async function () {
-        mockRequests(fakeServer, URLs);
+        xhrLocker.lock();
         player.loadVideo({ url: manifestInfos.url, transport });
-        await sleep(0);
-        fakeServer.respond(); // only wait for the manifest request
-        await sleep(100);
+
+        await sleep(1);
+        await xhrLocker.flush(); // only wait for the manifest request
+        await sleep(1);
 
         const manifest = player.getManifest();
         expect(manifest).not.to.equal(null);
@@ -290,14 +273,14 @@ export default function launchTestsForContent(
                   const timescale = reprIndexInfos.segments[0].timescale;
                   const firstSegmentTime =
                     reprIndexInfos.segments[0].time / timescale;
-                  const firstSegments = reprIndex.getSegments(firstSegmentTime,
+                  const duration = (
                     (
-                      (
-                        reprIndexInfos.segments[0].time +
-                          reprIndexInfos.segments[0].duration / 2
-                      ) / timescale
-                    ) - firstSegmentTime,
-                  );
+                      reprIndexInfos.segments[0].time +
+                      reprIndexInfos.segments[0].duration / 2
+                    ) / timescale
+                  ) - firstSegmentTime;
+                  const firstSegments =
+                    reprIndex.getSegments(firstSegmentTime, duration);
 
                   expect(firstSegments.length).to.equal(1);
 
@@ -321,9 +304,6 @@ export default function launchTestsForContent(
 
     describe("getCurrentAdaptations", () => {
       it("should return the currently played adaptations", async function () {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setVideoBitrate(0);
 
         player.loadVideo({
@@ -362,9 +342,6 @@ export default function launchTestsForContent(
 
     describe("getCurrentRepresentations", () => {
       it("should return the currently played representations", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setVideoBitrate(0);
 
         player.loadVideo({
@@ -402,9 +379,6 @@ export default function launchTestsForContent(
 
     describe("getVideoElement", () => {
       it("should return a video element", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -419,9 +393,6 @@ export default function launchTestsForContent(
 
     describe("getNativeTextTrack", () => {
       it("should be null if no enabled text track", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -434,9 +405,6 @@ export default function launchTestsForContent(
 
     describe("getPlayerState", () => {
       it("should go from LOADING to LOADED", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         expect(player.getPlayerState()).to.equal("STOPPED");
 
         player.loadVideo({
@@ -454,9 +422,6 @@ export default function launchTestsForContent(
       });
 
       it("should go to PLAYING when play is called", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         expect(player.getPlayerState()).to.equal("STOPPED");
 
         player.loadVideo({
@@ -466,14 +431,11 @@ export default function launchTestsForContent(
         });
         await waitForLoadedStateAfterLoadVideo(player);
         player.play();
-        await sleep(100);
+        await sleep(1000);
         expect(player.getPlayerState()).to.equal("PLAYING");
       });
 
       it("should go to LOADING then to PLAYING immediately when autoPlay is set", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         expect(player.getPlayerState()).to.equal("STOPPED");
 
         player.loadVideo({
@@ -489,9 +451,6 @@ export default function launchTestsForContent(
     describe("isLive", () => {
       if (isLive) {
         it("should return true", async () => {
-          mockRequests(fakeServer, URLs);
-          fakeServer.autoRespond = true;
-
           player.loadVideo({
             url: manifestInfos.url,
             transport,
@@ -502,9 +461,6 @@ export default function launchTestsForContent(
         });
       } else {
         it("should return false", async () => {
-          mockRequests(fakeServer, URLs);
-          fakeServer.autoRespond = true;
-
           player.loadVideo({
             url: manifestInfos.url,
             transport,
@@ -518,9 +474,6 @@ export default function launchTestsForContent(
 
     describe("getUrl", () => {
       it("should return the URL of the manifest", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -534,9 +487,6 @@ export default function launchTestsForContent(
     describe("getVideoDuration", () => {
       if (isLive) {
         it("should return Math.MAX_NUMBER", async () => {
-          mockRequests(fakeServer, URLs);
-          fakeServer.autoRespond = true;
-
           player.loadVideo({
             url: manifestInfos.url,
             transport,
@@ -547,9 +497,6 @@ export default function launchTestsForContent(
         });
       } else {
         it("should return the duration of the whole video", async () => {
-          mockRequests(fakeServer, URLs);
-          fakeServer.autoRespond = true;
-
           player.loadVideo({
             url: manifestInfos.url,
             transport,
@@ -565,9 +512,6 @@ export default function launchTestsForContent(
       // TODO handle live contents
       it("should return the buffer gap of the current range", async function() {
         this.timeout(10000);
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
         player.loadVideo({
@@ -617,9 +561,6 @@ export default function launchTestsForContent(
     describe("getVideoLoadedTime", () => {
       // TODO handle live contents
       it("should return the time of the current loaded time", async function() {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
 
@@ -635,13 +576,13 @@ export default function launchTestsForContent(
         expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.1);
         expect(player.getVideoLoadedTime()).to.be.closeTo(bufferGap, 0.1);
 
-        fakeServer.autoRespond = false;
+        xhrLocker.lock();
         player.seekTo(minimumPosition + 5);
         await sleep(100);
         expect(player.getVideoLoadedTime()).to.be.closeTo(bufferGap, 0.1);
 
-        fakeServer.respond();
-        fakeServer.autoRespond = true;
+        await xhrLocker.flush();
+        xhrLocker.unlock();
         await sleep(300);
         expect(player.getVideoLoadedTime()).to.be.closeTo(bufferGap + 5, 10);
 
@@ -654,9 +595,6 @@ export default function launchTestsForContent(
     describe("getVideoPlayedTime", () => {
       // TODO handle live contents
       it("should return the difference between the start of the current range and the current time", async function() {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
 
@@ -671,13 +609,13 @@ export default function launchTestsForContent(
         expect(player.getPosition()).to.equal(minimumPosition);
         expect(player.getVideoPlayedTime()).to.equal(0);
 
-        fakeServer.autoRespond = false;
+        xhrLocker.lock();
         player.seekTo(minimumPosition + 5);
         await sleep(100);
         expect(player.getVideoPlayedTime()).to.equal(5);
 
-        fakeServer.respond();
-        fakeServer.autoRespond = true;
+        await xhrLocker.flush();
+        xhrLocker.unlock();
         await sleep(300);
         expect(player.getVideoPlayedTime()).to.equal(5);
 
@@ -695,9 +633,6 @@ export default function launchTestsForContent(
     // TODO handle live contents
     describe("getWallClockTime", () => {
       it("should be at the minimum time by default", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -708,9 +643,6 @@ export default function launchTestsForContent(
       });
 
       it("should return the starting position if one", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -721,9 +653,6 @@ export default function launchTestsForContent(
       });
 
       it("should update as soon as we seek", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -737,9 +666,6 @@ export default function launchTestsForContent(
     // TODO handle live contents
     describe("getPosition", () => {
       it("should be at the minimum time by default", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -750,9 +676,6 @@ export default function launchTestsForContent(
       });
 
       it("should return the starting position if one", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -763,9 +686,6 @@ export default function launchTestsForContent(
       });
 
       it("should update as soon as we seek", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -778,9 +698,6 @@ export default function launchTestsForContent(
 
     describe("getPlaybackRate", () => {
       it("should be 1 by default", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         expect(player.getPlaybackRate()).to.equal(1);
 
         player.loadVideo({
@@ -795,9 +712,6 @@ export default function launchTestsForContent(
 
       // TODO handle live contents
       it("should update when the speed is updated", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setPlaybackRate(2);
         expect(player.getPlaybackRate()).to.equal(2);
 
@@ -820,9 +734,6 @@ export default function launchTestsForContent(
       // TODO handle live contents
       it("should update the speed accordingly", async function() {
         this.timeout(5000);
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -846,7 +757,7 @@ export default function launchTestsForContent(
 
     describe("getAvailableVideoBitrates", () => {
       it("should list the right video bitrates", async function () {
-        mockRequests(fakeServer, URLs);
+        xhrLocker.lock();
 
         player.loadVideo({
           url: manifestInfos.url,
@@ -855,10 +766,10 @@ export default function launchTestsForContent(
 
         expect(player.getAvailableVideoBitrates()).to.eql([]);
 
-        await sleep(100);
+        await sleep(1);
         expect(player.getAvailableVideoBitrates()).to.eql([]);
-        fakeServer.respond();
-        await sleep(100);
+        await xhrLocker.flush();
+        await sleep(1);
 
         expect(player.getAvailableVideoBitrates()).to.eql(videoBitrates);
       });
@@ -866,7 +777,7 @@ export default function launchTestsForContent(
 
     describe("getAvailableAudioBitrates", () => {
       it("should list the right audio bitrates", async function () {
-        mockRequests(fakeServer, URLs);
+        xhrLocker.lock();
 
         player.loadVideo({
           url: manifestInfos.url,
@@ -875,10 +786,10 @@ export default function launchTestsForContent(
 
         expect(player.getAvailableAudioBitrates()).to.eql([]);
 
-        await sleep(100);
+        await sleep(1);
         expect(player.getAvailableAudioBitrates()).to.eql([]);
-        fakeServer.respond();
-        await sleep(100);
+        await xhrLocker.flush();
+        await sleep(1);
 
         expect(player.getAvailableAudioBitrates()).to.eql(audioBitrates);
       });
@@ -886,9 +797,6 @@ export default function launchTestsForContent(
 
     describe("getManualAudioBitrate", () => {
       it("should stay at -1 by default", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         expect(player.getManualAudioBitrate()).to.equal(-1);
 
         player.loadVideo({
@@ -902,9 +810,6 @@ export default function launchTestsForContent(
       });
 
       it("should be able to update", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setAudioBitrate(10000);
         expect(player.getManualAudioBitrate()).to.equal(10000);
 
@@ -923,9 +828,6 @@ export default function launchTestsForContent(
 
     describe("getManualVideoBitrate", () => {
       it("should stay at -1 by default", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         expect(player.getManualVideoBitrate()).to.equal(-1);
 
         player.loadVideo({
@@ -939,9 +841,6 @@ export default function launchTestsForContent(
       });
 
       it("should be able to update", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setVideoBitrate(10000);
         expect(player.getManualVideoBitrate()).to.equal(10000);
 
@@ -960,9 +859,6 @@ export default function launchTestsForContent(
 
     describe("getVideoBitrate", () => {
       it("should give a value once loaded", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         expect(player.getVideoBitrate()).to.equal(undefined);
 
         player.loadVideo({
@@ -979,9 +875,6 @@ export default function launchTestsForContent(
 
     describe("getAudioBitrate", () => {
       it("should give a value once loaded", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         expect(player.getAudioBitrate()).to.equal(undefined);
 
         player.loadVideo({
@@ -998,9 +891,6 @@ export default function launchTestsForContent(
 
     describe("getMaxVideoBitrate", () => {
       it("should stay at Infinity by default", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         expect(player.getMaxVideoBitrate()).to.equal(Infinity);
 
         player.loadVideo({
@@ -1014,9 +904,6 @@ export default function launchTestsForContent(
       });
 
       it("should be able to update", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setMaxVideoBitrate(10000);
         expect(player.getMaxVideoBitrate()).to.equal(10000);
 
@@ -1035,9 +922,6 @@ export default function launchTestsForContent(
 
     describe("getMaxAudioBitrate", () => {
       it("should stay at Infinity by default", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         expect(player.getMaxAudioBitrate()).to.equal(Infinity);
 
         player.loadVideo({
@@ -1051,9 +935,6 @@ export default function launchTestsForContent(
       });
 
       it("should be able to update", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setMaxVideoBitrate(10000);
         expect(player.getMaxVideoBitrate()).to.equal(10000);
 
@@ -1072,9 +953,6 @@ export default function launchTestsForContent(
 
     describe("play", () => {
       it("should begin to play if LOADED", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -1087,9 +965,6 @@ export default function launchTestsForContent(
       });
 
       it("should resume if paused", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -1109,9 +984,6 @@ export default function launchTestsForContent(
 
     describe("pause", () => {
       it("should have no effect when LOADED", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -1124,9 +996,6 @@ export default function launchTestsForContent(
       });
 
       it("should pause if playing", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -1140,9 +1009,6 @@ export default function launchTestsForContent(
       });
 
       it("should do nothing if already paused", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -1162,9 +1028,6 @@ export default function launchTestsForContent(
     // TODO handle live contents
     describe("seekTo", () => {
       it("should be able to seek to a given time once loaded", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -1179,9 +1042,6 @@ export default function launchTestsForContent(
 
     describe("getVolume", () => {
       it("should return the current media elment volume", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         const initialVolume = player.getVideoElement().volume;
         expect(player.getVolume()).to.equal(initialVolume);
 
@@ -1195,9 +1055,6 @@ export default function launchTestsForContent(
       });
 
       it("should be updated when the volume is updated", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         const initialVolume = player.getVideoElement().volume;
         expect(player.getVolume()).to.equal(initialVolume);
         player.setVolume(0.54);
@@ -1221,9 +1078,6 @@ export default function launchTestsForContent(
       });
 
       it("should return 0 if muted", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         const initialVolume = player.getVideoElement().volume;
         expect(player.getVolume()).to.equal(initialVolume);
         player.mute();
@@ -1248,9 +1102,6 @@ export default function launchTestsForContent(
 
     describe("setVolume", () => {
       it("should update the volume", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setVolume(0.15);
         expect(player.getVolume()).to.equal(0.15);
 
@@ -1270,9 +1121,6 @@ export default function launchTestsForContent(
       });
 
       it("should un-mute when muted", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.mute();
         expect(player.isMute()).to.equal(true);
         player.setVolume(0.25);
@@ -1305,9 +1153,6 @@ export default function launchTestsForContent(
 
     describe("isMute", () => {
       it("should be false by default", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         expect(player.isMute()).to.equal(false);
 
         player.loadVideo({
@@ -1322,9 +1167,6 @@ export default function launchTestsForContent(
       });
 
       it("should be true if muted and false if un-muted", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.mute();
         expect(player.isMute()).to.equal(true);
 
@@ -1349,9 +1191,6 @@ export default function launchTestsForContent(
 
     describe("mute", () => {
       it("should set the volume to 0", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         const initialVolume = player.getVideoElement().volume;
         player.mute();
         expect(player.isMute()).to.equal(true);
@@ -1389,9 +1228,6 @@ export default function launchTestsForContent(
 
     describe("unMute", async () => {
       it("should unmute when the volume is muted", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         const initialVolume = player.getVideoElement().volume;
         player.mute();
         expect(player.isMute()).to.equal(true);
@@ -1429,9 +1265,6 @@ export default function launchTestsForContent(
 
     describe("setVideoBitrate", () => {
       it("should set the video bitrate even if called before the loadVideo", () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setVideoBitrate(1000000);
         expect(player.getManualVideoBitrate()).to.equal(1000000);
 
@@ -1444,9 +1277,6 @@ export default function launchTestsForContent(
       });
 
       it("should set the video bitrate while playing", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setVideoBitrate(0.001);
 
         player.loadVideo({
@@ -1481,9 +1311,6 @@ export default function launchTestsForContent(
       });
 
       it("should set the minimum bitrate if set to 0", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setVideoBitrate(0);
 
         player.loadVideo({
@@ -1502,9 +1329,6 @@ export default function launchTestsForContent(
       });
 
       it("should set the maximum bitrate if set to Infinity", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setVideoBitrate(Infinity);
 
         player.loadVideo({
@@ -1527,9 +1351,6 @@ export default function launchTestsForContent(
 
     describe("setAudioBitrate", () => {
       it("should set the audio bitrate even if called before the loadVideo", () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setAudioBitrate(1000000);
         expect(player.getManualAudioBitrate()).to.equal(1000000);
 
@@ -1542,9 +1363,6 @@ export default function launchTestsForContent(
       });
 
       it("should set the audio bitrate while playing", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setAudioBitrate(0.001);
 
         player.loadVideo({
@@ -1578,9 +1396,6 @@ export default function launchTestsForContent(
       });
 
       it("should set the minimum bitrate if set to 0", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setAudioBitrate(0);
 
         player.loadVideo({
@@ -1599,9 +1414,6 @@ export default function launchTestsForContent(
       });
 
       it("should set the maximum bitrate if set to Infinity", async () => {
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setAudioBitrate(Infinity);
 
         player.loadVideo({
@@ -1623,7 +1435,7 @@ export default function launchTestsForContent(
 
     describe("getAvailableAudioTracks", () => {
       it("should list the right audio languages", async function () {
-        mockRequests(fakeServer, URLs);
+        xhrLocker.lock();
 
         player.loadVideo({
           url: manifestInfos.url,
@@ -1631,10 +1443,10 @@ export default function launchTestsForContent(
         });
         expect(player.getAvailableAudioTracks()).to.eql([]);
 
-        await sleep(100);
+        await sleep(1);
         expect(player.getAvailableAudioTracks()).to.eql([]);
-        fakeServer.respond();
-        await sleep(100);
+        await xhrLocker.flush();
+        await sleep(1);
 
         const audioTracks = player.getAvailableAudioTracks();
 
@@ -1671,7 +1483,7 @@ export default function launchTestsForContent(
 
     describe("getAvailableTextTracks", () => {
       it("should list the right text languages", async function () {
-        mockRequests(fakeServer, URLs);
+        xhrLocker.lock();
 
         player.loadVideo({
           url: manifestInfos.url,
@@ -1679,10 +1491,10 @@ export default function launchTestsForContent(
         });
         expect(player.getAvailableTextTracks()).to.eql([]);
 
-        await sleep(100);
+        await sleep(1);
         expect(player.getAvailableTextTracks()).to.eql([]);
-        fakeServer.respond();
-        await sleep(100);
+        await xhrLocker.flush();
+        await sleep(1);
 
         const textTracks = player.getAvailableTextTracks();
 
@@ -1719,7 +1531,7 @@ export default function launchTestsForContent(
 
     describe("getAvailableVideoTracks", () => {
       it("should list the right video tracks", async function () {
-        mockRequests(fakeServer, URLs);
+        xhrLocker.lock();
 
         player.loadVideo({
           url: manifestInfos.url,
@@ -1727,10 +1539,10 @@ export default function launchTestsForContent(
         });
         expect(player.getAvailableVideoTracks()).to.eql([]);
 
-        await sleep(100);
+        await sleep(1);
         expect(player.getAvailableVideoTracks()).to.eql([]);
-        fakeServer.respond();
-        await sleep(100);
+        await xhrLocker.flush();
+        await sleep(1);
 
         const videoTracks = player.getAvailableVideoTracks();
 
@@ -1780,9 +1592,6 @@ export default function launchTestsForContent(
       // TODO handle live contents
       it("should download until a set wanted buffer ahead", async function() {
         this.timeout(5000);
-        mockRequests(fakeServer, URLs);
-        fakeServer.autoRespond = true;
-
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
 

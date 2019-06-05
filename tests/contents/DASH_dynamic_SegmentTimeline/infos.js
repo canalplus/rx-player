@@ -1,7 +1,14 @@
+const BASE_URL = "http://" +
+               /* eslint-disable no-undef */
+               __TEST_CONTENT_SERVER__.URL + ":" +
+               __TEST_CONTENT_SERVER__.PORT +
+               /* eslint-enable no-undef */
+               "/DASH_dynamic_SegmentTimeline/media/";
+
 // Provide infos on this content under JSON.
 // Useful for integration tests on DASH parsers.
 export default {
-  url: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
+  url: BASE_URL + "Manifest.mpd",
   transport: "dash",
   isLive: true,
   availabilityStartTime: 1325376000,
@@ -20,20 +27,20 @@ export default {
                 mimeType: "audio/mp4",
                 index: {
                   init: {
-                    mediaURL: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/A48/init.mp4",
+                    mediaURL: BASE_URL + "A48/init.mp4",
                   },
                   segments: [
                     {
                       time: 73320372578304,
                       timescale: 48000,
                       duration: 288768,
-                      mediaURL: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/A48/t73320372578304.m4s",
+                      mediaURL: BASE_URL + "A48/t73320372578304.m4s",
                     },
                     {
                       time: 73320372867072,
                       timescale: 48000,
                       duration: 287744,
-                      mediaURL: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/A48/t73320372867072.m4s",
+                      mediaURL: BASE_URL + "A48/t73320372867072.m4s",
                     },
                   ],
                   // ...
@@ -53,20 +60,20 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/V300/init.mp4",
+                    mediaURL: BASE_URL + "V300/init.mp4",
                   },
                   segments: [
                     {
                       time: 137475698580000,
                       timescale: 90000,
                       duration: 540000,
-                      mediaURL: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/V300/t137475698580000.m4s",
+                      mediaURL: BASE_URL + "V300/t137475698580000.m4s",
                     },
                     {
                       time: 137475699120000,
                       timescale: 90000,
                       duration: 540000,
-                      mediaURL: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/V300/t137475699120000.m4s",
+                      mediaURL: BASE_URL + "V300/t137475699120000.m4s",
                     },
                   ],
                   // ...

@@ -1,13 +1,8 @@
 import { expect } from "chai";
-import sinon from "sinon";
-
-import {
-  manifestInfos,
-  URLs,
-} from "../../contents/DASH_static_SegmentTimeline";
-import mockRequests from "../../utils/mock_requests.js";
-import sleep from "../../utils/sleep.js";
 import RxPlayer from "../../../src";
+import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
+import sleep from "../../utils/sleep.js";
+import XHRLocker from "../../utils/xhr_locker.js";
 
 /**
  * Test ability to add an external text track when loading a video.
@@ -15,20 +10,20 @@ import RxPlayer from "../../../src";
 
 describe("external text track", function () {
   let player;
-  let fakeServer;
+  let xhrLocker;
 
   beforeEach(() => {
     player = new RxPlayer();
-    fakeServer = sinon.fakeServer.create();
+    xhrLocker = XHRLocker();
   });
 
   afterEach(() => {
     player.dispose();
-    fakeServer.restore();
+    xhrLocker.restore;
   });
 
   it("should be able to add an external text track", async function () {
-    mockRequests(fakeServer, URLs);
+    xhrLocker.lock();
 
     player.loadVideo({
       transport: manifestInfos.transport,
@@ -42,7 +37,7 @@ describe("external text track", function () {
     });
 
     await sleep(1);
-    fakeServer.respond();
+    await xhrLocker.flush();
     await sleep(1);
 
     const textTracks = player.getAvailableTextTracks();
@@ -56,7 +51,7 @@ describe("external text track", function () {
   });
 
   it("should be able to add a closed caption text track", async function () {
-    mockRequests(fakeServer, URLs);
+    xhrLocker.lock();
 
     player.loadVideo({
       transport: manifestInfos.transport,
@@ -70,7 +65,7 @@ describe("external text track", function () {
     });
 
     await sleep(1);
-    fakeServer.respond();
+    await xhrLocker.flush();
     await sleep(1);
 
     const textTracks = player.getAvailableTextTracks();
@@ -85,7 +80,7 @@ describe("external text track", function () {
   });
 
   it("should be able to add multiple external text tracks", async function () {
-    mockRequests(fakeServer, URLs);
+    xhrLocker.lock();
 
     player.loadVideo({
       transport: manifestInfos.transport,
@@ -113,7 +108,7 @@ describe("external text track", function () {
     });
 
     await sleep(1);
-    fakeServer.respond();
+    await xhrLocker.flush();
     await sleep(1);
 
     const textTracks = player.getAvailableTextTracks();
@@ -142,7 +137,7 @@ describe("external text track", function () {
   });
 
   it("should switch initially to external text track if set as default language", async function () {
-    mockRequests(fakeServer, URLs);
+    xhrLocker.lock();
 
     const waysOfWritingDefaultTextTrack = [
       "en",
@@ -166,9 +161,9 @@ describe("external text track", function () {
         defaultTextTrack,
       });
 
-      await sleep(10);
-      fakeServer.respond();
-      await sleep(10);
+      await sleep(1);
+      await xhrLocker.flush();
+      await sleep(1);
 
       const textTracks1 = player.getAvailableTextTracks();
       expect(textTracks1[0].active).to.equal(true);
@@ -199,9 +194,9 @@ describe("external text track", function () {
         defaultTextTrack,
       });
 
-      await sleep(10);
-      fakeServer.respond();
-      await sleep(10);
+      await sleep(1);
+      await xhrLocker.flush();
+      await sleep(1);
 
       const textTracks2 = player.getAvailableTextTracks();
       expect(textTracks2[0].active).to.equal(true);
@@ -209,7 +204,7 @@ describe("external text track", function () {
   });
 
   it("should switch initially to a closed caption external text track if set as default language", async function () {
-    mockRequests(fakeServer, URLs);
+    xhrLocker.lock();
 
     const waysOfWritingDefaultTextTrack = [
       { language: "en", closedCaption: true },
@@ -229,9 +224,9 @@ describe("external text track", function () {
         defaultTextTrack,
       });
 
-      await sleep(10);
-      fakeServer.respond();
-      await sleep(10);
+      await sleep(1);
+      await xhrLocker.flush();
+      await sleep(1);
 
       const textTracks1 = player.getAvailableTextTracks();
       expect(textTracks1[0].active).to.equal(true);
@@ -262,9 +257,10 @@ describe("external text track", function () {
         defaultTextTrack,
       });
 
-      await sleep(10);
-      fakeServer.respond();
-      await sleep(10);
+
+      await sleep(1);
+      await xhrLocker.flush();
+      await sleep(1);
 
       const textTracks2 = player.getAvailableTextTracks();
       expect(textTracks2[0].active).to.equal(true);
@@ -272,7 +268,7 @@ describe("external text track", function () {
   });
 
   it("should not switch initially to external text track if not set as default language", async function () {
-    mockRequests(fakeServer, URLs);
+    xhrLocker.lock();
 
     const waysOfWritingDefaultTextTrack = [
       "fr",
@@ -296,9 +292,9 @@ describe("external text track", function () {
         defaultTextTrack,
       });
 
-      await sleep(10);
-      fakeServer.respond();
-      await sleep(10);
+      await sleep(1);
+      await xhrLocker.flush();
+      await sleep(1);
 
       const textTracks1 = player.getAvailableTextTracks();
       expect(textTracks1[0].active).to.equal(false);
@@ -329,9 +325,9 @@ describe("external text track", function () {
         defaultTextTrack,
       });
 
-      await sleep(10);
-      fakeServer.respond();
-      await sleep(10);
+      await sleep(1);
+      await xhrLocker.flush();
+      await sleep(1);
 
       const textTracks2 = player.getAvailableTextTracks();
       expect(textTracks2[0].active).to.equal(false);

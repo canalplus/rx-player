@@ -15,35 +15,26 @@
  */
 
 import { expect } from "chai";
-import sinon from "sinon";
-
 import RxPlayer from "../../../src";
-
-import {
-  manifestInfos,
-  URLs,
-} from "../../contents/DASH_static_SegmentTimeline";
+import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep.js";
-import mockRequests from "../../utils/mock_requests";
 import waitForState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState";
+import XHRLocker from "../../utils/xhr_locker";
 
 describe("basic playback use cases: non-linear DASH SegmentTimeline", function () {
-
   let player;
-  let fakeServer;
+  let xhrLocker;
 
   beforeEach(() => {
     player = new RxPlayer();
-    fakeServer = sinon.fakeServer.create();
-    fakeServer.autoRespond = true;
-    mockRequests(fakeServer, URLs);
+    xhrLocker = XHRLocker();
   });
 
   afterEach(() => {
     player.dispose();
-    fakeServer.restore();
+    xhrLocker.restore();
   });
 
   it("should begin playback on play", async function () {
@@ -106,7 +97,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(player.getPosition()).to.equal(10);
     expect(player.getPlayerState()).to.equal("LOADED");
     player.play();
-    await sleep(200);
+    await sleep(600);
     expect(player.getPlayerState()).to.equal("PLAYING");
     expect(player.getPosition()).to.be.above(10);
   });
@@ -219,17 +210,51 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
   });
 
   it("should download first segment when wanted buffer ahead is under first segment duration", async function () {
+    xhrLocker.lock();
     player.setWantedBufferAhead(2);
     player.loadVideo({
       transport: manifestInfos.transport,
       url: manifestInfos.url,
     });
-    await waitForLoadedStateAfterLoadVideo(player);
-    await sleep(100);
-    expect(player.getVideoLoadedTime()).to.be.below(5);
 
-    // Manifest + 2 init segments + 2 segments
-    expect(fakeServer.requestCount).to.equal(5);
+    await sleep(1);
+    expect(xhrLocker.getLockedXHR().length).to.equal(1); // Manifest
+    await xhrLocker.flush();
+    await sleep(1);
+    expect(xhrLocker.getLockedXHR().length).to.equal(2); // init segments
+    await xhrLocker.flush();
+    await sleep(1);
+    expect(xhrLocker.getLockedXHR().length).to.equal(2); // first two segments
+    await xhrLocker.flush(); // first two segments
+    await sleep(1);
+    expect(xhrLocker.getLockedXHR().length).to.equal(0); // nada
+    expect(player.getVideoLoadedTime()).to.be.above(4);
+    expect(player.getVideoLoadedTime()).to.be.below(5);
+  });
+
+  it("should download more than the first segment when wanted buffer ahead is over the first segment duration", async function () {
+    xhrLocker.lock();
+    player.setWantedBufferAhead(20);
+    player.loadVideo({
+      transport: manifestInfos.transport,
+      url: manifestInfos.url,
+    });
+
+    await sleep(1);
+    expect(xhrLocker.getLockedXHR().length).to.equal(1); // Manifest
+    await xhrLocker.flush();
+    await sleep(1);
+    expect(xhrLocker.getLockedXHR().length).to.equal(2); // init segments
+    await xhrLocker.flush();
+    await sleep(1);
+    expect(xhrLocker.getLockedXHR().length).to.equal(2); // first two segments
+    await xhrLocker.flush(); // first two segments
+    await sleep(1);
+    expect(xhrLocker.getLockedXHR().length).to.equal(2); // still
+    await xhrLocker.flush();
+    await sleep(1);
+    expect(player.getVideoLoadedTime()).to.be.above(7);
+    expect(player.getVideoLoadedTime()).to.be.below(9);
   });
 
   it("should continue downloading when seek to wanter buffer ahead", async function() {
@@ -316,8 +341,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     await sleep(100);
     expect(player.getPlayerState()).to.equal("PLAYING");
 
-    // deactivate autoRespond for now
-    fakeServer.autoRespond = false;
+    xhrLocker.lock();
 
     player.seekTo(10);
     await waitForState(player, "SEEKING", ["PLAYING"]);
@@ -327,12 +351,10 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(player.getPlayerState()).to.equal("SEEKING");
     expect(player.getVideoBufferGap()).to.equal(Infinity);
 
-    fakeServer.respond();
+    await xhrLocker.flush();
     await sleep(100);
     expect(player.getVideoBufferGap()).to.be.above(1);
     expect(player.getVideoBufferGap()).to.be.below(10);
     expect(player.getPlayerState()).to.equal("PLAYING");
-
-    fakeServer.autoRespond = true;
   });
 });

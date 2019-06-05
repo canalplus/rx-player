@@ -1,3 +1,4 @@
+/* eslint-env node */
 /**
  * Data worth a little more than 15s of playback audio+video
  *
@@ -5,10 +6,11 @@
  * avoid being too heavy.
  */
 
-import flatMap from "../../utils/flatMap.js";
-import patchSegmentWithTimeOffset from "../../utils/patchSegmentWithTimeOffset.js";
+const path = require("path");
+const flatMap = require("../utils/flatMap.js");
+const patchSegmentWithTimeOffset = require("../utils/patchSegmentWithTimeOffset.js");
 
-const baseURL = "http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/";
+const BASE_URL = "/DASH_static_SegmentTimeline/media/";
 
 const audioSegments = [
   0, 177341, 353469, 530621, 706749, 883901, 1060029, 1236157, 1413309,
@@ -17,8 +19,8 @@ const audioSegments = [
   4414653,
 ].map(time => {
   return {
-    url: baseURL + `dash/ateam-audio=128000-${time}.dash`,
-    data: require(`arraybuffer-loader!./media/ateam-audio=128000-${time}.dash`),
+    url: BASE_URL + `dash/ateam-audio=128000-${time}.dash`,
+    path: path.join(__dirname, `./media/dash/ateam-audio=128000-${time}.dash`),
     contentType: "audio/mp4",
   };
 });
@@ -33,11 +35,9 @@ const videoQualities = flatMap(
       9009000,
     ].map(time => {
       return {
-        url: baseURL + `dash/ateam-video=${quality}-${time / 90}.dash`,
-        data: () => {
-          const base = new Uint8Array(
-            require(`arraybuffer-loader!./media/ateam-video=${quality}-0.dash`)
-          );
+        url: BASE_URL + `dash/ateam-video=${quality}-${time / 90}.dash`,
+        path: path.join(__dirname, `media/dash/ateam-video=${quality}-0.dash`),
+        postProcess(base) {
           return patchSegmentWithTimeOffset(base, time).buffer;
         },
         contentType: "video/mp4",
@@ -46,33 +46,33 @@ const videoQualities = flatMap(
 
     // initialization segment
     segments.push({
-      url: baseURL + `dash/ateam-video=${quality}.dash`,
-      data: require(`arraybuffer-loader!./media/ateam-video=${quality}.dash`),
+      url: BASE_URL + `dash/ateam-video=${quality}.dash`,
+      path: path.join(__dirname, `media/dash/ateam-video=${quality}.dash`),
       contentType: "video/mp4",
     });
 
     // last segment (different duration)
     segments.push({
-      url: baseURL + `dash/ateam-video=${quality}-900000.dash`,
-      data: require(`arraybuffer-loader!./media/ateam-video=${quality}-9009000.dash`),
+      url: BASE_URL + `dash/ateam-video=${quality}-900000.dash`,
+      path: path.join(__dirname, `media/dash/ateam-video=${quality}-9009000.dash`),
       contentType: "video/mp4",
     });
 
     return segments;
   });
 
-export default [
+module.exports = [
   // Manifest
   {
-    url: baseURL + "ateam.mpd",
-    data: require("raw-loader!./media/ateam.mpd").default,
+    url: BASE_URL + "ateam.mpd",
+    path: path.join(__dirname, "media/ateam.mpd"),
     contentType: "application/dash+xml",
   },
 
   // Audio initialization segment
   {
-    url: baseURL + "dash/ateam-audio=128000.dash",
-    data: require("arraybuffer-loader!./media/ateam-audio=128000.dash"),
+    url: BASE_URL + "dash/ateam-audio=128000.dash",
+    path: path.join(__dirname, "media/dash/ateam-audio=128000.dash"),
     contentType: "audio/mp4",
   },
   ...audioSegments, // remaining audio segments
