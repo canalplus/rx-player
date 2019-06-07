@@ -22,13 +22,13 @@ describe("errors - NetworkError", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
     const reason = "bar";
-    const requestError = new RequestError(xhr, "foo", reason);
+    const requestError = new RequestError(xhr, "foo", 12, reason);
     const networkError = new NetworkError("foo", requestError, true);
     expect(networkError).toBeInstanceOf(Error);
     expect(networkError.name).toBe("NetworkError");
     expect(networkError.type).toBe("NETWORK_ERROR");
     expect(networkError.xhr).toBe(requestError.xhr);
-    expect(networkError.status).toBe(requestError.status);
+    expect(networkError.status).toBe(12);
     expect(networkError.errorType).toBe(requestError.type);
     expect(networkError.code).toBe("");
     expect(networkError.fatal).toBe(true);
@@ -39,13 +39,13 @@ describe("errors - NetworkError", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
     const reason = "bar";
-    const requestError = new RequestError(xhr, "foo", reason);
+    const requestError = new RequestError(xhr, "foo", 13, reason);
     const networkError = new NetworkError("MEDIA_ERR_NETWORK", requestError, true);
     expect(networkError).toBeInstanceOf(Error);
     expect(networkError.name).toBe("NetworkError");
     expect(networkError.type).toBe("NETWORK_ERROR");
     expect(networkError.xhr).toBe(requestError.xhr);
-    expect(networkError.status).toBe(requestError.status);
+    expect(networkError.status).toBe(13);
     expect(networkError.errorType).toBe(requestError.type);
     expect(networkError.code).toBe("MEDIA_ERR_NETWORK");
     expect(networkError.fatal).toBe(true);
@@ -55,7 +55,7 @@ describe("errors - NetworkError", () => {
   it("should return false in isHttpError if not an HTTP error", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
-    const requestError = new RequestError(xhr, "foo", "bar");
+    const requestError = new RequestError(xhr, "foo", 500, "bar");
     const networkError = new NetworkError("MEDIA_ERR_NETWORK", requestError, true);
     expect(networkError.isHttpError(0)).toBe(false);
   });
@@ -65,7 +65,7 @@ describe("errors - NetworkError", () => {
   /* tslint:enable max-line-length */
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
-    const requestError = new RequestError(xhr, "foo", "ERROR_HTTP_CODE");
+    const requestError = new RequestError(xhr, "foo", 44, "ERROR_HTTP_CODE");
     const networkError = new NetworkError("MEDIA_ERR_NETWORK", requestError, true);
     expect(networkError.isHttpError(1)).toBe(false);
   });
@@ -75,8 +75,8 @@ describe("errors - NetworkError", () => {
   /* tslint:enable max-line-length */
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
-    const requestError = new RequestError(xhr, "foo", "ERROR_HTTP_CODE");
+    const requestError = new RequestError(xhr, "foo", 33, "ERROR_HTTP_CODE");
     const networkError = new NetworkError("MEDIA_ERR_NETWORK", requestError, true);
-    expect(networkError.isHttpError(0)).toBe(true);
+    expect(networkError.isHttpError(33)).toBe(true);
   });
 });

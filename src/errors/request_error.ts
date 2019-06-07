@@ -24,7 +24,7 @@ export default class RequestError extends Error {
   public readonly name : "RequestError";
   public readonly type : string;
   public readonly message : string;
-  public readonly xhr : XMLHttpRequest;
+  public readonly xhr : XMLHttpRequest|null;
   public readonly url : string;
   public readonly status : number;
 
@@ -33,7 +33,12 @@ export default class RequestError extends Error {
    * @param {string} url
    * @param {string} type
    */
-  constructor(xhr : XMLHttpRequest, url : string, type : string) {
+  constructor(
+    xhr : XMLHttpRequest|null,
+    url : string,
+    status : number,
+    type : string
+  ) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, RequestError.prototype);
@@ -41,7 +46,7 @@ export default class RequestError extends Error {
     this.name = "RequestError";
     this.url = url;
     this.xhr = xhr;
-    this.status = xhr.status;
+    this.status = status;
     this.type = type;
     this.message = type;
   }
