@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+import fetchRequest, {
+  fetchIsSupported,
+  IDataChunk,
+  IDataComplete,
+} from "./fetch";
 import xhrRequest, {
   IRequestOptions,
   IRequestProgress,
@@ -22,7 +27,12 @@ import xhrRequest, {
 
 export default xhrRequest;
 export {
+  fetchIsSupported,
+  fetchRequest,
+  IDataChunk,
+  IDataComplete,
   IRequestOptions,
   IRequestProgress,
   IRequestResponse,
+  xhrRequest,
 };
