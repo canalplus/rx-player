@@ -18,7 +18,7 @@ import xhrRequest, {
   IRequestOptions,
   IRequestProgress,
   IRequestResponse,
-} from "./xhr_request";
+} from "./xhr";
 
 export default xhrRequest;
 export {

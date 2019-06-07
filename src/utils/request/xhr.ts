@@ -146,53 +146,57 @@ function toJSONForIE(data : string) : unknown|null {
  */
 
 // overloading to the max
-function request(options : IRequestOptions<undefined|null|""|"text", false|undefined>)
-                : Observable<IRequestResponse<string, "text">>;
-function request(options : IRequestOptions<undefined|null|""|"text", true>)
-                : Observable<IRequestResponse<string, "text"> |
-                             IRequestProgress>;
+function request(options : IRequestOptions< undefined | null | "" | "text",
+                                            false | undefined>)
+                : Observable<IRequestResponse< string, "text" >>;
+function request(options : IRequestOptions< undefined | null | "" | "text",
+                                            true >)
+                : Observable<IRequestResponse< string, "text" > |
+                             IRequestProgress >;
 
-function request(options : IRequestOptions<"arraybuffer", false|undefined>)
-                : Observable<IRequestResponse<ArrayBuffer, "arraybuffer">>;
+function request(options : IRequestOptions< "arraybuffer",
+                                            false | undefined>)
+                : Observable<IRequestResponse< ArrayBuffer, "arraybuffer" >>;
 function request(options : IRequestOptions<"arraybuffer", true>)
                 : Observable<IRequestResponse<ArrayBuffer, "arraybuffer"> |
-                             IRequestProgress>;
+                             IRequestProgress >;
 
-function request(options : IRequestOptions<"document", false|undefined>)
-                : Observable<IRequestResponse<Document, "document">>;
-function request(options : IRequestOptions<"document", true>)
-                : Observable<IRequestResponse<Document, "document"> |
-                             IRequestProgress>;
+function request(options : IRequestOptions< "document",
+                                            false | undefined >)
+                : Observable<IRequestResponse< Document, "document" >>;
+function request(options : IRequestOptions< "document",
+                                            true >)
+                : Observable<IRequestResponse< Document, "document" > |
+                             IRequestProgress >;
 
-function request(options : IRequestOptions<"json", false|undefined>)
-                : Observable<IRequestResponse<object, "json">>;
-function request(options : IRequestOptions<"json", true>)
-                : Observable<IRequestResponse<object, "json"> |
-                             IRequestProgress>;
+function request(options : IRequestOptions< "json",
+                                            false | undefined >)
+                : Observable<IRequestResponse< object, "json" >>;
+function request(options : IRequestOptions< "json", true >)
+                : Observable<IRequestResponse< object, "json" > |
+                             IRequestProgress >;
 
-function request(options : IRequestOptions<"blob", false|undefined>)
-                : Observable<IRequestResponse<Blob, "blob">>;
+function request(options : IRequestOptions< "blob",
+                                            false|undefined >)
+                : Observable<IRequestResponse< Blob, "blob" >>;
 function request(options : IRequestOptions<"blob", true>)
-                : Observable<IRequestResponse<Blob, "blob"> |
-                             IRequestProgress>;
+                : Observable<IRequestResponse< Blob, "blob" > |
+                             IRequestProgress >;
 
 function request<T>(
-  options : IRequestOptions<XMLHttpRequestResponseType | null | undefined,
-                            false | undefined>
-) : Observable<IRequestResponse<T, XMLHttpRequestResponseType>>;
+  options : IRequestOptions< XMLHttpRequestResponseType | null | undefined,
+                             false | undefined >)
+  : Observable<IRequestResponse< T, XMLHttpRequestResponseType >>;
 function request<T>(
-  options : IRequestOptions<XMLHttpRequestResponseType | null | undefined,
-                            true>
-) : Observable<IRequestResponse<T, XMLHttpRequestResponseType> |
+  options : IRequestOptions< XMLHttpRequestResponseType | null | undefined,
+                            true >)
+  : Observable<IRequestResponse< T, XMLHttpRequestResponseType > |
                IRequestProgress
 >;
 function request<T>(
-  options : IRequestOptions<XMLHttpRequestResponseType |
-                            null |
-                            undefined,
-                            boolean |
-                            undefined>
-) : Observable<IRequestResponse<T, XMLHttpRequestResponseType> |
+  options : IRequestOptions< XMLHttpRequestResponseType | null | undefined,
+                            boolean | undefined >
+) : Observable<IRequestResponse< T, XMLHttpRequestResponseType > |
                IRequestProgress
 > {
   const requestOptions = {
