@@ -33,7 +33,7 @@ export interface IRequestProgress { type : "progress";
 }
 
 // Interface for "response" events
-export interface IRequestResponse<T, U> { type : "response";
+export interface IRequestResponse<T, U> { type : "data-loaded";
                                           value : { duration : number;
                                                     receivedTime : number;
                                                     responseData : T;
@@ -71,12 +71,12 @@ function toJSONForIE(data : string) : unknown|null {
  * ## Overview
  *
  * Perform the request on subscription.
- * Emit zero, one or more progress event(s) and then the response if the request
+ * Emit zero, one or more progress event(s) and then the data if the request
  * was successful.
  *
  * Throw if an error happened or if the status code is not in the 200 range at
  * the time of the response.
- * Complete after emitting the response.
+ * Complete after emitting the data.
  * Abort the xhr on unsubscription.
  *
  * ## Emitted Objects
@@ -89,8 +89,8 @@ function toJSONForIE(data : string) : unknown|null {
  *   }
  * ```
  *
- * The type of event can either be "progress" or "response". The value is under
- * a different form depending on the type.
+ * The type of event can either be "progress" or "data-loaded". The value is
+ * under a different form depending on the type.
  *
  * For "progress" events, the value should be the following object:
  * ```
@@ -106,7 +106,7 @@ function toJSONForIE(data : string) : unknown|null {
  *   }
  * ```
  *
- * For "response" events, the value should be the following object:
+ * For "data-loaded" events, the value should be the following object:
  * ```
  *   {
  *     status {Number}: xhr status code
@@ -124,9 +124,9 @@ function toJSONForIE(data : string) : unknown|null {
  * ```
  *
  * For any successful request you should have 0+ "progress" events and 1
- * "response" event.
+ * "data-loaded" event.
  *
- * For failing request, you should have 0+ "progress" events and 0 "response"
+ * For failing request, you should have 0+ "progress" events and 0 "data-loaded"
  * event (the Observable will throw before).
  *
  * ## Errors
@@ -135,7 +135,7 @@ function toJSONForIE(data : string) : unknown|null {
  *   - RequestErrorTypes.TIMEOUT_ERROR: the request timeouted (took too long to
  *     respond).
  *   - RequestErrorTypes.PARSE_ERROR: the browser APIs used to parse the
- *                                    response failed.
+ *                                    data failed.
  *   - RequestErrorTypes.ERROR_HTTP_CODE: the HTTP code at the time of reception
  *                                        was not in the 200-299 (included)
  *                                        range.
@@ -286,7 +286,7 @@ function request<T>(
             return;
           }
 
-          obs.next({ type: "response",
+          obs.next({ type: "data-loaded",
                      value: { status,
                               url: _url,
                               responseType: loadedResponseType,

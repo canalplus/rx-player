@@ -45,6 +45,8 @@ export interface ISegmentTimingInfos {
                       //   durationInSeconds = duration / timescale
 }
 
+// Contains timing informations on new segments indicated in the metadata of
+// a previous segment
 export interface INextSegmentsInfos {
   duration : number; // duration of the segment, in the corresponding timescale
   time : number; // start time of the segment, in the corresponding timescale
@@ -55,12 +57,12 @@ export interface INextSegmentsInfos {
 
 // -- arguments
 
-// loader argument for the manifest pipeline
+// Arguments for the loader of the manifest pipeline
 export interface IManifestLoaderArguments {
   url : string; // URL of the concerned manifest
 }
 
-// loader argument for every other pipelines
+// Argument for the loader of the segment pipelines
 export interface ISegmentLoaderArguments {
   manifest : Manifest; // Manifest related to this segment
   period : Period; // Period related to this segment
@@ -71,7 +73,8 @@ export interface ISegmentLoaderArguments {
 
 // -- response
 
-export interface ILoaderResponseValue<T> {
+// Value of a "data-loaded" event
+export interface ILoaderDataLoadedValue<T> {
   responseData : T; // The response for the request
   duration? : number; // time in seconds it took to load this content
   size? : number; // size in bytes of this content
@@ -82,43 +85,36 @@ export interface ILoaderResponseValue<T> {
                           // time origin), in ms
 }
 
-// A loader gave a response after a request
-export interface ILoaderResponse<T> { type : "response";
-                                      value : ILoaderResponseValue<T>; }
+// Event emitted by a loader with the response after a request completed
+export interface ILoaderDataLoaded<T> { type : "data-loaded";
+                                        value : ILoaderDataLoadedValue<T>; }
 
-// A loader gave a response without doing any request
-interface ILoaderData<T> { type : "data";
-                           value : { responseData : T }; }
+// Event emitted by a loader with the response when it did not perform any request
+interface ILoaderDataCreated<T> { type : "data-created";
+                                  value : { responseData : T }; }
 
-// items emitted by loaders on xhr progress events
-export interface ILoaderProgress {
-  type : "progress";
-  value : {
-    duration : number;
-    size : number;
-    url : string;
-    totalSize? : number; // undefined if the total size is not known
-  };
-}
+// Event emitted by loaders on xhr progress events
+export interface ILoaderProgress { type : "progress";
+                                   value : { duration : number;
+                                             size : number;
+                                             url : string;
+                                             totalSize? : number; }; }
 
-// items emitted by loaders on xhr response events
-interface ILoaderData<T> { type : "data";
-                           value : { responseData : T }; }
+export type IManifestLoaderObservable<T> = Observable<ILoaderDataLoaded<T>>;
+export type IManifestLoaderObserver<T> = Observer<ILoaderDataLoaded<T>>;
 
-export type ILoaderEvent<T> = ILoaderProgress |
-                              ILoaderResponse<T> |
-                              ILoaderData<T>;
-
-export type ILoaderObserver<T> = Observer<ILoaderEvent<T>>;
-
-export type ILoaderObservable<T> = Observable<ILoaderEvent<T>>;
+export type ISegmentLoaderEvent<T> =  ILoaderProgress |
+                                      ILoaderDataLoaded<T> |
+                                      ILoaderDataCreated<T>;
+export type ISegmentLoaderObservable<T> = Observable<ISegmentLoaderEvent<T>>;
+export type ISegmentLoaderObserver<T> = Observer<ISegmentLoaderEvent<T>>;
 
 // ---- PARSER ----
 
 // -- arguments
 
 export interface IManifestParserArguments<T, U> {
-  response : ILoaderResponseValue<T>; // Response from the loader
+  response : ILoaderDataLoadedValue<T>; // Response from the loader
   url : string; // URL originally requested
   hasClockSynchronization : boolean; // If true, the current device is currently
                                      // synchronized with the server's clock.
@@ -134,7 +130,7 @@ export interface IManifestParserArguments<T, U> {
 }
 
 export interface ISegmentParserArguments<T> {
-  response : ILoaderResponseValue<T>; // Response from the loader
+  response : ILoaderDataLoadedValue<T>; // Response from the loader
   init? : ISegmentTimingInfos; // Infos about the initialization segment of the
                                // corresponding Representation
   manifest : Manifest; // Manifest related to this segment
@@ -154,7 +150,7 @@ export interface IManifestParserResult {
 
 export type IManifestParserObservable = Observable<IManifestParserResult>;
 
-export type SegmentParserObservable = Observable<{
+export type ISegmentParserObservable = Observable<{
   segmentData : Uint8Array|ArrayBuffer|null; // Data to decode
   segmentInfos : ISegmentTimingInfos|null; // Timing infos about the segment
   segmentOffset : number; // time offset, in seconds, to add to the absolute
@@ -197,7 +193,7 @@ export interface IImageTrackSegmentData {
   type : string; // the type of the data (example: "bif")
 }
 
-export type ImageParserObservable = Observable<{
+export type IImageParserObservable = Observable<{
   segmentData : IImageTrackSegmentData|null; // Data to parse and decode
   segmentInfos : ISegmentTimingInfos|null; // Timing infos about the segment
   segmentOffset : number; // time offset, in seconds, to add to the absolute
@@ -208,28 +204,28 @@ export type ImageParserObservable = Observable<{
 export interface ITransportManifestPipeline {
   // TODO Remove resolver
   resolver? : (x : IManifestLoaderArguments) => Observable<IManifestLoaderArguments>;
-  loader : (x : IManifestLoaderArguments) => ILoaderObservable<Document|string>;
+  loader : (x : IManifestLoaderArguments)
+    => IManifestLoaderObservable< Document | string >;
   parser : (x : IManifestParserArguments< Document |
                                           string, string>) => IManifestParserObservable;
 }
 
-interface ITransportSegmentPipelineBase<T> {
-  loader : (x : ISegmentLoaderArguments) => ILoaderObservable<T>;
-  parser : (x : ISegmentParserArguments<T>) => SegmentParserObservable;
+export interface ITransportVideoSegmentPipeline {
+  loader : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
+                                                                      ArrayBuffer |
+                                                                      null >;
+  parser : (x : ISegmentParserArguments< Uint8Array |
+                                         ArrayBuffer |
+                                         null >) => ISegmentParserObservable;
 }
-
-export type ITransportVideoSegmentPipeline =
-  ITransportSegmentPipelineBase<Uint8Array|ArrayBuffer|null>;
-
-export type ITransportAudioSegmentPipeline =
-  ITransportSegmentPipelineBase<Uint8Array|ArrayBuffer|null>;
+export type ITransportAudioSegmentPipeline = ITransportVideoSegmentPipeline;
 
 export interface ITransportTextSegmentPipeline {
   // Note: The segment's data can be null for init segments
-  loader : (x : ISegmentLoaderArguments) => ILoaderObservable< Uint8Array |
-                                                               ArrayBuffer |
-                                                               string |
-                                                               null >;
+  loader : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
+                                                                      ArrayBuffer |
+                                                                      string |
+                                                                      null >;
   parser : (x : ISegmentParserArguments< Uint8Array |
                                          ArrayBuffer |
                                          string |
@@ -238,12 +234,12 @@ export interface ITransportTextSegmentPipeline {
 
 export interface ITransportImageSegmentPipeline {
   // Note: The segment's data can be null for init segments
-  loader : (x : ISegmentLoaderArguments) => ILoaderObservable< Uint8Array |
-                                                               ArrayBuffer |
-                                                               null >;
+  loader : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
+                                                                      ArrayBuffer |
+                                                                      null >;
   parser : (x : ISegmentParserArguments< Uint8Array |
                                          ArrayBuffer |
-                                         null >) => ImageParserObservable;
+                                         null >) => IImageParserObservable;
 }
 
 export type ITransportSegmentPipeline = ITransportAudioSegmentPipeline |

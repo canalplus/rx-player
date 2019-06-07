@@ -31,9 +31,9 @@ import isMP4EmbeddedTrack from "./is_mp4_embedded_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 
 import {
-  ILoaderObservable,
   INextSegmentsInfos,
   ISegmentLoaderArguments,
+  ISegmentLoaderObservable,
   ISegmentParserArguments,
   ISegmentTimingInfos,
   ITextTrackSegmentData,
@@ -45,49 +45,38 @@ import {
  * @param {Object} infos
  * @returns {Observable.<Object>}
  */
-function TextTrackLoader(
-  { segment, representation } : ISegmentLoaderArguments
-) : ILoaderObservable<ArrayBuffer|string|null> {
-  const {
-    mediaURL,
-    range,
-    indexRange,
-  } = segment;
+function TextTrackLoader({ segment,
+                           representation } : ISegmentLoaderArguments
+) : ISegmentLoaderObservable<ArrayBuffer|string|null> {
+  const { mediaURL,
+          range,
+          indexRange } = segment;
 
   // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
-  const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" : "text";
+  const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" :
+                                                            "text";
 
   // init segment without initialization media/range/indexRange:
   // we do nothing on the network
   if (mediaURL == null) {
-    return observableOf({
-      type: "data" as "data",
-      value: { responseData: null },
-    });
+    return observableOf({ type: "data-created",
+                          value: { responseData: null } });
   }
 
   // fire a single time for init and index ranges
   if (range != null && indexRange != null) {
-    return request({
-      url: mediaURL,
-      responseType,
-      headers: {
-        Range: byteRange([
-          Math.min(range[0], indexRange[0]),
-          Math.max(range[1], indexRange[1]),
-        ]),
-      },
-      sendProgressEvents: true,
-    });
+    return request({ url: mediaURL,
+                     responseType,
+                     headers: { Range: byteRange([ Math.min(range[0], indexRange[0]),
+                                                   Math.max(range[1],
+                                                            indexRange[1]) ]) },
+                     sendProgressEvents: true });
   }
-  return request<ArrayBuffer|string>({
-    url: mediaURL,
-    responseType,
-    headers: range ? {
-      Range: byteRange(range),
-    } : null,
-    sendProgressEvents: true,
-  });
+  return request<ArrayBuffer|string>({ url: mediaURL,
+                                       responseType,
+                                       headers: range ? { Range: byteRange(range) } :
+                                                        null,
+                                       sendProgressEvents: true });
 }
 
 /**
@@ -95,27 +84,28 @@ function TextTrackLoader(
  * @param {Object} infos
  * @returns {Observable.<Object>}
  */
-function TextTrackParser({
-  response,
-  segment,
-  adaptation,
-  representation,
-  init,
-} : ISegmentParserArguments<Uint8Array|ArrayBuffer|string|null>
+function TextTrackParser({ response,
+                           segment,
+                           adaptation,
+                           representation,
+                           init } : ISegmentParserArguments< Uint8Array |
+                                                             ArrayBuffer |
+                                                             string |
+                                                             null >
 ) : TextTrackParserObservable {
   const { language } = adaptation;
   const { isInit, indexRange } = segment;
 
   if (response.responseData == null) {
-    return observableOf({
-      segmentData: null,
-      segmentInfos: segment.timescale > 0 ? {
-        duration: segment.isInit ? 0 : segment.duration,
-        time: segment.isInit ? -1 : segment.time,
-        timescale: segment.timescale,
-      } : null,
-      segmentOffset: segment.timestampOffset || 0,
-    });
+    return observableOf({ segmentData: null,
+                          segmentInfos: segment.timescale > 0 ?
+                            { duration: segment.isInit ? 0 :
+                                                         segment.duration,
+                              time: segment.isInit ? -1 :
+                                                     segment.time,
+                              timescale: segment.timescale } :
+                            null,
+                          segmentOffset: segment.timestampOffset || 0 });
   }
 
   let responseData : Uint8Array|string;
@@ -128,26 +118,26 @@ function TextTrackParser({
     assert(response.responseData instanceof ArrayBuffer);
     responseData = new Uint8Array(response.responseData as ArrayBuffer);
 
-    const sidxSegments =
-      getSegmentsFromSidx(responseData, indexRange ? indexRange[0] : 0);
+    const sidxSegments = getSegmentsFromSidx(responseData,
+                                             indexRange ? indexRange[0] : 0);
 
     if (sidxSegments) {
       nextSegments = sidxSegments;
     }
-    segmentInfos = isInit ?
-      { time: -1, duration: 0, timescale: segment.timescale } :
-      getISOBMFFTimingInfos(segment, responseData, sidxSegments, init);
+    segmentInfos = isInit ? { time: -1, duration: 0, timescale: segment.timescale } :
+                            getISOBMFFTimingInfos(segment,
+                                                  responseData,
+                                                  sidxSegments,
+                                                  init);
   } else { // if not MP4
     assert(typeof response.responseData === "string");
     responseData = response.responseData as string;
     if (isInit) {
       segmentInfos = { time: -1, duration: 0, timescale: segment.timescale };
     } else {
-      segmentInfos = {
-        time: segment.time,
-        duration: segment.duration,
-        timescale: segment.timescale,
-      };
+      segmentInfos = { time: segment.time,
+                       duration: segment.duration,
+                       timescale: segment.timescale };
     }
   }
 
@@ -155,22 +145,18 @@ function TextTrackParser({
     if (isMP4) {
       const timescale = getMDHDTimescale(responseData as Uint8Array);
       if (timescale > 0) {
-        segmentInfos = {
-          time: -1,
-          duration: 0,
-          timescale,
-        };
+        segmentInfos = { time: -1,
+                         duration: 0,
+                         timescale };
       }
     }
     segmentData = null;
   } else { // if not init
     assert(segmentInfos != null);
-    const segmentDataBase = {
-      start: segmentInfos.time,
-      end: segmentInfos.time + (segmentInfos.duration || 0),
-      language,
-      timescale: segmentInfos.timescale,
-    };
+    const segmentDataBase = { start: segmentInfos.time,
+                              end: segmentInfos.time + (segmentInfos.duration || 0),
+                              language,
+                              timescale: segmentInfos.timescale };
     if (isMP4) {
       const { codec = "" } = representation;
       let type : string|undefined;
@@ -189,10 +175,11 @@ function TextTrackParser({
           `The codec used for the subtitles, "${codec}", is not managed yet.`);
       }
 
-      segmentData = objectAssign({
-        data: stringFromUTF8(getMDAT(responseData as Uint8Array)),
-        type,
-      }, { timescale: 1 }, segmentDataBase);
+      const textData = stringFromUTF8(getMDAT(responseData as Uint8Array));
+      segmentData = objectAssign({ data: textData,
+                                   type },
+                                 { timescale: 1 },
+                                 segmentDataBase);
 
     } else { // not MP4: check for plain text subtitles
       let type;
@@ -221,21 +208,19 @@ function TextTrackParser({
         }
       }
 
-      segmentData = objectAssign({
-        data: responseData as string,
-        type,
-      }, { timescale: 1 }, segmentDataBase);
+      segmentData = objectAssign({ data: responseData as string,
+                                   type },
+                                 { timescale: 1 },
+                                 segmentDataBase);
     }
   }
 
   if (nextSegments) {
     representation.index._addSegments(nextSegments, segmentInfos);
   }
-  return observableOf({
-    segmentData,
-    segmentInfos,
-    segmentOffset: segment.timestampOffset || 0,
-  });
+  return observableOf({ segmentData,
+                        segmentInfos,
+                        segmentOffset: segment.timestampOffset || 0 });
 }
 
 export {

@@ -39,16 +39,17 @@ import parseMPD, {
 } from "../../parsers/manifest/dash";
 import request from "../../utils/request";
 import {
-  ILoaderObservable,
-  ImageParserObservable,
+  IImageParserObservable,
   IManifestLoaderArguments,
+  IManifestLoaderObservable,
   IManifestParserArguments,
   IManifestParserObservable,
   ISegmentLoaderArguments,
+  ISegmentLoaderObservable,
   ISegmentParserArguments,
+  ISegmentParserObservable,
   ITransportOptions,
   ITransportPipelines,
-  SegmentParserObservable,
 } from "../types";
 import generateManifestLoader from "../utils/manifest_loader";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
@@ -67,7 +68,7 @@ function requestStringResource(url : string) : Observable<string> {
   return request({ url,
                    responseType: "text" })
   .pipe(
-    filter((e) => e.type === "response"),
+    filter((e) => e.type === "data-loaded"),
     map((e) => e.value.responseData)
   );
 }
@@ -90,15 +91,16 @@ export default function(
   const manifestPipeline = {
     loader(
       { url } : IManifestLoaderArguments
-    ) : ILoaderObservable<Document|string> {
+    ) : IManifestLoaderObservable< Document | string > {
       return manifestLoader(url);
     },
 
     parser(
       { response, url: loaderURL, scheduleRequest, hasClockSynchronization } :
-      IManifestParserArguments<Document|string, string>
+      IManifestParserArguments< Document | string, string >
     ) : IManifestParserObservable {
-      const url = response.url == null ? loaderURL : response.url;
+      const url = response.url == null ? loaderURL :
+                                         response.url;
       const data = typeof response.responseData === "string" ?
                      new DOMParser().parseFromString(response.responseData,
                                                      "text/xml") :
@@ -134,14 +136,12 @@ export default function(
   const segmentPipeline = {
     loader({ adaptation, manifest, period, representation, segment }
       : ISegmentLoaderArguments
-    ) : ILoaderObservable<Uint8Array|ArrayBuffer|null> {
-      return segmentLoader({
-        adaptation,
-        manifest,
-        period,
-        representation,
-        segment,
-      });
+    ) : ISegmentLoaderObservable<Uint8Array|ArrayBuffer|null> {
+      return segmentLoader({ adaptation,
+                             manifest,
+                             period,
+                             representation,
+                             segment });
     },
 
     parser({
@@ -150,14 +150,12 @@ export default function(
       response,
       init,
     } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : SegmentParserObservable {
+    ) : ISegmentParserObservable {
       const { responseData } = response;
       if (responseData == null) {
-        return observableOf({
-          segmentData: null,
-          segmentInfos: null,
-          segmentOffset: 0,
-        });
+        return observableOf({ segmentData: null,
+                              segmentInfos: null,
+                              segmentOffset: 0 });
       }
       const segmentData : Uint8Array = responseData instanceof Uint8Array ?
         responseData :
@@ -196,32 +194,26 @@ export default function(
     },
   };
 
-  const textTrackPipeline = {
-    loader: TextTrackLoader,
-    parser: TextTrackParser,
-  };
+  const textTrackPipeline = { loader: TextTrackLoader,
+                              parser: TextTrackParser };
 
   const imageTrackPipeline = {
     loader(
       { segment } : ISegmentLoaderArguments
-    ) : ILoaderObservable<ArrayBuffer|null> {
+    ) : ISegmentLoaderObservable<ArrayBuffer|null> {
       if (segment.isInit || segment.mediaURL == null) {
-        return observableOf({
-          type: "data" as "data",
-          value: { responseData: null },
-        });
+        return observableOf({ type: "data-created" as const,
+                              value: { responseData: null } });
       }
       const { mediaURL } = segment;
-      return request({
-        url: mediaURL,
-        responseType: "arraybuffer",
-        sendProgressEvents: true,
-      });
+      return request({ url: mediaURL,
+                       responseType: "arraybuffer",
+                       sendProgressEvents: true });
     },
 
     parser(
       { response, segment } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : ImageParserObservable {
+    ) : IImageParserObservable {
       const responseData = response.responseData;
 
       // TODO image Parsing should be more on the sourceBuffer side, no?
@@ -239,29 +231,21 @@ export default function(
 
       const bifObject = features.imageParser(new Uint8Array(responseData));
       const data = bifObject.thumbs;
-      return observableOf({
-        segmentData: {
-          data,
-          start: 0,
-          end: Number.MAX_VALUE,
-          timescale: 1,
-          type: "bif",
-        },
-        segmentInfos: {
-          time: 0,
-          duration: Number.MAX_VALUE,
-          timescale: bifObject.timescale,
-        },
-        segmentOffset: segment.timestampOffset || 0,
-      });
+      return observableOf({ segmentData: { data,
+                                           start: 0,
+                                           end: Number.MAX_VALUE,
+                                           timescale: 1,
+                                           type: "bif" },
+                            segmentInfos: { time: 0,
+                                            duration: Number.MAX_VALUE,
+                                            timescale: bifObject.timescale },
+                            segmentOffset: segment.timestampOffset || 0 });
     },
   };
 
-  return {
-    manifest: manifestPipeline,
-    audio: segmentPipeline,
-    video: segmentPipeline,
-    text: textTrackPipeline,
-    image: imageTrackPipeline,
-  };
+  return { manifest: manifestPipeline,
+           audio: segmentPipeline,
+           video: segmentPipeline,
+           text: textTrackPipeline,
+           image: imageTrackPipeline };
 }

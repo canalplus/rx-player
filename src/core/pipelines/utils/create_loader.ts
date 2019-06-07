@@ -39,9 +39,9 @@ import {
   RequestError,
 } from "../../../errors";
 import {
-  ILoaderEvent,
+  ILoaderDataLoadedValue,
   ILoaderProgress,
-  ILoaderResponseValue,
+  ISegmentLoaderEvent,
   ITransportPipeline,
 } from "../../../transports";
 import castToObservable from "../../../utils/cast_to_observable";
@@ -50,7 +50,7 @@ import downloadingBackoff from "./backoff";
 
 // Data comes from a local cache (no request was done)
 interface IPipelineLoaderCache<T> { type : "cache";
-                                    value : ILoaderResponseValue<T>; }
+                                    value : ILoaderDataLoadedValue<T>; }
 
 // An Error happened while loading (usually a request error)
 export interface IPipelineLoaderError { type : "error";
@@ -82,8 +82,8 @@ export type IPipelineLoaderEvent<T, U> = IPipelineLoaderRequest<T> |
 
 // Options you can pass on to the loader
 export interface IPipelineLoaderOptions<T, U> {
-  cache? : { add : (obj : T, arg : ILoaderResponseValue<U>) => void;
-             get : (obj : T) => ILoaderResponseValue<U>; }; // Caching logic
+  cache? : { add : (obj : T, arg : ILoaderDataLoadedValue<U>) => void;
+             get : (obj : T) => ILoaderDataLoadedValue<U>; }; // Caching logic
   maxRetry : number; // Maximum number of time a request on error will be retried
   maxRetryOffline : number; // Maximum number of time a request be retried when
                             // the user is offline
@@ -203,16 +203,19 @@ export default function createLoader<T, U>(
    */
   function loadData(
     loaderArgument : T
-  ) : Observable<ILoaderEvent<U>|IPipelineLoaderRequest<T>|IPipelineLoaderCache<U>> {
+  ) : Observable< ISegmentLoaderEvent<U> |
+                  IPipelineLoaderRequest<T> |
+                  IPipelineLoaderCache<U>>
+  {
 
     /**
      * Call the Pipeline's loader with an exponential Backoff.
      * @returns {Observable}
      */
     function startLoaderWithBackoff(
-    ) : Observable<ILoaderEvent<U>|IPipelineLoaderRequest<T>> {
-      const request$ = downloadingBackoff<ILoaderEvent<U>>(
-        tryCatch<T, ILoaderEvent<U>>(loader as any, loaderArgument),
+    ) : Observable<ISegmentLoaderEvent<U>|IPipelineLoaderRequest<T>> {
+      const request$ = downloadingBackoff<ISegmentLoaderEvent<U>>(
+        tryCatch<T, ISegmentLoaderEvent<U>>(loader as any, loaderArgument),
         backoffOptions
       ).pipe(
         catchError((error : Error) : Observable<never> => {
@@ -220,7 +223,7 @@ export default function createLoader<T, U>(
         }),
 
         tap((arg) => {
-          if (arg.type === "response" && cache) {
+          if (arg.type === "data-loaded" && cache != null) {
             cache.add(loaderArgument, arg.value);
           }
         })
@@ -261,30 +264,33 @@ export default function createLoader<T, U>(
         return loadData(resolverResponse).pipe(
           mergeMap((arg) : Observable<IPipelineLoaderEvent<T, U>> => {
             // "cache": data taken from cache by the pipeline
-            // "data": the data is available but no request has been done
-            // "response": data received through a request
+            // "data-created": the data is available but no request has been done
+            // "data-loaded": data received through a request
             switch (arg.type) {
               case "cache":
-              case "data":
-              case "response":
+              case "data-created":
+              case "data-loaded":
                 const response$ = observableOf({
                   type: "response" as "response",
                   value: objectAssign({}, resolverResponse, {
                     responseData: arg.value.responseData,
-                    url: arg.type === "response" ? arg.value.url :
-                                                   undefined,
-                    sendingTime: arg.type === "response" ? arg.value.sendingTime :
-                                                           undefined,
-                    receivedTime: arg.type === "response" ? arg.value.receivedTime :
-                                                            undefined,
+                    url: arg.type === "data-loaded" ? arg.value.url :
+                                                      undefined,
+                    sendingTime: arg.type === "data-loaded" ? arg.value.sendingTime :
+                                                              undefined,
+                    receivedTime: arg.type === "data-loaded" ? arg.value.receivedTime :
+                                                               undefined,
                   }),
                 });
-                const metrics$ = arg.type !== "response" ?
-                                   EMPTY :
-                                   observableOf({
-                                     type: "metrics" as const,
-                                     value: { size: arg.value.size,
-                                              duration: arg.value.duration } });
+                const metrics$ =
+                  arg.type === "data-loaded" ? observableOf({
+                                                 type: "metrics" as const,
+                                                 value: {
+                                                   size: arg.value.size,
+                                                   duration: arg.value.duration,
+                                                 },
+                                               }) :
+                                               EMPTY;
                 return observableConcat(response$, metrics$);
               default:
                 return observableOf(arg);

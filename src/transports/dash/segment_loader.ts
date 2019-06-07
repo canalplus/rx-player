@@ -21,9 +21,9 @@ import {
 import request from "../../utils/request";
 import {
   CustomSegmentLoader,
-  ILoaderObservable,
-  ILoaderObserver,
   ISegmentLoaderArguments,
+  ISegmentLoaderObservable,
+  ISegmentLoaderObserver,
 } from "../types";
 import byteRange from "../utils/byte_range";
 
@@ -38,29 +38,24 @@ interface IRegularSegmentLoaderArguments extends ISegmentLoaderArguments {
  */
 function regularSegmentLoader(
   { url, segment } : IRegularSegmentLoaderArguments
-) : ILoaderObservable<ArrayBuffer> {
+) : ISegmentLoaderObservable<ArrayBuffer> {
   const { range, indexRange } = segment;
 
   // fire a single time for init and index ranges
   if (range != null && indexRange != null) {
-    return request({
-      url,
-      responseType: "arraybuffer",
-      headers: {
-        Range: byteRange([
-          Math.min(range[0], indexRange[0]),
-          Math.max(range[1], indexRange[1]),
-        ]),
-      },
-      sendProgressEvents: true,
-    });
+    return request({ url,
+                     responseType: "arraybuffer",
+                     headers: { Range: byteRange([ Math.min(range[0],
+                                                            indexRange[0]),
+                                                   Math.max(range[1],
+                                                            indexRange[1]) ]), },
+                     sendProgressEvents: true });
   }
-  return request({
-    url,
-    responseType: "arraybuffer",
-    headers: range ? { Range: byteRange(range) } : null,
-    sendProgressEvents: true,
-  });
+  return request({ url,
+                   responseType: "arraybuffer",
+                   headers: range ? { Range: byteRange(range) } :
+                                    null,
+                   sendProgressEvents: true });
 }
 
 /**
@@ -74,31 +69,28 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
   period,
   representation,
   segment,
-} : ISegmentLoaderArguments) : ILoaderObservable<Uint8Array|ArrayBuffer|null> => {
+} : ISegmentLoaderArguments)
+  : ISegmentLoaderObservable< Uint8Array | ArrayBuffer | null> => {
   const { mediaURL } = segment;
 
   if (mediaURL == null) {
-    return observableOf({
-      type: "data" as "data",
-      value: { responseData: null },
-    });
+    return observableOf({ type: "data-created" as const,
+                          value: { responseData: null } });
   }
 
-  const args = {
-    adaptation,
-    manifest,
-    period,
-    representation,
-    segment,
-    transport: "dash",
-    url: mediaURL,
-  };
+  const args = { adaptation,
+                 manifest,
+                 period,
+                 representation,
+                 segment,
+                 transport: "dash",
+                 url: mediaURL };
 
   if (!customSegmentLoader) {
     return regularSegmentLoader(args);
   }
 
-  return new Observable((obs : ILoaderObserver<Uint8Array|ArrayBuffer>) => {
+  return new Observable((obs : ISegmentLoaderObserver<Uint8Array|ArrayBuffer>) => {
     let hasFinished = false;
     let hasFallbacked = false;
 
@@ -113,14 +105,10 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
     }) => {
       if (!hasFallbacked) {
         hasFinished = true;
-        obs.next({
-          type: "response",
-          value: {
-            responseData: _args.data,
-            size: _args.size,
-            duration: _args.duration,
-          },
-        });
+        obs.next({ type: "data-loaded",
+                   value: { responseData: _args.data,
+                            size: _args.size,
+                            duration: _args.duration } });
         obs.complete();
       }
     };

@@ -32,18 +32,19 @@ import request from "../../utils/request";
 import stringFromUTF8 from "../../utils/string_from_utf8";
 import warnOnce from "../../utils/warn_once";
 import {
-  ILoaderObservable,
-  ImageParserObservable,
+  IImageParserObservable,
   IManifestLoaderArguments,
+  IManifestLoaderObservable,
   IManifestParserArguments,
   IManifestParserObservable,
   INextSegmentsInfos,
   ISegmentLoaderArguments,
+  ISegmentLoaderObservable,
   ISegmentParserArguments,
+  ISegmentParserObservable,
   ISegmentTimingInfos,
   ITransportOptions,
   ITransportPipelines,
-  SegmentParserObservable,
   TextTrackParserObservable,
 } from "../types";
 import generateManifestLoader from "../utils/manifest_loader";
@@ -121,14 +122,15 @@ export default function(
 
     loader(
       { url } : IManifestLoaderArguments
-    ) : ILoaderObservable<Document|string> {
+    ) : IManifestLoaderObservable<Document|string> {
       return manifestLoader(url);
     },
 
     parser(
       { response, url: reqURL } : IManifestParserArguments<Document|string, string>
     ) : IManifestParserObservable {
-      const url = response.url == null ? reqURL : response.url;
+      const url = response.url == null ? reqURL :
+                                         response.url;
       const data = typeof response.responseData === "string" ?
         new DOMParser().parseFromString(response.responseData, "text/xml") :
         response.responseData;
@@ -151,7 +153,7 @@ export default function(
       representation,
       segment,
     } : ISegmentLoaderArguments
-    ) : ILoaderObservable<ArrayBuffer|Uint8Array|null> {
+    ) : ISegmentLoaderObservable<ArrayBuffer|Uint8Array|null> {
       return segmentLoader({
         adaptation,
         manifest,
@@ -167,32 +169,33 @@ export default function(
       adaptation,
       manifest,
     } : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
-    ) : SegmentParserObservable {
+    ) : ISegmentParserObservable {
       const { responseData } = response;
       if (responseData == null) {
-        return observableOf({ segmentData: null, segmentInfos: null, segmentOffset: 0 });
+        return observableOf({ segmentData: null,
+                              segmentInfos: null,
+                              segmentOffset: 0 });
       }
 
       if (segment.isInit) {
         // smooth init segments are crafted by hand. Their timescale is the one
         // from the manifest.
-        const initSegmentInfos = {
-          timescale: segment.timescale,
-          time: -1,
-          duration: 0,
-        };
-        return observableOf({
-          segmentData: responseData,
-          segmentInfos: initSegmentInfos,
-          segmentOffset: 0,
-        });
+        const initSegmentInfos = { timescale: segment.timescale,
+                                   time: -1,
+                                   duration: 0 };
+        return observableOf({ segmentData: responseData,
+                              segmentInfos: initSegmentInfos,
+                              segmentOffset: 0 });
       }
       const responseBuffer = responseData instanceof Uint8Array ?
-        responseData : new Uint8Array(responseData);
+        responseData :
+        new Uint8Array(responseData);
 
-      const { nextSegments, segmentInfos } =
-        extractTimingsInfos(responseBuffer, segment, manifest.isLive);
-      const segmentData = patchSegment(responseBuffer, segmentInfos.time);
+      const { nextSegments, segmentInfos } = extractTimingsInfos(responseBuffer,
+                                                                 segment,
+                                                                 manifest.isLive);
+      const segmentData = patchSegment(responseBuffer,
+                                       segmentInfos.time);
 
       if (nextSegments) {
         addNextSegments(adaptation, nextSegments, segmentInfos);
@@ -206,19 +209,16 @@ export default function(
       segment,
       representation,
     } : ISegmentLoaderArguments
-    ) : ILoaderObservable<string|ArrayBuffer|null> {
+    ) : ISegmentLoaderObservable<string|ArrayBuffer|null> {
       if (segment.isInit || segment.mediaURL == null) {
-        return observableOf({
-          type: "data" as "data",
-          value: { responseData: null },
-        });
+        return observableOf({ type: "data-created" as const,
+                              value: { responseData: null } });
       }
-      const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" : "text";
-      return request({
-        url: segment.mediaURL,
-        responseType,
-        sendProgressEvents: true,
-      });
+      const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" :
+                                                                "text";
+      return request({ url: segment.mediaURL,
+                       responseType,
+                       sendProgressEvents: true });
     },
 
     parser({
@@ -230,34 +230,30 @@ export default function(
     } : ISegmentParserArguments<string|ArrayBuffer|Uint8Array|null>
     ) : TextTrackParserObservable {
       const { language } = adaptation;
-      const {
-        mimeType = "",
-        codec = "",
-      } = representation;
+      const { mimeType = "",
+              codec = "" } = representation;
 
       if (__DEV__) {
         if (segment.isInit) {
           assert(response.responseData === null);
         } else {
-          assert(
-            typeof response.responseData === "string" ||
-            response.responseData instanceof ArrayBuffer
-          );
+          assert(typeof response.responseData === "string" ||
+                   response.responseData instanceof ArrayBuffer);
         }
       }
 
       const responseData = response.responseData;
 
       if (responseData === null) {
-        return observableOf({
-          segmentData: null,
-          segmentInfos: segment.timescale > 0 ? {
-            duration: segment.isInit ? 0 : segment.duration,
-            time: segment.isInit ? -1 : segment.time,
-            timescale: segment.timescale,
-          } : null,
-          segmentOffset: 0,
-        });
+        return observableOf({ segmentData: null,
+                              segmentInfos: segment.timescale > 0 ?
+                                { duration: segment.isInit ? 0 :
+                                                             segment.duration,
+                                  time: segment.isInit ? -1 :
+                                                         segment.time,
+                                  timescale: segment.timescale } :
+                                null,
+                              segmentOffset: 0 });
       }
 
       let parsedResponse : string|Uint8Array;
@@ -300,17 +296,16 @@ export default function(
 
         // vod is simple WebVTT or TTML text
         _sdStart = segmentTime;
-        _sdEnd = segment.duration != null ?
-          segmentTime + segment.duration : undefined;
+        _sdEnd = segment.duration != null ? segmentTime + segment.duration :
+                                            undefined;
         _sdTimescale = segment.timescale;
       }
 
       if (isMP4) {
         const lcCodec = codec.toLowerCase();
-        if (
-          mimeType === "application/ttml+xml+mp4" ||
-          lcCodec === "stpp" ||
-          lcCodec === "stpp.ttml.im1t"
+        if (mimeType === "application/ttml+xml+mp4" ||
+            lcCodec === "stpp" ||
+            lcCodec === "stpp.ttml.im1t"
         ) {
           _sdType = "ttml";
         } else if (lcCodec === "wvtt") {
@@ -351,85 +346,69 @@ export default function(
       if (segmentInfos != null && nextSegments) {
         addNextSegments(adaptation, nextSegments, segmentInfos);
       }
-      return observableOf({
-        segmentData: {
-          type: _sdType,
-          data: _sdData,
-          language,
-          timescale: _sdTimescale,
-          start: _sdStart,
-          end: _sdEnd,
-        },
-        segmentInfos,
-        segmentOffset: _sdStart / _sdTimescale,
-      });
+      return observableOf({ segmentData: { type: _sdType,
+                                           data: _sdData,
+                                           language,
+                                           timescale: _sdTimescale,
+                                           start: _sdStart,
+                                           end: _sdEnd },
+                            segmentInfos,
+                            segmentOffset: _sdStart / _sdTimescale });
     },
   };
 
   const imageTrackPipeline = {
     loader(
       { segment } : ISegmentLoaderArguments
-    ) : ILoaderObservable<ArrayBuffer|null> {
+    ) : ISegmentLoaderObservable<ArrayBuffer|null> {
       if (segment.isInit || segment.mediaURL == null) {
         // image do not need an init segment. Passthrough directly to the parser
-        return observableOf({
-          type: "data" as "data",
-          value: { responseData: null },
-        });
+        return observableOf({ type: "data-created" as const,
+                              value: { responseData: null } });
       }
 
-      return request({
-        url: segment.mediaURL,
-        responseType: "arraybuffer",
-        sendProgressEvents: true,
-      });
+      return request({ url: segment.mediaURL,
+                       responseType: "arraybuffer",
+                       sendProgressEvents: true });
     },
 
     parser(
       { response, segment } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : ImageParserObservable {
+    ) : IImageParserObservable {
       const responseData = response.responseData;
 
       // TODO image Parsing should be more on the sourceBuffer side, no?
       if (responseData === null || features.imageParser == null) {
-        return observableOf({
-          segmentData: null,
-          segmentInfos: segment.timescale > 0 ? {
-            duration: segment.isInit ? 0 : segment.duration,
-            time: segment.isInit ? -1 : segment.time,
-            timescale: segment.timescale,
-          } : null,
-          segmentOffset: 0,
-        });
+        return observableOf({ segmentData: null,
+                              segmentInfos: segment.timescale > 0 ?
+                                { duration: segment.isInit ? 0 :
+                                                             segment.duration,
+                                  time: segment.isInit ? -1 :
+                                                         segment.time,
+                                  timescale: segment.timescale } :
+                                null,
+                              segmentOffset: 0 });
       }
 
       const bifObject = features.imageParser(new Uint8Array(responseData));
       const data = bifObject.thumbs;
-      return observableOf({
-        segmentData: {
-          data,
-          start: 0,
-          end: Number.MAX_VALUE,
-          timescale: 1,
-          type: "bif",
-        },
-        segmentInfos: {
-          time: 0,
-          duration: Number.MAX_VALUE,
-          timescale: bifObject.timescale,
-        },
-        segmentOffset: 0,
-      });
+      return observableOf({ segmentData: { data,
+                                           start: 0,
+                                           end: Number.MAX_VALUE,
+                                           timescale: 1,
+                                           type: "bif" },
+                            segmentInfos: { time: 0,
+                                            duration: Number.MAX_VALUE,
+                                            timescale: bifObject.timescale },
+                            segmentOffset: 0 });
     },
   };
 
-  return {
-    manifest: manifestPipeline,
-    audio: segmentPipeline,
-    video: segmentPipeline,
-    text: textTrackPipeline,
-    image: imageTrackPipeline,
-  };
+  return { manifest: manifestPipeline,
+           audio: segmentPipeline,
+           video: segmentPipeline,
+           text: textTrackPipeline,
+           image: imageTrackPipeline };
 }
 
 /**
@@ -439,5 +418,6 @@ export default function(
  * @returns {Boolean}
  */
 function isMP4EmbeddedTrack(representation : Representation) : boolean {
-  return !!representation.mimeType && representation.mimeType.indexOf("mp4") >= 0;
+  return !!representation.mimeType &&
+         representation.mimeType.indexOf("mp4") >= 0;
 }

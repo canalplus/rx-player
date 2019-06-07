@@ -19,8 +19,8 @@ import request from "../../utils/request";
 
 import {
   CustomManifestLoader,
-  ILoaderObservable,
-  ILoaderObserver,
+  IManifestLoaderObservable,
+  IManifestLoaderObserver,
 } from "../types";
 
 /**
@@ -38,13 +38,13 @@ function regularManifestLoader(url: string) {
  */
 const manifestPreLoader = (
   { customManifestLoader } : { customManifestLoader?: CustomManifestLoader }
-) => (url: string) : ILoaderObservable<Document|string> => {
+) => (url: string) : IManifestLoaderObservable<Document|string> => {
     if (!customManifestLoader) {
       return regularManifestLoader(url);
     }
 
     const timeAPIsDelta = Date.now() - performance.now();
-    return new Observable((obs: ILoaderObserver<Document|string>) => {
+    return new Observable((obs: IManifestLoaderObserver<Document|string>) => {
       let hasFinished = false;
       let hasFallbacked = false;
 
@@ -67,7 +67,7 @@ const manifestPreLoader = (
           const sendingTime =
             _args.sendingTime != null ? _args.sendingTime - timeAPIsDelta :
                                         undefined;
-          obs.next({ type: "response",
+          obs.next({ type: "data-loaded",
                      value: { responseData: _args.data,
                               size: _args.size,
                               duration: _args.duration,
