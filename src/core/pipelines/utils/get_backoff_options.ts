@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-import { IPrioritizedSegmentFetcher } from "./prioritized_segment_fetcher";
-import {
-  ISegmentFetcherEvent,
-  ISegmentFetcherResponseEvent,
-  ISegmentFetcherWarning,
-} from "./segment_fetcher";
-import SegmentPipelinesManager, {
-  ISegmentPipelineOptions,
-} from "./segment_pipelines_manager";
+import config from "../../../config";
+import { IBackoffOptions } from "./backoff";
 
-export default SegmentPipelinesManager;
-export {
-  ISegmentFetcherEvent,
-  ISegmentFetcherResponseEvent,
-  ISegmentFetcherWarning,
-  ISegmentPipelineOptions,
-  IPrioritizedSegmentFetcher,
-};
+const { MAX_BACKOFF_DELAY_BASE,
+        INITIAL_BACKOFF_DELAY_BASE } = config;
+
+export default function getBackoffOptions(
+  maxRetry : number,
+  maxRetryOffline : number
+) : IBackoffOptions {
+  return { baseDelay: INITIAL_BACKOFF_DELAY_BASE,
+           maxDelay: MAX_BACKOFF_DELAY_BASE,
+           maxRetryRegular: maxRetry,
+           maxRetryOffline };
+}
