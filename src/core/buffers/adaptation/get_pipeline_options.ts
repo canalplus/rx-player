@@ -17,7 +17,7 @@
 import config from "../../../config";
 import arrayIncludes from "../../../utils/array_includes";
 import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
-import { IPipelineOptions } from "../../pipelines";
+import { ISegmentPipelineOptions } from "../../pipelines";
 
 const { DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
         DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE } = config;
@@ -31,7 +31,7 @@ const { DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
 export default function getPipelineOptions(
   bufferType : string,
   { retry, offlineRetry } : { retry? : number; offlineRetry? : number }
-) : IPipelineOptions<any, any> {
+) : ISegmentPipelineOptions<any> {
   const cache = arrayIncludes(["audio", "video"], bufferType) ?
     new InitializationSegmentCache<any>() :
     undefined;
