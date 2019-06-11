@@ -14,21 +14,25 @@
  * limitations under the License.
  */
 
-import { IPrioritizedSegmentFetcher } from "./prioritized_segment_fetcher";
 import {
-  ISegmentFetcherEvent,
-  ISegmentFetcherResponseEvent,
-  ISegmentFetcherWarning,
-} from "./segment_fetcher";
-import SegmentPipelinesManager, {
-  ISegmentPipelineOptions,
-} from "./segment_pipelines_manager";
+  formatError,
+  ICustomError,
+  NetworkError,
+  RequestError,
+} from "../../../errors";
 
-export default SegmentPipelinesManager;
-export {
-  ISegmentFetcherEvent,
-  ISegmentFetcherResponseEvent,
-  ISegmentFetcherWarning,
-  ISegmentPipelineOptions,
-  IPrioritizedSegmentFetcher,
-};
+/**
+ * Generate a new error from the infos given.
+ * @param {string} code
+ * @param {Error} error
+ * @returns {Error}
+ */
+export default function errorSelector(error : unknown) : ICustomError {
+  if (error instanceof RequestError) {
+    return new NetworkError("PIPELINE_LOAD_ERROR", error);
+  }
+  return formatError(error, {
+    defaultCode: "PIPELINE_LOAD_ERROR",
+    defaultReason: "Unknown error when fetching the Manifest",
+  });
+}
