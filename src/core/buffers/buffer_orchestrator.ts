@@ -74,7 +74,7 @@ const { MAXIMUM_MAX_BUFFER_AHEAD,
  * Create and manage the various Buffer Observables needed for the content to
  * play:
  *
- *   - Create or dispose SourceBuffers depending on the chosen adaptations.
+ *   - Create or dispose SourceBuffers depending on the chosen Adaptations.
  *
  *   - Push the right segments to those SourceBuffers depending on the user's
  *     preferences, the current position, the bandwidth, the decryption
