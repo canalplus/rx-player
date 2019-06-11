@@ -267,9 +267,6 @@ export type ITransportSegmentPipeline = ITransportAudioSegmentPipeline |
                                         ITransportTextSegmentPipeline |
                                         ITransportImageSegmentPipeline;
 
-export type ITransportPipeline = ITransportManifestPipeline |
-                                 ITransportSegmentPipeline;
-
 export interface ITransportPipelines { manifest : ITransportManifestPipeline;
                                        audio : ITransportAudioSegmentPipeline;
                                        video : ITransportVideoSegmentPipeline;
