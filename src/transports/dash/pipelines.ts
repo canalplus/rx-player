@@ -162,7 +162,7 @@ export default function(
         new Uint8Array(responseData);
       const indexRange = segment.indexRange;
       const isWEBM = representation.mimeType === "video/webm" ||
-        representation.mimeType === "audio/webm";
+                     representation.mimeType === "audio/webm";
       const nextSegments = isWEBM ?
         getSegmentsFromCues(segmentData, 0) :
         getSegmentsFromSidx(segmentData, indexRange ? indexRange[0] : 0);
@@ -214,7 +214,7 @@ export default function(
     parser(
       { response, segment } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
     ) : IImageParserObservable {
-      const responseData = response.responseData;
+      const { responseData } = response;
 
       // TODO image Parsing should be more on the sourceBuffer side, no?
       if (responseData === null || features.imageParser == null) {

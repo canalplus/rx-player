@@ -127,8 +127,7 @@ export default function createSegmentFetcher<T>(
             // format it for ABR Handling
             if (size != null && duration != null) {
               network$.next({ type: bufferType,
-                              value: { size,
-                                       duration } });
+                              value: { size, duration } });
             }
             break;
           }
@@ -206,7 +205,7 @@ export default function createSegmentFetcher<T>(
                                          new OtherError("PIPELINE_PARSING_ERROR",
                                                         error.toString(),
                                                         true);
-                  throw formattedError;
+                throw formattedError;
               }));
           },
         };
