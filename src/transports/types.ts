@@ -101,18 +101,42 @@ export interface ILoaderProgress { type : "progress";
                                              url : string;
                                              totalSize? : number; }; }
 
+// Event emitted by loaders when a chunk of the response is available
+export interface ILoaderChunkedData { type : "data-chunk";
+                                      value : {
+                                        responseData: ArrayBuffer|Uint8Array;
+                                      }; }
+
+// Event emitted by loaders when all data has been emitted through chunks
+export interface ILoaderChunkedDataComplete { type : "data-chunk-complete";
+                                              value : { duration : number;
+                                                        receivedTime : number;
+                                                        sendingTime : number;
+                                                        size : number;
+                                                        status : number;
+                                                        url : string; }; }
+
+// Events sent by loaders
+export type ILoaderChunkedDataEvent = ILoaderChunkedData |
+                                      ILoaderProgress |
+                                      ILoaderChunkedDataComplete;
+
+export type ILoaderRegularDataEvent<T> = ILoaderProgress |
+                                         ILoaderDataLoaded<T> |
+                                         ILoaderDataCreated<T>;
+
 export type ILoadedManifest = Document |
                               string |
                               IMetaPlaylist;
+export type IManifestLoaderEvent = ILoaderDataLoaded<ILoadedManifest>;
+export type IManifestLoaderObservable = Observable<IManifestLoaderEvent>;
+export type IManifestLoaderObserver = Observer<IManifestLoaderEvent>;
 
-export type IManifestLoaderObservable = Observable<ILoaderDataLoaded<ILoadedManifest>>;
-export type IManifestLoaderObserver = Observer<ILoaderDataLoaded<ILoadedManifest>>;
+export type ISegmentLoaderEvent<T> = ILoaderChunkedDataEvent |
+                                     ILoaderRegularDataEvent<T>;
 
-export type ISegmentLoaderEvent<T> =  ILoaderProgress |
-                                      ILoaderDataLoaded<T> |
-                                      ILoaderDataCreated<T>;
-export type ISegmentLoaderObservable<T> = Observable<ISegmentLoaderEvent<T>>;
-export type ISegmentLoaderObserver<T> = Observer<ISegmentLoaderEvent<T>>;
+export type ISegmentLoaderObservable<T> = Observable<ILoaderChunkedDataEvent> |
+                                          Observable<ILoaderRegularDataEvent<T>>;
 
 // ---- PARSER ----
 
@@ -131,7 +155,9 @@ export interface IManifestParserArguments {
 }
 
 export interface ISegmentParserArguments<T> {
-  response : ILoaderDataLoadedValue<T>; // Response from the loader
+  // Response from the loader
+  response : { responseData: T }; // Segment's data
+
   init? : ISegmentTimingInfos; // Infos about the initialization segment of the
                                // corresponding Representation
   manifest : Manifest; // Manifest related to this segment
