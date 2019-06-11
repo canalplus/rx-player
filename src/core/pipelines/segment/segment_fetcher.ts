@@ -37,14 +37,14 @@ import {
   IABRRequest,
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
-import createLoader, {
-  IPipelineLoaderOptions,
+import createSegmentLoader, {
   IPipelineLoaderResponse,
-  IPipelineWarning,
-} from "../utils/create_loader";
+  IPipelineLoaderWarning,
+  ISegmentPipelineLoaderOptions,
+} from "./create_segment_loader";
 
 export type ISegmentFetcherContent = ISegmentLoaderArguments;
-export type ISegmentFetcherWarning = IPipelineWarning;
+export type ISegmentFetcherWarning = IPipelineLoaderWarning;
 
 export interface ISegmentFetcherMetrics { type : "metrics";
                                           value : { size? : number;
@@ -85,9 +85,9 @@ export default function createSegmentFetcher<T>(
   bufferType : IBufferType,
   transport : ITransportPipelines,
   requests$ : Subject<IABRMetric | IABRRequest>,
-  options : IPipelineLoaderOptions<ISegmentLoaderArguments, T>
+  options : ISegmentPipelineLoaderOptions<any>
 ) : ISegmentFetcher<T> {
-  const segmentLoader = createLoader(transport[bufferType], options);
+  const segmentLoader = createSegmentLoader(transport[bufferType].loader, options);
   const segmentParser = transport[bufferType].parser as any; // deal with it
 
   /**
@@ -106,51 +106,51 @@ export default function createSegmentFetcher<T>(
     let requestBeginSent = false;
     return segmentLoader(content).pipe(
       tap((arg) => {
-      switch (arg.type) {
-        case "metrics": {
-          const { value } = arg;
-          const { size, duration } = value; // unwrapping for TS
+        switch (arg.type) {
+          case "metrics": {
+            const { value } = arg;
+            const { size, duration } = value; // unwrapping for TS
 
-          // format it for ABR Handling
-          if (size != null && duration != null) {
-            requests$.next({ type: "metrics",
-                            value: { size, duration, content } });
+            // format it for ABR Handling
+            if (size != null && duration != null) {
+              requests$.next({ type: "metrics",
+                              value: { size, duration, content } });
+            }
+            break;
           }
-          break;
-        }
 
-        case "request": {
-          const { value } = arg;
+          case "request": {
+            const { value } = arg;
 
-          // format it for ABR Handling
-          const segment : ISegment|undefined = value && value.segment;
-          if (segment == null || segment.duration == null) {
-            return;
-          }
-          requestBeginSent = true;
-          const duration = segment.duration / segment.timescale;
-          const time = segment.time / segment.timescale;
-          requests$.next({ type: "requestBegin",
-                           value: { duration,
-                                    time,
-                                    requestTimestamp: performance.now(),
-                                    id } });
-          break;
-        }
-
-        case "progress": {
-          const { value } = arg;
-          if (value.totalSize != null && value.size < value.totalSize) {
-            requests$.next({ type: "progress",
-                             value: { duration: value.duration,
-                                      size: value.size,
-                                      totalSize: value.totalSize,
-                                      timestamp: performance.now(),
+            // format it for ABR Handling
+            const segment : ISegment|undefined = value && value.segment;
+            if (segment == null || segment.duration == null) {
+              return;
+            }
+            requestBeginSent = true;
+            const duration = segment.duration / segment.timescale;
+            const time = segment.time / segment.timescale;
+            requests$.next({ type: "requestBegin",
+                             value: { duration,
+                                      time,
+                                      requestTimestamp: performance.now(),
                                       id } });
+            break;
           }
-          break;
+
+          case "progress": {
+            const { value } = arg;
+            if (value.totalSize != null && value.size < value.totalSize) {
+              requests$.next({ type: "progress",
+                               value: { duration: value.duration,
+                                        size: value.size,
+                                        totalSize: value.totalSize,
+                                        timestamp: performance.now(),
+                                        id } });
+            }
+            break;
+          }
         }
-      }
       }),
 
       finalize(() => {
@@ -158,7 +158,7 @@ export default function createSegmentFetcher<T>(
           requests$.next({ type: "requestEnd", value: { id } });
         }
       }),
-      filter((e) : e is IPipelineLoaderResponse<T> | IPipelineWarning => {
+      filter((e) : e is IPipelineLoaderResponse<T> | IPipelineLoaderWarning => {
         return e.type === "warning" || e.type === "response";
       }),
       map((evt) => {

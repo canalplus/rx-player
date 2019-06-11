@@ -19,11 +19,11 @@ import createManifestPipeline, {
   IFetchManifestResult,
 } from "./manifest";
 import SegmentPipelinesManager, {
-  IPipelineOptions,
   IPrioritizedSegmentFetcher,
   ISegmentFetcherEvent,
   ISegmentFetcherResponseEvent,
   ISegmentFetcherWarning,
+  ISegmentPipelineOptions,
 } from "./segment";
 
 export {
@@ -36,7 +36,7 @@ export {
   IPrioritizedSegmentFetcher,
   ISegmentFetcherEvent,
 
-  IPipelineOptions,
+  ISegmentPipelineOptions,
 
   ISegmentFetcherResponseEvent,
   ISegmentFetcherWarning,

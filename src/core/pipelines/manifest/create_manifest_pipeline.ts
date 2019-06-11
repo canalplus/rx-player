@@ -22,33 +22,23 @@ import {
 } from "rxjs";
 import {
   catchError,
-  filter,
   map,
   mergeMap,
   share,
-  tap,
 } from "rxjs/operators";
-import config from "../../../config";
 import {
   formatError,
   ICustomError,
-  NetworkError,
-  RequestError,
 } from "../../../errors";
 import Manifest from "../../../manifest";
-import {
-  IManifestLoaderArguments,
-  ITransportPipelines,
-} from "../../../transports";
+import { ITransportPipelines } from "../../../transports";
 import tryCatch from "../../../utils/rx-try_catch";
 import backoff from "../utils/backoff";
-import createLoader, {
-  IPipelineLoaderOptions,
-  IPipelineLoaderResponse,
-} from "../utils/create_loader";
-
-const { MAX_BACKOFF_DELAY_BASE,
-        INITIAL_BACKOFF_DELAY_BASE } = config;
+import errorSelector from "../utils/error_selector";
+import getBackoffOptions from "../utils/get_backoff_options";
+import createManifestLoader, {
+  IManifestPipelineLoaderOptions,
+} from "./create_manifest_loader";
 
 export interface IRequestSchedulerOptions { maxRetry : number;
                                             maxRetryOffline : number; }
@@ -59,29 +49,8 @@ export interface IFetchManifestOptions {
                                  // to obtain the current server's time
 }
 
-type IPipelineManifestOptions =
-  IPipelineLoaderOptions<IManifestLoaderArguments, Document|string>;
-
 export interface IFetchManifestResult { manifest : Manifest;
                                         sendingTime? : number; }
-
-/**
- * Generate a new error from the infos given.
- * @param {string} code
- * @param {Error} error
- * @returns {Error}
- */
-function errorSelector(
-  error : unknown
-) : ICustomError {
-  if (error instanceof RequestError) {
-    return new NetworkError("PIPELINE_LOAD_ERROR", error);
-  }
-  return formatError(error, {
-    defaultCode: "PIPELINE_LOAD_ERROR",
-    defaultReason: "Unknown error when fetching the Manifest",
-  });
-}
 
 /**
  * Create function allowing to easily fetch and parse the manifest from its URL.
@@ -101,12 +70,10 @@ function errorSelector(
  */
 export default function createManifestPipeline(
   pipelines : ITransportPipelines,
-  pipelineOptions : IPipelineManifestOptions,
+  pipelineOptions : IManifestPipelineLoaderOptions,
   warning$ : Subject<ICustomError>
 ) : (args : IFetchManifestOptions) => Observable<IFetchManifestResult> {
-  const loader = createLoader<
-    IManifestLoaderArguments, Document|string
-  >(pipelines.manifest, pipelineOptions);
+  const loader = createManifestLoader(pipelines.manifest, pipelineOptions);
   const { parser } = pipelines.manifest;
 
   /**
@@ -117,13 +84,7 @@ export default function createManifestPipeline(
    */
   function scheduleRequest<T>(request : () => Observable<T>) : Observable<T> {
     const { maxRetry, maxRetryOffline } = pipelineOptions;
-
-    const backoffOptions = { baseDelay: INITIAL_BACKOFF_DELAY_BASE,
-                             maxDelay: MAX_BACKOFF_DELAY_BASE,
-                             maxRetryRegular: maxRetry,
-                             maxRetryOffline,
-                             onRetry: (error : unknown) => {
-                               warning$.next(errorSelector(error)); } };
+    const backoffOptions = getBackoffOptions(maxRetry, maxRetryOffline);
 
     return backoff(tryCatch(request, undefined), backoffOptions).pipe(
       mergeMap(evt => {
@@ -147,18 +108,12 @@ export default function createManifestPipeline(
     { url, externalClockOffset } : IFetchManifestOptions
   ) : Observable<IFetchManifestResult> {
     return loader({ url }).pipe(
-
-      tap((arg) => {
-        if (arg.type === "warning") {
-          warning$.next(arg.value);
+      mergeMap((evt) => {
+        if (evt.type === "warning") {
+          warning$.next(evt.value);
+          return EMPTY;
         }
-      }),
-
-      filter((arg) : arg is IPipelineLoaderResponse<Document|string> =>
-        arg.type === "response"
-      ),
-
-      mergeMap(({ value }) => {
+        const { value } = evt;
         const { sendingTime } = value;
         return parser({ response: value,
                         url,

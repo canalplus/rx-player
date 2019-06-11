@@ -16,15 +16,16 @@
 
 import {
   Observable,
+  Observer,
   of as observableOf,
 } from "rxjs";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
 import {
   CustomSegmentLoader,
+  ILoaderRegularDataEvent,
   ISegmentLoaderArguments,
   ISegmentLoaderObservable,
-  ISegmentLoaderObserver,
 } from "../types";
 import byteRange from "../utils/byte_range";
 import {
@@ -35,6 +36,9 @@ import {
 interface IRegularSegmentLoaderArguments extends ISegmentLoaderArguments {
   url : string;
 }
+
+type ICustomSegmentLoaderObserver =
+  Observer<ILoaderRegularDataEvent<Uint8Array|ArrayBuffer>>;
 
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
@@ -126,7 +130,7 @@ const generateSegmentLoader = (
       return regularSegmentLoader(args);
     }
 
-    return new Observable((obs : ISegmentLoaderObserver<ArrayBuffer|Uint8Array>) => {
+    return new Observable((obs : ICustomSegmentLoaderObserver) => {
       let hasFinished = false;
       let hasFallbacked = false;
 
@@ -162,7 +166,12 @@ const generateSegmentLoader = (
 
       const fallback = () => {
         hasFallbacked = true;
+
+        // XXX TODO What is TypeScript/RxJS doing here??????
+        /* tslint:disable deprecation */
+        // @ts-ignore
         regularSegmentLoader(args).subscribe(obs);
+        /* tslint:enable deprecation */
       };
 
       const callbacks = { reject, resolve, fallback };

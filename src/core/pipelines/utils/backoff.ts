@@ -61,10 +61,10 @@ function isOfflineRequestError(error : RequestError) : boolean {
          isOffline();
 }
 
-interface IBackoffOptions { baseDelay : number;
-                            maxDelay : number;
-                            maxRetryRegular : number;
-                            maxRetryOffline : number; }
+export interface IBackoffOptions { baseDelay : number;
+                                   maxDelay : number;
+                                   maxRetryRegular : number;
+                                   maxRetryOffline : number; }
 
 export interface IBackoffRetry {
   type : "retry";

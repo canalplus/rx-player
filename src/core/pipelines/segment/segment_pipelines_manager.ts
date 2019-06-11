@@ -15,16 +15,13 @@
  */
 
 import { Subject } from "rxjs";
-import {
-  ISegmentLoaderArguments,
-  ITransportPipelines,
-} from "../../../transports";
+import { ITransportPipelines } from "../../../transports";
 import {
   IABRMetric,
   IABRRequest,
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
-import { IPipelineLoaderOptions } from "../utils/create_loader";
+import { ISegmentPipelineLoaderOptions } from "./create_segment_loader";
 import applyPrioritizerToSegmentFetcher, {
   IPrioritizedSegmentFetcher,
 } from "./prioritized_segment_fetcher";
@@ -84,7 +81,7 @@ export default class SegmentPipelinesManager<T> {
   createPipeline(
     bufferType : IBufferType,
     requests$ : Subject<IABRRequest | IABRMetric>,
-    options : IPipelineLoaderOptions<ISegmentLoaderArguments, T>
+    options : ISegmentPipelineLoaderOptions<T>
   ) : IPrioritizedSegmentFetcher<T> {
     const segmentFetcher = createSegmentFetcher<T>(bufferType,
                                                    this._transport,
@@ -94,4 +91,4 @@ export default class SegmentPipelinesManager<T> {
   }
 }
 
-export { IPipelineLoaderOptions as IPipelineOptions };
+export { ISegmentPipelineLoaderOptions as ISegmentPipelineOptions };
