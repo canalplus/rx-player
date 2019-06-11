@@ -59,7 +59,7 @@ function isOfflineRequestError(error : RequestError) : boolean {
          isOffline();
 }
 
-interface IDownloadingBackoffOptions { baseDelay : number;
+export interface IDownloadingBackoffOptions { baseDelay : number;
                                        maxDelay : number;
                                        maxRetryRegular : number;
                                        maxRetryOffline : number;

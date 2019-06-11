@@ -19,12 +19,12 @@ import {
 } from "./prioritized_segment_fetcher";
 import { IFetchedSegment } from "./segment_fetcher";
 import SegmentPipelinesManager, {
-  IPipelineOptions,
+  ISegmentPipelineOptions,
 } from "./segment_pipelines_manager";
 
 export default SegmentPipelinesManager;
 export {
   IFetchedSegment,
-  IPipelineOptions,
+  ISegmentPipelineOptions,
   IPrioritizedSegmentFetcher,
 };

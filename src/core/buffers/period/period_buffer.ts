@@ -46,7 +46,7 @@ import { getLeftSizeOfRange } from "../../../utils/ranges";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
 import {
-  IPipelineOptions,
+  ISegmentPipelineOptions,
   SegmentPipelinesManager,
 } from "../../pipelines";
 import SourceBuffersManager, {
@@ -265,7 +265,7 @@ function getPipelineOptions(
   bufferType : string,
   retry? : number,
   offlineRetry? : number
-) : IPipelineOptions<any, any> {
+) : ISegmentPipelineOptions<any> {
   const cache = arrayIncludes(["audio", "video"], bufferType) ?
     new InitializationSegmentCache<any>() :
     undefined;

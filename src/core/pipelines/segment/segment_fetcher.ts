@@ -44,10 +44,10 @@ import {
   IABRRequest
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
-import createLoader, {
-  IPipelineLoaderOptions,
+import createSegmentLoader, {
   IPipelineLoaderResponse,
-} from "../utils/create_loader";
+  ISegmentPipelineLoaderOptions,
+} from "./create_segment_loader";
 
 interface IParsedSegment<T> {
   segmentData : T;
@@ -92,9 +92,9 @@ export default function createSegmentFetcher<T>(
   network$ : Subject<IABRMetric>,
   requests$ : Subject<Subject<IABRRequest>>,
   warning$ : Subject<Error|ICustomError>,
-  options : IPipelineLoaderOptions<ISegmentLoaderArguments, T>
+  options : ISegmentPipelineLoaderOptions<any>
 ) : ISegmentFetcher<T> {
-  const segmentLoader = createLoader(transport[bufferType], options);
+  const segmentLoader = createSegmentLoader(transport[bufferType].loader, options);
   const segmentParser = transport[bufferType].parser as any; // deal with it
   let request$ : Subject<IABRRequest>|undefined;
   let id : string|undefined;

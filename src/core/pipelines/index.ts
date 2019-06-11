@@ -19,15 +19,15 @@ import createManifestPipeline, {
 } from "./manifest";
 import SegmentPipelinesManager, {
   IFetchedSegment,
-  IPipelineOptions,
   IPrioritizedSegmentFetcher,
+  ISegmentPipelineOptions,
 } from "./segment";
 
 export {
   createManifestPipeline,
   IFetchManifestResult,
   IFetchedSegment,
-  IPipelineOptions,
+  ISegmentPipelineOptions,
   SegmentPipelinesManager,
   IPrioritizedSegmentFetcher,
 };
