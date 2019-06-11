@@ -149,8 +149,8 @@ export default function(
       representation,
       response,
       init,
-    } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : ISegmentParserObservable {
+    } : ISegmentParserArguments< Uint8Array|ArrayBuffer|null >
+    ) : ISegmentParserObservable< Uint8Array | ArrayBuffer | null > {
       const { responseData } = response;
       if (responseData == null) {
         return observableOf({ segmentData: null,

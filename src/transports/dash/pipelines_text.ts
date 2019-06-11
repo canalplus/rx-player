@@ -36,8 +36,8 @@ import {
   ISegmentLoaderObservable,
   ISegmentParserArguments,
   ISegmentTimingInfos,
+  ITextParserObservable,
   ITextTrackSegmentData,
-  TextTrackParserObservable,
 } from "../types";
 
 /**
@@ -92,7 +92,7 @@ function TextTrackParser({ response,
                                                              ArrayBuffer |
                                                              string |
                                                              null >
-) : TextTrackParserObservable {
+) : ITextParserObservable {
   const { language } = adaptation;
   const { isInit, indexRange } = segment;
 

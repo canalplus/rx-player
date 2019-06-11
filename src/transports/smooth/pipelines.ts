@@ -43,9 +43,9 @@ import {
   ISegmentParserArguments,
   ISegmentParserObservable,
   ISegmentTimingInfos,
+  ITextParserObservable,
   ITransportOptions,
   ITransportPipelines,
-  TextTrackParserObservable,
 } from "../types";
 import generateManifestLoader from "../utils/manifest_loader";
 import extractTimingsInfos from "./extract_timings_infos";
@@ -168,8 +168,8 @@ export default function(
       response,
       adaptation,
       manifest,
-    } : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
-    ) : ISegmentParserObservable {
+    } : ISegmentParserArguments< ArrayBuffer | Uint8Array | null >
+    ) : ISegmentParserObservable< ArrayBuffer | Uint8Array | null > {
       const { responseData } = response;
       if (responseData == null) {
         return observableOf({ segmentData: null,
@@ -228,7 +228,7 @@ export default function(
         adaptation,
         manifest,
     } : ISegmentParserArguments<string|ArrayBuffer|Uint8Array|null>
-    ) : TextTrackParserObservable {
+    ) : ITextParserObservable {
       const { language } = adaptation;
       const { mimeType = "",
               codec = "" } = representation;

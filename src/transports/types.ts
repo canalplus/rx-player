@@ -142,16 +142,16 @@ export interface ISegmentParserArguments<T> {
 
 // -- response
 
-// Result from the Manifest parser
-export interface IManifestParserResult {
+// Response object returned by the Manifest's parser
+export interface IManifestParserResponse {
   manifest : Manifest; // the manifest itself
   url? : string; // final URL of the manifest
 }
 
-export type IManifestParserObservable = Observable<IManifestParserResult>;
+export type IManifestParserObservable = Observable<IManifestParserResponse>;
 
-export type ISegmentParserObservable = Observable<{
-  segmentData : Uint8Array|ArrayBuffer|null; // Data to decode
+export interface ISegmentParserResponse<T> {
+  segmentData : T; // Data to decode
   segmentInfos : ISegmentTimingInfos|null; // Timing infos about the segment
   segmentOffset : number; // time offset, in seconds, to add to the absolute
                           // timed data defined in `segmentData` to obtain the
@@ -166,7 +166,15 @@ export type ISegmentParserObservable = Observable<{
                           // Note that `segmentInfos` needs not to be offseted
                           // as it should already contain the correct time
                           // information.
-}>;
+}
+
+// Response object returned by the video's segment parser
+export type IVideoParserResponse =
+  ISegmentParserResponse< Uint8Array | ArrayBuffer | null >;
+
+// Response object returned by the audio's segment parser
+export type IAudioParserResponse =
+  ISegmentParserResponse< Uint8Array | ArrayBuffer | null >;
 
 export interface ITextTrackSegmentData {
   data : string; // text track data
@@ -177,13 +185,9 @@ export interface ITextTrackSegmentData {
   type : string; // the type of `data` (examples: "ttml", "srt" or "vtt")
 }
 
-export type TextTrackParserObservable = Observable<{
-  segmentData : ITextTrackSegmentData|null; // Data to parse and decode
-  segmentInfos : ISegmentTimingInfos|null; // Timing infos about the segment
-  segmentOffset : number; // time offset, in seconds, to add to the absolute
-                          // timed data defined in `segmentData` to obtain the
-                          // "real" wanted effective times.
-}>;
+// Response object returned by the text's segment parser
+export type ITextParserResponse =
+  ISegmentParserResponse< ITextTrackSegmentData | null >;
 
 export interface IImageTrackSegmentData {
   data : IBifThumbnail[]; // image track data, in the given type
@@ -193,22 +197,31 @@ export interface IImageTrackSegmentData {
   type : string; // the type of the data (example: "bif")
 }
 
-export type IImageParserObservable = Observable<{
-  segmentData : IImageTrackSegmentData|null; // Data to parse and decode
-  segmentInfos : ISegmentTimingInfos|null; // Timing infos about the segment
-  segmentOffset : number; // time offset, in seconds, to add to the absolute
-                          // timed data defined in `segmentData` to obtain the
-                          // "real" wanted effective times.
-}>;
+// Response object returned by the image's segment parser
+export type IImageParserResponse =
+  ISegmentParserResponse< IImageTrackSegmentData | null >;
 
-export interface ITransportManifestPipeline {
-  // TODO Remove resolver
-  resolver? : (x : IManifestLoaderArguments) => Observable<IManifestLoaderArguments>;
-  loader : (x : IManifestLoaderArguments)
-    => IManifestLoaderObservable< Document | string >;
-  parser : (x : IManifestParserArguments< Document |
-                                          string, string>) => IManifestParserObservable;
-}
+export type ISegmentParserObservable<T> = Observable<ISegmentParserResponse<T>>;
+export type IVideoParserObservable = Observable<IVideoParserResponse>;
+export type IAudioParserObservable = Observable<IAudioParserResponse>;
+export type ITextParserObservable = Observable<ITextParserResponse>;
+export type IImageParserObservable = Observable<IImageParserResponse>;
+
+// TODO Remove resolver
+export type IManifestResolverFunction =
+  (x : IManifestLoaderArguments) => Observable<IManifestLoaderArguments>;
+
+export type IManifestLoaderFunction =
+  (x : IManifestLoaderArguments) => IManifestLoaderObservable< Document | string >;
+
+export type IManifestParserFunction =
+  (x : IManifestParserArguments< Document | string,
+                                 string>) => IManifestParserObservable;
+
+// TODO Remove resolver
+export interface ITransportManifestPipeline { resolver? : IManifestResolverFunction;
+                                              loader : IManifestLoaderFunction;
+                                              parser : IManifestParserFunction; }
 
 export interface ITransportVideoSegmentPipeline {
   loader : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
@@ -216,9 +229,16 @@ export interface ITransportVideoSegmentPipeline {
                                                                       null >;
   parser : (x : ISegmentParserArguments< Uint8Array |
                                          ArrayBuffer |
-                                         null >) => ISegmentParserObservable;
+                                         null >) => IVideoParserObservable;
 }
-export type ITransportAudioSegmentPipeline = ITransportVideoSegmentPipeline;
+export interface ITransportAudioSegmentPipeline {
+  loader : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
+                                                                      ArrayBuffer |
+                                                                      null >;
+  parser : (x : ISegmentParserArguments< Uint8Array |
+                                         ArrayBuffer |
+                                         null >) => IAudioParserObservable;
+}
 
 export interface ITransportTextSegmentPipeline {
   // Note: The segment's data can be null for init segments
@@ -229,7 +249,7 @@ export interface ITransportTextSegmentPipeline {
   parser : (x : ISegmentParserArguments< Uint8Array |
                                          ArrayBuffer |
                                          string |
-                                         null >) => TextTrackParserObservable;
+                                         null >) => ITextParserObservable;
 }
 
 export interface ITransportImageSegmentPipeline {
