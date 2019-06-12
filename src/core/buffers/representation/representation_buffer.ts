@@ -122,10 +122,10 @@ interface ISegmentInfos {
 
 // Parsed Segment information
 interface ISegmentObject<T> {
-  segmentData : T|null; // What will be pushed to the SourceBuffer
-  segmentInfos : ISegmentInfos|null; // informations about the segment's start
+  chunkData : T|null; // What will be pushed to the SourceBuffer
+  chunkInfos : ISegmentInfos|null; // informations about the segment's start
                                      // and duration
-  segmentOffset : number; // Offset to add to the segment at decode time
+  chunkOffset : number; // Offset to add to the segment at decode time
   appendWindow : [ number | undefined, number | undefined ];
 }
 
@@ -192,9 +192,9 @@ export default function RepresentationBuffer<T>({
 
   // Saved initSegment state for this representation.
   let initSegmentObject : ISegmentObject<T>|null =
-    initSegment == null ? { segmentData: null,
-                            segmentInfos: null,
-                            segmentOffset: 0,
+    initSegment == null ? { chunkData: null,
+                            chunkInfos: null,
+                            chunkOffset: 0,
                             appendWindow: [undefined, undefined] } :
                           null;
 
@@ -403,21 +403,18 @@ export default function RepresentationBuffer<T>({
               return observableOf({ type: "retry" as const,
                                     value: { segment,
                                              error: evt.value } });
-            }
-
-            if (evt.type === "chunk-complete") {
+            } else if (evt.type === "chunk-complete") {
               currentSegmentRequest = null;
               return EMPTY;
             }
 
             const initInfos = initSegmentObject &&
-                              initSegmentObject.segmentInfos ||
+                              initSegmentObject.chunkInfos ||
                               undefined;
-            return evt.parse(initInfos)
-              .pipe(map(data => {
-                return { type: "parsed-segment" as const,
-                         value: { segment, data } };
-              }));
+            return evt.parse(initInfos).pipe(map(data => {
+              return { type: "parsed-segment" as const,
+                       value: { segment, data } };
+            }));
           }));
 
         return observableConcat(response$, requestNextSegment$);
@@ -471,23 +468,23 @@ export default function RepresentationBuffer<T>({
    */
   function pushSegment(
     segment : ISegment,
-    { segmentInfos,
-      segmentData,
-      segmentOffset,
+    { /* chunkInfos, */
+      chunkData,
+      chunkOffset,
       appendWindow } : ISegmentObject<T>
   ) : Observable<IBufferEventAddedSegment<T>> {
     return observableDefer(() => {
-      if (segmentData == null) {
+      if (chunkData == null) {
         // no segmentData to add here (for example, a text init segment)
         // just complete directly without appending anything
         return EMPTY;
       }
 
       const dataInfos = { initSegment: initSegmentObject &&
-                                       initSegmentObject.segmentData,
+                                       initSegmentObject.chunkData,
                           segment: segment.isInit ? null :
-                                                    segmentData,
-                          timestampOffset: segmentOffset,
+                                                    chunkData,
+                          timestampOffset: chunkOffset,
                           appendWindow,
                           codec };
       const append$ = appendDataInSourceBuffer(clock$, queuedSourceBuffer, dataInfos);
@@ -496,23 +493,23 @@ export default function RepresentationBuffer<T>({
 
       return append$.pipe(
         map(() => { // add to SegmentBookkeeper
-          if (!segment.isInit) {
-            const { time, duration, timescale } = segmentInfos != null ? segmentInfos :
-                                                                         segment;
-            const start = Math.max(time / timescale,
-                                   appendWindow[0] != null ? appendWindow[0] :
-                                                             0);
-            let end : number | undefined;
-            if (duration != null) {
-              end = Math.min((time + duration) / timescale,
-                             appendWindow[1] != null ? appendWindow[1] :
-                                                       Infinity);
-            }
-            segmentBookkeeper
-              .insert(period, adaptation, representation, segment, start, end);
-          }
+          // if (!segment.isInit) {
+          //   const { time, duration, timescale } = chunkInfos != null ? chunkInfos :
+          //                                                              segment;
+          //   const start = Math.max(time / timescale,
+          //                          appendWindow[0] != null ? appendWindow[0] :
+          //                                                    0);
+          //   let end : number | undefined;
+          //   if (duration != null) {
+          //     end = Math.min((time + duration) / timescale,
+          //                    appendWindow[1] != null ? appendWindow[1] :
+          //                                              Infinity);
+          //   }
+          //   segmentBookkeeper
+          //     .insert(period, adaptation, representation, segment, start, end);
+          // }
           const buffered = queuedSourceBuffer.getBuffered();
-          return EVENTS.addedSegment(content, segment, buffered, segmentData);
+          return EVENTS.addedSegment(content, segment, buffered, chunkData);
         }),
         finalize(() => { // remove from queue
           sourceBufferWaitingQueue.remove(segment.id);
