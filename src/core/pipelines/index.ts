@@ -19,8 +19,9 @@ import createManifestPipeline, {
 } from "./manifest";
 import SegmentPipelinesManager, {
   IPrioritizedSegmentFetcher,
+  ISegmentFetcherChunkCompleteEvent,
+  ISegmentFetcherChunkEvent,
   ISegmentFetcherEvent,
-  ISegmentFetcherResponseEvent,
   ISegmentFetcherWarning,
   ISegmentPipelineOptions,
 } from "./segment";
@@ -36,6 +37,7 @@ export {
 
   ISegmentPipelineOptions,
 
-  ISegmentFetcherResponseEvent,
+  ISegmentFetcherChunkEvent,
+  ISegmentFetcherChunkCompleteEvent,
   ISegmentFetcherWarning,
 };

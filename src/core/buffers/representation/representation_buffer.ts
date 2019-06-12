@@ -382,11 +382,15 @@ export default function RepresentationBuffer<T>({
         currentSegmentRequest = { segment, priority, request$ };
         const response$ = request$
           .pipe(mergeMap((evt) : Observable<ISegmentLoadingEvent<T>> => {
-            if (evt.type !== "response") {
+            if (evt.type === "warning") {
               return observableOf(evt);
             }
 
-            currentSegmentRequest = null;
+            if (evt.type === "chunk-complete") {
+              currentSegmentRequest = null;
+              return EMPTY;
+            }
+
             const initInfos = initSegmentObject &&
                               initSegmentObject.segmentInfos ||
                               undefined;

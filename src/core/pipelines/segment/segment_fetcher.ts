@@ -38,7 +38,8 @@ import {
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
 import createSegmentLoader, {
-  IPipelineLoaderResponse,
+  IPipelineLoaderChunk,
+  IPipelineLoaderChunkComplete,
   IPipelineLoaderWarning,
   ISegmentPipelineLoaderOptions,
 } from "./create_segment_loader";
@@ -46,22 +47,21 @@ import createSegmentLoader, {
 export type ISegmentFetcherContent = ISegmentLoaderArguments;
 export type ISegmentFetcherWarning = IPipelineLoaderWarning;
 
-export interface ISegmentFetcherMetrics { type : "metrics";
-                                          value : { size? : number;
-                                                    duration? : number;
-                                                    content: ISegmentFetcherContent; }; }
-
 interface IParsedSegment<T> { segmentData : T;
                               segmentInfos : { duration? : number;
                                                time : number;
                                                timescale : number; };
                               segmentOffset : number; }
-export interface ISegmentFetcherResponseEvent<T> {
-  type : "response";
+
+export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete"; }
+
+export interface ISegmentFetcherChunkEvent<T> {
+  type : "chunk";
   parse : (init? : ISegmentTimingInfos) => Observable<IParsedSegment<T>>;
 }
 
-export type ISegmentFetcherEvent<T> = ISegmentFetcherResponseEvent<T> |
+export type ISegmentFetcherEvent<T> = ISegmentFetcherChunkCompleteEvent |
+                                      ISegmentFetcherChunkEvent<T> |
                                       ISegmentFetcherWarning;
 
 export type ISegmentFetcher<T> = (content : ISegmentLoaderArguments) =>
@@ -155,22 +155,28 @@ export default function createSegmentFetcher<T>(
           requests$.next({ type: "requestEnd", value: { id } });
         }
       }),
-      filter((e) : e is IPipelineLoaderResponse<T> | IPipelineLoaderWarning => {
-        return e.type === "warning" || e.type === "response";
-      }),
-      map((evt) => {
-        if (evt.type === "warning") {
-          return evt;
+
+      filter((e) : e is IPipelineLoaderChunk<T> |
+                        IPipelineLoaderChunkComplete |
+                        ISegmentFetcherWarning =>
+        e.type === "warning" || e.type === "chunk" || e.type === "chunk-complete"),
+
+      map((response) => {
+        if (response.type === "warning") {
+          return response;
+        }
+        if (response.type === "chunk-complete") {
+          return { type: "chunk-complete" as const };
         }
         return {
-          type: "response" as const,
+          type: "chunk" as const,
           /**
            * Parse the loaded data.
            * @param {Object} [init]
            * @returns {Observable}
            */
           parse(init? : ISegmentTimingInfos) : Observable<IParsedSegment<T>> {
-            const parserArg = objectAssign({ response: evt.value, init }, content);
+            const parserArg = objectAssign({ response: response.value, init }, content);
             return segmentParser(parserArg)
               .pipe(catchError((error: unknown) => {
                 throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
