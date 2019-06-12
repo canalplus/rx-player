@@ -16,8 +16,9 @@
 
 import { IPrioritizedSegmentFetcher } from "./prioritized_segment_fetcher";
 import {
+  ISegmentFetcherChunkCompleteEvent,
+  ISegmentFetcherChunkEvent,
   ISegmentFetcherEvent,
-  ISegmentFetcherResponseEvent,
   ISegmentFetcherWarning,
 } from "./segment_fetcher";
 import SegmentPipelinesManager, {
@@ -26,9 +27,10 @@ import SegmentPipelinesManager, {
 
 export default SegmentPipelinesManager;
 export {
+  IPrioritizedSegmentFetcher,
+  ISegmentFetcherChunkCompleteEvent,
+  ISegmentFetcherChunkEvent,
   ISegmentFetcherEvent,
-  ISegmentFetcherResponseEvent,
   ISegmentFetcherWarning,
   ISegmentPipelineOptions,
-  IPrioritizedSegmentFetcher,
 };

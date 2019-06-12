@@ -405,7 +405,11 @@ export default function RepresentationBuffer<T>({
                                              error: evt.value } });
             }
 
-            currentSegmentRequest = null;
+            if (evt.type === "chunk-complete") {
+              currentSegmentRequest = null;
+              return EMPTY;
+            }
+
             const initInfos = initSegmentObject &&
                               initSegmentObject.segmentInfos ||
                               undefined;
