@@ -47,7 +47,6 @@ export default function applyPrioritizerToSegmentFetcher<T>(
   fetcher : ISegmentFetcher<T>
 ) : IPrioritizedSegmentFetcher<T> {
   return {
-
     /**
      * Create a Segment request with a given priority.
      * @param {Object} content - content to request

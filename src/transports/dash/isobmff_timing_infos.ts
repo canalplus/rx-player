@@ -14,24 +14,34 @@
  * limitations under the License.
  */
 
-import assert from "../../utils/assert";
-
 import { ISegment } from "../../manifest";
 import {
   getDurationFromTrun,
   getTrackFragmentDecodeTime,
   ISidxSegment,
 } from "../../parsers/containers/isobmff";
-import { ISegmentTimingInfos } from "../types";
+import assert from "../../utils/assert";
+import { IChunkTimingInfos } from "../types";
 
 /**
+<<<<<<< HEAD
  * Get precize start and duration of a segment from ISOBMFF.
  *   1. get start from tfdt
  *   2. get duration from trun
  *   3. if at least one is missing, get both information from sidx
  *   4. As a fallback take segment infos.
+||||||| parent of 5daefa04... transports:  now know if they handle chunked or non-chunked data
+ * Get precize start and duration of a segment from ISOBMFF.
+ *   1. get start from tfdt
+ *   2. get duration from trun
+ *   3. if at least one is missing, get both informations from sidx
+ *   4. As a fallback take segment infos.
+=======
+ * Get precize start and duration of a chunk.
+>>>>>>> 5daefa04... transports:  now know if they handle chunked or non-chunked data
  * @param {Object} segment
- * @param {UInt8Array} buffer - The entire isobmff container
+ * @param {UInt8Array} buffer - An ISOBMFF container (at least a `moof` + a
+ * `mdat` box.
  * @param {Array.<Object>|undefined} sidxSegments - Segments from sidx. Here
  * pre-parsed for performance reasons as it is usually available when
  * this function is called.
@@ -39,18 +49,27 @@ import { ISegmentTimingInfos } from "../types";
  * @returns {Object}
  */
 function getISOBMFFTimingInfos(
-  segment : ISegment,
   buffer : Uint8Array,
+  isChunked : boolean,
+  segment : ISegment,
   sidxSegments : ISidxSegment[]|null,
-  initInfos? : ISegmentTimingInfos
-) : ISegmentTimingInfos {
+  initInfos? : IChunkTimingInfos
+) : IChunkTimingInfos|null {
   const _sidxSegments = sidxSegments || [];
   let startTime;
   let duration;
 
   const baseDecodeTime = getTrackFragmentDecodeTime(buffer);
-  const trunDuration = getDurationFromTrun(buffer);
+  if (isChunked) { // when chunked, no mean to know the duration for now
+    if (baseDecodeTime < 0 || initInfos == null) {
+      return null;
+    }
+    return { time: baseDecodeTime,
+             duration: undefined,
+             timescale: initInfos.timescale };
+  }
 
+  const trunDuration = getDurationFromTrun(buffer);
   const timescale = initInfos && initInfos.timescale ? initInfos.timescale :
                                                        segment.timescale;
 
