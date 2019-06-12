@@ -90,7 +90,9 @@ function getParserArguments<T>(
   segment : ISegment,
   offset : number
 ) : ISegmentParserArguments<T> {
-  return objectAssign(getLoaderArguments(segment, offset), { init, response });
+  return { init,
+           response,
+           content: getLoaderArguments(segment, offset) };
 }
 
 /**
@@ -225,22 +227,22 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
     contentOffset : number,
     scaledContentOffset : number,
     contentEnd : number | undefined,
-    { segmentData,
-      segmentInfos,
-      segmentOffset,
+    { chunkData,
+      chunkInfos,
+      chunkOffset,
       appendWindow } : ISegmentParserResponse<T>
   ) : ISegmentParserResponse<T> {
-    if (segmentData == null) {
-      return { segmentData: null,
-               segmentInfos: null,
-               segmentOffset: 0,
+    if (chunkData == null) {
+      return { chunkData: null,
+               chunkInfos: null,
+               chunkOffset: 0,
                appendWindow: [undefined, undefined] };
     }
-    if (segmentInfos && segmentInfos.time > -1) {
-      segmentInfos.time += scaledContentOffset;
+    if (chunkInfos && chunkInfos.time > -1) {
+      chunkInfos.time += scaledContentOffset;
     }
 
-    const offsetedSegmentOffset = segmentOffset + contentOffset;
+    const offsetedSegmentOffset = chunkOffset + contentOffset;
     const offsetedWindowStart = appendWindow[0] != null ?
       Math.max(appendWindow[0] + contentOffset, contentOffset) :
       contentOffset;
@@ -253,9 +255,9 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
     } else if (contentEnd != null) {
       offsetedWindowEnd = contentEnd;
     }
-    return { segmentData,
-             segmentInfos,
-             segmentOffset: offsetedSegmentOffset,
+    return { chunkData,
+             chunkInfos,
+             chunkOffset: offsetedSegmentOffset,
              appendWindow: [offsetedWindowStart, offsetedWindowEnd] };
   }
 
@@ -268,7 +270,8 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
     ) : ISegmentParserObservable< Uint8Array | ArrayBuffer > {
-      const { init, segment } = args;
+      const { init, content } = args;
+      const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const scaledOffset = contentStart * (init ? init.timescale :
                                                   segment.timescale);
@@ -290,7 +293,8 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
     ) : ISegmentParserObservable< Uint8Array | ArrayBuffer > {
-      const { init, segment } = args;
+      const { init, content } = args;
+      const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const scaledOffset = contentStart * (init ? init.timescale :
                                                   segment.timescale);
@@ -310,7 +314,8 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
     },
 
     parser: (args: ISegmentParserArguments<ArrayBuffer|string|Uint8Array|null>) => {
-      const { init, segment } = args;
+      const { init, content } = args;
+      const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const scaledOffset = contentStart * (init ? init.timescale :
                                                   segment.timescale);
@@ -333,7 +338,8 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
     parser(
       args : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
     ) : IImageParserObservable {
-      const { init, segment } = args;
+      const { init, content } = args;
+      const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const scaledOffset = contentStart * (init ? init.timescale :
                                                   segment.timescale);

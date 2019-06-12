@@ -59,22 +59,27 @@ export interface IPipelineLoaderMetrics { type : "metrics";
 export interface IPipelineLoaderRequest { type : "request";
                                           value : ISegmentLoaderArguments; }
 
-// A chunk is available
-export interface IPipelineLoaderChunk<T> { type : "chunk";
-                                           value : { responseData : T |
-                                                                    ArrayBuffer |
-                                                                    Uint8Array; }; }
-// A chunk is available
+// The whole data is available
+export interface IPipelineLoaderData<T> { type : "data";
+                                          value : { responseData : T }; }
+
+// A chunk of the data is available
+export interface IPipelineLoaderChunk { type : "chunk";
+                                        value : { responseData : null |
+                                                                 ArrayBuffer |
+                                                                 Uint8Array; }; }
+// The data has been entirely sent through "chunk" events
 export interface IPipelineLoaderChunkComplete { type : "chunk-complete";
                                                 value : null; }
 
 // Events a loader emits
 // Type parameters: T: Argument given to the loader
 //                  U: ResponseType of the request
-export type IPipelineLoaderEvent<T> = IPipelineLoaderRequest |
+export type IPipelineLoaderEvent<T> = IPipelineLoaderData<T> |
+                                      IPipelineLoaderRequest |
                                       IPipelineLoaderProgress |
                                       IPipelineLoaderWarning |
-                                      IPipelineLoaderChunk<T> |
+                                      IPipelineLoaderChunk |
                                       IPipelineLoaderChunkComplete |
                                       IPipelineLoaderMetrics;
 
@@ -236,9 +241,10 @@ export default function createSegmentLoader<T>(
           case "data-created":
           case "data-loaded":
             const chunck$ = observableOf({
-              type: "chunk" as const,
-              value: objectAssign({}, pipelineInputData, {
-                responseData: arg.value.responseData }),
+              type: "data" as const,
+              value: objectAssign({},
+                                  pipelineInputData,
+                                  { responseData: arg.value.responseData }),
             });
             const complete$ = observableOf({ type: "chunk-complete" as const,
                                              value: null });
