@@ -1,7 +1,6 @@
 /**
  * Returns the title read from a Markdown document.
  * That is, the first "#"-prepended chapter.
- * TODO know the right term.
  *
  * null if not found.
  * @param {string} data

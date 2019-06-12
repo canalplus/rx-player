@@ -11,18 +11,21 @@ const path = require("path");
  *     convert
  *   - outputFile {string}: normalized absolute path to where the resulting
  *     HTML file should be stored
- *
- * Note: file named 'README.md' (non-case sensitive) are not considered.
- * This is because they are usually symbolic links created specifically for
- * Github, for aesthetic reasons.
  * @param {string} baseInDir - The directory where the markdown files are. This
  * directory will be checked for files recursively.
  * @param {string} baseOutDir - The directory where the resulting HTML files
  * will reside.
+ * @param {Object} [opts = {}]
+ * @param {Function|undefined} opts.fileFilter
  * @returns {Promise.<Array.<Object>>}
  */
-module.exports = async function getFilesToConvert(baseInDir, baseOutDir) {
+module.exports = async function getFilesToConvert(
+  baseInDir,
+  baseOutDir,
+  opts = {}
+) {
   const filesToConvert = [];
+  const { fileFilter } = opts;
   async function recusiveGetFilesToConvert(inputDir, outputDir) {
     // Loop through all the files in the temp directory
     let files;
@@ -32,8 +35,9 @@ module.exports = async function getFilesToConvert(baseInDir, baseOutDir) {
       throw new Error("error reading directory: " + err);
     }
 
-    const filteredFiles = files
-      .filter((fileName) => fileName.toLowerCase() !== "readme.md");
+    const filteredFiles = fileFilter != null ?
+      files.filter((fileName) => fileFilter(fileName, baseInDir)) :
+      files;
 
     for (let i = 0; i < filteredFiles.length; i++) {
       const file = filteredFiles[i];

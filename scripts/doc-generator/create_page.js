@@ -20,13 +20,12 @@ module.exports = async function createDocumentationPage(
   outputFile,
   options = {}
 )  {
-  const {
-    css = [],
-    linkTranslator = (link) => link,
-    getPageTitle = a => a,
-    homeLink,
-    listLink,
-  } = options;
+  const { css = [],
+          linkTranslator = (link) => link,
+          getPageTitle = a => a,
+          beforeParse,
+          homeLink,
+          listLink } = options;
 
   const outputDir = path.dirname(outputFile);
   let data;
@@ -39,21 +38,25 @@ module.exports = async function createDocumentationPage(
     return;
   }
   const inputDir = path.dirname(inputFile);
-  const pageTitle = readTitleFromMD(data) ||"Untitled Page";
+  const pageTitle = readTitleFromMD(data) || "Untitled Page";
 
   // remove original table of contents if one and generate new one
-  const contentWOTOC = removeTableOfContentFromMD(data);
-  const { content, toc } = constructTableOfContents(contentWOTOC);
+  const toParse = beforeParse != null ?
+    beforeParse(data) :
+    data;
+  const { content, toc } = constructTableOfContents(toParse);
 
-  const domContent =
-    await parseMD(content, inputDir, outputDir, linkTranslator);
+  const domContent = await parseMD(content,
+                                   inputDir,
+                                   outputDir,
+                                   linkTranslator);
 
-  const html = constructHTML(getPageTitle(pageTitle), domContent, {
-    css,
-    toc,
-    homeLink,
-    listLink,
-  });
+  const html = constructHTML(getPageTitle(pageTitle),
+                             domContent,
+                             { css,
+                               toc,
+                               homeLink,
+                               listLink });
   try {
     await promisify(fs.writeFile)(outputFile, html);
   } catch (err) {
@@ -100,7 +103,7 @@ async function parseMD(data, inputDir, outputDir, linkTranslator) {
   const $ = cheerio.load(convertMDToHTML(data));
 
   if (linkTranslator) {
-    $("a").each((i, elem) => {
+    $("a").each((_, elem) => {
       const href = $(elem).attr("href");
       if (href) {
         $(elem).attr("href", linkTranslator(href));
@@ -121,25 +124,4 @@ async function parseMD(data, inputDir, outputDir, linkTranslator) {
     await updateMediaTag($(videoTags[i]), inputDir, outputDir);
   }
   return $.html();
-}
-
-/**
- * Remove "## table of contents" line from markdown if it exists.
- * @param {string} md
- * @returns {string}
- */
-function removeTableOfContentFromMD(md) {
-  const lines = md.split(/\r\n|\n|\r/);
-  for (let i = 0, len = lines.length; i < len; i++) {
-    if (/^ *## +table of contents/i.test(lines[i])) {
-      const start = i;
-      for (i = i + 1; i < len; i++) {
-        if (/^ *## +/.test(lines[i])) {
-          lines.splice(start, i - 1 - start);
-          return lines.join("\n");
-        }
-      }
-    }
-  }
-  return lines.join("\n");
 }
