@@ -45,26 +45,29 @@ import {
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
 import createSegmentLoader, {
-  IPipelineLoaderResponse,
+  IPipelineLoaderChunk,
+  IPipelineLoaderChunkComplete,
   ISegmentPipelineLoaderOptions,
 } from "./create_segment_loader";
 
-interface IParsedSegment<T> {
-  segmentData : T;
-  segmentInfos : {
-    duration? : number;
-    time : number;
-    timescale : number;
-  };
-  segmentOffset : number;
-}
+interface IParsedSegment<T> { segmentData : T;
+                              segmentInfos : { duration? : number;
+                                               time : number;
+                                               timescale : number; };
+                              segmentOffset : number; }
 
-export interface IFetchedSegment<T> {
-  parse : (init? : ISegmentTimingInfos) => Observable<IParsedSegment<T>>;
-}
+export interface IChunkComplete { type: "chunk-complete"; }
+
+export interface IFetchedChunk<T> { type : "chunk";
+                                    parse : (init? : ISegmentTimingInfos) =>
+                                      Observable<IParsedSegment<T>>; }
+
+export type ISegmentFetcherEvent<T> = IChunkComplete |
+                                      IFetchedChunk<T>;
 
 export type ISegmentFetcher<T> =
-  (content : ISegmentLoaderArguments) => Observable<IFetchedSegment<T>>;
+  (content : ISegmentLoaderArguments) => Observable< IFetchedChunk<T> |
+                                                     IChunkComplete >;
 
 const generateRequestID = idGenerator();
 
@@ -111,7 +114,7 @@ export default function createSegmentFetcher<T>(
    */
   return function fetchSegment(
     content : ISegmentLoaderArguments
-  ) : Observable<IFetchedSegment<T>> {
+  ) : Observable<IFetchedChunk<T>|IChunkComplete> {
     return segmentLoader(content).pipe(
 
       tap((arg) => {
@@ -174,8 +177,8 @@ export default function createSegmentFetcher<T>(
         }
       }),
 
-      filter((arg) : arg is IPipelineLoaderResponse<any> =>
-        arg.type === "response"
+      filter((arg) : arg is IPipelineLoaderChunk<T>|IPipelineLoaderChunkComplete =>
+        arg.type === "chunk" || arg.type === "chunk-complete"
       ),
 
       finalize(() => {
@@ -190,7 +193,11 @@ export default function createSegmentFetcher<T>(
       }),
 
       map((response) => {
+        if (response.type === "chunk-complete") {
+          return { type: "chunk-complete" as const };
+        }
         return {
+          type: "chunk" as const,
           /**
            * Parse the loaded data.
            * @param {Object} [init]

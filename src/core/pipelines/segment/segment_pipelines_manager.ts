@@ -28,7 +28,7 @@ import applyPrioritizerToSegmentFetcher, {
 } from "./prioritized_segment_fetcher";
 import ObservablePrioritizer from "./prioritizer";
 import createSegmentFetcher, {
-  IFetchedSegment,
+  ISegmentFetcherEvent,
 } from "./segment_fetcher";
 
 /**
@@ -75,7 +75,7 @@ export default class SegmentPipelinesManager<T> {
   private readonly _requestsInfos$ : Subject<Subject<IABRRequest>>;
   private readonly _warning$ : Subject<Error | ICustomError>;
   private readonly _transport : ITransportPipelines;
-  private readonly _prioritizer : ObservablePrioritizer<IFetchedSegment<T>>;
+  private readonly _prioritizer : ObservablePrioritizer<ISegmentFetcherEvent<T>>;
 
   /**
    * @param {Object} transport

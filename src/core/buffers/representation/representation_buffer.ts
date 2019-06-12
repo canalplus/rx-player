@@ -56,8 +56,8 @@ import Manifest, {
 } from "../../../manifest";
 import SimpleSet from "../../../utils/simple_set";
 import {
-  IFetchedSegment,
   IPrioritizedSegmentFetcher,
+  ISegmentFetcherEvent,
 } from "../../pipelines";
 import {
   QueuedSourceBuffer,
@@ -133,7 +133,7 @@ interface ILoadedSegmentObject<T> {
 // Object describing a pending Segment request
 interface ISegmentRequestObject<T> {
   segment : ISegment; // The Segment the request is for
-  request$ : Observable<IFetchedSegment<T>>; // The request itself
+  request$ : Observable<ISegmentFetcherEvent<T>>; // The request itself
   priority : number; // The current priority of the request
 }
 
@@ -363,7 +363,11 @@ export default function RepresentationBuffer<T>({
         currentSegmentRequest = { segment, priority, request$ };
         const response$ = request$.pipe(
           mergeMap((fetchedSegment) => {
-            currentSegmentRequest = null;
+            if (fetchedSegment.type === "chunk-complete") {
+              currentSegmentRequest = null;
+              return EMPTY;
+            }
+
             const initInfos = initSegmentObject &&
                               initSegmentObject.segmentInfos ||
                               undefined;

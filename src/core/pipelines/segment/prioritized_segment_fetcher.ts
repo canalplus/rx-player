@@ -18,17 +18,17 @@ import { Observable } from "rxjs";
 import { ISegmentLoaderArguments } from "../../../transports";
 import ObservablePrioritizer from "./prioritizer";
 import {
-  IFetchedSegment,
   ISegmentFetcher,
+  ISegmentFetcherEvent,
 } from "./segment_fetcher";
 
 // Defines what is returned by the SegmentPipeline
 // See the function definition for documentation
 export interface IPrioritizedSegmentFetcher<T> {
   createRequest : (content : ISegmentLoaderArguments,
-                   priority? : number) => Observable<IFetchedSegment<T>>;
+                   priority? : number) => Observable<ISegmentFetcherEvent<T>>;
 
-  updatePriority : (observable : Observable<IFetchedSegment<T>>,
+  updatePriority : (observable : Observable<ISegmentFetcherEvent<T>>,
                     priority : number) => void;
 }
 
@@ -43,7 +43,7 @@ export interface IPrioritizedSegmentFetcher<T> {
  * @returns {Object}
  */
 export default function applyPrioritizerToSegmentFetcher<T>(
-  prioritizer : ObservablePrioritizer<IFetchedSegment<T>>,
+  prioritizer : ObservablePrioritizer<ISegmentFetcherEvent<T>>,
   fetcher : ISegmentFetcher<T>
 ) : IPrioritizedSegmentFetcher<T> {
   return {
@@ -58,7 +58,7 @@ export default function applyPrioritizerToSegmentFetcher<T>(
     createRequest(
       content : ISegmentLoaderArguments,
       priority : number = 0
-    ) : Observable<IFetchedSegment<T>> {
+    ) : Observable<ISegmentFetcherEvent<T>> {
       return prioritizer.create(fetcher(content), priority);
     },
 
@@ -68,7 +68,7 @@ export default function applyPrioritizerToSegmentFetcher<T>(
      * @param {Number} priority
      */
     updatePriority(
-      observable : Observable<IFetchedSegment<T>>,
+      observable : Observable<ISegmentFetcherEvent<T>>,
       priority : number
     ) : void {
       prioritizer.updatePriority(observable, priority);

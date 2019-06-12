@@ -17,14 +17,20 @@
 import {
   IPrioritizedSegmentFetcher,
 } from "./prioritized_segment_fetcher";
-import { IFetchedSegment } from "./segment_fetcher";
+import {
+  IChunkComplete,
+  IFetchedChunk,
+  ISegmentFetcherEvent
+} from "./segment_fetcher";
 import SegmentPipelinesManager, {
   ISegmentPipelineOptions,
 } from "./segment_pipelines_manager";
 
 export default SegmentPipelinesManager;
 export {
-  IFetchedSegment,
+  IChunkComplete,
+  IFetchedChunk,
   ISegmentPipelineOptions,
   IPrioritizedSegmentFetcher,
+  ISegmentFetcherEvent,
 };
