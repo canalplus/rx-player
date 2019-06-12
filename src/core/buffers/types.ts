@@ -25,6 +25,7 @@ import {
 import { IBufferType } from "../source_buffers";
 
 // Emitted after a new segment has been added to the SourceBuffer
+// XXX TODO
 export interface IBufferEventAddedSegment<T> {
   type : "added-segment";
   value : {

@@ -21,8 +21,8 @@ import {
   getTRAF,
 } from "../../parsers/containers/isobmff";
 import {
+  IChunkTimingInfos,
   INextSegmentsInfos,
-  ISegmentTimingInfos,
 } from "../types";
 import {
   IISOBMFFBasicSegment,
@@ -30,21 +30,29 @@ import {
   parseTfxd,
 } from "./isobmff";
 
+/**
+ * Try to obtain time information from the given data.
+ * @param {Uint8Array} data
+ * @param {boolean} isChunked
+ * @param {Object} segment
+ * @param {boolean} isLive
+ * @returns {Object}
+ */
 export default function extractTimingsInfos(
-  responseData : Uint8Array,
+  data : Uint8Array,
+  isChunked : boolean,
   segment : ISegment,
   isLive : boolean
-) : {
-  nextSegments : INextSegmentsInfos[];
-  segmentInfos : ISegmentTimingInfos;
-} {
+) : { nextSegments : INextSegmentsInfos[];
+      chunkInfos : IChunkTimingInfos | null; }
+{
   const nextSegments : INextSegmentsInfos[] = [];
-  let segmentInfos : ISegmentTimingInfos;
+  let chunkInfos : IChunkTimingInfos;
 
   let tfxdSegment : IISOBMFFBasicSegment|undefined;
   let tfrfSegments : IISOBMFFBasicSegment[]|undefined;
   if (isLive) {
-    const traf = getTRAF(responseData);
+    const traf = getTRAF(data);
     if (traf) {
       tfrfSegments = parseTfrf(traf);
       tfxdSegment = parseTfxd(traf);
@@ -53,49 +61,43 @@ export default function extractTimingsInfos(
     }
   }
 
-  if (!tfxdSegment) {
-    // we could always make a mistake when reading a container.
-    // If the estimate is too far from what the segment seems to imply, take
-    // the segment infos instead.
-    const maxDecodeTimeDelta = Math.min(
-      segment.timescale * 0.9,
-      segment.duration != null ? segment.duration / 4 : 0.25
-    );
-
-    const trunDuration = getDurationFromTrun(responseData);
-    if (
-      trunDuration >= 0 && (segment.duration == null ||
-      Math.abs(trunDuration - segment.duration) <= maxDecodeTimeDelta)
-    ) {
-      segmentInfos = {
-        time: segment.time,
-        duration: trunDuration,
-        timescale: segment.timescale,
-      };
-    } else {
-      segmentInfos = {
-        time: segment.time,
-        duration: segment.duration,
-        timescale: segment.timescale,
-      };
-    }
-  } else {
-    segmentInfos = {
-      time: tfxdSegment.time,
-      duration: tfxdSegment.duration,
-      timescale: segment.timescale,
-    };
-  }
-
   if (tfrfSegments) {
     for (let i = 0; i < tfrfSegments.length; i++) {
-      nextSegments.push({
-        time: tfrfSegments[i].time,
-        duration: tfrfSegments[i].duration,
-        timescale: segment.timescale,
-      });
+      nextSegments.push({ time: tfrfSegments[i].time,
+                          duration: tfrfSegments[i].duration,
+                          timescale: segment.timescale });
     }
   }
 
-  return { nextSegments, segmentInfos };
+  if (tfxdSegment) {
+    chunkInfos = { time: tfxdSegment.time,
+                   duration: tfxdSegment.duration,
+                   timescale: segment.timescale };
+    return { nextSegments, chunkInfos };
+  }
+
+  if (isChunked) {
+    return { nextSegments, chunkInfos: null };
+  }
+
+  // we could always make a mistake when reading a container.
+  // If the estimate is too far from what the segment seems to imply, take
+  // the segment infos instead.
+  const maxDecodeTimeDelta = Math.min(segment.timescale * 0.9,
+                                      segment.duration != null ? segment.duration / 4 :
+                                                                 0.25);
+
+  const trunDuration = getDurationFromTrun(data);
+  if (trunDuration >= 0 && (segment.duration == null ||
+      Math.abs(trunDuration - segment.duration) <= maxDecodeTimeDelta)
+  ) {
+    chunkInfos = { time: segment.time,
+                   duration: trunDuration,
+                   timescale: segment.timescale };
+  } else {
+    chunkInfos = { time: segment.time,
+                   duration: segment.duration,
+                   timescale: segment.timescale };
+  }
+  return { nextSegments, chunkInfos };
 }

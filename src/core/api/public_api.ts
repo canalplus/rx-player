@@ -1916,6 +1916,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         // Manage image tracks
         // TODO Better way? Perhaps linked to an ImageSourceBuffer
         // implementation
+        // XXX TODO
         const { bufferType, segmentData } = event.value;
         if (bufferType === "image") {
           if (segmentData != null && (segmentData as { type : string }).type === "bif") {

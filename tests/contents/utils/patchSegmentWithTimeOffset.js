@@ -1,16 +1,16 @@
 /* eslint-env node */
 
 /**
- * Update the decode time of ISOBMFF segments.
- * @param {Uint8Array} segmentData - The ISOBMFF segment.
+ * Update tehe decode time of ISOBMFF segments.
+ * @param {Uint8Array} chunkData - The ISOBMFF segment or sub-segment.
  * @param {number} timeOffset - The time at which the segment should be
  * offseted.
  * @param {boolean|undefined} _lmsg - Whether a lmsg should be set. False by
  * default.
  * @returns {Uint8Array} - The updated ISOBMFF
  */
-module.exports = function patchSegmentWithTimeOffset(
-  segmentData,
+export default function patchSegmentWithTimeOffset(
+  chunkData,
   timeOffset,
   _lmsg
 ) {
@@ -38,9 +38,9 @@ module.exports = function patchSegmentWithTimeOffset(
   function patchBoxes() {
     let output = new Uint8Array(0);
     let pos = 0;
-    while (pos < segmentData.length) {
-      const { size, boxtype } = getBoxInfos(segmentData.subarray(pos, pos + 8));
-      const boxdata = segmentData.subarray(pos, pos + size);
+    while (pos < chunkData.length) {
+      const { size, boxtype } = getBoxInfos(chunkData.subarray(pos, pos + 8));
+      const boxdata = chunkData.subarray(pos, pos + size);
       const concatData = (topLevelBoxesToParse
         .indexOf(boxtype) >= 0) ?
         patchBox(boxtype, boxdata, output.length) :

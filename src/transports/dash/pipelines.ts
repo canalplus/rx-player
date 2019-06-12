@@ -134,63 +134,59 @@ export default function(
   };
 
   const segmentPipeline = {
-    loader({ adaptation, manifest, period, representation, segment }
-      : ISegmentLoaderArguments
+    loader(
+      content : ISegmentLoaderArguments
     ) : ISegmentLoaderObservable<Uint8Array|ArrayBuffer|null> {
-      return segmentLoader({ adaptation,
-                             manifest,
-                             period,
-                             representation,
-                             segment });
+      return segmentLoader(content);
     },
 
-    parser({
-      segment,
-      representation,
-      response,
-      init,
-    } : ISegmentParserArguments< Uint8Array|ArrayBuffer|null >
+    parser({ content, response, init } : ISegmentParserArguments< Uint8Array |
+                                                                  ArrayBuffer |
+                                                                  null >
     ) : ISegmentParserObservable< Uint8Array | ArrayBuffer | null > {
-      const { responseData } = response;
-      if (responseData == null) {
-        return observableOf({ segmentData: null,
-                              segmentInfos: null,
-                              segmentOffset: 0 });
+      const { representation, segment } = content;
+      const { data, isChunked } = response;
+      if (data == null) { // No data, just return empty infos
+        return observableOf({ chunkData: null,
+                              chunkInfos: null,
+                              chunkOffset: 0 });
       }
-      const segmentData : Uint8Array = responseData instanceof Uint8Array ?
-        responseData :
-        new Uint8Array(responseData);
+
+      const chunkData = data instanceof Uint8Array ? data :
+                                                     new Uint8Array(data);
       const indexRange = segment.indexRange;
       const isWEBM = representation.mimeType === "video/webm" ||
                      representation.mimeType === "audio/webm";
+
       const nextSegments = isWEBM ?
-        getSegmentsFromCues(segmentData, 0) :
-        getSegmentsFromSidx(segmentData, indexRange ? indexRange[0] : 0);
+        getSegmentsFromCues(chunkData, 0) :
+        getSegmentsFromSidx(chunkData, indexRange ? indexRange[0] : 0);
 
       if (!segment.isInit) {
-        const segmentInfos = isWEBM ?
-          {
-            time: segment.time,
-            duration: segment.duration,
-            timescale: segment.timescale,
-          } :
-          getISOBMFFTimingInfos(segment, segmentData, nextSegments, init);
-        const segmentOffset = segment.timestampOffset || 0;
-        return observableOf({ segmentData, segmentInfos, segmentOffset });
-      }
+        const chunkInfos = isWEBM ? null : // TODO extract from webm
+                                    getISOBMFFTimingInfos(chunkData,
+                                                          isChunked,
+                                                          segment,
+                                                          nextSegments,
+                                                          init);
+        const chunkOffset = segment.timestampOffset || 0;
+        return observableOf({ chunkData, chunkInfos, chunkOffset });
+      } else { // it is an initialization segment
+        if (nextSegments) {
+          representation.index._addSegments(nextSegments);
+        }
 
-      if (nextSegments) {
-        representation.index._addSegments(nextSegments);
+        const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
+                                   getMDHDTimescale(chunkData);
+
+        const chunkInfos = timescale != null && timescale > 0 ? { time: -1,
+                                                                  duration: 0,
+                                                                  timescale } :
+                                                                null;
+        return observableOf({ chunkData,
+                              chunkInfos,
+                              chunkOffset: segment.timestampOffset || 0 });
       }
-      const timescale = isWEBM ?
-        getTimeCodeScale(segmentData, 0) :
-        getMDHDTimescale(segmentData);
-      return observableOf({
-        segmentData,
-        segmentInfos: timescale && timescale > 0 ?
-          { time: -1, duration: 0, timescale } : null,
-        segmentOffset: segment.timestampOffset || 0,
-      });
     },
   };
 
@@ -212,34 +208,37 @@ export default function(
     },
 
     parser(
-      { response, segment } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
+      { response, content } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
     ) : IImageParserObservable {
-      const { responseData } = response;
+      const { segment } = content;
+      const { data, isChunked } = response;
+
+      if (isChunked) {
+        throw new Error("Image data should not be downloaded in chunks");
+      }
 
       // TODO image Parsing should be more on the sourceBuffer side, no?
-      if (responseData === null || features.imageParser == null) {
+      if (data === null || features.imageParser == null) {
         return observableOf({
-          segmentData: null,
-          segmentInfos: segment.timescale > 0 ? {
+          chunkData: null,
+          chunkInfos: segment.timescale > 0 ? {
             duration: segment.isInit ? 0 : segment.duration,
             time: segment.isInit ? -1 : segment.time,
             timescale: segment.timescale,
           } : null,
-          segmentOffset: segment.timestampOffset || 0,
-        });
+          chunkOffset: segment.timestampOffset || 0 });
       }
-
-      const bifObject = features.imageParser(new Uint8Array(responseData));
-      const data = bifObject.thumbs;
-      return observableOf({ segmentData: { data,
-                                           start: 0,
-                                           end: Number.MAX_VALUE,
-                                           timescale: 1,
-                                           type: "bif" },
-                            segmentInfos: { time: 0,
-                                            duration: Number.MAX_VALUE,
-                                            timescale: bifObject.timescale },
-                            segmentOffset: segment.timestampOffset || 0 });
+      const bifObject = features.imageParser(new Uint8Array(data));
+      const thumbsData = bifObject.thumbs;
+      return observableOf({ chunkData: { data: thumbsData,
+                                         start: 0,
+                                         end: Number.MAX_VALUE,
+                                         timescale: 1,
+                                         type: "bif" },
+                            chunkInfos: { time: 0,
+                                          duration: Number.MAX_VALUE,
+                                          timescale: bifObject.timescale },
+                            chunkOffset: segment.timestampOffset || 0 });
     },
   };
 

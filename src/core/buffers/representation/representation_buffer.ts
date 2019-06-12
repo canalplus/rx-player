@@ -45,7 +45,7 @@ import {
   switchMap,
   take,
   takeWhile,
-  tap,
+  // tap,
 } from "rxjs/operators";
 import log from "../../../log";
 import Manifest, {
@@ -118,10 +118,10 @@ interface ISegmentInfos {
 
 // Parsed Segment information
 interface ISegmentObject<T> {
-  segmentData : T|null; // What will be pushed to the SourceBuffer
-  segmentInfos : ISegmentInfos|null; // informations about the segment's start
+  chunkData : T|null; // What will be pushed to the SourceBuffer
+  chunkInfos : ISegmentInfos|null; // informations about the segment's start
                                      // and duration
-  segmentOffset : number; // Offset to add to the segment at decode time
+  chunkOffset : number; // Offset to add to the segment at decode time
 }
 
 // Informations about a loaded and parsed Segment
@@ -169,7 +169,7 @@ export default function RepresentationBuffer<T>({
 
   // Saved initSegment state for this representation.
   let initSegmentObject : ISegmentObject<T>|null =
-    initSegment == null ? { segmentData: null, segmentInfos: null, segmentOffset: 0 } :
+    initSegment == null ? { chunkData: null, chunkInfos: null, chunkOffset: 0 } :
                           null;
 
   // Subject to start/restart a Buffer Queue.
@@ -369,7 +369,7 @@ export default function RepresentationBuffer<T>({
             }
 
             const initInfos = initSegmentObject &&
-                              initSegmentObject.segmentInfos ||
+                              initSegmentObject.chunkInfos ||
                               undefined;
             return fetchedSegment.parse(initInfos);
           }),
@@ -398,41 +398,41 @@ export default function RepresentationBuffer<T>({
         initSegmentObject = loadedSegment.value;
       }
 
-      const { segmentInfos, segmentData, segmentOffset } = loadedSegment.value;
-      if (segmentData == null) {
-        // no segmentData to add here (for example, a text init segment)
+      const { /* chunkInfos, */ chunkData, chunkOffset } = loadedSegment.value;
+      if (chunkData == null) {
+        // no chunkData to add here (for example, a text init segment)
         // just complete directly without appending anything
         return EMPTY;
       }
 
       const append$ = appendDataInSourceBuffer(clock$, queuedSourceBuffer, {
         initSegment: initSegmentObject &&
-                     initSegmentObject.segmentData,
+                     initSegmentObject.chunkData,
         segment: segment.isInit ? null :
-                                  segmentData,
-        timestampOffset: segmentOffset,
+                                  chunkData,
+        timestampOffset: chunkOffset,
         codec,
       });
 
       sourceBufferWaitingQueue.add(segment.id);
 
       return append$.pipe(
-        mapTo(EVENTS.addedSegment(bufferType, segment, segmentData)),
-        tap(() => { // add to SegmentBookkeeper
-          if (segment.isInit) {
-            return;
-          }
-          const { time, duration, timescale } = segmentInfos != null ? segmentInfos :
-                                                                       segment;
-          const start = time / timescale;
-          const end = duration && (time + duration) / timescale;
-          segmentBookkeeper.insert(period,
-                                   adaptation,
-                                   representation,
-                                   segment,
-                                   start,
-                                   end);
-        }),
+        mapTo(EVENTS.addedSegment(bufferType, segment, chunkData)),
+        // tap(() => { // add to SegmentBookkeeper
+        //   if (segment.isInit) {
+        //     return;
+        //   }
+        //   const { time, duration, timescale } = chunkInfos != null ? chunkInfos :
+        //                                                              segment;
+        //   const start = time / timescale;
+        //   const end = duration && (time + duration) / timescale;
+        //   segmentBookkeeper.insert(period,
+        //                            adaptation,
+        //                            representation,
+        //                            segment,
+        //                            start,
+        //                            end);
+        // }),
         finalize(() => { // remove from queue
           sourceBufferWaitingQueue.remove(segment.id);
         }));
