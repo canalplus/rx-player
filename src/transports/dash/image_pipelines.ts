@@ -38,30 +38,35 @@ export function imageLoader(
 }
 
 export function imageParser(
-  { response, segment } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
+  { response, content } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
 ) : IImageParserObservable {
-  const { responseData } = response;
+  const { segment } = content;
+  const { data, isChunked } = response;
 
-  // TODO image Parsing should be more on the sourceBuffer side, no?
-  if (responseData === null || features.imageParser == null) {
-    return observableOf({ segmentData: null,
-                          segmentInfos: segment.timescale > 0 ?
-                            { duration: segment.isInit ? 0 : segment.duration,
-                              time: segment.isInit ? -1 : segment.time,
-                              timescale: segment.timescale } :
-                            null,
-                          segmentOffset: segment.timestampOffset || 0 });
+  if (isChunked) {
+    throw new Error("Image data should not be downloaded in chunks");
   }
 
-  const bifObject = features.imageParser(new Uint8Array(responseData));
-  const data = bifObject.thumbs;
-  return observableOf({ segmentData: { data,
-                                       start: 0,
-                                       end: Number.MAX_VALUE,
-                                       timescale: 1,
-                                       type: "bif" },
-                        segmentInfos: { time: 0,
-                                        duration: Number.MAX_VALUE,
-                                        timescale: bifObject.timescale },
-                        segmentOffset: segment.timestampOffset || 0 });
+  // TODO image Parsing should be more on the sourceBuffer side, no?
+  if (data === null || features.imageParser == null) {
+    return observableOf({
+      chunkData: null,
+      chunkInfos: segment.timescale > 0 ? {
+        duration: segment.isInit ? 0 : segment.duration,
+        time: segment.isInit ? -1 : segment.time,
+        timescale: segment.timescale,
+      } : null,
+      chunkOffset: segment.timestampOffset || 0 });
+  }
+  const bifObject = features.imageParser(new Uint8Array(data));
+  const thumbsData = bifObject.thumbs;
+  return observableOf({ chunkData: { data: thumbsData,
+                                     start: 0,
+                                     end: Number.MAX_VALUE,
+                                     timescale: 1,
+                                     type: "bif" },
+                        chunkInfos: { time: 0,
+                                      duration: Number.MAX_VALUE,
+                                      timescale: bifObject.timescale },
+                        chunkOffset: segment.timestampOffset || 0 });
 }

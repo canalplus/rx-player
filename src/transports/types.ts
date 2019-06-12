@@ -32,7 +32,7 @@ import { IBifThumbnail } from "../parsers/images/bif";
 // Contains timings informations on a single segment.
 // Those variables expose the best guess we have on the effective duration and
 // starting time that the corresponding segment should have at decoding time.
-export interface ISegmentTimingInfos {
+export interface IChunkTimingInfos {
   duration? : number; // duration of the segment in the corresponding timescale
                       // (see timescale).
                       // 0 for init segments
@@ -149,16 +149,22 @@ export interface IManifestParserArguments<T, U> {
 }
 
 export interface ISegmentParserArguments<T> {
-  // Response from the loader
-  response : { responseData: T }; // Segment's data
+  response : { data: T; // Segment's data
+               isChunked : boolean; }; // If true, the given response corresponds
+                                       // to a chunk of the whole data.
+                                       // If false, the response is the whole
+                                       // segment.
 
-  init? : ISegmentTimingInfos; // Infos about the initialization segment of the
-                               // corresponding Representation
-  manifest : Manifest; // Manifest related to this segment
-  period : Period; // Period related to this segment
-  adaptation : Adaptation; // Adaptation related to this segment
-  representation : Representation; // Representation related to this segment
-  segment : ISegment; // The segment we want to parse
+  // TODO just timescale?
+  init? : IChunkTimingInfos; // Infos about the initialization segment of the
+                             // corresponding Representation
+  content : {
+    manifest : Manifest; // Manifest related to this segment
+    period : Period; // Period related to this segment
+    adaptation : Adaptation; // Adaptation related to this segment
+    representation : Representation; // Representation related to this segment
+    segment : ISegment; // The segment we want to parse
+  };
 }
 
 // -- response
@@ -172,20 +178,20 @@ export interface IManifestParserResponse {
 export type IManifestParserObservable = Observable<IManifestParserResponse>;
 
 export interface ISegmentParserResponse<T> {
-  segmentData : T; // Data to decode
-  segmentInfos : ISegmentTimingInfos|null; // Timing infos about the segment
-  segmentOffset : number; // time offset, in seconds, to add to the absolute
-                          // timed data defined in `segmentData` to obtain the
+  chunkData : T; // Data to decode
+  chunkInfos : IChunkTimingInfos|null; // Timing infos about the segment
+  chunkOffset : number; // time offset, in seconds, to add to the absolute
+                          // timed data defined in `chunkData` to obtain the
                           // "real" wanted effective time.
                           //
                           // For example:
-                          //   If `segmentData` anounce that the segment begins
-                          //   at 32 seconds, and `segmentOffset` equals to `4`,
-                          //   then the segment should really begin at 36
-                          //   seconds (32 + 4).
+                          //   If `chunkData` anounce that the segment begins at
+                          //   32 seconds, and `chunkOffset` equals to `4`, then
+                          //   the segment should really begin at 36 seconds
+                          //   (32 + 4).
                           //
-                          // Note that `segmentInfos` needs not to be offseted
-                          // as it should already contain the correct time
+                          // Note that `chunkInfos` needs not to be offseted as
+                          // it should already contain the correct time
                           // information.
 }
 
@@ -197,7 +203,7 @@ export type IVideoParserResponse =
 export type IAudioParserResponse =
   ISegmentParserResponse< Uint8Array | ArrayBuffer | null >;
 
-export interface ITextTrackSegmentData {
+export interface ITextTrackSegmentData { // XXX TODO without time?
   data : string; // text track data
   end? : number; // end time until which the segment apply, timescaled
   language? : string; // language in which the text track is, as a language code

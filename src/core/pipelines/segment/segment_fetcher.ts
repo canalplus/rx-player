@@ -14,21 +14,25 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
-import { Observable, Subject } from "rxjs";
+import {
+  concat as observableConcat,
+  Observable,
+  of as observableOf,
+  Subject,
+} from "rxjs";
 import {
   catchError,
   filter,
   finalize,
-  map,
+  mergeMap,
   share,
   tap,
 } from "rxjs/operators";
 import { formatError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
+  IChunkTimingInfos,
   ISegmentLoaderArguments,
-  ISegmentTimingInfos,
   ITransportPipelines,
 } from "../../../transports";
 import idGenerator from "../../../utils/id_generator";
@@ -40,6 +44,7 @@ import { IBufferType } from "../../source_buffers";
 import createSegmentLoader, {
   IPipelineLoaderChunk,
   IPipelineLoaderChunkComplete,
+  IPipelineLoaderData,
   IPipelineLoaderWarning,
   ISegmentPipelineLoaderOptions,
 } from "./create_segment_loader";
@@ -47,18 +52,18 @@ import createSegmentLoader, {
 export type ISegmentFetcherContent = ISegmentLoaderArguments;
 export type ISegmentFetcherWarning = IPipelineLoaderWarning;
 
-interface IParsedSegment<T> { segmentData : T;
-                              segmentInfos : { duration? : number;
-                                               time : number;
-                                               timescale : number; };
-                              segmentOffset : number; }
-
-export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete"; }
+interface IParsedSegment<T> { chunkData : T;
+                              chunkInfos : { duration? : number;
+                                             time : number;
+                                             timescale : number; };
+                              chunkOffset : number; }
 
 export interface ISegmentFetcherChunkEvent<T> {
   type : "chunk";
-  parse : (init? : ISegmentTimingInfos) => Observable<IParsedSegment<T>>;
+  parse : (init? : IChunkTimingInfos) => Observable<IParsedSegment<T>>;
 }
+
+export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete"; }
 
 export type ISegmentFetcherEvent<T> = ISegmentFetcherChunkCompleteEvent |
                                       ISegmentFetcherChunkEvent<T> |
@@ -156,34 +161,40 @@ export default function createSegmentFetcher<T>(
         }
       }),
 
-      filter((e) : e is IPipelineLoaderChunk<T> |
+      filter((e) : e is IPipelineLoaderChunk |
                         IPipelineLoaderChunkComplete |
-                        ISegmentFetcherWarning =>
-        e.type === "warning" || e.type === "chunk" || e.type === "chunk-complete"),
+                        IPipelineLoaderData<T> |
+                        ISegmentFetcherWarning => e.type === "warning" ||
+                                                  e.type === "chunk" ||
+                                                  e.type === "chunk-complete" ||
+                                                  e.type === "data"),
 
-      map((response) => {
-        if (response.type === "warning") {
-          return response;
+      mergeMap((evt) => {
+        if (evt.type === "warning") {
+          return observableOf(evt);
         }
-        if (response.type === "chunk-complete") {
-          return { type: "chunk-complete" as const };
+        if (evt.type === "chunk-complete") {
+          return observableOf({ type: "chunk-complete" as const });
         }
-        return {
+
+        const isChunked = evt.type === "chunk";
+        const data = {
           type: "chunk" as const,
-          /**
-           * Parse the loaded data.
-           * @param {Object} [init]
-           * @returns {Observable}
-           */
-          parse(init? : ISegmentTimingInfos) : Observable<IParsedSegment<T>> {
-            const parserArg = objectAssign({ response: response.value, init }, content);
-            return segmentParser(parserArg)
+          parse(init? : IChunkTimingInfos) : Observable<IParsedSegment<T>> {
+            const response = { data: evt.value.responseData, isChunked };
+            return segmentParser({ response, init, content })
               .pipe(catchError((error: unknown) => {
                 throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
                                            defaultReason: "Unknown parsing error" });
               }));
           },
         };
+
+        if (isChunked) {
+          return observableOf(data);
+        }
+        return observableConcat(observableOf(data),
+                                observableOf({ type: "chunk-complete" as const }));
       }),
       share() // avoid multiple side effects if multiple subs
     );
