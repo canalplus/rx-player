@@ -130,6 +130,7 @@ export default function(
       }
     },
   };
+
   return { manifest: manifestPipeline,
            audio: { loader: segmentLoader,
                     parser: segmentParser },
