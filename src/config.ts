@@ -552,7 +552,7 @@ export default {
    * this logic could lead to bugs with the current code.
    * @type {Number}
    */
-  MINIMUM_SEGMENT_SIZE: 0.1,
+  MINIMUM_SEGMENT_SIZE: 0.05,
 
   /**
    * Maximum interval at which text tracks are refreshed in an "html"
