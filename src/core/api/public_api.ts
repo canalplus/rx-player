@@ -772,6 +772,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                     bufferOptions,
                                                     clock$,
                                                     keySystems,
+                                                    lowLatencyMode,
                                                     mediaElement: videoElement,
                                                     networkConfig,
                                                     pipelines,

@@ -112,6 +112,7 @@ export interface IInitializeOptions {
                     manualBitrateSwitchingMode : "seamless" | "direct"; };
   clock$ : Observable<IInitClockTick>;
   keySystems : IKeySystemOption[];
+  lowLatencyMode : boolean;
   mediaElement : HTMLMediaElement;
   networkConfig: { manifestRetry? : number;
                    offlineRetry? : number;
@@ -152,6 +153,7 @@ export default function InitializeOnMediaSource(
     bufferOptions,
     clock$,
     keySystems,
+    lowLatencyMode,
     mediaElement,
     networkConfig,
     speed$,
@@ -199,7 +201,7 @@ export default function InitializeOnMediaSource(
   ]).pipe(mergeMap(([ initialMediaSource, { manifest, sendingTime } ]) => {
 
     log.debug("Init: Calculating initial time");
-    const initialTime = getInitialTime(manifest, startAt);
+    const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
     log.debug("Init: Initial time calculated:", initialTime);
 
     const mediaSourceLoader = createMediaSourceLoader({
