@@ -31,7 +31,7 @@ export default function parseTextTrackToCues(
   type : string,
   data : string,
   timestampOffset : number,
-  language : string
+  language? : string
 ) : Array<ICompatVTTCue|TextTrackCue> {
   log.debug("NTSB: Finding parser for native text tracks:", type);
   const parser = features.nativeTextTracksParsers[type];

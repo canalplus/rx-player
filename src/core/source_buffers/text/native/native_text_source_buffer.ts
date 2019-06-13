@@ -24,12 +24,14 @@ import log from "../../../../log";
 import AbstractSourceBuffer from "../../abstract_source_buffer";
 import parseTextTrackToCues from "./parsers";
 
-export interface INativeTextTrackData { data : string;
-                                        language : string;
-                                        timescale : number;
-                                        start: number;
-                                        end? : number;
-                                        type : string; }
+export interface INativeTextTrackData {
+  data : string; // text track content. Should be a string
+  type : string; // type of texttracks (e.g. "ttml" or "vtt")
+  timescale : number; // timescale for the start and end
+  start? : number; // exact beginning to which the track applies
+  end? : number; // exact end to which the track applies
+  language? : string; // language the texttrack is in
+}
 
 /**
  * SourceBuffer to display TextTracks in a <track> element, in the given
@@ -69,21 +71,15 @@ export default class NativeTextSourceBuffer
    */
   _append(data : INativeTextTrackData) : void {
     log.debug("NTSB: Appending new native text tracks", data);
-    const {
-      timescale, // timescale for the start and end
-      start: timescaledStart, // exact beginning to which the track applies
-      end: timescaledEnd, // exact end to which the track applies
-      data: dataString, // text track content. Should be a string
-      type, // type of texttracks (e.g. "ttml" or "vtt")
-      language, // language the texttrack is in
-    } = data;
-    if (timescaledEnd != null && timescaledEnd - timescaledStart <= 0) {
-      // this is accepted for error resilience, just skip that case.
-      log.warn("NTSB: Invalid subtitles appended");
-      return;
-    }
+    const { timescale,
+            start: timescaledStart,
+            end: timescaledEnd,
+            data: dataString,
+            type,
+            language } = data;
 
-    const startTime = timescaledStart / timescale;
+    const startTime = timescaledStart != null ? timescaledStart / timescale :
+                                                undefined;
     const endTime = timescaledEnd != null ? timescaledEnd / timescale :
                                             undefined;
 
@@ -91,30 +87,61 @@ export default class NativeTextSourceBuffer
                                       dataString,
                                       this.timestampOffset,
                                       language);
-    if (cues.length > 0) {
-      const firstCue = cues[0];
 
-      // NOTE(compat): cleanup all current cues if the newly added
-      // ones are in the past. this is supposed to fix an issue on
-      // IE/Edge.
-      const currentCues = this._track.cues;
-      if (currentCues.length > 0) {
-        if (
-          firstCue.startTime < currentCues[currentCues.length - 1].startTime
-        ) {
-          this._remove(firstCue.startTime, +Infinity);
-        }
+    let start : number;
+    if (startTime != null) {
+      start = startTime;
+    } else {
+      if (cues.length <= 0) {
+        log.warn("NTSB: Current text tracks have no cues nor start time. Aborting");
+        return;
       }
-
-      for (let i = 0; i < cues.length; i++) {
-        this._track.addCue(cues[i]);
-      }
-      this.buffered.insert(startTime,
-                           endTime != null ? endTime :
-                                             cues[cues.length - 1].endTime);
-    } else if (endTime != null) {
-      this.buffered.insert(startTime, endTime);
+      log.warn("NTSB: No start time given. Guessing from cues.");
+      start = cues[0].startTime;
     }
+
+    let end : number;
+    if (endTime != null) {
+      end = endTime;
+    } else {
+      if (cues.length <= 0) {
+        log.warn("NTSB: Current text tracks have no cues nor end time. Aborting");
+        return;
+      }
+      log.warn("NTSB: No end time given. Guessing from cues.");
+      end = cues[cues.length - 1].endTime;
+    }
+
+    if (end <= start) {
+      log.warn("NTSB: Invalid text track appended: ",
+               "the start time is inferior or equal to the end time.");
+      return;
+    }
+
+    if (cues.length <= 0) {
+      this.buffered.insert(start, end);
+      return;
+    }
+
+    const firstCue = cues[0];
+
+    // NOTE(compat): cleanup all current cues if the newly added
+    // ones are in the past. this is supposed to fix an issue on
+    // IE/Edge.
+    // TODO Move to compat
+    const currentCues = this._track.cues;
+    if (currentCues.length > 0) {
+      if (
+        firstCue.startTime < currentCues[currentCues.length - 1].startTime
+      ) {
+        this._remove(firstCue.startTime, +Infinity);
+      }
+    }
+
+    for (let i = 0; i < cues.length; i++) {
+      this._track.addCue(cues[i]);
+    }
+    this.buffered.insert(start, end);
   }
 
   /**

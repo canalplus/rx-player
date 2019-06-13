@@ -39,12 +39,14 @@ const { onEnded$,
         onSeeked$,
         onSeeking$ } = events;
 
-export interface IHTMLTextTrackData { timescale : number;
-                                      start : number;
-                                      end? : number;
-                                      data : string;
-                                      type : string;
-                                      language : string; }
+export interface IHTMLTextTrackData {
+  data : string; // text track content. Should be a string
+  type : string; // type of texttracks (e.g. "ttml" or "vtt")
+  timescale : number; // timescale for the start and end
+  start? : number; // exact beginning to which the track applies
+  end? : number; // exact end to which the track applies
+  language? : string; // language the texttrack is in
+}
 
 const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL } = config;
 
@@ -148,23 +150,15 @@ export default class HTMLTextSourceBuffer
    */
   _append(data : IHTMLTextTrackData) : void {
     log.debug("HTSB: Appending new html text tracks", data);
-    const {
-      timescale, // timescale for the start and end
-      start: timescaledStart, // exact beginning to which the track applies
-      end: timescaledEnd, // exact end to which the track applies
-      data: dataString, // text track content. Should be a string
-      type, // type of texttracks (e.g. "ttml" or "vtt")
-      language, // language the texttrack is in
-    } = data;
-    if (timescaledEnd && timescaledEnd - timescaledStart <= 0) {
-      // this is accepted for error resilience, just skip that case.
-      /* tslint:disable:max-line-length */
-      log.warn("HTSB: Invalid text track appended: the start time is inferior or equal to the end time.");
-      /* tslint:enable:max-line-length */
-      return;
-    }
+    const { timescale,
+            start: timescaledStart,
+            end: timescaledEnd,
+            data: dataString,
+            type,
+            language } = data;
 
-    const startTime = timescaledStart / timescale;
+    const startTime = timescaledStart != null ? timescaledStart / timescale :
+                                                undefined;
     const endTime = timescaledEnd != null ? timescaledEnd / timescale :
                                             undefined;
 
@@ -172,9 +166,37 @@ export default class HTMLTextSourceBuffer
                                           dataString,
                                           this.timestampOffset,
                                           language);
-    const start = startTime;
-    const end = endTime != null ? endTime :
-                                  cues[cues.length - 1].end;
+
+    let start : number;
+    if (startTime != null) {
+      start = startTime;
+    } else {
+      if (cues.length <= 0) {
+        log.warn("HTSB: Current text tracks have no cues nor start time. Aborting");
+        return;
+      }
+      log.warn("HTSB: No start time given. Guessing from cues.");
+      start = cues[0].start;
+    }
+
+    let end : number;
+    if (endTime != null) {
+      end = endTime;
+    } else {
+      if (cues.length <= 0) {
+        log.warn("HTSB: Current text tracks have no cues nor end time. Aborting");
+        return;
+      }
+      log.warn("HTSB: No end time given. Guessing from cues.");
+      end = cues[cues.length - 1].end;
+    }
+
+    if (end <= start) {
+      log.warn("HTSB: Invalid text track appended: ",
+               "the start time is inferior or equal to the end time.");
+      return;
+    }
+
     this._buffer.insert(cues, start, end);
     this.buffered.insert(start, end);
   }
