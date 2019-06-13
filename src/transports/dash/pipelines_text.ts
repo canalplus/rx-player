@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import { of as observableOf } from "rxjs";
+import log from "../../log";
 import {
   getMDAT,
   getMDHDTimescale,
@@ -117,28 +117,28 @@ function parseMP4EmbeddedTrack({ response,
                                              segment,
                                              sidxSegments,
                                              init);
-    let startTime : number;
-    let duration : number|undefined;
-    let timescale : number;
+    let startTime : number | undefined;
+    let endTime : number | undefined;
+    let timescale : number = 1;
     if (chunkInfos == null) {
-      if (isChunked) { // XXX TODO
-        throw new Error("Time informations not found for the current text track.");
+      if (isChunked) {
+        log.warn("DASH: Unavailable time data for current text track.");
+      } else {
+        startTime = segment.time;
+        endTime = segment.duration == null ? undefined :
+                                             startTime + segment.duration;
+        timescale = segment.timescale;
       }
-      startTime = segment.time;
-      duration = segment.duration == null ? undefined :
-                                            segment.duration;
-      timescale = segment.timescale;
     } else {
       startTime = chunkInfos.time;
-      duration = chunkInfos.duration;
+      if (chunkInfos.duration != null) {
+        endTime = startTime + chunkInfos.duration;
+      } else if (!isChunked && segment.duration != null) {
+        endTime = startTime + segment.duration;
+      }
       timescale = chunkInfos.timescale;
     }
 
-    const chunkDataBase = { start: startTime,
-                            end: duration == null ? undefined :
-                                                    startTime + duration,
-                            language,
-                            timescale };
     const  codec = representation.codec == null ? "" :
       representation.codec;
     let type : string|undefined;
@@ -154,11 +154,16 @@ function parseMP4EmbeddedTrack({ response,
 
     if (!type) {
       throw new Error("The codec used for the subtitles " +
-        `"${codec}" is not managed yet.`);
+                      `"${codec}" is not managed yet.`);
     }
 
     const textData = stringFromUTF8(getMDAT(chunkBytes));
-    const chunkData = objectAssign({ data: textData, type }, chunkDataBase);
+    const chunkData = { data: textData,
+                        type,
+                        language,
+                        start: startTime,
+                        end: endTime,
+                        timescale } ;
     return observableOf({ chunkData,
                           chunkInfos,
                           chunkOffset: segment.timestampOffset || 0 });
@@ -179,9 +184,6 @@ function parsePlainTextTrack({ response,
   }
 
   const { data, isChunked } = response;
-  if (isChunked) { // XXX TODO
-    throw new Error("Time informations not found for the current text track.");
-  }
 
   let textTrackData : string;
   if (typeof data !== "string") {
@@ -194,11 +196,18 @@ function parsePlainTextTrack({ response,
 
   const duration = segment.duration == null ? undefined :
                                               segment.duration;
-  const chunkDataBase = { start: segment.time,
-                          end: duration == null ? undefined :
-                                                  segment.time + duration,
-                          language,
-                          timescale: segment.timescale };
+  let start : number | undefined;
+  let end : number | undefined;
+  let timescale : number = 1;
+  if (!isChunked) {
+    start = segment.time;
+    end = duration == null ? undefined :
+                             start + duration;
+    timescale = segment.timescale;
+  } else {
+    log.warn("DASH: Unavailable time data for current text track.");
+  }
+
   let type;
 
   const { mimeType = "" } = representation;
@@ -225,7 +234,12 @@ function parsePlainTextTrack({ response,
     }
   }
 
-  const chunkData = objectAssign({ data: textTrackData, type }, chunkDataBase);
+  const chunkData = { data: textTrackData,
+                      type,
+                      language,
+                      start,
+                      end,
+                      timescale };
   return observableOf({ chunkData,
                         chunkInfos: null,
                         chunkOffset: segment.timestampOffset || 0 });
