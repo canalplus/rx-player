@@ -14,22 +14,24 @@
  * limitations under the License.
  */
 
-import { Subscription, Subject } from "rxjs";
+import { Subject, Subscription } from "rxjs";
 
-import { IUtils } from "./../../types";
+import { progressBuilder } from "../../utils";
+import { downloadManagerSubscription } from "../dash/dashSegmentsBuilder";
 import {
+  IEmitterLoaderBuilder,
   IProgressBarBuilderDownload,
   settingsType,
-  IEmitterLoaderBuilder,
 } from "../dash/types";
-import { downloadManagerSubscription } from "../dash/dashSegmentsBuilder";
-import { progressBuilder } from "../../utils";
+import { IUtils } from "./../../types";
 
 /**
  * A downloader that instanciate the event api and launch the downloadManager
  *
- * @param settings - The settings that need the download manager depending if we are in resume or start mode
- * @param progressBuilderAssets - The progressBuilder variables that are needed to construct the progress percentage
+ * @param settings -
+ * The settings that need the download manager depending if we are in resume or start mode
+ * @param progressBuilderAssets -
+ * The progressBuilder variables that are needed to construct the progress percentage
  * @param utils - Emitter and db instances
  * @returns The subscription of the observable
  *

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { openDB, IDBPDatabase } from "idb";
+import { IDBPDatabase, openDB } from "idb";
 import { IndexDBError } from "../../utils";
 
 /**
@@ -33,7 +33,7 @@ export const isIndexDBSupported = (): boolean => "indexedDB" in window;
  */
 export async function setUpDb(
   nameDB: string
-): Promise<IDBPDatabase<unknown> | void> {
+): Promise<IDBPDatabase | void> {
   if (!isIndexDBSupported()) {
     throw new IndexDBError("IndexDB is not supported in your browser");
   }

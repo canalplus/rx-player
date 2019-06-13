@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import { Subscription, ReplaySubject, AsyncSubject } from "rxjs";
+import { AsyncSubject, ReplaySubject, Subscription } from "rxjs";
 
+import { IKeySystemOption } from "../../../../../core/eme/types";
+import { ISegment } from "../../../../../manifest";
+import { ISidxSegment } from "../../../../../parsers/containers/isobmff";
 import {
-  videoSettingsQualityInputType,
   IAddMovie,
   IProgressBarBuilderAbstract,
+  videoSettingsQualityInputType,
 } from "../../types";
 import { TypedArray } from "../drm/keySystems";
-import { IKeySystemOption } from "../../../../../core/eme/types";
-import { ISidxSegment } from "../../../../../parsers/containers/isobmff";
-import { ISegment } from "../../../../../manifest";
 
 export interface IRepresentation {
   segmentBase: { indexRange: [number, number] | never[] };

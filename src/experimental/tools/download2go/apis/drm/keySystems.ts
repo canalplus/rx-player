@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable, of, combineLatest } from "rxjs";
-import { mergeMap, filter, tap, finalize, take } from "rxjs/operators";
+import { combineLatest, Observable, of } from "rxjs";
+import { filter, finalize, mergeMap, take, tap } from "rxjs/operators";
 
+import EMEManager from "../../../../../core/eme/eme_manager";
 import {
   IKeySystemOption,
   IPersistedSessionData,
@@ -24,7 +25,6 @@ import {
 import createMediaSource, {
   resetMediaSource,
 } from "../../../../../core/init/create_media_source";
-import EMEManager from "../../../../../core/eme/eme_manager";
 import { IUtils } from "../../types";
 
 export type TypedArray =
@@ -42,9 +42,10 @@ export type TypedArray =
  * Get the licence when keysSystems are specified
  *
  * @remarks
- * This function is basically reproducing the getLicence from the rx-player, but we are adding an additional
- * step to catch the licence and resolve a promise with the licence.
- * To get the challenge we need to retrieve the licence we are instanciating a minimal rxPlayer
+ * This function is basically reproducing the getLicence from the rx-player, but we are
+ * adding an additional step to catch the licence and resolve a promise with the licence
+ * To get the challenge we need to retrieve the licence
+ * we are instanciating a minimal rxPlayer
  * @param ILicenceOptions - The parameters we need to get the licence
  * @returns The licence under a buffer form
  *
@@ -64,13 +65,17 @@ function getLicense(
       ...settingsKeySystem,
       licenseStorage: {
         save(sessionsIDS: IPersistedSessionData[]) {
-          externalSettings.storageUtils.db.add("drm", {
-            contentID: externalSettings.contentID,
-            keySystems: {
-              sessionsIDS,
-              type: settingsKeySystem.type,
-            },
-          });
+          externalSettings.storageUtils.db
+            .add("drm", {
+              contentID: externalSettings.contentID,
+              keySystems: {
+                sessionsIDS,
+                type: settingsKeySystem.type,
+              },
+            })
+            .catch(err => {
+              throw new Error(err);
+            });
         },
         load() {
           return [];
@@ -90,7 +95,7 @@ function getLicense(
       const appendedSegment$ = of(externalSettings.initSegment).pipe(
         tap(segmentData => sourceBuffer.appendBuffer(segmentData))
       );
-      return combineLatest(sessionsUpdate$, appendedSegment$).pipe(
+      return combineLatest([sessionsUpdate$, appendedSegment$]).pipe(
         finalize(() => resetMediaSource(video, mediaSource))
       );
     }),

@@ -15,38 +15,39 @@
  */
 
 import {
+  AsyncSubject,
+  combineLatest,
   Observable,
   Observer,
   of,
   ReplaySubject,
-  AsyncSubject,
-  combineLatest,
 } from "rxjs";
 import {
-  mergeMap,
-  distinctUntilKeyChanged,
   distinctUntilChanged,
+  distinctUntilKeyChanged,
+  mergeMap,
   tap,
 } from "rxjs/operators";
+import find from "../../../../../utils/array_find";
 
-import { SegmentConstuctionError, makeHTTPRequest } from "../../utils";
+import { makeHTTPRequest, SegmentConstuctionError } from "../../utils";
 import { buildInitIndexSegment } from "./dashConnectivity";
 
-import {
-  Quality,
-  ILocalManifestOnline,
-  IDownloadManagerOutput,
-  SegmentIndex,
-} from "../dash/types";
-import {
-  videoSettingsQualityInputType,
-  IProgressBarBuilderAbstract,
-  IUtils,
-} from "../../types";
-import { TypedArray } from "../drm/keySystems";
-import { IParsedRepresentation } from "../../../../../parsers/manifest/types";
 import { ISegment } from "../../../../../manifest";
 import { getSegmentsFromSidx } from "../../../../../parsers/containers/isobmff";
+import { IParsedRepresentation } from "../../../../../parsers/manifest/types";
+import {
+  IProgressBarBuilderAbstract,
+  IUtils,
+  videoSettingsQualityInputType,
+} from "../../types";
+import {
+  IDownloadManagerOutput,
+  ILocalManifestOnline,
+  Quality,
+  SegmentIndex,
+} from "../dash/types";
+import { TypedArray } from "../drm/keySystems";
 
 /**
  * A tool function to choose quality depending of what we receive
@@ -56,9 +57,11 @@ import { getSegmentsFromSidx } from "../../../../../parsers/containers/isobmff";
  * - determining the exact quality we want
  * - determine the quality by telling to get the HIGHEST, MEDIUM or LOWEST quality
  *
- * @param IParsedRepresentation[] - The representation video of the current parsed dash content
+ * @param IParsedRepresentation[] - The representation video of the current
+ * parsed dash content
  * @param currentTypeAdaptation - The current type of the adapation we are currently on.
- * @param quality - The quality we want to choose, either a exact number or HIGH,MEDIUM,LOW
+ * @param quality - The quality we want to choose, either a exact number or
+ * HIGH,MEDIUM,LOW
  * @returns The representation that correspond to the quality wanted
  *
  */
@@ -77,7 +80,8 @@ export const chooseVideoQuality = (
 
   if (Array.isArray(quality)) {
     const [widthWanted, heightWanted] = quality;
-    const reprensentationQuality = representations.find(
+    const reprensentationQuality = find(
+      representations,
       ({ width, height }) => width === widthWanted && height === heightWanted
     );
     if (reprensentationQuality) {
@@ -152,15 +156,16 @@ export const getBaseSegments = async (
 };
 
 /**
- * A tool function that is used to concat the initSegment buffer and indexSegment buffer together to create the SIDX.
+ * A tool function that is used to concat the initSegment buffer
+ * and indexSegment buffer together to create the SIDX.
  *
- * @param ars - An array of Uint8Array buffer
+ * @param tabs - An array of Uint8Array buffer
  * @returns The concatenated initSegment/indexSegment buffer
  *
  */
 export function concatBytes(...args: Uint8Array[]): Uint8Array {
   const totalLengthBuffers = args.reduce(
-    (acc, buffer) => (acc += buffer.byteLength),
+    (acc, buffer) => acc + buffer.byteLength,
     0
   );
   const concatBuffer = args.reduce(
@@ -178,7 +183,8 @@ export function concatBytes(...args: Uint8Array[]): Uint8Array {
 }
 
 /**
- * A tool function that is used to filter depending on a callback but also permit to emit immediately of the given subject is emiting.
+ * A tool function that is used to filter depending
+ * on a callback but also permit to emit immediately of the given subject is emiting.
  *
  * @param (value) => boolean - a callback that should return a boolean
  * @param AsyncSubject - An AsyncSubject that wait a single emission
@@ -191,7 +197,7 @@ export function takeUntilFilter<V, T>(
 ) {
   let i = 0;
   return (source: Observable<[V, T]>): Observable<[V, T]> => {
-    return Observable.create((obs: Observer<[V, T]>) => {
+    return new Observable<[V, T]>(obs => {
       const subscription = source.subscribe(
         value => {
           try {
@@ -219,7 +225,8 @@ export function takeUntilFilter<V, T>(
 }
 
 /**
- * An operator that take a Observable in parameter that is emitting a progress status. Then, decide when to emit next manifest.
+ * An operator that take a Observable in parameter that
+ * is emitting a progress status. Then, decide when to emit next manifest.
  *
  * @param progress$ - An Observable under the form ProgressBarBuilder type
  * @returns - An Observable
@@ -235,7 +242,7 @@ export function emitEveryNth(
     source$: Observable<ILocalManifestOnline>
   ): Observable<IDownloadManagerOutput> => {
     const { storeManifestEvery, emitter } = utilsBuilder;
-    return Observable.create((obs: Observer<IDownloadManagerOutput>) => {
+    return new Observable((obs: Observer<IDownloadManagerOutput>) => {
       const progressFiltered$ = progress$.pipe(
         mergeMap(({ progress, ...props }) =>
           of({
@@ -246,7 +253,7 @@ export function emitEveryNth(
         ),
         distinctUntilKeyChanged("progress")
       );
-      return combineLatest(source$, progressFiltered$)
+      return combineLatest([source$, progressFiltered$])
         .pipe(
           distinctUntilChanged(
             (

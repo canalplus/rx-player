@@ -16,12 +16,46 @@
 
 import { IDBPDatabase } from "idb";
 
-import { IAddMovie, IStoredManifest, IRequestArgs } from "./types";
+import includes from "../../../utils/array_includes";
 import {
+  IActiveSubs,
   IEmitterLoaderBuilder,
   IProgressBarBuilder,
-  IActiveSubs,
 } from "./apis/dash/types";
+import { IAddMovie, IRequestArgs, IStoredManifest } from "./types";
+
+/* tslint:disable */
+
+/**
+ * A utils class that extends Error object to have custom class errors
+ */
+export class SegmentConstuctionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SegmentConstructionError";
+  }
+}
+
+export class ValidationArgsError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ValidationArgsError";
+  }
+}
+
+export class RxPlayerError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "RxPlayerError";
+  }
+}
+export class IndexDBError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "IndexDBError";
+  }
+}
+/* tslint:enable */
 
 /**
  * Check the presence and validity of IAddMovie arguments
@@ -32,7 +66,7 @@ import {
  */
 export async function checkForSettingsAddMovie(
   settings: IAddMovie,
-  db: IDBPDatabase<unknown>,
+  db: IDBPDatabase,
   activeSubsDownloader: IActiveSubs
 ): Promise<void> {
   if (!settings.url) {
@@ -88,15 +122,19 @@ export function checkForPauseAMovie(contentID: string) {
 }
 
 /**
- * A progressBarBuilder, emit a eventName 'progress' with the current progress of the download.
+ * A progressBarBuilder, emit a eventName
+ * 'progress' with the current progress of the download.
  *
  * @remarks
- * We can launch multiple Download function at the same time so emit will also emit a contentID to know.
+ * We can launch multiple Download function at the
+ * same time so emit will also emit a contentID to know.
  *
  * @param emitter - The emitter object on we are emitting
  * @param contentID - The contentID unique by download
- * @param emitterLoaderBuilder - The id,totalSegments and segmentDownladed for the current contentID movie download
- * @param IProgressBarBuilder - The object where we stock the value to construct the progress bar
+ * @param emitterLoaderBuilder - The id,totalSegments and
+ * segmentDownladed for the current contentID movie download
+ * @param IProgressBarBuilder - The object
+ * where we stock the value to construct the progress bar
  * @returns number
  *
  */
@@ -104,7 +142,7 @@ export function progressBuilder(
   { id, totalSegments, segmentDownloaded }: IEmitterLoaderBuilder,
   progressBarBuilder: IProgressBarBuilder
 ): void {
-  if (!progressBarBuilder.downloadedID.includes(id) && totalSegments) {
+  if (!includes(progressBarBuilder.downloadedID, id) && totalSegments) {
     progressBarBuilder.overall += totalSegments;
     progressBarBuilder.progress += segmentDownloaded;
     progressBarBuilder.downloadedID.push(id);
@@ -113,39 +151,6 @@ export function progressBuilder(
   progressBarBuilder.progress += segmentDownloaded;
   return;
 }
-
-/* tslint:disable */
-
-/**
- * A utils class that extends Error object to have custom class errors
- */
-export class SegmentConstuctionError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "SegmentConstructionError";
-  }
-}
-
-export class ValidationArgsError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "ValidationArgsError";
-  }
-}
-
-export class RxPlayerError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "RxPlayerError";
-  }
-}
-export class IndexDBError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "IndexDBError";
-  }
-}
-/* tslint:enable */
 
 export function makeHTTPRequest<T>(
   url: string,

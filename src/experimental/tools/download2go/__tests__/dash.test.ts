@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { AsyncSubject } from "rxjs";
+import { AsyncSubject, from } from "rxjs";
+import { IParsedRepresentation } from "../../../../parsers/manifest/types";
 import {
   buildInitIndexSegment,
   getSegmentBuffer,
@@ -24,9 +25,6 @@ import {
   concatBytes,
   takeUntilFilter,
 } from "../apis/dash/dashTools";
-import { IRepresentationIndex } from "../../../../manifest";
-import { from } from "rxjs";
-// import { from } from "rxjs";
 
 const resForMakeHTTPRequest = new Int16Array(0);
 jest.mock("../utils.ts", () => ({
@@ -67,14 +65,18 @@ describe("Download2go - dash content manipulation", () => {
           },
           url: "http://dash-vod-aka-test.canal-bis.com/multicodec/index.mpd",
           type: "BaseRepresentationIndex",
-        }).then(res => {
-          expect(res).toEqual({
-            data: resForMakeHTTPRequest,
-            duration: 200,
-            timescale: 10,
-            time: 10,
+        })
+          .then(res => {
+            expect(res).toEqual({
+              data: resForMakeHTTPRequest,
+              duration: 200,
+              timescale: 10,
+              time: 10,
+            });
+          })
+          .catch(() => {
+            throw new Error("Test failed");
           });
-        });
       });
 
       it("should get a simple segmentBuffer on TemplateRepresentationIndex", () => {
@@ -90,14 +92,18 @@ describe("Download2go - dash content manipulation", () => {
           },
           url: "",
           type: "TemplateRepresentationIndex",
-        }).then(res => {
-          expect(res).toEqual({
-            data: resForMakeHTTPRequest,
-            duration: 200,
-            timescale: 10,
-            time: 10,
+        })
+          .then(res => {
+            expect(res).toEqual({
+              data: resForMakeHTTPRequest,
+              duration: 200,
+              timescale: 10,
+              time: 10,
+            });
+          })
+          .catch(() => {
+            throw new Error("Test failed");
           });
-        });
       });
     });
   });
@@ -105,10 +111,10 @@ describe("Download2go - dash content manipulation", () => {
   describe("dashTools", () => {
     describe("[chooseVideoQuality]", () => {
       it("should return the only quality available", () => {
-        const qualities = [
+        const qualities: IParsedRepresentation[] = [
           {
             bitrate: 112,
-            index: {} as IRepresentationIndex,
+            index: {} as any,
             id: "id--1",
             height: 1280,
             width: 1920,
@@ -119,17 +125,17 @@ describe("Download2go - dash content manipulation", () => {
       });
 
       it("should return the best quality available", () => {
-        const qualities = [
+        const qualities: IParsedRepresentation[] = [
           {
             bitrate: 112,
-            index: {} as IRepresentationIndex,
+            index: {} as any,
             id: "id--1",
             height: 1280,
             width: 1920,
           },
           {
             bitrate: 11222,
-            index: {} as IRepresentationIndex,
+            index: {} as any,
             id: "id--2",
             height: 1380,
             width: 1920,
@@ -139,7 +145,7 @@ describe("Download2go - dash content manipulation", () => {
         expect(res1).toEqual([
           {
             bitrate: 11222,
-            index: {} as IRepresentationIndex,
+            index: {} as any,
             id: "id--2",
             height: 1380,
             width: 1920,
@@ -149,7 +155,7 @@ describe("Download2go - dash content manipulation", () => {
         expect(res2).toEqual([
           {
             bitrate: 11222,
-            index: {} as IRepresentationIndex,
+            index: {} as any,
             id: "id--2",
             height: 1380,
             width: 1920,
@@ -158,24 +164,24 @@ describe("Download2go - dash content manipulation", () => {
       });
 
       it("should return MEDIUM since specific quality is not existing", () => {
-        const qualities = [
+        const qualities: IParsedRepresentation[] = [
           {
             bitrate: 112,
-            index: {} as IRepresentationIndex,
+            index: {} as any,
             id: "id--1",
             height: 200,
             width: 100,
           },
           {
             bitrate: 112,
-            index: {} as IRepresentationIndex,
+            index: {} as any,
             id: "id--1",
             height: 1280,
             width: 1920,
           },
           {
             bitrate: 11222,
-            index: {} as IRepresentationIndex,
+            index: {} as any,
             id: "id--2",
             height: 1380,
             width: 1920,
@@ -185,7 +191,7 @@ describe("Download2go - dash content manipulation", () => {
         expect(res).toEqual([
           {
             bitrate: 112,
-            index: {} as IRepresentationIndex,
+            index: {} as any,
             id: "id--1",
             height: 1280,
             width: 1920,
@@ -194,17 +200,17 @@ describe("Download2go - dash content manipulation", () => {
       });
 
       it("should return nothing since we are not in video mode", () => {
-        const qualities = [
+        const qualities: IParsedRepresentation[] = [
           {
             bitrate: 112,
-            index: {} as IRepresentationIndex,
+            index: {} as any,
             id: "id--1",
             height: 1280,
             width: 1920,
           },
           {
             bitrate: 11222,
-            index: {} as IRepresentationIndex,
+            index: {} as any,
             id: "id--2",
             height: 1380,
             width: 1920,
@@ -215,24 +221,24 @@ describe("Download2go - dash content manipulation", () => {
       });
 
       it("should return the lowest quality", () => {
-        const qualities = [
+        const qualities: IParsedRepresentation[] = [
           {
             bitrate: 112,
-            index: {} as IRepresentationIndex,
+            index: {} as any,
             id: "id--1",
             height: 1280,
             width: 1920,
           },
           {
             bitrate: 11222,
-            index: {} as IRepresentationIndex,
+            index: {} as any,
             id: "id--2",
             height: 1380,
             width: 1920,
           },
           {
             bitrate: 112,
-            index: {} as IRepresentationIndex,
+            index: {} as any,
             id: "id--1",
             height: 200,
             width: 300,
@@ -242,7 +248,7 @@ describe("Download2go - dash content manipulation", () => {
         expect(res).toEqual([
           {
             bitrate: 112,
-            index: {} as IRepresentationIndex,
+            index: {} as any,
             id: "id--1",
             height: 200,
             width: 300,
@@ -282,7 +288,7 @@ describe("Download2go - dash content manipulation", () => {
           });
       });
 
-      it("should return a prior stream depending on observable emit whatever is the callback condition", () => {
+      it("should emit value depending on obs emit whatever is the cb condition", () => {
         const obs2 = new AsyncSubject<void>();
         obs2.next();
         obs2.complete();

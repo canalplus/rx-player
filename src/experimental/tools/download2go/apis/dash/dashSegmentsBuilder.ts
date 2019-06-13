@@ -15,43 +15,45 @@
  */
 
 import {
+  AsyncSubject,
   from,
   Observable,
-  Subscription,
   ReplaySubject,
-  AsyncSubject,
+  Subscription,
 } from "rxjs";
-import { retry, concatMap, mergeMap, takeUntil } from "rxjs/operators";
+import { concatMap, map, mergeMap, retry, takeUntil } from "rxjs/operators";
 
-import { chooseVideoQuality, emitEveryNth, getBaseSegments } from "./dashTools";
-import { createSegment } from "./dashConnectivity";
+import PPromise from "../../../../../utils/promise";
 import { SegmentConstuctionError } from "../../utils";
-import { initDownloaderAssets } from "../publicApi/offlineDownload";
 import getLicense from "../drm/keySystems";
+import { initDownloaderAssets } from "../publicApi/offlineDownload";
+import { createSegment } from "./dashConnectivity";
+import { chooseVideoQuality, emitEveryNth, getBaseSegments } from "./dashTools";
 
-import {
-  IParsedAdaptation,
-  IParsedPeriod,
-  IParsedRepresentation,
-  IParsedManifest,
-} from "../../../../../parsers/manifest/types";
-import { ISidxSegment } from "../../../../../parsers/containers/isobmff";
 import IRepresentationIndex, {
   ISegment,
 } from "../../../../../manifest/representation_index/types";
+import { ISidxSegment } from "../../../../../parsers/containers/isobmff";
 import {
+  IParsedAdaptation,
+  IParsedManifest,
+  IParsedPeriod,
+  IParsedRepresentation,
+} from "../../../../../parsers/manifest/types";
+import { IProgressBarBuilderAbstract, IUtils } from "../../types";
+import {
+  IDownloaderManagerAbstract,
+  IDownloadManagerOutput,
+  ILoaderBuilder,
   ILocalAdaptationOnline,
   ILocalIndexOnline,
-  ILocalRepresentationOnline,
   ILocalManifestOnline,
   ILocalPeriodOnline,
+  ILocalRepresentationOnline,
   IOptionsBuilder,
-  ILoaderBuilder,
   ISegmentBuilder,
-  IDownloadManagerOutput,
-  IDownloaderManagerAbstract,
+  SegmentBuilt,
 } from "./types";
-import { IProgressBarBuilderAbstract, IUtils } from "../../types";
 
 /**
  * Pipeline that construct the wholes files that we need by assembling segments
@@ -85,7 +87,8 @@ const buildSegments = async (
   }
   if (!durationCurrPeriod && type === "TemplateRepresentationIndex") {
     throw new SegmentConstuctionError(
-      "Error during the contruction of segments, no duration of the current period given because it's a TemplateRepresentationIndex"
+      "Error during the contruction of segments,\
+      no duration of the current period given because it's a TemplateRepresentationIndex"
     );
   }
   // GET ENCRYPTION INFORMATION
@@ -107,16 +110,19 @@ const buildSegments = async (
           error: err,
         });
         throw new SegmentConstuctionError(
-          "An error has been encountered during the handShake with the CDM and the license server"
+          "An error has been encountered during \
+          the handShake with the CDM and the license server"
         );
       }
     );
   }
-  progressBarBuilder$!.next({
-    id,
-    segmentDownloaded: 0,
-    totalSegments: nextSegmentsRanges.length,
-  });
+  if (progressBarBuilder$) {
+    progressBarBuilder$.next({
+      id,
+      segmentDownloaded: 0,
+      totalSegments: nextSegmentsRanges.length,
+    });
+  }
   return {
     init: (await db.put("segments", {
       contentID,
@@ -141,7 +147,8 @@ const buildSegments = async (
 };
 
 /**
- * Create the base structure of what expect the rx-player in local transport from the parsed dash
+ * Create the base structure of what expect
+ * the rx-player in local transport from the parsed dash
  *
  * @param IParsedManifest - The freshly parsed manifest
  * @returns The full manifest ready to be inserted in IndexDB
@@ -161,13 +168,13 @@ export const fillStructMapping = (
           accAdaptation.concat(period.adaptations[elem]),
         []
       );
-      return Promise.resolve([
+      return PPromise.resolve([
         ...(await acc),
         {
           duration: period.duration,
           start: period.start,
           // tslint:disable-next-line:object-literal-sort-keys
-          adaptations: await Promise.all(
+          adaptations: await PPromise.all(
             concatAdaptations.map(
               async (
                 adaptation: IParsedAdaptation
@@ -184,7 +191,7 @@ export const fillStructMapping = (
                   closedCaption: adaptation.closedCaption,
                 }),
                 ...(adaptation.language && { language: adaptation.language }),
-                representations: await Promise.all(
+                representations: await PPromise.all(
                   chooseVideoQuality(
                     adaptation.representations,
                     adaptation.type,
@@ -230,14 +237,15 @@ export const fillStructMapping = (
         },
       ]);
     },
-    Promise.resolve([])
+    PPromise.resolve([])
   );
   // Change version with the right one
   return { version: "0.1", duration, periods: rxpManifest, isFinished: false };
 };
 
 /**
- * A download manager that take all the representations to execute them concurrently and tranform a Segment non built into a segment built
+ * A download manager that take all the representations to execute them
+ * concurrently and tranform a Segment non built into a segment built
  *
  * @param rxpManifest - The rxpManifest where all the data reside
  * @param utilsBuilder - Emitter and db instances
@@ -253,43 +261,45 @@ export const downloadManager = (
   contentID: string
 ): Observable<IDownloadManagerOutput> =>
   from(rxpManifest).pipe(
-    concatMap(
-      val => {
-        if (!val) {
-          return from([]);
-        }
-        return from(val.periods).pipe(
-          concatMap(period =>
-            from(period.adaptations).pipe(
-              mergeMap(
-                adaptation =>
-                  from(adaptation.representations).pipe(
-                    mergeMap(
-                      representation =>
-                        from(representation.index.segments).pipe(
-                          concatMap(segment =>
-                            createSegment(segment, utilsBuilder).pipe(retry(2))
-                          )
+    concatMap(manifest => {
+      if (!manifest) {
+        return from([]);
+      }
+      return from(manifest.periods).pipe(
+        concatMap(period =>
+          from(period.adaptations).pipe(
+            mergeMap(
+              adaptation =>
+                from(adaptation.representations).pipe(
+                  mergeMap(
+                    representation =>
+                      from(representation.index.segments).pipe(
+                        concatMap(segment =>
+                          createSegment(segment, utilsBuilder).pipe(retry(2))
                         ),
-                      (nextSegments, segmentInfos) => {
-                        nextSegments.index.segments[
-                          segmentInfos[0][1]
-                        ] = segmentInfos;
-                        return segmentInfos;
-                      },
-                      adaptation.representations.length
-                    )
-                  ),
-                undefined,
-                period.adaptations.length
-              ),
-              takeUntil(pause$)
-            )
+                        map(function(
+                          this: Array<ISegmentBuilder | SegmentBuilt>,
+                          segmentBuilt
+                        ) {
+                          const [[, i]] = segmentBuilt;
+                          this[i] = segmentBuilt;
+                          return segmentBuilt;
+                        },
+                        representation.index.segments)
+                      ),
+                    adaptation.representations.length
+                  )
+                ),
+              period.adaptations.length
+            ),
+            takeUntil(pause$)
           )
-        );
-      },
-      (localManifest, _) => localManifest
-    ),
+        ),
+        map(function(this: ILocalManifestOnline) {
+          return this;
+        }, manifest)
+      );
+    }),
     emitEveryNth(progress$, utilsBuilder, contentID, pause$)
   );
 
@@ -314,14 +324,14 @@ export function downloadManagerSubscription(
   const downloadManagerSub = downloadManager(
     settings.type === "start"
       ? initDownloaderAssets(settings, { db, emitter, progressBarBuilder$ })
-      : Promise.resolve(settings.rxpManifest),
+      : PPromise.resolve(settings.rxpManifest),
     { emitter, db, storeManifestEvery, progressBarBuilder$ },
     progress$,
     pause$,
     contentID
   ).subscribe(
     async ({ manifest, ...props }) => {
-      await Promise.all([
+      await PPromise.all([
         db.put("manifests", {
           contentID,
           rxpManifest: manifest,

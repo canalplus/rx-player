@@ -14,28 +14,28 @@
  * limitations under the License.
  */
 
-import { ReplaySubject, AsyncSubject } from "rxjs";
+import { AsyncSubject, ReplaySubject } from "rxjs";
 
+import { downloader } from "./apis/publicApi/download";
+import { constructOfflineManifest } from "./apis/publicApi/offlineDownload";
 import { setUpDb } from "./apis/transactionDB/dbSetUp";
 import {
+  checkForPauseAMovie,
+  checkForResumeAPausedMovie,
   checkForSettingsAddMovie,
   IndexDBError,
-  checkForResumeAPausedMovie,
-  checkForPauseAMovie,
 } from "./utils";
-import { constructOfflineManifest } from "./apis/publicApi/offlineDownload";
-import { downloader } from "./apis/publicApi/download";
 
+import EventEmitter from "../../../utils/event_emitter";
+import { IActiveSubs, IPauseSubject } from "./apis/dash/types";
 import {
   IAddMovie,
-  IPublicAPI,
-  IProgressBarBuilderAbstract,
-  IStoredManifest,
-  IOptionsStarter,
   IEventsEmitter,
+  IOptionsStarter,
+  IProgressBarBuilderAbstract,
+  IPublicAPI,
+  IStoredManifest,
 } from "./types";
-import { IActiveSubs, IPauseSubject } from "./apis/dash/types";
-import EventEmitter from "../../../utils/event_emitter";
 
 export default async function D2G({
   nameDB = "d2g",
@@ -82,7 +82,7 @@ export default async function D2G({
           contentID: settings.dbSettings.contentID,
           error: e || new Error("A Unexpected error happened"),
         });
-        return;
+        return undefined;
       }
     },
     async resume(contentID: string): Promise<void> {
@@ -148,7 +148,7 @@ export default async function D2G({
           action: "getAllDownloadedMovies",
           error: new IndexDBError(e.message),
         });
-        return;
+        return undefined;
       }
     },
     async getSingleMovie<T>(contentID: string): Promise<T | void> {
@@ -201,7 +201,7 @@ export default async function D2G({
           contentID,
           error: e || new Error("A Unexpected error happened"),
         });
-        return;
+        return undefined;
       }
     },
   };

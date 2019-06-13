@@ -17,13 +17,13 @@
 import { IDBPDatabase } from "idb";
 import { Subject } from "rxjs";
 
-import {
-  IVideoSettings,
-  IProgressBarBuilder,
-  ILocalManifestOnline,
-  IEmitterLoaderBuilder,
-} from "./apis/dash/types";
 import EventEmitter from "../../../utils/event_emitter";
+import {
+  IEmitterLoaderBuilder,
+  ILocalManifestOnline,
+  IProgressBarBuilder,
+  IVideoSettings,
+} from "./apis/dash/types";
 
 export type videoSettingsQualityInputType = "HIGH" | "MEDIUM" | "LOW";
 export interface IAddMovie {
@@ -60,7 +60,7 @@ export type storeManifestEveryFn = (progress: number) => boolean;
 
 export interface IUtils {
   emitter: EventEmitter<IEventsEmitter>;
-  db: IDBPDatabase<unknown>;
+  db: IDBPDatabase;
   storeManifestEvery?: storeManifestEveryFn;
   progressBarBuilder$?: Subject<IEmitterLoaderBuilder>;
 }

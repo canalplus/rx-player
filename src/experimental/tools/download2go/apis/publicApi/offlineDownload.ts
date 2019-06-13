@@ -16,22 +16,22 @@
 
 import { IDBPDatabase } from "idb";
 
+import { ValidationArgsError } from "../../utils";
 import { getOnlineMPDParsed } from "../dash/dashConnectivity";
 import { fillStructMapping } from "../dash/dashSegmentsBuilder";
-import { ValidationArgsError } from "../../utils";
 
 import { IParserResponse } from "../../../../../parsers/manifest/dash/parse_mpd";
-import { IParsedManifest } from "../../../../../parsers/manifest/types";
-import { ILocalManifestOnline, IOptionsBuilder } from "../dash/types";
 import {
+  ILocalAdaptation,
+  ILocalIndexSegment,
   ILocalManifest,
   ILocalPeriod,
-  ILocalAdaptation,
   ILocalRepresentation,
-  ILocalIndexSegment,
 } from "../../../../../parsers/manifest/local/types";
-import { IUtils } from "./../../types";
+import { IParsedManifest } from "../../../../../parsers/manifest/types";
 import { IAddMovie } from "../../types";
+import { ILocalManifestOnline, IOptionsBuilder } from "../dash/types";
+import { IUtils } from "./../../types";
 
 /**
  * Check the parsed dash manifest then launch the pipeline building of the structure
@@ -78,7 +78,7 @@ export async function initDownloaderAssets(
     videoSettings: { quality, keySystems },
   } = settings;
   if (url) {
-    return await buildRxpManifestPipeline(
+    return buildRxpManifestPipeline(
       await getOnlineMPDParsed(url),
       {
         contentID,
@@ -88,7 +88,7 @@ export async function initDownloaderAssets(
       {
         db,
         emitter,
-        progressBarBuilder$: progressBarBuilder$!,
+        ...(progressBarBuilder$ && { progressBarBuilder$ }),
       }
     );
   }
@@ -99,8 +99,8 @@ export async function initDownloaderAssets(
  * Returns the structure of the manifest needed by the rxPlayer transport local.
  *
  * @remarks
- * It's mandatory to construct again the rxpManifest when the user want it because we can't
- * insert function type in IndexDB
+ * It's mandatory to construct again the rxpManifest
+ * when the user want it because we can't insert function type in IndexDB
  *
  * @param ILocalManifestOnline - The rxpManifest we downloaded when online
  * @returns The manifest that the rxPlayer expect
@@ -108,7 +108,7 @@ export async function initDownloaderAssets(
  */
 export function constructOfflineManifest(
   rxpManifestOnlineFormat: ILocalManifestOnline,
-  db: IDBPDatabase<unknown>
+  db: IDBPDatabase
 ): ILocalManifest {
   return {
     ...rxpManifestOnlineFormat,
@@ -125,17 +125,22 @@ export function constructOfflineManifest(
                   index: {
                     ...(representation.index.init && {
                       init: {
-                        load({ resolve }) {
+                        load({ resolve, reject }) {
                           if (representation.index.init) {
-                            db.get("segments", representation.index.init).then(
-                              segmentIndex => {
+                            db.get("segments", representation.index.init)
+                              .then(segmentIndex => {
+                                if (!segmentIndex) {
+                                  reject(new Error("Segment not found"));
+                                }
                                 resolve({
                                   data: segmentIndex.data,
                                   duration: segmentIndex.duration,
                                   size: segmentIndex.size,
                                 });
-                              }
-                            );
+                              })
+                              .catch(err => {
+                                reject(err);
+                              });
                           }
                         },
                       },
@@ -159,14 +164,18 @@ export function constructOfflineManifest(
                           duration,
                           time,
                           timescale,
-                          load({ resolve }) {
-                            db.get("segments", key).then(({ data, size }) => {
-                              resolve({
-                                data,
-                                duration,
-                                size,
+                          load({ resolve, reject }) {
+                            db.get("segments", key)
+                              .then(({ data, size }) => {
+                                resolve({
+                                  data,
+                                  duration,
+                                  size,
+                                });
+                              })
+                              .catch(err => {
+                                reject(err);
                               });
-                            });
                           },
                         };
                       }

@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-import { Observable, Observer } from "rxjs";
+import { Observable } from "rxjs";
 
-import { SegmentConstuctionError, makeHTTPRequest } from "../../utils";
-import {
-  IRepresentation,
-  ISegmentsBuiltType,
-  ISegmentBuilder,
-  SegmentBuilt,
-} from "./types";
 import { ISegment } from "../../../../../manifest";
 import { ISidxSegment } from "../../../../../parsers/containers/isobmff";
 import parseManifest from "../../../../../parsers/manifest/dash/index";
 import { IParserResponse } from "../../../../../parsers/manifest/dash/parse_mpd";
 import { IParsedManifest } from "../../../../../parsers/manifest/types";
-import { IUtils } from "./../../types";
+import { makeHTTPRequest, SegmentConstuctionError } from "../../utils";
 import { TypedArray } from "../drm/keySystems";
+import { IUtils } from "./../../types";
+import {
+  IRepresentation,
+  ISegmentBuilder,
+  ISegmentsBuiltType,
+  SegmentBuilt,
+} from "./types";
 
 /**
  * Get a manifest from a server and parse it.
@@ -145,7 +145,8 @@ type: "TemplateRepresentationIndex" | "BaseRepresentationIndex";
 };
 
 /**
- * A simple manager observable that either get the segment if is not already built or skip to the next one.
+ * A simple manager observable that either get the segment
+ * if is not already built or skip to the next one.
  *
  * @param segmentBuilder - Either a SegmentBuilt type or a ISegmentBuilder
  * @param optionBuilder - Emitter and db instances
@@ -156,7 +157,7 @@ export const createSegment = (
   segmentBuilder: ISegmentBuilder | SegmentBuilt,
   optionBuilder: IUtils
 ): Observable<SegmentBuilt> => {
-  return Observable.create((obs: Observer<ISegmentBuilder | SegmentBuilt>) => {
+  return new Observable<SegmentBuilt>(obs => {
     if (Array.isArray(segmentBuilder)) {
       obs.next(segmentBuilder);
       obs.complete();
@@ -179,11 +180,13 @@ export const createSegment = (
             size: sizePerBuffer,
           });
           obs.next([[key as string, keyIndex], time, timescale, duration]);
-          optionBuilder.progressBarBuilder$!.next({
-            id: utils.id,
-            segmentDownloaded: 1,
-            size: sizePerBuffer,
-          });
+          if (optionBuilder.progressBarBuilder$) {
+            optionBuilder.progressBarBuilder$.next({
+              id: utils.id,
+              segmentDownloaded: 1,
+              size: sizePerBuffer,
+            });
+          }
           obs.complete();
         } catch (e) {
           obs.error(e);

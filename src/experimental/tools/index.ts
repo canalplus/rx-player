@@ -18,10 +18,12 @@ import createMetaplaylist from "./createMetaplaylist";
 import mediaCapabilitiesProber from "./mediaCapabilitiesProber";
 import parseBifThumbnails from "./parseBIFThumbnails";
 import TextTrackRenderer from "./TextTrackRenderer";
+import download2Go from "./download2go";
 
 export {
   createMetaplaylist,
   mediaCapabilitiesProber,
   parseBifThumbnails,
   TextTrackRenderer,
+  download2Go,
 };
