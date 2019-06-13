@@ -43,6 +43,14 @@ is then emitted through it.
 This Observable will throw on any problem arising during that step, such as an
 HTTP error.
 
+In some specific conditions, the loader can also emit the wanted resource in
+multiple sub-parts. This allows for example to play a media file while still
+downloading it and is at the basis of low-latency streaming.
+To allow such use cases, the segment loaders can also emit the wanted resource
+by cutting it into chunks and emitting them through the Observable as they are
+available.
+This is better explained in the related chapter below.
+
 
 
 ## A parser ####################################################################
@@ -153,7 +161,25 @@ segment.
                         +----------+
 ```
 
-The following events can then be sent by the segment loader's Observable:
+The events sent depend on the "mode" chosen by the loader to download the
+segment. There is two possible modes:
+
+  - the regular mode, where the loader wait for the segments to be completely
+    downloaded before sending it
+
+  - the low-latency mode, where the loader emits segments by chunks at the same
+    time they are downloaded.
+
+The latter mode is usually active under the following conditions:
+  - low-latency streaming is enabled through the corresponding `loadVideo` option
+  - we're loading a DASH content.
+  - we're not loading an initialization segment.
+
+In most other cases, it will be in the regular mode.
+
+You can deduce which mode it was in simply by looking a the events it sends.
+In the regular mode, any of the following events can be sent through the
+Observable:
 
   - `"progress"`: We have new metrics on the current download (e.g. the amount
     currently downloaded, the time since the beginning of the request...)
@@ -175,6 +201,22 @@ The following events can then be sent by the segment loader's Observable:
     `"data-loaded"` event with the data when the segment has been loaded
     succesfully.
 
+In the low-latency mode, the following events can be sent instead:
+
+  - `"progress"`: We have new metrics on the current download (e.g. the amount
+    currently downloaded, the time since the beginning of the request...)
+
+  - `"data-chunk"`: A sub-segment (or chunk) of the data is currently available.
+    The corresponding sub-segment is communicated via this event.
+
+    This event can be communicated multiple times until a `"data-complete"`
+    event is received.
+
+  - `"data-chunk-complete"`: The segment request just finished. All
+    corresponding data has been sent through `"data-chunk"` events.
+
+    If sent, this is the last event sent by a segment loader.
+
 
 
 ## Segment parser ##############################################################
@@ -188,12 +230,17 @@ the segment's data:
 
 It receives the segment or sub-segment as argument and related informations
 ```
-  INPUT:                                      OUTPUT:
-  ------                                      -------
-  Segment in a generic format +  +----------+ Decodable data +
-  Segment informations           |          | time informations
+ INPUT:                                       OUTPUT:
+ ------                                       -------
+ Segment in a generic format +                Decodable data + time
+ isChunked? [1] + Segment        +----------+ informations
+ informations                    |          |
  ===============================>| SEGMENT  |===========================>
                                  |  PARSER  |
                                  |          |
                                  +----------+
 ```
+
+[1] The parser can make different guess on the time informations of the
+segment depending on if the loaded segment corresponds to the whole segment or
+just a small chunk of it. The `isChunked` boolean allows it to be aware of that.
