@@ -217,7 +217,10 @@ export default {
    * suggested, in seconds.
    * @type {Number}
    */
-  DEFAULT_LIVE_GAP: 10,
+  DEFAULT_LIVE_GAP: {
+    DEFAULT: 10,
+    LOW_LATENCY: 2,
+  },
 
   /**
    * Maximum time, in seconds, the player should automatically skip when stalled
