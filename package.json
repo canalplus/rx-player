@@ -215,6 +215,9 @@
     "type": "git",
     "url": "git://github.com/canalplus/rx-player.git"
   },
+  "dependencies": {
+    "idb": "4.0.3"
+  },
   "devDependencies": {
     "@canalplus/readme.doc": "0.6.1",
     "@eslint/js": "9.39.5",
