@@ -238,9 +238,9 @@ export default function(
       let chunkInfos : IChunkTimingInfos|null = null;
       const isMP4 = mimeType.indexOf("mp4") >= 0;
 
-      let _sdStart : number;
+      let _sdStart : number|undefined;
       let _sdEnd : number|undefined;
-      let _sdTimescale : number;
+      let _sdTimescale : number = 1;
       let _sdData : string;
       let _sdType : string|undefined;
 
@@ -335,6 +335,7 @@ export default function(
       if (chunkInfos != null && nextSegments) {
         addNextSegments(adaptation, nextSegments, chunkInfos);
       }
+
       return observableOf({ chunkData: { type: _sdType,
                                          data: _sdData,
                                          language,
@@ -342,7 +343,8 @@ export default function(
                                          start: _sdStart,
                                          end: _sdEnd },
                             chunkInfos,
-                            chunkOffset: _sdStart / _sdTimescale,
+                            chunkOffset: _sdStart == null ? 0 :
+                                                            _sdStart / _sdTimescale,
                             appendWindow: [undefined, undefined] });
     },
   };
