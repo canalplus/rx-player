@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 CANAL+ Group
+ * Copyright 2019 CANAL+ Group
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,25 @@
  * limitations under the License.
  */
 
-import ContentDownloader from "./ContentDownloader";
-import createMetaplaylist from "./createMetaplaylist";
-import mediaCapabilitiesProber from "./mediaCapabilitiesProber";
-import VideoThumbnailLoader from "./VideoThumbnailLoader";
+import { AsyncSubject, Subscription } from "rxjs";
+import Manifest from "../../../../../manifest";
+import { IRepresentationFilters } from "../../types";
 
-export {
-  ContentDownloader,
-  createMetaplaylist,
-  mediaCapabilitiesProber,
-  VideoThumbnailLoader,
-};
+export enum ContentType {
+  VIDEO = "video",
+  AUDIO = "audio",
+  TEXT = "text",
+}
+
+export interface IActiveDownload {
+  [contentID: string]: Subscription;
+}
+
+export interface IActivePauses {
+  [contentID: string]: AsyncSubject<void>;
+}
+
+export interface IContextManager {
+  manifest: Manifest;
+  filters?: IRepresentationFilters;
+}
