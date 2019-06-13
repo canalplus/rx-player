@@ -146,6 +146,7 @@ export interface ILoadVideoOptions {
   supplementaryImageTracks? : ISupplementaryImageTrackOption[];
   defaultAudioTrack? : IDefaultAudioTrackOption|null|undefined;
   defaultTextTrack? : IDefaultTextTrackOption|null|undefined;
+  lowLatencyMode? : boolean;
   networkConfig? : INetworkConfigOption;
   startAt? : IStartAtOption;
   textTrackMode? : "native"|"html";
@@ -159,6 +160,7 @@ interface IParsedLoadVideoOptionsBase {
   transport : string;
   autoPlay : boolean;
   keySystems : IKeySystemOption[];
+  lowLatencyMode : boolean;
   networkConfig: INetworkConfigOption;
   transportOptions : ITransportOptions;
   supplementaryTextTracks : ISupplementaryTextTrackOption[];
@@ -454,6 +456,8 @@ function parseLoadVideoOptions(
              "`setPreferredTextTracks` method instead");
   }
   const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
+  const lowLatencyMode = options.lowLatencyMode == null ? false :
+                                                          !!options.lowLatencyMode;
   const hideNativeSubtitle = options.hideNativeSubtitle == null ?
     !DEFAULT_SHOW_NATIVE_SUBTITLE :
     !!options.hideNativeSubtitle;
@@ -504,6 +508,7 @@ function parseLoadVideoOptions(
            defaultTextTrack,
            hideNativeSubtitle,
            keySystems,
+           lowLatencyMode,
            manualBitrateSwitchingMode,
            networkConfig,
            startAt,

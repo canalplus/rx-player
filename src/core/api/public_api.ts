@@ -669,6 +669,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             defaultAudioTrack,
             defaultTextTrack,
             keySystems,
+            lowLatencyMode,
             manualBitrateSwitchingMode,
             networkConfig,
             startAt,
@@ -707,7 +708,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     // Global clock used for the whole application.
     const clock$ = createClock(videoElement, { withMediaSource: !isDirectFile,
-                                               lowLatencyMode: false });
+                                               lowLatencyMode });
 
     const contentIsStopped$ = observableMerge(
       this._priv_stopCurrentContent$,
