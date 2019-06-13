@@ -1,4 +1,4 @@
-# Networking code ##############################################################
+# Transport code ###############################################################
 
 
 ## Overview ####################################################################
@@ -21,6 +21,10 @@ Its roles are to:
 As such, most network request needed by the player are directly performed by
 the `transports` code.
 
+
+
+## Implementation ##############################################################
+
 This code is completely divided by streaming protocols used.
 E.g.  `DASH` streaming is entirely defined in its own directory and same thing
 for `Smooth Streaming`.
@@ -39,26 +43,8 @@ This allows to greatly simplify code maintenance and evolutivity. For example,
 managing a new streaming protocol would mainly just need us to add some code
 there. Same thing for adding a new feature to e.g. `DASH` or `Smooth`.
 
-
-
-## Code organization ###########################################################
-
 Each streaming protocol implementation present in the `transports` code exports
 a single `transport` function.
 
-This function takes configuration options as argument and returns an object
-containing multiple other functions allowing to download and parse the manifest
-and all type of segments managed in the rx-player.
-
-It is then the task of the core of the rx-player to call those functions at the
-right time.
-
-The interface used by the transport function, its arguments and what it returns
-is heavily documented in the typings declared in the corresponding code.
-
-The code written there should limit at most any side-effects and should stay
-relatively pure. Calling functions defined there with the same arguments should
-always return the same response.
-
-As this code is heavily decoupled from the core, we found that keeping it that
-way greatly simplified how we can both write it and use it in the core.
+The object returned by that function is often referenced as the `transport
+pipelines`. It is documented [here](./pipeline.md).

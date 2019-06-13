@@ -20,8 +20,6 @@ The RxPlayer is heavily modularized.
 
 This helps us maintaining the code and providing evolutions more quickly, as the
 various modules use few well-defined interfaces with the rest of the code.
-As such, the impact an evolution on a particular module has on the rest of the
-code is controlled and limited to these interfaces.
 
 Like the code, the documentation is also divided in multiple parts, which link
 one by one to a module in the code.
