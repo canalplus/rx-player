@@ -193,6 +193,9 @@
     "type": "git",
     "url": "git://github.com/canalplus/rx-player.git"
   },
+  "dependencies": {
+    "idb": "4.0.3"
+  },
   "devDependencies": {
     "@babel/core": "7.23.6",
     "@babel/plugin-transform-runtime": "7.23.6",
