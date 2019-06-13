@@ -421,8 +421,7 @@ _type_: ``Boolean``
 _defaults_: ``false``
 
 The player has a specific feature which throttle the video to the minimum
-bitrate when the current page is hidden for more than a minute (based on
-``document.hidden``).
+bitrate when the current page is hidden for more than a minute.
 
 To activate this feature, set it to ``true``.
 ```js
