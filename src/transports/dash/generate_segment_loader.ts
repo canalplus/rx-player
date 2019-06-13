@@ -267,7 +267,7 @@ const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
     const fallback = () => {
       hasFallbacked = true;
 
-      // XXX TODO What is TypeScript/RxJS doing here??????
+      // HACK What is TypeScript/RxJS doing here??????
       /* tslint:disable deprecation */
       // @ts-ignore
       regularSegmentLoader(args).subscribe(obs);

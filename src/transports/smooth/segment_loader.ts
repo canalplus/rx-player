@@ -38,7 +38,7 @@ interface IRegularSegmentLoaderArguments extends ISegmentLoaderArguments {
 }
 
 type ICustomSegmentLoaderObserver =
-  Observer<ILoaderRegularDataEvent<Uint8Array|ArrayBuffer>>;
+  Observer< ILoaderRegularDataEvent< Uint8Array | ArrayBuffer > >;
 
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
@@ -167,7 +167,7 @@ const generateSegmentLoader = (
       const fallback = () => {
         hasFallbacked = true;
 
-        // XXX TODO What is TypeScript/RxJS doing here??????
+        // HACK What is TypeScript/RxJS doing here??????
         /* tslint:disable deprecation */
         // @ts-ignore
         regularSegmentLoader(args).subscribe(obs);
