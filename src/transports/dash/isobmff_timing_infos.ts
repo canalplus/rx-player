@@ -20,18 +20,20 @@ import {
   getTrackFragmentDecodeTime,
   ISidxSegment,
 } from "../../parsers/containers/isobmff";
-import assert from "../../utils/assert";
 import { IChunkTimingInfos } from "../types";
 
 /**
  * Get precize start and duration of a chunk.
- * @param {Object} segment
  * @param {UInt8Array} buffer - An ISOBMFF container (at least a `moof` + a
  * `mdat` box.
+ * @param {Boolean} isChunked - If true, the whole segment was chunked into
+ * multiple parts and buffer is one of them. If false, buffer is the whole
+ * segment.
+ * @param {Object} segment
  * @param {Array.<Object>|undefined} sidxSegments - Segments from sidx. Here
  * pre-parsed for performance reasons as it is usually available when
  * this function is called.
- * @param {Object} initInfos
+ * @param {Object|undefined} initInfos
  * @returns {Object}
  */
 function getISOBMFFTimingInfos(
@@ -40,7 +42,7 @@ function getISOBMFFTimingInfos(
   segment : ISegment,
   sidxSegments : ISidxSegment[]|null,
   initInfos? : IChunkTimingInfos
-) : IChunkTimingInfos|null {
+) : IChunkTimingInfos | null {
   const _sidxSegments = sidxSegments || [];
   let startTime;
   let duration;
@@ -132,14 +134,9 @@ function getISOBMFFTimingInfos(
     }
   }
 
-  if (__DEV__) {
-    assert(startTime != null);
-    assert(duration != null);
-  }
-
   return { timescale,
            time: startTime || 0,
-           duration: duration || 0 };
+           duration };
 }
 
 export default getISOBMFFTimingInfos;
