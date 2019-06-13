@@ -170,7 +170,7 @@ function fetchRequest(
           return readBufferAndSendEvents();
         } else if (data.done) {
           const receivedTime = performance.now();
-          const duration = receivedTime - receivedTime;
+          const duration = receivedTime - sendingTime;
           isDone = true;
           obs.next({ type: "data-complete" as const,
                      value: { duration,
