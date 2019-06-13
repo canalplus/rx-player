@@ -18,7 +18,7 @@ It tries to choose the optimal segments based on:
 
 
 
-## The BufferOrchestrator #####################################################$
+## The BufferOrchestrator ######################################################
 
 The ``BufferOrchestrator`` is the main entry point to interact with the buffer.
 It completely takes care of segment downloading and pushing for a whole content.
