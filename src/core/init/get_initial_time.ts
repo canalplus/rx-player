@@ -40,6 +40,7 @@ export interface IInitialTimeOptions { position? : number;
  */
 export default function getInitialTime(
   manifest : Manifest,
+  lowLatencyMode : boolean,
   startAt? : IInitialTimeOptions
 ) : number {
   log.debug("Init: calculating initial time");
@@ -83,6 +84,7 @@ export default function getInitialTime(
     }
   }
 
+  const minimumPosition = manifest.getMinimumPosition();
   if (manifest.isLive) {
     const sgp = manifest.suggestedPresentationDelay;
     const clockOffset = manifest.getClockOffset();
@@ -102,12 +104,14 @@ export default function getInitialTime(
     }
     log.debug(`Init: ${liveTime} defined as the live time, applying a live gap` +
               ` of ${sgp}`);
-    const defaultStartingPos = liveTime - (sgp == null ? DEFAULT_LIVE_GAP :
-                                                         sgp);
-    return Math.max(defaultStartingPos, manifest.getMinimumPosition());
+    if (sgp != null) {
+      return Math.max(liveTime - sgp, minimumPosition);
+    }
+    const defaultStartingPos = liveTime - (lowLatencyMode ? DEFAULT_LIVE_GAP.LOW_LATENCY :
+                                                            DEFAULT_LIVE_GAP.DEFAULT);
+    return Math.max(defaultStartingPos, minimumPosition);
   }
 
-  const minimumPosition = manifest.getMinimumPosition();
   log.info("Init: starting at the minimum available position:", minimumPosition);
   return minimumPosition;
 }
