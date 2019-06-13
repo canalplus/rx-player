@@ -249,7 +249,6 @@ export default function createSegmentLoader<T>(
             const complete$ = observableOf({ type: "chunk-complete" as const,
                                              value: null });
             return observableConcat(chunck$, complete$, metrics$);
-
           case "request":
           case "progress":
             return observableOf(arg);
@@ -260,7 +259,9 @@ export default function createSegmentLoader<T>(
                                     responseData: arg.value.responseData }),
             });
           case "data-chunk-complete":
-            return metrics$;
+            const _complete$ = observableOf({ type: "chunk-complete" as const,
+                                              value: null });
+            return observableConcat(_complete$, metrics$);
         }
         return assertUnreachable(arg);
       }));
