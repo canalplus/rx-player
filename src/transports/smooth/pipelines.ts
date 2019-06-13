@@ -256,13 +256,21 @@ export default function(
 
         nextSegments = timings.nextSegments;
         chunkInfos = timings.chunkInfos;
-        if (chunkInfos == null) { // XXX TODO
-          throw new Error("Time informations not found for the current text track.");
+        if (chunkInfos == null) {
+          if (isChunked) {
+            log.warn("Smooth: Unavailable time data for current text track.");
+          } else {
+            _sdStart = segment.time;
+            _sdEnd = segment.duration == null ? undefined :
+                                                _sdStart + segment.duration;
+            _sdTimescale = segment.timescale;
+          }
+        } else {
+          _sdStart = chunkInfos.time;
+          _sdEnd = chunkInfos.duration != null ? chunkInfos.time + chunkInfos.duration :
+                                                 undefined;
+          _sdTimescale = chunkInfos.timescale;
         }
-        _sdStart = chunkInfos.time;
-        _sdEnd = chunkInfos.duration != null ? chunkInfos.time + chunkInfos.duration :
-                                               undefined;
-        _sdTimescale = chunkInfos.timescale;
 
         const lcCodec = codec.toLowerCase();
         if (mimeType === "application/ttml+xml+mp4" ||
