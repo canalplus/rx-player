@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
 import arrayFind from "../../../utils/array_find";
 import idGenerator from "../../../utils/id_generator";
 import resolveURL, {
@@ -172,9 +171,7 @@ function parseCompleteIntermediateRepresentation(
     transportType: "dash",
     isLive: isDynamic,
     uris: [args.url, ...rootChildren.locations],
-    suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay != null ?
-                                  rootAttributes.suggestedPresentationDelay :
-                                  config.DEFAULT_SUGGESTED_PRESENTATION_DELAY.DASH,
+    suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay,
     clockOffset: clockOffsetFromDirectUTCTiming != null &&
                  !isNaN(clockOffsetFromDirectUTCTiming) ?
                    clockOffsetFromDirectUTCTiming :

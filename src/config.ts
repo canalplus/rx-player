@@ -212,16 +212,6 @@ export default {
   DEFAULT_LIVE_GAP: 10,
 
   /**
-   * Default value for a manifest's suggested presentation delay if not
-   * specified in the manifest.
-   * @type {Object}
-   */
-  DEFAULT_SUGGESTED_PRESENTATION_DELAY: {
-    SMOOTH: 10,
-    DASH: 10,
-  },
-
-  /**
    * Maximum time, in seconds, the player should automatically skip when stalled
    * because of a discontinuity in the downloaded range.
    * @type {Number}

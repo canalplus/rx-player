@@ -15,7 +15,6 @@
  */
 
 import objectAssign from "object-assign";
-import config from "../../../config";
 import assert from "../../../utils/assert";
 import idGenerator from "../../../utils/id_generator";
 import resolveURL, {
@@ -118,10 +117,7 @@ function createSmoothStreamingParser(
   manifestReceivedTime? : number
 ) => IParsedManifest {
 
-  const SUGGESTED_PERSENTATION_DELAY =
-    parserOptions.suggestedPresentationDelay == null ?
-      config.DEFAULT_SUGGESTED_PRESENTATION_DELAY.SMOOTH :
-      parserOptions.suggestedPresentationDelay;
+  const SUGGESTED_PERSENTATION_DELAY = parserOptions.suggestedPresentationDelay;
 
   const REFERENCE_DATE_TIME = parserOptions.referenceDateTime ||
     Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1000;
