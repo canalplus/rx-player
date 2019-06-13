@@ -80,12 +80,13 @@ class ContentList extends React.Component {
       manifestUrl: "",
       drm: DRM_TYPES[0],
       autoPlay: true,
+      lowLatency: true,
     };
   }
 
   loadContent(content) {
     const { loadVideo, stopVideo } = this.props;
-    const { autoPlay } = this.state;
+    const { autoPlay, lowLatency } = this.state;
     if (content == null) {
       stopVideo();
       return;
@@ -118,6 +119,8 @@ class ContentList extends React.Component {
 
   loadUrl(url, drmInfos, autoPlay) {
     const { loadVideo } = this.props;
+    const { lowLatency } = this.state;
+  
     parseDRMConfigurations(drmInfos)
       .then((keySystems) => {
         loadVideo({
@@ -129,6 +132,7 @@ class ContentList extends React.Component {
           // subs.  We force HTML textTrackMode to vizualise styles.
           textTrackMode: "html",
           keySystems,
+          lowLatencyMode: lowLatency,
         });
       });
   }
@@ -171,9 +175,17 @@ class ContentList extends React.Component {
     this.setState({ autoPlay: value });
   }
 
+  onLowLatencyClick(evt) {
+    const { target } = evt;
+    const value = target.type === "checkbox" ?
+      target.checked : target.value;
+    this.setState({ lowLatency: value });
+  }
+
   render() {
     const {
       autoPlay,
+      lowLatency,
       contentChoiceIndex,
       displayDRMSettings,
       drm,
@@ -226,6 +238,10 @@ class ContentList extends React.Component {
       this.onAutoPlayClick(evt);
     };
 
+    const onLowLatencyClick = (evt) => {
+      this.onLowLatencyClick(evt);
+    };
+
     const onDRMTypeClick = (type) => {
       this.setState({ drm: type });
     };
@@ -263,6 +279,13 @@ class ContentList extends React.Component {
               AutoPlay
               <label class="input switch">
                 <input type="checkbox" checked={autoPlay} onChange={onAutoPlayClick} />
+                <span class="slider round"></span>
+              </label>
+            </div>
+            <div class="auto-play">
+              LowLatency
+              <label class="input switch">
+                <input type="checkbox" checked={lowLatency} onChange={onLowLatencyClick} />
                 <span class="slider round"></span>
               </label>
             </div>
