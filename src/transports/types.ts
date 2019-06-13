@@ -203,13 +203,13 @@ export type IVideoParserResponse =
 export type IAudioParserResponse =
   ISegmentParserResponse< Uint8Array | ArrayBuffer | null >;
 
-export interface ITextTrackSegmentData { // XXX TODO without time?
+export interface ITextTrackSegmentData {
   data : string; // text track data
-  end? : number; // end time until which the segment apply, timescaled
-  language? : string; // language in which the text track is, as a language code
-  start : number; // start time from which the segment apply, timescaled
-  timescale : number; // timescale to convert `start` and `end` into seconds
   type : string; // the type of `data` (examples: "ttml", "srt" or "vtt")
+  language? : string; // language in which the text track is, as a language code
+  start? : number; // start time from which the segment apply, timescaled
+  end? : number; // end time until which the segment apply, timescaled
+  timescale : number; // timescale to convert `start` and `end` into seconds
 }
 
 // Response object returned by the text's segment parser
