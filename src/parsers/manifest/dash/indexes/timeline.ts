@@ -134,26 +134,22 @@ function fromParsedSToIndexSegment(
       start = timelineStart;
     } else if (previousItem.duration != null) {
       start = previousItem.start +
-        (previousItem.duration * (previousItem.repeatCount + 1));
+              (previousItem.duration * (previousItem.repeatCount + 1));
     }
   }
-  if (
-    (duration == null || isNaN(duration)) &&
-    nextItem && nextItem.start != null && !isNaN(nextItem.start) &&
-    start != null && !isNaN(start)
+  if ((duration == null || isNaN(duration)) &&
+      nextItem && nextItem.start != null && !isNaN(nextItem.start) &&
+      start != null && !isNaN(start)
   ) {
     duration = nextItem.start - start;
   }
-  if (
-    (start != null && !isNaN(start)) &&
-    (duration != null && !isNaN(duration)) &&
-    (repeatCount == null || !isNaN(repeatCount))
+  if ((start != null && !isNaN(start)) &&
+      (duration != null && !isNaN(duration)) &&
+      (repeatCount == null || !isNaN(repeatCount))
   ) {
-    return {
-      start,
-      duration,
-      repeatCount: repeatCount || 0,
-    };
+    return { start,
+             duration,
+             repeatCount: repeatCount || 0 };
   }
   log.warn("DASH: A \"S\" Element could not have been parsed.");
   return null;
@@ -183,9 +179,8 @@ function getSegmentIndex(
     }
   }
 
-  return (low > 0)
-    ? low - 1
-    : low;
+  return (low > 0) ? low - 1 :
+                     low;
 }
 
 /**
@@ -208,21 +203,23 @@ function _addSegmentInfos(
   const timelineLength = timeline.length;
   const lastItem = timeline[timelineLength - 1];
 
-  const scaledNewSegment = newSegment.timescale === timescale ? {
-    time: newSegment.time,
-    duration: newSegment.duration,
-  } : {
-    time: (newSegment.time / newSegment.timescale) * timescale,
-    duration: (newSegment.duration / newSegment.timescale) * timescale,
-  };
+  const scaledNewSegment =
+    newSegment.timescale === timescale ? { time: newSegment.time,
+                                           duration: newSegment.duration } :
+                                         { time: (newSegment.time /
+                                                  newSegment.timescale) * timescale,
+                                           duration: (newSegment.duration /
+                                                      newSegment.timescale) *
+                                                     timescale };
 
   let scaledCurrentTime;
 
   if (currentSegmentInfos && currentSegmentInfos.timescale) {
     scaledCurrentTime = (
-      currentSegmentInfos.timescale === timescale ?
-        currentSegmentInfos.time :
-        (currentSegmentInfos.time / currentSegmentInfos.timescale) * timescale
+      currentSegmentInfos.timescale === timescale ? currentSegmentInfos.time :
+                                                    (currentSegmentInfos.time /
+                                                     currentSegmentInfos.timescale)
+                                                    * timescale
     ) + index.indexTimeOffset;
   }
 
@@ -231,7 +228,7 @@ function _addSegmentInfos(
   // next segment. this is the case where the new segment are
   // associated to a current segment and have the same start
   const shouldDeductNextSegment = scaledCurrentTime != null &&
-    (scaledNewSegment.time === scaledCurrentTime);
+                                  (scaledNewSegment.time === scaledCurrentTime);
   if (shouldDeductNextSegment) {
     const newSegmentStart = scaledNewSegment.time + scaledNewSegment.duration;
     const lastSegmentStart = lastItem.start + lastItem.duration * lastItem.repeatCount;
@@ -254,28 +251,22 @@ function _addSegmentInfos(
       }
     }
 
-    index.timeline.push({
-      duration: -1,
-      start: newSegmentStart,
-      repeatCount: 0,
-    });
+    index.timeline.push({ duration: -1,
+                          start: newSegmentStart,
+                          repeatCount: 0 });
     return true;
   }
 
   // if the given timing has a timestamp after the timeline end we
   // just need to push a new element in the timeline, or increase
   // the @r attribute of the lastItem element.
-  else if (
-    scaledNewSegment.time >= getIndexSegmentEnd(lastItem, null, timelineEnd)
-  ) {
+  else if (scaledNewSegment.time >= getIndexSegmentEnd(lastItem, null, timelineEnd)) {
     if (lastItem.duration === scaledNewSegment.duration) {
       lastItem.repeatCount++;
     } else {
-      index.timeline.push({
-        duration: scaledNewSegment.duration,
-        start: scaledNewSegment.time,
-        repeatCount: 0,
-      });
+      index.timeline.push({ duration: scaledNewSegment.duration,
+                            start: scaledNewSegment.time,
+                            repeatCount: 0 });
     }
     return true;
   }
@@ -294,14 +285,12 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     index : ITimelineIndexIndexArgument,
     context : ITimelineIndexContextArgument
   ) {
-    const {
-      isDynamic,
-      representationBaseURL,
-      representationId,
-      representationBitrate,
-      periodStart,
-      periodEnd,
-    } = context;
+    const { isDynamic,
+            representationBaseURL,
+            representationId,
+            representationBitrate,
+            periodStart,
+            periodEnd } = context;
     const { timescale } = index;
 
     const presentationTimeOffset = index.presentationTimeOffset != null ?
@@ -316,37 +305,34 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       const item = initialTimeline[i];
       const nextItem = timeline[timeline.length - 1] || null;
       const prevItem = initialTimeline[i + 1] || null;
-      const timelineElement =
-        fromParsedSToIndexSegment(item, nextItem, prevItem, scaledStart);
+      const timelineElement = fromParsedSToIndexSegment(item,
+                                                        nextItem,
+                                                        prevItem,
+                                                        scaledStart);
       if (timelineElement) {
         timeline.push(timelineElement);
       }
     }
-    this._index = {
-      duration: index.duration,
-      indexRange: index.indexRange,
-      indexTimeOffset,
-      initialization: index.initialization && {
-        mediaURL: createIndexURL(
-          representationBaseURL,
-          index.initialization.media,
-          representationId,
-          representationBitrate
-        ),
-        range: index.initialization.range,
-      },
-      isDynamic,
-      mediaURL: createIndexURL(
-        representationBaseURL,
-        index.media,
-        representationId,
-        representationBitrate
-      ),
-      startNumber: index.startNumber,
-      timeline,
-      timelineEnd: periodEnd == null ? undefined : periodEnd * timescale,
-      timescale,
-    };
+    this._index = { duration: index.duration,
+                    indexRange: index.indexRange,
+                    indexTimeOffset,
+                    initialization: index.initialization && {
+                      mediaURL: createIndexURL(representationBaseURL,
+                                               index.initialization.media,
+                                               representationId,
+                                               representationBitrate),
+                      range: index.initialization.range,
+                    },
+                    isDynamic,
+                    mediaURL: createIndexURL(representationBaseURL,
+                                             index.media,
+                                             representationId,
+                                             representationBitrate),
+                    startNumber: index.startNumber,
+                    timeline,
+                    timelineEnd: periodEnd == null ? undefined :
+                                                     periodEnd * timescale,
+                    timescale };
   }
 
   /**
@@ -385,11 +371,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
 
     if (lastItem.duration < 0) {
-      lastItem = {
-        start: lastItem.start,
-        duration: 0,
-        repeatCount: lastItem.repeatCount,
-      };
+      lastItem = { start: lastItem.start,
+                   duration: 0,
+                   repeatCount: lastItem.repeatCount };
     }
 
     const scaledStart = toIndexTime(this._index, _start);
@@ -470,7 +454,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (rangeTo !== nextTimelineItem.start &&
         scaledTime >= rangeUp &&
         scaledTime <= rangeTo &&
-        (rangeTo - scaledTime) < timescale) {
+        (rangeTo - scaledTime) < timescale)
+    {
       return fromIndexTime(this._index, nextTimelineItem.start);
     }
 
@@ -492,11 +477,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    */
   _addSegments(
     nextSegments : Array<{ duration : number; time : number; timescale : number }>,
-    currentSegmentInfos? : {
-      duration? : number;
-      time : number;
-      timescale : number;
-    }
+    currentSegmentInfos? : { duration? : number;
+                             time : number;
+                             timescale : number; }
   ) : void {
     for (let i = 0; i < nextSegments.length; i++) {
       _addSegmentInfos(this._index, nextSegments[i], currentSegmentInfos);

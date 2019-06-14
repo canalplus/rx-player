@@ -108,29 +108,25 @@ export interface IBaseIndexContextArgument {
  */
 function _addSegmentInfos(
   index : IBaseIndex,
-  segmentInfos : {
-    time : number;
-    duration : number;
-    timescale : number;
-    count?: number;
-    range?: [number, number];
-  }
+  segmentInfos : { time : number;
+                   duration : number;
+                   timescale : number;
+                   count?: number;
+                   range?: [number, number]; }
 ) : boolean {
   if (segmentInfos.timescale !== index.timescale) {
     const { timescale } = index;
-    index.timeline.push({
-      start: (segmentInfos.time / segmentInfos.timescale) * timescale,
-      duration: (segmentInfos.duration / segmentInfos.timescale) * timescale,
-      repeatCount: segmentInfos.count || 0,
-      range: segmentInfos.range,
-    });
+    index.timeline.push({ start: (segmentInfos.time / segmentInfos.timescale)
+                                 * timescale,
+                          duration: (segmentInfos.duration / segmentInfos.timescale)
+                                    * timescale,
+                          repeatCount: segmentInfos.count || 0,
+                          range: segmentInfos.range });
   } else {
-    index.timeline.push({
-      start: segmentInfos.time,
-      duration: segmentInfos.duration,
-      repeatCount: segmentInfos.count || 0,
-      range: segmentInfos.range,
-    });
+    index.timeline.push({ start: segmentInfos.time,
+                          duration: segmentInfos.duration,
+                          repeatCount: segmentInfos.count || 0,
+                          range: segmentInfos.range });
   }
   return true;
 }
@@ -147,44 +143,36 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @param {Object} context
    */
   constructor(index : IBaseIndexIndexArgument, context : IBaseIndexContextArgument) {
-    const {
-      periodStart,
-      periodEnd,
-      representationBaseURL,
-      representationId,
-      representationBitrate,
-    } = context;
+    const { periodStart,
+            periodEnd,
+            representationBaseURL,
+            representationId,
+            representationBitrate } = context;
     const { timescale } = index;
 
     const presentationTimeOffset = index.presentationTimeOffset != null ?
       index.presentationTimeOffset : 0;
 
-    const indexTimeOffset =
-      presentationTimeOffset - periodStart * timescale;
+    const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
 
-    this._index = {
-      duration: index.duration,
-      indexRange: index.indexRange,
-      indexTimeOffset,
-      initialization: index.initialization && {
-        mediaURL: createIndexURL(
-          representationBaseURL,
-          index.initialization.media,
-          representationId,
-          representationBitrate
-        ),
-        range: index.initialization.range,
-      },
-      mediaURL: createIndexURL(
-        representationBaseURL,
-        index.media,
-        representationId,
-        representationBitrate
-      ),
-      startNumber: index.startNumber,
-      timeline: index.timeline,
-      timelineEnd: periodEnd == null ? undefined : periodEnd * timescale,
-      timescale,
+    this._index = { duration: index.duration,
+                    indexRange: index.indexRange,
+                    indexTimeOffset,
+                    initialization: index.initialization && {
+                      mediaURL: createIndexURL(representationBaseURL,
+                                               index.initialization.media,
+                                               representationId,
+                                               representationBitrate),
+                      range: index.initialization.range,
+                    },
+                    mediaURL: createIndexURL(representationBaseURL,
+                                             index.media,
+                                             representationId,
+                                             representationBitrate),
+                    startNumber: index.startNumber,
+                    timeline: index.timeline,
+                    timelineEnd: periodEnd == null ? undefined : periodEnd * timescale,
+                    timescale,
     };
   }
 
@@ -252,13 +240,12 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @param {Array.<Object>} nextSegments
    * @returns {Array.<Object>}
    */
-  _addSegments(nextSegments : Array<{
-    time : number;
-    duration : number;
-    timescale : number;
-    count? : number;
-    range? : [number, number];
-  }>) : void {
+  _addSegments(nextSegments : Array<{ time : number;
+                                      duration : number;
+                                      timescale : number;
+                                      count? : number;
+                                      range? : [number, number]; }>
+  ) : void {
     for (let i = 0; i < nextSegments.length; i++) {
       _addSegmentInfos(this._index, nextSegments[i]);
     }

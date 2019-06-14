@@ -17,12 +17,10 @@
 import { ISegment } from "../../../../manifest";
 import resolveURL from "../../../../utils/resolve_url";
 
-interface IIndexSegment {
-  start: number;
-  duration: number;
-  repeatCount: number; // repeat counter
-  range?: [number, number];
-}
+interface IIndexSegment { start: number;
+                          duration: number;
+                          repeatCount: number; // repeat counter
+                          range?: [number, number]; }
 
 /**
  * Calculate the number of times a timeline element repeat.
@@ -97,16 +95,13 @@ function getTimescaledRange(
   index: { timescale?: number },
   start: number,
   duration: number
-) : {
-  up: number;
-  to: number;
-} {
+) : { up: number;
+      to: number; }
+{
   const timescale = index.timescale || 1;
 
-  return {
-    up: (start) * timescale,
-    to: (start + duration) * timescale,
-  };
+  return { up: (start) * timescale,
+           to: (start + duration) * timescale };
 }
 
 /**
@@ -135,24 +130,23 @@ function getIndexSegmentEnd(
  * @returns {Object}
  */
 function getInitSegment(
-  index: {
-    timescale: number;
-    initialization?: { mediaURL: string; range?: [number, number] };
-    indexRange?: [number, number];
-    indexTimeOffset : number;
-  }
+  index: { timescale: number;
+           initialization?: { mediaURL: string; range?: [number, number] };
+           indexRange?: [number, number];
+           indexTimeOffset : number; }
 ) : ISegment {
   const { initialization } = index;
 
-  return {
-    id: "init",
-    isInit: true,
-    time: 0,
-    range: initialization ? initialization.range || undefined : undefined,
-    indexRange: index.indexRange || undefined,
-    mediaURL: initialization ? initialization.mediaURL : null,
-    timescale: index.timescale,
-    timestampOffset: -(index.indexTimeOffset / index.timescale),
+  return { id: "init",
+           isInit: true,
+           time: 0,
+           range: initialization ? initialization.range || undefined :
+                                   undefined,
+           indexRange: index.indexRange || undefined,
+           mediaURL: initialization ? initialization.mediaURL :
+                                      null,
+           timescale: index.timescale,
+           timestampOffset: -(index.indexTimeOffset / index.timescale),
   };
 }
 
@@ -222,17 +216,17 @@ function getSegmentsFromTimeline(
       // not completely generated
       if (start + maxEncounteredDuration < scaledTo) {
         const segmentNumber = currentNumber != null ? currentNumber : undefined;
-        const segment = {
-          id: "" + start,
-          time: start - index.indexTimeOffset,
-          isInit: false,
-          range,
-          duration: undefined,
-          timescale,
-          mediaURL: replaceSegmentDASHTokens(mediaURL, start, segmentNumber),
-          number: segmentNumber,
-          timestampOffset: -(index.indexTimeOffset / timescale),
-        };
+        const segment = { id: "" + start,
+                          time: start - index.indexTimeOffset,
+                          isInit: false,
+                          range,
+                          duration: undefined,
+                          timescale,
+                          mediaURL: replaceSegmentDASHTokens(mediaURL,
+                                                             start,
+                                                             segmentNumber),
+                          number: segmentNumber,
+                          timestampOffset: -(index.indexTimeOffset / timescale) };
         segments.push(segment);
       }
       return segments;
@@ -244,17 +238,17 @@ function getSegmentsFromTimeline(
     while (segmentTime < scaledTo && segmentNumberInCurrentRange <= repeat) {
       const segmentNumber = currentNumber != null ?
         currentNumber + segmentNumberInCurrentRange : undefined;
-      const segment = {
-        id: "" + segmentTime,
-        time: segmentTime - index.indexTimeOffset,
-        isInit: false,
-        range,
-        duration,
-        timescale,
-        mediaURL: replaceSegmentDASHTokens(mediaURL, segmentTime, segmentNumber),
-        number: segmentNumber,
-        timestampOffset: -(index.indexTimeOffset / timescale),
-      };
+      const segment = { id: "" + segmentTime,
+                        time: segmentTime - index.indexTimeOffset,
+                        isInit: false,
+                        range,
+                        duration,
+                        timescale,
+                        mediaURL: replaceSegmentDASHTokens(mediaURL,
+                                                           segmentTime,
+                                                           segmentNumber),
+                        number: segmentNumber,
+                        timestampOffset: -(index.indexTimeOffset / timescale) };
       segments.push(segment);
 
       // update segment number and segment time for the next segment
@@ -312,11 +306,9 @@ function createIndexURL(
   id?: string,
   bitrate?: number
 ): string {
-  return replaceRepresentationDASHTokens(
-    resolveURL(representationURL, media),
-    id,
-    bitrate
-  );
+  return replaceRepresentationDASHTokens(resolveURL(representationURL, media),
+                                         id,
+                                         bitrate);
 }
 
 /**

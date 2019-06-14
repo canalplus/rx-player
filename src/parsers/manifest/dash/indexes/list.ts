@@ -93,42 +93,34 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    * @param {Object} context
    */
   constructor(index : IListIndexIndexArgument, context : IListIndexContextArgument) {
-    const {
-      periodStart,
-      representationBaseURL,
-      representationId,
-      representationBitrate,
-    } = context;
+    const { periodStart,
+            representationBaseURL,
+            representationId,
+            representationBitrate } = context;
 
     this._periodStart = periodStart;
-    const presentationTimeOffset = index.presentationTimeOffset != null ?
-      index.presentationTimeOffset : 0;
+    const presentationTimeOffset =
+      index.presentationTimeOffset != null ? index.presentationTimeOffset :
+                                             0;
     const indexTimeOffset = presentationTimeOffset - periodStart * index.timescale;
 
-    this._index = {
-      list: index.list.map((lItem) => ({
-        mediaURL: createIndexURL(
-          representationBaseURL,
-          lItem.media,
-          representationId,
-          representationBitrate
-        ),
-        mediaRange: lItem.mediaRange,
-      })),
-      timescale: index.timescale,
-      duration: index.duration,
-      indexTimeOffset,
-      indexRange: index.indexRange,
-      initialization: index.initialization && {
-        mediaURL: createIndexURL(
-          representationBaseURL,
-          index.initialization.media,
-          representationId,
-          representationBitrate
-        ),
-        range: index.initialization.range,
-      },
-    };
+    const list = index.list.map((lItem) => ({
+      mediaURL: createIndexURL(representationBaseURL,
+                               lItem.media,
+                               representationId,
+                               representationBitrate),
+      mediaRange: lItem.mediaRange }));
+    this._index = { list,
+                    timescale: index.timescale,
+                    duration: index.duration,
+                    indexTimeOffset,
+                    indexRange: index.indexRange,
+                    initialization: index.initialization && {
+                      mediaURL: createIndexURL(representationBaseURL,
+                                               index.initialization.media,
+                                               representationId,
+                                               representationBitrate),
+                    range: index.initialization.range, }, };
   }
 
   /**
@@ -156,16 +148,14 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     while (i <= length) {
       const range = list[i].mediaRange;
       const mediaURL = list[i].mediaURL;
-      const args = {
-        id: "" + i,
-        time: i * duration,
-        isInit: false,
-        range,
-        duration,
-        timescale,
-        mediaURL,
-        timestampOffset: -(index.indexTimeOffset / timescale),
-      };
+      const args = { id: "" + i,
+                     time: i * duration,
+                     isInit: false,
+                     range,
+                     duration,
+                     timescale,
+                     mediaURL,
+                     timestampOffset: -(index.indexTimeOffset / timescale) };
       segments.push(args);
       i++;
     }
@@ -180,11 +170,9 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    * @returns {Boolean}
    */
   shouldRefresh(_fromTime : number, toTime : number) : boolean {
-    const {
-      timescale,
-      duration,
-      list,
-    } = this._index;
+    const { timescale,
+            duration,
+            list } = this._index;
 
     const scaledTo = toTime * timescale;
     const i = Math.floor(scaledTo / duration);
