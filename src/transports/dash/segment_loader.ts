@@ -24,10 +24,7 @@ import {
   scan,
 } from "rxjs/operators";
 import log from "../../log";
-import {
-  be4toi,
-  concat,
-} from "../../utils/byte_parsing";
+import { concat } from "../../utils/byte_parsing";
 import xhrRequest from "../../utils/request";
 import fetchRequest, {
   IDataChunk,
@@ -41,6 +38,7 @@ import {
   ISegmentLoaderObservable,
 } from "../types";
 import byteRange from "../utils/byte_range";
+import extractCompleteChunks from "./extract_complete_chunks";
 
 interface IRegularSegmentLoaderArguments extends ISegmentLoaderArguments {
   url : string;
@@ -48,78 +46,6 @@ interface IRegularSegmentLoaderArguments extends ISegmentLoaderArguments {
 
 type ICustomSegmentLoaderObserver =
   Observer<ILoaderRegularDataEvent<Uint8Array|ArrayBuffer>>;
-
-/**
- * Find the offset for the first declaration of the given box in an isobmff.
- * Returns -1 if not found.
- * @param {Uint8Array} buf - the isobmff
- * @param {Number} wantedName
- * @returns {Number} - Offset where the box begins. -1 if not found.
- */
-function findBox(buf : Uint8Array, wantedName : number) : number {
-  const len = buf.length;
-  let i = 0;
-  while (i + 8 < len) {
-    const size = be4toi(buf, i);
-    if (size <= 0) {
-      return - 1;
-    }
-
-    const name = be4toi(buf, i + 4);
-    if (name === wantedName) {
-      if (i + size <= len) {
-        return i;
-      }
-      return -1;
-    }
-    i += size;
-  }
-  return -1;
-}
-
-/**
- * @param {Uint8Array} buffer
- * @returns {Array}
- */
-function extractCompleteChunks(
-  buffer: Uint8Array
-) : [Uint8Array[], Uint8Array | null] {
-  let _position = 0;
-  const chunks : Uint8Array[] = [];
-  while (_position < buffer.length) {
-    const currentBuffer = buffer.subarray(_position, Infinity);
-    const moofIndex = findBox(currentBuffer, 0x6d6f6f66 /* moof */);
-    if (moofIndex < 0) {
-      // no moof, not a segment.
-      return [ chunks, currentBuffer ];
-    }
-    const moofLen = be4toi(buffer, moofIndex + _position);
-    const moofEnd = _position + moofIndex + moofLen;
-    if (moofEnd > buffer.length) {
-      // not a complete moof segment
-      return [ chunks, currentBuffer ];
-    }
-
-    const mdatIndex = findBox(currentBuffer, 0x6d646174 /* mdat */);
-    if (mdatIndex < 0) {
-      // no mdat, not a segment.
-      return [ chunks, currentBuffer ];
-    }
-    const mdatLen = be4toi(buffer, mdatIndex + _position);
-    const mdatEnd = _position + mdatIndex + mdatLen;
-    if (mdatEnd > buffer.length) {
-      // not a complete mdat segment
-      return [ chunks, currentBuffer ];
-    }
-
-    const maxEnd = Math.max(moofEnd, mdatEnd);
-    const chunk = buffer.subarray(_position, maxEnd);
-    chunks.push(chunk);
-
-    _position = maxEnd;
-  }
-  return [ chunks, null ];
-}
 
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
