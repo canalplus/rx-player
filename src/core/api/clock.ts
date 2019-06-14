@@ -23,13 +23,19 @@
 
 import objectAssign from "object-assign";
 import {
+  defer as observableDefer,
+  fromEvent as observableFromEvent,
+  interval as observableInterval,
+  merge as observableMerge,
   Observable,
-  Observer,
   ReplaySubject,
 } from "rxjs";
 import {
+  map,
+  mapTo,
   multicast,
   refCount,
+  startWith,
 } from "rxjs/operators";
 import config from "../../config";
 import log from "../../log";
@@ -38,51 +44,46 @@ import {
   getRange,
 } from "../../utils/ranges";
 
-export type IMediaInfosState = "init" |
-                               "canplay" |
-                               "play" |
-                               "progress" |
-                               "seeking" |
-                               "seeked" |
-                               "loadedmetadata" |
-                               "ratechange" |
-                               "timeupdate";
+export type IMediaInfosState = "init" | // set once on first emit
+                               "canplay" | // HTML5 Event
+                               "play" | // HTML5 Event
+                               "progress" | // HTML5 Event
+                               "seeking" | // HTML5 Event
+                               "seeked" | // HTML5 Event
+                               "loadedmetadata" | // HTML5 Event
+                               "ratechange" | // HTML5 Event
+                               "timeupdate"; // Interval
 
 // Informations recuperated on the media element on each clock
 // tick
-interface IMediaInfos { bufferGap : number;
-                        buffered : TimeRanges;
-                        currentRange : { start : number;
-                                         end : number; } |
-                                       null;
-                        currentTime : number;
-                        duration : number;
-                        ended: boolean;
-                        paused : boolean;
-                        playbackRate : number;
-                        readyState : number;
-                        seeking : boolean;
-                        state : IMediaInfosState; }
+interface IMediaInfos {
+  bufferGap : number; // Gap between `currentTime` and the next position with
+                      // bufferred data
+  buffered : TimeRanges; // Buffered ranges for the media element
+  currentRange : { start : number; // Buffered ranges related to `currentTime`
+                   end : number; } |
+                 null;
+  currentTime : number; // Current position set on the media element
+  duration : number; // Current duration set on the media element
+  ended: boolean; // Current `ended` value set on the media element
+  paused : boolean; // Current `paused` value set on the media element
+  playbackRate : number; // Current `playbackRate` set on the mediaElement
+  readyState : number; // Current `readyState` value on the media element
+  seeking : boolean; // Current `seeking` value on the mediaElement
+  state : IMediaInfosState; } // see type
 
-type stalledStatus = {
-                       reason : "seeking" | "not-ready" | "buffering";
-                       timestamp : number;
+type stalledStatus = { // set if the player is stalled
+                       reason : "seeking" | // Building buffer after seeking
+                                "not-ready" | // Building buffer after low readyState
+                                "buffering"; // Other cases
+                       timestamp : number; // `performance.now` at the time the
+                                           // stalling happened
                      } |
-                     null;
+                     null; // the player is not stalled
 
 // Global informations emitted on each clock tick
-export interface IClockTick extends IMediaInfos { stalled : stalledStatus; }
-
-function isMediaInfoState(state : string) : state is IMediaInfosState {
-  return state === "init" ||
-         state === "canplay" ||
-         state === "play" ||
-         state === "progress" ||
-         state === "seeking" ||
-         state === "seeked" ||
-         state === "loadedmetadata" ||
-         state === "ratechange" ||
-         state ===   "timeupdate";
+export interface IClockTick extends IMediaInfos {
+  stalled : stalledStatus; // see type
 }
 
 const { SAMPLING_INTERVAL_MEDIASOURCE,
@@ -96,13 +97,13 @@ const { SAMPLING_INTERVAL_MEDIASOURCE,
  * HTMLMediaElement Events for which timings are calculated and emitted.
  * @type {Array.<string>}
  */
-const SCANNED_MEDIA_ELEMENTS_EVENTS = [ "canplay",
-                                        "play",
-                                        "progress",
-                                        "seeking",
-                                        "seeked",
-                                        "loadedmetadata",
-                                        "ratechange" ];
+const SCANNED_MEDIA_ELEMENTS_EVENTS : IMediaInfosState[] = [ "canplay",
+                                                             "play",
+                                                             "progress",
+                                                             "seeking",
+                                                             "seeked",
+                                                             "loadedmetadata",
+                                                             "ratechange" ];
 
 /**
  * Returns the amount of time in seconds the buffer should have ahead of the
@@ -293,45 +294,39 @@ function createClock(
   mediaElement : HTMLMediaElement,
   { withMediaSource } : { withMediaSource : boolean }
 ) : Observable<IClockTick> {
-  return new Observable((obs : Observer<IClockTick>) => {
+  return observableDefer(() : Observable<IClockTick> => {
     let lastTimings : IClockTick = objectAssign(getMediaInfos(mediaElement, "init"),
                                                 { stalled: null });
 
-    /**
-     * Emit timings sample.
-     * Meant to be used as a callback on various async events.
-     * @param {Event} [evt] - The Event which triggered the callback, if one.
-     */
-    function emitSample(evt? : Event) {
-      const state : IMediaInfosState = evt &&
-                                       isMediaInfoState(evt.type) ? evt.type :
-                                                                    "timeupdate";
+    function getCurrentClockTick(state : IMediaInfosState) : IClockTick {
       const mediaTimings = getMediaInfos(mediaElement, state);
       const stalledState = getStalledStatus(lastTimings, mediaTimings, withMediaSource);
 
       // /!\ Mutate mediaTimings
-      lastTimings = objectAssign(mediaTimings,
-                                 { stalled: stalledState });
-      log.debug("API: new clock tick", lastTimings);
-      obs.next(lastTimings);
+      return objectAssign(mediaTimings, { stalled: stalledState });
     }
+
+    const eventObs : Array< Observable< IMediaInfosState > > =
+      SCANNED_MEDIA_ELEMENTS_EVENTS.map((eventName) =>
+        observableFromEvent(mediaElement, eventName)
+          .pipe(mapTo(eventName)));
 
     const interval = withMediaSource ? SAMPLING_INTERVAL_MEDIASOURCE :
                                        SAMPLING_INTERVAL_NO_MEDIASOURCE;
 
-    const intervalID = setInterval(emitSample, interval);
-    SCANNED_MEDIA_ELEMENTS_EVENTS
-      .forEach((eventName) =>
-        mediaElement.addEventListener(eventName, emitSample));
+    const interval$ : Observable<"timeupdate"> =
+      observableInterval(interval)
+        .pipe(mapTo("timeupdate"));
 
-    obs.next(lastTimings);
+    return observableMerge(interval$, ...eventObs)
+      .pipe(
+        map((state : IMediaInfosState) => {
+          lastTimings = getCurrentClockTick(state);
+          log.debug("API: new clock tick", lastTimings);
+          return lastTimings;
+        }),
 
-    return () => {
-      clearInterval(intervalID);
-      SCANNED_MEDIA_ELEMENTS_EVENTS
-        .forEach((eventName) =>
-          mediaElement.removeEventListener(eventName, emitSample));
-    };
+        startWith(lastTimings));
   }).pipe(
     multicast(() => new ReplaySubject<IClockTick>(1)), // Always emit the last
     refCount()
