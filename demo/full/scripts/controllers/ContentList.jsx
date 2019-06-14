@@ -176,6 +176,7 @@ class ContentList extends React.Component {
             transport,
             supplementaryImageTracks,
             supplementaryTextTracks,
+            lowLatencyMode,
             drmInfos = [] } = content;
 
     parseDRMConfigurations(drmInfos)
@@ -186,6 +187,7 @@ class ContentList extends React.Component {
                     supplementaryImageTracks,
                     supplementaryTextTracks,
                     textTrackMode: "html",
+                    lowLatencyMode,
                     keySystems });
       });
   }
