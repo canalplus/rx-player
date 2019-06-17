@@ -15,7 +15,8 @@
     - [maxBufferAhead](#prop-maxBufferAhead)
     - [maxBufferBehind](#prop-maxBufferBehind)
     - [limitVideoWidth](#prop-limitVideoWidth)
-    - [throttleWhenHidden](#prop-throttleWhenHidden)
+    - [throttleWhenHidden (deprecated)](#prop-throttleWhenHidden)
+    - [throttleVideoBitrateWhenHidden](#prop-throttleVideoBitrateWhenHidden)
     - [stopAtEnd](#prop-stopAtEnd)
 
 
@@ -427,6 +428,31 @@ To activate this feature, set it to ``true``.
 ```js
 const player = Player({
   throttleWhenHidden: true
+});
+```
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---
+
+<a name="prop-throttleVideoBitrateWhenHidden"></a>
+### throttleVideoBitrateWhenHidden ############################################
+
+_type_: ``Boolean``
+
+_defaults_: ``false``
+
+The player has a specific feature which throttle the video to the minimum
+bitrate when the current video display element is considered hidden (either the page is
+hidden, or the Picture-In-Picture mode is disabled, for more than a minute).
+
+To activate this feature, set it to ``true``.
+```js
+const player = Player({
+  throttleVideoBitrateWhenHidden: true
 });
 ```
 
