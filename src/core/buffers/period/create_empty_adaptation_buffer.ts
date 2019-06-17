@@ -32,14 +32,13 @@ import { IBufferStateFull } from "../types";
  *
  * This observable will never download any segment and just emit a "full"
  * event when reaching the end.
- *
  * @param {Observable} bufferClock$
  * @param {Observable} wantedBufferAhead$
  * @param {string} bufferType
  * @param {Object} content
  * @returns {Observable}
  */
-export default function createFakeAdaptationBuffer(
+export default function creatEmptyAdaptationBuffer(
   bufferClock$ : Observable<{ currentTime : number }>,
   wantedBufferAhead$ : Observable<number>,
   bufferType : IBufferType,
@@ -51,7 +50,7 @@ export default function createFakeAdaptationBuffer(
       period.end != null && clockTick.currentTime + wantedBufferAhead >= period.end
     ),
     map(() => {
-      log.debug("Buffer: full FakeBuffer", bufferType);
+      log.debug("Buffer: full \"empty\" AdaptationBuffer", bufferType);
       return { type: "full-buffer" as "full-buffer",
                value: { bufferType } };
     })

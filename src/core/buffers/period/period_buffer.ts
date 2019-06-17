@@ -61,7 +61,7 @@ import {
   IBufferWarningEvent,
   IPeriodBufferEvent,
 } from "../types";
-import createFakeBuffer from "./create_fake_buffer";
+import createEmptyBuffer from "./create_empty_adaptation_buffer";
 import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
 
 const { DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
@@ -141,7 +141,7 @@ export default function PeriodBuffer({
 
         return observableConcat<IPeriodBufferEvent>(
           cleanBuffer$.pipe(mapTo(EVENTS.adaptationChange(bufferType, null, period))),
-          createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { period })
+          createEmptyBuffer(clock$, wantedBufferAhead$, bufferType, { period })
         );
       }
 
@@ -224,7 +224,7 @@ export default function PeriodBuffer({
         sourceBuffersManager.disposeSourceBuffer(bufferType);
         return observableConcat<IAdaptationBufferEvent<T>|IBufferWarningEvent>(
           observableOf(EVENTS.warning(error)),
-          createFakeBuffer(clock$, wantedBufferAhead$, bufferType, { period })
+          createEmptyBuffer(clock$, wantedBufferAhead$, bufferType, { period })
         );
       }
       log.error(`Buffer: Native ${bufferType} buffer crashed. Stopping playback.`, error);
