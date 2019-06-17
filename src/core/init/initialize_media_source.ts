@@ -193,7 +193,10 @@ export default function InitializeOnMediaSource({
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".
-  const abrManager = new ABRManager(requestsInfos$, network$, adaptiveOptions);
+  const abrManager = new ABRManager(requestsInfos$,
+                                    network$,
+                                    adaptiveOptions,
+                                    lowLatencyMode);
 
   // Create and open a new MediaSource object on the given media element.
   const openMediaSource$ = openMediaSource(mediaElement).pipe(
@@ -250,10 +253,11 @@ export default function InitializeOnMediaSource({
       speed$,
       abrManager,
       segmentPipelinesManager,
-      bufferOptions: objectAssign({ textTrackOptions,
-                                    offlineRetry: networkConfig.offlineRetry,
-                                    segmentRetry: networkConfig.segmentRetry },
-                                  bufferOptions),
+      bufferOptions: objectAssign({
+        textTrackOptions,
+        offlineRetry: networkConfig.offlineRetry,
+        segmentRetry: networkConfig.segmentRetry,
+      }, bufferOptions),
     });
 
     log.debug("Init: Calculating initial time");

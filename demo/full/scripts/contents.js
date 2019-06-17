@@ -10,7 +10,7 @@ export default [
     "url": "https://www.bok.net/dash/tears_of_steel/cleartext/stream.mpd",
     "transport": "dash",
     "live": false,
-  },
+  }, 
   {
     "name": "Tears of Steal (DRM Widevine)",
     "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",

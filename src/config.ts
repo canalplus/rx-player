@@ -219,7 +219,7 @@ export default {
    */
   DEFAULT_LIVE_GAP: {
     DEFAULT: 10,
-    LOW_LATENCY: 2,
+    LOW_LATENCY_MODE: 2,
   },
 
   /**
@@ -345,13 +345,10 @@ export default {
    * triggered when various events of the media element are received.
    * @type {Number}
    */
-  SAMPLING_INTERVAL_MEDIASOURCE: 1000,
-
-  /**
-   * Same than SAMPLING_INTERVAL_MEDIASOURCE but for the directfile API.
-   * @type {Number}
-   */
-  SAMPLING_INTERVAL_NO_MEDIASOURCE: 500,
+  SAMPLING_INTERVAL: {
+    MEDIASOURCE: 1000,
+    NO_MEDIASOURCE: 500,
+  },
 
   /**
    * Minimum number of bytes sampled before we trust the estimate.
@@ -380,14 +377,20 @@ export default {
    * starvation mode.
    * @type {Number}
    */
-  ABR_STARVATION_FACTOR: 0.72,
+  ABR_STARVATION_FACTOR: {
+    DEFAULT: 0.72,
+    LOW_LATENCY_MODE: 0.62
+  },
 
   /**
    * Factor with which is multiplied the bandwidth estimate when the ABR is not
    * in starvation mode.
    * @type {Number}
    */
-  ABR_REGULAR_FACTOR: 0.90,
+  ABR_REGULAR_FACTOR: {
+    DEFAULT: 0.90,
+    LOW_LATENCY_MODE: 0.7
+  },
 
   /**
    * If a SourceBuffer has less than ABR_STARVATION_GAP in seconds ahead of the
@@ -408,8 +411,14 @@ export default {
    *
    * @type {Number}
    */
-  ABR_STARVATION_GAP: 5,
-  OUT_OF_STARVATION_GAP: 7,
+  ABR_STARVATION_GAP: {
+    DEFAULT: 5,
+    LOW_LATENCY_MODE: 1.3,
+  },
+  OUT_OF_STARVATION_GAP: {
+    DEFAULT: 7,
+    LOW_LATENCY_MODE: 3,
+  },
 
   /**
    * This is a security to avoid going into starvation mode when the content is
@@ -449,7 +458,7 @@ export default {
    */
   RESUME_GAP_AFTER_SEEKING: {
     DEFAULT: 1.5,
-    LOW_LATENCY: 0.5,
+    LOW_LATENCY_MODE: 0.5,
   },
 
   /**
@@ -457,19 +466,16 @@ export default {
    * the player was stalled due to a low readyState.
    * @type {Number}
    */
-  RESUME_GAP_AFTER_NOT_ENOUGH_DATA: {
-    DEFAULT: 0.5,
-    LOW_LATENCY: 0.5,
-  },
+  RESUME_GAP_AFTER_NOT_ENOUGH_DATA: 0.5,
 
   /**
    * Number of seconds ahead in the buffer after which playback will resume
    * after the player went through a buffering step.
-   * @type {Number}
+   * @type {Object}
    */
-  RESUME_GAP_AFTER_BUFFERING: {
+  RESUME_GAP_AFTER_BUFFERING:  {
     DEFAULT: 5,
-    LOW_LATENCY: 0.5,
+    LOW_LATENCY_MODE: 0.5,
   },
 
   /**
@@ -482,7 +488,7 @@ export default {
    */
   STALL_GAP: {
     DEFAULT: 0.5,
-    LOW_LATENCY: 0.001,
+    LOW_LATENCY_MODE: 0.01,
   },
 
   /**
@@ -555,7 +561,7 @@ export default {
    * this logic could lead to bugs with the current code.
    * @type {Number}
    */
-  MINIMUM_SEGMENT_SIZE: 0.05,
+  MINIMUM_SEGMENT_SIZE: 0.02,
 
   /**
    * Maximum interval at which text tracks are refreshed in an "html"

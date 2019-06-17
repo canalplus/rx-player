@@ -146,13 +146,13 @@ export interface ILoadVideoOptions {
   supplementaryImageTracks? : ISupplementaryImageTrackOption[];
   defaultAudioTrack? : IDefaultAudioTrackOption|null|undefined;
   defaultTextTrack? : IDefaultTextTrackOption|null|undefined;
-  lowLatencyMode? : boolean;
   networkConfig? : INetworkConfigOption;
   startAt? : IStartAtOption;
   textTrackMode? : "native"|"html";
   hideNativeSubtitle? : boolean;
   textTrackElement? : HTMLElement;
   manualBitrateSwitchingMode? : "seamless"|"direct";
+  lowLatencyMode? : boolean;
 }
 
 interface IParsedLoadVideoOptionsBase {
@@ -160,7 +160,6 @@ interface IParsedLoadVideoOptionsBase {
   transport : string;
   autoPlay : boolean;
   keySystems : IKeySystemOption[];
-  lowLatencyMode : boolean;
   networkConfig: INetworkConfigOption;
   transportOptions : ITransportOptions;
   supplementaryTextTracks : ISupplementaryTextTrackOption[];
@@ -169,6 +168,7 @@ interface IParsedLoadVideoOptionsBase {
   defaultTextTrack : ITextTrackPreference|null|undefined;
   startAt : IParsedStartAtOption|undefined;
   manualBitrateSwitchingMode : "seamless"|"direct";
+  lowLatencyMode : boolean;
 }
 
 interface IParsedLoadVideoOptionsNative
@@ -496,11 +496,11 @@ function parseLoadVideoOptions(
     }
   }
 
-  const networkConfig = options.networkConfig == null ?
-    {} :
-    { manifestRetry: options.networkConfig.manifestRetry,
-      offlineRetry: options.networkConfig.offlineRetry,
-      segmentRetry: options.networkConfig.segmentRetry };
+  const networkConfig = options.networkConfig == null ? {} : {
+    manifestRetry: options.networkConfig.manifestRetry,
+    offlineRetry: options.networkConfig.offlineRetry,
+    segmentRetry: options.networkConfig.segmentRetry,
+  };
 
   // TODO without cast
   /* tslint:disable no-object-literal-type-assertion */

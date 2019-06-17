@@ -743,7 +743,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
 
       const pipelines = transportFn(objectAssign({ supplementaryTextTracks,
-                                                   supplementaryImageTracks },
+                                                   supplementaryImageTracks,
+                                                   lowLatencyMode },
                                                  transportOptions));
       // Options used by the ABR Manager.
       const adaptiveOptions = {

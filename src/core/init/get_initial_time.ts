@@ -79,7 +79,7 @@ export default function getInitialTime(
 
   if (manifest.isLive) {
     const sgp = manifest.suggestedPresentationDelay;
-    const defaultLiveGap = lowLatencyMode ? DEFAULT_LIVE_GAP.LOW_LATENCY :
+    const defaultLiveGap = lowLatencyMode ? DEFAULT_LIVE_GAP.LOW_LATENCY_MODE :
                                             DEFAULT_LIVE_GAP.DEFAULT;
 
     const defaultStartingPos = manifest.getMaximumPosition() -

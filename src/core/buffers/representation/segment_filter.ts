@@ -21,8 +21,9 @@ import {
   Period,
   Representation,
 } from "../../../manifest";
-import SimpleSet from "../../../utils/simple_set";
 import SegmentBookkeeper from "../segment_bookkeeper";
+import { IWaitingSegmentCache } from "./representation_buffer";
+import arrayFind from "../../../utils/array_find";
 
 const {
   BITRATE_REBUFFERING_RATIO,
@@ -49,13 +50,30 @@ export default function shouldDownloadSegment(
   },
   segmentBookkeeper: SegmentBookkeeper,
   wantedRange : { start : number; end : number },
-  segmentIDsToIgnore : SimpleSet
+  currentSegmentRequest: null | { segment: ISegment },
+  waitingSegmentCache : IWaitingSegmentCache
 ) : boolean {
-  const { period, adaptation, representation } = content;
-  const shouldIgnore = segmentIDsToIgnore.test(segment.id);
+  const {
+    period,
+    adaptation,
+    representation,
+  } = content;
 
-  if (shouldIgnore) {
-    return false;
+  if (waitingSegmentCache[segment.id] &&
+      (
+        currentSegmentRequest == null ||
+        currentSegmentRequest.segment.id !== segment.id
+      )
+    ) {
+    const isWaitingForBuffering = arrayFind(waitingSegmentCache[segment.id].chunks, ([_, status]) => {
+      return status !== "appended";
+    });
+
+    // If a segment is being bufferized and it is not loaded anymore,
+    // we should ask for download
+    if (isWaitingForBuffering) {
+      return false;
+    }
   }
 
   // segment without time info are usually init segments or some
@@ -76,7 +94,9 @@ export default function shouldDownloadSegment(
   const currentSegment =
     segmentBookkeeper.hasPlayableSegment(wantedRange, { time, duration, timescale });
 
-  if (!currentSegment) {
+  if (!currentSegment ||
+    !currentSegment.isComplete
+     ) {
     return true;
   }
 

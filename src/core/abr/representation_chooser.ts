@@ -114,6 +114,7 @@ interface IRepresentationChooserOptions {
   initialBitrate?: number; // The initial wanted bitrate
   manualBitrate?: number; // A bitrate set manually
   maxAutoBitrate?: number; // The maximum bitrate we should set in adaptive mode
+  lowLatencyMode?: boolean; // Low latency mode enabled or not
 }
 
 /**
@@ -270,7 +271,8 @@ function estimateStarvationModeBitrate(
  */
 function shouldDirectlySwitchToLowBitrate(
   pendingRequests : Partial<Record<string, IRequestInfo>>,
-  clock : IRepresentationChooserClockTick
+  clock : IRepresentationChooserClockTick,
+  starvationGap : number
 ) : boolean {
   const nextNeededPosition = clock.currentTime + clock.bufferGap;
   const requests = objectValues(pendingRequests)
@@ -296,8 +298,9 @@ function shouldDirectlySwitchToLowBitrate(
   }
 
   const remainingTime = estimateRemainingTime(lastProgressEvent, bandwidthEstimate);
-  if ((now - lastProgressEvent.timestamp) / 1000 <= (remainingTime * 1.2) &&
-      remainingTime < ((clock.bufferGap / clock.speed) + ABR_STARVATION_GAP)
+  if (
+    (now - lastProgressEvent.timestamp) / 1000 <= (remainingTime * 1.2) &&
+    remainingTime < ((clock.bufferGap / clock.speed) + starvationGap)
   ) {
     return false;
   }
@@ -337,17 +340,25 @@ export default class RepresentationChooser {
   private readonly estimator : BandwidthEstimator;
   private readonly _initialBitrate : number;
   private readonly _reEstimate$ : Subject<void>;
+  private readonly _lowLatencyMode : boolean;
+  private readonly _abrStarvationFactor : number;
+  private readonly _abrRegularFactor : number;
   private _currentRequests : Partial<Record<string, IRequestInfo>>;
 
   /**
    * @param {Object} options
    */
-  constructor(options : IRepresentationChooserOptions) {
+  constructor(
+    options : IRepresentationChooserOptions
+  ) {
     this._dispose$ = new Subject();
 
-    this.manualBitrate$ =
-      new BehaviorSubject(options.manualBitrate != null ? options.manualBitrate :
-                                                          -1);
+    this._lowLatencyMode = !!options.lowLatencyMode;
+
+    this.manualBitrate$ = new BehaviorSubject(
+      options.manualBitrate != null ?
+      options.manualBitrate : -1
+    );
 
     this.maxAutoBitrate$ =
       new BehaviorSubject(options.maxAutoBitrate != null ? options.maxAutoBitrate :
@@ -358,6 +369,10 @@ export default class RepresentationChooser {
 
     this._initialBitrate = options.initialBitrate || 0;
 
+    this._abrStarvationFactor = this._lowLatencyMode ? ABR_STARVATION_FACTOR.LOW_LATENCY_MODE :
+                                                       ABR_STARVATION_FACTOR.DEFAULT;
+    this._abrRegularFactor = this._lowLatencyMode ? ABR_REGULAR_FACTOR.LOW_LATENCY_MODE :
+                                                    ABR_REGULAR_FACTOR.DEFAULT;
     this._limitWidth$ = options.limitWidth$;
     this._throttle$ = options.throttle$;
     this._throttleBitrate$ = options.throttleBitrate$;
@@ -437,12 +452,20 @@ export default class RepresentationChooser {
           let bandwidthEstimate;
           const { bufferGap, currentTime, duration } = clock;
 
+          const starvationGap = this._lowLatencyMode ?
+            ABR_STARVATION_GAP.LOW_LATENCY_MODE :
+            ABR_STARVATION_GAP.DEFAULT;
+
           // check if should get in/out of starvation mode
           if (bufferGap + currentTime < duration - ABR_STARVATION_DURATION_DELTA) {
-            if (!inStarvationMode && bufferGap <= ABR_STARVATION_GAP) {
+            const outOfStarvationGap = this._lowLatencyMode ?
+              OUT_OF_STARVATION_GAP.LOW_LATENCY_MODE :
+              OUT_OF_STARVATION_GAP.DEFAULT;
+
+            if (!inStarvationMode && bufferGap <= starvationGap) {
               log.info("ABR: enter starvation mode.");
               inStarvationMode = true;
-            } else if (inStarvationMode && bufferGap >= OUT_OF_STARVATION_GAP) {
+            } else if (inStarvationMode && bufferGap >= outOfStarvationGap) {
               log.info("ABR: exit starvation mode.");
               inStarvationMode = false;
             }
@@ -476,12 +499,12 @@ export default class RepresentationChooser {
             let nextEstimate;
             if (bandwidthEstimate != null) {
               nextEstimate = bandwidthEstimate *
-                             (inStarvationMode ? ABR_STARVATION_FACTOR :
-                                                 ABR_REGULAR_FACTOR);
+                             (inStarvationMode ? this._abrStarvationFactor :
+                                                 this._abrRegularFactor);
             } else if (lastEstimatedBitrate != null) {
               nextEstimate = lastEstimatedBitrate *
-                             (inStarvationMode ? ABR_STARVATION_FACTOR :
-                                                 ABR_REGULAR_FACTOR);
+                             (inStarvationMode ? this._abrStarvationFactor :
+                                                 this._abrRegularFactor);
             } else {
               nextEstimate = _initialBitrate;
             }
@@ -507,7 +530,9 @@ export default class RepresentationChooser {
             } else if (chosenRepresentation.bitrate > clock.downloadBitrate) {
               return !inStarvationMode;
             }
-            return shouldDirectlySwitchToLowBitrate(this._currentRequests, clock);
+            return shouldDirectlySwitchToLowBitrate(this._currentRequests,
+                                                    clock,
+                                                    starvationGap);
           })();
           return { bitrate: bandwidthEstimate,
                    representation: chosenRepresentation,
