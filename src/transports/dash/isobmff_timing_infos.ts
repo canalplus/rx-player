@@ -46,20 +46,23 @@ function getISOBMFFTimingInfos(
   const _sidxSegments = sidxSegments || [];
   let startTime;
   let duration;
-
-  const baseDecodeTime = getTrackFragmentDecodeTime(buffer);
-  if (isChunked) { // when chunked, no mean to know the duration for now
-    if (baseDecodeTime < 0 || initInfos == null) {
-      return null;
-    }
-    return { time: baseDecodeTime,
-             duration: undefined,
-             timescale: initInfos.timescale };
-  }
-
   const trunDuration = getDurationFromTrun(buffer);
   const timescale = initInfos && initInfos.timescale ? initInfos.timescale :
                                                        segment.timescale;
+
+  const baseDecodeTime = getTrackFragmentDecodeTime(buffer);
+  if (isChunked) { // when chunked, no mean to know the duration for now
+    if (initInfos == null) {
+      return null;
+    }
+    if (baseDecodeTime < 0) {
+      return null;
+    }
+    return { time: baseDecodeTime,
+             duration: trunDuration >= 0 ? trunDuration :
+                                           undefined,
+             timescale: initInfos.timescale };
+  }
 
   // we could always make a mistake when reading a container.
   // If the estimate is too far from what the segment seems to imply, take
