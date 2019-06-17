@@ -117,6 +117,7 @@ import TrackManager, {
   ITMVideoTrack,
   ITMVideoTrackListItem
 } from "./track_manager";
+import { videoIsVisible$ } from "../../compat/event_listeners";
 
 const {
   DEFAULT_UNMUTED_VOLUME,
@@ -443,6 +444,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private readonly _priv_throttleWhenHidden : boolean;
 
   /**
+   * Store wanted configuration for the throttleVideoBitrateWhenHidden option.
+   * @private
+   * @type {boolean}
+   */
+  private readonly _priv_throttleVideoBitrateWhenHidden : boolean;
+
+  /**
    * Store volume when mute is called, to restore it on unmute.
    * @private
    * @type {Number}
@@ -520,6 +528,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             preferredAudioTracks,
             preferredTextTracks,
             throttleWhenHidden,
+            throttleVideoBitrateWhenHidden,
             videoElement,
             wantedBufferAhead,
             stopAtEnd } = parseConstructorOptions(options);
@@ -595,6 +604,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     };
 
     this._priv_throttleWhenHidden = throttleWhenHidden;
+    this._priv_throttleVideoBitrateWhenHidden = throttleVideoBitrateWhenHidden;
     this._priv_limitVideoWidth = limitVideoWidth;
     this._priv_mutedMemory = DEFAULT_UNMUTED_VOLUME;
 
@@ -727,14 +737,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       const pipelines = transportFn(objectAssign({ supplementaryTextTracks,
                                                    supplementaryImageTracks },
                                                  transportOptions));
-
       // Options used by the ABR Manager.
       const adaptiveOptions = {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
         manualBitrates: this._priv_bitrateInfos.manualBitrates,
         maxAutoBitrates: this._priv_bitrateInfos.initialMaxAutoBitrates,
-        throttle: this._priv_throttleWhenHidden ?
+        throttleWhenHidden: this._priv_throttleWhenHidden ?
         { video: isInBackground$()
+            .pipe(
+              map(isBg => isBg ? 0 :
+                                 Infinity),
+              takeUntil(this._priv_stopCurrentContent$)
+            ), } :
+        {},
+        throttleVideoBitrateWhenHidden: this._priv_throttleVideoBitrateWhenHidden ?
+        { video: videoIsVisible$(videoElement)
             .pipe(
               map(isBg => isBg ? 0 :
                                  Infinity),

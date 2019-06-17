@@ -108,11 +108,18 @@ interface IFilters { bitrate?: number;
                      width?: number; }
 
 interface IRepresentationChooserOptions {
-  limitWidth$?: Observable<number>; // Emit maximum useful width
-  throttle$?: Observable<number>; // Emit temporary bandwidth throttle
-  initialBitrate?: number; // The initial wanted bitrate
-  manualBitrate?: number; // A bitrate set manually
-  maxAutoBitrate?: number; // The maximum bitrate we should set in adaptive mode
+  // Emit maximum useful width
+  limitWidth$?: Observable<number>;
+  // Emit temporary bandwidth throttle
+  throttleWhenHidden$?: Observable<number>;
+  // Emit temporary bandwidth throttle
+  throttleVideoBitrateWhenHidden$?: Observable<number>;
+  // The initial wanted bitrate
+  initialBitrate?: number;
+  // A bitrate set manually
+  manualBitrate?: number;
+  // The maximum bitrate we should set in adaptive mode
+  maxAutoBitrate?: number;
 }
 
 /**
@@ -331,7 +338,8 @@ export default class RepresentationChooser {
 
   private readonly _dispose$ : Subject<void>;
   private readonly _limitWidth$ : Observable<number>|undefined;
-  private readonly _throttle$ : Observable<number>|undefined;
+  private readonly _throttleWhenHidden$ : Observable<number>|undefined;
+  private readonly _throttleVideoBitrateWhenHidden$ : Observable<number>|undefined;
   private readonly estimator : BandwidthEstimator;
   private readonly _initialBitrate : number;
   private readonly _reEstimate$ : Subject<void>;
@@ -357,7 +365,8 @@ export default class RepresentationChooser {
     this._initialBitrate = options.initialBitrate || 0;
 
     this._limitWidth$ = options.limitWidth$;
-    this._throttle$ = options.throttle$;
+    this._throttleWhenHidden$ = options.throttleWhenHidden$;
+    this._throttleVideoBitrateWhenHidden$ = options.throttleVideoBitrateWhenHidden$;
     this._reEstimate$ = new Subject<void>();
   }
 
@@ -391,8 +400,12 @@ export default class RepresentationChooser {
       _deviceEventsArray.push(this._limitWidth$
                                 .pipe(map(width => ({ width }))));
     }
-    if (this._throttle$) {
-      _deviceEventsArray.push(this._throttle$
+    if (this._throttleWhenHidden$) {
+      _deviceEventsArray.push(this._throttleWhenHidden$
+                                .pipe(map(bitrate => ({ bitrate }))));
+    }
+    if (this._throttleVideoBitrateWhenHidden$) {
+      _deviceEventsArray.push(this._throttleVideoBitrateWhenHidden$
                                 .pipe(map(bitrate => ({ bitrate }))));
     }
 

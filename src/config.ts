@@ -195,6 +195,14 @@ export default {
   DEFAULT_THROTTLE_WHEN_HIDDEN: false,
 
   /**
+   * If true, if the video is considered in a "hidden" state for a delay specified by
+   * the INACTIVITY DELAY config property, we throttle automatically to the video
+   * representation with the lowest bitrate.
+   * @type {Boolean}
+   */
+  DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN: false,
+
+  /**
    * If true, the video representations you can switch to in adaptive mode
    * are limited by the video element's width.
    *

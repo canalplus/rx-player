@@ -274,6 +274,35 @@ function getVideoWidthFromPIPWindow(
 /**
  * Get video width from HTML video element, or video estimated dimensions
  * when Picture-in-Picture is activated.
+ * @returns {Observable}
+ */
+function videoIsVisible$(
+  mediaElement: HTMLMediaElement
+) : Observable<boolean> {
+  const isPIPActiveAtInit = (document as any).pictureInPictureElement != null &&
+    (document as any).pictureInPictureElement === mediaElement;
+
+  const visibilityChange$ = visibilityChange().pipe(map((x) => !!x));
+  const isPIPActive$ = observableMerge(
+    observableFromEvent(mediaElement, "enterpictureinpicture")
+      .pipe(mapTo(true)),
+    observableFromEvent(mediaElement, "leavepictureinpicture")
+      .pipe(mapTo(false))
+  ).pipe(startWith(isPIPActiveAtInit));
+
+  return observableCombineLatest([visibilityChange$, isPIPActive$]).pipe(
+    mergeMap(([ isVisible, isPIPActive ]) => {
+      const isVideoVisible = isPIPActive || isVisible;
+      return observableOf(isVideoVisible).pipe(
+        debounceTime(!isVideoVisible ? INACTIVITY_DELAY : 0)
+      );
+    }),
+    startWith(false),
+    distinctUntilChanged()
+  );
+}
+
+/**
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
@@ -405,6 +434,7 @@ const onKeyStatusesChange$ = compatibleListener(["keystatuseschange"]);
 
 export {
   isInBackground$,
+  videoIsVisible$,
   videoWidth$,
   onPlayPause$,
   onTextTrackChanges$,
