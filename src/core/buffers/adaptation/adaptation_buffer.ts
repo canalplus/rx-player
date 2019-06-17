@@ -74,8 +74,7 @@ export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTi
   bufferGap : number; // /!\ bufferGap of the SourceBuffer
   duration : number; // duration of the HTMLMediaElement
   isLive : boolean; // If true, we're playing a live content
-  readyState : number; // readyState of the HTMLMediaElement
-  speed : number; // playback rate at which the content plays
+  speed : number; // Current regular speed asked by the user
 }
 
 /**
@@ -87,16 +86,18 @@ export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTi
  *
  * It will emit various events to report its status to the caller.
  *
- * @param {Observable} clock$ - Clock at which the Buffer will check for
- * segments download
- * @param {QueuedSourceBuffer} queuedSourceBuffer - QueuedSourceBuffer used
- * to push segments and know about the current real buffer's health.
- * @param {SegmentBookkeeper} segmentBookkeeper - Used to synchronize and
- * retrieve the Segments currently present in the QueuedSourceBuffer
- * @param {Function} segmentFetcher - Function used to download segments
- * @param {Observable} wantedBufferAhead$ - Emits the buffer goal
- * @param {Object} content - Content to download
- * @param {Object} abrManager
+ * @param {Observable} clock$ - Clock emitting current playback conditions.
+ * Triggers the main logic on each tick.
+ * @param {QueuedSourceBuffer} queuedSourceBuffer - QueuedSourceBuffer used to
+ * push segments to and to know about the current buffer's health.
+ * @param {SegmentBookkeeper} segmentBookkeeper - Synchronize and retrieve the
+ * actual Segments currently present in the SourceBuffer.
+ * @param {Function} segmentFetcher - Allow to download segments.
+ * @param {Observable} wantedBufferAhead$ - Emits the buffer goal.
+ * @param {Object} content - Content to download.
+ * @param {Object} abrManager - Calculate Bitrate and choose the right
+ * Representation.
+ * @param {Object} options - Tinkering options.
  * @returns {Observable}
  */
 export default function AdaptationBuffer<T>(
@@ -153,30 +154,36 @@ export default function AdaptationBuffer<T>(
         const { representation } = estimate;
         currentRepresentation = representation;
 
-        // Manual switch needs an immediate feedback.
+        // A manual bitrate switch might need an immediate feedback.
         // To do that properly, we need to reload the MediaSource
         if (directManualBitrateSwitching && estimate.manual && i !== 0) {
           return observableOf(EVENTS.needsMediaSourceReload());
         }
-        const representationChange$ = observableOf(
-          EVENTS.representationChange(adaptation.type, period, representation));
+        const representationChange$ =
+          observableOf(EVENTS.representationChange(adaptation.type,
+                                                   period,
+                                                   representation));
         const representationBuffer$ = createRepresentationBuffer(representation)
           .pipe(takeUntil(killCurrentBuffer$));
         return observableConcat(representationChange$, representationBuffer$);
       })),
+
+    // NOTE: This operator was put in a merge on purpose. It's a "clever"
+    // hack to allow it to be called just *AFTER* the concatMapLatest one.
     newRepresentation$.pipe(map((estimation, i) => {
-      if (i === 0) { // no buffer pending
-        return;
+      if (i === 0) { // Initial run == no Buffer pending. We have nothing to do:
+        return;      // The one just created will be launched right away.
       }
       if (estimation.urgent) {
         log.info("Buffer: urgent Representation switch", adaptation.type);
 
-        // kill current buffer after concatMapLatest has been called
+        // Kill current Buffer immediately. The one just chosen take its place.
         killCurrentBuffer$.next();
       } else {
         log.info("Buffer: slow Representation switch", adaptation.type);
 
-        // terminate current buffer after concatMapLatest has been called
+        // terminate current Buffer. The last chosen Representation at the time
+        // it will be finished will take its place.
         terminateCurrentBuffer$.next();
       }
     }), ignoreElements())

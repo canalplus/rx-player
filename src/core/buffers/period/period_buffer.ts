@@ -104,6 +104,7 @@ export interface IPeriodBufferArguments {
  *     download and append the corresponding Segments in the SourceBuffer.
  *   - Announce when the Buffer is full or is awaiting new Segments through
  *     events
+ * @param {Object} args
  * @returns {Observable}
  */
 export default function PeriodBuffer({
@@ -120,7 +121,8 @@ export default function PeriodBuffer({
 } : IPeriodBufferArguments) : Observable<IPeriodBufferEvent> {
   const { period } = content;
 
-  // Emits the chosen adaptation for the current type.
+  // Emits the chosen Adaptation for the current type.
+  // `null` when no Adaptation is chosen (e.g. no subtitles)
   const adaptation$ = new ReplaySubject<Adaptation|null>(1);
   return adaptation$.pipe(
     switchMap((adaptation) => {
@@ -131,8 +133,8 @@ export default function PeriodBuffer({
 
         if (previousQSourceBuffer != null) {
           log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
-          cleanBuffer$ = previousQSourceBuffer
-            .removeBuffer(period.start, period.end || Infinity);
+          cleanBuffer$ = previousQSourceBuffer.removeBuffer(period.start,
+                                                            period.end || Infinity);
         } else {
           cleanBuffer$ = observableOf(null);
         }
@@ -148,20 +150,23 @@ export default function PeriodBuffer({
       const newBuffer$ = clock$.pipe(
         take(1),
         mergeMap((tick) => {
-          const qSourceBuffer = createOrReuseQueuedSourceBuffer(
-            sourceBuffersManager, bufferType, adaptation, options);
-          const strategy = getAdaptationSwitchStrategy(
-            qSourceBuffer.getBuffered(), period, bufferType, tick);
-
+          const qSourceBuffer = createOrReuseQueuedSourceBuffer(sourceBuffersManager,
+                                                                bufferType,
+                                                                adaptation,
+                                                                options);
+          const strategy = getAdaptationSwitchStrategy(qSourceBuffer.getBuffered(),
+                                                       period,
+                                                       bufferType,
+                                                       tick);
           if (strategy.type === "needs-reload") {
             return observableOf(EVENTS.needsMediaSourceReload());
           }
 
           const cleanBuffer$ = strategy.type === "clean-buffer" ?
-            observableConcat(
-              ...strategy.value.map(({ start, end }) =>
-                qSourceBuffer.removeBuffer(start, end)
-              )).pipe(ignoreElements()) : EMPTY;
+            observableConcat(...strategy.value.map(({ start, end }) =>
+                               qSourceBuffer.removeBuffer(start, end))
+                            ).pipe(ignoreElements()) :
+            EMPTY;
 
           const bufferGarbageCollector$ = garbageCollectors.get(qSourceBuffer);
           const adaptationBuffer$ = createAdaptationBuffer(adaptation, qSourceBuffer);
@@ -180,8 +185,6 @@ export default function PeriodBuffer({
   );
 
   /**
-   * @param {string} bufferType
-   * @param {Object} period
    * @param {Object} adaptation
    * @param {Object} qSourceBuffer
    * @returns {Observable}
@@ -192,11 +195,11 @@ export default function PeriodBuffer({
   ) : Observable<IAdaptationBufferEvent<T>|IBufferWarningEvent> {
     const { manifest } = content;
     const segmentBookkeeper = segmentBookkeepers.get(qSourceBuffer);
-    const pipelineOptions = getPipelineOptions(
-      bufferType, options.segmentRetry, options.offlineRetry);
-    const pipeline = segmentPipelinesManager
-    .createPipeline(bufferType, pipelineOptions);
-
+    const pipelineOptions = getPipelineOptions(bufferType,
+                                               options.segmentRetry,
+                                               options.offlineRetry);
+    const pipeline = segmentPipelinesManager.createPipeline(bufferType,
+                                                            pipelineOptions);
     const adaptationBufferClock$ = clock$.pipe(map(tick => {
       const buffered = qSourceBuffer.getBuffered();
       return objectAssign({},
@@ -263,7 +266,8 @@ function getPipelineOptions(
   offlineRetry? : number
 ) : IPipelineOptions<any, any> {
   const cache = arrayIncludes(["audio", "video"], bufferType) ?
-    new InitializationSegmentCache<any>() : undefined;
+    new InitializationSegmentCache<any>() :
+    undefined;
 
   let maxRetry : number;
   let maxRetryOffline : number;
