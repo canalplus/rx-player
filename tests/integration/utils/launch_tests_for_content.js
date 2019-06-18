@@ -105,6 +105,8 @@ export default function launchTestsForContent(
         await xhrLocker.flush(); // only wait for the manifest request
         await sleep(1);
 
+        expect(player.getPlayerState()).to.equal("LOADING");
+
         const firstPeriodAdaptationsInfos = periodsInfos[firstPeriodIndex]
           .adaptations;
         const audioRepresentationInfos =

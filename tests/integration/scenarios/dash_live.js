@@ -30,6 +30,8 @@ describe("DASH live content (SegmentTimeline)", function () {
     await xhrLocker.flush();
     await sleep(1);
 
+    expect(player.getPlayerState()).to.equal("LOADING");
+
     const manifest = player.getManifest();
     expect(manifest).not.to.equal(null);
     expect(typeof manifest).to.equal("object");
