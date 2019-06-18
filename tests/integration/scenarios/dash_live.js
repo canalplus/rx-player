@@ -18,14 +18,14 @@ describe("DASH live content (SegmentTimeline)", function () {
     xhrLocker.restore();
   });
 
-  it("should fetch and parse the manifest", async function () {
+  it("should fetch and parse the Manifest", async function () {
     xhrLocker.lock();
     player.loadVideo({
       url: manifestInfos.url,
       transport: manifestInfos.transport,
     });
 
-    expect(xhrLocker.getLockedXHR().length).to.equal(1);
+    expect(xhrLocker.getLockedXHR().length).to.equal(1); // Manifest request
     await sleep(1);
     await xhrLocker.flush();
     await sleep(1);

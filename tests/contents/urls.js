@@ -1,3 +1,7 @@
+/* eslint-env node */
+
+// Every URLs served by our server. For test purposes.
+
 const urls1 = require("./Smooth_static/urls");
 const urls2 = require("./DASH_dynamic_UTCTimings/urls");
 const urls3 = require("./DASH_static_SegmentTimeline/urls");

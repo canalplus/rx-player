@@ -4,30 +4,20 @@ const http = require("http");
 const fs = require("fs");
 const urls = require("./urls");
 
+// Transform `urls` array into an Object where the key is the url of each
+// element.
 const routeObj = urls.reduce((acc, elt) => {
   acc[elt.url] = elt;
   return acc;
 }, {});
 
-function answerWithCORS(res, status, body) {
-  if (Buffer.isBuffer(body)) {
-    res.setHeader("Content-Length", body.byteLength);
-  }
-  res.writeHead(status, {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "*",
-    "Access-Control-Allow-Credentials": true,
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-  });
-  if (body !== undefined) {
-    res.end(body);
-  } else {
-    res.end();
-  }
-  return;
-}
-
-module.exports = function(port) {
+/**
+ * Create simple HTTP server specifically designed to serve the contents defined
+ * in this directory.
+ * @param {number} port
+ * @returns {Object}
+ */
+module.exports = function createServer(port) {
   const server = http.createServer(function(req, res) {
     if (routeObj[req.url] == null) {
       res.setHeader("Content-Type", "text/plain");
@@ -89,7 +79,38 @@ module.exports = function(port) {
   };
 };
 
+/**
+ * Add CORS headers, Content-Length, body, HTTP status and answer with the
+ * Response Object given.
+ * @param {Response} res
+ * @param {number} status
+ * @param {*} body
+ */
+function answerWithCORS(res, status, body) {
+  if (Buffer.isBuffer(body)) {
+    res.setHeader("Content-Length", body.byteLength);
+  }
+  res.writeHead(status, {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "*",
+    "Access-Control-Allow-Credentials": true,
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+  });
+  if (body !== undefined) {
+    res.end(body);
+  } else {
+    res.end();
+  }
+  return;
+}
 
+/**
+ * Parse value of the "Range" header into an array of two numbers, which are
+ * specifically the start and end range wanted included.
+ * @param {string} rangeHeader
+ * @param {number} dataLength
+ * @returns {Array.<number>}
+ */
 function parseRangeHeader(rangeHeader, dataLength) {
   const rangesStr = rangeHeader.substr(6).split("-");
   if (
