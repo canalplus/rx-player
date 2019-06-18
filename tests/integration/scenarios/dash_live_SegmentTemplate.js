@@ -43,7 +43,6 @@ describe("DASH live content (SegmentTemplate)", function() {
       .to.equal(manifestInfos.transport);
     expect(typeof manifest.id).to.equal("string");
     expect(manifest.isLive).to.equal(true);
-    expect(manifest.suggestedPresentationDelay).to.equal(10);
     expect(manifest.getUrl()).to.equal(manifestInfos.url);
     expect(manifest.availabilityStartTime)
       .to.equal(manifestInfos.availabilityStartTime);
