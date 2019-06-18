@@ -19,7 +19,7 @@ describe("external text track", function () {
 
   afterEach(() => {
     player.dispose();
-    xhrLocker.restore;
+    xhrLocker.restore();
   });
 
   it("should be able to add an external text track", async function () {
