@@ -18,52 +18,42 @@ describe("Memory tests", () => {
   });
 
   it("should not have a sensible memory leak after playing a content", async function() {
-    if (
-      window.performance == null ||
-      window.performance.memory == null ||
-      window.gc == null
-    ) {
+    if (window.performance == null ||
+        window.performance.memory == null ||
+        window.gc == null)
+    {
       // eslint-disable-next-line no-console
       console.warn("API not available. Skipping test.");
       return;
     }
     this.timeout(5 * 60 * 1000);
-    player = new RxPlayer({
-      initialVideoBitrate: Infinity,
-      initialAudioBitrate: Infinity,
-    });
+    player = new RxPlayer({ initialVideoBitrate: Infinity,
+                            initialAudioBitrate: Infinity,
+                            preferredTextTracks: [{ language: "fra",
+                                                    closedCaption: true }] });
     window.gc();
     const initialMemory = window.performance.memory;
 
-    player.loadVideo({
-      url: manifestInfos.url,
-      transport: manifestInfos.transport,
-      prefferedTextTracks: {
-        language: "fra",
-        closedCaption: true,
-      },
-      supplementaryTextTracks: [{
-        url: textTrackInfos.url,
-        language: "fra",
-        mimeType: "application/ttml+xml",
-        closedCaption: true,
-      }],
-      supplementaryImageTracks: [{
-        mimeType: "application/bif",
-        url: imageInfos.url,
-      }],
-      autoPlay: true,
-    });
+    player.loadVideo({ url: manifestInfos.url,
+                       transport: manifestInfos.transport,
+                       textTrackMode: "html",
+                       textTrackElement: document.createElement("div"),
+                       supplementaryTextTracks: [{ url: textTrackInfos.url,
+                                                   language: "fra",
+                                                   mimeType: "application/ttml+xml",
+                                                   closedCaption: true }],
+                       supplementaryImageTracks: [{ mimeType: "application/bif",
+                                                    url: imageInfos.url }],
+                       autoPlay: true });
     player.setPlaybackRate(4);
     await waitForPlayerState(player, "ENDED");
 
+    player.stop();
     await sleep(1000);
     window.gc();
-    await sleep(1000);
-
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize -
-      initialMemory.usedJSHeapSize;
+                           initialMemory.usedJSHeapSize;
 
     // eslint-disable-next-line no-console
     console.log(`
@@ -76,54 +66,41 @@ describe("Memory tests", () => {
   });
 
   it("should not have a sensible memory leak after 1000 LOADED states and adaptive streaming", async function() {
-    if (
-      window.performance == null ||
-      window.performance.memory == null ||
-      window.gc == null
-    ) {
+    if (window.performance == null ||
+        window.performance.memory == null ||
+        window.gc == null)
+    {
       // eslint-disable-next-line no-console
       console.warn("API not available. Skipping test.");
       return;
     }
     this.timeout(5 * 60 * 1000);
-    player = new RxPlayer({
-      initialVideoBitrate: Infinity,
-      initialAudioBitrate: Infinity,
-    });
+    player = new RxPlayer({ initialVideoBitrate: Infinity,
+                            initialAudioBitrate: Infinity,
+                            preferredTextTracks: [{ language: "fra",
+                                                    closedCaption: true }] });
     window.gc();
     const initialMemory = window.performance.memory;
 
     for (let i = 0; i < 1000; i++) {
-      player.loadVideo({
-        url: manifestInfos.url,
-        transport: manifestInfos.transport,
-        prefferedTextTracks: [{
-          language: "fra",
-          closedCaption: true,
-        }],
-        supplementaryTextTracks: [{
-          url: textTrackInfos.url,
-          language: "fra",
-          mimeType: "application/ttml+xml",
-          closedCaption: true,
-        }],
-        supplementaryImageTracks: [{
-          mimeType: "application/bif",
-          url: imageInfos.url,
-        }],
-        autoPlay: true,
-      });
+      player.loadVideo({ url: manifestInfos.url,
+                         transport: manifestInfos.transport,
+                         supplementaryTextTracks: [{ url: textTrackInfos.url,
+                                                     language: "fra",
+                                                     mimeType: "application/ttml+xml",
+                                                     closedCaption: true }],
+                         supplementaryImageTracks: [{ mimeType: "application/bif",
+                                                      url: imageInfos.url }],
+                         autoPlay: true });
       await waitForLoadedStateAfterLoadVideo(player);
     }
     player.stop();
 
     await sleep(1000);
     window.gc();
-    await sleep(1000);
-
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize -
-      initialMemory.usedJSHeapSize;
+                           initialMemory.usedJSHeapSize;
 
     // eslint-disable-next-line no-console
     console.log(`
