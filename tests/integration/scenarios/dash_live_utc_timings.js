@@ -7,26 +7,26 @@ import {
   WithoutTimings,
 } from "../../contents/DASH_dynamic_UTCTimings";
 import sleep from "../../utils/sleep.js";
-import XHRLocker from "../../utils/xhr_locker.js";
+import XHRMock from "../../utils/request_mock";
 
 describe("DASH live - UTCTimings", () => {
   describe("DASH live content (SegmentTemplate + Direct UTCTiming)", function () {
     const { manifestInfos } = WithDirect;
     let player;
-    let xhrLocker;
+    let xhrMock;
 
     beforeEach(() => {
       player = new RxPlayer();
-      xhrLocker = XHRLocker();
+      xhrMock = new XHRMock();
     });
 
     afterEach(() => {
       player.dispose();
-      xhrLocker.restore();
+      xhrMock.restore();
     });
 
     it("should calculate the right bounds", async () => {
-      xhrLocker.lock();
+      xhrMock.lock();
 
       player.loadVideo({
         url: manifestInfos.url,
@@ -34,7 +34,7 @@ describe("DASH live - UTCTimings", () => {
       });
 
       await sleep(1);
-      await xhrLocker.flush();
+      await xhrMock.flush();
       await sleep(1);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1553517853, 1);
@@ -46,24 +46,28 @@ describe("DASH live - UTCTimings", () => {
   describe("DASH live content (SegmentTemplate + HTTP UTCTiming)", function () {
     const { manifestInfos } = WithHTTP;
     let player;
-    let xhrLocker;
+    let xhrMock;
     const requests = [];
 
     beforeEach(() => {
       player = new RxPlayer();
-      xhrLocker = XHRLocker();
+      xhrMock = new XHRMock();
     });
 
     afterEach(() => {
       requests.length = 0;
       player.dispose();
-      xhrLocker.restore();
+      xhrMock.restore();
     });
 
     it("should fetch the clock and then calculate the right bounds", async () => {
-      const url = URL.createObjectURL(new Blob(["2019-03-25T12:49:08.014Z"]));
-      xhrLocker.redirect("https://time.akamai.com/?iso", url);
-      xhrLocker.lock();
+      // const url = URL.createObjectURL(new Blob(["2019-03-25T12:49:08.014Z"]));
+      xhrMock.respondTo("GET",
+                        "https://time.akamai.com/?iso",
+                        [ 200,
+                          { "Content-Type": "text/plain"},
+                          "2019-03-25T12:49:08.014Z"]);
+      xhrMock.lock();
 
       player.loadVideo({
         url: manifestInfos.url,
@@ -71,11 +75,11 @@ describe("DASH live - UTCTimings", () => {
       });
 
       await sleep(1);
-      await xhrLocker.flush(); // Manifest request
+      await xhrMock.flush(); // Manifest request
       await sleep(1);
-      await xhrLocker.flush(); // time request
+      await xhrMock.flush(); // time request
       await sleep(1);
-      await xhrLocker.flush(); // Once for the init segment
+      await xhrMock.flush(); // Once for the init segment
       await sleep(1);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1553517853, 1);
@@ -85,20 +89,20 @@ describe("DASH live - UTCTimings", () => {
   describe("DASH live content (SegmentTemplate + Without Timing)", function() {
     const { manifestInfos } = WithoutTimings;
     let player;
-    let xhrLocker;
+    let xhrMock;
 
     beforeEach(() => {
       player = new RxPlayer();
-      xhrLocker = XHRLocker();
+      xhrMock = new XHRMock();
     });
 
     afterEach(() => {
       player.dispose();
-      xhrLocker.restore();
+      xhrMock.restore();
     });
 
     it("should calculate the right bounds", async () => {
-      xhrLocker.lock();
+      xhrMock.lock();
 
       player.loadVideo({
         url: manifestInfos.url,
@@ -106,7 +110,7 @@ describe("DASH live - UTCTimings", () => {
       });
 
       await sleep(10);
-      await xhrLocker.flush();
+      await xhrMock.flush();
       await sleep(10);
 
       const { availabilityStartTime } = player.getManifest();
@@ -125,20 +129,20 @@ describe("DASH live - UTCTimings", () => {
   describe("DASH live content (SegmentTemplate + Direct & HTTP UTCTiming)", function () {
     const { manifestInfos } = WithDirectAndHTTP;
     let player;
-    let xhrLocker;
+    let xhrMock;
 
     beforeEach(() => {
       player = new RxPlayer();
-      xhrLocker = XHRLocker();
+      xhrMock = new XHRMock();
     });
 
     afterEach(() => {
       player.dispose();
-      xhrLocker.restore();
+      xhrMock.restore();
     });
 
     it("should not fetch the clock but still calculate the right bounds", async () => {
-      xhrLocker.lock();
+      xhrMock.lock();
 
       player.loadVideo({
         url: manifestInfos.url,
@@ -146,12 +150,12 @@ describe("DASH live - UTCTimings", () => {
       });
 
       await sleep(1);
-      await xhrLocker.flush();
+      await xhrMock.flush();
       await sleep(1);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1553517853, 1);
 
-      const requestsDone = xhrLocker.getLockedXHR().map(r => r.url);
+      const requestsDone = xhrMock.getLockedXHR().map(r => r.url);
       expect(requestsDone)
         .not.to.include("https://time.akamai.com/?iso");
     });

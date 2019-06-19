@@ -2,7 +2,7 @@ import { expect } from "chai";
 import RxPlayer from "../../../src";
 import sleep from "../../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
-import XHRLocker from "../../utils/xhr_locker";
+import XHRMock from "../../utils/request_mock";
 
 /**
  * Performs a serie of basic tests on a content.
@@ -49,7 +49,7 @@ export default function launchTestsForContent(
   manifestInfos
 ) {
   let player;
-  let xhrLocker;
+  let xhrMock;
 
   const {
     availabilityStartTime,
@@ -79,17 +79,17 @@ export default function launchTestsForContent(
   describe("API tests", () => {
     beforeEach(() => {
       player = new RxPlayer();
-      xhrLocker = XHRLocker();
+      xhrMock = new XHRMock();
     });
 
     afterEach(() => {
       player.dispose();
-      xhrLocker.restore();
+      xhrMock.restore();
     });
 
     describe("loadVideo", () => {
       it("should fetch the manifest then the init segments", async function () {
-        xhrLocker.lock();
+        xhrMock.lock();
 
         // set the lowest bitrate to facilitate the test
         player.setVideoBitrate(0);
@@ -98,11 +98,11 @@ export default function launchTestsForContent(
         player.loadVideo({ url: manifestInfos.url, transport });
 
         // should only have the manifest for now
-        expect(xhrLocker.getLockedXHR().length).to.equal(1);
-        expect(xhrLocker.getLockedXHR()[0].url).to.equal(manifestInfos.url);
+        expect(xhrMock.getLockedXHR().length).to.equal(1);
+        expect(xhrMock.getLockedXHR()[0].url).to.equal(manifestInfos.url);
 
         await sleep(1);
-        await xhrLocker.flush(); // only wait for the manifest request
+        await xhrMock.flush(); // only wait for the manifest request
         await sleep(1);
 
         expect(player.getPlayerState()).to.equal("LOADING");
@@ -126,10 +126,10 @@ export default function launchTestsForContent(
             (audioRepresentationInfos && audioRepresentationInfos.index.init) &&
             (videoRepresentationInfos && videoRepresentationInfos.index.init)
           ) {
-            expect(xhrLocker.getLockedXHR().length).to.equal(2);
+            expect(xhrMock.getLockedXHR().length).to.equal(2);
             const requestsDone = [
-              xhrLocker.getLockedXHR()[0].url,
-              xhrLocker.getLockedXHR()[1].url,
+              xhrMock.getLockedXHR()[0].url,
+              xhrMock.getLockedXHR()[1].url,
             ];
             expect(requestsDone)
               .to.include(videoRepresentationInfos.index.init.mediaURL);
@@ -138,12 +138,12 @@ export default function launchTestsForContent(
           } else if (!(
             audioRepresentationInfos && audioRepresentationInfos.index.init)
           ) {
-            expect(xhrLocker.getLockedXHR().length).to.equal(1);
-            expect(xhrLocker.getLockedXHR()[0].url).to
+            expect(xhrMock.getLockedXHR().length).to.equal(1);
+            expect(xhrMock.getLockedXHR()[0].url).to
               .equal(videoRepresentationInfos.index.init.mediaURL);
           } else {
-            expect(xhrLocker.getLockedXHR().length).to.equal(1);
-            expect(xhrLocker.getLockedXHR()[0].url).to
+            expect(xhrMock.getLockedXHR().length).to.equal(1);
+            expect(xhrMock.getLockedXHR()[0].url).to
               .equal(audioRepresentationInfos.index.init.mediaURL);
           }
         }
@@ -164,11 +164,11 @@ export default function launchTestsForContent(
 
     describe("getManifest", () => {
       it("should returns the manifest correctly parsed", async function () {
-        xhrLocker.lock();
+        xhrMock.lock();
         player.loadVideo({ url: manifestInfos.url, transport });
 
         await sleep(1);
-        await xhrLocker.flush(); // only wait for the manifest request
+        await xhrMock.flush(); // only wait for the manifest request
         await sleep(1);
 
         const manifest = player.getManifest();
@@ -578,13 +578,13 @@ export default function launchTestsForContent(
         expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.1);
         expect(player.getVideoLoadedTime()).to.be.closeTo(bufferGap, 0.1);
 
-        xhrLocker.lock();
+        xhrMock.lock();
         player.seekTo(minimumPosition + 5);
         await sleep(100);
         expect(player.getVideoLoadedTime()).to.be.closeTo(bufferGap, 0.1);
 
-        await xhrLocker.flush();
-        xhrLocker.unlock();
+        await xhrMock.flush();
+        xhrMock.unlock();
         await sleep(300);
         expect(player.getVideoLoadedTime()).to.be.closeTo(bufferGap + 5, 10);
 
@@ -611,13 +611,13 @@ export default function launchTestsForContent(
         expect(player.getPosition()).to.equal(minimumPosition);
         expect(player.getVideoPlayedTime()).to.equal(0);
 
-        xhrLocker.lock();
+        xhrMock.lock();
         player.seekTo(minimumPosition + 5);
         await sleep(100);
         expect(player.getVideoPlayedTime()).to.equal(5);
 
-        await xhrLocker.flush();
-        xhrLocker.unlock();
+        await xhrMock.flush();
+        xhrMock.unlock();
         await sleep(300);
         expect(player.getVideoPlayedTime()).to.equal(5);
 
@@ -759,7 +759,7 @@ export default function launchTestsForContent(
 
     describe("getAvailableVideoBitrates", () => {
       it("should list the right video bitrates", async function () {
-        xhrLocker.lock();
+        xhrMock.lock();
 
         player.loadVideo({
           url: manifestInfos.url,
@@ -770,7 +770,7 @@ export default function launchTestsForContent(
 
         await sleep(1);
         expect(player.getAvailableVideoBitrates()).to.eql([]);
-        await xhrLocker.flush();
+        await xhrMock.flush();
         await sleep(1);
 
         expect(player.getAvailableVideoBitrates()).to.eql(videoBitrates);
@@ -779,7 +779,7 @@ export default function launchTestsForContent(
 
     describe("getAvailableAudioBitrates", () => {
       it("should list the right audio bitrates", async function () {
-        xhrLocker.lock();
+        xhrMock.lock();
 
         player.loadVideo({
           url: manifestInfos.url,
@@ -790,7 +790,7 @@ export default function launchTestsForContent(
 
         await sleep(1);
         expect(player.getAvailableAudioBitrates()).to.eql([]);
-        await xhrLocker.flush();
+        await xhrMock.flush();
         await sleep(1);
 
         expect(player.getAvailableAudioBitrates()).to.eql(audioBitrates);
@@ -1437,7 +1437,7 @@ export default function launchTestsForContent(
 
     describe("getAvailableAudioTracks", () => {
       it("should list the right audio languages", async function () {
-        xhrLocker.lock();
+        xhrMock.lock();
 
         player.loadVideo({
           url: manifestInfos.url,
@@ -1447,7 +1447,7 @@ export default function launchTestsForContent(
 
         await sleep(1);
         expect(player.getAvailableAudioTracks()).to.eql([]);
-        await xhrLocker.flush();
+        await xhrMock.flush();
         await sleep(1);
 
         const audioTracks = player.getAvailableAudioTracks();
@@ -1485,7 +1485,7 @@ export default function launchTestsForContent(
 
     describe("getAvailableTextTracks", () => {
       it("should list the right text languages", async function () {
-        xhrLocker.lock();
+        xhrMock.lock();
 
         player.loadVideo({
           url: manifestInfos.url,
@@ -1495,7 +1495,7 @@ export default function launchTestsForContent(
 
         await sleep(1);
         expect(player.getAvailableTextTracks()).to.eql([]);
-        await xhrLocker.flush();
+        await xhrMock.flush();
         await sleep(1);
 
         const textTracks = player.getAvailableTextTracks();
@@ -1533,7 +1533,7 @@ export default function launchTestsForContent(
 
     describe("getAvailableVideoTracks", () => {
       it("should list the right video tracks", async function () {
-        xhrLocker.lock();
+        xhrMock.lock();
 
         player.loadVideo({
           url: manifestInfos.url,
@@ -1543,7 +1543,7 @@ export default function launchTestsForContent(
 
         await sleep(1);
         expect(player.getAvailableVideoTracks()).to.eql([]);
-        await xhrLocker.flush();
+        await xhrMock.flush();
         await sleep(1);
 
         const videoTracks = player.getAvailableVideoTracks();

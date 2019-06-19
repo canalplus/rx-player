@@ -21,20 +21,20 @@ import sleep from "../../utils/sleep.js";
 import waitForState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState";
-import XHRLocker from "../../utils/xhr_locker";
+import XHRMock from "../../utils/request_mock";
 
 describe("basic playback use cases: non-linear DASH SegmentTimeline", function () {
   let player;
-  let xhrLocker;
+  let xhrMock;
 
   beforeEach(() => {
     player = new RxPlayer();
-    xhrLocker = XHRLocker();
+    xhrMock = new XHRMock();
   });
 
   afterEach(() => {
     player.dispose();
-    xhrLocker.restore();
+    xhrMock.restore();
   });
 
   it("should begin playback on play", async function () {
@@ -210,7 +210,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
   });
 
   it("should download first segment when wanted buffer ahead is under first segment duration", async function () {
-    xhrLocker.lock();
+    xhrMock.lock();
     player.setWantedBufferAhead(2);
     player.loadVideo({
       transport: manifestInfos.transport,
@@ -218,22 +218,22 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     });
 
     await sleep(1);
-    expect(xhrLocker.getLockedXHR().length).to.equal(1); // Manifest
-    await xhrLocker.flush();
+    expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest
+    await xhrMock.flush();
     await sleep(1);
-    expect(xhrLocker.getLockedXHR().length).to.equal(2); // init segments
-    await xhrLocker.flush();
+    expect(xhrMock.getLockedXHR().length).to.equal(2); // init segments
+    await xhrMock.flush();
     await sleep(1);
-    expect(xhrLocker.getLockedXHR().length).to.equal(2); // first two segments
-    await xhrLocker.flush(); // first two segments
+    expect(xhrMock.getLockedXHR().length).to.equal(2); // first two segments
+    await xhrMock.flush(); // first two segments
     await sleep(1);
-    expect(xhrLocker.getLockedXHR().length).to.equal(0); // nada
+    expect(xhrMock.getLockedXHR().length).to.equal(0); // nada
     expect(player.getVideoLoadedTime()).to.be.above(4);
     expect(player.getVideoLoadedTime()).to.be.below(5);
   });
 
   it("should download more than the first segment when wanted buffer ahead is over the first segment duration", async function () {
-    xhrLocker.lock();
+    xhrMock.lock();
     player.setWantedBufferAhead(20);
     player.loadVideo({
       transport: manifestInfos.transport,
@@ -241,17 +241,17 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     });
 
     await sleep(1);
-    expect(xhrLocker.getLockedXHR().length).to.equal(1); // Manifest
-    await xhrLocker.flush();
+    expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest
+    await xhrMock.flush();
     await sleep(1);
-    expect(xhrLocker.getLockedXHR().length).to.equal(2); // init segments
-    await xhrLocker.flush();
+    expect(xhrMock.getLockedXHR().length).to.equal(2); // init segments
+    await xhrMock.flush();
     await sleep(1);
-    expect(xhrLocker.getLockedXHR().length).to.equal(2); // first two segments
-    await xhrLocker.flush(); // first two segments
+    expect(xhrMock.getLockedXHR().length).to.equal(2); // first two segments
+    await xhrMock.flush(); // first two segments
     await sleep(1);
-    expect(xhrLocker.getLockedXHR().length).to.equal(2); // still
-    await xhrLocker.flush();
+    expect(xhrMock.getLockedXHR().length).to.equal(2); // still
+    await xhrMock.flush();
     await sleep(1);
     expect(player.getVideoLoadedTime()).to.be.above(7);
     expect(player.getVideoLoadedTime()).to.be.below(9);
@@ -341,7 +341,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     await sleep(100);
     expect(player.getPlayerState()).to.equal("PLAYING");
 
-    xhrLocker.lock();
+    xhrMock.lock();
 
     player.seekTo(10);
     await waitForState(player, "SEEKING", ["PLAYING"]);
@@ -351,7 +351,7 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     expect(player.getPlayerState()).to.equal("SEEKING");
     expect(player.getVideoBufferGap()).to.equal(Infinity);
 
-    await xhrLocker.flush();
+    await xhrMock.flush();
     await sleep(100);
     expect(player.getVideoBufferGap()).to.be.above(1);
     expect(player.getVideoBufferGap()).to.be.below(10);

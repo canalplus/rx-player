@@ -2,32 +2,32 @@ import { expect } from "chai";
 import RxPlayer from "../../../src";
 import { manifestInfos } from "../../contents/DASH_dynamic_SegmentTimeline";
 import sleep from "../../utils/sleep.js";
-import XHRLocker from "../../utils/xhr_locker.js";
+import XHRMock from "../../utils/request_mock";
 
 describe("DASH live content (SegmentTimeline)", function () {
   let player;
-  let xhrLocker;
+  let xhrMock;
 
   beforeEach(() => {
     player = new RxPlayer();
-    xhrLocker = XHRLocker();
+    xhrMock = new XHRMock();
   });
 
   afterEach(() => {
     player.dispose();
-    xhrLocker.restore();
+    xhrMock.restore();
   });
 
   it("should fetch and parse the Manifest", async function () {
-    xhrLocker.lock();
+    xhrMock.lock();
     player.loadVideo({
       url: manifestInfos.url,
       transport: manifestInfos.transport,
     });
 
-    expect(xhrLocker.getLockedXHR().length).to.equal(1); // Manifest request
+    expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest request
     await sleep(1);
-    await xhrLocker.flush();
+    await xhrMock.flush();
     await sleep(1);
 
     expect(player.getPlayerState()).to.equal("LOADING");
@@ -193,8 +193,8 @@ describe("DASH live content (SegmentTimeline)", function () {
       videoRepresentationIndex.getSegments(1527507762, 300000000000).length
     ).to.equal(50);
 
-    expect(xhrLocker.getLockedXHR().length).to.be.at.least(2);
-    const requestsDone = xhrLocker.getLockedXHR().map(r => r.url);
+    expect(xhrMock.getLockedXHR().length).to.be.at.least(2);
+    const requestsDone = xhrMock.getLockedXHR().map(r => r.url);
     expect(requestsDone)
       .to.include(videoRepresentationIndexInfos.init.mediaURL);
     expect(requestsDone)
@@ -202,14 +202,14 @@ describe("DASH live content (SegmentTimeline)", function () {
   });
 
   it("should list the right bitrates", async function () {
-    xhrLocker.lock();
+    xhrMock.lock();
     player.loadVideo({
       url: manifestInfos.url,
       transport: manifestInfos.transport,
     });
 
     await sleep(1);
-    await xhrLocker.flush();
+    await xhrMock.flush();
     await sleep(1);
 
     expect(player.getAvailableAudioBitrates()).to.eql([48000]);
@@ -218,7 +218,7 @@ describe("DASH live content (SegmentTimeline)", function () {
 
   describe("getAvailableAudioTracks", () => {
     it("should list the right audio languages", async function () {
-      xhrLocker.lock();
+      xhrMock.lock();
 
       player.loadVideo({
         url: manifestInfos.url,
@@ -228,7 +228,7 @@ describe("DASH live content (SegmentTimeline)", function () {
 
       await sleep(1);
       expect(player.getAvailableAudioTracks()).to.eql([]);
-      await xhrLocker.flush();
+      await xhrMock.flush();
       await sleep(1);
 
       const audioTracks = player.getAvailableAudioTracks();
@@ -267,7 +267,7 @@ describe("DASH live content (SegmentTimeline)", function () {
 
   describe("getAvailableTextTracks", () => {
     it("should list the right text languages", async function () {
-      xhrLocker.lock();
+      xhrMock.lock();
       player.loadVideo({
         url: manifestInfos.url,
         transport: manifestInfos.transport,
@@ -276,7 +276,7 @@ describe("DASH live content (SegmentTimeline)", function () {
 
       await sleep(1);
       expect(player.getAvailableTextTracks()).to.eql([]);
-      await xhrLocker.flush();
+      await xhrMock.flush();
       await sleep(1);
 
       const textTracks = player.getAvailableTextTracks();
@@ -315,7 +315,7 @@ describe("DASH live content (SegmentTimeline)", function () {
 
   describe("getAvailableVideoTracks", () => {
     it("should list the right video tracks", async function () {
-      xhrLocker.lock();
+      xhrMock.lock();
 
       player.loadVideo({
         url: manifestInfos.url,
@@ -325,7 +325,7 @@ describe("DASH live content (SegmentTimeline)", function () {
 
       await sleep(1);
       expect(player.getAvailableVideoTracks()).to.eql([]);
-      await xhrLocker.flush();
+      await xhrMock.flush();
       await sleep(1);
 
       const videoTracks = player.getAvailableVideoTracks();
@@ -375,7 +375,7 @@ describe("DASH live content (SegmentTimeline)", function () {
 
   describe("getMinimumPosition", () => {
     it("should return the last position minus the TimeShift window", async () => {
-      xhrLocker.lock();
+      xhrMock.lock();
 
       player.loadVideo({
         url: manifestInfos.url,
@@ -383,7 +383,7 @@ describe("DASH live content (SegmentTimeline)", function () {
       });
 
       await sleep(1);
-      await xhrLocker.flush();
+      await xhrMock.flush();
       await sleep(1);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1527507767, 1);
@@ -392,7 +392,7 @@ describe("DASH live content (SegmentTimeline)", function () {
 
   describe("getMaximumPosition", () => {
     it("should return the last playable position", async () => {
-      xhrLocker.lock();
+      xhrMock.lock();
 
       player.loadVideo({
         url: manifestInfos.url,
@@ -400,7 +400,7 @@ describe("DASH live content (SegmentTimeline)", function () {
       });
 
       await sleep(1);
-      await xhrLocker.flush();
+      await xhrMock.flush();
       await sleep(1);
       expect(player.getMaximumPosition()).to.be
         .closeTo(1527508062, 1);

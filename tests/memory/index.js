@@ -36,8 +36,6 @@ describe("Memory tests", () => {
 
     player.loadVideo({ url: manifestInfos.url,
                        transport: manifestInfos.transport,
-                       textTrackMode: "html",
-                       textTrackElement: document.createElement("div"),
                        supplementaryTextTracks: [{ url: textTrackInfos.url,
                                                    language: "fra",
                                                    mimeType: "application/ttml+xml",
@@ -62,7 +60,7 @@ describe("Memory tests", () => {
       | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
       | Difference (B)         | ${heapDifference}
     `);
-    expect(heapDifference).to.be.below(1e6);
+    expect(heapDifference).to.be.below(1.5e6);
   });
 
   it("should not have a sensible memory leak after 1000 LOADED states and adaptive streaming", async function() {
@@ -76,9 +74,9 @@ describe("Memory tests", () => {
     }
     this.timeout(5 * 60 * 1000);
     player = new RxPlayer({ initialVideoBitrate: Infinity,
-                            initialAudioBitrate: Infinity,
-                            preferredTextTracks: [{ language: "fra",
-                                                    closedCaption: true }] });
+                            initialaudiobitrate: Infinity,
+                            preferredtexttracks: [{ language: "fra",
+                                                    closedcaption: true }] });
     window.gc();
     const initialMemory = window.performance.memory;
 

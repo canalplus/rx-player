@@ -21,20 +21,20 @@ import sleep from "../../utils/sleep.js";
 import /* waitForState, */ {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState";
-import XHRLocker from "../../utils/xhr_locker";
+import XHRMock from "../../utils/request_mock";
 
 describe("loadVideo Options", () => {
   let player;
-  let xhrLocker;
+  let xhrMock;
 
   beforeEach(() => {
     player = new RxPlayer();
-    xhrLocker = XHRLocker();
+    xhrMock = new XHRMock();
   });
 
   afterEach(() => {
     player.dispose();
-    xhrLocker.restore();
+    xhrMock.restore();
   });
 
   describe("url", () => {
@@ -48,7 +48,7 @@ describe("loadVideo Options", () => {
     });
 
     it("should request the URL if one is given", async () => {
-      xhrLocker.lock();
+      xhrMock.lock();
       player.loadVideo({
         url: manifestInfos.url,
         transport: "dash",
@@ -57,8 +57,8 @@ describe("loadVideo Options", () => {
 
       await sleep(0);
 
-      expect(xhrLocker.getLockedXHR().length).to.equal(1);
-      expect(xhrLocker.getLockedXHR()[0].url).to.equal(manifestInfos.url);
+      expect(xhrMock.getLockedXHR().length).to.equal(1);
+      expect(xhrMock.getLockedXHR()[0].url).to.equal(manifestInfos.url);
     });
   });
 
@@ -386,7 +386,7 @@ describe("loadVideo Options", () => {
       };
 
       it("should pass through the custom segmentLoader for segment requests", async () => {
-        xhrLocker.lock();
+        xhrMock.lock();
         let nbVideoSegmentRequests = 0;
         player.loadVideo({
           transport: manifestInfos.transport,
@@ -395,25 +395,25 @@ describe("loadVideo Options", () => {
         });
 
         await sleep(1);
-        await xhrLocker.flush(); // Manifest request
+        await xhrMock.flush(); // Manifest request
         await sleep(1);
         expect(numberOfTimeCustomSegmentLoaderWasCalled)
           .to.equal(2); // Segment requests
-        nbVideoSegmentRequests += xhrLocker.getLockedXHR()
+        nbVideoSegmentRequests += xhrMock.getLockedXHR()
           .filter(r => r.url && r.url.includes("ateam-video"))
           .length;
-        await xhrLocker.flush();
+        await xhrMock.flush();
         await sleep(1);
         expect(numberOfTimeCustomSegmentLoaderWasCalled)
           .to.equal(4); // Segment requests
-        nbVideoSegmentRequests += xhrLocker.getLockedXHR()
+        nbVideoSegmentRequests += xhrMock.getLockedXHR()
           .filter(r => r.url && r.url.includes("ateam-video"))
           .length;
-        await xhrLocker.flush();
+        await xhrMock.flush();
         await sleep(1);
         expect(numberOfTimeCustomSegmentLoaderWasCalled)
           .to.equal(6); // Segment requests
-        nbVideoSegmentRequests += xhrLocker.getLockedXHR()
+        nbVideoSegmentRequests += xhrMock.getLockedXHR()
           .filter(r => r.url && r.url.includes("ateam-video"))
           .length;
         expect(numberOfTimeCustomSegmentLoaderWentThrough)
