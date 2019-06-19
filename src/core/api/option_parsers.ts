@@ -244,7 +244,7 @@ function parseConstructorOptions(
                                                       !!options.limitVideoWidth;
 
   if (options.throttleWhenHidden != null) {
-    console.warn("`throttleWhenHidden` API is deprecated. Consider using " +
+    warnOnce("`throttleWhenHidden` API is deprecated. Consider using " +
       "`throttleVideoBitrateWhenHidden`.");
 
     throttleWhenHidden = options.throttleWhenHidden;
