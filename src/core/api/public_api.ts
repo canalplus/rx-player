@@ -69,6 +69,7 @@ import {
   isFullscreen,
   requestFullscreen,
 } from "../../compat";
+import { videoIsVisible$ } from "../../compat/event_listeners";
 import {
   ErrorCodes,
   ErrorTypes,
@@ -117,7 +118,6 @@ import TrackManager, {
   ITMVideoTrack,
   ITMVideoTrackListItem
 } from "./track_manager";
-import { videoIsVisible$ } from "../../compat/event_listeners";
 
 const {
   DEFAULT_UNMUTED_VOLUME,
