@@ -49,7 +49,6 @@ import castToObservable from "../../utils/cast_to_observable";
 import retryObsWithBackoff from "../../utils/rx-retry_with_backoff";
 import tryCatch from "../../utils/rx-try_catch";
 import {
-  IEMESessionEvents,
   IEMEWarningEvent,
   IKeySystemOption,
   IMediaKeySessionEvents,
@@ -104,7 +103,7 @@ function licenseErrorSelector(
 export default function handleSessionEvents(
   session: MediaKeySession|ICustomMediaKeySession,
   keySystem: IKeySystemOption
-) : Observable<IEMESessionEvents|IEMEWarningEvent> {
+) : Observable<IMediaKeySessionEvents|IEMEWarningEvent> {
   log.debug("EME: Handle message events", session);
 
   const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
@@ -220,7 +219,7 @@ export default function handleSessionEvents(
   const sessionUpdates = observableMerge(keyMessages$, keyStatusesChanges)
     .pipe(
       concatMap((evt : IMediaKeySessionEvents|IEMEWarningEvent) :
-        Observable<IEMESessionEvents|IEMEWarningEvent> => {
+        Observable<IMediaKeySessionEvents|IEMEWarningEvent> => {
           if (evt.type === "warning") {
             return observableOf(evt);
           }
@@ -243,7 +242,7 @@ export default function handleSessionEvents(
           );
         }));
 
-  const sessionEvents : Observable<IEMESessionEvents|IEMEWarningEvent> =
+  const sessionEvents : Observable<IMediaKeySessionEvents|IEMEWarningEvent> =
     observableMerge(sessionUpdates, keyErrors, sessionWarningSubject$);
 
   return session.closed ?
