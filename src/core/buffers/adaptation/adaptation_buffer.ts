@@ -114,15 +114,13 @@ export default function AdaptationBuffer<T>(
   options : { manualBitrateSwitchingMode : "seamless" | "direct" }
 ) : Observable<IAdaptationBufferEvent<T>> {
 
-  /**
-   * The buffer goal ratio limits the wanted buffer ahead to determine the
-   * buffer goal.
-   *
-   * It can help in cases such as : the current browser has issues with
-   * buffering and tells us that we should try to bufferize less data :
-   * https://developers.google.com/web/updates/2017/10/quotaexceedederror
-   */
-  const bufferGoalRatioMap: { [key: string]: number } = {};
+  // The buffer goal ratio limits the wanted buffer ahead to determine the
+  // buffer goal.
+  //
+  // It can help in cases such as : the current browser has issues with
+  // buffering and tells us that we should try to bufferize less data :
+  // https://developers.google.com/web/updates/2017/10/quotaexceedederror
+  const bufferGoalRatioMap: Partial<Record<string, number>> = {};
 
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
@@ -158,8 +156,8 @@ export default function AdaptationBuffer<T>(
   );
 
   const newRepresentation$ = abr$
-  .pipe(distinctUntilChanged((a, b) => a.manual === b.manual &&
-                                       a.representation.id === b.representation.id));
+    .pipe(distinctUntilChanged((a, b) => a.manual === b.manual &&
+                                         a.representation.id === b.representation.id));
 
   const adaptationBuffer$ = observableMerge(
     newRepresentation$
