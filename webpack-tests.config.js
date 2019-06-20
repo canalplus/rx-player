@@ -5,6 +5,7 @@ const coverageIsWanted = !!process.env.RXP_COVERAGE;
 
 const config = {
   mode: "development",
+  entry: "./tests/integration/index.js",
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
   },
@@ -22,6 +23,10 @@ const config = {
   },
   plugins: [
     new webpack.DefinePlugin({
+      "__TEST_CONTENT_SERVER__": {
+        URL: "\"127.0.0.1\"",
+        PORT: "\"3000\"",
+      },
       "__FEATURES__": {
         SMOOTH: true,
         DASH: true,

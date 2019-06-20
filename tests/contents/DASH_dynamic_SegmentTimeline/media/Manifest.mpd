@@ -3,7 +3,6 @@
    <ProgramInformation>
       <Title>Media Presentation Description by MobiTV. Powered by MDL Team@Sweden.</Title>
    </ProgramInformation>
-   <BaseURL>http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/</BaseURL>
 <Period id="p0" start="PT0S" ns2:publishTime="2012-01-01T00:00:00Z" xmlns:ns2="urn:mobitv">
       <AdaptationSet contentType="audio" lang="eng" mimeType="audio/mp4" segmentAlignment="true" startWithSAP="1" ns2:qualityLevel="SD">
          <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />

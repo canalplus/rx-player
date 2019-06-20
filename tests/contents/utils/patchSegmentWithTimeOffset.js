@@ -23,7 +23,7 @@
  * default.
  * @returns {Uint8Array} - The updated ISOBMFF
  */
-export default function patchSegmentWithTimeOffset(
+module.exports = function patchSegmentWithTimeOffset(
   segmentData,
   timeOffset,
   _lmsg
@@ -200,7 +200,7 @@ export default function patchSegmentWithTimeOffset(
   }
 
   return patchBoxes();
-}
+};
 
 /**
  * Translate groups of 4 big-endian bytes to Integer.

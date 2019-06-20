@@ -4,10 +4,9 @@ import sinon from "sinon";
 
 import RxPlayer from "../../../src";
 
-import {
-  manifestInfos,
-  Manifest_URL,
-} from "../../contents/DASH_dynamic_SegmentTimeline";
+import { manifestInfos } from "../../contents/DASH_dynamic_SegmentTimeline";
+
+const MANIFEST_URL_INFOS = manifestInfos.url;
 
 /**
  *  Workaround to provide a "real" sleep function, which does not depend on
@@ -47,7 +46,7 @@ describe("manifest error management", function () {
 
   it("should retry to download the manifest 5 times", async () => {
     const clock = sinon.useFakeTimers();
-    fakeServer.respondWith("GET", Manifest_URL.url, res =>
+    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, res =>
       res.respond(500));
 
     player.loadVideo({
@@ -97,15 +96,8 @@ describe("manifest error management", function () {
   it("should parse the manifest if it works the second time", async () => {
     const clock = sinon.useFakeTimers();
 
-    let requestCounter = 0;
-    fakeServer.respondWith("GET", Manifest_URL.url, (xhr) => {
-      return ++requestCounter >= 2 ?
-        xhr.respond(
-          200,
-          { "Content-Type": Manifest_URL.contentType },
-          Manifest_URL.data
-        ) :
-        xhr.respond(500);
+    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
+      return xhr.respond(500);
     });
 
     player.loadVideo({
@@ -117,11 +109,11 @@ describe("manifest error management", function () {
 
     await sleepWithoutSinonStub();
     fakeServer.respond();
+    fakeServer.restore();
     clock.tick(5000);
 
     expect(player.getError()).to.equal(null);
     await sleepWithoutSinonStub();
-    fakeServer.respond();
 
     clock.restore();
 
@@ -133,16 +125,8 @@ describe("manifest error management", function () {
 
   it("should parse the manifest if it works the third time", async () => {
     const clock = sinon.useFakeTimers();
-
-    let requestCounter = 0;
-    fakeServer.respondWith("GET", Manifest_URL.url, (xhr) => {
-      return ++requestCounter >= 3 ?
-        xhr.respond(
-          200,
-          { "Content-Type": Manifest_URL.contentType },
-          Manifest_URL.data
-        ) :
-        xhr.respond(500);
+    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
+      return xhr.respond(500);
     });
 
     player.loadVideo({
@@ -160,11 +144,11 @@ describe("manifest error management", function () {
 
     await sleepWithoutSinonStub();
     fakeServer.respond();
+    fakeServer.restore();
     clock.tick(5000);
 
     expect(player.getError()).to.equal(null);
     await sleepWithoutSinonStub();
-    fakeServer.respond();
 
     clock.restore();
 
@@ -176,16 +160,8 @@ describe("manifest error management", function () {
 
   it("should parse the manifest if it works the fourth time", async () => {
     const clock = sinon.useFakeTimers();
-
-    let requestCounter = 0;
-    fakeServer.respondWith("GET", Manifest_URL.url, (xhr) => {
-      return ++requestCounter >= 4 ?
-        xhr.respond(
-          200,
-          { "Content-Type": Manifest_URL.contentType },
-          Manifest_URL.data
-        ) :
-        xhr.respond(500);
+    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
+      return xhr.respond(500);
     });
 
     player.loadVideo({
@@ -209,11 +185,11 @@ describe("manifest error management", function () {
 
     await sleepWithoutSinonStub();
     fakeServer.respond();
+    fakeServer.restore();
     clock.tick(5000);
 
     expect(player.getError()).to.equal(null);
     await sleepWithoutSinonStub();
-    fakeServer.respond();
 
     clock.restore();
 
@@ -225,16 +201,8 @@ describe("manifest error management", function () {
 
   it("should parse the manifest if it works the fifth time", async () => {
     const clock = sinon.useFakeTimers();
-
-    let requestCounter = 0;
-    fakeServer.respondWith("GET", Manifest_URL.url, (xhr) => {
-      return ++requestCounter >= 5 ?
-        xhr.respond(
-          200,
-          { "Content-Type": Manifest_URL.contentType },
-          Manifest_URL.data
-        ) :
-        xhr.respond(500);
+    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
+      return xhr.respond(500);
     });
 
     player.loadVideo({
@@ -262,11 +230,11 @@ describe("manifest error management", function () {
 
     await sleepWithoutSinonStub();
     fakeServer.respond();
+    fakeServer.restore();
     clock.tick(5000);
 
     expect(player.getError()).to.equal(null);
     await sleepWithoutSinonStub();
-    fakeServer.respond();
 
     clock.restore();
 

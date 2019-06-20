@@ -6,7 +6,6 @@
    <ProgramInformation>
       <Title>Media Presentation Description from DASHI-IF live simulator</Title>
    </ProgramInformation>
-   <BaseURL>https://vm2.dashif.org/livesim-dev/periods_1/testpic_2s/</BaseURL>
 <Period id="p431532" start="PT1553515200S">
       <AdaptationSet contentType="audio" lang="eng" mimeType="audio/mp4" segmentAlignment="true" startWithSAP="1">
          <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />

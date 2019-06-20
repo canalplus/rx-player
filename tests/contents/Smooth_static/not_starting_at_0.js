@@ -1,73 +1,12 @@
-/**
- * Data worth a little more than 15s of playback audio+video
- *
- * Note: the same actual low-bitrate segments are used for every video tracks to
- * avoid being too heavy.
- */
-
-import flatMap from "../../utils/flatMap.js";
-const baseURL = "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/";
-
-const audioSegments = [
-  0, 20053333, 40106666, 60160000, 80000000, 100053333, 120106666, 140160000,
-  160000000, 180053333, 200106666, 220160000, 240000000, 260053333, 280106666,
-  300160000, 320000000, 340053333, 360106666, 380160000, 400000000, 420053333,
-  440106666, 460160000, 480000000, 500053333, 520106666, 540160000, 560000000,
-  580053333, 600106666, 620160000, 640000000, 660053333, 680106666, 700160000,
-  720000000, 740053333,
-].map(time => {
-  const data = require(`arraybuffer-loader!./media/Fragments(audio_und=${time}).mp4`);
-  return {
-    // TODO Open Sinon issue with malformed RegExp from strings
-    url: baseURL + `QualityLevels96000/Fragmentsaudio_und=${time + 90000000}`,
-    data: () => data.slice(),
-    contentType: "video/mp4",
-  };
-});
-
-const videoSegments = flatMap(
-  [300000, 750000, 1100000, 1500000, 2100000, 3400000, 4000000, 5000000],
-  quality => {
-    const segments = [
-      0, 20000000, 40000000, 60000000, 80000000, 100000000, 120000000,
-      140000000, 160000000, 180000000, 200000000, 220000000, 240000000,
-      260000000, 280000000, 300000000, 320000000, 340000000, 360000000,
-      380000000, 400000000, 420000000, 440000000, 460000000, 480000000,
-      500000000, 520000000, 540000000, 560000000, 580000000, 600000000,
-      620000000, 640000000, 660000000, 680000000, 700000000, 720000000,
-    ].map(time => {
-      const data =
-        require(`arraybuffer-loader!./media/${quality}-Fragments(video=0).mp4`);
-      return {
-        // TODO Open Sinon issue with malformed RegExp from strings
-        url: baseURL + `QualityLevels${quality}/Fragmentsvideo=${time + 90000000}`,
-        data: () => data.slice(),
-        contentType: "video/mp4",
-      };
-    });
-
-    segments.push({
-      // TODO Open Sinon issue with malformed RegExp from strings
-      url: baseURL + `QualityLevels${quality}/Fragmentsvideo=740000000`,
-      data: require(`arraybuffer-loader!./media/${quality}-Fragments(video=740000000).mp4`),
-      contentType: "video/mp4",
-    });
-
-    return segments;
-  });
-
-const URLs = [
-  {
-    url: baseURL + "Manifest",
-    data: require("raw-loader!./media/Manifest_Not_Starting_at_0.xml").default,
-    contentType: "text/xml",
-  },
-  ...audioSegments,
-  ...videoSegments,
-];
+const BASE_URL = "http://" +
+               /* eslint-disable no-undef */
+               __TEST_CONTENT_SERVER__.URL + ":" +
+               __TEST_CONTENT_SERVER__.PORT +
+               /* eslint-enable no-undef */
+               "/Smooth_static/media/";
 
 const manifestInfos = {
-  url: baseURL + "Manifest",
+  url: BASE_URL + "Manifest_Not_Starting_at_0.xml",
   transport: "smooth",
   isLive: false,
   duration: 75.0079999 + 9,
@@ -96,7 +35,7 @@ const manifestInfos = {
                       time: 90000000,
                       timescale: 10000000,
                       duration: 20053333,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels96000/Fragmentsaudio_und=90000000",
+                      mediaURL: BASE_URL + "QualityLevels96000/Fragmentsaudio_und=90000000",
                     },
                   ],
                   // ...
@@ -123,7 +62,7 @@ const manifestInfos = {
                       time: 90000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels300000/Fragmentsvideo=90000000",
+                      mediaURL: BASE_URL + "QualityLevels300000/Fragmentsvideo=90000000",
                     },
                     // ...
                   ],
@@ -142,7 +81,7 @@ const manifestInfos = {
                       time: 90000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels750000/Fragmentsvideo=90000000",
+                      mediaURL: BASE_URL + "QualityLevels750000/Fragmentsvideo=90000000",
                     },
                     // ...
                   ],
@@ -161,7 +100,7 @@ const manifestInfos = {
                       time: 90000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels1100000/Fragmentsvideo=90000000",
+                      mediaURL: BASE_URL + "QualityLevels1100000/Fragmentsvideo=90000000",
                     },
                     // ...
                   ],
@@ -180,7 +119,7 @@ const manifestInfos = {
                       time: 90000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels1500000/Fragmentsvideo=90000000",
+                      mediaURL: BASE_URL + "QualityLevels1500000/Fragmentsvideo=90000000",
                     },
                     // ...
                   ],
@@ -199,7 +138,7 @@ const manifestInfos = {
                       time: 90000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels2100000/Fragmentsvideo=90000000",
+                      mediaURL: BASE_URL + "QualityLevels2100000/Fragmentsvideo=90000000",
                     },
                     // ...
                   ],
@@ -218,7 +157,7 @@ const manifestInfos = {
                       time: 90000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels3400000/Fragmentsvideo=90000000",
+                      mediaURL: BASE_URL + "QualityLevels3400000/Fragmentsvideo=90000000",
                     },
                     // ...
                   ],
@@ -237,7 +176,7 @@ const manifestInfos = {
                       time: 90000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels4000000/Fragmentsvideo=90000000",
+                      mediaURL: BASE_URL + "QualityLevels4000000/Fragmentsvideo=90000000",
                     },
                     // ...
                   ],
@@ -256,7 +195,7 @@ const manifestInfos = {
                       time: 90000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: "http://hss-vod-aka-test.canal-bis.com/ondemand/test/bif/index.ism/QualityLevels5000000/Fragmentsvideo=90000000",
+                      mediaURL: BASE_URL + "QualityLevels5000000/Fragmentsvideo=90000000",
                     },
                     // ...
                   ],
@@ -271,7 +210,4 @@ const manifestInfos = {
   ],
 };
 
-export {
-  URLs,
-  manifestInfos,
-};
+export { manifestInfos };
