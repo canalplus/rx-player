@@ -22,7 +22,7 @@ import {
   IEmitterLoaderBuilder,
   IProgressBarBuilder,
 } from "./apis/dash/types";
-import { ISettingsDownloader, IRequestArgs, IStoredManifest } from "./types";
+import { IRequestArgs, ISettingsDownloader, IStoredManifest } from "./types";
 
 /* tslint:disable */
 

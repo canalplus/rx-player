@@ -20,8 +20,8 @@ import { IKeySystemOption } from "../../../../../core/eme/types";
 import { ISegment } from "../../../../../manifest";
 import { ISidxSegment } from "../../../../../parsers/containers/isobmff";
 import {
-  ISettingsDownloader,
   IProgressBarBuilderAbstract,
+  ISettingsDownloader,
   videoSettingsQualityInputType,
 } from "../../types";
 import { TypedArray } from "../drm/keySystems";

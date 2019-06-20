@@ -29,14 +29,19 @@ import {
 import EventEmitter from "../../../utils/event_emitter";
 import { IActiveSubs, IPauseSubject } from "./apis/dash/types";
 import {
-  ISettingsDownloader,
   IEventsEmitter,
   IOptionsStarter,
   IProgressBarBuilderAbstract,
   IPublicAPI,
+  ISettingsDownloader,
   IStoredManifest,
 } from "./types";
 
+/**
+ * Instanciate a D2G downloader.
+ * @param {Object<{nameDB, storeManifestEvery}>} IOptionsStarter
+ * @returns {Promise.<IPublicAPI>}
+ */
 export default async function D2G({
   nameDB = "d2g",
   storeManifestEvery,
@@ -50,7 +55,15 @@ export default async function D2G({
   const activePauseSubject: IPauseSubject = {};
 
   return {
+    /**
+     * A hand made EventEmitter that respect IEventsEmitter.
+     */
     emitter,
+    /**
+     * Start a download from scratch.
+     * @param {Object<ISettingsDownloader>} settings
+     * @returns {Promise.<void>}
+     */
     async download(settings: ISettingsDownloader): Promise<void> {
       try {
         await checkForSettingsAddMovie(settings, db, activeSubsDownloader);
@@ -82,9 +95,13 @@ export default async function D2G({
           contentID: settings.dbSettings.contentID,
           error: e || new Error("A Unexpected error happened"),
         });
-        return undefined;
       }
     },
+    /**
+     * Resume a download already started earlier.
+     * @param {string} contentID
+     * @returns {Promise.<void>}
+     */
     async resume(contentID: string): Promise<void> {
       try {
         const manifest: IStoredManifest = await db.get("manifests", contentID);
@@ -119,7 +136,12 @@ export default async function D2G({
         });
       }
     },
-    pause(contentID: string): number | void {
+    /**
+     * Pause a download already started earlier.
+     * @param {string} contentID
+     * @returns {void}
+     */
+    pause(contentID: string): void {
       try {
         checkForPauseAMovie(contentID);
         if (activeSubsDownloader[contentID] && activePauseSubject[contentID]) {
@@ -129,9 +151,7 @@ export default async function D2G({
           delete activeSubsDownloader[contentID];
           activePauseSubject[contentID].unsubscribe();
           delete activePauseSubject[contentID];
-          return 1;
         }
-        return 2;
       } catch (e) {
         emitter.trigger("error", {
           action: "resume",
@@ -140,6 +160,10 @@ export default async function D2G({
         });
       }
     },
+    /**
+     * Get all the downloaded entry (manifest) partially or fully downloaded.
+     * @returns {Promise.<T[]|void>}
+     */
     async getAllDownloadedMovies<T>(): Promise<T[] | void> {
       try {
         return await db.getAll("manifests");
@@ -151,6 +175,12 @@ export default async function D2G({
         return undefined;
       }
     },
+    /**
+     * Get a singleMovie ready to be played by the rx-player,
+     * could be fully or partially downloaded.
+     * @param {string} contentID
+     * @returns {Promise.<T|void>}
+     */
     async getSingleMovie<T>(contentID: string): Promise<T | void> {
       try {
         const movie = await db.get("manifests", contentID);
@@ -173,7 +203,13 @@ export default async function D2G({
         });
       }
     },
-    async deleteDownloadedMovie(contentID: string): Promise<number | void> {
+    /**
+     * Delete an entry partially or fully downloaded and stop the download
+     * if the content is downloading, then delete.
+     * @param {string} contentID
+     * @returns {Promise.<void>}
+     */
+    async deleteDownloadedMovie(contentID: string): Promise<void> {
       try {
         if (activeSubsDownloader[contentID] && activePauseSubject[contentID]) {
           activePauseSubject[contentID].next();
@@ -194,14 +230,12 @@ export default async function D2G({
         }
         await db.delete("drm", contentID);
         await db.delete("manifests", contentID);
-        return 1;
       } catch (e) {
         emitter.trigger("error", {
           action: "deleteDownloadedMovie",
           contentID,
           error: e || new Error("A Unexpected error happened"),
         });
-        return undefined;
       }
     },
   };
