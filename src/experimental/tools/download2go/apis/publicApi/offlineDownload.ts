@@ -29,7 +29,7 @@ import {
   ILocalRepresentation,
 } from "../../../../../parsers/manifest/local/types";
 import { IParsedManifest } from "../../../../../parsers/manifest/types";
-import { IAddMovie } from "../../types";
+import { ISettingsDownloader } from "../../types";
 import { ILocalManifestOnline, IOptionsBuilder } from "../dash/types";
 import { IUtils } from "./../../types";
 
@@ -69,7 +69,7 @@ export async function buildRxpManifestPipeline(
  *
  */
 export async function initDownloaderAssets(
-  settings: IAddMovie,
+  settings: ISettingsDownloader,
   { db, emitter, progressBarBuilder$ }: IUtils
 ): Promise<ILocalManifestOnline | never> {
   const {

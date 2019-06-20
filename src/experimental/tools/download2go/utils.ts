@@ -22,7 +22,7 @@ import {
   IEmitterLoaderBuilder,
   IProgressBarBuilder,
 } from "./apis/dash/types";
-import { IAddMovie, IRequestArgs, IStoredManifest } from "./types";
+import { ISettingsDownloader, IRequestArgs, IStoredManifest } from "./types";
 
 /* tslint:disable */
 
@@ -58,14 +58,14 @@ export class IndexDBError extends Error {
 /* tslint:enable */
 
 /**
- * Check the presence and validity of IAddMovie arguments
+ * Check the presence and validity of ISettingsDownloader arguments
  *
- * @param IAddMovie - The arguments that the user of the lib provided
+ * @param ISettingsDownloader - The arguments that the user of the lib provided
  * @returns void
  *
  */
 export async function checkForSettingsAddMovie(
-  settings: IAddMovie,
+  settings: ISettingsDownloader,
   db: IDBPDatabase,
   activeSubsDownloader: IActiveSubs
 ): Promise<void> {
@@ -168,8 +168,8 @@ export function makeHTTPRequest<T>(
       req.responseType = responseType;
     }
 
-    req.onerror = function onXHRError(e) {
-      return reject(e);
+    req.onerror = function onXHRError() {
+      return reject(new Error("Network error"));
     };
 
     req.onload = function onXHRLoad() {

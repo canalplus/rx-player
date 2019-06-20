@@ -26,7 +26,7 @@ import {
 } from "./apis/dash/types";
 
 export type videoSettingsQualityInputType = "HIGH" | "MEDIUM" | "LOW";
-export interface IAddMovie {
+export interface ISettingsDownloader {
   url: string;
   type: "start";
   dbSettings: {
@@ -96,7 +96,7 @@ export interface IEventsEmitter {
 }
 export interface IPublicAPI {
   emitter: EventEmitter<IEventsEmitter>;
-  download(settings: IAddMovie): Promise<void>;
+  download(settings: ISettingsDownloader): Promise<void>;
   resume(contentID: string): Promise<any>;
   pause(contentID: string): number | void;
   getAllDownloadedMovies<T>(): Promise<T[] | void>;

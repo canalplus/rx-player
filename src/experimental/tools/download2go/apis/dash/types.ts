@@ -20,7 +20,7 @@ import { IKeySystemOption } from "../../../../../core/eme/types";
 import { ISegment } from "../../../../../manifest";
 import { ISidxSegment } from "../../../../../parsers/containers/isobmff";
 import {
-  IAddMovie,
+  ISettingsDownloader,
   IProgressBarBuilderAbstract,
   videoSettingsQualityInputType,
 } from "../../types";
@@ -161,7 +161,7 @@ export interface IDownloadManagerOutput {
 }
 
 export type settingsType =
-  | IAddMovie
+  | ISettingsDownloader
   | {
       contentID: string;
       rxpManifest: ILocalManifestOnline;

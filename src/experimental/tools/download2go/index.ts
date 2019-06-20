@@ -29,7 +29,7 @@ import {
 import EventEmitter from "../../../utils/event_emitter";
 import { IActiveSubs, IPauseSubject } from "./apis/dash/types";
 import {
-  IAddMovie,
+  ISettingsDownloader,
   IEventsEmitter,
   IOptionsStarter,
   IProgressBarBuilderAbstract,
@@ -51,7 +51,7 @@ export default async function D2G({
 
   return {
     emitter,
-    async download(settings: IAddMovie): Promise<any> {
+    async download(settings: ISettingsDownloader): Promise<void> {
       try {
         await checkForSettingsAddMovie(settings, db, activeSubsDownloader);
         const size = 0;
