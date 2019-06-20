@@ -27,8 +27,6 @@
 import objectAssign from "object-assign";
 import {
   asapScheduler,
-  BehaviorSubject,
-  combineLatest as observableCombineLatest,
   concat as observableConcat,
   defer as observableDefer,
   EMPTY,
@@ -41,7 +39,6 @@ import {
   catchError,
   distinctUntilChanged,
   filter,
-  finalize,
   ignoreElements,
   map,
   observeOn,
@@ -125,7 +122,7 @@ export default function AdaptationBuffer<T>(
    * buffering and tells us that we should try to bufferize less data :
    * https://developers.google.com/web/updates/2017/10/quotaexceedederror
    */
-  let bufferGoalRatioMap: { [key: string]: BehaviorSubject<number> } = {};
+  const bufferGoalRatioMap: { [key: string]: number } = {};
 
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
@@ -180,20 +177,11 @@ export default function AdaptationBuffer<T>(
                                                    period,
                                                    representation));
 
-        const bufferGoalRatio$ = bufferGoalRatioMap[representation.id] ||
-          new BehaviorSubject<number>(1);
+        const bufferGoalRatio = bufferGoalRatioMap[representation.id] || 1;
+        bufferGoalRatioMap[representation.id] = bufferGoalRatio;
 
-        bufferGoalRatioMap[representation.id] = bufferGoalRatio$;
-
-          // Get the buffer goal from wanted buffer ahead and buffer goal ratio.
-        const bufferGoal$ = observableCombineLatest([
-          wantedBufferAhead$,
-          bufferGoalRatio$,
-        ]).pipe(
-          map(([ wantedBufferAhead, bufferGoalRatio ]) => {
-            return bufferGoalRatio ? wantedBufferAhead * bufferGoalRatio :
-                                     wantedBufferAhead;
-          })
+        const bufferGoal$ = wantedBufferAhead$.pipe(
+          map((wba) => wba * bufferGoalRatio)
         );
 
         const representationBuffer$ = createRepresentationBuffer(representation,
@@ -201,17 +189,15 @@ export default function AdaptationBuffer<T>(
         .pipe(
           catchError((err) => {
             if (err.code === "BUFFER_FULL_ERROR") {
-              const lastBufferGoalRatio = bufferGoalRatio$.getValue();
+              const lastBufferGoalRatio = bufferGoalRatio;
               if (lastBufferGoalRatio > 0.05) {
-                const bufferGoalRatio = lastBufferGoalRatio - 0.05;
-                bufferGoalRatio$.next(Math.max(bufferGoalRatio, 0.05));
+                bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.05;
               }
               killCurrentBuffer$.next();
               return EMPTY;
             }
             throw err;
           }),
-          finalize(() => bufferGoalRatio$.complete()),
           takeUntil(killCurrentBuffer$)
         );
         return observableConcat(representationChange$, representationBuffer$);
@@ -238,9 +224,7 @@ export default function AdaptationBuffer<T>(
     }), ignoreElements())
   );
 
-  return observableMerge(adaptationBuffer$, bitrateEstimate$).pipe(
-    finalize(() => bufferGoalRatioMap = {})
-  );
+  return observableMerge(adaptationBuffer$, bitrateEstimate$);
 
   /**
    * Create and returns a new RepresentationBuffer Observable, linked to the
