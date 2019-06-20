@@ -97,7 +97,7 @@ function getSegmentData(
  * from a video source.
  *
  * From a given video adaptation, the tools will extract a "thumbnail track",
- * either from a trickmode track (whose light chunks are adapted from such use case)
+ * either from a trickMode track (whose light chunks are adapted from such use case)
  * or direclty from the media content.
  */
 export default class VideoThumbnailLoader {

@@ -46,18 +46,12 @@ export interface IParsedAdaptation {
   type: string;
 
   // optional
-  trickModeTrack? : IParsedTrickmodeAdaptation;
+  trickModeTrack? : IParsedAdaptation;
+  isTrickModeFor? : string;
   audioDescription? : boolean;
   closedCaption? : boolean;
   language?: string;
 }
-
-export interface IParsedTrickmodeAdaptation {
-  id: string;
-  representations: IParsedRepresentation[];
-  isTrickmodeFor : string;
-}
-
 export interface IParsedPeriod {
   // required
   id : string;
