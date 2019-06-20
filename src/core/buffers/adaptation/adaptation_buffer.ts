@@ -27,16 +27,21 @@
 import objectAssign from "object-assign";
 import {
   asapScheduler,
+  BehaviorSubject,
+  combineLatest as observableCombineLatest,
   concat as observableConcat,
   defer as observableDefer,
+  EMPTY,
   merge as observableMerge,
   Observable,
   of as observableOf,
   Subject,
 } from "rxjs";
 import {
+  catchError,
   distinctUntilChanged,
   filter,
+  finalize,
   ignoreElements,
   map,
   observeOn,
@@ -111,6 +116,17 @@ export default function AdaptationBuffer<T>(
   abrManager : ABRManager,
   options : { manualBitrateSwitchingMode : "seamless" | "direct" }
 ) : Observable<IAdaptationBufferEvent<T>> {
+
+  /**
+   * The buffer goal ratio limits the wanted buffer ahead to determine the
+   * buffer goal.
+   *
+   * It can help in cases such as : the current browser has issues with
+   * buffering and tells us that we should try to bufferize less data :
+   * https://developers.google.com/web/updates/2017/10/quotaexceedederror
+   */
+  let bufferGoalRatioMap: { [key: string]: BehaviorSubject<number> } = {};
+
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
 
@@ -145,8 +161,8 @@ export default function AdaptationBuffer<T>(
   );
 
   const newRepresentation$ = abr$
-    .pipe(distinctUntilChanged((a, b) => a.manual === b.manual &&
-                                         a.representation.id === b.representation.id));
+  .pipe(distinctUntilChanged((a, b) => a.manual === b.manual &&
+                                       a.representation.id === b.representation.id));
 
   const adaptationBuffer$ = observableMerge(
     newRepresentation$
@@ -163,8 +179,41 @@ export default function AdaptationBuffer<T>(
           observableOf(EVENTS.representationChange(adaptation.type,
                                                    period,
                                                    representation));
-        const representationBuffer$ = createRepresentationBuffer(representation)
-          .pipe(takeUntil(killCurrentBuffer$));
+
+        const bufferGoalRatio$ = bufferGoalRatioMap[representation.id] ||
+          new BehaviorSubject<number>(1);
+
+        bufferGoalRatioMap[representation.id] = bufferGoalRatio$;
+
+          // Get the buffer goal from wanted buffer ahead and buffer goal ratio.
+        const bufferGoal$ = observableCombineLatest([
+          wantedBufferAhead$,
+          bufferGoalRatio$,
+        ]).pipe(
+          map(([ wantedBufferAhead, bufferGoalRatio ]) => {
+            return bufferGoalRatio ? wantedBufferAhead * bufferGoalRatio :
+                                     wantedBufferAhead;
+          })
+        );
+
+        const representationBuffer$ = createRepresentationBuffer(representation,
+                                                                 bufferGoal$)
+        .pipe(
+          catchError((err) => {
+            if (err.code === "BUFFER_FULL_ERROR") {
+              const lastBufferGoalRatio = bufferGoalRatio$.getValue();
+              if (lastBufferGoalRatio > 0.05) {
+                const bufferGoalRatio = lastBufferGoalRatio - 0.05;
+                bufferGoalRatio$.next(Math.max(bufferGoalRatio, 0.05));
+              }
+              killCurrentBuffer$.next();
+              return EMPTY;
+            }
+            throw err;
+          }),
+          finalize(() => bufferGoalRatio$.complete()),
+          takeUntil(killCurrentBuffer$)
+        );
         return observableConcat(representationChange$, representationBuffer$);
       })),
 
@@ -189,7 +238,9 @@ export default function AdaptationBuffer<T>(
     }), ignoreElements())
   );
 
-  return observableMerge(adaptationBuffer$, bitrateEstimate$);
+  return observableMerge(adaptationBuffer$, bitrateEstimate$).pipe(
+    finalize(() => bufferGoalRatioMap = {})
+  );
 
   /**
    * Create and returns a new RepresentationBuffer Observable, linked to the
@@ -198,7 +249,8 @@ export default function AdaptationBuffer<T>(
    * @returns {Observable}
    */
   function createRepresentationBuffer(
-    representation : Representation
+    representation : Representation,
+    bufferGoal$ : Observable<number>
   ) : Observable<IRepresentationBufferEvent<T>> {
     return observableDefer(() => {
       log.info("Buffer: changing representation", adaptation.type, representation);
@@ -211,7 +263,7 @@ export default function AdaptationBuffer<T>(
                                     segmentBookkeeper,
                                     segmentFetcher,
                                     terminate$: terminateCurrentBuffer$,
-                                    wantedBufferAhead$, });
+                                    bufferGoal$, });
     });
   }
 }
