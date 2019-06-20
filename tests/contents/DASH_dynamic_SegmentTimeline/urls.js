@@ -7,19 +7,22 @@ const path = require("path");
  * One single bitrate, english audio.
  */
 
-const Manifest_URL = {
-  url: "/DASH_dynamic_SegmentTimeline/media/Manifest.mpd",
-  path: path.join(__dirname, "./media/Manifest.mpd"),
-  contentType: "application/dash+xml",
-};
-
 /**
  * URLs for which the request should be stubbed.
  * @type {Array.<Object>}
  */
 module.exports = [
   // manifest
-  Manifest_URL,
+  {
+    url: "/DASH_dynamic_SegmentTimeline/media/Manifest.mpd",
+    path: path.join(__dirname, "./media/Manifest.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
+    url: "/DASH_dynamic_SegmentTimeline/media/Manifest_no-timeShiftBufferDepth.mpd",
+    path: path.join(__dirname, "./media/Manifest_no-timeShiftBufferDepth.mpd"),
+    contentType: "application/dash+xml",
+  },
 
   // Audio initialization segment
   {

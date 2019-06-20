@@ -38,7 +38,6 @@ export interface IParsedSegmentTemplate extends IParsedSegmentBase {
   indexRange?: [number, number];
   initialization?: IParsedInitialization;
   startNumber? : number;
-  timeShiftBufferDepth?: number;
 
   media? : string;
   index? : string;
@@ -58,7 +57,6 @@ export interface IParsedSegmentTimeline {
   indexRange?: [number, number];
   initialization?: IParsedInitialization;
   startNumber? : number;
-  timeShiftBufferDepth?: number;
   media? : string;
   index? : string;
   bitstreamSwitching? : boolean;

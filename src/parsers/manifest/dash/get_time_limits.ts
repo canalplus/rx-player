@@ -16,18 +16,35 @@
 
 import { IParsedManifest } from "../types";
 import getMaximumTime from "./get_maximum_time";
-import getMinimumTime from "./get_minimum_time";
+
+interface ITimeValue {
+  isContinuous : boolean;
+  value : number;
+  time : number;
+}
 
 export default function getTimeLimits(
   parsedMPD : IParsedManifest,
   lastTimeReference? : number,
   timeShiftBufferDepth? : number
-) : [ { isContinuous : boolean; value : number; time : number }, // minimum
-      { isContinuous : boolean; value : number; time : number } /* maximum */ ]
+) : [ ITimeValue, /* minimum */ ITimeValue, /* maximum */ ]
 {
   const time = performance.now();
   const maximumTime = getMaximumTime(parsedMPD, lastTimeReference);
-  const minimumTime = getMinimumTime(maximumTime, timeShiftBufferDepth);
-  return [ { isContinuous: true, value: minimumTime, time },
+  const minimumTime : ITimeValue = (() => {
+    if (timeShiftBufferDepth == null) {
+      const ast = parsedMPD.availabilityStartTime || 0;
+      return { isContinuous: false,
+               value: ast,
+               time };
+    } else {
+      const minimumTimeValue = maximumTime - (timeShiftBufferDepth - 3);
+      const value = Math.min(minimumTimeValue, maximumTime);
+      return { isContinuous: true,
+               value,
+               time };
+    }
+  })();
+  return [ minimumTime,
            { isContinuous: true, value: maximumTime, time } ];
 }
