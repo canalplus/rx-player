@@ -38,18 +38,24 @@ export interface IAttachedMediaKeysEvent { type: "attached-media-keys";
 export type IEMEManagerEvent = IEMEWarningEvent |
                                ICreatedMediaKeysEvent |
                                IAttachedMediaKeysEvent |
-                               IMediaKeySessionEvents;
+                               IMediaKeySessionEvents |
+                               IMediaKeySessionHandledEvents;
 
 export type ILicense = TypedArray |
                        ArrayBuffer;
 
 export interface IMediaKeySessionEvents { type : MediaKeyMessageType |
-                                                 "key-status-change" |
-                                                 "session-updated";
-                                          value : { session? :
+                                                 "key-status-change";
+                                          value : { session :
                                                       MediaKeySession |
-                                                      ICustomMediaKeySession;
-                                                    license: ILicense|null; }; }
+                                                      ICustomMediaKeySession; }; }
+
+export interface IMediaKeySessionHandledEvents { type: "key-message-handled" |
+                                                       "key-status-change-handled" |
+                                                       "session-updated";
+                                                 value: { session: MediaKeySession |
+                                                                   ICustomMediaKeySession;
+                                                          license: ILicense|null; }; }
 
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {
