@@ -22,13 +22,13 @@ import parseManifest from "../../../../../parsers/manifest/dash/index";
 import { IParserResponse } from "../../../../../parsers/manifest/dash/parse_mpd";
 import { IParsedManifest } from "../../../../../parsers/manifest/types";
 import { makeHTTPRequest, SegmentConstuctionError } from "../../utils";
-import { TypedArray } from "../drm/keySystems";
+import { ITypedArray } from "../drm/keySystems";
 import { IUtils } from "./../../types";
 import {
   IRepresentation,
   ISegmentBuilder,
   ISegmentsBuiltType,
-  SegmentBuilt,
+  ISegmentBuilt,
 } from "./types";
 
 /**
@@ -62,20 +62,20 @@ export const buildInitIndexSegment = async ({
   segmentBase,
   initialization,
 }: IRepresentation): Promise<{
-initSegment: TypedArray | ArrayBuffer;
-indexSegment: TypedArray | ArrayBuffer;
+initSegment: ITypedArray | ArrayBuffer;
+indexSegment: ITypedArray | ArrayBuffer;
 }> => {
   try {
     if (!initialization.mediaURL) {
       throw new Error("MediaURL from the initialization segment is broken");
     }
     const [initSegment, indexSegment] = await Promise.all([
-      makeHTTPRequest<TypedArray | ArrayBuffer>(initialization.mediaURL, {
+      makeHTTPRequest<ITypedArray | ArrayBuffer>(initialization.mediaURL, {
         headers: { Range: `bytes=${initialization.range.join("-")}` },
         method: "GET",
         responseType: "arraybuffer",
       }),
-      makeHTTPRequest<TypedArray | ArrayBuffer>(initialization.mediaURL, {
+      makeHTTPRequest<ITypedArray | ArrayBuffer>(initialization.mediaURL, {
         headers: { Range: `bytes=${segmentBase.indexRange.join("-")}` },
         method: "GET",
         responseType: "arraybuffer",
@@ -112,7 +112,7 @@ type: "TemplateRepresentationIndex" | "BaseRepresentationIndex";
         );
       }
       const { range, duration, timescale, time } = segment as ISidxSegment;
-      const data = await makeHTTPRequest<TypedArray | ArrayBuffer>(url, {
+      const data = await makeHTTPRequest<ITypedArray | ArrayBuffer>(url, {
         headers: { Range: `bytes=${range.join("-")}` },
         method: "GET",
         responseType: "arraybuffer",
@@ -125,7 +125,7 @@ type: "TemplateRepresentationIndex" | "BaseRepresentationIndex";
       };
     } else {
       const { mediaURL, duration = 0, timescale, time } = segment as ISegment;
-      const data = await makeHTTPRequest<TypedArray | ArrayBuffer>(
+      const data = await makeHTTPRequest<ITypedArray | ArrayBuffer>(
         mediaURL || "",
         {
           method: "GET",
@@ -154,10 +154,10 @@ type: "TemplateRepresentationIndex" | "BaseRepresentationIndex";
  *
  */
 export const createSegment = (
-  segmentBuilder: ISegmentBuilder | SegmentBuilt,
+  segmentBuilder: ISegmentBuilder | ISegmentBuilt,
   optionBuilder: IUtils
-): Observable<SegmentBuilt> => {
-  return new Observable<SegmentBuilt>(obs => {
+): Observable<ISegmentBuilt> => {
+  return new Observable<ISegmentBuilt>(obs => {
     if (Array.isArray(segmentBuilder)) {
       obs.next(segmentBuilder);
       obs.complete();

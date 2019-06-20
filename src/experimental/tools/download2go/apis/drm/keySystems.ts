@@ -27,7 +27,7 @@ import createMediaSource, {
 } from "../../../../../core/init/create_media_source";
 import { IUtils } from "../../types";
 
-export type TypedArray =
+export type ITypedArray =
   | Int8Array
   | Int16Array
   | Int32Array
@@ -53,7 +53,7 @@ export type TypedArray =
 function getLicense(
   settingsKeySystem: IKeySystemOption,
   externalSettings: {
-  initSegment: TypedArray | ArrayBuffer;
+  initSegment: ITypedArray | ArrayBuffer;
   codec: string;
   storageUtils: IUtils;
   contentID: string;

@@ -21,7 +21,7 @@ import { downloadManagerSubscription } from "../dash/dashSegmentsBuilder";
 import {
   IEmitterLoaderBuilder,
   IProgressBarBuilderDownload,
-  settingsType,
+  ISettings,
 } from "../dash/types";
 import { IUtils } from "./../../types";
 
@@ -37,7 +37,7 @@ import { IUtils } from "./../../types";
  *
  */
 export function downloader(
-  settings: settingsType,
+  settings: ISettings,
   progressBuilderAssets: IProgressBarBuilderDownload,
   { db, emitter, storeManifestEvery }: IUtils
 ): Subscription {

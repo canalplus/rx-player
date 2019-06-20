@@ -39,15 +39,15 @@ import { IParsedRepresentation } from "../../../../../parsers/manifest/types";
 import {
   IProgressBarBuilderAbstract,
   IUtils,
-  videoSettingsQualityInputType,
+  IVideoSettingsQualityInputType,
 } from "../../types";
 import {
   IDownloadManagerOutput,
   ILocalManifestOnline,
   Quality,
-  SegmentIndex,
+  ISegmentIndex,
 } from "../dash/types";
-import { TypedArray } from "../drm/keySystems";
+import { ITypedArray } from "../drm/keySystems";
 
 /**
  * A tool function to choose quality depending of what we receive
@@ -68,7 +68,7 @@ import { TypedArray } from "../drm/keySystems";
 export const chooseVideoQuality = (
   representations: IParsedRepresentation[],
   currentTypeAdaptation: string,
-  quality: [number, number] | videoSettingsQualityInputType
+  quality: [number, number] | IVideoSettingsQualityInputType
 ): IParsedRepresentation[] => {
   if (currentTypeAdaptation !== "video") {
     return representations;
@@ -117,7 +117,7 @@ export const chooseVideoQuality = (
 
 export const getBaseSegments = async (
   Segment: ISegment
-): Promise<SegmentIndex> => {
+): Promise<ISegmentIndex> => {
   const { indexRange, range, mediaURL, duration = 0 } = Segment;
   if (indexRange && range) {
     const { initSegment, indexSegment } = await buildInitIndexSegment({
@@ -140,7 +140,7 @@ export const getBaseSegments = async (
       type: "BaseRepresentationIndex",
     };
   } else {
-    const dataInit = await makeHTTPRequest<TypedArray | ArrayBuffer>(
+    const dataInit = await makeHTTPRequest<ITypedArray | ArrayBuffer>(
       mediaURL || "",
       {
         method: "GET",

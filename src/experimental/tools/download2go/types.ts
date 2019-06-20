@@ -25,7 +25,7 @@ import {
   IVideoSettings,
 } from "./apis/dash/types";
 
-export type videoSettingsQualityInputType = "HIGH" | "MEDIUM" | "LOW";
+export type IVideoSettingsQualityInputType = "HIGH" | "MEDIUM" | "LOW";
 export interface ISettingsDownloader {
   url: string;
   type: "start";
@@ -56,18 +56,18 @@ export interface IStoredManifest {
   size: number;
 }
 
-export type storeManifestEveryFn = (progress: number) => boolean;
+export type IStoreManifestEveryFn = (progress: number) => boolean;
 
 export interface IUtils {
   emitter: EventEmitter<IEventsEmitter>;
   db: IDBPDatabase;
-  storeManifestEvery?: storeManifestEveryFn;
+  storeManifestEvery?: IStoreManifestEveryFn;
   progressBarBuilder$?: Subject<IEmitterLoaderBuilder>;
 }
 
 export interface IOptionsStarter {
   nameDB?: string;
-  storeManifestEvery?: storeManifestEveryFn;
+  storeManifestEvery?: IStoreManifestEveryFn;
 }
 
 export interface IRequestArgs {

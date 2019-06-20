@@ -52,7 +52,7 @@ import {
   ILocalRepresentationOnline,
   IOptionsBuilder,
   ISegmentBuilder,
-  SegmentBuilt,
+  ISegmentBuilt,
 } from "./types";
 
 /**
@@ -278,7 +278,7 @@ export const downloadManager = (
                           createSegment(segment, utilsBuilder).pipe(retry(2))
                         ),
                         map(function(
-                          this: Array<ISegmentBuilder | SegmentBuilt>,
+                          this: Array<ISegmentBuilder | ISegmentBuilt>,
                           segmentBuilt
                         ) {
                           const [[, i]] = segmentBuilt;

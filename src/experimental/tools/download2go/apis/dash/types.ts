@@ -22,9 +22,9 @@ import { ISidxSegment } from "../../../../../parsers/containers/isobmff";
 import {
   IProgressBarBuilderAbstract,
   ISettingsDownloader,
-  videoSettingsQualityInputType,
+  IVideoSettingsQualityInputType,
 } from "../../types";
-import { TypedArray } from "../drm/keySystems";
+import { ITypedArray } from "../drm/keySystems";
 
 export interface IRepresentation {
   segmentBase: { indexRange: [number, number] | never[] };
@@ -48,7 +48,7 @@ export interface ISegmentsBuiltType {
 }
 
 export interface IOptionsBuilder {
-  quality: [number, number] | videoSettingsQualityInputType;
+  quality: [number, number] | IVideoSettingsQualityInputType;
   contentID: string;
   keySystemsOptions?: IKeySystemOption;
 }
@@ -76,7 +76,7 @@ export interface IProgressBarBuilder {
 }
 
 export interface IVideoSettings {
-  quality: [number, number] | videoSettingsQualityInputType;
+  quality: [number, number] | IVideoSettingsQualityInputType;
   keySystems?: IKeySystemOption;
 }
 
@@ -90,7 +90,7 @@ export interface ILocalIndexSegmentOnline {
 
 export interface ILocalIndexOnline {
   init?: string | null;
-  segments: Array<ISegmentBuilder | SegmentBuilt>;
+  segments: Array<ISegmentBuilder | ISegmentBuilt>;
 }
 
 export interface ILocalRepresentationOnline {
@@ -135,18 +135,18 @@ export interface ISegmentBuilder {
   };
 }
 
-export type SegmentBuilt = [[string, number], number, number, number];
+export type ISegmentBuilt = [[string, number], number, number, number];
 
-export type SegmentIndex =
+export type ISegmentIndex =
   | {
-      dataInit: TypedArray | ArrayBuffer;
+      dataInit: ITypedArray | ArrayBuffer;
       mediaURL: string | null;
       nextSegmentsRanges?: ISegment[];
       duration?: number;
       type: "TemplateRepresentationIndex";
     }
   | {
-      dataInit: TypedArray;
+      dataInit: ITypedArray;
       mediaURL: string | null;
       duration: number;
       nextSegmentsRanges: ISidxSegment[] | null;
@@ -160,7 +160,7 @@ export interface IDownloadManagerOutput {
   progressBarBuilder: IProgressBarBuilder;
 }
 
-export type settingsType =
+export type ISettings =
   | ISettingsDownloader
   | {
       contentID: string;
@@ -180,7 +180,7 @@ export interface IPauseSubject {
 }
 
 export interface IDownloaderManagerAbstract {
-  settings: settingsType;
+  settings: ISettings;
   activeSubsDownloader: IActiveSubs;
   progress$: ReplaySubject<IProgressBarBuilderAbstract>;
   pause$: AsyncSubject<void>;
