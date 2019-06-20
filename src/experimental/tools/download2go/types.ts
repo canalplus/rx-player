@@ -59,7 +59,7 @@ export interface IStoredManifest {
 export type IStoreManifestEveryFn = (progress: number) => boolean;
 
 export interface IUtils {
-  emitter: EventEmitter<IEventsEmitter>;
+  emitter: EventEmitter<IDownload2GoEvents>;
   db: IDBPDatabase;
   storeManifestEvery?: IStoreManifestEveryFn;
   progressBarBuilder$?: Subject<IEmitterLoaderBuilder>;
@@ -76,7 +76,7 @@ export interface IRequestArgs {
   responseType?: XMLHttpRequestResponseType;
 }
 
-export interface IEventsEmitter {
+export interface IDownload2GoEvents {
   progress: {
     contentID: string;
     progress: number;
@@ -94,12 +94,13 @@ export interface IEventsEmitter {
     progress: number;
   };
 }
+
 export interface IPublicAPI {
-  emitter: EventEmitter<IEventsEmitter>;
+  emitter: EventEmitter<IDownload2GoEvents>;
   download(settings: ISettingsDownloader): Promise<void>;
-  resume(contentID: string): Promise<any>;
-  pause(contentID: string): number | void;
+  resume(contentID: string): Promise<void>;
+  pause(contentID: string): void;
   getAllDownloadedMovies<T>(): Promise<T[] | void>;
   getSingleMovie<T>(contentID: string): Promise<T | void>;
-  deleteDownloadedMovie(contentID: string): Promise<number | void>;
+  deleteDownloadedMovie(contentID: string): Promise<void>;
 }

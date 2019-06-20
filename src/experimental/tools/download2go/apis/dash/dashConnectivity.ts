@@ -104,43 +104,39 @@ segment: ISidxSegment | ISegment;
 url: string | null;
 type: "TemplateRepresentationIndex" | "BaseRepresentationIndex";
 }): Promise<ISegmentsBuiltType> => {
-  try {
-    if (type === "BaseRepresentationIndex") {
-      if (!url) {
-        throw new SegmentConstuctionError(
-          "The mediaURL is not defined for the given representation segment"
-        );
-      }
-      const { range, duration, timescale, time } = segment as ISidxSegment;
-      const data = await makeHTTPRequest<ITypedArray | ArrayBuffer>(url, {
-        headers: { Range: `bytes=${range.join("-")}` },
+  if (type === "BaseRepresentationIndex") {
+    if (!url) {
+      throw new SegmentConstuctionError(
+        "The mediaURL is not defined for the given representation segment"
+      );
+    }
+    const { range, duration, timescale, time } = segment as ISidxSegment;
+    const data = await makeHTTPRequest<ITypedArray | ArrayBuffer>(url, {
+      headers: { Range: `bytes=${range.join("-")}` },
+      method: "GET",
+      responseType: "arraybuffer",
+    });
+    return {
+      data,
+      duration,
+      time,
+      timescale,
+    };
+  } else {
+    const { mediaURL, duration = 0, timescale, time } = segment as ISegment;
+    const data = await makeHTTPRequest<ITypedArray | ArrayBuffer>(
+      mediaURL || "",
+      {
         method: "GET",
         responseType: "arraybuffer",
-      });
-      return {
-        data,
-        duration,
-        time,
-        timescale,
-      };
-    } else {
-      const { mediaURL, duration = 0, timescale, time } = segment as ISegment;
-      const data = await makeHTTPRequest<ITypedArray | ArrayBuffer>(
-        mediaURL || "",
-        {
-          method: "GET",
-          responseType: "arraybuffer",
-        }
-      );
-      return {
-        data,
-        duration,
-        time,
-        timescale,
-      };
-    }
-  } catch (e) {
-    throw new SegmentConstuctionError(e.message);
+      }
+    );
+    return {
+      data,
+      duration,
+      time,
+      timescale,
+    };
   }
 };
 

@@ -32,6 +32,7 @@ import { IRequestArgs, ISettingsDownloader, IStoredManifest } from "./types";
 export class SegmentConstuctionError extends Error {
   constructor(message: string) {
     super(message);
+    Object.setPrototypeOf(this, SegmentConstuctionError.prototype);
     this.name = "SegmentConstructionError";
   }
 }
@@ -39,6 +40,7 @@ export class SegmentConstuctionError extends Error {
 export class ValidationArgsError extends Error {
   constructor(message: string) {
     super(message);
+    Object.setPrototypeOf(this, ValidationArgsError.prototype);
     this.name = "ValidationArgsError";
   }
 }
@@ -46,12 +48,14 @@ export class ValidationArgsError extends Error {
 export class RxPlayerError extends Error {
   constructor(message: string) {
     super(message);
+    Object.setPrototypeOf(this, RxPlayerError.prototype);
     this.name = "RxPlayerError";
   }
 }
 export class IndexDBError extends Error {
   constructor(message: string) {
     super(message);
+    Object.setPrototypeOf(this, IndexDBError.prototype);
     this.name = "IndexDBError";
   }
 }

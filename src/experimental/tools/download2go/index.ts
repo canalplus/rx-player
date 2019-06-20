@@ -29,7 +29,7 @@ import {
 import EventEmitter from "../../../utils/event_emitter";
 import { IActiveSubs, IPauseSubject } from "./apis/dash/types";
 import {
-  IEventsEmitter,
+  IDownload2GoEvents,
   IOptionsStarter,
   IProgressBarBuilderAbstract,
   IPublicAPI,
@@ -46,7 +46,7 @@ export default async function D2G({
   nameDB = "d2g",
   storeManifestEvery,
 }: IOptionsStarter = {}): Promise<IPublicAPI> {
-  const emitter = new EventEmitter<IEventsEmitter>();
+  const emitter = new EventEmitter<IDownload2GoEvents>();
   const db = await setUpDb(nameDB);
   if (!db) {
     throw new IndexDBError("A problem occured during the set up of IndexDB");
@@ -56,7 +56,7 @@ export default async function D2G({
 
   return {
     /**
-     * A hand made EventEmitter that respect IEventsEmitter.
+     * A hand made EventEmitter that respect IDownload2GoEvents.
      */
     emitter,
     /**
