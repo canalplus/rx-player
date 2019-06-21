@@ -255,7 +255,11 @@ export default function parseAdaptationSets(
         !!arrayFind(roles, (role) => role.value === "main") &&
         !!arrayFind(roles, (role) => role.schemeIdUri === "urn:mpeg:dash:role:2011");
       const videoMainAdaptation = acc.videoMainAdaptation;
-      if (type === "video" && videoMainAdaptation !== null && isMainAdaptation) {
+      if (type === "video" &&
+          videoMainAdaptation !== null &&
+          isMainAdaptation &&
+          isTrickModeFor == null
+      ) {
         videoMainAdaptation.representations.push(...representations);
         newID = videoMainAdaptation.id;
       } else {
@@ -286,6 +290,7 @@ export default function parseAdaptationSets(
         }
 
         if (isTrickModeFor != null) {
+          parsedAdaptationSet.isTrickModeFor = isTrickModeFor;
           acc.trickModeAdaptations.push(parsedAdaptationSet);
         } else {
           const adaptationsOfTheSameType = parsedAdaptations[type];
