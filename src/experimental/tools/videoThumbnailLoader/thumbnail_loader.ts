@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 import {
+  combineLatest,
+  EMPTY,
   Observable,
   of as observableOf,
   Subject,
@@ -29,14 +31,13 @@ import {
 } from "rxjs/operators";
 import { QueuedSourceBuffer } from "../../../core/source_buffers";
 import { Representation } from "../../../manifest";
-import arrayFind from "../../../utils/array_find";
 import arrayFindIndex from "../../../utils/array_find_index";
 import castToObservable from "../../../utils/cast_to_observable";
 import concatMapLatest from "../../../utils/concat_map_latest";
 import PPromise from "../../../utils/promise";
 import {
+  areRangesOverlapping,
   convertToRanges,
-  isTimeInRange
 } from "../../../utils/ranges";
 import request from "../../../utils/request";
 import appendInitSegment from "./append_init_segment";
@@ -58,35 +59,38 @@ const MAXIMUM_MEDIA_BUFFERED = 2;
 
 /**
  * Get segment data from cache or load it.
- * @param {number} time
- * @param {string} mediaURL
+ * @param {Object} thumbnails
  * @param {HTMLMediaElement} mediaElement
  */
 function getSegmentData(
-  time: number,
-  mediaURL: string,
+  thumbnails: IThumbnailInfo[],
   mediaElement: HTMLMediaElement
-): Observable<{ data?: ArrayBuffer; fromNetwork: boolean }> {
+): Observable<ArrayBuffer[]> {
 
-  const mediaRanges = convertToRanges(mediaElement.buffered);
-  for (let i = 0; i < mediaRanges.length; i++) {
-    const mediaRange = mediaRanges[i];
-    if (isTimeInRange(mediaRange, time)) {
-      return observableOf({ fromNetwork: false });
-    }
+  const thumbnailsToLoad = thumbnails.filter((t) => {
+    const tRange = { start: t.start, end: t.start + t.duration };
+    const mediaRanges = convertToRanges(mediaElement.buffered);
+    return arrayFindIndex(mediaRanges, (mr) => {
+      return tRange.start >= mr.start && tRange.end <= mr.end;
+    }) === -1;
+  });
+
+  if (!thumbnailsToLoad.length) {
+    return EMPTY;
   }
 
-  const loadedData = request({
-    url: mediaURL,
-    sendProgressEvents: false,
-    responseType: "arraybuffer",
+  const loadedData$ = thumbnailsToLoad.map(({ mediaURL }) => {
+    return request({
+      url: mediaURL,
+      sendProgressEvents: false,
+      responseType: "arraybuffer",
+    });
   });
-  return loadedData.pipe(
-    map(({ value: { responseData } }) => {
-      return {
-        data: responseData,
-        fromNetwork: true,
-      };
+
+  return combineLatest(loadedData$).pipe(
+    map((loadedData) => {
+      const responseDatas = loadedData.map(({ value }) => value.responseData);
+      return responseDatas;
     }),
     take(1)
   );
@@ -161,37 +165,42 @@ export default class VideoThumbnailLoader {
                         "VideoThumbnailLoaderError: No thumbnail track given.");
                     }
 
-                    const thumbnail: IThumbnailInfo | undefined =
-                      arrayFind(this._thumbnailTrack.thumbnailInfos, (t) => {
-                        return t.start
-                          <= time && (t.duration + t.start) > time;
-                      });
+                    const thumbnails: IThumbnailInfo[] | undefined =
+                      this._thumbnailTrack.thumbnailInfos
+                        .filter((t) => {
+                          const thumbnailDuration = t.duration;
+                          const range = { start: time - thumbnailDuration,
+                                          end: time + thumbnailDuration };
+                          const tRange = { start: t.start, end: t.start + t.duration };
+                          return areRangesOverlapping(range, tRange);
+                        });
 
-                    if (!thumbnail) {
+                    if (thumbnails.length === 0) {
                       throw new Error(
                         "VideoThumbnailLoaderError: Couldn't find thumbnail.");
                     }
 
-                    return getSegmentData(time,
-                      thumbnail.mediaURL,
-                      this._thumbnailVideoElement
-                    ).pipe(
-                      mergeMap(({
-                        data,
-                        fromNetwork,
-                      }) => {
-                        if (data && fromNetwork) {
-                          return videoSourceBuffer
-                            .appendBuffer({
-                              segment: data,
-                              initSegment: null,
-                              codec: this._thumbnailTrack.codec,
-                              timestampOffset: 0,
-                            }).pipe(
+                    return getSegmentData(thumbnails, videoElement).pipe(
+                      mergeMap((datas) => {
+                        if (datas) {
+                          const appendBuffers$ = combineLatest(
+                            datas.map((data) => {
+                              return videoSourceBuffer
+                                .appendBuffer({
+                                  segment: data,
+                                  initSegment: null,
+                                  codec: this._thumbnailTrack.codec,
+                                  timestampOffset: 0,
+                                });
+                            })
+                          );
+                          return appendBuffers$.pipe(
                               mergeMap(() => {
-                                this._bufferedDataRanges.push({
-                                  start: thumbnail.start,
-                                  end: thumbnail.start + thumbnail.duration,
+                                thumbnails.forEach((t) => {
+                                  this._bufferedDataRanges.push({
+                                    start: t.start,
+                                    end: t.start + t.duration,
+                                  });
                                 });
                                 this._thumbnailVideoElement.currentTime = time;
                                 return observableOf(null);

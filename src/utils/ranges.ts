@@ -377,6 +377,7 @@ function keepRangeIntersection(
 }
 
 export {
+  areRangesOverlapping,
   convertToRanges,
   getInnerAndOuterTimeRanges,
   getLeftSizeOfRange,
