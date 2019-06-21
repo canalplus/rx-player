@@ -742,7 +742,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
         manualBitrates: this._priv_bitrateInfos.manualBitrates,
         maxAutoBitrates: this._priv_bitrateInfos.initialMaxAutoBitrates,
-        throttleWhenHidden: this._priv_throttleWhenHidden ?
+        throttle: this._priv_throttleWhenHidden ?
         { video: isInBackground$()
             .pipe(
               map(isBg => isBg ? 0 :
@@ -750,7 +750,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
               takeUntil(this._priv_stopCurrentContent$)
             ), } :
         {},
-        throttleVideoBitrateWhenHidden: this._priv_throttleVideoBitrateWhenHidden ?
+        throttleBitrate: this._priv_throttleVideoBitrateWhenHidden ?
         { video: videoIsVisible$(videoElement)
             .pipe(
               map(isBg => isBg ? 0 :

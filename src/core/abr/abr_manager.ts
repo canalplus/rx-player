@@ -42,16 +42,16 @@ export type IABRClockTick = IRepresentationChooserClockTick;
 // Options for every RepresentationChoosers
 interface IRepresentationChoosersOptions {
   limitWidth: Partial<Record<IBufferType, Observable<number>>>;
-  throttleWhenHidden: Partial<Record<IBufferType, Observable<number>>>;
-  throttleVideoBitrateWhenHidden: Partial<Record<IBufferType, Observable<number>>>;
+  throttle: Partial<Record<IBufferType, Observable<number>>>;
+  throttleBitrate: Partial<Record<IBufferType, Observable<number>>>;
   initialBitrates: Partial<Record<IBufferType, number>>;
   manualBitrates: Partial<Record<IBufferType, number>>;
   maxAutoBitrates: Partial<Record<IBufferType, number>>;
 }
 
 const defaultChooserOptions = { limitWidth: {},
-                                throttleWhenHidden: {},
-                                throttleVideoBitrateWhenHidden: {},
+                                throttle: {},
+                                throttleBitrate: {},
                                 initialBitrates: {},
                                 manualBitrates: {},
                                 maxAutoBitrates: {} };
@@ -68,8 +68,8 @@ const createChooser = (
 ) : RepresentationChooser => {
   return new RepresentationChooser({
     limitWidth$: options.limitWidth[type],
-    throttleWhenHidden$: options.throttleWhenHidden[type],
-    throttleVideoBitrateWhenHidden$: options.throttleVideoBitrateWhenHidden[type],
+    throttle$: options.throttle[type],
+    throttleBitrate$: options.throttleBitrate[type],
     initialBitrate: options.initialBitrates[type],
     manualBitrate: options.manualBitrates[type],
     maxAutoBitrate: options.maxAutoBitrates[type],
@@ -172,8 +172,8 @@ export default class ABRManager {
       initialBitrates: options.initialBitrates || {},
       manualBitrates: options.manualBitrates || {},
       maxAutoBitrates: options.maxAutoBitrates || {},
-      throttleWhenHidden: options.throttleWhenHidden || {},
-      throttleVideoBitrateWhenHidden: options.throttleVideoBitrateWhenHidden || {},
+      throttle: options.throttle || {},
+      throttleBitrate: options.throttleBitrate || {},
       limitWidth: options.limitWidth || {},
     };
 

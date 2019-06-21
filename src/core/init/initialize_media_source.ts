@@ -109,8 +109,8 @@ export interface IInitializeOptions {
     initialBitrates : Partial<Record<IBufferType, number>>;
     manualBitrates : Partial<Record<IBufferType, number>>;
     maxAutoBitrates : Partial<Record<IBufferType, number>>;
-    throttleWhenHidden : Partial<Record<IBufferType, Observable<number>>>;
-    throttleVideoBitrateWhenHidden : Partial<Record<IBufferType, Observable<number>>>;
+    throttle : Partial<Record<IBufferType, Observable<number>>>;
+    throttleBitrate : Partial<Record<IBufferType, Observable<number>>>;
     limitWidth : Partial<Record<IBufferType, Observable<number>>>;
   };
   autoPlay : boolean;
