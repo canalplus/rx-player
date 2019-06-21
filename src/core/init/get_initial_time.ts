@@ -78,8 +78,10 @@ export default function getInitialTime(
 
   if (manifest.isLive) {
     const sgp = manifest.suggestedPresentationDelay;
-    return manifest.getMaximumPosition() - (sgp == null ? DEFAULT_LIVE_GAP :
-                                                          sgp);
+    const defaultStartingPos = manifest.getMaximumPosition() -
+                               (sgp == null ? DEFAULT_LIVE_GAP :
+                                              sgp);
+    return Math.max(defaultStartingPos, manifest.getMinimumPosition());
   }
 
   return manifest.getMinimumPosition();
