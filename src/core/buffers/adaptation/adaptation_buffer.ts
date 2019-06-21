@@ -29,7 +29,6 @@ import {
   asapScheduler,
   concat as observableConcat,
   defer as observableDefer,
-  EMPTY,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -190,9 +189,10 @@ export default function AdaptationBuffer<T>(
               const lastBufferGoalRatio = bufferGoalRatio;
               if (lastBufferGoalRatio > 0.05) {
                 bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.05;
+              } else {
+                throw err;
               }
-              killCurrentBuffer$.next();
-              return EMPTY;
+              return createRepresentationBuffer(representation, bufferGoal$);
             }
             throw err;
           }),
