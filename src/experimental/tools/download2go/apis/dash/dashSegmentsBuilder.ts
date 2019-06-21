@@ -18,6 +18,7 @@ import {
   AsyncSubject,
   from,
   Observable,
+  of,
   ReplaySubject,
   Subscription,
 } from "rxjs";
@@ -274,9 +275,14 @@ export const downloadManager = (
                   mergeMap(
                     representation =>
                       from(representation.index.segments).pipe(
-                        concatMap(segment =>
-                          createSegment(segment, utilsBuilder).pipe(retry(2))
-                        ),
+                        concatMap(segment => {
+                          if (Array.isArray(segment)) {
+                            return of(segment);
+                          }
+                          return createSegment(segment, utilsBuilder).pipe(
+                            retry(2)
+                          );
+                        }),
                         map(function(
                           this: Array<ISegmentBuilder | ISegmentBuilt>,
                           segmentBuilt

@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
+import { Observable, of } from "rxjs";
+import { mergeMap } from "rxjs/operators";
 
 import { ISegment } from "../../../../../manifest";
 import { ISidxSegment } from "../../../../../parsers/containers/isobmff";
 import parseManifest from "../../../../../parsers/manifest/dash/index";
 import { IParserResponse } from "../../../../../parsers/manifest/dash/parse_mpd";
 import { IParsedManifest } from "../../../../../parsers/manifest/types";
+import xhrRequest from "../../../../../utils/request";
 import { makeHTTPRequest, SegmentConstuctionError } from "../../utils";
 import { ITypedArray } from "../drm/keySystems";
 import { IUtils } from "./../../types";
 import {
   IRepresentation,
   ISegmentBuilder,
-  ISegmentsBuiltType,
   ISegmentBuilt,
+  ISegmentsBuiltType,
 } from "./types";
 
 /**
@@ -95,7 +97,7 @@ indexSegment: ITypedArray | ArrayBuffer;
  * @returns The data,duration,time,timescale of the current segment retrieved
  *
  */
-export const getSegmentBuffer = async ({
+export const getSegmentBuffer = ({
   segment,
   url,
   type,
@@ -103,7 +105,7 @@ export const getSegmentBuffer = async ({
 segment: ISidxSegment | ISegment;
 url: string | null;
 type: "TemplateRepresentationIndex" | "BaseRepresentationIndex";
-}): Promise<ISegmentsBuiltType> => {
+}): Observable<ISegmentsBuiltType> => {
   if (type === "BaseRepresentationIndex") {
     if (!url) {
       throw new SegmentConstuctionError(
@@ -111,32 +113,35 @@ type: "TemplateRepresentationIndex" | "BaseRepresentationIndex";
       );
     }
     const { range, duration, timescale, time } = segment as ISidxSegment;
-    const data = await makeHTTPRequest<ITypedArray | ArrayBuffer>(url, {
+    return xhrRequest({
+      url,
       headers: { Range: `bytes=${range.join("-")}` },
-      method: "GET",
       responseType: "arraybuffer",
-    });
-    return {
-      data,
-      duration,
-      time,
-      timescale,
-    };
+    }).pipe(
+      mergeMap(({ value }) => {
+        return of({
+          data: value.responseData,
+          duration,
+          time,
+          timescale,
+        });
+      })
+    );
   } else {
     const { mediaURL, duration = 0, timescale, time } = segment as ISegment;
-    const data = await makeHTTPRequest<ITypedArray | ArrayBuffer>(
-      mediaURL || "",
-      {
-        method: "GET",
-        responseType: "arraybuffer",
-      }
+    return xhrRequest({
+      url: mediaURL || "",
+      responseType: "arraybuffer",
+    }).pipe(
+      mergeMap(({ value }) => {
+        return of({
+          data: value.responseData,
+          duration,
+          time,
+          timescale,
+        });
+      })
     );
-    return {
-      data,
-      duration,
-      time,
-      timescale,
-    };
   }
 };
 
@@ -150,44 +155,32 @@ type: "TemplateRepresentationIndex" | "BaseRepresentationIndex";
  *
  */
 export const createSegment = (
-  segmentBuilder: ISegmentBuilder | ISegmentBuilt,
+  segmentBuilder: ISegmentBuilder,
   optionBuilder: IUtils
 ): Observable<ISegmentBuilt> => {
-  return new Observable<ISegmentBuilt>(obs => {
-    if (Array.isArray(segmentBuilder)) {
-      obs.next(segmentBuilder);
-      obs.complete();
-      return;
-    }
-    const { segment, utils } = segmentBuilder;
-    getSegmentBuffer({
-      segment,
-      type: utils.type,
-      url: utils.url,
+  const { segment, utils } = segmentBuilder;
+  return getSegmentBuffer({
+    segment,
+    type: utils.type,
+    url: utils.url,
+  }).pipe(
+    mergeMap(({ data, duration, timescale, time }) => {
+      const sizePerBuffer = data.byteLength;
+      const [segmentKey] = utils.segmentKey;
+      optionBuilder.db.put("segments", {
+        contentID: utils.contentID,
+        data,
+        segmentKey,
+        size: sizePerBuffer,
+      });
+      if (optionBuilder.progressBarBuilder$) {
+        optionBuilder.progressBarBuilder$.next({
+          id: utils.id,
+          segmentDownloaded: 1,
+          size: sizePerBuffer,
+        });
+      }
+      return of([utils.segmentKey, time, timescale, duration]);
     })
-      .then(async ({ data, duration, timescale, time }) => {
-        try {
-          const sizePerBuffer = data.byteLength;
-          const [segmentKey, keyIndex] = utils.segmentKey;
-          const key = await optionBuilder.db.put("segments", {
-            contentID: utils.contentID,
-            data,
-            segmentKey,
-            size: sizePerBuffer,
-          });
-          obs.next([[key as string, keyIndex], time, timescale, duration]);
-          if (optionBuilder.progressBarBuilder$) {
-            optionBuilder.progressBarBuilder$.next({
-              id: utils.id,
-              segmentDownloaded: 1,
-              size: sizePerBuffer,
-            });
-          }
-          obs.complete();
-        } catch (e) {
-          obs.error(e);
-        }
-      })
-      .catch(err => obs.error(err));
-  });
+  ) as Observable<ISegmentBuilt>;
 };

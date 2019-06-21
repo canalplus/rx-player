@@ -16,10 +16,7 @@
 
 import { AsyncSubject, from } from "rxjs";
 import { IParsedRepresentation } from "../../../../parsers/manifest/types";
-import {
-  buildInitIndexSegment,
-  getSegmentBuffer,
-} from "../apis/dash/dashConnectivity";
+import { buildInitIndexSegment } from "../apis/dash/dashConnectivity";
 import {
   chooseVideoQuality,
   concatBytes,
@@ -48,62 +45,6 @@ describe("Download2go - dash content manipulation", () => {
             indexSegment: resForMakeHTTPRequest,
           });
         });
-      });
-    });
-
-    describe("[getSegmentBuffer]", () => {
-      it("should get a simple segmentBuffer on BaseRepresentationIndex", () => {
-        getSegmentBuffer({
-          segment: {
-            id: "test",
-            isInit: false,
-            mediaURL: "",
-            range: [300, 600],
-            duration: 200,
-            timescale: 10,
-            time: 10,
-          },
-          url: "http://dash-vod-aka-test.canal-bis.com/multicodec/index.mpd",
-          type: "BaseRepresentationIndex",
-        })
-          .then(res => {
-            expect(res).toEqual({
-              data: resForMakeHTTPRequest,
-              duration: 200,
-              timescale: 10,
-              time: 10,
-            });
-          })
-          .catch(() => {
-            throw new Error("Test failed");
-          });
-      });
-
-      it("should get a simple segmentBuffer on TemplateRepresentationIndex", () => {
-        getSegmentBuffer({
-          segment: {
-            id: "test",
-            isInit: false,
-            mediaURL: "azerty",
-            range: [300, 600],
-            duration: 200,
-            timescale: 10,
-            time: 10,
-          },
-          url: "",
-          type: "TemplateRepresentationIndex",
-        })
-          .then(res => {
-            expect(res).toEqual({
-              data: resForMakeHTTPRequest,
-              duration: 200,
-              timescale: 10,
-              time: 10,
-            });
-          })
-          .catch(() => {
-            throw new Error("Test failed");
-          });
       });
     });
   });

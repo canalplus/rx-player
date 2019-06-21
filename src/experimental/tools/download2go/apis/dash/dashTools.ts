@@ -44,8 +44,8 @@ import {
 import {
   IDownloadManagerOutput,
   ILocalManifestOnline,
-  Quality,
   ISegmentIndex,
+  Quality,
 } from "../dash/types";
 import { ITypedArray } from "../drm/keySystems";
 

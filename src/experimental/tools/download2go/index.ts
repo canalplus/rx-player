@@ -89,6 +89,12 @@ export default async function D2G({
           { db, emitter, storeManifestEvery }
         );
         activeSubsDownloader[contentID] = subcriptionDownloader;
+        emitter.trigger("progress", {
+          contentID,
+          progress: 0,
+          size,
+          status: "processing",
+        });
       } catch (e) {
         emitter.trigger("error", {
           action: "download",

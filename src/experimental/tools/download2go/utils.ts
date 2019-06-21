@@ -16,6 +16,7 @@
 
 import { IDBPDatabase } from "idb";
 
+import { RequestError, RequestErrorTypes } from "../../../errors";
 import includes from "../../../utils/array_includes";
 import {
   IActiveSubs,
@@ -52,6 +53,7 @@ export class RxPlayerError extends Error {
     this.name = "RxPlayerError";
   }
 }
+
 export class IndexDBError extends Error {
   constructor(message: string) {
     super(message);
@@ -173,20 +175,24 @@ export function makeHTTPRequest<T>(
     }
 
     req.onerror = function onXHRError() {
-      return reject(new Error("Network error"));
+      const errorCode = RequestErrorTypes.ERROR_HTTP_CODE;
+      reject(new RequestError(req, url, errorCode));
+      return;
     };
 
     req.onload = function onXHRLoad() {
       if (req.readyState === 4 && req.status >= 200 && req.status < 300) {
         if (req.response == null) {
-          return reject(
-            new Error("The response of the HTTP request is not defined")
-          );
+          const errorCode = RequestErrorTypes.ERROR_HTTP_CODE;
+          reject(new RequestError(req, url, errorCode));
+          return;
         }
 
         resolve(req.response);
       } else {
-        reject(new Error("A network request happened"));
+        const errorCode = RequestErrorTypes.ERROR_HTTP_CODE;
+        reject(new RequestError(req, url, errorCode));
+        return;
       }
     };
     req.send();
