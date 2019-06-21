@@ -181,24 +181,26 @@ export default function AdaptationBuffer<T>(
           map((wba) => wba * bufferGoalRatio)
         );
 
-        const representationBuffer$ = createRepresentationBuffer(representation,
-                                                                 bufferGoal$)
-        .pipe(
-          catchError((err) => {
-            if (err.code === "BUFFER_FULL_ERROR") {
-              const lastBufferGoalRatio = bufferGoalRatio;
-              if (lastBufferGoalRatio > 0.05) {
-                bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.05;
-              } else {
-                throw err;
+        function getRepresentationBuffer$(): Observable<IRepresentationBufferEvent<T>> {
+          return createRepresentationBuffer(representation,
+                                            bufferGoal$).pipe(
+            catchError((err) => {
+              if (err.code === "BUFFER_FULL_ERROR") {
+                const lastBufferGoalRatio = bufferGoalRatio;
+                if (lastBufferGoalRatio > 0.05) {
+                  bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.05;
+                } else {
+                  throw err;
+                }
+                return getRepresentationBuffer$();
               }
-              return createRepresentationBuffer(representation, bufferGoal$);
-            }
-            throw err;
-          }),
-          takeUntil(killCurrentBuffer$)
-        );
-        return observableConcat(representationChange$, representationBuffer$);
+              throw err;
+            }),
+            takeUntil(killCurrentBuffer$)
+          );
+        }
+
+        return observableConcat(representationChange$, getRepresentationBuffer$());
       })),
 
     // NOTE: This operator was put in a merge on purpose. It's a "clever"
