@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 /**
  * Very basic flatMap ponyfill.
  * @param {Array} arr
