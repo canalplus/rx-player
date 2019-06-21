@@ -585,7 +585,8 @@ player.seekTo({ wallClockTime: Date.now() / 1000 });
 
 _return value_: ``Boolean``
 
-Returns ``true`` if the content is "live". ``false`` otherwise.
+Returns ``true`` if the content is a "live" content (e.g. a live TV Channel).
+``false`` otherwise.
 
 Also ``false`` if no content is loaded yet.
 

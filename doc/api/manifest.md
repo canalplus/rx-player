@@ -110,7 +110,9 @@ See [the Period chapter](#period-props) for more informations on Adaptations.
 
 _type_: ``Boolean``
 
-``true`` if the content is a live content, ``false`` for non-live contents.
+``true`` if the content is a "live" content (e.g. a live TV Channel).
+``false`` otherwise.
+
 
 #### uris
 
