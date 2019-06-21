@@ -48,6 +48,7 @@ const {
   // DEFAULT_SHOW_NATIVE_SUBTITLE,
   // DEFAULT_TEXT_TRACK_MODE,
   DEFAULT_THROTTLE_WHEN_HIDDEN,
+  DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
   DEFAULT_WANTED_BUFFER_AHEAD,
 } = config;
 
@@ -71,6 +72,7 @@ describe("API - parseConstructorOptions", () => {
     wantedBufferAhead: DEFAULT_WANTED_BUFFER_AHEAD,
     limitVideoWidth: DEFAULT_LIMIT_VIDEO_WIDTH,
     throttleWhenHidden: DEFAULT_THROTTLE_WHEN_HIDDEN,
+    throttleVideoBitrateWhenHidden: DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
     videoElement,
     initialVideoBitrate: DEFAULT_INITIAL_BITRATES.video,
     initialAudioBitrate: DEFAULT_INITIAL_BITRATES.audio,
