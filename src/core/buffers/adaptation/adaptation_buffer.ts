@@ -40,6 +40,7 @@ import {
   filter,
   ignoreElements,
   map,
+  mergeMap,
   observeOn,
   share,
   takeUntil,
@@ -185,16 +186,21 @@ export default function AdaptationBuffer<T>(
           return createRepresentationBuffer(representation,
                                             bufferGoal$).pipe(
             catchError((err) => {
-              if (err.code === "BUFFER_FULL_ERROR") {
-                const lastBufferGoalRatio = bufferGoalRatio;
-                if (lastBufferGoalRatio > 0.05) {
-                  bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.05;
-                } else {
+              return wantedBufferAhead$.pipe(
+                mergeMap((wantedBufferAhead) => {
+                  if (err.code === "BUFFER_FULL_ERROR") {
+                    const lastBufferGoalRatio = bufferGoalRatio;
+                    if (lastBufferGoalRatio <= 0.25 ||
+                      wantedBufferAhead * lastBufferGoalRatio <= 2
+                       ) {
+                      throw err;
+                    }
+                    bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;
+                    return getRepresentationBuffer$();
+                  }
                   throw err;
-                }
-                return getRepresentationBuffer$();
-              }
-              throw err;
+                })
+              );
             }),
             takeUntil(killCurrentBuffer$)
           );
