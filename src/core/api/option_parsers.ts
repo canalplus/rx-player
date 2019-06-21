@@ -434,25 +434,24 @@ function parseLoadVideoOptions(
              "`setPreferredTextTracks` method instead");
   }
   const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
-  const hideNativeSubtitle = (options as any).hideNativeSubtitle == null ?
+  const hideNativeSubtitle = options.hideNativeSubtitle == null ?
     !DEFAULT_SHOW_NATIVE_SUBTITLE :
-    !!(options as any).hideNativeSubtitle;
-  const manualBitrateSwitchingMode =
-    (options as any).manualBitrateSwitchingMode == null ?
+    !!options.hideNativeSubtitle;
+  const manualBitrateSwitchingMode = options.manualBitrateSwitchingMode == null ?
       !DEFAULT_MANUAL_BITRATE_SWITCHING_MODE :
-      (options as any).manualBitrateSwitchingMode;
+      options.manualBitrateSwitchingMode;
 
   if (textTrackMode === "html") {
     // TODO Better way to express that in TypeScript?
-    if ((options as any).textTrackElement == null) {
+    if (options.textTrackElement == null) {
       throw new Error("You have to provide a textTrackElement " +
                       "in \"html\" textTrackMode.");
-    } else if (!((options as any).textTrackElement instanceof HTMLElement)) {
+    } else if (!(options.textTrackElement instanceof HTMLElement)) {
       throw new Error("textTrackElement should be an HTMLElement.");
     } else {
-      textTrackElement = (options as any).textTrackElement;
+      textTrackElement = options.textTrackElement;
     }
-  } else if ((options as any).textTrackElement != null) {
+  } else if (options.textTrackElement != null) {
     log.warn("API: You have set a textTrackElement without being in " +
              "an \"html\" textTrackMode. It will be ignored.");
   }
