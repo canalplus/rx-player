@@ -14,7 +14,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
   const player = new RxPlayer({
     limitVideoWidth: false,
     stopAtEnd: false,
-    throttleWhenHidden: true,
+    throttleVideoBitrateWhenHidden: true,
     videoElement,
   });
 
