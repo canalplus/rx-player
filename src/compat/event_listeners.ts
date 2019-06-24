@@ -154,8 +154,8 @@ function compatibleListener<T extends Event>(
 
 /**
  * Returns an observable:
- *   - emitting true when the visibility of document changes to hidden
- *   - emitting false when the visibility of document changes to visible
+ *   - emitting true when the document is visible
+ *   - emitting false when the document is hidden
  * @returns {Observable}
  */
 function visibilityChange() : Observable<boolean> {
@@ -180,8 +180,8 @@ function visibilityChange() : Observable<boolean> {
     const isHidden = document[hidden as "hidden"];
     return observableFromEvent(document, visibilityChangeEvent)
       .pipe(
-        map(() => document[hidden as "hidden"]),
-        startWith(isHidden)
+        map(() => !(document[hidden as "hidden"])),
+        startWith(!isHidden)
       );
   });
 }
@@ -193,23 +193,24 @@ function videoSizeChange() : Observable<unknown> {
   return observableFromEvent(window, "resize");
 }
 
-// emit true when visible and false when hidden
-const visibilityChange$ = visibilityChange().pipe(map((x) => !x));
-
-const isVisible$ = visibilityChange$
+// Emit `true` when visible
+const isVisible$ = visibilityChange()
   .pipe(filter((x) => x));
 
-// Emit if the visibility changed to hidden since 60s
-const isInactive$ = visibilityChange$
+// Emit `false` if the page is hidden for `INACTIVITY_DELAY` seconds
+const isInactive$ = visibilityChange()
   .pipe(
     debounceTime(INACTIVITY_DELAY),
     filter((x) => !x)
   );
 
 /**
+ * Emit `true` if the page is considered active.
+ * `false` when considered inactive.
+ * Emit the original value on subscription.
  * @returns {Observable}
  */
-function isInBackground$() : Observable<boolean> {
+function isActive() : Observable<boolean> {
   return observableMerge(isVisible$, isInactive$);
 }
 
@@ -285,7 +286,7 @@ function getVideoWidthFromPIPWindow(
  * when Picture-in-Picture is activated.
  * @returns {Observable}
  */
-function videoIsVisible$(
+function isVideoVisible(
   mediaElement: HTMLMediaElement
 ) : Observable<boolean> {
   const isPIPActiveAtInit = (document as any).pictureInPictureElement != null &&
@@ -298,11 +299,11 @@ function videoIsVisible$(
       .pipe(mapTo(false))
   ).pipe(startWith(isPIPActiveAtInit));
 
-  return observableCombineLatest([visibilityChange$, isPIPActive$]).pipe(
+  return observableCombineLatest([visibilityChange(), isPIPActive$]).pipe(
     mergeMap(([ isVisible, isPIPActive ]) => {
-      const isVideoVisible = isPIPActive || isVisible;
-      return observableOf(isVideoVisible).pipe(
-        debounceTime(!isVideoVisible ? INACTIVITY_DELAY : 0)
+      const videoVisible = isPIPActive || isVisible;
+      return observableOf(videoVisible).pipe(
+        debounceTime((!videoVisible) ? INACTIVITY_DELAY : 0)
       );
     }),
     distinctUntilChanged()
@@ -440,8 +441,8 @@ const onKeyError$ = compatibleListener(["keyerror", "error"]);
 const onKeyStatusesChange$ = compatibleListener(["keystatuseschange"]);
 
 export {
-  isInBackground$,
-  videoIsVisible$,
+  isActive,
+  isVideoVisible,
   videoWidth$,
   onPlayPause$,
   onTextTrackChanges$,

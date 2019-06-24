@@ -69,7 +69,6 @@ import {
   isFullscreen,
   requestFullscreen,
 } from "../../compat";
-import { videoIsVisible$ } from "../../compat/event_listeners";
 import {
   ErrorCodes,
   ErrorTypes,
@@ -119,33 +118,26 @@ import TrackManager, {
   ITMVideoTrackListItem
 } from "./track_manager";
 
-const {
-  DEFAULT_UNMUTED_VOLUME,
-} = config;
+const { DEFAULT_UNMUTED_VOLUME } = config;
 
-const {
-  isInBackground$,
-  onEnded$,
-  onFullscreenChange$,
-  onPlayPause$,
-  onSeeking$,
-  onTextTrackChanges$,
-  videoWidth$,
-} = events;
+const { isActive,
+        isVideoVisible,
+        onEnded$,
+        onFullscreenChange$,
+        onPlayPause$,
+        onSeeking$,
+        onTextTrackChanges$,
+        videoWidth$ } = events;
 
-interface IPositionUpdateItem {
-  position : number;
-  duration : number;
-  playbackRate : number;
-  bufferGap : number;
-  wallClockTime? : number;
-  liveGap? : number;
-}
+interface IPositionUpdateItem { position : number;
+                                duration : number;
+                                playbackRate : number;
+                                bufferGap : number;
+                                wallClockTime? : number;
+                                liveGap? : number; }
 
-interface IBitrateEstimate {
-  type : IBufferType;
-  bitrate : number|undefined;
-}
+interface IBitrateEstimate { type : IBufferType;
+                             bitrate : number | undefined; }
 
 interface IPublicAPIEvent {
   playerStateChange : string;
@@ -743,18 +735,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         manualBitrates: this._priv_bitrateInfos.manualBitrates,
         maxAutoBitrates: this._priv_bitrateInfos.initialMaxAutoBitrates,
         throttle: this._priv_throttleWhenHidden ?
-        { video: isInBackground$()
+        { video: isActive()
             .pipe(
-              map(isBg => isBg ? 0 :
-                                 Infinity),
+              map(active => active ? Infinity :
+                                     0),
               takeUntil(this._priv_stopCurrentContent$)
             ), } :
         {},
         throttleBitrate: this._priv_throttleVideoBitrateWhenHidden ?
-        { video: videoIsVisible$(videoElement)
+        { video: isVideoVisible(videoElement)
             .pipe(
-              map(isBg => isBg ? 0 :
-                                 Infinity),
+              map(active => active ? Infinity :
+                                     0),
               takeUntil(this._priv_stopCurrentContent$)
             ), } :
         {},
