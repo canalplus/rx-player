@@ -21,6 +21,8 @@
 
 import {
   combineLatest as observableCombineLatest,
+  concat as observableConcat,
+  EMPTY,
   fromEvent as observableFromEvent,
   interval as observableInterval,
   merge as observableMerge,
@@ -33,11 +35,13 @@ import {
   debounceTime,
   distinctUntilChanged,
   filter,
+  ignoreElements,
   map,
   mapTo,
   mergeMap,
   startWith,
   switchMap,
+  take,
 } from "rxjs/operators";
 import config from "../config";
 import log from "../log";
@@ -49,6 +53,7 @@ import EventEmitter, {
 import {
   HTMLElement_,
   ICompatDocument,
+  READY_STATES,
 } from "./browser_compatibility_types";
 
 // Draft from W3C https://wicg.github.io/picture-in-picture/#pictureinpicturewindow
@@ -228,7 +233,6 @@ function isInBackground$() : Observable<boolean> {
 function getPictureInPictureWindow$(
   mediaElement: HTMLMediaElement
 ) : Observable<null|IPictureInPictureWindow> {
-
   /**
    * Try to get Picture-in-Picture window if it is activated on RxPlayer media element,
    * by trying to request again Picture-in-Picture.
@@ -239,11 +243,16 @@ function getPictureInPictureWindow$(
       (document as any).pictureInPictureElement === mediaElement &&
       typeof (mediaElement as any).requestPictureInPicture === "function"
     ) {
-      return compatibleListener(["loadeddata"])(mediaElement).pipe(
-        mergeMap(() => {
-          return castToObservable((mediaElement as any).requestPictureInPicture());
-        }),
-        startWith(null),
+      const initialState$ = mediaElement.readyState < READY_STATES.HAVE_CURRENT_DATA ?
+        observableConcat(
+          observableOf(null),
+          compatibleListener(["loadeddata"])(mediaElement).pipe(take(1), ignoreElements())
+        ) : EMPTY;
+
+      return observableConcat(
+        initialState$,
+        castToObservable((mediaElement as any).requestPictureInPicture())
+      ).pipe(
         catchError(() => {
           log.warn("Compat: Couldn't get back Picture-in-Picture window.");
           return observableOf(null);
