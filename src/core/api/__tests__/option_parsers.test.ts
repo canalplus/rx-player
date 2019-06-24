@@ -165,6 +165,38 @@ describe("API - parseConstructorOptions", () => {
                             "`throttleVideoBitrateWhenHidden` instead.");
   });
 
+  /* tslint:disable:max-line-length */
+  it("should not set `throttleVideoBitrateWhenHidden` if `throttleWhenHidden` is set", () => {
+  /* tslint:enable:max-line-length */
+    warnOnceMock.mockReturnValue(undefined);
+    expect(parseConstructorOptions({
+      throttleWhenHidden: false,
+      throttleVideoBitrateWhenHidden: true,
+    })).toEqual({
+      ...defaultConstructorOptions,
+      throttleWhenHidden: false,
+      throttleVideoBitrateWhenHidden: true,
+    });
+    expect(warnOnceMock).toHaveBeenCalledTimes(1);
+    expect(warnOnceMock)
+      .toHaveBeenCalledWith("`throttleWhenHidden` API is deprecated. Consider using " +
+                            "`throttleVideoBitrateWhenHidden` instead.");
+    warnOnceMock.mockReset();
+
+    expect(parseConstructorOptions({
+      throttleWhenHidden: true,
+      throttleVideoBitrateWhenHidden: true,
+    })).toEqual({
+      ...defaultConstructorOptions,
+      throttleWhenHidden: true,
+      throttleVideoBitrateWhenHidden: false,
+    });
+    expect(warnOnceMock).toHaveBeenCalledTimes(1);
+    expect(warnOnceMock)
+      .toHaveBeenCalledWith("`throttleWhenHidden` API is deprecated. Consider using " +
+                            "`throttleVideoBitrateWhenHidden` instead.");
+  });
+
   it("should authorize setting a throttleVideoBitrateWhenHidden option", () => {
     expect(parseConstructorOptions({ throttleVideoBitrateWhenHidden: false })).toEqual({
       ...defaultConstructorOptions,

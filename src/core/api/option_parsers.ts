@@ -247,14 +247,20 @@ function parseConstructorOptions(
     warnOnce("`throttleWhenHidden` API is deprecated. Consider using " +
              "`throttleVideoBitrateWhenHidden` instead.");
 
-    throttleWhenHidden = options.throttleWhenHidden;
+    throttleWhenHidden = !!options.throttleWhenHidden;
   } else {
     throttleWhenHidden = DEFAULT_THROTTLE_WHEN_HIDDEN;
   }
 
-  throttleVideoBitrateWhenHidden = options.throttleVideoBitrateWhenHidden == null ?
-    DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN :
-    !!options.throttleVideoBitrateWhenHidden;
+  // `throttleWhenHidden` and `throttleVideoBitrateWhenHidden` can be in conflict
+  // Do not activate the latter if the former is
+  if (throttleWhenHidden) {
+    throttleVideoBitrateWhenHidden = false;
+  } else {
+    throttleVideoBitrateWhenHidden = options.throttleVideoBitrateWhenHidden == null ?
+      DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN :
+      !!options.throttleVideoBitrateWhenHidden;
+  }
 
   preferredAudioTracks = options.preferredAudioTracks == null ?
     [] :
