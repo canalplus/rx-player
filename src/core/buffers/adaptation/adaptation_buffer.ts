@@ -27,6 +27,7 @@
 import objectAssign from "object-assign";
 import {
   asapScheduler,
+  BehaviorSubject,
   concat as observableConcat,
   defer as observableDefer,
   merge as observableMerge,
@@ -40,7 +41,6 @@ import {
   filter,
   ignoreElements,
   map,
-  mergeMap,
   observeOn,
   share,
   takeUntil,
@@ -107,7 +107,7 @@ export default function AdaptationBuffer<T>(
   queuedSourceBuffer : QueuedSourceBuffer<T>,
   segmentBookkeeper : SegmentBookkeeper,
   segmentFetcher : IPrioritizedSegmentFetcher<T>,
-  wantedBufferAhead$ : Observable<number>,
+  wantedBufferAhead$ : BehaviorSubject<number>,
   content : { manifest : Manifest;
               period : Period; adaptation : Adaptation; },
   abrManager : ABRManager,
@@ -175,38 +175,11 @@ export default function AdaptationBuffer<T>(
                                                    period,
                                                    representation));
 
-        const bufferGoalRatio = bufferGoalRatioMap[representation.id] || 1;
-        bufferGoalRatioMap[representation.id] = bufferGoalRatio;
-
-        const bufferGoal$ = wantedBufferAhead$.pipe(
-          map((wba) => wba * bufferGoalRatio)
+        const representationBuffers$ = createRepresentationBuffer(representation).pipe(
+          takeUntil(killCurrentBuffer$)
         );
 
-        function getRepresentationBuffer$(): Observable<IRepresentationBufferEvent<T>> {
-          return createRepresentationBuffer(representation,
-                                            bufferGoal$).pipe(
-            catchError((err) => {
-              return wantedBufferAhead$.pipe(
-                mergeMap((wantedBufferAhead) => {
-                  if (err.code === "BUFFER_FULL_ERROR") {
-                    const lastBufferGoalRatio = bufferGoalRatio;
-                    if (lastBufferGoalRatio <= 0.25 ||
-                      wantedBufferAhead * lastBufferGoalRatio <= 2
-                       ) {
-                      throw err;
-                    }
-                    bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;
-                    return getRepresentationBuffer$();
-                  }
-                  throw err;
-                })
-              );
-            }),
-            takeUntil(killCurrentBuffer$)
-          );
-        }
-
-        return observableConcat(representationChange$, getRepresentationBuffer$());
+        return observableConcat(representationChange$, representationBuffers$);
       })),
 
     // NOTE: This operator was put in a merge on purpose. It's a "clever"
@@ -239,21 +212,44 @@ export default function AdaptationBuffer<T>(
    * @returns {Observable}
    */
   function createRepresentationBuffer(
-    representation : Representation,
-    bufferGoal$ : Observable<number>
+    representation : Representation
   ) : Observable<IRepresentationBufferEvent<T>> {
     return observableDefer(() => {
+      const bufferGoalRatio = bufferGoalRatioMap[representation.id] || 1;
+      bufferGoalRatioMap[representation.id] = bufferGoalRatio;
+
+      const bufferGoal$ = wantedBufferAhead$.pipe(
+        map((wba) => wba * bufferGoalRatio)
+      );
+
       log.info("Buffer: changing representation", adaptation.type, representation);
-      return RepresentationBuffer({ clock$,
-                                    content: { representation,
-                                               adaptation,
-                                               period,
-                                               manifest },
-                                    queuedSourceBuffer,
-                                    segmentBookkeeper,
-                                    segmentFetcher,
-                                    terminate$: terminateCurrentBuffer$,
-                                    bufferGoal$, });
+      return RepresentationBuffer({
+        clock$,
+        content: { representation,
+                   adaptation,
+                   period,
+                   manifest },
+        queuedSourceBuffer,
+        segmentBookkeeper,
+        segmentFetcher,
+        terminate$: terminateCurrentBuffer$,
+        bufferGoal$,
+      }).pipe(
+          catchError((err) => {
+            if (err.code === "BUFFER_FULL_ERROR") {
+              const wantedBufferAhead = wantedBufferAhead$.getValue();
+              const lastBufferGoalRatio = bufferGoalRatio;
+              if (lastBufferGoalRatio <= 0.25 ||
+                  wantedBufferAhead * lastBufferGoalRatio <= 2
+                ) {
+                throw err;
+              }
+              bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;
+              return createRepresentationBuffer(representation);
+            }
+            throw err;
+          })
+        );
     });
   }
 }

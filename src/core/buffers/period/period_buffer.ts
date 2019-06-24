@@ -16,6 +16,7 @@
 
 import objectAssign from "object-assign";
 import {
+  BehaviorSubject,
   concat as observableConcat,
   EMPTY,
   merge as observableMerge,
@@ -94,7 +95,7 @@ export interface IPeriodBufferArguments {
              offlineRetry? : number;
              segmentRetry? : number;
              textTrackOptions? : ITextTrackSourceBufferOptions; };
-  wantedBufferAhead$ : Observable<number>;
+  wantedBufferAhead$ : BehaviorSubject<number>;
 }
 
 /**
