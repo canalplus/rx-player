@@ -144,13 +144,35 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should authorize setting a throttleWhenHidden option", () => {
+    warnOnceMock.mockReturnValue(undefined);
     expect(parseConstructorOptions({ throttleWhenHidden: false })).toEqual({
       ...defaultConstructorOptions,
       throttleWhenHidden: false,
     });
+    expect(warnOnceMock).toHaveBeenCalledTimes(1);
+    expect(warnOnceMock)
+      .toHaveBeenCalledWith("`throttleWhenHidden` API is deprecated. Consider using " +
+                            "`throttleVideoBitrateWhenHidden` instead.");
+    warnOnceMock.mockReset();
+
     expect(parseConstructorOptions({ throttleWhenHidden: true })).toEqual({
       ...defaultConstructorOptions,
       throttleWhenHidden: true,
+    });
+    expect(warnOnceMock).toHaveBeenCalledTimes(1);
+    expect(warnOnceMock)
+      .toHaveBeenCalledWith("`throttleWhenHidden` API is deprecated. Consider using " +
+                            "`throttleVideoBitrateWhenHidden` instead.");
+  });
+
+  it("should authorize setting a throttleVideoBitrateWhenHidden option", () => {
+    expect(parseConstructorOptions({ throttleVideoBitrateWhenHidden: false })).toEqual({
+      ...defaultConstructorOptions,
+      throttleVideoBitrateWhenHidden: false,
+    });
+    expect(parseConstructorOptions({ throttleVideoBitrateWhenHidden: true })).toEqual({
+      ...defaultConstructorOptions,
+      throttleVideoBitrateWhenHidden: true,
     });
   });
 
