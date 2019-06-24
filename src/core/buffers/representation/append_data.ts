@@ -55,12 +55,12 @@ export default function appendDataToSourceBufferWithRetries<T>(
 
       return observableConcat(
         forceGarbageCollection(clock$, queuedSourceBuffer).pipe(ignoreElements()),
-        append$.pipe(catchError((forcedGCError: Error) => {
+        append$
+      ).pipe(
+        catchError((forcedGCError : Error) => {
           // (weird Typing either due to TypeScript or RxJS bug)
-          throw new MediaError("BUFFER_FULL_ERROR",
-                               forcedGCError.toString(),
-                               true);
-        }))
+          throw new MediaError("BUFFER_FULL_ERROR", forcedGCError.toString(), true);
+        })
       );
     }));
 }
