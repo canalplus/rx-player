@@ -66,14 +66,12 @@ const createChooser = (
   type : IBufferType,
   options : IRepresentationChoosersOptions
 ) : RepresentationChooser => {
-  return new RepresentationChooser({
-    limitWidth$: options.limitWidth[type],
-    throttle$: options.throttle[type],
-    throttleBitrate$: options.throttleBitrate[type],
-    initialBitrate: options.initialBitrates[type],
-    manualBitrate: options.manualBitrates[type],
-    maxAutoBitrate: options.maxAutoBitrates[type],
-  });
+  return new RepresentationChooser({ limitWidth$: options.limitWidth[type],
+                                     throttle$: options.throttle[type],
+                                     throttleBitrate$: options.throttleBitrate[type],
+                                     initialBitrate: options.initialBitrates[type],
+                                     manualBitrate: options.manualBitrates[type],
+                                     maxAutoBitrate: options.maxAutoBitrates[type] });
 };
 
 /**

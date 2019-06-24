@@ -105,14 +105,12 @@ function getManifestPipelineOptions(
 
 // Arguments to give to the `initialize` function
 export interface IInitializeOptions {
-  adaptiveOptions: {
-    initialBitrates : Partial<Record<IBufferType, number>>;
-    manualBitrates : Partial<Record<IBufferType, number>>;
-    maxAutoBitrates : Partial<Record<IBufferType, number>>;
-    throttle : Partial<Record<IBufferType, Observable<number>>>;
-    throttleBitrate : Partial<Record<IBufferType, Observable<number>>>;
-    limitWidth : Partial<Record<IBufferType, Observable<number>>>;
-  };
+  adaptiveOptions: { initialBitrates : Partial<Record<IBufferType, number>>;
+                     manualBitrates : Partial<Record<IBufferType, number>>;
+                     maxAutoBitrates : Partial<Record<IBufferType, number>>;
+                     throttle : Partial<Record<IBufferType, Observable<number>>>;
+                     throttleBitrate : Partial<Record<IBufferType, Observable<number>>>;
+                     limitWidth : Partial<Record<IBufferType, Observable<number>>>; };
   autoPlay : boolean;
   bufferOptions : { wantedBufferAhead$ : BehaviorSubject<number>;
                     maxBufferAhead$ : Observable<number>;

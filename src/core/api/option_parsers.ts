@@ -245,7 +245,7 @@ function parseConstructorOptions(
 
   if (options.throttleWhenHidden != null) {
     warnOnce("`throttleWhenHidden` API is deprecated. Consider using " +
-      "`throttleVideoBitrateWhenHidden`.");
+             "`throttleVideoBitrateWhenHidden`.");
 
     throttleWhenHidden = options.throttleWhenHidden;
   } else {
