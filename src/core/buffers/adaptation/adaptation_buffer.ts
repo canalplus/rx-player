@@ -212,7 +212,9 @@ export default function AdaptationBuffer<T>(
     representation : Representation
   ) : Observable<IRepresentationBufferEvent<T>> {
     return observableDefer(() => {
-      const bufferGoalRatio = bufferGoalRatioMap[representation.id] || 1;
+      const oldBufferGoalRatio = bufferGoalRatioMap[representation.id];
+      const bufferGoalRatio: number = oldBufferGoalRatio != null ? oldBufferGoalRatio :
+                                                                   1;
       bufferGoalRatioMap[representation.id] = bufferGoalRatio;
 
       const bufferGoal$ = wantedBufferAhead$.pipe(
