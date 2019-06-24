@@ -517,7 +517,7 @@ function createSmoothStreamingParser(
         // infinite buffer
         minimumTime = { isContinuous: false,
                         value: firstTimeReference != null ? firstTimeReference :
-                                                            0,
+                                                            availabilityStartTime,
                         time };
       } else {
         minimumTime = { isContinuous: true,
