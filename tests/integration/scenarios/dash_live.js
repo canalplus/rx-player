@@ -389,7 +389,7 @@ describe("DASH live content (SegmentTimeline)", function () {
       await xhrMock.flush();
       await sleep(1);
       expect(player.getMinimumPosition()).to.be
-        .closeTo(1527507767, 1);
+        .closeTo(1527507765, 1);
     });
   });
 

@@ -318,7 +318,7 @@ describe("DASH live content (SegmentTemplate)", function() {
       await xhrMock.flush();
       await sleep(1);
       expect(player.getMinimumPosition()).to.be
-        .closeTo(1553517853.013, 1);
+        .closeTo(1553517851.013, 1);
     });
   });
 
