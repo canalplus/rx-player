@@ -305,7 +305,6 @@ function videoIsVisible$(
         debounceTime(!isVideoVisible ? INACTIVITY_DELAY : 0)
       );
     }),
-    startWith(false),
     distinctUntilChanged()
   );
 }
