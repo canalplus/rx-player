@@ -174,12 +174,9 @@ export default function AdaptationBuffer<T>(
           observableOf(EVENTS.representationChange(adaptation.type,
                                                    period,
                                                    representation));
-
-        const representationBuffers$ = createRepresentationBuffer(representation).pipe(
-          takeUntil(killCurrentBuffer$)
-        );
-
-        return observableConcat(representationChange$, representationBuffers$);
+        const representationBuffer$ = createRepresentationBuffer(representation)
+          .pipe(takeUntil(killCurrentBuffer$));
+        return observableConcat(representationChange$, representationBuffer$);
       })),
 
     // NOTE: This operator was put in a merge on purpose. It's a "clever"
@@ -223,33 +220,30 @@ export default function AdaptationBuffer<T>(
       );
 
       log.info("Buffer: changing representation", adaptation.type, representation);
-      return RepresentationBuffer({
-        clock$,
-        content: { representation,
-                   adaptation,
-                   period,
-                   manifest },
-        queuedSourceBuffer,
-        segmentBookkeeper,
-        segmentFetcher,
-        terminate$: terminateCurrentBuffer$,
-        bufferGoal$,
-      }).pipe(
-          catchError((err) => {
-            if (err.code === "BUFFER_FULL_ERROR") {
-              const wantedBufferAhead = wantedBufferAhead$.getValue();
-              const lastBufferGoalRatio = bufferGoalRatio;
-              if (lastBufferGoalRatio <= 0.25 ||
-                  wantedBufferAhead * lastBufferGoalRatio <= 2
-                ) {
-                throw err;
-              }
-              bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;
-              return createRepresentationBuffer(representation);
+      return RepresentationBuffer({ clock$,
+                                    content: { representation,
+                                               adaptation,
+                                               period,
+                                               manifest },
+                                    queuedSourceBuffer,
+                                    segmentBookkeeper,
+                                    segmentFetcher,
+                                    terminate$: terminateCurrentBuffer$,
+                                    bufferGoal$ })
+        .pipe(catchError((err) => {
+          if (err.code === "BUFFER_FULL_ERROR") {
+            const wantedBufferAhead = wantedBufferAhead$.getValue();
+            const lastBufferGoalRatio = bufferGoalRatio;
+            if (lastBufferGoalRatio <= 0.25 ||
+                wantedBufferAhead * lastBufferGoalRatio <= 2
+            ) {
+              throw err;
             }
-            throw err;
-          })
-        );
+            bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;
+            return createRepresentationBuffer(representation);
+          }
+          throw err;
+        }));
     });
   }
 }
