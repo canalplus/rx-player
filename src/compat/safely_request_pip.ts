@@ -38,10 +38,9 @@ export default function safelyRequestPIP(
     return observableOf(null);
   }
   return observableDefer(() => {
-    return castToObservable((mediaElement as any).requestPictureInPicture())
-      .pipe(catchError(() => {
-        log.warn("Compat: Couldn't request a Picture-in-Picture window.");
-        return observableOf(null);
-      }));
-  });
+    return castToObservable((mediaElement as any).requestPictureInPicture());
+  }).pipe(catchError(() => {
+    log.warn("Compat: Couldn't request a Picture-in-Picture window.");
+    return observableOf(null);
+  }));
 }
