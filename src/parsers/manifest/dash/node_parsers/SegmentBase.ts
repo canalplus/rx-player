@@ -22,7 +22,6 @@ import parseInitialization, {
 import {
   parseBoolean,
   parseByteRange,
-  parseDuration,
 } from "./utils";
 
 export interface ISegmentBaseAttributes {
@@ -34,7 +33,6 @@ export interface ISegmentBaseAttributes {
   initialization?: IParsedInitialization;
   presentationTimeOffset?: number;
   startNumber? : number;
-  timeShiftBufferDepth?: number;
   timescale?: number;
 }
 
@@ -79,15 +77,6 @@ export default function parseSegmentBase(root: Element) : IParsedSegmentBase {
           log.warn(`DASH: invalid timescale ("${attribute.value}")`);
         } else {
           attributes.timescale = _timescale;
-        }
-      }
-        break;
-      case "timeShiftBufferDepth": {
-        const timeShiftBufferDepth = parseDuration(attribute.value);
-        if (isNaN(timeShiftBufferDepth)) {
-          log.warn(`DASH: invalid timeShiftBufferDepth ("${attribute.value}")`);
-        } else {
-          attributes.timeShiftBufferDepth = timeShiftBufferDepth;
         }
       }
         break;

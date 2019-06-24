@@ -19,58 +19,138 @@ describe("DASH Parser - getTimeLimits", () => {
     jest.resetModules();
   });
 
-  it("should call getMaximumTime and getMinimumTime and return their output", () => {
+  it("should call getMaximumTime and return its output", () => {
     const getMaximumTimeSpy = jest.fn().mockReturnValue(79);
-    const getMinimumTimeSpy = jest.fn().mockReturnValue(65);
-    jest.mock("../get_maximum_time", () => ({
-      __esModule: true,
-      default: getMaximumTimeSpy,
-    }));
-    jest.mock("../get_minimum_time", () => ({
-      __esModule: true,
-      default: getMinimumTimeSpy,
-    }));
+    jest.mock("../get_maximum_time", () => ({ __esModule: true,
+                                              default: getMaximumTimeSpy }));
     const performanceMock = jest.spyOn(performance, "now").mockReturnValue(14);
     const getTimeLimits = require("../get_time_limits").default;
-    const parsedMPD = {};
+    const parsedMPD1 = { availabilityStartTime: 5 };
+    const parsedMPD2 = { availabilityStartTime: 6 };
 
-    const timeLimits1 = getTimeLimits(parsedMPD, 4, 3);
+    const timeLimits1 = getTimeLimits(parsedMPD1, 4, 3);
 
-    const minimumTime = {
-      isContinuous: true,
-      value: 65,
-      time: 14,
-    };
-    const maximumTime = {
-      isContinuous: true,
-      value: 79,
-      time: 14,
-    };
-    expect(timeLimits1).toEqual([minimumTime, maximumTime]);
+    const maximumTime = { isContinuous: true,
+                          value: 79,
+                          time: 14 };
+    expect(timeLimits1[1]).toEqual(maximumTime);
     expect(performanceMock).toHaveBeenCalledTimes(1);
 
     expect(getMaximumTimeSpy).toHaveBeenCalledTimes(1);
-    expect(getMaximumTimeSpy).toHaveBeenCalledWith(parsedMPD, 4);
+    expect(getMaximumTimeSpy).toHaveBeenCalledWith(parsedMPD1, 4);
 
-    expect(getMinimumTimeSpy).toHaveBeenCalledTimes(1);
-    expect(getMinimumTimeSpy).toHaveBeenCalledWith(79, 3);
-
-    getMinimumTimeSpy.mockClear();
     getMaximumTimeSpy.mockClear();
     performanceMock.mockClear();
 
-    const timeLimits2 = getTimeLimits(parsedMPD);
+    const timeLimits2 = getTimeLimits(parsedMPD1);
 
-    expect(timeLimits2).toEqual([minimumTime, maximumTime]);
+    expect(timeLimits2[1]).toEqual(maximumTime);
     expect(performanceMock).toHaveBeenCalledTimes(1);
 
     expect(getMaximumTimeSpy).toHaveBeenCalledTimes(1);
-    expect(getMaximumTimeSpy).toHaveBeenCalledWith(parsedMPD, undefined);
+    expect(getMaximumTimeSpy).toHaveBeenCalledWith(parsedMPD1, undefined);
 
-    expect(getMinimumTimeSpy).toHaveBeenCalledTimes(1);
-    expect(getMinimumTimeSpy).toHaveBeenCalledWith(79, undefined);
+    getMaximumTimeSpy.mockClear();
+    performanceMock.mockClear();
 
-    getMinimumTimeSpy.mockRestore();
+    const timeLimits3 = getTimeLimits(parsedMPD2, 4, 3);
+
+    expect(timeLimits3[1]).toEqual(maximumTime);
+    expect(performanceMock).toHaveBeenCalledTimes(1);
+
+    expect(getMaximumTimeSpy).toHaveBeenCalledTimes(1);
+    expect(getMaximumTimeSpy).toHaveBeenCalledWith(parsedMPD2, 4);
+
+    getMaximumTimeSpy.mockRestore();
+    performanceMock.mockRestore();
+  });
+
+  /* tslint:disable max-line-length */
+  it("should return the availabilityStartTime as a minimum time if no timeShiftBufferDepth is given", () => {
+  /* tslint:enable max-line-length */
+    const getMaximumTimeSpy = jest.fn().mockReturnValue(49);
+    jest.mock("../get_maximum_time", () => ({ __esModule: true,
+                                              default: getMaximumTimeSpy }));
+    const performanceMock = jest.spyOn(performance, "now").mockReturnValue(34);
+    const getTimeLimits = require("../get_time_limits").default;
+    const parsedMPD = { availabilityStartTime: 4 };
+
+    const maximumTime = { isContinuous: true,
+                          value: 49,
+                          time: 34 };
+    const minimumTime = { isContinuous: false,
+                          time: 34,
+                          value: 4 };
+    expect(getTimeLimits(parsedMPD, 5)).toEqual([minimumTime, maximumTime]);
+    expect(getTimeLimits(parsedMPD, 5555)).toEqual([minimumTime, maximumTime]);
+    expect(getTimeLimits(parsedMPD)).toEqual([minimumTime, maximumTime]);
+
+    getMaximumTimeSpy.mockRestore();
+    performanceMock.mockRestore();
+  });
+
+  /* tslint:disable max-line-length */
+  it("should substract a little less than the timeShiftBufferDepth to the maximum time", () => {
+  /* tslint:enable max-line-length */
+    const getMaximumTimeSpy = jest.fn().mockReturnValue(100);
+    jest.mock("../get_maximum_time", () => ({ __esModule: true,
+                                              default: getMaximumTimeSpy }));
+    const performanceMock = jest.spyOn(performance, "now").mockReturnValue(34);
+    const getTimeLimits = require("../get_time_limits").default;
+    const parsedMPD = { availabilityStartTime: 4 };
+
+    const maximumTime = { isContinuous: true,
+                          value: 100,
+                          time: 34 };
+
+    const minimumTime1 = { isContinuous: true,
+                           time: 34,
+                           value: 95 };
+    expect(getTimeLimits(parsedMPD, 5, 8))
+      .toEqual([minimumTime1, maximumTime]);
+
+    const minimumTime2 = { isContinuous: true,
+                           time: 34,
+                           value: 25 };
+    expect(getTimeLimits(parsedMPD, 5555, 78))
+      .toEqual([minimumTime2, maximumTime]);
+
+    const minimumTime3 = { isContinuous: true,
+                           time: 34,
+                           value: 69 };
+    expect(getTimeLimits(parsedMPD, undefined, 34))
+      .toEqual([minimumTime3, maximumTime]);
+
+    getMaximumTimeSpy.mockRestore();
+    performanceMock.mockRestore();
+  });
+
+  /* tslint:disable max-line-length */
+  it("should return the maximum time if the timeShiftBufferDepth is less than 3", () => {
+  /* tslint:enable max-line-length */
+    const getMaximumTimeSpy = jest.fn().mockReturnValue(100);
+    jest.mock("../get_maximum_time", () => ({ __esModule: true,
+                                              default: getMaximumTimeSpy }));
+    const performanceMock = jest.spyOn(performance, "now").mockReturnValue(34);
+    const getTimeLimits = require("../get_time_limits").default;
+    const parsedMPD = { availabilityStartTime: 4 };
+
+    const maximumTime = { isContinuous: true,
+                          value: 100,
+                          time: 34 };
+
+    const minimumTime = { isContinuous: true,
+                          time: 34,
+                          value: 100 };
+    expect(getTimeLimits(parsedMPD, 5, 3))
+      .toEqual([minimumTime, maximumTime]);
+    expect(getTimeLimits(parsedMPD, 5, 2))
+      .toEqual([minimumTime, maximumTime]);
+    expect(getTimeLimits(parsedMPD, 5, 1))
+      .toEqual([minimumTime, maximumTime]);
+    expect(getTimeLimits(parsedMPD, 5, 0))
+      .toEqual([minimumTime, maximumTime]);
+
     getMaximumTimeSpy.mockRestore();
     performanceMock.mockRestore();
   });

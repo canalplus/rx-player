@@ -411,21 +411,26 @@ function createSmoothStreamingParser(
 
     const isLive = parseBoolean(root.getAttribute("IsLive"));
 
-    const timeShiftBufferDepth = isLive ?
-      +(root.getAttribute("DVRWindowLength") || 0) / timescale :
-      undefined;
+    let timeShiftBufferDepth : number|undefined;
+    if (isLive) {
+      const dvrWindowLength = root.getAttribute("DVRWindowLength");
+      if (dvrWindowLength != null &&
+          !isNaN(+dvrWindowLength) &&
+          +dvrWindowLength !== 0)
+      {
+        timeShiftBufferDepth = +dvrWindowLength / timescale;
+      }
+    }
 
     const adaptations: IParsedAdaptations = adaptationNodes
       .map((node: Element) => {
-        return parseAdaptation({
-          root: node,
-          rootURL,
-          timescale,
-          protections,
-          isLive,
-          timeShiftBufferDepth,
-          manifestReceivedTime,
-        });
+        return parseAdaptation({ root: node,
+                                 rootURL,
+                                 timescale,
+                                 protections,
+                                 isLive,
+                                 timeShiftBufferDepth,
+                                 manifestReceivedTime });
       })
       .filter((adaptation) : adaptation is IParsedAdaptation => adaptation != null)
       .reduce((acc: IParsedAdaptations, adaptation) => {
@@ -503,30 +508,32 @@ function createSmoothStreamingParser(
       availabilityStartTime = REFERENCE_DATE_TIME;
 
       const time = performance.now();
-      maximumTime = {
-        isContinuous: true,
-        value: lastTimeReference != null ?
-          lastTimeReference : (Date.now() / 1000 - availabilityStartTime),
-        time,
-      };
-      minimumTime = {
-        isContinuous: true,
-        value: Math.min(
-          maximumTime.value - (timeShiftBufferDepth || 0) + 5,
-          maximumTime.value
-        ),
-        time,
-      };
+      maximumTime = { isContinuous: true,
+                      value: lastTimeReference != null ?
+                        lastTimeReference :
+                        (Date.now() / 1000 - availabilityStartTime),
+                      time };
+      if (timeShiftBufferDepth == null) {
+        // infinite buffer
+        minimumTime = { isContinuous: false,
+                        value: firstTimeReference != null ? firstTimeReference :
+                                                            availabilityStartTime,
+                        time };
+      } else {
+        minimumTime = { isContinuous: true,
+                        value: Math.min(maximumTime.value - timeShiftBufferDepth + 5,
+                                        maximumTime.value),
+                        time };
+      }
       const manifestDuration = root.getAttribute("Duration");
       duration = (manifestDuration != null && +manifestDuration !== 0) ?
         (+manifestDuration / timescale) : undefined;
 
     } else {
-      minimumTime = {
-        isContinuous: false,
-        value: firstTimeReference != null ? firstTimeReference : 0,
-        time: performance.now(),
-      };
+      minimumTime = { isContinuous: false,
+                      value: firstTimeReference != null ? firstTimeReference :
+                                                          0,
+                      time: performance.now() };
 
       // if non-live and first time reference different than 0. Add first time reference
       // to duration
