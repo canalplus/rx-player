@@ -21,6 +21,7 @@
 
 import {
   combineLatest as observableCombineLatest,
+  defer as observableDefer,
   fromEvent as observableFromEvent,
   interval as observableInterval,
   merge as observableMerge,
@@ -175,8 +176,14 @@ function visibilityChange() : Observable<boolean> {
                           "hidden";
   const visibilityChangeEvent = prefix ? prefix + "visibilitychange" :
                                          "visibilitychange";
-  return observableFromEvent(document, visibilityChangeEvent)
-    .pipe(map(() => document[hidden as "hidden"]));
+  return observableDefer(() => {
+    const isHidden = document[hidden as "hidden"];
+    return observableFromEvent(document, visibilityChangeEvent)
+      .pipe(
+        map(() => document[hidden as "hidden"]),
+        startWith(isHidden)
+      );
+  });
 }
 
 /**
@@ -186,22 +193,24 @@ function videoSizeChange() : Observable<unknown> {
   return observableFromEvent(window, "resize");
 }
 
-const isVisible$ = visibilityChange()
-  .pipe(filter((x) => !x)); // emit false when visible
+// emit true when visible and false when hidden
+const visibilityChange$ = visibilityChange().pipe(map((x) => !x));
 
-// Emit true if the visibility changed to hidden since 60s
-const isHidden$ = visibilityChange()
+const isVisible$ = visibilityChange$
+  .pipe(filter((x) => x));
+
+// Emit if the visibility changed to hidden since 60s
+const isInactive$ = visibilityChange$
   .pipe(
     debounceTime(INACTIVITY_DELAY),
-    filter((x) => x)
+    filter((x) => !x)
   );
 
 /**
  * @returns {Observable}
  */
 function isInBackground$() : Observable<boolean> {
-  return observableMerge(isVisible$, isHidden$)
-    .pipe(startWith(false));
+  return observableMerge(isVisible$, isInactive$);
 }
 
 /**
@@ -282,7 +291,6 @@ function videoIsVisible$(
   const isPIPActiveAtInit = (document as any).pictureInPictureElement != null &&
     (document as any).pictureInPictureElement === mediaElement;
 
-  const visibilityChange$ = visibilityChange().pipe(map((x) => !!x));
   const isPIPActive$ = observableMerge(
     observableFromEvent(mediaElement, "enterpictureinpicture")
       .pipe(mapTo(true)),
