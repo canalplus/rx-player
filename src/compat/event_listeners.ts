@@ -42,17 +42,19 @@ import {
 import config from "../config";
 import log from "../log";
 import castToObservable from "../utils/cast_to_observable";
-import { IEventEmitter } from "../utils/event_emitter";
+import EventEmitter, {
+  fromEvent,
+  IEventEmitter,
+} from "../utils/event_emitter";
 import {
   HTMLElement_,
   ICompatDocument,
 } from "./browser_compatibility_types";
 
 // Draft from W3C https://wicg.github.io/picture-in-picture/#pictureinpicturewindow
-interface IPictureInPictureWindow {
+interface IPictureInPictureWindow extends EventEmitter<{ resize: Event }>{
   width: number;
   height: number;
-  on(event: "resize", listener: () => unknown): this;
 }
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
@@ -195,7 +197,7 @@ function videoSizeChange() : Observable<unknown> {
 function pictureInPictureSizeChange(
   pipWindow: IPictureInPictureWindow
 ) : Observable<unknown> {
-  return observableFromEvent(pipWindow as any, "resize");
+  return fromEvent(pipWindow, "resize");
 }
 
 const isVisible$ = visibilityChange()
