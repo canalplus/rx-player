@@ -100,7 +100,7 @@ export interface IRepresentationBufferArguments<T> {
   segmentBookkeeper : SegmentBookkeeper;
   segmentFetcher : IPrioritizedSegmentFetcher<T>;
   terminate$ : Observable<void>;
-  wantedBufferAhead$ : Observable<number>;
+  bufferGoal$ : Observable<number>;
 }
 
 // Informations about a Segment waiting for download
@@ -156,7 +156,7 @@ export default function RepresentationBuffer<T>({
   segmentBookkeeper, // keep track of what segments already are in the SourceBuffer
   segmentFetcher, // allows to download new segments
   terminate$, // signal the RepresentationBuffer that it should terminate
-  wantedBufferAhead$, // emit the buffer goal
+  bufferGoal$, // emit the buffer goal
 } : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent<T>> {
   const { manifest, period, adaptation, representation } = content;
   const codec = representation.getMimeTypeString();
@@ -191,7 +191,7 @@ export default function RepresentationBuffer<T>({
 
   const status$ = observableCombineLatest([
     clock$,
-    wantedBufferAhead$,
+    bufferGoal$,
     terminate$.pipe(take(1),
                     mapTo(true),
                     startWith(false)),

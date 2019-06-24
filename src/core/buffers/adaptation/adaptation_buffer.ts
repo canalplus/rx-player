@@ -27,6 +27,7 @@
 import objectAssign from "object-assign";
 import {
   asapScheduler,
+  BehaviorSubject,
   concat as observableConcat,
   defer as observableDefer,
   merge as observableMerge,
@@ -35,6 +36,7 @@ import {
   Subject,
 } from "rxjs";
 import {
+  catchError,
   distinctUntilChanged,
   filter,
   ignoreElements,
@@ -105,12 +107,21 @@ export default function AdaptationBuffer<T>(
   queuedSourceBuffer : QueuedSourceBuffer<T>,
   segmentBookkeeper : SegmentBookkeeper,
   segmentFetcher : IPrioritizedSegmentFetcher<T>,
-  wantedBufferAhead$ : Observable<number>,
+  wantedBufferAhead$ : BehaviorSubject<number>,
   content : { manifest : Manifest;
               period : Period; adaptation : Adaptation; },
   abrManager : ABRManager,
   options : { manualBitrateSwitchingMode : "seamless" | "direct" }
 ) : Observable<IAdaptationBufferEvent<T>> {
+
+  // The buffer goal ratio limits the wanted buffer ahead to determine the
+  // buffer goal.
+  //
+  // It can help in cases such as : the current browser has issues with
+  // buffering and tells us that we should try to bufferize less data :
+  // https://developers.google.com/web/updates/2017/10/quotaexceedederror
+  const bufferGoalRatioMap: Partial<Record<string, number>> = {};
+
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
 
@@ -201,6 +212,15 @@ export default function AdaptationBuffer<T>(
     representation : Representation
   ) : Observable<IRepresentationBufferEvent<T>> {
     return observableDefer(() => {
+      const oldBufferGoalRatio = bufferGoalRatioMap[representation.id];
+      const bufferGoalRatio: number = oldBufferGoalRatio != null ? oldBufferGoalRatio :
+                                                                   1;
+      bufferGoalRatioMap[representation.id] = bufferGoalRatio;
+
+      const bufferGoal$ = wantedBufferAhead$.pipe(
+        map((wba) => wba * bufferGoalRatio)
+      );
+
       log.info("Buffer: changing representation", adaptation.type, representation);
       return RepresentationBuffer({ clock$,
                                     content: { representation,
@@ -211,7 +231,21 @@ export default function AdaptationBuffer<T>(
                                     segmentBookkeeper,
                                     segmentFetcher,
                                     terminate$: terminateCurrentBuffer$,
-                                    wantedBufferAhead$, });
+                                    bufferGoal$ })
+        .pipe(catchError((err) => {
+          if (err.code === "BUFFER_FULL_ERROR") {
+            const wantedBufferAhead = wantedBufferAhead$.getValue();
+            const lastBufferGoalRatio = bufferGoalRatio;
+            if (lastBufferGoalRatio <= 0.25 ||
+                wantedBufferAhead * lastBufferGoalRatio <= 2
+            ) {
+              throw err;
+            }
+            bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;
+            return createRepresentationBuffer(representation);
+          }
+          throw err;
+        }));
     });
   }
 }

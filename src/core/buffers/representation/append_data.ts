@@ -18,11 +18,11 @@
  * This file allows any Buffer to push data to a QueuedSourceBuffer.
  */
 
-import { Observable } from "rxjs";
 import {
-  catchError,
-  mergeMapTo,
-} from "rxjs/operators";
+  concat as observableConcat,
+  Observable,
+} from "rxjs";
+import { catchError, ignoreElements } from "rxjs/operators";
 import { MediaError } from "../../../errors";
 import {
   IAppendBufferInfos,
@@ -53,11 +53,14 @@ export default function appendDataToSourceBufferWithRetries<T>(
         throw new MediaError("BUFFER_APPEND_ERROR", appendError.toString(), true);
       }
 
-      return forceGarbageCollection(clock$, queuedSourceBuffer).pipe(
-        mergeMapTo(append$),
+      return observableConcat(
+        forceGarbageCollection(clock$, queuedSourceBuffer).pipe(ignoreElements()),
+        append$
+      ).pipe(
         catchError((forcedGCError : Error) => {
           // (weird Typing either due to TypeScript or RxJS bug)
           throw new MediaError("BUFFER_FULL_ERROR", forcedGCError.toString(), true);
-        }));
+        })
+      );
     }));
 }

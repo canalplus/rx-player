@@ -15,6 +15,7 @@
  */
 
 import {
+  BehaviorSubject,
   concat as observableConcat,
   EMPTY,
   merge as observableMerge,
@@ -108,7 +109,7 @@ export default function BufferOrchestrator(
   abrManager : ABRManager,
   sourceBuffersManager : SourceBuffersManager,
   segmentPipelinesManager : SegmentPipelinesManager<any>,
-  options: { wantedBufferAhead$ : Observable<number>;
+  options: { wantedBufferAhead$ : BehaviorSubject<number>;
              maxBufferAhead$ : Observable<number>;
              maxBufferBehind$ : Observable<number>;
              segmentRetry? : number;

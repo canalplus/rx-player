@@ -15,6 +15,7 @@
  */
 
 import {
+  BehaviorSubject,
   EMPTY,
   merge as observableMerge,
   Observable,
@@ -68,7 +69,7 @@ export interface IMediaSourceLoaderArguments {
   abrManager : ABRManager;
   segmentPipelinesManager : SegmentPipelinesManager<any>;
   bufferOptions : { // Buffers-related options
-    wantedBufferAhead$ : Observable<number>;
+    wantedBufferAhead$ : BehaviorSubject<number>;
     maxBufferAhead$ : Observable<number>;
     maxBufferBehind$ : Observable<number>;
     offlineRetry? : number;

@@ -17,6 +17,7 @@
 import objectAssign from "object-assign";
 import {
   asapScheduler,
+  BehaviorSubject,
   combineLatest as observableCombineLatest,
   concat as observableConcat,
   EMPTY,
@@ -110,7 +111,7 @@ export interface IInitializeOptions {
                      throttle : Partial<Record<IBufferType, Observable<number>>>;
                      limitWidth : Partial<Record<IBufferType, Observable<number>>>; };
   autoPlay : boolean;
-  bufferOptions : { wantedBufferAhead$ : Observable<number>;
+  bufferOptions : { wantedBufferAhead$ : BehaviorSubject<number>;
                     maxBufferAhead$ : Observable<number>;
                     maxBufferBehind$ : Observable<number>;
                     manualBitrateSwitchingMode : "seamless" | "direct"; };
