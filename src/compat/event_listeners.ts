@@ -293,15 +293,11 @@ function getVideoWidthFromPIPWindow(
  * @returns {boolean}
  */
 function isPIPActive(mediaElement: HTMLMediaElement) {
-  if ("pictureInPictureElement" in document) {
-    return (
-      (document as any).pictureInPictureElement &&
-      (document as any).pictureInPictureElement === mediaElement
-    );
-  } else if ("webkitPresentationMode" in mediaElement) {
-    return (mediaElement as any).webkitPresentationMode === "picture-in-picture";
-  }
-  return false;
+  return (
+    (document as any).pictureInPictureElement &&
+    (document as any).pictureInPictureElement === mediaElement ||
+    (mediaElement as any).webkitPresentationMode === "picture-in-picture"
+  );
 }
 
 /**
@@ -312,26 +308,28 @@ function isPIPActive(mediaElement: HTMLMediaElement) {
  */
 function onSwitchPictureInPictureMode$(
   mediaElement: HTMLMediaElement
-): Observable<boolean> {
-  return new Observable((obs) => {
-    mediaElement.addEventListener("enterpictureinpicture", () => {
-      obs.next(true);
-    });
-    mediaElement.addEventListener("leavepictureinpicture", () => {
-      obs.next(false);
-    });
+): Observable<{ isEnabled: boolean; pipWindow: null|ICompatPictureInPictureWindow }> {
+  const onEnterPictureInPicture$ =
+    fromEvent<any, any>(mediaElement, "enterpictureinpicture").pipe(
+      map((pipWindow) => ({ isEnabled: true,
+                            pipWindow })));
 
-    if ("webkitPresentationMode" in mediaElement &&
-        "webkitSupportsPresentationMode" in mediaElement &&
-        (mediaElement as any).webkitSupportsPresentationMode
-    ) {
-      (mediaElement as HTMLMediaElement).addEventListener(
-        "webkitpresentationmodechanged", () => {
-          obs.next((mediaElement as any).webkitPresentationMode === "picture-in-picture");
-        }
-      );
-    }
-  });
+  const onLeavePictureInPicture$ =
+    fromEvent<any, any>(mediaElement, "leavepictureinpicture").pipe(
+      map(() => ({ isEnabled: false,
+                   pipWindow: null })));
+
+  const onPresentationModeChanged$ =
+    fromEvent<any, any>(mediaElement, "webkitpresentationmodechanged").pipe(
+      map(() => ({ isEnabled: (mediaElement as any)
+                    .webkitPresentationMode === "picture-in-picture",
+                   pipWindow: null })));
+
+  return observableMerge(
+    onEnterPictureInPicture$,
+    onLeavePictureInPicture$,
+    onPresentationModeChanged$
+  );
 }
 
 /**
@@ -343,14 +341,15 @@ function onSwitchPictureInPictureMode$(
 function isVideoVisible(
   mediaElement: HTMLMediaElement
 ) : Observable<boolean> {
-  const isPIPActiveAtInit = isPIPActive(mediaElement);
+  const isPIPEnabledAtInit = isPIPActive(mediaElement);
 
-  const isPIPActive$ = onSwitchPictureInPictureMode$(mediaElement)
-    .pipe(startWith(isPIPActiveAtInit));
+  const isPIPEnabled$ = onSwitchPictureInPictureMode$(mediaElement)
+    .pipe(startWith({ isEnabled: isPIPEnabledAtInit,
+                      pipWindow: null }));
 
-  return observableCombineLatest([visibilityChange(), isPIPActive$]).pipe(
-    mergeMap(([ isVisible, activePip ]) => {
-      const videoVisible = activePip || isVisible;
+  return observableCombineLatest([visibilityChange(), isPIPEnabled$]).pipe(
+    mergeMap(([ isVisible, { isEnabled } ]) => {
+      const videoVisible = isEnabled || isVisible;
       return observableOf(videoVisible).pipe(
         debounceTime((!videoVisible) ? INACTIVITY_DELAY : 0)
       );
@@ -512,4 +511,3 @@ export {
   onKeyError$,
   onKeyStatusesChange$,
 };
-(document as any).pictureInPictureElement
