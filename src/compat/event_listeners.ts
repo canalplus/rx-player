@@ -253,13 +253,19 @@ function getPictureInPictureWindow$(
       );
   })();
 
+  const onEnterPictureInPicture$ = onSwitchPictureInPictureMode$(mediaElement).pipe(
+    filter((x) => x)
+  );
+
+  const onLeavePictureInPicture$ = onSwitchPictureInPictureMode$(mediaElement).pipe(
+    filter((x) => !x)
+  );
+
   return initialPIPWindow.pipe(
     mergeMap((pipWindow) => {
       return observableMerge(
-        observableFromEvent(mediaElement, "enterpictureinpicture").pipe(
-          map((evt: any) => evt.pictureInPictureWindow)
-        ),
-        observableFromEvent(mediaElement, "leavepictureinpicture").pipe(mapTo(null))
+        onEnterPictureInPicture$.pipe(map((evt: any) => evt.pictureInPictureWindow)),
+        onLeavePictureInPicture$.pipe(mapTo(null))
       ).pipe(startWith(pipWindow));
     })
   );
@@ -282,6 +288,53 @@ function getVideoWidthFromPIPWindow(
 }
 
 /**
+ * Check if Picture-In-Picture is active on media element
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {boolean}
+ */
+function isPIPActive(mediaElement: HTMLMediaElement) {
+  if ("pictureInPictureElement" in document) {
+    return (
+      (document as any).pictureInPictureElement &&
+      (document as any).pictureInPictureElement === mediaElement
+    );
+  } else if ("webkitPresentationMode" in mediaElement) {
+    return (mediaElement as any).webkitPresentationMode === "picture-in-picture";
+  }
+  return false;
+}
+
+/**
+ * Emit `true` when video enters in picture-in-picture mode. Emit `false``
+ * otherwise.
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
+function onSwitchPictureInPictureMode$(
+  mediaElement: HTMLMediaElement
+): Observable<boolean> {
+  return new Observable((obs) => {
+    mediaElement.addEventListener("enterpictureinpicture", () => {
+      obs.next(true);
+    });
+    mediaElement.addEventListener("leavepictureinpicture", () => {
+      obs.next(false);
+    });
+
+    if ("webkitPresentationMode" in mediaElement &&
+        "webkitSupportsPresentationMode" in mediaElement &&
+        (mediaElement as any).webkitSupportsPresentationMode
+    ) {
+      (mediaElement as HTMLMediaElement).addEventListener(
+        "webkitpresentationmodechanged", () => {
+          obs.next((mediaElement as any).webkitPresentationMode === "picture-in-picture");
+        }
+      );
+    }
+  });
+}
+
+/**
  * Returns `true` when video is considered as visible (the page is visible and/or
  * the Picture-In-Picture is activated). Returns `false` otherwise.
  * @param {HTMLMediaElement} mediaElement
@@ -290,19 +343,14 @@ function getVideoWidthFromPIPWindow(
 function isVideoVisible(
   mediaElement: HTMLMediaElement
 ) : Observable<boolean> {
-  const isPIPActiveAtInit = (document as any).pictureInPictureElement != null &&
-    (document as any).pictureInPictureElement === mediaElement;
+  const isPIPActiveAtInit = isPIPActive(mediaElement);
 
-  const isPIPActive$ = observableMerge(
-    observableFromEvent(mediaElement, "enterpictureinpicture")
-      .pipe(mapTo(true)),
-    observableFromEvent(mediaElement, "leavepictureinpicture")
-      .pipe(mapTo(false))
-  ).pipe(startWith(isPIPActiveAtInit));
+  const isPIPActive$ = onSwitchPictureInPictureMode$(mediaElement)
+    .pipe(startWith(isPIPActiveAtInit));
 
   return observableCombineLatest([visibilityChange(), isPIPActive$]).pipe(
-    mergeMap(([ isVisible, isPIPActive ]) => {
-      const videoVisible = isPIPActive || isVisible;
+    mergeMap(([ isVisible, activePip ]) => {
+      const videoVisible = activePip || isVisible;
       return observableOf(videoVisible).pipe(
         debounceTime((!videoVisible) ? INACTIVITY_DELAY : 0)
       );
@@ -464,3 +512,4 @@ export {
   onKeyError$,
   onKeyStatusesChange$,
 };
+(document as any).pictureInPictureElement
