@@ -4,11 +4,11 @@
 
 ### Features
 
-  - api/abr: add `throttleVideoWhenHidden` which unlike `throttleWhenHidden` does not throttle the video bitrate if the media element is in picture-in-picture mode
+  - api/abr: add `throttleVideoBitrateWhenHidden` which unlike `throttleWhenHidden` does not throttle the video bitrate if the media element is in picture-in-picture mode
 
 ### Deprecated
 
-  - api/abr: deprecate `throttleWhenHidden` in profit of `throttleVideoWhenHidden` which has a better API definition for some edge cases
+  - api/abr: deprecate `throttleWhenHidden` in profit of `throttleVideoBitrateWhenHidden` which has a better API definition for some edge cases
 
 ### Bug fixes
 
