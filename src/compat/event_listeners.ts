@@ -20,26 +20,38 @@
  */
 
 import {
+  combineLatest as observableCombineLatest,
   fromEvent as observableFromEvent,
   interval as observableInterval,
   merge as observableMerge,
   NEVER,
   Observable,
+  of as observableOf,
 } from "rxjs";
 import {
   debounceTime,
   distinctUntilChanged,
   filter,
   map,
+  mapTo,
+  mergeMap,
   startWith,
+  switchMap,
+  take,
 } from "rxjs/operators";
 import config from "../config";
 import log from "../log";
-import { IEventEmitter } from "../utils/event_emitter";
+import {
+  fromEvent,
+  IEventEmitter,
+} from "../utils/event_emitter";
 import {
   HTMLElement_,
   ICompatDocument,
+  ICompatPictureInPictureWindow,
+  READY_STATES,
 } from "./browser_compatibility_types";
+import safelyRequestPIP from "./safely_request_pip";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
@@ -193,16 +205,94 @@ function isInBackground$() : Observable<boolean> {
 }
 
 /**
+ * Send, through an observable :
+ * - The Picture-in-Picture window if activated
+ * - A null object if not
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
+function getPictureInPictureWindow$(
+  mediaElement: HTMLMediaElement
+) : Observable<null|ICompatPictureInPictureWindow> {
+  /**
+   * Try to get Picture-in-Picture window if it is activated on RxPlayer media element,
+   * by trying to request again Picture-in-Picture.
+   */
+  const initialPIPWindow: Observable<null|ICompatPictureInPictureWindow> = (() => {
+    if ((document as any).pictureInPictureElement == null ||
+        (document as any).pictureInPictureElement !== mediaElement)
+    {
+      return observableOf(null);
+    }
+
+    if (mediaElement.readyState > READY_STATES.HAVE_NOTHING) {
+      return safelyRequestPIP(mediaElement);
+    }
+
+    return compatibleListener(["loadedmetadata"])(mediaElement)
+      .pipe(
+        take(1),
+        mergeMap(() => {
+          if ((document as any).pictureInPictureElement == null ||
+              (document as any).pictureInPictureElement !== mediaElement) {
+            return observableOf(null);
+          }
+          return safelyRequestPIP(mediaElement);
+        }),
+        startWith(null)
+      );
+  })();
+
+  return initialPIPWindow.pipe(
+    mergeMap((pipWindow) => {
+      return observableMerge(
+        observableFromEvent(mediaElement, "enterpictureinpicture").pipe(
+          map((evt: any) => evt.pictureInPictureWindow)
+        ),
+        observableFromEvent(mediaElement, "leavepictureinpicture").pipe(mapTo(null))
+      ).pipe(startWith(pipWindow));
+    })
+  );
+}
+
+/**
+ * Get video width from Picture-in-Picture window
+ * @param {HTMLMediaElement} mediaElement
+ * @param {Object} pipWindow
+ * @returns {number}
+ */
+function getVideoWidthFromPIPWindow(
+  mediaElement: HTMLMediaElement,
+  pipWindow: ICompatPictureInPictureWindow
+): number {
+  const { width, height } = pipWindow;
+  const videoRatio = mediaElement.clientHeight / mediaElement.clientWidth;
+  const calcWidth = height / videoRatio;
+  return Math.min(width, calcWidth);
+}
+
+/**
+ * Get video width from HTML video element, or video estimated dimensions
+ * when Picture-in-Picture is activated.
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
 function videoWidth$(mediaElement : HTMLMediaElement) : Observable<number> {
-  return observableMerge(
-    observableInterval(20000),
-    videoSizeChange().pipe(debounceTime(500))
-  ).pipe(
-    startWith(null), // emit on subscription
-    map(() => mediaElement.clientWidth * pixelRatio),
+  return observableCombineLatest([
+    getPictureInPictureWindow$(mediaElement),
+    observableInterval(20000).pipe(startWith(null)),
+    videoSizeChange().pipe(debounceTime(500), startWith(null)),
+  ]).pipe(
+    switchMap(([ pipWindow ]) => {
+      if (pipWindow != null) {
+        const firstWidth = getVideoWidthFromPIPWindow(mediaElement, pipWindow);
+        return fromEvent(pipWindow, "resize").pipe(
+          startWith(firstWidth * pixelRatio),
+          map(() => getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio)
+        );
+      }
+      return observableOf(mediaElement.clientWidth * pixelRatio);
+    }),
     distinctUntilChanged()
   );
 }
