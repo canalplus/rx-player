@@ -13,7 +13,7 @@
 ### Bug fixes
 
   - api/abr: `limitVideoWidth` now also considers if the video is in picture-in-picture mode
-  - buffer: better prevent the `QuotaExceededError` `MediaError` on some memory-constrained devices
+  - buffer: better prevent the `BUFFER_FULL_ERROR` `MediaError` on some memory-constrained devices
   - dash: consider the buffer depth as infinite (until `availabilityStartTime`) if the `timeShiftBufferDepth` is not set
   - smooth: consider the buffer depth as infinite if the `DVRWindowLength` is not set or set to 0
   - init: start live contents that just began (less than 10 seconds ago) at the minimum position instead of throwing a STARTING_TIME_NOT_FOUND MEDIA_ERROR.
