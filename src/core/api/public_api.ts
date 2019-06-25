@@ -118,33 +118,26 @@ import TrackManager, {
   ITMVideoTrackListItem
 } from "./track_manager";
 
-const {
-  DEFAULT_UNMUTED_VOLUME,
-} = config;
+const { DEFAULT_UNMUTED_VOLUME } = config;
 
-const {
-  isInBackground$,
-  onEnded$,
-  onFullscreenChange$,
-  onPlayPause$,
-  onSeeking$,
-  onTextTrackChanges$,
-  videoWidth$,
-} = events;
+const { isActive,
+        isVideoVisible,
+        onEnded$,
+        onFullscreenChange$,
+        onPlayPause$,
+        onSeeking$,
+        onTextTrackChanges$,
+        videoWidth$ } = events;
 
-interface IPositionUpdateItem {
-  position : number;
-  duration : number;
-  playbackRate : number;
-  bufferGap : number;
-  wallClockTime? : number;
-  liveGap? : number;
-}
+interface IPositionUpdateItem { position : number;
+                                duration : number;
+                                playbackRate : number;
+                                bufferGap : number;
+                                wallClockTime? : number;
+                                liveGap? : number; }
 
-interface IBitrateEstimate {
-  type : IBufferType;
-  bitrate : number|undefined;
-}
+interface IBitrateEstimate { type : IBufferType;
+                             bitrate : number | undefined; }
 
 interface IPublicAPIEvent {
   playerStateChange : string;
@@ -443,6 +436,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private readonly _priv_throttleWhenHidden : boolean;
 
   /**
+   * Store wanted configuration for the throttleVideoBitrateWhenHidden option.
+   * @private
+   * @type {boolean}
+   */
+  private readonly _priv_throttleVideoBitrateWhenHidden : boolean;
+
+  /**
    * Store volume when mute is called, to restore it on unmute.
    * @private
    * @type {Number}
@@ -520,6 +520,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             preferredAudioTracks,
             preferredTextTracks,
             throttleWhenHidden,
+            throttleVideoBitrateWhenHidden,
             videoElement,
             wantedBufferAhead,
             stopAtEnd } = parseConstructorOptions(options);
@@ -595,6 +596,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     };
 
     this._priv_throttleWhenHidden = throttleWhenHidden;
+    this._priv_throttleVideoBitrateWhenHidden = throttleVideoBitrateWhenHidden;
     this._priv_limitVideoWidth = limitVideoWidth;
     this._priv_mutedMemory = DEFAULT_UNMUTED_VOLUME;
 
@@ -727,17 +729,24 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       const pipelines = transportFn(objectAssign({ supplementaryTextTracks,
                                                    supplementaryImageTracks },
                                                  transportOptions));
-
       // Options used by the ABR Manager.
       const adaptiveOptions = {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
         manualBitrates: this._priv_bitrateInfos.manualBitrates,
         maxAutoBitrates: this._priv_bitrateInfos.initialMaxAutoBitrates,
         throttle: this._priv_throttleWhenHidden ?
-        { video: isInBackground$()
+        { video: isActive()
             .pipe(
-              map(isBg => isBg ? 0 :
-                                 Infinity),
+              map(active => active ? Infinity :
+                                     0),
+              takeUntil(this._priv_stopCurrentContent$)
+            ), } :
+        {},
+        throttleBitrate: this._priv_throttleVideoBitrateWhenHidden ?
+        { video: isVideoVisible(videoElement)
+            .pipe(
+              map(active => active ? Infinity :
+                                     0),
               takeUntil(this._priv_stopCurrentContent$)
             ), } :
         {},

@@ -109,6 +109,7 @@ export interface IInitializeOptions {
                      manualBitrates : Partial<Record<IBufferType, number>>;
                      maxAutoBitrates : Partial<Record<IBufferType, number>>;
                      throttle : Partial<Record<IBufferType, Observable<number>>>;
+                     throttleBitrate : Partial<Record<IBufferType, Observable<number>>>;
                      limitWidth : Partial<Record<IBufferType, Observable<number>>>; };
   autoPlay : boolean;
   bufferOptions : { wantedBufferAhead$ : BehaviorSubject<number>;

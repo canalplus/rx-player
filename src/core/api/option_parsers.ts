@@ -49,6 +49,7 @@ const { DEFAULT_AUTO_PLAY,
         DEFAULT_STOP_AT_END,
         DEFAULT_TEXT_TRACK_MODE,
         DEFAULT_THROTTLE_WHEN_HIDDEN,
+        DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
         DEFAULT_WANTED_BUFFER_AHEAD } = config;
 
 export { IKeySystemOption };
@@ -102,6 +103,7 @@ export interface IConstructorOptions { maxBufferAhead? : number;
 
                                        limitVideoWidth? : boolean;
                                        throttleWhenHidden? : boolean;
+                                       throttleVideoBitrateWhenHidden? : boolean;
 
                                        preferredAudioTracks? : IAudioTrackPreference[];
                                        preferredTextTracks? : ITextTrackPreference[];
@@ -120,6 +122,7 @@ export interface IParsedConstructorOptions {
 
   limitVideoWidth : boolean;
   throttleWhenHidden : boolean;
+  throttleVideoBitrateWhenHidden : boolean;
 
   preferredAudioTracks : IAudioTrackPreference[];
   preferredTextTracks : ITextTrackPreference[];
@@ -196,6 +199,7 @@ function parseConstructorOptions(
 
   let limitVideoWidth : boolean;
   let throttleWhenHidden : boolean;
+  let throttleVideoBitrateWhenHidden : boolean;
 
   let preferredAudioTracks : IAudioTrackPreference[];
   let preferredTextTracks : ITextTrackPreference[];
@@ -239,9 +243,24 @@ function parseConstructorOptions(
   limitVideoWidth = options.limitVideoWidth == null ? DEFAULT_LIMIT_VIDEO_WIDTH :
                                                       !!options.limitVideoWidth;
 
-  throttleWhenHidden = options.throttleWhenHidden == null ?
-    DEFAULT_THROTTLE_WHEN_HIDDEN :
-    !!options.throttleWhenHidden;
+  if (options.throttleWhenHidden != null) {
+    warnOnce("`throttleWhenHidden` API is deprecated. Consider using " +
+             "`throttleVideoBitrateWhenHidden` instead.");
+
+    throttleWhenHidden = !!options.throttleWhenHidden;
+  } else {
+    throttleWhenHidden = DEFAULT_THROTTLE_WHEN_HIDDEN;
+  }
+
+  // `throttleWhenHidden` and `throttleVideoBitrateWhenHidden` can be in conflict
+  // Do not activate the latter if the former is
+  if (throttleWhenHidden) {
+    throttleVideoBitrateWhenHidden = false;
+  } else {
+    throttleVideoBitrateWhenHidden = options.throttleVideoBitrateWhenHidden == null ?
+      DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN :
+      !!options.throttleVideoBitrateWhenHidden;
+  }
 
   preferredAudioTracks = options.preferredAudioTracks == null ?
     [] :
@@ -310,6 +329,7 @@ function parseConstructorOptions(
            videoElement,
            wantedBufferAhead,
            throttleWhenHidden,
+           throttleVideoBitrateWhenHidden,
            preferredAudioTracks,
            preferredTextTracks,
            initialAudioBitrate,

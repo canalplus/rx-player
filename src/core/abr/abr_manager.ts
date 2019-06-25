@@ -43,6 +43,7 @@ export type IABRClockTick = IRepresentationChooserClockTick;
 interface IRepresentationChoosersOptions {
   limitWidth: Partial<Record<IBufferType, Observable<number>>>;
   throttle: Partial<Record<IBufferType, Observable<number>>>;
+  throttleBitrate: Partial<Record<IBufferType, Observable<number>>>;
   initialBitrates: Partial<Record<IBufferType, number>>;
   manualBitrates: Partial<Record<IBufferType, number>>;
   maxAutoBitrates: Partial<Record<IBufferType, number>>;
@@ -50,6 +51,7 @@ interface IRepresentationChoosersOptions {
 
 const defaultChooserOptions = { limitWidth: {},
                                 throttle: {},
+                                throttleBitrate: {},
                                 initialBitrates: {},
                                 manualBitrates: {},
                                 maxAutoBitrates: {} };
@@ -66,6 +68,7 @@ const createChooser = (
 ) : RepresentationChooser => {
   return new RepresentationChooser({ limitWidth$: options.limitWidth[type],
                                      throttle$: options.throttle[type],
+                                     throttleBitrate$: options.throttleBitrate[type],
                                      initialBitrate: options.initialBitrates[type],
                                      manualBitrate: options.manualBitrates[type],
                                      maxAutoBitrate: options.maxAutoBitrates[type] });
@@ -168,6 +171,7 @@ export default class ABRManager {
       manualBitrates: options.manualBitrates || {},
       maxAutoBitrates: options.maxAutoBitrates || {},
       throttle: options.throttle || {},
+      throttleBitrate: options.throttleBitrate || {},
       limitWidth: options.limitWidth || {},
     };
 

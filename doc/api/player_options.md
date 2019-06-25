@@ -15,8 +15,9 @@
     - [maxBufferAhead](#prop-maxBufferAhead)
     - [maxBufferBehind](#prop-maxBufferBehind)
     - [limitVideoWidth](#prop-limitVideoWidth)
-    - [throttleWhenHidden](#prop-throttleWhenHidden)
+    - [throttleVideoBitrateWhenHidden](#prop-throttleVideoBitrateWhenHidden)
     - [stopAtEnd](#prop-stopAtEnd)
+    - [throttleWhenHidden (deprecated)](#prop-throttleWhenHidden)
 
 
 
@@ -413,20 +414,22 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 ---
 
 
-<a name="prop-throttleWhenHidden"></a>
-### throttleWhenHidden #########################################################
+<a name="prop-throttleVideoBitrateWhenHidden"></a>
+### throttleVideoBitrateWhenHidden #############################################
 
 _type_: ``Boolean``
 
 _defaults_: ``false``
 
 The player has a specific feature which throttle the video to the minimum
-bitrate when the current page is hidden for more than a minute.
+bitrate when the current video element is considered hidden (e.g. the containing
+page is hidden and the Picture-In-Picture mode is disabled) for more than a
+minute.
 
 To activate this feature, set it to ``true``.
 ```js
 const player = Player({
-  throttleWhenHidden: true
+  throttleVideoBitrateWhenHidden: true
 });
 ```
 
@@ -460,3 +463,35 @@ const player = Player({
   stopAtEnd: false
 });
 ```
+
+
+<a name="prop-throttleWhenHidden"></a>
+### throttleWhenHidden #########################################################
+
+---
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
+_type_: ``Boolean``
+
+_defaults_: ``false``
+
+The player has a specific feature which throttle the video to the minimum
+bitrate when the current page is hidden for more than a minute.
+
+To activate this feature, set it to ``true``.
+```js
+const player = Player({
+  throttleWhenHidden: true
+});
+```
+
+---
+
+:warning: This option will have no effect for contents loaded in _DirectFile_
+mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+
+---

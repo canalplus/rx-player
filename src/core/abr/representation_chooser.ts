@@ -110,6 +110,7 @@ interface IFilters { bitrate?: number;
 interface IRepresentationChooserOptions {
   limitWidth$?: Observable<number>; // Emit maximum useful width
   throttle$?: Observable<number>; // Emit temporary bandwidth throttle
+  throttleBitrate$?: Observable<number>; // Emit temporary bandwidth throttle
   initialBitrate?: number; // The initial wanted bitrate
   manualBitrate?: number; // A bitrate set manually
   maxAutoBitrate?: number; // The maximum bitrate we should set in adaptive mode
@@ -332,6 +333,7 @@ export default class RepresentationChooser {
   private readonly _dispose$ : Subject<void>;
   private readonly _limitWidth$ : Observable<number>|undefined;
   private readonly _throttle$ : Observable<number>|undefined;
+  private readonly _throttleBitrate$ : Observable<number>|undefined;
   private readonly estimator : BandwidthEstimator;
   private readonly _initialBitrate : number;
   private readonly _reEstimate$ : Subject<void>;
@@ -358,6 +360,7 @@ export default class RepresentationChooser {
 
     this._limitWidth$ = options.limitWidth$;
     this._throttle$ = options.throttle$;
+    this._throttleBitrate$ = options.throttleBitrate$;
     this._reEstimate$ = new Subject<void>();
   }
 
@@ -393,6 +396,10 @@ export default class RepresentationChooser {
     }
     if (this._throttle$) {
       _deviceEventsArray.push(this._throttle$
+                                .pipe(map(bitrate => ({ bitrate }))));
+    }
+    if (this._throttleBitrate$) {
+      _deviceEventsArray.push(this._throttleBitrate$
                                 .pipe(map(bitrate => ({ bitrate }))));
     }
 
