@@ -301,11 +301,6 @@ const rxPlayer = new RxPlayer({
 Some very specific properties from various methods are deprecated.
 You will find them here.
 
-## Other properties ############################################################
-
-Some very specific properties from various methods are deprecated.
-You will find them here.
-
 
 ### Manifest ###################################################################
 
