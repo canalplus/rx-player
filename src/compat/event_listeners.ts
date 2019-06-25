@@ -282,8 +282,9 @@ function getVideoWidthFromPIPWindow(
 }
 
 /**
- * Get video width from HTML video element, or video estimated dimensions
- * when Picture-in-Picture is activated.
+ * Returns `true` when video is considered as visible (the page is visible and/or
+ * the Picture-In-Picture is activated). Returns `false` otherwise.
+ * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
 function isVideoVisible(
@@ -311,6 +312,8 @@ function isVideoVisible(
 }
 
 /**
+ * Get video width from HTML video element, or video estimated dimensions
+ * when Picture-in-Picture is activated.
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
