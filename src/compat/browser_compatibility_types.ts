@@ -15,7 +15,6 @@
  */
 
 import { MediaError } from "../errors";
-import EventEmitter from "../utils/event_emitter";
 
 // regular MediaKeys type + optional functions present in IE11
 interface ICompatMediaKeysConstructor {
@@ -83,8 +82,8 @@ interface ICompatMediaKeySystemConfiguration {
 
 // Draft from W3C https://wicg.github.io/picture-in-picture/#pictureinpicturewindow
 export interface ICompatPictureInPictureWindow
-  extends EventEmitter<{ resize: Event }>{ width: number;
-                                           height: number; }
+  extends EventTarget { width: number;
+                        height: number; }
 
 const win = window as any;
 const HTMLElement_ : typeof HTMLElement = win.HTMLElement;
