@@ -254,11 +254,11 @@ function getPictureInPictureWindow$(
   })();
 
   const onEnterPictureInPicture$ = onSwitchPictureInPictureMode$(mediaElement).pipe(
-    filter((x) => x)
+    filter(({ isEnabled }) => isEnabled)
   );
 
   const onLeavePictureInPicture$ = onSwitchPictureInPictureMode$(mediaElement).pipe(
-    filter((x) => !x)
+    filter(({ isEnabled }) => !isEnabled)
   );
 
   return initialPIPWindow.pipe(
