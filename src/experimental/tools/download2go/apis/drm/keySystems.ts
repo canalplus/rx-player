@@ -68,6 +68,9 @@ function getLicense(
           externalSettings.storageUtils.db
             .add("drm", {
               contentID: externalSettings.contentID,
+              appMetadata: {
+                downloaded: Date.now(),
+              },
               keySystems: {
                 sessionsIDS,
                 type: settingsKeySystem.type,
