@@ -125,6 +125,7 @@ const { isActive,
         onEnded$,
         onFullscreenChange$,
         onPlayPause$,
+        onPictureInPictureEvent$,
         onSeeking$,
         onTextTrackChanges$,
         videoWidth$ } = events;
@@ -422,6 +423,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_abrManager : ABRManager|null;
 
   /**
+   * Emit last picture in picture event.
+   * @private
+   * @type {BehaviorSubject}
+   */
+  private _priv_pictureInPictureEvent$ : ReplaySubject<events.IPictureInPictureEvent>;
+
+  /**
    * Store wanted configuration for the limitVideoWidth option.
    * @private
    * @type {boolean}
@@ -535,6 +543,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.videoElement = videoElement;
 
     this._priv_destroy$ = new Subject();
+
+    this._priv_pictureInPictureEvent$ = new ReplaySubject(1);
+    onPictureInPictureEvent$(videoElement)
+      .pipe(takeUntil(this._priv_destroy$))
+      .subscribe(this._priv_pictureInPictureEvent$);
 
     /** @deprecated */
     onFullscreenChange$(videoElement)
@@ -651,6 +664,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_bufferOptions.wantedBufferAhead$.complete();
     this._priv_bufferOptions.maxBufferAhead$.complete();
     this._priv_bufferOptions.maxBufferBehind$.complete();
+    this._priv_pictureInPictureEvent$.complete();
 
     // un-attach video element
     this.videoElement = null;
@@ -743,7 +757,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             ), } :
         {},
         throttleBitrate: this._priv_throttleVideoBitrateWhenHidden ?
-        { video: isVideoVisible(videoElement)
+        { video: isVideoVisible(this._priv_pictureInPictureEvent$)
             .pipe(
               map(active => active ? Infinity :
                                      0),
@@ -751,7 +765,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             ), } :
         {},
         limitWidth: this._priv_limitVideoWidth ?
-        { video: videoWidth$(videoElement)
+        { video: videoWidth$(videoElement, this._priv_pictureInPictureEvent$)
             .pipe(takeUntil(this._priv_stopCurrentContent$)), } :
         {},
       };
