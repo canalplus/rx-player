@@ -14,8 +14,9 @@
 <li><a href="#subchapter-maxBufferAhead">maxBufferAhead</a></li>
 <li><a href="#subchapter-maxBufferBehind">maxBufferBehind</a></li>
 <li><a href="#subchapter-limitVideoWidth">limitVideoWidth</a></li>
-<li><a href="#subchapter-throttleWhenHidden">throttleWhenHidden</a></li>
+<li><a href="#subchapter-throttleVideoBitrateWhenHidden">throttleVideoBitrateWhenHidden</a></li>
 <li><a href="#subchapter-stopAtEnd">stopAtEnd</a></li>
+<li><a href="#subchapter-throttleWhenHidden">throttleWhenHidden</a></li>
 </ul>
 </li>
 </ul>
@@ -296,17 +297,18 @@ fullscreen, specific environments), you might not want to activate this limit.</
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
 mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
 <hr>
-<p><a name="prop-throttleWhenHidden"></a>
-<a name="subchapter-throttleWhenHidden"></a></p>
-<h3>throttleWhenHidden</h3>
+<p><a name="prop-throttleVideoBitrateWhenHidden"></a>
+<a name="subchapter-throttleVideoBitrateWhenHidden"></a></p>
+<h3>throttleVideoBitrateWhenHidden</h3>
 <p><em>type</em>: <code>Boolean</code></p>
 <p><em>defaults</em>: <code>false</code></p>
 <p>The player has a specific feature which throttle the video to the minimum
-bitrate when the current page is hidden for more than a minute (based on
-<code>document.hidden</code>).</p>
+bitrate when the current video element is considered hidden (e.g. the containing
+page is hidden and the Picture-In-Picture mode is disabled) for more than a
+minute.</p>
 <p>To activate this feature, set it to <code>true</code>.</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> player = Player({
-  <span class="hljs-attr">throttleWhenHidden</span>: <span class="hljs-literal">true</span>
+  <span class="hljs-attr">throttleVideoBitrateWhenHidden</span>: <span class="hljs-literal">true</span>
 });
 </code></pre>
 <hr>
@@ -329,4 +331,24 @@ to deactivate this behavior. To do so, set <code>stopAtEnd</code> to <code>false
   <span class="hljs-attr">stopAtEnd</span>: <span class="hljs-literal">false</span>
 });
 </code></pre>
+<p><a name="prop-throttleWhenHidden"></a>
+<a name="subchapter-throttleWhenHidden"></a></p>
+<h3>throttleWhenHidden</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is deprecated, it will disappear in the next major release
+<code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
+<p><em>type</em>: <code>Boolean</code></p>
+<p><em>defaults</em>: <code>false</code></p>
+<p>The player has a specific feature which throttle the video to the minimum
+bitrate when the current page is hidden for more than a minute.</p>
+<p>To activate this feature, set it to <code>true</code>.</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = Player({
+  <span class="hljs-attr">throttleWhenHidden</span>: <span class="hljs-literal">true</span>
+});
+</code></pre>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
 </body></html></div></div></div></body>

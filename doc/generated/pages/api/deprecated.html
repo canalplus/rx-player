@@ -21,7 +21,11 @@
 <li><a href="#subchapter-defaultTextTrack">defaultTextTrack</a></li>
 </ul>
 </li>
-<li><a href="#chapter-Other%20properties">Other properties</a></li>
+<li><a href="#chapter-RxPlayer%20options">RxPlayer options</a>
+<ul>
+<li><a href="#subchapter-throttleWhenHidden">throttleWhenHidden</a></li>
+</ul>
+</li>
 <li><a href="#chapter-Other%20properties">Other properties</a>
 <ul>
 <li><a href="#subchapter-Manifest">Manifest</a></li>
@@ -244,10 +248,22 @@ RxPlayer:</p>
 <p>Or at any time, through the <code>setPreferredTextTracks</code> method:</p>
 <pre><code class="language-js">player.setPreferredTextTracks([{ <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> }]);
 </code></pre>
-<p><a name="chapter-Other%20properties"></a></p>
-<h2>Other properties</h2>
-<p>Some very specific properties from various methods are deprecated.
-You will find them here.</p>
+<p><a name="chapter-RxPlayer%20options"></a></p>
+<h2>RxPlayer options</h2>
+<p>The following RxPlayer constructor options are deprecated.</p>
+<p><a name="subchapter-throttleWhenHidden"></a></p>
+<h3>throttleWhenHidden</h3>
+<p><code>throttleWhenHidden</code>has been deprecated as video visibility relies only on
+page visibility API and document hiddenness.</p>
+<p>A video should be visible if the Picture-In-Picture mode is activated, even
+if the <code>hidden</code> attribute of <code>document</code> is set to <code>true</code>.</p>
+<p><code>throttleVideoBitrateWhenHidden</code> relies on both and can be used like this :</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> rxPlayer = <span class="hljs-keyword">new</span> RxPlayer({
+  <span class="hljs-comment">// ... RxPlayer options</span>
+  <span class="hljs-comment">// throttleWhenHidden: true [deprecated]</span>
+  throttleVideoBitrateWhenHidden: <span class="hljs-literal">true</span>,
+});
+</code></pre>
 <p><a name="chapter-Other%20properties"></a></p>
 <h2>Other properties</h2>
 <p>Some very specific properties from various methods are deprecated.

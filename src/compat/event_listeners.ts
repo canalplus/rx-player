@@ -38,21 +38,15 @@ import {
   mergeMap,
   startWith,
   switchMap,
-  take,
 } from "rxjs/operators";
 import config from "../config";
 import log from "../log";
-import {
-  fromEvent,
-  IEventEmitter,
-} from "../utils/event_emitter";
+import { IEventEmitter } from "../utils/event_emitter";
 import {
   HTMLElement_,
   ICompatDocument,
   ICompatPictureInPictureWindow,
-  READY_STATES,
 } from "./browser_compatibility_types";
-import safelyRequestPIP from "./safely_request_pip";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
@@ -215,57 +209,6 @@ function isActive() : Observable<boolean> {
 }
 
 /**
- * Send, through an observable :
- * - The Picture-in-Picture window if activated
- * - A null object if not
- * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
- */
-function getPictureInPictureWindow$(
-  mediaElement: HTMLMediaElement
-) : Observable<null|ICompatPictureInPictureWindow> {
-  /**
-   * Try to get Picture-in-Picture window if it is activated on RxPlayer media element,
-   * by trying to request again Picture-in-Picture.
-   */
-  const initialPIPWindow: Observable<null|ICompatPictureInPictureWindow> = (() => {
-    if ((document as any).pictureInPictureElement == null ||
-        (document as any).pictureInPictureElement !== mediaElement)
-    {
-      return observableOf(null);
-    }
-
-    if (mediaElement.readyState > READY_STATES.HAVE_NOTHING) {
-      return safelyRequestPIP(mediaElement);
-    }
-
-    return compatibleListener(["loadedmetadata"])(mediaElement)
-      .pipe(
-        take(1),
-        mergeMap(() => {
-          if ((document as any).pictureInPictureElement == null ||
-              (document as any).pictureInPictureElement !== mediaElement) {
-            return observableOf(null);
-          }
-          return safelyRequestPIP(mediaElement);
-        }),
-        startWith(null)
-      );
-  })();
-
-  return initialPIPWindow.pipe(
-    mergeMap((pipWindow) => {
-      return observableMerge(
-        observableFromEvent(mediaElement, "enterpictureinpicture").pipe(
-          map((evt: any) => evt.pictureInPictureWindow)
-        ),
-        observableFromEvent(mediaElement, "leavepictureinpicture").pipe(mapTo(null))
-      ).pipe(startWith(pipWindow));
-    })
-  );
-}
-
-/**
  * Get video width from Picture-in-Picture window
  * @param {HTMLMediaElement} mediaElement
  * @param {Object} pipWindow
@@ -281,28 +224,61 @@ function getVideoWidthFromPIPWindow(
   return Math.min(width, calcWidth);
 }
 
+export interface IPictureInPictureEvent {
+  isEnabled : boolean;
+  pipWindow : ICompatPictureInPictureWindow | null;
+}
+
 /**
- * Returns `true` when video is considered as visible (the page is visible and/or
- * the Picture-In-Picture is activated). Returns `false` otherwise.
+ * Emit when video enters and leaves Picture-In-Picture mode.
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
-function isVideoVisible(
+export function onPictureInPictureEvent$(
   mediaElement: HTMLMediaElement
+): Observable<IPictureInPictureEvent> {
+  return observableDefer(() => {
+    if ((mediaElement as any).webkitSupportsPresentationMode &&
+        typeof (mediaElement as any).webkitSetPresentationMode === "function")
+    {
+      const isWebKitPIPEnabled =
+        (mediaElement as any).webkitPresentationMode === "picture-in-picture";
+      return observableFromEvent(mediaElement, "webkitpresentationmodechanged")
+          .pipe(
+            map(() => ({ isEnabled: (mediaElement as any)
+                           .webkitPresentationMode === "picture-in-picture",
+                         pipWindow: null })),
+            startWith({ isEnabled: isWebKitPIPEnabled, pipWindow: null })
+          );
+    }
+
+    const isPIPEnabled = (
+      (document as any).pictureInPictureElement &&
+      (document as any).pictureInPictureElement === mediaElement
+    );
+    const initialState = { isEnabled: isPIPEnabled, pipWindow: null };
+    return observableMerge(
+      observableFromEvent(mediaElement, "enterpictureinpicture")
+        .pipe(map((evt: any) => ({ isEnabled: true,
+                                   pipWindow: evt.pictureInPictureWindow }))),
+      observableFromEvent(mediaElement, "leavepictureinpicture")
+        .pipe(mapTo({ isEnabled: false, pipWindow: null }))
+    ).pipe(startWith(initialState));
+  });
+}
+
+/**
+ * Returns `true` when video is considered as visible (the page is visible and/or
+ * the Picture-In-Picture is activated). Returns `false` otherwise.
+ * @param {Observable} pip$
+ * @returns {Observable}
+ */
+function isVideoVisible(
+  pip$ : Observable<IPictureInPictureEvent>
 ) : Observable<boolean> {
-  const isPIPActiveAtInit = (document as any).pictureInPictureElement != null &&
-    (document as any).pictureInPictureElement === mediaElement;
-
-  const isPIPActive$ = observableMerge(
-    observableFromEvent(mediaElement, "enterpictureinpicture")
-      .pipe(mapTo(true)),
-    observableFromEvent(mediaElement, "leavepictureinpicture")
-      .pipe(mapTo(false))
-  ).pipe(startWith(isPIPActiveAtInit));
-
-  return observableCombineLatest([visibilityChange(), isPIPActive$]).pipe(
-    mergeMap(([ isVisible, isPIPActive ]) => {
-      const videoVisible = isPIPActive || isVisible;
+  return observableCombineLatest([visibilityChange(), pip$]).pipe(
+    mergeMap(([ isVisible, pip ]) => {
+      const videoVisible = pip.isEnabled || isVisible;
       return observableOf(videoVisible).pipe(
         debounceTime((!videoVisible) ? INACTIVITY_DELAY : 0)
       );
@@ -317,21 +293,30 @@ function isVideoVisible(
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
-function videoWidth$(mediaElement : HTMLMediaElement) : Observable<number> {
+function videoWidth$(
+  mediaElement : HTMLMediaElement,
+  pip$ : Observable<IPictureInPictureEvent>
+) : Observable<number> {
   return observableCombineLatest([
-    getPictureInPictureWindow$(mediaElement),
+    pip$,
     observableInterval(20000).pipe(startWith(null)),
     videoSizeChange().pipe(debounceTime(500), startWith(null)),
   ]).pipe(
-    switchMap(([ pipWindow ]) => {
-      if (pipWindow != null) {
+    switchMap(([ pip ]) : Observable<number> => {
+      if (!pip.isEnabled) {
+        return observableOf(mediaElement.clientWidth * pixelRatio);
+      } else if (pip.pipWindow != null) {
+        const { pipWindow } = pip;
         const firstWidth = getVideoWidthFromPIPWindow(mediaElement, pipWindow);
-        return fromEvent(pipWindow, "resize").pipe(
+
+        // RxJS typing issue (for the "as any")
+        return observableFromEvent(pipWindow as any, "resize").pipe(
           startWith(firstWidth * pixelRatio),
           map(() => getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio)
         );
+      } else {
+        return observableOf(Infinity);
       }
-      return observableOf(mediaElement.clientWidth * pixelRatio);
     }),
     distinctUntilChanged()
   );

@@ -1,5 +1,25 @@
 # Changelog
 
+## v3.14.0 (2019/06/26)
+
+### Features
+
+  - api/abr: add `throttleVideoBitrateWhenHidden` which unlike `throttleWhenHidden` does not throttle the video bitrate if the media element is in picture-in-picture mode
+
+### Deprecated
+
+  - api/abr: deprecate `throttleWhenHidden` in profit of `throttleVideoBitrateWhenHidden` which has a better API definition for some edge cases
+
+### Bug fixes
+
+  - api/abr: `limitVideoWidth` now also considers if the video is in picture-in-picture mode
+  - buffer: better prevent the `BUFFER_FULL_ERROR` `MediaError` on some memory-constrained devices
+  - dash: consider the buffer depth as infinite (until `availabilityStartTime`) if the `timeShiftBufferDepth` is not set
+  - smooth: consider the buffer depth as infinite if the `DVRWindowLength` is not set or set to 0
+  - init: start live contents that just began (less than 10 seconds ago) at the minimum position instead of throwing a STARTING_TIME_NOT_FOUND MEDIA_ERROR.
+  - tests: use web server (local by default) instead of stubbed XHRs to serve tests contents to our integration and memory tests
+
+
 ## v3.13.0 (2019/05/15)
 
 ### Features

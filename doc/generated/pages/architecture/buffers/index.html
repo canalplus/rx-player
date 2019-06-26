@@ -1,7 +1,7 @@
 <head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>The Buffers - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-The%20Buffers">The Buffers</a></p>
 <ul>
 <li><a href="#chapter-Overview">Overview</a></li>
-<li><a href="#chapter-The%20BufferOrchestrator%20#####################################################$">The BufferOrchestrator #####################################################$</a></li>
+<li><a href="#chapter-The%20BufferOrchestrator">The BufferOrchestrator</a></li>
 <li><a href="#chapter-The%20PeriodBuffer">The PeriodBuffer</a></li>
 <li><a href="#chapter-The%20AdaptationBuffer">The AdaptationBuffer</a></li>
 <li><a href="#chapter-The%20RepresentationBuffer">The RepresentationBuffer</a></li>
@@ -28,8 +28,8 @@ pushing them to the corresponding SourceBuffer.</p>
 <p>what segments it already has bufferized</p>
 </li>
 </ul>
-<p><a name="chapter-The%20BufferOrchestrator%20#####################################################$"></a></p>
-<h2>The BufferOrchestrator #####################################################$</h2>
+<p><a name="chapter-The%20BufferOrchestrator"></a></p>
+<h2>The BufferOrchestrator</h2>
 <p>The <code>BufferOrchestrator</code> is the main entry point to interact with the buffer.
 It completely takes care of segment downloading and pushing for a whole content.</p>
 <p>To do so, it creates the right <code>PeriodBuffer</code>s depending on the current
