@@ -209,17 +209,6 @@ function isActive() : Observable<boolean> {
 }
 
 /**
- * Check if Picture-In-Picture is active on the given media element.
- * @param {HTMLMediaElement} mediaElement
- * @returns {boolean}
- */
-function isPIPActive(mediaElement: HTMLMediaElement) : boolean {
-  return ((document as any).pictureInPictureElement &&
-          (document as any).pictureInPictureElement === mediaElement) ||
-         (mediaElement as any).webkitPresentationMode === "picture-in-picture";
-}
-
-/**
  * Get video width from Picture-in-Picture window
  * @param {HTMLMediaElement} mediaElement
  * @param {Object} pipWindow
@@ -252,18 +241,22 @@ export function onPictureInPictureEvent$(
     if ((mediaElement as any).webkitSupportsPresentationMode &&
         typeof (mediaElement as any).webkitSetPresentationMode === "function")
     {
-      const isEnabled =
+      const isWebKitPIPEnabled =
         (mediaElement as any).webkitPresentationMode === "picture-in-picture";
       return observableFromEvent(mediaElement, "webkitpresentationmodechanged")
           .pipe(
             map(() => ({ isEnabled: (mediaElement as any)
                            .webkitPresentationMode === "picture-in-picture",
                          pipWindow: null })),
-            startWith({ isEnabled, pipWindow: null })
+            startWith({ isEnabled: isWebKitPIPEnabled, pipWindow: null })
           );
     }
 
-    const initialState = { isEnabled: isPIPActive(mediaElement), pipWindow: null };
+    const isPIPEnabled = (
+      (document as any).pictureInPictureElement &&
+      (document as any).pictureInPictureElement === mediaElement
+    );
+    const initialState = { isEnabled: isPIPEnabled, pipWindow: null };
     return observableMerge(
       observableFromEvent(mediaElement, "enterpictureinpicture")
         .pipe(map((evt: any) => ({ isEnabled: true,
