@@ -301,8 +301,7 @@ function isPIPActive(mediaElement: HTMLMediaElement) {
 }
 
 /**
- * Emit `true` when video enters in picture-in-picture mode. Emit `false``
- * otherwise.
+ * Emit when video enters and leaves Picture-In-Picture mode.
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
