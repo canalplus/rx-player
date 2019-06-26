@@ -772,42 +772,44 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       // Options used by the TextTrack SourceBuffer
       const textTrackOptions = options.textTrackMode === "native" ?
-        { textTrackMode: "native" as "native",
+        { textTrackMode: "native" as const,
           hideNativeSubtitle: options.hideNativeSubtitle } :
-        { textTrackMode: "html" as "html",
+        { textTrackMode: "html" as const,
           textTrackElement: options.textTrackElement };
 
+      const bufferOptions = objectAssign({ manualBitrateSwitchingMode },
+                                         this._priv_bufferOptions);
+
       // playback$ Observable, through which the content will be launched.
-      playback$ = initializeMediaSourcePlayback({
-        adaptiveOptions,
-        autoPlay,
-        bufferOptions: objectAssign({ manualBitrateSwitchingMode },
-                                    this._priv_bufferOptions),
-        clock$,
-        keySystems,
-        mediaElement: videoElement,
-        networkConfig,
-        pipelines,
-        speed$: this._priv_speed$,
-        startAt,
-        textTrackOptions,
-        url,
-      })
-        .pipe(takeUntil(contentIsStopped$))
-        .pipe(publish()) as ConnectableObservable<IInitEvent>;
+      const init$ = initializeMediaSourcePlayback({ adaptiveOptions,
+                                                    autoPlay,
+                                                    bufferOptions,
+                                                    clock$,
+                                                    keySystems,
+                                                    mediaElement: videoElement,
+                                                    networkConfig,
+                                                    pipelines,
+                                                    speed$: this._priv_speed$,
+                                                    startAt,
+                                                    textTrackOptions,
+                                                    url })
+        .pipe(takeUntil(contentIsStopped$));
+
+      playback$ = publish<IInitEvent>()(init$);
     } else {
       if (features.directfile == null) {
         throw new Error("DirectFile feature not activated in your build.");
       }
-      playback$ = features.directfile({ autoPlay,
-                                        clock$,
-                                        keySystems,
-                                        mediaElement: videoElement,
-                                        speed$: this._priv_speed$,
-                                        startAt,
-                                        url }
-      ).pipe(takeUntil(contentIsStopped$))
-       .pipe(publish()) as ConnectableObservable<IInitEvent>;
+      const directfileInit$ = features.directfile({ autoPlay,
+                                                    clock$,
+                                                    keySystems,
+                                                    mediaElement: videoElement,
+                                                    speed$: this._priv_speed$,
+                                                    startAt,
+                                                    url })
+        .pipe(takeUntil(contentIsStopped$));
+
+      playback$ = publish<IInitEvent>()(directfileInit$);
     }
 
     // Emit an object when the player stalls and null when it unstall
@@ -1327,21 +1329,23 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     let positionWanted : number|undefined;
-    const typeOf = typeof time;
 
-    if (typeOf === "number") {
-      positionWanted = time as number;
-    } else if (typeOf === "object") {
+    if (typeof time === "number") {
+      positionWanted = time;
+    } else if (typeof time === "object") {
+      const timeObj : { time? : number;
+                        relative? : number;
+                        position? : number;
+                        wallClockTime? : number; } = time;
       const currentTs = this.videoElement.currentTime;
-      if ((time as { relative? : number }).relative != null) {
-        positionWanted = currentTs + (time as { relative : number }).relative;
-      } else if ((time as { position? : number }).position != null) {
-        positionWanted = (time as { position : number }).position;
-      } else if ((time as { wallClockTime? : number }).wallClockTime != null) {
-        positionWanted = isDirectFile ?
-          (time as { wallClockTime : number }).wallClockTime :
-          (time as { wallClockTime : number }).wallClockTime -
-            ((manifest as Manifest).availabilityStartTime || 0);
+      if (timeObj.relative != null) {
+        positionWanted = currentTs + timeObj.relative;
+      } else if (timeObj.position != null) {
+        positionWanted = timeObj.position;
+      } else if (timeObj.wallClockTime != null) {
+        positionWanted = (isDirectFile || manifest == null) ?
+          timeObj.wallClockTime :
+          timeObj.wallClockTime - (manifest.availabilityStartTime || 0);
       } else {
         throw new Error("invalid time object. You must set one of the " +
                         "following properties: \"relative\", \"position\" or " +
