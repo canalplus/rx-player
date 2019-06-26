@@ -1,0 +1,437 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Player events - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Player%20events">Player events</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-Events">Events</a>
+<ul>
+<li><a href="#subchapter-playerStateChange">playerStateChange</a></li>
+<li><a href="#subchapter-positionUpdate">positionUpdate</a></li>
+<li><a href="#subchapter-availableAudioTracksChange">availableAudioTracksChange</a></li>
+<li><a href="#subchapter-availableVideoTracksChange">availableVideoTracksChange</a></li>
+<li><a href="#subchapter-availableTextTracksChange">availableTextTracksChange</a></li>
+<li><a href="#subchapter-audioTrackChange">audioTrackChange</a></li>
+<li><a href="#subchapter-textTrackChange">textTrackChange</a></li>
+<li><a href="#subchapter-videoTrackChange">videoTrackChange</a></li>
+<li><a href="#subchapter-availableAudioBitratesChange">availableAudioBitratesChange</a></li>
+<li><a href="#subchapter-availableVideoBitratesChange">availableVideoBitratesChange</a></li>
+<li><a href="#subchapter-audioBitrateChange">audioBitrateChange</a></li>
+<li><a href="#subchapter-videoBitrateChange">videoBitrateChange</a></li>
+<li><a href="#subchapter-imageTrackUpdate">imageTrackUpdate</a></li>
+<li><a href="#subchapter-fullscreenChange">fullscreenChange</a></li>
+<li><a href="#subchapter-bitrateEstimationChange">bitrateEstimationChange</a></li>
+<li><a href="#subchapter-warning">warning</a></li>
+<li><a href="#subchapter-error">error</a></li>
+<li><a href="#subchapter-nativeTextTracksChange">nativeTextTracksChange</a></li>
+<li><a href="#subchapter-periodChange">periodChange</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Player%20events"></a></p>
+<h1>Player events</h1>
+<p><a name="overview"></a>
+<a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>To communicate about events (like an error or the update of the current video
+bitrate) the player use the event listener pattern.</p>
+<p>As <a href="index.html#meth-addEventListener">documented in the API</a>, you can call
+<code>addEventListener</code> to register a callback for a particular event, like:</p>
+<pre><code class="language-js">player.addEventListener(<span class="hljs-string">&quot;videoBitrateChange&quot;</span>, (newVideoBitrate) =&gt; {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;the video bitrate changed to:&quot;</span>, newVideoBitrate)
+});
+</code></pre>
+<p>You can unregister a callback through the <code>removeEventListener</code> API,
+documented <a href="index.html#meth-removeEventListener">here</a>.</p>
+<p><a name="events"></a>
+<a name="chapter-Events"></a></p>
+<h2>Events</h2>
+<p>This chapter describes every event sent by the player. Each event generally
+comes with a payload, which will also be defined here.</p>
+<p><a name="events-playerStateChange"></a>
+<a name="subchapter-playerStateChange"></a></p>
+<h3>playerStateChange</h3>
+<p><em>payload type</em>: <code>string</code></p>
+<p>Emit the current state of the player, every time it changes.</p>
+<p>As it is a central part of our API and can be difficult concept to understand,
+we have a special <a href="states.html">page of documentation on player states</a>.</p>
+<p><a name="events-positionUpdate"></a>
+<a name="subchapter-positionUpdate"></a></p>
+<h3>positionUpdate</h3>
+<p><em>payload type</em>: <code>Object</code></p>
+<p>Emit informations about the current position at most every seconds (also emits
+every time various player events are received).</p>
+<p>The object emitted as the following properties:</p>
+<ul>
+<li>
+<p><code>position</code> (<code>Number</code>): The current position in the video, in seconds.</p>
+</li>
+<li>
+<p><code>duration</code> (<code>Number</code>): The duration of the content.</p>
+</li>
+<li>
+<p><code>bufferGap</code> (<code>Number</code>): The gap, in seconds, between the current
+position and the end of the current buffered range.</p>
+</li>
+<li>
+<p><code>playbackRate</code> (<code>Number</code>): The current playback rate the content is on.</p>
+</li>
+<li>
+<p><code>liveGap</code> (<code>Number|undefined</code>): Only for live contents. The gap between
+the current position and the &#x201C;live edge&#x201D;.</p>
+</li>
+<li>
+<p><code>maximumBufferTime</code> (<code>Number|undefined</code>): The maximum time until which
+the buffer can currently be filled. That is:</p>
+<ul>
+<li>
+<p>for non-live contents, the duration.</p>
+</li>
+<li>
+<p>for live contents, the live edge minus a security margin we added to avoid
+buffering ahead of it.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><code>wallClockTime</code> (<code>Number|undefined</code>): Only for live contents. The
+current time converted to wall-clock time in seconds.
+That is the real live position (and not the position as announced by the
+video element).</p>
+</li>
+</ul>
+<p><a name="events-availableAudioTracksChange"></a>
+<a name="subchapter-availableAudioTracksChange"></a></p>
+<h3>availableAudioTracksChange</h3>
+<p><em>payload type</em>: <code>Array.&lt;Object&gt;</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Triggered when the currently available audio tracks change (e.g.: at the
+beginning of the content, when period changes&#x2026;).</p>
+<p>The array emitted contains object describing each available audio track:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
+setting the track via <code>setAudioTrack</code>.</p>
+</li>
+<li>
+<p><code>language</code> (<code>string</code>): The language the audio track is in, as set in
+the <a href="../terms.html#manifest">Manifest</a>.</p>
+</li>
+<li>
+<p><code>normalized</code> (<code>string</code>): An attempt to translate the <code>language</code>
+property into an ISO 639-3 language code (for now only support translations
+from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
+fails (no corresponding ISO 639-3 language code is found), it will equal the
+value of <code>language</code></p>
+</li>
+<li>
+<p><code>audioDescription</code> (<code>Boolean</code>): Whether the track is an audio
+description (for the visually impaired or not).</p>
+</li>
+<li>
+<p><code>active</code> (<code>Boolean</code>): Whether the track is the one currently active or
+not.</p>
+</li>
+</ul>
+<p><a name="events-availableVideoTracksChange"></a>
+<a name="subchapter-availableVideoTracksChange"></a></p>
+<h3>availableVideoTracksChange</h3>
+<p><em>payload type</em>: <code>Array.&lt;Object&gt;</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Triggered when the currently available video tracks change (e.g.: at the
+beginning of the content, when period changes&#x2026;).</p>
+<p>The array emitted contains object describing each available video track:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
+setting the track via <code>setVideoTrack</code>.</p>
+</li>
+<li>
+<p><code>active</code> (<code>Boolean</code>): Whether this track is the one currently
+active or not.</p>
+</li>
+<li>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>):
+<a href="../terms.html#representation">Representations</a> of this video track, with
+attributes:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number</code>): The bitrate of this Representation, in bits per
+seconds.</p>
+</li>
+<li>
+<p><code>width</code> (<code>Number|undefined</code>): The width of video, in pixels.</p>
+</li>
+<li>
+<p><code>height</code> (<code>Number|undefined</code>): The height of video, in pixels.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec given in standard MIME type
+format.</p>
+</li>
+<li>
+<p><code>frameRate</code> (<code>string|undefined</code>): The video framerate.</p>
+</li>
+</ul>
+</li>
+</ul>
+<p><a name="events-availableVideoTracksChange"></a>
+<a name="subchapter-availableTextTracksChange"></a></p>
+<h3>availableTextTracksChange</h3>
+<p><em>payload type</em>: <code>Array.&lt;Object&gt;</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Triggered when the currently available text tracks change (e.g.: at the
+beginning of the content, when period changes&#x2026;).</p>
+<p>The array emitted contains object describing each available text track:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
+setting the track via <code>setTextTrack</code>.</p>
+</li>
+<li>
+<p><code>language</code> (<code>string</code>): The language the text track is in, as set in the
+<a href="../terms.html#manifest">Manifest</a>.</p>
+</li>
+<li>
+<p><code>normalized</code> (<code>string</code>): An attempt to translate the <code>language</code>
+property into an ISO 639-3 language code (for now only support translations
+from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
+fails (no corresponding ISO 639-3 language code is found), it will equal the
+value of <code>language</code></p>
+</li>
+<li>
+<p><code>closedCaption</code> (<code>Boolean</code>): Whether the track is specially adapted for
+the hard of hearing or not.</p>
+</li>
+<li>
+<p><code>active</code> (<code>Boolean</code>): Whether the track is the one currently active or
+not.</p>
+</li>
+</ul>
+<p><a name="events-audioTrackChange"></a>
+<a name="subchapter-audioTrackChange"></a></p>
+<h3>audioTrackChange</h3>
+<p><em>payload type</em>: <code>Object|null</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Information about the current audio track, each time it changes (the last
+received segment got a new one).</p>
+<p>The payload is an object describing the new track, with the following
+properties:</p>
+<ul>
+<li><code>id</code> (<code>Number|string</code>): The id used to identify the track.</li>
+<li><code>language</code> (<code>string</code>): The language the audio track is in.</li>
+<li><code>audioDescription</code> (<code>Boolean</code>): Whether the track is an audio
+description (for the visually impaired or not).</li>
+</ul>
+<p><a name="events-textTrackChange"></a>
+<a name="subchapter-textTrackChange"></a></p>
+<h3>textTrackChange</h3>
+<p><em>payload type</em>: <code>Object|null</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Information about the current text track, each time it changes (the last
+received segment got a new one).</p>
+<p>The payload is an object describing the new track, with the following
+properties:</p>
+<ul>
+<li><code>id</code> (<code>Number|string</code>): The id used to identify the track.</li>
+<li><code>language</code> (<code>string</code>): The language the text track is in.</li>
+<li><code>closedCaption</code> (<code>Boolean</code>): Whether the track is specially adapted for
+the hard of hearing or not.</li>
+</ul>
+<p><a name="events-videoTrackChange"></a>
+<a name="subchapter-videoTrackChange"></a></p>
+<h3>videoTrackChange</h3>
+<p><em>payload type</em>: <code>Object|null</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Information about the current video track, each time it changes (the last
+received segment got a new one).</p>
+<p>The payload is an object describing the new track, with the following
+properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for setting
+the track via <code>setVideoTrack</code>.</p>
+</li>
+<li>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>):
+<a href="../terms.html#representation">Representations</a> of this video track, with
+attributes:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number</code>): The bitrate of this Representation, in bits per
+seconds.</p>
+</li>
+<li>
+<p><code>width</code> (<code>Number|undefined</code>): The width of video, in pixels.</p>
+</li>
+<li>
+<p><code>height</code> (<code>Number|undefined</code>): The height of video, in pixels.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec given in standard MIME type
+format.</p>
+</li>
+<li>
+<p><code>frameRate</code> (<code>string|undefined</code>): The video framerate.</p>
+</li>
+</ul>
+</li>
+</ul>
+<p><a name="events-availableAudioBitratesChange"></a>
+<a name="subchapter-availableAudioBitratesChange"></a></p>
+<h3>availableAudioBitratesChange</h3>
+<p><em>payload type</em>: <code>Array.&lt;Number&gt;</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Triggered when the currently available audio bitrates change (e.g.: at the
+beginning of the content, when switching the current audio track, when period
+changes&#x2026;).</p>
+<p>The payload is an array of the different bitrates available, in bits per
+seconds.</p>
+<p><a name="events-availableVideoBitratesChange"></a>
+<a name="subchapter-availableVideoBitratesChange"></a></p>
+<h3>availableVideoBitratesChange</h3>
+<p><em>payload type</em>: <code>Array.&lt;Number&gt;</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Triggered when the currently available video bitrates change (e.g.: at the
+beginning of the content, when switching the current video track, when period
+changes&#x2026;).</p>
+<p>The payload is an array of the different bitrates available, in bits per
+seconds.</p>
+<p><a name="events-audioBitrateChange"></a>
+<a name="subchapter-audioBitrateChange"></a></p>
+<h3>audioBitrateChange</h3>
+<p><em>payload type</em>: <code>Number</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>The payload is the new audio bitrate, in bits per seconds. It is emitted every
+time it changes (based on the last received segment).</p>
+<p><a name="events-videoBitrateChange"></a>
+<a name="subchapter-videoBitrateChange"></a></p>
+<h3>videoBitrateChange</h3>
+<p><em>payload type</em>: <code>Number</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>The payload is the new video bitrate, in bits per seconds. It is emitted every
+time it changes (based on the last received segment).</p>
+<p><a name="events-imageTrackUpdate"></a>
+<a name="subchapter-imageTrackUpdate"></a></p>
+<h3>imageTrackUpdate</h3>
+<p><em>payload type</em>: <code>Object</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Triggered each time the current image playlist changes (has new images).</p>
+<p>Has the following property in its payload:
+<em>data</em> (<code>Array.&lt;Object&gt;</code>): Every image data.</p>
+<p>Each image has a structure as defined in the <a href="images.html#api-structure">Images structure
+page</a>.</p>
+<p><a name="events-fullscreenChange"></a>
+<a name="subchapter-fullscreenChange"></a></p>
+<h3>fullscreenChange</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
+<p><em>payload type</em>: <code>Boolean</code></p>
+<p>Triggered each time the video player goes/exits fullscreen mode.</p>
+<p>The payload is <code>true</code> if the player entered fullscreen, <code>false</code> if it exited
+it.</p>
+<p><a name="events-bitrateEstimationChange"></a>
+<a name="subchapter-bitrateEstimationChange"></a></p>
+<h3>bitrateEstimationChange</h3>
+<p><em>payload type</em>: <code>Object</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Information about the last bitrate estimation performed, by type of buffer
+(<code>audio</code>, <code>video</code> etc.).</p>
+<p>Note that this event is sent only if the corresponding buffer type has multiple
+<a href="../terms.html#representation">Representations</a> for the given content (as bitrate
+estimations are only useful in that case).</p>
+<p>The payload is an object with the following properties:</p>
+<ul>
+<li>
+<p><code>type</code> (<code>string</code>): The buffer type</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number</code>): The last estimated bandwidth for this buffer type,
+in bits per seconds.
+This bitrate is smoothed by doing a (complex) mean on an extended period of
+time, so it often does not link directly to the current calculated bitrate.</p>
+</li>
+</ul>
+<p><a name="events-warning"></a>
+<a name="subchapter-warning"></a></p>
+<h3>warning</h3>
+<p><em>payload type</em>: <code>Error</code></p>
+<p>Triggered each time a non-fatal (for content playback) error happened.</p>
+<p>The payload is the corresponding error. See <a href="errors.html">the Player Error
+documentation</a> for more informations.</p>
+<p><a name="events-error"></a>
+<a name="subchapter-error"></a></p>
+<h3>error</h3>
+<p><em>payload type</em>: <code>Error</code></p>
+<p>Triggered each time a fatal (for content playback) error happened.</p>
+<p>The payload is the corresponding error. See <a href="errors.html">the Player Error
+documentation</a> for more informations.</p>
+<p><a name="events-nativeTextTracksChange"></a>
+<a name="subchapter-nativeTextTracksChange"></a></p>
+<h3>nativeTextTracksChange</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
+<p><em>payload type</em>: <code>Array&lt;TextTrackElement&gt;</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Triggered each times a new <code>&lt;track&gt;</code> element is removed or added to the video
+element.</p>
+<p>The payload is the array of <code>TextTrack</code> elements. The RxPlayer will only set
+a single <code>&lt;track&gt;</code> when a text track is set.</p>
+<p><a name="events-periodChange"></a>
+<a name="subchapter-periodChange"></a></p>
+<h3>periodChange</h3>
+<p><em>payload type</em>: <code>Object</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Triggered when the current <a href="../terms.html#period">Period</a> being seen changes.</p>
+<p>The payload is the corresponding Period. See <a href="manifest.html#period">the Manifest
+documentation</a> for more informations.</p>
+</body></html></div></div></div></body>

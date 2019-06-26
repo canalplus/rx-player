@@ -1,0 +1,134 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../styles/style.css"/><link rel="stylesheet" href="../styles/code.css"/><title>On using TypeScript - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-On%20using%20TypeScript">On using TypeScript</a></p>
+<ul>
+<li><a href="#chapter-Why%20refactoring?">Why refactoring?</a></li>
+<li><a href="#chapter-Why%20TypeScript?">Why TypeScript?</a></li>
+<li><a href="#chapter-What%20we%20have%20done">What we have done</a></li>
+<li><a href="#chapter-What%20we%20still%20need%20to%20do">What we still need to do</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-On%20using%20TypeScript"></a></p>
+<h1>On using TypeScript</h1>
+<p>We recently (as from <code>v3.0.1</code>) have chosen to switch the rx-player codebase
+from plain JavaScript to TypeScript.</p>
+<p>This was in fact going for more than a month before the official <code>v3.0.1</code>
+release, a time during which we maintained both JavaScript and TypeScript
+versions of the player:</p>
+<ul>
+<li>We ported fixes we found with our typescript branch on the regular releases</li>
+<li>We ported improvements we were doing on regular releases to our typescript
+branch.</li>
+</ul>
+<p>This is one of the reasons why you saw a LOT of release candidates for the
+<code>v3.0.0</code>, as we were seeing more typos and other minor errors in master we had
+to fix.</p>
+<p><a name="chapter-Why%20refactoring?"></a></p>
+<h2>Why refactoring?</h2>
+<p>It may appear shocking to most developpers, but we do not dislike JavaScript.
+The language has its quirks (that we, as JS developers, learned to avoid the
+hard way) but it has a flexibility that few other languages can compete with.</p>
+<p>For example, our codebase adopts concepts of both Functional Programming and
+Object Oriented Programming and it still looks idiomatic to the JS language
+(even more since we&#x2019;re using ES6+ and RxJS).</p>
+<p>In recent years, we were spectators of a huge trend to write desktop
+applications (thanks to Electron), mobile applications (e.g. with react-native)
+and servers (thanks to Node.js) in what is basically JavaScript. Because it is
+becoming a kind of developper
+<a href="https://en.wikipedia.org/wiki/Lingua_franca">lingua-franca</a>, the pool of
+possible contributors is amazing. Moreover, as many developpers can read and
+judge the quality of JavaScript codebases, open-sourcing becomes only more
+exciting with a JavaScript project.</p>
+<p>Despite this, we had issues with where our codebase was evolving toward:</p>
+<ul>
+<li>
+<p>it was becoming fairly large, and the old team in charge of the project
+left. We lost a lot of the code&#x2019;s knowledge in that process.</p>
+</li>
+<li>
+<p>to renew the codebase and bring new features, some refactoring were
+needed. But we did not have enough confidence on our code to do them.</p>
+</li>
+<li>
+<p>As new features were added, bugs were also added.
+A majority of these issues were either based on typos, or on a wrong
+representation of the data structure we had at a certain point in the code.</p>
+</li>
+<li>
+<p>There also were multiple coding styles in different parts of the player,
+depending on the &#x201C;era&#x201D; in which the file was written in.
+This harms the &#x201C;welcomeness&#x201D; of the codebase, which, as an open-source
+library, is an important factor.</p>
+</li>
+</ul>
+<p>We liked to present the rx-player as a really maintanable project, but by
+keeping things like they were, we had a substantial risk of going toward the
+exact opposite.</p>
+<p>With that in mind, we observed that none of us were developping in &#x201C;browser&#x2019;s
+JavaScript&#x201D; anymore, as most projects we worked on made usage of Babel for
+years now.
+The code we write in looks very different than what is transpiled to run on
+browsers (we&#x2019;re treating the &#x201C;real&#x201D; JavaScript today as a - easily
+readable - bytecode).</p>
+<p>As such, we knew we needed to do something about the code, and we were not
+hesitant to do substantial changes, while not wanting to depart too much from
+JavaScript.</p>
+<p><a name="chapter-Why%20TypeScript?"></a></p>
+<h2>Why TypeScript?</h2>
+<p>When we were brainstorming on what we could do to improve our codebase, we edged
+a lot around a better type system. As functional-programming fans, we were
+seeing some wonderful type systems in other programming languages (Haskell,
+Scala, Rust) that we thought could partially answer to a lot of our problems.
+One of us worked with Scala in its previous professional experience, this also
+amplified the need to &#x201C;improve&#x201D; our JavaScript.</p>
+<p>In the browser&#x2019;s world, there were two possibilities:</p>
+<ul>
+<li>using another language transpiled to JavaScript (elm, PureScript, Scala.js)</li>
+<li>using a &#x201C;superset&#x201D; of JavaScript, which gives us typings without changing
+the base language</li>
+</ul>
+<p>The first solution was not wanted, as we would lost a lot of possible
+contributors (both in-house or external), but also because it would need a lot
+more work we could not afford.</p>
+<p>The second solution was the only one we actually seriously thought about.
+As such, a little more than a month ago, We began porting the rx-player in both
+flow and TypeScript, to see which type system we could profit the more from.</p>
+<p>We found both to be really similar for what we wanted to achieve. TypeScript
+was finally chosen because:</p>
+<ol>
+<li>
+<p>It has a lot more traction than flow today, with a lot more tools and a lot
+more codebases written in/for TypeScript. This gives us more guarantees
+about the language&#x2019;s future.</p>
+</li>
+<li>
+<p>RxJS, VisualStudioCode, BabylonJS and AngularJS are all well-regarded
+codebases, all written in TypeScript. We consider this as a proof that the
+language can helps us toward our goals, and that the language is mature
+enough today.</p>
+</li>
+<li>
+<p>The future of flow seemed too uncertain. This is even more the case now
+that Facebook is working on <a href="https://reasonml.github.io/">the Reason
+language</a>.</p>
+</li>
+</ol>
+<p><a name="chapter-What%20we%20have%20done"></a></p>
+<h2>What we have done</h2>
+<p>When we began to really consider switching the source to TypeScript, we set one
+goal before the release: The whole RxPlayer should work under TypeScript&#x2019;s
+&#x201C;strict&#x201D; mode, and the code should look enough like idiomatic TypeScript to be
+presented as a <em>TypeScript project</em> (and not as a <em>ported JavaScript</em> one).</p>
+<p>As such, we worked on every files in the <em>src</em> directory, even doing important
+refactorings, to ensure our code was elegant enough to be maintenable and
+presentable.
+Today, we have the confidence that the base we have can be approached naturally
+in a TypeScript way.</p>
+<p>We &#x201C;switched&#x201D; every rx-player source and unit tests files.</p>
+<p><a name="chapter-What%20we%20still%20need%20to%20do"></a></p>
+<h2>What we still need to do</h2>
+<p>Some parts of the code still need work to look like perfect <em>idiomatic</em>
+TypeScript.</p>
+<p>For example, the part gluing our networking logic to the streaming logic (what
+we call the &#x201C;pipeline&#x201D;) relies too much on <strong>any</strong> types and casting.
+This is the main part that needs work today. Specifically, the
+manifest-refreshing logic shares too much logic with the segment-downloading
+one, leading to types impossible to set.</p>
+</body></html></div></div></div></body>
