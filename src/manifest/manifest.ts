@@ -55,6 +55,11 @@ interface IManifestParsingOptions {
 
 export interface IManifestEvents {
   manifestUpdate : null;
+  blacklistUpdate : Array<{ // new blacklisted elements:
+    period : Period;
+    adaptation : Adaptation;
+    representation : Representation;
+  }>;
 }
 
 /**
