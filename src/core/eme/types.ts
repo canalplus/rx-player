@@ -62,7 +62,6 @@ export type IEMEManagerEvent = IEMEWarningEvent |
                                IAttachedMediaKeysEvent |
                                IMediaKeySessionHandledEvents;
 
-
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {
   keySystemAccess: ICompatMediaKeySystemAccess |
@@ -110,6 +109,8 @@ export interface IKeySystemOption {
                     TypedArray |
                     ArrayBuffer |
                     null;
+  getLicenseConfig? : { retry? : number;
+                        timeout? : number; };
   serverCertificate? : ArrayBuffer | TypedArray;
   persistentLicense? : boolean;
   licenseStorage? : IPersistedSessionStorage;
