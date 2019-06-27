@@ -296,7 +296,16 @@ export default function InitializeOnMediaSource({
       })
     ).pipe(mergeMap(refreshManifest));
 
-    return observableMerge(loadOnMediaSource$, handleReloads$, manifestAutoRefresh$);
+    const blacklistUpdates$ = emeManager$.pipe(tap((evt) => {
+      if (evt.type === "blacklist-key") {
+        manifest.blacklistKeyIDs(evt.value);
+      }
+    }));
+
+    return observableMerge(loadOnMediaSource$,
+                           handleReloads$,
+                           manifestAutoRefresh$,
+                           blacklistUpdates$);
   }));
 
   return observableMerge(loadContent$,

@@ -41,9 +41,7 @@ import {
 } from "../../compat";
 import {
   EncryptedMediaError,
-  ErrorTypes,
   ICustomError,
-  isKnownError,
 } from "../../errors";
 import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
@@ -60,6 +58,17 @@ const { onKeyError$,
         onKeyMessage$,
         onKeyStatusesChange$ } = events;
 
+interface IGetLicenseError {
+  message? : string;
+  noRetry? : boolean;
+  fallbackOnLastTry? : boolean;
+}
+
+interface IParsedGetLicenseError extends Error {
+  noRetry? : boolean;
+  fallbackOnLastTry? : boolean;
+}
+
 const KEY_STATUSES = { EXPIRED: "expired",
                        INTERNAL_ERROR: "internal-error",
                        OUTPUT_RESTRICTED: "output-restricted" };
@@ -68,13 +77,12 @@ const KEY_STATUSES = { EXPIRED: "expired",
  * @param {Error|Object} error
  * @returns {Error|Object}
  */
-function licenseErrorSelector(error : unknown) : ICustomError {
-  if (isKnownError(error)) {
-    if (error.type === ErrorTypes.ENCRYPTED_MEDIA_ERROR) {
-      return error;
-    }
+function licenseErrorSelector(error: unknown) : ICustomError {
+  if (error instanceof TimeoutError) {
+     return new EncryptedMediaError("KEY_LOAD_TIMEOUT",
+                                    "The license server took more " +
+                                    "than more time than the set timeout.");
   }
-
   return new EncryptedMediaError("KEY_LOAD_ERROR",
                                  error instanceof Error ? error.toString() :
                                                           "`getLicense` failed");
@@ -99,10 +107,16 @@ export default function handleSessionEvents(
   const getLicenseRetryOptions = { totalRetry: getLicenseConfig.retry != null ?
                                                  getLicenseConfig.retry :
                                                  2,
+
                                    retryDelay: 200,
 
-                                   errorSelector: licenseErrorSelector,
-                                   onRetry: (error: unknown) =>
+                                   shouldRetry: (error : unknown) =>
+                                      error instanceof TimeoutError ||
+                                      (error != null &&
+                                       (error as IParsedGetLicenseError)
+                                         .noRetry !== true),
+
+                                   onRetry: (error : unknown) =>
                                      sessionWarningSubject$.next({
                                        type: "warning",
                                        value: licenseErrorSelector(error),
@@ -200,7 +214,7 @@ export default function handleSessionEvents(
         return observableConcat(warnings$, blackListUpdate$, handledKeyStatusesChange$);
       }));
 
-  const keyMessages$ : Observable<IMediaKeySessionHandledEvents> =
+  const keyMessages$ : Observable<IEMEWarningEvent | IMediaKeySessionHandledEvents> =
     onKeyMessage$(session).pipe(mergeMap((messageEvent: MediaKeyMessageEvent) => {
       const message = new Uint8Array(messageEvent.message);
       const messageType = messageEvent.messageType ||
@@ -215,27 +229,64 @@ export default function handleSessionEvents(
           10 * 1000;
         return (castToObservable(getLicense) as Observable<TypedArray|ArrayBuffer|null>)
           .pipe(
+            catchError((error : unknown) : never =>
+            {
+              const err : IParsedGetLicenseError =
+                new Error("An error occured when calling `getLicense`.");
+
+              if (error != null) {
+                const { message: errorMessage,
+                        noRetry,
+                        fallbackOnLastTry } = error as IGetLicenseError;
+                if (typeof errorMessage === "string") {
+                  err.message = errorMessage;
+                }
+                if (typeof noRetry === "boolean") {
+                  err.noRetry = noRetry;
+                }
+                if (typeof fallbackOnLastTry === "boolean") {
+                  err.fallbackOnLastTry = fallbackOnLastTry;
+                }
+              }
+              throw err;
+            }),
+
             getLicenseTimeout >= 0 ? timeout(getLicenseTimeout) :
-                                     identity /* noop */,
-            catchError((error : unknown) : never => {
-              if (error instanceof TimeoutError) {
-                throw new EncryptedMediaError("KEY_LOAD_TIMEOUT",
-                                              "The license server took more " +
-                                              "than 10 seconds to respond.");
-              }
-              if (error instanceof Error) {
-                throw error;
-              }
-              throw new Error("An error occured when calling `getLicense`.");
-            })
-        );
+                                     identity /* noop */
+          );
       });
 
       return retryObsWithBackoff(getLicense$, getLicenseRetryOptions)
-        .pipe(map(licenseObject => ({
-          type: "key-message-handled" as const,
-          value : { session, license: licenseObject },
-        })));
+        .pipe(
+          map(licenseObject => ({
+            type: "key-message-handled" as const,
+            value : { session, license: licenseObject },
+          })),
+
+          catchError((err : unknown) => {
+            if (err instanceof TimeoutError) {
+               throw new EncryptedMediaError("KEY_LOAD_TIMEOUT",
+                                             "The `getLicense` request timeouted.");
+            }
+
+            if (!(err instanceof Error)) {
+              throw new EncryptedMediaError("KEY_LOAD_ERROR",
+                                            "An unknown error happened " +
+                                            "when fetching the license");
+            }
+
+            const error = new EncryptedMediaError("KEY_LOAD_ERROR", err.message);
+
+            const { fallbackOnLastTry } = err as IParsedGetLicenseError;
+            if (fallbackOnLastTry !== true) {
+              throw err;
+            }
+            return observableOf({ type: "warning" as const,
+                                  value: error },
+                                { type: "blacklist-key" as const,
+                                  value: [] });
+          })
+        );
     }));
 
   const sessionUpdates = observableMerge(keyMessages$, keyStatusesChanges)
