@@ -60,6 +60,15 @@ class Representation {
   // DRM Information for this Representation.
   public contentProtections? : IContentProtection[];
 
+  // Whether we are able to decrypt this Representation / unable to decrypt it or
+  // if we don't know yet:
+  //   - if `true`, it means that we know we were able to decrypt this
+  //     Representation in the current content.
+  //   - if `false`, it means that we know we were unable to decrypt this
+  //     Representation
+  //   - if `undefined` there is no certainty on this matter
+  public canBeDecrypted? : boolean;
+
   /**
    * @param {Object} args
    */
