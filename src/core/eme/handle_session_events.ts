@@ -227,30 +227,30 @@ export default function handleSessionEvents(
     .pipe(
       concatMap((
         evt : IMediaKeySessionHandledEvents | IEMEWarningEvent
-      ) : Observable<IMediaKeySessionHandledEvents | IEMEWarningEvent > => {
-          if (evt.type !== "key-message-handled" &&
-              evt.type !== "key-status-change-handled")
-          {
-            return observableOf(evt);
-          }
+      ) : Observable< IMediaKeySessionHandledEvents | IEMEWarningEvent > => {
+        if (evt.type !== "key-message-handled" &&
+            evt.type !== "key-status-change-handled")
+        {
+          return observableOf(evt);
+        }
 
-          const license = evt.value.license;
+        const license = evt.value.license;
 
-          if (license == null) {
-            log.info("EME: No license given, skipping session.update");
-            return observableOf(evt);
-          }
+        if (license == null) {
+          log.info("EME: No license given, skipping session.update");
+          return observableOf(evt);
+        }
 
-          log.debug("EME: Update session", evt);
-          return castToObservable(session.update(license)).pipe(
-            catchError((error: Error) => {
-              throw new EncryptedMediaError("KEY_UPDATE_ERROR", error.toString(), true);
-            }),
-            mapTo({ type: "session-updated" as const,
-                    value: { session, license }, }),
-            startWith(evt)
-          );
-        }));
+        log.debug("EME: Update session", evt);
+        return castToObservable(session.update(license)).pipe(
+          catchError((error: Error) => {
+            throw new EncryptedMediaError("KEY_UPDATE_ERROR", error.toString(), true);
+          }),
+          mapTo({ type: "session-updated" as const,
+                  value: { session, license }, }),
+          startWith(evt)
+        );
+      }));
 
   const sessionEvents : Observable<IMediaKeySessionHandledEvents |
                                    IEMEWarningEvent> =
