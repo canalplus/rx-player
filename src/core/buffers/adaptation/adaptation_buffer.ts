@@ -122,7 +122,6 @@ export default function AdaptationBuffer<T>({
 } : IAdaptationBufferArguments<T>) : Observable<IAdaptationBufferEvent<T>> {
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
-  const { representations } = adaptation;
 
   // The buffer goal ratio limits the wanted buffer ahead to determine the
   // buffer goal.
@@ -144,8 +143,12 @@ export default function AdaptationBuffer<T>({
   const requestsEvents$ = new Subject<IABRMetric | IABRRequest>();
   const abrEvents$ = observableMerge(bufferEvents$, requestsEvents$);
 
-  const abr$ : Observable<IABREstimate> =
-    abrManager.get$(adaptation.type, representations, clock$, abrEvents$)
+  const decryptableRepresentations = adaptation.representations
+    .filter((representation) => representation.canBeDecrypted !== false);
+  const abr$ : Observable<IABREstimate> = abrManager.get$(adaptation.type,
+                                                          decryptableRepresentations,
+                                                          clock$,
+                                                          abrEvents$)
       .pipe(subscribeOn(asapScheduler), share());
 
   const segmentFetcher = segmentPipelinesManager.createPipeline(adaptation.type,
