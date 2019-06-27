@@ -18,6 +18,7 @@ import { ICustomError } from "../errors";
 import log from "../log";
 import { IParsedManifest } from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
+import { isABEqualBytes } from "../utils/byte_parsing";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
 import warnOnce from "../utils/warn_once";
@@ -26,6 +27,7 @@ import Adaptation, {
   IRepresentationFilter,
 } from "./adaptation";
 import Period from "./period";
+import Representation from "./representation";
 import { StaticRepresentationIndex } from "./representation_index";
 import updatePeriods from "./update_periods";
 
@@ -382,6 +384,52 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   public getClockOffset() : number | undefined {
     return this._clockOffset;
+  }
+
+  /**
+   * Look in the Manifest for Representations linked to the given key ID,
+   * and mark them as being impossible to decrypt.
+   * Then trigger a "blacklist-update" event to notify everyone of the changes
+   * performed.
+   * @param {Array.<ArrayBuffer>} keyIDs
+   */
+  public markUndecipherableKIDs(keyIDs : ArrayBuffer[]) : void {
+    // TODO Doing a Map<keyID hash, Representation[]> first might be more
+    // efficient
+    const updates : Array<{ period : Period;
+                            adaptation : Adaptation;
+                            representation : Representation; }> = [];
+    for (let i = 0; i < this.periods.length; i++) {
+      const period = this.periods[i];
+      const adaptations = period.getAdaptations();
+      for (let j = 0; j < adaptations.length; j++) {
+        const adaptation = adaptations[j];
+        const representations = adaptation.representations;
+        for (let k = 0; k < representations.length; k++) {
+          const representation = representations[k];
+          if (representation.canBeDecrypted !== false &&
+              representation.contentProtections != null)
+          {
+            const { contentProtections } = representation;
+            for (let l = 0; l < contentProtections.length; l++) {
+              const contentProtection = contentProtections[l];
+              for (let m = 0; m < keyIDs.length; m++) {
+                if (contentProtection.keyId != null &&
+                    isABEqualBytes(keyIDs[m], contentProtection.keyId))
+                {
+                  updates.push({ period, adaptation, representation });
+                  representation.canBeDecrypted = false;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (updates.length) {
+      this.trigger("blacklistUpdate", updates);
+    }
   }
 
   /**

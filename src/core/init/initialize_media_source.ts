@@ -196,6 +196,12 @@ export default function InitializeOnMediaSource(
     emeManager$.pipe(filter(isEMEReadyEvent), take(1)),
   ]).pipe(mergeMap(([ initialMediaSource, { manifest, sendingTime } ]) => {
 
+    const blacklistUpdates$ = emeManager$.pipe(tap((evt) => {
+      if (evt.type === "blacklist-key") {
+        manifest.markUndecipherableKIDs(evt.value);
+      }
+    }));
+
     log.debug("Init: Calculating initial time");
     const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
     log.debug("Init: Initial time calculated:", initialTime);
@@ -224,7 +230,7 @@ export default function InitializeOnMediaSource(
                                                     fetchManifest,
                                                     minimumManifestUpdateInterval);
 
-    return observableMerge(manifestUpdate$, recursiveLoad$).pipe(
+    return observableMerge(blacklistUpdates$, manifestUpdate$, recursiveLoad$).pipe(
       startWith(EVENTS.manifestReady(manifest)),
       finalize(() => {
         scheduleManifestRefresh$.complete();

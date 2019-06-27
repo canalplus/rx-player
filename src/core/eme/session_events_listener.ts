@@ -187,7 +187,18 @@ export default function SessionEventsListener(
           })),
 
           catchError((err : unknown) => {
-            throw formatGetLicenseError(err);
+            const formattedError = formatGetLicenseError(err);
+
+            if (err != null) {
+              const { fallbackOnLastTry } = (err as { fallbackOnLastTry? : boolean });
+              if (fallbackOnLastTry === true) {
+                return observableOf({ type: "warning" as const,
+                                      value: formattedError },
+                                    { type: "blacklist-key" as const,
+                                      value: [] });
+              }
+            }
+            throw err;
           })
         );
     }));
