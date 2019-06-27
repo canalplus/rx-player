@@ -16,7 +16,7 @@
 
 import IRepresentationIndex from "./representation_index";
 
-interface IContentProtection { keyId?: string;
+interface IContentProtection { keyId : Uint8Array;
                                systemId?: string; }
 
 export interface IRepresentationArguments { bitrate : number;

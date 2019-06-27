@@ -109,7 +109,7 @@ describe("Manifest - Representation", () => {
       id: "test",
       index: minimalIndex,
       contentProtections: [{
-        keyId: "AAFF",
+        keyId: new Uint8Array([45]),
       }],
     };
     const representation = new Representation(args);
