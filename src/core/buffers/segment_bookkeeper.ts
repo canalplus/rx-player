@@ -566,8 +566,7 @@ export default class SegmentBookkeeper {
         const timeDiff = currentSegmentI.bufferedStart - currentSegmentI.start;
         if (_wantedRange.start > currentSegmentI.start) {
           const wantedDiff = currentSegmentI.bufferedStart - _wantedRange.start;
-          if (wantedDiff > 0 && timeDiff
-            > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
+          if (wantedDiff > 0 && timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             log.debug("SB: The wanted segment has been garbage collected",
                       currentSegmentI);
             return false;
@@ -594,8 +593,7 @@ export default class SegmentBookkeeper {
         const timeDiff = currentSegmentI.end - currentSegmentI.bufferedEnd;
         if (_wantedRange.end < currentSegmentI.end) {
           const wantedDiff = _wantedRange.end - currentSegmentI.bufferedEnd;
-          if (wantedDiff > 0 && timeDiff
-            > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
+          if (wantedDiff > 0 && timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             log.debug("SB: The wanted segment has been garbage collected",
                       currentSegmentI);
             return false;
@@ -610,12 +608,5 @@ export default class SegmentBookkeeper {
       }
       return true;
     }
-  }
-
-  /**
-   * Empty the current inventory
-   */
-  public reset() {
-    this.inventory = [];
   }
 }
