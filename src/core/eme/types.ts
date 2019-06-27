@@ -37,7 +37,18 @@ export interface IAttachedMediaKeysEvent { type: "attached-media-keys";
 
 export type IEMEManagerEvent = IEMEWarningEvent |
                                ICreatedMediaKeysEvent |
-                               IAttachedMediaKeysEvent;
+                               IAttachedMediaKeysEvent |
+                               IMediaKeySessionHandledEvents;
+
+export type ILicense = TypedArray |
+                       ArrayBuffer;
+
+export interface IMediaKeySessionHandledEvents { type: "key-message-handled" |
+                                                       "key-status-change-handled" |
+                                                       "session-updated";
+                                                 value: { session: MediaKeySession |
+                                                                   ICustomMediaKeySession;
+                                                          license: ILicense|null; }; }
 
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {
