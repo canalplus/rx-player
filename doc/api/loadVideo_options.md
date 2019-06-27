@@ -123,9 +123,19 @@ This property is an array of objects with the following properties (only
       In any case, the license provided by this function should be of a
       ``BufferSource`` type (example: an ``Uint8Array`` or an ``ArrayBuffer``).
 
-      Note: We set a 10 seconds timeout on this request. If the returned Promise
-      do not resolve or reject under this limit, the player will stop with an
-      error. If this limit is problematic for you, please open an issue.
+      Note: We set a 10 seconds timeout by default on this request (configurable
+      through the `getLicenseConfig` object).
+      If the returned Promise do not resolve or reject under this limit, the
+      player will stop with an error. If this limit is problematic for you,
+      please open an issue.
+
+  - `getLicenseConfig` (`Object|undefined`): Optional configuration for the
+    `getLicense` callback. Can contain the following properties:
+       - `retry` (`Number`|`undefined`) (default: `2`): number of time
+         `getLicense` is retried on error or on timeout before we fail on a
+         `KEY_LOAD_ERROR`
+       - `timeout` (`Number`|`undefined`) (default: `10000`): timeout, in ms,
+         after which we consider the `getLicense` callback to have failed.  
 
   - ``serverCertificate`` (``BufferSource|undefined``): Eventual certificate
     used to encrypt messages to the license server.
