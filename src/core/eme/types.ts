@@ -38,17 +38,10 @@ export interface IAttachedMediaKeysEvent { type: "attached-media-keys";
 export type IEMEManagerEvent = IEMEWarningEvent |
                                ICreatedMediaKeysEvent |
                                IAttachedMediaKeysEvent |
-                               IMediaKeySessionEvents |
                                IMediaKeySessionHandledEvents;
 
 export type ILicense = TypedArray |
                        ArrayBuffer;
-
-export interface IMediaKeySessionEvents { type : MediaKeyMessageType |
-                                                 "key-status-change";
-                                          value : { session :
-                                                      MediaKeySession |
-                                                      ICustomMediaKeySession; }; }
 
 export interface IMediaKeySessionHandledEvents { type: "key-message-handled" |
                                                        "key-status-change-handled" |

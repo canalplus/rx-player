@@ -28,7 +28,7 @@ import {
 export default function tryCatch<T, I>(
   func : (args : T) => Observable<I>,
   args : T
-) : Observable<I>|Observable<never> {
+) : Observable<I> {
   try {
     return func(args);
   } catch (e) {
