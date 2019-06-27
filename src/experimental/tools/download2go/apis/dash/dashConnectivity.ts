@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Observable, of } from "rxjs";
+import { Observable, of, throwError } from "rxjs";
 import { mergeMap } from "rxjs/operators";
 
 import { ISegment } from "../../../../../manifest";
@@ -167,12 +167,14 @@ export const createSegment = (
     mergeMap(({ data, duration, timescale, time }) => {
       const sizePerBuffer = data.byteLength;
       const [segmentKey] = utils.segmentKey;
-      optionBuilder.db.put("segments", {
-        contentID: utils.contentID,
-        data,
-        segmentKey,
-        size: sizePerBuffer,
-      });
+      optionBuilder.db
+        .put("segments", {
+          contentID: utils.contentID,
+          data,
+          segmentKey,
+          size: sizePerBuffer,
+        })
+        .catch(throwError);
       if (optionBuilder.progressBarBuilder$) {
         optionBuilder.progressBarBuilder$.next({
           id: utils.id,

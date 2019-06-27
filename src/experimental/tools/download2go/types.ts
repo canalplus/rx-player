@@ -17,7 +17,6 @@
 import { IDBPDatabase } from "idb";
 import { Subject } from "rxjs";
 
-import EventEmitter from "../../../utils/event_emitter";
 import {
   IEmitterLoaderBuilder,
   ILocalManifestOnline,
@@ -58,8 +57,20 @@ export interface IStoredManifest {
 
 export type IStoreManifestEveryFn = (progress: number) => boolean;
 
+type IArgs<
+TEventRecord,
+TEventName extends keyof TEventRecord
+> = TEventRecord[TEventName];
+
+export interface IEmitterTrigger<T> {
+  trigger<TEventName extends keyof T>(
+    evt: TEventName,
+    arg: IArgs<T, TEventName>
+  ): void;
+}
+
 export interface IUtils {
-  emitter: EventEmitter<IDownload2GoEvents>;
+  emitter: IEmitterTrigger<IDownload2GoEvents>;
   db: IDBPDatabase;
   storeManifestEvery?: IStoreManifestEveryFn;
   progressBarBuilder$?: Subject<IEmitterLoaderBuilder>;
@@ -93,14 +104,4 @@ export interface IDownload2GoEvents {
     contentID: string;
     progress: number;
   };
-}
-
-export interface IPublicAPI {
-  emitter: EventEmitter<IDownload2GoEvents>;
-  download(settings: ISettingsDownloader): Promise<void>;
-  resume(contentID: string): Promise<void>;
-  pause(contentID: string): void;
-  getAllDownloadedMovies<T>(): Promise<T[] | void>;
-  getSingleMovie<T>(contentID: string): Promise<T | void>;
-  deleteDownloadedMovie(contentID: string): Promise<void>;
 }
