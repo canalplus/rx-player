@@ -89,11 +89,14 @@ function licenseErrorSelector(error : unknown) : ICustomError {
 export default function handleSessionEvents(
   session: MediaKeySession|ICustomMediaKeySession,
   keySystem: IKeySystemOption
-) : Observable<IMediaKeySessionHandledEvents|IEMEWarningEvent> {
+) : Observable<IMediaKeySessionHandledEvents | IEMEWarningEvent> {
   log.debug("EME: Handle message events", session);
 
   const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
-  const getLicenseRetryOptions = { totalRetry: 2,
+  const { getLicenseConfig = {} } = keySystem;
+  const getLicenseRetryOptions = { totalRetry: getLicenseConfig.retry != null ?
+                                                 getLicenseConfig.retry :
+                                                 2,
                                    retryDelay: 200,
 
                                    errorSelector: licenseErrorSelector,
@@ -108,8 +111,8 @@ export default function handleSessionEvents(
       throw new EncryptedMediaError("KEY_ERROR", error.type);
     }));
 
-  const keyStatusesChanges : Observable<IMediaKeySessionHandledEvents |
-                                        IEMEWarningEvent> =
+  const keyStatusesChanges : Observable< IMediaKeySessionHandledEvents |
+                                         IEMEWarningEvent > =
     onKeyStatusesChange$(session)
       .pipe(mergeMap((keyStatusesEvent: Event) => {
         log.debug("EME: keystatuseschange event", session, keyStatusesEvent);
@@ -181,9 +184,12 @@ export default function handleSessionEvents(
 
       const getLicense$ = observableDefer(() => {
         const getLicense = keySystem.getLicense(message, messageType);
+        const getLicenseTimeout = getLicenseConfig.timeout != null ?
+          getLicenseConfig.timeout :
+          10 * 1000;
         return (castToObservable(getLicense) as Observable<TypedArray|ArrayBuffer|null>)
           .pipe(
-            timeout(10 * 1000),
+            timeout(getLicenseTimeout),
             catchError((error : unknown) : never => {
               if (error instanceof TimeoutError) {
                 throw new EncryptedMediaError("KEY_LOAD_TIMEOUT",
@@ -209,9 +215,7 @@ export default function handleSessionEvents(
     .pipe(
       concatMap((
         evt : IMediaKeySessionHandledEvents | IEMEWarningEvent
-      ) : Observable<IMediaKeySessionHandledEvents |
-                     IEMEWarningEvent> =>
-        {
+      ) : Observable<IMediaKeySessionHandledEvents | IEMEWarningEvent > => {
           if (evt.type !== "key-message-handled" &&
               evt.type !== "key-status-change-handled")
           {
