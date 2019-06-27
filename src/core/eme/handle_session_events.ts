@@ -217,7 +217,7 @@ export default function handleSessionEvents(
     .pipe(
       concatMap((
         evt : IMediaKeySessionHandledEvents | IEMEWarningEvent
-      ) : Observable<IMediaKeySessionHandledEvents | IEMEWarningEvent > => {
+      ) : Observable< IMediaKeySessionHandledEvents | IEMEWarningEvent > => {
         if (evt.type !== "key-message-handled" &&
             evt.type !== "key-status-change-handled")
         {
