@@ -50,9 +50,22 @@ class Representation {
   // indication possible (often under a ratio form).
   public frameRate? : string;
 
+  // A string describing the codec used for this Representation.
+  // Examples: vp9, hvc, stpp
+  // undefined if we do not know.
   public codec? : string;
+
+  // A string describing the mime-type for this Representation.
+  // Examples: audio/mp4, video/webm, application/mp4, text/plain
+  // undefined if we do not know.
   public mimeType? : string;
+
+  // If this Representation is linked to video content, this value is the width
+  // in pixel of the corresponding video data.
   public width? : number;
+
+  // If this Representation is linked to video content, this value is the height
+  // in pixel of the corresponding video data.
   public height? : number;
 
   // DRM Informations for this Representation.
