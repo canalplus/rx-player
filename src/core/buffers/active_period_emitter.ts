@@ -24,31 +24,46 @@
 
 import {
   merge as observableMerge,
-  Observable
+  Observable,
+  Subscription
 } from "rxjs";
 import {
   distinctUntilChanged,
+  filter,
+  finalize,
   map,
   tap,
 } from "rxjs/operators";
 import log from "../../log";
-import { Period } from "../../manifest";
+import {
+  Adaptation,
+  Period,
+} from "../../manifest";
 import SortedList from "../../utils/sorted_list";
 import {
   IBufferType,
 } from "../source_buffers";
+import {
+  IMultiplePeriodBuffersEvent,
+  IPeriodBufferClearedEvent,
+  IPeriodBufferReadyEvent,
+} from "./types";
 
 // PeriodBuffer informations emitted to the ActivePeriodEmitted
 export interface IPeriodBufferInfos { period: Period;
-                                      type: IBufferType; }
+                                      type: IBufferType;
+                                      adaptation$?: Observable<Adaptation|null>; }
 
 // structure used internally to keep track of which Period has which
 // PeriodBuffer
 interface IPeriodItem { period: Period;
-                        buffers: Set<IBufferType>; }
+                        adaptations: Set<IBufferType>;
+                        representations: Set<IBufferType>;
+                        adaptationsSubscriptions: Subscription[]; }
 
 /**
- * Emit the active Period each times it changes.
+ * Emit the active Period each times it changes and firsts adaptations
+ * and representation have been chosen.
  *
  * The active Period is the first Period (in chronological order) which has
  * a PeriodBuffer for every defined BUFFER_TYPES.
@@ -78,69 +93,131 @@ interface IPeriodItem { period: Period;
  * ```
  *
  * @param {Array.<string>} bufferTypes - Every buffer types in the content.
- * @param {Observable} addPeriodBuffer$ - Emit PeriodBuffer informations when
- * one is added.
- * @param {Observable} removePeriodBuffer$ - Emit PeriodBuffer informations when
- * one is removed.
+ * @param {Observable} bufferEvents$ - Events from buffer managers.
  * @returns {Observable}
  */
 export default function ActivePeriodEmitter(
   bufferTypes: IBufferType[],
-  addPeriodBuffer$ : Observable<IPeriodBufferInfos>,
-  removePeriodBuffer$ : Observable<IPeriodBufferInfos>
+  bufferEvents$: Array<Observable<IMultiplePeriodBuffersEvent>>
 ) : Observable<Period|null> {
   const periodsList : SortedList<IPeriodItem> =
     new SortedList((a, b) => a.period.start - b.period.start);
 
-  const onItemAdd$ = addPeriodBuffer$
-    .pipe(tap(({ period, type }) => {
-      // add or update the periodItem
-      let periodItem = periodsList.findFirst(p => p.period === period);
-      if (!periodItem) {
-        periodItem = { period,
-                       buffers: new Set<IBufferType>() };
-        periodsList.add(periodItem);
+  /**
+   * Add representation to period item on representation change
+   */
+  function addRepresentationToItem(type: IBufferType): void {
+    const periodItem = periodsList.findFirst(p =>
+      isBufferListFull(bufferTypes, p.adaptations)
+    );
+    if (periodItem) {
+      periodItem.representations.add(type);
+    }
+  }
+
+  /**
+   * Add period item on period buffer ready
+   * @param {Object} evt
+   * @returns {Observable}
+   */
+  function addPeriodItem(evt: IPeriodBufferReadyEvent): void {
+    // add or update the periodItem
+    const { value: { period, type, adaptation$ }} = evt;
+    let periodItem = periodsList.findFirst(p => p.period === period);
+    if (!periodItem) {
+      periodItem = { period,
+                     adaptations: new Set<IBufferType>(),
+                     representations: new Set<IBufferType>(),
+                     adaptationsSubscriptions: [] };
+      periodsList.add(periodItem);
+    }
+
+    if (periodItem.adaptations.has(type)) {
+      log.warn(
+        `ActivePeriodEmitter: Buffer type ${type} already added to the period`);
+    }
+    periodItem.adaptations.add(type);
+
+    if (adaptation$ != null) {
+      periodItem.adaptationsSubscriptions.push(adaptation$.pipe(
+        tap((adaptation) => {
+          const firstPeriodItem =
+            periodsList.findFirst(p => p.period === period);
+          if (firstPeriodItem) {
+            if (adaptation == null) {
+              firstPeriodItem.representations.add(type);
+            }
+          }
+        })
+      ).subscribe());
+    }
+  }
+
+  /**
+   * Remove period item on period buffer cleared
+   * @param {Object} evt
+   */
+  function removePeriodItem(evt: IPeriodBufferClearedEvent): void {
+    if (!periodsList || periodsList.length() === 0) {
+      log.error("ActivePeriodEmitter: cannot remove, no period is active.");
+      return;
+    }
+
+    const periodItem = periodsList.findFirst(p => p.period === evt.value.period);
+    if (!periodItem) {
+      log.error("ActivePeriodEmitter: cannot remove, unknown period.");
+      return;
+    }
+
+    periodItem.adaptations.delete(evt.value.type);
+
+    if (!periodItem.adaptations.size) {
+      periodsList.removeElement(periodItem);
+    }
+  }
+
+  return observableMerge(...bufferEvents$).pipe(
+    filter((evt) => {
+      return evt.type === "representationChange" ||
+      evt.type === "periodBufferReady" ||
+      evt.type === "periodBufferCleared";
+    }),
+    tap((evt) => {
+      switch (evt.type) {
+        case "representationChange":
+          addRepresentationToItem(evt.value.type);
+          break;
+        case "periodBufferReady":
+          addPeriodItem(evt);
+          break;
+        case "periodBufferCleared":
+          removePeriodItem(evt);
+          break;
+        default:
+          break;
       }
-
-      if (periodItem.buffers.has(type)) {
-        log.warn(`ActivePeriodEmitter: Buffer type ${type} already added to the period`);
-      }
-      periodItem.buffers.add(type);
-    }));
-
-  const onItemRemove$ = removePeriodBuffer$
-    .pipe(tap(({ period, type }) => {
-      if (!periodsList || periodsList.length() === 0) {
-        log.error("ActivePeriodEmitter: cannot remove, no period is active.");
-        return ;
-      }
-
-      const periodItem = periodsList.findFirst(p => p.period === period);
-      if (!periodItem) {
-        log.error("ActivePeriodEmitter: cannot remove, unknown period.");
-        return ;
-      }
-
-      periodItem.buffers.delete(type);
-
-      if (!periodItem.buffers.size) {
-        periodsList.removeElement(periodItem);
-      }
-    }));
-
-  return observableMerge(onItemAdd$, onItemRemove$).pipe(
-    map(() : Period|null => {
+    }),
+    map(() => {
       const head = periodsList.head();
       if (!head) {
         return null;
       }
 
       const periodItem = periodsList.findFirst(p =>
-        isBufferListFull(bufferTypes, p.buffers)
+        isBufferListFull(bufferTypes, p.adaptations) &&
+        isBufferListFull(bufferTypes, p.representations)
       );
       return periodItem != null ? periodItem.period : null;
     }),
-    distinctUntilChanged()
+    distinctUntilChanged(),
+    finalize(() => {
+      while (periodsList.length) {
+        const periodItem = periodsList.pop();
+        if (periodItem && periodItem.adaptationsSubscriptions != null) {
+          periodItem.adaptationsSubscriptions.forEach((s) => s.unsubscribe());
+        }
+      }
+    })
   );
 }
 

@@ -2058,18 +2058,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_triggerContentEvent("availableVideoBitratesChange",
                                    this.getAvailableVideoBitrates());
 
-    const activeAudioRepresentations = this.getCurrentRepresentations();
-    if (activeAudioRepresentations && activeAudioRepresentations.audio != null) {
-      const bitrate = activeAudioRepresentations.audio.bitrate;
+    const activeRepresentations = this.getCurrentRepresentations();
+
+    if (activeRepresentations && activeRepresentations.audio != null) {
+      const bitrate = activeRepresentations.audio.bitrate;
       this._priv_triggerContentEvent("audioBitrateChange",
                                      bitrate != null ? bitrate : -1);
     } else {
       this._priv_triggerContentEvent("audioBitrateChange", -1);
     }
 
-    const activeVideoRepresentations = this.getCurrentRepresentations();
-    if (activeVideoRepresentations && activeVideoRepresentations.video != null) {
-      const bitrate = activeVideoRepresentations.video.bitrate;
+    if (activeRepresentations && activeRepresentations.video != null) {
+      const bitrate = activeRepresentations.video.bitrate;
       this._priv_triggerContentEvent("videoBitrateChange",
                                      bitrate != null ? bitrate : -1);
     } else {
