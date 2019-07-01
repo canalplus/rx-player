@@ -229,19 +229,21 @@ export default function(options : ITransportOptions): ITransportPipelines {
     { chunkData,
       chunkInfos,
       chunkOffset,
+      segmentProtection,
       appendWindow } : ISegmentParserResponse<T>
   ) : ISegmentParserResponse<T> {
+    const offsetedSegmentOffset = chunkOffset + contentOffset;
     if (chunkData == null) {
       return { chunkData: null,
-               chunkInfos: null,
-               chunkOffset: 0,
+               chunkInfos,
+               chunkOffset: offsetedSegmentOffset,
+               segmentProtection,
                appendWindow: [undefined, undefined] };
     }
     if (chunkInfos !== null && chunkInfos.time > -1) {
       chunkInfos.time += scaledContentOffset;
     }
 
-    const offsetedSegmentOffset = chunkOffset + contentOffset;
     const offsetedWindowStart = appendWindow[0] != null ?
       Math.max(appendWindow[0] + contentOffset, contentOffset) :
       contentOffset;
@@ -257,6 +259,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
     return { chunkData,
              chunkInfos,
              chunkOffset: offsetedSegmentOffset,
+             segmentProtection,
              appendWindow: [offsetedWindowStart, offsetedWindowEnd] };
   }
 

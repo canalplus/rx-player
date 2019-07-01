@@ -28,7 +28,10 @@ import Manifest, {
   Adaptation,
   Representation,
 } from "../../manifest";
-import { getMDAT } from "../../parsers/containers/isobmff";
+import {
+  getMDAT,
+  takePSSHOut,
+} from "../../parsers/containers/isobmff";
 import createSmoothManifestParser from "../../parsers/manifest/smooth";
 import {
   bytesToStr,
@@ -48,6 +51,7 @@ import {
   ISegmentLoaderObservable,
   ISegmentParserArguments,
   ISegmentParserObservable,
+  ISegmentProtection,
   ITextParserObservable,
   ITransportOptions,
   ITransportPipelines,
@@ -172,8 +176,12 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         return observableOf({ chunkData: null,
                               chunkInfos: null,
                               chunkOffset: 0,
+                              segmentProtection: null,
                               appendWindow: [undefined, undefined] });
       }
+
+      const responseBuffer = data instanceof Uint8Array ? data :
+                                                          new Uint8Array(data);
 
       if (segment.isInit) {
         // smooth init segments are crafted by hand. Their timescale is the one
@@ -181,14 +189,19 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         const initSegmentInfos = { timescale: segment.timescale,
                                    time: 0,
                                    duration: 0 };
+
+        const psshBoxes = takePSSHOut(responseBuffer);
+        let segmentProtection : ISegmentProtection | null = null;
+        if (psshBoxes.length > 0) {
+          segmentProtection = { type: "pssh",
+                                value: psshBoxes };
+        }
         return observableOf({ chunkData: data,
                               chunkInfos: initSegmentInfos,
                               chunkOffset: 0,
+                              segmentProtection,
                               appendWindow: [undefined, undefined] });
       }
-
-      const responseBuffer = data instanceof Uint8Array ? data :
-                                                          new Uint8Array(data);
 
       const { nextSegments, chunkInfos } = extractTimingsInfos(responseBuffer,
                                                                isChunked,
@@ -204,6 +217,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       return observableOf({ chunkData,
                             chunkInfos,
                             chunkOffset: 0,
+                            segmentProtection: null,
                             appendWindow: [undefined, undefined] });
     },
   };
@@ -248,6 +262,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         return observableOf({ chunkData: null,
                               chunkInfos: null,
                               chunkOffset: 0,
+                              segmentProtection: null,
                               appendWindow: [undefined, undefined] });
       }
 
@@ -362,6 +377,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                             chunkInfos,
                             chunkOffset: _sdStart == null ? 0 :
                                                             _sdStart / _sdTimescale,
+                            segmentProtection: null,
                             appendWindow: [undefined, undefined] });
     },
   };
@@ -382,9 +398,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
     },
 
     parser(
-      { response, content } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
+      { response } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
     ) : IImageParserObservable {
-      const { segment } = content;
       const { data, isChunked } = response;
 
       if (isChunked) {
@@ -394,12 +409,9 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       // TODO image Parsing should be more on the sourceBuffer side, no?
       if (data === null || features.imageParser == null) {
         return observableOf({ chunkData: null,
-                              chunkInfos: segment.timescale > 0 ?
-                                { duration: segment.isInit ? 0 : segment.duration,
-                                  time: segment.isInit ? 0 : segment.time,
-                                  timescale: segment.timescale } :
-                                null,
+                              chunkInfos: null,
                               chunkOffset: 0,
+                              segmentProtection: null,
                               appendWindow: [undefined, undefined] });
       }
 
@@ -414,6 +426,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                                             duration: Number.MAX_VALUE,
                                             timescale: bifObject.timescale },
                             chunkOffset: 0,
+                            segmentProtection: null,
                             appendWindow: [undefined, undefined] });
     },
   };
