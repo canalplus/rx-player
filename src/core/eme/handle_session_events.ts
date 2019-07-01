@@ -18,6 +18,7 @@ import {
   concat as observableConcat,
   defer as observableDefer,
   EMPTY,
+  identity,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -103,11 +104,14 @@ function licenseErrorSelector(
 export default function handleSessionEvents(
   session: MediaKeySession|ICustomMediaKeySession,
   keySystem: IKeySystemOption
-) : Observable<IMediaKeySessionHandledEvents|IEMEWarningEvent> {
+) : Observable<IMediaKeySessionHandledEvents | IEMEWarningEvent> {
   log.debug("EME: Handle message events", session);
 
   const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
-  const getLicenseRetryOptions = { totalRetry: 2,
+  const { getLicenseConfig = {} } = keySystem;
+  const getLicenseRetryOptions = { totalRetry: getLicenseConfig.retry != null ?
+                                                 getLicenseConfig.retry :
+                                                 2,
                                    retryDelay: 200,
 
                                    errorSelector: (error: ICustomError|Error) =>
@@ -124,8 +128,8 @@ export default function handleSessionEvents(
       throw new EncryptedMediaError("KEY_ERROR", error.type, true);
     }));
 
-  const keyStatusesChanges : Observable<IMediaKeySessionHandledEvents |
-                                        IEMEWarningEvent> =
+  const keyStatusesChanges : Observable< IMediaKeySessionHandledEvents |
+                                         IEMEWarningEvent > =
     onKeyStatusesChange$(session)
       .pipe(mergeMap((keyStatusesEvent: Event) => {
         log.debug("EME: keystatuseschange event", session, keyStatusesEvent);
@@ -192,9 +196,13 @@ export default function handleSessionEvents(
 
       const getLicense$ = observableDefer(() => {
         const getLicense = keySystem.getLicense(message, messageType);
+        const getLicenseTimeout = getLicenseConfig.timeout != null ?
+          getLicenseConfig.timeout :
+          10 * 1000;
         return (castToObservable(getLicense) as Observable<TypedArray|ArrayBuffer|null>)
           .pipe(
-            timeout(10 * 1000),
+            getLicenseTimeout >= 0 ? timeout(getLicenseTimeout) :
+                                     identity /* noop */,
             catchError((error : unknown) : never => {
               if (error instanceof TimeoutError) {
                 throw new EncryptedMediaError("KEY_LOAD_TIMEOUT",
@@ -221,32 +229,30 @@ export default function handleSessionEvents(
     .pipe(
       concatMap((
         evt : IMediaKeySessionHandledEvents | IEMEWarningEvent
-      ) : Observable<IMediaKeySessionHandledEvents |
-                     IEMEWarningEvent> =>
+      ) : Observable< IMediaKeySessionHandledEvents | IEMEWarningEvent > => {
+        if (evt.type !== "key-message-handled" &&
+            evt.type !== "key-status-change-handled")
         {
-          if (evt.type !== "key-message-handled" &&
-              evt.type !== "key-status-change-handled")
-          {
-            return observableOf(evt);
-          }
+          return observableOf(evt);
+        }
 
-          const license = evt.value.license;
+        const license = evt.value.license;
 
-          if (license == null) {
-            log.info("EME: No license given, skipping session.update");
-            return observableOf(evt);
-          }
+        if (license == null) {
+          log.info("EME: No license given, skipping session.update");
+          return observableOf(evt);
+        }
 
-          log.debug("EME: Update session", evt);
-          return castToObservable(session.update(license)).pipe(
-            catchError((error: Error) => {
-              throw new EncryptedMediaError("KEY_UPDATE_ERROR", error.toString(), true);
-            }),
-            mapTo({ type: "session-updated" as const,
-                    value: { session, license }, }),
-            startWith(evt)
-          );
-        }));
+        log.debug("EME: Update session", evt);
+        return castToObservable(session.update(license)).pipe(
+          catchError((error: Error) => {
+            throw new EncryptedMediaError("KEY_UPDATE_ERROR", error.toString(), true);
+          }),
+          mapTo({ type: "session-updated" as const,
+                  value: { session, license }, }),
+          startWith(evt)
+        );
+      }));
 
   const sessionEvents : Observable<IMediaKeySessionHandledEvents |
                                    IEMEWarningEvent> =
