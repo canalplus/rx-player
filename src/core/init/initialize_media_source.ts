@@ -45,6 +45,7 @@ import ABRManager, {
   IABRManagerArguments,
 } from "../abr";
 import {
+  IContentProtection,
   IEMEManagerEvent,
   IKeySystemOption,
 } from "../eme";
@@ -179,12 +180,15 @@ export default function InitializeOnMediaSource(
     subscribeOn(asapScheduler), // to launch subscriptions only when all
     share());                 // Observables here are linked
 
+  // Send content protection data to EMEManager
+  const protectedSegments$ = new Subject<IContentProtection>();
+
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
   const emeManager$ = openMediaSource$.pipe(
-    mergeMap(() => createEMEManager(mediaElement, keySystems)),
+    mergeMap(() => createEMEManager(mediaElement, keySystems, protectedSegments$)),
     subscribeOn(asapScheduler), // to launch subscriptions only when all
-    share());                 // Observables here are linked
+    share());                   // Observables here are linked
 
   // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.
@@ -265,6 +269,10 @@ export default function InitializeOnMediaSource(
                   case "needs-media-source-reload":
                     reloadMediaSource$.next(evt.value);
                     break;
+                  case "protected-segment":
+                    protectedSegments$.next({ type: "pssh",
+                                              data: evt.value.data,
+                                              content: evt.value.content });
                 }
               }));
 
