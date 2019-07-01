@@ -57,27 +57,36 @@ export interface ISessionUpdatedEvent { type: "session-updated";
                                                           ICustomMediaKeySession;
                                                  license: ILicense|null; }; }
 
-export interface IBlacklistKeyEvent { type : "blacklist-key";
-                                      value: ArrayBuffer[]; }
+export interface IBlacklistKeysEvent { type : "blacklist-keys";
+                                       value: ArrayBuffer[]; }
+
+export interface IBlacklistSessionEvent { type: "blacklist-session";
+                                          value: null; }
 
 export interface IContent { adaptation : Adaptation;
                             manifest : Manifest;
                             period : Period;
                             representation : Representation; }
 
-export interface IContentProtection { type : "pssh";
-                                      data : Uint8Array[];
-                                      content : IContent; }
-
 export type IMediaKeySessionHandledEvents = IKeyMessageHandledEvent |
                                             IKeyStatusChangeHandledEvent |
-                                            IBlacklistKeyEvent |
-                                            ISessionUpdatedEvent;
+                                            ISessionUpdatedEvent |
+                                            IBlacklistSessionEvent |
+                                            IBlacklistKeysEvent;
+
+export interface IBlacklistContentEvent { type: "blacklist-content";
+                                          value: IContent | null; }
 
 export type IEMEManagerEvent = IEMEWarningEvent |
                                ICreatedMediaKeysEvent |
                                IAttachedMediaKeysEvent |
-                               IMediaKeySessionHandledEvents;
+                               IMediaKeySessionHandledEvents |
+                               IBlacklistKeysEvent |
+                               IBlacklistContentEvent;
+
+export interface IContentProtection { type : "pssh";
+                                      data : Uint8Array[];
+                                      content : IContent; }
 
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {

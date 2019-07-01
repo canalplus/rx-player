@@ -35,6 +35,7 @@ import {
   events,
   generateKeyRequest,
   getInitData,
+  ICustomMediaKeySession,
 } from "../../compat/";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
@@ -64,6 +65,8 @@ const { onEncrypted$ } = events;
  * @param {HTMLMediaElement} mediaElement - The MediaElement which will be
  * associated to a MediaKeys object
  * @param {Array.<Object>} keySystems - key system configuration
+ * @param {Observable} contentProtections$ - Observable emitting external
+ * initialization data.
  * @returns {Observable}
  */
 export default function EMEManager(
@@ -76,6 +79,12 @@ export default function EMEManager(
    // Keep track of all initialization data handled here.
    // This is to avoid handling multiple times the same encrypted events.
   const handledInitData = new InitDataStore();
+
+  // Keep track of the blacklisted sessions.
+  // If a new event ask for a MediaKeySession which has already been blacklisted,
+  // we can directly send the corresponding event.
+  const blacklistedSessions = new WeakMap< MediaKeySession | ICustomMediaKeySession,
+                                           boolean >();
 
   // store the mediaKeys when ready
   const mediaKeysInfos$ = initMediaKeys(mediaElement, keySystemsConfigs)
@@ -157,6 +166,11 @@ export default function EMEManager(
               keySystemOptions,
               sessionStorage } = sessionInfosEvt.value;
 
+      if (blacklistedSessions.has(mediaKeySession)) {
+        return observableOf({ type: "blacklist-content" as const,
+                              value: null });
+      }
+
       const generateRequest$ = sessionInfosEvt.type !== "created-session" ?
           EMPTY :
           generateKeyRequest(mediaKeySession, initData, initDataType).pipe(
@@ -172,7 +186,15 @@ export default function EMEManager(
             }),
             ignoreElements());
 
-      return observableMerge(SessionEventsListener(mediaKeySession, keySystemOptions),
+      return observableMerge(SessionEventsListener(mediaKeySession, keySystemOptions)
+                               .pipe(map(evt => {
+                                 if (evt.type !== "blacklist-session") {
+                                   return evt;
+                                 }
+                                 blacklistedSessions.set(mediaKeySession, true);
+                                 return { type: "blacklist-content" as const,
+                                          value: null };
+                               })),
                              generateRequest$);
     }));
 

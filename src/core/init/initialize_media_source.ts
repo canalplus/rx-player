@@ -201,8 +201,15 @@ export default function InitializeOnMediaSource(
   ]).pipe(mergeMap(([ initialMediaSource, { manifest, sendingTime } ]) => {
 
     const blacklistUpdates$ = emeManager$.pipe(tap((evt) => {
-      if (evt.type === "blacklist-key") {
+      if (evt.type === "blacklist-keys") {
         manifest.markUndecipherableKIDs(evt.value);
+      } else if (evt.type === "blacklist-content") {
+        if (evt.value == null) {
+          log.error("Init: blacklisted content but the content is not known");
+        } else {
+          manifest.markUndecipherableRepresentation(evt.value);
+          return;
+        }
       }
     }));
 

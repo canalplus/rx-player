@@ -50,7 +50,7 @@ import retryObsWithBackoff from "../../utils/rx-retry_with_backoff";
 import tryCatch from "../../utils/rx-try_catch";
 import checkKeyStatuses from "./check_key_statuses";
 import {
-  IBlacklistKeyEvent,
+  IBlacklistKeysEvent,
   IEMEWarningEvent,
   IKeySystemOption,
   IMediaKeySessionHandledEvents,
@@ -95,14 +95,14 @@ export default function SessionEventsListener(
 ) : Observable<IMediaKeySessionHandledEvents | IEMEWarningEvent> {
   log.debug("EME: Binding session events", session);
 
-  function getKeyStatusesEvents() : Observable<IEMEWarningEvent | IBlacklistKeyEvent> {
+  function getKeyStatusesEvents() : Observable<IEMEWarningEvent | IBlacklistKeysEvent> {
     const [warnings, blacklistedKeyIDs] = checkKeyStatuses(session, keySystem);
 
     const warnings$ = warnings.length > 0 ? observableOf(...warnings) :
                                             EMPTY;
 
     const blackListUpdate$ = blacklistedKeyIDs.length > 0 ?
-      observableOf({ type: "blacklist-key" as const,
+      observableOf({ type: "blacklist-keys" as const,
                      value: blacklistedKeyIDs }) :
       EMPTY;
 
@@ -194,11 +194,11 @@ export default function SessionEventsListener(
               if (fallbackOnLastTry === true) {
                 return observableOf({ type: "warning" as const,
                                       value: formattedError },
-                                    { type: "blacklist-key" as const,
-                                      value: [] });
+                                    { type: "blacklist-session" as const,
+                                      value: null });
               }
             }
-            throw err;
+            throw formattedError;
           })
         );
     }));
