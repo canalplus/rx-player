@@ -98,8 +98,8 @@ export default function SessionEventsListener(
   function getKeyStatusesEvents() : Observable<IEMEWarningEvent | IBlacklistKeyEvent> {
     const [warnings, blacklistedKeyIDs] = checkKeyStatuses(session, keySystem);
 
-    const warnings$ = warnings.length ? observableOf(...warnings) :
-                                        EMPTY;
+    const warnings$ = warnings.length > 0 ? observableOf(...warnings) :
+                                            EMPTY;
 
     const blackListUpdate$ = blacklistedKeyIDs.length > 0 ?
       observableOf({ type: "blacklist-key" as const,

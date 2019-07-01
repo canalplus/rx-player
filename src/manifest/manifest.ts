@@ -407,7 +407,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       }
     }
 
-    if (updates.length) {
+    if (updates.length > 0) {
       this.trigger("blacklistUpdate", updates);
     }
   }
