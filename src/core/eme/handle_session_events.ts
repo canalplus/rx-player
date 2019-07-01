@@ -18,6 +18,7 @@ import {
   concat as observableConcat,
   defer as observableDefer,
   EMPTY,
+  identity,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -200,7 +201,8 @@ export default function handleSessionEvents(
           10 * 1000;
         return (castToObservable(getLicense) as Observable<TypedArray|ArrayBuffer|null>)
           .pipe(
-            timeout(getLicenseTimeout),
+            getLicenseTimeout >= 0 ? timeout(getLicenseTimeout) :
+                                     identity /* noop */,
             catchError((error : unknown) : never => {
               if (error instanceof TimeoutError) {
                 throw new EncryptedMediaError("KEY_LOAD_TIMEOUT",
