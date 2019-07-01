@@ -19,7 +19,7 @@ import isNonEmptyString from "../../../utils/is_non_empty_string";
 import SimpleSet from "../../../utils/simple_set";
 
 /**
- * Memorize initialization data with straightforward methods.
+ * Memorize initialization data.
  * @class InitDataStore
  */
 export default class InitDataStore {
