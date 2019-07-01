@@ -48,7 +48,6 @@ import castToObservable from "../../utils/cast_to_observable";
 import retryObsWithBackoff from "../../utils/rx-retry_with_backoff";
 import tryCatch from "../../utils/rx-try_catch";
 import {
-  IContent,
   IEMEWarningEvent,
   IKeySystemOption,
   IMediaKeySessionHandledEvents,
@@ -94,13 +93,11 @@ function licenseErrorSelector(error: unknown) : ICustomError {
  * blob and map them to licenses using the getLicense method from
  * selected keySystem.
  * @param {MediaKeySession} session - The MediaKeySession concerned.
- * @param {Object|null} content - The corresponding content.
  * @param {Object} keySystem - The key system configuration.
  * @returns {Observable}
  */
 export default function handleSessionEvents(
   session: MediaKeySession|ICustomMediaKeySession,
-  _content : IContent | null,
   keySystem: IKeySystemOption
 ) : Observable<IMediaKeySessionHandledEvents | IEMEWarningEvent> {
   log.debug("EME: Handle message events", session);
@@ -187,7 +184,7 @@ export default function handleSessionEvents(
                                             EMPTY;
 
         const blackListUpdate$ = blacklistedKeyIDs.length > 0 ?
-          observableOf({ type: "blacklist-key" as const,
+          observableOf({ type: "blacklist-keys" as const,
                          value: blacklistedKeyIDs }) :
           EMPTY;
 
@@ -282,12 +279,13 @@ export default function handleSessionEvents(
 
             const { fallbackOnLastTry } = err as IParsedGetLicenseError;
             if (fallbackOnLastTry !== true) {
-              throw err;
+              throw error;
             }
+
             return observableOf({ type: "warning" as const,
                                   value: error },
-                                { type: "blacklist-key" as const,
-                                  value: [] });
+                                { type: "blacklist-session" as const,
+                                  value: null });
           })
         );
     }));

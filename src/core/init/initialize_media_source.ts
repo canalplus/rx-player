@@ -301,15 +301,25 @@ export default function InitializeOnMediaSource({
     ).pipe(mergeMap(refreshManifest));
 
     const blacklistUpdates$ = emeManager$.pipe(tap((evt) => {
-      if (evt.type === "blacklist-key") {
-        manifest.blacklistKeyIDs(evt.value);
+      if (evt.type === "blacklist-keys") {
+        manifest.markUndecipherableKIDs(evt.value);
+        reloadMediaSource$.next();
+        return;
+      } else if (evt.type === "blacklist-content") {
+        if (evt.value == null) {
+          log.error("Init: blacklisted content but the content is not known");
+        } else {
+          manifest.markUndecipherableRepresentation(evt.value);
+          reloadMediaSource$.next();
+          return;
+        }
       }
     }));
 
-    return observableMerge(loadOnMediaSource$,
+    return observableMerge(blacklistUpdates$,
+                           loadOnMediaSource$,
                            handleReloads$,
-                           manifestAutoRefresh$,
-                           blacklistUpdates$);
+                           manifestAutoRefresh$);
   }));
 
   return observableMerge(loadContent$,

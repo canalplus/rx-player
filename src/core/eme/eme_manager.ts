@@ -36,6 +36,7 @@ import {
   events,
   generateKeyRequest,
   getInitData,
+  ICustomMediaKeySession,
   shouldUnsetMediaKeys,
 } from "../../compat/";
 import { EncryptedMediaError } from "../../errors";
@@ -88,8 +89,11 @@ function clearEMESession(mediaElement : HTMLMediaElement) : Observable<never> {
  *
  * The EME handler can be given one or multiple systems and will choose the
  * appropriate one supported by the user's browser.
- * @param {HTMLMediaElement} mediaElement
- * @param {Array.<Object>} keySystems
+ * @param {HTMLMediaElement} mediaElement - The MediaElement which will be
+ * associated to a MediaKeys object
+ * @param {Array.<Object>} keySystems - key system configuration
+ * @param {Observable} contentProtections$ - Observable emitting external
+ * initialization data.
  * @returns {Observable}
  */
 export default function EMEManager(
@@ -100,6 +104,12 @@ export default function EMEManager(
    // Keep track of all initialization data handled here.
    // This is to avoid handling multiple times the same encrypted events.
   const handledInitData = new InitDataStore();
+
+  // Keep track of the blacklisted sessions.
+  // If a new event ask for a MediaKeySession which has already been blacklisted,
+  // we can directly send the corresponding event.
+  const blacklistedSessions = new WeakMap< MediaKeySession | ICustomMediaKeySession,
+                                           boolean >();
 
   // store the mediaKeys when ready
   const mediaKeysInfos$ = initMediaKeys(mediaElement,
@@ -178,8 +188,21 @@ export default function EMEManager(
               keySystemOptions,
               sessionStorage } = sessionInfosEvt.value;
 
+      if (blacklistedSessions.has(mediaKeySession)) {
+        return observableOf({ type: "blacklist-content" as const,
+                              value: content });
+      }
+
       return observableMerge(
-        handleSessionEvents(mediaKeySession, content, keySystemOptions),
+        handleSessionEvents(mediaKeySession, keySystemOptions)
+          .pipe(map(evt => {
+            if (evt.type !== "blacklist-session") {
+              return evt;
+            }
+            blacklistedSessions.set(mediaKeySession, true);
+            return { type: "blacklist-content" as const,
+                     value: content };
+          })),
 
         // only perform generate request on new sessions
         sessionInfosEvt.type !== "created-session" ?

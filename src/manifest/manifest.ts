@@ -88,11 +88,9 @@ interface IManifestParsingOptions {
 
 export interface IManifestEvents {
   manifestUpdate : null;
-  blacklistUpdate : Array<{ // new blacklisted elements:
-    period : Period;
-    adaptation : Adaptation;
-    representation : Representation;
-  }>;
+  ["decipherability-update"] : Array<{ period : Period;
+                                       adaptation : Adaptation;
+                                       representation : Representation; }>;
 }
 
 /**
@@ -234,6 +232,18 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     if (supplementaryTextTracks.length) {
       this.addSupplementaryTextAdaptations(supplementaryTextTracks);
     }
+  }
+
+  /**
+   * Returns Period corresponding to the given ID.
+   * Returns undefined if there is none.
+   * @param {string} id
+   * @returns {Period|undefined}
+   */
+  getPeriod(id : string) : Period|undefined {
+    return arrayFind(this.periods, (period) => {
+      return id === period.id;
+    });
   }
 
   /**
@@ -476,8 +486,41 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     }
 
     if (updates.length) {
-      this.trigger("blacklistUpdate", updates);
+      this.trigger("decipherability-update", updates);
     }
+  }
+
+  /**
+   * Look in the Manifest for the given Representations.
+   * and mark it as being impossible to decrypt.
+   * Then trigger a "blacklist-update" event to notify everyone of the changes
+   * performed.
+   * @param {Object} content
+   */
+  public markUndecipherableRepresentation(
+    content : { period : Period;
+                adaptation : Adaptation;
+                representation : Representation; }
+  ) : void {
+    const { period, adaptation, representation } = content;
+    const _period = this.getPeriod(period.id);
+    if (_period == null) {
+      return;
+    }
+
+    const _adaptation = _period.getAdaptation(adaptation.id);
+    if (_adaptation == null) {
+      return;
+    }
+
+    const _representation = _adaptation.getRepresentation(representation.id);
+    if (_representation == null || _representation.canBeDecrypted !== false) {
+      return;
+    }
+    _representation.canBeDecrypted = false;
+    this.trigger("decipherability-update", [{ period: _period,
+                                              adaptation: _adaptation,
+                                              representation: _representation }]);
   }
 
   /**
