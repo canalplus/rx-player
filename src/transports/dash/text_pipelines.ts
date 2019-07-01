@@ -98,6 +98,7 @@ function TextTrackParser({ response,
 
   if (response.responseData == null) {
     return observableOf({ segmentData: null,
+                          segmentProtection: null,
                           segmentInfos: segment.timescale > 0 ?
                             { duration: segment.isInit ? 0 :
                                                          segment.duration,
@@ -219,6 +220,7 @@ function TextTrackParser({ response,
     representation.index._addSegments(nextSegments, segmentInfos);
   }
   return observableOf({ segmentData,
+                        segmentProtection: null,
                         segmentInfos,
                         segmentOffset: segment.timestampOffset || 0 });
 }

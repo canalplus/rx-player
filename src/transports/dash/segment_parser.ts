@@ -20,6 +20,7 @@ import {
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
+  takePSSHOut,
 } from "../../parsers/containers/isobmff";
 import {
   getSegmentsFromCues,
@@ -28,6 +29,7 @@ import {
 import {
   ISegmentParserArguments,
   ISegmentParserObservable,
+  ISegmentProtection,
 } from "../types";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 
@@ -42,6 +44,7 @@ export default function parser({ segment,
   if (responseData == null) {
     return observableOf({ segmentData: null,
                           segmentInfos: null,
+                          segmentProtection: null,
                           segmentOffset: 0 });
   }
   const segmentData : Uint8Array = responseData instanceof Uint8Array ?
@@ -61,7 +64,10 @@ export default function parser({ segment,
         timescale: segment.timescale } :
       getISOBMFFTimingInfos(segment, segmentData, nextSegments, init);
     const segmentOffset = segment.timestampOffset || 0;
-    return observableOf({ segmentData, segmentInfos, segmentOffset });
+    return observableOf({ segmentData,
+                          segmentProtection: null,
+                          segmentInfos,
+                          segmentOffset });
   }
 
   if (nextSegments) {
@@ -69,7 +75,17 @@ export default function parser({ segment,
   }
   const timescale = isWEBM ?  getTimeCodeScale(segmentData, 0) :
                               getMDHDTimescale(segmentData);
+
+  let segmentProtection : ISegmentProtection | null = null;
+  if (!isWEBM) {
+    const psshBoxes = takePSSHOut(segmentData);
+    if (psshBoxes.length > 0) {
+      segmentProtection = { type: "pssh",
+                            value: psshBoxes };
+    }
+  }
   return observableOf({ segmentData,
+                        segmentProtection,
                         segmentInfos: timescale && timescale > 0 ?
                           { time: -1, duration: 0, timescale } :
                           null,

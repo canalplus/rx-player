@@ -25,7 +25,10 @@ import Manifest, {
   Adaptation,
   Representation,
 } from "../../manifest";
-import { getMDAT } from "../../parsers/containers/isobmff";
+import {
+  getMDAT,
+  takePSSHOut,
+} from "../../parsers/containers/isobmff";
 import createSmoothManifestParser from "../../parsers/manifest/smooth";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
@@ -42,6 +45,7 @@ import {
   ISegmentLoaderObservable,
   ISegmentParserArguments,
   ISegmentParserObservable,
+  ISegmentProtection,
   ISegmentTimingInfos,
   ITextParserObservable,
   ITransportOptions,
@@ -173,9 +177,14 @@ export default function(
       const { responseData } = response;
       if (responseData == null) {
         return observableOf({ segmentData: null,
+                              segmentProtection: null,
                               segmentInfos: null,
                               segmentOffset: 0 });
       }
+
+      const responseBuffer = responseData instanceof Uint8Array ?
+        responseData :
+        new Uint8Array(responseData);
 
       if (segment.isInit) {
         // smooth init segments are crafted by hand. Their timescale is the one
@@ -183,13 +192,18 @@ export default function(
         const initSegmentInfos = { timescale: segment.timescale,
                                    time: -1,
                                    duration: 0 };
-        return observableOf({ segmentData: responseData,
+
+        const psshBoxes = takePSSHOut(responseBuffer);
+        let segmentProtection : ISegmentProtection | null = null;
+        if (psshBoxes.length > 0) {
+          segmentProtection = { type: "pssh",
+                                value: psshBoxes };
+        }
+        return observableOf({ segmentData: responseBuffer,
+                              segmentProtection,
                               segmentInfos: initSegmentInfos,
                               segmentOffset: 0 });
       }
-      const responseBuffer = responseData instanceof Uint8Array ?
-        responseData :
-        new Uint8Array(responseData);
 
       const { nextSegments, segmentInfos } = extractTimingsInfos(responseBuffer,
                                                                  segment,
@@ -200,7 +214,10 @@ export default function(
       if (nextSegments) {
         addNextSegments(adaptation, nextSegments, segmentInfos);
       }
-      return observableOf({ segmentData, segmentInfos, segmentOffset: 0 });
+      return observableOf({ segmentData,
+                            segmentProtection: null,
+                            segmentInfos,
+                            segmentOffset: 0 });
     },
   };
 
@@ -246,6 +263,7 @@ export default function(
 
       if (responseData === null) {
         return observableOf({ segmentData: null,
+                              segmentProtection: null,
                               segmentInfos: segment.timescale > 0 ?
                                 { duration: segment.isInit ? 0 :
                                                              segment.duration,
@@ -352,6 +370,7 @@ export default function(
                                            timescale: _sdTimescale,
                                            start: _sdStart,
                                            end: _sdEnd },
+                            segmentProtection: null,
                             segmentInfos,
                             segmentOffset: _sdStart / _sdTimescale });
     },
@@ -380,6 +399,7 @@ export default function(
       // TODO image Parsing should be more on the sourceBuffer side, no?
       if (responseData === null || features.imageParser == null) {
         return observableOf({ segmentData: null,
+                              segmentProtection: null,
                               segmentInfos: segment.timescale > 0 ?
                                 { duration: segment.isInit ? 0 :
                                                              segment.duration,
@@ -400,6 +420,7 @@ export default function(
                             segmentInfos: { time: 0,
                                             duration: Number.MAX_VALUE,
                                             timescale: bifObject.timescale },
+                            segmentProtection: null,
                             segmentOffset: 0 });
     },
   };
