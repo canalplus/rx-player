@@ -135,7 +135,9 @@ This property is an array of objects with the following properties (only
          `getLicense` is retried on error or on timeout before we fail on a
          `KEY_LOAD_ERROR`
        - `timeout` (`Number`|`undefined`) (default: `10000`): timeout, in ms,
-         after which we consider the `getLicense` callback to have failed.  
+         after which we consider the `getLicense` callback to have failed.
+
+         Set it to `-1` to disable any timeout.
 
   - ``serverCertificate`` (``BufferSource|undefined``): Eventual certificate
     used to encrypt messages to the license server.
