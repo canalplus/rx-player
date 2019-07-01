@@ -16,7 +16,7 @@
 
 import { Subject } from "rxjs";
 import { ICustomError } from "../../errors";
-import {
+import Manifest, {
   Adaptation,
   ISegment,
   Period,
@@ -73,10 +73,19 @@ export interface IBufferStateActive {
 // State emitted when the buffer has been filled to the end
 export interface IBufferStateFull {
   type : "full-buffer";
-  value : {
-    bufferType : IBufferType; // The type of the Representation
-  };
+
+  // The type of the Representation
+  value : { bufferType : IBufferType };
 }
+
+export interface IProtectedSegmentEvent {
+  type : "protected-segment";
+  value : { type : "pssh";
+            data : Uint8Array[];
+            content: { adaptation : Adaptation;
+                       manifest : Manifest;
+                       period : Period;
+                       representation : Representation; }; }; }
 
 // State emitted when the buffer waits
 export type IRepresentationBufferStateEvent = IBufferNeededActions |
@@ -86,6 +95,7 @@ export type IRepresentationBufferStateEvent = IBufferNeededActions |
 
 // Events emitted by the Buffer
 export type IRepresentationBufferEvent<T> = IBufferEventAddedSegment<T> |
+                                            IProtectedSegmentEvent |
                                             IRepresentationBufferStateEvent |
                                             IBufferWarningEvent;
 
