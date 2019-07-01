@@ -48,6 +48,7 @@ import castToObservable from "../../utils/cast_to_observable";
 import retryObsWithBackoff from "../../utils/rx-retry_with_backoff";
 import tryCatch from "../../utils/rx-try_catch";
 import {
+  IContent,
   IEMEWarningEvent,
   IKeySystemOption,
   IMediaKeySessionHandledEvents,
@@ -92,12 +93,14 @@ function licenseErrorSelector(error: unknown) : ICustomError {
  * listen to "message" events from session containing a challenge
  * blob and map them to licenses using the getLicense method from
  * selected keySystem.
- * @param {MediaKeySession} session
- * @param {Object} keySystem
+ * @param {MediaKeySession} session - The MediaKeySession concerned.
+ * @param {Object|null} content - The corresponding content.
+ * @param {Object} keySystem - The key system configuration.
  * @returns {Observable}
  */
 export default function handleSessionEvents(
   session: MediaKeySession|ICustomMediaKeySession,
+  _content : IContent | null,
   keySystem: IKeySystemOption
 ) : Observable<IMediaKeySessionHandledEvents | IEMEWarningEvent> {
   log.debug("EME: Handle message events", session);

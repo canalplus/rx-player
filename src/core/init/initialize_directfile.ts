@@ -21,6 +21,7 @@
 
 import {
   asapScheduler,
+  EMPTY,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -45,7 +46,9 @@ import {
   IEMEManagerEvent,
   IKeySystemOption,
 } from "../eme";
-import createEMEManager, { IEMEDisabledEvent } from "./create_eme_manager";
+import createEMEManager, {
+  IEMEDisabledEvent,
+} from "./create_eme_manager";
 import EVENTS from "./events_generators";
 import { IInitialTimeOptions } from "./get_initial_time";
 import getStalledEvents from "./get_stalled_events";
@@ -153,7 +156,7 @@ export default function initializeDirectfileContent({
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
   const emeManager$ = linkURL$.pipe(
-    mergeMap(() => createEMEManager(mediaElement, keySystems)),
+    mergeMap(() => createEMEManager(mediaElement, keySystems, EMPTY)),
     observeOn(asapScheduler), // multiple Observables here are based on this one
     share()
   );

@@ -28,6 +28,7 @@ import { EncryptedMediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
 import {
+  IContentProtection,
   IEMEManagerEvent,
   IKeySystemOption,
 } from "../eme";
@@ -45,7 +46,8 @@ export interface IEMEDisabledEvent { type: "eme-disabled"; }
  */
 export default function createEMEManager(
   mediaElement : HTMLMediaElement,
-  keySystems : IKeySystemOption[]
+  keySystems : IKeySystemOption[],
+  contentProtections$ : Observable<IContentProtection>
 ) : Observable<IEMEManagerEvent|IEMEDisabledEvent> {
   if (features.emeManager == null) {
     return observableMerge(
@@ -78,7 +80,7 @@ export default function createEMEManager(
   }
 
   log.debug("Init: Creating EMEManager");
-  return features.emeManager(mediaElement, keySystems);
+  return features.emeManager(mediaElement, keySystems, contentProtections$);
 }
 
 export { IEMEManagerEvent };

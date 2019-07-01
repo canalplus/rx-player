@@ -35,18 +35,23 @@ import {
 import {
   events,
   generateKeyRequest,
+  getInitData,
   shouldUnsetMediaKeys,
 } from "../../compat/";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
+import { concat } from "../../utils/byte_parsing";
 import noop from "../../utils/noop";
 import disposeMediaKeys from "./dispose_media_keys";
-import getSession from "./get_session";
+import getSession, {
+  IEncryptedEvent,
+} from "./get_session";
 import handleSessionEvents from "./handle_session_events";
 import initMediaKeys from "./init_media_keys";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 import setServerCertificate from "./set_server_certificate";
 import {
+  IContentProtection,
   IEMEManagerEvent,
   IKeySystemOption,
 } from "./types";
@@ -89,7 +94,8 @@ function clearEMESession(mediaElement : HTMLMediaElement) : Observable<never> {
  */
 export default function EMEManager(
   mediaElement : HTMLMediaElement,
-  keySystemsConfigs: IKeySystemOption[]
+  keySystemsConfigs: IKeySystemOption[],
+  contentProtections$ : Observable<IContentProtection>
 ) : Observable<IEMEManagerEvent> {
    // Keep track of all initialization data handled here.
    // This is to avoid handling multiple times the same encrypted events.
@@ -105,24 +111,41 @@ export default function EMEManager(
     return evt.type === "attached-media-keys";
   }));
 
-  const encryptedEvents$ = onEncrypted$(mediaElement).pipe(tap((encryptedEvent) => {
-    log.debug("EME: encrypted event received", encryptedEvent);
-  }));
+  const externalEvents$ = contentProtections$
+    .pipe(map((evt) : IEncryptedEvent => ({ type: "cenc",
+                                            data: concat(...evt.data),
+                                            content: evt.content })));
 
-  const bindSession$ = observableCombineLatest([encryptedEvents$,
+  const encryptedEvents$ = onEncrypted$(mediaElement).pipe(
+    tap((encryptedEvent) => {
+      log.debug("EME: encrypted event received", encryptedEvent);
+    }),
+    map((evt) : IEncryptedEvent => {
+      const { initData, initDataType } = getInitData(evt);
+      return { type: initDataType,
+               data: initData,
+               content: null };
+    })
+  );
+
+  const protectedEvents$ : Observable<IEncryptedEvent> =
+    observableMerge(externalEvents$, encryptedEvents$);
+
+  const bindSession$ = observableCombineLatest([protectedEvents$,
                                                 attachedMediaKeys$]
   ).pipe(
     /* Attach server certificate and create/reuse MediaKeySession */
-    mergeMap(([encryptedEvent, mediaKeysEvent], i) => {
+    mergeMap(([protectedEvent, mediaKeysEvent], i) => {
       const mediaKeysInfos = mediaKeysEvent.value;
       const { keySystemOptions, mediaKeys } = mediaKeysInfos;
       const { serverCertificate } = keySystemOptions;
 
-      const session$ = getSession(encryptedEvent, handledInitData, mediaKeysInfos)
+      const session$ = getSession(protectedEvent, handledInitData, mediaKeysInfos)
         .pipe(map((evt) => ({
           type: evt.type,
           value: { initData: evt.value.initData,
                    initDataType: evt.value.initDataType,
+                   content: evt.value.content,
                    mediaKeySession: evt.value.mediaKeySession,
                    sessionType: evt.value.sessionType,
                    keySystemOptions: mediaKeysInfos.keySystemOptions,
@@ -149,13 +172,14 @@ export default function EMEManager(
 
       const { initData,
               initDataType,
+              content,
               mediaKeySession,
               sessionType,
               keySystemOptions,
               sessionStorage } = sessionInfosEvt.value;
 
       return observableMerge(
-        handleSessionEvents(mediaKeySession, keySystemOptions),
+        handleSessionEvents(mediaKeySession, content, keySystemOptions),
 
         // only perform generate request on new sessions
         sessionInfosEvt.type !== "created-session" ?

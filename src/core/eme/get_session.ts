@@ -27,16 +27,22 @@ import {
   map,
   mergeMap,
 } from "rxjs/operators";
-import {
-  getInitData,
-  ICustomMediaKeySession,
-} from "../../compat";
+import { ICustomMediaKeySession } from "../../compat";
 import config from "../../config";
 import log from "../../log";
 import createSession from "./create_session";
-import { IMediaKeysInfos } from "./types";
+import {
+  IContent,
+  IMediaKeysInfos,
+} from "./types";
 import InitDataStore from "./utils/init_data_store";
 import isSessionUsable from "./utils/is_session_usable";
+
+export interface IEncryptedEvent {
+  type : string | undefined; // initialization data type
+  data : Uint8Array; // initialization data
+  content : IContent | null; // content linked to that data, if known
+}
 
 export interface IHandledEncryptedEvent {
   type : "created-session" |
@@ -45,6 +51,7 @@ export interface IHandledEncryptedEvent {
   value : { mediaKeySession : MediaKeySession |
                               ICustomMediaKeySession;
             sessionType : MediaKeySessionType;
+            content : IContent | null;
             initData : Uint8Array; // assiociated initialization data
             initDataType : string | // type of the associated initialization data
                            undefined; }; }
@@ -61,14 +68,12 @@ const { EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS: MAX_SESSIONS } = config;
  * @returns {Observable}
  */
 export default function getSession(
-  encryptedEvent : MediaEncryptedEvent,
+  encryptedEvent : IEncryptedEvent,
   handledInitData : InitDataStore,
   mediaKeysInfos : IMediaKeysInfos
 ) : Observable<IHandledEncryptedEvent> {
-  return observableDefer(() => {
-    const { initData,
-            initDataType } = getInitData(encryptedEvent);
-
+  return observableDefer(() : Observable<IHandledEncryptedEvent> => {
+    const { type: initDataType, data: initData, content } = encryptedEvent;
     if (handledInitData.has(initData, initDataType)) {
       log.debug("EME: Init data already received. Skipping it.");
       return EMPTY; // Already handled, quit
@@ -86,6 +91,7 @@ export default function getSession(
         return observableOf({ type: "loaded-open-session" as "loaded-open-session",
                               value: { mediaKeySession: previousLoadedSession,
                                        sessionType: entry.sessionType,
+                                       content,
                                        initData,
                                        initDataType } });
       } else if (mediaKeysInfos.sessionStorage) {
@@ -114,6 +120,7 @@ export default function getSession(
                                 value: {
                                   mediaKeySession: evt.value.mediaKeySession,
                                   sessionType: evt.value.sessionType,
+                                  content,
                                   initData,
                                   initDataType, } })))
       );
