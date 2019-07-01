@@ -71,6 +71,7 @@ import {
   IBufferNeededActions,
   IBufferStateActive,
   IBufferStateFull,
+  IProtectedSegmentEvent,
   IRepresentationBufferEvent,
 } from "../types";
 import getNeededSegments from "./get_needed_segments";
@@ -116,12 +117,18 @@ interface ISegmentInfos {
   timescale : number;
 }
 
+export interface ISegmentProtection { // Describes DRM information
+  type : "pssh";
+  value : Uint8Array[];
+}
+
 // Parsed Segment information
 interface ISegmentObject<T> {
   chunkData : T|null; // What will be pushed to the SourceBuffer
   chunkInfos : ISegmentInfos|null; // information about the segment's start
                                    // and duration
   chunkOffset : number; // Offset to add to the segment at decode time
+  segmentProtection : ISegmentProtection | null; // DRM information
   appendWindow : [ number | undefined, number | undefined ];
 }
 
@@ -185,6 +192,7 @@ export default function RepresentationBuffer<T>({
     initSegment == null ? { chunkData: null,
                             chunkInfos: null,
                             chunkOffset: 0,
+                            segmentProtection: null,
                             appendWindow: [undefined, undefined] } :
                           null;
 
@@ -450,6 +458,7 @@ export default function RepresentationBuffer<T>({
     evt : ISegmentLoadingEvent<T>
   ) : Observable<IBufferEventAddedSegment<T> |
                  ISegmentFetcherWarning |
+                 IProtectedSegmentEvent |
                  IBufferManifestMightBeOutOfSync>
   {
     switch (evt.type) {
@@ -499,13 +508,19 @@ export default function RepresentationBuffer<T>({
     { chunkInfos,
       chunkData,
       chunkOffset,
+      segmentProtection,
       appendWindow } : ISegmentObject<T>
-  ) : Observable<IBufferEventAddedSegment<T>> {
+  ) : Observable< IBufferEventAddedSegment<T> | IProtectedSegmentEvent > {
     return observableDefer(() => {
+      const protectedEvent$ = segmentProtection == null ?
+        EMPTY :
+        observableOf(EVENTS.protectedSegment(segmentProtection.type,
+                                             segmentProtection.value,
+                                             content));
       if (chunkData == null) {
         // no segmentData to add here (for example, a text init segment)
         // just complete directly without appending anything
-        return EMPTY;
+        return protectedEvent$;
       }
 
       const data = { initSegment: initSegmentObject != null ?
@@ -530,11 +545,13 @@ export default function RepresentationBuffer<T>({
                                           content);
       const append$ = pushDataToSourceBufferWithRetries(clock$,
                                                         queuedSourceBuffer,
-                                                        { data, inventoryInfos });
-      return append$.pipe(map(() => {
-        const buffered = queuedSourceBuffer.getBufferedRanges();
-        return EVENTS.addedSegment(content, segment, buffered, chunkData);
-      }));
+                                                        { data, inventoryInfos })
+        .pipe(map(() => {
+          const buffered = queuedSourceBuffer.getBufferedRanges();
+          return EVENTS.addedSegment(content, segment, buffered, chunkData);
+        }));
+      return observableMerge(append$,
+                             protectedEvent$);
     });
   }
 }

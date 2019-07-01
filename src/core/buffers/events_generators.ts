@@ -16,7 +16,7 @@
 
 import { Subject } from "rxjs";
 import { ICustomError } from "../../errors";
-import {
+import Manifest, {
   Adaptation,
   ISegment,
   Period,
@@ -39,6 +39,7 @@ import {
   INeedsMediaSourceReload,
   IPeriodBufferClearedEvent,
   IPeriodBufferReadyEvent,
+  IProtectedSegmentEvent,
   IRepresentationChangeEvent,
   IResumeStreamEvent,
 } from "./types";
@@ -143,6 +144,18 @@ const EVENTS = {
   ) : IPeriodBufferClearedEvent {
     return { type: "periodBufferCleared",
              value: { type, period } };
+  },
+
+  protectedSegment(
+    type : "pssh",
+    data : Uint8Array[],
+    content: { adaptation : Adaptation;
+               manifest : Manifest;
+               period : Period;
+               representation: Representation; }
+  ) : IProtectedSegmentEvent {
+    return { type: "protected-segment",
+             value: { type, data, content }};
   },
 
   representationChange(
