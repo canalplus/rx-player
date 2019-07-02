@@ -102,14 +102,12 @@ export default function retryObsWithBackoff<T>(
   obs$ : Observable<T>,
   options : IBackoffOptions
 ) : Observable<T> {
-  const {
-    retryDelay,
-    totalRetry,
-    shouldRetry,
-    resetDelay,
-    errorSelector,
-    onRetry,
-  } = options;
+  const { retryDelay,
+          totalRetry,
+          shouldRetry,
+          resetDelay,
+          errorSelector,
+          onRetry } = options;
 
   let retryCount = 0;
   let debounceRetryCount : () => void|undefined;
