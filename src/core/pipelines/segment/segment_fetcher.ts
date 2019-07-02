@@ -200,7 +200,7 @@ export default function createSegmentFetcher<T>(
             return segmentParser(parserArg)
               .pipe(catchError((error: unknown) => {
                 throw formatError(error,
-                                  "PIPELINE_PARSING_ERROR",
+                                  "PIPELINE_PARSE_ERROR",
                                   "Unknown parsing error");
               }));
           },

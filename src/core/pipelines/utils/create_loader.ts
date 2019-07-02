@@ -97,11 +97,13 @@ const { MAX_BACKOFF_DELAY_BASE,
  * @param {Error} error
  * @returns {Error}
  */
-function errorSelector(code : string, error : unknown) : ICustomError {
+function errorSelector(error : unknown) : ICustomError {
   if (error instanceof RequestError) {
-    return new NetworkError(code, error);
+    return new NetworkError("PIPELINE_LOAD_ERROR", error);
   }
-  return formatError(error, code, "Unknown error when loading content");
+  return formatError(error,
+                     "PIPELINE_LOAD_ERROR",
+                     "Unknown error when loading content");
 }
 
 /**
@@ -169,7 +171,7 @@ export default function createLoader<T, U>(
                            maxRetryOffline,
                            onRetry: (error : unknown) => {
                              retryErrorSubject
-                               .next(errorSelector("PIPELINE_LOAD_ERROR", error)); } };
+                               .next(errorSelector(error)); } };
   /**
    * Call the transport's resolver - if it exists - with the given data.
    *
@@ -181,7 +183,7 @@ export default function createLoader<T, U>(
     return tryCatch<T, T>(resolver, resolverArgument)
       .pipe()
       .pipe(catchError((error : unknown) : Observable<never> => {
-        throw errorSelector("PIPELINE_RESOLVE_ERROR", error);
+        throw errorSelector(error);
       }));
   }
 
@@ -211,7 +213,7 @@ export default function createLoader<T, U>(
         backoffOptions
       ).pipe(
         catchError((error : unknown) : Observable<never> => {
-          throw errorSelector("PIPELINE_LOAD_ERROR", error);
+          throw errorSelector(error);
         }),
 
         tap((arg) => {

@@ -69,11 +69,15 @@ export interface IFetchManifestResult { manifest : Manifest;
  * @param {Error} error
  * @returns {Error}
  */
-function errorSelector(code : string, error : unknown) : ICustomError {
+function errorSelector(
+  error : unknown
+) : ICustomError {
   if (error instanceof RequestError) {
-    return new NetworkError(code, error);
+    return new NetworkError("PIPELINE_LOAD_ERROR", error);
   }
-  return formatError(error, code, "Unknown error when fetching the Manifest");
+  return formatError(error,
+                     "PIPELINE_LOAD_ERROR",
+                     "Unknown error when fetching the Manifest");
 }
 
 /**
@@ -116,12 +120,11 @@ export default function createManifestPipeline(
                              maxRetryRegular: maxRetry,
                              maxRetryOffline,
                              onRetry: (error : unknown) => {
-                               warning$.next(errorSelector("PIPELINE_LOAD_ERROR",
-                                                           error)); } };
+                               warning$.next(errorSelector(error)); } };
 
     return downloadingBackoff(tryCatch(request, undefined), backoffOptions).pipe(
       catchError((error : unknown) : Observable<never> => {
-        throw errorSelector("PIPELINE_LOAD_ERROR", error);
+        throw errorSelector(error);
       }));
   }
 
@@ -154,7 +157,7 @@ export default function createManifestPipeline(
         ).pipe(
           catchError((error: unknown) => {
             throw formatError(error,
-                              "PIPELINE_PARSING_ERROR",
+                              "PIPELINE_PARSE_ERROR",
                               "Unknown error when parsing the Manifest");
           }),
           map(({ manifest }) => {
