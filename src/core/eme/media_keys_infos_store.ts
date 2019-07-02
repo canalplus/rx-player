@@ -61,3 +61,7 @@ export default class MediaKeysInfosStore {
     this._state.set(mediaElement, null);
   }
 }
+
+const defaultMediaKeysInfosStore = new MediaKeysInfosStore();
+
+export { defaultMediaKeysInfosStore };

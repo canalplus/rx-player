@@ -58,16 +58,14 @@ const { onKeyError$,
         onKeyMessage$,
         onKeyStatusesChange$ } = events;
 
-interface IGetLicenseError {
-  message? : string;
-  noRetry? : boolean;
-  fallbackOnLastTry? : boolean;
-}
+// Error that can be thrown from the external `getLicense` callback
+interface IGetLicenseError { message? : string;
+                             noRetry? : boolean;
+                             fallbackOnLastTry? : boolean; }
 
-interface IParsedGetLicenseError extends Error {
-  noRetry? : boolean;
-  fallbackOnLastTry? : boolean;
-}
+// Error thrown by `getLicense` once catched
+interface IParsedGetLicenseError extends Error { noRetry? : boolean;
+                                                 fallbackOnLastTry? : boolean; }
 
 const KEY_STATUSES = { EXPIRED: "expired",
                        INTERNAL_ERROR: "internal-error",
@@ -77,11 +75,11 @@ const KEY_STATUSES = { EXPIRED: "expired",
  * @param {Error|Object} error
  * @returns {Error|Object}
  */
-function licenseErrorSelector(error: unknown) : ICustomError {
+function formatGetLicenseError(error: unknown) : ICustomError {
   if (error instanceof TimeoutError) {
      return new EncryptedMediaError("KEY_LOAD_TIMEOUT",
-                                    "The license server took more " +
-                                    "than more time than the set timeout.");
+                                    "The license server took too much time to " +
+                                    "respond.");
   }
   return new EncryptedMediaError("KEY_LOAD_ERROR",
                                  error instanceof Error ? error.toString() :
@@ -89,18 +87,33 @@ function licenseErrorSelector(error: unknown) : ICustomError {
 }
 
 /**
- * listen to "message" events from session containing a challenge
- * blob and map them to licenses using the getLicense method from
- * selected keySystem.
+ * Error thrown when the MediaKeySession is blacklisted.
+ * Such MediaKeySession should not be re-used but other MediaKeySession for the
+ * same content can still be used.
+ * played.
+ * @class BlacklistedSessionError
+ * @extends Error
+ */
+export class BlacklistedSessionError extends Error {
+  public sessionError : ICustomError;
+  constructor(sessionError : ICustomError) {
+    super();
+    this.sessionError = sessionError;
+  }
+}
+
+/**
+ * listen to various events from a MediaKeySession and react accordingly
+ * depending on the configuration given.
  * @param {MediaKeySession} session - The MediaKeySession concerned.
  * @param {Object} keySystem - The key system configuration.
  * @returns {Observable}
  */
-export default function handleSessionEvents(
+export default function SessionEventsListener(
   session: MediaKeySession|ICustomMediaKeySession,
   keySystem: IKeySystemOption
 ) : Observable<IMediaKeySessionHandledEvents | IEMEWarningEvent> {
-  log.debug("EME: Handle message events", session);
+  log.debug("EME: Binding session events", session);
 
   const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
   const { getLicenseConfig = {}, fallbackOn = {} } = keySystem;
@@ -119,7 +132,7 @@ export default function handleSessionEvents(
                                    onRetry: (error : unknown) =>
                                      sessionWarningSubject$.next({
                                        type: "warning",
-                                       value: licenseErrorSelector(error),
+                                       value: formatGetLicenseError(error),
                                      }) };
 
   const keyErrors : Observable<never> = onKeyError$(session)
@@ -264,6 +277,7 @@ export default function handleSessionEvents(
           })),
 
           catchError((err : unknown) => {
+            const formattedError = formatGetLicenseError(err);
             if (err instanceof TimeoutError) {
                throw new EncryptedMediaError("KEY_LOAD_TIMEOUT",
                                              "The `getLicense` request timeouted.");
@@ -285,10 +299,8 @@ export default function handleSessionEvents(
             log.warn("EME: Last `getLicense` attempt failed. " +
                      "Blacklisting the current session.");
 
-            return observableOf({ type: "warning" as const,
-                                  value: error },
-                                { type: "blacklist-session" as const,
-                                  value: null });
+            formattedError.fatal = false;
+            throw new BlacklistedSessionError(formattedError);
           })
         );
     }));

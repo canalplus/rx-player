@@ -61,7 +61,7 @@ export interface IBlacklistKeysEvent { type : "blacklist-keys";
                                        value: ArrayBuffer[]; }
 
 export interface IBlacklistSessionEvent { type: "blacklist-session";
-                                          value: null; }
+                                          value: ICustomError; }
 
 export interface IContent { adaptation : Adaptation;
                             manifest : Manifest;
@@ -75,7 +75,7 @@ export type IMediaKeySessionHandledEvents = IKeyMessageHandledEvent |
                                             IBlacklistKeysEvent;
 
 export interface IBlacklistContentEvent { type: "blacklist-content";
-                                          value: IContent | null; }
+                                          value: IContent; }
 
 export type IEMEManagerEvent = IEMEWarningEvent |
                                ICreatedMediaKeysEvent |
@@ -116,14 +116,14 @@ export interface IPersistedSessionStorage { load() : IPersistedSessionData[];
                                             save(x : IPersistedSessionData[]) : void; }
 
 export type TypedArray = Int8Array |
-                  Int16Array |
-                  Int32Array |
-                  Uint8Array |
-                  Uint16Array |
-                  Uint32Array |
-                  Uint8ClampedArray |
-                  Float32Array |
-                  Float64Array;
+                         Int16Array |
+                         Int32Array |
+                         Uint8Array |
+                         Uint16Array |
+                         Uint32Array |
+                         Uint8ClampedArray |
+                         Float32Array |
+                         Float64Array;
 
 // Options given by the caller
 export interface IKeySystemOption {
