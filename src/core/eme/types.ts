@@ -77,7 +77,7 @@ export interface IPersistedSessionData { sessionId : string;
 export interface IPersistedSessionStorage { load() : IPersistedSessionData[];
                                             save(x : IPersistedSessionData[]) : void; }
 
-type TypedArray = Int8Array |
+export type TypedArray = Int8Array |
                   Int16Array |
                   Int32Array |
                   Uint8Array |
