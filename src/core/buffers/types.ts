@@ -163,4 +163,4 @@ export type IBufferOrchestratorEvent = IActivePeriodChangedEvent |
 
 // A minor error happened
 export interface IBufferWarningEvent { type : "warning";
-                                       value : Error | ICustomError; }
+                                       value : ICustomError; }

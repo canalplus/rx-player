@@ -91,7 +91,7 @@ export default class Adaptation {
 
   // Array containing every errors that happened when the Adaptation has been
   // created, in the order they have happened.
-  public readonly parsingErrors : Array<Error|ICustomError>;
+  public readonly parsingErrors : ICustomError[];
 
   /**
    * @param {Object} args

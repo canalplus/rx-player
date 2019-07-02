@@ -48,8 +48,8 @@ export default function appendDataToSourceBufferWithRetries<T>(
   const append$ = queuedSourceBuffer.appendBuffer(dataInfos);
 
   return append$.pipe(
-    catchError((appendError : Error) => {
-      if (appendError.name !== "QuotaExceededError") {
+    catchError((appendError : unknown) => {
+      if (appendError instanceof Error && appendError.name !== "QuotaExceededError") {
         throw new MediaError("BUFFER_APPEND_ERROR", appendError.toString());
       }
 
@@ -57,9 +57,12 @@ export default function appendDataToSourceBufferWithRetries<T>(
         forceGarbageCollection(clock$, queuedSourceBuffer).pipe(ignoreElements()),
         append$
       ).pipe(
-        catchError((forcedGCError : Error) => {
+        catchError((forcedGCError : unknown) => {
+          const reason = forcedGCError instanceof Error ? forcedGCError.toString() :
+                                                          "Could not clean the buffer";
+
           // (weird Typing either due to TypeScript or RxJS bug)
-          throw new MediaError("BUFFER_FULL_ERROR", forcedGCError.toString());
+          throw new MediaError("BUFFER_FULL_ERROR", reason);
         })
       );
     }));

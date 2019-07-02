@@ -56,10 +56,11 @@ function setServerCertificate(
   return observableDefer(() => {
     return castToObservable(
       (mediaKeys as MediaKeys).setServerCertificate(serverCertificate)
-    ).pipe(catchError((error: Error) => {
+    ).pipe(catchError((error: unknown) => {
       log.warn("EME: mediaKeys.setServerCertificate returned an error", error);
-      throw new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR",
-                                    error.toString());
+      const reason = error instanceof Error ? error.toString() :
+                                              "`setServerCertificate` error";
+      throw new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", reason);
     }));
   });
 }
@@ -80,7 +81,7 @@ export default function trySettingServerCertificate(
     return setServerCertificate(mediaKeys, serverCertificate).pipe(
       ignoreElements(),
       catchError(error => {
-        return observableOf({ type: "warning" as "warning", value: error });
+        return observableOf({ type: "warning" as const, value: error });
       }));
   }
   log.warn("EME: Could not set the server certificate." +

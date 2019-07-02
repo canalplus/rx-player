@@ -21,6 +21,7 @@ import {
   ErrorTypes,
   RequestErrorTypes,
 } from "./error_codes";
+import formatError from "./format_error";
 import isKnownError, {
   ICustomError,
 } from "./is_known_error";
@@ -34,6 +35,7 @@ export {
   EncryptedMediaError,
   ErrorCodes,
   ErrorTypes,
+  formatError,
   ICustomError,
   MediaError as MediaError,
   NetworkError,

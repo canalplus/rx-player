@@ -144,9 +144,8 @@ const EVENTS = {
              value: undefined };
   },
 
-  warning(value : Error | ICustomError) : IBufferWarningEvent {
-    return { type: "warning",
-             value };
+  warning(value : ICustomError) : IBufferWarningEvent {
+    return { type: "warning", value };
   },
 };
 

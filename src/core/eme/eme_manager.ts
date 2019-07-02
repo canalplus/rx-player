@@ -166,10 +166,10 @@ export default function EMEManager(
                 sessionStorage.add(initData, initDataType, mediaKeySession);
               }
             }),
-            catchError((error: Error) => {
+            catchError((error: unknown) => {
               throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR",
-                                            error != null ? error.toString() :
-                                                            "Unknown error");
+                                            error instanceof Error ? error.toString() :
+                                                                     "Unknown error");
             }),
             ignoreElements()
           )

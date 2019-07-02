@@ -26,8 +26,7 @@ import PersistedSessionsStore from "./utils/persisted_session_store";
 
 // A minor error happened
 export interface IEMEWarningEvent { type : "warning";
-                                    value : ICustomError |
-                                            Error; }
+                                    value : ICustomError; }
 
 export interface ICreatedMediaKeysEvent { type: "created-media-keys";
                                           value: IMediaKeysInfos; }

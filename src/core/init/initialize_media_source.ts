@@ -166,7 +166,7 @@ export default function InitializeOnMediaSource({
   pipelines,
   url,
 } : IInitializeOptions) : Observable<IInitEvent> {
-  const warning$ = new Subject<Error|ICustomError>();
+  const warning$ = new Subject<ICustomError>();
 
   // Fetch and parse the manifest from the URL given.
   // Throttled to avoid doing multiple simultaneous requests.
