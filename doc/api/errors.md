@@ -253,6 +253,11 @@ An EncryptedMediaError can have the following codes (``code`` property):
   - ``"MEDIA_IS_ENCRYPTED_ERROR"``: The media is encrypted and no key system
     was given to the RxPlayer's APIs.
 
+  - ``"MULTIPLE_SESSIONS_SAME_INIT_DATA"``: This error should never happen and
+    is a RxPlayer bug if it does. It means that we were going to open multiple
+    `MediaKeySession` for the same initialization data (instead of using the
+    exact same `MediaKeySession`).
+
 
 
 <a name="types-other_error"></a>

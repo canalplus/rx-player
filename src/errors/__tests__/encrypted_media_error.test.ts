@@ -19,39 +19,27 @@ import EncryptedMediaError from "../encrypted_media_error";
 describe("errors - EncryptedMediaError", () => {
   it("should format an EncryptedMediaError", () => {
     const reason = "test";
-    const encryptedMediaError = new EncryptedMediaError("foo", reason);
+    const encryptedMediaError = new EncryptedMediaError("KEY_LOAD_TIMEOUT", reason);
     expect(encryptedMediaError).toBeInstanceOf(Error);
     expect(encryptedMediaError.name).toBe("EncryptedMediaError");
     expect(encryptedMediaError.type).toBe("ENCRYPTED_MEDIA_ERROR");
-    expect(encryptedMediaError.code).toBe("");
+    expect(encryptedMediaError.code).toBe("KEY_LOAD_TIMEOUT");
     expect(encryptedMediaError.fatal).toBe(false);
-    expect(encryptedMediaError.message).toBe("EncryptedMediaError () test");
+    expect(encryptedMediaError.message)
+      .toBe("EncryptedMediaError (KEY_LOAD_TIMEOUT) test");
   });
 
   it("should be able to set it as fatal", () => {
     const reason = "test";
-    const encryptedMediaError = new EncryptedMediaError("foo", reason);
+    const encryptedMediaError = new EncryptedMediaError("INCOMPATIBLE_KEYSYSTEMS",
+                                                        reason);
     encryptedMediaError.fatal = true;
     expect(encryptedMediaError).toBeInstanceOf(Error);
     expect(encryptedMediaError.name).toBe("EncryptedMediaError");
     expect(encryptedMediaError.type).toBe("ENCRYPTED_MEDIA_ERROR");
-    expect(encryptedMediaError.code).toBe("");
-    expect(encryptedMediaError.fatal).toBe(true);
-    expect(encryptedMediaError.message).toBe("EncryptedMediaError () test");
-  });
-
-  /* tslint:disable max-line-length */
-  it("should set a complete error message if both a valid code and a reason is given", () => {
-  /* tslint:enable max-line-length */
-    const reason = "test";
-    const encryptedMediaError = new EncryptedMediaError("MEDIA_ERR_NETWORK", reason);
-    encryptedMediaError.fatal = true;
-    expect(encryptedMediaError).toBeInstanceOf(Error);
-    expect(encryptedMediaError.name).toBe("EncryptedMediaError");
-    expect(encryptedMediaError.type).toBe("ENCRYPTED_MEDIA_ERROR");
-    expect(encryptedMediaError.code).toBe("MEDIA_ERR_NETWORK");
+    expect(encryptedMediaError.code).toBe("INCOMPATIBLE_KEYSYSTEMS");
     expect(encryptedMediaError.fatal).toBe(true);
     expect(encryptedMediaError.message)
-      .toBe("EncryptedMediaError (MEDIA_ERR_NETWORK) test");
+      .toBe("EncryptedMediaError (INCOMPATIBLE_KEYSYSTEMS) test");
   });
 });

@@ -14,11 +14,21 @@
  * limitations under the License.
  */
 
-import {
-  ErrorCodes,
-  ErrorTypes,
-} from "./error_codes";
+import { ErrorTypes } from "./error_codes";
 import errorMessage from "./error_message";
+
+export type IEncryptedMediaErrorCode = "INCOMPATIBLE_KEYSYSTEMS" |
+                                       "INVALID_ENCRYPTED_EVENT" |
+                                       "INVALID_KEY_SYSTEM" |
+                                       "KEY_ERROR" |
+                                       "KEY_GENERATE_REQUEST_ERROR" |
+                                       "KEY_LOAD_ERROR" |
+                                       "KEY_LOAD_TIMEOUT" |
+                                       "KEY_STATUS_CHANGE_ERROR" |
+                                       "KEY_UPDATE_ERROR" |
+                                       "LICENSE_SERVER_CERTIFICATE_ERROR" |
+                                       "MEDIA_IS_ENCRYPTED_ERROR" |
+                                       "MULTIPLE_SESSIONS_SAME_INIT_DATA";
 
 /**
  * Error linked to the encryption of the media.
@@ -30,7 +40,7 @@ export default class EncryptedMediaError extends Error {
   public readonly name : "EncryptedMediaError";
   public readonly type : string;
   public readonly message : string;
-  public readonly code : string;
+  public readonly code : IEncryptedMediaErrorCode;
   public fatal : boolean;
 
   /**
@@ -38,7 +48,7 @@ export default class EncryptedMediaError extends Error {
    * @param {string} reason
    * @Param {Boolean} fatal
    */
-  constructor(code : string, reason : string) {
+  constructor(code : IEncryptedMediaErrorCode, reason : string) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, EncryptedMediaError.prototype);
@@ -46,9 +56,7 @@ export default class EncryptedMediaError extends Error {
     this.name = "EncryptedMediaError";
     this.type = ErrorTypes.ENCRYPTED_MEDIA_ERROR;
 
-    this.code = ErrorCodes.hasOwnProperty(code) ?
-                  (ErrorCodes as Record<string, string>)[code] :
-                  "";
+    this.code = code;
     this.message = errorMessage(this.name, this.code, reason);
     this.fatal = false;
   }
