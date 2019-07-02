@@ -22,9 +22,9 @@ describe("errors - OtherError", () => {
     expect(otherError).toBeInstanceOf(Error);
     expect(otherError.name).toBe("OtherError");
     expect(otherError.type).toBe("OTHER_ERROR");
-    expect(otherError.code).toBe("");
+    expect(otherError.code).toBe("NONE");
     expect(otherError.fatal).toBe(false);
-    expect(otherError.message).toBe("OtherError () tata");
+    expect(otherError.message).toBe("OtherError (NONE) tata");
   });
 
   it("should be able to set it as fatal", () => {
@@ -34,9 +34,9 @@ describe("errors - OtherError", () => {
     expect(otherError).toBeInstanceOf(Error);
     expect(otherError.name).toBe("OtherError");
     expect(otherError.type).toBe("OTHER_ERROR");
-    expect(otherError.code).toBe("");
+    expect(otherError.code).toBe("NONE");
     expect(otherError.fatal).toBe(true);
-    expect(otherError.message).toBe("OtherError () test");
+    expect(otherError.message).toBe("OtherError (NONE) test");
   });
 
   it("should filter in a valid error code", () => {
@@ -46,8 +46,8 @@ describe("errors - OtherError", () => {
     expect(otherError).toBeInstanceOf(Error);
     expect(otherError.name).toBe("OtherError");
     expect(otherError.type).toBe("OTHER_ERROR");
-    expect(otherError.code).toBe("MEDIA_ERR_NETWORK");
+    expect(otherError.code).toBe("PIPELINE_LOAD_ERROR");
     expect(otherError.fatal).toBe(true);
-    expect(otherError.message).toBe("OtherError (MEDIA_ERR_NETWORK) test");
+    expect(otherError.message).toBe("OtherError (PIPELINE_LOAD_ERROR) test");
   });
 });

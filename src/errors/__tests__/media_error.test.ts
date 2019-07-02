@@ -23,9 +23,9 @@ describe("errors - MediaError", () => {
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");
-    expect(mediaError.code).toBe("");
+    expect(mediaError.code).toBe("BUFFER_FULL_ERROR");
     expect(mediaError.fatal).toBe(false);
-    expect(mediaError.message).toBe("MediaError () test");
+    expect(mediaError.message).toBe("MediaError (BUFFER_FULL_ERROR) test");
   });
 
   it("should be able to set it as fatal", () => {
@@ -35,9 +35,9 @@ describe("errors - MediaError", () => {
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");
-    expect(mediaError.code).toBe("");
+    expect(mediaError.code).toBe("BUFFER_APPEND_ERROR");
     expect(mediaError.fatal).toBe(true);
-    expect(mediaError.message).toBe("MediaError () test");
+    expect(mediaError.message).toBe("MediaError (BUFFER_APPEND_ERROR) test");
   });
 
   it("should filter in a valid error code", () => {
