@@ -282,6 +282,9 @@ export default function handleSessionEvents(
               throw error;
             }
 
+            log.warn("EME: Last `getLicense` attempt failed. " +
+                     "Blacklisting the current session.");
+
             return observableOf({ type: "warning" as const,
                                   value: error },
                                 { type: "blacklist-session" as const,
