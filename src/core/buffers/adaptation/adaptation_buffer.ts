@@ -34,6 +34,7 @@ import {
   Observable,
   of as observableOf,
   Subject,
+  throwError,
 } from "rxjs";
 import {
   catchError,
@@ -45,7 +46,10 @@ import {
   share,
   takeUntil,
 } from "rxjs/operators";
-import { formatError } from "../../../errors";
+import {
+  formatError,
+  MediaError,
+} from "../../../errors";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
@@ -136,10 +140,18 @@ export default function AdaptationBuffer<T>(
     return objectAssign({ downloadBitrate }, tick);
   }));
 
-  const decryptableRepresentations = adaptation.representations
+  const decipherableRepresentations = adaptation.representations
     .filter((representation) => representation.canBeDecrypted !== false);
+
+  if (decipherableRepresentations.length <= 0) {
+    const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
+                                    "No Representation in the chosen" +
+                                    "Adaptation can be played");
+    return throwError(noRepErr);
+  }
+
   const abr$ : Observable<IABREstimation> =
-    abrManager.get$(adaptation.type, abrClock$, decryptableRepresentations)
+    abrManager.get$(adaptation.type, abrClock$, decipherableRepresentations)
       .pipe(observeOn(asapScheduler), share());
 
   // emit when the current RepresentationBuffer should be stopped right now
