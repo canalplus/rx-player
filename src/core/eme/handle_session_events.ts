@@ -67,7 +67,7 @@ const KEY_STATUS_EXPIRED = "expired";
  * @param {Error|Object} error
  * @returns {Error|Object}
  */
-function licenseErrorSelector(error: ICustomError|Error) : ICustomError|Error {
+function licenseErrorSelector(error : unknown) : ICustomError|Error {
   if (isKnownError(error)) {
     if (error.type === ErrorTypes.ENCRYPTED_MEDIA_ERROR) {
       return error;
@@ -75,7 +75,8 @@ function licenseErrorSelector(error: ICustomError|Error) : ICustomError|Error {
   }
 
   return new EncryptedMediaError("KEY_LOAD_ERROR",
-                                 error.message || error.toString());
+                                 error instanceof Error ? error.message :
+                                                          "`getLicense` failed");
 }
 
 /**
@@ -100,7 +101,7 @@ export default function handleSessionEvents(
                                    retryDelay: 200,
 
                                    errorSelector: licenseErrorSelector,
-                                   onRetry: (error: ICustomError|Error) =>
+                                   onRetry: (error: unknown) =>
                                      sessionWarningSubject$.next({
                                        type: "warning",
                                        value: licenseErrorSelector(error),
