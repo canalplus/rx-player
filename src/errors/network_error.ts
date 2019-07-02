@@ -15,12 +15,15 @@
  */
 
 import {
-  ErrorCodes,
   ErrorTypes,
   RequestErrorTypes,
 } from "./error_codes";
 import errorMessage from "./error_message";
-import RequestError from "./request_error";
+import RequestError, {
+  IRequestErrorType,
+} from "./request_error";
+
+export type INetworkErrorCode = "PIPELINE_LOAD_ERROR";
 
 /**
  * Error linked to network interactions (requests).
@@ -32,11 +35,11 @@ export default class NetworkError extends Error {
   public readonly name : "NetworkError";
   public readonly type : string;
   public readonly message : string;
-  public readonly code : string|undefined;
+  public readonly code : INetworkErrorCode;
   public readonly xhr : XMLHttpRequest;
   public readonly url : string;
   public readonly status : number;
-  public readonly errorType : string;
+  public readonly errorType : IRequestErrorType;
   public fatal : boolean;
 
   /**
@@ -44,7 +47,7 @@ export default class NetworkError extends Error {
    * @param {Error} requestError
    * @param {Boolean} fatal
    */
-  constructor(code : string, requestError : RequestError) {
+  constructor(code : INetworkErrorCode, requestError : RequestError) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, NetworkError.prototype);
@@ -57,9 +60,7 @@ export default class NetworkError extends Error {
     this.status = requestError.status;
     this.errorType = requestError.type;
 
-    this.code = ErrorCodes.hasOwnProperty(code) ?
-                  (ErrorCodes as Record<string, string>)[code] :
-                  "";
+    this.code = code;
     this.message = errorMessage(this.name, this.code, requestError.message);
     this.fatal = false;
   }

@@ -31,7 +31,7 @@ describe("Errors - isKnownError", () => {
   it("should return false for a RequestError", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
-    const requestError = new RequestError(xhr, "foo", "bar");
+    const requestError = new RequestError(xhr, "foo", "TIMEOUT");
     expect(isKnownError(requestError)).toBe(false);
   });
 
@@ -48,8 +48,8 @@ describe("Errors - isKnownError", () => {
   it("should return true for a NetworkError", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
-    const requestError = new RequestError(xhr, "foo", "bar");
-    const networkError = new NetworkError("foo", requestError);
+    const requestError = new RequestError(xhr, "foo", "ERROR_HTTP_CODE");
+    const networkError = new NetworkError("PIPELINE_LOAD_ERROR", requestError);
     expect(isKnownError(networkError)).toBe(true);
   });
 
@@ -59,7 +59,7 @@ describe("Errors - isKnownError", () => {
   });
 
   it("should return true for an EncryptedMediaError", () => {
-    const encryptedMediaError = new EncryptedMediaError("foo", "toto");
+    const encryptedMediaError = new EncryptedMediaError("KEY_UPDATE_ERROR", "toto");
     expect(isKnownError(encryptedMediaError)).toBe(true);
   });
 });
