@@ -54,21 +54,12 @@ import {
   IKeySystemOption,
   IMediaKeySessionHandledEvents,
   KEY_STATUS_ERRORS,
+  TypedArray,
 } from "./types";
 
 const { onKeyError$,
         onKeyMessage$,
         onKeyStatusesChange$ } = events;
-
-type TypedArray = Int8Array |
-                  Int16Array |
-                  Int32Array |
-                  Uint8Array |
-                  Uint16Array |
-                  Uint32Array |
-                  Uint8ClampedArray |
-                  Float32Array |
-                  Float64Array;
 
 const KEY_STATUS_EXPIRED = "expired";
 
