@@ -17,7 +17,7 @@
 import { ErrorTypes } from "./error_codes";
 import errorMessage from "./error_message";
 
-export type IOtherErrorType = "PIPELINE_LOAD_ERROR" |
+export type IOtherErrorCode = "PIPELINE_LOAD_ERROR" |
                               "PIPELINE_PARSE_ERROR" |
                               "NONE";
 
@@ -29,7 +29,7 @@ export default class OtherError extends Error {
   public readonly name : "OtherError";
   public readonly type : string;
   public readonly message : string;
-  public readonly code : IOtherErrorType;
+  public readonly code : IOtherErrorCode;
   public fatal : boolean;
 
   /**
@@ -37,7 +37,7 @@ export default class OtherError extends Error {
    * @param {string} reason
    * @param {Boolean} fatal
    */
-  constructor(code : IOtherErrorType, reason : string) {
+  constructor(code : IOtherErrorCode, reason : string) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, OtherError.prototype);
