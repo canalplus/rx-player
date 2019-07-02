@@ -182,14 +182,12 @@ export default function initializeDirectfileContent({
       if (evt === "autoplay-blocked") {
         const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY",
                                      "Cannot trigger auto-play automatically: " +
-                                     "your browser does not allow it.",
-                                     false);
+                                     "your browser does not allow it.");
         return observableOf(EVENTS.warning(error), EVENTS.loaded());
       } else if (evt === "not-loaded-metadata") {
         const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
                                      "Cannot load automatically: your browser " +
-                                     "falsely announced having loaded the content.",
-                                     false);
+                                     "falsely announced having loaded the content.");
         return observableOf(EVENTS.warning(error));
       }
       return observableOf(EVENTS.loaded());

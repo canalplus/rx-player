@@ -50,7 +50,7 @@ export default function appendDataToSourceBufferWithRetries<T>(
   return append$.pipe(
     catchError((appendError : Error) => {
       if (appendError.name !== "QuotaExceededError") {
-        throw new MediaError("BUFFER_APPEND_ERROR", appendError.toString(), true);
+        throw new MediaError("BUFFER_APPEND_ERROR", appendError.toString());
       }
 
       return observableConcat(
@@ -59,7 +59,7 @@ export default function appendDataToSourceBufferWithRetries<T>(
       ).pipe(
         catchError((forcedGCError : Error) => {
           // (weird Typing either due to TypeScript or RxJS bug)
-          throw new MediaError("BUFFER_FULL_ERROR", forcedGCError.toString(), true);
+          throw new MediaError("BUFFER_FULL_ERROR", forcedGCError.toString());
         })
       );
     }));

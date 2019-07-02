@@ -38,7 +38,7 @@ export default class EncryptedMediaError extends Error {
    * @param {string} reason
    * @Param {Boolean} fatal
    */
-  constructor(code : string, reason : string, fatal : boolean) {
+  constructor(code : string, reason : string) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, EncryptedMediaError.prototype);
@@ -49,7 +49,7 @@ export default class EncryptedMediaError extends Error {
     this.code = ErrorCodes.hasOwnProperty(code) ?
                   (ErrorCodes as Record<string, string>)[code] :
                   "";
-    this.fatal = !!fatal;
     this.message = errorMessage(this.name, this.code, reason);
+    this.fatal = false;
   }
 }

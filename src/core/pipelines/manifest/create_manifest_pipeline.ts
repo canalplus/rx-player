@@ -68,16 +68,14 @@ export interface IFetchManifestResult { manifest : Manifest;
  * Generate a new error from the infos given.
  * @param {string} code
  * @param {Error} error
- * @param {Boolean} fatal - Whether the error is fatal to the content's
- * playback.
  * @returns {Error}
  */
-function errorSelector(code : string, error : Error, fatal : boolean) : ICustomError {
+function errorSelector(code : string, error : Error) : ICustomError {
   if (!isKnownError(error)) {
     if (error instanceof RequestError) {
-      return new NetworkError(code, error, fatal);
+      return new NetworkError(code, error);
     }
-    return new OtherError(code, error.toString(), fatal);
+    return new OtherError(code, error.toString());
   }
   return error;
 }
@@ -123,12 +121,11 @@ export default function createManifestPipeline(
                              maxRetryOffline,
                              onRetry: (error : Error) => {
                                warning$.next(errorSelector("PIPELINE_LOAD_ERROR",
-                                                           error,
-                                                           false)); } };
+                                                           error)); } };
 
     return downloadingBackoff(tryCatch(request, undefined), backoffOptions).pipe(
       catchError((error : Error) : Observable<never> => {
-        throw errorSelector("PIPELINE_LOAD_ERROR", error, true);
+        throw errorSelector("PIPELINE_LOAD_ERROR", error);
       }));
   }
 
@@ -163,8 +160,7 @@ export default function createManifestPipeline(
             const formattedError = isKnownError(error) ?
                                      error :
                                      new OtherError("PIPELINE_PARSING_ERROR",
-                                                    error.toString(),
-                                                    true);
+                                                    error.toString());
             throw formattedError;
           }),
           map(({ manifest }) => {

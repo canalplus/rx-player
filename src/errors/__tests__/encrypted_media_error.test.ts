@@ -19,7 +19,7 @@ import EncryptedMediaError from "../encrypted_media_error";
 describe("errors - EncryptedMediaError", () => {
   it("should format an EncryptedMediaError", () => {
     const reason = "test";
-    const encryptedMediaError = new EncryptedMediaError("foo", reason, false);
+    const encryptedMediaError = new EncryptedMediaError("foo", reason);
     expect(encryptedMediaError).toBeInstanceOf(Error);
     expect(encryptedMediaError.name).toBe("EncryptedMediaError");
     expect(encryptedMediaError.type).toBe("ENCRYPTED_MEDIA_ERROR");
@@ -30,7 +30,8 @@ describe("errors - EncryptedMediaError", () => {
 
   it("should be able to set it as fatal", () => {
     const reason = "test";
-    const encryptedMediaError = new EncryptedMediaError("foo", reason, true);
+    const encryptedMediaError = new EncryptedMediaError("foo", reason);
+    encryptedMediaError.fatal = true;
     expect(encryptedMediaError).toBeInstanceOf(Error);
     expect(encryptedMediaError.name).toBe("EncryptedMediaError");
     expect(encryptedMediaError.type).toBe("ENCRYPTED_MEDIA_ERROR");
@@ -43,8 +44,8 @@ describe("errors - EncryptedMediaError", () => {
   it("should set a complete error message if both a valid code and a reason is given", () => {
   /* tslint:enable max-line-length */
     const reason = "test";
-    const encryptedMediaError =
-      new EncryptedMediaError("MEDIA_ERR_NETWORK", reason, true);
+    const encryptedMediaError = new EncryptedMediaError("MEDIA_ERR_NETWORK", reason);
+    encryptedMediaError.fatal = true;
     expect(encryptedMediaError).toBeInstanceOf(Error);
     expect(encryptedMediaError.name).toBe("EncryptedMediaError");
     expect(encryptedMediaError.type).toBe("ENCRYPTED_MEDIA_ERROR");

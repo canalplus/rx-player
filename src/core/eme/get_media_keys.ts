@@ -51,8 +51,7 @@ function createSessionStorage(
   const { licenseStorage } = keySystemOptions;
   if (!licenseStorage) {
     throw new EncryptedMediaError("INVALID_KEY_SYSTEM",
-                                  "No license storage found for persistent license.",
-                                  true);
+                                  "No license storage found for persistent license.");
   }
 
   log.info("EME: Set the given license storage");

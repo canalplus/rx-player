@@ -38,26 +38,21 @@ export default function throwOnMediaError(
         case 1:
           throw new MediaError("MEDIA_ERR_ABORTED",
                                "The fetching of the associated resource was aborted " +
-                               "by the user's request.",
-                               true);
+                               "by the user's request.");
         case 2:
           throw new MediaError("MEDIA_ERR_NETWORK",
                                "A network error occurred which prevented the media " +
-                               "from being successfully fetched",
-                               true);
+                               "from being successfully fetched");
         case 3:
           throw new MediaError("MEDIA_ERR_DECODE",
                                "An error occurred while trying to decode the media " +
-                               "resource",
-                               true);
+                               "resource");
         case 4:
           throw new MediaError("MEDIA_ERR_SRC_NOT_SUPPORTED",
-                               "The media resource has been found to be unsuitable.",
-                               true);
+                               "The media resource has been found to be unsuitable.");
         default:
           throw new MediaError("MEDIA_ERR_UNKNOWN",
-                               "The HTMLMediaElement errored due to an unknown reason.",
-                               true);
+                               "The HTMLMediaElement errored due to an unknown reason.");
       }
     }));
 }

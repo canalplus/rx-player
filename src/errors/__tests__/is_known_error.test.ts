@@ -41,7 +41,7 @@ describe("Errors - isKnownError", () => {
   });
 
   it("should return true for an OtherError", () => {
-    const otherError = new OtherError("foo", "tata", false);
+    const otherError = new OtherError("foo", "tata");
     expect(isKnownError(otherError)).toBe(true);
   });
 
@@ -49,17 +49,17 @@ describe("Errors - isKnownError", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
     const requestError = new RequestError(xhr, "foo", "bar");
-    const networkError = new NetworkError("foo", requestError, false);
+    const networkError = new NetworkError("foo", requestError);
     expect(isKnownError(networkError)).toBe(true);
   });
 
   it("should return true for a MediaError", () => {
-    const mediaError = new MediaError("foo", "toto", false);
+    const mediaError = new MediaError("foo", "toto");
     expect(isKnownError(mediaError)).toBe(true);
   });
 
   it("should return true for an EncryptedMediaError", () => {
-    const encryptedMediaError = new EncryptedMediaError("foo", "toto", false);
+    const encryptedMediaError = new EncryptedMediaError("foo", "toto");
     expect(isKnownError(encryptedMediaError)).toBe(true);
   });
 });

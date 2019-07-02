@@ -95,8 +95,7 @@ export default class Period {
               const error = new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE",
                                            "An Adaptation has an unknown and " +
                                            "unsupported type: " +
-                                           adaptation.type,
-                                           false);
+                                           adaptation.type);
               this.parsingErrors.push(error);
               return false;
             } else {
@@ -114,8 +113,7 @@ export default class Period {
             (type === "video" || type === "audio")
         ) {
           throw new MediaError("MANIFEST_PARSE_ERROR",
-                               "No supported " + type + " adaptations",
-                               true);
+                               "No supported " + type + " adaptations");
         }
 
         if (filteredAdaptations.length) {
@@ -126,8 +124,7 @@ export default class Period {
 
     if (!this.adaptations.video && !this.adaptations.audio) {
       throw new MediaError("MANIFEST_PARSE_ERROR",
-                           "No supported audio and video tracks.",
-                           true);
+                           "No supported audio and video tracks.");
     }
 
     this.duration = args.duration;

@@ -203,7 +203,6 @@ describe("Manifest - Period", () => {
     expect(error).toBeInstanceOf(Error);
     expect(error.code).toBe("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE");
     expect(error.type).toBe("MEDIA_ERROR");
-    expect(error.fatal).toEqual(false);
     expect(logSpy).toHaveBeenCalledTimes(1);
   });
 

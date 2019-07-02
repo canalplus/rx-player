@@ -23,14 +23,13 @@ import {
 /**
  * Format an unknown error into an API-defined error.
  * @param {*} error
- * @param {Boolean} fatal
  * @returns {Error}
  */
 export default function formatError(error : unknown) : ICustomError {
   if (!isKnownError(error)) {
     const reason = error instanceof Error && error.message ? error.message :
                                                              "Unknown error";
-    return new OtherError("NONE", reason, false);
+    return new OtherError("NONE", reason);
   } else {
     return error;
   }

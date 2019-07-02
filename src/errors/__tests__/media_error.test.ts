@@ -19,7 +19,7 @@ import MediaError from "../media_error";
 describe("errors - MediaError", () => {
   it("should format a MediaError", () => {
     const reason = "test";
-    const mediaError = new MediaError("foo", reason, false);
+    const mediaError = new MediaError("foo", reason);
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");
@@ -30,7 +30,8 @@ describe("errors - MediaError", () => {
 
   it("should be able to set it as fatal", () => {
     const reason = "test";
-    const mediaError = new MediaError("foo", reason, true);
+    const mediaError = new MediaError("foo", reason);
+    mediaError.fatal = true;
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");
@@ -42,7 +43,8 @@ describe("errors - MediaError", () => {
   it("should filter in a valid error code", () => {
   /* tslint:enable max-line-length */
     const reason = "test";
-    const mediaError = new MediaError("MEDIA_ERR_NETWORK", reason, true);
+    const mediaError = new MediaError("MEDIA_ERR_NETWORK", reason);
+    mediaError.fatal = true;
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");

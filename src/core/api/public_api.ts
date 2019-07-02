@@ -279,34 +279,28 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * Store the initial wanted bitrates at first.
      * @type {Object}
      */
-    lastBitrates : {
-      audio? : number;
-      video? : number;
-      text? : number;
-      image? : number;
-    };
+    lastBitrates : { audio? : number;
+                     video? : number;
+                     text? : number;
+                     image? : number; };
 
     /**
      * Store last wanted maxAutoBitrates for the next ABRManager instanciation.
      * @type {Object}
      */
-    initialMaxAutoBitrates : {
-      audio : number; // has a default in the config
-      video : number; // has a default in the config
-      text? : number;
-      image? : number;
-    };
+    initialMaxAutoBitrates : { audio : number; // has a default in the config
+                               video : number; // has a default in the config
+                               text? : number;
+                               image? : number; };
 
     /**
      * Store last wanted manual bitrates for the next ABRManager instanciation.
      * @type {Object}
      */
-    manualBitrates : {
-      audio : number; // has a default in the config
-      video : number; // has a default in the config
-      text? : number;
-      image? : number;
-    };
+    manualBitrates : { audio : number; // has a default in the config
+                       video : number; // has a default in the config
+                       text? : number;
+                       image? : number; };
   };
 
   /**
@@ -1290,8 +1284,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return playPromise.catch((error: Error) => {
       if (error.name === "NotAllowedError") {
         const warning = new MediaError("MEDIA_ERR_PLAY_NOT_ALLOWED",
-                                       error.toString(),
-                                       false);
+                                       error.toString());
         this.trigger("warning", warning);
       }
       throw error;
