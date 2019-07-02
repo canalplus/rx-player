@@ -26,10 +26,7 @@ import {
   catchError,
   ignoreElements,
 } from "rxjs/operators";
-import {
-  formatError,
-  MediaError,
-} from "../../../errors";
+import { MediaError } from "../../../errors";
 import {
   IAppendBufferInfos,
   QueuedSourceBuffer,
@@ -56,9 +53,10 @@ export default function appendDataToSourceBufferWithRetries<T>(
   return append$.pipe(
     catchError((appendError : unknown) => {
       if (!(appendError instanceof Error) || appendError.name !== "QuotaExceededError") {
-        throw formatError(appendError,
-                          "BUFFER_APPEND_ERROR",
-                          "An unknown error happened when pushing content");
+        const reason = appendError instanceof Error ?
+          appendError.toString() :
+          "An unknown error happened when pushing content";
+        throw new MediaError("BUFFER_APPEND_ERROR", reason);
       }
 
       return observableConcat(

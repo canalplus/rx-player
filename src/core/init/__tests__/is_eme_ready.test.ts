@@ -21,7 +21,7 @@ describe("core - init - isEMEReadyEvent", () => {
   it("should return false for a warning event", () => {
     expect(isEMEReadyEvent({
       type: "warning",
-      value: new OtherError("", ""),
+      value: new OtherError("NONE", ""),
     })).toBe(false);
   });
 

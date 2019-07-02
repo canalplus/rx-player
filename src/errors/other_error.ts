@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-import {
-  ErrorCodes,
-  ErrorTypes,
-} from "./error_codes";
+import { ErrorTypes } from "./error_codes";
 import errorMessage from "./error_message";
+
+export type IOtherErrorType = "PIPELINE_LOAD_ERROR" |
+                              "PIPELINE_PARSE_ERROR" |
+                              "NONE";
 
 /**
  * @class OtherError
@@ -28,7 +29,7 @@ export default class OtherError extends Error {
   public readonly name : "OtherError";
   public readonly type : string;
   public readonly message : string;
-  public readonly code : string;
+  public readonly code : IOtherErrorType;
   public fatal : boolean;
 
   /**
@@ -36,7 +37,7 @@ export default class OtherError extends Error {
    * @param {string} reason
    * @param {Boolean} fatal
    */
-  constructor(code : string, reason : string) {
+  constructor(code : IOtherErrorType, reason : string) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, OtherError.prototype);
@@ -44,9 +45,7 @@ export default class OtherError extends Error {
     this.name = "OtherError";
     this.type = ErrorTypes.OTHER_ERROR;
 
-    this.code = ErrorCodes.hasOwnProperty(code) ?
-                  (ErrorCodes as Record<string, string>)[code] :
-                  "";
+    this.code = code;
     this.message = errorMessage(this.name, this.code, reason);
     this.fatal = false;
   }

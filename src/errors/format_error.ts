@@ -26,7 +26,9 @@ import OtherError from "./other_error";
  */
 export default function formatError(
   error : unknown,
-  defaultCode : string,
+  defaultCode : "PIPELINE_LOAD_ERROR" |
+                "PIPELINE_PARSE_ERROR" |
+                "NONE",
   defaultReason : string
 ) : ICustomError {
   if (!isKnownError(error)) {
