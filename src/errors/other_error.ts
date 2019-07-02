@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-import { ErrorTypes } from "./error_codes";
+import {
+  ErrorTypes,
+  IOtherErrorCode,
+} from "./error_codes";
 import errorMessage from "./error_message";
-
-export type IOtherErrorCode = "PIPELINE_LOAD_ERROR" |
-                              "PIPELINE_PARSE_ERROR" |
-                              "NONE";
 
 /**
  * @class OtherError

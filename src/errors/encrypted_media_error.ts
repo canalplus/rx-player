@@ -14,21 +14,11 @@
  * limitations under the License.
  */
 
-import { ErrorTypes } from "./error_codes";
+import {
+  ErrorTypes,
+  IEncryptedMediaErrorCode,
+} from "./error_codes";
 import errorMessage from "./error_message";
-
-export type IEncryptedMediaErrorCode = "INCOMPATIBLE_KEYSYSTEMS" |
-                                       "INVALID_ENCRYPTED_EVENT" |
-                                       "INVALID_KEY_SYSTEM" |
-                                       "KEY_ERROR" |
-                                       "KEY_GENERATE_REQUEST_ERROR" |
-                                       "KEY_LOAD_ERROR" |
-                                       "KEY_LOAD_TIMEOUT" |
-                                       "KEY_STATUS_CHANGE_ERROR" |
-                                       "KEY_UPDATE_ERROR" |
-                                       "LICENSE_SERVER_CERTIFICATE_ERROR" |
-                                       "MEDIA_IS_ENCRYPTED_ERROR" |
-                                       "MULTIPLE_SESSIONS_SAME_INIT_DATA";
 
 /**
  * Error linked to the encryption of the media.
