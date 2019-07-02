@@ -16,6 +16,10 @@ export default function parseDRMConfigurations(drmConfigurations) {
     const keySystem = {
       type,
       getLicense: generateGetLicense(licenseServerUrl, type),
+      fallbackOn: {
+        keyInternalError: true,
+        keyOutputRestricted: true,
+      },
     };
 
     if (!serverCertificateUrl) {
@@ -66,12 +70,20 @@ function generateGetLicense(licenseServerUrl, drmType) {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", licenseServerUrl, true);
     return new Promise((resolve, reject) => {
+      xhr.onerror = () => {
+        const error = new Error("getLicense's request failed on an error");
+        error.fallbackOnLastTry = true;
+        reject(error);
+      };
       xhr.onload = (evt) => {
         if (xhr.status >= 200 && xhr.status < 300) {
           const license = evt.target.response;
           resolve(license);
         } else {
-          reject();
+          const error = new Error("getLicense's request finished with a " +
+                                  `${xhr.status} HTTP error`);
+          error.fallbackOnLastTry = true;
+          reject(error);
         }
       };
       if (isPlayready) {
