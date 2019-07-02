@@ -168,7 +168,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
 
   // Array containing every errors that happened when the Manifest has been
   // created, in the order they have happened.
-  public parsingErrors : Array<Error|ICustomError>;
+  public parsingErrors : ICustomError[];
 
   // Whole duration anounced in the Manifest.
   private _duration : number|undefined;

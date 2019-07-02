@@ -28,10 +28,9 @@ import {
 } from "rxjs/operators";
 import config from "../../../config";
 import {
+  formatError,
   ICustomError,
-  isKnownError,
   NetworkError,
-  OtherError,
   RequestError,
 } from "../../../errors";
 import Manifest from "../../../manifest";
@@ -70,14 +69,11 @@ export interface IFetchManifestResult { manifest : Manifest;
  * @param {Error} error
  * @returns {Error}
  */
-function errorSelector(code : string, error : Error) : ICustomError {
-  if (!isKnownError(error)) {
-    if (error instanceof RequestError) {
-      return new NetworkError(code, error);
-    }
-    return new OtherError(code, error.toString());
+function errorSelector(code : string, error : unknown) : ICustomError {
+  if (error instanceof RequestError) {
+    return new NetworkError(code, error);
   }
-  return error;
+  return formatError(error, code, "Unknown error when fetching the Manifest");
 }
 
 /**
@@ -99,7 +95,7 @@ function errorSelector(code : string, error : Error) : ICustomError {
 export default function createManifestPipeline(
   pipelines : ITransportPipelines,
   pipelineOptions : IPipelineManifestOptions,
-  warning$ : Subject<Error|ICustomError>
+  warning$ : Subject<ICustomError>
 ) : (args : IFetchManifestOptions) => Observable<IFetchManifestResult> {
   const loader = createLoader<
     IManifestLoaderArguments, Document|string
@@ -119,12 +115,12 @@ export default function createManifestPipeline(
                              maxDelay: MAX_BACKOFF_DELAY_BASE,
                              maxRetryRegular: maxRetry,
                              maxRetryOffline,
-                             onRetry: (error : Error) => {
+                             onRetry: (error : unknown) => {
                                warning$.next(errorSelector("PIPELINE_LOAD_ERROR",
                                                            error)); } };
 
     return downloadingBackoff(tryCatch(request, undefined), backoffOptions).pipe(
-      catchError((error : Error) : Observable<never> => {
+      catchError((error : unknown) : Observable<never> => {
         throw errorSelector("PIPELINE_LOAD_ERROR", error);
       }));
   }
@@ -156,12 +152,10 @@ export default function createManifestPipeline(
                         hasClockSynchronization,
                         scheduleRequest }
         ).pipe(
-          catchError((error: Error) => {
-            const formattedError = isKnownError(error) ?
-                                     error :
-                                     new OtherError("PIPELINE_PARSING_ERROR",
-                                                    error.toString());
-            throw formattedError;
+          catchError((error: unknown) => {
+            throw formatError(error,
+                              "PIPELINE_PARSING_ERROR",
+                              "Unknown error when parsing the Manifest");
           }),
           map(({ manifest }) => {
             const warnings = manifest.parsingErrors;

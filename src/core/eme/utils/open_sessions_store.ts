@@ -126,7 +126,7 @@ export default class MediaKeySessionsStore {
         .then(() => {
           this._delete(session);
         })
-        .catch((e : Error) => {
+        .catch((e : unknown) => {
           log.warn(`EME-MKSS: session.closed rejected: ${e}`);
         });
     }

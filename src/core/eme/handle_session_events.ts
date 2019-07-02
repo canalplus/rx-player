@@ -67,7 +67,7 @@ const KEY_STATUS_EXPIRED = "expired";
  * @param {Error|Object} error
  * @returns {Error|Object}
  */
-function licenseErrorSelector(error : unknown) : ICustomError|Error {
+function licenseErrorSelector(error : unknown) : ICustomError {
   if (isKnownError(error)) {
     if (error.type === ErrorTypes.ENCRYPTED_MEDIA_ERROR) {
       return error;
@@ -75,7 +75,7 @@ function licenseErrorSelector(error : unknown) : ICustomError|Error {
   }
 
   return new EncryptedMediaError("KEY_LOAD_ERROR",
-                                 error instanceof Error ? error.message :
+                                 error instanceof Error ? error.toString() :
                                                           "`getLicense` failed");
 }
 
@@ -158,9 +158,18 @@ export default function handleSessionEvents(
             type: "key-status-change-handled" as const,
             value : { session, license: licenseObject },
           })),
-          catchError((error: Error) => {
-            throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                          error.toString());
+          catchError((error: unknown) => {
+            let message;
+            if (error instanceof Error) {
+              message = error.toString();
+            } else if (error != null &&
+                       typeof (error as { message : string }).message === "string")
+            {
+              message = (error as { message : string }).message;
+            } else {
+              message = "Unknown `onKeyStatusesChange` error";
+            }
+            throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", message);
           })
         );
         return observableConcat(warnings$, handledKeyStatusesChange$);
@@ -224,8 +233,10 @@ export default function handleSessionEvents(
 
         log.debug("EME: Update session", evt);
         return castToObservable(session.update(license)).pipe(
-          catchError((error: Error) => {
-            throw new EncryptedMediaError("KEY_UPDATE_ERROR", error.toString());
+          catchError((error: unknown) => {
+            const reason = error instanceof Error ? error.toString() :
+                                                    "`session.update` failed";
+            throw new EncryptedMediaError("KEY_UPDATE_ERROR", reason);
           }),
           mapTo({ type: "session-updated" as const,
                   value: { session, license }, }),

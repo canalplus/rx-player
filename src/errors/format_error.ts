@@ -14,22 +14,25 @@
  * limitations under the License.
  */
 
-import {
+import isKnownError, {
   ICustomError,
-  isKnownError,
-  OtherError,
-} from "../../errors";
+} from "./is_known_error";
+import OtherError from "./other_error";
 
-/**
+/*
  * Format an unknown error into an API-defined error.
  * @param {*} error
  * @returns {Error}
  */
-export default function formatError(error : unknown) : ICustomError {
+export default function formatError(
+  error : unknown,
+  defaultCode : string,
+  defaultReason : string
+) : ICustomError {
   if (!isKnownError(error)) {
-    const reason = error instanceof Error && error.message ? error.message :
-                                                             "Unknown error";
-    return new OtherError("NONE", reason);
+    const reason = error instanceof Error ? error.toString() :
+                                            defaultReason;
+    return new OtherError(defaultCode, reason);
   } else {
     return error;
   }

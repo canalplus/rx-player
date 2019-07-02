@@ -46,7 +46,7 @@ export interface IManifestReadyEvent { type : "manifestReady";
 
 // A minor error happened
 export interface IWarningEvent { type : "warning";
-                                 value : Error | ICustomError; }
+                                 value : ICustomError; }
 
 export interface IReloadingMediaSourceEvent { type: "reloading-media-source";
                                               value: undefined; }

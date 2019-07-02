@@ -92,8 +92,8 @@ function autoPlay$(
 ): Observable<"autoplay"|"autoplay-blocked"> {
   return play$(mediaElement).pipe(
     mapTo("autoplay" as "autoplay"),
-    catchError((error) => {
-      if (error.name === "NotAllowedError") {
+    catchError((error : unknown) => {
+      if (error instanceof Error && error.name === "NotAllowedError") {
         // auto-play was probably prevented.
         log.warn("Init: Media element can't play." +
                  " It may be due to browser auto-play policies.");

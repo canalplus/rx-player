@@ -72,6 +72,7 @@ import {
 import {
   ErrorCodes,
   ErrorTypes,
+  formatError,
   ICustomError,
   MediaError,
 } from "../../errors";
@@ -98,7 +99,6 @@ import { IBufferType } from "../source_buffers";
 import createClock, {
   IClockTick
 } from "./clock";
-import formatError from "./format_error";
 import getPlayerState, {
   PLAYER_STATES,
 } from "./get_player_state";
@@ -1935,7 +1935,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @private
    */
   private _priv_onPlaybackError(error : unknown) : void {
-    const formattedError = formatError(error);
+    const formattedError = formatError(error,
+                                       "NONE",
+                                       "An unknown error stopped content playback.");
     formattedError.fatal = true;
 
     this._priv_stopCurrentContent$.next();
@@ -1970,8 +1972,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Error} error
    * @private
    */
-  private _priv_onPlaybackWarning(error : unknown) : void {
-    const formattedError = formatError(error);
+  private _priv_onPlaybackWarning(error : ICustomError) : void {
+    const formattedError = formatError(error,
+                                       "NONE",
+                                       "An unknown error happened.");
     log.warn("API: Sending warning:", formattedError);
     this.trigger("warning", formattedError);
   }
