@@ -19,6 +19,8 @@ import EncryptedMediaError from "./encrypted_media_error";
 import {
   ErrorCodes,
   ErrorTypes,
+  IErrorCode,
+  IErrorType,
   RequestErrorTypes,
 } from "./error_codes";
 import formatError from "./format_error";
@@ -35,6 +37,8 @@ export {
   EncryptedMediaError,
   ErrorCodes,
   ErrorTypes,
+  IErrorCode,
+  IErrorType,
   formatError,
   ICustomError,
   MediaError as MediaError,

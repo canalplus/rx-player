@@ -74,6 +74,8 @@ import {
   ErrorTypes,
   formatError,
   ICustomError,
+  IErrorCode,
+  IErrorType,
   MediaError,
 } from "../../errors";
 import features from "../../features";
@@ -476,7 +478,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * All possible Error types emitted by the RxPlayer.
    * @type {Object}
    */
-  static get ErrorTypes() : Partial<Record<string, string>> {
+  static get ErrorTypes() : Record<IErrorType, IErrorType> {
     return ErrorTypes;
   }
 
@@ -484,7 +486,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * All possible Error codes emitted by the RxPlayer.
    * @type {Object}
    */
-  static get ErrorCodes() : Partial<Record<string, string>> {
+  static get ErrorCodes() : Record<IErrorCode, IErrorCode> {
     return ErrorCodes;
   }
 

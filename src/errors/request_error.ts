@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-export type IRequestErrorType = "TIMEOUT" |
-                                "ERROR_EVENT" |
-                                "PARSE_ERROR" |
-                                "ERROR_HTTP_CODE";
+import { IRequestErrorType } from "./error_codes";
 
 /**
  * Errors linked to the XHR implentation done in the RxPlayer.

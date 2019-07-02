@@ -16,14 +16,12 @@
 
 import {
   ErrorTypes,
+  INetworkErrorCode,
+  IRequestErrorType,
   RequestErrorTypes,
 } from "./error_codes";
 import errorMessage from "./error_message";
-import RequestError, {
-  IRequestErrorType,
-} from "./request_error";
-
-export type INetworkErrorCode = "PIPELINE_LOAD_ERROR";
+import RequestError from "./request_error";
 
 /**
  * Error linked to network interactions (requests).
