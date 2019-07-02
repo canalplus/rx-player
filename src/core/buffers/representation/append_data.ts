@@ -22,8 +22,14 @@ import {
   concat as observableConcat,
   Observable,
 } from "rxjs";
-import { catchError, ignoreElements } from "rxjs/operators";
-import { MediaError } from "../../../errors";
+import {
+  catchError,
+  ignoreElements,
+} from "rxjs/operators";
+import {
+  formatError,
+  MediaError,
+} from "../../../errors";
 import {
   IAppendBufferInfos,
   QueuedSourceBuffer,
@@ -49,8 +55,10 @@ export default function appendDataToSourceBufferWithRetries<T>(
 
   return append$.pipe(
     catchError((appendError : unknown) => {
-      if (appendError instanceof Error && appendError.name !== "QuotaExceededError") {
-        throw new MediaError("BUFFER_APPEND_ERROR", appendError.toString());
+      if (!(appendError instanceof Error) || appendError.name !== "QuotaExceededError") {
+        throw formatError(appendError,
+                          "BUFFER_APPEND_ERROR",
+                          "An unknown error happened when pushing content");
       }
 
       return observableConcat(
