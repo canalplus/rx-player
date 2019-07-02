@@ -26,16 +26,12 @@ import {
  * @param {Boolean} fatal
  * @returns {Error}
  */
-export default function formatError(
-  error : unknown,
-  fatal : boolean
-) : ICustomError {
+export default function formatError(error : unknown) : ICustomError {
   if (!isKnownError(error)) {
     const reason = error instanceof Error && error.message ? error.message :
                                                              "Unknown error";
-    return new OtherError("NONE", reason, fatal);
+    return new OtherError("NONE", reason, false);
   } else {
-    error.fatal = fatal;
     return error;
   }
 }

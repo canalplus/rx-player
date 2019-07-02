@@ -1942,7 +1942,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @private
    */
   private _priv_onPlaybackError(error : unknown) : void {
-    const formattedError = formatError(error, true);
+    const formattedError = formatError(error);
+    formattedError.fatal = true;
 
     this._priv_stopCurrentContent$.next();
     this._priv_cleanUpCurrentContentState();
@@ -1977,7 +1978,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @private
    */
   private _priv_onPlaybackWarning(error : unknown) : void {
-    const formattedError = formatError(error, false);
+    const formattedError = formatError(error);
     log.warn("API: Sending warning:", formattedError);
     this.trigger("warning", formattedError);
   }
