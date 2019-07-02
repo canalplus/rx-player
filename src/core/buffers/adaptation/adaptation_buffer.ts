@@ -34,6 +34,7 @@ import {
   of as observableOf,
   ReplaySubject,
   Subject,
+  throwError,
 } from "rxjs";
 import {
   catchError,
@@ -49,7 +50,10 @@ import {
   takeUntil,
   tap,
 } from "rxjs/operators";
-import { formatError } from "../../../errors";
+import {
+  formatError,
+  MediaError,
+} from "../../../errors";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
@@ -143,10 +147,18 @@ export default function AdaptationBuffer<T>({
   const requestsEvents$ = new Subject<IABRMetric | IABRRequest>();
   const abrEvents$ = observableMerge(bufferEvents$, requestsEvents$);
 
-  const decryptableRepresentations = adaptation.representations
+  const decipherableRepresentations = adaptation.representations
     .filter((representation) => representation.canBeDecrypted !== false);
+
+  if (decipherableRepresentations.length <= 0) {
+    const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
+                                    "No Representation in the chosen" +
+                                    "Adaptation can be played");
+    return throwError(noRepErr);
+  }
+
   const abr$ : Observable<IABREstimate> = abrManager.get$(adaptation.type,
-                                                          decryptableRepresentations,
+                                                          decipherableRepresentations,
                                                           clock$,
                                                           abrEvents$)
       .pipe(subscribeOn(asapScheduler), share());
