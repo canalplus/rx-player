@@ -67,7 +67,7 @@ class Representation {
   //   - if `false`, it means that we know we were unable to decrypt this
   //     Representation
   //   - if `undefined` there is no certainty on this matter
-  public canBeDecrypted? : boolean;
+  public decipherable? : boolean;
 
   /**
    * @param {Object} args

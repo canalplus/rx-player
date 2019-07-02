@@ -417,7 +417,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
         const representations = adaptation.representations;
         for (let k = 0; k < representations.length; k++) {
           const representation = representations[k];
-          if (representation.canBeDecrypted !== false &&
+          if (representation.decipherable !== false &&
               representation.contentProtections != null)
           {
             const { contentProtections } = representation;
@@ -428,7 +428,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                     isABEqualBytes(keyIDs[m], contentProtection.keyId))
                 {
                   updates.push({ period, adaptation, representation });
-                  representation.canBeDecrypted = false;
+                  representation.decipherable = false;
                 }
               }
             }
@@ -466,10 +466,10 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     }
 
     const _representation = _adaptation.getRepresentation(representation.id);
-    if (_representation == null || _representation.canBeDecrypted !== false) {
+    if (_representation == null || _representation.decipherable !== false) {
       return;
     }
-    _representation.canBeDecrypted = false;
+    _representation.decipherable = false;
     this.trigger("decipherability-update", [{ period: _period,
                                               adaptation: _adaptation,
                                               representation: _representation }]);
