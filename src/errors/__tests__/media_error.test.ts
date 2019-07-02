@@ -19,7 +19,7 @@ import MediaError from "../media_error";
 describe("errors - MediaError", () => {
   it("should format a MediaError", () => {
     const reason = "test";
-    const mediaError = new MediaError("foo", reason);
+    const mediaError = new MediaError("BUFFER_FULL_ERROR", reason);
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");
@@ -30,7 +30,7 @@ describe("errors - MediaError", () => {
 
   it("should be able to set it as fatal", () => {
     const reason = "test";
-    const mediaError = new MediaError("foo", reason);
+    const mediaError = new MediaError("BUFFER_APPEND_ERROR", reason);
     mediaError.fatal = true;
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
