@@ -21,11 +21,6 @@ import {
   ICustomMediaKeySystemAccess,
 } from "../../compat";
 import { ICustomError } from "../../errors";
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
-} from "../../manifest";
 import SessionsStore from "./utils/open_sessions_store";
 import PersistedSessionsStore from "./utils/persisted_session_store";
 
@@ -61,12 +56,7 @@ export interface IBlacklistKeysEvent { type : "blacklist-keys";
                                        value: ArrayBuffer[]; }
 
 export interface IBlacklistSessionEvent { type: "blacklist-session";
-                                          value: null; }
-
-export interface IContent { adaptation : Adaptation;
-                            manifest : Manifest;
-                            period : Period;
-                            representation : Representation; }
+                                          value: ICustomError; }
 
 export type IMediaKeySessionHandledEvents = IKeyMessageHandledEvent |
                                             IKeyStatusChangeHandledEvent |
@@ -75,7 +65,7 @@ export type IMediaKeySessionHandledEvents = IKeyMessageHandledEvent |
                                             IBlacklistKeysEvent;
 
 export interface IBlacklistContentEvent { type: "blacklist-content";
-                                          value: IContent | null; }
+                                          value: null; }
 
 export type IEMEManagerEvent = IEMEWarningEvent |
                                ICreatedMediaKeysEvent |
@@ -85,8 +75,7 @@ export type IEMEManagerEvent = IEMEWarningEvent |
                                IBlacklistContentEvent;
 
 export interface IContentProtection { type : "pssh";
-                                      data : Uint8Array[];
-                                      content : IContent; }
+                                      data : Uint8Array[]; }
 
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {

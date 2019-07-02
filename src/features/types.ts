@@ -24,11 +24,6 @@ import {
   IDirectfileEvent,
   IDirectFileOptions,
 } from "../core/init/initialize_directfile";
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
-} from "../manifest";
 import {
   IHTMLTextTracksParserFn,
   INativeTextTracksParserFn,
@@ -38,14 +33,8 @@ import { ITransportFunction } from "../transports";
 export type IDirectFileInit = (args : IDirectFileOptions) =>
                                 Observable<IDirectfileEvent>;
 
-export interface IContent { adaptation : Adaptation;
-                            manifest : Manifest;
-                            period : Period;
-                            representation : Representation; }
-
 interface IContentProtection { type : "pssh";
-                               data : Uint8Array[];
-                               content : IContent; }
+                               data : Uint8Array[]; }
 
 export type IEMEManager = (mediaElement : HTMLMediaElement,
                            keySystems: IKeySystemOption[],

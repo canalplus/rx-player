@@ -83,6 +83,21 @@ function formatGetLicenseError(error: unknown) : ICustomError {
 }
 
 /**
+ * Error thrown when the MediaKeySession is blacklisted.
+ * Such MediaKeySession should not be re-used but other MediaKeySession for the
+ * same content can still be used.
+ * @class BlacklistedSessionError
+ * @extends Error
+ */
+export class BlacklistedSessionError extends Error {
+  public sessionError : ICustomError;
+  constructor(sessionError : ICustomError) {
+    super();
+    this.sessionError = sessionError;
+  }
+}
+
+/**
  * listen to various events from a MediaKeySession and react accordingly
  * depending on the configuration given.
  * @param {MediaKeySession} session - The MediaKeySession concerned.
@@ -194,10 +209,7 @@ export default function SessionEventsListener(
               if (fallbackOnLastTry === true) {
                 log.warn("EME: Last `getLicense` attempt failed. " +
                          "Blacklisting the current session.");
-                return observableOf({ type: "warning" as const,
-                                      value: formattedError },
-                                    { type: "blacklist-session" as const,
-                                      value: null });
+                throw new BlacklistedSessionError(formattedError);
               }
             }
             throw formattedError;
