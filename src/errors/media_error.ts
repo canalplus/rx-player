@@ -17,26 +17,26 @@
 import { ErrorTypes } from "./error_codes";
 import errorMessage from "./error_message";
 
-export type IMediaError = "BUFFER_APPEND_ERROR" |
-                          "BUFFER_FULL_ERROR" |
-                          "BUFFER_TYPE_UNKNOWN" |
-                          "MANIFEST_INCOMPATIBLE_CODECS_ERROR" |
-                          "MANIFEST_PARSE_ERROR" |
-                          "MANIFEST_UNSUPPORTED_ADAPTATION_TYPE" |
-                          "MEDIA_ERR_ABORTED" |
-                          "MEDIA_ERR_BLOCKED_AUTOPLAY" |
-                          "MEDIA_ERR_PLAY_NOT_ALLOWED" |
-                          "MEDIA_ERR_NOT_LOADED_METADATA" |
-                          "MEDIA_ERR_DECODE" |
-                          "MEDIA_ERR_NETWORK" |
-                          "MEDIA_ERR_SRC_NOT_SUPPORTED" |
-                          "MEDIA_ERR_UNKNOWN" |
-                          "MEDIA_KEYS_NOT_SUPPORTED" |
-                          "MEDIA_SOURCE_NOT_SUPPORTED" |
-                          "MEDIA_STARTING_TIME_NOT_FOUND" |
-                          "MEDIA_TIME_BEFORE_MANIFEST" |
-                          "MEDIA_TIME_AFTER_MANIFEST" |
-                          "MEDIA_TIME_NOT_FOUND";
+export type IMediaErrorCode = "BUFFER_APPEND_ERROR" |
+                              "BUFFER_FULL_ERROR" |
+                              "BUFFER_TYPE_UNKNOWN" |
+                              "MANIFEST_INCOMPATIBLE_CODECS_ERROR" |
+                              "MANIFEST_PARSE_ERROR" |
+                              "MANIFEST_UNSUPPORTED_ADAPTATION_TYPE" |
+                              "MEDIA_ERR_ABORTED" |
+                              "MEDIA_ERR_BLOCKED_AUTOPLAY" |
+                              "MEDIA_ERR_PLAY_NOT_ALLOWED" |
+                              "MEDIA_ERR_NOT_LOADED_METADATA" |
+                              "MEDIA_ERR_DECODE" |
+                              "MEDIA_ERR_NETWORK" |
+                              "MEDIA_ERR_SRC_NOT_SUPPORTED" |
+                              "MEDIA_ERR_UNKNOWN" |
+                              "MEDIA_KEYS_NOT_SUPPORTED" |
+                              "MEDIA_SOURCE_NOT_SUPPORTED" |
+                              "MEDIA_STARTING_TIME_NOT_FOUND" |
+                              "MEDIA_TIME_BEFORE_MANIFEST" |
+                              "MEDIA_TIME_AFTER_MANIFEST" |
+                              "MEDIA_TIME_NOT_FOUND";
 
 /**
  * Error linked to the media Playback.
@@ -48,7 +48,7 @@ export default class MediaError extends Error {
   public readonly name : "MediaError";
   public readonly type : string;
   public readonly message : string;
-  public readonly code : IMediaError;
+  public readonly code : IMediaErrorCode;
   public fatal : boolean;
 
   /**
@@ -56,7 +56,7 @@ export default class MediaError extends Error {
    * @param {string} reason
    * @param {Boolean} fatal
    */
-  constructor(code : IMediaError, reason : string) {
+  constructor(code : IMediaErrorCode, reason : string) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, MediaError.prototype);
