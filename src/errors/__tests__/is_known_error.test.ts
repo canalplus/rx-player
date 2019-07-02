@@ -54,7 +54,7 @@ describe("Errors - isKnownError", () => {
   });
 
   it("should return true for a MediaError", () => {
-    const mediaError = new MediaError("foo", "toto");
+    const mediaError = new MediaError("MEDIA_ERR_DECODE", "toto");
     expect(isKnownError(mediaError)).toBe(true);
   });
 
