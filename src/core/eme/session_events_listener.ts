@@ -192,6 +192,8 @@ export default function SessionEventsListener(
             if (err != null) {
               const { fallbackOnLastTry } = (err as { fallbackOnLastTry? : boolean });
               if (fallbackOnLastTry === true) {
+                log.warn("EME: Last `getLicense` attempt failed. " +
+                         "Blacklisting the current session.");
                 return observableOf({ type: "warning" as const,
                                       value: formattedError },
                                     { type: "blacklist-session" as const,
