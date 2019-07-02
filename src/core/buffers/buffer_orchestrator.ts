@@ -154,14 +154,12 @@ export default function BufferOrchestrator(
       if (position < manifest.getMinimumPosition()) {
         const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST",
                                        "The current position is behind the " +
-                                       "earliest time announced in the Manifest.",
-                                       false);
+                                       "earliest time announced in the Manifest.");
         return observableOf(EVENTS.warning(warning));
       } else if (position > manifest.getMaximumPosition()) {
         const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST",
                                        "The current position is after the latest " +
-                                       "time announced in the Manifest.",
-                                       false);
+                                       "time announced in the Manifest.");
         return observableOf(EVENTS.warning(warning));
       }
       return EMPTY;
@@ -286,8 +284,7 @@ export default function BufferOrchestrator(
           .getPeriodForTime(currentTime + wantedTimeOffset);
         if (newInitialPeriod == null) {
           throw new MediaError("MEDIA_TIME_NOT_FOUND",
-                               "The wanted position is not found in the Manifest.",
-                               true);
+                               "The wanted position is not found in the Manifest.");
         }
         return launchConsecutiveBuffersForPeriod(newInitialPeriod);
       })

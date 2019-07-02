@@ -321,8 +321,7 @@ export default function getMediaKeySystemAccess(
           obs.error(new EncryptedMediaError("INCOMPATIBLE_KEYSYSTEMS",
                                             "No key system compatible with your " +
                                             "wanted configuration has been found " +
-                                            "in the current browser.",
-                                            true));
+                                            "in the current browser."));
           return;
         }
 

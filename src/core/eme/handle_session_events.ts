@@ -64,23 +64,17 @@ const KEY_STATUS_EXPIRED = "expired";
 
 /**
  * @param {Error|Object} error
- * @param {Boolean} fatal
  * @returns {Error|Object}
  */
-function licenseErrorSelector(
-  error: ICustomError|Error,
-  fatal: boolean
-) : ICustomError|Error {
+function licenseErrorSelector(error: ICustomError|Error) : ICustomError|Error {
   if (isKnownError(error)) {
     if (error.type === ErrorTypes.ENCRYPTED_MEDIA_ERROR) {
-      error.fatal = fatal;
       return error;
     }
   }
 
   return new EncryptedMediaError("KEY_LOAD_ERROR",
-                                 error.message || error.toString(),
-                                 fatal);
+                                 error.message || error.toString());
 }
 
 /**
@@ -101,18 +95,16 @@ export default function handleSessionEvents(
   const getLicenseRetryOptions = { totalRetry: 2,
                                    retryDelay: 200,
 
-                                   errorSelector: (error: ICustomError|Error) =>
-                                     licenseErrorSelector(error, true),
-
+                                   errorSelector: licenseErrorSelector,
                                    onRetry: (error: ICustomError|Error) =>
                                      sessionWarningSubject$.next({
                                        type: "warning",
-                                       value: licenseErrorSelector(error, false),
+                                       value: licenseErrorSelector(error),
                                      }) };
 
   const keyErrors : Observable<never> = onKeyError$(session)
     .pipe(map((error) => {
-      throw new EncryptedMediaError("KEY_ERROR", error.type, true);
+      throw new EncryptedMediaError("KEY_ERROR", error.type);
     }));
 
   const keyStatusesChanges : Observable<IMediaKeySessionHandledEvents |
@@ -129,8 +121,7 @@ export default function handleSessionEvents(
           if (keyStatus === KEY_STATUS_EXPIRED || keyId === KEY_STATUS_EXPIRED) {
             const { throwOnLicenseExpiration } = keySystem;
             const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                                  "A decryption key expired",
-                                                  false);
+                                                  "A decryption key expired");
 
             if (throwOnLicenseExpiration !== false) {
               throw error;
@@ -141,13 +132,11 @@ export default function handleSessionEvents(
           if (KEY_STATUS_ERRORS[keyId]) {
             throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
                                           "An invalid key status has been " +
-                                          "encountered: " + keyId,
-                                          true);
+                                          "encountered: " + keyId);
           } else if (KEY_STATUS_ERRORS[keyStatus]) {
             throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
                                           "An invalid key status has been " +
-                                          "encountered: " + keyStatus,
-                                          true);
+                                          "encountered: " + keyStatus);
           }
         });
 
@@ -166,8 +155,7 @@ export default function handleSessionEvents(
           })),
           catchError((error: Error) => {
             throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                          error.toString(),
-                                          true);
+                                          error.toString());
           })
         );
         return observableConcat(warnings$, handledKeyStatusesChange$);
@@ -190,8 +178,7 @@ export default function handleSessionEvents(
               if (error instanceof TimeoutError) {
                 throw new EncryptedMediaError("KEY_LOAD_TIMEOUT",
                                               "The license server took more " +
-                                              "than 10 seconds to respond.",
-                                              false);
+                                              "than 10 seconds to respond.");
               }
               if (error instanceof Error) {
                 throw error;
@@ -231,7 +218,7 @@ export default function handleSessionEvents(
           log.debug("EME: Update session", evt);
           return castToObservable(session.update(license)).pipe(
             catchError((error: Error) => {
-              throw new EncryptedMediaError("KEY_UPDATE_ERROR", error.toString(), true);
+              throw new EncryptedMediaError("KEY_UPDATE_ERROR", error.toString());
             }),
             mapTo({ type: "session-updated" as const,
                     value: { session, license }, }),

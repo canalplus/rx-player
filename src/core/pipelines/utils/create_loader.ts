@@ -96,16 +96,14 @@ const { MAX_BACKOFF_DELAY_BASE,
  * Generate a new error from the infos given.
  * @param {string} code
  * @param {Error} error
- * @param {Boolean} fatal - Whether the error is fatal to the content's
- * playback.
  * @returns {Error}
  */
-function errorSelector(code : string, error : Error, fatal : boolean) : ICustomError {
+function errorSelector(code : string, error : Error) : ICustomError {
   if (!isKnownError(error)) {
     if (error instanceof RequestError) {
-      return new NetworkError(code, error, fatal);
+      return new NetworkError(code, error);
     }
-    return new OtherError(code, error.toString(), fatal);
+    return new OtherError(code, error.toString());
   }
   return error;
 }
@@ -165,7 +163,7 @@ export default function createLoader<T, U>(
                      observableOf; // TS Issue triggers an Rx deprecation
                      /* tslint:enable:deprecation */
 
-  // Subject that will emit non-fatal errors.
+  // Subject that will emit warnings on request retry
   const retryErrorSubject : Subject<Error> = new Subject();
 
   // Backoff options given to the backoff retry done with the loader function.
@@ -174,10 +172,8 @@ export default function createLoader<T, U>(
                            maxRetryRegular: maxRetry,
                            maxRetryOffline,
                            onRetry: (error : Error) => {
-                             retryErrorSubject.next(
-                               errorSelector("PIPELINE_LOAD_ERROR",
-                                             error,
-                                             false)); } };
+                             retryErrorSubject
+                               .next(errorSelector("PIPELINE_LOAD_ERROR", error)); } };
   /**
    * Call the transport's resolver - if it exists - with the given data.
    *
@@ -189,7 +185,7 @@ export default function createLoader<T, U>(
     return tryCatch<T, T>(resolver, resolverArgument)
       .pipe()
       .pipe(catchError((error : Error) : Observable<never> => {
-        throw errorSelector("PIPELINE_RESOLVE_ERROR", error, true);
+        throw errorSelector("PIPELINE_RESOLVE_ERROR", error);
       }));
   }
 
@@ -219,7 +215,7 @@ export default function createLoader<T, U>(
         backoffOptions
       ).pipe(
         catchError((error : Error) : Observable<never> => {
-          throw errorSelector("PIPELINE_LOAD_ERROR", error, true);
+          throw errorSelector("PIPELINE_LOAD_ERROR", error);
         }),
 
         tap((arg) => {

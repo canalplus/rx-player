@@ -59,8 +59,7 @@ function setServerCertificate(
     ).pipe(catchError((error: Error) => {
       log.warn("EME: mediaKeys.setServerCertificate returned an error", error);
       throw new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR",
-                                    error.toString(),
-                                    true);
+                                    error.toString());
     }));
   });
 }
@@ -81,7 +80,6 @@ export default function trySettingServerCertificate(
     return setServerCertificate(mediaKeys, serverCertificate).pipe(
       ignoreElements(),
       catchError(error => {
-        error.fatal = false;
         return observableOf({ type: "warning" as "warning", value: error });
       }));
   }

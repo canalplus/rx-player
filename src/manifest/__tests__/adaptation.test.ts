@@ -254,7 +254,6 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation.parsingErrors).toHaveLength(1);
     const error = adaptation.parsingErrors[0];
     expect(error.code).toEqual("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
-    expect(error.fatal).toEqual(false);
     expect(error.type).toEqual("MEDIA_ERROR");
   });
 

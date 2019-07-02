@@ -199,12 +199,12 @@ export default function createSegmentFetcher<T>(
           parse(init? : ISegmentTimingInfos) : Observable<IParsedSegment<T>> {
             const parserArg = objectAssign({ response: response.value, init }, content);
             return segmentParser(parserArg)
-              .pipe(catchError((error: Error) => {
+              .pipe(catchError((error: unknown) => {
                 const formattedError = isKnownError(error) ?
-                                         error :
-                                         new OtherError("PIPELINE_PARSING_ERROR",
-                                                        error.toString(),
-                                                        true);
+                  error :
+                  new OtherError("PIPELINE_PARSING_ERROR",
+                                 error instanceof Error ? error.message :
+                                                          "Unknown parsing error");
                 throw formattedError;
               }));
           },

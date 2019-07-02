@@ -52,8 +52,7 @@ export default function createEMEManager(
       onEncrypted$(mediaElement).pipe(map(() => {
         log.error("Init: Encrypted event but EME feature not activated");
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
-                                      "EME feature not activated.",
-                                      true);
+                                      "EME feature not activated.");
       })),
       observableOf({ type: "eme-disabled" as "eme-disabled" }));
   }
@@ -63,8 +62,7 @@ export default function createEMEManager(
       onEncrypted$(mediaElement).pipe(map(() => {
         log.error("Init: Ciphered media and no keySystem passed");
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
-                                      "Media is encrypted and no `keySystems` given",
-                                      true);
+                                      "Media is encrypted and no `keySystems` given");
       })),
       observableOf({ type: "eme-disabled" as "eme-disabled" }));
   }
@@ -74,8 +72,7 @@ export default function createEMEManager(
       onEncrypted$(mediaElement).pipe(map(() => {
         log.error("Init: Encrypted event but no EME API available");
         throw new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
-                                      "Encryption APIs not found.",
-                                      true);
+                                      "Encryption APIs not found.");
       })),
       observableOf({ type: "eme-disabled" as "eme-disabled" }));
   }

@@ -23,7 +23,7 @@ describe("errors - NetworkError", () => {
     xhr.open("GET", "http://www.example.com");
     const reason = "bar";
     const requestError = new RequestError(xhr, "foo", reason);
-    const networkError = new NetworkError("foo", requestError, true);
+    const networkError = new NetworkError("foo", requestError);
     expect(networkError).toBeInstanceOf(Error);
     expect(networkError.name).toBe("NetworkError");
     expect(networkError.type).toBe("NETWORK_ERROR");
@@ -31,7 +31,7 @@ describe("errors - NetworkError", () => {
     expect(networkError.status).toBe(requestError.status);
     expect(networkError.errorType).toBe(requestError.type);
     expect(networkError.code).toBe("");
-    expect(networkError.fatal).toBe(true);
+    expect(networkError.fatal).toBe(false);
     expect(networkError.message).toBe("NetworkError () bar");
   });
 
@@ -40,7 +40,8 @@ describe("errors - NetworkError", () => {
     xhr.open("GET", "http://www.example.com");
     const reason = "bar";
     const requestError = new RequestError(xhr, "foo", reason);
-    const networkError = new NetworkError("MEDIA_ERR_NETWORK", requestError, true);
+    const networkError = new NetworkError("MEDIA_ERR_NETWORK", requestError);
+    networkError.fatal = true;
     expect(networkError).toBeInstanceOf(Error);
     expect(networkError.name).toBe("NetworkError");
     expect(networkError.type).toBe("NETWORK_ERROR");
@@ -56,7 +57,7 @@ describe("errors - NetworkError", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
     const requestError = new RequestError(xhr, "foo", "bar");
-    const networkError = new NetworkError("MEDIA_ERR_NETWORK", requestError, true);
+    const networkError = new NetworkError("MEDIA_ERR_NETWORK", requestError);
     expect(networkError.isHttpError(0)).toBe(false);
   });
 
@@ -66,7 +67,7 @@ describe("errors - NetworkError", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
     const requestError = new RequestError(xhr, "foo", "ERROR_HTTP_CODE");
-    const networkError = new NetworkError("MEDIA_ERR_NETWORK", requestError, true);
+    const networkError = new NetworkError("MEDIA_ERR_NETWORK", requestError);
     expect(networkError.isHttpError(1)).toBe(false);
   });
 
@@ -76,7 +77,7 @@ describe("errors - NetworkError", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
     const requestError = new RequestError(xhr, "foo", "ERROR_HTTP_CODE");
-    const networkError = new NetworkError("MEDIA_ERR_NETWORK", requestError, true);
+    const networkError = new NetworkError("MEDIA_ERR_NETWORK", requestError);
     expect(networkError.isHttpError(0)).toBe(true);
   });
 });

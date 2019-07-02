@@ -112,8 +112,7 @@ export default class Adaptation {
     if (hadRepresentations && argsRepresentations.length === 0) {
       log.warn("Incompatible codecs for adaptation", args);
       const error = new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                                   "An Adaptation contains only incompatible codecs.",
-                                   false);
+                                   "An Adaptation contains only incompatible codecs.");
       this.parsingErrors.push(error);
     }
 

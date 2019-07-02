@@ -168,8 +168,8 @@ export default function EMEManager(
             }),
             catchError((error: Error) => {
               throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR",
-                                            error.toString(),
-                                            false);
+                                            error != null ? error.toString() :
+                                                            "Unknown error");
             }),
             ignoreElements()
           )

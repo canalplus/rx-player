@@ -44,7 +44,7 @@ export default class NetworkError extends Error {
    * @param {Error} requestError
    * @param {Boolean} fatal
    */
-  constructor(code : string, requestError : RequestError, fatal : boolean) {
+  constructor(code : string, requestError : RequestError) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, NetworkError.prototype);
@@ -60,8 +60,8 @@ export default class NetworkError extends Error {
     this.code = ErrorCodes.hasOwnProperty(code) ?
                   (ErrorCodes as Record<string, string>)[code] :
                   "";
-    this.fatal = !!fatal;
     this.message = errorMessage(this.name, this.code, requestError.message);
+    this.fatal = false;
   }
 
   /**
