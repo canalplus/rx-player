@@ -148,7 +148,7 @@ export default function AdaptationBuffer<T>({
   const abrEvents$ = observableMerge(bufferEvents$, requestsEvents$);
 
   const decipherableRepresentations = adaptation.representations
-    .filter((representation) => representation.canBeDecrypted !== false);
+    .filter((representation) => representation.decipherable !== false);
 
   if (decipherableRepresentations.length <= 0) {
     const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
