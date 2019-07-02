@@ -44,11 +44,11 @@ import { concat } from "../../utils/byte_parsing";
 import getSession, {
   IEncryptedEvent,
 } from "./get_session";
-import SessionEventsListener, {
-  BlacklistedSessionError,
-} from "./handle_session_events";
 import initMediaKeys from "./init_media_keys";
 import { defaultMediaKeysInfosStore } from "./media_keys_infos_store";
+import SessionEventsListener, {
+  BlacklistedSessionError,
+} from "./session_events_listener";
 import setServerCertificate from "./set_server_certificate";
 import {
   IContentProtection,
