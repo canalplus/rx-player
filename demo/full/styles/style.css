@@ -141,6 +141,17 @@ body {
   align-items: center;
 }
 
+.content-inputs-selects {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.content-inputs-middle {
+  display: flex;
+  flex-direction: row;
+}
+
 .text-input {
   font-family: CanalDemiRomain, "Open Sans", sans-serif;
   font-size: 1rem;
@@ -367,6 +378,8 @@ body {
 }
 
 .choice-input-button-wrapper {
+  display: flex;
+  flex-direction: row;
   margin-right: -5px;
 }
 
@@ -446,13 +459,24 @@ body {
   width: 60px;
 }
 
-.record-button {
-  font-size: 1.1rem;
-  border-radius: 3px;
+.update-control {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
-.record-button.disabled {
+.save-button {
+  font-size: 1.1rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.save-button.disabled {
   background-color: #ececec;
+}
+
+.need-to-fill {
+  border: solid 2px #ec3655;
 }
 
 .erase-button {
@@ -870,6 +894,14 @@ input:checked + .slider:before {
 
 @media only screen and (max-width: 660px) {
   .content-inputs {
+    flex-direction: column;
+  }
+
+  .content-inputs-left {
+    flex-direction: column;
+  }
+
+  .update-control {
     flex-direction: column;
   }
 }

@@ -66,13 +66,14 @@ Object.keys(CONTENTS_PER_TYPE).forEach((key) => {
   CONTENTS_PER_TYPE[key].splice(0, 0, { name: "Custom link", disabled: false });
 });
 
+
 class ContentList extends React.Component {
   constructor(...args) {
     super(...args);
 
     const contents = CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]];
     const firstEnabledContentIndex =
-      contents.findIndex((content) => !content.disabled);
+      contents.findIndex((content) => !content.disabled && content.name !== "Custom link");
 
     const localStorageContents = [];
     const localContentItems = localStorage.getItem("rxPlayerLocalContents");
@@ -181,7 +182,7 @@ class ContentList extends React.Component {
   changeTransportType(transportType) {
     const contents = CONTENTS_PER_TYPE[transportType];
     const firstEnabledContentIndex =
-      contents.findIndex((content) => !content.disabled);
+      contents.findIndex((content) => !content.disabled && content.name !== "Custom link");
     this.setState({
       transportType,
       contentChoiceIndex: firstEnabledContentIndex,
@@ -392,6 +393,10 @@ class ContentList extends React.Component {
       this.setState({ drm: type });
     };
 
+    const onCancel = () => {
+      this.setState({ isSavingOrUpdating: false });
+    }
+
     const shouldDisableEncryptedContent = !HAS_EME_APIs && !IS_HTTPS;
 
     const generateDRMButtons = () => {
@@ -412,43 +417,44 @@ class ContentList extends React.Component {
     return (
       <div className="choice-inputs-wrapper">
         <div className="content-inputs">
-          <div className="content-inputs-selects">
-            <Select
-              className="choice-input transport-type-choice white-select"
-              onChange={onTechChange}
-              options={TRANSPORT_TYPES}
-            />
-            <Select
-              className="choice-input content-choice white-select"
-              onChange={onContentChange}
-              options={contentsToSelect}
-              selected={contentChoiceIndex}
-            />
-            {
-              (hasLocalStorage && (hasTextInput || isLocalContent)) ?
-                (<Button
-                  className={"choice-input-button record-button" + (!activeSaveOption ? " disabled" : "")}
-                  onClick={
-                    () => {
-                      isSavingOrUpdating ?
-                        onClickValid(chosenContent ? chosenContent.id : undefined) :
-                        onClickSave()
-                    }
-                  }
-                  disabled={!activeSaveOption}
-                  value={isSavingOrUpdating ? "Valid" : (isLocalContent ? "Update" : "Save content")}
-                />) :
-                null
-            }
-            {
-              (hasLocalStorage && isLocalContent) ? 
-                (<Button
-                  className="choice-input-button erase-button"
-                  onClick={onClickErase}
-                  value={String.fromCharCode(0xf1f8)}
-                />) :
-                null
-            }
+          <div className="content-inputs-left">
+            <div className="content-inputs-selects">
+              <Select
+                className="choice-input transport-type-choice white-select"
+                onChange={onTechChange}
+                options={TRANSPORT_TYPES}
+              />
+              <Select
+                className="choice-input content-choice white-select"
+                onChange={onContentChange}
+                options={contentsToSelect}
+                selected={contentChoiceIndex}
+              />
+            </div>
+            <div className="content-inputs-middle">
+              {
+                (hasLocalStorage && (hasTextInput || isLocalContent)) ?
+                  (<Button
+                    className={"choice-input-button save-button" +
+                      (!activeSaveOption ? " disabled" : "")}
+                    onClick={onClickSave}
+                    disabled={!activeSaveOption || isSavingOrUpdating}
+                    value={isLocalContent ? 
+                      (isSavingOrUpdating ? "Updating" : "Update content") :
+                      (isSavingOrUpdating ? "Saving" : "Save content")}
+                  />) :
+                  null
+              }
+              {
+                (hasLocalStorage && isLocalContent) ? 
+                  (<Button
+                    className="choice-input-button erase-button"
+                    onClick={onClickErase}
+                    value={String.fromCharCode(0xf1f8)}
+                  />) :
+                  null
+              }
+            </div>
           </div>
           <div className="choice-input-button-wrapper">
             <div class="auto-play">
@@ -470,12 +476,36 @@ class ContentList extends React.Component {
             (
               <div className="custom-input-wrapper">
                 {
-                  isSavingOrUpdating ? (<TextInput
-                    className="text-input"
-                    onChange={onNameInput}
-                    value={contentName}
-                    placeholder={"Content name"}
-                  />) : null
+                  isSavingOrUpdating ?
+                    (<div className="update-control">
+                      <TextInput
+                        className={"text-input" + (contentName === "" ? " need-to-fill" : "")}
+                        onChange={onNameInput}
+                        value={contentName}
+                        placeholder={"Content name"}
+                      />
+                      <div>
+                        {
+                          (isSavingOrUpdating) ?
+                            (<Button
+                              className={"choice-input-button save-button"}
+                              onClick={() => onClickValid(chosenContent ? chosenContent.id : undefined)}
+                              value={isLocalContent ? "Update content" : "Save content"}
+                            />) :
+                            null
+                        }
+                        {
+                          (isSavingOrUpdating) ?
+                            (<Button
+                              className={"choice-input-button save-button"}
+                              onClick={onCancel}
+                              value={"Cancel"}
+                            />) :
+                            null
+                        }
+                      </div>
+                    </div>)
+                    : null
                 }
                 <TextInput
                   className="text-input"
