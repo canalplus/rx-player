@@ -168,7 +168,13 @@ export default class Adaptation {
    * @returns {Array.<Number>}
    */
   getAvailableBitrates() : number[] {
-    const bitrates = this.representations.map(r => r.bitrate);
+    const bitrates : number[] = [];
+    for (let i = 0; i < this.representations.length; i ++) {
+      const representation = this.representations[i];
+      if (representation.decipherable !== false) {
+        bitrates.push(representation.bitrate);
+      }
+    }
     return uniq(bitrates);
   }
 
