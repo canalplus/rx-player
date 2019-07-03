@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import {
   combineLatest as observableCombineLatest,
   merge as observableMerge,
@@ -33,31 +32,48 @@ import { IInitClockTick } from "./types";
  * Create clock Observable for the Buffers part of the code.
  * @param {Object} manifest
  * @param {Observable} initClock$
+ * @param {Observable} speed$
  * @param {Observable} initialSeek$
+ * @param {Observable} initialPlay$
  * @param {Number} startTime
+ * @param {boolean} shouldAutoPlay
  * @returns {Observable}
  */
 export default function createBufferClock(
   manifest : Manifest,
   initClock$ : Observable<IInitClockTick>,
-  initialSeek$ : Observable<unknown>,
   speed$ : Observable<number>,
-  startTime : number
+  initialSeek$ : Observable<unknown>,
+  initialPlay$ : Observable<unknown>,
+  startTime : number,
+  shouldAutoPlay : boolean
 ) : Observable<IBufferOrchestratorClockTick> {
+  let initialPlayPerformed = false;
   let initialSeekPerformed = false;
+
+  const updateIsPlaying$ = initialPlay$.pipe(
+    tap(() => { initialPlayPerformed = true; }),
+    ignoreElements());
+
   const updateTimeOffset$ = initialSeek$.pipe(
     tap(() => { initialSeekPerformed = true; }),
-    ignoreElements()
-  );
+    ignoreElements());
 
   const clock$ : Observable<IBufferOrchestratorClockTick> =
     observableCombineLatest([initClock$, speed$])
       .pipe(map(([tick, speed]) => {
-        return objectAssign({
-          isLive: manifest.isLive,
-          liveGap: manifest.isLive ?
-            manifest.getMaximumPosition() - tick.currentTime :
-            Infinity,
+        const { isLive } = manifest;
+        return {
+          currentTime: tick.currentTime,
+          duration: tick.duration,
+          isPaused: initialPlayPerformed ? tick.paused :
+                                           !shouldAutoPlay,
+          isLive,
+          liveGap: isLive ? manifest.getMaximumPosition() - tick.currentTime :
+                            Infinity,
+          readyState: tick.readyState,
+          speed,
+          stalled: tick.stalled,
 
           // wantedTimeOffset is an offset to add to the timing's current time to have
           // the "real" wanted position.
@@ -67,9 +83,8 @@ export default function createBufferClock(
           // Thus we initially set a wantedTimeOffset equal to startTime.
           wantedTimeOffset: initialSeekPerformed ? 0 :
                                                    startTime - tick.currentTime,
-          speed,
-        }, tick);
+        };
       }));
 
-  return observableMerge(clock$, updateTimeOffset$);
+  return observableMerge(updateIsPlaying$, updateTimeOffset$, clock$);
 }
