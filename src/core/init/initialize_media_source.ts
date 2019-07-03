@@ -138,6 +138,10 @@ export type IInitEvent = IManifestReadyEvent |
                          IReloadingMediaSourceEvent |
                          IWarningEvent;
 
+// Informations needed when reloading the MediaSource
+interface IReloadingInfos { currentTime : number;
+                            isPaused : boolean; }
+
 /**
  * Central part of the player.
  *
@@ -261,16 +265,14 @@ export default function InitializeOnMediaSource({
     const initialTime = getInitialTime(manifest, startAt);
     log.debug("Init: Initial time calculated:", initialTime);
 
-    const reloadMediaSource$ = new Subject<void>();
+    const reloadMediaSource$ = new Subject<IReloadingInfos>();
     const onEvent = createEventListener(reloadMediaSource$,
                                         protectedSegments$,
                                         refreshManifest);
     const handleReloads$ : Observable<IInitEvent> = reloadMediaSource$.pipe(
-      switchMap(() => {
-        const currentPosition = mediaElement.currentTime;
-        const isPaused = mediaElement.paused;
+      switchMap(({ currentTime, isPaused }) => {
         return openMediaSource(mediaElement).pipe(
-          mergeMap(newMS => loadOnMediaSource(newMS, currentPosition, !isPaused)),
+          mergeMap(newMS => loadOnMediaSource(newMS, currentTime, !isPaused)),
           mergeMap(onEvent),
           startWith(EVENTS.reloadingMediaSource())
         );
@@ -334,7 +336,7 @@ export default function InitializeOnMediaSource({
  * @returns {Function}
  */
 function createEventListener(
-  reloadMediaSource$ : Subject<void>,
+  reloadMediaSource$ : Subject<IReloadingInfos>,
   protectedSegments$ : Subject<IContentProtection>,
   refreshManifest : () => Observable<never>
 ) : (evt : IMediaSourceLoaderEvent) => Observable<IInitEvent> {
@@ -346,7 +348,7 @@ function createEventListener(
   return function onEvent(evt : IMediaSourceLoaderEvent) {
     switch (evt.type) {
       case "needs-media-source-reload":
-        reloadMediaSource$.next();
+        reloadMediaSource$.next(evt.value);
         break;
 
       case "needs-manifest-refresh":

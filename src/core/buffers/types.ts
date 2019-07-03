@@ -151,7 +151,8 @@ export interface ICompletedBufferEvent { type: "complete-buffer";
 
 // The MediaSource needs to be reloaded to continue
 export interface INeedsMediaSourceReload { type: "needs-media-source-reload";
-                                           value: undefined; }
+                                           value: { currentTime : number;
+                                                    isPaused : boolean; }; }
 
 // Events coming from single PeriodBuffer
 export type IPeriodBufferEvent = IPeriodBufferReadyEvent |
