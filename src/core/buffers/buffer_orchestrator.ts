@@ -42,6 +42,7 @@ import log from "../../log";
 import Manifest, {
   Period,
 } from "../../manifest";
+import { fromEvent } from "../../utils/event_emitter";
 import SortedList from "../../utils/sorted_list";
 import WeakMapMemory from "../../utils/weak_map_memory";
 import ABRManager from "../abr";
@@ -180,7 +181,13 @@ export default function BufferOrchestrator(
       areComplete ? EVENTS.endOfStream() : EVENTS.resumeStream()
     ));
 
-  return observableMerge(...buffersArray,
+  // TODO do not reload whole content when the decipherability changes
+  const reloadOnDecipherabilityUpdate$ = fromEvent(manifest, "decipherability-update")
+    .pipe(mergeMap(() =>
+      clock$.pipe(take(1), map(e => EVENTS.needsMediaSourceReload(e)))));
+
+  return observableMerge(reloadOnDecipherabilityUpdate$,
+                         ...buffersArray,
                          activePeriodChanged$,
                          endOfStream$,
                          outOfManifest$);
