@@ -13,7 +13,7 @@ const MediaKeys_ =
   null;
 
 const { localStorage } = window;
-const hasLocalStorage = !!localStorage
+const hasLocalStorage = !!localStorage;
 
 const HAS_EME_APIs = (
   typeof navigator.requestMediaKeySystemAccess === "function" ||
@@ -117,7 +117,7 @@ class ContentList extends React.Component {
 
   removeContentToLocalStorage(content) {
     const { localStorageContents } = this.state;
-    const idx = localStorageContents.findIndex((e) => { 
+    const idx = localStorageContents.findIndex((e) => {
       return e.name === content.name;
     });
 
@@ -208,12 +208,16 @@ class ContentList extends React.Component {
       const { localContent } = content;
       manifestUrl = localContent ? content.url : "";
       contentName = localContent ? content.name : "";
-      licenseServerUrl = (localContent && content.drmInfos && content.drmInfos[0]) ?
-        content.drmInfos[0].licenseServerUrl :
-        "";
-      setServerCertificate = (localContent && content.drmInfos && content.drmInfos[0]) ?
-        content.drmInfos[0].setServerCertificate :
-        "";
+      licenseServerUrl = (localContent &&
+                          content.drmInfos &&
+                          content.drmInfos[0]) ?
+                            content.drmInfos[0].licenseServerUrl :
+                            "";
+      setServerCertificate = (localContent &&
+                              content.drmInfos &&
+                              content.drmInfos[0]) ?
+                                content.drmInfos[0].setServerCertificate :
+                                "";
     }
 
     this.setState({
@@ -258,7 +262,7 @@ class ContentList extends React.Component {
       transportType,
       localStorageContents,
       isSavingOrUpdating,
-      chosenContent
+      chosenContent,
     } = this.state;
 
     // get local storage content here, and concat
@@ -267,21 +271,24 @@ class ContentList extends React.Component {
       .map((content) => {
         let name = content.name;
         let disabled = false;
-        
+
         if (IS_HTTPS) {
           if (content.url.startsWith("http:")) {
             name = "[HTTP only] " + name;
             disabled = true;
           }
-        } else if (!HAS_EME_APIs && content.drmInfos && content.drmInfos.length) {
+        } else if (!HAS_EME_APIs &&
+                   content.drmInfos &&
+                   content.drmInfos.length
+        ) {
           name = "[HTTPS only] " + name;
           disabled = true;
         }
-      
+
         if (content.live) {
           name += " (live)";
         }
-      
+
         const localContent = !!content.localContent;
         return { content, name, disabled, localContent };
       });
@@ -336,8 +343,8 @@ class ContentList extends React.Component {
             {
               drm,
               licenseServerUrl,
-              serverCertificateUrl
-            }
+              serverCertificateUrl,
+            },
           ] : [],
           localContent: true,
           id: id == null ? (Date.now() + "_" + Math.random() + "_" + contentName) :
@@ -348,10 +355,10 @@ class ContentList extends React.Component {
           this.changeContentIndex(contentsToSelect.length, content);
         }
         this.setState({
-          isSavingOrUpdating: false
+          isSavingOrUpdating: false,
         });
       }
-    }
+    };
 
     const onClickSave = () => {
       this.setState({
@@ -395,7 +402,7 @@ class ContentList extends React.Component {
 
     const onCancel = () => {
       this.setState({ isSavingOrUpdating: false });
-    }
+    };
 
     const shouldDisableEncryptedContent = !HAS_EME_APIs && !IS_HTTPS;
 
@@ -439,14 +446,14 @@ class ContentList extends React.Component {
                       (!activeSaveOption ? " disabled" : "")}
                     onClick={onClickSave}
                     disabled={!activeSaveOption || isSavingOrUpdating}
-                    value={isLocalContent ? 
+                    value={isLocalContent ?
                       (isSavingOrUpdating ? "Updating" : "Update content") :
                       (isSavingOrUpdating ? "Saving" : "Save content")}
                   />) :
                   null
               }
               {
-                (hasLocalStorage && isLocalContent) ? 
+                (hasLocalStorage && isLocalContent) ?
                   (<Button
                     className="choice-input-button erase-button"
                     onClick={onClickErase}
@@ -489,7 +496,11 @@ class ContentList extends React.Component {
                           (isSavingOrUpdating) ?
                             (<Button
                               className={"choice-input-button save-button"}
-                              onClick={() => onClickValid(chosenContent ? chosenContent.id : undefined)}
+                              onClick={
+                                () => onClickValid(chosenContent ?
+                                                    chosenContent.id :
+                                                    undefined)
+                              }
                               value={isLocalContent ? "Update content" : "Save content"}
                             />) :
                             null
@@ -546,10 +557,12 @@ class ContentList extends React.Component {
                             value={licenseServerUrl}
                             placeholder={
                               chosenContentHasDRMInfo &&
-                              chosenContent.drmInfos[0].licenseServerUrl != "" &&
-                              chosenContent.drmInfos[0].licenseServerUrl != null ?
-                                chosenContent.drmInfos[0].licenseServerUrl :
-                                "License URL Server"
+                              chosenContent.drmInfos[0]
+                                .licenseServerUrl != "" &&
+                              chosenContent.drmInfos[0]
+                                .licenseServerUrl != null ?
+                                  chosenContent.drmInfos[0].licenseServerUrl :
+                                  "License URL Server"
                             }
                           />
                         </div>
@@ -559,9 +572,12 @@ class ContentList extends React.Component {
                           value={serverCertificateUrl}
                           placeholder={
                             chosenContentHasDRMInfo &&
-                            chosenContent.drmInfos[0].serverCertificateUrl != "" &&
-                            chosenContent.drmInfos[0].serverCertificateUrl != null ?
-                              chosenContent.drmInfos[0].serverCertificateUrl :
+                            chosenContent.drmInfos[0]
+                              .serverCertificateUrl != "" &&
+                            chosenContent.drmInfos[0]
+                              .serverCertificateUrl != null ?
+                              chosenContent.drmInfos[0]
+                                .serverCertificateUrl :
                               "Server certificate URL (optional)"
                           }
                         />
