@@ -208,16 +208,16 @@ class ContentList extends React.Component {
       const { localContent } = content;
       manifestUrl = localContent ? content.url : "";
       contentName = localContent ? content.name : "";
-      licenseServerUrl = (localContent &&
-                          content.drmInfos &&
-                          content.drmInfos[0]) ?
-                            content.drmInfos[0].licenseServerUrl :
-                            "";
-      setServerCertificate = (localContent &&
-                              content.drmInfos &&
-                              content.drmInfos[0]) ?
-                                content.drmInfos[0].setServerCertificate :
-                                "";
+      licenseServerUrl = (
+        localContent &&
+        content.drmInfos &&
+        content.drmInfos[0]
+      ) ? content.drmInfos[0].licenseServerUrl : "";
+      setServerCertificate = (
+        localContent &&
+        content.drmInfos &&
+        content.drmInfos[0]
+      ) ? content.drmInfos[0].setServerCertificate : "";
     }
 
     this.setState({
@@ -347,8 +347,8 @@ class ContentList extends React.Component {
             },
           ] : [],
           localContent: true,
-          id: id == null ? (Date.now() + "_" + Math.random() + "_" + contentName) :
-                           id,
+          id: id == null ?
+            (Date.now() + "_" + Math.random() + "_" + contentName) : id,
         };
         const hasAdded = this.addContentToLocalStorage(content);
         if (hasAdded) {
@@ -497,9 +497,11 @@ class ContentList extends React.Component {
                             (<Button
                               className={"choice-input-button save-button"}
                               onClick={
-                                () => onClickValid(chosenContent ?
-                                                    chosenContent.id :
-                                                    undefined)
+                                () => onClickValid(
+                                  chosenContent ?
+                                    chosenContent.id :
+                                    undefined
+                                )
                               }
                               value={isLocalContent ? "Update content" : "Save content"}
                             />) :
@@ -524,10 +526,10 @@ class ContentList extends React.Component {
                   value={manifestUrl}
                   placeholder={
                     isLocalContent ? chosenContent.url :
-                                     (
-                                       URL_DENOMINATIONS[transportType] ||
-                                       `URL to the ${transportType} content`
-                                     ) + (IS_HTTPS ? " (HTTPS only if mixed contents disabled)" : "")
+                      (
+                        URL_DENOMINATIONS[transportType] ||
+                        `URL to the ${transportType} content`
+                      ) + (IS_HTTPS ? " (HTTPS only if mixed contents disabled)" : "")
                   }
                 />
                 <div className="player-box">
@@ -561,8 +563,8 @@ class ContentList extends React.Component {
                                 .licenseServerUrl != "" &&
                               chosenContent.drmInfos[0]
                                 .licenseServerUrl != null ?
-                                  chosenContent.drmInfos[0].licenseServerUrl :
-                                  "License URL Server"
+                                chosenContent.drmInfos[0].licenseServerUrl :
+                                "License URL Server"
                             }
                           />
                         </div>
