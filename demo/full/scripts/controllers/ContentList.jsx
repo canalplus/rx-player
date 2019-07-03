@@ -12,6 +12,9 @@ const MediaKeys_ =
   window.MSMediaKeys ||
   null;
 
+const { localStorage } = window;
+const hasLocalStorage = !!localStorage
+
 const HAS_EME_APIs = (
   typeof navigator.requestMediaKeySystemAccess === "function" ||
   (
@@ -60,7 +63,7 @@ const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
 }, {});
 
 Object.keys(CONTENTS_PER_TYPE).forEach((key) => {
-  CONTENTS_PER_TYPE[key].push({ name: "Custom link", disabled: false });
+  CONTENTS_PER_TYPE[key].splice(0, 0, { name: "Custom link", disabled: false });
 });
 
 class ContentList extends React.Component {
@@ -71,16 +74,60 @@ class ContentList extends React.Component {
     const firstEnabledContentIndex =
       contents.findIndex((content) => !content.disabled);
 
+    const localStorageContents = [];
+    const localContentItems = localStorage.getItem("rxPlayerLocalContents");
+    if (hasLocalStorage && localContentItems) {
+      localStorageContents.push(...JSON.parse(localContentItems));
+    }
+
     this.state = {
       transportType: TRANSPORT_TYPES[0],
       contentChoiceIndex: firstEnabledContentIndex,
-      hasTextInput: CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]].length - 1 ===
-        firstEnabledContentIndex,
+      hasTextInput: firstEnabledContentIndex === 0,
       displayDRMSettings: false,
       manifestUrl: "",
+      contentName: "",
       drm: DRM_TYPES[0],
       autoPlay: true,
+      localStorageContents,
+      isSavingOrUpdating: false,
+      chosenContent: undefined,
     };
+  }
+
+  addContentToLocalStorage(content) {
+    const { localStorageContents } = this.state;
+    const idx = localStorageContents.findIndex((e) => {
+      return e.id === content.id;
+    });
+
+    if (idx > -1) {
+      localStorageContents.splice(idx, 1, content);
+      this.setState({ localStorageContents });
+      localStorage.setItem("rxPlayerLocalContents", JSON.stringify(localStorageContents));
+      return null;
+    }
+
+    localStorageContents.push(content);
+    this.setState({ localStorageContents });
+    localStorage.setItem("rxPlayerLocalContents", JSON.stringify(localStorageContents));
+    return content;
+  }
+
+  removeContentToLocalStorage(content) {
+    const { localStorageContents } = this.state;
+    const idx = localStorageContents.findIndex((e) => { 
+      return e.name === content.name;
+    });
+
+    if (idx < 0) {
+      return null;
+    }
+
+    localStorageContents.splice(idx, 1);
+    this.setState({ localStorageContents });
+    localStorage.setItem("rxPlayerLocalContents", JSON.stringify(localStorageContents));
+    return content;
   }
 
   loadContent(content) {
@@ -138,18 +185,45 @@ class ContentList extends React.Component {
     this.setState({
       transportType,
       contentChoiceIndex: firstEnabledContentIndex,
-      hasTextInput: CONTENTS_PER_TYPE[transportType].length - 1 ===
-        firstEnabledContentIndex,
+      hasTextInput: firstEnabledContentIndex === 0,
+      manifestUrl: "",
+      contentName: "",
+      licenseServerUrl: "",
+      setServerCertificate: "",
+      isSavingOrUpdating: false,
+      content: undefined,
     });
   }
 
-  changeContentIndex(index) {
-    const { transportType } = this.state;
-    const hasTextInput = CONTENTS_PER_TYPE[transportType].length - 1 === index;
+  changeContentIndex(index, content) {
+    const hasTextInput = index === 0;
+
+    let manifestUrl = "";
+    let contentName = "";
+    let licenseServerUrl = "";
+    let setServerCertificate = "";
+
+    if (content) {
+      const { localContent } = content;
+      manifestUrl = localContent ? content.url : "";
+      contentName = localContent ? content.name : "";
+      licenseServerUrl = (localContent && content.drmInfos && content.drmInfos[0]) ?
+        content.drmInfos[0].licenseServerUrl :
+        "";
+      setServerCertificate = (localContent && content.drmInfos && content.drmInfos[0]) ?
+        content.drmInfos[0].setServerCertificate :
+        "";
+    }
 
     this.setState({
       contentChoiceIndex: index,
       hasTextInput,
+      chosenContent: content,
+      manifestUrl,
+      contentName,
+      licenseServerUrl,
+      setServerCertificate,
+      isSavingOrUpdating: false,
     });
   }
 
@@ -178,10 +252,48 @@ class ContentList extends React.Component {
       hasTextInput,
       licenseServerUrl,
       manifestUrl,
+      contentName,
       serverCertificateUrl,
       transportType,
+      localStorageContents,
+      isSavingOrUpdating,
+      chosenContent
     } = this.state;
-    const contentsToSelect = CONTENTS_PER_TYPE[transportType];
+
+    // get local storage content here, and concat
+    const contentsFromLocalStorage = localStorageContents
+      .filter(({ transport }) => transport === transportType.toLowerCase())
+      .map((content) => {
+        let name = content.name;
+        let disabled = false;
+        
+        if (IS_HTTPS) {
+          if (content.url.startsWith("http:")) {
+            name = "[HTTP only] " + name;
+            disabled = true;
+          }
+        } else if (!HAS_EME_APIs && content.drmInfos && content.drmInfos.length) {
+          name = "[HTTPS only] " + name;
+          disabled = true;
+        }
+      
+        if (content.live) {
+          name += " (live)";
+        }
+      
+        const localContent = !!content.localContent;
+        return { content, name, disabled, localContent };
+      });
+
+    const contentsToSelect = CONTENTS_PER_TYPE[transportType]
+      .slice()
+      .concat(contentsFromLocalStorage)
+      .map((content) => {
+        if (content.localContent) {
+          content.name = "[Local storage] " + content.name;
+        }
+        return content;
+      });
 
     const onTechChange = (evt) => {
       const index = +evt.target.value;
@@ -192,11 +304,12 @@ class ContentList extends React.Component {
 
     const onContentChange = (evt) => {
       const index = +evt.target.value;
-      this.changeContentIndex(index);
+      const { content } = contentsToSelect[index];
+      this.changeContentIndex(index, content);
     };
 
     const onClickLoad = () => {
-      if (contentChoiceIndex === contentsToSelect.length - 1) {
+      if (contentChoiceIndex === 0) {
         const drmInfos = [{
           licenseServerUrl,
           serverCertificateUrl,
@@ -207,6 +320,57 @@ class ContentList extends React.Component {
         this.loadContent(contentsToSelect[contentChoiceIndex].content);
       }
     };
+
+    const activeSaveOption = manifestUrl !== "" &&
+                             manifestUrl != null &&
+                             transportType != null;
+
+    const onClickValid = (id) => {
+      if (activeSaveOption) {
+        const content = {
+          name: contentName,
+          url: manifestUrl,
+          transport: transportType.toLowerCase(),
+          drmInfos: (drm && licenseServerUrl) ? [
+            {
+              drm,
+              licenseServerUrl,
+              serverCertificateUrl
+            }
+          ] : [],
+          localContent: true,
+          id: id == null ? (Date.now() + "_" + Math.random() + "_" + contentName) :
+                           id,
+        };
+        const hasAdded = this.addContentToLocalStorage(content);
+        if (hasAdded) {
+          this.changeContentIndex(contentsToSelect.length, content);
+        }
+        this.setState({
+          isSavingOrUpdating: false
+        });
+      }
+    }
+
+    const onClickSave = () => {
+      this.setState({
+        isSavingOrUpdating: true,
+      });
+    };
+
+    const onClickErase = () => {
+      const { content } = contentsToSelect[contentChoiceIndex];
+      if (content) {
+        const hasRemoved = this.removeContentToLocalStorage(content);
+        if (hasRemoved) {
+          const newContent = contentsToSelect[contentChoiceIndex - 1].content;
+          this.changeContentIndex(contentChoiceIndex - 1, newContent);
+        }
+      }
+    };
+
+    const onNameInput = (evt) =>
+      this.setState({ contentName: evt.target.value });
 
     const onManifestInput = (evt) =>
       this.setState({ manifestUrl: evt.target.value });
@@ -240,6 +404,11 @@ class ContentList extends React.Component {
         />);
     };
 
+    const isLocalContent = !!(chosenContent && chosenContent.localContent);
+    const chosenContentHasDRMInfo = chosenContent &&
+                        chosenContent.drmInfos &&
+                        chosenContent.drmInfos[0];
+
     return (
       <div className="choice-inputs-wrapper">
         <div className="content-inputs">
@@ -255,6 +424,31 @@ class ContentList extends React.Component {
               options={contentsToSelect}
               selected={contentChoiceIndex}
             />
+            {
+              (hasLocalStorage && (hasTextInput || isLocalContent)) ?
+                (<Button
+                  className={"choice-input-button record-button" + (!activeSaveOption ? " disabled" : "")}
+                  onClick={
+                    () => {
+                      isSavingOrUpdating ?
+                        onClickValid(chosenContent ? chosenContent.id : undefined) :
+                        onClickSave()
+                    }
+                  }
+                  disabled={!activeSaveOption}
+                  value={isSavingOrUpdating ? "Valid" : (isLocalContent ? "Update" : "Save content")}
+                />) :
+                null
+            }
+            {
+              (hasLocalStorage && isLocalContent) ? 
+                (<Button
+                  className="choice-input-button erase-button"
+                  onClick={onClickErase}
+                  value={String.fromCharCode(0xf1f8)}
+                />) :
+                null
+            }
           </div>
           <div className="choice-input-button-wrapper">
             <div class="auto-play">
@@ -272,18 +466,27 @@ class ContentList extends React.Component {
           </div>
         </div>
         {
-          hasTextInput ?
+          (hasTextInput || (isLocalContent && isSavingOrUpdating)) ?
             (
               <div className="custom-input-wrapper">
+                {
+                  isSavingOrUpdating ? (<TextInput
+                    className="text-input"
+                    onChange={onNameInput}
+                    value={contentName}
+                    placeholder={"Content name"}
+                  />) : null
+                }
                 <TextInput
                   className="text-input"
                   onChange={onManifestInput}
                   value={manifestUrl}
                   placeholder={
-                    (
-                      URL_DENOMINATIONS[transportType] ||
-                      `URL to the ${transportType} content`
-                    ) + (IS_HTTPS ? " (HTTPS only if mixed contents disabled)" : "")
+                    isLocalContent ? chosenContent.url :
+                                     (
+                                       URL_DENOMINATIONS[transportType] ||
+                                       `URL to the ${transportType} content`
+                                     ) + (IS_HTTPS ? " (HTTPS only if mixed contents disabled)" : "")
                   }
                 />
                 <div className="player-box">
@@ -311,14 +514,26 @@ class ContentList extends React.Component {
                             className="choice-input text-input"
                             onChange={onLicenseServerInput}
                             value={licenseServerUrl}
-                            placeholder={"License server URL"}
+                            placeholder={
+                              chosenContentHasDRMInfo &&
+                              chosenContent.drmInfos[0].licenseServerUrl != "" &&
+                              chosenContent.drmInfos[0].licenseServerUrl != null ?
+                                chosenContent.drmInfos[0].licenseServerUrl :
+                                "License URL Server"
+                            }
                           />
                         </div>
                         <TextInput
                           className="choice-input text-input"
                           onChange={onServerCertificateInput}
                           value={serverCertificateUrl}
-                          placeholder={"Server certificate URL (optional)"}
+                          placeholder={
+                            chosenContentHasDRMInfo &&
+                            chosenContent.drmInfos[0].serverCertificateUrl != "" &&
+                            chosenContent.drmInfos[0].serverCertificateUrl != null ?
+                              chosenContent.drmInfos[0].serverCertificateUrl :
+                              "Server certificate URL (optional)"
+                          }
                         />
                       </div> :
                       null

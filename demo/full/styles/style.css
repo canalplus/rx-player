@@ -446,6 +446,23 @@ body {
   width: 60px;
 }
 
+.record-button {
+  font-size: 1.1rem;
+  border-radius: 3px;
+}
+
+.record-button.disabled {
+  background-color: #ececec;
+}
+
+.erase-button {
+  font-size: 1.5rem;
+  width: 60px;
+  border-radius: 3px;
+  background-color: #ececec;
+  border: dashed 1px #d1d1d1;
+}
+
 .options-button.clicked {
   background-color: #c6c6c6;
 }
