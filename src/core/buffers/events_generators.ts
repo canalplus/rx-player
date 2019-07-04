@@ -65,13 +65,15 @@ const EVENTS = {
   },
 
   addedSegment<T>(
-    bufferType : IBufferType,
+    content : { adaptation : Adaptation;
+                period : Period;
+                representation : Representation; },
     segment : ISegment,
     buffered : TimeRanges,
     segmentData : T
   ) : IBufferEventAddedSegment<T> {
     return { type : "added-segment",
-             value : { bufferType,
+             value : { content,
                        segment,
                        segmentData,
                        buffered } };

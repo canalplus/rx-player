@@ -33,6 +33,7 @@ import {
   merge as observableMerge,
   Observable,
   of as observableOf,
+  ReplaySubject,
   Subject,
 } from "rxjs";
 import {
@@ -41,8 +42,10 @@ import {
   filter,
   ignoreElements,
   map,
+  multicast,
   observeOn,
   share,
+  startWith,
   take,
   takeUntil,
   tap,
@@ -132,39 +135,36 @@ export default function AdaptationBuffer<T>(
   // https://developers.google.com/web/updates/2017/10/quotaexceedederror
   const bufferGoalRatioMap: Partial<Record<string, number>> = {};
 
-  // Bitrate higher or equal to this value should not be
-  // replaced by segments of better quality.
-  // undefined means everything can potentially be replaced
-  const fastSwitchingStep$ = new BehaviorSubject<undefined|number>(undefined);
-
-  // Subject to send the current situation to the ABRManager
-  const abrEvents$ : Subject<IABRBufferEvents> = new Subject();
-
-  // Keep track of the currently considered representation to add informations
-  // to the ABR clock.
-  let currentRepresentation : Representation|null = null;
-
-  const abrClock$ = clock$.pipe(map((tick) => {
-    const downloadBitrate = currentRepresentation ? currentRepresentation.bitrate :
-                                                    undefined;
-    return objectAssign({ downloadBitrate }, tick);
-  }));
-
-  const abr$ : Observable<IABREstimation> =
-    abrManager.get$(adaptation.type, representations, abrClock$, abrEvents$)
-      .pipe(observeOn(asapScheduler), share());
-
   // emit when the current RepresentationBuffer should be stopped right now
   const killCurrentBuffer$ = new Subject<void>();
 
   // emit when the current RepresentationBuffer should stop making new downloads
   const terminateCurrentBuffer$ = new Subject<void>();
 
+  // Keep track of the currently considered representation to add informations
+  // to the ABR clock.
+  let currentRepresentation : Representation|null = null;
+  const abrClock$ = clock$.pipe(
+    map((tick) => objectAssign({ representation: currentRepresentation }, tick)));
+
+  const addedSegments$ : Subject<IABRBufferEvents> = new Subject();
+
+  const abr$ : Observable<IABREstimation> =
+    abrManager.get$(adaptation.type, representations, abrClock$, addedSegments$)
+      .pipe(observeOn(asapScheduler), share());
+
+  // Bitrate higher or equal to this value should not be replaced by segments of
+  // better quality.
+  // undefined means everything can potentially be replaced
+  const fastSwitchingStep$ = abr$.pipe(
+    map(({ knownStableBitrate }) => knownStableBitrate),
+    startWith(undefined),
+    distinctUntilChanged(),
+    // always emit the last on subscribe
+    multicast(() => new ReplaySubject< number | undefined >(1)));
+
   // Emit at each bitrate estimate done by the ABRManager
   const bitrateEstimates$ = abr$.pipe(
-    tap(({ lastStableBitrate }) => {
-      fastSwitchingStep$.next(lastStableBitrate); // Do not replace high bitrates
-    }),
     filter(({ bitrate }) => bitrate != null),
     distinctUntilChanged((old, current) => old.bitrate === current.bitrate),
     map(({ bitrate }) => {
@@ -196,12 +196,10 @@ export default function AdaptationBuffer<T>(
         const representationBuffer$ = createRepresentationBuffer(representation)
           .pipe(takeUntil(killCurrentBuffer$));
 
-        abrEvents$.next({ type: "representation-buffer-change",
-                             value: { representation } });
         return observableConcat(representationChange$, representationBuffer$)
           .pipe(tap(evt => {
             if (evt.type === "added-segment") {
-              abrEvents$.next(evt);
+              addedSegments$.next(evt);
             }
           }));
       })),

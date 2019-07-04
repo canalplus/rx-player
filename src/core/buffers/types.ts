@@ -28,7 +28,9 @@ import { IBufferType } from "../source_buffers";
 export interface IBufferEventAddedSegment<T> {
   type : "added-segment";
   value : {
-    bufferType : IBufferType; // The type of the Representation
+    content: { period : Period;
+               adaptation : Adaptation;
+               representation : Representation; };
     segment : ISegment; // The concerned Segment
     buffered : TimeRanges; // TimeRanges of the concerned SourceBuffer
     segmentData : T; // The data pushed

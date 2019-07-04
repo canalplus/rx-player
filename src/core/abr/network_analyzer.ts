@@ -16,6 +16,7 @@
 
 import config from "../../config";
 import log from "../../log";
+import { Representation } from "../../manifest";
 import arrayFind from "../../utils/array_find";
 import BandwidthEstimator from "./bandwidth_estimator";
 import EWMA from "./ewma";
@@ -33,8 +34,7 @@ const {
 } = config;
 
 interface INetworkAnalizerClockTick {
-  downloadBitrate : number|undefined; // bitrate of the currently downloaded
-                                      // segments, in bit per seconds
+  representation : Representation|null; // Current downloaded Representation
   bufferGap : number; // time to the end of the buffer, in seconds
   currentTime : number; // current position, in seconds
   speed : number; // current playback rate
@@ -143,16 +143,16 @@ function estimateStarvationModeBitrate(
   }
 
   const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
-  const currentBitrate = clock.downloadBitrate;
+  const currentRepresentation = clock.representation;
   if (
-    currentBitrate == null ||
+    currentRepresentation == null ||
     requestElapsedTime <= ((chunkDuration * 1.5 + 1) / clock.speed)
   ) {
     return undefined;
   }
 
   // calculate a reduced bitrate from the current one
-  const reducedBitrate = currentBitrate * 0.7;
+  const reducedBitrate = currentRepresentation.bitrate * 0.7;
   if (lastEstimatedBitrate == null || reducedBitrate < lastEstimatedBitrate) {
     return reducedBitrate;
   }
@@ -251,9 +251,10 @@ export default class NetworkAnalyzer {
       if (bandwidthEstimate != null) {
         log.info("ABR: starvation mode emergency estimate:", bandwidthEstimate);
         this._estimator.reset();
-        const currentBitrate = clockTick.downloadBitrate;
-        newBitrateCeil = currentBitrate == null ?
-          bandwidthEstimate : Math.min(bandwidthEstimate, currentBitrate);
+        const currentRepresentation = clockTick.representation;
+        newBitrateCeil = currentRepresentation == null ?
+          bandwidthEstimate :
+          Math.min(bandwidthEstimate, currentRepresentation.bitrate);
       }
     }
 
@@ -303,11 +304,12 @@ export default class NetworkAnalyzer {
     currentRequests : IRequestInfo[],
     clockTick: INetworkAnalizerClockTick
    ) : boolean {
-    if (clockTick.downloadBitrate == null) {
+     const currentRepresentation = clockTick.representation;
+    if (currentRepresentation == null) {
       return true;
-    } else if (bitrate === clockTick.downloadBitrate) {
+    } else if (bitrate === currentRepresentation.bitrate) {
       return false;
-    } else if (bitrate > clockTick.downloadBitrate) {
+    } else if (bitrate > currentRepresentation.bitrate) {
       return !this._inStarvationMode;
     }
     return shouldDirectlySwitchToLowBitrate(clockTick, currentRequests);

@@ -26,7 +26,6 @@
 import nextTick from "next-tick";
 import objectAssign from "object-assign";
 import {
-  BehaviorSubject,
   combineLatest as observableCombineLatest,
   concat as observableConcat,
   defer as observableDefer,
@@ -47,6 +46,7 @@ import {
   switchMap,
   take,
   takeWhile,
+  withLatestFrom,
 } from "rxjs/operators";
 import config from "../../../config";
 import log from "../../../log";
@@ -103,7 +103,7 @@ export interface IRepresentationBufferArguments<T> {
   segmentFetcher : IPrioritizedSegmentFetcher<T>;
   terminate$ : Observable<void>;
   bufferGoal$ : Observable<number>;
-  fastSwitchingStep$: BehaviorSubject<undefined|number>;
+  fastSwitchingStep$: Observable< undefined | number>;
 }
 
 // Informations about a Segment waiting for download
@@ -204,13 +204,16 @@ export default function RepresentationBuffer<T>({
                     startWith(false)),
     finishedDownloadQueue$.pipe(startWith(undefined)) ]
   ).pipe(
-    map(function getCurrentStatus([timing, bufferGoal, terminate]) : {
-      discontinuity : number;
-      isFull : boolean;
-      terminate : boolean;
-      neededSegments : IQueuedSegment[];
-      shouldRefreshManifest : boolean;
-    } {
+    withLatestFrom(fastSwitchingStep$),
+    map(function getCurrentStatus(
+      [ [ timing, bufferGoal, terminate ],
+        fastSwitchingStep ]
+    ) : { discontinuity : number;
+          isFull : boolean;
+          terminate : boolean;
+          neededSegments : IQueuedSegment[];
+          shouldRefreshManifest : boolean; }
+    {
       const buffered = queuedSourceBuffer.getBuffered();
       segmentBookkeeper.synchronizeBuffered(buffered);
 
@@ -227,7 +230,9 @@ export default function RepresentationBuffer<T>({
                                            neededRange.end);
 
       let neededSegments = getSegmentsNeeded(representation, neededRange)
-        .filter((segment) => shouldDownloadSegment(segment, neededRange))
+        .filter((segment) =>
+          shouldDownloadSegment(segment, neededRange, fastSwitchingStep)
+        )
         .map((segment) => ({
           priority: getSegmentPriority(segment, timing),
           segment,
@@ -430,7 +435,7 @@ export default function RepresentationBuffer<T>({
               .insert(period, adaptation, representation, segment, start, end);
           }
           const buffered = queuedSourceBuffer.getBuffered();
-          return EVENTS.addedSegment(bufferType, segment, buffered, segmentData);
+          return EVENTS.addedSegment(content, segment, buffered, segmentData);
         }),
         finalize(() => { // remove from queue
           sourceBufferWaitingQueue.remove(segment.id);
@@ -442,11 +447,13 @@ export default function RepresentationBuffer<T>({
    * Return true if the given segment should be downloaded. false otherwise.
    * @param {Object} segment
    * @param {Array.<Object>} neededRange
+   * @param {number | undefined} fastSwitchingStep
    * @returns {Boolean}
    */
   function shouldDownloadSegment(
     segment : ISegment,
-    neededRange : { start: number; end: number }
+    neededRange : { start: number; end: number },
+    fastSwitchingStep : number | undefined
   ) : boolean {
     if (sourceBufferWaitingQueue.test(segment.id)) {
       return false; // we're already pushing it
@@ -469,6 +476,6 @@ export default function RepresentationBuffer<T>({
 
     return shouldReplaceSegment(currentSegment.infos,
                                 objectAssign({ segment }, content),
-                                fastSwitchingStep$.getValue());
+                                fastSwitchingStep);
   }
 }
