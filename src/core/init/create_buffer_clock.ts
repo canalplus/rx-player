@@ -20,7 +20,6 @@ import {
   Observable,
 } from "rxjs";
 import {
-  filter,
   ignoreElements,
   map,
   tap,
@@ -29,31 +28,34 @@ import Manifest from "../../manifest";
 import { IBufferOrchestratorClockTick } from "../buffers";
 import { IInitClockTick } from "./types";
 
+export interface IBufferClockArguments {
+  autoPlay : boolean; // If true, the player will auto-play when initialPlay$ emits
+  initialPlay$ : Observable<unknown>; // The initial play has been done
+  initialSeek$ : Observable<unknown>; // The initial seek has been done
+  manifest : Manifest;
+  speed$ : Observable<number>; // The last speed requested by the user
+  startTime : number; // The time the player will seek when initialSeek$ emits
+}
+
 /**
  * Create clock Observable for the Buffers part of the code.
- * @param {Object} manifest
  * @param {Observable} initClock$
- * @param {Observable} speed$
- * @param {Observable} initialSeek$
- * @param {Observable} initialPlay$
- * @param {Number} startTime
- * @param {boolean} shouldAutoPlay
+ * @param {Object} bufferClockArgument
  * @returns {Observable}
  */
 export default function createBufferClock(
-  manifest : Manifest,
   initClock$ : Observable<IInitClockTick>,
-  speed$ : Observable<number>,
-  initialSeek$ : Observable<unknown>,
-  initialPlay$ : Observable<unknown>,
-  startTime : number,
-  shouldAutoPlay : boolean
+  { autoPlay,
+    initialPlay$,
+    initialSeek$,
+    manifest,
+    speed$,
+    startTime } : IBufferClockArguments
 ) : Observable<IBufferOrchestratorClockTick> {
   let initialPlayPerformed = false;
   let initialSeekPerformed = false;
 
   const updateIsPlaying$ = initialPlay$.pipe(
-    filter((evt) => evt !== "not-loaded-metadata"),
     tap(() => { initialPlayPerformed = true; }),
     ignoreElements());
 
@@ -69,7 +71,7 @@ export default function createBufferClock(
           currentTime: tick.currentTime,
           duration: tick.duration,
           isPaused: initialPlayPerformed ? tick.paused :
-                                           !shouldAutoPlay,
+                                           !autoPlay,
           isLive,
           liveGap: isLive ? manifest.getMaximumPosition() - tick.currentTime :
                             Infinity,

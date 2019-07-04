@@ -23,6 +23,7 @@ import {
   Subject,
 } from "rxjs";
 import {
+  filter,
   finalize,
   ignoreElements,
   map,
@@ -147,9 +148,13 @@ export default function createMediaSourceLoader({
     const { seek$, load$ } =
       seekAndLoadOnMediaEvents(clock$, mediaElement, initialTime, autoPlay);
 
-    const bufferClock$ = createBufferClock(manifest, clock$, speed$,
-                                           seek$, load$,
-                                           initialTime, autoPlay);
+    const initialPlay$ = load$.pipe(filter((evt) => evt !== "not-loaded-metadata"));
+    const bufferClock$ = createBufferClock(clock$, { autoPlay,
+                                                     initialPlay$,
+                                                     initialSeek$: seek$,
+                                                     manifest,
+                                                     speed$,
+                                                     startTime: initialTime });
 
     // Will be used to cancel any endOfStream tries when the contents resume
     const cancelEndOfStream$ = new Subject<null>();
