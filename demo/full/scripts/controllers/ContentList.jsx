@@ -78,8 +78,7 @@ class ContentList extends React.Component {
 
     const contents = CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]];
     const firstEnabledContentIndex =
-      contents.findIndex((c) => !c.disabled && c.name !== "Custom link") ||
-      contents[0];
+      contents.findIndex((c) => !c.disabled && c.name !== "Custom link");
 
     const localStorageContents = [];
 
@@ -95,10 +94,11 @@ class ContentList extends React.Component {
       }
     }
 
+    const index = firstEnabledContentIndex > -1 ? firstEnabledContentIndex : 0;
     this.state = {
       transportType: TRANSPORT_TYPES[0],
-      contentChoiceIndex: firstEnabledContentIndex,
-      hasTextInput: firstEnabledContentIndex === 0,
+      contentChoiceIndex: index,
+      hasTextInput: index === 0,
       displayDRMSettings: false,
       manifestUrl: "",
       savedContentName: "",
@@ -208,13 +208,13 @@ class ContentList extends React.Component {
   changeTransportType(transportType) {
     const contents = CONTENTS_PER_TYPE[transportType];
     const firstEnabledContentIndex =
-      contents.findIndex((c) => !c.disabled && c.name !== "Custom link") ||
-      contents[0];
+      contents.findIndex((c) => !c.disabled && c.name !== "Custom link");
 
+    const index = firstEnabledContentIndex > -1 ? firstEnabledContentIndex : 0;
     this.setState({
       transportType,
-      contentChoiceIndex: firstEnabledContentIndex,
-      hasTextInput: firstEnabledContentIndex === 0,
+      contentChoiceIndex: index,
+      hasTextInput: index === 0,
       manifestUrl: "",
       savedContentName: "",
       licenseServerUrl: "",
