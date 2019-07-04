@@ -87,7 +87,7 @@ class ContentList extends React.Component {
       hasTextInput: firstEnabledContentIndex === 0,
       displayDRMSettings: false,
       manifestUrl: "",
-      contentName: "",
+      savedContentName: "",
       drm: DRM_TYPES[0],
       autoPlay: true,
       localStorageContents,
@@ -115,7 +115,7 @@ class ContentList extends React.Component {
     return content;
   }
 
-  removeContentToLocalStorage(content) {
+  removeContentFromLocalStorage(content) {
     const { localStorageContents } = this.state;
     const idx = localStorageContents.findIndex((e) => {
       return e.name === content.name;
@@ -188,7 +188,7 @@ class ContentList extends React.Component {
       contentChoiceIndex: firstEnabledContentIndex,
       hasTextInput: firstEnabledContentIndex === 0,
       manifestUrl: "",
-      contentName: "",
+      savedContentName: "",
       licenseServerUrl: "",
       setServerCertificate: "",
       isSavingOrUpdating: false,
@@ -200,14 +200,14 @@ class ContentList extends React.Component {
     const hasTextInput = index === 0;
 
     let manifestUrl = "";
-    let contentName = "";
+    let savedContentName = "";
     let licenseServerUrl = "";
     let setServerCertificate = "";
 
     if (content) {
       const { localContent } = content;
       manifestUrl = localContent ? content.url : "";
-      contentName = localContent ? content.name : "";
+      savedContentName = localContent ? content.name : "";
       licenseServerUrl = (
         localContent &&
         content.drmInfos &&
@@ -225,7 +225,7 @@ class ContentList extends React.Component {
       hasTextInput,
       chosenContent: content,
       manifestUrl,
-      contentName,
+      savedContentName,
       licenseServerUrl,
       setServerCertificate,
       isSavingOrUpdating: false,
@@ -257,7 +257,7 @@ class ContentList extends React.Component {
       hasTextInput,
       licenseServerUrl,
       manifestUrl,
-      contentName,
+      savedContentName,
       serverCertificateUrl,
       transportType,
       localStorageContents,
@@ -336,7 +336,7 @@ class ContentList extends React.Component {
     const onClickValid = (id) => {
       if (activeSaveOption) {
         const content = {
-          name: contentName,
+          name: savedContentName,
           url: manifestUrl,
           transport: transportType.toLowerCase(),
           drmInfos: (drm && licenseServerUrl) ? [
@@ -348,7 +348,7 @@ class ContentList extends React.Component {
           ] : [],
           localContent: true,
           id: id == null ?
-            (Date.now() + "_" + Math.random() + "_" + contentName) : id,
+            (Date.now() + "_" + Math.random() + "_" + savedContentName) : id,
         };
         const hasAdded = this.addContentToLocalStorage(content);
         if (hasAdded) {
@@ -369,7 +369,7 @@ class ContentList extends React.Component {
     const onClickErase = () => {
       const { content } = contentsToSelect[contentChoiceIndex];
       if (content) {
-        const hasRemoved = this.removeContentToLocalStorage(content);
+        const hasRemoved = this.removeContentFromLocalStorage(content);
         if (hasRemoved) {
           const newContent = contentsToSelect[contentChoiceIndex - 1].content;
           this.changeContentIndex(contentChoiceIndex - 1, newContent);
@@ -378,7 +378,7 @@ class ContentList extends React.Component {
     };
 
     const onNameInput = (evt) =>
-      this.setState({ contentName: evt.target.value });
+      this.setState({ savedContentName: evt.target.value });
 
     const onManifestInput = (evt) =>
       this.setState({ manifestUrl: evt.target.value });
@@ -486,9 +486,9 @@ class ContentList extends React.Component {
                   isSavingOrUpdating ?
                     (<div className="update-control">
                       <TextInput
-                        className={"text-input" + (contentName === "" ? " need-to-fill" : "")}
+                        className={"text-input" + (savedContentName === "" ? " need-to-fill" : "")}
                         onChange={onNameInput}
-                        value={contentName}
+                        value={savedContentName}
                         placeholder={"Content name"}
                       />
                       <div>
