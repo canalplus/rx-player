@@ -35,37 +35,42 @@ const URL_DENOMINATIONS = {
   DirectFile: "URL to the content",
 };
 
+function formatContentForDisplay(content) {
+  let name = content.name;
+  let disabled = false;
+
+  if (IS_HTTPS) {
+    if (content.url.startsWith("http:")) {
+      name = "[HTTP only] " + name;
+      disabled = true;
+    }
+  } else if (!HAS_EME_APIs &&
+             content.drmInfos &&
+             content.drmInfos.length
+  ) {
+    name = "[HTTPS only] " + name;
+    disabled = true;
+  }
+
+  if (content.live) {
+    name += " (live)";
+  }
+
+  const localContent = !!content.localContent;
+  return { content, name, disabled, localContent };
+}
+
 const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
   acc[tech] = contentsDatabase
-    .filter(({ transport }) =>
-      transport === tech.toLowerCase()
-    ).map((content) => {
-      let name = content.name;
-      let disabled = false;
+    .filter(({ transport }) => transport === tech.toLowerCase())
+    .map(formatContentForDisplay);
 
-      if (IS_HTTPS) {
-        if (content.url.startsWith("http:")) {
-          name = "[HTTP only] " + name;
-          disabled = true;
-        }
-      } else if (!HAS_EME_APIs && content.drmInfos && content.drmInfos.length) {
-        name = "[HTTPS only] " + name;
-        disabled = true;
-      }
-
-      if (content.live) {
-        name += " (live)";
-      }
-
-      return { content, name, disabled };
-    });
   return acc;
 }, {});
 
 Object.keys(CONTENTS_PER_TYPE).forEach((key) => {
   CONTENTS_PER_TYPE[key].unshift({ name: "Custom link", disabled: false });
 });
-
 
 class ContentList extends React.Component {
   constructor(...args) {
@@ -285,30 +290,7 @@ class ContentList extends React.Component {
     // get local storage content here, and concat
     const contentsFromLocalStorage = localStorageContents
       .filter(({ transport }) => transport === transportType.toLowerCase())
-      .map((content) => {
-        let name = content.name;
-        let disabled = false;
-
-        if (IS_HTTPS) {
-          if (content.url.startsWith("http:")) {
-            name = "[HTTP only] " + name;
-            disabled = true;
-          }
-        } else if (!HAS_EME_APIs &&
-                   content.drmInfos &&
-                   content.drmInfos.length
-        ) {
-          name = "[HTTPS only] " + name;
-          disabled = true;
-        }
-
-        if (content.live) {
-          name += " (live)";
-        }
-
-        const localContent = !!content.localContent;
-        return { content, name, disabled, localContent };
-      });
+      .map(formatContentForDisplay);
 
     const contentsToSelect = CONTENTS_PER_TYPE[transportType]
       .slice()
