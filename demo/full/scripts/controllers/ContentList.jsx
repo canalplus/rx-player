@@ -63,7 +63,7 @@ const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
 }, {});
 
 Object.keys(CONTENTS_PER_TYPE).forEach((key) => {
-  CONTENTS_PER_TYPE[key].splice(0, 0, { name: "Custom link", disabled: false });
+  CONTENTS_PER_TYPE[key].unshift({ name: "Custom link", disabled: false });
 });
 
 
@@ -73,7 +73,8 @@ class ContentList extends React.Component {
 
     const contents = CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]];
     const firstEnabledContentIndex =
-      contents.findIndex((content) => !content.disabled && content.name !== "Custom link");
+      contents.findIndex((c) => !c.disabled && c.name !== "Custom link") ||
+      contents[0];
 
     const localStorageContents = [];
     const localContentItems = localStorage.getItem("rxPlayerLocalContents");
@@ -182,7 +183,9 @@ class ContentList extends React.Component {
   changeTransportType(transportType) {
     const contents = CONTENTS_PER_TYPE[transportType];
     const firstEnabledContentIndex =
-      contents.findIndex((content) => !content.disabled && content.name !== "Custom link");
+      contents.findIndex((c) => !c.disabled && c.name !== "Custom link") ||
+      contents[0];
+
     this.setState({
       transportType,
       contentChoiceIndex: firstEnabledContentIndex,
