@@ -493,7 +493,7 @@ class ContentList extends React.Component {
                         value={savedContentName}
                         placeholder={"Content name"}
                       />
-                      <div>
+                      <div className="update-control-buttons">
                         {
                           (isSavingOrUpdating) ?
                             (<Button

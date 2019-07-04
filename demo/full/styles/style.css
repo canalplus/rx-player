@@ -465,6 +465,12 @@ body {
   align-items: center;
 }
 
+.update-control-buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
 .save-button {
   font-size: 1.1rem;
   border-radius: 3px;
