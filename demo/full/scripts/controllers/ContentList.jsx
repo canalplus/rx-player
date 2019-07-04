@@ -77,9 +77,16 @@ class ContentList extends React.Component {
       contents[0];
 
     const localStorageContents = [];
-    const localContentItems = localStorage.getItem("rxPlayerLocalContents");
-    if (hasLocalStorage && localContentItems) {
-      localStorageContents.push(...JSON.parse(localContentItems));
+    
+    if (hasLocalStorage) {
+      const localContentItems = localStorage.getItem("rxPlayerLocalContents");
+      if (hasLocalStorage && localContentItems) {
+        try {
+          localStorageContents.push(...JSON.parse(localContentItems));
+        } catch(err) {
+          console.warn("Demo: Can't parse local storage content.");
+        }
+      }
     }
 
     this.state = {
@@ -98,6 +105,11 @@ class ContentList extends React.Component {
   }
 
   addContentToLocalStorage(content) {
+    if (!hasLocalStorage) {
+      console.warn("Demo: No local storage support for adding content.");
+      return null;
+    }
+
     const { localStorageContents } = this.state;
     const idx = localStorageContents.findIndex((e) => {
       return e.id === content.id;
@@ -117,6 +129,11 @@ class ContentList extends React.Component {
   }
 
   removeContentFromLocalStorage(content) {
+    if (!hasLocalStorage) {
+      console.warn("Demo: No local storage support for removing content.");
+      return null;
+    }
+
     const { localStorageContents } = this.state;
     const idx = localStorageContents.findIndex((e) => {
       return e.name === content.name;
