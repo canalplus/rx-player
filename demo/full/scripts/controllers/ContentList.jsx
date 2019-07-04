@@ -224,17 +224,14 @@ class ContentList extends React.Component {
     let licenseServerUrl = "";
     let setServerCertificate = "";
 
-    if (content) {
-      const { localContent } = content;
-      manifestUrl = localContent ? content.url : "";
-      savedContentName = localContent ? content.name : "";
+    if (content && content.localContent) {
+      manifestUrl = content.url;
+      savedContentName = content.name;
       licenseServerUrl = (
-        localContent &&
         content.drmInfos &&
         content.drmInfos[0]
       ) ? content.drmInfos[0].licenseServerUrl : "";
       setServerCertificate = (
-        localContent &&
         content.drmInfos &&
         content.drmInfos[0]
       ) ? content.drmInfos[0].setServerCertificate : "";
