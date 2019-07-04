@@ -31,11 +31,10 @@ export default function formatError(
                                                    "NONE";
                                      defaultReason : string; }
 ) : ICustomError {
-  if (!isKnownError(error)) {
-    const reason = error instanceof Error ? error.toString() :
-                                            defaultReason;
-    return new OtherError(defaultCode, reason);
-  } else {
+  if (isKnownError(error)) {
     return error;
   }
+  const reason = error instanceof Error ? error.toString() :
+                                          defaultReason;
+  return new OtherError(defaultCode, reason);
 }
