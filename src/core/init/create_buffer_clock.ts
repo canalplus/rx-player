@@ -55,7 +55,7 @@ export default function createBufferClock(
   let initialPlayPerformed = false;
   let initialSeekPerformed = false;
 
-  const updateIsPlaying$ = initialPlay$.pipe(
+  const updateIsPaused$ = initialPlay$.pipe(
     tap(() => { initialPlayPerformed = true; }),
     ignoreElements());
 
@@ -90,5 +90,5 @@ export default function createBufferClock(
         };
       }));
 
-  return observableMerge(updateIsPlaying$, updateTimeOffset$, clock$);
+  return observableMerge(updateIsPaused$, updateTimeOffset$, clock$);
 }
