@@ -14,37 +14,27 @@
  * limitations under the License.
  */
 
-import AssertionError from "./assertion_error";
-import EncryptedMediaError from "./encrypted_media_error";
-import {
-  ErrorCodes,
-  ErrorTypes,
-  IErrorCode,
-  IErrorType,
-  RequestErrorTypes,
-} from "./error_codes";
-import formatError from "./format_error";
 import isKnownError, {
   ICustomError,
 } from "./is_known_error";
-import MediaError from "./media_error";
-import NetworkError from "./network_error";
 import OtherError from "./other_error";
-import RequestError from "./request_error";
 
-export {
-  AssertionError,
-  EncryptedMediaError,
-  ErrorCodes,
-  ErrorTypes,
-  IErrorCode,
-  IErrorType,
-  formatError,
-  ICustomError,
-  MediaError as MediaError,
-  NetworkError,
-  OtherError,
-  RequestError,
-  RequestErrorTypes,
-  isKnownError,
-};
+/*
+ * Format an unknown error into an API-defined error.
+ * @param {*} error
+ * @returns {Error}
+ */
+export default function formatError(
+  error : unknown,
+  { defaultCode, defaultReason } : { defaultCode : "PIPELINE_LOAD_ERROR" |
+                                                   "PIPELINE_PARSE_ERROR" |
+                                                   "NONE";
+                                     defaultReason : string; }
+) : ICustomError {
+  if (isKnownError(error)) {
+    return error;
+  }
+  const reason = error instanceof Error ? error.toString() :
+                                          defaultReason;
+  return new OtherError(defaultCode, reason);
+}

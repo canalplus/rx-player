@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
+import { OtherError } from "../../../errors";
 import isEMEReadyEvent from "../is_eme_ready";
 
 describe("core - init - isEMEReadyEvent", () => {
   it("should return false for a warning event", () => {
     expect(isEMEReadyEvent({
       type: "warning",
-      value: new Error(),
+      value: new OtherError("NONE", ""),
     })).toBe(false);
   });
 

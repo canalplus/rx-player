@@ -108,7 +108,8 @@ const MediaKeys_ : ICompatMediaKeysConstructor|undefined =
     constructor() {
       const noMediaKeys = () => {
         throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED",
-          "No `MediaKeys` implementation found in the current browser.", true);
+                             "No `MediaKeys` implementation found " +
+                             "in the current browser.");
       };
       this.create = noMediaKeys;
       this.createSession = noMediaKeys;

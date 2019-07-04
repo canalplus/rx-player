@@ -46,6 +46,7 @@ import {
   take,
   takeUntil,
 } from "rxjs/operators";
+import { formatError } from "../../../errors";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
@@ -235,19 +236,23 @@ export default function AdaptationBuffer<T>(
                                     segmentFetcher,
                                     terminate$: terminateCurrentBuffer$,
                                     bufferGoal$ })
-        .pipe(catchError((err) => {
-          if (err.code === "BUFFER_FULL_ERROR") {
+        .pipe(catchError((err : unknown) => {
+          const formattedError = formatError(err, {
+            defaultCode: "NONE",
+            defaultReason: "Unknown `RepresentationBuffer` error",
+          });
+          if (formattedError.code === "BUFFER_FULL_ERROR") {
             const wantedBufferAhead = wantedBufferAhead$.getValue();
             const lastBufferGoalRatio = bufferGoalRatio;
             if (lastBufferGoalRatio <= 0.25 ||
-                wantedBufferAhead * lastBufferGoalRatio <= 2
-            ) {
-              throw err;
+                wantedBufferAhead * lastBufferGoalRatio <= 2)
+            {
+              throw formattedError;
             }
             bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;
             return createRepresentationBuffer(representation);
           }
-          throw err;
+          throw formattedError;
         }));
     });
   }

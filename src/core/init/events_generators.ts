@@ -92,7 +92,7 @@ function nullRepresentation(
  * @param {Error} value
  * @returns {Object}
  */
-function warning(value : Error | ICustomError) : IWarningEvent {
+function warning(value : ICustomError) : IWarningEvent {
   return { type: "warning", value };
 }
 

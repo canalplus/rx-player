@@ -28,9 +28,8 @@ import {
   tap,
 } from "rxjs/operators";
 import {
+  formatError,
   ICustomError,
-  isKnownError,
-  OtherError,
 } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
@@ -91,7 +90,7 @@ export default function createSegmentFetcher<T>(
   transport : ITransportPipelines,
   network$ : Subject<IABRMetric>,
   requests$ : Subject<Subject<IABRRequest>>,
-  warning$ : Subject<Error|ICustomError>,
+  warning$ : Subject<ICustomError>,
   options : IPipelineLoaderOptions<ISegmentLoaderArguments, T>
 ) : ISegmentFetcher<T> {
   const segmentLoader = createLoader(transport[bufferType], options);
@@ -199,13 +198,9 @@ export default function createSegmentFetcher<T>(
           parse(init? : ISegmentTimingInfos) : Observable<IParsedSegment<T>> {
             const parserArg = objectAssign({ response: response.value, init }, content);
             return segmentParser(parserArg)
-              .pipe(catchError((error: Error) => {
-                const formattedError = isKnownError(error) ?
-                                         error :
-                                         new OtherError("PIPELINE_PARSING_ERROR",
-                                                        error.toString(),
-                                                        true);
-                throw formattedError;
+              .pipe(catchError((error: unknown) => {
+                throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
+                                           defaultReason: "Unknown parsing error" });
               }));
           },
         };

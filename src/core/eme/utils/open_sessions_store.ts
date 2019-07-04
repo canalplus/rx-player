@@ -112,11 +112,8 @@ export default class MediaKeySessionsStore {
     sessionType : MediaKeySessionType
   ) : MediaKeySession|ICustomMediaKeySession {
     if (this.get(initData, initDataType)) {
-      throw new EncryptedMediaError(
-        "MULTIPLE_SESSIONS_SAME_INIT_DATA",
-        "This initialization data was already stored.",
-        true
-      );
+      throw new EncryptedMediaError("MULTIPLE_SESSIONS_SAME_INIT_DATA",
+                                    "This initialization data was already stored.");
     }
 
     const session = createSession(this._mediaKeys, sessionType);
@@ -129,7 +126,7 @@ export default class MediaKeySessionsStore {
         .then(() => {
           this._delete(session);
         })
-        .catch((e : Error) => {
+        .catch((e : unknown) => {
           log.warn(`EME-MKSS: session.closed rejected: ${e}`);
         });
     }

@@ -14,24 +14,78 @@
  * limitations under the License.
  */
 
-const ErrorTypes = {
+export type IErrorType = "NETWORK_ERROR" |
+                         "MEDIA_ERROR" |
+                         "ENCRYPTED_MEDIA_ERROR" |
+                         "OTHER_ERROR";
+
+export type IEncryptedMediaErrorCode = "INCOMPATIBLE_KEYSYSTEMS" |
+                                       "INVALID_ENCRYPTED_EVENT" |
+                                       "INVALID_KEY_SYSTEM" |
+                                       "KEY_ERROR" |
+                                       "KEY_GENERATE_REQUEST_ERROR" |
+                                       "KEY_LOAD_ERROR" |
+                                       "KEY_LOAD_TIMEOUT" |
+                                       "KEY_STATUS_CHANGE_ERROR" |
+                                       "KEY_UPDATE_ERROR" |
+                                       "LICENSE_SERVER_CERTIFICATE_ERROR" |
+                                       "MEDIA_IS_ENCRYPTED_ERROR" |
+                                       "MULTIPLE_SESSIONS_SAME_INIT_DATA";
+
+export type IMediaErrorCode = "BUFFER_APPEND_ERROR" |
+                              "BUFFER_FULL_ERROR" |
+                              "BUFFER_TYPE_UNKNOWN" |
+                              "MANIFEST_INCOMPATIBLE_CODECS_ERROR" |
+                              "MANIFEST_PARSE_ERROR" |
+                              "MANIFEST_UNSUPPORTED_ADAPTATION_TYPE" |
+                              "MEDIA_ERR_ABORTED" |
+                              "MEDIA_ERR_BLOCKED_AUTOPLAY" |
+                              "MEDIA_ERR_PLAY_NOT_ALLOWED" |
+                              "MEDIA_ERR_NOT_LOADED_METADATA" |
+                              "MEDIA_ERR_DECODE" |
+                              "MEDIA_ERR_NETWORK" |
+                              "MEDIA_ERR_SRC_NOT_SUPPORTED" |
+                              "MEDIA_ERR_UNKNOWN" |
+                              "MEDIA_KEYS_NOT_SUPPORTED" |
+                              "MEDIA_SOURCE_NOT_SUPPORTED" |
+                              "MEDIA_STARTING_TIME_NOT_FOUND" |
+                              "MEDIA_TIME_BEFORE_MANIFEST" |
+                              "MEDIA_TIME_AFTER_MANIFEST" |
+                              "MEDIA_TIME_NOT_FOUND";
+
+export type INetworkErrorCode = "PIPELINE_LOAD_ERROR";
+
+export type IOtherErrorCode = "PIPELINE_LOAD_ERROR" |
+                              "PIPELINE_PARSE_ERROR" |
+                              "NONE";
+
+export type IErrorCode = INetworkErrorCode |
+                         IMediaErrorCode |
+                         IEncryptedMediaErrorCode |
+                         IOtherErrorCode;
+
+export type IRequestErrorType = "TIMEOUT" |
+                                "ERROR_EVENT" |
+                                "PARSE_ERROR" |
+                                "ERROR_HTTP_CODE";
+
+const ErrorTypes : Record<IErrorType, IErrorType> = {
   NETWORK_ERROR: "NETWORK_ERROR",
   MEDIA_ERROR: "MEDIA_ERROR",
   ENCRYPTED_MEDIA_ERROR: "ENCRYPTED_MEDIA_ERROR",
   OTHER_ERROR: "OTHER_ERROR",
 };
 
-const RequestErrorTypes = {
+const RequestErrorTypes : Record<IRequestErrorType, IRequestErrorType> = {
   TIMEOUT: "TIMEOUT",
   ERROR_EVENT: "ERROR_EVENT",
   ERROR_HTTP_CODE: "ERROR_HTTP_CODE",
   PARSE_ERROR: "PARSE_ERROR",
 };
 
-const ErrorCodes = {
-  PIPELINE_RESOLVE_ERROR: "PIPELINE_RESOLVE_ERROR",
+const ErrorCodes : Record<IErrorCode, IErrorCode>  = {
   PIPELINE_LOAD_ERROR: "PIPELINE_LOAD_ERROR",
-  PIPELINE_PARSING_ERROR: "PIPELINE_PARSING_ERROR",
+  PIPELINE_PARSE_ERROR: "PIPELINE_PARSE_ERROR",
 
   MANIFEST_PARSE_ERROR: "MANIFEST_PARSE_ERROR",
   MANIFEST_INCOMPATIBLE_CODECS_ERROR: "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
@@ -51,7 +105,10 @@ const ErrorCodes = {
   KEY_LOAD_TIMEOUT: "KEY_LOAD_TIMEOUT",
   KEY_GENERATE_REQUEST_ERROR: "KEY_GENERATE_REQUEST_ERROR",
   INCOMPATIBLE_KEYSYSTEMS: "INCOMPATIBLE_KEYSYSTEMS",
+  INVALID_ENCRYPTED_EVENT: "INVALID_ENCRYPTED_EVENT",
+  INVALID_KEY_SYSTEM: "INVALID_KEY_SYSTEM",
   LICENSE_SERVER_CERTIFICATE_ERROR: "LICENSE_SERVER_CERTIFICATE_ERROR",
+  MULTIPLE_SESSIONS_SAME_INIT_DATA: "MULTIPLE_SESSIONS_SAME_INIT_DATA",
 
   BUFFER_APPEND_ERROR: "BUFFER_APPEND_ERROR",
   BUFFER_FULL_ERROR: "BUFFER_FULL_ERROR",
@@ -69,6 +126,8 @@ const ErrorCodes = {
 
   MEDIA_SOURCE_NOT_SUPPORTED: "MEDIA_SOURCE_NOT_SUPPORTED",
   MEDIA_KEYS_NOT_SUPPORTED: "MEDIA_KEYS_NOT_SUPPORTED",
+
+  NONE: "NONE",
 };
 
 export {

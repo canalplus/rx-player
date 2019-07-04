@@ -15,8 +15,8 @@
  */
 
 import {
-  ErrorCodes,
   ErrorTypes,
+  IMediaErrorCode,
 } from "./error_codes";
 import errorMessage from "./error_message";
 
@@ -30,7 +30,7 @@ export default class MediaError extends Error {
   public readonly name : "MediaError";
   public readonly type : string;
   public readonly message : string;
-  public readonly code : string;
+  public readonly code : IMediaErrorCode;
   public fatal : boolean;
 
   /**
@@ -38,7 +38,7 @@ export default class MediaError extends Error {
    * @param {string} reason
    * @param {Boolean} fatal
    */
-  constructor(code : string, reason : string, fatal : boolean) {
+  constructor(code : IMediaErrorCode, reason : string) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, MediaError.prototype);
@@ -46,10 +46,8 @@ export default class MediaError extends Error {
     this.name = "MediaError";
     this.type = ErrorTypes.MEDIA_ERROR;
 
-    this.code = ErrorCodes.hasOwnProperty(code) ?
-                  (ErrorCodes as Record<string, string>)[code] :
-                  "";
-    this.fatal = !!fatal;
+    this.code = code;
     this.message = errorMessage(this.name, this.code, reason);
+    this.fatal = false;
   }
 }

@@ -72,7 +72,10 @@ import {
 import {
   ErrorCodes,
   ErrorTypes,
+  formatError,
   ICustomError,
+  IErrorCode,
+  IErrorType,
   MediaError,
 } from "../../errors";
 import features from "../../features";
@@ -278,34 +281,28 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * Store the initial wanted bitrates at first.
      * @type {Object}
      */
-    lastBitrates : {
-      audio? : number;
-      video? : number;
-      text? : number;
-      image? : number;
-    };
+    lastBitrates : { audio? : number;
+                     video? : number;
+                     text? : number;
+                     image? : number; };
 
     /**
      * Store last wanted maxAutoBitrates for the next ABRManager instanciation.
      * @type {Object}
      */
-    initialMaxAutoBitrates : {
-      audio : number; // has a default in the config
-      video : number; // has a default in the config
-      text? : number;
-      image? : number;
-    };
+    initialMaxAutoBitrates : { audio : number; // has a default in the config
+                               video : number; // has a default in the config
+                               text? : number;
+                               image? : number; };
 
     /**
      * Store last wanted manual bitrates for the next ABRManager instanciation.
      * @type {Object}
      */
-    manualBitrates : {
-      audio : number; // has a default in the config
-      video : number; // has a default in the config
-      text? : number;
-      image? : number;
-    };
+    manualBitrates : { audio : number; // has a default in the config
+                       video : number; // has a default in the config
+                       text? : number;
+                       image? : number; };
   };
 
   /**
@@ -481,7 +478,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * All possible Error types emitted by the RxPlayer.
    * @type {Object}
    */
-  static get ErrorTypes() : Partial<Record<string, string>> {
+  static get ErrorTypes() : Record<IErrorType, IErrorType> {
     return ErrorTypes;
   }
 
@@ -489,7 +486,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * All possible Error codes emitted by the RxPlayer.
    * @type {Object}
    */
-  static get ErrorCodes() : Partial<Record<string, string>> {
+  static get ErrorCodes() : Record<IErrorCode, IErrorCode> {
     return ErrorCodes;
   }
 
@@ -1289,8 +1286,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return playPromise.catch((error: Error) => {
       if (error.name === "NotAllowedError") {
         const warning = new MediaError("MEDIA_ERR_PLAY_NOT_ALLOWED",
-                                       error.toString(),
-                                       false);
+                                       error.toString());
         this.trigger("warning", warning);
       }
       throw error;
@@ -1940,10 +1936,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Error} error
    * @private
    */
-  private _priv_onPlaybackError(error : ICustomError | Error) : void {
+  private _priv_onPlaybackError(error : unknown) : void {
+    const formattedError = formatError(error, {
+      defaultCode: "NONE",
+      defaultReason: "An unknown error stopped content playback.",
+    });
+    formattedError.fatal = true;
+
     this._priv_stopCurrentContent$.next();
     this._priv_cleanUpCurrentContentState();
-    this._priv_currentError = error;
+    this._priv_currentError = formattedError;
     log.error("API: The player stopped because of an error:", error);
     this._priv_setPlayerState(PLAYER_STATES.STOPPED);
 
@@ -1951,8 +1953,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // player state is updated can launch a new content, thus the error will not
     // be here anymore, in which case triggering the "error" event is unwanted.
     // This is very ugly though, and we should probable have a better solution
-    if (this._priv_currentError === error) {
-      this.trigger("error", error);
+    if (this._priv_currentError === formattedError) {
+      this.trigger("error", formattedError);
     }
   }
 
@@ -1973,9 +1975,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Error} error
    * @private
    */
-  private _priv_onPlaybackWarning(error : Error) : void {
-    log.warn("API: Sending warning:", error);
-    this.trigger("warning", error);
+  private _priv_onPlaybackWarning(error : ICustomError) : void {
+    const formattedError = formatError(error, {
+      defaultCode: "NONE",
+      defaultReason: "An unknown error happened.",
+    });
+    log.warn("API: Sending warning:", formattedError);
+    this.trigger("warning", formattedError);
   }
 
   /**

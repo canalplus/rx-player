@@ -16,7 +16,7 @@
 
 import { Observable } from "rxjs";
 import config from "../../config";
-import { RequestError, RequestErrorTypes } from "../../errors";
+import { RequestError } from "../../errors";
 
 const { DEFAULT_REQUEST_TIMEOUT } = config;
 
@@ -238,13 +238,11 @@ function request<T>(
     const sendingTime = performance.now();
 
     xhr.onerror = function onXHRError() {
-      const errorCode = RequestErrorTypes.ERROR_EVENT;
-      obs.error(new RequestError(xhr, url, errorCode));
+      obs.error(new RequestError(xhr, url, "ERROR_EVENT"));
     };
 
     xhr.ontimeout = function onXHRTimeout() {
-      const errorCode = RequestErrorTypes.TIMEOUT;
-      obs.error(new RequestError(xhr, url, errorCode));
+      obs.error(new RequestError(xhr, url, "TIMEOUT"));
     };
 
     if (options.sendProgressEvents === true) {
@@ -281,8 +279,7 @@ function request<T>(
           }
 
           if (responseData == null) {
-            const errorCode = RequestErrorTypes.PARSE_ERROR;
-            obs.error(new RequestError(xhr, _url, errorCode));
+            obs.error(new RequestError(xhr, _url, "PARSE_ERROR"));
             return;
           }
 
@@ -298,8 +295,7 @@ function request<T>(
           obs.complete();
 
         } else {
-          const errorCode = RequestErrorTypes.ERROR_HTTP_CODE;
-          obs.error(new RequestError(xhr, url, errorCode));
+          obs.error(new RequestError(xhr, url, "ERROR_HTTP_CODE"));
         }
       }
     };

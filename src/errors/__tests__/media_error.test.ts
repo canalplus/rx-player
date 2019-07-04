@@ -19,30 +19,32 @@ import MediaError from "../media_error";
 describe("errors - MediaError", () => {
   it("should format a MediaError", () => {
     const reason = "test";
-    const mediaError = new MediaError("foo", reason, false);
+    const mediaError = new MediaError("BUFFER_FULL_ERROR", reason);
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");
-    expect(mediaError.code).toBe("");
+    expect(mediaError.code).toBe("BUFFER_FULL_ERROR");
     expect(mediaError.fatal).toBe(false);
-    expect(mediaError.message).toBe("MediaError () test");
+    expect(mediaError.message).toBe("MediaError (BUFFER_FULL_ERROR) test");
   });
 
   it("should be able to set it as fatal", () => {
     const reason = "test";
-    const mediaError = new MediaError("foo", reason, true);
+    const mediaError = new MediaError("BUFFER_APPEND_ERROR", reason);
+    mediaError.fatal = true;
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");
-    expect(mediaError.code).toBe("");
+    expect(mediaError.code).toBe("BUFFER_APPEND_ERROR");
     expect(mediaError.fatal).toBe(true);
-    expect(mediaError.message).toBe("MediaError () test");
+    expect(mediaError.message).toBe("MediaError (BUFFER_APPEND_ERROR) test");
   });
 
   it("should filter in a valid error code", () => {
   /* tslint:enable max-line-length */
     const reason = "test";
-    const mediaError = new MediaError("MEDIA_ERR_NETWORK", reason, true);
+    const mediaError = new MediaError("MEDIA_ERR_NETWORK", reason);
+    mediaError.fatal = true;
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");

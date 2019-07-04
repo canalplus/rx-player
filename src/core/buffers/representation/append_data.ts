@@ -22,7 +22,10 @@ import {
   concat as observableConcat,
   Observable,
 } from "rxjs";
-import { catchError, ignoreElements } from "rxjs/operators";
+import {
+  catchError,
+  ignoreElements,
+} from "rxjs/operators";
 import { MediaError } from "../../../errors";
 import {
   IAppendBufferInfos,
@@ -48,18 +51,24 @@ export default function appendDataToSourceBufferWithRetries<T>(
   const append$ = queuedSourceBuffer.appendBuffer(dataInfos);
 
   return append$.pipe(
-    catchError((appendError : Error) => {
-      if (appendError.name !== "QuotaExceededError") {
-        throw new MediaError("BUFFER_APPEND_ERROR", appendError.toString(), true);
+    catchError((appendError : unknown) => {
+      if (!(appendError instanceof Error) || appendError.name !== "QuotaExceededError") {
+        const reason = appendError instanceof Error ?
+          appendError.toString() :
+          "An unknown error happened when pushing content";
+        throw new MediaError("BUFFER_APPEND_ERROR", reason);
       }
 
       return observableConcat(
         forceGarbageCollection(clock$, queuedSourceBuffer).pipe(ignoreElements()),
         append$
       ).pipe(
-        catchError((forcedGCError : Error) => {
+        catchError((forcedGCError : unknown) => {
+          const reason = forcedGCError instanceof Error ? forcedGCError.toString() :
+                                                          "Could not clean the buffer";
+
           // (weird Typing either due to TypeScript or RxJS bug)
-          throw new MediaError("BUFFER_FULL_ERROR", forcedGCError.toString(), true);
+          throw new MediaError("BUFFER_FULL_ERROR", reason);
         })
       );
     }));

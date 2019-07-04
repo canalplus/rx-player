@@ -92,8 +92,7 @@ export default function getInitData(
   const initData = encryptedEvent.initData;
   if (initData == null) {
     throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT",
-                                  "Compat: No init data found on media encrypted event.",
-                                  true);
+                                  "Compat: No init data found on media encrypted event.");
   }
 
   const initDataBytes = new Uint8Array(initData);

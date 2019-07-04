@@ -202,6 +202,10 @@ A MediaError can have the following codes (``code`` property):
     This can lead to stalling indefinitely as the player won't be able to
     download new segments arround the current time.
 
+  - ``"MEDIA_TIME_NOT_FOUND"``: This error should never happen and is a RxPlayer
+    bug if it does. It means that a time initially thought to be in the bounds
+    of the manifest does not link to any "Period" of the Manifest.
+
 
 
 <a name="types-encrypted_media_error"></a>
@@ -248,6 +252,11 @@ An EncryptedMediaError can have the following codes (``code`` property):
 
   - ``"MEDIA_IS_ENCRYPTED_ERROR"``: The media is encrypted and no key system
     was given to the RxPlayer's APIs.
+
+  - ``"MULTIPLE_SESSIONS_SAME_INIT_DATA"``: This error should never happen and
+    is a RxPlayer bug if it does. It means that we were going to open multiple
+    `MediaKeySession` for the same initialization data (instead of using the
+    exact same `MediaKeySession`).
 
 
 

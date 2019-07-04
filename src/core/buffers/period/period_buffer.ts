@@ -35,6 +35,7 @@ import {
   take,
 } from "rxjs/operators";
 import config from "../../../config";
+import { formatError } from "../../../errors";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
@@ -217,15 +218,20 @@ export default function PeriodBuffer({
                             { manifest, period, adaptation },
                             abrManager,
                             options
-    ).pipe(catchError((error : Error) => {
+    ).pipe(catchError((error : unknown) => {
       // non native buffer should not impact the stability of the
       // player. ie: if a text buffer sends an error, we want to
       // continue playing without any subtitles
       if (!SourceBuffersManager.isNative(bufferType)) {
         log.error(`Buffer: Custom ${bufferType} buffer crashed. Aborting it.`, error);
         sourceBuffersManager.disposeSourceBuffer(bufferType);
+
+        const formattedError = formatError(error, {
+          defaultCode: "NONE",
+          defaultReason: "Unknown `AdaptationBuffer` error",
+        });
         return observableConcat<IAdaptationBufferEvent<T>|IBufferWarningEvent>(
-          observableOf(EVENTS.warning(error)),
+          observableOf(EVENTS.warning(formattedError)),
           createEmptyBuffer(clock$, wantedBufferAhead$, bufferType, { period })
         );
       }

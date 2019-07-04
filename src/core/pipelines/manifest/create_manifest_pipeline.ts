@@ -28,10 +28,9 @@ import {
 } from "rxjs/operators";
 import config from "../../../config";
 import {
+  formatError,
   ICustomError,
-  isKnownError,
   NetworkError,
-  OtherError,
   RequestError,
 } from "../../../errors";
 import Manifest from "../../../manifest";
@@ -68,18 +67,18 @@ export interface IFetchManifestResult { manifest : Manifest;
  * Generate a new error from the infos given.
  * @param {string} code
  * @param {Error} error
- * @param {Boolean} fatal - Whether the error is fatal to the content's
- * playback.
  * @returns {Error}
  */
-function errorSelector(code : string, error : Error, fatal : boolean) : ICustomError {
-  if (!isKnownError(error)) {
-    if (error instanceof RequestError) {
-      return new NetworkError(code, error, fatal);
-    }
-    return new OtherError(code, error.toString(), fatal);
+function errorSelector(
+  error : unknown
+) : ICustomError {
+  if (error instanceof RequestError) {
+    return new NetworkError("PIPELINE_LOAD_ERROR", error);
   }
-  return error;
+  return formatError(error, {
+    defaultCode: "PIPELINE_LOAD_ERROR",
+    defaultReason: "Unknown error when fetching the Manifest",
+  });
 }
 
 /**
@@ -101,7 +100,7 @@ function errorSelector(code : string, error : Error, fatal : boolean) : ICustomE
 export default function createManifestPipeline(
   pipelines : ITransportPipelines,
   pipelineOptions : IPipelineManifestOptions,
-  warning$ : Subject<Error|ICustomError>
+  warning$ : Subject<ICustomError>
 ) : (args : IFetchManifestOptions) => Observable<IFetchManifestResult> {
   const loader = createLoader<
     IManifestLoaderArguments, Document|string
@@ -121,14 +120,12 @@ export default function createManifestPipeline(
                              maxDelay: MAX_BACKOFF_DELAY_BASE,
                              maxRetryRegular: maxRetry,
                              maxRetryOffline,
-                             onRetry: (error : Error) => {
-                               warning$.next(errorSelector("PIPELINE_LOAD_ERROR",
-                                                           error,
-                                                           false)); } };
+                             onRetry: (error : unknown) => {
+                               warning$.next(errorSelector(error)); } };
 
     return downloadingBackoff(tryCatch(request, undefined), backoffOptions).pipe(
-      catchError((error : Error) : Observable<never> => {
-        throw errorSelector("PIPELINE_LOAD_ERROR", error, true);
+      catchError((error : unknown) : Observable<never> => {
+        throw errorSelector(error);
       }));
   }
 
@@ -159,13 +156,11 @@ export default function createManifestPipeline(
                         hasClockSynchronization,
                         scheduleRequest }
         ).pipe(
-          catchError((error: Error) => {
-            const formattedError = isKnownError(error) ?
-                                     error :
-                                     new OtherError("PIPELINE_PARSING_ERROR",
-                                                    error.toString(),
-                                                    true);
-            throw formattedError;
+          catchError((error: unknown) => {
+            throw formatError(error, {
+              defaultCode: "PIPELINE_PARSE_ERROR",
+              defaultReason: "Unknown error when parsing the Manifest",
+            });
           }),
           map(({ manifest }) => {
             const warnings = manifest.parsingErrors;

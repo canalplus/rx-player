@@ -35,7 +35,7 @@ import { getFuzzedDelay } from "../../../utils/backoff_delay";
  * @param {Error} error
  * @returns {Boolean} - If true, the request can be retried.
  */
-function shouldRetry(error : Error) : boolean {
+function shouldRetry(error : unknown) : boolean {
   if (!(error instanceof RequestError)) {
     return false;
   }
@@ -63,7 +63,7 @@ interface IDownloadingBackoffOptions { baseDelay : number;
                                        maxDelay : number;
                                        maxRetryRegular : number;
                                        maxRetryOffline : number;
-                                       onRetry? : (error : Error,
+                                       onRetry? : (error : unknown,
                                                    retryCount : number) => void; }
 
 /**
@@ -97,7 +97,7 @@ function downloadingBackoff<T>(
 
   let lastError = ERROR_TYPES.NONE;
 
-  return obs$.pipe(catchError((error : Error, source) => {
+  return obs$.pipe(catchError((error : unknown, source) => {
     if (!shouldRetry(error)) {
       throw error;
     }

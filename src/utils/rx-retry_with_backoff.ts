@@ -44,12 +44,10 @@ function debounce(fn : () => void, delay : number) : () => void {
 interface IBackoffOptions {
   retryDelay : number;
   totalRetry : number;
-  shouldRetry? : (error : Error|ICustomError) => boolean;
+  shouldRetry? : (error : unknown) => boolean;
   resetDelay? : number;
-  errorSelector? : (
-    error : Error|ICustomError, retryCount : number
-  ) => Error|ICustomError;
-  onRetry? : (error : Error|ICustomError, retryCount : number) => void;
+  errorSelector? : (error : unknown, retryCount : number) => Error|ICustomError;
+  onRetry? : (error : unknown, retryCount : number) => void;
 }
 
 /**
@@ -115,7 +113,7 @@ export default function retryObsWithBackoff<T>(
     debounceRetryCount = debounce(() => { retryCount = 0; }, resetDelay);
   }
 
-  return obs$.pipe(catchError((error : Error|ICustomError, source : Observable<T>) => {
+  return obs$.pipe(catchError((error : unknown, source : Observable<T>) => {
     const wantRetry = !shouldRetry || shouldRetry(error);
     if (!wantRetry || retryCount++ >= totalRetry) {
       if (errorSelector) {
