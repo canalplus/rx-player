@@ -47,32 +47,26 @@ export default function throttle<T, U>(
 
   return (...args : T[]) : Observable<U> => {
     return new Observable((obs : Observer<U>) => {
-      let hasErroredOrCompleted = false;
       if (isPending) {
-        hasErroredOrCompleted = true;
         obs.complete();
         return undefined;
       }
 
       isPending = true;
-      func(...args)
+      const funcSubscription = func(...args)
         .subscribe((i) => { obs.next(i); },
                    (e) => {
-                     hasErroredOrCompleted = true;
-                     isPending = false;
+                    isPending = false;
                      obs.error(e);
                    },
                    () => {
-                     hasErroredOrCompleted = true;
                      isPending = false;
                      obs.complete();
                    });
 
       return () => {
-        // handle unsubscription
-        if (!hasErroredOrCompleted) {
-          isPending = false;
-        }
+        funcSubscription.unsubscribe();
+        isPending = false;
       };
     });
   };
