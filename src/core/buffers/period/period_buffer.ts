@@ -225,9 +225,10 @@ export default function PeriodBuffer({
         log.error(`Buffer: Custom ${bufferType} buffer crashed. Aborting it.`, error);
         sourceBuffersManager.disposeSourceBuffer(bufferType);
 
-        const formattedError = formatError(error,
-                                           "NONE",
-                                           "Unknown `AdaptationBuffer` error");
+        const formattedError = formatError(error, {
+          defaultCode: "NONE",
+          defaultReason: "Unknown `AdaptationBuffer` error",
+        });
         return observableConcat<IAdaptationBufferEvent<T>|IBufferWarningEvent>(
           observableOf(EVENTS.warning(formattedError)),
           createEmptyBuffer(clock$, wantedBufferAhead$, bufferType, { period })

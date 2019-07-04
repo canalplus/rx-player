@@ -234,15 +234,16 @@ export default function AdaptationBuffer<T>(
                                     terminate$: terminateCurrentBuffer$,
                                     bufferGoal$ })
         .pipe(catchError((err : unknown) => {
-          const formattedError = formatError(err,
-                                             "NONE",
-                                             "Unknown `RepresentationBuffer` error");
+          const formattedError = formatError(err, {
+            defaultCode: "NONE",
+            defaultReason: "Unknown `RepresentationBuffer` error",
+          });
           if (formattedError.code === "BUFFER_FULL_ERROR") {
             const wantedBufferAhead = wantedBufferAhead$.getValue();
             const lastBufferGoalRatio = bufferGoalRatio;
             if (lastBufferGoalRatio <= 0.25 ||
-                wantedBufferAhead * lastBufferGoalRatio <= 2
-            ) {
+                wantedBufferAhead * lastBufferGoalRatio <= 2)
+            {
               throw formattedError;
             }
             bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;

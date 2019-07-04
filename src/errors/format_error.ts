@@ -26,10 +26,10 @@ import OtherError from "./other_error";
  */
 export default function formatError(
   error : unknown,
-  defaultCode : "PIPELINE_LOAD_ERROR" |
-                "PIPELINE_PARSE_ERROR" |
-                "NONE",
-  defaultReason : string
+  { defaultCode, defaultReason } : { defaultCode : "PIPELINE_LOAD_ERROR" |
+                                                   "PIPELINE_PARSE_ERROR" |
+                                                   "NONE";
+                                     defaultReason : string; }
 ) : ICustomError {
   if (!isKnownError(error)) {
     const reason = error instanceof Error ? error.toString() :

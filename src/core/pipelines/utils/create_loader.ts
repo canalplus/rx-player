@@ -101,9 +101,8 @@ function errorSelector(error : unknown) : ICustomError {
   if (error instanceof RequestError) {
     return new NetworkError("PIPELINE_LOAD_ERROR", error);
   }
-  return formatError(error,
-                     "PIPELINE_LOAD_ERROR",
-                     "Unknown error when loading content");
+  return formatError(error, { defaultCode: "PIPELINE_LOAD_ERROR",
+                              defaultReason: "Unknown error when loading content" });
 }
 
 /**

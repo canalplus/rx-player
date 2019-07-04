@@ -75,9 +75,10 @@ function errorSelector(
   if (error instanceof RequestError) {
     return new NetworkError("PIPELINE_LOAD_ERROR", error);
   }
-  return formatError(error,
-                     "PIPELINE_LOAD_ERROR",
-                     "Unknown error when fetching the Manifest");
+  return formatError(error, {
+    defaultCode: "PIPELINE_LOAD_ERROR",
+    defaultReason: "Unknown error when fetching the Manifest",
+  });
 }
 
 /**
@@ -156,9 +157,10 @@ export default function createManifestPipeline(
                         scheduleRequest }
         ).pipe(
           catchError((error: unknown) => {
-            throw formatError(error,
-                              "PIPELINE_PARSE_ERROR",
-                              "Unknown error when parsing the Manifest");
+            throw formatError(error, {
+              defaultCode: "PIPELINE_PARSE_ERROR",
+              defaultReason: "Unknown error when parsing the Manifest",
+            });
           }),
           map(({ manifest }) => {
             const warnings = manifest.parsingErrors;

@@ -199,9 +199,8 @@ export default function createSegmentFetcher<T>(
             const parserArg = objectAssign({ response: response.value, init }, content);
             return segmentParser(parserArg)
               .pipe(catchError((error: unknown) => {
-                throw formatError(error,
-                                  "PIPELINE_PARSE_ERROR",
-                                  "Unknown parsing error");
+                throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
+                                           defaultReason: "Unknown parsing error" });
               }));
           },
         };

@@ -1937,9 +1937,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @private
    */
   private _priv_onPlaybackError(error : unknown) : void {
-    const formattedError = formatError(error,
-                                       "NONE",
-                                       "An unknown error stopped content playback.");
+    const formattedError = formatError(error, {
+      defaultCode: "NONE",
+      defaultReason: "An unknown error stopped content playback.",
+    });
     formattedError.fatal = true;
 
     this._priv_stopCurrentContent$.next();
@@ -1975,9 +1976,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @private
    */
   private _priv_onPlaybackWarning(error : ICustomError) : void {
-    const formattedError = formatError(error,
-                                       "NONE",
-                                       "An unknown error happened.");
+    const formattedError = formatError(error, {
+      defaultCode: "NONE",
+      defaultReason: "An unknown error happened.",
+    });
     log.warn("API: Sending warning:", formattedError);
     this.trigger("warning", formattedError);
   }
