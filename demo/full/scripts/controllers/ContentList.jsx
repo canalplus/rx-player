@@ -224,7 +224,7 @@ class ContentList extends React.Component {
     });
   }
 
-  changeContentIndex(index, content) {
+  changeContent(index, content) {
     const hasTextInput = index === 0;
 
     let manifestUrl = "";
@@ -312,10 +312,10 @@ class ContentList extends React.Component {
       }
     };
 
-    const onContentChange = (evt) => {
+    const onContentInputChange = (evt) => {
       const index = +evt.target.value;
       const { content } = contentsToSelect[index];
-      this.changeContentIndex(index, content);
+      this.changeContent(index, content);
     };
 
     const onClickLoad = () => {
@@ -354,7 +354,7 @@ class ContentList extends React.Component {
         };
         const hasAdded = this.addContentToLocalStorage(content);
         if (hasAdded) {
-          this.changeContentIndex(contentsToSelect.length, content);
+          this.changeContent(contentsToSelect.length, content);
         }
         this.setState({
           isSavingOrUpdating: false,
@@ -374,7 +374,7 @@ class ContentList extends React.Component {
         const hasRemoved = this.removeContentFromLocalStorage(content);
         if (hasRemoved) {
           const newContent = contentsToSelect[contentChoiceIndex - 1].content;
-          this.changeContentIndex(contentChoiceIndex - 1, newContent);
+          this.changeContent(contentChoiceIndex - 1, newContent);
         }
       }
     };
@@ -435,7 +435,7 @@ class ContentList extends React.Component {
               />
               <Select
                 className="choice-input content-choice white-select"
-                onChange={onContentChange}
+                onChange={onContentInputChange}
                 options={contentsToSelect}
                 selected={contentChoiceIndex}
               />
