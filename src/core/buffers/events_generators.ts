@@ -109,8 +109,11 @@ const EVENTS = {
              value : { bufferType } };
   },
 
-  needsMediaSourceReload() : INeedsMediaSourceReload {
-    return { type: "needs-media-source-reload", value: undefined };
+  needsMediaSourceReload(
+    { currentTime, isPaused } : { currentTime : number; isPaused : boolean}
+  ) : INeedsMediaSourceReload {
+    return { type: "needs-media-source-reload",
+             value: { currentTime, isPaused } };
   },
 
   periodBufferReady(

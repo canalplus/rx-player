@@ -43,6 +43,7 @@ import {
   map,
   observeOn,
   share,
+  take,
   takeUntil,
 } from "rxjs/operators";
 import log from "../../../log";
@@ -76,6 +77,7 @@ export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTi
   bufferGap : number; // /!\ bufferGap of the SourceBuffer
   duration : number; // duration of the HTMLMediaElement
   isLive : boolean; // If true, we're playing a live content
+  isPaused: boolean; // If true, the player is on pause
   speed : number; // Current regular speed asked by the user
 }
 
@@ -168,7 +170,8 @@ export default function AdaptationBuffer<T>(
         // A manual bitrate switch might need an immediate feedback.
         // To do that properly, we need to reload the MediaSource
         if (directManualBitrateSwitching && estimate.manual && i !== 0) {
-          return observableOf(EVENTS.needsMediaSourceReload());
+          return clock$.pipe(take(1),
+                             map(t => EVENTS.needsMediaSourceReload(t)));
         }
         const representationChange$ =
           observableOf(EVENTS.representationChange(adaptation.type,
