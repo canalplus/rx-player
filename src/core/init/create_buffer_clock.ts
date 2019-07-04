@@ -20,6 +20,7 @@ import {
   Observable,
 } from "rxjs";
 import {
+  filter,
   ignoreElements,
   map,
   tap,
@@ -52,6 +53,7 @@ export default function createBufferClock(
   let initialSeekPerformed = false;
 
   const updateIsPlaying$ = initialPlay$.pipe(
+    filter((evt) => evt !== "not-loaded-metadata"),
     tap(() => { initialPlayPerformed = true; }),
     ignoreElements());
 
