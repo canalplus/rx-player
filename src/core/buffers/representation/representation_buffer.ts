@@ -24,6 +24,7 @@
  */
 
 import nextTick from "next-tick";
+import objectAssign from "object-assign";
 import {
   BehaviorSubject,
   combineLatest as observableCombineLatest,
@@ -46,8 +47,8 @@ import {
   switchMap,
   take,
   takeWhile,
-  tap,
 } from "rxjs/operators";
+import config from "../../../config";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
@@ -77,7 +78,7 @@ import getBufferPaddings from "./get_buffer_paddings";
 import getSegmentPriority from "./get_segment_priority";
 import getSegmentsNeeded from "./get_segments_needed";
 import getWantedRange from "./get_wanted_range";
-import segmentFilter from "./segment_filter";
+import shouldReplaceSegment from "./should_replace_segment";
 
 // Item emitted by the Buffer's clock$
 export interface IRepresentationBufferClockTick {
@@ -102,7 +103,7 @@ export interface IRepresentationBufferArguments<T> {
   segmentFetcher : IPrioritizedSegmentFetcher<T>;
   terminate$ : Observable<void>;
   bufferGoal$ : Observable<number>;
-  lastStableBitrate$: BehaviorSubject<undefined|number>;
+  fastSwitchingStep$: BehaviorSubject<undefined|number>;
 }
 
 // Informations about a Segment waiting for download
@@ -139,6 +140,8 @@ interface ISegmentRequestObject<T> {
   priority : number; // The current priority of the request
 }
 
+const { MINIMUM_SEGMENT_SIZE } = config;
+
 /**
  * Build up buffer for a single Representation.
  *
@@ -159,7 +162,8 @@ export default function RepresentationBuffer<T>({
   segmentFetcher, // allows to download new segments
   terminate$, // signal the RepresentationBuffer that it should terminate
   bufferGoal$, // emit the buffer goal
-  lastStableBitrate$,
+  fastSwitchingStep$, // Bitrate higher or equal to this value should not be
+                      // replaced by segments of better quality
 } : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent<T>> {
   const { manifest, period, adaptation, representation } = content;
   const codec = representation.getMimeTypeString();
@@ -416,23 +420,18 @@ export default function RepresentationBuffer<T>({
       sourceBufferWaitingQueue.add(segment.id);
 
       return append$.pipe(
-        tap(() => { // add to SegmentBookkeeper
-          if (segment.isInit) {
-            return;
+        map(() => { // add to SegmentBookkeeper
+          if (!segment.isInit) {
+            const { time, duration, timescale } = segmentInfos != null ? segmentInfos :
+                                                                         segment;
+            const start = time / timescale;
+            const end = duration && (time + duration) / timescale;
+            segmentBookkeeper
+              .insert(period, adaptation, representation, segment, start, end);
           }
-          const { time, duration, timescale } = segmentInfos != null ? segmentInfos :
-                                                                       segment;
-          const start = time / timescale;
-          const end = duration && (time + duration) / timescale;
-          segmentBookkeeper.insert(period,
-                                   adaptation,
-                                   representation,
-                                   segment,
-                                   start,
-                                   end);
+          const buffered = queuedSourceBuffer.getBuffered();
+          return EVENTS.addedSegment(bufferType, segment, buffered, segmentData);
         }),
-        mapTo(EVENTS.addedSegment(
-          bufferType, segment, queuedSourceBuffer.getBuffered(), segmentData)),
         finalize(() => { // remove from queue
           sourceBufferWaitingQueue.remove(segment.id);
         }));
@@ -449,12 +448,27 @@ export default function RepresentationBuffer<T>({
     segment : ISegment,
     neededRange : { start: number; end: number }
   ) : boolean {
-    const lastStableBitrate = lastStableBitrate$.getValue();
-    return segmentFilter(segment,
-                         content,
-                         segmentBookkeeper,
-                         neededRange,
-                         sourceBufferWaitingQueue,
-                         lastStableBitrate);
+    if (sourceBufferWaitingQueue.test(segment.id)) {
+      return false; // we're already pushing it
+    }
+
+    const { duration, time, timescale } = segment;
+    if (segment.isInit || duration == null) {
+      return true;
+    }
+    if (duration / timescale < MINIMUM_SEGMENT_SIZE) {
+      return false;
+    }
+    const currentSegment = segmentBookkeeper.hasPlayableSegment(neededRange,
+                                                                { duration,
+                                                                  time,
+                                                                  timescale });
+    if (currentSegment == null) {
+      return true;
+    }
+
+    return shouldReplaceSegment(currentSegment.infos,
+                                objectAssign({ segment }, content),
+                                fastSwitchingStep$.getValue());
   }
 }

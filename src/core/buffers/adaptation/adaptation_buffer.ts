@@ -120,6 +120,10 @@ export default function AdaptationBuffer<T>(
   options : { manualBitrateSwitchingMode : "seamless" | "direct" }
 ) : Observable<IAdaptationBufferEvent<T>> {
 
+  const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
+  const { manifest, period, adaptation } = content;
+  const { representations } = adaptation;
+
   // The buffer goal ratio limits the wanted buffer ahead to determine the
   // buffer goal.
   //
@@ -128,8 +132,13 @@ export default function AdaptationBuffer<T>(
   // https://developers.google.com/web/updates/2017/10/quotaexceedederror
   const bufferGoalRatioMap: Partial<Record<string, number>> = {};
 
-  const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
-  const { manifest, period, adaptation } = content;
+  // Bitrate higher or equal to this value should not be
+  // replaced by segments of better quality.
+  // undefined means everything can potentially be replaced
+  const fastSwitchingStep$ = new BehaviorSubject<undefined|number>(undefined);
+
+  // Subject to send the current situation to the ABRManager
+  const abrEvents$ : Subject<IABRBufferEvents> = new Subject();
 
   // Keep track of the currently considered representation to add informations
   // to the ABR clock.
@@ -141,13 +150,8 @@ export default function AdaptationBuffer<T>(
     return objectAssign({ downloadBitrate }, tick);
   }));
 
-  const lastStableBitrate$ = new BehaviorSubject<undefined|number>(undefined);
-  const { representations } = adaptation;
-
-  const eventsForABR$ : Subject<IABRBufferEvents> = new Subject();
-
   const abr$ : Observable<IABREstimation> =
-    abrManager.get$(adaptation.type, representations, abrClock$, eventsForABR$)
+    abrManager.get$(adaptation.type, representations, abrClock$, abrEvents$)
       .pipe(observeOn(asapScheduler), share());
 
   // emit when the current RepresentationBuffer should be stopped right now
@@ -159,7 +163,7 @@ export default function AdaptationBuffer<T>(
   // Emit at each bitrate estimate done by the ABRManager
   const bitrateEstimates$ = abr$.pipe(
     tap(({ lastStableBitrate }) => {
-      lastStableBitrate$.next(lastStableBitrate);
+      fastSwitchingStep$.next(lastStableBitrate); // Do not replace high bitrates
     }),
     filter(({ bitrate }) => bitrate != null),
     distinctUntilChanged((old, current) => old.bitrate === current.bitrate),
@@ -192,14 +196,12 @@ export default function AdaptationBuffer<T>(
         const representationBuffer$ = createRepresentationBuffer(representation)
           .pipe(takeUntil(killCurrentBuffer$));
 
-        eventsForABR$.next({
-          type: "representation-buffer-change",
-          value: { representation },
-        });
+        abrEvents$.next({ type: "representation-buffer-change",
+                             value: { representation } });
         return observableConcat(representationChange$, representationBuffer$)
           .pipe(tap(evt => {
             if (evt.type === "added-segment") {
-              eventsForABR$.next(evt);
+              abrEvents$.next(evt);
             }
           }));
       })),
@@ -257,7 +259,7 @@ export default function AdaptationBuffer<T>(
                                     segmentFetcher,
                                     terminate$: terminateCurrentBuffer$,
                                     bufferGoal$,
-                                    lastStableBitrate$ })
+                                    fastSwitchingStep$ })
         .pipe(catchError((err : unknown) => {
           const formattedError = formatError(err, {
             defaultCode: "NONE",
