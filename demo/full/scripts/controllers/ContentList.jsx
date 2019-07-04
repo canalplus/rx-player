@@ -82,13 +82,14 @@ class ContentList extends React.Component {
       contents[0];
 
     const localStorageContents = [];
-    
+
     if (hasLocalStorage) {
       const localContentItems = localStorage.getItem("rxPlayerLocalContents");
       if (hasLocalStorage && localContentItems) {
         try {
           localStorageContents.push(...JSON.parse(localContentItems));
         } catch(err) {
+          /* eslint-disable-next-line */
           console.warn("Demo: Can't parse local storage content.");
         }
       }
@@ -111,6 +112,7 @@ class ContentList extends React.Component {
 
   addContentToLocalStorage(content) {
     if (!hasLocalStorage) {
+      /* eslint-disable-next-line */
       console.warn("Demo: No local storage support for adding content.");
       return null;
     }
@@ -135,6 +137,7 @@ class ContentList extends React.Component {
 
   removeContentFromLocalStorage(content) {
     if (!hasLocalStorage) {
+      /* eslint-disable-next-line */
       console.warn("Demo: No local storage support for removing content.");
       return null;
     }
