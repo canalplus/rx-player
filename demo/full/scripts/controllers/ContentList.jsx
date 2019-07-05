@@ -57,7 +57,8 @@ function formatContentForDisplay(content) {
   }
 
   if (content.localContent) {
-    name = "[Local storage] " + name;
+    name = (hasLocalStorage ? "[Local storage] " :
+                              "[Saved] ") + name;
   }
 
   return { content, name, disabled };
@@ -115,13 +116,7 @@ class ContentList extends React.Component {
     };
   }
 
-  addContentToLocalStorage(content) {
-    if (!hasLocalStorage) {
-      /* eslint-disable-no-console-next-line */
-      console.warn("Demo: No local storage support for adding content.");
-      return null;
-    }
-
+  addContentToStorage(content) {
     const { localStorageContents } = this.state;
     const idx = localStorageContents.findIndex((e) => {
       return e.id === content.id;
@@ -130,23 +125,23 @@ class ContentList extends React.Component {
     if (idx > -1) {
       localStorageContents.splice(idx, 1, content);
       this.setState({ localStorageContents });
-      localStorage.setItem("rxPlayerLocalContents", JSON.stringify(localStorageContents));
+      if (hasLocalStorage) {
+        localStorage.setItem("rxPlayerLocalContents", 
+                             JSON.stringify(localStorageContents));
+      }
       return null;
     }
 
     localStorageContents.push(content);
     this.setState({ localStorageContents });
-    localStorage.setItem("rxPlayerLocalContents", JSON.stringify(localStorageContents));
+    if (hasLocalStorage) {
+      localStorage.setItem("rxPlayerLocalContents",
+                           JSON.stringify(localStorageContents));
+    }
     return content;
   }
 
-  removeContentFromLocalStorage(content) {
-    if (!hasLocalStorage) {
-      /* eslint-disable-no-console-next-line */
-      console.warn("Demo: No local storage support for removing content.");
-      return null;
-    }
-
+  removeContentFromStorage(content) {
     const { localStorageContents } = this.state;
     const idx = localStorageContents.findIndex((e) => {
       return e.name === content.name;
@@ -158,7 +153,10 @@ class ContentList extends React.Component {
 
     localStorageContents.splice(idx, 1);
     this.setState({ localStorageContents });
-    localStorage.setItem("rxPlayerLocalContents", JSON.stringify(localStorageContents));
+    if (hasLocalStorage) {
+      localStorage.setItem("rxPlayerLocalContents",
+                           JSON.stringify(localStorageContents));
+    }
     return content;
   }
 
@@ -354,7 +352,7 @@ class ContentList extends React.Component {
         id: id == null ?
           (Date.now() + "_" + Math.random() + "_" + customContentName) : id,
       };
-      const hasAdded = this.addContentToLocalStorage(content);
+      const hasAdded = this.addContentToStorage(content);
       if (hasAdded) {
         this.changeContent(contentsToSelect.length, content);
       }
@@ -372,7 +370,7 @@ class ContentList extends React.Component {
     const onClickErase = () => {
       const { content } = contentsToSelect[contentChoiceIndex];
       if (content) {
-        const hasRemoved = this.removeContentFromLocalStorage(content);
+        const hasRemoved = this.removeContentFromStorage(content);
         if (hasRemoved) {
           const newContent = contentsToSelect[contentChoiceIndex - 1].content;
           this.changeContent(contentChoiceIndex - 1, newContent);
@@ -443,7 +441,7 @@ class ContentList extends React.Component {
             </div>
             <div className="content-inputs-middle">
               {
-                (hasLocalStorage && (hasTextInput || isLocalContent)) ?
+                (hasTextInput || isLocalContent) ?
                   (<Button
                     className={"choice-input-button save-button" +
                       (!activeSaveOption ? " disabled" : "")}
@@ -456,7 +454,7 @@ class ContentList extends React.Component {
                   null
               }
               {
-                (hasLocalStorage && isLocalContent) ?
+                isLocalContent ?
                   (<Button
                     className="choice-input-button erase-button"
                     onClick={onClickErase}
