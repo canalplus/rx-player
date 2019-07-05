@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import RxPlayer from "../../../src";
 import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
+import textTrackInfos from "../../contents/texttracks";
 import sleep from "../../utils/sleep.js";
 import XHRMock from "../../utils/request_mock";
 
@@ -29,7 +30,7 @@ describe("external text track", function () {
       transport: manifestInfos.transport,
       url: manifestInfos.url,
       supplementaryTextTracks: {
-        url: "http://fakeURL",
+        url: textTrackInfos.url,
         language: "en",
         closedCaption: false,
         mimeType: "text/vtt",
@@ -57,7 +58,7 @@ describe("external text track", function () {
       transport: manifestInfos.transport,
       url: manifestInfos.url,
       supplementaryTextTracks: {
-        url: "http://fakeURL",
+        url: textTrackInfos.url,
         language: "arm",
         closedCaption: true,
         mimeType: "text/vtt",
@@ -87,19 +88,19 @@ describe("external text track", function () {
       url: manifestInfos.url,
       supplementaryTextTracks: [
         {
-          url: "http://fakeURL1",
+          url: textTrackInfos.url,
           language: "en",
           closedCaption: false,
           mimeType: "text/vtt",
         },
         {
-          url: "http://fakeURL2",
+          url: textTrackInfos.url,
           language: "fr",
           closedCaption: false,
           mimeType: "text/vtt",
         },
         {
-          url: "http://fakeURL3",
+          url: textTrackInfos.url,
           language: "ger",
           closedCaption: true,
           mimeType: "text/vtt",
@@ -153,7 +154,7 @@ describe("external text track", function () {
         transport: manifestInfos.transport,
         url: manifestInfos.url,
         supplementaryTextTracks: {
-          url: "http://fakeURL",
+          url: textTrackInfos.url,
           language: "en",
           closedCaption: false,
           mimeType: "text/vtt",
@@ -173,19 +174,19 @@ describe("external text track", function () {
         url: manifestInfos.url,
         supplementaryTextTracks: [
           {
-            url: "http://fakeURL1",
+            url: textTrackInfos.url,
             language: "en",
             closedCaption: false,
             mimeType: "text/vtt",
           },
           {
-            url: "http://fakeURL2",
+            url: textTrackInfos.url,
             language: "fr",
             closedCaption: false,
             mimeType: "text/vtt",
           },
           {
-            url: "http://fakeURL3",
+            url: textTrackInfos.url,
             language: "ger",
             closedCaption: true,
             mimeType: "text/vtt",
@@ -216,7 +217,7 @@ describe("external text track", function () {
         transport: manifestInfos.transport,
         url: manifestInfos.url,
         supplementaryTextTracks: {
-          url: "http://fakeURL",
+          url: textTrackInfos.url,
           language: "en",
           closedCaption: true,
           mimeType: "text/vtt",
@@ -236,19 +237,19 @@ describe("external text track", function () {
         url: manifestInfos.url,
         supplementaryTextTracks: [
           {
-            url: "http://fakeURL1",
+            url: textTrackInfos.url,
             language: "en",
             closedCaption: true,
             mimeType: "text/vtt",
           },
           {
-            url: "http://fakeURL2",
+            url: textTrackInfos.url,
             language: "fr",
             closedCaption: false,
             mimeType: "text/vtt",
           },
           {
-            url: "http://fakeURL3",
+            url: textTrackInfos.url,
             language: "ger",
             closedCaption: true,
             mimeType: "text/vtt",
@@ -284,7 +285,7 @@ describe("external text track", function () {
         transport: manifestInfos.transport,
         url: manifestInfos.url,
         supplementaryTextTracks: {
-          url: "http://fakeURL",
+          url: textTrackInfos.url,
           language: "en",
           closedCaption: false,
           mimeType: "text/vtt",
@@ -304,19 +305,19 @@ describe("external text track", function () {
         url: manifestInfos.url,
         supplementaryTextTracks: [
           {
-            url: "http://fakeURL1",
+            url: textTrackInfos.url,
             language: "en",
             closedCaption: false,
             mimeType: "text/vtt",
           },
           {
-            url: "http://fakeURL2",
+            url: textTrackInfos.url,
             language: "fr",
             closedCaption: false,
             mimeType: "text/vtt",
           },
           {
-            url: "http://fakeURL3",
+            url: textTrackInfos.url,
             language: "ger",
             closedCaption: true,
             mimeType: "text/vtt",
