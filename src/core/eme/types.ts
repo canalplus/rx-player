@@ -77,14 +77,14 @@ export interface IPersistedSessionStorage { load() : IPersistedSessionData[];
                                             save(x : IPersistedSessionData[]) : void; }
 
 export type TypedArray = Int8Array |
-                  Int16Array |
-                  Int32Array |
-                  Uint8Array |
-                  Uint16Array |
-                  Uint32Array |
-                  Uint8ClampedArray |
-                  Float32Array |
-                  Float64Array;
+                         Int16Array |
+                         Int32Array |
+                         Uint8Array |
+                         Uint16Array |
+                         Uint32Array |
+                         Uint8ClampedArray |
+                         Float32Array |
+                         Float64Array;
 
 // Options given by the caller
 export interface IKeySystemOption {
