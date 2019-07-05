@@ -99,6 +99,16 @@ class ContentList extends React.Component {
           console.warn("Demo: Can't parse local storage content.");
         }
       }
+
+      let baseId = localStorageContents.reduce((acc, val) => {
+        const id = val.id || 0;
+        return Math.max(acc, id);
+      }, 0);
+
+      this.generateId = () => {
+        baseId++;
+        return baseId;
+      };
     }
 
     this.state = {
@@ -349,8 +359,7 @@ class ContentList extends React.Component {
           },
         ] : [],
         localContent: true,
-        id: id == null ?
-          (Date.now() + "_" + Math.random() + "_" + customContentName) : id,
+        id: id == null ? this.generateId() : id,
       };
       const hasAdded = this.addContentToStorage(content);
       if (hasAdded) {
