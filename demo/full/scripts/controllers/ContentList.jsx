@@ -80,9 +80,11 @@ class ContentList extends React.Component {
     super(...args);
 
     const contents = CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]];
-    const firstEnabledContentIndex = contents.length > 1 ?
-      contents.findIndex((c) => !c.disabled && c.name !== "Custom link") :
-      0;
+    const firstEnabledLocalLinkContentIndex =
+      contents.findIndex((c) => !c.disabled && c.name !== "Custom link")
+    const firstEnabledContentIndex =
+      firstEnabledLocalLinkContentIndex > -1 ?
+        firstEnabledLocalLinkContentIndex : 0;
 
     const localStorageContents = [];
 
@@ -210,14 +212,16 @@ class ContentList extends React.Component {
 
   changeTransportType(transportType) {
     const contents = CONTENTS_PER_TYPE[transportType];
+    const firstEnabledLocalLinkContentIndex =
+      contents.findIndex((c) => !c.disabled && c.name !== "Custom link")
     const firstEnabledContentIndex =
-      contents.findIndex((c) => !c.disabled && c.name !== "Custom link");
+      firstEnabledLocalLinkContentIndex > -1 ?
+        firstEnabledLocalLinkContentIndex : 0;
 
-    const index = firstEnabledContentIndex > -1 ? firstEnabledContentIndex : 0;
     this.setState({
       transportType,
-      contentChoiceIndex: index,
-      hasTextInput: index === 0,
+      contentChoiceIndex: firstEnabledContentIndex,
+      hasTextInput: firstEnabledContentIndex === 0,
       customManifestUrl: "",
       customContentName: "",
       licenseServerUrl: "",
