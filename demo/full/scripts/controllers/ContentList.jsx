@@ -82,7 +82,7 @@ class ContentList extends React.Component {
 
     const contents = CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]];
     const firstEnabledLocalLinkContentIndex =
-      contents.findIndex((c) => !c.disabled && c.name !== "Custom link")
+      contents.findIndex((c) => !c.disabled && c.name !== "Custom link");
     const firstEnabledContentIndex =
       firstEnabledLocalLinkContentIndex > -1 ?
         firstEnabledLocalLinkContentIndex : 0;
@@ -136,7 +136,7 @@ class ContentList extends React.Component {
       localStorageContents.splice(idx, 1, content);
       this.setState({ localStorageContents });
       if (hasLocalStorage) {
-        localStorage.setItem("rxPlayerLocalContents", 
+        localStorage.setItem("rxPlayerLocalContents",
                              JSON.stringify(localStorageContents));
       }
       return null;
@@ -221,7 +221,7 @@ class ContentList extends React.Component {
   changeTransportType(transportType) {
     const contents = CONTENTS_PER_TYPE[transportType];
     const firstEnabledLocalLinkContentIndex =
-      contents.findIndex((c) => !c.disabled && c.name !== "Custom link")
+      contents.findIndex((c) => !c.disabled && c.name !== "Custom link");
     const firstEnabledContentIndex =
       firstEnabledLocalLinkContentIndex > -1 ?
         firstEnabledLocalLinkContentIndex : 0;
