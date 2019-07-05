@@ -47,11 +47,18 @@ import {
 } from "./types";
 
 // PeriodBuffer informations emitted to the ActivePeriodEmitted
-export interface IPeriodBufferInfos {
+// when adding period item
+export interface IAddPeriodBufferInfos {
   period: Period;
   type: IBufferType;
-  periodBufferEvents$?: Observable<IAdaptationChangeEvent |
+  periodBufferEvents$: Observable<IAdaptationChangeEvent |
                                    IRepresentationChangeEvent>; }
+
+// PeriodBuffer informations emitted to the ActivePeriodEmitted
+// when removing period item
+export interface IRemovePeriodBufferInfos {
+  period: Period;
+  type: IBufferType; }
 
 // structure used internally to keep track of which Period has which
 // PeriodBuffer
@@ -97,47 +104,47 @@ interface IPeriodItem { period: Period;
  */
 export default function ActivePeriodEmitter(
   bufferTypes: IBufferType[],
-  addPeriodBuffer$ : Observable<IPeriodBufferInfos>,
-  removePeriodBuffer$ : Observable<IPeriodBufferInfos>
+  addPeriodBuffer$ : Observable<IAddPeriodBufferInfos>,
+  removePeriodBuffer$ : Observable<IRemovePeriodBufferInfos>
 ) : Observable<Period|null> {
   const periodsList : SortedList<IPeriodItem> =
     new SortedList((a, b) => a.period.start - b.period.start);
 
   const onItemAdd$ = addPeriodBuffer$
     .pipe(mergeMap(({ period, type, periodBufferEvents$ }) => {
-      // add or update the periodItem
-      let periodItem = periodsList.findFirst(p => p.period === period);
-      if (!periodItem) {
-        periodItem = { period,
-                       buffers: new Set<IBufferType>() };
-        periodsList.add(periodItem);
-      }
-
-      if (periodItem.buffers.has(type)) {
-        log.warn(`ActivePeriodEmitter: Buffer type ${type} already added to the period`);
-      }
-
-      if (!periodBufferEvents$) {
-        throw new Error(
-          "No period events when adding period item to active period emitter.");
-      }
-
       return periodBufferEvents$.pipe(
-        scan((acc: number, evt) => {
+        scan((acc: {
+          hasAdaptation: boolean;
+          hasRepresentation: boolean;
+        }, evt) => {
           switch (evt.type) {
             case "adaptationChange":
-              return evt.value.adaptation == null ? acc + 2 : acc + 1;
+              acc.hasAdaptation = true;
+              if (evt.value.adaptation == null) {
+                acc.hasRepresentation = true;
+              }
+              return acc;
             case "representationChange":
-              return acc + 1;
+              acc.hasRepresentation = true;
+              return acc;
             default:
               return acc;
           }
-        }, 0),
-        filter((res) => res === 2),
+        }, { hasAdaptation: false, hasRepresentation: false }),
+        filter(({ hasAdaptation, hasRepresentation }) =>
+          hasAdaptation && hasRepresentation),
         tap(() => {
+          // add or update the periodItem
+          let periodItem = periodsList.findFirst(p => p.period === period);
           if (!periodItem) {
-            throw new Error(
-              "No period item when adding type to active period emitter.");
+            periodItem = { period,
+                           buffers: new Set<IBufferType>() };
+            periodsList.add(periodItem);
+          }
+
+          if (periodItem.buffers.has(type)) {
+            log.warn(`ActivePeriodEmitter: Buffer type ${type}` +
+                     "already added to the period");
           }
           periodItem.buffers.add(type);
         }),
