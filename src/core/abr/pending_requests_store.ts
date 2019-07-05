@@ -50,12 +50,10 @@ export interface IProgressEventValue {
 export interface IBeginRequest {
   type: IBufferType;
   event: "requestBegin";
-  value: {
-    id: string|number;
-    time: number;
-    duration: number;
-    requestTimestamp: number;
-  };
+  value: { id: string|number;
+           time: number;
+           duration: number;
+           requestTimestamp: number; };
 }
 
 export interface IProgressRequest {
@@ -91,12 +89,10 @@ export default class PendingRequestsStore {
       return;
     }
     const { time, duration, requestTimestamp } = payload.value;
-    this._currentRequests[id] = {
-      time,
-      duration,
-      requestTimestamp,
-      progress: [],
-    };
+    this._currentRequests[id] = { time,
+                                  duration,
+                                  requestTimestamp,
+                                  progress: [] };
   }
 
   /**
@@ -131,7 +127,8 @@ export default class PendingRequestsStore {
   }
 
   /**
-   *
+   * Returns informations about all pending requests.
+   * @returns {Array.<Object>}
    */
   public getRequests() : IRequestInfo[] {
     return objectValues(this._currentRequests)

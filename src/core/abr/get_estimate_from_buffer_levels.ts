@@ -18,17 +18,19 @@ import log from "../../log";
 import arrayFindIndex from "../../utils/array_find_index";
 
 export interface IBufferBasedChooserClockTick {
-  bufferGap : number;
-  currentBitrate? : number;
-  currentScore? : number;
-  speed : number;
+  bufferGap : number; // Difference in seconds between the current position and
+                      // the next non-buffered position
+  currentBitrate? : number; // The bitrate of the currently downloaded segments, in bps
+  currentScore? : number; // The "maintainability score" of the currently
+                          // downloaded segments
+  speed : number; // Playback rate wanted
 }
 
 /**
  * From the buffer gap, choose a representation.
  * @param {Object} clockTick
  * @param {Array.<Number>} bitrates
- * @param {Array.<Number>} levels
+ * @param {Array.<Number>} bufferLevels
  * @returns {Object|undefined}
  */
 export default function getEstimateFromBufferLevels(
