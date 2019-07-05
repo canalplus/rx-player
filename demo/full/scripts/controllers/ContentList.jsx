@@ -56,8 +56,11 @@ function formatContentForDisplay(content) {
     name += " (live)";
   }
 
-  const localContent = !!content.localContent;
-  return { content, name, disabled, localContent };
+  if (content.localContent) {
+    name = "[Local storage] " + name;
+  }
+
+  return { content, name, disabled };
 }
 
 const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
@@ -296,14 +299,7 @@ class ContentList extends React.Component {
       .map(formatContentForDisplay);
 
     const contentsToSelect = CONTENTS_PER_TYPE[transportType]
-      .slice()
-      .concat(contentsFromLocalStorage)
-      .map((content) => {
-        if (content.localContent) {
-          content.name = "[Local storage] " + content.name;
-        }
-        return content;
-      });
+      .concat(contentsFromLocalStorage);
 
     const onTechChange = (evt) => {
       const index = +evt.target.value;
