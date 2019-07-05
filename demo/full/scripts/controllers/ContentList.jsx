@@ -80,8 +80,9 @@ class ContentList extends React.Component {
     super(...args);
 
     const contents = CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]];
-    const firstEnabledContentIndex =
-      contents.findIndex((c) => !c.disabled && c.name !== "Custom link");
+    const firstEnabledContentIndex = contents.length > 1 ?
+      contents.findIndex((c) => !c.disabled && c.name !== "Custom link") :
+      0;
 
     const localStorageContents = [];
 
@@ -97,14 +98,13 @@ class ContentList extends React.Component {
       }
     }
 
-    const index = firstEnabledContentIndex > -1 ? firstEnabledContentIndex : 0;
     this.state = {
       transportType: TRANSPORT_TYPES[0],
-      contentChoiceIndex: index,
-      hasTextInput: index === 0,
+      contentChoiceIndex: firstEnabledContentIndex,
+      hasTextInput: firstEnabledContentIndex === 0,
       displayDRMSettings: false,
-      manifestUrl: "",
-      savedContentName: "",
+      customManifestUrl: "",
+      customContentName: "",
       drm: DRM_TYPES[0],
       autoPlay: true,
       localStorageContents,
@@ -115,7 +115,7 @@ class ContentList extends React.Component {
 
   addContentToLocalStorage(content) {
     if (!hasLocalStorage) {
-      /* eslint-disable-next-line */
+      /* eslint-disable-no-console-next-line */
       console.warn("Demo: No local storage support for adding content.");
       return null;
     }
@@ -140,7 +140,7 @@ class ContentList extends React.Component {
 
   removeContentFromLocalStorage(content) {
     if (!hasLocalStorage) {
-      /* eslint-disable-next-line */
+      /* eslint-disable-no-console-next-line */
       console.warn("Demo: No local storage support for removing content.");
       return null;
     }
@@ -218,44 +218,44 @@ class ContentList extends React.Component {
       transportType,
       contentChoiceIndex: index,
       hasTextInput: index === 0,
-      manifestUrl: "",
-      savedContentName: "",
+      customManifestUrl: "",
+      customContentName: "",
       licenseServerUrl: "",
-      setServerCertificate: "",
+      serverCertificateUrl: "",
       isSavingOrUpdating: false,
-      content: undefined,
+      chosenContent: undefined,
     });
   }
 
   changeContent(index, content) {
     const hasTextInput = index === 0;
 
-    let manifestUrl = "";
-    let savedContentName = "";
+    let customManifestUrl = "";
+    let customContentName = "";
     let licenseServerUrl = "";
-    let setServerCertificate = "";
+    let serverCertificateUrl = "";
 
     if (content && content.localContent) {
-      manifestUrl = content.url;
-      savedContentName = content.name;
+      customManifestUrl = content.url;
+      customContentName = content.name;
       licenseServerUrl = (
         content.drmInfos &&
         content.drmInfos[0]
       ) ? content.drmInfos[0].licenseServerUrl : "";
-      setServerCertificate = (
+      serverCertificateUrl = (
         content.drmInfos &&
         content.drmInfos[0]
-      ) ? content.drmInfos[0].setServerCertificate : "";
+      ) ? content.drmInfos[0].serverCertificateUrl : "";
     }
 
     this.setState({
       contentChoiceIndex: index,
       hasTextInput,
       chosenContent: content,
-      manifestUrl,
-      savedContentName,
+      customManifestUrl,
+      customContentName,
       licenseServerUrl,
-      setServerCertificate,
+      serverCertificateUrl,
       isSavingOrUpdating: false,
     });
   }
@@ -284,8 +284,8 @@ class ContentList extends React.Component {
       drm,
       hasTextInput,
       licenseServerUrl,
-      manifestUrl,
-      savedContentName,
+      customManifestUrl,
+      customContentName,
       serverCertificateUrl,
       transportType,
       localStorageContents,
@@ -321,41 +321,42 @@ class ContentList extends React.Component {
           serverCertificateUrl,
           drm,
         }];
-        this.loadUrl(manifestUrl, drmInfos, autoPlay);
+        this.loadUrl(customManifestUrl, drmInfos, autoPlay);
       } else {
         this.loadContent(contentsToSelect[contentChoiceIndex].content);
       }
     };
 
-    const activeSaveOption = manifestUrl !== "" &&
-                             manifestUrl != null &&
+    const activeSaveOption = customManifestUrl !== "" &&
+                             customManifestUrl != null &&
                              transportType != null;
 
     const onClickValid = (id) => {
-      if (activeSaveOption) {
-        const content = {
-          name: savedContentName,
-          url: manifestUrl,
-          transport: transportType.toLowerCase(),
-          drmInfos: (drm && licenseServerUrl) ? [
-            {
-              drm,
-              licenseServerUrl,
-              serverCertificateUrl,
-            },
-          ] : [],
-          localContent: true,
-          id: id == null ?
-            (Date.now() + "_" + Math.random() + "_" + savedContentName) : id,
-        };
-        const hasAdded = this.addContentToLocalStorage(content);
-        if (hasAdded) {
-          this.changeContent(contentsToSelect.length, content);
-        }
-        this.setState({
-          isSavingOrUpdating: false,
-        });
+      if (!activeSaveOption) {
+        return;
       }
+      const content = {
+        name: customContentName,
+        url: customManifestUrl,
+        transport: transportType.toLowerCase(),
+        drmInfos: (drm && licenseServerUrl) ? [
+          {
+            drm,
+            licenseServerUrl,
+            serverCertificateUrl,
+          },
+        ] : [],
+        localContent: true,
+        id: id == null ?
+          (Date.now() + "_" + Math.random() + "_" + customContentName) : id,
+      };
+      const hasAdded = this.addContentToLocalStorage(content);
+      if (hasAdded) {
+        this.changeContent(contentsToSelect.length, content);
+      }
+      this.setState({
+        isSavingOrUpdating: false,
+      });
     };
 
     const onClickSave = () => {
@@ -376,10 +377,10 @@ class ContentList extends React.Component {
     };
 
     const onNameInput = (evt) =>
-      this.setState({ savedContentName: evt.target.value });
+      this.setState({ customContentName: evt.target.value });
 
     const onManifestInput = (evt) =>
-      this.setState({ manifestUrl: evt.target.value });
+      this.setState({ customManifestUrl: evt.target.value });
 
     const onLicenseServerInput = (evt) =>
       this.setState({ licenseServerUrl: evt.target.value });
@@ -484,9 +485,9 @@ class ContentList extends React.Component {
                   isSavingOrUpdating ?
                     (<div className="update-control">
                       <TextInput
-                        className={"text-input" + (savedContentName === "" ? " need-to-fill" : "")}
+                        className={"text-input" + (customContentName === "" ? " need-to-fill" : "")}
                         onChange={onNameInput}
-                        value={savedContentName}
+                        value={customContentName}
                         placeholder={"Content name"}
                       />
                       <div className="update-control-buttons">
@@ -521,7 +522,7 @@ class ContentList extends React.Component {
                 <TextInput
                   className="text-input"
                   onChange={onManifestInput}
-                  value={manifestUrl}
+                  value={customManifestUrl}
                   placeholder={
                     isLocalContent ? chosenContent.url :
                       (
