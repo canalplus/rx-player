@@ -72,11 +72,9 @@ const defaultChooserOptions = { limitWidth: {},
  */
 const createChooser = (
   type : IBufferType,
-  mediaElement : HTMLMediaElement,
   options : IRepresentationChoosersOptions
 ) : RepresentationChooser => {
-  return new RepresentationChooser(mediaElement,
-                                   { limitWidth$: options.limitWidth[type],
+  return new RepresentationChooser({ limitWidth$: options.limitWidth[type],
                                      throttle$: options.throttle[type],
                                      throttleBitrate$: options.throttleBitrate[type],
                                      initialBitrate: options.initialBitrates[type],
@@ -96,10 +94,8 @@ export default class ABRManager {
 
   private _choosers:  Partial<Record<IBufferType, RepresentationChooser>>;
   private _chooserInstanceOptions: IRepresentationChoosersOptions;
-  private _mediaElement : HTMLMediaElement;
 
   /**
-   * @param {HTMLMediaElement} mediaElement
    * @param {Observable} requests$ - Emit requests infos as they begin, progress
    * and end.
    * Allows to know if a request take too much time to be finished in
@@ -161,13 +157,10 @@ export default class ABRManager {
    * @param {Object|undefined} options
    */
   constructor(
-    mediaElement : HTMLMediaElement,
     requests$: Observable<Observable<IRequest>>,
     metrics$: Observable<IMetric>,
     options : IRepresentationChoosersOptions = defaultChooserOptions
   ) {
-    this._mediaElement = mediaElement;
-
     // Subject emitting and completing on dispose.
     // Used to clean up every created observables.
     this._dispose$ = new Subject();
@@ -338,7 +331,6 @@ export default class ABRManager {
     if (!this._choosers[bufferType]) {
       log.debug("ABR: Creating new buffer for ", bufferType);
       this._choosers[bufferType] = createChooser(bufferType,
-                                                 this._mediaElement,
                                                  this._chooserInstanceOptions);
     }
     return this._choosers[bufferType] as RepresentationChooser;

@@ -222,8 +222,6 @@ export default class RepresentationChooser {
   private readonly _networkAnalyzer : NetworkAnalyzer;
   private readonly _pendingRequests : PendingRequestsStore;
 
-  private _mediaElement : HTMLMediaElement;
-
   // "Maintainability score" estimator for the last downloaded Representation.
   // null when no representation has been chosen yet.
   //
@@ -242,19 +240,14 @@ export default class RepresentationChooser {
   private _lastStableRepresentation : Representation | null;
 
   /**
-   * @param {HTMLMediaElement} mediaElement
    * @param {Object} options
    */
-  constructor(
-    mediaElement : HTMLMediaElement,
-    options : IRepresentationChooserOptions
-  ) {
+  constructor(options : IRepresentationChooserOptions) {
     this._dispose$ = new Subject();
     this._scoreKeeper = null;
     this._lastStableRepresentation = null;
     this._networkAnalyzer = new NetworkAnalyzer(options.initialBitrate || 0);
     this._pendingRequests = new PendingRequestsStore();
-    this._mediaElement = mediaElement;
     this._limitWidth$ = options.limitWidth$;
     this._throttle$ = options.throttle$;
     this._throttleBitrate$ = options.throttleBitrate$;
@@ -312,8 +305,7 @@ export default class RepresentationChooser {
       const bufferBasedClock$ = bufferEvents$.pipe(
         filter((e) : e is IBufferEventAddedSegment => e.type === "added-segment"),
         withLatestFrom(clock$),
-        map(([{ value: evtValue }, { speed } ]) => {
-          const { currentTime } = this._mediaElement;
+        map(([{ value: evtValue }, { speed, currentTime } ]) => {
           const timeRanges = evtValue.buffered;
           const bufferGap = getLeftSizeOfRange(timeRanges, currentTime);
           const { representation } = evtValue.content;
