@@ -28,7 +28,11 @@ import {
 } from "rxjs";
 import {
   distinctUntilChanged,
+  filter,
   map,
+  mergeMap,
+  scan,
+  take,
   tap,
 } from "rxjs/operators";
 import log from "../../log";
@@ -37,10 +41,17 @@ import SortedList from "../../utils/sorted_list";
 import {
   IBufferType,
 } from "../source_buffers";
+import {
+  IAdaptationChangeEvent,
+  IRepresentationChangeEvent,
+} from "./types";
 
 // PeriodBuffer informations emitted to the ActivePeriodEmitted
-export interface IPeriodBufferInfos { period: Period;
-                                      type: IBufferType; }
+export interface IPeriodBufferInfos {
+  period: Period;
+  type: IBufferType;
+  periodBufferEvents$?: Observable<IAdaptationChangeEvent |
+                                   IRepresentationChangeEvent>; }
 
 // structure used internally to keep track of which Period has which
 // PeriodBuffer
@@ -93,7 +104,7 @@ export default function ActivePeriodEmitter(
     new SortedList((a, b) => a.period.start - b.period.start);
 
   const onItemAdd$ = addPeriodBuffer$
-    .pipe(tap(({ period, type }) => {
+    .pipe(mergeMap(({ period, type, periodBufferEvents$ }) => {
       // add or update the periodItem
       let periodItem = periodsList.findFirst(p => p.period === period);
       if (!periodItem) {
@@ -105,7 +116,33 @@ export default function ActivePeriodEmitter(
       if (periodItem.buffers.has(type)) {
         log.warn(`ActivePeriodEmitter: Buffer type ${type} already added to the period`);
       }
-      periodItem.buffers.add(type);
+
+      if (!periodBufferEvents$) {
+        throw new Error(
+          "No period events when adding period item to active period emitter.");
+      }
+
+      return periodBufferEvents$.pipe(
+        scan((acc: number, evt) => {
+          switch (evt.type) {
+            case "adaptationChange":
+              return evt.value.adaptation == null ? acc + 2 : acc + 1;
+            case "representationChange":
+              return acc + 1;
+            default:
+              return acc;
+          }
+        }, 0),
+        filter((res) => res === 2),
+        tap(() => {
+          if (!periodItem) {
+            throw new Error(
+              "No period item when adding type to active period emitter.");
+          }
+          periodItem.buffers.add(type);
+        }),
+        take(1)
+      );
     }));
 
   const onItemRemove$ = removePeriodBuffer$
