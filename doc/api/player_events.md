@@ -362,6 +362,8 @@ options](./loadVideo_options.md#prop-transport)).
 The payload is the new audio bitrate, in bits per seconds. It is emitted every
 time it changes (based on the last received segment).
 
+`-1` when the bitrate is not known.
+
 
 <a name="events-videoBitrateChange"></a>
 ### videoBitrateChange #########################################################
@@ -377,6 +379,8 @@ options](./loadVideo_options.md#prop-transport)).
 
 The payload is the new video bitrate, in bits per seconds. It is emitted every
 time it changes (based on the last received segment).
+
+`-1` when the bitrate is not known.
 
 
 <a name="events-imageTrackUpdate"></a>
