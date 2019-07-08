@@ -269,6 +269,19 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
     }
   }
 
+  async getAvailableSpace() {
+    if (navigator.storage && navigator.storage.estimate) {
+      const { quota, usage } = await navigator.storage.estimate();
+      if (quota && usage) {
+        return {
+          total: quota / 1e6,
+          used: usage / 1e6,
+        };
+      }
+    }
+    return {};
+  }
+
   /**
    * Delete an entry partially or fully downloaded and stop the download
    * if the content is downloading, then delete.
