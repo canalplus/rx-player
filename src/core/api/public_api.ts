@@ -359,7 +359,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     /**
      * Store currently considered adaptations, per active period.
      *
-     * null if no adaptation is active
+     * null if no Adaptation is active
      * @type {Object}
      */
     activeAdaptations : {
@@ -369,7 +369,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     /**
      * Store currently considered representations, per active period.
      *
-     * null if no representation is active
+     * null if no Representation is active
      * @type {Object}
      */
     activeRepresentations : {
@@ -1490,7 +1490,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Update the maximum video bitrate the user can switch to.
+   * Update the maximum audio bitrate the user can switch to.
    * @param {Number} btr
    */
   setMaxAudioBitrate(btr : number) : void {
