@@ -210,6 +210,12 @@ function createDeviceEvents({
     observableOf({});
 }
 
+/**
+ * Emit the estimated bitrate and best Representation according to the current
+ * network and buffer situation.
+ * @param {Object} args
+ * @returns {Observable}
+ */
 export default function RepresentationEstimator({
   bandwidthEstimator,
   bufferEvents$,
