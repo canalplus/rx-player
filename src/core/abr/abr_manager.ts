@@ -26,7 +26,6 @@ import RepresentationEstimator, {
   IABRBufferEvents,
   IABREstimate,
   IRepresentationEstimatorClockTick,
-  IRequest,
 } from "./representation_estimator";
 
 export type IABRManagerClockTick = IRepresentationEstimatorClockTick;
@@ -38,7 +37,7 @@ interface IRepresentationEstimatorsThrottlers {
   throttleBitrate : Partial<Record<IBufferType, Observable<number>>>;
 }
 
-interface IABRManagerOptions {
+export interface IABRManagerOptions {
   manualBitrates: Partial<Record<IBufferType, number>>;
   maxAutoBitrates: Partial<Record<IBufferType, number>>;
   initialBitrates: Partial<Record<IBufferType, number>>;
@@ -213,8 +212,3 @@ export default class ABRManager {
     return originalInfos;
   }
 }
-
-export {
-  IABRManagerOptions,
-  IRequest as IABRRequest,
-};

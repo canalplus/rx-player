@@ -60,7 +60,7 @@ export interface IABREstimate {
   knownStableBitrate?: number; // Last "maintanable" bitrate
 }
 
-interface IRepresentationEstimatorClockTick {
+export interface IRepresentationEstimatorClockTick {
   bufferGap : number; // time to the end of the buffer, in seconds
   currentTime : number; // current position, in seconds
   speed : number; // current playback rate
@@ -88,9 +88,9 @@ interface IProgressEventValue {
   totalSize : number; // total size to download, in bytes
 }
 
-type IRequest = IProgressRequest |
-                IBeginRequest |
-                IEndRequest;
+export type IABRRequest = IProgressRequest |
+                          IBeginRequest |
+                          IEndRequest;
 
 interface IProgressRequest { type: "progress";
                              value: IProgressEventValue; }
@@ -418,8 +418,3 @@ export default function RepresentationEstimator({
 
   return observableMerge(metrics$, requests$, estimate$);
 }
-
-export {
-  IRequest,
-  IRepresentationEstimatorClockTick,
-};

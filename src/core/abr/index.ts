@@ -17,17 +17,16 @@
 import ABRManager, {
   IABRManagerClockTick,
   IABRManagerOptions,
-  IABRRequest,
 } from "./abr_manager";
 export {
   IABRBufferEvents,
   IABREstimate,
   IABRMetric,
+  IABRRequest,
 } from "./representation_estimator";
 
 export default ABRManager;
 export {
   IABRManagerOptions,
-  IABRRequest,
   IABRManagerClockTick,
 };
