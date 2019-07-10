@@ -82,7 +82,8 @@ export type IRepresentationBufferStateEvent = IBufferNeededActions |
 
 // Events emitted by the Buffer
 export type IRepresentationBufferEvent<T> = IBufferEventAddedSegment<T> |
-                                            IRepresentationBufferStateEvent;
+                                            IRepresentationBufferStateEvent |
+                                            IBufferWarningEvent;
 
 // Emitted as new bitrate estimations are done
 export interface IBitrateEstimationChangeEvent {
@@ -150,7 +151,6 @@ export interface INeedsMediaSourceReload { type: "needs-media-source-reload";
 // Events coming from single PeriodBuffer
 export type IPeriodBufferEvent = IPeriodBufferReadyEvent |
                                  IAdaptationBufferEvent<unknown> |
-                                 IBufferWarningEvent |
                                  INeedsMediaSourceReload |
                                  IAdaptationChangeEvent;
 

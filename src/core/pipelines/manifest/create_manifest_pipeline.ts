@@ -140,7 +140,7 @@ export default function createManifestPipeline(
     return loader({ url }).pipe(
 
       tap((arg) => {
-        if (arg.type === "error") {
+        if (arg.type === "warning") {
           warning$.next(arg.value);
         }
       }),

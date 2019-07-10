@@ -16,7 +16,6 @@
 
 import log from "../../log";
 import objectValues from "../../utils/object_values";
-import { IBufferType } from "../source_buffers";
 
 export interface IProgressEventValue {
   duration : number; // current duration for the request, in ms
@@ -26,10 +25,11 @@ export interface IProgressEventValue {
   totalSize : number; // total size to download, in bytes
 }
 
-export interface IProgressRequest {
-  type: IBufferType;
-  event: "progress";
-  value: IProgressEventValue;
+export interface IBeginRequestValue {
+  id: string|number;
+  time: number;
+  duration: number;
+  requestTimestamp: number;
 }
 
 export interface IRequestInfo {
@@ -45,21 +45,6 @@ export interface IProgressEventValue {
   size : number; // current downloaded size, in bytes
   timestamp : number; // timestamp of the progress event since unix epoch, in ms
   totalSize : number; // total size to download, in bytes
-}
-
-export interface IBeginRequest {
-  type: IBufferType;
-  event: "requestBegin";
-  value: { id: string|number;
-           time: number;
-           duration: number;
-           requestTimestamp: number; };
-}
-
-export interface IProgressRequest {
-  type: IBufferType;
-  event: "progress";
-  value: IProgressEventValue;
 }
 
 /**
@@ -80,7 +65,8 @@ export default class PendingRequestsStore {
    * @param {string} id
    * @param {Object} payload
    */
-  public add(id : string, payload: IBeginRequest) : void {
+  public add(payload : IBeginRequestValue) : void {
+    const { id, time, duration, requestTimestamp } = payload;
     if (this._currentRequests[id]) {
       if (__DEV__) {
         throw new Error("ABR: request already added.");
@@ -88,7 +74,6 @@ export default class PendingRequestsStore {
       log.warn("ABR: request already added.");
       return;
     }
-    const { time, duration, requestTimestamp } = payload.value;
     this._currentRequests[id] = { time,
                                   duration,
                                   requestTimestamp,
@@ -97,11 +82,10 @@ export default class PendingRequestsStore {
 
   /**
    * Notify of the progress of a currently pending request.
-   * @param {string} id
    * @param {Object} progress
    */
-  public addProgress(id : string, progress : IProgressRequest) : void {
-    const request = this._currentRequests[id];
+  public addProgress(progress : IProgressEventValue) : void {
+    const request = this._currentRequests[progress.id];
     if (!request) {
       if (__DEV__) {
         throw new Error("ABR: progress for a request not added");
@@ -109,7 +93,7 @@ export default class PendingRequestsStore {
       log.warn("ABR: progress for a request not added");
       return;
     }
-    request.progress.push(progress.value);
+    request.progress.push(progress);
   }
 
   /**

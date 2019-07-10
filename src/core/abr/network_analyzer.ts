@@ -25,16 +25,13 @@ import {
   IRequestInfo,
 } from "./pending_requests_store";
 
-const {
-  ABR_REGULAR_FACTOR,
-  ABR_STARVATION_DURATION_DELTA,
-  ABR_STARVATION_FACTOR,
-  ABR_STARVATION_GAP,
-  OUT_OF_STARVATION_GAP,
-} = config;
+const { ABR_REGULAR_FACTOR,
+        ABR_STARVATION_DURATION_DELTA,
+        ABR_STARVATION_FACTOR,
+        ABR_STARVATION_GAP,
+        OUT_OF_STARVATION_GAP } = config;
 
 interface INetworkAnalizerClockTick {
-  representation : Representation|null; // Current downloaded Representation
   bufferGap : number; // time to the end of the buffer, in seconds
   currentTime : number; // current position, in seconds
   speed : number; // current playback rate
@@ -113,6 +110,7 @@ function estimateRemainingTime(
 function estimateStarvationModeBitrate(
   pendingRequests : IRequestInfo[],
   clock : INetworkAnalizerClockTick,
+  currentRepresentation : Representation | null,
   lastEstimatedBitrate : number|undefined
 ) : number|undefined {
   const nextNeededPosition = clock.currentTime + clock.bufferGap;
@@ -143,7 +141,6 @@ function estimateStarvationModeBitrate(
   }
 
   const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
-  const currentRepresentation = clock.representation;
   if (
     currentRepresentation == null ||
     requestElapsedTime <= ((chunkDuration * 1.5 + 1) / clock.speed)
@@ -208,18 +205,18 @@ function shouldDirectlySwitchToLowBitrate(
  * @class NetworkAnalyzer
  */
 export default class NetworkAnalyzer {
-  private _estimator: BandwidthEstimator;
   private _inStarvationMode: boolean;
   private _initialBitrate: number;
 
   constructor(initialBitrate: number) {
     this._initialBitrate = initialBitrate;
-    this._estimator = new BandwidthEstimator();
     this._inStarvationMode = false;
   }
 
   public getBandwidthEstimate(
     clockTick: INetworkAnalizerClockTick,
+    bandwidthEstimator : BandwidthEstimator,
+    currentRepresentation : Representation | null,
     currentRequests : IRequestInfo[],
     lastEstimatedBitrate: number|undefined
   ) : { bandwidthEstimate? : number; bitrateChosen : number } {
@@ -228,7 +225,9 @@ export default class NetworkAnalyzer {
     const { bufferGap, currentTime, duration } = clockTick;
 
     // check if should get in/out of starvation mode
-    if (bufferGap + currentTime < duration - ABR_STARVATION_DURATION_DELTA) {
+    if (isNaN(duration) ||
+        bufferGap + currentTime < duration - ABR_STARVATION_DURATION_DELTA)
+    {
       if (!this._inStarvationMode && bufferGap <= ABR_STARVATION_GAP) {
         log.info("ABR: enter starvation mode.");
         this._inStarvationMode = true;
@@ -245,13 +244,14 @@ export default class NetworkAnalyzer {
     // from the last requests.
     // If so, cancel previous estimations and replace it by the new one
     if (this._inStarvationMode) {
-      bandwidthEstimate =
-        estimateStarvationModeBitrate(currentRequests, clockTick, lastEstimatedBitrate);
+      bandwidthEstimate = estimateStarvationModeBitrate(currentRequests,
+                                                        clockTick,
+                                                        currentRepresentation,
+                                                        lastEstimatedBitrate);
 
       if (bandwidthEstimate != null) {
         log.info("ABR: starvation mode emergency estimate:", bandwidthEstimate);
-        this._estimator.reset();
-        const currentRepresentation = clockTick.representation;
+        bandwidthEstimator.reset();
         newBitrateCeil = currentRepresentation == null ?
           bandwidthEstimate :
           Math.min(bandwidthEstimate, currentRepresentation.bitrate);
@@ -260,7 +260,7 @@ export default class NetworkAnalyzer {
 
     // if newBitrateCeil is not yet defined, do the normal estimation
     if (newBitrateCeil == null) {
-      bandwidthEstimate = this._estimator.getEstimate();
+      bandwidthEstimate = bandwidthEstimator.getEstimate();
 
       if (bandwidthEstimate != null) {
         newBitrateCeil = this._inStarvationMode ?
@@ -283,17 +283,6 @@ export default class NetworkAnalyzer {
   }
 
   /**
-   * Add a bandwidth estimate by giving:
-   *   - the duration of the request, in s
-   *   - the size of the request in bytes
-   * @param {number} duration
-   * @param {number} size
-   */
-  public addEstimate(duration : number, size : number) : void {
-    this._estimator.addSample(duration, size);
-  }
-
-  /**
    * For a given wanted bitrate, tells if should switch urgently.
    * @param {number} bitrate
    * @param {Object} clockTick
@@ -301,10 +290,10 @@ export default class NetworkAnalyzer {
    */
   public isUrgent(
     bitrate: number,
+    currentRepresentation : Representation | null,
     currentRequests : IRequestInfo[],
     clockTick: INetworkAnalizerClockTick
    ) : boolean {
-     const currentRepresentation = clockTick.representation;
     if (currentRepresentation == null) {
       return true;
     } else if (bitrate === currentRepresentation.bitrate) {

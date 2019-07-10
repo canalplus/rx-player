@@ -745,26 +745,28 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
         manualBitrates: this._priv_bitrateInfos.manualBitrates,
         maxAutoBitrates: this._priv_bitrateInfos.initialMaxAutoBitrates,
-        throttle: this._priv_throttleWhenHidden ?
-        { video: isActive()
-            .pipe(
-              map(active => active ? Infinity :
-                                     0),
-              takeUntil(this._priv_stopCurrentContent$)
-            ), } :
-        {},
-        throttleBitrate: this._priv_throttleVideoBitrateWhenHidden ?
-        { video: isVideoVisible(this._priv_pictureInPictureEvent$)
-            .pipe(
-              map(active => active ? Infinity :
-                                     0),
-              takeUntil(this._priv_stopCurrentContent$)
-            ), } :
-        {},
-        limitWidth: this._priv_limitVideoWidth ?
-        { video: videoWidth$(videoElement, this._priv_pictureInPictureEvent$)
-            .pipe(takeUntil(this._priv_stopCurrentContent$)), } :
-        {},
+        throttlers: {
+          throttle: this._priv_throttleWhenHidden ?
+          { video: isActive()
+              .pipe(
+                map(active => active ? Infinity :
+                                       0),
+                takeUntil(this._priv_stopCurrentContent$)
+              ), } :
+          {},
+          throttleBitrate: this._priv_throttleVideoBitrateWhenHidden ?
+          { video: isVideoVisible(this._priv_pictureInPictureEvent$)
+              .pipe(
+                map(active => active ? Infinity :
+                                       0),
+                takeUntil(this._priv_stopCurrentContent$)
+              ), } :
+          {},
+          limitWidth: this._priv_limitVideoWidth ?
+          { video: videoWidth$(videoElement, this._priv_pictureInPictureEvent$)
+              .pipe(takeUntil(this._priv_stopCurrentContent$)), } :
+          {},
+        },
       };
 
       // Options used by the TextTrack SourceBuffer

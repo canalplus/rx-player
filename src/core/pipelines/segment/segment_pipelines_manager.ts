@@ -15,14 +15,13 @@
  */
 
 import { Subject } from "rxjs";
-import { ICustomError } from "../../../errors";
 import {
   ISegmentLoaderArguments,
   ITransportPipelines,
 } from "../../../transports";
 import {
   IABRMetric,
-  IABRRequest
+  IABRRequest,
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
 import { IPipelineLoaderOptions } from "../utils/create_loader";
@@ -31,31 +30,19 @@ import applyPrioritizerToSegmentFetcher, {
 } from "./prioritized_segment_fetcher";
 import ObservablePrioritizer from "./prioritizer";
 import createSegmentFetcher, {
-  IFetchedSegment,
+  ISegmentFetcherEvent,
 } from "./segment_fetcher";
 
 /**
- * Interact with the networking pipelines to download segments and dispatch
- * the related events to the right subjects.
+ * Interact with the networking pipelines to download segments with the right
+ * priority.
  *
  * @class SegmentPipelinesManager
  *
  * @example
  * ```js
- * const requests$ = new Subject();
- * const metrics$ = new Subject();
- * const warnings$ = new Subject();
- *
  * // 1 - create the manager
- * const segmentPipelinesManager =
- *   new SegmentPipelinesManager(transport, requests$, metrics$, warnings$);
- *
- * // Note:
- * // You can create an ABRManager with the same requests$ and metrics$ subjects.
- * // It will then be informed of when the SegmentPipelinesManager downloads
- * // segments and with which metrics.
- * // The format of those events is kept the same for ease of use.
- * const abrManager = new ABRManager(requests$, metrics$);
+ * const segmentPipelinesManager = new SegmentPipelinesManager(transport);
  *
  * // 2 - create a new pipeline with its own options
  * const pipeline = segmentPipelinesManager.createPipeline("audio", {
@@ -67,36 +54,24 @@ import createSegmentFetcher, {
  * pipeline.createRequest(myContent, 1)
  *
  *   // 4 - parse it
- *   .pipe(mergeMap(fetchedSegment => fetchedSegment.parse()))
+ *   .pipe(
+ *     filter(evt => evt.type === "response"),
+ *     mergeMap(response => response.parse());
+ *   )
  *
  *   // 5 - use it
  *   .subscribe((res) => console.log("audio segment downloaded:", res));
  * ```
  */
 export default class SegmentPipelinesManager<T> {
-  private readonly _metrics$ : Subject<IABRMetric>;
-  private readonly _requestsInfos$ : Subject<Subject<IABRRequest>>;
-  private readonly _warning$ : Subject<ICustomError>;
   private readonly _transport : ITransportPipelines;
-  private readonly _prioritizer : ObservablePrioritizer<IFetchedSegment<T>>;
+  private readonly _prioritizer : ObservablePrioritizer<ISegmentFetcherEvent<T>>;
 
   /**
    * @param {Object} transport
-   * @param {Subject} requestsInfos$
-   * @param {Subject} metrics$
-   * @param {Subject} warning
    */
-  constructor(
-    transport : ITransportPipelines,
-    requestsInfos$ : Subject<Subject<IABRRequest>>,
-    metrics$ : Subject<IABRMetric>,
-    warning : Subject<ICustomError>
-  ) {
+  constructor(transport : ITransportPipelines) {
     this._transport = transport;
-    this._metrics$ = metrics$;
-    this._requestsInfos$ = requestsInfos$;
-    this._warning$ = warning;
-
     this._prioritizer = new ObservablePrioritizer();
   }
 
@@ -108,15 +83,13 @@ export default class SegmentPipelinesManager<T> {
    */
   createPipeline(
     bufferType : IBufferType,
+    requests$ : Subject<IABRRequest | IABRMetric>,
     options : IPipelineLoaderOptions<ISegmentLoaderArguments, T>
   ) : IPrioritizedSegmentFetcher<T> {
     const segmentFetcher = createSegmentFetcher<T>(bufferType,
                                                    this._transport,
-                                                   this._metrics$,
-                                                   this._requestsInfos$,
-                                                   this._warning$,
+                                                   requests$,
                                                    options);
-
     return applyPrioritizerToSegmentFetcher<T>(this._prioritizer, segmentFetcher);
   }
 }

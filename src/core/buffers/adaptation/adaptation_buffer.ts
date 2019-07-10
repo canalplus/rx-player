@@ -24,7 +24,6 @@
  * download and push segments for a single Representation.
  */
 
-import objectAssign from "object-assign";
 import {
   asapScheduler,
   BehaviorSubject,
@@ -59,10 +58,11 @@ import Manifest, {
 } from "../../../manifest";
 import concatMapLatest from "../../../utils/concat_map_latest";
 import ABRManager, {
-  IABRBufferEvents,
-  IABREstimation,
+  IABREstimate,
+  IABRMetric,
+  IABRRequest,
 } from "../../abr";
-import { IPrioritizedSegmentFetcher } from "../../pipelines";
+import { SegmentPipelinesManager } from "../../pipelines";
 import { QueuedSourceBuffer } from "../../source_buffers";
 import EVENTS from "../events_generators";
 import RepresentationBuffer, {
@@ -77,7 +77,9 @@ import {
   IBufferStateActive,
   IBufferStateFull,
   IRepresentationBufferEvent,
+  IRepresentationChangeEvent,
 } from "../types";
+import getPipelineOptions from "./get_pipeline_options";
 
 export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTick {
   bufferGap : number; // /!\ bufferGap of the SourceBuffer
@@ -85,6 +87,21 @@ export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTi
   isLive : boolean; // If true, we're playing a live content
   isPaused: boolean; // If true, the player is on pause
   speed : number; // Current regular speed asked by the user
+}
+
+export interface IAdaptationBufferArguments<T> {
+  abrManager : ABRManager; // Estimate best Representation
+  clock$ : Observable<IAdaptationBufferClockTick>; // Emit current playback conditions.
+  content : { manifest : Manifest;
+              period : Period;
+              adaptation : Adaptation; }; // content to download
+  options: { manualBitrateSwitchingMode : "seamless" | "direct"; // Switch strategy
+             offlineRetry? : number; // Retry count when offline
+             segmentRetry? : number; }; // Retry count on retryable error
+  queuedSourceBuffer : QueuedSourceBuffer<T>; // Interact with the SourceBuffer
+  segmentBookkeeper : SegmentBookkeeper; // Inventory of segments in the SourceBuffer
+  segmentPipelinesManager : SegmentPipelinesManager<any>; // Load and parse segments
+  wantedBufferAhead$ : BehaviorSubject<number>; // Buffer goal wanted by the user
 }
 
 /**
@@ -96,33 +113,19 @@ export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTi
  *
  * It will emit various events to report its status to the caller.
  *
- * @param {Observable} clock$ - Clock emitting current playback conditions.
- * Triggers the main logic on each tick.
- * @param {QueuedSourceBuffer} queuedSourceBuffer - QueuedSourceBuffer used to
- * push segments to and to know about the current buffer's health.
- * @param {SegmentBookkeeper} segmentBookkeeper - Synchronize and retrieve the
- * actual Segments currently present in the SourceBuffer.
- * @param {Function} segmentFetcher - Allow to download segments.
- * @param {Observable} wantedBufferAhead$ - Emits the buffer goal.
- * @param {Object} content - Content to download.
- * @param {Object} abrManager - Calculate Bitrate and choose the right
- * Representation.
- * @param {Object} options - Tinkering options.
+ * @param {Object} args
  * @returns {Observable}
  */
-export default function AdaptationBuffer<T>(
-  clock$ : Observable<IAdaptationBufferClockTick>,
-  queuedSourceBuffer : QueuedSourceBuffer<T>,
-  segmentBookkeeper : SegmentBookkeeper,
-  segmentFetcher : IPrioritizedSegmentFetcher<T>,
-  wantedBufferAhead$ : BehaviorSubject<number>,
-  content : { manifest : Manifest;
-              period : Period;
-              adaptation : Adaptation; },
-  abrManager : ABRManager,
-  options : { manualBitrateSwitchingMode : "seamless" | "direct" }
-) : Observable<IAdaptationBufferEvent<T>> {
-
+export default function AdaptationBuffer<T>({
+  abrManager,
+  clock$,
+  content,
+  options,
+  queuedSourceBuffer,
+  segmentBookkeeper,
+  segmentPipelinesManager,
+  wantedBufferAhead$,
+} : IAdaptationBufferArguments<T>) : Observable<IAdaptationBufferEvent<T>> {
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
   const { representations } = adaptation;
@@ -141,27 +144,30 @@ export default function AdaptationBuffer<T>(
   // emit when the current RepresentationBuffer should stop making new downloads
   const terminateCurrentBuffer$ = new Subject<void>();
 
-  // Keep track of the currently considered representation to add informations
-  // to the ABR clock.
-  let currentRepresentation : Representation|null = null;
-  const abrClock$ = clock$.pipe(
-    map((tick) => objectAssign({ representation: currentRepresentation }, tick)));
+  // Add currently considered Representation to the ABR clock.
+  const bufferEvents$ = new Subject<IBufferEventAddedSegment<T> |
+                                    IRepresentationChangeEvent>();
+  const requestsEvents$ = new Subject<IABRMetric | IABRRequest>();
+  const abrEvents$ = observableMerge(bufferEvents$, requestsEvents$);
 
-  const addedSegments$ : Subject<IABRBufferEvents> = new Subject();
-
-  const abr$ : Observable<IABREstimation> =
-    abrManager.get$(adaptation.type, representations, abrClock$, addedSegments$)
+  const abr$ : Observable<IABREstimate> =
+    abrManager.get$(adaptation.type, representations, clock$, abrEvents$)
       .pipe(observeOn(asapScheduler), share());
+
+  const pipelineOptions = getPipelineOptions(adaptation.type, options);
+  const segmentFetcher = segmentPipelinesManager.createPipeline(adaptation.type,
+                                                                requestsEvents$,
+                                                                pipelineOptions);
 
   // Bitrate higher or equal to this value should not be replaced by segments of
   // better quality.
   // undefined means everything can potentially be replaced
   const fastSwitchingStep$ = abr$.pipe(
     map(({ knownStableBitrate }) => knownStableBitrate),
-    startWith(undefined),
-    distinctUntilChanged(),
     // always emit the last on subscribe
-    multicast(() => new ReplaySubject< number | undefined >(1)));
+    multicast(() => new ReplaySubject< number | undefined >(1)),
+    startWith(undefined),
+    distinctUntilChanged());
 
   // Emit at each bitrate estimate done by the ABRManager
   const bitrateEstimates$ = abr$.pipe(
@@ -181,7 +187,6 @@ export default function AdaptationBuffer<T>(
     newRepresentation$
       .pipe(concatMapLatest((estimate, i) : Observable<IAdaptationBufferEvent<T>> => {
         const { representation } = estimate;
-        currentRepresentation = representation;
 
         // A manual bitrate switch might need an immediate feedback.
         // To do that properly, we need to reload the MediaSource
@@ -189,6 +194,7 @@ export default function AdaptationBuffer<T>(
           return clock$.pipe(take(1),
                              map(t => EVENTS.needsMediaSourceReload(t)));
         }
+
         const representationChange$ =
           observableOf(EVENTS.representationChange(adaptation.type,
                                                    period,
@@ -197,9 +203,11 @@ export default function AdaptationBuffer<T>(
           .pipe(takeUntil(killCurrentBuffer$));
 
         return observableConcat(representationChange$, representationBuffer$)
-          .pipe(tap(evt => {
-            if (evt.type === "added-segment") {
-              addedSegments$.next(evt);
+          .pipe(tap((evt) : void => {
+            if (evt.type === "representationChange" ||
+                evt.type === "added-segment")
+            {
+              return bufferEvents$.next(evt);
             }
           }));
       })),
@@ -238,8 +246,8 @@ export default function AdaptationBuffer<T>(
   ) : Observable<IRepresentationBufferEvent<T>> {
     return observableDefer(() => {
       const oldBufferGoalRatio = bufferGoalRatioMap[representation.id];
-      const bufferGoalRatio: number = oldBufferGoalRatio != null ? oldBufferGoalRatio :
-                                                                   1;
+      const bufferGoalRatio = oldBufferGoalRatio != null ? oldBufferGoalRatio :
+                                                           1;
       bufferGoalRatioMap[representation.id] = bufferGoalRatio;
 
       const bufferGoal$ = wantedBufferAhead$.pipe(
@@ -259,23 +267,23 @@ export default function AdaptationBuffer<T>(
                                     bufferGoal$,
                                     fastSwitchingStep$ })
         .pipe(catchError((err : unknown) => {
-          const formattedError = formatError(err, {
-            defaultCode: "NONE",
-            defaultReason: "Unknown `RepresentationBuffer` error",
-          });
-          if (formattedError.code === "BUFFER_FULL_ERROR") {
-            const wantedBufferAhead = wantedBufferAhead$.getValue();
-            const lastBufferGoalRatio = bufferGoalRatio;
-            if (lastBufferGoalRatio <= 0.25 ||
-                wantedBufferAhead * lastBufferGoalRatio <= 2)
-            {
-              throw formattedError;
+            const formattedError = formatError(err, {
+              defaultCode: "NONE",
+              defaultReason: "Unknown `RepresentationBuffer` error",
+            });
+            if (formattedError.code === "BUFFER_FULL_ERROR") {
+              const wantedBufferAhead = wantedBufferAhead$.getValue();
+              const lastBufferGoalRatio = bufferGoalRatio;
+              if (lastBufferGoalRatio <= 0.25 ||
+                  wantedBufferAhead * lastBufferGoalRatio <= 2)
+              {
+                throw formattedError;
+              }
+              bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;
+              return createRepresentationBuffer(representation);
             }
-            bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;
-            return createRepresentationBuffer(representation);
-          }
-          throw formattedError;
-        }));
+            throw formattedError;
+          }));
     });
   }
 }

@@ -51,8 +51,10 @@ import downloadingBackoff from "./backoff";
 interface IPipelineLoaderCache<T> { type : "cache";
                                     value : ILoaderDataLoadedValue<T>; }
 
+export type IPipelineLoaderProgress = ILoaderProgress;
+
 // An Error happened while loading (usually a request error)
-export interface IPipelineLoaderError { type : "error";
+export interface IPipelineLoaderError { type : "warning";
                                         value : ICustomError; }
 
 // Request metrics are available
@@ -75,7 +77,7 @@ export interface IPipelineLoaderResponse<T> { type : "response";
 //                  U: ResponseType of the request
 export type IPipelineLoaderEvent<T, U> = IPipelineLoaderRequest<T> |
                                          IPipelineLoaderResponse<U> |
-                                         ILoaderProgress |
+                                         IPipelineLoaderProgress |
                                          IPipelineLoaderError |
                                          IPipelineLoaderMetrics;
 
@@ -93,7 +95,6 @@ const { MAX_BACKOFF_DELAY_BASE,
 
 /**
  * Generate a new error from the infos given.
- * @param {string} code
  * @param {Error} error
  * @returns {Error}
  */
@@ -169,8 +170,8 @@ export default function createLoader<T, U>(
                            maxRetryRegular: maxRetry,
                            maxRetryOffline,
                            onRetry: (error : unknown) => {
-                             retryErrorSubject
-                               .next(errorSelector(error)); } };
+                             retryErrorSubject.next(errorSelector(error));
+                           } };
   /**
    * Call the transport's resolver - if it exists - with the given data.
    *
@@ -294,7 +295,7 @@ export default function createLoader<T, U>(
     );
 
     const retryError$ : Observable<IPipelineLoaderError> = retryErrorSubject
-      .pipe(map(error => ({ type: "error" as "error", value: error })));
+      .pipe(map(error => ({ type: "warning" as const, value: error })));
 
     return observableMerge(pipeline$, retryError$);
   };

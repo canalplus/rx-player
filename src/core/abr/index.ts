@@ -15,18 +15,19 @@
  */
 
 import ABRManager, {
-  IABRClockTick,
-  IABRMetric,
+  IABRManagerClockTick,
+  IABRManagerOptions,
   IABRRequest,
 } from "./abr_manager";
 export {
   IABRBufferEvents,
-  IABREstimation,
-} from "./representation_chooser";
+  IABREstimate,
+  IABRMetric,
+} from "./representation_estimator";
 
 export default ABRManager;
 export {
-  IABRMetric,
+  IABRManagerOptions,
   IABRRequest,
-  IABRClockTick,
+  IABRManagerClockTick,
 };

@@ -16,71 +16,40 @@
 
 import {
   Observable,
-  Subject,
+  ReplaySubject,
 } from "rxjs";
-import {
-  mergeMap,
-  takeUntil,
-} from "rxjs/operators";
 import log from "../../log";
-import {
-  Adaptation,
-  ISegment,
-  Representation,
-} from "../../manifest";
+import { Representation } from "../../manifest";
 import { IBufferType } from "../source_buffers";
-import RepresentationChooser, {
+import BandwidthEstimator from "./bandwidth_estimator";
+import RepresentationEstimator, {
   IABRBufferEvents,
-  IABREstimation,
-  IRepresentationChooserClockTick,
+  IABREstimate,
+  IRepresentationEstimatorClockTick,
   IRequest,
-} from "./representation_chooser";
+} from "./representation_estimator";
 
-interface IMetricValue { duration: number;
-                         size: number;
-                         content: { representation: Representation;
-                                    adaptation: Adaptation;
-                                    segment: ISegment; }; }
+export type IABRManagerClockTick = IRepresentationEstimatorClockTick;
 
-interface IMetric { type : IBufferType;
-                    value : IMetricValue; }
-
-export type IABRClockTick = IRepresentationChooserClockTick;
-
-// Options for every RepresentationChoosers
-interface IRepresentationChoosersOptions {
-  limitWidth: Partial<Record<IBufferType, Observable<number>>>;
-  throttle: Partial<Record<IBufferType, Observable<number>>>;
-  throttleBitrate: Partial<Record<IBufferType, Observable<number>>>;
-  initialBitrates: Partial<Record<IBufferType, number>>;
-  manualBitrates: Partial<Record<IBufferType, number>>;
-  maxAutoBitrates: Partial<Record<IBufferType, number>>;
+// Options for every RepresentationEstimator
+interface IRepresentationEstimatorsThrottlers {
+  limitWidth : Partial<Record<IBufferType, Observable<number>>>;
+  throttle : Partial<Record<IBufferType, Observable<number>>>;
+  throttleBitrate : Partial<Record<IBufferType, Observable<number>>>;
 }
 
-const defaultChooserOptions = { limitWidth: {},
-                                throttle: {},
-                                throttleBitrate: {},
-                                initialBitrates: {},
-                                manualBitrates: {},
-                                maxAutoBitrates: {} };
+interface IABRManagerOptions {
+  manualBitrates: Partial<Record<IBufferType, number>>;
+  maxAutoBitrates: Partial<Record<IBufferType, number>>;
+  initialBitrates: Partial<Record<IBufferType, number>>;
+  throttlers: IRepresentationEstimatorsThrottlers;
+}
 
-/**
- * Create the right RepresentationChooser instance, from the given data.
- * @param {string} type
- * @param {Object} options
- * @returns {RepresentationChooser} - The RepresentationChooser instance
- */
-const createChooser = (
-  type : IBufferType,
-  options : IRepresentationChoosersOptions
-) : RepresentationChooser => {
-  return new RepresentationChooser({ limitWidth$: options.limitWidth[type],
-                                     throttle$: options.throttle[type],
-                                     throttleBitrate$: options.throttleBitrate[type],
-                                     initialBitrate: options.initialBitrates[type],
-                                     manualBitrate: options.manualBitrates[type],
-                                     maxAutoBitrate: options.maxAutoBitrates[type] });
-};
+interface IABRManagerCommonElementsPerType {
+  bandwidthEstimator : BandwidthEstimator;
+  maxAutoBitrate$ : ReplaySubject<number>;
+  manualBitrate$ : ReplaySubject<number>;
+}
 
 /**
  * Adaptive BitRate Manager.
@@ -90,133 +59,19 @@ const createChooser = (
  * @class ABRManager
  */
 export default class ABRManager {
-  private readonly _dispose$: Subject<void>;
+  private _manualBitrates : Partial<Record<IBufferType, number>>;
+  private _maxAutoBitrates : Partial<Record<IBufferType, number>>;
+  private _initialBitrates : Partial<Record<IBufferType, number>>;
+  private _throttlers : IRepresentationEstimatorsThrottlers;
+  private _commonElementsPerType : Partial<Record<IBufferType,
+                                           IABRManagerCommonElementsPerType>>;
 
-  private _choosers:  Partial<Record<IBufferType, RepresentationChooser>>;
-  private _chooserInstanceOptions: IRepresentationChoosersOptions;
-
-  /**
-   * @param {Observable} requests$ - Emit requests infos as they begin, progress
-   * and end.
-   * Allows to know if a request take too much time to be finished in
-   * emergency times (e.g. when the user's bandwidth falls very quickly).
-   *
-   * The items emitted are Observables which each emit infos about a SINGLE
-   * request. These infos are under the form of objects with the following keys:
-   *   - type {string}: the buffer type (example: "video")
-   *
-   *   - event {string}: Wether the request started, is progressing or has
-   *     ended. Should be either one of these three strings:
-   *       1. "requestBegin": The request has just begun.
-   *
-   *       2. "progress": Informations about the request progress were received
-   *          (basically the amount of bytes currently received).
-   *
-   *       2. "requestEnd": The request just ended (successfully/on error/was
-   *          canceled)
-   *
-   *     Note that it should ALWAYS happen in the following order:
-   *     1 requestBegin -> 0+ progress -> 1 requestEnd
-   *
-   *     Also note that EVERY requestBegin should eventually be followed by a
-   *     requestEnd at some point. If that's not the case, a memory leak
-   *     can happen.
-   *
-   *   - value {Object|undefined}: The value depends on the type of event
-   *     received:
-   *       - for "requestBegin" events, it should be an object with the
-   *         following keys:
-   *           - id {number|String}: The id of this particular request.
-   *           - duration {number}: duration, in seconds of the asked segment.
-   *           - time {number}: The start time, in seconds of the asked segment.
-   *           - requestTimestamp {number}: the timestamp at which the request
-   *             was sent, in ms.
-   *
-   *       - for "progress" events, it should be an object with the following
-   *         keys:
-   *           - id {number|String}: The id of this particular request.
-   *           - size {number}: amount currently downloaded, in bytes
-   *           - timestamp {number}: timestamp at which the progress event was
-   *             received, in ms
-   *         Those events SHOULD be received in order (that is, in increasing
-   *         order for both size and timestamp).
-   *
-   *       - for "requestEnd" events:
-   *           - id {number|String}: The id of this particular request.
-   *
-   * @param {Observable} metrics$ - Emit each times the network downloaded
-   * a new segment for a given buffer type. Allows to obtain informations about
-   * the user's bitrate.
-   *
-   * The items emitted are objects with the following keys:
-   *   - type {string}: the buffer type (example: "video")
-   *   - value {Object}:
-   *     - duration {number}: duration of the request, in seconds.
-   *     - size {number}: size of the downloaded chunks, in bytes.
-   *
-   * @param {Object|undefined} options
-   */
-  constructor(
-    requests$: Observable<Observable<IRequest>>,
-    metrics$: Observable<IMetric>,
-    options : IRepresentationChoosersOptions = defaultChooserOptions
-  ) {
-    // Subject emitting and completing on dispose.
-    // Used to clean up every created observables.
-    this._dispose$ = new Subject();
-
-    // Will contain every RepresentationChooser attached to the ABRManager,
-    // by type ("audio"/"video" etc.)
-    this._choosers = {};
-
-    // -- OPTIONS --
-
-    // Will contain options used when (lazily) instantiating a
-    // RepresentationChooser
-    this._chooserInstanceOptions = {
-      initialBitrates: options.initialBitrates || {},
-      manualBitrates: options.manualBitrates || {},
-      maxAutoBitrates: options.maxAutoBitrates || {},
-      throttle: options.throttle || {},
-      throttleBitrate: options.throttleBitrate || {},
-      limitWidth: options.limitWidth || {},
-    };
-
-    metrics$
-      .pipe(takeUntil(this._dispose$))
-      .subscribe(({ type, value }) => {
-        const chooser = this._lazilyCreateChooser(type);
-        const { duration, size, content } = value;
-        chooser.addEstimate(duration, size, content);
-      });
-
-    requests$
-      .pipe(
-        // requests$ emits observables which are subscribed to
-        mergeMap(request$ => request$),
-        takeUntil(this._dispose$)
-      )
-      .subscribe((request) => {
-        const { type, value } = request;
-        const chooser = this._lazilyCreateChooser(type);
-
-        switch (request.event) {
-        case "requestBegin":
-          // use the id of the segment as in any case, we should only have at
-          // most one active download for the same segment.
-          // This might be not optimal if this changes however. The best I think
-          // for now is to just throw/warn in DEV mode when two pending ids
-          // are identical
-          chooser.addPendingRequest(value.id, request);
-          break;
-        case "requestEnd":
-          chooser.removePendingRequest(value.id);
-          break;
-        case "progress":
-          chooser.addRequestProgress(value.id, request);
-          break;
-        }
-      });
+  constructor(options : IABRManagerOptions) {
+    this._manualBitrates = options.manualBitrates || {};
+    this._maxAutoBitrates = options.maxAutoBitrates || {};
+    this._initialBitrates = options.initialBitrates || {};
+    this._throttlers = options.throttlers || {};
+    this._commonElementsPerType = {};
   }
 
   /**
@@ -232,11 +87,24 @@ export default class ABRManager {
   public get$(
     type : IBufferType,
     representations : Representation[] = [],
-    clock$ : Observable<IABRClockTick>,
+    clock$ : Observable<IABRManagerClockTick>,
     bufferEvents$ : Observable<IABRBufferEvents>
-  ) : Observable<IABREstimation> {
-    return this._lazilyCreateChooser(type)
-      .get$(representations, clock$, bufferEvents$);
+  ) : Observable<IABREstimate> {
+    const { bandwidthEstimator,
+            manualBitrate$,
+            maxAutoBitrate$ } = this._getCommonElementsForType(type);
+    const initialBitrate = this._initialBitrates[type];
+    const throttlers = { limitWidth$: this._throttlers.limitWidth[type],
+                         throttleBitrate$: this._throttlers.throttleBitrate[type],
+                         throttle$: this._throttlers.throttle[type] };
+    return RepresentationEstimator({ bandwidthEstimator,
+                                     bufferEvents$,
+                                     clock$,
+                                     initialBitrate,
+                                     manualBitrate$,
+                                     maxAutoBitrate$,
+                                     representations,
+                                     throttlers });
   }
 
   /**
@@ -252,33 +120,35 @@ export default class ABRManager {
    * @param {number} bitrate
    */
   public setManualBitrate(type : IBufferType, bitrate : number) : void {
-    log.info("ABR: Setting manual bitrate");
-    const chooser = this._choosers[type];
-    if (!chooser) {
-      // if no chooser yet, store as a chooser option for when it will be
-      // effectively instantiated
-      this._chooserInstanceOptions.initialBitrates[type] = bitrate;
-    } else {
-      chooser.manualBitrate$.next(bitrate);
+    log.info("ABR: Setting manual bitrate", type, bitrate);
+    if (bitrate === this._manualBitrates[type]) {
+      return;
+    }
+
+    this._manualBitrates[type] = bitrate;
+    const typeElements = this._commonElementsPerType[type];
+    if (typeElements != null) {
+      typeElements.manualBitrate$.next(bitrate);
     }
   }
 
   /**
    * Set a maximum bitrate a given type will be able to automatically switch to.
-   * The chooser for the given type can still emit higher bitrates with the
+   * The estimator for the given type can still emit higher bitrates with the
    * setManualBitrate method.
    * @param {string} supportedBufferTypes
    * @param {number} bitrate
    */
   public setMaxAutoBitrate(type : IBufferType, bitrate : number) : void {
-    log.info("ABR: Setting maximum auto bitrate");
-    const chooser = this._choosers[type];
-    if (!chooser) {
-      // if no chooser yet, store as a chooser option for when it will be
-      // effectively instantiated
-      this._chooserInstanceOptions.maxAutoBitrates[type] = bitrate;
-    } else {
-      chooser.maxAutoBitrate$.next(bitrate);
+    log.info("ABR: Setting maximum auto bitrate", type, bitrate);
+    if (bitrate === this._maxAutoBitrates[type]) {
+      return;
+    }
+
+    this._maxAutoBitrates[type] = bitrate;
+    const typeElements = this._commonElementsPerType[type];
+    if (typeElements != null) {
+      typeElements.maxAutoBitrate$.next(bitrate);
     }
   }
 
@@ -288,10 +158,7 @@ export default class ABRManager {
    * @returns {number|undefined}
    */
   public getManualBitrate(type : IBufferType) : number|undefined {
-    const chooser = this._choosers[type];
-    return chooser ?
-      chooser.manualBitrate$.getValue() :
-      this._chooserInstanceOptions.manualBitrates[type];
+    return this._manualBitrates[type];
   }
 
   /**
@@ -300,45 +167,54 @@ export default class ABRManager {
    * @returns {number|undefined}
    */
   public getMaxAutoBitrate(type : IBufferType) : number|undefined {
-    const chooser = this._choosers[type];
-    return chooser ?
-      chooser.maxAutoBitrate$.getValue() :
-      this._chooserInstanceOptions.maxAutoBitrates[type];
+    return this._maxAutoBitrates[type];
   }
 
   /**
-   * Clean every ressources linked to the ABRManager.
+   * Clean ressources linked to the ABRManager.
    * The ABRManager is unusable after calling this method.
    */
   public dispose() : void {
     log.debug("ABR: Freeing up ressources");
-    Object.keys(this._choosers).forEach(type => {
-      (this._choosers[type as IBufferType] as RepresentationChooser).dispose();
+    Object.keys(this._commonElementsPerType).forEach((type) => {
+      const infos = this._commonElementsPerType[type as IBufferType];
+      if (infos != null) {
+        infos.bandwidthEstimator.reset();
+        infos.maxAutoBitrate$.complete();
+        infos.manualBitrate$.complete();
+      }
     });
-    this._chooserInstanceOptions = defaultChooserOptions;
-    this._choosers = {};
-    this._dispose$.next();
-    this._dispose$.complete();
   }
 
   /**
-   * If it doesn't exist, create a RepresentationChooser under the
-   * _choosers[bufferType] property.
    * @param {string} bufferType
    * @returns {Object}
    */
-  private _lazilyCreateChooser(bufferType : IBufferType) : RepresentationChooser {
-    if (!this._choosers[bufferType]) {
-      log.debug("ABR: Creating new buffer for ", bufferType);
-      this._choosers[bufferType] = createChooser(bufferType,
-                                                 this._chooserInstanceOptions);
+  private _getCommonElementsForType(
+    bufferType : IBufferType
+  ) : IABRManagerCommonElementsPerType {
+    const originalInfos = this._commonElementsPerType[bufferType];
+    if (originalInfos == null) {
+      log.debug("ABR: Creating new BandwidthEstimator for ", bufferType);
+      const bandwidthEstimator = new BandwidthEstimator();
+
+      const manualBitrate$ = new ReplaySubject<number>(1);
+      const manualBitrate = this._manualBitrates[bufferType];
+      manualBitrate$.next(manualBitrate == null ? -1 : manualBitrate);
+
+      const maxAutoBitrate$ = new ReplaySubject<number>(1);
+      const maxAutoBitrate = this._maxAutoBitrates[bufferType];
+      maxAutoBitrate$.next(maxAutoBitrate == null ? -1 : maxAutoBitrate);
+
+      const infos = { bandwidthEstimator, maxAutoBitrate$, manualBitrate$ };
+      this._commonElementsPerType[bufferType] = infos;
+      return infos;
     }
-    return this._choosers[bufferType] as RepresentationChooser;
+    return originalInfos;
   }
 }
 
 export {
+  IABRManagerOptions,
   IRequest as IABRRequest,
-  IMetric as IABRMetric,
-  IRepresentationChoosersOptions as IABROptions,
 };

@@ -58,12 +58,11 @@ import Manifest, {
 } from "../../../manifest";
 import SimpleSet from "../../../utils/simple_set";
 import {
-  IFetchedSegment,
   IPrioritizedSegmentFetcher,
+  ISegmentFetcherEvent,
+  ISegmentFetcherWarning,
 } from "../../pipelines";
-import {
-  QueuedSourceBuffer,
-} from "../../source_buffers";
+import { QueuedSourceBuffer } from "../../source_buffers";
 import EVENTS from "../events_generators";
 import SegmentBookkeeper from "../segment_bookkeeper";
 import {
@@ -128,15 +127,23 @@ interface ISegmentObject<T> {
 }
 
 // Informations about a loaded and parsed Segment
-interface ILoadedSegmentObject<T> {
+interface IParsedSegmentEventValue<T> {
   segment : ISegment; // Concerned Segment
-  value : ISegmentObject<T>; // parsed Data
+  data : ISegmentObject<T>; // parsed Data
 }
+
+interface IParsedSegmentEvent<T> {
+  type : "parsed-segment";
+  value : IParsedSegmentEventValue<T>;
+}
+
+type ISegmentLoadingEvent<T> = IParsedSegmentEvent<T> |
+                               ISegmentFetcherWarning;
 
 // Object describing a pending Segment request
 interface ISegmentRequestObject<T> {
   segment : ISegment; // The Segment the request is for
-  request$ : Observable<IFetchedSegment<T>>; // The request itself
+  request$ : Observable<ISegmentFetcherEvent<T>>; // The request itself
   priority : number; // The current priority of the request
 }
 
@@ -345,7 +352,7 @@ export default function RepresentationBuffer<T>({
   //   - append them to the SourceBuffer
   const bufferQueue$ = startQueue$.pipe(
     switchMap(() => downloadQueue.length ? loadSegmentsFromQueue() : EMPTY),
-    mergeMap(appendSegment)
+    mergeMap(onLoaderEvent)
   );
 
   return observableMerge(status$, bufferQueue$).pipe(share());
@@ -359,9 +366,9 @@ export default function RepresentationBuffer<T>({
    *   - Will emit from finishedDownloadQueue$ Subject after it's done.
    * @returns {Observable}
    */
-  function loadSegmentsFromQueue() : Observable<ILoadedSegmentObject<T>> {
-    const requestNextSegment$ : Observable<ILoadedSegmentObject<T>> =
-      observableDefer(() => {
+  function loadSegmentsFromQueue() : Observable<ISegmentLoadingEvent<T>> {
+    const requestNextSegment$ =
+      observableDefer(() : Observable<ISegmentLoadingEvent<T>> => {
         const currentNeededSegment = downloadQueue.shift();
         if (currentNeededSegment == null) {
           nextTick(() => { finishedDownloadQueue$.next(); });
@@ -373,16 +380,22 @@ export default function RepresentationBuffer<T>({
         const request$ = segmentFetcher.createRequest(context, priority);
 
         currentSegmentRequest = { segment, priority, request$ };
-        const response$ = request$.pipe(
-          mergeMap((fetchedSegment) => {
+        const response$ = request$
+          .pipe(mergeMap((evt) : Observable<ISegmentLoadingEvent<T>> => {
+            if (evt.type !== "response") {
+              return observableOf(evt);
+            }
+
             currentSegmentRequest = null;
             const initInfos = initSegmentObject &&
                               initSegmentObject.segmentInfos ||
                               undefined;
-            return fetchedSegment.parse(initInfos);
-          }),
-          map((args) => ({ segment, value: args }))
-        );
+            return evt.parse(initInfos)
+              .pipe(map(data => {
+                return { type: "parsed-segment" as const,
+                         value: { segment, data } };
+              }));
+          }));
 
         return observableConcat(response$, requestNextSegment$);
       });
@@ -394,19 +407,23 @@ export default function RepresentationBuffer<T>({
   /**
    * Append the given segment to the SourceBuffer.
    * Emit the right event when it succeeds.
-   * @param {Object} loadedSegment
+   * @param {Object} evt
    * @returns {Observable}
    */
-  function appendSegment(
-    loadedSegment : ILoadedSegmentObject<T>
-  ) : Observable<IBufferEventAddedSegment<T>> {
+  function onLoaderEvent(
+    evt : ISegmentLoadingEvent<T>
+  ) : Observable<IBufferEventAddedSegment<T>|ISegmentFetcherWarning> {
     return observableDefer(() => {
-      const { segment } = loadedSegment;
-      if (segment.isInit) {
-        initSegmentObject = loadedSegment.value;
+      if (evt.type !== "parsed-segment") {
+        return observableOf(evt);
       }
 
-      const { segmentInfos, segmentData, segmentOffset } = loadedSegment.value;
+      const { segment } = evt.value;
+      if (segment.isInit) {
+        initSegmentObject = evt.value.data;
+      }
+
+      const { segmentInfos, segmentData, segmentOffset } = evt.value.data;
       if (segmentData == null) {
         // no segmentData to add here (for example, a text init segment)
         // just complete directly without appending anything
