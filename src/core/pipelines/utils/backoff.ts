@@ -64,9 +64,7 @@ function isOfflineRequestError(error : RequestError) : boolean {
 interface IBackoffOptions { baseDelay : number;
                             maxDelay : number;
                             maxRetryRegular : number;
-                            maxRetryOffline : number;
-                            onRetry? : (error : unknown,
-                                        retryCount : number) => void; }
+                            maxRetryOffline : number; }
 
 export interface IBackoffRetry {
   type : "retry";
@@ -101,8 +99,7 @@ export default function backoff<T>(
   const { baseDelay,
           maxDelay,
           maxRetryRegular,
-          maxRetryOffline,
-          onRetry } = options;
+          maxRetryOffline } = options;
 
   let retryCount = 0;
 
@@ -132,10 +129,6 @@ export default function backoff<T>(
 
       if (++retryCount > maxRetry) {
         throw error;
-      }
-
-      if (onRetry) {
-        onRetry(error, retryCount);
       }
 
       const delay = Math.min(baseDelay * Math.pow(2, retryCount - 1),
