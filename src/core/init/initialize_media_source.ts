@@ -48,7 +48,7 @@ import Manifest from "../../manifest";
 import { ITransportPipelines } from "../../transports";
 import throttle from "../../utils/rx-throttle";
 import ABRManager, {
-  IABRManagerOptions,
+  IABRManagerArguments,
 } from "../abr";
 import {
   IEMEManagerEvent,
@@ -101,7 +101,7 @@ function getManifestPipelineOptions(
 
 // Arguments to give to the `initialize` function
 export interface IInitializeOptions {
-  adaptiveOptions: IABRManagerOptions;
+  adaptiveOptions: IABRManagerArguments;
   autoPlay : boolean;
   bufferOptions : { wantedBufferAhead$ : BehaviorSubject<number>;
                     maxBufferAhead$ : Observable<number>;

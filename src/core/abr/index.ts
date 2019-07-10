@@ -15,8 +15,8 @@
  */
 
 import ABRManager, {
+  IABRManagerArguments,
   IABRManagerClockTick,
-  IABRManagerOptions,
 } from "./abr_manager";
 export {
   IABRBufferEvents,
@@ -27,6 +27,6 @@ export {
 
 export default ABRManager;
 export {
-  IABRManagerOptions,
+  IABRManagerArguments,
   IABRManagerClockTick,
 };

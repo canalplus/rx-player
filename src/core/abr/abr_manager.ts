@@ -38,7 +38,7 @@ interface IRepresentationEstimatorsThrottlers {
   throttleBitrate : Partial<Record<IBufferType, Observable<number>>>;
 }
 
-export interface IABRManagerOptions {
+export interface IABRManagerArguments {
   manualBitrates: Partial<Record<IBufferType, Observable<number>>>;
   maxAutoBitrates: Partial<Record<IBufferType, Observable<number>>>;
   initialBitrates: Partial<Record<IBufferType, number>>;
@@ -59,7 +59,10 @@ export default class ABRManager {
   private _throttlers : IRepresentationEstimatorsThrottlers;
   private _bandwidthEstimators : Partial<Record<IBufferType, BandwidthEstimator>>;
 
-  constructor(options : IABRManagerOptions) {
+  /**
+   * @param {Object} options
+   */
+  constructor(options : IABRManagerArguments) {
     this._manualBitrates = options.manualBitrates || {};
     this._maxAutoBitrates = options.maxAutoBitrates || {};
     this._initialBitrates = options.initialBitrates || {};
