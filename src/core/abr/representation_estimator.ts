@@ -39,12 +39,12 @@ import {
 import { getLeftSizeOfRange } from "../../utils/ranges";
 import BandwidthEstimator from "./bandwidth_estimator";
 import BufferBasedChooser from "./buffer_based_chooser";
-import EWMA from "./ewma";
 import filterByBitrate from "./filter_by_bitrate";
 import filterByWidth from "./filter_by_width";
 import fromBitrateCeil from "./from_bitrate_ceil";
 import NetworkAnalyzer from "./network_analyzer";
 import PendingRequestsStore from "./pending_requests_store";
+import RepresentationScoreCalculator from "./representation_score_calculator";
 
 // Adaptive BitRate estimate object
 export interface IABREstimate {
@@ -166,18 +166,6 @@ function getFilteredRepresentations(
   return _representations;
 }
 
-function getScoreForRepresentation(
-  scoreKeeper: { estimator : EWMA;
-                 representation : Representation; } |
-               null,
-  representation : Representation
-) : number|undefined {
-  return scoreKeeper != null &&
-         scoreKeeper.representation.id === representation.id ?
-           scoreKeeper.estimator.getEstimate() :
-           undefined;
-}
-
 /**
  * Create Observable that merge several throttling Observables into one.
  * @param {Observable} limitWidth$ - Emit the width at which the chosen
@@ -226,14 +214,15 @@ export default function RepresentationEstimator({
   representations,
   throttlers,
 } : IRepresentationEstimatorArguments) : Observable<IABREstimate> {
-  let _scoreKeeper : { representation : Representation; estimator : EWMA } |
-                     null = null;
-  let _lastStableRepresentation : Representation | null = null;
-  const _networkAnalyzer = new NetworkAnalyzer(initialBitrate || 0);
-  const _pendingRequests = new PendingRequestsStore();
-
+  const scoreCalculator = new RepresentationScoreCalculator();
+  const networkAnalyzer = new NetworkAnalyzer(initialBitrate || 0);
+  const requestsStore = new PendingRequestsStore();
   const deviceEvents$ = createDeviceEvents(throttlers);
 
+  /**
+   * Callback to call when new metrics arrive.
+   * @param {Object} value
+   */
   function onMetric(value : IABRMetricValue) : void {
     const { duration, size, content } = value;
 
@@ -247,23 +236,9 @@ export default function RepresentationEstimator({
     }
     const requestDuration = duration / 1000;
     const segmentDuration = segment.duration / segment.timescale;
-    const ratio = segmentDuration / requestDuration;
 
     const { representation } = content;
-    if (_scoreKeeper != null &&
-        _scoreKeeper.representation.id === representation.id)
-    {
-      _scoreKeeper.estimator.addSample(requestDuration, ratio);
-    } else {
-      const ewma = new EWMA(5);
-      ewma.addSample(requestDuration, ratio);
-      _scoreKeeper = { estimator: ewma, representation };
-    }
-
-    const estimate = _scoreKeeper.estimator.getEstimate();
-    if (estimate > 1) {
-      _lastStableRepresentation = representation;
-    }
+    scoreCalculator.addSample(representation, requestDuration, segmentDuration);
   }
 
   const metrics$ = bufferEvents$.pipe(
@@ -275,13 +250,13 @@ export default function RepresentationEstimator({
     tap((evt) => {
       switch (evt.type) {
         case "requestBegin":
-          _pendingRequests.add(evt.value);
+          requestsStore.add(evt.value);
           break;
         case "requestEnd":
-          _pendingRequests.remove(evt.value.id);
+          requestsStore.remove(evt.value.id);
           break;
         case "progress":
-          _pendingRequests.addProgress(evt.value);
+          requestsStore.addProgress(evt.value);
           break;
       }
     }),
@@ -319,7 +294,7 @@ export default function RepresentationEstimator({
       }
 
       // -- AUTO mode --
-      let lastEstimatedBitrate: number|undefined;
+      let lastEstimatedBitrate : number | undefined;
       let forceBandwidthMode = true;
 
       // Emit each time a buffer-based estimation should be actualized (each
@@ -331,7 +306,7 @@ export default function RepresentationEstimator({
           const timeRanges = evtValue.buffered;
           const bufferGap = getLeftSizeOfRange(timeRanges, currentTime);
           const { representation } = evtValue.content;
-          const currentScore = getScoreForRepresentation(_scoreKeeper, representation);
+          const currentScore = scoreCalculator.getEstimate(representation);
           const currentBitrate = representation.bitrate;
           return { bufferGap, currentBitrate, currentScore, speed };
         })
@@ -352,8 +327,8 @@ export default function RepresentationEstimator({
         ) : IABREstimate => {
           const _representations = getFilteredRepresentations(representations,
                                                               deviceEvents);
-          const requests = _pendingRequests.getRequests();
-          const { bandwidthEstimate, bitrateChosen } = _networkAnalyzer
+          const requests = requestsStore.getRequests();
+          const { bandwidthEstimate, bitrateChosen } = networkAnalyzer
             .getBandwidthEstimate(clock,
                                   bandwidthEstimator,
                                   currentRepresentation,
@@ -362,10 +337,10 @@ export default function RepresentationEstimator({
 
           lastEstimatedBitrate = bandwidthEstimate;
 
-          const knownStableBitrate = _lastStableRepresentation == null ?
+          const stableRepresentation = scoreCalculator.getLastStableRepresentation();
+          const knownStableBitrate = stableRepresentation == null ?
             undefined :
-            _lastStableRepresentation.bitrate / (clock.speed > 0 ? clock.speed :
-                                                                   1);
+            stableRepresentation.bitrate / (clock.speed > 0 ? clock.speed : 1);
 
           const { bufferGap } = clock;
           if (!forceBandwidthMode && bufferGap <= 5) {
@@ -385,10 +360,10 @@ export default function RepresentationEstimator({
           if (forceBandwidthMode) {
             return { bitrate: bandwidthEstimate,
                      representation: chosenRepFromBandwidth,
-                     urgent: _networkAnalyzer.isUrgent(chosenRepFromBandwidth.bitrate,
-                                                       currentRepresentation,
-                                                       requests,
-                                                       clock),
+                     urgent: networkAnalyzer.isUrgent(chosenRepFromBandwidth.bitrate,
+                                                      currentRepresentation,
+                                                      requests,
+                                                      clock),
                      manual: false,
                      knownStableBitrate };
           }
@@ -397,10 +372,10 @@ export default function RepresentationEstimator({
           {
             return { bitrate: bandwidthEstimate,
                      representation: chosenRepFromBandwidth,
-                     urgent: _networkAnalyzer.isUrgent(chosenRepFromBandwidth.bitrate,
-                                                       currentRepresentation,
-                                                       requests,
-                                                       clock),
+                     urgent: networkAnalyzer.isUrgent(chosenRepFromBandwidth.bitrate,
+                                                      currentRepresentation,
+                                                      requests,
+                                                      clock),
                      manual: false,
                      knownStableBitrate, };
           }
@@ -411,10 +386,10 @@ export default function RepresentationEstimator({
                                        representations[0];
           return { bitrate: bandwidthEstimate,
                    representation: chosenRepresentation,
-                   urgent: _networkAnalyzer.isUrgent(bufferBasedBitrate,
-                                                     currentRepresentation,
-                                                     requests,
-                                                     clock),
+                   urgent: networkAnalyzer.isUrgent(bufferBasedBitrate,
+                                                    currentRepresentation,
+                                                    requests,
+                                                    clock),
                    manual: false,
                    knownStableBitrate, };
         })
