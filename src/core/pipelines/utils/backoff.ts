@@ -61,12 +61,12 @@ function isOfflineRequestError(error : RequestError) : boolean {
          isOffline();
 }
 
-interface IDownloadingBackoffOptions { baseDelay : number;
-                                       maxDelay : number;
-                                       maxRetryRegular : number;
-                                       maxRetryOffline : number;
-                                       onRetry? : (error : unknown,
-                                                   retryCount : number) => void; }
+interface IBackoffOptions { baseDelay : number;
+                            maxDelay : number;
+                            maxRetryRegular : number;
+                            maxRetryOffline : number;
+                            onRetry? : (error : unknown,
+                                        retryCount : number) => void; }
 
 export interface IBackoffRetry {
   type : "retry";
@@ -94,9 +94,9 @@ export type IBackoffEvent<T> = IBackoffRetry |
  * @param {Object} options - Configuration options.
  * @returns {Observable}
  */
-function downloadingBackoff<T>(
+export default function backoff<T>(
   obs$ : Observable<T>,
-  options : IDownloadingBackoffOptions
+  options : IBackoffOptions
 ) : Observable<IBackoffEvent<T>> {
   const { baseDelay,
           maxDelay,
@@ -149,5 +149,3 @@ function downloadingBackoff<T>(
     })
   );
 }
-
-export default downloadingBackoff;
