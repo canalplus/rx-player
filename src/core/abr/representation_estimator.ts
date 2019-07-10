@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import {
   combineLatest as observableCombineLatest,
   defer as observableDefer,
@@ -104,8 +103,8 @@ interface IBeginRequest { type: "requestBegin";
 interface IEndRequest { type: "requestEnd";
                         value: { id: string }; }
 
-interface IFilters { bitrate?: number;
-                     width?: number; }
+export interface IABRFilters { bitrate?: number;
+                               width?: number; }
 
 // Event emitted each time a segment is added
 interface IBufferEventAddedSegment {
@@ -132,12 +131,12 @@ export interface IRepresentationEstimatorArguments {
   bandwidthEstimator : BandwidthEstimator; // Calculate bandwidth
   bufferEvents$ : Observable<IABRBufferEvents>; // Emit events from the buffer
   clock$ : Observable<IRepresentationEstimatorClockTick>; // current playback situation
+  filters$ : Observable<IABRFilters>; // Filter possible choices
   initialBitrate?: number; // The initial wanted bitrate
   manualBitrate$ : Observable<number>; // Force bitrate to a given value
   maxAutoBitrate$ : Observable<number>; // Set a maximum value for the
                                         // adaptative bitrate
   representations : Representation[]; // List of Representations to choose from
-  throttlers : IRepresentationEstimatorThrottlers; // Throttle the choice
 }
 
 /**
@@ -151,7 +150,7 @@ export interface IRepresentationEstimatorArguments {
  */
 function getFilteredRepresentations(
   representations : Representation[],
-  filters : IFilters
+  filters : IABRFilters
 ) : Representation[] {
   let _representations = representations;
 
@@ -167,38 +166,6 @@ function getFilteredRepresentations(
 }
 
 /**
- * Create Observable that merge several throttling Observables into one.
- * @param {Observable} limitWidth$ - Emit the width at which the chosen
- * Representation should be limited.
- * @param {Observable} throttleBitrate$ - Emit the maximum bitrate authorized.
- * @returns {Observable}
- */
-function createDeviceEvents({
-  limitWidth$,
-  throttle$,
-  throttleBitrate$,
-} : IRepresentationEstimatorThrottlers) : Observable<IFilters> {
-  const deviceEventsArray : Array<Observable<IFilters>> = [];
-
-  if (limitWidth$) {
-    deviceEventsArray.push(limitWidth$.pipe(map(width => ({ width }))));
-  }
-  if (throttle$) {
-    deviceEventsArray.push(throttle$.pipe(map(bitrate => ({ bitrate }))));
-  }
-  if (throttleBitrate$) {
-    deviceEventsArray.push(throttleBitrate$.pipe(map(bitrate => ({ bitrate }))));
-  }
-
-  // Emit restrictions on the pools of available representations to choose
-  // from.
-  return deviceEventsArray.length ?
-    observableCombineLatest(deviceEventsArray)
-      .pipe(map((args : IFilters[]) => objectAssign({}, ...args))) :
-    observableOf({});
-}
-
-/**
  * Emit the estimated bitrate and best Representation according to the current
  * network and buffer situation.
  * @param {Object} args
@@ -208,16 +175,15 @@ export default function RepresentationEstimator({
   bandwidthEstimator,
   bufferEvents$,
   clock$,
+  filters$,
   initialBitrate,
   manualBitrate$,
   maxAutoBitrate$,
   representations,
-  throttlers,
 } : IRepresentationEstimatorArguments) : Observable<IABREstimate> {
   const scoreCalculator = new RepresentationScoreCalculator();
   const networkAnalyzer = new NetworkAnalyzer(initialBitrate || 0);
   const requestsStore = new PendingRequestsStore();
-  const deviceEvents$ = createDeviceEvents(throttlers);
 
   /**
    * Callback to call when new metrics arrive.
@@ -318,15 +284,15 @@ export default function RepresentationEstimator({
 
       return observableCombineLatest([ clock$,
                                        maxAutoBitrate$,
-                                       deviceEvents$,
+                                       filters$,
                                        bufferBasedEstimation$ ]
       ).pipe(
         withLatestFrom(currentRepresentation$),
-        map(([ [ clock, maxAutoBitrate, deviceEvents, bufferBasedBitrate ],
+        map(([ [ clock, maxAutoBitrate, filters, bufferBasedBitrate ],
                currentRepresentation ]
         ) : IABREstimate => {
           const _representations = getFilteredRepresentations(representations,
-                                                              deviceEvents);
+                                                              filters);
           const requests = requestsStore.getRequests();
           const { bandwidthEstimate, bitrateChosen } = networkAnalyzer
             .getBandwidthEstimate(clock,

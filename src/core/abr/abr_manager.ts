@@ -22,6 +22,7 @@ import log from "../../log";
 import { Representation } from "../../manifest";
 import { IBufferType } from "../source_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
+import createFilters from "./create_filters";
 import RepresentationEstimator, {
   IABRBufferEvents,
   IABREstimate,
@@ -86,17 +87,17 @@ export default class ABRManager {
     const manualBitrate$ = this._manualBitrates[type] || observableOf(-1);
     const maxAutoBitrate$ = this._maxAutoBitrates[type] || observableOf(Infinity);
     const initialBitrate = this._initialBitrates[type] || 0;
-    const throttlers = { limitWidth$: this._throttlers.limitWidth[type],
-                         throttleBitrate$: this._throttlers.throttleBitrate[type],
-                         throttle$: this._throttlers.throttle[type] };
+    const filters$ = createFilters(this._throttlers.limitWidth[type],
+                                   this._throttlers.throttleBitrate[type],
+                                   this._throttlers.throttle[type]);
     return RepresentationEstimator({ bandwidthEstimator,
                                      bufferEvents$,
                                      clock$,
+                                     filters$,
                                      initialBitrate,
                                      manualBitrate$,
                                      maxAutoBitrate$,
-                                     representations,
-                                     throttlers });
+                                     representations });
   }
 
   /**
