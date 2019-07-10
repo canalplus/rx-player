@@ -15,7 +15,9 @@
  */
 
 import {
+  EMPTY,
   Observable,
+  of as observableOf,
   Subject,
 } from "rxjs";
 import {
@@ -39,7 +41,7 @@ import {
   ITransportPipelines,
 } from "../../../transports";
 import tryCatch from "../../../utils/rx-try_catch";
-import downloadingBackoff from "../utils/backoff";
+import backoff from "../utils/backoff";
 import createLoader, {
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
@@ -123,7 +125,14 @@ export default function createManifestPipeline(
                              onRetry: (error : unknown) => {
                                warning$.next(errorSelector(error)); } };
 
-    return downloadingBackoff(tryCatch(request, undefined), backoffOptions).pipe(
+    return backoff(tryCatch(request, undefined), backoffOptions).pipe(
+      mergeMap(evt => {
+        if (evt.type === "retry") {
+          warning$.next(errorSelector(evt.value));
+          return EMPTY;
+        }
+        return observableOf(evt.value);
+      }),
       catchError((error : unknown) : Observable<never> => {
         throw errorSelector(error);
       }));

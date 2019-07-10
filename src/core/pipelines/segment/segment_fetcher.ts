@@ -38,13 +38,13 @@ import {
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
 import createLoader, {
-  IPipelineLoaderError,
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
+  IPipelineWarning,
 } from "../utils/create_loader";
 
 export type ISegmentFetcherContent = ISegmentLoaderArguments;
-export type ISegmentFetcherWarning = IPipelineLoaderError;
+export type ISegmentFetcherWarning = IPipelineWarning;
 
 export interface ISegmentFetcherMetrics { type : "metrics";
                                           value : { size? : number;
@@ -155,7 +155,7 @@ export default function createSegmentFetcher<T>(
           requests$.next({ type: "requestEnd", value: { id } });
         }
       }),
-      filter((e) : e is IPipelineLoaderResponse<T> | IPipelineLoaderError => {
+      filter((e) : e is IPipelineLoaderResponse<T> | IPipelineWarning => {
         return e.type === "warning" || e.type === "response";
       }),
       map((evt) => {

@@ -18,14 +18,11 @@ import objectAssign from "object-assign";
 import {
   concat as observableConcat,
   EMPTY,
-  merge as observableMerge,
   Observable,
   of as observableOf,
-  Subject,
 } from "rxjs";
 import {
   catchError,
-  finalize,
   map,
   mergeMap,
   tap,
@@ -45,7 +42,7 @@ import {
 } from "../../../transports";
 import castToObservable from "../../../utils/cast_to_observable";
 import tryCatch from "../../../utils/rx-try_catch";
-import downloadingBackoff from "./backoff";
+import backoff from "./backoff";
 
 // Data comes from a local cache (no request was done)
 interface IPipelineLoaderCache<T> { type : "cache";
@@ -54,7 +51,7 @@ interface IPipelineLoaderCache<T> { type : "cache";
 export type IPipelineLoaderProgress = ILoaderProgress;
 
 // An Error happened while loading (usually a request error)
-export interface IPipelineLoaderError { type : "warning";
+export interface IPipelineWarning { type : "warning";
                                         value : ICustomError; }
 
 // Request metrics are available
@@ -78,7 +75,7 @@ export interface IPipelineLoaderResponse<T> { type : "response";
 export type IPipelineLoaderEvent<T, U> = IPipelineLoaderRequest<T> |
                                          IPipelineLoaderResponse<U> |
                                          IPipelineLoaderProgress |
-                                         IPipelineLoaderError |
+                                         IPipelineWarning |
                                          IPipelineLoaderMetrics;
 
 // Options you can pass on to the loader
@@ -161,17 +158,11 @@ export default function createLoader<T, U>(
                      observableOf; // TS Issue triggers an Rx deprecation
                      /* tslint:enable:deprecation */
 
-  // Subject that will emit warnings on request retry
-  const retryErrorSubject : Subject<ICustomError> = new Subject();
-
   // Backoff options given to the backoff retry done with the loader function.
   const backoffOptions = { baseDelay: INITIAL_BACKOFF_DELAY_BASE,
                            maxDelay: MAX_BACKOFF_DELAY_BASE,
                            maxRetryRegular: maxRetry,
-                           maxRetryOffline,
-                           onRetry: (error : unknown) => {
-                             retryErrorSubject.next(errorSelector(error));
-                           } };
+                           maxRetryOffline };
   /**
    * Call the transport's resolver - if it exists - with the given data.
    *
@@ -199,16 +190,19 @@ export default function createLoader<T, U>(
     loaderArgument : T
   ) : Observable< ISegmentLoaderEvent<U> |
                   IPipelineLoaderRequest<T> |
-                  IPipelineLoaderCache<U>>
+                  IPipelineLoaderCache<U> |
+                  IPipelineWarning>
   {
 
     /**
      * Call the Pipeline's loader with an exponential Backoff.
      * @returns {Observable}
      */
-    function startLoaderWithBackoff(
-    ) : Observable<ISegmentLoaderEvent<U>|IPipelineLoaderRequest<T>> {
-      const request$ = downloadingBackoff<ISegmentLoaderEvent<U>>(
+    function startLoaderWithBackoff() : Observable<ISegmentLoaderEvent<U> |
+                                                   IPipelineWarning |
+                                                   IPipelineLoaderRequest<T>>
+    {
+      const request$ = backoff<ISegmentLoaderEvent<U>>(
         tryCatch<T, ISegmentLoaderEvent<U>>(loader as any, loaderArgument),
         backoffOptions
       ).pipe(
@@ -216,6 +210,11 @@ export default function createLoader<T, U>(
           throw errorSelector(error);
         }),
 
+        map((evt) : IPipelineWarning | ISegmentLoaderEvent<U> => {
+          return evt.type === "response" ? evt.value :
+                                           ({ type: "warning" as const,
+                                              value: errorSelector(evt.value) });
+        }),
         tap((arg) => {
           if (arg.type === "data-loaded" && cache != null) {
             cache.add(loaderArgument, arg.value);
@@ -235,7 +234,7 @@ export default function createLoader<T, U>(
     if (dataFromCache != null) {
       return castToObservable(dataFromCache).pipe(
         map(response => {
-          return { type: "cache" as "cache",
+          return { type: "cache" as const,
                    value: response };
         }),
         catchError(startLoaderWithBackoff)
@@ -253,7 +252,7 @@ export default function createLoader<T, U>(
   return function startPipeline(
     pipelineInputData : T
   ) : Observable<IPipelineLoaderEvent<T, U>> {
-    const pipeline$ = callResolver(pipelineInputData).pipe(
+    return callResolver(pipelineInputData).pipe(
       mergeMap((resolverResponse : T) => {
         return loadData(resolverResponse).pipe(
           mergeMap((arg) : Observable<IPipelineLoaderEvent<T, U>> => {
@@ -290,13 +289,7 @@ export default function createLoader<T, U>(
                 return observableOf(arg);
             }
           }));
-      }),
-      finalize(() => { retryErrorSubject.complete(); })
+      })
     );
-
-    const retryError$ : Observable<IPipelineLoaderError> = retryErrorSubject
-      .pipe(map(error => ({ type: "warning" as const, value: error })));
-
-    return observableMerge(pipeline$, retryError$);
   };
 }
