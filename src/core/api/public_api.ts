@@ -85,7 +85,6 @@ import Manifest, {
   Representation,
 } from "../../manifest";
 import { IBifThumbnail } from "../../parsers/images/bif";
-import ABRManager from "../abr";
 import {
   clearEMESession,
   disposeEME,
@@ -290,19 +289,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * Store last wanted maxAutoBitrates for the next ABRManager instanciation.
      * @type {Object}
      */
-    initialMaxAutoBitrates : { audio : number; // has a default in the config
-                               video : number; // has a default in the config
-                               text? : number;
-                               image? : number; };
+    maxAutoBitrates : { audio : BehaviorSubject<number>;
+                        video : BehaviorSubject<number>; };
 
     /**
      * Store last wanted manual bitrates for the next ABRManager instanciation.
      * @type {Object}
      */
-    manualBitrates : { audio : number; // has a default in the config
-                       video : number; // has a default in the config
-                       text? : number;
-                       image? : number; };
+    manualBitrates : { audio : BehaviorSubject<number>;
+                       video : BehaviorSubject<number>; };
   };
 
   /**
@@ -409,15 +404,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @type {Object|null}
    */
   private _priv_trackManager : TrackManager|null;
-
-  /**
-   * ABRManager instance linked to the current content.
-   * Null if no content has been loaded or if the current content loaded
-   * has no ABRManager.
-   * @private
-   * @type {Object|null}
-   */
-  private _priv_abrManager : ABRManager|null;
 
   /**
    * Emit last picture in picture event.
@@ -599,10 +585,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_bitrateInfos = {
       lastBitrates: { audio: initialAudioBitrate,
                       video: initialVideoBitrate },
-      initialMaxAutoBitrates: { audio: maxAudioBitrate,
-                                video: maxVideoBitrate },
-      manualBitrates: { audio: -1,
-                        video: -1 },
+      maxAutoBitrates: { audio: new BehaviorSubject(maxAudioBitrate),
+                         video: new BehaviorSubject(maxVideoBitrate) },
+      manualBitrates: { audio: new BehaviorSubject(-1),
+                        video: new BehaviorSubject(-1) },
     };
 
     this._priv_throttleWhenHidden = throttleWhenHidden;
@@ -611,7 +597,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_mutedMemory = DEFAULT_UNMUTED_VOLUME;
 
     this._priv_trackManager = null;
-    this._priv_abrManager = null;
     this._priv_currentError = null;
     this._priv_contentInfos = null;
 
@@ -662,6 +647,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_bufferOptions.maxBufferAhead$.complete();
     this._priv_bufferOptions.maxBufferBehind$.complete();
     this._priv_pictureInPictureEvent$.complete();
+    this._priv_bitrateInfos.manualBitrates.video.complete();
+    this._priv_bitrateInfos.manualBitrates.audio.complete();
+    this._priv_bitrateInfos.maxAutoBitrates.video.complete();
+    this._priv_bitrateInfos.maxAutoBitrates.audio.complete();
 
     // un-attach video element
     this.videoElement = null;
@@ -671,10 +660,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Load a new video.
    * @param {Object} opts
    * @returns {Observable}
-   * @throws Error - throws if no url is given.
-   * @throws Error - throws if no transport is given and no default transport
-   * has been set.
-   * @throws Error - throws if the asked transport does not exist
    */
   loadVideo(opts : ILoadVideoOptions) : void {
     const options = parseLoadVideoOptions(opts);
@@ -744,7 +729,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       const adaptiveOptions = {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
         manualBitrates: this._priv_bitrateInfos.manualBitrates,
-        maxAutoBitrates: this._priv_bitrateInfos.initialMaxAutoBitrates,
+        maxAutoBitrates: this._priv_bitrateInfos.maxAutoBitrates,
         throttlers: {
           throttle: this._priv_throttleWhenHidden ?
           { video: isActive()
@@ -1213,7 +1198,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getManualAudioBitrate() : number {
-    return this._priv_bitrateInfos.manualBitrates.audio;
+    return this._priv_bitrateInfos.manualBitrates.audio.getValue();
   }
 
   /**
@@ -1221,7 +1206,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getManualVideoBitrate() : number {
-    return this._priv_bitrateInfos.manualBitrates.video;
+    return this._priv_bitrateInfos.manualBitrates.video.getValue();
   }
 
   /**
@@ -1252,22 +1237,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Returns max wanted video bitrate currently set.
    * @returns {Number}
    */
-  getMaxVideoBitrate() : number|undefined {
-    if (!this._priv_abrManager) {
-      return this._priv_bitrateInfos.initialMaxAutoBitrates.video;
-    }
-    return this._priv_abrManager.getMaxAutoBitrate("video");
+  getMaxVideoBitrate() : number {
+    return this._priv_bitrateInfos.maxAutoBitrates.video.getValue();
   }
 
   /**
    * Returns max wanted audio bitrate currently set.
    * @returns {Number}
    */
-  getMaxAudioBitrate() : number|undefined {
-    if (!this._priv_abrManager) {
-      return this._priv_bitrateInfos.initialMaxAutoBitrates.audio;
-    }
-    return this._priv_abrManager.getMaxAutoBitrate("audio");
+  getMaxAudioBitrate() : number {
+    return this._priv_bitrateInfos.maxAutoBitrates.audio.getValue();
   }
 
   /**
@@ -1459,10 +1438,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Number} btr
    */
   setVideoBitrate(btr : number) : void {
-    this._priv_bitrateInfos.manualBitrates.video = btr;
-    if (this._priv_abrManager) {
-      this._priv_abrManager.setManualBitrate("video", btr);
-    }
+    this._priv_bitrateInfos.manualBitrates.video.next(btr);
   }
 
   /**
@@ -1471,10 +1447,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Number} btr
    */
   setAudioBitrate(btr : number) : void {
-    this._priv_bitrateInfos.manualBitrates.audio = btr;
-    if (this._priv_abrManager) {
-      this._priv_abrManager.setManualBitrate("audio", btr);
-    }
+    this._priv_bitrateInfos.manualBitrates.audio.next(btr);
   }
 
   /**
@@ -1482,13 +1455,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Number} btr
    */
   setMaxVideoBitrate(btr : number) : void {
-    // set it for the next content loaded
-    this._priv_bitrateInfos.initialMaxAutoBitrates.video = btr;
-
-    // set it for the current if one is loaded
-    if (this._priv_abrManager) {
-      this._priv_abrManager.setMaxAutoBitrate("video", btr);
-    }
+    this._priv_bitrateInfos.maxAutoBitrates.video.next(btr);
   }
 
   /**
@@ -1496,13 +1463,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Number} btr
    */
   setMaxAudioBitrate(btr : number) : void {
-    // set it for the next content loaded
-    this._priv_bitrateInfos.initialMaxAutoBitrates.audio = btr;
-
-    // set it for the current if one is loaded
-    if (this._priv_abrManager) {
-      this._priv_abrManager.setMaxAutoBitrate("audio", btr);
-    }
+    this._priv_bitrateInfos.maxAutoBitrates.audio.next(btr);
   }
 
   /**
@@ -1832,11 +1793,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_contentInfos = null;
     this._priv_trackManager = null;
 
-    if (this._priv_abrManager) {
-      this._priv_abrManager.dispose();
-      this._priv_abrManager = null;
-    }
-
     this._priv_contentEventsMemory = {};
 
     // EME cleaning
@@ -1992,17 +1948,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Object} value
    * @private
    */
-  private _priv_onManifestReady(value : {
-    abrManager : ABRManager;
-    manifest : Manifest;
-  }) : void {
+  private _priv_onManifestReady({ manifest } : { manifest : Manifest }) : void {
     if (!this._priv_contentInfos) {
       log.error("API: The manifest is loaded but no content is.");
       return;
     }
-    const { manifest, abrManager } = value;
     this._priv_contentInfos.manifest = manifest;
-    this._priv_abrManager = abrManager;
 
     const { initialAudioTrack, initialTextTrack } = this._priv_contentInfos;
     this._priv_trackManager = new TrackManager({
