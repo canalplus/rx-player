@@ -144,7 +144,7 @@ export default function AdaptationBuffer<T>({
   // emit when the current RepresentationBuffer should stop making new downloads
   const terminateCurrentBuffer$ = new Subject<void>();
 
-  // Add currently considered Representation to the ABR clock.
+  // use ABRManager for choosing the Representation
   const bufferEvents$ = new Subject<IBufferEventAddedSegment<T> |
                                     IRepresentationChangeEvent>();
   const requestsEvents$ = new Subject<IABRMetric | IABRRequest>();
