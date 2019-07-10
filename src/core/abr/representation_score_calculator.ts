@@ -36,6 +36,9 @@ import EWMA from "./ewma";
  *     be `2`.
  *   - ...
  *
+ * The score is mainly here to tell you when your buffer-based guesses are
+ * actually higher than the quality you should normally reach.
+ *
  * /!\ Please bear in mind that we don't consider the playback rate in those
  * operations.
  * Still, integrating the playback rate a posteriori should not be difficult
@@ -55,6 +58,14 @@ export default class RepresentationScoreCalculator {
     this._lastRepresentationWithGoodScore = null;
   }
 
+  /**
+   * Add new sample data.
+   * @param {Representation} representation
+   * @param {number} requestDuration - duration taken for doing the request for
+   * the whole segment.
+   * @param {number} segmentDuration - media duration of the whole segment, in
+   * seconds.
+   */
   public addSample(
     representation : Representation,
     requestDuration : number,
@@ -77,6 +88,12 @@ export default class RepresentationScoreCalculator {
     }
   }
 
+  /**
+   * Get score estimate for the given Representation.
+   * undefined if no estimate is available.
+   * @param {Representation} representation
+   * @returns {number|undefined}
+   */
   public getEstimate(representation : Representation) : number | undefined {
     const ewma = this._getEWMA(representation);
     if (ewma != null) {
@@ -84,10 +101,24 @@ export default class RepresentationScoreCalculator {
     }
   }
 
+  /**
+   * Returns last Representation which had reached a score superior to 1.
+   * This Representation is the last known one which could be maintained.
+   * Useful to know if a current guess is higher than what you should
+   * normally be able to play.
+   * `null` if no Representation ever reach that score.
+   * @returns {Representation|null}
+   */
   public getLastStableRepresentation() : Representation | null {
     return this._lastRepresentationWithGoodScore;
   }
 
+  /**
+   * Returns EWMA for the given Representation.
+   * null if no EWMA is currently stored for it.
+   * @param {Representation} representation
+   * @returns {EWMA|null}
+   */
   private _getEWMA(representation : Representation) : EWMA | null {
     if (this._currentRepresentationData != null &&
         this._currentRepresentationData.representation.id === representation.id)
