@@ -324,8 +324,9 @@ class ContentList extends React.Component {
     const onTransportChange = (evt) => {
       const index = +evt.target.value;
       if (index >= 0) {
-        this.changeTransportType(TRANSPORT_TYPES[index]);
-        const contents = contentsPerType[transportType];
+        const newTransportType = TRANSPORT_TYPES[index];
+        this.changeTransportType(newTransportType);
+        const contents = contentsPerType[newTransportType];
         const contentChoiceIndex = getIndexOfFirstEnabledContent(contents);
         const content = contents[contentChoiceIndex];
         this.changeSelectedContent(contentChoiceIndex, content);
