@@ -18,7 +18,7 @@ export default [
     "live": false,
     "drmInfos": [{
       "licenseServerUrl": "https://cwip-shaka-proxy.appspot.com/no_auth",
-      "drm": "widevine",
+      "drm": "Widevine",
     }],
   },
   {
@@ -28,7 +28,7 @@ export default [
     "live": false,
     "drmInfos": [{
       "licenseServerUrl": "https://test.playready.microsoft.com/service/rightsmanager.asmx?PlayRight=1&UseSimpleNonPersistentLicense=1",
-      "drm": "playready",
+      "drm": "Playready",
     }],
   },
   {
@@ -100,7 +100,7 @@ export default [
   //   "live": false,
   //   "drmInfos": [{
   //     "licenseServerUrl": "https://test.playready.microsoft.com/service/rightsmanager.asmx?PlayRight=1&UseSimpleNonPersistentLicense=1",
-  //     "drm": "playready",
+  //     "drm": "Playready",
   //   }],
   // },
   {

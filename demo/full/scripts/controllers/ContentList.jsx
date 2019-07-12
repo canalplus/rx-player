@@ -141,8 +141,8 @@ class ContentList extends React.Component {
 
     this.state = { autoPlay: true,
                    contentChoiceIndex: 0,
-                   contentsPerType,
                    contentNameField: "",
+                   contentsPerType,
                    currentDRMType: DRM_TYPES[0],
                    currentManifestURL: "",
                    displayDRMSettings: false,
@@ -217,15 +217,15 @@ class ContentList extends React.Component {
    * @param {string} transportType
    */
   changeTransportType(transportType) {
-    this.setState({ transportType,
-                    currentDRMType: DRM_TYPES[0],
-                    contentChoiceIndex: 0,
-                    currentManifestURL: "",
+    this.setState({ contentChoiceIndex: 0,
                     contentNameField: "",
+                    currentDRMType: DRM_TYPES[0],
+                    currentManifestURL: "",
                     displayDRMSettings: false,
                     isSavingOrUpdating: false,
                     licenseServerUrl: "",
-                    serverCertificateUrl: "" });
+                    serverCertificateUrl: "",
+                    transportType });
   }
 
   /**
@@ -241,7 +241,6 @@ class ContentList extends React.Component {
     const hasDRMSettings = content.drmInfos != null &&
                            content.drmInfos.length > 0;
     let drm  = null;
-
     currentManifestURL = content.url;
     contentNameField = content.contentName;
     if (hasDRMSettings) {
@@ -249,19 +248,14 @@ class ContentList extends React.Component {
       licenseServerUrl = content.drmInfos[0].licenseServerUrl;
       serverCertificateUrl = content.drmInfos[0].serverCertificateUrl;
     }
-    const stateUpdate = { contentChoiceIndex: index,
-                          displayDRMSettings: hasDRMSettings,
-                          currentManifestURL,
-                          contentNameField,
-                          licenseServerUrl,
-                          serverCertificateUrl,
-                          isSavingOrUpdating: false };
-
-    if (drm != null) {
-      stateUpdate.currentDRMType = drm;
-    }
-
-    this.setState(stateUpdate);
+    this.setState({ contentChoiceIndex: index,
+                    contentNameField,
+                    currentDRMType: drm != null ? drm : DRM_TYPES[0],
+                    currentManifestURL,
+                    displayDRMSettings: hasDRMSettings,
+                    isSavingOrUpdating: false,
+                    licenseServerUrl,
+                    serverCertificateUrl });
   }
 
   /**
@@ -278,8 +272,8 @@ class ContentList extends React.Component {
       return;
     }
     this.setState({ displayDRMSettings: false,
-                    serverCertificateUrl: "",
-                    licenseServerUrl: "" });
+                    licenseServerUrl: "",
+                    serverCertificateUrl: "" });
   }
 
   /**
@@ -296,8 +290,8 @@ class ContentList extends React.Component {
   render() {
     const { autoPlay,
             contentChoiceIndex,
-            contentsPerType,
             contentNameField,
+            contentsPerType,
             currentDRMType,
             currentManifestURL,
             displayDRMSettings,
