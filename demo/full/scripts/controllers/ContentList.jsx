@@ -88,14 +88,13 @@ function formatContentForDisplay(content) {
  * Contruct list of contents per type of transport from:
  *   - contents stored in local storage (or just memory)
  *   - contents declared locally
- * @param {Array.<Object>} storedContents
- * @param {Array.<Object>} regularContents
  * @returns {Object}
  */
-function getContentsPerType(storedContents, regularContents) {
-  const reversedStoredContents = storedContents.slice().reverse();
+function constructContentList() {
+  const localStorageContents = getLocalStorageContents();
+  const reversedStoredContents = localStorageContents.slice().reverse();
   const storedAndRegularContents = reversedStoredContents
-    .concat(regularContents);
+    .concat(contentsDatabase);
   return TRANSPORT_TYPES.reduce((acc, tech) => {
     const customLinkContent = { url: "",
                                 contentName: "",
@@ -137,9 +136,7 @@ class ContentList extends React.Component {
   constructor(...args) {
     super(...args);
 
-    const localStorageContents = getLocalStorageContents();
-    const contentsPerType = getContentsPerType(localStorageContents,
-                                               contentsDatabase);
+    const contentsPerType = constructContentList();
     const transportType = TRANSPORT_TYPES[0];
 
     this.state = { autoPlay: true,
@@ -149,7 +146,6 @@ class ContentList extends React.Component {
                    currentDRMType: DRM_TYPES[0],
                    currentManifestURL: "",
                    displayDRMSettings: false,
-                   displayTextInput: false,
                    isSavingOrUpdating: false,
                    licenseServerUrl: "",
                    serverCertificateUrl: "",
@@ -223,7 +219,6 @@ class ContentList extends React.Component {
   changeTransportType(transportType) {
     this.setState({ transportType,
                     contentChoiceIndex: 0,
-                    displayTextInput: true,
                     currentManifestURL: "",
                     contentNameField: "",
                     displayDRMSettings: false,
@@ -238,8 +233,6 @@ class ContentList extends React.Component {
    * @param {Object} content - content object
    */
   changeSelectedContent(index, content) {
-    const displayTextInput = index === 0;
-
     let currentManifestURL = "";
     let contentNameField = "";
     let licenseServerUrl = "";
@@ -256,7 +249,6 @@ class ContentList extends React.Component {
       serverCertificateUrl = content.drmInfos[0].serverCertificateUrl;
     }
     const stateUpdate = { contentChoiceIndex: index,
-                          displayTextInput,
                           displayDRMSettings: hasDRMSettings,
                           currentManifestURL,
                           contentNameField,
@@ -308,11 +300,12 @@ class ContentList extends React.Component {
             currentDRMType,
             currentManifestURL,
             displayDRMSettings,
-            displayTextInput,
             isSavingOrUpdating,
             licenseServerUrl,
             serverCertificateUrl,
             transportType } = this.state;
+
+    const isCustomContent = contentChoiceIndex === 0;
 
     const contentsToSelect = contentsPerType[transportType];
     const chosenContent = contentsToSelect[contentChoiceIndex];
@@ -326,10 +319,12 @@ class ContentList extends React.Component {
       if (index >= 0) {
         const newTransportType = TRANSPORT_TYPES[index];
         this.changeTransportType(newTransportType);
+
+        // update content selection
         const contents = contentsPerType[newTransportType];
         const contentChoiceIndex = getIndexOfFirstEnabledContent(contents);
-        const content = contents[contentChoiceIndex];
-        this.changeSelectedContent(contentChoiceIndex, content);
+        this.changeSelectedContent(contentChoiceIndex,
+                                   contents[contentChoiceIndex]);
       }
     };
 
@@ -358,23 +353,28 @@ class ContentList extends React.Component {
                                 [ { drm: currentDRMType,
                                     licenseServerUrl,
                                     serverCertificateUrl } ] :
-                                [],
+                                undefined,
                               id: chosenContent.id };
 
       const storedContent = storeContent(contentToSave);
 
       // reconstruct list of contents
-      const localStorageContents = getLocalStorageContents();
-      const contentsPerType = getContentsPerType(localStorageContents,
-                                                 contentsDatabase);
+      const contentsPerType = constructContentList();
       this.setState({ contentsPerType,
                       isSavingOrUpdating: false });
 
-      // select new content
-      const contentChoiceIndex = contentsPerType[transportType]
+      // update content selection
+      const contents = contentsPerType[transportType];
+      const contentChoiceIndex = contents
         .findIndex(c => c.id === storedContent.id);
-      const content = contentsPerType[transportType][contentChoiceIndex];
-      this.changeSelectedContent(contentChoiceIndex, content);
+      if (contentChoiceIndex < 0) {
+        /* eslint-disable-next-line no-console */
+        console.warn("Stored content not found in local storage.");
+        this.changeSelectedContent(0, contents[0]);
+      } else {
+        this.changeSelectedContent(contentChoiceIndex,
+                                   contents[contentChoiceIndex]);
+      }
     };
 
     const onClickSaveOrUpdate = () =>
@@ -386,12 +386,17 @@ class ContentList extends React.Component {
         const hasRemoved = removeStoredContent(content.id);
         if (hasRemoved) {
           // reconstruct list of contents
-          const localStorageContents = getLocalStorageContents();
-          const contentsPerType = getContentsPerType(localStorageContents,
-                                                     contentsDatabase);
+          const contentsPerType = constructContentList();
           this.setState({ contentsPerType });
-          const newContent = contentsPerType[transportType][contentChoiceIndex];
-          this.changeSelectedContent(contentChoiceIndex, newContent);
+
+          // update content selection
+          const contents = contentsPerType[transportType];
+          if (contentChoiceIndex >= contentsPerType.length) {
+            this.changeSelectedContent(0, contents[0]);
+          } else {
+            this.changeSelectedContent(contentChoiceIndex,
+                                       contents[contentChoiceIndex]);
+          }
         }
       }
     };
@@ -454,7 +459,7 @@ class ContentList extends React.Component {
             </div>
             <div className="content-inputs-middle">
               {
-                (displayTextInput || isLocalContent) ?
+                (isCustomContent || isLocalContent) ?
                   (<Button
                     className={"choice-input-button content-button enter-name-button" +
                       (!hasURL ? " disabled" : "")}
@@ -493,7 +498,7 @@ class ContentList extends React.Component {
           </div>
         </div>
         {
-          (displayTextInput || (isLocalContent && isSavingOrUpdating)) ?
+          (isCustomContent || (isLocalContent && isSavingOrUpdating)) ?
             (
               <div className="custom-input-wrapper">
                 {

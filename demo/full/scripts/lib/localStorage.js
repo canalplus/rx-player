@@ -89,19 +89,17 @@ export function storeContent(content) {
 /**
  * Remove saved content from localStorage if available.
  * @param {string} id - ID of the content you want to remove.
- * @returns {Object|null} - `null` if the object was not found. Or the
- * corresponding content if it was.
+ * @returns {Boolean} - `false` if the object was not found. `true` otherwise.
  */
 export function removeStoredContent(id) {
   const localStorageContents = getLocalStorageContents();
   const idx = localStorageContents.findIndex(e => e.id === id);
 
   if (idx < 0) {
-    return null;
+    return false;
   }
 
-  const content = localStorageContents[idx];
   localStorageContents.splice(idx, 1);
   saveLocalStorageContents(localStorageContents);
-  return content;
+  return true;
 }
