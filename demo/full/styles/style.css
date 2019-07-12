@@ -884,7 +884,7 @@ input:checked + .slider:before {
   margin: 3px;
 }
 
-.github-button {
+.button-gh {
   margin: 5px;
 }
 
@@ -926,7 +926,7 @@ input:checked + .slider:before {
 }
 
 @media only screen and (max-width: 650px) {
-  .github-buttons {
+  .button-gh {
     display: none;
   }
 }
