@@ -11,7 +11,7 @@
 #   1. Go to a clean master branch
 #
 #   2. Make sure the rx-player you want to use is bundled as
-#      dist/rx-player.min.js
+#      dist/rx-player.js
 #
 #   3. Update the full demo files (in demo/full) as you want
 #
@@ -62,7 +62,7 @@ cp -r demo/full/styles $tmpStylesDir -v
 cp demo/full/bundle.js $tmpDemoFile -v
 cp demo/full/index.html $tmpIndexFile -v
 cp demo/full/plus.ico $tmpFaviconFile -v
-cp dist/rx-player.min.js $tmpRxPlayerFile -v
+cp dist/rx-player.js $tmpRxPlayerFile -v
 cp scripts/generate_demo_list.js $tmpDemoList -v
 
 # update gh-pages
