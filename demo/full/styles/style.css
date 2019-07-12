@@ -912,7 +912,7 @@ input:checked + .slider:before {
   margin: 4px 0 4px 0;
 }
 
-@media only screen and (max-width: 730px) {
+@media only screen and (max-width: 800px) {
   .content-inputs {
     flex-direction: column;
   }

@@ -460,8 +460,8 @@ class ContentList extends React.Component {
                     onClick={onClickSaveOrUpdate}
                     disabled={!hasURL || isSavingOrUpdating}
                     value={isLocalContent ?
-                      (isSavingOrUpdating ? "Updating" : "Update") :
-                      (isSavingOrUpdating ? "Saving" : "Save")}
+                      (isSavingOrUpdating ? "Updating..." : "Update content") :
+                      (isSavingOrUpdating ? "Saving..." : "Store content")}
                   />) :
                   null
               }
@@ -508,7 +508,7 @@ class ContentList extends React.Component {
                         <Button
                           className={"choice-input-button content-button save-button"}
                           onClick={saveCurrentContent}
-                          disabled={!contentNameField}
+                          disabled={!contentNameField || !currentManifestURL}
                           value={isLocalContent ? "Update" : "Save"}
                         />
                         <Button
