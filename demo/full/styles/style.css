@@ -420,7 +420,6 @@ body {
 }
 
 .choice-input-button:disabled:hover {
-  color: #888;
   box-shadow: none;
 }
 
@@ -486,7 +485,7 @@ body {
   background-color: #ec3655;
 }
 
-.save-button:hover {
+.save-button:hover:not(.disabled) {
   color: #fff;
   background-color: #ff3655;
 }
