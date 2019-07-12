@@ -1,0 +1,128 @@
+#!/bin/bash
+
+# Deploy new demo
+# ====================
+#
+# This script allows to automatically create a new demo page on the gh-pages
+# branch.
+#
+# To use it:
+#
+#   1. Go to a clean master branch
+#
+#   2. Make sure the rx-player you want to use is bundled as
+#      dist/rx-player.min.js
+#
+#   3. Update the full demo files (in demo/full) as you want
+#
+#   4. Call this script with the wanted directory name in argument.
+#      Some user interactions will be needed to avoid doing unwanted commits.
+#
+#   5. That's it!
+#      A commit should have been pushed to the gh-pages.
+
+set -e
+
+deployed_branch=$1
+
+# Do not normalize path check for dirty "." or "/"
+# But as only people with write access on the gh-pages branch can do harm,
+# that's good enough
+if [ -z "$deployed_branch" ] ||
+   [ "$deployed_branch" == "" ] ||
+   [ "$deployed_branch" == "versions" ] ||
+   [ "$deployed_branch" == "fonts" ] ||
+   [ "$deployed_branch" == "assets" ] ||
+   [ "$deployed_branch" == "styles" ]; then
+  echo "ERROR: Invalid branch name"
+  exit 1;
+fi
+ 
+# Generate demo
+npm run demo
+
+if [ -n "$(git status --porcelain doc)" ]; then
+  echo "ERROR: Please commit your modifications"
+  exit 1;
+fi
+
+tmpFontsDir=$(mktemp -d)
+tmpAssetsDir=$(mktemp -d)
+tmpStylesDir=$(mktemp -d)
+tmpDemoFile=$(mktemp)
+tmpRxPlayerFile=$(mktemp)
+tmpIndexFile=$(mktemp)
+tmpFaviconFile=$(mktemp)
+tmpDemoList=$(mktemp)
+
+cp -r demo/full/fonts $tmpFontsDir -v
+cp -r demo/full/assets $tmpAssetsDir -v
+cp -r demo/full/styles $tmpStylesDir -v
+cp demo/full/bundle.js $tmpDemoFile -v
+cp demo/full/index.html $tmpIndexFile -v
+cp demo/full/plus.ico $tmpFaviconFile -v
+cp dist/rx-player.min.js $tmpRxPlayerFile -v
+cp scripts/generate_demo_list.js $tmpDemoList -v
+
+# update gh-pages
+git checkout gh-pages
+git pull origin gh-pages
+
+rm -rf "$deployed_branch"
+mkdir -p "$deployed_branch"
+mv $tmpIndexFile "${deployed_branch}/index.html"
+mv $tmpFaviconFile "${deployed_branch}/plus.ico"
+mv $tmpRxPlayerFile "${deployed_branch}/lib.js"
+mv $tmpDemoFile "${deployed_branch}/bundle.js"
+mv $tmpFontsDir/fonts "${deployed_branch}/fonts"
+mv $tmpAssetsDir/assets "${deployed_branch}/assets"
+mv $tmpStylesDir/styles "${deployed_branch}/styles"
+
+if [ -n "$(git status --porcelain)" ]; then
+  echo "-- Current Status on gh-pages: --"
+  echo ""
+  git status "$deployed_branch"
+
+  while : ; do
+    echo ""
+    echo "We will push the demo to gh-pages."
+    REPLY=""
+    read -p "do you want to continue [y/d/s/a/c/t/h] (h for help) ? " -n 1 -r
+    echo ""
+
+    if [[ $REPLY =~ ^[Hh](elp)?$ ]]; then
+      echo ""
+      echo ""
+      echo "+- help -------------------------------------------------+"
+      echo "| y: commit and continue                                 |"
+      echo "| d: see diff                                            |"
+      echo "| s: see status                                          |"
+      echo "| a: abort script from here                              |"
+      echo "| c: checkout from this commit and go to the next one    |"
+      echo "| t: stash this commit and go to the next one            |"
+      echo "| h: see this help                                       |"
+      echo "+--------------------------------------------------------+"
+    elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
+      git add "$deployed_branch"
+      git commit -m "demo: deploy $current_version to the gh-pages" -S
+      git push origin gh-pages
+      break
+    elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
+      git diff "$deployed_branch"
+    elif [[ $REPLY =~ ^[Ss](tatus)?$ ]]; then
+      git status "$deployed_branch"
+    elif [[ $REPLY =~ ^[Aa](bort)?$ ]]; then
+      echo "exiting"
+      exit 0
+    elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
+      git checkout "$deployed_branch"
+    elif [[ $REPLY =~ ^([Tt]|([Ss]tash))?$ ]]; then
+      git stash -u push "$deployed_branch"
+      break
+    fi
+  done
+else
+  echo "nothing to do on the gh-pages branch"
+fi
+
+git checkout master
