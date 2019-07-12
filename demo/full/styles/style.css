@@ -59,6 +59,11 @@ body {
   color: rgb(200,200,200);
 }
 
+.custom-input-wrapper {
+  border: 1px dashed #d1d1d1;
+  padding: 0px 10px 10px 10px;
+}
+
 .player-logs-wrapper-bar {
   display: flex;
   flex-direction: row;
