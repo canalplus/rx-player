@@ -1,8 +1,8 @@
 import React from "react";
 
 /**
- * Simple select list. Call the onChange call back on choice with the index of
- * the option chosen in argument.
+ * Simple text input.
+ * Call `onChange` when updated.
  * @param {Object} props
  * @returns {Object}
  */

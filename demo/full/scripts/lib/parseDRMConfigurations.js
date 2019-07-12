@@ -6,7 +6,9 @@ import {
 
 export default function parseDRMConfigurations(drmConfigurations) {
   return Promise.all(drmConfigurations.map(drmConfig => {
-    const { licenseServerUrl, serverCertificateUrl, drm } = drmConfig;
+    const { licenseServerUrl,
+            serverCertificateUrl,
+            drm } = drmConfig;
 
     if (!licenseServerUrl) {
       return ;

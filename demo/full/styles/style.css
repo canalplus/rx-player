@@ -471,18 +471,32 @@ body {
   align-items: center;
 }
 
-.save-button {
+.content-button {
   font-size: 1.1rem;
   border-radius: 3px;
   white-space: nowrap;
 }
 
-.save-button.disabled {
+.content-button.disabled {
   background-color: #ececec;
 }
 
+.save-button {
+  color: #fff;
+  background-color: #ec3655;
+}
+
+.save-button:hover {
+  color: #fff;
+  background-color: #ff3655;
+}
+
+.cancel-button:hover {
+  color: #ec3655;
+}
+
 .need-to-fill {
-  border: solid 2px #ec3655;
+  font-weight: bold;
 }
 
 .erase-button {
@@ -898,7 +912,7 @@ input:checked + .slider:before {
   margin: 4px 0 4px 0;
 }
 
-@media only screen and (max-width: 660px) {
+@media only screen and (max-width: 730px) {
   .content-inputs {
     flex-direction: column;
   }
@@ -909,6 +923,12 @@ input:checked + .slider:before {
 
   .update-control {
     flex-direction: column;
+  }
+}
+
+@media only screen and (max-width: 650px) {
+  .github-buttons {
+    display: none;
   }
 }
 

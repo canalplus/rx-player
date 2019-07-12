@@ -1,19 +1,22 @@
 import React from "react";
+import {
+  hasLocalStorage,
+  getLocalStorageContents,
+  storeContent,
+  removeStoredContent,
+} from "../lib/localStorage.js";
 import parseDRMConfigurations from "../lib/parseDRMConfigurations.js";
 import Button from "../components/Button.jsx";
+import FocusedTextInput from "../components/FocusedInput.jsx";
 import TextInput from "../components/Input.jsx";
 import Select from "../components/Select.jsx";
 import contentsDatabase from "../contents.js";
 
-const MediaKeys_ =
-  window.MediaKeys ||
-  window.MozMediaKeys ||
-  window.WebKitMediaKeys ||
-  window.MSMediaKeys ||
-  null;
-
-const { localStorage } = window;
-const hasLocalStorage = !!localStorage;
+const MediaKeys_ = window.MediaKeys ||
+                   window.MozMediaKeys ||
+                   window.WebKitMediaKeys ||
+                   window.MSMediaKeys ||
+                   null;
 
 const HAS_EME_APIs = (
   typeof navigator.requestMediaKeySystemAccess === "function" ||
@@ -29,147 +32,142 @@ const IS_HTTPS = window.location.protocol.startsWith("https");
 const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile"];
 const DRM_TYPES = ["Widevine", "Playready", "Clearkey"];
 
-const URL_DENOMINATIONS = {
-  DASH: "URL to the MPD",
-  Smooth: "URL to the Manifest",
-  DirectFile: "URL to the content",
-};
+const DISABLE_ENCRYPTED_CONTENT = !HAS_EME_APIs && !IS_HTTPS;
 
+const URL_DENOMINATIONS = { DASH: "URL to the MPD",
+                            Smooth: "URL to the Manifest",
+                            DirectFile: "URL to the content" };
+
+/**
+ * Returns the name of the content formatted to be shown on the corresponding
+ * select button.
+ * @param {Object} content
+ * @returns {string}
+ */
 function formatContentForDisplay(content) {
-  let name = content.name;
-  let disabled = false;
+  let displayName = content.name;
+  let isDisabled = false;
+  let isLocalContent = false;
 
   if (IS_HTTPS) {
     if (content.url.startsWith("http:")) {
-      name = "[HTTP only] " + name;
-      disabled = true;
+      displayName = "[HTTP only] " + displayName;
+      isDisabled = true;
     }
   } else if (!HAS_EME_APIs &&
              content.drmInfos &&
-             content.drmInfos.length
-  ) {
-    name = "[HTTPS only] " + name;
-    disabled = true;
+               content.drmInfos.length)
+  {
+    displayName = "[HTTPS only] " + displayName;
+    isDisabled = true;
   }
 
   if (content.live) {
-    name += " (live)";
+    displayName += " (live)";
   }
 
   if (content.localContent) {
-    name = (hasLocalStorage ? "[Local storage] " :
-                              "[Saved] ") + name;
+    displayName = (hasLocalStorage ?  "[Stored] " : "[Saved] ") +
+      displayName;
+    isLocalContent = true;
   }
 
-  return { content, name, disabled };
+  return { url: content.url,
+           contentName: content.name,
+           id: content.id,
+           transport: content.transport,
+           supplementaryImageTracks: content.supplementaryImageTracks,
+           supplementaryTextTracks: content.supplementaryTextTracks,
+           drmInfos: content.drmInfos,
+           displayName,
+           isDisabled,
+           isLocalContent };
 }
 
-const CONTENTS_PER_TYPE = TRANSPORT_TYPES.reduce((acc, tech) => {
-  acc[tech] = contentsDatabase
-    .filter(({ transport }) => transport === tech.toLowerCase())
-    .map(formatContentForDisplay);
+/**
+ * Contruct list of contents per type of transport from:
+ *   - contents stored in local storage (or just memory)
+ *   - contents declared locally
+ * @param {Array.<Object>} storedContents
+ * @param {Array.<Object>} regularContents
+ * @returns {Object}
+ */
+function getContentsPerType(storedContents, regularContents) {
+  const reversedStoredContents = storedContents.slice().reverse();
+  const storedAndRegularContents = reversedStoredContents
+    .concat(regularContents);
+  return TRANSPORT_TYPES.reduce((acc, tech) => {
+    const customLinkContent = { url: "",
+                                contentName: "",
+                                transport: tech,
+                                drmInfos: [],
+                                displayName: "Custom link",
+                                isLocalContent: false,
+                                isDisabled: false };
+    acc[tech] = [customLinkContent]
+      .concat(storedAndRegularContents
+        .filter(({ transport }) => transport === tech.toLowerCase())
+        .map(formatContentForDisplay));
+    return acc;
+  }, {});
+}
 
-  return acc;
-}, {});
-
-Object.keys(CONTENTS_PER_TYPE).forEach((key) => {
-  CONTENTS_PER_TYPE[key].unshift({ name: "Custom link", disabled: false });
-});
+/**
+ * Returns index of the first content to display according to all contents
+ * available.
+ * @param {Array.<Object>} contentList
+ * @returns {number}
+ */
+function getIndexOfFirstEnabledContent(contentList) {
+  let contentChoiceIndex = 1;
+  if (contentList.length <= 0) {
+    throw new Error("No content for the transport: ", TRANSPORT_TYPES[0]);
+  }
+  while(contentChoiceIndex < contentList.length &&
+        contentList[contentChoiceIndex].isDisabled) {
+    contentChoiceIndex++;
+  }
+  if (contentChoiceIndex >= contentList.length) {
+    return 0;
+  }
+  return contentChoiceIndex;
+}
 
 class ContentList extends React.Component {
   constructor(...args) {
     super(...args);
 
-    const contents = CONTENTS_PER_TYPE[TRANSPORT_TYPES[0]];
-    const firstEnabledLocalLinkContentIndex =
-      contents.findIndex((c) => !c.disabled && c.name !== "Custom link");
-    const firstEnabledContentIndex =
-      firstEnabledLocalLinkContentIndex > -1 ?
-        firstEnabledLocalLinkContentIndex : 0;
+    const localStorageContents = getLocalStorageContents();
+    const contentsPerType = getContentsPerType(localStorageContents,
+                                               contentsDatabase);
+    const transportType = TRANSPORT_TYPES[0];
 
-    const localStorageContents = [];
-
-    if (hasLocalStorage) {
-      const localContentItems = localStorage.getItem("rxPlayerLocalContents");
-      if (hasLocalStorage && localContentItems) {
-        try {
-          localStorageContents.push(...JSON.parse(localContentItems));
-        } catch(err) {
-          /* eslint-disable-next-line */
-          console.warn("Demo: Can't parse local storage content.");
-        }
-      }
-
-      let baseId = localStorageContents.reduce((acc, val) => {
-        const id = val.id || 0;
-        return Math.max(acc, id);
-      }, 0);
-
-      this.generateId = () => {
-        baseId++;
-        return baseId;
-      };
-    }
-
-    this.state = {
-      transportType: TRANSPORT_TYPES[0],
-      contentChoiceIndex: firstEnabledContentIndex,
-      hasTextInput: firstEnabledContentIndex === 0,
-      displayDRMSettings: false,
-      customManifestUrl: "",
-      customContentName: "",
-      drm: DRM_TYPES[0],
-      autoPlay: true,
-      localStorageContents,
-      isSavingOrUpdating: false,
-      chosenContent: undefined,
-    };
+    this.state = { autoPlay: true,
+                   contentChoiceIndex: 0,
+                   contentsPerType,
+                   contentNameField: "",
+                   currentDRMType: DRM_TYPES[0],
+                   currentManifestURL: "",
+                   displayDRMSettings: false,
+                   displayTextInput: false,
+                   isSavingOrUpdating: false,
+                   licenseServerUrl: "",
+                   serverCertificateUrl: "",
+                   transportType };
   }
 
-  addContentToStorage(content) {
-    const { localStorageContents } = this.state;
-    const idx = localStorageContents.findIndex((e) => {
-      return e.id === content.id;
-    });
-
-    if (idx > -1) {
-      localStorageContents.splice(idx, 1, content);
-      this.setState({ localStorageContents });
-      if (hasLocalStorage) {
-        localStorage.setItem("rxPlayerLocalContents",
-                             JSON.stringify(localStorageContents));
-      }
-      return null;
-    }
-
-    localStorageContents.push(content);
-    this.setState({ localStorageContents });
-    if (hasLocalStorage) {
-      localStorage.setItem("rxPlayerLocalContents",
-                           JSON.stringify(localStorageContents));
-    }
-    return content;
+  componentDidMount() {
+    // estimate first index which should be selected
+    const contentList = this.state.contentsPerType[this.state.transportType];
+    const contentChoiceIndex = getIndexOfFirstEnabledContent(contentList);
+    const content = contentList[contentChoiceIndex];
+    this.changeSelectedContent(contentChoiceIndex, content);
   }
 
-  removeContentFromStorage(content) {
-    const { localStorageContents } = this.state;
-    const idx = localStorageContents.findIndex((e) => {
-      return e.name === content.name;
-    });
-
-    if (idx < 0) {
-      return null;
-    }
-
-    localStorageContents.splice(idx, 1);
-    this.setState({ localStorageContents });
-    if (hasLocalStorage) {
-      localStorage.setItem("rxPlayerLocalContents",
-                           JSON.stringify(localStorageContents));
-    }
-    return content;
-  }
-
+  /**
+   * Load the given content through the player.
+   * @param {Object} content
+   */
   loadContent(content) {
     const { loadVideo, stopVideo } = this.props;
     const { autoPlay } = this.state;
@@ -178,110 +176,124 @@ class ContentList extends React.Component {
       return;
     }
 
-    const {
-      url,
-      transport,
-      supplementaryImageTracks,
-      supplementaryTextTracks,
-      drmInfos = [],
-    } = content;
+    const { url,
+            transport,
+            supplementaryImageTracks,
+            supplementaryTextTracks,
+            drmInfos = [] } = content;
 
     parseDRMConfigurations(drmInfos)
       .then((keySystems) => {
-        loadVideo({
-          url,
-          transport,
-          autoPlay,
-          supplementaryImageTracks,
-          supplementaryTextTracks,
-          textTrackMode: "html",
-          keySystems,
-        });
+        loadVideo({ url,
+                    transport,
+                    autoPlay,
+                    supplementaryImageTracks,
+                    supplementaryTextTracks,
+                    textTrackMode: "html",
+                    keySystems });
       });
   }
 
 
+  /**
+   * @param {string} url
+   * @param {Array.<Object>} drmInfos
+   * @param {boolean} autoPlay
+   */
   loadUrl(url, drmInfos, autoPlay) {
     const { loadVideo } = this.props;
     parseDRMConfigurations(drmInfos)
       .then((keySystems) => {
-        loadVideo({
-          url,
-          transport: this.state.transportType.toLowerCase(),
-          autoPlay,
+        loadVideo({ url,
+                    transport: this.state.transportType.toLowerCase(),
+                    autoPlay,
 
-          // native browser subtitles engine (VTTCue) doesn"t render stylized
-          // subs.  We force HTML textTrackMode to vizualise styles.
-          textTrackMode: "html",
-          keySystems,
-        });
+                    // native browser subtitles engine (VTTCue) doesn"t render
+                    // stylized subs.  We force HTML textTrackMode to vizualise
+                    // styles.
+                    textTrackMode: "html",
+                    keySystems });
       });
   }
 
+  /**
+   * Update type of transport chosen.
+   * @param {string} transportType
+   */
   changeTransportType(transportType) {
-    const contents = CONTENTS_PER_TYPE[transportType];
-    const firstEnabledLocalLinkContentIndex =
-      contents.findIndex((c) => !c.disabled && c.name !== "Custom link");
-    const firstEnabledContentIndex =
-      firstEnabledLocalLinkContentIndex > -1 ?
-        firstEnabledLocalLinkContentIndex : 0;
-
-    this.setState({
-      transportType,
-      contentChoiceIndex: firstEnabledContentIndex,
-      hasTextInput: firstEnabledContentIndex === 0,
-      customManifestUrl: "",
-      customContentName: "",
-      licenseServerUrl: "",
-      serverCertificateUrl: "",
-      isSavingOrUpdating: false,
-      chosenContent: undefined,
-    });
+    this.setState({ transportType,
+                    contentChoiceIndex: 0,
+                    displayTextInput: true,
+                    currentManifestURL: "",
+                    contentNameField: "",
+                    displayDRMSettings: false,
+                    isSavingOrUpdating: false,
+                    licenseServerUrl: "",
+                    serverCertificateUrl: "" });
   }
 
-  changeContent(index, content) {
-    const hasTextInput = index === 0;
+  /**
+   * Change the content chosen in the list.
+   * @param {number} index - index in the lsit
+   * @param {Object} content - content object
+   */
+  changeSelectedContent(index, content) {
+    const displayTextInput = index === 0;
 
-    let customManifestUrl = "";
-    let customContentName = "";
+    let currentManifestURL = "";
+    let contentNameField = "";
     let licenseServerUrl = "";
     let serverCertificateUrl = "";
+    const hasDRMSettings = content.drmInfos != null &&
+                           content.drmInfos.length > 0;
+    let drm  = null;
 
-    if (content && content.localContent) {
-      customManifestUrl = content.url;
-      customContentName = content.name;
-      licenseServerUrl = (
-        content.drmInfos &&
-        content.drmInfos[0]
-      ) ? content.drmInfos[0].licenseServerUrl : "";
-      serverCertificateUrl = (
-        content.drmInfos &&
-        content.drmInfos[0]
-      ) ? content.drmInfos[0].serverCertificateUrl : "";
+    currentManifestURL = content.url;
+    contentNameField = content.contentName;
+    if (hasDRMSettings) {
+      drm = content.drmInfos[0].drm;
+      licenseServerUrl = content.drmInfos[0].licenseServerUrl;
+      serverCertificateUrl = content.drmInfos[0].serverCertificateUrl;
+    }
+    const stateUpdate = { contentChoiceIndex: index,
+                          displayTextInput,
+                          displayDRMSettings: hasDRMSettings,
+                          currentManifestURL,
+                          contentNameField,
+                          licenseServerUrl,
+                          serverCertificateUrl,
+                          isSavingOrUpdating: false };
+
+    if (drm != null) {
+      stateUpdate.currentDRMType = drm;
     }
 
-    this.setState({
-      contentChoiceIndex: index,
-      hasTextInput,
-      chosenContent: content,
-      customManifestUrl,
-      customContentName,
-      licenseServerUrl,
-      serverCertificateUrl,
-      isSavingOrUpdating: false,
-    });
+    this.setState(stateUpdate);
   }
 
-  onDisplayDRMSettings(evt) {
+  /**
+   * Display/hide the DRM settings according to the checkbox state.
+   * @param {Event} evt - Event sent by the checkbox when it was changed.
+   */
+  onChangeDisplayDRMSettings(evt) {
     const { target } = evt;
     const value = target.type === "checkbox" ?
-      target.checked : target.value;
-    this.setState({
-      displayDRMSettings: value,
-    });
+      target.checked :
+      target.value;
+    if (value) {
+      this.setState({ displayDRMSettings: true });
+      return;
+    }
+    this.setState({ displayDRMSettings: false,
+                    serverCertificateUrl: "",
+                    licenseServerUrl: "" });
   }
 
-  onAutoPlayClick(evt) {
+  /**
+   * Enable/disable autoPlay according to the checkbox state.
+   * @param {Event} evt - Event sent by the checkbox when it was changed.
+   */
+  onChangeAutoPlay(evt) {
     const { target } = evt;
     const value = target.type === "checkbox" ?
       target.checked : target.value;
@@ -289,109 +301,105 @@ class ContentList extends React.Component {
   }
 
   render() {
-    const {
-      autoPlay,
-      contentChoiceIndex,
-      displayDRMSettings,
-      drm,
-      hasTextInput,
-      licenseServerUrl,
-      customManifestUrl,
-      customContentName,
-      serverCertificateUrl,
-      transportType,
-      localStorageContents,
-      isSavingOrUpdating,
-      chosenContent,
-    } = this.state;
+    const { autoPlay,
+            contentChoiceIndex,
+            contentsPerType,
+            contentNameField,
+            currentDRMType,
+            currentManifestURL,
+            displayDRMSettings,
+            displayTextInput,
+            isSavingOrUpdating,
+            licenseServerUrl,
+            serverCertificateUrl,
+            transportType } = this.state;
 
-    // get local storage content here, and concat
-    const contentsFromLocalStorage = localStorageContents
-      .filter(({ transport }) => transport === transportType.toLowerCase())
-      .map(formatContentForDisplay);
+    const contentsToSelect = contentsPerType[transportType];
+    const chosenContent = contentsToSelect[contentChoiceIndex];
 
-    const contentsToSelect = CONTENTS_PER_TYPE[transportType]
-      .concat(contentsFromLocalStorage);
+    const hasURL = currentManifestURL !== "";
+    const isLocalContent = !!(chosenContent &&
+                              chosenContent.isLocalContent);
 
-    const onTechChange = (evt) => {
+    const onTransportChange = (evt) => {
       const index = +evt.target.value;
       if (index >= 0) {
         this.changeTransportType(TRANSPORT_TYPES[index]);
+        const contents = contentsPerType[transportType];
+        const contentChoiceIndex = getIndexOfFirstEnabledContent(contents);
+        const content = contents[contentChoiceIndex];
+        this.changeSelectedContent(contentChoiceIndex, content);
       }
     };
 
-    const onContentInputChange = (evt) => {
+    const onContentChoiceChange = (evt) => {
       const index = +evt.target.value;
-      const { content } = contentsToSelect[index];
-      this.changeContent(index, content);
+      const content = contentsToSelect[index];
+      this.changeSelectedContent(index, content);
     };
 
     const onClickLoad = () => {
       if (contentChoiceIndex === 0) {
-        const drmInfos = [{
-          licenseServerUrl,
-          serverCertificateUrl,
-          drm,
-        }];
-        this.loadUrl(customManifestUrl, drmInfos, autoPlay);
+        const drmInfos = [{ licenseServerUrl,
+                            serverCertificateUrl,
+                            drm: currentDRMType }];
+        this.loadUrl(currentManifestURL, drmInfos, autoPlay);
       } else {
-        this.loadContent(contentsToSelect[contentChoiceIndex].content);
+        this.loadContent(contentsToSelect[contentChoiceIndex]);
       }
     };
 
-    const activeSaveOption = customManifestUrl !== "" &&
-                             customManifestUrl != null &&
-                             transportType != null;
+    const saveCurrentContent = () => {
+      const contentToSave = { name: contentNameField,
+                              url: currentManifestURL,
+                              transport: transportType.toLowerCase(),
+                              drmInfos: displayDRMSettings ?
+                                [ { drm: currentDRMType,
+                                    licenseServerUrl,
+                                    serverCertificateUrl } ] :
+                                [],
+                              id: chosenContent.id };
 
-    const onClickValid = (id) => {
-      if (!activeSaveOption) {
-        return;
-      }
-      const content = {
-        name: customContentName,
-        url: customManifestUrl,
-        transport: transportType.toLowerCase(),
-        drmInfos: (drm && licenseServerUrl) ? [
-          {
-            drm,
-            licenseServerUrl,
-            serverCertificateUrl,
-          },
-        ] : [],
-        localContent: true,
-        id: id == null ? this.generateId() : id,
-      };
-      const hasAdded = this.addContentToStorage(content);
-      if (hasAdded) {
-        this.changeContent(contentsToSelect.length, content);
-      }
-      this.setState({
-        isSavingOrUpdating: false,
-      });
+      const storedContent = storeContent(contentToSave);
+
+      // reconstruct list of contents
+      const localStorageContents = getLocalStorageContents();
+      const contentsPerType = getContentsPerType(localStorageContents,
+                                                 contentsDatabase);
+      this.setState({ contentsPerType,
+                      isSavingOrUpdating: false });
+
+      // select new content
+      const contentChoiceIndex = contentsPerType[transportType]
+        .findIndex(c => c.id === storedContent.id);
+      const content = contentsPerType[transportType][contentChoiceIndex];
+      this.changeSelectedContent(contentChoiceIndex, content);
     };
 
-    const onClickSave = () => {
-      this.setState({
-        isSavingOrUpdating: true,
-      });
-    };
+    const onClickSaveOrUpdate = () =>
+      this.setState({ isSavingOrUpdating: true });
 
     const onClickErase = () => {
-      const { content } = contentsToSelect[contentChoiceIndex];
+      const content = contentsToSelect[contentChoiceIndex];
       if (content) {
-        const hasRemoved = this.removeContentFromStorage(content);
+        const hasRemoved = removeStoredContent(content.id);
         if (hasRemoved) {
-          const newContent = contentsToSelect[contentChoiceIndex - 1].content;
-          this.changeContent(contentChoiceIndex - 1, newContent);
+          // reconstruct list of contents
+          const localStorageContents = getLocalStorageContents();
+          const contentsPerType = getContentsPerType(localStorageContents,
+                                                     contentsDatabase);
+          this.setState({ contentsPerType });
+          const newContent = contentsPerType[transportType][contentChoiceIndex];
+          this.changeSelectedContent(contentChoiceIndex, newContent);
         }
       }
     };
 
     const onNameInput = (evt) =>
-      this.setState({ customContentName: evt.target.value });
+      this.setState({ contentNameField: evt.target.value });
 
     const onManifestInput = (evt) =>
-      this.setState({ customManifestUrl: evt.target.value });
+      this.setState({ currentManifestURL: evt.target.value });
 
     const onLicenseServerInput = (evt) =>
       this.setState({ licenseServerUrl: evt.target.value });
@@ -399,37 +407,32 @@ class ContentList extends React.Component {
     const onServerCertificateInput = (evt) =>
       this.setState({ serverCertificateUrl: evt.target.value });
 
-    const onDisplayDRMSettings = (evt) =>
-      this.onDisplayDRMSettings(evt);
+    const onChangeDisplayDRMSettings = (evt) =>
+      this.onChangeDisplayDRMSettings(evt);
 
-    const onAutoPlayClick = (evt) => {
+    const onAutoPlayClick = (evt) =>
       this.onAutoPlayClick(evt);
-    };
 
     const onDRMTypeClick = (type) => {
-      this.setState({ drm: type });
+      this.setState({ currentDRMType: type });
     };
 
     const onCancel = () => {
       this.setState({ isSavingOrUpdating: false });
-    };
 
-    const shouldDisableEncryptedContent = !HAS_EME_APIs && !IS_HTTPS;
+      // re-load content
+      this.changeSelectedContent(contentChoiceIndex, chosenContent);
+    };
 
     const generateDRMButtons = () => {
       return DRM_TYPES.map(type =>
         <Button
           className={"choice-input-button drm-button" +
-            (drm === type ? " selected" : "")}
+            (currentDRMType === type ? " selected" : "")}
           onClick={() => onDRMTypeClick(type)}
           value={type}
         />);
     };
-
-    const isLocalContent = !!(chosenContent && chosenContent.localContent);
-    const chosenContentHasDRMInfo = chosenContent &&
-                        chosenContent.drmInfos &&
-                        chosenContent.drmInfos[0];
 
     return (
       <div className="choice-inputs-wrapper">
@@ -438,27 +441,27 @@ class ContentList extends React.Component {
             <div className="content-inputs-selects">
               <Select
                 className="choice-input transport-type-choice white-select"
-                onChange={onTechChange}
+                onChange={onTransportChange}
                 options={TRANSPORT_TYPES}
               />
               <Select
                 className="choice-input content-choice white-select"
-                onChange={onContentInputChange}
-                options={contentsToSelect}
+                onChange={onContentChoiceChange}
+                options={contentsToSelect.map(c => c.displayName)}
                 selected={contentChoiceIndex}
               />
             </div>
             <div className="content-inputs-middle">
               {
-                (hasTextInput || isLocalContent) ?
+                (displayTextInput || isLocalContent) ?
                   (<Button
-                    className={"choice-input-button save-button" +
-                      (!activeSaveOption ? " disabled" : "")}
-                    onClick={onClickSave}
-                    disabled={!activeSaveOption || isSavingOrUpdating}
+                    className={"choice-input-button content-button enter-name-button" +
+                      (!hasURL ? " disabled" : "")}
+                    onClick={onClickSaveOrUpdate}
+                    disabled={!hasURL || isSavingOrUpdating}
                     value={isLocalContent ?
-                      (isSavingOrUpdating ? "Updating" : "Update content") :
-                      (isSavingOrUpdating ? "Saving" : "Save content")}
+                      (isSavingOrUpdating ? "Updating" : "Update") :
+                      (isSavingOrUpdating ? "Saving" : "Save")}
                   />) :
                   null
               }
@@ -489,43 +492,30 @@ class ContentList extends React.Component {
           </div>
         </div>
         {
-          (hasTextInput || (isLocalContent && isSavingOrUpdating)) ?
+          (displayTextInput || (isLocalContent && isSavingOrUpdating)) ?
             (
               <div className="custom-input-wrapper">
                 {
                   isSavingOrUpdating ?
                     (<div className="update-control">
-                      <TextInput
-                        className={"text-input" + (customContentName === "" ? " need-to-fill" : "")}
+                      <FocusedTextInput
+                        className={"text-input need-to-fill"}
                         onChange={onNameInput}
-                        value={customContentName}
+                        value={contentNameField}
                         placeholder={"Content name"}
                       />
                       <div className="update-control-buttons">
-                        {
-                          (isSavingOrUpdating) ?
-                            (<Button
-                              className={"choice-input-button save-button"}
-                              onClick={
-                                () => onClickValid(
-                                  chosenContent ?
-                                    chosenContent.id :
-                                    undefined
-                                )
-                              }
-                              value={isLocalContent ? "Update content" : "Save content"}
-                            />) :
-                            null
-                        }
-                        {
-                          (isSavingOrUpdating) ?
-                            (<Button
-                              className={"choice-input-button save-button"}
-                              onClick={onCancel}
-                              value={"Cancel"}
-                            />) :
-                            null
-                        }
+                        <Button
+                          className={"choice-input-button content-button save-button"}
+                          onClick={saveCurrentContent}
+                          disabled={!contentNameField}
+                          value={isLocalContent ? "Update" : "Save"}
+                        />
+                        <Button
+                          className={"choice-input-button content-button cancel-button"}
+                          onClick={onCancel}
+                          value={"Cancel"}
+                        />
                       </div>
                     </div>)
                     : null
@@ -533,25 +523,23 @@ class ContentList extends React.Component {
                 <TextInput
                   className="text-input"
                   onChange={onManifestInput}
-                  value={customManifestUrl}
+                  value={currentManifestURL}
                   placeholder={
-                    isLocalContent ? chosenContent.url :
-                      (
-                        URL_DENOMINATIONS[transportType] ||
-                        `URL to the ${transportType} content`
-                      ) + (IS_HTTPS ? " (HTTPS only if mixed contents disabled)" : "")
+                    (URL_DENOMINATIONS[transportType] ||
+                     `URL to the ${transportType} content`) +
+                    (IS_HTTPS ? " (HTTPS only if mixed contents disabled)" : "")
                   }
                 />
                 <div className="player-box">
-                  <span className={"encryption-checkbox" + (shouldDisableEncryptedContent ? " disabled" : "")}>
-                    {(shouldDisableEncryptedContent ? "[HTTPS only] " : "") + "Encrypted content"}
+                  <span className={"encryption-checkbox" + (DISABLE_ENCRYPTED_CONTENT ? " disabled" : "")}>
+                    {(DISABLE_ENCRYPTED_CONTENT ? "[HTTPS only] " : "") + "Encrypted content"}
                     <label class="switch">
                       <input
-                        disabled={shouldDisableEncryptedContent}
+                        disabled={DISABLE_ENCRYPTED_CONTENT}
                         name="displayDRMSettingsTextInput"
                         type="checkbox"
                         checked={displayDRMSettings}
-                        onChange={onDisplayDRMSettings}
+                        onChange={onChangeDisplayDRMSettings}
                       />
                       <span class="slider round"></span>
                     </label>
@@ -567,31 +555,14 @@ class ContentList extends React.Component {
                             className="choice-input text-input"
                             onChange={onLicenseServerInput}
                             value={licenseServerUrl}
-                            placeholder={
-                              chosenContentHasDRMInfo &&
-                              chosenContent.drmInfos[0]
-                                .licenseServerUrl != "" &&
-                              chosenContent.drmInfos[0]
-                                .licenseServerUrl != null ?
-                                chosenContent.drmInfos[0].licenseServerUrl :
-                                "License URL Server"
-                            }
+                            placeholder={"License URL Server"}
                           />
                         </div>
                         <TextInput
                           className="choice-input text-input"
                           onChange={onServerCertificateInput}
                           value={serverCertificateUrl}
-                          placeholder={
-                            chosenContentHasDRMInfo &&
-                            chosenContent.drmInfos[0]
-                              .serverCertificateUrl != "" &&
-                            chosenContent.drmInfos[0]
-                              .serverCertificateUrl != null ?
-                              chosenContent.drmInfos[0]
-                                .serverCertificateUrl :
-                              "Server certificate URL (optional)"
-                          }
+                          placeholder={"Server certificate URL (optional)"}
                         />
                       </div> :
                       null
