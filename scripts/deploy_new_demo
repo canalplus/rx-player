@@ -23,6 +23,7 @@
 
 set -e
 
+current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 deployed_branch=$1
 
 # Do not normalize path check for dirty "." or "/"
@@ -125,4 +126,4 @@ else
   echo "nothing to do on the gh-pages branch"
 fi
 
-git checkout master
+git checkout "$current_branch"
