@@ -218,6 +218,7 @@ class ContentList extends React.Component {
    */
   changeTransportType(transportType) {
     this.setState({ transportType,
+                    currentDRMType: DRM_TYPES[0],
                     contentChoiceIndex: 0,
                     currentManifestURL: "",
                     contentNameField: "",
