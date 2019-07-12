@@ -412,7 +412,7 @@ class ContentList extends React.Component {
       this.onChangeDisplayDRMSettings(evt);
 
     const onAutoPlayClick = (evt) =>
-      this.onAutoPlayClick(evt);
+      this.onChangeAutoPlay(evt);
 
     const onDRMTypeClick = (type) => {
       this.setState({ currentDRMType: type });
