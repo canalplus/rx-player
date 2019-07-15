@@ -20,6 +20,7 @@ import {
   merge as observableMerge,
   Observable,
   of as observableOf,
+  throwError,
 } from "rxjs";
 import {
   catchError,
@@ -35,11 +36,9 @@ import {
   events,
   generateKeyRequest,
   getInitData,
-  ICustomMediaKeySession,
 } from "../../compat/";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
-import { concat } from "../../utils/byte_parsing";
 import getSession, {
   IEncryptedEvent,
 } from "./get_session";
@@ -80,13 +79,13 @@ export default function EMEManager(
 
    // Keep track of all initialization data handled here.
    // This is to avoid handling multiple times the same encrypted events.
-  const handledInitData = new InitDataStore();
+  const handledInitData = new InitDataStore<boolean>();
 
-  // Keep track of the blacklisted sessions with the corresponding error.
-  // If a new event ask for a MediaKeySession which has already been blacklisted,
-  // we can directly send the corresponding event.
-  const blacklistedSessions = new WeakMap< MediaKeySession | ICustomMediaKeySession,
-                                           BlacklistedSessionError >();
+  // Keep track of the blacklisted init data with the corresponding session
+  // error.
+  // If a new event emit data which has already been blacklisted, we can
+  // directly send the corresponding event.
+  const blacklistedInitData = new InitDataStore<BlacklistedSessionError>();
 
   // store the mediaKeys when ready
   const mediaKeysInfos$ = initMediaKeys(mediaElement, keySystemsConfigs)
@@ -111,9 +110,7 @@ export default function EMEManager(
     }));
 
   const externalEvents$ = contentProtections$.pipe(
-    tap((evt) => { log.debug("EME: Encrypted event received from Player", evt); }),
-    map((evt) : IEncryptedEvent => ({ type: "cenc",
-                                      data: concat(...evt.data) })));
+    tap((evt) => { log.debug("EME: Encrypted event received from Player", evt); }));
 
   // Merge all encrypted events
   const encryptedEvents$ = observableMerge(externalEvents$, mediaEncryptedEvents$);
@@ -124,19 +121,36 @@ export default function EMEManager(
         [ encryptedEvt, mediaKeysEvt ])
       )),
     /* Attach server certificate and create/reuse MediaKeySession */
-    mergeMap(([encryptedEvents, mediaKeysEvent], i) => {
+    mergeMap(([encryptedEvent, mediaKeysEvent], i) => {
       const mediaKeysInfos = mediaKeysEvent.value;
       const { keySystemOptions, mediaKeys } = mediaKeysInfos;
       const { serverCertificate } = keySystemOptions;
 
-      const { type: initDataType, data: initData } = encryptedEvents;
-      if (handledInitData.has(initData, initDataType)) {
+      const { type: initDataType, data: initData } = encryptedEvent;
+
+      const blacklistError = blacklistedInitData.get(initDataType, initData);
+      if (blacklistError != null) {
+        if (initDataType == null) {
+          log.error("EME: The current session has already been blacklisted " +
+                    "but the current content is not known. Throwing.");
+          const { sessionError } = blacklistError;
+          sessionError.fatal = true;
+          return throwError(sessionError);
+        }
+        log.warn("EME: The current session has already been blacklisted. " +
+                 "Blacklisting content.");
+        return observableOf({ type: "blacklist-protection-data" as const,
+                              value: { type: initDataType,
+                                       data: initData } });
+      }
+
+      if (handledInitData.get(initDataType, initData) === true) {
         log.debug("EME: Init data already received. Skipping it.");
         return EMPTY; // Already handled, quit
       }
-      handledInitData.add(initData, initDataType);
+      handledInitData.set(initDataType, initData, true);
 
-      const session$ = getSession(encryptedEvents, mediaKeysInfos)
+      const session$ = getSession(encryptedEvent, mediaKeysInfos)
         .pipe(map((evt) => ({
           type: evt.type,
           value: { initData: evt.value.initData,
@@ -161,7 +175,8 @@ export default function EMEManager(
 
     /* Trigger license request and manage MediaKeySession events */
     mergeMap((sessionInfosEvt) =>  {
-      if (sessionInfosEvt.type === "warning") {
+      if (sessionInfosEvt.type === "warning" ||
+          sessionInfosEvt.type === "blacklist-protection-data") {
         return observableOf(sessionInfosEvt);
       }
 
@@ -171,22 +186,6 @@ export default function EMEManager(
               sessionType,
               keySystemOptions,
               sessionStorage } = sessionInfosEvt.value;
-
-      const blacklistError = blacklistedSessions.get(mediaKeySession);
-      if (blacklistError != null) {
-        // XXX TODO
-        // if (content == null) {
-        //   log.error("EME: The current session has already been blacklisted " +
-        //             "but the current content is not known. Throwing.");
-        //   const { sessionError } = blacklistError;
-        //   sessionError.fatal = true;
-        //   return throwError(sessionError);
-        // }
-        log.warn("EME: The current session has already been blacklisted. " +
-                 "Blacklisting content.");
-        return observableOf({ type: "blacklist-content" as const,
-                              value: null });
-      }
 
       const generateRequest$ = sessionInfosEvt.type !== "created-session" ?
           EMPTY :
@@ -210,21 +209,22 @@ export default function EMEManager(
             throw err;
           }
 
-          blacklistedSessions.set(mediaKeySession, err);
+          blacklistedInitData.set(initDataType, initData, err);
+
           const { sessionError } = err;
-          // XXX TODO
-          // if (content == null) {
-          //   log.error("EME: Current session blacklisted and content not known. " +
-          //             "Throwing.");
-          //   sessionError.fatal = true;
-          //   throw sessionError;
-          // }
+          if (initDataType == null) {
+            log.error("EME: Current session blacklisted and content not known. " +
+                      "Throwing.");
+            sessionError.fatal = true;
+            throw sessionError;
+          }
 
           log.warn("EME: Current session blacklisted. Blacklisting content.");
           return observableOf({ type: "warning" as const,
                                 value: sessionError },
-                              { type: "blacklist-content" as const,
-                                value: null });
+                              { type: "blacklist-protection-data" as const,
+                                value: { type: initDataType,
+                                         data: initData } });
         }));
     }));
 

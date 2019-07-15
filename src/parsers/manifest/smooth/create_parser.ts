@@ -24,7 +24,7 @@ import resolveURL, {
 } from "../../../utils/resolve_url";
 import takeFirstSet from "../../../utils/take_first_set";
 import {
-  IContentProtection,
+  IContentProtectionKIDs,
   IParsedAdaptation,
   IParsedAdaptations,
   IParsedManifest,
@@ -348,15 +348,15 @@ function createSmoothStreamingParser(
                                     "") +
                   String(qualityLevel.bitrate);
 
-      const contentProtections : IContentProtection[] = [];
-      let firstProtection : IContentProtectionSmooth | undefined;
+      const keyIDs : IContentProtectionKIDs[] = [];
+      let firstProtection : IContentProtectionSmooth|undefined;
       if (protections.length > 0) {
         firstProtection = protections[0];
         protections.forEach((protection) => {
           const keyId = protection.keyId;
           protection.keySystems.forEach((keySystem) => {
-            contentProtections.push({ keyId,
-                                      systemId: keySystem.systemId });
+            keyIDs.push({ keyId,
+                          systemId: keySystem.systemId });
           });
         });
       }
@@ -369,10 +369,10 @@ function createSmoothStreamingParser(
 
                                     // TODO set multiple protections here
                                     // instead of the first one
-                                    protection: firstProtection != null ?
-                                      { keyId: firstProtection.keyId,
-                                        keySystems: firstProtection.keySystems } :
-                                      undefined, };
+                                    protection: firstProtection != null ? {
+                                      keyId: firstProtection.keyId,
+                                      keySystems: firstProtection.keySystems,
+                                    } : undefined, };
 
       const aggressiveMode = parserOptions.aggressiveMode == null ?
         DEFAULT_AGGRESSIVE_MODE :
@@ -386,8 +386,9 @@ function createSmoothStreamingParser(
                                                                     mimeType,
                                                                     codecs,
                                                                     id });
-      if (contentProtections.length > 0) {
-        representation.contentProtections = contentProtections;
+      if (keyIDs.length > 0) {
+        representation.contentProtections = { keyIds: keyIDs,
+                                              initData: [] };
       }
       return representation;
     });

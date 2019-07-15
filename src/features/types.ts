@@ -33,8 +33,8 @@ import { ITransportFunction } from "../transports";
 export type IDirectFileInit = (args : IDirectFileOptions) =>
                                 Observable<IDirectfileEvent>;
 
-interface IContentProtection { type : "pssh";
-                               data : Uint8Array[]; }
+interface IContentProtection { type : string;
+                               data : Uint8Array; }
 
 export type IEMEManager = (mediaElement : HTMLMediaElement,
                            keySystems: IKeySystemOption[],

@@ -215,15 +215,16 @@ export default function parseRepresentations(
     }
 
     if (adaptation.children.contentProtections != null) {
-      const contentProtections = adaptation.children.contentProtections
+      const contentProtectionKIDs = adaptation.children.contentProtections
         .reduce<Array<{ keyId : Uint8Array }>>((acc, cp) => {
           if (cp.keyId != null) {
             acc.push({ keyId: cp.keyId });
           }
           return acc;
         }, []);
-      if (contentProtections.length > 0) {
-        parsedRepresentation.contentProtections = contentProtections;
+      if (contentProtectionKIDs.length > 0) {
+        parsedRepresentation.contentProtections = { keyIds: contentProtectionKIDs,
+                                                    initData: [] };
       }
     }
 
