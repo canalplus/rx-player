@@ -163,8 +163,8 @@ export default class VideoThumbnailLoader {
 
     this._setTimeSubscription$ = this._setTime$.pipe(
       distinctUntilChanged(),
-      concatMapLatest((time) => {
-        if (time !== this._thumbnailVideoElement.currentTime) {
+      concatMapLatest((time, i) => {
+        if (time !== this._thumbnailVideoElement.currentTime || i === 0) {
           const setTimeCallback: () => Observable<null> = () => {
             return videoSourceInfos$.pipe(
               mergeMap((videoSourceBuffer) => {
