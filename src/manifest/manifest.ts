@@ -550,7 +550,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
 
 /**
  * Update decipherability based on a predicate given.
- * Do nothing for a Representation when the predicate returns true, mark as
+ * Do nothing for a Representation when the predicate returns false, mark as
  * undecipherable when the predicate returns false. Returns every updates in
  * an array.
  * @param {Manifest} manifest
@@ -570,7 +570,7 @@ function updateDeciperability(
       const representations = adaptation.representations;
       for (let k = 0; k < representations.length; k++) {
         const representation = representations[k];
-        if (predicate(representation)) {
+        if (!predicate(representation)) {
           updates.push({ period, adaptation, representation });
           representation.decipherable = false;
         }
