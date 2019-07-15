@@ -16,19 +16,20 @@
 
 import hashBuffer from "../../../utils/hash_buffer";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
-import SimpleSet from "../../../utils/simple_set";
+
+type IDictionary<T> = Partial<Record<string, T>>;
 
 /**
- * Memorize initialization data.
+ * Map initialization data to another property.
  * @class InitDataStore
  */
-export default class InitDataStore {
-  private _namedTypeData : Record<string, SimpleSet>;
-  private _unnamedTypeData : SimpleSet;
+export default class InitDataStore<T> {
+  private _namedTypeData : IDictionary<IDictionary<T>>;
+  private _unnamedTypeData : IDictionary<T>;
 
   constructor() {
     this._namedTypeData = {};
-    this._unnamedTypeData = new SimpleSet();
+    this._unnamedTypeData = {};
   }
 
   /**
@@ -37,17 +38,19 @@ export default class InitDataStore {
    * @param {string|undefined} initDataType
    * @returns {boolean}
    */
-  public has(
-    initData : Uint8Array,
-    initDataType : string|undefined
-  ) : boolean {
+  public get(
+    initDataType : string|undefined,
+    initData : Uint8Array
+  ) : T | undefined {
     if (!isNonEmptyString(initDataType)) {
-      return this._unnamedTypeData.test(hashBuffer(initData));
+      return this._unnamedTypeData[hashBuffer(initData)];
     }
-    if (this._namedTypeData[initDataType] == null) {
-      return false;
+
+    const forDataType = this._namedTypeData[initDataType];
+    if (forDataType == null) {
+      return undefined;
     }
-    return this._namedTypeData[initDataType].test(hashBuffer(initData));
+    return forDataType[hashBuffer(initData)];
   }
 
   /**
@@ -55,22 +58,23 @@ export default class InitDataStore {
    * @param {Uint8Array} initData
    * @param {string|undefined} initDataType
    */
-  public add(
+  public set(
+    initDataType : string|undefined,
     initData : Uint8Array,
-    initDataType : string|undefined
+    data : T
   ) {
-    if (this.has(initData, initDataType)) {
-      return;
-    }
+    const hashed = hashBuffer(initData);
     if (!isNonEmptyString(initDataType)) {
-      this._unnamedTypeData.add(hashBuffer(initData));
+      this._unnamedTypeData[hashed] = data;
       return;
     }
 
-    if (this._namedTypeData[initDataType] == null) {
-      this._namedTypeData[initDataType] = new SimpleSet();
+    const forDataType = this._namedTypeData[initDataType];
+    if (forDataType == null) {
+      this._namedTypeData[initDataType] = { [hashed]: data };
+    } else {
+      forDataType[hashed] = data;
     }
-    this._namedTypeData[initDataType].add(hashBuffer(initData));
   }
 
   /**
@@ -81,24 +85,24 @@ export default class InitDataStore {
    * @returns {boolean}
    */
   public remove(
-    initData : Uint8Array,
-    initDataType : string|undefined
+    initDataType : string|undefined,
+    initData : Uint8Array
   ) : boolean {
     if (!isNonEmptyString(initDataType)) {
       const hashed = hashBuffer(initData);
-      if (this._unnamedTypeData.test(hashed)) {
-        this._unnamedTypeData.remove(hashed);
+      if (this._unnamedTypeData.hasOwnProperty(hashed)) {
+        delete this._unnamedTypeData[hashed];
         return true;
       }
       return false;
     } else {
-      if (this._namedTypeData[initDataType] == null) {
+      if (!this._namedTypeData.hasOwnProperty(initDataType)) {
         return false;
       }
+      const dataForType = this._namedTypeData[initDataType] as IDictionary<T>;
       const hashed = hashBuffer(initData);
-      const simpleSet = this._namedTypeData[initDataType];
-      if (simpleSet.test(hashed)) {
-        simpleSet.remove(hashed);
+      if (dataForType.hasOwnProperty(hashed)) {
+        delete dataForType[hashed];
         return true;
       }
       return false;

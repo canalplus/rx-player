@@ -64,18 +64,19 @@ export type IMediaKeySessionHandledEvents = IKeyMessageHandledEvent |
                                             IBlacklistSessionEvent |
                                             IBlacklistKeysEvent;
 
-export interface IBlacklistContentEvent { type: "blacklist-content";
-                                          value: null; }
+export interface IBlacklistProtectionDataEvent { type: "blacklist-protection-data";
+                                                 value: { type : string;
+                                                          data : Uint8Array; }; }
 
 export type IEMEManagerEvent = IEMEWarningEvent |
                                ICreatedMediaKeysEvent |
                                IAttachedMediaKeysEvent |
                                IMediaKeySessionHandledEvents |
                                IBlacklistKeysEvent |
-                               IBlacklistContentEvent;
+                               IBlacklistProtectionDataEvent;
 
-export interface IContentProtection { type : "pssh";
-                                      data : Uint8Array[]; }
+export interface IContentProtection { type : string;
+                                      data : Uint8Array; }
 
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {

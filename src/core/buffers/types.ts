@@ -80,8 +80,8 @@ export interface IBufferStateFull {
 
 export interface IProtectedSegmentEvent {
   type : "protected-segment";
-  value : { type : "pssh";
-            data : Uint8Array[];
+  value : { type : string;
+            data : Uint8Array;
             content: { adaptation : Adaptation;
                        manifest : Manifest;
                        period : Period;

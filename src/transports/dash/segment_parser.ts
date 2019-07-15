@@ -88,8 +88,9 @@ export default function parser({ content,
     if (!isWEBM) {
       const psshBoxes = takePSSHOut(chunkData);
       if (psshBoxes.length > 0) {
-        segmentProtection = { type: "pssh",
-                              value: psshBoxes };
+        representation._addProtectionData("cenc", psshBoxes);
+        segmentProtection = { type: "cenc",
+          value: psshBoxes };
       }
     }
     return observableOf({ chunkData,

@@ -47,8 +47,8 @@ export interface IChunkTimingInfos {
 }
 
 export interface ISegmentProtection {
-  type : "pssh";
-  value : Uint8Array[];
+  type : "cenc";
+  value : Uint8Array;
 }
 
 // Contains timing information on new segments indicated in the metadata of

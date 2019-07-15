@@ -15,6 +15,7 @@
  */
 
 import log from "../../../log";
+import { concat } from "../../../utils/byte_parsing";
 import {
   getBoxContent,
   getBoxOffsets,
@@ -29,11 +30,11 @@ import {
  * @returns {Array.<Uint8Array>} - The extracted PSSH boxes. In the order they
  * are encountered.
  */
-export default function takePSSHOut(data : Uint8Array) : Uint8Array[] {
+export default function takePSSHOut(data : Uint8Array) : Uint8Array {
   let i = 0;
   const moov = getBoxContent(data, 0x6D6F6F76 /* moov */);
   if (moov === null) {
-    return [];
+    return new Uint8Array([]);
   }
 
   const psshBoxes : Uint8Array[] = [];
@@ -43,10 +44,10 @@ export default function takePSSHOut(data : Uint8Array) : Uint8Array[] {
       psshOffsets = getBoxOffsets(moov, 0x70737368 /* pssh */);
     } catch (e) {
       log.warn(e);
-      return psshBoxes;
+      return concat(...psshBoxes);
     }
     if (psshOffsets == null) {
-      return psshBoxes;
+      return concat(...psshBoxes);
     }
     psshBoxes.push(moov.slice(psshOffsets[0], psshOffsets[1]));
 
@@ -57,5 +58,5 @@ export default function takePSSHOut(data : Uint8Array) : Uint8Array[] {
     moov[psshOffsets[0] + 7] = 0x65;
     i = psshOffsets[1];
   }
-  return psshBoxes;
+  return concat(...psshBoxes);
 }

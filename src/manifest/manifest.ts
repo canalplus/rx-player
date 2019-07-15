@@ -17,7 +17,10 @@
 import { ICustomError } from "../errors";
 import { IParsedManifest } from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
-import { isABEqualBytes } from "../utils/byte_parsing";
+import {
+  areBytesEqual,
+  isABEqualBytes,
+} from "../utils/byte_parsing";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
 import warnOnce from "../utils/warn_once";
@@ -54,11 +57,15 @@ interface IManifestParsingOptions {
   representationFilter? : IRepresentationFilter;
 }
 
+export interface IDecipherabilityUpdateElement {
+  period : Period;
+  adaptation : Adaptation;
+  representation : Representation;
+}
+
 export interface IManifestEvents {
   manifestUpdate : null;
-  ["decipherability-update"] : Array<{ period : Period;
-                                       adaptation : Adaptation;
-                                       representation : Representation; }>;
+  ["decipherability-update"] : IDecipherabilityUpdateElement[];
 }
 
 /**
@@ -384,38 +391,23 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @param {Array.<ArrayBuffer>} keyIDs
    */
   public markUndecipherableKIDs(keyIDs : ArrayBuffer[]) : void {
-    // TODO Doing a Map<keyID hash, Representation[]> first might be more
-    // efficient
-    const updates : Array<{ period : Period;
-                            adaptation : Adaptation;
-                            representation : Representation; }> = [];
-    for (let i = 0; i < this.periods.length; i++) {
-      const period = this.periods[i];
-      const adaptations = period.getAdaptations();
-      for (let j = 0; j < adaptations.length; j++) {
-        const adaptation = adaptations[j];
-        const representations = adaptation.representations;
-        for (let k = 0; k < representations.length; k++) {
-          const representation = representations[k];
-          if (representation.decipherable !== false &&
-              representation.contentProtections != null)
-          {
-            const { contentProtections } = representation;
-            for (let l = 0; l < contentProtections.length; l++) {
-              const contentProtection = contentProtections[l];
-              for (let m = 0; m < keyIDs.length; m++) {
-                if (contentProtection.keyId != null &&
-                    isABEqualBytes(keyIDs[m], contentProtection.keyId))
-                {
-                  updates.push({ period, adaptation, representation });
-                  representation.decipherable = false;
-                }
-              }
-            }
-          }
+    const updates = updateDeciperability(this, (representation) => {
+      if (representation.decipherable === false ||
+          representation.contentProtections == null)
+      {
+        return true;
+      }
+      const contentKIDs = representation.contentProtections.keyIds;
+      for (let i = 0; i < contentKIDs.length; i++) {
+        const elt = contentKIDs[i];
+        for (let j = 0; j < keyIDs.length; j++) {
+           if (isABEqualBytes(keyIDs[j], elt.keyId)) {
+             return false;
+           }
         }
       }
-    }
+      return true;
+    });
 
     if (updates.length > 0) {
       this.trigger("decipherability-update", updates);
@@ -423,36 +415,32 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   }
 
   /**
-   * Look in the Manifest for the given Representations.
-   * and mark it as being impossible to decrypt.
+   * Look in the Manifest for Representations linked to the given init data
+   * and mark them as being impossible to decrypt.
    * Then trigger a "blacklist-update" event to notify everyone of the changes
    * performed.
-   * @param {Object} content
+   * @param {Array.<ArrayBuffer>} keyIDs
    */
-  public markUndecipherableRepresentation(
-    content : { period : Period;
-                adaptation : Adaptation;
-                representation : Representation; }
-  ) : void {
-    const { period, adaptation, representation } = content;
-    const _period = this.getPeriod(period.id);
-    if (_period == null) {
-      return;
-    }
+  public markUndecipherableProtectionData(type : string, data: Uint8Array) : void {
+    const updates = updateDeciperability(this, (representation) => {
+      if (representation.decipherable === false ||
+          representation.contentProtections == null)
+      {
+        return true;
+      }
+      const elements = representation.contentProtections.initData;
+      for (let i = 0; i < elements.length; i++) {
+        const elt = elements[i];
+        if (elt.type === type && areBytesEqual(elt.data, data)) {
+          return false;
+        }
+      }
+      return true;
+    });
 
-    const _adaptation = _period.getAdaptation(adaptation.id);
-    if (_adaptation == null) {
-      return;
+    if (updates.length > 0) {
+      this.trigger("decipherability-update", updates);
     }
-
-    const _representation = _adaptation.getRepresentation(representation.id);
-    if (_representation == null || _representation.decipherable === false) {
-      return;
-    }
-    _representation.decipherable = false;
-    this.trigger("decipherability-update", [{ period: _period,
-                                              adaptation: _adaptation,
-                                              representation: _representation }]);
   }
 
   /**
@@ -538,6 +526,38 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                                    newTextAdaptations;
     }
   }
+}
+
+/**
+ * Update decipherability based on a predicate given.
+ * Do nothing for a Representation when the predicate returns true, mark as
+ * undecipherable when the predicate returns false. Returns every updates in
+ * an array.
+ * @param {Manifest} manifest
+ * @param {Function} predicate
+ * @returns {Array.<Object>}
+ */
+function updateDeciperability(
+  manifest : Manifest,
+  predicate : (rep : Representation) => boolean
+) : IDecipherabilityUpdateElement[] {
+  const updates : IDecipherabilityUpdateElement[] = [];
+  for (let i = 0; i < manifest.periods.length; i++) {
+    const period = manifest.periods[i];
+    const adaptations = period.getAdaptations();
+    for (let j = 0; j < adaptations.length; j++) {
+      const adaptation = adaptations[j];
+      const representations = adaptation.representations;
+      for (let k = 0; k < representations.length; k++) {
+        const representation = representations[k];
+        if (predicate(representation)) {
+          updates.push({ period, adaptation, representation });
+          representation.decipherable = false;
+        }
+      }
+    }
+  }
+  return updates;
 }
 
 export {

@@ -170,7 +170,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       response,
     } : ISegmentParserArguments< ArrayBuffer | Uint8Array | null >
     ) : ISegmentParserObservable< ArrayBuffer | Uint8Array > {
-      const { segment, adaptation, manifest } = content;
+      const { segment, representation, adaptation, manifest } = content;
       const { data, isChunked } = response;
       if (data == null) {
         return observableOf({ chunkData: null,
@@ -193,7 +193,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         const psshBoxes = takePSSHOut(responseBuffer);
         let segmentProtection : ISegmentProtection | null = null;
         if (psshBoxes.length > 0) {
-          segmentProtection = { type: "pssh",
+          representation._addProtectionData("cenc", psshBoxes);
+          segmentProtection = { type: "cenc",
                                 value: psshBoxes };
         }
         return observableOf({ chunkData: data,

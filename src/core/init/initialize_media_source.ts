@@ -204,15 +204,10 @@ export default function InitializeOnMediaSource(
       if (evt.type === "blacklist-keys") {
         log.info("Init: blacklisting based on keyIDs");
         manifest.markUndecipherableKIDs(evt.value);
-      } else if (evt.type === "blacklist-content") {
-        if (evt.value == null) {
-          log.error("Init: blacklisted content but the content is not known");
-        } else {
-          log.info("Init: blacklisting based on Representation.");
-          // XXX TODO
-          // manifest.markUndecipherableRepresentation(evt.value);
-          return;
-        }
+      } else if (evt.type === "blacklist-protection-data") {
+        log.info("Init: blacklisting based on protection data.");
+        const { type, data } = evt.value;
+        manifest.markUndecipherableProtectionData(type, data);
       }
     }));
 
@@ -280,8 +275,7 @@ export default function InitializeOnMediaSource(
                     reloadMediaSource$.next(evt.value);
                     break;
                   case "protected-segment":
-                    protectedSegments$.next({ type: "pssh",
-                                              data: evt.value.data });
+                    protectedSegments$.next(evt.value);
                 }
               }));
 
