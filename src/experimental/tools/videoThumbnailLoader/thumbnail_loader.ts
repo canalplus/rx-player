@@ -58,7 +58,7 @@ interface IThumbnailTrack {
 const MAXIMUM_MEDIA_BUFFERED = 2;
 
 /**
- * Get segment data from cache or load it.
+ * Load needed segment data.
  * @param {Object} thumbnails
  * @param {HTMLMediaElement} mediaElement
  */
