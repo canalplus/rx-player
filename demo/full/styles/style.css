@@ -62,6 +62,7 @@ body {
 .custom-input-wrapper {
   border: 1px dashed #d1d1d1;
   padding: 0px 10px 10px 10px;
+  margin-top: 10px;
 }
 
 .player-logs-wrapper-bar {
