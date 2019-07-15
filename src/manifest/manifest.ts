@@ -446,7 +446,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     }
 
     const _representation = _adaptation.getRepresentation(representation.id);
-    if (_representation == null || _representation.decipherable !== false) {
+    if (_representation == null || _representation.decipherable === false) {
       return;
     }
     _representation.decipherable = false;
