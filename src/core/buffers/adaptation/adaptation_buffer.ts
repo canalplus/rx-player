@@ -152,7 +152,7 @@ export default function AdaptationBuffer<T>({
 
   if (decipherableRepresentations.length <= 0) {
     const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
-                                    "No Representation in the chosen" +
+                                    "No Representation in the chosen " +
                                     "Adaptation can be played");
     return throwError(noRepErr);
   }
