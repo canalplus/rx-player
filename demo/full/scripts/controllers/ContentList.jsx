@@ -39,12 +39,11 @@ const URL_DENOMINATIONS = { DASH: "URL to the MPD",
                             DirectFile: "URL to the content" };
 
 /**
- * Returns the name of the content formatted to be shown on the corresponding
- * select button.
+ * Format content for using in component.
  * @param {Object} content
- * @returns {string}
+ * @returns {Object} - formatted content
  */
-function formatContentForDisplay(content) {
+function formatContent(content) {
   let displayName = content.name;
   let isDisabled = false;
   let isLocalContent = false;
@@ -106,7 +105,7 @@ function constructContentList() {
     acc[tech] = [customLinkContent]
       .concat(storedAndRegularContents
         .filter(({ transport }) => transport === tech.toLowerCase())
-        .map(formatContentForDisplay));
+        .map(formatContent));
     return acc;
   }, {});
 }
