@@ -24,17 +24,18 @@ import {
 import {
   catchError,
   distinctUntilChanged,
+  filter,
   map,
   mapTo,
   mergeMap,
   shareReplay,
+  switchMap,
   take,
 } from "rxjs/operators";
 import { QueuedSourceBuffer } from "../../../core/source_buffers";
 import { Representation } from "../../../manifest";
 import arrayFindIndex from "../../../utils/array_find_index";
 import castToObservable from "../../../utils/cast_to_observable";
-import concatMapLatest from "../../../utils/concat_map_latest";
 import PPromise from "../../../utils/promise";
 import {
   areRangesOverlapping,
@@ -113,9 +114,6 @@ export default class VideoThumbnailLoader {
 
   private _thumbnailTrack: IThumbnailTrack;
 
-  private _currentCallback: Observable<unknown> | null;
-  private _nextCallback: null | Observable<unknown>;
-
   private _setTime$: Subject<number>;
   private _setTimeSubscription$: Subscription;
 
@@ -129,8 +127,6 @@ export default class VideoThumbnailLoader {
 
     // nullable
     this._thumbnailTrack = this.updateThumbnailTrack(trickModeTrack);
-    this._currentCallback = null;
-    this._nextCallback = null;
     this._setTime$ = new Subject();
 
     const videoSourceInfos$ = prepareSourceBuffer(
@@ -162,83 +158,96 @@ export default class VideoThumbnailLoader {
     );
 
     this._setTimeSubscription$ = this._setTime$.pipe(
-      distinctUntilChanged(),
-      concatMapLatest((time, i) => {
-        if (time !== this._thumbnailVideoElement.currentTime || i === 0) {
-          const setTimeCallback: () => Observable<null> = () => {
-            return videoSourceInfos$.pipe(
-              mergeMap((videoSourceBuffer) => {
-                return castToObservable(this.removeBuffers(videoSourceBuffer, time)).pipe(
-                  mergeMap(() => {
-                    if (!this._thumbnailTrack) {
-                      throw new Error(
-                        "VideoThumbnailLoaderError: No thumbnail track given.");
-                    }
-
-                    const thumbnails: IThumbnailInfo[] | undefined =
-                      this._thumbnailTrack.thumbnailInfos
-                        .filter((t) => {
-                          const thumbnailDuration = t.duration;
-                          const range = { start: time - thumbnailDuration,
-                                          end: time + thumbnailDuration };
-                          const tRange = { start: t.start, end: t.start + t.duration };
-                          return areRangesOverlapping(range, tRange);
-                        });
-
-                    if (thumbnails.length === 0) {
-                      throw new Error(
-                        "VideoThumbnailLoaderError: Couldn't find thumbnail.");
-                    }
-
-                    return getSegmentData(thumbnails, videoElement).pipe(
-                      mergeMap((datas) => {
-                        if (datas) {
-                          const appendBuffers$ = combineLatest(
-                            datas.map((data) => {
-                              return videoSourceBuffer
-                                .appendBuffer({
-                                  segment: data,
-                                  initSegment: null,
-                                  codec: this._thumbnailTrack.codec,
-                                  timestampOffset: 0,
-                                });
-                            })
-                          );
-                          return appendBuffers$.pipe(
-                              mergeMap(() => {
-                                thumbnails.forEach((t) => {
-                                  this._bufferedDataRanges.push({
-                                    start: t.start,
-                                    end: t.start + t.duration,
-                                  });
-                                });
-                                this._thumbnailVideoElement.currentTime = time;
-                                return observableOf(null);
-                              }),
-                              catchError((err) => {
-                                throw new Error(
-                                  "VideoThumbnailLoaderError: Couldn't append buffer :" +
-                                  err.message || err
-                                );
-                              })
-                            );
-                        }
-                        return observableOf(null);
-                      })
-                    );
-                  }));
-              })
-            );
-          };
-          this._nextCallback = setTimeCallback();
-          return this.flush().pipe(
-            catchError((err) => {
-              this.dispose();
-              throw err;
-            })
-          );
+      filter((time, i) => time !== this._thumbnailVideoElement.currentTime || i === 0),
+      map((time) => {
+        if (!this._thumbnailTrack) {
+          throw new Error(
+            "VideoThumbnailLoaderError: No thumbnail track given.");
         }
-        return observableOf(null);
+
+        const thumbnails: IThumbnailInfo[] | undefined =
+          this._thumbnailTrack.thumbnailInfos
+            .filter((t) => {
+              const thumbnailDuration = t.duration;
+              const range = { start: time - thumbnailDuration,
+                              end: time + thumbnailDuration };
+              const tRange = { start: t.start, end: t.start + t.duration };
+              return areRangesOverlapping(range, tRange);
+            });
+
+      if (thumbnails.length === 0) {
+        throw new Error(
+          "VideoThumbnailLoaderError: Couldn't find thumbnail.");
+      }
+
+      return { thumbnails, time };
+    }),
+      distinctUntilChanged((a, b) => {
+        if (a.thumbnails.length !== b.thumbnails.length) {
+          return false;
+        }
+        for (let i = 0; i < a.thumbnails.length; i++) {
+          if (a.thumbnails[i].start !== b.thumbnails[i].start ||
+              a.thumbnails[i].duration !== b.thumbnails[i].duration ||
+              a.thumbnails[i].mediaURL !== b.thumbnails[i].mediaURL) {
+            return false;
+          }
+        }
+        return true;
+      }),
+      switchMap(({ thumbnails, time }) => {
+        return videoSourceInfos$.pipe(
+          mergeMap((videoSourceBuffer) => {
+            return castToObservable(this.removeBuffers(videoSourceBuffer, time)).pipe(
+              mergeMap(() => {
+                if (!this._thumbnailTrack) {
+                  throw new Error(
+                    "VideoThumbnailLoaderError: No thumbnail track given.");
+                }
+
+                return getSegmentData(thumbnails, videoElement).pipe(
+                  mergeMap((datas) => {
+                    if (datas) {
+                      const appendBuffers$ = combineLatest(
+                        datas.map((data) => {
+                          return videoSourceBuffer
+                            .appendBuffer({
+                              segment: data,
+                              initSegment: null,
+                              codec: this._thumbnailTrack.codec,
+                              timestampOffset: 0,
+                            });
+                        })
+                      );
+                      return appendBuffers$.pipe(
+                          mergeMap(() => {
+                            thumbnails.forEach((t) => {
+                              this._bufferedDataRanges.push({
+                                start: t.start,
+                                end: t.start + t.duration,
+                              });
+                            });
+                            this._thumbnailVideoElement.currentTime = time;
+                            return observableOf(null);
+                          }),
+                          catchError((err) => {
+                            throw new Error(
+                              "VideoThumbnailLoaderError: Couldn't append buffer :" +
+                              err.message || err
+                            );
+                          })
+                        );
+                    }
+                    return observableOf(null);
+                  })
+                );
+              }));
+          })
+        );
+      }),
+      catchError((err) => {
+        this.dispose();
+        throw err;
       })
     ).subscribe();
   }
@@ -336,25 +345,5 @@ export default class VideoThumbnailLoader {
       removeBufferActions$.push(prm);
     });
     return PPromise.all(removeBufferActions$);
-  }
-
-  /**
-   * Flush buffer promises.
-   * Resolves when no buffered operations.
-   */
-  private flush(): Observable<unknown> {
-    if (!this._currentCallback && this._nextCallback) {
-      this._currentCallback = this._nextCallback;
-      this._nextCallback = null;
-      return this._currentCallback
-        .pipe(
-          mergeMap(() => {
-            this._currentCallback = null;
-            return this.flush();
-          }),
-          take(1)
-        );
-    }
-    return observableOf(null);
   }
 }
