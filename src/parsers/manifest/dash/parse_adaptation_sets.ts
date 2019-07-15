@@ -165,33 +165,6 @@ function getAdaptationSetSwitchingIDs(
 }
 
 /**
- * Attach trickMode adaptations to corresponding adaptations.
- * @param {Object} adaptations
- * @param {Array.<Object>} trickModeAdaptations
- */
-function attachTrickModesToAdaptations(
-  adaptations: IParsedAdaptations,
-  trickModeAdaptations: IParsedAdaptation[]
-): IParsedAdaptations {
-  trickModeAdaptations.forEach((trickmodeAdaptation) => {
-    const videoAdaptations = adaptations.video;
-    if (videoAdaptations) {
-      const { isTrickModeFor } = trickmodeAdaptation;
-      videoAdaptations.forEach((adaptation) => {
-        if (isTrickModeFor != null && adaptation.id === isTrickModeFor) {
-          if (adaptation.trickModeTrack != null) {
-            log.warn("DASH: Overriding trickMode adaptation for adaptation " +
-              adaptation.id);
-          }
-          adaptation.trickModeTrack = trickmodeAdaptation;
-        }
-      });
-    }
-  });
-  return adaptations;
-}
-
-/**
  * Process intermediate periods to create final parsed periods.
  * @param {Array.<Object>} periodsIR
  * @param {Object} manifestInfos
@@ -201,12 +174,12 @@ export default function parseAdaptationSets(
   adaptationsIR : IAdaptationSetIntermediateRepresentation[],
   periodInfos : IPeriodInfos
 ): IParsedAdaptations {
-  const { adaptations, trickModeAdaptations } = adaptationsIR
-    .reduce<{ trickModeAdaptations : IParsedAdaptation[];
-              adaptations : IParsedAdaptations;
-              adaptationSwitchingInfos : IAdaptationSwitchingInfos;
-              videoMainAdaptation : IParsedAdaptation|null; }>
-    ((acc, adaptation) => {
+  const { adaptations } = adaptationsIR
+    .reduce<{
+      adaptations : IParsedAdaptations;
+      adaptationSwitchingInfos : IAdaptationSwitchingInfos;
+      videoMainAdaptation : IParsedAdaptation|null;
+    }>((acc, adaptation) => {
       const parsedAdaptations = acc.adaptations;
       const representationsIR = adaptation.children.representations;
       const adaptationInfos = {
@@ -291,84 +264,79 @@ export default function parseAdaptationSets(
 
         if (isTrickModeFor != null) {
           parsedAdaptationSet.isTrickModeFor = isTrickModeFor;
-          acc.trickModeAdaptations.push(parsedAdaptationSet);
+        }
+        const adaptationsOfTheSameType = parsedAdaptations[type];
+        if (!adaptationsOfTheSameType) {
+          parsedAdaptations[type] = [parsedAdaptationSet];
+          if (isMainAdaptation && type === "video") {
+            acc.videoMainAdaptation = parsedAdaptationSet;
+          }
         } else {
-          const adaptationsOfTheSameType = parsedAdaptations[type];
-          if (!adaptationsOfTheSameType) {
-            parsedAdaptations[type] = [parsedAdaptationSet];
-            if (isMainAdaptation && type === "video") {
-              acc.videoMainAdaptation = parsedAdaptationSet;
-            }
-          } else {
-            let mergedInto : IParsedAdaptation|null = null;
+          let mergedInto : IParsedAdaptation|null = null;
 
-            // look if we have to merge this into another Adaptation
-            for (let k = 0; k < adaptationSetSwitchingIDs.length; k++) {
-              const id : string = adaptationSetSwitchingIDs[k];
-              const switchingInfos = acc.adaptationSwitchingInfos[id];
+          // look if we have to merge this into another Adaptation
+          for (let k = 0; k < adaptationSetSwitchingIDs.length; k++) {
+            const id : string = adaptationSetSwitchingIDs[k];
+            const switchingInfos = acc.adaptationSwitchingInfos[id];
+            if (
+              switchingInfos != null && switchingInfos.newID !== newID &&
+              arrayIncludes(switchingInfos.adaptationSetSwitchingIDs, originalID)
+            ) {
+              const adaptationToMergeInto =
+                arrayFind(adaptationsOfTheSameType, (a) => a.id === id);
               if (
-                switchingInfos != null && switchingInfos.newID !== newID &&
-                arrayIncludes(switchingInfos.adaptationSetSwitchingIDs, originalID)
+                adaptationToMergeInto != null &&
+                adaptationToMergeInto.audioDescription ===
+                  parsedAdaptationSet.audioDescription &&
+                adaptationToMergeInto.closedCaption ===
+                  parsedAdaptationSet.closedCaption &&
+                adaptationToMergeInto.language === parsedAdaptationSet.language
               ) {
-                const adaptationToMergeInto =
-                  arrayFind(adaptationsOfTheSameType, (a) => a.id === id);
-                if (
-                  adaptationToMergeInto != null &&
-                  adaptationToMergeInto.audioDescription ===
-                    parsedAdaptationSet.audioDescription &&
-                  adaptationToMergeInto.closedCaption ===
-                    parsedAdaptationSet.closedCaption &&
-                  adaptationToMergeInto.language === parsedAdaptationSet.language
-                ) {
-                  log.info("DASH Parser: merging \"switchable\" AdaptationSets",
-                    originalID, id);
-                  adaptationToMergeInto.representations
-                    .push(...parsedAdaptationSet.representations);
-                  mergedInto = adaptationToMergeInto;
-                }
+                log.info("DASH Parser: merging \"switchable\" AdaptationSets",
+                  originalID, id);
+                adaptationToMergeInto.representations
+                  .push(...parsedAdaptationSet.representations);
+                mergedInto = adaptationToMergeInto;
               }
-            }
-
-            if (isMainAdaptation && type === "video") {
-              if (mergedInto == null) {
-                // put "main" adaptation as the first
-                adaptationsOfTheSameType.unshift(parsedAdaptationSet);
-                acc.videoMainAdaptation = parsedAdaptationSet;
-              } else {
-                // put the resulting adaptation first instead
-                const indexOf = adaptationsOfTheSameType.indexOf(mergedInto);
-                if (indexOf < 0) {
-                  adaptationsOfTheSameType.unshift(parsedAdaptationSet);
-                } else if (indexOf !== 0) {
-                  adaptationsOfTheSameType.splice(indexOf, 1);
-                  adaptationsOfTheSameType.unshift(mergedInto);
-                }
-                acc.videoMainAdaptation = mergedInto;
-              }
-            } else if (mergedInto === null) {
-              adaptationsOfTheSameType.push(parsedAdaptationSet);
             }
           }
-        }
 
-        if (originalID != null && acc.adaptationSwitchingInfos[originalID] == null) {
-          acc.adaptationSwitchingInfos[originalID] = { newID, adaptationSetSwitchingIDs };
+          if (isMainAdaptation && type === "video") {
+            if (mergedInto == null) {
+              // put "main" adaptation as the first
+              adaptationsOfTheSameType.unshift(parsedAdaptationSet);
+              acc.videoMainAdaptation = parsedAdaptationSet;
+            } else {
+              // put the resulting adaptation first instead
+              const indexOf = adaptationsOfTheSameType.indexOf(mergedInto);
+              if (indexOf < 0) {
+                adaptationsOfTheSameType.unshift(parsedAdaptationSet);
+              } else if (indexOf !== 0) {
+                adaptationsOfTheSameType.splice(indexOf, 1);
+                adaptationsOfTheSameType.unshift(mergedInto);
+              }
+              acc.videoMainAdaptation = mergedInto;
+            }
+          } else if (mergedInto === null) {
+            adaptationsOfTheSameType.push(parsedAdaptationSet);
+          }
         }
-        }
+      }
+
+      if (originalID != null && acc.adaptationSwitchingInfos[originalID] == null) {
+        acc.adaptationSwitchingInfos[originalID] = { newID, adaptationSetSwitchingIDs };
+      }
 
       return {
-        trickModeAdaptations: acc.trickModeAdaptations,
         adaptations: parsedAdaptations,
         adaptationSwitchingInfos: acc.adaptationSwitchingInfos,
         videoMainAdaptation: acc.videoMainAdaptation,
       };
     }, {
-      trickModeAdaptations: [],
       adaptations: {},
       videoMainAdaptation: null,
       adaptationSwitchingInfos: {},
     });
-  const adaptationsWithTrickmodes: IParsedAdaptations =
-    attachTrickModesToAdaptations(adaptations, trickModeAdaptations);
-  return adaptationsWithTrickmodes;
+
+  return adaptations;
 }

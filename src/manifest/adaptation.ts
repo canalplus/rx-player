@@ -50,7 +50,7 @@ export interface IAdaptationArguments { id : string;
                                         type : IAdaptationType;
 
                                         // -- optional
-                                        trickModeTrack? : IAdaptationArguments;
+                                        isTrickModeFor? : string;
                                         audioDescription? : boolean;
                                         closedCaption? : boolean;
                                         language? : string;
@@ -104,7 +104,8 @@ export default class Adaptation {
    */
   constructor(
     args : IAdaptationArguments,
-    representationFilter? : IRepresentationFilter
+    representationFilter? : IRepresentationFilter,
+    trickModeTrack? : IAdaptationArguments
   ) {
     this.parsingErrors = [];
     this.id = args.id;
@@ -133,8 +134,8 @@ export default class Adaptation {
       this.isAudioDescription = args.audioDescription;
     }
 
-    if (args.trickModeTrack != null) {
-      this.trickModeTrack = new Adaptation(args.trickModeTrack);
+    if (trickModeTrack != null) {
+      this.trickModeTrack = new Adaptation(trickModeTrack);
     }
 
     this.representations = argsRepresentations

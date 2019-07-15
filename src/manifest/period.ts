@@ -103,7 +103,11 @@ export default class Period {
             }
           })
           .map((adaptation) => {
-            const newAdaptation = new Adaptation(adaptation, representationFilter);
+            const trickModeTrack = arrayFind(adaptationsForType, (a) => {
+              return a.isTrickModeFor === adaptation.id;
+            });
+            const newAdaptation = new Adaptation(
+              adaptation, representationFilter, trickModeTrack);
             this.parsingErrors.push(...newAdaptation.parsingErrors);
             return newAdaptation;
           })

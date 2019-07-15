@@ -74,8 +74,8 @@ describe("Manifest - Period", () => {
     expect(errorReceived.message).toContain("No supported audio and video tracks.");
 
     expect(adaptationSpy).toHaveBeenCalledTimes(2);
-    expect(adaptationSpy).toHaveBeenNthCalledWith(1, fooAda1, undefined);
-    expect(adaptationSpy).toHaveBeenNthCalledWith(2, fooAda2, undefined);
+    expect(adaptationSpy).toHaveBeenNthCalledWith(1, fooAda1, undefined, undefined);
+    expect(adaptationSpy).toHaveBeenNthCalledWith(2, fooAda2, undefined, undefined);
   });
 
   it("should throw if only empty audio and/or video adaptations is given", () => {
@@ -197,7 +197,7 @@ describe("Manifest - Period", () => {
     expect(period.parsingErrors).toHaveLength(1);
 
     expect(adaptationSpy).toHaveBeenCalledTimes(1);
-    expect(adaptationSpy).toHaveBeenCalledWith(videoAda1, undefined);
+    expect(adaptationSpy).toHaveBeenCalledWith(videoAda1, undefined, undefined);
 
     const [error] = period.parsingErrors;
     expect(error).toBeInstanceOf(Error);
@@ -230,7 +230,7 @@ describe("Manifest - Period", () => {
     expect(period.parsingErrors).toHaveLength(0);
 
     expect(adaptationSpy).toHaveBeenCalledTimes(1);
-    expect(adaptationSpy).toHaveBeenCalledWith(videoAda1, undefined);
+    expect(adaptationSpy).toHaveBeenCalledWith(videoAda1, undefined, undefined);
     expect(logSpy).toHaveBeenCalledTimes(0);
   });
 
@@ -254,8 +254,10 @@ describe("Manifest - Period", () => {
     expect(period.adaptations.video).toHaveLength(2);
 
     expect(adaptationSpy).toHaveBeenCalledTimes(2);
-    expect(adaptationSpy).toHaveBeenNthCalledWith(1, videoAda1, representationFilter);
-    expect(adaptationSpy).toHaveBeenNthCalledWith(2, videoAda2, representationFilter);
+    expect(adaptationSpy).toHaveBeenNthCalledWith(
+      1, videoAda1, representationFilter, undefined);
+    expect(adaptationSpy).toHaveBeenNthCalledWith(
+      2, videoAda2, representationFilter, undefined);
     expect(representationFilter).not.toHaveBeenCalled();
   });
 
