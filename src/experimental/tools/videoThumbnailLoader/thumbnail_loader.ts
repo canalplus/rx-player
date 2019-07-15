@@ -25,6 +25,7 @@ import {
   catchError,
   distinctUntilChanged,
   map,
+  mapTo,
   mergeMap,
   shareReplay,
   take,
@@ -40,7 +41,6 @@ import {
   convertToRanges,
 } from "../../../utils/ranges";
 import request from "../../../utils/request";
-import appendInitSegment from "./append_init_segment";
 import prepareSourceBuffer from "./media_source";
 
 interface IThumbnailInfo {
@@ -139,10 +139,20 @@ export default class VideoThumbnailLoader {
     ).pipe(
       mergeMap(({ videoSourceBuffer }) => {
         const { initURL: init, codec } = this._thumbnailTrack;
-        return appendInitSegment(init, codec, videoSourceBuffer).pipe(
-          map(() => {
-            return videoSourceBuffer;
-          })
+        return request({ url: init,
+                         sendProgressEvents: false,
+                         responseType: "arraybuffer",
+        }).pipe(
+          mergeMap((e) => {
+            const { value: { responseData }} = e;
+            return videoSourceBuffer.appendBuffer({
+              initSegment : responseData,
+              segment: null,
+              codec,
+              timestampOffset: 0,
+            });
+          }),
+          mapTo(videoSourceBuffer)
         );
       }),
       catchError(() => {
