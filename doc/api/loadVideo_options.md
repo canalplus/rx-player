@@ -118,10 +118,20 @@ This property is an array of objects with the following properties (only
         - resolves if the license was fetched, with the licence in argument
         - resolve with ``null`` if you do not want to set a license for this
           `message` event
-        - reject if an error was encountered
+        - reject if an error was encountered.
 
       In any case, the license provided by this function should be of a
       ``BufferSource`` type (example: an ``Uint8Array`` or an ``ArrayBuffer``).
+
+      Even in case of an error, you can (this is not mandatory) set two
+      properties on the rejected value which will be interpreted by the
+      RxPlayer:
+        - `noRetry` (`Boolean`): If set to `true`, we will throw directly a
+          `KEY_LOAD_ERROR` to call `getLicense`. If not set or set to `false`,
+          the current retry parameters will be applied (see `getLicenseConfig`)
+        - `message` (`string`): If the message property is set as a "string",
+          this message will be included in the corresponding RxPlayer's error
+          event (or warning event, if we're retrying).
 
       Note: We set a 10 seconds timeout by default on this request (configurable
       through the `getLicenseConfig` object).
