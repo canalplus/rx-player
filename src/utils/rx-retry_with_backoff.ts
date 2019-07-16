@@ -25,27 +25,10 @@ import {
 import { ICustomError } from "../errors";
 import { getBackedoffDelay } from "./backoff_delay";
 
-/**
- * Simple debounce implementation.
- * @param {Function} fn
- * @param {Number} delay - delay in ms
- * @returns {Function}
- */
-function debounce(fn : () => void, delay : number) : () => void {
-  let timer = 0;
-  return () => {
-    if (timer) {
-      clearTimeout(timer);
-    }
-    timer = window.setTimeout(fn, delay);
-  };
-}
-
 interface IBackoffOptions {
   retryDelay : number;
   totalRetry : number;
   shouldRetry? : (error : unknown) => boolean;
-  resetDelay? : number;
   errorSelector? : (error : unknown, retryCount : number) => Error|ICustomError;
   onRetry? : (error : unknown, retryCount : number) => void;
 }
@@ -70,10 +53,6 @@ interface IBackoffOptions {
  *     etc.
  *     If the observable still fails after this number of retry, the error will
  *     be throwed through this observable.
- *
- *   - resetDelay {Number|undefined} - Delay in ms since a retry after which the
- *     counter of retry will be reset if the observable wasn't retried a new
- *     time. 0 / undefined means no delay will be applied.
  *
  *   - shouldRetry {Function|undefined} -  Function which will receive the
  *     observable error each time it fails, and should return a boolean. If this
@@ -103,15 +82,10 @@ export default function retryObsWithBackoff<T>(
   const { retryDelay,
           totalRetry,
           shouldRetry,
-          resetDelay,
           errorSelector,
           onRetry } = options;
 
   let retryCount = 0;
-  let debounceRetryCount : () => void|undefined;
-  if (resetDelay != null && resetDelay > 0) {
-    debounceRetryCount = debounce(() => { retryCount = 0; }, resetDelay);
-  }
 
   return obs$.pipe(catchError((error : unknown, source : Observable<T>) => {
     const wantRetry = !shouldRetry || shouldRetry(error);
@@ -130,9 +104,6 @@ export default function retryObsWithBackoff<T>(
     const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
     return observableTimer(fuzzedDelay)
       .pipe(mergeMap(() => {
-        if (debounceRetryCount) {
-          debounceRetryCount();
-        }
         return source;
       }));
   }));
