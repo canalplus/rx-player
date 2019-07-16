@@ -28,6 +28,7 @@ export type IEncryptedMediaErrorCode = "INCOMPATIBLE_KEYSYSTEMS" |
                                        "KEY_LOAD_TIMEOUT" |
                                        "KEY_STATUS_CHANGE_ERROR" |
                                        "KEY_UPDATE_ERROR" |
+                                       "CREATE_MEDIA_KEYS_ERROR" |
                                        "LICENSE_SERVER_CERTIFICATE_ERROR" |
                                        "MEDIA_IS_ENCRYPTED_ERROR" |
                                        "MULTIPLE_SESSIONS_SAME_INIT_DATA";
@@ -98,6 +99,7 @@ const ErrorCodes : Record<IErrorCode, IErrorCode>  = {
 
   MEDIA_IS_ENCRYPTED_ERROR: "MEDIA_IS_ENCRYPTED_ERROR",
 
+  CREATE_MEDIA_KEYS_ERROR: "CREATE_MEDIA_KEYS_ERROR",
   KEY_ERROR: "KEY_ERROR",
   KEY_STATUS_CHANGE_ERROR: "KEY_STATUS_CHANGE_ERROR",
   KEY_UPDATE_ERROR: "KEY_UPDATE_ERROR",
