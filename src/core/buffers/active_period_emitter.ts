@@ -28,24 +28,28 @@ import {
 } from "rxjs";
 import {
   distinctUntilChanged,
+  filter,
   map,
   tap,
 } from "rxjs/operators";
-import log from "../../log";
 import { Period } from "../../manifest";
-import SortedList from "../../utils/sorted_list";
+import { IRepresentationChangeEvent } from "../init";
 import {
   IBufferType,
 } from "../source_buffers";
+import { IAdaptationChangeEvent } from "./types";
 
 // PeriodBuffer informations emitted to the ActivePeriodEmitted
 export interface IPeriodBufferInfos { period: Period;
                                       type: IBufferType; }
-
-// structure used internally to keep track of which Period has which
-// PeriodBuffer
-interface IPeriodItem { period: Period;
-                        buffers: Set<IBufferType>; }
+type IPeriodsList = Map<string,
+                        {
+                          period: Period;
+                          buffers: Map<IBufferType, {
+                            hasRepresentation: any;
+                            hasAdaptation: any;
+                          }>;
+                        }>;
 
 /**
  * Emit the active Period each times it changes.
@@ -86,74 +90,76 @@ interface IPeriodItem { period: Period;
  */
 export default function ActivePeriodEmitter(
   bufferTypes: IBufferType[],
-  addPeriodBuffer$ : Observable<IPeriodBufferInfos>,
+  bufferEvents$: Observable<IAdaptationChangeEvent|IRepresentationChangeEvent>,
   removePeriodBuffer$ : Observable<IPeriodBufferInfos>
 ) : Observable<Period|null> {
-  const periodsList : SortedList<IPeriodItem> =
-    new SortedList((a, b) => a.period.start - b.period.start);
+  const periodsList: IPeriodsList = new Map();
 
-  const onItemAdd$ = addPeriodBuffer$
-    .pipe(tap(({ period, type }) => {
-      // add or update the periodItem
-      let periodItem = periodsList.findFirst(p => p.period === period);
-      if (!periodItem) {
-        periodItem = { period,
-                       buffers: new Set<IBufferType>() };
-        periodsList.add(periodItem);
+  const addPeriod$ = bufferEvents$.pipe(
+    map((evt) => {
+      const { period } = evt.value;
+      let test = periodsList.get(period.id);
+      if (test == null) {
+        const buffers = new Map();
+        ["video", "audio", "text", "image"].forEach((bufferType) => {
+          buffers.set(bufferType, {
+            hasRepresentation: false,
+            hasAdaptation: false,
+          });
+        });
+
+        test = {
+          period,
+          buffers,
+        };
+        periodsList.set(period.id, test);
       }
 
-      if (periodItem.buffers.has(type)) {
-        log.warn(`ActivePeriodEmitter: Buffer type ${type} already added to the period`);
-      }
-      periodItem.buffers.add(type);
-    }));
-
-  const onItemRemove$ = removePeriodBuffer$
-    .pipe(tap(({ period, type }) => {
-      if (!periodsList || periodsList.length() === 0) {
-        log.error("ActivePeriodEmitter: cannot remove, no period is active.");
-        return ;
-      }
-
-      const periodItem = periodsList.findFirst(p => p.period === period);
-      if (!periodItem) {
-        log.error("ActivePeriodEmitter: cannot remove, unknown period.");
-        return ;
-      }
-
-      periodItem.buffers.delete(type);
-
-      if (!periodItem.buffers.size) {
-        periodsList.removeElement(periodItem);
+      const { type } = evt.value;
+      const typedPeriodBufferInfos = test.buffers.get(type);
+      if (typedPeriodBufferInfos) {
+        if (evt.type === "adaptationChange") {
+          typedPeriodBufferInfos.hasAdaptation = true;
+          if (evt.value.adaptation == null) {
+            typedPeriodBufferInfos.hasRepresentation = true;
+          }
+        } else if (evt.type === "representationChange") {
+          typedPeriodBufferInfos.hasRepresentation = true;
+        }
       }
     }));
 
-  return observableMerge(onItemAdd$, onItemRemove$).pipe(
-    map(() : Period|null => {
-      const head = periodsList.head();
-      if (!head) {
-        return null;
-      }
+  const removePeriod$ = removePeriodBuffer$.pipe(
+    tap(({ period }) => {
+      periodsList.delete(period.id);
+    })
+  );
 
-      const periodItem = periodsList.findFirst(p =>
-        isBufferListFull(bufferTypes, p.buffers)
-      );
-      return periodItem != null ? periodItem.period : null;
+  return observableMerge(addPeriod$, removePeriod$).pipe(
+    map(() => {
+      const periodsListIterator = periodsList.entries();
+      let periodElement = periodsListIterator.next().value;
+      while (periodElement) {
+        const isReady = (() => {
+          const buffersIterator = periodElement[1].buffers.values();
+          let bufferElement = buffersIterator.next().value;
+          while (bufferElement) {
+            const { hasRepresentation, hasAdaptation } = bufferElement;
+            if (!hasAdaptation || !hasRepresentation) {
+              return false;
+            }
+            bufferElement = buffersIterator.next().value;
+          }
+          return true;
+        })() && periodElement[1].buffers.size === bufferTypes.length;
+        if (isReady) {
+          return periodElement[1].period;
+        }
+        periodElement = periodsListIterator.next().value;
+      }
+      return null;
     }),
+    filter((p) => !!p),
     distinctUntilChanged()
   );
-}
-
-/**
- * Returns true if the set of given buffer types is complete (has all possible
- * types).
- * @param {Array.<string>} bufferTypes - Every buffer types in the content.
- * @param {Set.<string>} bufferList
- * @returns {Boolean}
- */
-function isBufferListFull(
-  bufferTypes : IBufferType[],
-  bufferList : Set<IBufferType>
-) : boolean {
-  return bufferList.size >= bufferTypes.length;
 }

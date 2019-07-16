@@ -30,6 +30,7 @@ import {
   map,
   mergeMap,
   share,
+  shareReplay,
   take,
   takeUntil,
   tap,
@@ -61,9 +62,11 @@ import PeriodBuffer, {
 } from "./period";
 import SegmentBookkeeper from "./segment_bookkeeper";
 import {
+  IAdaptationChangeEvent,
   IBufferOrchestratorEvent,
   IMultiplePeriodBuffersEvent,
   IPeriodBufferEvent,
+  IRepresentationChangeEvent,
 } from "./types";
 
 export type IBufferOrchestratorClockTick = IPeriodBufferClockTick;
@@ -179,13 +182,22 @@ export default function BufferOrchestrator(
           removePeriodBuffer$.next(evt.value);
         }
       }),
-      share()
+      shareReplay({ refCount: true })
     );
   });
 
   // Emits the activePeriodChanged events every time the active Period changes.
   const activePeriodChanged$ =
-    ActivePeriodEmitter(bufferTypes, addPeriodBuffer$, removePeriodBuffer$).pipe(
+    ActivePeriodEmitter(
+      bufferTypes,
+      observableMerge(...buffersArray).pipe(
+        filter((evt): evt is IRepresentationChangeEvent|IAdaptationChangeEvent => {
+          const { type } = evt;
+          return type === "representationChange" || type === "adaptationChange";
+        })
+      ),
+      removePeriodBuffer$
+    ).pipe(
       filter((period) : period is Period => !!period),
       map(period => {
         log.info("Buffer: New active period", period);
@@ -200,8 +212,8 @@ export default function BufferOrchestrator(
       areComplete ? EVENTS.endOfStream() : EVENTS.resumeStream()
     ));
 
-  return observableMerge(activePeriodChanged$,
-                         ...buffersArray,
+  return observableMerge(...buffersArray,
+                         activePeriodChanged$,
                          endOfStream$,
                          outOfManifest$);
 
