@@ -27,7 +27,7 @@ import {
   RequestError,
   RequestErrorTypes,
 } from "../../../errors";
-import { getFuzzedDelay } from "../../../utils/backoff_delay";
+import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
 
 /**
  * Called on a pipeline's loader error.

@@ -21,26 +21,7 @@ const FUZZ_FACTOR = 0.3;
  * @param {Number} retryDelay
  * @returns {Number}
  */
-function getFuzzedDelay(retryDelay : number) : number {
+export default function getFuzzedDelay(retryDelay : number) : number {
   const fuzzingFactor = ((Math.random() * 2) - 1) * FUZZ_FACTOR;
   return retryDelay * (fuzzingFactor + 1.0); // Max 1.3 Min 0.7
 }
-
-/**
- * Calculate a "backed off" fuzzed delay.
- * That is, a delay augmented depending on the current retry count.
- * @param {Number} retryDelay
- * @param {Number} [retryCount=1]
- * @returns {Number}
- */
-function getBackedoffDelay(
-  retryDelay : number,
-  retryCount : number = 1
-) : number {
-  return getFuzzedDelay(retryDelay * Math.pow(2, retryCount - 1));
-}
-
-export {
-  getFuzzedDelay,
-  getBackedoffDelay,
-};
