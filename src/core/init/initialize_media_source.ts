@@ -219,7 +219,7 @@ export default function InitializeOnMediaSource({
 
   const loadContent$ = observableCombineLatest([
     openMediaSource$,
-    fetchManifest({ url, hasClockSynchronization: false }),
+    fetchManifest({ url }),
     emeManager$.pipe(filter(isEMEReadyEvent), take(1)),
   ]).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
 
@@ -234,8 +234,8 @@ export default function InitializeOnMediaSource({
         return EMPTY;
       }
 
-      const hasClockSynchronization = manifest.hasClockSynchronization();
-      return fetchManifest({ url: refreshURL, hasClockSynchronization }).pipe(
+      const externalClockOffset = manifest.getClockOffset();
+      return fetchManifest({ url: refreshURL, externalClockOffset }).pipe(
         tap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
           manifest.update(newManifest);
           manifestRefreshed$.next({ manifest, sendingTime: newSendingTime });

@@ -425,8 +425,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * If true, this Manifest is currently synchronized with the server's clock.
    * @returns {Boolean}
    */
-  public hasClockSynchronization() : boolean {
-    return this._clockOffset != null;
+  public getClockOffset() : number | undefined {
+    return this._clockOffset;
   }
 
   /**

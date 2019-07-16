@@ -86,7 +86,7 @@ export default function(
     },
 
     parser(
-      { response, url: loaderURL, scheduleRequest, hasClockSynchronization } :
+      { response, url: loaderURL, scheduleRequest, externalClockOffset } :
       IManifestParserArguments< Document | string, string >
     ) : IManifestParserObservable {
       const url = response.url == null ? loaderURL :
@@ -99,7 +99,7 @@ export default function(
       const parsedManifest = dashManifestParser(data, {
         url,
         referenceDateTime,
-        loadExternalClock: !hasClockSynchronization,
+        externalClockOffset,
       });
       return loadExternalResources(parsedManifest);
 
