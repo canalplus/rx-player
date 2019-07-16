@@ -59,10 +59,6 @@ const { onKeyError$,
         onKeyMessage$,
         onKeyStatusesChange$ } = events;
 
-// Error that can be thrown from the external `getLicense` callback
-// Error thrown by `getLicense` once catched
-interface IParsedGetLicenseError extends Error { noRetry? : boolean; }
-
 /**
  * @param {Error|Object} error
  * @returns {Error|Object}
@@ -110,8 +106,8 @@ export default function SessionEventsListener(
 
     shouldRetry: (error : unknown) =>
       error instanceof TimeoutError ||
-      (error != null && (error as IParsedGetLicenseError).noRetry !== true),
-
+      error == null ||
+      (error as { noRetry? : boolean }).noRetry !== true,
     onRetry: (error : unknown) =>
       sessionWarningSubject$.next({ type: "warning",
                                     value: formatGetLicenseError(error) }) };
