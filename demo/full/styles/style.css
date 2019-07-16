@@ -709,6 +709,7 @@ body {
   background-color: white;
   border-radius: 5px;
   padding: 10px;
+  margin: 10px 0px;
 }
 
 .encryption-checkbox {

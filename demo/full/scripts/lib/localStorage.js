@@ -74,7 +74,8 @@ export function storeContent(content) {
                          transport: content.transport,
                          drmInfos: content.drmInfos,
                          id,
-                         localContent: true };
+                         localContent: true,
+                         lowLatency: content.lowLatency };
 
 
   if (index > -1) {
