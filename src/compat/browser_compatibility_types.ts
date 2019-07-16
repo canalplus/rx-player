@@ -15,6 +15,7 @@
  */
 
 import { MediaError } from "../errors";
+import { isSafari } from "./browser_detection";
 
 // regular MediaKeys type + optional functions present in IE11
 interface ICompatMediaKeysConstructor {
@@ -95,28 +96,36 @@ const MediaSource_ : typeof MediaSource|undefined = win.MediaSource ||
                                                     win.WebKitMediaSource ||
                                                     win.MSMediaSource;
 
-const MediaKeys_ : ICompatMediaKeysConstructor|undefined =
-  win.MSMediaKeys ||
-  win.MozMediaKeys ||
-  win.WebKitMediaKeys ||
-  win.MediaKeys ||
-  class {
-    public readonly create : () => never;
-    public readonly isTypeSupported : () => never;
-    public readonly createSession : () => never;
-    public readonly setServerCertificate : () => never;
-    constructor() {
-      const noMediaKeys = () => {
-        throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED",
-                             "No `MediaKeys` implementation found " +
-                             "in the current browser.");
-      };
-      this.create = noMediaKeys;
-      this.createSession = noMediaKeys;
-      this.isTypeSupported = noMediaKeys;
-      this.setServerCertificate = noMediaKeys;
-    }
-  };
+const MediaKeys_ : ICompatMediaKeysConstructor|undefined = (() => {
+  // On Safari 12.1, it seems that since fairplay CDM implementation
+  // within the browser is not standard with EME w3c current spec, the
+  // requestMediaKeySystemAccess API doesn't resolve positively, even
+  // if the drm (fairplay in most cases) is supported.
+  if (isSafari && win.WebKitMediaKeys != null && win.MediaKeys != null) {
+    return win.WebKitMediaKeys;
+  }
+  return win.MediaKeys ||
+         win.MSMediaKeys ||
+         win.MozMediaKeys ||
+         win.WebKitMediaKeys ||
+         class {
+           public readonly create : () => never;
+           public readonly isTypeSupported : () => never;
+           public readonly createSession : () => never;
+           public readonly setServerCertificate : () => never;
+           constructor() {
+            const noMediaKeys = () => {
+              throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED",
+                                   "No `MediaKeys` implementation found " +
+                                   "in the current browser.");
+            };
+             this.create = noMediaKeys;
+             this.createSession = noMediaKeys;
+             this.isTypeSupported = noMediaKeys;
+             this.setServerCertificate = noMediaKeys;
+           }
+         };
+})();
 
 const READY_STATES = { HAVE_NOTHING: 0,
                        HAVE_METADATA: 1,
