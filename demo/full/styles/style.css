@@ -59,6 +59,12 @@ body {
   color: rgb(200,200,200);
 }
 
+.custom-input-wrapper {
+  border: 1px dashed #d1d1d1;
+  padding: 0px 10px 10px 10px;
+  margin-top: 10px;
+}
+
 .player-logs-wrapper-bar {
   display: flex;
   flex-direction: row;
@@ -139,6 +145,17 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.content-inputs-selects {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.content-inputs-middle {
+  display: flex;
+  flex-direction: row;
 }
 
 .text-input {
@@ -367,6 +384,8 @@ body {
 }
 
 .choice-input-button-wrapper {
+  display: flex;
+  flex-direction: row;
   margin-right: -5px;
 }
 
@@ -407,7 +426,6 @@ body {
 }
 
 .choice-input-button:disabled:hover {
-  color: #888;
   box-shadow: none;
 }
 
@@ -444,6 +462,54 @@ body {
 .load-button {
   font-size: 1.5rem;
   width: 60px;
+}
+
+.update-control {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.update-control-buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.content-button {
+  font-size: 1.1rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.content-button.disabled {
+  background-color: #ececec;
+}
+
+.save-button {
+  color: #fff;
+  background-color: #ec3655;
+}
+
+.save-button:hover:not(.disabled) {
+  color: #fff;
+  background-color: #ff3655;
+}
+
+.cancel-button:hover {
+  color: #ec3655;
+}
+
+.need-to-fill {
+  font-weight: bold;
+}
+
+.erase-button {
+  font-size: 1.5rem;
+  width: 60px;
+  border-radius: 3px;
+  background-color: #ececec;
+  border: dashed 1px #d1d1d1;
 }
 
 .options-button.clicked {
@@ -824,7 +890,7 @@ input:checked + .slider:before {
   margin: 3px;
 }
 
-.github-button {
+.button-gh {
   margin: 5px;
 }
 
@@ -851,9 +917,23 @@ input:checked + .slider:before {
   margin: 4px 0 4px 0;
 }
 
-@media only screen and (max-width: 660px) {
+@media only screen and (max-width: 800px) {
   .content-inputs {
     flex-direction: column;
+  }
+
+  .content-inputs-left {
+    flex-direction: column;
+  }
+
+  .update-control {
+    flex-direction: column;
+  }
+}
+
+@media only screen and (max-width: 650px) {
+  .button-gh {
+    display: none;
   }
 }
 
