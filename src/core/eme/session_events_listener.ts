@@ -102,8 +102,8 @@ export default function SessionEventsListener(
   const getLicenseRetryOptions = {
     totalRetry: getLicenseConfig.retry != null ? getLicenseConfig.retry :
                                                  2,
-    retryDelay: 200,
-
+    baseDelay: 200,
+    maxDelay: 3000,
     shouldRetry: (error : unknown) =>
       error instanceof TimeoutError ||
       error == null ||
