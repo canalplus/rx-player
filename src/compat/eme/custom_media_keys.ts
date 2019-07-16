@@ -167,11 +167,10 @@ let CustomMediaKeys : IMockMediaKeysConstructor =
  * Therefore, we prefer not to use requestMediaKeySystemAccess on Safari when webkit API
  * is available.
  */
-const preferWebKitAPIForSafari = isSafari &&
-  (window as any).WebKitMediaKeys &&
-  MediaKeys_ === (window as any).WebKitMediaKeys;
-
-if (navigator.requestMediaKeySystemAccess && !preferWebKitAPIForSafari) {
+if (navigator.requestMediaKeySystemAccess &&
+    !isSafari ||
+    MediaKeys_ === (window as any).WebKitMediaKeys
+) {
   requestMediaKeySystemAccess = (a : string, b : ICompatMediaKeySystemConfiguration[]) =>
     castToObservable(
       navigator.requestMediaKeySystemAccess(a, b) as Promise<ICompatMediaKeySystemAccess>
