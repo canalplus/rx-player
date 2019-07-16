@@ -129,15 +129,3 @@ export interface IKeySystemOption {
   throwOnLicenseExpiration? : boolean;
   disableMediaKeysAttachmentLock? : boolean;
 }
-
-// Keys are the different key statuses possible.
-// Values are ``true`` if such key status defines an error
-/* tslint:disable no-object-literal-type-assertion */
-export const KEY_STATUS_ERRORS = { "internal-error": true,
-                                   expired: false,
-                                   released: false,
-                                   "output-restricted": false,
-                                   "output-downscaled": false,
-                                   "status-pending": false,
-                                 } as Partial<Record<string, boolean>>;
-/* tslint:enable no-object-literal-type-assertion */
