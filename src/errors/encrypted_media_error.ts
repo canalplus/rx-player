@@ -29,8 +29,8 @@ import errorMessage from "./error_message";
 export default class EncryptedMediaError extends Error {
   public readonly name : "EncryptedMediaError";
   public readonly type : string;
-  public readonly message : string;
   public readonly code : IEncryptedMediaErrorCode;
+  public message : string;
   public fatal : boolean;
 
   /**

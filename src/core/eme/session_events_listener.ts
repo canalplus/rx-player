@@ -70,12 +70,12 @@ function formatGetLicenseError(error: unknown) : ICustomError {
                                     "respond.");
   }
 
-  const message = error != null &&
-                  typeof (error as { message : string }).message === "string" ?
-    (error as { message : string }).message :
-    "An error occured when calling `getLicense`.";
-
-  return new EncryptedMediaError("KEY_LOAD_ERROR", message);
+  const err = new EncryptedMediaError("KEY_LOAD_ERROR",
+                                      "An error occured when calling `getLicense`.");
+  if  (error != null && (error as { message : string }).message) {
+    err.message = (error as { message : string }).message;
+  }
+  return err;
 }
 
 /**
@@ -134,17 +134,12 @@ export default function SessionEventsListener(
           map(licenseObject => ({ type: "key-status-change-handled" as const,
                                   value : { session, license: licenseObject } })),
           catchError((error: unknown) => {
-            let message;
-            if (error instanceof Error) {
-              message = error.toString();
-            } else if (error != null &&
-                       typeof (error as { message : string }).message === "string")
-            {
-              message = (error as { message : string }).message;
-            } else {
-              message = "Unknown `onKeyStatusesChange` error";
+            const err = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
+                                                "Unknown `onKeyStatusesChange` error");
+            if  (error != null && (error as { message : string }).message) {
+              err.message = (error as { message : string }).message;
             }
-            throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", message);
+            throw err;
           })
         );
         return observableConcat(keyStatusesEvents$, handledKeyStatusesChange$);
