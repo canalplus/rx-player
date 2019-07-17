@@ -21,42 +21,88 @@ cp -r dist/_esm5.raw/ dist/_esm5.processed
 # TODO So ugly right now. We should find a way to transform the JS in a cleaner
 # way
 files="$(find dist/_esm5.processed -type f -iname '*.js')"
-for f in "$files"; do
-  sed -i -E "s/\b__DEV__\b/false/g" $f
 
-  sed -i -E "s/\b__LOGGER_LEVEL__\b/\"NONE\"/g" $f
+# macOS comes with the BSD version of some command line tools, which are
+# slightly different from the Linux version. The -i argument on sed 
+# doesn't work with a zero-length extension. Thus, we declare an extension,
+# and then delete back-up unwanted files.
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  for f in "$files"; do
+    sed -i.DELETE -E "s/[[:<:]]__DEV__[[:>:]]/false/g" $f
 
-  sed -i -E "s/\b__FEATURES__\.EME\b/false/g" $f
-  sed -i -E "s/\b__FEATURES__\.SMOOTH\b/false/g" $f
-  sed -i -E "s/\b__FEATURES__\.DASH\b/false/g" $f
-  sed -i -E "s/\b__FEATURES__\.DIRECTFILE\b/false/g" $f
-  sed -i -E "s/\b__FEATURES__\.HTML_SAMI\b/false/g" $f
-  sed -i -E "s/\b__FEATURES__\.HTML_SRT\b/false/g" $f
-  sed -i -E "s/\b__FEATURES__\.HTML_TTML\b/false/g" $f
-  sed -i -E "s/\b__FEATURES__\.HTML_VTT\b/false/g" $f
-  sed -i -E "s/\b__FEATURES__\.NATIVE_SAMI\b/false/g" $f
-  sed -i -E "s/\b__FEATURES__\.NATIVE_SRT\b/false/g" $f
-  sed -i -E "s/\b__FEATURES__\.NATIVE_TTML\b/false/g" $f
-  sed -i -E "s/\b__FEATURES__\.NATIVE_VTT\b/false/g" $f
-  sed -i -E "s/\b__FEATURES__\.BIF_PARSER\b/false/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__LOGGER_LEVEL__[[:>:]]/\"NONE\"/g" $f
 
-  sed -i -E "s/\b__RELATIVE_PATH__\.EME_MANAGER\b/\"..\/core\/eme\/index.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.IMAGE_BUFFER\b/\"..\/core\/source_buffers\/image\/index.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.BIF_PARSER\b/\"..\/parsers\/images\/bif.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.SMOOTH\b/\"..\/transports\/smooth\/index.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.DASH\b/\"..\/transports\/dash\/index.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_TEXT_BUFFER\b/\"..\/core\/source_buffers\/text\/native\/index.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_VTT\b/\"..\/parsers\/texttracks\/webvtt\/native.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_SRT\b/\"..\/parsers\/texttracks\/srt\/native.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_TTML\b/\"..\/parsers\/texttracks\/ttml\/native\/index.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_SAMI\b/\"..\/parsers\/texttracks\/sami\/native.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.HTML_TEXT_BUFFER\b/\"..\/core\/source_buffers\/text\/html\/index.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.HTML_VTT\b/\"..\/parsers\/texttracks\/webvtt\/html\/index.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.HTML_SRT\b/\"..\/parsers\/texttracks\/srt\/html.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.HTML_TTML\b/\"..\/parsers\/texttracks\/ttml\/html\/index.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.HTML_SAMI\b/\"..\/parsers\/texttracks\/sami\/html.js\"/g" $f
-  sed -i -E "s/\b__RELATIVE_PATH__\.DIRECTFILE\b/\"..\/core\/init\/directfile.js\"/g" $f
-done
+    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.EME[[:>:]]/false/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.SMOOTH[[:>:]]/false/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.DASH[[:>:]]/false/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.DIRECTFILE[[:>:]]/false/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.HTML_SAMI[[:>:]]/false/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.HTML_SRT[[:>:]]/false/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.HTML_TTML[[:>:]]/false/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.HTML_VTT[[:>:]]/false/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.NATIVE_SAMI[[:>:]]/false/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.NATIVE_SRT[[:>:]]/false/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.NATIVE_TTML[[:>:]]/false/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.NATIVE_VTT[[:>:]]/false/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.BIF_PARSER[[:>:]]/false/g" $f
+
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.EME_MANAGER[[:>:]]/\"..\/core\/eme\/index.js\"/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.IMAGE_BUFFER[[:>:]]/\"..\/core\/source_buffers\/image\/index.js\"/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.BIF_PARSER[[:>:]]/\"..\/parsers\/images\/bif.js\"/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.SMOOTH[[:>:]]/\"..\/transports\/smooth\/index.js\"/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.DASH[[:>:]]/\"..\/transports\/dash\/index.js\"/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.NATIVE_TEXT_BUFFER[[:>:]]/\"..\/core\/source_buffers\/text\/native\/index.js\"/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.NATIVE_VTT[[:>:]]/\"..\/parsers\/texttracks\/webvtt\/native.js\"/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.NATIVE_SRT[[:>:]]/\"..\/parsers\/texttracks\/srt\/native.js\"/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.NATIVE_TTML[[:>:]]/\"..\/parsers\/texttracks\/ttml\/native\/index.js\"/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.NATIVE_SAMI[[:>:]]/\"..\/parsers\/texttracks\/sami\/native.js\"/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.HTML_TEXT_BUFFER[[:>:]]/\"..\/core\/source_buffers\/text\/html\/index.js\"/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.HTML_VTT[[:>:]]/\"..\/parsers\/texttracks\/webvtt\/html\/index.js\"/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.HTML_SRT[[:>:]]/\"..\/parsers\/texttracks\/srt\/html.js\"/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.HTML_TTML[[:>:]]/\"..\/parsers\/texttracks\/ttml\/html\/index.js\"/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.HTML_SAMI[[:>:]]/\"..\/parsers\/texttracks\/sami\/html.js\"/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.DIRECTFILE[[:>:]]/\"..\/core\/init\/directfile.js\"/g" $f
+  done
+
+  find dist/_esm5.processed -type f -name "*.DELETE" -delete
+else
+  for f in "$files"; do
+    sed -i -E "s/\b__DEV__\b/false/g" $f
+
+    sed -i -E "s/\b__LOGGER_LEVEL__\b/\"NONE\"/g" $f
+
+    sed -i -E "s/\b__FEATURES__\.EME\b/false/g" $f
+    sed -i -E "s/\b__FEATURES__\.SMOOTH\b/false/g" $f
+    sed -i -E "s/\b__FEATURES__\.DASH\b/false/g" $f
+    sed -i -E "s/\b__FEATURES__\.DIRECTFILE\b/false/g" $f
+    sed -i -E "s/\b__FEATURES__\.HTML_SAMI\b/false/g" $f
+    sed -i -E "s/\b__FEATURES__\.HTML_SRT\b/false/g" $f
+    sed -i -E "s/\b__FEATURES__\.HTML_TTML\b/false/g" $f
+    sed -i -E "s/\b__FEATURES__\.HTML_VTT\b/false/g" $f
+    sed -i -E "s/\b__FEATURES__\.NATIVE_SAMI\b/false/g" $f
+    sed -i -E "s/\b__FEATURES__\.NATIVE_SRT\b/false/g" $f
+    sed -i -E "s/\b__FEATURES__\.NATIVE_TTML\b/false/g" $f
+    sed -i -E "s/\b__FEATURES__\.NATIVE_VTT\b/false/g" $f
+    sed -i -E "s/\b__FEATURES__\.BIF_PARSER\b/false/g" $f
+
+    sed -i -E "s/\b__RELATIVE_PATH__\.EME_MANAGER\b/\"..\/core\/eme\/index.js\"/g" $f
+    sed -i -E "s/\b__RELATIVE_PATH__\.IMAGE_BUFFER\b/\"..\/core\/source_buffers\/image\/index.js\"/g" $f
+    sed -i -E "s/\b__RELATIVE_PATH__\.BIF_PARSER\b/\"..\/parsers\/images\/bif.js\"/g" $f
+    sed -i -E "s/\b__RELATIVE_PATH__\.SMOOTH\b/\"..\/transports\/smooth\/index.js\"/g" $f
+    sed -i -E "s/\b__RELATIVE_PATH__\.DASH\b/\"..\/transports\/dash\/index.js\"/g" $f
+    sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_TEXT_BUFFER\b/\"..\/core\/source_buffers\/text\/native\/index.js\"/g" $f
+    sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_VTT\b/\"..\/parsers\/texttracks\/webvtt\/native.js\"/g" $f
+    sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_SRT\b/\"..\/parsers\/texttracks\/srt\/native.js\"/g" $f
+    sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_TTML\b/\"..\/parsers\/texttracks\/ttml\/native\/index.js\"/g" $f
+    sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_SAMI\b/\"..\/parsers\/texttracks\/sami\/native.js\"/g" $f
+    sed -i -E "s/\b__RELATIVE_PATH__\.HTML_TEXT_BUFFER\b/\"..\/core\/source_buffers\/text\/html\/index.js\"/g" $f
+    sed -i -E "s/\b__RELATIVE_PATH__\.HTML_VTT\b/\"..\/parsers\/texttracks\/webvtt\/html\/index.js\"/g" $f
+    sed -i -E "s/\b__RELATIVE_PATH__\.HTML_SRT\b/\"..\/parsers\/texttracks\/srt\/html.js\"/g" $f
+    sed -i -E "s/\b__RELATIVE_PATH__\.HTML_TTML\b/\"..\/parsers\/texttracks\/ttml\/html\/index.js\"/g" $f
+    sed -i -E "s/\b__RELATIVE_PATH__\.HTML_SAMI\b/\"..\/parsers\/texttracks\/sami\/html.js\"/g" $f
+    sed -i -E "s/\b__RELATIVE_PATH__\.DIRECTFILE\b/\"..\/core\/init\/directfile.js\"/g" $f
+  done
+fi
 
 echo "processed modular build succesfully created!"
 
