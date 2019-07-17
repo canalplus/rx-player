@@ -83,7 +83,6 @@ function getSegmentData(
   const loadedData$ = thumbnailsToLoad.map(({ mediaURL }) => {
     return request({
       url: mediaURL,
-      sendProgressEvents: false,
       responseType: "arraybuffer",
     });
   });
@@ -136,7 +135,6 @@ export default class VideoThumbnailLoader {
       mergeMap(({ videoSourceBuffer }) => {
         const { initURL: init, codec } = this._thumbnailTrack;
         return request({ url: init,
-                         sendProgressEvents: false,
                          responseType: "arraybuffer",
         }).pipe(
           mergeMap((e) => {
