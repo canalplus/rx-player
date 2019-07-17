@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import {
-  combineLatest,
   EMPTY,
+  merge as observableMerge,
   Observable,
   of as observableOf,
   Subject,
@@ -63,10 +63,10 @@ const MAXIMUM_MEDIA_BUFFERED = 2;
  * @param {Object} thumbnails
  * @param {HTMLMediaElement} mediaElement
  */
-function getSegmentData(
+function getSegmentsData(
   thumbnails: IThumbnailInfo[],
   mediaElement: HTMLMediaElement
-): Observable<ArrayBuffer[]> {
+): Observable<ArrayBuffer> {
 
   const thumbnailsToLoad = thumbnails.filter((t) => {
     const tRange = { start: t.start, end: t.start + t.duration };
@@ -84,15 +84,13 @@ function getSegmentData(
     return request({
       url: mediaURL,
       responseType: "arraybuffer",
-    });
+    }).pipe(take(1));
   });
 
-  return combineLatest(loadedData$).pipe(
-    map((loadedData) => {
-      const responseDatas = loadedData.map(({ value }) => value.responseData);
-      return responseDatas;
-    }),
-    take(1)
+  return observableMerge(...loadedData$).pipe(
+    map(({ value: { responseData }}) => {
+      return responseData;
+    })
   );
 }
 
@@ -203,21 +201,17 @@ export default class VideoThumbnailLoader {
                     "VideoThumbnailLoaderError: No thumbnail track given.");
                 }
 
-                return getSegmentData(thumbnails, videoElement).pipe(
-                  mergeMap((datas) => {
-                    if (datas) {
-                      const appendBuffers$ = combineLatest(
-                        datas.map((data) => {
-                          return videoSourceBuffer
-                            .appendBuffer({
-                              segment: data,
-                              initSegment: null,
-                              codec: this._thumbnailTrack.codec,
-                              timestampOffset: 0,
-                            });
-                        })
-                      );
-                      return appendBuffers$.pipe(
+                return getSegmentsData(thumbnails, videoElement).pipe(
+                  mergeMap((data) => {
+                    if (data) {
+                      const appendBuffer$ = videoSourceBuffer
+                        .appendBuffer({
+                          segment: data,
+                          initSegment: null,
+                          codec: this._thumbnailTrack.codec,
+                          timestampOffset: 0,
+                        });
+                      return appendBuffer$.pipe(
                           mergeMap(() => {
                             thumbnails.forEach((t) => {
                               this._bufferedDataRanges.push({
