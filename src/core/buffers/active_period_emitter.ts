@@ -30,34 +30,24 @@ import {
   distinctUntilChanged,
   filter,
   map,
-  tap,
+  scan,
 } from "rxjs/operators";
 import { Period } from "../../manifest";
-import { IRepresentationChangeEvent } from "../init";
-import {
-  IBufferType,
-} from "../source_buffers";
-import { IAdaptationChangeEvent } from "./types";
+import { IBufferType } from "../source_buffers";
+import { IMultiplePeriodBuffersEvent } from "./types";
 
-// PeriodBuffer informations emitted to the ActivePeriodEmitted
-export interface IPeriodBufferInfos { period: Period;
-                                      type: IBufferType; }
-type IPeriodsList = Map<string,
-                        {
-                          period: Period;
-                          buffers: Map<IBufferType, {
-                            hasRepresentation: any;
-                            hasAdaptation: any;
-                          }>;
-                        }>;
+interface IPeriodObject { period : Period;
+                          buffers: Set<IBufferType>; }
+
+type IPeriodsList = Partial<Record<string, IPeriodObject>>;
 
 /**
  * Emit the active Period each times it changes.
  *
  * The active Period is the first Period (in chronological order) which has
- * a PeriodBuffer for every defined BUFFER_TYPES.
+ * a RepresentationBuffer associated for every defined BUFFER_TYPES.
  *
- * Emit null if no Period has PeriodBuffers for all types.
+ * Emit null if no Period can be considered active currently.
  *
  * @example
  * For 4 BUFFER_TYPES: "AUDIO", "VIDEO", "TEXT" and "IMAGE":
@@ -70,7 +60,8 @@ type IPeriodsList = Map<string,
  * IMAGE   |=========| | |=        | |
  *                     +-------------+
  *
- * The active Period here is Period 2 as Period 1 has no video PeriodBuffer.
+ * The active Period here is Period 2 as Period 1 has no video
+ * RepresentationBuffer.
  *
  * If we are missing a or multiple PeriodBuffers in the first chronological
  * Period, like that is the case here, it generally means that we are
@@ -89,77 +80,74 @@ type IPeriodsList = Map<string,
  * @returns {Observable}
  */
 export default function ActivePeriodEmitter(
-  bufferTypes: IBufferType[],
-  bufferEvents$: Observable<IAdaptationChangeEvent|IRepresentationChangeEvent>,
-  removePeriodBuffer$ : Observable<IPeriodBufferInfos>
+  buffers$: Array<Observable<IMultiplePeriodBuffersEvent>>
 ) : Observable<Period|null> {
-  const periodsList: IPeriodsList = new Map();
-
-  const addPeriod$ = bufferEvents$.pipe(
-    map((evt) => {
-      const { period } = evt.value;
-      let test = periodsList.get(period.id);
-      if (test == null) {
-        const buffers = new Map();
-        ["video", "audio", "text", "image"].forEach((bufferType) => {
-          buffers.set(bufferType, {
-            hasRepresentation: false,
-            hasAdaptation: false,
-          });
-        });
-
-        test = {
-          period,
-          buffers,
-        };
-        periodsList.set(period.id, test);
-      }
-
-      const { type } = evt.value;
-      const typedPeriodBufferInfos = test.buffers.get(type);
-      if (typedPeriodBufferInfos) {
-        if (evt.type === "adaptationChange") {
-          typedPeriodBufferInfos.hasAdaptation = true;
-          if (evt.value.adaptation == null) {
-            typedPeriodBufferInfos.hasRepresentation = true;
-          }
-        } else if (evt.type === "representationChange") {
-          typedPeriodBufferInfos.hasRepresentation = true;
-        }
-      }
-    }));
-
-  const removePeriod$ = removePeriodBuffer$.pipe(
-    tap(({ period }) => {
-      periodsList.delete(period.id);
-    })
-  );
-
-  return observableMerge(addPeriod$, removePeriod$).pipe(
-    map(() => {
-      const periodsListIterator = periodsList.entries();
-      let periodElement = periodsListIterator.next().value;
-      while (periodElement) {
-        const isReady = (() => {
-          const buffersIterator = periodElement[1].buffers.values();
-          let bufferElement = buffersIterator.next().value;
-          while (bufferElement) {
-            const { hasRepresentation, hasAdaptation } = bufferElement;
-            if (!hasAdaptation || !hasRepresentation) {
-              return false;
+  const numberOfBuffers = buffers$.length;
+  return observableMerge(...buffers$).pipe(
+    // not needed to filter, this is an optim
+    filter(({ type }) => type === "periodBufferCleared" ||
+                         type === "adaptationChange" ||
+                         type === "representationChange"),
+    scan<IMultiplePeriodBuffersEvent, IPeriodsList>((acc, evt) => {
+      switch (evt.type) {
+        case "periodBufferCleared": {
+          const { period, type } = evt.value;
+          const currentInfos = acc[period.id];
+          if (currentInfos != null && currentInfos.buffers.has(type)) {
+            currentInfos.buffers.delete(type);
+            if (currentInfos.buffers.size === 0) {
+              delete acc[period.id];
             }
-            bufferElement = buffersIterator.next().value;
           }
-          return true;
-        })() && periodElement[1].buffers.size === bufferTypes.length;
-        if (isReady) {
-          return periodElement[1].period;
         }
-        periodElement = periodsListIterator.next().value;
+          break;
+
+        case "adaptationChange": {
+          // `adaptationChange` with a null Adaptation will not lead to a
+          // `representationChange` event
+          if (evt.value.adaptation != null) {
+            return acc;
+          }
+        }
+        case "representationChange": {
+          const { period, type } = evt.value;
+          const currentInfos = acc[period.id];
+          if (currentInfos != null && !currentInfos.buffers.has(type)) {
+            currentInfos.buffers.add(type);
+          } else {
+            const bufferSet = new Set<IBufferType>();
+            bufferSet.add(type);
+            acc[period.id] = { period, buffers: bufferSet };
+          }
+        }
+          break;
+
       }
-      return null;
+      return acc;
+    }, {}),
+
+    map((list) : Period | null => {
+      const activePeriodIDs = Object.keys(list);
+      const completePeriods : Period[] = [];
+      for (let i = 0; i < activePeriodIDs.length; i++) {
+        const periodInfos = list[activePeriodIDs[i]];
+        if (periodInfos != null && periodInfos.buffers.size === numberOfBuffers) {
+          completePeriods.push(periodInfos.period);
+        }
+      }
+
+      return completePeriods.reduce<Period|null>((acc, period) => {
+        if (acc == null) {
+          return period;
+        }
+        return period.start < acc.start ? period :
+                                          acc;
+      }, null);
     }),
-    filter((p) => !!p),
-    distinctUntilChanged()
+
+    distinctUntilChanged((a, b) => {
+      return a == null && b == null ||
+             a != null && b != null && a.id === b.id;
+    })
   );
 }
