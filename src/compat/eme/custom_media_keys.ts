@@ -46,6 +46,14 @@ import {
 import * as events from "../event_listeners";
 import CustomMediaKeySystemAccess from "./custom_key_system_access";
 
+// On Safari 12.1, it seems that since fairplay CDM implementation
+// within the browser is not standard with EME w3c current spec, the
+// requestMediaKeySystemAccess API doesn't resolve positively, even
+// if the drm (fairplay in most cases) is supported.
+export function shouldUseWebKitMediaKeys() {
+  return isSafari && (window as any).WebKitMediaKeys != null;
+}
+
 let requestMediaKeySystemAccess : null |
                                   ((keyType : string,
                                     config : ICompatMediaKeySystemConfiguration[])
@@ -168,8 +176,7 @@ let CustomMediaKeys : IMockMediaKeysConstructor =
  * is available.
  */
 if (navigator.requestMediaKeySystemAccess &&
-    !isSafari ||
-    MediaKeys_ === (window as any).WebKitMediaKeys
+    !shouldUseWebKitMediaKeys()
 ) {
   requestMediaKeySystemAccess = (a : string, b : ICompatMediaKeySystemConfiguration[]) =>
     castToObservable(

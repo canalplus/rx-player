@@ -15,7 +15,7 @@
  */
 
 import { MediaError } from "../errors";
-import { isSafari } from "./browser_detection";
+import { shouldUseWebKitMediaKeys } from "./eme/custom_media_keys";
 
 // regular MediaKeys type + optional functions present in IE11
 interface ICompatMediaKeysConstructor {
@@ -97,11 +97,7 @@ const MediaSource_ : typeof MediaSource|undefined = win.MediaSource ||
                                                     win.MSMediaSource;
 
 const MediaKeys_ : ICompatMediaKeysConstructor|undefined = (() => {
-  // On Safari 12.1, it seems that since fairplay CDM implementation
-  // within the browser is not standard with EME w3c current spec, the
-  // requestMediaKeySystemAccess API doesn't resolve positively, even
-  // if the drm (fairplay in most cases) is supported.
-  if (isSafari && win.WebKitMediaKeys != null && win.MediaKeys != null) {
+  if (shouldUseWebKitMediaKeys()) {
     return win.WebKitMediaKeys;
   }
   return win.MediaKeys ||
