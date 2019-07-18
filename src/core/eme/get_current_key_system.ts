@@ -18,6 +18,7 @@ import { defaultMediaKeysInfosStore } from "./media_keys_infos_store";
 
 /**
  * Returns the name of the current key system used.
+ * @param {HTMLMediaElement} mediaElement
  * @returns {string}
  */
 export default function getCurrentKeySystem(
