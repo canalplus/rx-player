@@ -25,7 +25,6 @@ import {
 } from "rxjs/operators";
 import attachMediaKeys from "./attach_media_keys";
 import getMediaKeysInfos from "./get_media_keys";
-import MediaKeysInfosStore from "./media_keys_infos_store";
 import {
   IAttachedMediaKeysEvent,
   ICreatedMediaKeysEvent,
@@ -36,20 +35,18 @@ import {
  * Get media keys infos from key system configs then attach media keys to media element.
  * @param {HTMLMediaElement} mediaElement
  * @param {Array.<Object>} keySystemsConfigs
- * @param {Object} currentMediaKeysInfos
  * @returns {Observable}
  */
 export default function initMediaKeys(
   mediaElement : HTMLMediaElement,
-  keySystemsConfigs: IKeySystemOption[],
-  currentMediaKeysInfos : MediaKeysInfosStore
+  keySystemsConfigs: IKeySystemOption[]
 ): Observable<ICreatedMediaKeysEvent|IAttachedMediaKeysEvent> {
-  return getMediaKeysInfos(mediaElement, keySystemsConfigs, currentMediaKeysInfos)
+  return getMediaKeysInfos(mediaElement, keySystemsConfigs)
     .pipe(mergeMap((mediaKeysInfos) => {
       return observableConcat(
         observableOf({ type: "created-media-keys" as const,
                        value: mediaKeysInfos }),
-        attachMediaKeys(mediaKeysInfos, mediaElement, currentMediaKeysInfos)
+        attachMediaKeys(mediaKeysInfos, mediaElement)
           .pipe(mapTo({ type: "attached-media-keys" as const,
                         value: mediaKeysInfos, }))
       );

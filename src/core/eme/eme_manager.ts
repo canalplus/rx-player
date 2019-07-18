@@ -42,7 +42,6 @@ import getSession, {
   IEncryptedEvent,
 } from "./get_session";
 import initMediaKeys from "./init_media_keys";
-import { defaultMediaKeysInfosStore } from "./media_keys_infos_store";
 import SessionEventsListener from "./session_events_listener";
 import setServerCertificate from "./set_server_certificate";
 import {
@@ -75,10 +74,8 @@ export default function EMEManager(
   const handledInitData = new InitDataStore();
 
   // store the mediaKeys when ready
-  const mediaKeysInfos$ = initMediaKeys(mediaElement,
-                                        keySystemsConfigs,
-                                        defaultMediaKeysInfosStore)
-                            .pipe(shareReplay()); // cache success
+  const mediaKeysInfos$ = initMediaKeys(mediaElement, keySystemsConfigs)
+    .pipe(shareReplay()); // cache success
 
   const attachedMediaKeys$ = mediaKeysInfos$.pipe(filter(evt => {
     return evt.type === "attached-media-keys";

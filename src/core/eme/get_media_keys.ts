@@ -39,9 +39,9 @@ import SessionsStore from "./utils/open_sessions_store";
 import PersistedSessionsStore from "./utils/persisted_session_store";
 
 /**
+ * @throws {EncryptedMediaError}
  * @param {Object} keySystemOptions
  * @returns {Object|null}
- * @throws {EncryptedMediaError}
  */
 function createSessionStorage(
   keySystemOptions : IKeySystemOption
@@ -60,17 +60,20 @@ function createSessionStorage(
   return new PersistedSessionsStore(licenseStorage);
 }
 
+/**
+ * @param {HTMLMediaElement} mediaElement
+ * @param {Array.<Object>} keySystemsConfigs
+ * @returns {Observable}
+ */
 export default function getMediaKeysInfos(
   mediaElement : HTMLMediaElement,
-  keySystemsConfigs: IKeySystemOption[],
-  currentMediaKeysInfos : MediaKeysInfosStore
+  keySystemsConfigs: IKeySystemOption[]
 ) : Observable<IMediaKeysInfos> {
     return getMediaKeySystemAccess(mediaElement,
-                                   keySystemsConfigs,
-                                   currentMediaKeysInfos
+                                   keySystemsConfigs
     ).pipe(mergeMap((evt) => {
       const { options, mediaKeySystemAccess } = evt.value;
-      const currentState = currentMediaKeysInfos.getState(mediaElement);
+      const currentState = MediaKeysInfosStore.getState(mediaElement);
       const sessionStorage = createSessionStorage(options);
 
       if (currentState != null && evt.type === "reuse-media-key-system-access") {

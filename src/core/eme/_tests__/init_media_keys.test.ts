@@ -45,8 +45,7 @@ describe("core - eme - initMediaKeys", () => {
 
     const mediaElement = document.createElement("video");
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
-    const currentMediaKeysInfos = { foo: "bar" };
-    initMediaKeys(mediaElement, keySystemsConfigs, currentMediaKeysInfos)
+    initMediaKeys(mediaElement, keySystemsConfigs)
       .pipe(take(1))
       .subscribe((result : unknown) => {
         expect(result).toEqual({
@@ -56,11 +55,11 @@ describe("core - eme - initMediaKeys", () => {
 
         expect(spyGetMediaKeysInfos).toHaveBeenCalledTimes(1);
         expect(spyGetMediaKeysInfos)
-          .toHaveBeenCalledWith(mediaElement, keySystemsConfigs, currentMediaKeysInfos);
+          .toHaveBeenCalledWith(mediaElement, keySystemsConfigs);
 
         expect(spyAttachMediaKeys).toHaveBeenCalledTimes(1);
         expect(spyAttachMediaKeys)
-          .toHaveBeenCalledWith(falseMediaKeys, mediaElement, currentMediaKeysInfos);
+          .toHaveBeenCalledWith(falseMediaKeys, mediaElement);
         done();
       });
   });
@@ -85,8 +84,7 @@ describe("core - eme - initMediaKeys", () => {
 
     const mediaElement = document.createElement("video");
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
-    const currentMediaKeysInfos = { foo: "bar" };
-    initMediaKeys(mediaElement, keySystemsConfigs, currentMediaKeysInfos)
+    initMediaKeys(mediaElement, keySystemsConfigs)
       .pipe(skip(1))
       .subscribe((result : unknown) => {
         expect(result).toEqual({
@@ -96,11 +94,11 @@ describe("core - eme - initMediaKeys", () => {
 
         expect(spyGetMediaKeysInfos).toHaveBeenCalledTimes(1);
         expect(spyGetMediaKeysInfos)
-          .toHaveBeenCalledWith(mediaElement, keySystemsConfigs, currentMediaKeysInfos);
+          .toHaveBeenCalledWith(mediaElement, keySystemsConfigs);
 
         expect(spyAttachMediaKeys).toHaveBeenCalledTimes(1);
         expect(spyAttachMediaKeys)
-          .toHaveBeenCalledWith(falseMediaKeys, mediaElement, currentMediaKeysInfos);
+          .toHaveBeenCalledWith(falseMediaKeys, mediaElement);
 
         done();
       });
@@ -124,14 +122,13 @@ describe("core - eme - initMediaKeys", () => {
 
     const mediaElement = document.createElement("video");
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
-    const currentMediaKeysInfos = { foo: "bar" };
-    initMediaKeys(mediaElement, keySystemsConfigs, currentMediaKeysInfos)
+    initMediaKeys(mediaElement, keySystemsConfigs)
       .subscribe(null, (e : Error) => {
         expect(e).toBe(err);
 
         expect(spyGetMediaKeysInfos).toHaveBeenCalledTimes(1);
         expect(spyGetMediaKeysInfos)
-          .toHaveBeenCalledWith(mediaElement, keySystemsConfigs, currentMediaKeysInfos);
+          .toHaveBeenCalledWith(mediaElement, keySystemsConfigs);
 
         expect(spyAttachMediaKeys).not.toHaveBeenCalled();
         done();
@@ -159,10 +156,9 @@ describe("core - eme - initMediaKeys", () => {
 
     const mediaElement = document.createElement("video");
     const keySystemsConfigs = [{ l: 4 }, { d: 12 }];
-    const currentMediaKeysInfos = { foo: "bar" };
 
     let eventReceived = false;
-    initMediaKeys(mediaElement, keySystemsConfigs, currentMediaKeysInfos)
+    initMediaKeys(mediaElement, keySystemsConfigs)
       .subscribe((evt : unknown) => {
         expect(evt).toEqual({
           type: "created-media-keys",
@@ -175,11 +171,11 @@ describe("core - eme - initMediaKeys", () => {
 
         expect(spyAttachMediaKeys).toHaveBeenCalledTimes(1);
         expect(spyGetMediaKeysInfos)
-          .toHaveBeenCalledWith(mediaElement, keySystemsConfigs, currentMediaKeysInfos);
+          .toHaveBeenCalledWith(mediaElement, keySystemsConfigs);
 
         expect(spyGetMediaKeysInfos).toHaveBeenCalledTimes(1);
         expect(spyAttachMediaKeys)
-          .toHaveBeenCalledWith(falseMediaKeys, mediaElement, currentMediaKeysInfos);
+          .toHaveBeenCalledWith(falseMediaKeys, mediaElement);
 
         done();
       });

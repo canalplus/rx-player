@@ -22,7 +22,7 @@ import {
 import { ignoreElements } from "rxjs/operators";
 import { shouldUnsetMediaKeys } from "../../compat/";
 import disposeMediaKeys from "./dispose_media_keys";
-import { defaultMediaKeysInfosStore } from "./media_keys_infos_store";
+import MediaKeysInfosStore from "./media_keys_infos_store";
 
 /**
  * Clear EME ressources that should be cleared when the current content stops
@@ -34,11 +34,11 @@ export default function clearEMESession(
 ) : Observable<never> {
   return observableDefer(() => {
     if (shouldUnsetMediaKeys()) {
-      return disposeMediaKeys(mediaElement, defaultMediaKeysInfosStore)
+      return disposeMediaKeys(mediaElement)
         .pipe(ignoreElements());
     }
 
-    const currentState = defaultMediaKeysInfosStore.getState(mediaElement);
+    const currentState = MediaKeysInfosStore.getState(mediaElement);
     if (currentState && currentState.keySystemOptions.closeSessionsOnStop) {
       return currentState.sessionsStore.closeAllSessions()
         .pipe(ignoreElements());
