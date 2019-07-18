@@ -174,9 +174,14 @@ const customManifestLoader = (url, callbacks) => {
       // sure to be aligned with the current clock.
       const sendingTime = now - duration;
 
+      // the request could have been redirected,
+      // we have to feed back the real URL
+      const _url = xhr.responseURL || url;
+
       const size = r.total;
       const data = xhr.response;
       callbacks.resolve({
+        url: _url,
         sendingTime,
         receivingTime,
         duration,
