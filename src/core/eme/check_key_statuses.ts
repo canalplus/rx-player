@@ -26,17 +26,15 @@ const KEY_STATUSES = { EXPIRED: "expired",
                        OUTPUT_RESTRICTED: "output-restricted" };
 
 /**
- * Look at the current key statuses in the sessions and:
- *   - construct the appropriate warnings
- *   - returns blacklistedKeyIDs
+ * Look at the current key statuses in the sessions and construct the
+ * appropriate warnings
  *
- * Throws if one of the keyID is on an error for which we should not fallback.
+ * Throws if one of the keyID is on an error.
  * @param {MediaKeySession} session - The MediaKeySession from which the keys
  * will be checked.
  * @param {Object} keySystem - Configuration. Used to known on which situations
  * we can fallback.
- * @returns {Array} - First element are the warnings to send.
- * The second are keyIDs to blacklist.
+ * @returns {Array} - Warnings to send.
  */
 export default function checkKeyStatuses(
   session : MediaKeySession | ICustomMediaKeySession,
