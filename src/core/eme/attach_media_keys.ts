@@ -31,29 +31,27 @@ import { IMediaKeysInfos } from "./types";
  * If a MediaKeys was already set on it, dispose of it before setting the new
  * one.
  *
- * /!\ Mutates heavily currentMediaKeysInfos
+ * /!\ Mutates heavily MediaKeysInfosStore
  * @param {Object} mediaKeysInfos
  * @param {HTMLMediaElement} mediaElement
- * @param {Object} currentMediaKeysInfos
  * @returns {Observable}
  */
 export default function attachMediaKeys(
   mediaKeysInfos: IMediaKeysInfos,
-  mediaElement : HTMLMediaElement,
-  currentMediaKeysInfos: MediaKeysInfosStore
+  mediaElement : HTMLMediaElement
 ) : Observable<unknown> {
   return observableDefer(() => {
-    const previousState = currentMediaKeysInfos.getState(mediaElement);
     const { keySystemOptions,
             mediaKeySystemAccess,
             mediaKeys,
             sessionsStore } = mediaKeysInfos;
 
-    currentMediaKeysInfos.setState(mediaElement,
-                                   { keySystemOptions,
-                                     mediaKeySystemAccess,
-                                     mediaKeys,
-                                     sessionsStore });
+    const previousState = MediaKeysInfosStore.getState(mediaElement);
+    MediaKeysInfosStore.setState(mediaElement,
+                                 { keySystemOptions,
+                                   mediaKeySystemAccess,
+                                   mediaKeys,
+                                   sessionsStore });
 
     return (previousState &&
             previousState.sessionsStore !== sessionsStore ?

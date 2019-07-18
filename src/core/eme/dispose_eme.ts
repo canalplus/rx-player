@@ -16,11 +16,10 @@
 
 import noop from "../../utils/noop";
 import disposeMediaKeys from "./dispose_media_keys";
-import { defaultMediaKeysInfosStore } from "./media_keys_infos_store";
 
 /**
  * Free up all ressources taken by the EME management.
  */
 export default function disposeEME(mediaElement : HTMLMediaElement) : void {
-  disposeMediaKeys(mediaElement, defaultMediaKeysInfosStore).subscribe(noop);
+  disposeMediaKeys(mediaElement).subscribe(noop);
 }
