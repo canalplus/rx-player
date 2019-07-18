@@ -116,15 +116,15 @@
     "rxjs": "6.5.2"
   },
   "devDependencies": {
-    "@babel/core": "7.5.4",
+    "@babel/core": "7.5.5",
     "@babel/polyfill": "7.4.4",
-    "@babel/preset-env": "7.5.4",
+    "@babel/preset-env": "7.5.5",
     "@babel/preset-react": "7.0.0",
     "@types/chai": "4.1.7",
     "@types/deep-equal": "1.0.1",
     "@types/jest": "24.0.15",
     "@types/mocha": "5.2.7",
-    "@types/node": "12.6.2",
+    "@types/node": "12.6.8",
     "@types/sinon": "7.0.13",
     "arraybuffer-loader": "1.0.7",
     "babel-loader": "8.0.6",
@@ -141,14 +141,14 @@
     "istanbul-instrumenter-loader": "3.0.1",
     "jest": "24.8.0",
     "jsx-loader": "0.13.2",
-    "karma": "4.1.0",
-    "karma-chrome-launcher": "2.2.0",
+    "karma": "4.2.0",
+    "karma-chrome-launcher": "3.0.0",
     "karma-coverage-istanbul-reporter": "2.0.5",
     "karma-firefox-launcher": "1.1.0",
     "karma-mocha": "1.3.0",
     "karma-mocha-reporter": "2.2.5",
     "karma-webpack": "4.0.2",
-    "markdown-it": "9.0.0",
+    "markdown-it": "9.0.1",
     "markdown-it-emoji": "1.4.0",
     "mocha": "6.1.4",
     "mocha-loader": "2.0.1",
@@ -166,8 +166,8 @@
     "typescript": "3.5.3",
     "uglifyjs-webpack-plugin": "2.1.3",
     "url-loader": "2.0.1",
-    "webpack": "4.35.3",
+    "webpack": "4.36.1",
     "webpack-bundle-analyzer": "3.3.2",
-    "webpack-cli": "3.3.5"
+    "webpack-cli": "3.3.6"
   }
 }
