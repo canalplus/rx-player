@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
+import MediaKeysInfosStore from "./media_keys_infos_store";
+
 /**
- * /!\ This file is feature-switchable.
- * It always should be imported through the `features` object.
+ * Returns the name of the current key system used.
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {string}
  */
-
-import clearEMESession from "./clear_eme_session";
-import disposeEME from "./dispose_eme";
-import EMEManager from "./eme_manager";
-import getCurrentKeySystem from "./get_current_key_system";
-import { IEMEManagerEvent } from "./types";
-export * from "./types";
-
-export default EMEManager;
-export {
-  clearEMESession,
-  disposeEME,
-  getCurrentKeySystem,
-  IEMEManagerEvent,
-};
+export default function getCurrentKeySystem(
+  mediaElement : HTMLMediaElement
+) : string|null {
+  const currentState = MediaKeysInfosStore.getState(mediaElement);
+  return currentState && currentState.keySystemOptions.type;
+}

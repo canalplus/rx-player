@@ -16,31 +16,33 @@
 
 import {
   defer as observableDefer,
+  EMPTY,
   Observable,
-  of as observableOf,
 } from "rxjs";
-import { mergeMapTo } from "rxjs/operators";
-import { setMediaKeys } from "../../compat";
-import log from "../../log";
+import { ignoreElements } from "rxjs/operators";
+import { shouldUnsetMediaKeys } from "../../compat/";
+import disposeMediaKeys from "./dispose_media_keys";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 
 /**
- * @param {Object} mediaKeysInfos
+ * Clear EME ressources that should be cleared when the current content stops
+ * its playback.
  * @returns {Observable}
  */
-export default function disposeMediaKeys(
+export default function clearEMESession(
   mediaElement : HTMLMediaElement
-) : Observable<unknown> {
+) : Observable<never> {
   return observableDefer(() => {
-    const currentState = MediaKeysInfosStore.getState(mediaElement);
-    if (!currentState) {
-      return observableOf(null);
+    if (shouldUnsetMediaKeys()) {
+      return disposeMediaKeys(mediaElement)
+        .pipe(ignoreElements());
     }
 
-    log.debug("EME: Disposing of the current MediaKeys");
-    const { sessionsStore } = currentState;
-    MediaKeysInfosStore.clearState(mediaElement);
-    return sessionsStore.closeAllSessions()
-      .pipe(mergeMapTo(setMediaKeys(mediaElement, null)));
+    const currentState = MediaKeysInfosStore.getState(mediaElement);
+    if (currentState && currentState.keySystemOptions.closeSessionsOnStop) {
+      return currentState.sessionsStore.closeAllSessions()
+        .pipe(ignoreElements());
+    }
+    return EMPTY;
   });
 }

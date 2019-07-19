@@ -118,10 +118,24 @@ This property is an array of objects with the following properties (only
         - resolves if the license was fetched, with the licence in argument
         - resolve with ``null`` if you do not want to set a license for this
           `message` event
-        - reject if an error was encountered
+        - reject if an error was encountered.
 
       In any case, the license provided by this function should be of a
       ``BufferSource`` type (example: an ``Uint8Array`` or an ``ArrayBuffer``).
+
+      Even in case of an error, you can (this is not mandatory) set two
+      properties on the rejected value which will be interpreted by the
+      RxPlayer:
+        - `noRetry` (`Boolean`): If set to `true`, we will throw directly a
+          `KEY_LOAD_ERROR` to call `getLicense`. If not set or set to `false`,
+          the current retry parameters will be applied (see `getLicenseConfig`)
+        - `message` (`string`): If the `message` property is set as a "string",
+          this message will be set as the `message` property of the
+          corresponding `EncryptedMediaError` (either communicated through an
+          `"error"` event if we're not retrying or through a `"warning"` event
+          if we're retrying).
+          As every other `getLicense`-related errors, this error will have the
+          `KEY_LOAD_ERROR` `code` property.
 
       Note: We set a 10 seconds timeout by default on this request (configurable
       through the `getLicenseConfig` object).
@@ -208,6 +222,13 @@ This property is an array of objects with the following properties (only
     Like ``getLicense``, this function should return a promise which emit a
     license or `null` (for no license) when resolved. It can also return
     directly the license or `null` if it can be done synchronously.
+
+    In case of an error, you can set the `message` property on the
+    rejected value as a "string". This message will be set as the `message`
+    property of the corresponding `EncryptedMediaError` communicated through
+    an `"error"` event.
+    As every other `onKeyStatusesChange`-related errors, this error will have
+    the `KEY_STATUS_CHANGE_ERROR` `code` property.
 
   - ``closeSessionsOnStop`` (``Boolean|undefined``): If set to ``true``, the
     ``MediaKeySession`` created for a content will be immediately closed when

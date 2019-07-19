@@ -73,7 +73,8 @@ const { EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
 
 /**
  * @param {Array.<Object>} keySystems
- * @param {Object} currentMediaKeysInfos
+ * @param {MediaKeySystemAccess} currentKeySystemAccess
+ * @param {Object} currentKeySystemOptions
  * @returns {null|Object}
  */
 function checkCachedMediaKeySystemAccess(
@@ -243,17 +244,16 @@ function buildKeySystemConfigurations(
  *   - complete immediately after emitting.
  *   - throw if no  compatible key system has been found.
  *
+ * @param {HTMLMediaElement} mediaElement
  * @param {Array.<Object>} keySystems - The keySystems you want to test.
- * @param {Object} currentMediaKeysInfos
  * @returns {Observable}
  */
 export default function getMediaKeySystemAccess(
   mediaElement : HTMLMediaElement,
-  keySystemsConfigs: IKeySystemOption[],
-  currentMediaKeysInfos: MediaKeysInfosStore
+  keySystemsConfigs: IKeySystemOption[]
 ) : Observable<IFoundMediaKeySystemAccessEvent> {
   return observableDefer<Observable<IFoundMediaKeySystemAccessEvent>>(() => {
-    const currentState = currentMediaKeysInfos.getState(mediaElement);
+    const currentState = MediaKeysInfosStore.getState(mediaElement);
     if (currentState) {
       // Fast way to find a compatible keySystem if the currently loaded
       // one as exactly the same compatibility options.

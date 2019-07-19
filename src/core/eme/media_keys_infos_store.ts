@@ -35,29 +35,36 @@ export type IMediaElementMediaKeysInfos =
   } |
   null;
 
-/**
- * Store the MediaKeys infos attached to a media element.
- * @class MediaKeysInfosStore
- */
-export default class MediaKeysInfosStore {
-  private _state : WeakMap<HTMLMediaElement, IMediaElementMediaKeysInfos>;
+// Store the MediaKeys infos attached to a media element.
+const currentMediaState = new WeakMap<HTMLMediaElement, IMediaElementMediaKeysInfos>();
 
-  constructor() {
-    this._state = new WeakMap();
-  }
-
+export default {
+  /**
+   * Update MediaKeys infos set on a HMTLMediaElement
+   * @param {HTMLMediaElement} mediaElement
+   * @param {Object} state
+   */
   setState(
     mediaElement : HTMLMediaElement,
     state : IMediaElementMediaKeysInfos
   ) : void {
-    this._state.set(mediaElement, state);
-  }
+    currentMediaState.set(mediaElement, state);
+  },
 
+  /**
+   * Get MediaKeys infos currently set on a HMTLMediaElement
+   * @param {HTMLMediaElement} mediaElement
+   * @returns {Object}
+   */
   getState(mediaElement : HTMLMediaElement) : IMediaElementMediaKeysInfos {
-    return this._state.get(mediaElement) || null;
-  }
+    return currentMediaState.get(mediaElement) || null;
+  },
 
+  /**
+   * Remove MediaKeys infos currently set on a HMTLMediaElement
+   * @param {HTMLMediaElement} mediaElement
+   */
   clearState(mediaElement : HTMLMediaElement) : void {
-    this._state.set(mediaElement, null);
-  }
-}
+    currentMediaState.set(mediaElement, null);
+  },
+};

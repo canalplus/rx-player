@@ -14,22 +14,12 @@
  * limitations under the License.
  */
 
+import noop from "../../utils/noop";
+import disposeMediaKeys from "./dispose_media_keys";
+
 /**
- * /!\ This file is feature-switchable.
- * It always should be imported through the `features` object.
+ * Free up all ressources taken by the EME management.
  */
-
-import clearEMESession from "./clear_eme_session";
-import disposeEME from "./dispose_eme";
-import EMEManager from "./eme_manager";
-import getCurrentKeySystem from "./get_current_key_system";
-import { IEMEManagerEvent } from "./types";
-export * from "./types";
-
-export default EMEManager;
-export {
-  clearEMESession,
-  disposeEME,
-  getCurrentKeySystem,
-  IEMEManagerEvent,
-};
+export default function disposeEME(mediaElement : HTMLMediaElement) : void {
+  disposeMediaKeys(mediaElement).subscribe(noop);
+}

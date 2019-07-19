@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-/**
- * /!\ This file is feature-switchable.
- * It always should be imported through the `features` object.
- */
+import getFuzzedDelay from "../get_fuzzed_delay";
 
-import clearEMESession from "./clear_eme_session";
-import disposeEME from "./dispose_eme";
-import EMEManager from "./eme_manager";
-import getCurrentKeySystem from "./get_current_key_system";
-import { IEMEManagerEvent } from "./types";
-export * from "./types";
-
-export default EMEManager;
-export {
-  clearEMESession,
-  disposeEME,
-  getCurrentKeySystem,
-  IEMEManagerEvent,
-};
+describe("utils - getFuzzedDelay", () => {
+  it("should return the delay given multiplied by [0.3, 0.7]", () => {
+    for (let i = 0; i < 1000; i++) {
+      const fuzzed = getFuzzedDelay(1);
+      expect(fuzzed).toBeGreaterThanOrEqual(0.7);
+      expect(fuzzed).toBeLessThanOrEqual(1.3);
+    }
+    for (let i = 0; i < 1000; i++) {
+      const fuzzed = getFuzzedDelay(98);
+      expect(fuzzed).toBeGreaterThanOrEqual(98 * 0.7);
+      expect(fuzzed).toBeLessThanOrEqual(98 * 1.3);
+    }
+  });
+});
