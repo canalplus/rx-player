@@ -116,14 +116,8 @@ export type ISegmentLoaderObserver<T> = Observer<ISegmentLoaderEvent<T>>;
 export interface IManifestParserArguments<T, U> {
   response : ILoaderDataLoadedValue<T>; // Response from the loader
   url : string; // URL originally requested
-  hasClockSynchronization : boolean; // If true, the current device is currently
-                                     // synchronized with the server's clock.
-                                     // If false, there may be a delay/advance
-                                     // between it and the client's clock.
-                                     // In the latter case, you might need to
-                                     // perform a synchronization step,
-                                     // depending on the type of
-                                     // Manifest.
+  externalClockOffset? : number; // If set, offset to add to `performance.now()`
+                                 // to obtain the current server's time
 
   // allow the parser to load supplementary ressources (of type U)
   scheduleRequest : (request : () => Observable<U>) => Observable<U>;

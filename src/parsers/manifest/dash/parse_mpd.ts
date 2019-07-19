@@ -42,7 +42,8 @@ const generateManifestID = idGenerator();
 export interface IMPDParserArguments {
   url : string; // URL of the manifest (post-redirection if one)
   referenceDateTime? : number; // Default base time, in seconds
-  loadExternalClock: boolean; // If true, we might need to synchronize the clock
+  externalClockOffset? : number; // If set, offset to add to `performance.now()`
+                                 // to obtain the current server's time
 }
 
 export type IParserResponse<T> = { type : "needs-ressources";
@@ -178,6 +179,10 @@ function parseCompleteIntermediateRepresentation(
                    undefined,
   };
 
+  if (parsedMPD.clockOffset == null && args.externalClockOffset != null) {
+    parsedMPD.clockOffset = args.externalClockOffset;
+  }
+
   // -- add optional fields --
   if (rootAttributes.minimumUpdatePeriod != null
       && rootAttributes.minimumUpdatePeriod > 0) {
@@ -187,10 +192,7 @@ function parseCompleteIntermediateRepresentation(
   checkManifestIDs(parsedMPD);
   if (parsedMPD.isLive) {
     const lastTimeReference = getLastTimeReference(parsedMPD);
-    if (clockOffsetFromDirectUTCTiming == null &&
-        lastTimeReference == null &&
-        args.loadExternalClock
-    ) {
+    if (parsedMPD.clockOffset == null && lastTimeReference == null) {
       const UTCTimingHTTPURL = getHTTPUTCTimingURL(mpdIR);
       if (UTCTimingHTTPURL != null && UTCTimingHTTPURL.length > 0) {
         return {

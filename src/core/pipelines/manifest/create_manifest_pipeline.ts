@@ -53,8 +53,8 @@ export interface IRequestSchedulerOptions { maxRetry : number;
 
 export interface IFetchManifestOptions {
   url : string; // URL from which the manifest was requested
-  hasClockSynchronization: boolean; // if true, the client's clock is
-                                    // synchronized with the server's
+  externalClockOffset? : number; // If set, offset to add to `performance.now()`
+                                 // to obtain the current server's time
 }
 
 type IPipelineManifestOptions =
@@ -135,7 +135,7 @@ export default function createManifestPipeline(
    * @returns {Observable}
    */
   return function fetchManifest(
-    { url, hasClockSynchronization } : IFetchManifestOptions
+    { url, externalClockOffset } : IFetchManifestOptions
   ) : Observable<IFetchManifestResult> {
     return loader({ url }).pipe(
 
@@ -153,7 +153,7 @@ export default function createManifestPipeline(
         const { sendingTime } = value;
         return parser({ response: value,
                         url,
-                        hasClockSynchronization,
+                        externalClockOffset,
                         scheduleRequest }
         ).pipe(
           catchError((error: unknown) => {
