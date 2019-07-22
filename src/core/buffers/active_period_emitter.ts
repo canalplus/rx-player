@@ -28,32 +28,26 @@ import {
 } from "rxjs";
 import {
   distinctUntilChanged,
+  filter,
   map,
-  tap,
+  scan,
 } from "rxjs/operators";
-import log from "../../log";
 import { Period } from "../../manifest";
-import SortedList from "../../utils/sorted_list";
-import {
-  IBufferType,
-} from "../source_buffers";
+import { IBufferType } from "../source_buffers";
+import { IMultiplePeriodBuffersEvent } from "./types";
 
-// PeriodBuffer informations emitted to the ActivePeriodEmitted
-export interface IPeriodBufferInfos { period: Period;
-                                      type: IBufferType; }
+interface IPeriodObject { period : Period;
+                          buffers: Set<IBufferType>; }
 
-// structure used internally to keep track of which Period has which
-// PeriodBuffer
-interface IPeriodItem { period: Period;
-                        buffers: Set<IBufferType>; }
+type IPeriodsList = Partial<Record<string, IPeriodObject>>;
 
 /**
  * Emit the active Period each times it changes.
  *
  * The active Period is the first Period (in chronological order) which has
- * a PeriodBuffer for every defined BUFFER_TYPES.
+ * a RepresentationBuffer associated for every defined BUFFER_TYPES.
  *
- * Emit null if no Period has PeriodBuffers for all types.
+ * Emit null if no Period can be considered active currently.
  *
  * @example
  * For 4 BUFFER_TYPES: "AUDIO", "VIDEO", "TEXT" and "IMAGE":
@@ -66,7 +60,8 @@ interface IPeriodItem { period: Period;
  * IMAGE   |=========| | |=        | |
  *                     +-------------+
  *
- * The active Period here is Period 2 as Period 1 has no video PeriodBuffer.
+ * The active Period here is Period 2 as Period 1 has no video
+ * RepresentationBuffer.
  *
  * If we are missing a or multiple PeriodBuffers in the first chronological
  * Period, like that is the case here, it generally means that we are
@@ -85,75 +80,74 @@ interface IPeriodItem { period: Period;
  * @returns {Observable}
  */
 export default function ActivePeriodEmitter(
-  bufferTypes: IBufferType[],
-  addPeriodBuffer$ : Observable<IPeriodBufferInfos>,
-  removePeriodBuffer$ : Observable<IPeriodBufferInfos>
+  buffers$: Array<Observable<IMultiplePeriodBuffersEvent>>
 ) : Observable<Period|null> {
-  const periodsList : SortedList<IPeriodItem> =
-    new SortedList((a, b) => a.period.start - b.period.start);
+  const numberOfBuffers = buffers$.length;
+  return observableMerge(...buffers$).pipe(
+    // not needed to filter, this is an optim
+    filter(({ type }) => type === "periodBufferCleared" ||
+                         type === "adaptationChange" ||
+                         type === "representationChange"),
+    scan<IMultiplePeriodBuffersEvent, IPeriodsList>((acc, evt) => {
+      switch (evt.type) {
+        case "periodBufferCleared": {
+          const { period, type } = evt.value;
+          const currentInfos = acc[period.id];
+          if (currentInfos != null && currentInfos.buffers.has(type)) {
+            currentInfos.buffers.delete(type);
+            if (currentInfos.buffers.size === 0) {
+              delete acc[period.id];
+            }
+          }
+        }
+          break;
 
-  const onItemAdd$ = addPeriodBuffer$
-    .pipe(tap(({ period, type }) => {
-      // add or update the periodItem
-      let periodItem = periodsList.findFirst(p => p.period === period);
-      if (!periodItem) {
-        periodItem = { period,
-                       buffers: new Set<IBufferType>() };
-        periodsList.add(periodItem);
+        case "adaptationChange": {
+          // `adaptationChange` with a null Adaptation will not lead to a
+          // `representationChange` event
+          if (evt.value.adaptation != null) {
+            return acc;
+          }
+        }
+        case "representationChange": {
+          const { period, type } = evt.value;
+          const currentInfos = acc[period.id];
+          if (currentInfos != null && !currentInfos.buffers.has(type)) {
+            currentInfos.buffers.add(type);
+          } else {
+            const bufferSet = new Set<IBufferType>();
+            bufferSet.add(type);
+            acc[period.id] = { period, buffers: bufferSet };
+          }
+        }
+          break;
+
+      }
+      return acc;
+    }, {}),
+
+    map((list) : Period | null => {
+      const activePeriodIDs = Object.keys(list);
+      const completePeriods : Period[] = [];
+      for (let i = 0; i < activePeriodIDs.length; i++) {
+        const periodInfos = list[activePeriodIDs[i]];
+        if (periodInfos != null && periodInfos.buffers.size === numberOfBuffers) {
+          completePeriods.push(periodInfos.period);
+        }
       }
 
-      if (periodItem.buffers.has(type)) {
-        log.warn(`ActivePeriodEmitter: Buffer type ${type} already added to the period`);
-      }
-      periodItem.buffers.add(type);
-    }));
-
-  const onItemRemove$ = removePeriodBuffer$
-    .pipe(tap(({ period, type }) => {
-      if (!periodsList || periodsList.length() === 0) {
-        log.error("ActivePeriodEmitter: cannot remove, no period is active.");
-        return ;
-      }
-
-      const periodItem = periodsList.findFirst(p => p.period === period);
-      if (!periodItem) {
-        log.error("ActivePeriodEmitter: cannot remove, unknown period.");
-        return ;
-      }
-
-      periodItem.buffers.delete(type);
-
-      if (!periodItem.buffers.size) {
-        periodsList.removeElement(periodItem);
-      }
-    }));
-
-  return observableMerge(onItemAdd$, onItemRemove$).pipe(
-    map(() : Period|null => {
-      const head = periodsList.head();
-      if (!head) {
-        return null;
-      }
-
-      const periodItem = periodsList.findFirst(p =>
-        isBufferListFull(bufferTypes, p.buffers)
-      );
-      return periodItem != null ? periodItem.period : null;
+      return completePeriods.reduce<Period|null>((acc, period) => {
+        if (acc == null) {
+          return period;
+        }
+        return period.start < acc.start ? period :
+                                          acc;
+      }, null);
     }),
-    distinctUntilChanged()
-  );
-}
 
-/**
- * Returns true if the set of given buffer types is complete (has all possible
- * types).
- * @param {Array.<string>} bufferTypes - Every buffer types in the content.
- * @param {Set.<string>} bufferList
- * @returns {Boolean}
- */
-function isBufferListFull(
-  bufferTypes : IBufferType[],
-  bufferList : Set<IBufferType>
-) : boolean {
-  return bufferList.size >= bufferTypes.length;
+    distinctUntilChanged((a, b) => {
+      return a == null && b == null ||
+             a != null && b != null && a.id === b.id;
+    })
+  );
 }

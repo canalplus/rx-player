@@ -15,6 +15,7 @@
  */
 
 import {
+  asapScheduler,
   BehaviorSubject,
   concat as observableConcat,
   EMPTY,
@@ -29,6 +30,7 @@ import {
   ignoreElements,
   map,
   mergeMap,
+  observeOn,
   share,
   take,
   takeUntil,
@@ -51,9 +53,7 @@ import SourceBuffersManager, {
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
 } from "../source_buffers";
-import ActivePeriodEmitter, {
-  IPeriodBufferInfos,
-} from "./active_period_emitter";
+import ActivePeriodEmitter from "./active_period_emitter";
 import areBuffersComplete from "./are_buffers_complete";
 import EVENTS from "./events_generators";
 import PeriodBuffer, {
@@ -165,33 +165,21 @@ export default function BufferOrchestrator(
       return EMPTY;
     }));
 
-  const addPeriodBuffer$ = new Subject<IPeriodBufferInfos>();
-  const removePeriodBuffer$ = new Subject<IPeriodBufferInfos>();
   const bufferTypes = getBufferTypes();
 
   // Every PeriodBuffers for every possible types
   const buffersArray = bufferTypes.map((bufferType) => {
-    return manageEveryBuffers(bufferType, initialPeriod).pipe(
-      tap((evt) => {
-        if (evt.type === "periodBufferReady") {
-          addPeriodBuffer$.next(evt.value);
-        } else if (evt.type === "periodBufferCleared") {
-          removePeriodBuffer$.next(evt.value);
-        }
-      }),
-      share()
-    );
+    return manageEveryBuffers(bufferType, initialPeriod)
+      .pipe(observeOn(asapScheduler), share());
   });
 
   // Emits the activePeriodChanged events every time the active Period changes.
-  const activePeriodChanged$ =
-    ActivePeriodEmitter(bufferTypes, addPeriodBuffer$, removePeriodBuffer$).pipe(
-      filter((period) : period is Period => !!period),
-      map(period => {
-        log.info("Buffer: New active period", period);
-        return EVENTS.activePeriodChanged(period);
-      })
-    );
+  const activePeriodChanged$ = ActivePeriodEmitter(buffersArray).pipe(
+    filter((period) : period is Period => !!period),
+    map(period => {
+      log.info("Buffer: New active period", period);
+      return EVENTS.activePeriodChanged(period);
+    }));
 
   // Emits an "end-of-stream" event once every PeriodBuffer are complete.
   // Emits a 'resume-stream" when it's not
@@ -200,8 +188,8 @@ export default function BufferOrchestrator(
       areComplete ? EVENTS.endOfStream() : EVENTS.resumeStream()
     ));
 
-  return observableMerge(activePeriodChanged$,
-                         ...buffersArray,
+  return observableMerge(...buffersArray,
+                         activePeriodChanged$,
                          endOfStream$,
                          outOfManifest$);
 
