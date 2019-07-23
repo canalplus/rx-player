@@ -40,7 +40,7 @@ export default function getEstimateFromBufferLevels(
 ) : number|undefined {
   const { bufferGap, currentBitrate, currentScore, speed } = clockTick;
   if (currentBitrate == null) {
-    return undefined;
+    return bitrates[0];
   }
   const currentBitrateIndex = arrayFindIndex(bitrates, b => b === currentBitrate);
   if (currentBitrateIndex < 0 || bitrates.length !== bufferLevels.length) {
