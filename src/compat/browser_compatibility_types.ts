@@ -15,6 +15,7 @@
  */
 
 import { MediaError } from "../errors";
+import shouldUseWebKitMediaKeys from "./should_use_webkit_media_keys";
 
 // regular MediaKeys type + optional functions present in IE11
 interface ICompatMediaKeysConstructor {
@@ -95,28 +96,32 @@ const MediaSource_ : typeof MediaSource|undefined = win.MediaSource ||
                                                     win.WebKitMediaSource ||
                                                     win.MSMediaSource;
 
-const MediaKeys_ : ICompatMediaKeysConstructor|undefined =
-  win.MediaKeys ||
-  win.MozMediaKeys ||
-  win.WebKitMediaKeys ||
-  win.MSMediaKeys ||
-  class {
-    public readonly create : () => never;
-    public readonly isTypeSupported : () => never;
-    public readonly createSession : () => never;
-    public readonly setServerCertificate : () => never;
-    constructor() {
-      const noMediaKeys = () => {
-        throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED",
-                             "No `MediaKeys` implementation found " +
-                             "in the current browser.");
-      };
-      this.create = noMediaKeys;
-      this.createSession = noMediaKeys;
-      this.isTypeSupported = noMediaKeys;
-      this.setServerCertificate = noMediaKeys;
-    }
-  };
+const MediaKeys_ : ICompatMediaKeysConstructor|undefined = (() => {
+  if (shouldUseWebKitMediaKeys()) {
+    return win.WebKitMediaKeys;
+  }
+  return win.MediaKeys ||
+         win.MSMediaKeys ||
+         win.MozMediaKeys ||
+         win.WebKitMediaKeys ||
+         class {
+           public readonly create : () => never;
+           public readonly isTypeSupported : () => never;
+           public readonly createSession : () => never;
+           public readonly setServerCertificate : () => never;
+           constructor() {
+            const noMediaKeys = () => {
+              throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED",
+                                   "No `MediaKeys` implementation found " +
+                                   "in the current browser.");
+            };
+             this.create = noMediaKeys;
+             this.createSession = noMediaKeys;
+             this.isTypeSupported = noMediaKeys;
+             this.setServerCertificate = noMediaKeys;
+           }
+         };
+})();
 
 const READY_STATES = { HAVE_NOTHING: 0,
                        HAVE_METADATA: 1,

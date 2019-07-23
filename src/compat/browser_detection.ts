@@ -29,9 +29,12 @@ const isFirefox : boolean = navigator.userAgent.toLowerCase()
 
 const isSamsungBrowser : boolean = /SamsungBrowser/.test(navigator.userAgent);
 
+const isSafari : boolean = /Safari/i.test(navigator.userAgent);
+
 export {
   isIE11,
   isIEOrEdge,
   isFirefox,
+  isSafari,
   isSamsungBrowser,
 };
