@@ -17,6 +17,7 @@
 import {
   AsyncSubject,
   combineLatest,
+  merge,
   Observable,
   Observer,
   of,
@@ -25,10 +26,14 @@ import {
 import {
   distinctUntilChanged,
   distinctUntilKeyChanged,
+  filter,
   mergeMap,
+  share,
   tap,
+  withLatestFrom,
 } from "rxjs/operators";
 import find from "../../../../../utils/array_find";
+import { concat as concatBytes } from "../../../../../utils/byte_parsing";
 
 import { makeHTTPRequest, SegmentConstuctionError } from "../../utils";
 import { buildInitIndexSegment } from "./dashConnectivity";
@@ -156,75 +161,6 @@ export const getBaseSegments = async (
 };
 
 /**
- * A tool function that is used to concat the initSegment buffer
- * and indexSegment buffer together to create the SIDX.
- *
- * @param tabs - An array of Uint8Array buffer
- * @returns The concatenated initSegment/indexSegment buffer
- *
- */
-export function concatBytes(...args: Uint8Array[]): Uint8Array {
-  const totalLengthBuffers = args.reduce(
-    (acc, buffer) => acc + buffer.byteLength,
-    0
-  );
-  const concatBuffer = args.reduce(
-    (acc, buffer) => {
-      if (buffer.byteLength > 0) {
-        acc.newBuffer.set(buffer, acc.offset);
-        acc.offset += buffer.byteLength;
-        return acc;
-      }
-      return acc;
-    },
-    { newBuffer: new Uint8Array(totalLengthBuffers), offset: 0 }
-  );
-  return concatBuffer.newBuffer;
-}
-
-/**
- * A tool function that is used to filter depending
- * on a callback but also permit to emit immediately of the given subject is emiting.
- *
- * @param (value) => boolean - a callback that should return a boolean
- * @param AsyncSubject - An AsyncSubject that wait a single emission
- * @returns Observable source
- *
- */
-export function takeUntilFilter<V, T>(
-  shouldEmit: (value: [V, T]) => boolean,
-  pause$: AsyncSubject<void>
-) {
-  let i = 0;
-  return (source: Observable<[V, T]>): Observable<[V, T]> => {
-    return new Observable<[V, T]>(obs => {
-      const subscription = source.subscribe(
-        value => {
-          try {
-            pause$.subscribe(() => {
-              if (i === 0) {
-                obs.next(value);
-                i += 1;
-              }
-            });
-            if (shouldEmit(value)) {
-              obs.next(value);
-              return;
-            }
-          } catch (err) {
-            obs.error(err);
-          }
-        },
-        err => obs.error(err),
-        () => obs.complete()
-      );
-
-      return subscription;
-    });
-  };
-}
-
-/**
  * An operator that take a Observable in parameter that
  * is emitting a progress status. Then, decide when to emit next manifest.
  *
@@ -253,33 +189,35 @@ export function emitEveryNth(
         ),
         distinctUntilKeyChanged("progress")
       );
-      return combineLatest([source$, progressFiltered$])
-        .pipe(
-          distinctUntilChanged(
-            (
-              [_, { progress: prevProgress }],
-              [__, { progress: currProgress }]
-            ) => prevProgress === currProgress
-          ),
-          tap(builder => {
-            const [, { status, progress, size }] = builder;
-            emitter.trigger("progress", {
-              contentID,
-              progress,
-              size,
-              status,
-            });
-          }),
-          takeUntilFilter(
-            ([_, { progress }]) =>
-              storeManifestEvery && typeof storeManifestEvery === "function"
-                ? storeManifestEvery(progress) || progress === 100
-                : progress % 10 === 0,
-            pause$
+      const builder$ = combineLatest([source$, progressFiltered$]).pipe(
+        distinctUntilChanged(
+          ([_, { progress: prevProgress }], [__, { progress: currProgress }]) =>
+            prevProgress === currProgress
+        ),
+        tap(builder => {
+          const [, { status, progress, size }] = builder;
+          emitter.trigger("progress", {
+            contentID,
+            progress,
+            size,
+            status,
+          });
+        }),
+        share()
+      );
+      merge(
+        builder$.pipe(
+          filter(([_, { progress }]) =>
+            storeManifestEvery && typeof storeManifestEvery === "function"
+              ? storeManifestEvery(progress) || progress === 100
+              : progress % 10 === 0
           )
-        )
+        ),
+        pause$
+      )
+        .pipe(withLatestFrom(builder$))
         .subscribe(
-          ([manifest, { progress, status, ...props }]) => {
+          ([_, [manifest, { progress, status, ...props }]]) => {
             obs.next({
               manifest: { ...manifest, isFinished: progress === 100 },
               progress:

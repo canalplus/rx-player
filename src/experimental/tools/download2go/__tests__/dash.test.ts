@@ -14,14 +14,9 @@
  * limitations under the License.
  */
 
-import { AsyncSubject, from } from "rxjs";
 import { IParsedRepresentation } from "../../../../parsers/manifest/types";
 import { buildInitIndexSegment } from "../apis/dash/dashConnectivity";
-import {
-  chooseVideoQuality,
-  concatBytes,
-  takeUntilFilter,
-} from "../apis/dash/dashTools";
+import { chooseVideoQuality } from "../apis/dash/dashTools";
 
 const resForMakeHTTPRequest = new Int16Array(0);
 jest.mock("../utils.ts", () => ({
@@ -195,54 +190,6 @@ describe("Download2go - dash content manipulation", () => {
             width: 300,
           },
         ]);
-      });
-    });
-
-    describe("[concatBytes]", () => {
-      it("should return a Uint8Array with length of 4 but empty", () => {
-        const data1 = new Uint8Array(2);
-        const data2 = new Uint8Array(2);
-        const res = concatBytes(data1, data2);
-        expect(res.byteLength).toEqual(4);
-      });
-
-      it("should return a Uint8Array concat which is not containing empty value", () => {
-        const data1 = Uint8Array.from([21, 12, 90]);
-        const data2 = Uint8Array.from([82, 67, 23]);
-        const res = concatBytes(data1, data2);
-        expect(res).toEqual(Uint8Array.from([21, 12, 90, 82, 67, 23]));
-      });
-    });
-
-    describe("[takeUntilFilter]", () => {
-      it("should return a normal stream depending on callback boolean", () => {
-        const obs2 = new AsyncSubject<void>();
-        from([["1", 1], ["2", 2], ["3", 3], ["4", 4], ["5", 5]])
-          .pipe(takeUntilFilter<string, number>(
-            ([, progress]) => progress % 2 === 0,
-            obs2
-          ) as any)
-          .subscribe(res => {
-            if (Array.isArray(res)) {
-              expect(res[1]).toEqual(2);
-            }
-          });
-      });
-
-      it("should emit value depending on obs emit whatever is the cb condition", () => {
-        const obs2 = new AsyncSubject<void>();
-        obs2.next();
-        obs2.complete();
-        from([["1", 1], ["2", 2], ["3", 3], ["4", 4], ["5", 5]])
-          .pipe(takeUntilFilter<string, number>(
-            ([, progress]) => progress % 3 === 0,
-            obs2
-          ) as any)
-          .subscribe(res => {
-            if (Array.isArray(res)) {
-              expect(res[1]).toEqual(1);
-            }
-          });
       });
     });
   });

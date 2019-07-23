@@ -297,9 +297,12 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
       if (activeSubsDownloader[contentID] && activePauseSubject[contentID]) {
         activePauseSubject[contentID].next();
         activePauseSubject[contentID].complete();
-        activeSubsDownloader[contentID].unsubscribe();
-        delete activeSubsDownloader[contentID];
         activePauseSubject[contentID].unsubscribe();
+        // Add an additional check when pause complete.
+        if (activeSubsDownloader[contentID]) {
+          activeSubsDownloader[contentID].unsubscribe();
+          delete activeSubsDownloader[contentID];
+        }
         delete activePauseSubject[contentID];
       }
       const indexTx = db
