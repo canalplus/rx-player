@@ -20,7 +20,7 @@ import arrayFindIndex from "../../utils/array_find_index";
 /**
  * @param {Array.<Representation>} representations - The representations array
  * @param {Number} bitrate
- * @returns {Representation}
+ * @returns {Representation|undefined}
  */
 export default function fromBitrateCeil(
   representations : Representation[],

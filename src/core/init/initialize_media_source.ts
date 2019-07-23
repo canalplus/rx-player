@@ -48,8 +48,7 @@ import Manifest from "../../manifest";
 import { ITransportPipelines } from "../../transports";
 import throttle from "../../utils/rx-throttle";
 import ABRManager, {
-  IABRMetric,
-  IABRRequest,
+  IABRManagerArguments,
 } from "../abr";
 import {
   IEMEManagerEvent,
@@ -59,10 +58,7 @@ import {
   createManifestPipeline,
   SegmentPipelinesManager,
 } from "../pipelines";
-import {
-  IBufferType,
-  ITextTrackSourceBufferOptions,
-} from "../source_buffers";
+import { ITextTrackSourceBufferOptions } from "../source_buffers";
 import createEMEManager, {
   IEMEDisabledEvent,
 } from "./create_eme_manager";
@@ -105,12 +101,7 @@ function getManifestPipelineOptions(
 
 // Arguments to give to the `initialize` function
 export interface IInitializeOptions {
-  adaptiveOptions: { initialBitrates : Partial<Record<IBufferType, number>>;
-                     manualBitrates : Partial<Record<IBufferType, number>>;
-                     maxAutoBitrates : Partial<Record<IBufferType, number>>;
-                     throttle : Partial<Record<IBufferType, Observable<number>>>;
-                     throttleBitrate : Partial<Record<IBufferType, Observable<number>>>;
-                     limitWidth : Partial<Record<IBufferType, Observable<number>>>; };
+  adaptiveOptions: IABRManagerArguments;
   autoPlay : boolean;
   bufferOptions : { wantedBufferAhead$ : BehaviorSubject<number>;
                     maxBufferAhead$ : Observable<number>;
@@ -179,23 +170,12 @@ export default function InitializeOnMediaSource({
                            getManifestPipelineOptions(networkConfig),
                            warning$));
 
-  // Subject through which network metrics will be sent by the segment
-  // pipelines to the ABR manager.
-  const network$ = new Subject<IABRMetric>();
-
-  // Subject through which each request progression will be sent by the
-  // segment pipelines to the ABR manager.
-  const requestsInfos$ = new Subject<Subject<IABRRequest>>();
-
   // Creates pipelines for downloading segments.
-  const segmentPipelinesManager = new SegmentPipelinesManager<any>(pipelines,
-                                                                   requestsInfos$,
-                                                                   network$,
-                                                                   warning$);
+  const segmentPipelinesManager = new SegmentPipelinesManager<any>(pipelines);
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".
-  const abrManager = new ABRManager(requestsInfos$, network$, adaptiveOptions);
+  const abrManager = new ABRManager(adaptiveOptions);
 
   // Create and open a new MediaSource object on the given media element.
   const openMediaSource$ = openMediaSource(mediaElement).pipe(

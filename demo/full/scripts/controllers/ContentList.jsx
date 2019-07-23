@@ -434,6 +434,11 @@ class ContentList extends React.Component {
         />);
     };
 
+    const selectValues = contentsToSelect.map(c => {
+      return { name: c.displayName,
+               disabled: c.isDisabled };
+    });
+
     return (
       <div className="choice-inputs-wrapper">
         <div className="content-inputs">
@@ -447,7 +452,7 @@ class ContentList extends React.Component {
               <Select
                 className="choice-input content-choice white-select"
                 onChange={onContentChoiceChange}
-                options={contentsToSelect.map(c => c.displayName)}
+                options={selectValues}
                 selected={contentChoiceIndex}
               />
             </div>

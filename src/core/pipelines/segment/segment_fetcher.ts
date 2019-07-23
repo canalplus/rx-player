@@ -15,10 +15,7 @@
  */
 
 import objectAssign from "object-assign";
-import {
-  Observable,
-  Subject,
-} from "rxjs";
+import { Observable, Subject } from "rxjs";
 import {
   catchError,
   filter,
@@ -27,10 +24,7 @@ import {
   share,
   tap,
 } from "rxjs/operators";
-import {
-  formatError,
-  ICustomError,
-} from "../../../errors";
+import { formatError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
   ISegmentLoaderArguments,
@@ -40,67 +34,61 @@ import {
 import idGenerator from "../../../utils/id_generator";
 import {
   IABRMetric,
-  IABRRequest
+  IABRRequest,
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
 import createLoader, {
   IPipelineLoaderOptions,
   IPipelineLoaderResponse,
+  IPipelineWarning,
 } from "../utils/create_loader";
 
-interface IParsedSegment<T> {
-  segmentData : T;
-  segmentInfos : {
-    duration? : number;
-    time : number;
-    timescale : number;
-  };
-  segmentOffset : number;
-}
+export type ISegmentFetcherContent = ISegmentLoaderArguments;
+export type ISegmentFetcherWarning = IPipelineWarning;
 
-export interface IFetchedSegment<T> {
+export interface ISegmentFetcherMetrics { type : "metrics";
+                                          value : { size? : number;
+                                                    duration? : number;
+                                                    content: ISegmentFetcherContent; }; }
+
+interface IParsedSegment<T> { segmentData : T;
+                              segmentInfos : { duration? : number;
+                                               time : number;
+                                               timescale : number; };
+                              segmentOffset : number; }
+export interface ISegmentFetcherResponseEvent<T> {
+  type : "response";
   parse : (init? : ISegmentTimingInfos) => Observable<IParsedSegment<T>>;
 }
 
-export type ISegmentFetcher<T> =
-  (content : ISegmentLoaderArguments) => Observable<IFetchedSegment<T>>;
+export type ISegmentFetcherEvent<T> = ISegmentFetcherResponseEvent<T> |
+                                      ISegmentFetcherWarning;
+
+export type ISegmentFetcher<T> = (content : ISegmentLoaderArguments) =>
+                                   Observable<ISegmentFetcherEvent<T>>;
 
 const generateRequestID = idGenerator();
 
 /**
  * Create a function which will fetch segments.
  *
- * This function will:
- *   - only emit the resulting data
- *   - dispatch the other infos through the right subjects.
- *
  * @param {string} bufferType
  * @param {Object} transport
- * @param {Subject} network$ - Subject through which network metrics will be
- * sent, for the ABR.
- * @param {Subject} requests$ - Subject through which requests infos will be
- * sent, for the ABR.
- * @param {Subject} warning$ - Subject through which minor requests error will
- * be sent.
+ * @param {Subject} requests$
  * @param {Object} options
  * @returns {Function}
  */
 export default function createSegmentFetcher<T>(
   bufferType : IBufferType,
   transport : ITransportPipelines,
-  network$ : Subject<IABRMetric>,
-  requests$ : Subject<Subject<IABRRequest>>,
-  warning$ : Subject<ICustomError>,
+  requests$ : Subject<IABRMetric | IABRRequest>,
   options : IPipelineLoaderOptions<ISegmentLoaderArguments, T>
 ) : ISegmentFetcher<T> {
   const segmentLoader = createLoader(transport[bufferType], options);
   const segmentParser = transport[bufferType].parser as any; // deal with it
-  let request$ : Subject<IABRRequest>|undefined;
-  let id : string|undefined;
 
   /**
    * Process a pipeline observable to adapt it to the the rest of the code:
-   *   - use the network$ subject for network metrics (bandwitdh mesure)
    *   - use the requests subject for network requests and their progress
    *   - use the warning$ subject for retries' error messages
    *   - only emit the data
@@ -110,93 +98,79 @@ export default function createSegmentFetcher<T>(
    */
   return function fetchSegment(
     content : ISegmentLoaderArguments
-  ) : Observable<IFetchedSegment<T>> {
+  ) : Observable<ISegmentFetcherEvent<T>> {
+    const id = generateRequestID();
+    let requestBeginSent = false;
     return segmentLoader(content).pipe(
-
       tap((arg) => {
-        switch (arg.type) {
-          case "error":
-            warning$.next(objectAssign(arg.value, { pipelineType: bufferType }));
-            break;
+      switch (arg.type) {
+        case "metrics": {
+          const { value } = arg;
+          const { size, duration } = value; // unwrapping for TS
 
-          case "metrics": {
-            const { value } = arg;
-            const { size, duration } = value; // unwrapping for TS
-
-            // format it for ABR Handling
-            if (size != null && duration != null) {
-              network$.next({ type: bufferType,
-                              value: { size, duration } });
-            }
-            break;
+          // format it for ABR Handling
+          if (size != null && duration != null) {
+            requests$.next({ type: "metrics",
+                            value: { size, duration, content } });
           }
-
-          case "request": {
-            const { value } = arg;
-
-            // format it for ABR Handling
-            const segment : ISegment|undefined = value && value.segment;
-            if (segment != null && segment.duration != null) {
-              request$ = new Subject();
-              requests$.next(request$);
-
-              const duration = segment.duration / segment.timescale;
-              const time = segment.time / segment.timescale;
-              id = generateRequestID();
-              request$.next({ type: bufferType,
-                              event: "requestBegin",
-                              value: { duration,
-                                       time,
-                                       requestTimestamp: performance.now(),
-                                       id } });
-            }
-            break;
-          }
-
-          case "progress": {
-            const { value } = arg;
-            if (value.totalSize != null &&
-                value.size < value.totalSize &&
-                id != null &&
-                request$ != null
-            ) {
-              request$.next({ type: bufferType,
-                              event: "progress",
-                              value: { duration: value.duration,
-                                       size: value.size,
-                                       totalSize: value.totalSize,
-                                       timestamp: performance.now(),
-                                       id } });
-            }
-            break;
-          }
+          break;
         }
-      }),
 
-      filter((arg) : arg is IPipelineLoaderResponse<any> =>
-        arg.type === "response"
-      ),
+        case "request": {
+          const { value } = arg;
+
+          // format it for ABR Handling
+          const segment : ISegment|undefined = value && value.segment;
+          if (segment == null || segment.duration == null) {
+            return;
+          }
+          requestBeginSent = true;
+          const duration = segment.duration / segment.timescale;
+          const time = segment.time / segment.timescale;
+          requests$.next({ type: "requestBegin",
+                           value: { duration,
+                                    time,
+                                    requestTimestamp: performance.now(),
+                                    id } });
+          break;
+        }
+
+        case "progress": {
+          const { value } = arg;
+          if (value.totalSize != null && value.size < value.totalSize) {
+            requests$.next({ type: "progress",
+                             value: { duration: value.duration,
+                                      size: value.size,
+                                      totalSize: value.totalSize,
+                                      timestamp: performance.now(),
+                                      id } });
+          }
+          break;
+        }
+      }
+      }),
 
       finalize(() => {
-        if (request$ != null) {
-          if (id != null) {
-            request$.next({ type: bufferType,
-                            event: "requestEnd",
-                            value: { id } });
-          }
-          request$.complete();
+        if (requestBeginSent) {
+          requests$.next({ type: "requestEnd", value: { id } });
         }
       }),
-
-      map((response) => {
+      filter((e) : e is IPipelineLoaderResponse<T> | IPipelineWarning => {
+        return e.type === "warning" || e.type === "response";
+      }),
+      map((evt) => {
+        if (evt.type === "warning") {
+          return evt;
+        }
         return {
+          type: "response" as const,
           /**
            * Parse the loaded data.
            * @param {Object} [init]
            * @returns {Observable}
            */
           parse(init? : ISegmentTimingInfos) : Observable<IParsedSegment<T>> {
-            const parserArg = objectAssign({ response: response.value, init }, content);
+            const parserArg = objectAssign({ response: evt.value, init }, content);
             return segmentParser(parserArg)
               .pipe(catchError((error: unknown) => {
                 throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
@@ -205,7 +179,6 @@ export default function createSegmentFetcher<T>(
           },
         };
       }),
-
       share() // avoid multiple side effects if multiple subs
     );
   };
