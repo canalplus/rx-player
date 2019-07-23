@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../log";
 import { Representation } from "../../manifest";
 import EWMA from "./ewma";
 
@@ -83,7 +84,10 @@ export default class RepresentationScoreCalculator {
       this._currentRepresentationData = { representation, ewma: currentEWMA };
     }
 
-    if (currentEWMA.getEstimate() > 1) {
+    if (currentEWMA.getEstimate() > 1 &&
+        this._lastRepresentationWithGoodScore !== representation
+    ) {
+      log.debug("ABR: New last stable representation", representation);
       this._lastRepresentationWithGoodScore = representation;
     }
   }

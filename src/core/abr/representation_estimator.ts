@@ -30,6 +30,7 @@ import {
   tap,
   withLatestFrom,
 } from "rxjs/operators";
+import log from "../../log";
 import {
   Adaptation,
   ISegment,
@@ -324,6 +325,8 @@ export default function RepresentationEstimator({
                                          representations[0];
 
           if (forceBandwidthMode) {
+            log.debug("ABR: Choosing representation with bandwith estimation.",
+                      chosenRepFromBandwidth);
             return { bitrate: bandwidthEstimate,
                      representation: chosenRepFromBandwidth,
                      urgent: networkAnalyzer.isUrgent(chosenRepFromBandwidth.bitrate,
@@ -336,6 +339,8 @@ export default function RepresentationEstimator({
           if (bufferBasedBitrate == null ||
               chosenRepFromBandwidth.bitrate >= bufferBasedBitrate)
           {
+            log.debug("ABR: Choosing representation with bandwith estimation.",
+                      chosenRepFromBandwidth);
             return { bitrate: bandwidthEstimate,
                      representation: chosenRepFromBandwidth,
                      urgent: networkAnalyzer.isUrgent(chosenRepFromBandwidth.bitrate,
@@ -350,6 +355,10 @@ export default function RepresentationEstimator({
                                                        limitedBitrate) ||
                                        _representations[0] ||
                                        representations[0];
+          if (bufferBasedBitrate <= maxAutoBitrate) {
+            log.debug("ABR: Choosing representation with buffer based bitrate ceiling.",
+                      chosenRepresentation);
+          }
           return { bitrate: bandwidthEstimate,
                    representation: chosenRepresentation,
                    urgent: networkAnalyzer.isUrgent(bufferBasedBitrate,

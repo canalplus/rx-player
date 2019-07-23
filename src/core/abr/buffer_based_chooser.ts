@@ -16,6 +16,7 @@
 
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
+import log from "../../log";
 import getBufferLevels from "./get_buffer_levels";
 import getEstimateFromBufferLevels, {
   IBufferBasedChooserClockTick,
@@ -41,6 +42,8 @@ export default function BufferBasedChooser(
   bitrates: number[]
 ) : Observable<number|undefined> {
   const levelsMap = getBufferLevels(bitrates);
+  log.debug("ABR: Steps for buffer based chooser.",
+            levelsMap.map((l, i) => ({ bufferLevel: l, bitrate: bitrates[i]})));
   return update$.pipe(map((clockTick) => {
     return getEstimateFromBufferLevels(clockTick, bitrates, levelsMap);
   }));
