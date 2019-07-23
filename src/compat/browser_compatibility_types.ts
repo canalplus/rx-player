@@ -15,7 +15,7 @@
  */
 
 import { MediaError } from "../errors";
-import { shouldUseWebKitMediaKeys } from "./eme/custom_media_keys";
+import shouldUseWebKitMediaKeys from "./should_use_webkit_media_keys";
 
 // regular MediaKeys type + optional functions present in IE11
 interface ICompatMediaKeysConstructor {
