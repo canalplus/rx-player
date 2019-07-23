@@ -19,7 +19,7 @@ describe("getEstimateFromBufferLevels", () => {
     jest.resetModules();
   });
 
-  it("should return undefined if the current bitrate is undefined", () => {
+  it("should return the first bitrate if the current bitrate is undefined", () => {
     const logger = {};
     jest.mock("../../../log", () => ({ __esModule: true,
                                        default: logger }));
@@ -32,24 +32,24 @@ describe("getEstimateFromBufferLevels", () => {
     expect(getEstimateFromBufferLevels({
       bufferGap: 0,
       speed: 1,
-    }, [1, 2, 3], [0, 5, 10])).toEqual(undefined);
+    }, [1, 2, 3], [0, 5, 10])).toEqual(1);
     expect(getEstimateFromBufferLevels({
       bufferGap: 0,
       speed: 1,
       currentBitrate: undefined,
       currentScore: undefined,
-    }, [10, 20], [0, 58])).toEqual(undefined);
+    }, [10, 20], [0, 58])).toEqual(10);
     expect(getEstimateFromBufferLevels({
       bufferGap: 0,
       speed: 1,
       currentBitrate: undefined,
       currentScore: 4,
-    }, [1, 2, 3], [0, 5, 10])).toEqual(undefined);
+    }, [1, 2, 3], [0, 5, 10])).toEqual(1);
     expect(getEstimateFromBufferLevels({
       bufferGap: 0,
       speed: 1,
       currentScore: 1,
-    }, [1, 2, 3], [0, 5, 10])).toEqual(undefined);
+    }, [1, 2, 3], [0, 5, 10])).toEqual(1);
   });
 
   /* tslint:disable max-line-length */
