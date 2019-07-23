@@ -107,12 +107,43 @@ either:
 - resolves if the license was fetched, with the licence in argument
 - resolve with <code>null</code> if you do not want to set a license for this
 <code>message</code> event
-- reject if an error was encountered</p>
+- reject if an error was encountered.</p>
 <p>In any case, the license provided by this function should be of a
 <code>BufferSource</code> type (example: an <code>Uint8Array</code> or an <code>ArrayBuffer</code>).</p>
-<p>Note: We set a 10 seconds timeout on this request. If the returned Promise
-do not resolve or reject under this limit, the player will stop with an
-error. If this limit is problematic for you, please open an issue.</p>
+<p>Even in case of an error, you can (this is not mandatory) set two
+properties on the rejected value which will be interpreted by the
+RxPlayer:
+- <code>noRetry</code> (<code>Boolean</code>): If set to <code>true</code>, we will throw directly a
+<code>KEY_LOAD_ERROR</code> to call <code>getLicense</code>. If not set or set to <code>false</code>,
+the current retry parameters will be applied (see <code>getLicenseConfig</code>)
+- <code>message</code> (<code>string</code>): If the <code>message</code> property is set as a &#x201C;string&#x201D;,
+this message will be set as the <code>message</code> property of the
+corresponding <code>EncryptedMediaError</code> (either communicated through an
+<code>&quot;error&quot;</code> event if we&#x2019;re not retrying or through a <code>&quot;warning&quot;</code> event
+if we&#x2019;re retrying).
+As every other <code>getLicense</code>-related errors, this error will have the
+<code>KEY_LOAD_ERROR</code> <code>code</code> property.</p>
+<p>Note: We set a 10 seconds timeout by default on this request (configurable
+through the <code>getLicenseConfig</code> object).
+If the returned Promise do not resolve or reject under this limit, the
+player will stop with an error. If this limit is problematic for you,
+please open an issue.</p>
+</li>
+<li>
+<p><code>getLicenseConfig</code> (<code>Object|undefined</code>): Optional configuration for the
+<code>getLicense</code> callback. Can contain the following properties:</p>
+<ul>
+<li>
+<p><code>retry</code> (<code>Number</code>|<code>undefined</code>) (default: <code>2</code>): number of time
+<code>getLicense</code> is retried on error or on timeout before we fail on a
+<code>KEY_LOAD_ERROR</code></p>
+</li>
+<li>
+<p><code>timeout</code> (<code>Number</code>|<code>undefined</code>) (default: <code>10000</code>): timeout, in ms,
+after which we consider the <code>getLicense</code> callback to have failed.</p>
+<p>Set it to <code>-1</code> to disable any timeout.</p>
+</li>
+</ul>
 </li>
 <li>
 <p><code>serverCertificate</code> (<code>BufferSource|undefined</code>): Eventual certificate
@@ -190,6 +221,12 @@ changes, except for the following statuses (which throws immediately):</p>
 <p>Like <code>getLicense</code>, this function should return a promise which emit a
 license or <code>null</code> (for no license) when resolved. It can also return
 directly the license or <code>null</code> if it can be done synchronously.</p>
+<p>In case of an error, you can set the <code>message</code> property on the
+rejected value as a &#x201C;string&#x201D;. This message will be set as the <code>message</code>
+property of the corresponding <code>EncryptedMediaError</code> communicated through
+an <code>&quot;error&quot;</code> event.
+As every other <code>onKeyStatusesChange</code>-related errors, this error will have
+the <code>KEY_STATUS_CHANGE_ERROR</code> <code>code</code> property.</p>
 </li>
 <li>
 <p><code>closeSessionsOnStop</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, the
