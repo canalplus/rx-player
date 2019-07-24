@@ -62,8 +62,8 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
   }
 
   public readonly nameDB: string;
-  public readonly storeManifestEvery: IStoreManifestEveryFn | undefined;
-  private db: IDBPDatabase | undefined;
+  public readonly storeManifestEvery?: IStoreManifestEveryFn;
+  private db?: IDBPDatabase;
   private emitter: IEmitterTrigger<IDownload2GoEvents>;
   private activeSubsDownloader: IActiveSubs;
   private activePauseSubject: IPauseSubject;

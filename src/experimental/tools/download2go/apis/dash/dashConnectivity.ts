@@ -48,7 +48,6 @@ export const getOnlineMPDParsed = async (
     responseType: "text",
   });
   return parseManifest(new DOMParser().parseFromString(data, "text/xml"), {
-    loadExternalClock: false,
     url,
   });
 };
