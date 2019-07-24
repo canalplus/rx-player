@@ -28,12 +28,6 @@ const HAS_EME_APIs = (
   typeof HTMLVideoElement.prototype.webkitGenerateKeyRequest === "function"
 );
 
-const isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
-
-// We struggled to make the corresponding CSS work on IE11 and abandonned :'(
-// We might come back to it later on.
-const CAN_STORE_CONTENT = !isIE11;
-
 const IS_HTTPS = window.location.protocol.startsWith("https");
 const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile"];
 const DRM_TYPES = ["Widevine", "Playready", "Clearkey"];
@@ -464,7 +458,7 @@ class ContentList extends React.Component {
             </div>
             <div className="content-inputs-middle">
               {
-                CAN_STORE_CONTENT && (isCustomContent || isLocalContent) ?
+                (isCustomContent || isLocalContent) ?
                   (<Button
                     className={"choice-input-button content-button enter-name-button" +
                       (!hasURL ? " disabled" : "")}
