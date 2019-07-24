@@ -137,7 +137,6 @@ body {
 
 .content-inputs {
   display: flex;
-  justify-content: space-between;
   align-items: center;
 }
 
@@ -177,7 +176,6 @@ body {
 }
 
 .content-choice {
-  flex: 1;
   margin: 0 5px;
   width: 100%;
 }
@@ -385,8 +383,10 @@ body {
 
 .choice-input-button-wrapper {
   display: flex;
+  align-items: center;
   flex-direction: row;
   margin-right: -5px;
+  margin-left: auto;
 }
 
 .choice-input-button-wrapper > button {
@@ -920,6 +920,10 @@ input:checked + .slider:before {
 @media only screen and (max-width: 800px) {
   .content-inputs {
     flex-direction: column;
+  }
+
+  .choice-input-button-wrapper {
+    margin-left: 0px;
   }
 
   .content-inputs-left {
