@@ -172,6 +172,7 @@ export const createSegment = (
           data,
           segmentKey,
           size: sizePerBuffer,
+          duration,
         })
         .catch(throwError);
       if (optionBuilder.progressBarBuilder$) {

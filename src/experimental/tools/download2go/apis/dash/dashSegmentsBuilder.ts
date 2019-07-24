@@ -180,11 +180,7 @@ export const fillStructMapping = (
               async (
                 adaptation: IParsedAdaptation
               ): Promise<ILocalAdaptationOnline> => ({
-                type: adaptation.type as
-                  | "audio"
-                  | "video"
-                  | "text"
-                  | "thumbnail",
+                type: adaptation.type as "audio" | "video" | "text",
                 ...(adaptation.audioDescription && {
                   audioDescription: adaptation.audioDescription,
                 }),
@@ -291,7 +287,7 @@ export const downloadManager = (
                           this[i] = segmentBuilt;
                           return segmentBuilt;
                         },
-                        representation.index.segments)
+                            representation.index.segments)
                       ),
                     adaptation.representations.length
                   )

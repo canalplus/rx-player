@@ -32,6 +32,7 @@ import { IParsedManifest } from "../../../../../parsers/manifest/types";
 import { ISettingsDownloader } from "../../types";
 import { ILocalManifestOnline, IOptionsBuilder } from "../dash/types";
 import { IUtils } from "./../../types";
+import { ISegmentInitStored, ISegmentStored } from "./types";
 
 /**
  * Check the parsed dash manifest then launch the pipeline building of the structure
@@ -123,28 +124,52 @@ export function constructOfflineManifest(
                 return {
                   ...representation,
                   index: {
-                    ...(representation.index.init && {
-                      init: {
-                        load({ resolve, reject }) {
-                          if (representation.index.init) {
-                            db.get("segments", representation.index.init)
-                              .then(segmentIndex => {
-                                if (!segmentIndex) {
-                                  reject(new Error("Segment not found"));
-                                }
-                                resolve({
-                                  data: segmentIndex.data,
-                                  duration: segmentIndex.duration,
-                                  size: segmentIndex.size,
-                                });
-                              })
-                              .catch(err => {
-                                reject(err);
+                    loadInitSegment({ resolve, reject }) {
+                      if (representation.index.init) {
+                        db.get("segments", representation.index.init)
+                          .then(
+                            (segmentIndex: ISegmentInitStored | undefined) => {
+                              if (!segmentIndex) {
+                                reject(new Error("Segment not found"));
+                                return;
+                              }
+                              resolve({
+                                data: segmentIndex.data,
+                                size: segmentIndex.size,
                               });
+                              return;
+                            }
+                          )
+                          .catch(err => {
+                            reject(err);
+                          });
+                        return;
+                      }
+                      resolve({
+                        data: null,
+                        size: 0,
+                      });
+                      return;
+                    },
+                    loadSegment(segmentID, { resolve, reject }) {
+                      db.get("segments", segmentID)
+                        .then((segment: ISegmentStored | undefined) => {
+                          if (!segment) {
+                            reject(new Error("Segment not found"));
+                            return;
                           }
-                        },
-                      },
-                    }),
+                          const { data, duration, size } = segment;
+                          resolve({
+                            data,
+                            duration,
+                            size,
+                          });
+                          return;
+                        })
+                        .catch(err => {
+                          reject(err);
+                        });
+                    },
                     segments: representation.index.segments.map(
                       (segment): ILocalIndexSegment => {
                         if (!Array.isArray(segment)) {
@@ -152,31 +177,15 @@ export function constructOfflineManifest(
                             duration: 0,
                             time: 0,
                             timescale: 0,
-                            load({ reject }) {
-                              reject(
-                                new Error("Segment has not been built yet")
-                              );
-                            },
+                            id: "",
                           };
                         }
-                        const [[key], time, timescale, duration] = segment;
+                        const [[id], time, timescale, duration] = segment;
                         return {
                           duration,
                           time,
                           timescale,
-                          load({ resolve, reject }) {
-                            db.get("segments", key)
-                              .then(({ data, size }) => {
-                                resolve({
-                                  data,
-                                  duration,
-                                  size,
-                                });
-                              })
-                              .catch(err => {
-                                reject(err);
-                              });
-                          },
+                          id,
                         };
                       }
                     ),

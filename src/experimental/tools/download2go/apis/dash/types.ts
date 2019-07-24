@@ -104,7 +104,7 @@ export interface ILocalRepresentationOnline {
 }
 
 export interface ILocalAdaptationOnline {
-  type: "audio" | "video" | "text" | "thumbnail";
+  type: "audio" | "video" | "text";
   audioDescription?: boolean;
   closedCaption?: boolean;
   language?: string;
