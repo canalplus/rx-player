@@ -23,29 +23,13 @@ import {
   mergeMap,
 } from "rxjs/operators";
 import { ICustomError } from "../errors";
-import { getBackedoffDelay } from "./backoff_delay";
-
-/**
- * Simple debounce implementation.
- * @param {Function} fn
- * @param {Number} delay - delay in ms
- * @returns {Function}
- */
-function debounce(fn : () => void, delay : number) : () => void {
-  let timer = 0;
-  return () => {
-    if (timer) {
-      clearTimeout(timer);
-    }
-    timer = window.setTimeout(fn, delay);
-  };
-}
+import getFuzzedDelay from "./get_fuzzed_delay";
 
 interface IBackoffOptions {
-  retryDelay : number;
+  baseDelay : number;
+  maxDelay : number;
   totalRetry : number;
   shouldRetry? : (error : unknown) => boolean;
-  resetDelay? : number;
   errorSelector? : (error : unknown, retryCount : number) => Error|ICustomError;
   onRetry? : (error : unknown, retryCount : number) => void;
 }
@@ -71,10 +55,6 @@ interface IBackoffOptions {
  *     If the observable still fails after this number of retry, the error will
  *     be throwed through this observable.
  *
- *   - resetDelay {Number|undefined} - Delay in ms since a retry after which the
- *     counter of retry will be reset if the observable wasn't retried a new
- *     time. 0 / undefined means no delay will be applied.
- *
  *   - shouldRetry {Function|undefined} -  Function which will receive the
  *     observable error each time it fails, and should return a boolean. If this
  *     boolean is false, the error will be directly thrown (without anymore
@@ -85,13 +65,6 @@ interface IBackoffOptions {
  *       1. The observable error
  *       2. The current retry count, beginning at 1 for the first retry
  *
- *   - errorSelector {Function|undefined} - If and when the observable will
- *     definitely throw (without retrying), this function will be called with
- *     two arguments:
- *       1. The observable error
- *       2. The final retry count, beginning at 1 for the first retry
- *     The returned value will be what will be thrown by the observable.
- *
  * @returns {Observable}
  * TODO Take errorSelector out. Should probably be entirely managed in the
  * calling code via a catch (much simpler to use and to understand).
@@ -100,40 +73,30 @@ export default function retryObsWithBackoff<T>(
   obs$ : Observable<T>,
   options : IBackoffOptions
 ) : Observable<T> {
-  const { retryDelay,
+  const { baseDelay,
+          maxDelay,
           totalRetry,
           shouldRetry,
-          resetDelay,
-          errorSelector,
           onRetry } = options;
 
   let retryCount = 0;
-  let debounceRetryCount : () => void|undefined;
-  if (resetDelay != null && resetDelay > 0) {
-    debounceRetryCount = debounce(() => { retryCount = 0; }, resetDelay);
-  }
 
   return obs$.pipe(catchError((error : unknown, source : Observable<T>) => {
-    const wantRetry = !shouldRetry || shouldRetry(error);
-    if (!wantRetry || retryCount++ >= totalRetry) {
-      if (errorSelector) {
-        throw errorSelector(error, retryCount);
-      } else {
-        throw error;
-      }
+    if ((shouldRetry != null && !shouldRetry(error)) ||
+         retryCount++ >= totalRetry)
+    {
+      throw error;
     }
 
     if (onRetry) {
       onRetry(error, retryCount);
     }
 
-    const fuzzedDelay = getBackedoffDelay(retryDelay, retryCount);
+    const delay = Math.min(baseDelay * Math.pow(2, retryCount - 1),
+                           maxDelay);
+
+    const fuzzedDelay = getFuzzedDelay(delay);
     return observableTimer(fuzzedDelay)
-      .pipe(mergeMap(() => {
-        if (debounceRetryCount) {
-          debounceRetryCount();
-        }
-        return source;
-      }));
+      .pipe(mergeMap(() => source));
   }));
 }

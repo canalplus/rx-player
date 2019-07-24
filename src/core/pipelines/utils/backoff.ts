@@ -20,14 +20,16 @@ import {
 } from "rxjs";
 import {
   catchError,
+  map,
   mergeMap,
+  startWith,
 } from "rxjs/operators";
 import { isOffline } from "../../../compat";
 import {
   RequestError,
   RequestErrorTypes,
 } from "../../../errors";
-import { getFuzzedDelay } from "../../../utils/backoff_delay";
+import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
 
 /**
  * Called on a pipeline's loader error.
@@ -59,12 +61,23 @@ function isOfflineRequestError(error : RequestError) : boolean {
          isOffline();
 }
 
-interface IDownloadingBackoffOptions { baseDelay : number;
-                                       maxDelay : number;
-                                       maxRetryRegular : number;
-                                       maxRetryOffline : number;
-                                       onRetry? : (error : unknown,
-                                                   retryCount : number) => void; }
+interface IBackoffOptions { baseDelay : number;
+                            maxDelay : number;
+                            maxRetryRegular : number;
+                            maxRetryOffline : number; }
+
+export interface IBackoffRetry {
+  type : "retry";
+  value : unknown; // The error that made us retry
+}
+
+export interface IBackoffResponse<T> {
+  type : "response";
+  value : T;
+}
+
+export type IBackoffEvent<T> = IBackoffRetry |
+                               IBackoffResponse<T>;
 
 /**
  * Specific exponential backoff algorithm used for segments/manifest
@@ -79,15 +92,14 @@ interface IDownloadingBackoffOptions { baseDelay : number;
  * @param {Object} options - Configuration options.
  * @returns {Observable}
  */
-function downloadingBackoff<T>(
+export default function backoff<T>(
   obs$ : Observable<T>,
-  options : IDownloadingBackoffOptions
-) : Observable<T> {
+  options : IBackoffOptions
+) : Observable<IBackoffEvent<T>> {
   const { baseDelay,
           maxDelay,
           maxRetryRegular,
-          maxRetryOffline,
-          onRetry } = options;
+          maxRetryOffline } = options;
 
   let retryCount = 0;
 
@@ -97,37 +109,36 @@ function downloadingBackoff<T>(
 
   let lastError = ERROR_TYPES.NONE;
 
-  return obs$.pipe(catchError((error : unknown, source) => {
-    if (!shouldRetry(error)) {
-      throw error;
-    }
-    const currentError = error instanceof RequestError &&
-                         isOfflineRequestError(error) ? ERROR_TYPES.OFFLINE :
-                                                        ERROR_TYPES.REGULAR;
+  return obs$.pipe(
+    map(res => ({ type : "response" as const, value: res })),
+    catchError((error : unknown, source) => {
+      if (!shouldRetry(error)) {
+        throw error;
+      }
+      const currentError = error instanceof RequestError &&
+                           isOfflineRequestError(error) ? ERROR_TYPES.OFFLINE :
+                                                          ERROR_TYPES.REGULAR;
 
-    const maxRetry = currentError === ERROR_TYPES.OFFLINE ? maxRetryOffline :
-                                                            maxRetryRegular;
+      const maxRetry = currentError === ERROR_TYPES.OFFLINE ? maxRetryOffline :
+                                                              maxRetryRegular;
 
-    if (currentError !== lastError) {
-      retryCount = 0;
-      lastError = currentError;
-    }
+      if (currentError !== lastError) {
+        retryCount = 0;
+        lastError = currentError;
+      }
 
-    if (++retryCount > maxRetry) {
-      throw error;
-    }
+      if (++retryCount > maxRetry) {
+        throw error;
+      }
 
-    if (onRetry) {
-      onRetry(error, retryCount);
-    }
+      const delay = Math.min(baseDelay * Math.pow(2, retryCount - 1),
+                             maxDelay);
 
-    const delay = Math.min(baseDelay * Math.pow(2, retryCount - 1),
-                           maxDelay);
-
-    const fuzzedDelay = getFuzzedDelay(delay);
-    return observableTimer(fuzzedDelay)
-             .pipe(mergeMap(() => source));
-  }));
+      const fuzzedDelay = getFuzzedDelay(delay);
+      return observableTimer(fuzzedDelay).pipe(
+        mergeMap(() => source),
+        startWith({ type: "retry" as const, value: error })
+      );
+    })
+  );
 }
-
-export default downloadingBackoff;

@@ -19,6 +19,7 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
+  catchError,
   map,
   mergeMap,
 } from "rxjs/operators";
@@ -27,6 +28,7 @@ import {
 } from "../../errors";
 import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
+import tryCatch from "../../utils/rx-try_catch";
 import getMediaKeySystemAccess from "./find_key_system";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 import {
@@ -37,9 +39,9 @@ import SessionsStore from "./utils/open_sessions_store";
 import PersistedSessionsStore from "./utils/persisted_session_store";
 
 /**
+ * @throws {EncryptedMediaError}
  * @param {Object} keySystemOptions
  * @returns {Object|null}
- * @throws {EncryptedMediaError}
  */
 function createSessionStorage(
   keySystemOptions : IKeySystemOption
@@ -58,17 +60,20 @@ function createSessionStorage(
   return new PersistedSessionsStore(licenseStorage);
 }
 
+/**
+ * @param {HTMLMediaElement} mediaElement
+ * @param {Array.<Object>} keySystemsConfigs
+ * @returns {Observable}
+ */
 export default function getMediaKeysInfos(
   mediaElement : HTMLMediaElement,
-  keySystemsConfigs: IKeySystemOption[],
-  currentMediaKeysInfos : MediaKeysInfosStore
+  keySystemsConfigs: IKeySystemOption[]
 ) : Observable<IMediaKeysInfos> {
     return getMediaKeySystemAccess(mediaElement,
-                                   keySystemsConfigs,
-                                   currentMediaKeysInfos
+                                   keySystemsConfigs
     ).pipe(mergeMap((evt) => {
       const { options, mediaKeySystemAccess } = evt.value;
-      const currentState = currentMediaKeysInfos.getState(mediaElement);
+      const currentState = MediaKeysInfosStore.getState(mediaElement);
       const sessionStorage = createSessionStorage(options);
 
       if (currentState != null && evt.type === "reuse-media-key-system-access") {
@@ -81,11 +86,18 @@ export default function getMediaKeysInfos(
       }
 
       log.debug("EME: Calling createMediaKeys on the MediaKeySystemAccess");
-      return castToObservable(mediaKeySystemAccess.createMediaKeys())
-        .pipe(map((mediaKeys) => ({ mediaKeys,
-                                    sessionsStore: new SessionsStore(mediaKeys),
-                                    mediaKeySystemAccess,
-                                    keySystemOptions: options,
-                                    sessionStorage })));
+      return tryCatch(() => castToObservable(mediaKeySystemAccess.createMediaKeys()),
+                      undefined).pipe(
+        catchError((error : unknown) : never => {
+          const message = error instanceof Error ?
+            error.message :
+            "Unknown error when creating MediaKeys.";
+          throw new EncryptedMediaError("CREATE_MEDIA_KEYS_ERROR", message);
+        }),
+        map((mediaKeys) => ({ mediaKeys,
+                              sessionsStore: new SessionsStore(mediaKeys),
+                              mediaKeySystemAccess,
+                              keySystemOptions: options,
+                              sessionStorage })));
     }));
 }

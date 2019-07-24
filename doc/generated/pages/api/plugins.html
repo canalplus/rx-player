@@ -161,9 +161,14 @@ implementation does the same thing and more):</p>
       <span class="hljs-comment">// sure to be aligned with the current clock.</span>
       <span class="hljs-keyword">const</span> sendingTime = now - duration;
 
+      <span class="hljs-comment">// the request could have been redirected,</span>
+      <span class="hljs-comment">// we have to feed back the real URL</span>
+      <span class="hljs-keyword">const</span> _url = xhr.responseURL || url;
+
       <span class="hljs-keyword">const</span> size = r.total;
       <span class="hljs-keyword">const</span> data = xhr.response;
       callbacks.resolve({
+        <span class="hljs-attr">url</span>: _url,
         sendingTime,
         receivingTime,
         duration,

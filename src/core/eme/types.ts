@@ -34,20 +34,32 @@ export interface ICreatedMediaKeysEvent { type: "created-media-keys";
 export interface IAttachedMediaKeysEvent { type: "attached-media-keys";
                                            value: IMediaKeysInfos; }
 
+export type ILicense = TypedArray |
+                       ArrayBuffer;
+
+export interface IKeyMessageHandledEvent { type: "key-message-handled";
+                                           value: { session: MediaKeySession |
+                                                             ICustomMediaKeySession;
+                                                    license: ILicense|null; }; }
+
+export interface IKeyStatusChangeHandledEvent { type: "key-status-change-handled";
+                                                value: { session: MediaKeySession |
+                                                                  ICustomMediaKeySession;
+                                                         license: ILicense|null; }; }
+
+export interface ISessionUpdatedEvent { type: "session-updated";
+                                        value: { session: MediaKeySession |
+                                                          ICustomMediaKeySession;
+                                                 license: ILicense|null; }; }
+
+export type IMediaKeySessionHandledEvents = IKeyMessageHandledEvent |
+                                            IKeyStatusChangeHandledEvent |
+                                            ISessionUpdatedEvent;
+
 export type IEMEManagerEvent = IEMEWarningEvent |
                                ICreatedMediaKeysEvent |
                                IAttachedMediaKeysEvent |
                                IMediaKeySessionHandledEvents;
-
-export type ILicense = TypedArray |
-                       ArrayBuffer;
-
-export interface IMediaKeySessionHandledEvents { type: "key-message-handled" |
-                                                       "key-status-change-handled" |
-                                                       "session-updated";
-                                                 value: { session: MediaKeySession |
-                                                                   ICustomMediaKeySession;
-                                                          license: ILicense|null; }; }
 
 // Infos indentifying a MediaKeySystemAccess
 export interface IKeySystemAccessInfos {
@@ -96,6 +108,8 @@ export interface IKeySystemOption {
                     TypedArray |
                     ArrayBuffer |
                     null;
+  getLicenseConfig? : { retry? : number;
+                        timeout? : number; };
   serverCertificate? : ArrayBuffer | TypedArray;
   persistentLicense? : boolean;
   licenseStorage? : IPersistedSessionStorage;
@@ -115,15 +129,3 @@ export interface IKeySystemOption {
   throwOnLicenseExpiration? : boolean;
   disableMediaKeysAttachmentLock? : boolean;
 }
-
-// Keys are the different key statuses possible.
-// Values are ``true`` if such key status defines an error
-/* tslint:disable no-object-literal-type-assertion */
-export const KEY_STATUS_ERRORS = { "internal-error": true,
-                                   expired: false,
-                                   released: false,
-                                   "output-restricted": false,
-                                   "output-downscaled": false,
-                                   "status-pending": false,
-                                 } as Partial<Record<string, boolean>>;
-/* tslint:enable no-object-literal-type-assertion */

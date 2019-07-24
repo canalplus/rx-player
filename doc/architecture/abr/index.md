@@ -1,6 +1,5 @@
 # ABRManager ###################################################################
 
-
 ## Overview ####################################################################
 
 The ABRManager (ABR for Adaptive BitRate) is a class which facilitates the
@@ -21,3 +20,9 @@ be the most adapted, that is the quality which:
   - will maximize the user experience (example: a quality too high for the
     network to handle would lead to excessive re-bufferings, but a too low would
     be not as pleasant to watch)
+
+In order to estimate the quality that maximizes the playback experience, the ABR
+relies on two "estimators". The [bandwidth estimator](./bandwidth_estimator.md)
+picks a quality from network conditions. The
+[buffer based estimator](./buffer_based_estimator.md) relies on buffering
+conditions to make his choices.

@@ -17,7 +17,6 @@
 import {
   combineLatest as observableCombineLatest,
   concat as observableConcat,
-  defer as observableDefer,
   EMPTY,
   merge as observableMerge,
   Observable,
@@ -35,16 +34,15 @@ import {
 import {
   events,
   generateKeyRequest,
-  shouldUnsetMediaKeys,
+  getInitData,
 } from "../../compat/";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
-import noop from "../../utils/noop";
-import disposeMediaKeys from "./dispose_media_keys";
-import getSession from "./get_session";
-import handleSessionEvents from "./handle_session_events";
+import getSession, {
+  IEncryptedEvent,
+} from "./get_session";
 import initMediaKeys from "./init_media_keys";
-import MediaKeysInfosStore from "./media_keys_infos_store";
+import SessionEventsListener from "./session_events_listener";
 import setServerCertificate from "./set_server_certificate";
 import {
   IEMEManagerEvent,
@@ -54,60 +52,43 @@ import InitDataStore from "./utils/init_data_store";
 
 const { onEncrypted$ } = events;
 
-const attachedMediaKeysInfos = new MediaKeysInfosStore();
-
-/**
- * Clear EME ressources that should be cleared when the current content stops
- * its playback.
- * @returns {Observable}
- */
-function clearEMESession(mediaElement : HTMLMediaElement) : Observable<never> {
-  return observableDefer(() => {
-    if (shouldUnsetMediaKeys()) {
-      return disposeMediaKeys(mediaElement, attachedMediaKeysInfos)
-        .pipe(ignoreElements());
-    }
-
-    const currentState = attachedMediaKeysInfos.getState(mediaElement);
-    if (currentState && currentState.keySystemOptions.closeSessionsOnStop) {
-      return currentState.sessionsStore.closeAllSessions()
-        .pipe(ignoreElements());
-    }
-    return EMPTY;
-  });
-}
-
 /**
  * EME abstraction and event handler used to communicate with the Content-
  * Description-Module (CDM).
  *
  * The EME handler can be given one or multiple systems and will choose the
  * appropriate one supported by the user's browser.
- * @param {HTMLMediaElement} mediaElement
- * @param {Array.<Object>} keySystems
+ * @param {HTMLMediaElement} mediaElement - The MediaElement which will be
+ * associated to a MediaKeys object
+ * @param {Array.<Object>} keySystems - key system configuration
  * @returns {Observable}
  */
 export default function EMEManager(
   mediaElement : HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[]
 ) : Observable<IEMEManagerEvent> {
+  log.debug("EME: Starting EMEManager logic.");
+
    // Keep track of all initialization data handled here.
    // This is to avoid handling multiple times the same encrypted events.
   const handledInitData = new InitDataStore();
 
   // store the mediaKeys when ready
-  const mediaKeysInfos$ = initMediaKeys(mediaElement,
-                                        keySystemsConfigs,
-                                        attachedMediaKeysInfos)
-                            .pipe(shareReplay()); // cache success
+  const mediaKeysInfos$ = initMediaKeys(mediaElement, keySystemsConfigs)
+    .pipe(shareReplay()); // cache success
 
   const attachedMediaKeys$ = mediaKeysInfos$.pipe(filter(evt => {
     return evt.type === "attached-media-keys";
   }));
 
-  const encryptedEvents$ = onEncrypted$(mediaElement).pipe(tap((encryptedEvent) => {
-    log.debug("EME: encrypted event received", encryptedEvent);
-  }));
+  const encryptedEvents$ = onEncrypted$(mediaElement).pipe(
+    tap((evt) => {
+      log.debug("EME: Encrypted event received from media element.", evt);
+    }),
+    map((evt) : IEncryptedEvent => {
+      const { initData, initDataType } = getInitData(evt);
+      return { type: initDataType, data: initData };
+    }));
 
   const bindSession$ = observableCombineLatest([encryptedEvents$,
                                                 attachedMediaKeys$]
@@ -118,7 +99,14 @@ export default function EMEManager(
       const { keySystemOptions, mediaKeys } = mediaKeysInfos;
       const { serverCertificate } = keySystemOptions;
 
-      const session$ = getSession(encryptedEvent, handledInitData, mediaKeysInfos)
+      const { type: initDataType, data: initData } = encryptedEvent;
+      if (handledInitData.has(initData, initDataType)) {
+        log.debug("EME: Init data already received. Skipping it.");
+        return EMPTY; // Already handled, quit
+      }
+      handledInitData.add(initData, initDataType);
+
+      const session$ = getSession(encryptedEvent, mediaKeysInfos)
         .pipe(map((evt) => ({
           type: evt.type,
           value: { initData: evt.value.initData,
@@ -154,11 +142,7 @@ export default function EMEManager(
               keySystemOptions,
               sessionStorage } = sessionInfosEvt.value;
 
-      return observableMerge(
-        handleSessionEvents(mediaKeySession, keySystemOptions),
-
-        // only perform generate request on new sessions
-        sessionInfosEvt.type !== "created-session" ?
+      const generateRequest$ = sessionInfosEvt.type !== "created-session" ?
           EMPTY :
           generateKeyRequest(mediaKeySession, initData, initDataType).pipe(
             tap(() => {
@@ -171,34 +155,11 @@ export default function EMEManager(
                                             error instanceof Error ? error.toString() :
                                                                      "Unknown error");
             }),
-            ignoreElements()
-          )
-      );
-    })
-  );
+            ignoreElements());
+
+      return observableMerge(SessionEventsListener(mediaKeySession, keySystemOptions),
+                             generateRequest$);
+    }));
 
   return observableMerge(mediaKeysInfos$, bindSession$);
 }
-
-/**
- * Free up all ressources taken by the EME management.
- */
-function disposeEME(mediaElement : HTMLMediaElement) : void {
-  disposeMediaKeys(mediaElement, attachedMediaKeysInfos).subscribe(noop);
-}
-
-/**
- * Returns the name of the current key system used.
- * @returns {string}
- */
-function getCurrentKeySystem(mediaElement : HTMLMediaElement) : string|null {
-  const currentState = attachedMediaKeysInfos.getState(mediaElement);
-  return currentState && currentState.keySystemOptions.type;
-}
-
-export {
-  clearEMESession,
-  disposeEME,
-  getCurrentKeySystem,
-  IEMEManagerEvent,
-};

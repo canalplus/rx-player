@@ -434,47 +434,50 @@ class ContentList extends React.Component {
         />);
     };
 
+    const selectValues = contentsToSelect.map(c => {
+      return { name: c.displayName,
+               disabled: c.isDisabled };
+    });
+
     return (
       <div className="choice-inputs-wrapper">
         <div className="content-inputs">
-          <div className="content-inputs-left">
-            <div className="content-inputs-selects">
-              <Select
-                className="choice-input transport-type-choice white-select"
-                onChange={onTransportChange}
-                options={TRANSPORT_TYPES}
-              />
-              <Select
-                className="choice-input content-choice white-select"
-                onChange={onContentChoiceChange}
-                options={contentsToSelect.map(c => c.displayName)}
-                selected={contentChoiceIndex}
-              />
-            </div>
-            <div className="content-inputs-middle">
-              {
-                (isCustomContent || isLocalContent) ?
-                  (<Button
-                    className={"choice-input-button content-button enter-name-button" +
-                      (!hasURL ? " disabled" : "")}
-                    onClick={onClickSaveOrUpdate}
-                    disabled={!hasURL || isSavingOrUpdating}
-                    value={isLocalContent ?
-                      (isSavingOrUpdating ? "Updating..." : "Update content") :
-                      (isSavingOrUpdating ? "Saving..." : "Store content")}
-                  />) :
-                  null
-              }
-              {
-                isLocalContent ?
-                  (<Button
-                    className="choice-input-button erase-button"
-                    onClick={onClickErase}
-                    value={String.fromCharCode(0xf1f8)}
-                  />) :
-                  null
-              }
-            </div>
+          <div className="content-inputs-selects">
+            <Select
+              className="choice-input transport-type-choice white-select"
+              onChange={onTransportChange}
+              options={TRANSPORT_TYPES}
+            />
+            <Select
+              className="choice-input content-choice white-select"
+              onChange={onContentChoiceChange}
+              options={selectValues}
+              selected={contentChoiceIndex}
+            />
+          </div>
+          <div className="content-inputs-middle">
+            {
+              (isCustomContent || isLocalContent) ?
+                (<Button
+                  className={"choice-input-button content-button enter-name-button" +
+                    (!hasURL ? " disabled" : "")}
+                  onClick={onClickSaveOrUpdate}
+                  disabled={!hasURL || isSavingOrUpdating}
+                  value={isLocalContent ?
+                    (isSavingOrUpdating ? "Updating..." : "Update content") :
+                    (isSavingOrUpdating ? "Saving..." : "Store content")}
+                />) :
+                null
+            }
+            {
+              isLocalContent ?
+                (<Button
+                  className="choice-input-button erase-button"
+                  onClick={onClickErase}
+                  value={String.fromCharCode(0xf1f8)}
+                />) :
+                null
+            }
           </div>
           <div className="choice-input-button-wrapper">
             <div class="auto-play">

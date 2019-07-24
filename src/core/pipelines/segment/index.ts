@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
+import { IPrioritizedSegmentFetcher } from "./prioritized_segment_fetcher";
 import {
-  IPrioritizedSegmentFetcher,
-} from "./prioritized_segment_fetcher";
-import { IFetchedSegment } from "./segment_fetcher";
+  ISegmentFetcherEvent,
+  ISegmentFetcherResponseEvent,
+  ISegmentFetcherWarning,
+} from "./segment_fetcher";
 import SegmentPipelinesManager, {
   IPipelineOptions,
 } from "./segment_pipelines_manager";
 
 export default SegmentPipelinesManager;
 export {
-  IFetchedSegment,
+  ISegmentFetcherEvent,
+  ISegmentFetcherResponseEvent,
+  ISegmentFetcherWarning,
   IPipelineOptions,
   IPrioritizedSegmentFetcher,
 };

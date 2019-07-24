@@ -17,7 +17,6 @@
 import {
   concat as observableConcat,
   defer as observableDefer,
-  EMPTY,
   merge as observableMerge,
   Observable,
   of as observableOf,
@@ -27,53 +26,66 @@ import {
   map,
   mergeMap,
 } from "rxjs/operators";
-import {
-  getInitData,
-  ICustomMediaKeySession,
-} from "../../compat";
+import { ICustomMediaKeySession } from "../../compat";
 import config from "../../config";
 import log from "../../log";
 import createSession from "./create_session";
 import { IMediaKeysInfos } from "./types";
-import InitDataStore from "./utils/init_data_store";
 import isSessionUsable from "./utils/is_session_usable";
 
-export interface IHandledEncryptedEvent {
-  type : "created-session" |
-         "loaded-open-session" |
-         "loaded-persistent-session";
-  value : { mediaKeySession : MediaKeySession |
-                              ICustomMediaKeySession;
-            sessionType : MediaKeySessionType;
-            initData : Uint8Array; // assiociated initialization data
-            initDataType : string | // type of the associated initialization data
-                           undefined; }; }
+export interface IEncryptedEvent {
+  type : string | undefined; // initialization data type
+  data : Uint8Array; // initialization data
+}
+
+export interface ISessionData {
+  mediaKeySession : MediaKeySession |
+                    ICustomMediaKeySession;
+  sessionType : MediaKeySessionType;
+  initData : Uint8Array; // assiociated initialization data
+  initDataType : string | // type of the associated initialization data
+                 undefined;
+}
+
+// Event sent when a new session has been created
+export interface ICreatedSession {
+  type : "created-session";
+  value : ISessionData;
+}
+
+// Event sent when an already open session is returned
+export interface ILoadedOpenSession {
+  type : "loaded-open-session";
+  value : ISessionData;
+}
+
+// Event sent when a persistent session has been loaded
+export interface ILoadedPersistentSessionEvent {
+  type : "loaded-persistent-session";
+  value : ISessionData;
+}
+
+export type IHandledEncryptedEvent = ICreatedSession |
+                                     ILoadedOpenSession |
+                                     ILoadedPersistentSessionEvent;
 
 const { EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS: MAX_SESSIONS } = config;
 
 /**
  * Handle MediaEncryptedEvents sent by a HTMLMediaElement:
- * Either create a session, skip the event if it is already handled or
- * recuperate a previous session and returns it.
+ * Either create a session, recuperate a previous session and returns it or load
+ * a persistent session.
  * @param {Event} encryptedEvent
  * @param {Object} handledInitData
  * @param {Object} mediaKeysInfos
  * @returns {Observable}
  */
 export default function getSession(
-  encryptedEvent : MediaEncryptedEvent,
-  handledInitData : InitDataStore,
+  encryptedEvent : IEncryptedEvent,
   mediaKeysInfos : IMediaKeysInfos
 ) : Observable<IHandledEncryptedEvent> {
-  return observableDefer(() => {
-    const { initData,
-            initDataType } = getInitData(encryptedEvent);
-
-    if (handledInitData.has(initData, initDataType)) {
-      log.debug("EME: Init data already received. Skipping it.");
-      return EMPTY; // Already handled, quit
-    }
-    handledInitData.add(initData, initDataType);
+  return observableDefer(() : Observable<IHandledEncryptedEvent> => {
+    const { type: initDataType, data: initData } = encryptedEvent;
 
     // possible previous loaded session with the same initialization data
     let previousLoadedSession : MediaKeySession|ICustomMediaKeySession|null = null;
@@ -83,7 +95,7 @@ export default function getSession(
       previousLoadedSession = entry.session;
       if (isSessionUsable(previousLoadedSession)) {
         log.debug("EME: Reuse loaded session", previousLoadedSession.sessionId);
-        return observableOf({ type: "loaded-open-session" as "loaded-open-session",
+        return observableOf({ type: "loaded-open-session" as const,
                               value: { mediaKeySession: previousLoadedSession,
                                        sessionType: entry.sessionType,
                                        initData,

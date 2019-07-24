@@ -24,6 +24,7 @@
  */
 
 import nextTick from "next-tick";
+import objectAssign from "object-assign";
 import {
   combineLatest as observableCombineLatest,
   concat as observableConcat,
@@ -45,8 +46,9 @@ import {
   switchMap,
   take,
   takeWhile,
-  tap,
+  withLatestFrom,
 } from "rxjs/operators";
+import config from "../../../config";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
@@ -56,12 +58,11 @@ import Manifest, {
 } from "../../../manifest";
 import SimpleSet from "../../../utils/simple_set";
 import {
-  IFetchedSegment,
   IPrioritizedSegmentFetcher,
+  ISegmentFetcherEvent,
+  ISegmentFetcherWarning,
 } from "../../pipelines";
-import {
-  QueuedSourceBuffer,
-} from "../../source_buffers";
+import { QueuedSourceBuffer } from "../../source_buffers";
 import EVENTS from "../events_generators";
 import SegmentBookkeeper from "../segment_bookkeeper";
 import {
@@ -76,7 +77,7 @@ import getBufferPaddings from "./get_buffer_paddings";
 import getSegmentPriority from "./get_segment_priority";
 import getSegmentsNeeded from "./get_segments_needed";
 import getWantedRange from "./get_wanted_range";
-import segmentFilter from "./segment_filter";
+import shouldReplaceSegment from "./should_replace_segment";
 
 // Item emitted by the Buffer's clock$
 export interface IRepresentationBufferClockTick {
@@ -101,6 +102,7 @@ export interface IRepresentationBufferArguments<T> {
   segmentFetcher : IPrioritizedSegmentFetcher<T>;
   terminate$ : Observable<void>;
   bufferGoal$ : Observable<number>;
+  fastSwitchingStep$: Observable< undefined | number>;
 }
 
 // Informations about a Segment waiting for download
@@ -125,17 +127,27 @@ interface ISegmentObject<T> {
 }
 
 // Informations about a loaded and parsed Segment
-interface ILoadedSegmentObject<T> {
+interface IParsedSegmentEventValue<T> {
   segment : ISegment; // Concerned Segment
-  value : ISegmentObject<T>; // parsed Data
+  data : ISegmentObject<T>; // parsed Data
 }
+
+interface IParsedSegmentEvent<T> {
+  type : "parsed-segment";
+  value : IParsedSegmentEventValue<T>;
+}
+
+type ISegmentLoadingEvent<T> = IParsedSegmentEvent<T> |
+                               ISegmentFetcherWarning;
 
 // Object describing a pending Segment request
 interface ISegmentRequestObject<T> {
   segment : ISegment; // The Segment the request is for
-  request$ : Observable<IFetchedSegment<T>>; // The request itself
+  request$ : Observable<ISegmentFetcherEvent<T>>; // The request itself
   priority : number; // The current priority of the request
 }
+
+const { MINIMUM_SEGMENT_SIZE } = config;
 
 /**
  * Build up buffer for a single Representation.
@@ -157,6 +169,8 @@ export default function RepresentationBuffer<T>({
   segmentFetcher, // allows to download new segments
   terminate$, // signal the RepresentationBuffer that it should terminate
   bufferGoal$, // emit the buffer goal
+  fastSwitchingStep$, // Bitrate higher or equal to this value should not be
+                      // replaced by segments of better quality
 } : IRepresentationBufferArguments<T>) : Observable<IRepresentationBufferEvent<T>> {
   const { manifest, period, adaptation, representation } = content;
   const codec = representation.getMimeTypeString();
@@ -197,13 +211,16 @@ export default function RepresentationBuffer<T>({
                     startWith(false)),
     finishedDownloadQueue$.pipe(startWith(undefined)) ]
   ).pipe(
-    map(function getCurrentStatus([timing, bufferGoal, terminate]) : {
-      discontinuity : number;
-      isFull : boolean;
-      terminate : boolean;
-      neededSegments : IQueuedSegment[];
-      shouldRefreshManifest : boolean;
-    } {
+    withLatestFrom(fastSwitchingStep$),
+    map(function getCurrentStatus(
+      [ [ timing, bufferGoal, terminate ],
+        fastSwitchingStep ]
+    ) : { discontinuity : number;
+          isFull : boolean;
+          terminate : boolean;
+          neededSegments : IQueuedSegment[];
+          shouldRefreshManifest : boolean; }
+    {
       const buffered = queuedSourceBuffer.getBuffered();
       segmentBookkeeper.synchronizeBuffered(buffered);
 
@@ -220,7 +237,9 @@ export default function RepresentationBuffer<T>({
                                            neededRange.end);
 
       let neededSegments = getSegmentsNeeded(representation, neededRange)
-        .filter((segment) => shouldDownloadSegment(segment, neededRange))
+        .filter((segment) =>
+          shouldDownloadSegment(segment, neededRange, fastSwitchingStep)
+        )
         .map((segment) => ({
           priority: getSegmentPriority(segment, timing),
           segment,
@@ -333,7 +352,7 @@ export default function RepresentationBuffer<T>({
   //   - append them to the SourceBuffer
   const bufferQueue$ = startQueue$.pipe(
     switchMap(() => downloadQueue.length ? loadSegmentsFromQueue() : EMPTY),
-    mergeMap(appendSegment)
+    mergeMap(onLoaderEvent)
   );
 
   return observableMerge(status$, bufferQueue$).pipe(share());
@@ -347,9 +366,9 @@ export default function RepresentationBuffer<T>({
    *   - Will emit from finishedDownloadQueue$ Subject after it's done.
    * @returns {Observable}
    */
-  function loadSegmentsFromQueue() : Observable<ILoadedSegmentObject<T>> {
-    const requestNextSegment$ : Observable<ILoadedSegmentObject<T>> =
-      observableDefer(() => {
+  function loadSegmentsFromQueue() : Observable<ISegmentLoadingEvent<T>> {
+    const requestNextSegment$ =
+      observableDefer(() : Observable<ISegmentLoadingEvent<T>> => {
         const currentNeededSegment = downloadQueue.shift();
         if (currentNeededSegment == null) {
           nextTick(() => { finishedDownloadQueue$.next(); });
@@ -361,16 +380,22 @@ export default function RepresentationBuffer<T>({
         const request$ = segmentFetcher.createRequest(context, priority);
 
         currentSegmentRequest = { segment, priority, request$ };
-        const response$ = request$.pipe(
-          mergeMap((fetchedSegment) => {
+        const response$ = request$
+          .pipe(mergeMap((evt) : Observable<ISegmentLoadingEvent<T>> => {
+            if (evt.type !== "response") {
+              return observableOf(evt);
+            }
+
             currentSegmentRequest = null;
             const initInfos = initSegmentObject &&
                               initSegmentObject.segmentInfos ||
                               undefined;
-            return fetchedSegment.parse(initInfos);
-          }),
-          map((args) => ({ segment, value: args }))
-        );
+            return evt.parse(initInfos)
+              .pipe(map(data => {
+                return { type: "parsed-segment" as const,
+                         value: { segment, data } };
+              }));
+          }));
 
         return observableConcat(response$, requestNextSegment$);
       });
@@ -382,19 +407,23 @@ export default function RepresentationBuffer<T>({
   /**
    * Append the given segment to the SourceBuffer.
    * Emit the right event when it succeeds.
-   * @param {Object} loadedSegment
+   * @param {Object} evt
    * @returns {Observable}
    */
-  function appendSegment(
-    loadedSegment : ILoadedSegmentObject<T>
-  ) : Observable<IBufferEventAddedSegment<T>> {
+  function onLoaderEvent(
+    evt : ISegmentLoadingEvent<T>
+  ) : Observable<IBufferEventAddedSegment<T>|ISegmentFetcherWarning> {
     return observableDefer(() => {
-      const { segment } = loadedSegment;
-      if (segment.isInit) {
-        initSegmentObject = loadedSegment.value;
+      if (evt.type !== "parsed-segment") {
+        return observableOf(evt);
       }
 
-      const { segmentInfos, segmentData, segmentOffset } = loadedSegment.value;
+      const { segment } = evt.value;
+      if (segment.isInit) {
+        initSegmentObject = evt.value.data;
+      }
+
+      const { segmentInfos, segmentData, segmentOffset } = evt.value.data;
       if (segmentData == null) {
         // no segmentData to add here (for example, a text init segment)
         // just complete directly without appending anything
@@ -413,21 +442,17 @@ export default function RepresentationBuffer<T>({
       sourceBufferWaitingQueue.add(segment.id);
 
       return append$.pipe(
-        mapTo(EVENTS.addedSegment(bufferType, segment, segmentData)),
-        tap(() => { // add to SegmentBookkeeper
-          if (segment.isInit) {
-            return;
+        map(() => { // add to SegmentBookkeeper
+          if (!segment.isInit) {
+            const { time, duration, timescale } = segmentInfos != null ? segmentInfos :
+                                                                         segment;
+            const start = time / timescale;
+            const end = duration && (time + duration) / timescale;
+            segmentBookkeeper
+              .insert(period, adaptation, representation, segment, start, end);
           }
-          const { time, duration, timescale } = segmentInfos != null ? segmentInfos :
-                                                                       segment;
-          const start = time / timescale;
-          const end = duration && (time + duration) / timescale;
-          segmentBookkeeper.insert(period,
-                                   adaptation,
-                                   representation,
-                                   segment,
-                                   start,
-                                   end);
+          const buffered = queuedSourceBuffer.getBuffered();
+          return EVENTS.addedSegment(content, segment, buffered, segmentData);
         }),
         finalize(() => { // remove from queue
           sourceBufferWaitingQueue.remove(segment.id);
@@ -439,16 +464,35 @@ export default function RepresentationBuffer<T>({
    * Return true if the given segment should be downloaded. false otherwise.
    * @param {Object} segment
    * @param {Array.<Object>} neededRange
+   * @param {number | undefined} fastSwitchingStep
    * @returns {Boolean}
    */
   function shouldDownloadSegment(
     segment : ISegment,
-    neededRange : { start: number; end: number }
+    neededRange : { start: number; end: number },
+    fastSwitchingStep : number | undefined
   ) : boolean {
-    return segmentFilter(segment,
-                         content,
-                         segmentBookkeeper,
-                         neededRange,
-                         sourceBufferWaitingQueue);
+    if (sourceBufferWaitingQueue.test(segment.id)) {
+      return false; // we're already pushing it
+    }
+
+    const { duration, time, timescale } = segment;
+    if (segment.isInit || duration == null) {
+      return true;
+    }
+    if (duration / timescale < MINIMUM_SEGMENT_SIZE) {
+      return false;
+    }
+    const currentSegment = segmentBookkeeper.hasPlayableSegment(neededRange,
+                                                                { duration,
+                                                                  time,
+                                                                  timescale });
+    if (currentSegment == null) {
+      return true;
+    }
+
+    return shouldReplaceSegment(currentSegment.infos,
+                                objectAssign({ segment }, content),
+                                fastSwitchingStep);
   }
 }

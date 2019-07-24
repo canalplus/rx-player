@@ -1,5 +1,36 @@
 # Changelog
 
+## v3.15.0 (2019/06/24)
+
+### Features
+
+  - eme: add `getLicenseConfig` property to the `keySystems` `loadVideo` option, to be able to have much more control over getLicense's behavior
+  - eme: add `noRetry` to `getLicense` errors to abort retries when the licence request fails
+  - eme: add `message` to `getLicense` and `onKeyStatusesChange` errors to allow custom errors when the license request fails
+  - eme: add a new `ENCRYPTED_MEDIA_ERROR` with the code `CREATE_MEDIA_KEYS_ERROR` for when we cannot create a MediaKeys instance (seen on some Android devices).
+
+### Bug fixes
+
+  - api: avoid sending {audio,video...}BitrateChange with a `-1` value when starting to play a content
+  - api/abr: a call to `setAudioBitrate` or `setVideoBitrate` could be ignored for a content if it was still loading. This is now fixed.
+  - api/abr: a call to `setMaxAutoBitrate` or `setMaxVideoBitrate` could be ignored for a content if it was still loading. This is now fixed.
+  - dash: fix maximum position calculation when refreshing a live MPD with a UTCTiming element and no SegmentTimeline.
+  - dash/smooth: a MPD/Manifest request failing could still be retried when loading another content
+  - eme/compat: on Safari, depend on WebKitMediaKeys even if MediaKeys is defined because of differences of implementations
+  - pipelines: always send `PIPELINE_LOAD_ERROR` warnings when a segment request or a Manifest request is retried
+  - errors: replace undocumented `PIPELINE_RESOLVE_ERROR` code into the proper documented `PIPELINE_LOAD_ERROR` code
+  - errors: replace undocumented `PIPELINE_PARSING_ERROR` code into the proper documented `PIPELINE_PARSE_ERROR` code
+  - errors: add to the `ErrorCodes` static property the previously forgotten `NONE`, `INVALID_KEY_SYSTEM` and `INVALID_ENCRYPTED_EVENT` codes.
+
+### Other improvements
+
+  - abr: make use of another adaptive algorithm, buffer-based, when enough buffer has been built.
+  - demo: allow the user to save custom contents to local storage to be able to reuse them when the page is refreshed
+  - eme: throw a better error in `onKeyStatusesChange` if the Promise is rejected without an Error
+  - errors: refactore error management to better correlate the `fatal` boolean to a playback stop and to better ensure a documented error is always thrown
+  - scripts: make our build script compatible with MacOS (handle BSD sed)
+
+
 ## v3.14.0 (2019/06/26)
 
 ### Features

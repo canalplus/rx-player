@@ -34,22 +34,16 @@ import {
   switchMap,
   take,
 } from "rxjs/operators";
-import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
   Period,
 } from "../../../manifest";
-import arrayIncludes from "../../../utils/array_includes";
-import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
-import {
-  IPipelineOptions,
-  SegmentPipelinesManager,
-} from "../../pipelines";
+import { SegmentPipelinesManager } from "../../pipelines";
 import SourceBuffersManager, {
   IBufferType,
   ITextTrackSourceBufferOptions,
@@ -65,9 +59,6 @@ import {
 } from "../types";
 import createEmptyBuffer from "./create_empty_adaptation_buffer";
 import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
-
-const { DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
-        DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE } = config;
 
 export interface IPeriodBufferClockTick {
   currentTime : number; // the current position we are in the video in s
@@ -198,11 +189,6 @@ export default function PeriodBuffer({
   ) : Observable<IAdaptationBufferEvent<T>|IBufferWarningEvent> {
     const { manifest } = content;
     const segmentBookkeeper = segmentBookkeepers.get(qSourceBuffer);
-    const pipelineOptions = getPipelineOptions(bufferType,
-                                               options.segmentRetry,
-                                               options.offlineRetry);
-    const pipeline = segmentPipelinesManager.createPipeline(bufferType,
-                                                            pipelineOptions);
     const adaptationBufferClock$ = clock$.pipe(map(tick => {
       const buffered = qSourceBuffer.getBuffered();
       return objectAssign({},
@@ -210,15 +196,15 @@ export default function PeriodBuffer({
                           { bufferGap: getLeftSizeOfRange(buffered,
                                                           tick.currentTime) });
     }));
-    return AdaptationBuffer(adaptationBufferClock$,
-                            qSourceBuffer,
-                            segmentBookkeeper,
-                            pipeline,
-                            wantedBufferAhead$,
-                            { manifest, period, adaptation },
-                            abrManager,
-                            options
-    ).pipe(catchError((error : unknown) => {
+    return AdaptationBuffer({ abrManager,
+                              clock$: adaptationBufferClock$,
+                              content: { manifest, period, adaptation },
+                              options,
+                              queuedSourceBuffer: qSourceBuffer,
+                              segmentBookkeeper,
+                              segmentPipelinesManager,
+                              wantedBufferAhead$ })
+    .pipe(catchError((error : unknown) => {
       // non native buffer should not impact the stability of the
       // player. ie: if a text buffer sends an error, we want to
       // continue playing without any subtitles
@@ -260,35 +246,6 @@ function createOrReuseQueuedSourceBuffer<T>(
   const codec = getFirstDeclaredMimeType(adaptation);
   const sbOptions = bufferType === "text" ?  options.textTrackOptions : undefined;
   return sourceBuffersManager.createSourceBuffer(bufferType, codec, sbOptions);
-}
-
-/**
- * @param {string} bufferType
- * @param {number|undefined} retry
- * @param {number|undefined} offlineRetry
- * @returns {Object} - Options to give to the Pipeline
- */
-function getPipelineOptions(
-  bufferType : string,
-  retry? : number,
-  offlineRetry? : number
-) : IPipelineOptions<any, any> {
-  const cache = arrayIncludes(["audio", "video"], bufferType) ?
-    new InitializationSegmentCache<any>() :
-    undefined;
-
-  let maxRetry : number;
-  let maxRetryOffline : number;
-
-  if (bufferType === "image") {
-    maxRetry = 0; // Deactivate BIF fetching if it fails
-  } else {
-    maxRetry = retry != null ? retry :
-                               DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR;
-  }
-  maxRetryOffline = offlineRetry != null ? offlineRetry :
-                                           DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE;
-  return { cache, maxRetry, maxRetryOffline };
 }
 
 /**

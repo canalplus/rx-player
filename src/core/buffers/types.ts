@@ -28,8 +28,11 @@ import { IBufferType } from "../source_buffers";
 export interface IBufferEventAddedSegment<T> {
   type : "added-segment";
   value : {
-    bufferType : IBufferType; // The type of the Representation
+    content: { period : Period;
+               adaptation : Adaptation;
+               representation : Representation; };
     segment : ISegment; // The concerned Segment
+    buffered : TimeRanges; // TimeRanges of the concerned SourceBuffer
     segmentData : T; // The data pushed
   };
 }
@@ -79,7 +82,8 @@ export type IRepresentationBufferStateEvent = IBufferNeededActions |
 
 // Events emitted by the Buffer
 export type IRepresentationBufferEvent<T> = IBufferEventAddedSegment<T> |
-                                            IRepresentationBufferStateEvent;
+                                            IRepresentationBufferStateEvent |
+                                            IBufferWarningEvent;
 
 // Emitted as new bitrate estimations are done
 export interface IBitrateEstimationChangeEvent {
@@ -147,7 +151,6 @@ export interface INeedsMediaSourceReload { type: "needs-media-source-reload";
 // Events coming from single PeriodBuffer
 export type IPeriodBufferEvent = IPeriodBufferReadyEvent |
                                  IAdaptationBufferEvent<unknown> |
-                                 IBufferWarningEvent |
                                  INeedsMediaSourceReload |
                                  IAdaptationChangeEvent;
 
