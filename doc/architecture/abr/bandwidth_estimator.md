@@ -53,4 +53,4 @@ bitrate threshold. The chosen quality is a quality's bitrate ceiling.
 [4] If the buffer gap is too short, it is considered as "starving":
 
 [5] An immediate bandwidth is computed from last or current request.
-The quality's bitrate ceiling relies on it to return the chose quality.
+The quality's bitrate ceiling relies on it to return the chosen quality.

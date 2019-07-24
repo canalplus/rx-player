@@ -43,12 +43,12 @@ Bitrates (kb/s) |
 [2] The BOLA estimation is computed each time a segment is appended (thus buffer
 gap is updated).
 
-The RxPlayer has a mecanism that allows to replace buffered segments when newly
-estimated quality is upper. That leads to buffer gap not increasing when a chunk
-is added. That could mislead BOLA, and cause oscillations between chosen
-qualities.
+The RxPlayer has a mecanism that allows to replace low-quality buffered segments
+by higher quality ones if the current conditions improve.
+That leads to buffer gap not increasing when a chunk is added.
+That could mislead BOLA, and cause oscillations between chosen qualities.
 
-[3] In order to avoid this trend, we compute a maintanability score for currently 
+[3] In order to avoid this trend, we compute a maintanability score for currently
 downloaded quality. It is an [EWMA](https://en.wikipedia.org/wiki/EWMA) of the
 ratio between segment duration and segment download time. If the score points
 that a quality is "maintanable", the algorithm shall not decide to decrease quality

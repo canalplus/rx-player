@@ -21,7 +21,8 @@ be the most adapted, that is the quality which:
     network to handle would lead to excessive re-bufferings, but a too low would
     be not as pleasant to watch)
 
-In order to estimate the quality that maximizes the playback experience, the ABR 
+In order to estimate the quality that maximizes the playback experience, the ABR
 relies on two "estimators". The [bandwidth estimator](./bandwidth_estimator.md)
-picks a quality from network conditions. The [buffer based estimator](./buffer_based_estimator.md)
-relies on buffering conditions to make his choices.
+picks a quality from network conditions. The
+[buffer based estimator](./buffer_based_estimator.md) relies on buffering
+conditions to make his choices.
