@@ -224,43 +224,66 @@ export interface ITransportManifestPipeline { resolver? : IManifestResolverFunct
                                               loader : IManifestLoaderFunction;
                                               parser : IManifestParserFunction; }
 
+export type ITransportVideoSegmentLoader =
+  (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
+                                                             ArrayBuffer |
+                                                             null >;
+export type ITransportVideoSegmentParser =
+  (x : ISegmentParserArguments< Uint8Array |
+                                ArrayBuffer |
+                                null >) => IVideoParserObservable;
+
 export interface ITransportVideoSegmentPipeline {
-  loader : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
-                                                                      ArrayBuffer |
-                                                                      null >;
-  parser : (x : ISegmentParserArguments< Uint8Array |
-                                         ArrayBuffer |
-                                         null >) => IVideoParserObservable;
+  loader : ITransportVideoSegmentLoader;
+  parser : ITransportVideoSegmentParser;
 }
+
+export type ITransportAudioSegmentLoader =
+  (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
+                                                             ArrayBuffer |
+                                                             null >;
+export type ITransportAudioSegmentParser =
+  (x : ISegmentParserArguments< Uint8Array |
+                                ArrayBuffer |
+                                null >) => IAudioParserObservable;
+
 export interface ITransportAudioSegmentPipeline {
-  loader : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
-                                                                      ArrayBuffer |
-                                                                      null >;
-  parser : (x : ISegmentParserArguments< Uint8Array |
-                                         ArrayBuffer |
-                                         null >) => IAudioParserObservable;
+  loader : ITransportAudioSegmentLoader;
+  parser : ITransportAudioSegmentParser;
 }
+
+// Note: The segment's data can be null for init segments
+export type ITransportTextSegmentLoader =
+  (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
+                                                             ArrayBuffer |
+                                                             string |
+                                                             null >;
+
+export type ITransportTextSegmentParser =
+  (x : ISegmentParserArguments< Uint8Array |
+                                ArrayBuffer |
+                                string |
+                                null >) => ITextParserObservable;
 
 export interface ITransportTextSegmentPipeline {
-  // Note: The segment's data can be null for init segments
-  loader : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
-                                                                      ArrayBuffer |
-                                                                      string |
-                                                                      null >;
-  parser : (x : ISegmentParserArguments< Uint8Array |
-                                         ArrayBuffer |
-                                         string |
-                                         null >) => ITextParserObservable;
+  loader : ITransportTextSegmentLoader;
+  parser : ITransportTextSegmentParser;
 }
 
-export interface ITransportImageSegmentPipeline {
+export type ITransportImageSegmentLoader =
   // Note: The segment's data can be null for init segments
-  loader : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
-                                                                      ArrayBuffer |
-                                                                      null >;
-  parser : (x : ISegmentParserArguments< Uint8Array |
-                                         ArrayBuffer |
-                                         null >) => IImageParserObservable;
+  (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
+                                                             ArrayBuffer |
+                                                             null >;
+
+export type ITransportImageSegmentParser =
+  (x : ISegmentParserArguments< Uint8Array |
+                                ArrayBuffer |
+                                null >) => IImageParserObservable;
+
+export interface ITransportImageSegmentPipeline {
+  loader : ITransportImageSegmentLoader;
+  parser : ITransportImageSegmentParser;
 }
 
 export type ITransportSegmentPipeline = ITransportAudioSegmentPipeline |

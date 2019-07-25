@@ -27,6 +27,7 @@ import {
 } from "rxjs/operators";
 import features from "../../features";
 import Manifest, {
+  IMetaPlaylistPrivateInfos,
   ISegment,
 } from "../../manifest";
 import parseMetaPlaylist, {
@@ -120,6 +121,18 @@ function getTransportPipelines(
 
 /**
  * @param {Object} segment
+ * @returns {Object}
+ */
+function getMetaPlaylistPrivateInfos(segment : ISegment) : IMetaPlaylistPrivateInfos {
+  const { privateInfos } = segment;
+  if (privateInfos == null || privateInfos.metaplaylistInfos == null) {
+    throw new Error("MetaPlaylist: Undefined transport for content for metaplaylist.");
+  }
+  return privateInfos.metaplaylistInfos;
+}
+
+/**
+ * @param {Object} segment
  * @param {Object} transports
  * @returns {Object}
  */
@@ -128,12 +141,7 @@ function getTransportPipelinesFromSegment(
   transports : Partial<Record<string, ITransportPipelines>>,
   options : ITransportOptions
 ): ITransportPipelines {
-  const { privateInfos } = segment;
-  if (privateInfos == null || privateInfos.metaplaylistInfos == null) {
-    throw new Error("MetaPlaylist: Undefined transport for content for metaplaylist.");
-  }
-
-  const { transportType } = privateInfos.metaplaylistInfos;
+  const { transportType } = getMetaPlaylistPrivateInfos(segment);
   return getTransportPipelines(transports, transportType, options);
 }
 
@@ -202,12 +210,15 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
   };
 
   /**
-   * @param {number} offset
+   * @param {number} contentOffset
+   * @param {number} scaledContentOffset
+   * @param {number|undefined} contentEnd
+   * @param {Object} parserResponse
    */
-  function addOffsetToResponse<T>(
-    start : number,
-    scaledStart : number,
-    end : number | undefined,
+  function formatParserResponse<T>(
+    contentOffset : number,
+    scaledContentOffset : number,
+    contentEnd : number | undefined,
     { segmentData,
       segmentInfos,
       segmentOffset,
@@ -220,21 +231,21 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
                appendWindow: [undefined, undefined] };
     }
     if (segmentInfos && segmentInfos.time > -1) {
-      segmentInfos.time += scaledStart;
+      segmentInfos.time += scaledContentOffset;
     }
 
-    const offsetedSegmentOffset = segmentOffset + start;
+    const offsetedSegmentOffset = segmentOffset + contentOffset;
     const offsetedWindowStart = appendWindow[0] != null ?
-      Math.max(appendWindow[0] + start, start) :
-      start;
+      Math.max(appendWindow[0] + contentOffset, contentOffset) :
+      contentOffset;
 
     let offsetedWindowEnd : number|undefined;
     if (appendWindow[1] != null) {
-      offsetedWindowEnd = end != null ? Math.min(appendWindow[1] + start,
-                                                 end) :
-                                        appendWindow[1] + start;
-    } else if (end != null) {
-      offsetedWindowEnd = end;
+      offsetedWindowEnd = contentEnd != null ? Math.min(appendWindow[1] + contentOffset,
+                                                        contentEnd) :
+                                        appendWindow[1] + contentOffset;
+    } else if (contentEnd != null) {
+      offsetedWindowEnd = contentEnd;
     }
     return { segmentData,
              segmentInfos,
@@ -251,15 +262,16 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
     ) : ISegmentParserObservable< Uint8Array | ArrayBuffer > {
-      const { period, init, segment } = args;
-      const offset = period.start; // XXX TODO Wouldn't there be a risk for
-                                   // multi-period contents?
-      const windowEnd = period.end;
-
-      const scaledOffset = offset * (init ? init.timescale : segment.timescale);
+      const { init, segment } = args;
+      const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
+      const scaledOffset = contentStart * (init ? init.timescale :
+                                                  segment.timescale);
       const { audio } = getTransportPipelinesFromSegment(segment, transports, options);
-      return audio.parser(getParserArguments(args, segment, offset))
-        .pipe(map(res => addOffsetToResponse(offset, scaledOffset, windowEnd, res)));
+      return audio.parser(getParserArguments(args, segment, contentStart))
+        .pipe(map(res => formatParserResponse(contentStart,
+                                              scaledOffset,
+                                              contentEnd,
+                                              res)));
     },
   };
 
@@ -272,14 +284,16 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
     ) : ISegmentParserObservable< Uint8Array | ArrayBuffer > {
-      const { period, init, segment } = args;
-      const offset = period.start;
-      const windowEnd = period.end;
-
-      const scaledOffset = offset * (init ? init.timescale : segment.timescale);
+      const { init, segment } = args;
+      const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
+      const scaledOffset = contentStart * (init ? init.timescale :
+                                                  segment.timescale);
       const { video } = getTransportPipelinesFromSegment(segment, transports, options);
-      return video.parser(getParserArguments(args, segment, offset))
-        .pipe(map(res => addOffsetToResponse(offset, scaledOffset, windowEnd, res)));
+      return video.parser(getParserArguments(args, segment, contentStart))
+        .pipe(map(res => formatParserResponse(contentStart,
+                                              scaledOffset,
+                                              contentEnd,
+                                              res)));
     },
   };
 
@@ -290,14 +304,17 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
     },
 
     parser: (args: ISegmentParserArguments<ArrayBuffer|string|Uint8Array|null>) => {
-      const { period, init, segment } = args;
-      const offset = period.start;
-      const scaledOffset = offset * (init ? init.timescale : segment.timescale);
-      const windowEnd = period.end;
+      const { init, segment } = args;
+      const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
+      const scaledOffset = contentStart * (init ? init.timescale :
+                                                  segment.timescale);
 
       const { text } = getTransportPipelinesFromSegment(segment, transports, options);
-      return text.parser(getParserArguments(args, segment, offset))
-        .pipe(map(res => addOffsetToResponse(offset, scaledOffset, windowEnd, res)));
+      return text.parser(getParserArguments(args, segment, contentStart))
+        .pipe(map(res => formatParserResponse(contentStart,
+                                              scaledOffset,
+                                              contentEnd,
+                                              res)));
     },
   };
 
@@ -310,14 +327,17 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
     parser(
       args : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
     ) : IImageParserObservable {
-      const { period, init, segment } = args;
-      const offset = period.start;
-      const scaledOffset = offset * (init ? init.timescale : segment.timescale);
-      const windowEnd = period.end;
+      const { init, segment } = args;
+      const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
+      const scaledOffset = contentStart * (init ? init.timescale :
+                                                  segment.timescale);
 
       const { image } = getTransportPipelinesFromSegment(segment, transports, options);
-      return image.parser(getParserArguments(args, segment, offset))
-        .pipe(map(res => addOffsetToResponse(offset, scaledOffset, windowEnd, res)));
+      return image.parser(getParserArguments(args, segment, contentStart))
+        .pipe(map(res => formatParserResponse(contentStart,
+                                              scaledOffset,
+                                              contentEnd,
+                                              res)));
     },
   };
 
