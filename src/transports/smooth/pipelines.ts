@@ -173,7 +173,7 @@ export default function(
       adaptation,
       manifest,
     } : ISegmentParserArguments< ArrayBuffer | Uint8Array | null >
-    ) : ISegmentParserObservable< ArrayBuffer | Uint8Array | null > {
+    ) : ISegmentParserObservable< ArrayBuffer | Uint8Array > {
       const { responseData } = response;
       if (responseData == null) {
         return observableOf({ segmentData: null,
