@@ -270,7 +270,7 @@ player.loadVideo({
   transportOptions: {
     // Note: `_url` will here be `undefined`
     manifestLoader(_url, callbacks) {
-      callbacks.resolve(myMetaPlaylistObject);
+      callbacks.resolve({ data: myMetaPlaylistObject });
     }
   }
 });
