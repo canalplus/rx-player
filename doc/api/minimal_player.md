@@ -79,8 +79,32 @@ import { DASH, SMOOTH } from "rx-player/features";
 MinimalRxPlayer.addFeatures([DASH, SMOOTH]);
 ```
 
-By doing that, you will reduce the final bundle file __if tree-shaking is
-performed on the final code__ (like in webpack's production mode).
+There is also "experimental" features. Such features can completely change from
+one version to the next - unlike regular features which just follows semantic
+versioning. This means that you may have to keep the concerned code up-to-date
+each time you depend on a new RxPlayer version.
+Such features are imported from `"rx-player/experimental/features"` instead:
+
+```js
+import MinimalRxPlayer from "rx-player/minimal";
+import { METAPLAYLIST } from "rx-player/experimental/features";
+
+MinimalRxPlayer.addFeatures([METAPLAYLIST]);
+```
+
+You can of course depend on both experimental and regular features:
+
+```js
+import MinimalRxPlayer from "rx-player/minimal";
+import { DASH, SMOOTH } from "rx-player/features";
+import { METAPLAYLIST } from "rx-player/experimental/features";
+
+MinimalRxPlayer.addFeatures([DASH, SMOOTH, METAPLAYLIST]);
+```
+
+By using the minimal version, you will reduce the final bundle file __if
+tree-shaking is performed on the final code__ (like in webpack's production
+mode).
 
 The key is just to know which feature does what. The next chapter will list
 and explain the role of every one of them.
@@ -111,6 +135,7 @@ Here is the anotated exhaustive list (notes are at the bottom of the table):
 | `HTML_TTML_PARSER` [3]   | Parse TTML text tracks for the HTML text buffer          |
 | `HTML_SAMI_PARSER` [3]   | Parse SAMI text tracks for the HTML text buffer          |
 | `BIF_PARSER` [4]         | Parse BIF image tracks for the image buffer              |
+| `METAPLAYLIST` [5]       | Enable playback of "metaplaylist" contents               |
 
 ---
 
@@ -223,6 +248,11 @@ ignored during a build.
 True by default. If set to "false", all code relative to directfile streaming
 will be ignored during a build.
 
+<a name="env-metaplaylist"></a>
+#### RXP_METAPLAYLIST
+False by default. If set to "true", all code relative to metaplaylist streaming
+will be included during a build.
+
 <a name="env-eme"></a>
 #### RXP_EME
 True by default. If set to "false", all code relative to encrypted contents will
@@ -273,10 +303,10 @@ text tracks[[1]](#note-1) will be ignored during a build.
 True by default. If set to "false", all code relative to BIF image parsing will
 be ignored during a build.
 
-<a name="env-bif"></a>
+<a name="env-barebone"></a>
 #### RXP_BAREBONE
-If set to true, no feature is activated by default and previously-defined
-environment variables here are all considered as false by default.
+If set to true, no feature is activated by default and all other environment
+variables are considered as false by default (unless set).
 
 For example, to only activate DASH, you could do:
 ```sh

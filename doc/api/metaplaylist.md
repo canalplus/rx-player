@@ -2,15 +2,17 @@
 
 ## Overview ####################################################################
 
-The `MetaPlaylist` is a file allowing to define a content englobing multiple
-DASH or Smooth contents one after another.
+The `MetaPlaylist` is a file allowing to define a content composed of multiple
+DASH or Smooth contents played one after another.
 
 It allows advanced use cases for an extremely low cost for the server
 infrastructure, the main one being creating a linear (live) contents from
 multiple non-linear (VOD) ones, without touching the original contents.
 
-You can also construct a new non-linear contents formed of multiple non-linear
-contents put one after the other.
+You can also construct a new non-linear contents as a concatenation of multiple
+non-linear contents put one after the other. This method allows for example for
+a completely smooth streaming between multiple programs (e.g. when
+binge-watching a serie).
 
 
 
@@ -48,10 +50,10 @@ MetaPlaylist has several advantages. Some of them are:
 
   - Digital right management is also much more flexible than with a DASH MPD.
     For example, different license servers for different contents could be
-    integrated.
+    integrated. This is still a work-in-progress.
 
   - the specification is simple, allow no interpretation and is strict on what
-    is permitted. This should please client-side developpers!
+    is permitted.
 
   - All its features have been tested on web applications, meaning that you have
     the guarantee everything will work on any browser, even IE11.
@@ -62,12 +64,42 @@ MetaPlaylist has several advantages. Some of them are:
 
 A MetaPlaylist file is a simple JSON file.
 
-To jump into it right away, let me introduce an example of it:
+To jump into it right away, let me introduce some examples.
+
+For a VOD content:
 ```json
 {
   "type": "MPL",
   "version": "0.1",
-  "isLive": true,
+  "contents": [
+    {
+      "url": "http://url.to.some/DASH/first_content.mpd",
+      "startTime": 0,
+      "endTime": 10000,
+      "transport": "dash"
+    },
+    {
+      "url": "http://url.to.some/DASH/second_content.Manifest",
+      "startTime": 10000,
+      "endTime": 40000,
+      "transport": "smooth"
+    },
+    {
+      "url": "http://url.to.some/Smooth/third_content.mpd",
+      "startTime": 40000,
+      "endTime": 60000,
+      "transport": "dash"
+    }
+  ]
+}
+```
+
+For a live content:
+```json
+{
+  "type": "MPL",
+  "version": "0.1",
+  "dynamic": true,
   "pollInterval": 10000,
   "contents": [
     {
@@ -113,18 +145,25 @@ Here is an exhaustive list:
 
     The last part indicates the minor version:
     A new feature or fix have been added but its support is not needed by a
-    client (a client written for the `0.1` version can be used even for the
-    `0.99` version).
+    client (a client written for the `1.0` version can be used even for the
+    `1.99` version).
 
-  - isLive (`boolean`): If `true`, the MetaPlaylist file is not finished, and
-    might need to be updated. If `false`, the MetaPlaylist could still need
-    to be updated but its current content indicates a finished content:
-    A player should end when the end of the last content has been reached.
+    Please note that there is an exception for `0.x` versions, where each minor
+    versions could have a breaking change (as it is in that case considered an
+    experimental format).
 
-  - pollInterval (`number`): This property is not required.
+  - dynamic (`boolean`|`undefined`): If `true`, the MetaPlaylist file is not
+    finished, and might need to be updated. If `false`, the MetaPlaylist could
+    still need to be updated but its current content indicates a finished
+    content: A player should end when the end of the last content has been
+    reached.
+
+    By default, it is considered as not dynamic (so `false`).
+
+  - pollInterval (`number`|`undefined`): This property is not required.
 
     If not set or set to a negative number, you do not need to refresh the
-    MetaPlaylist file. 
+    MetaPlaylist file.
 
     If set to a positive number, this is the maximum interval in milliseconds
     the MetaPlaylist file should be fetched from the server.
@@ -149,41 +188,92 @@ list of its properties:
 
   - startTime (`number`): unix time at which the content should begin to be
     played
-    TODO what about leap seconds?
 
   - endTime (`number`): unix time at which the content should end. It the
-    original content is longer, it should be cut at that time.
+    original content is longer, it will be finished at that time instead.
     The original content should not be shorter.
-    TODO what about leap seconds?
 
   - transport (`string`): indicates the original streaming protocol.
-    Can be either of those two values for now:
+    Can be either of those values for now:
       - `"dash"`: the URL points to a DASH's MPD
       - `"smooth"`: the URL points to a Microsoft Smooth Streaming's Manifest.
+      - `"metaplaylist"`: Yes, it is possible to put MetaPlaylist files inside
+        other MetaPlaylist files!
 
 All those contents should be contiguous (meaning that the `endTime` of one
 should be the same value than the `startTime` of the following one).
 
-> Optional parameters are:
-> - content:
->     - textTracks ( _type_: ``Object`` ): An array of text tracks info:
->         - url ( _type_: ``string``): The URL of the text track.
->         - language ( _type_ : ``string`` ): The language of the text track (in ISO 639-2 or ISO 639-3 format).
->         - mimeType ( _type_: ``string`` ): The mimeType of the text track.
 
-  > ## <a name="logic"></a>The logic behind
+## How to actually play a MetaPlaylist content #################################
 
-> The MetaPlaylist defines the playback of original content on his own timeline. 
-> The timeline of MetaPlaylist starts at 01/01/1970. Considering that each original content start time is 0, each content plays at specified startTime in MetaPlaylist. The startTime of content is thus an offset to original boudaries. 
 
-> ```
-> 0 ----[...]-------- MetaPlaylist Timeline -------- NOW ----------->
+### Importing the METAPLAYLIST feature #########################################
 
-  >                           play at: 1300000000        1300000300
-  >                                  |-------- DASH -------->|
-  >                               start: 0    Content      end: 300
+The `"METAPLAYLIST"` feature is not included in the default RxPlayer build.
 
-  >       play at: 1299999800     1300000000
-  >               |----- Smooth ---->|
-  >           start: 0   Content   end: 200
-> ```
+There's two way you can import it, depending on if you're relying on the minimal
+version or if you prefer to make use of environment variables.
+
+
+#### Through the minimal version of the RxPlayer
+
+If you're using the "minimal" version of the RxPlayer (through the
+`"rx-player/minimal"` import), you will need to import:
+  - the `METAPLAYLIST` experimental feature
+  - every transport protocol you might want to use.
+
+For example if you need to use MetaPlaylist with both Smooth and DASH contents,
+you have to import at least all three as such:
+
+```js
+import RxPlayer from "rx-player/minimal";
+import { METAPLAYLIST } from "rx-player/experimental/features";
+import { DASH, SMOOTH } from "rx-player/features";
+
+RxPlayer.addFeatures([METAPLAYLIST, DASH, SMOOTH]);
+```
+
+
+#### Through environment variables
+
+If you don't want to go the minimal version's route and you have no problem with
+building yourself a new version of the RxPlayer, you can make use of environment
+variables to activate it.
+
+This can be done through the `RXP_METAPLAYLIST` environment variable, which you
+have to set to `true`:
+
+```sh
+RXP_METAPLAYLIST=true npm run build:min
+```
+
+More informations about any of that can be found in the [minimal player
+documentation](./minimal_player.md).
+
+### Loading a MetaPlaylist content #############################################
+
+A MetaPlaylist content can simply be played by setting a `"metaplaylist"`
+transport in `loadVideo`:
+
+```js
+player.loadVideo({
+  url: "http://www.example.com/metaplaylist.json",
+  transport: "metaplaylist"
+});
+```
+
+If you declare locally your MetaPlaylist file and do not want to set a URL for
+it, you can serve directly the file through the use of a Manifest Loader:
+```js
+player.loadVideo({
+  transport: "metaplaylist",
+  transportOptions: {
+    // Note: `_url` will here be `undefined`
+    manifestLoader(_url, callbacks) {
+      callbacks.resolve(myMetaPlaylistObject);
+    }
+  }
+});
+```
+More infos on the `manifestLoader` can be found
+[here](./plugins.md#manifestLoader).
