@@ -131,8 +131,10 @@ function createManifest(
   const generateAdaptationID = idGenerator();
   const generateRepresentationID = idGenerator();
   const { contents } = mplData;
-  const minimumTime = contents.length ? contents[0].startTime : 0;
-  const maximumTime = contents.length ? contents[contents.length - 1].startTime : 0;
+  const minimumTime = contents.length ? contents[0].startTime :
+                                        0;
+  const maximumTime = contents.length ? contents[contents.length - 1].startTime :
+                                        0;
   const isLive = mplData.dynamic === true;
   let duration : number|undefined = 0;
 
@@ -141,6 +143,8 @@ function createManifest(
     const content = contents[iMan];
     const periodOffset = content.startTime;
     const currentManifest = manifests[iMan];
+
+    const manifestPeriods = [];
     for (let iPer = 0; iPer < currentManifest.periods.length; iPer++) {
       const currentPeriod = currentManifest.periods[iPer];
       const adaptations = SUPPORTED_ADAPTATIONS_TYPE
@@ -233,8 +237,23 @@ function createManifest(
         duration: currentPeriod.duration,
         start: periodOffset + currentPeriod.start,
       };
-      periods.push(newPeriod);
+      manifestPeriods.push(newPeriod);
     }
+
+    for (let i = manifestPeriods.length - 1; i >= 0; i--) {
+      const period = manifestPeriods[i];
+      if (period.start >= content.endTime) {
+        manifestPeriods.splice(i, 1);
+      } else if (period.duration != null) {
+        if (period.start + period.duration > content.endTime) {
+          period.duration = content.endTime - period.start;
+        }
+      } else if (i === manifestPeriods.length - 1) {
+        period.duration = content.endTime - period.start;
+      }
+    }
+    periods.push(...manifestPeriods);
+
     if (!isLive && duration != null) {
       const currentDuration = currentManifest.getDuration();
       if (currentDuration == null) {
