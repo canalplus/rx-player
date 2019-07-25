@@ -141,7 +141,8 @@ function createManifest(
   const periods : IParsedPeriod[] = [];
   for (let iMan = 0; iMan < contents.length; iMan++) {
     const content = contents[iMan];
-    const periodOffset = content.startTime;
+    const contentOffset = content.startTime;
+    const contentEnd = content.endTime;
     const currentManifest = manifests[iMan];
 
     const manifestPeriods = [];
@@ -169,12 +170,10 @@ function createManifest(
                 representation: currentRepresentation,
               };
 
-              const newIndex = new MetaRepresentationIndex(
-                currentRepresentation.index,
-                periodOffset,
-                content.transport,
-                contentInfos
-              );
+              const newIndex = new MetaRepresentationIndex(currentRepresentation.index,
+                                                           [contentOffset, contentEnd],
+                                                           content.transport,
+                                                           contentInfos);
               representations.push({
                 bitrate: currentRepresentation.bitrate,
                 index: newIndex,
@@ -235,7 +234,7 @@ function createManifest(
         id: formatId(currentManifest.id) + "_" + formatId(currentPeriod.id),
         adaptations,
         duration: currentPeriod.duration,
-        start: periodOffset + currentPeriod.start,
+        start: contentOffset + currentPeriod.start,
       };
       manifestPeriods.push(newPeriod);
     }

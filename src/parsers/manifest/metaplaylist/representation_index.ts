@@ -31,19 +31,21 @@ import {
  * segment whose original time is 200, played with an offset of 1300)
  */
 export default class MetaRepresentationIndex implements IRepresentationIndex {
-  private _wrappedIndex: IRepresentationIndex;
-  private _timeOffset: number;
-  private _transport: string;
-  private _baseContentInfos: IBaseContentInfos;
+  private _wrappedIndex : IRepresentationIndex;
+  private _timeOffset : number;
+  private _contentEnd : number | undefined;
+  private _transport : string;
+  private _baseContentInfos : IBaseContentInfos;
 
   constructor(
-      wrappedIndex: IRepresentationIndex,
-      timeOffset: number,
-      transport: string,
-      baseContentInfos: IBaseContentInfos
+    wrappedIndex: IRepresentationIndex,
+    contentBounds: [number, number|undefined],
+    transport: string,
+    baseContentInfos: IBaseContentInfos
   ) {
     this._wrappedIndex = wrappedIndex;
-    this._timeOffset = timeOffset;
+    this._timeOffset = contentBounds[0];
+    this._contentEnd = contentBounds[1];
     this._transport = transport;
     this._baseContentInfos = baseContentInfos;
   }
@@ -54,20 +56,21 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
       return null;
     }
     segment.privateInfos = segment.privateInfos || {};
-    segment.privateInfos.metaplaylistInfos = {
-      transportType: this._transport,
-      baseContent: this._baseContentInfos,
-    };
+    segment.privateInfos.metaplaylistInfos = { transportType: this._transport,
+                                               baseContent: this._baseContentInfos,
+                                               contentStart: this._timeOffset,
+                                               contentEnd: this._contentEnd };
     return segment;
   }
 
   public getSegments(up : number, duration : number) : ISegment[] {
-    return this._wrappedIndex.getSegments(up - this._timeOffset,
-                                          duration)
+    return this._wrappedIndex.getSegments(up - this._timeOffset, duration)
       .map((segment) => {
         segment.privateInfos = segment.privateInfos || {};
         segment.privateInfos.metaplaylistInfos = { transportType: this._transport,
-                                                   baseContent: this._baseContentInfos };
+                                                   baseContent: this._baseContentInfos,
+                                                   contentStart: this._timeOffset,
+                                                   contentEnd: this._contentEnd };
         segment.time += this._timeOffset * segment.timescale;
         return segment;
       });
@@ -79,16 +82,14 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
 
   public getFirstPosition(): number|undefined {
     const wrappedFirstPosition = this._wrappedIndex.getFirstPosition();
-    return wrappedFirstPosition ?
-      wrappedFirstPosition + this._timeOffset :
-      undefined;
+    return wrappedFirstPosition ? wrappedFirstPosition + this._timeOffset :
+                                  undefined;
   }
 
   public getLastPosition(): number|undefined {
     const wrappedLastPosition = this._wrappedIndex.getLastPosition();
-    return wrappedLastPosition ?
-      wrappedLastPosition + this._timeOffset :
-      undefined;
+    return wrappedLastPosition ? wrappedLastPosition + this._timeOffset :
+                                 undefined;
   }
 
   public isSegmentStillAvailable(segment : ISegment) : boolean | undefined {
@@ -116,21 +117,15 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
   }
 
   public _addSegments(
-    nextSegments : Array<{
-      time : number;
-      duration : number;
-      timescale : number;
-      count? : number;
-      range? : [number, number];
-    }>,
-    currentSegment? : {
-      duration? : number;
-      time : number;
-      timescale? : number;
-    }
+    nextSegments : Array<{ time : number;
+                           duration : number;
+                           timescale : number;
+                           count? : number;
+                           range? : [number, number]; }>,
+    currentSegment? : { duration? : number;
+                        time : number;
+                        timescale? : number; }
   ): void {
-    return this._wrappedIndex._addSegments(
-      nextSegments, currentSegment
-    );
+    return this._wrappedIndex._addSegments(nextSegments, currentSegment);
   }
 }
