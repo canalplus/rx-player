@@ -49,6 +49,7 @@ export interface IMetaPlaylistTextTrack {
 }
 
 export interface IMetaPlaylist {
+  type : "MPL";
   version : string;
   dynamic? : boolean;
   pollInterval? : number;
@@ -79,7 +80,13 @@ export default function parseMetaPlaylist(
     throw new Error("MPL Parser: Bad MetaPlaylist file. Expected JSON.");
   }
 
-  const { contents, version } = parsedData;
+  const { contents, version, type } = parsedData;
+
+  if (type !== "MPL") {
+    throw new Error("MPL Parser: Bad MetaPlaylist. " +
+                    "The `type` property is not set to `MPL`");
+  }
+
   if (typeof version !== "string" || version.split(".")[0] !== "0") {
     throw new Error("MPL Parser: Bad MetaPlaylist version");
   }
