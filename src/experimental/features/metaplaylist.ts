@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import { IFeaturesObject } from "../../features/types";
 import metaplaylist from "../../transports/metaplaylist";
-import { IFeaturesObject } from "../types";
 
 function addMetaPlaylistFeature(features: IFeaturesObject) {
   features.transports.metaplaylist = metaplaylist;
