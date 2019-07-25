@@ -45,7 +45,7 @@ import {
   ISegmentLoaderArguments,
   ISegmentParserArguments,
   ISegmentParserObservable,
-  ISegmentTimingInfos,
+  ISegmentParserResponse,
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
@@ -201,27 +201,45 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
     },
   };
 
+  /**
+   * @param {number} offset
+   */
   function addOffsetToResponse<T>(
-    offset : number,
-    scaledOffset : number,
+    start : number,
+    scaledStart : number,
+    end : number | undefined,
     { segmentData,
       segmentInfos,
-      segmentOffset } : { segmentData : T|null;
-                          segmentInfos : ISegmentTimingInfos|null;
-                          segmentOffset : number; }
-  ) : { segmentData : T|null;
-        segmentInfos : ISegmentTimingInfos|null;
-        segmentOffset : number; }
-  {
+      segmentOffset,
+      appendWindow } : ISegmentParserResponse<T>
+  ) : ISegmentParserResponse<T> {
     if (segmentData == null) {
-      return { segmentData: null, segmentInfos: null, segmentOffset: 0 };
+      return { segmentData: null,
+               segmentInfos: null,
+               segmentOffset: 0,
+               appendWindow: [undefined, undefined] };
     }
     if (segmentInfos && segmentInfos.time > -1) {
-      segmentInfos.time += scaledOffset;
+      segmentInfos.time += scaledStart;
+    }
+
+    const offsetedSegmentOffset = segmentOffset + start;
+    const offsetedWindowStart = appendWindow[0] != null ?
+      Math.max(appendWindow[0] + start, start) :
+      start;
+
+    let offsetedWindowEnd : number|undefined;
+    if (appendWindow[1] != null) {
+      offsetedWindowEnd = end != null ? Math.min(appendWindow[1] + start,
+                                                 end) :
+                                        appendWindow[1] + start;
+    } else if (end != null) {
+      offsetedWindowEnd = end;
     }
     return { segmentData,
              segmentInfos,
-             segmentOffset: segmentOffset + offset };
+             segmentOffset: offsetedSegmentOffset,
+             appendWindow: [offsetedWindowStart, offsetedWindowEnd] };
   }
 
   const audioPipeline = {
@@ -232,13 +250,16 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
 
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : ISegmentParserObservable< Uint8Array | ArrayBuffer | null > {
+    ) : ISegmentParserObservable< Uint8Array | ArrayBuffer > {
       const { period, init, segment } = args;
-      const offset = period.start;
+      const offset = period.start; // XXX TODO Wouldn't there be a risk for
+                                   // multi-period contents?
+      const windowEnd = period.end;
+
       const scaledOffset = offset * (init ? init.timescale : segment.timescale);
       const { audio } = getTransportPipelinesFromSegment(segment, transports, options);
       return audio.parser(getParserArguments(args, segment, offset))
-        .pipe(map(res => addOffsetToResponse(offset, scaledOffset, res)));
+        .pipe(map(res => addOffsetToResponse(offset, scaledOffset, windowEnd, res)));
     },
   };
 
@@ -250,13 +271,15 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
 
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : ISegmentParserObservable< Uint8Array | ArrayBuffer | null > {
+    ) : ISegmentParserObservable< Uint8Array | ArrayBuffer > {
       const { period, init, segment } = args;
       const offset = period.start;
+      const windowEnd = period.end;
+
       const scaledOffset = offset * (init ? init.timescale : segment.timescale);
       const { video } = getTransportPipelinesFromSegment(segment, transports, options);
       return video.parser(getParserArguments(args, segment, offset))
-        .pipe(map(res => addOffsetToResponse(offset, scaledOffset, res)));
+        .pipe(map(res => addOffsetToResponse(offset, scaledOffset, windowEnd, res)));
     },
   };
 
@@ -270,9 +293,11 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
       const { period, init, segment } = args;
       const offset = period.start;
       const scaledOffset = offset * (init ? init.timescale : segment.timescale);
+      const windowEnd = period.end;
+
       const { text } = getTransportPipelinesFromSegment(segment, transports, options);
       return text.parser(getParserArguments(args, segment, offset))
-        .pipe(map(res => addOffsetToResponse(offset, scaledOffset, res)));
+        .pipe(map(res => addOffsetToResponse(offset, scaledOffset, windowEnd, res)));
     },
   };
 
@@ -288,9 +313,11 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
       const { period, init, segment } = args;
       const offset = period.start;
       const scaledOffset = offset * (init ? init.timescale : segment.timescale);
+      const windowEnd = period.end;
+
       const { image } = getTransportPipelinesFromSegment(segment, transports, options);
       return image.parser(getParserArguments(args, segment, offset))
-        .pipe(map(res => addOffsetToResponse(offset, scaledOffset, res)));
+        .pipe(map(res => addOffsetToResponse(offset, scaledOffset, windowEnd, res)));
     },
   };
 

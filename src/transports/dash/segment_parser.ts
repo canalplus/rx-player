@@ -38,7 +38,7 @@ export default function parser({ segment,
                                  init } : ISegmentParserArguments< Uint8Array |
                                                                    ArrayBuffer |
                                                                    null >
-) : ISegmentParserObservable< Uint8Array | ArrayBuffer | null > {
+) : ISegmentParserObservable< Uint8Array | ArrayBuffer > {
   const { responseData } = response;
   if (responseData == null) {
     return observableOf({ segmentData: null,
