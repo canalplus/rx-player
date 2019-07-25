@@ -25,6 +25,7 @@ import {
   map,
   mergeMap,
 } from "rxjs/operators";
+import features from "../../features";
 import Manifest, {
   ISegment,
 } from "../../manifest";
@@ -33,8 +34,6 @@ import parseMetaPlaylist, {
 } from "../../parsers/manifest/metaplaylist";
 import { IParsedManifest } from "../../parsers/manifest/types";
 import request from "../../utils/request";
-import DASHTransport from "../dash";
-import SmoothTransport from "../smooth";
 import {
   IImageParserObservable,
   ILoaderDataLoaded,
@@ -94,13 +93,40 @@ function getParserArguments<T>(
 }
 
 /**
+ * @param {Object} transports
+ * @param {string} transportName
+ * @param {Object} options
+ * @returns {Object}
+ */
+function getTransportPipelines(
+  transports : Partial<Record<string, ITransportPipelines>>,
+  transportName : string,
+  options : ITransportOptions
+) : ITransportPipelines {
+  const initialTransport = transports[transportName];
+  if (initialTransport != null) {
+    return initialTransport;
+  }
+
+  const feature = features.transports[transportName];
+
+  if (feature == null) {
+    throw new Error(`MetaPlaylist: Unknown transport ${transportName}.`);
+  }
+  const transport = feature(options);
+  transports[transportName] = transport;
+  return transport;
+}
+
+/**
  * @param {Object} segment
  * @param {Object} transports
  * @returns {Object}
  */
 function getTransportPipelinesFromSegment(
   segment : ISegment,
-  transports : Partial<Record<string, ITransportPipelines>>
+  transports : Partial<Record<string, ITransportPipelines>>,
+  options : ITransportOptions
 ): ITransportPipelines {
   const { privateInfos } = segment;
   if (privateInfos == null || privateInfos.metaplaylistInfos == null) {
@@ -108,19 +134,11 @@ function getTransportPipelinesFromSegment(
   }
 
   const { transportType } = privateInfos.metaplaylistInfos;
-  const transport = transports[transportType];
-  if (transport == null) {
-    throw new Error(`MetaPlaylist: Unknown transport ${transportType}.`);
-  }
-
-  return transport;
+  return getTransportPipelines(transports, transportType, options);
 }
 
 export default function(options: ITransportOptions = {}): ITransportPipelines {
-  // XXX TODO Through features
-  const transports : Partial<Record<string, ITransportPipelines>> =
-    { dash: DASHTransport(options),
-      smooth: SmoothTransport(options) };
+  const transports : Partial<Record<string, ITransportPipelines>> = {};
 
   const manifestPipeline = {
     loader({ url } : IManifestLoaderArguments) : IManifestLoaderObservable<string> {
@@ -153,7 +171,9 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
 
         const loaders$ : Array<Observable<Manifest>> =
           parsedResult.value.ressources.map((ressource) => {
-            const transport = transports[ressource.transportType];
+            const transport = getTransportPipelines(transports,
+                                                    ressource.transportType,
+                                                    options);
             if (transport == null) {
               throw new Error("MPL: Unrecognized transport.");
             }
@@ -206,7 +226,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
 
   const audioPipeline = {
     loader({ segment, period } : ISegmentLoaderArguments) {
-      const { audio } = getTransportPipelinesFromSegment(segment, transports);
+      const { audio } = getTransportPipelinesFromSegment(segment, transports, options);
       return audio.loader(getLoaderArguments(segment, period.start));
     },
 
@@ -216,7 +236,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
       const { period, init, segment } = args;
       const offset = period.start;
       const scaledOffset = offset * (init ? init.timescale : segment.timescale);
-      const { audio } = getTransportPipelinesFromSegment(segment, transports);
+      const { audio } = getTransportPipelinesFromSegment(segment, transports, options);
       return audio.parser(getParserArguments(args, segment, offset))
         .pipe(map(res => addOffsetToResponse(offset, scaledOffset, res)));
     },
@@ -224,7 +244,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
 
   const videoPipeline = {
     loader({ segment, period } : ISegmentLoaderArguments) {
-      const { video } = getTransportPipelinesFromSegment(segment, transports);
+      const { video } = getTransportPipelinesFromSegment(segment, transports, options);
       return video.loader(getLoaderArguments(segment, period.start));
     },
 
@@ -234,7 +254,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
       const { period, init, segment } = args;
       const offset = period.start;
       const scaledOffset = offset * (init ? init.timescale : segment.timescale);
-      const { video } = getTransportPipelinesFromSegment(segment, transports);
+      const { video } = getTransportPipelinesFromSegment(segment, transports, options);
       return video.parser(getParserArguments(args, segment, offset))
         .pipe(map(res => addOffsetToResponse(offset, scaledOffset, res)));
     },
@@ -242,7 +262,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
 
   const textTrackPipeline = {
     loader({ segment, period } : ISegmentLoaderArguments) {
-      const { text } = getTransportPipelinesFromSegment(segment, transports);
+      const { text } = getTransportPipelinesFromSegment(segment, transports, options);
       return text.loader(getLoaderArguments(segment, period.start));
     },
 
@@ -250,7 +270,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
       const { period, init, segment } = args;
       const offset = period.start;
       const scaledOffset = offset * (init ? init.timescale : segment.timescale);
-      const { text } = getTransportPipelinesFromSegment(segment, transports);
+      const { text } = getTransportPipelinesFromSegment(segment, transports, options);
       return text.parser(getParserArguments(args, segment, offset))
         .pipe(map(res => addOffsetToResponse(offset, scaledOffset, res)));
     },
@@ -258,7 +278,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
 
   const imageTrackPipeline = {
     loader({ segment, period } : ISegmentLoaderArguments) {
-      const { image } = getTransportPipelinesFromSegment(segment, transports);
+      const { image } = getTransportPipelinesFromSegment(segment, transports, options);
       return image.loader(getLoaderArguments(segment, period.start));
     },
 
@@ -268,7 +288,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
       const { period, init, segment } = args;
       const offset = period.start;
       const scaledOffset = offset * (init ? init.timescale : segment.timescale);
-      const { image } = getTransportPipelinesFromSegment(segment, transports);
+      const { image } = getTransportPipelinesFromSegment(segment, transports, options);
       return image.parser(getParserArguments(args, segment, offset))
         .pipe(map(res => addOffsetToResponse(offset, scaledOffset, res)));
     },
