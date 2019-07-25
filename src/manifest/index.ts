@@ -28,6 +28,7 @@ import Period from "./period";
 import Representation from "./representation";
 import IRepresentationIndex, {
   IBaseContentInfos,
+  IMetaPlaylistPrivateInfos,
   ISegment,
   StaticRepresentationIndex,
 } from "./representation_index";
@@ -43,6 +44,7 @@ export {
   IAdaptationType,
   IBaseContentInfos,
   IManifestParsingOptions,
+  IMetaPlaylistPrivateInfos,
   IRepresentationFilter,
   IRepresentationIndex,
   ISegment,
