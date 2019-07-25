@@ -28,16 +28,16 @@ import {
   NEVER,
   Observable,
   of as observableOf,
+  timer,
 } from "rxjs";
 import {
-  debounceTime,
+  delay,
   distinctUntilChanged,
-  filter,
   map,
   mapTo,
-  mergeMap,
   startWith,
   switchMap,
+  throttleTime,
 } from "rxjs/operators";
 import config from "../config";
 import log from "../log";
@@ -187,25 +187,22 @@ function videoSizeChange() : Observable<unknown> {
   return observableFromEvent(window, "resize");
 }
 
-// Emit `true` when visible
-const isVisible$ = visibilityChange()
-  .pipe(filter((x) => x));
-
-// Emit `false` if the page is hidden for `INACTIVITY_DELAY` seconds
-const isInactive$ = visibilityChange()
-  .pipe(
-    debounceTime(INACTIVITY_DELAY),
-    filter((x) => !x)
-  );
-
 /**
  * Emit `true` if the page is considered active.
  * `false` when considered inactive.
  * Emit the original value on subscription.
  * @returns {Observable}
  */
-function isActive() : Observable<boolean> {
-  return observableMerge(isVisible$, isInactive$);
+function isActive() {
+  return visibilityChange().pipe(
+    switchMap((x) => {
+      if (!x) {
+        return timer(INACTIVITY_DELAY)
+          .pipe(mapTo(x));
+      }
+      return observableOf(x);
+    })
+  );
 }
 
 /**
@@ -277,10 +274,10 @@ function isVideoVisible(
   pip$ : Observable<IPictureInPictureEvent>
 ) : Observable<boolean> {
   return observableCombineLatest([visibilityChange(), pip$]).pipe(
-    mergeMap(([ isVisible, pip ]) => {
+    switchMap(([ isVisible, pip ]) => {
       const videoVisible = pip.isEnabled || isVisible;
       return observableOf(videoVisible).pipe(
-        debounceTime((!videoVisible) ? INACTIVITY_DELAY : 0)
+        delay((!videoVisible) ? INACTIVITY_DELAY : 0)
       );
     }),
     distinctUntilChanged()
@@ -300,7 +297,7 @@ function videoWidth$(
   return observableCombineLatest([
     pip$,
     observableInterval(20000).pipe(startWith(null)),
-    videoSizeChange().pipe(debounceTime(500), startWith(null)),
+    videoSizeChange().pipe(throttleTime(500), startWith(null)),
   ]).pipe(
     switchMap(([ pip ]) : Observable<number> => {
       if (!pip.isEnabled) {
