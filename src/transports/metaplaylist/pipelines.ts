@@ -34,7 +34,6 @@ import parseMetaPlaylist, {
   IParserResponse as IMPLParserResponse,
 } from "../../parsers/manifest/metaplaylist";
 import { IParsedManifest } from "../../parsers/manifest/types";
-import request from "../../utils/request";
 import {
   IImageParserObservable,
   ILoaderDataLoaded,
@@ -50,6 +49,7 @@ import {
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
+import generateManifestLoader from "./manifest_loader";
 
 /**
  * Prepare any wrapped segment loader's arguments.
@@ -130,27 +130,24 @@ function getMetaPlaylistPrivateInfos(segment : ISegment) : IMetaPlaylistPrivateI
   }
   return privateInfos.metaplaylistInfos;
 }
-
-/**
- * @param {Object} segment
- * @param {Object} transports
- * @returns {Object}
- */
-function getTransportPipelinesFromSegment(
-  segment : ISegment,
-  transports : Partial<Record<string, ITransportPipelines>>,
-  options : ITransportOptions
-): ITransportPipelines {
-  const { transportType } = getMetaPlaylistPrivateInfos(segment);
-  return getTransportPipelines(transports, transportType, options);
-}
-
 export default function(options: ITransportOptions = {}): ITransportPipelines {
   const transports : Partial<Record<string, ITransportPipelines>> = {};
 
+  const manifestLoader = generateManifestLoader({
+    customManifestLoader: options.manifestLoader,
+  });
+
+  // remove some options that we might not want to apply to the
+  // other streaming protocols used here
+  const otherTransportOptions = objectAssign({},
+                                             options,
+                                             { manifestLoader: undefined,
+                                               supplementaryTextTracks: [],
+                                               supplementaryImageTracks: [] });
+
   const manifestPipeline = {
     loader({ url } : IManifestLoaderArguments) : IManifestLoaderObservable<string> {
-      return request({ url, responseType: "text" });
+      return manifestLoader(url);
     },
 
     parser(
@@ -181,7 +178,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
           parsedResult.value.ressources.map((ressource) => {
             const transport = getTransportPipelines(transports,
                                                     ressource.transportType,
-                                                    options);
+                                                    otherTransportOptions);
             if (transport == null) {
               throw new Error("MPL: Unrecognized transport.");
             }
@@ -208,6 +205,18 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
       }
     },
   };
+
+  /**
+   * @param {Object} segment
+   * @param {Object} transports
+   * @returns {Object}
+   */
+  function getTransportPipelinesFromSegment(
+    segment : ISegment
+  ): ITransportPipelines {
+    const { transportType } = getMetaPlaylistPrivateInfos(segment);
+    return getTransportPipelines(transports, transportType, otherTransportOptions);
+  }
 
   /**
    * @param {number} contentOffset
@@ -255,7 +264,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
 
   const audioPipeline = {
     loader({ segment, period } : ISegmentLoaderArguments) {
-      const { audio } = getTransportPipelinesFromSegment(segment, transports, options);
+      const { audio } = getTransportPipelinesFromSegment(segment);
       return audio.loader(getLoaderArguments(segment, period.start));
     },
 
@@ -266,7 +275,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const scaledOffset = contentStart * (init ? init.timescale :
                                                   segment.timescale);
-      const { audio } = getTransportPipelinesFromSegment(segment, transports, options);
+      const { audio } = getTransportPipelinesFromSegment(segment);
       return audio.parser(getParserArguments(args, segment, contentStart))
         .pipe(map(res => formatParserResponse(contentStart,
                                               scaledOffset,
@@ -277,7 +286,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
 
   const videoPipeline = {
     loader({ segment, period } : ISegmentLoaderArguments) {
-      const { video } = getTransportPipelinesFromSegment(segment, transports, options);
+      const { video } = getTransportPipelinesFromSegment(segment);
       return video.loader(getLoaderArguments(segment, period.start));
     },
 
@@ -288,7 +297,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const scaledOffset = contentStart * (init ? init.timescale :
                                                   segment.timescale);
-      const { video } = getTransportPipelinesFromSegment(segment, transports, options);
+      const { video } = getTransportPipelinesFromSegment(segment);
       return video.parser(getParserArguments(args, segment, contentStart))
         .pipe(map(res => formatParserResponse(contentStart,
                                               scaledOffset,
@@ -299,7 +308,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
 
   const textTrackPipeline = {
     loader({ segment, period } : ISegmentLoaderArguments) {
-      const { text } = getTransportPipelinesFromSegment(segment, transports, options);
+      const { text } = getTransportPipelinesFromSegment(segment);
       return text.loader(getLoaderArguments(segment, period.start));
     },
 
@@ -309,7 +318,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
       const scaledOffset = contentStart * (init ? init.timescale :
                                                   segment.timescale);
 
-      const { text } = getTransportPipelinesFromSegment(segment, transports, options);
+      const { text } = getTransportPipelinesFromSegment(segment);
       return text.parser(getParserArguments(args, segment, contentStart))
         .pipe(map(res => formatParserResponse(contentStart,
                                               scaledOffset,
@@ -320,7 +329,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
 
   const imageTrackPipeline = {
     loader({ segment, period } : ISegmentLoaderArguments) {
-      const { image } = getTransportPipelinesFromSegment(segment, transports, options);
+      const { image } = getTransportPipelinesFromSegment(segment);
       return image.loader(getLoaderArguments(segment, period.start));
     },
 
@@ -332,7 +341,7 @@ export default function(options: ITransportOptions = {}): ITransportPipelines {
       const scaledOffset = contentStart * (init ? init.timescale :
                                                   segment.timescale);
 
-      const { image } = getTransportPipelinesFromSegment(segment, transports, options);
+      const { image } = getTransportPipelinesFromSegment(segment);
       return image.parser(getParserArguments(args, segment, contentStart))
         .pipe(map(res => formatParserResponse(contentStart,
                                               scaledOffset,
