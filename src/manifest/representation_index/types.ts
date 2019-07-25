@@ -40,10 +40,14 @@ export interface IBaseContentInfos { manifest: Manifest;
                                      adaptation: Adaptation;
                                      representation: Representation; }
 
+export interface IMetaPlaylistPrivateInfos { transportType : string;
+                                             baseContent : IBaseContentInfos;
+                                             contentStart : number;
+                                             contentEnd? : number; }
+
 export interface IPrivateInfos {
   smoothInit? : ISmoothInitSegmentPrivateInfos;
-  metaplaylistInfos? : { transportType : string;
-                         baseContent : IBaseContentInfos; };
+  metaplaylistInfos? : IMetaPlaylistPrivateInfos;
 }
 
 // ISegment Object.
