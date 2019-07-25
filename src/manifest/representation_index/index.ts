@@ -17,12 +17,14 @@
 import StaticRepresentationIndex from "./static";
 import IRepresentationIndex, {
   IBaseContentInfos,
+  IMetaPlaylistPrivateInfos,
   ISegment,
 } from "./types";
 
 export default IRepresentationIndex;
 export {
   IBaseContentInfos,
+  IMetaPlaylistPrivateInfos,
   ISegment,
   StaticRepresentationIndex,
 };
