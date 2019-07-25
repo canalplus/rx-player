@@ -49,7 +49,7 @@ function formatContent(content) {
   let isLocalContent = false;
 
   if (IS_HTTPS) {
-    if (content.url.startsWith("http:")) {
+    if (!content.localContent && content.url.startsWith("http:")) {
       displayName = "[HTTP only] " + displayName;
       isDisabled = true;
     }
