@@ -31,12 +31,11 @@ method to use to load a new video.
 These options take the form of a single objects with multiple properties, like
 this:
 ```js
-// Setting the only two mandatory keys for a clear content (without DRM).
+// Simply loading a DASH MPD
 const options = {
   transport: "dash",
   url: myManifestUrl
 };
-
 player.loadVideo(options);
 ```
 
@@ -83,7 +82,9 @@ For Smooth, DASH or MetaPlaylist contents, the URL to the
 For _DirectFile_ mode contents, the URL of the content (the supported contents
 depends on the current browser).
 
-This property is mandatory.
+This property is mandatory unless a `manifestLoader` is defined in the
+[transportOptions](#prop-transportOptions), in which case that callback will be
+called instead any time we want to load the Manifest.
 
 
 <a name="prop-keySystems"></a>
