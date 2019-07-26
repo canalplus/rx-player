@@ -152,6 +152,9 @@ Here is an exhaustive list:
     versions could have a breaking change (as it is in that case considered an
     experimental format).
 
+    At the moment, there is only one version the version `"0.1"`. Thus, this is
+    what you have to set in your JSON if you integrate this specification.
+
   - dynamic (`boolean`|`undefined`): If `true`, the MetaPlaylist file is not
     finished, and might need to be updated. If `false`, the MetaPlaylist could
     still need to be updated but its current content indicates a finished
