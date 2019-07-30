@@ -565,25 +565,22 @@ export default {
    * the buffer.
    *
    * Basically, from a given time, if the current buffer gap number (time
-   * between the current time and the end of the downloaded buffer) is between
-   * the "high" and "low" described here (of the corresponding type), we won't
+   * between the current time and the end of the downloaded buffer) is above
+   * the padding described here (of the corresponding type), we won't
    * reschedule segments for that range.
    *
    * This is to avoid excessive re-buffering.
    *
-   * Keeping the "high"s too low would increase the risk of re-bufferings.
+   * Keeping the padding too low would increase the risk of re-bufferings.
    *
-   * Keeping the "high"s too high would delay visible quality increase.
+   * Keeping the padding too high would delay visible quality increase.
    *
    * @type {Object}
    */
   BUFFER_PADDING: {
-    audio: { high: 1,
-             low: 1 }, // only "audio" segments
-    video: { high: 3,
-             low: 2 }, // only "video" segments
-    other: { high: 1,
-             low: 1 }, // tracks which are not audio/video (text images).
+    audio: 1, // only "audio" segments
+    video: 3, // only "video" segments
+    other: 1, // tracks which are not audio/video (text images).
   },
 
   /**
