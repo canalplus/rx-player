@@ -156,32 +156,33 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       return [];
     }
 
-    const { duration,
-            startNumber,
-            timescale,
-            mediaURL } = index;
-
+    const { duration, startNumber, timescale, mediaURL } = index;
     const segments : ISegment[] = [];
-    for (let baseTime = up; baseTime <= to; baseTime += duration) {
+    const scaledStart = this._periodStart * this._index.timescale;
+    const relativeStart = up - scaledStart;
+    const numberOffset = startNumber == null ? 1 :
+                                               startNumber;
+    let numberIndexedToZero = Math.floor(relativeStart / duration);
 
-      const periodRelativeStart = baseTime - (this._periodStart * timescale);
-      const baseNumber = Math.floor((periodRelativeStart / duration));
-      const number = baseNumber + (startNumber == null ? 1 : startNumber);
-
-      const manifestTime = (baseNumber * duration) +
+    for (let presentationTime = numberIndexedToZero * duration + scaledStart;
+         presentationTime < to;
+         presentationTime += duration)
+    {
+      const manifestTime = numberIndexedToZero * duration +
                            (this._index.presentationTimeOffset || 0);
-      const presentationTime = baseNumber * duration +
-                               this._periodStart * this._index.timescale;
 
-      const args = { id: "" + number,
-                     number,
+      const realNumber = numberIndexedToZero + numberOffset;
+      const realURL = replaceSegmentDASHTokens(mediaURL, manifestTime, realNumber);
+      const args = { id: "" + realNumber,
+                     number: realNumber,
                      time: presentationTime,
                      isInit: false,
                      duration,
                      timescale,
-                     mediaURL: replaceSegmentDASHTokens(mediaURL, manifestTime, number),
+                     mediaURL: realURL,
                      timestampOffset: -(index.indexTimeOffset / timescale) };
       segments.push(args);
+      numberIndexedToZero++;
     }
 
     return segments;
