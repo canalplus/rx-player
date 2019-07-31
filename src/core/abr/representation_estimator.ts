@@ -138,6 +138,7 @@ export interface IRepresentationEstimatorArguments {
   maxAutoBitrate$ : Observable<number>; // Set a maximum value for the
                                         // adaptative bitrate
   representations : Representation[]; // List of Representations to choose from
+  lowLatencyMode: boolean;
 }
 
 /**
@@ -181,9 +182,10 @@ export default function RepresentationEstimator({
   manualBitrate$,
   maxAutoBitrate$,
   representations,
+  lowLatencyMode,
 } : IRepresentationEstimatorArguments) : Observable<IABREstimate> {
   const scoreCalculator = new RepresentationScoreCalculator();
-  const networkAnalyzer = new NetworkAnalyzer(initialBitrate || 0);
+  const networkAnalyzer = new NetworkAnalyzer(initialBitrate || 0, lowLatencyMode);
   const requestsStore = new PendingRequestsStore();
 
   /**

@@ -26,8 +26,7 @@ import { convertToRanges } from "../../utils/ranges";
 import takeFirstSet from "../../utils/take_first_set";
 
 const { MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,
-        MAX_BUFFERED_DISTANCE,
-        MINIMUM_SEGMENT_SIZE } = config;
+  MAX_BUFFERED_DISTANCE } = config;
 
 interface IBufferedSegmentInfos { adaptation : Adaptation;
                                   period : Period;
@@ -37,9 +36,28 @@ interface IBufferedSegmentInfos { adaptation : Adaptation;
 interface IBufferedSegment {
   bufferedEnd : number|undefined; // Last inferred end in the SourceBuffer
   bufferedStart : number|undefined; // Last inferred start in the SourceBuffer
-  end : number; // Supposed end the segment should reach
+  end? : number; // Supposed end the segment should reach
   infos : IBufferedSegmentInfos; // Informations on what this segment is
   start : number; // Supposed start the segment should start from
+  isComplete : boolean;
+}
+
+/**
+ * Check if two contents are the same
+ * @param {Object} content1
+ * @param {Object} content2
+ * @returns {boolean}
+ */
+function areSameContent(
+  content1: IBufferedSegmentInfos,
+  content2: IBufferedSegmentInfos
+): boolean {
+  return (
+    content1.segment.id === content2.segment.id &&
+    content1.adaptation.id === content2.adaptation.id &&
+    content1.representation.id === content2.representation.id &&
+    content1.period.id === content2.period.id
+  );
 }
 
 /**
@@ -52,6 +70,7 @@ interface IBufferedSegment {
  */
 export default class SegmentBookkeeper {
   public inventory : IBufferedSegment[];
+  private _minimumSegmentSize: number;
 
   constructor() {
     /**
@@ -62,6 +81,7 @@ export default class SegmentBookkeeper {
      * @type {Array.<Object>}
      */
     this.inventory = [];
+    this._minimumSegmentSize = 0.02;
   }
 
   /**
@@ -95,7 +115,7 @@ export default class SegmentBookkeeper {
       const { start: rangeStart, end: rangeEnd } = ranges[i];
 
       // if current TimeRange is too small to contain a segment, go to next one
-      if (rangeEnd - rangeStart < MINIMUM_SEGMENT_SIZE) {
+      if (rangeEnd - rangeStart < this._minimumSegmentSize) {
         continue;
       }
 
@@ -108,10 +128,10 @@ export default class SegmentBookkeeper {
       // start of that range.
       while (thisSegment &&
 
-             // TODO better way to indicate to typescript that all is well here
-            (takeFirstSet(thisSegment.bufferedEnd, thisSegment.end) as number
-              - rangeStart
-            ) < MINIMUM_SEGMENT_SIZE
+        // TODO better way to indicate to typescript that all is well here
+        (takeFirstSet(thisSegment.bufferedEnd, thisSegment.end) as number
+          - rangeStart
+        ) < this._minimumSegmentSize
       ) {
         thisSegment = inventory[++inventoryIndex];
       }
@@ -133,7 +153,7 @@ export default class SegmentBookkeeper {
 
         // TODO better way to indicate to typescript that all is well here
         lastDeletedSegmentEnd = takeFirstSet(lastDeletedSegment.bufferedEnd,
-                                             lastDeletedSegment.end) as number;
+          lastDeletedSegment.end) as number;
         // mutate inventory
         inventory.splice(indexBefore, numberOfSegmentToDelete);
         inventoryIndex = indexBefore;
@@ -151,9 +171,9 @@ export default class SegmentBookkeeper {
       // is contained in one of the next one), skip that part.
       if (rangeEnd -
 
-          // TODO better way to indicate to typescript that all is well here
-          (takeFirstSet(thisSegment.bufferedStart, thisSegment.start) as number)
-            >= MINIMUM_SEGMENT_SIZE
+        // TODO better way to indicate to typescript that all is well here
+        (takeFirstSet(thisSegment.bufferedStart, thisSegment.start) as number)
+        >= this._minimumSegmentSize
       ) {
         // set the bufferedStart of the first segment in that range
         if (
@@ -165,8 +185,8 @@ export default class SegmentBookkeeper {
           thisSegment.bufferedStart = rangeStart;
         } else if (thisSegment.bufferedStart == null) {
           if (lastDeletedSegmentEnd !== -1 &&
-              lastDeletedSegmentEnd > rangeStart &&
-              thisSegment.start - lastDeletedSegmentEnd <= MAX_BUFFERED_DISTANCE
+            lastDeletedSegmentEnd > rangeStart &&
+            thisSegment.start - lastDeletedSegmentEnd <= MAX_BUFFERED_DISTANCE
           ) {
             thisSegment.bufferedStart = lastDeletedSegmentEnd;
           } else if (thisSegment.start - rangeStart <= MAX_BUFFERED_DISTANCE) {
@@ -182,11 +202,11 @@ export default class SegmentBookkeeper {
         // (i.e until the start of the next segment can not constitute a segment
         // in that range == less than MINIMUM_SEGMENT_SIZE into that range)
         while (thisSegment &&
-               (
-                 rangeEnd -
-                    // TODO better way to indicate to typescript that all is well here
-                   (takeFirstSet(thisSegment.bufferedStart, thisSegment.start) as number)
-                ) >= MINIMUM_SEGMENT_SIZE
+          (
+            rangeEnd -
+            // TODO better way to indicate to typescript that all is well here
+            (takeFirstSet(thisSegment.bufferedStart, thisSegment.start) as number)
+          ) >= this._minimumSegmentSize
         ) {
           const prevSegment = inventory[inventoryIndex - 1];
 
@@ -205,12 +225,14 @@ export default class SegmentBookkeeper {
       const lastSegmentInRange = inventory[inventoryIndex - 1];
       if (lastSegmentInRange) {
         if (lastSegmentInRange.bufferedEnd != null &&
-            lastSegmentInRange.bufferedEnd > rangeEnd
+          lastSegmentInRange.bufferedEnd > rangeEnd
         ) {
           // the segment appears to have been partially garbage collected:
           // Update bufferedEnd
           lastSegmentInRange.bufferedEnd = rangeEnd;
-        } else if (lastSegmentInRange.bufferedEnd == null) {
+        } else if (lastSegmentInRange.bufferedEnd == null &&
+          lastSegmentInRange.end != null
+        ) {
           lastSegmentInRange.bufferedEnd =
             rangeEnd - lastSegmentInRange.end <= MAX_BUFFERED_DISTANCE ?
               rangeEnd : lastSegmentInRange.end;
@@ -226,77 +248,82 @@ export default class SegmentBookkeeper {
   }
 
   /**
-   * Add a new segment in the inventory.
+   * Add a new chunk in the inventory.
    *
    * Note: As new segments can "replace" partially or completely old ones, we
    * have to perform a complex logic and might update previously added segments.
    *
-   * @param {Object} period
-   * @param {Object} adaptation
-   * @param {Object} representation
-   * @param {Object} segment
-   * @param {Number} start - start time of the segment, in seconds
-   * @param {Number|undefined} end - end time of the segment, in seconds. Can
-   * be undefined in some rare cases
+   * @param {Object} content
+   * @param {Object} chunkInformation
    */
-  public insert(
-    period : Period,
-    adaptation : Adaptation,
-    representation : Representation,
-    segment : ISegment,
-    start : number,
-    end : number|undefined
-  ) : void {
-    // TODO (*very* low-priority) manage segments whose end is unknown (rare but
-    // could eventually happen).
-    // This should be properly managed in this method, but it is not in some
-    // other methods of this class, so I decided to not one of those to the
-    // inventory by security
-    if (end == null) {
-      if (__DEV__) {
-        throw new Error("SegmentBookkeeper: ending time of the segment not defined");
-      }
-      // This leads to excessive re-downloads of segment without an ending time.
-      log.warn("SB: ending time of the segment not defined");
-      return;
+  public setContent(
+    content: {
+      period: Period;
+      adaptation: Adaptation;
+      representation: Representation;
+      segment: ISegment;
+    },
+    chunkInformation: {
+      start: number;
+      end?: number;
     }
+  ): void {
+    const {
+      period,
+      adaptation,
+      representation,
+      segment,
+    } = content;
+
+    const {
+      start,
+      end,
+    } = chunkInformation;
 
     const { inventory } = this;
 
-    // infer start and end from the segment data
-    // /!\ Can be a little different than their real start/end time in the
-    // sourcebuffer.
-    // const start = segment.time / segment.timescale;
-    // const end = (segment.time + segment.duration) / segment.timescale;
-
-    const newSegment = { start,
-                         end,
-                         bufferedStart: undefined,
-                         bufferedEnd: undefined,
-                         infos: { segment,
-                                  period,
-                                  adaptation,
-                                  representation } };
+    const newSegment = {
+      start,
+      end,
+      bufferedStart: undefined,
+      bufferedEnd: undefined,
+      isComplete: false,
+      infos: { segment,
+               period,
+               adaptation,
+               representation } };
 
     // begin by the end as in most use cases this will be faster
     for (let i = inventory.length - 1; i >= 0; i--) {
       const segmentI = inventory[i];
 
       if ((segmentI.start) <= start) {
-        if ((segmentI.end) <= start) {
-          // our segment is after, push it after this one
-          //
-          // Case 1:
+        if (segmentI.end == null) {
+          if (segmentI.start === start) {
+            this.inventory.splice(i, 1, newSegment);
+          } else {
+            this.inventory.splice(i + 1, 0, newSegment);
+          }
+          return;
+        } else if (segmentI.end === start) {
+          // Case:
           //   segmentI     : |------|
           //   newSegment   :        |------|
-          //
-          // Case 2:
+          if (areSameContent(newSegment.infos, segmentI.infos)) {
+            segmentI.end = newSegment.end;
+            segmentI.bufferedEnd = newSegment.bufferedEnd;
+          } else {
+            this.inventory.splice(i + 1, 0, newSegment);
+          }
+          return;
+        } else if (segmentI.end < start) {
+          // Case 1:
           //   segmentI     : |------|
           //   newSegment   :          |------|
           this.inventory.splice(i + 1, 0, newSegment);
           return;
         } else { // /!\ also goes here if end is undefined
-          if (segmentI.start >= (start)) {
+          if (segmentI.start === (start)) {
             // In those cases, replace
             // Case 1:
             //  segmentI     : |-------|
@@ -347,12 +374,15 @@ export default class SegmentBookkeeper {
             //
             // *|??? - unknown end
 
-            // (if segment's end is not known yet, it could perfectly
-            // end before the one we're adding now)
-            if (segmentI.end != null) {
+            if (areSameContent(newSegment.infos, segmentI.infos)) {
+              segmentI.end = newSegment.end;
+              segmentI.bufferedEnd = newSegment.bufferedEnd;
+            } else {
+              // (if segment's end is not known yet, it could perfectly
+              // end before the one we're adding now)
               segmentI.end = start;
+              this.inventory.splice(i + 1, 0, newSegment);
             }
-            this.inventory.splice(i + 1, 0, newSegment);
             return;
           }
         }
@@ -391,32 +421,43 @@ export default class SegmentBookkeeper {
         // newSegment   : |???*
         //
         // *|??? - unknown end
-        this.inventory.splice(0, 0, newSegment);
+        if (areSameContent(newSegment.infos, firstSegment.infos)) {
+          this.inventory.splice(0, 1, newSegment);
+        } else {
+          this.inventory.splice(0, 0, newSegment);
+        }
       }
       return;
     }
 
-    if (firstSegment.start >= end) {
+    if (firstSegment.start > end) {
+      // Case 1:
+      //  firstSegment :        |----|
+      //  newSegment   : |----|
+      //
+      // Case 2:
+      //  firstSegment :        |???*
+      //  newSegment   : |----|
+      //
+      this.inventory.splice(0, 0, newSegment);
+    } else if (firstSegment.start === end) {
       // our segment is before, put it before
       // Case 1:
       //  firstSegment :      |----|
       //  newSegment   : |----|
       //
       // Case 2:
-      //  firstSegment :        |----|
-      //  newSegment   : |----|
-      //
-      // Case 3:
-      //  firstSegment :        |???*
-      //  newSegment   : |----|
-      //
-      // Case 4:
       //  firstSegment :      |???*
       //  newSegment   : |----|
       //
       // *|??? - unknown end
-      this.inventory.splice(0, 0, newSegment);
-    } else if ((firstSegment.end) <= end) {
+      if (areSameContent(newSegment.infos, firstSegment.infos)) {
+        firstSegment.start = newSegment.start;
+        firstSegment.bufferedStart = newSegment.bufferedStart;
+      } else {
+        this.inventory.splice(0, 0, newSegment);
+      }
+    } else if ((firstSegment.end) == null || (firstSegment.end) <= end) {
       // Our segment is bigger, replace the first
       // Case 1:
       //  firstSegment :   |---|
@@ -424,6 +465,9 @@ export default class SegmentBookkeeper {
       //
       // Case 2:
       //  firstSegment :   |-----|
+      //  newSegment   : |-------|
+      // Case 3:
+      //  firstSegment :   |???*
       //  newSegment   : |-------|
       this.inventory.splice(0, 1, newSegment);
     } else {
@@ -438,8 +482,51 @@ export default class SegmentBookkeeper {
       // newSegment   : |-----|
       //
       // *|??? - unknown end
-      firstSegment.start = end;
-      this.inventory.splice(0, 0, newSegment);
+
+      if (areSameContent(newSegment.infos, firstSegment.infos)) {
+        firstSegment.start = newSegment.start;
+        firstSegment.bufferedStart = newSegment.bufferedStart;
+      } else {
+        firstSegment.start = end;
+        this.inventory.splice(0, 0, newSegment);
+      }
+    }
+  }
+
+  /**
+   * Once all chunks from a content have been loaded and bufferized, consider the
+   * content to be complete. Set its end if not defined.
+   * @param {Object} content
+   */
+  public validateContent(
+    content: {
+      period: Period;
+      adaptation: Adaptation;
+      representation: Representation;
+      segment: ISegment;
+    }
+  ): void {
+    const { inventory } = this;
+    for (let i = 0; i < inventory.length; i++) {
+      const segmentI = inventory[i];
+      if (areSameContent(segmentI.infos, content)) {
+        segmentI.isComplete = true;
+        if (segmentI.infos.segment.duration) {
+          const duration = segmentI.infos.segment.duration /
+                           segmentI.infos.segment.timescale;
+          const end = duration + segmentI.start;
+          const inventoryIndex = i + 1;
+          while (inventory[inventoryIndex] &&
+            inventory[inventoryIndex].start < end &&
+            areSameContent(inventory[inventoryIndex].infos, content)
+          ) {
+            inventory.splice(inventoryIndex, 1);
+          }
+          segmentI.end = end;
+          segmentI.bufferedEnd = undefined;
+        }
+        return;
+      }
     }
   }
 
@@ -498,9 +585,9 @@ export default class SegmentBookkeeper {
         // When impossible to know, say the segment is not complete
         if (hasEnoughInfos(currentSegmentI, prevSegmentI, nextSegmentI)) {
           if (hasWantedRange(wantedRange,
-                             currentSegmentI,
-                             prevSegmentI,
-                             nextSegmentI)
+            currentSegmentI,
+            prevSegmentI,
+            nextSegmentI)
           ) {
             return currentSegmentI;
           }
@@ -524,13 +611,13 @@ export default class SegmentBookkeeper {
       nextSegmentI : IBufferedSegment
     ) : boolean {
       if ((prevSegmentI && prevSegmentI.bufferedEnd == null) ||
-          currentSegmentI.bufferedStart == null
+        currentSegmentI.bufferedStart == null
       ) {
         return false;
       }
 
       if ((nextSegmentI && nextSegmentI.bufferedStart == null) ||
-          currentSegmentI.bufferedEnd == null
+        currentSegmentI.bufferedEnd == null
       ) {
         return false;
       }
@@ -556,9 +643,9 @@ export default class SegmentBookkeeper {
       nextSegmentI : IBufferedSegment
     ) : boolean {
       if (!prevSegmentI ||
-          prevSegmentI.bufferedEnd == null ||
-          currentSegmentI.bufferedStart == null ||
-          prevSegmentI.bufferedEnd < currentSegmentI.bufferedStart
+        prevSegmentI.bufferedEnd == null ||
+        currentSegmentI.bufferedStart == null ||
+        prevSegmentI.bufferedEnd < currentSegmentI.bufferedStart
       ) {
         if (currentSegmentI.bufferedStart == null) {
           return false;
@@ -568,24 +655,24 @@ export default class SegmentBookkeeper {
           const wantedDiff = currentSegmentI.bufferedStart - _wantedRange.start;
           if (wantedDiff > 0 && timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             log.debug("SB: The wanted segment has been garbage collected",
-                      currentSegmentI);
+              currentSegmentI);
             return false;
           }
         } else {
           if (timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             log.debug("SB: The wanted segment has been garbage collected",
-                      currentSegmentI);
+              currentSegmentI);
             return false;
           }
         }
       }
 
-      if (currentSegmentI.end === null) {
+      if (currentSegmentI.end == null) {
         return false;
       } else if (!nextSegmentI ||
-                 nextSegmentI.bufferedStart == null ||
-                 currentSegmentI.bufferedEnd == null ||
-                 nextSegmentI.bufferedStart > currentSegmentI.bufferedEnd
+        nextSegmentI.bufferedStart == null ||
+        currentSegmentI.bufferedEnd == null ||
+        nextSegmentI.bufferedStart > currentSegmentI.bufferedEnd
       ) {
         if (currentSegmentI.bufferedEnd == null) {
           return false;
@@ -595,13 +682,13 @@ export default class SegmentBookkeeper {
           const wantedDiff = _wantedRange.end - currentSegmentI.bufferedEnd;
           if (wantedDiff > 0 && timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             log.debug("SB: The wanted segment has been garbage collected",
-                      currentSegmentI);
+              currentSegmentI);
             return false;
           }
         } else {
           if (timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
             log.debug("SB: The wanted segment has been garbage collected",
-                      currentSegmentI);
+              currentSegmentI);
             return false;
           }
         }

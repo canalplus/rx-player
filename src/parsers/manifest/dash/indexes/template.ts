@@ -91,6 +91,7 @@ export interface ITemplateIndexContextArgument {
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time
   isDynamic : boolean; // if true, the MPD can update over time
+  isLowLatency : boolean;
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
   periodEnd : number|undefined; // End of the period concerned by this
@@ -115,7 +116,7 @@ function getMaximumPosition(
     return periodEnd * timescale;
   }
   if (liveEdgeOffset != null) {
-    return performance.now() + liveEdgeOffset;
+    return ((performance.now() / 1000) + liveEdgeOffset) * timescale;
   }
   return Number.MAX_VALUE;
 }
@@ -137,6 +138,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const { availabilityStartTime,
             clockOffset,
             isDynamic,
+            isLowLatency,
             periodEnd,
             periodStart,
             representationBaseURL,
@@ -174,9 +176,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       } else {
         log.warn("DASH Parser: no clock synchronization mechanism found." +
                  " Setting a live gap of 10 seconds as a security.");
-        const now = Date.now() - 10000;
+        const now = Date.now() - (isLowLatency ? 2000 : 10000);
         const maximumSegmentTime = now / 1000 - availabilityStartTime;
-        this._liveEdgeOffset = maximumSegmentTime - performance.now();
+        this._liveEdgeOffset = maximumSegmentTime - (performance.now() / 1000);
       }
     }
   }

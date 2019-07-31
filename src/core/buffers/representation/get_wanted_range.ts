@@ -40,12 +40,9 @@ export default function getWantedRange(
   padding : number
 ) : { start : number; end : number } {
   const currentTime = tick.currentTime + tick.wantedTimeOffset;
-  const limitEnd = tick.liveGap == null ? hardLimits.end :
-                                          Math.min(hardLimits.end || Infinity,
-                                                   tick.currentTime + tick.liveGap);
   const boundedLimits = {
     start: Math.max(hardLimits.start || 0, currentTime),
-    end: limitEnd,
+    end: hardLimits.end,
   };
 
   // Difference between the current time and the end of the current range

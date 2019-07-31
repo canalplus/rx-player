@@ -27,10 +27,12 @@ describe("DASH Parser - getMaximumTime", () => {
 
     expect(getMaximumTime({ availabilityStartTime: undefined,
                             clockOffset: undefined },
+                          false,
                           5))
           .toEqual(5);
     expect(getMaximumTime({ availabilityStartTime: 4,
                             clockOffset: 12 },
+                          false,
                           5))
           .toEqual(5);
     expect(warnSpy).not.toHaveBeenCalled();
@@ -47,7 +49,7 @@ describe("DASH Parser - getMaximumTime", () => {
 
     const getMaximumTime = require("../get_maximum_time").default;
 
-    expect(getMaximumTime({ clockOffset: 5000 })).toEqual(30 + 5);
+    expect(getMaximumTime({ clockOffset: 5000 }, false)).toEqual(30 + 5);
 
     expect(performanceSpy).toHaveBeenCalledTimes(1);
     expect(warnSpy).not.toHaveBeenCalled();
@@ -66,7 +68,8 @@ describe("DASH Parser - getMaximumTime", () => {
     const getMaximumTime = require("../get_maximum_time").default;
 
     expect(getMaximumTime({ clockOffset: 5000,
-                            availabilityStartTime: 10 }))
+                            availabilityStartTime: 10 },
+                          false))
           .toEqual(30 + 5 - 10);
 
     expect(performanceSpy).toHaveBeenCalledTimes(1);
@@ -85,7 +88,7 @@ describe("DASH Parser - getMaximumTime", () => {
 
     const getMaximumTime = require("../get_maximum_time").default;
 
-    expect(getMaximumTime({})).toEqual(30 - 10);
+    expect(getMaximumTime({}, false)).toEqual(30 - 10);
 
     expect(dateSpy).toHaveBeenCalledTimes(1);
     expect(warnSpy).toHaveBeenCalledTimes(1);
@@ -106,7 +109,7 @@ describe("DASH Parser - getMaximumTime", () => {
 
     const getMaximumTime = require("../get_maximum_time").default;
 
-    expect(getMaximumTime({ availabilityStartTime: 10 })).toEqual(30 - 10 - 10);
+    expect(getMaximumTime({ availabilityStartTime: 10 }, false)).toEqual(30 - 10 - 10);
 
     expect(dateSpy).toHaveBeenCalledTimes(1);
     expect(warnSpy).toHaveBeenCalledTimes(1);

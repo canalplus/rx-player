@@ -408,6 +408,7 @@ describe("API - parseLoadVideoOptions", () => {
     defaultTextTrack: undefined,
     hideNativeSubtitle: false,
     keySystems: [],
+    lowLatencyMode: false,
     manualBitrateSwitchingMode: false,
     networkConfig: {},
     startAt: undefined,

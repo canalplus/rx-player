@@ -707,8 +707,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const videoElement = this.videoElement;
 
     // Global clock used for the whole application.
-    const clock$ = createClock(videoElement, { withMediaSource: !isDirectFile,
-                                               lowLatencyMode });
+    const clock$ = createClock(videoElement,
+                               { withMediaSource: !isDirectFile,
+                                 lowLatencyMode });
 
     const contentIsStopped$ = observableMerge(
       this._priv_stopCurrentContent$,
@@ -725,7 +726,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
 
       const pipelines = transportFn(objectAssign({ supplementaryTextTracks,
-                                                   supplementaryImageTracks },
+                                                   supplementaryImageTracks,
+                                                   lowLatencyMode },
                                                  transportOptions));
       // Options used by the ABR Manager.
       const adaptiveOptions = {

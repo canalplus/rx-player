@@ -23,12 +23,13 @@ interface ITimeValue { isContinuous : boolean;
 
 export default function getTimeLimits(
   parsedMPD : IParsedManifest,
+  lowLatencyMode : boolean,
   timeShiftBufferDepth? : number,
   lastTimeReference? : number
 ) : [ ITimeValue, /* minimum */ ITimeValue, /* maximum */ ]
 {
   const time = performance.now();
-  const maximumTime = getMaximumTime(parsedMPD, lastTimeReference);
+  const maximumTime = getMaximumTime(parsedMPD, lowLatencyMode, lastTimeReference);
   const minimumTime : ITimeValue = (() => {
     if (timeShiftBufferDepth == null) {
       const ast = parsedMPD.availabilityStartTime || 0;

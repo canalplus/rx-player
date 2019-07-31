@@ -44,6 +44,7 @@ export interface IMPDParserArguments {
   referenceDateTime? : number; // Default base time, in seconds
   externalClockOffset? : number; // If set, offset to add to `performance.now()`
                                  // to obtain the current server's time
+  lowLatencyMode : boolean;
 }
 
 export type IParserResponse<T> = { type : "needs-ressources";
@@ -195,6 +196,7 @@ function parseCompleteIntermediateRepresentation(
                                        baseURL,
                                        clockOffset,
                                        duration: rootAttributes.duration,
+                                       lowLatencyMode: args.lowLatencyMode,
                                        isDynamic });
 
   const duration = parseDuration(rootAttributes, parsedPeriods);
@@ -224,6 +226,7 @@ function parseCompleteIntermediateRepresentation(
   if (parsedMPD.isLive) {
     const lastTimeReference = getLastTimeReference(parsedMPD);
     const [minTime, maxTime] = getTimeLimits(parsedMPD,
+                                             args.lowLatencyMode,
                                              rootAttributes.timeShiftBufferDepth,
                                              lastTimeReference);
     parsedMPD.minimumTime = minTime;

@@ -190,7 +190,10 @@ class ContentList extends React.Component {
                     supplementaryTextTracks,
                     textTrackMode: "html",
                     lowLatencyMode: isLowLatency,
-                    keySystems });
+                    keySystems,
+                    networkConfig: isLowLatency ? {
+                      segmentRetry: Infinity,
+                    } : undefined });
       });
   }
 

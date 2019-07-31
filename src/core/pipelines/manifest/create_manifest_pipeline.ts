@@ -47,6 +47,7 @@ export interface IFetchManifestOptions {
   url : string; // URL from which the manifest was requested
   externalClockOffset? : number; // If set, offset to add to `performance.now()`
                                  // to obtain the current server's time
+  lowLatencyMode : boolean;
 }
 
 export interface IFetchManifestResult { manifest : Manifest;
@@ -105,7 +106,7 @@ export default function createManifestPipeline(
    * @returns {Observable}
    */
   return function fetchManifest(
-    { url, externalClockOffset } : IFetchManifestOptions
+    { url, externalClockOffset, lowLatencyMode } : IFetchManifestOptions
   ) : Observable<IFetchManifestResult> {
     return loader({ url }).pipe(
       mergeMap((evt) => {
@@ -118,7 +119,8 @@ export default function createManifestPipeline(
         return parser({ response: value,
                         url,
                         externalClockOffset,
-                        scheduleRequest }
+                        scheduleRequest,
+                        lowLatencyMode }
         ).pipe(
           catchError((error: unknown) => {
             throw formatError(error, {

@@ -27,6 +27,7 @@ import { IParsedManifest } from "../types";
  */
 export default function getMaximumTime(
   parsedMPD : IParsedManifest,
+  lowLatencyMode : boolean,
   lastTimeReference? : number
 ) : number {
   if (lastTimeReference != null) {
@@ -37,7 +38,7 @@ export default function getMaximumTime(
   if (parsedMPD.clockOffset == null) {
     log.warn("DASH Parser: no clock synchronization mechanism found." +
              " Setting a live gap of 10 seconds as a security.");
-    const now = Date.now() - 10000;
+    const now = Date.now() - ((lowLatencyMode ? 2 : 10) * 1000);
     return now / 1000 - ast;
   } else {
     const now = performance.now() + parsedMPD.clockOffset;

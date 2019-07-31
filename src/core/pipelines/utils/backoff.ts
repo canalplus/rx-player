@@ -44,6 +44,7 @@ function shouldRetry(error : unknown) : boolean {
   if (error.type === RequestErrorTypes.ERROR_HTTP_CODE) {
     return error.status >= 500 ||
            error.status === 404 ||
+           error.status === 415 || // XXX TODO
            error.status === 412;
   }
   return error.type === RequestErrorTypes.TIMEOUT ||

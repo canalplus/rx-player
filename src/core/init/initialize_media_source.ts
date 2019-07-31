@@ -177,7 +177,7 @@ export default function InitializeOnMediaSource({
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".
-  const abrManager = new ABRManager(adaptiveOptions);
+  const abrManager = new ABRManager(adaptiveOptions, lowLatencyMode);
 
   // Create and open a new MediaSource object on the given media element.
   const openMediaSource$ = openMediaSource(mediaElement).pipe(
@@ -201,7 +201,7 @@ export default function InitializeOnMediaSource({
 
   const loadContent$ = observableCombineLatest([
     openMediaSource$,
-    fetchManifest({ url }),
+    fetchManifest({ url, lowLatencyMode }),
     emeManager$.pipe(filter(isEMEReadyEvent), take(1)),
   ]).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
 
@@ -217,7 +217,7 @@ export default function InitializeOnMediaSource({
       }
 
       const externalClockOffset = manifest.getClockOffset();
-      return fetchManifest({ url: refreshURL, externalClockOffset }).pipe(
+      return fetchManifest({ url: refreshURL, externalClockOffset, lowLatencyMode }).pipe(
         tap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
           manifest.update(newManifest);
           manifestRefreshed$.next({ manifest, sendingTime: newSendingTime });

@@ -30,6 +30,7 @@ export interface IManifestInfos {
   clockOffset? : number;
   duration? : number;
   isDynamic : boolean;
+  lowLatencyMode : boolean;
 }
 
 /**
@@ -95,6 +96,7 @@ export default function parsePeriods(
       clockOffset: manifestInfos.clockOffset,
       end: periodEnd,
       isDynamic: manifestInfos.isDynamic,
+      isLowLatency: manifestInfos.lowLatencyMode,
       start: periodStart,
     });
     const parsedPeriod : IParsedPeriod = {

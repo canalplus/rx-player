@@ -38,6 +38,7 @@ export interface IPeriodInfos {
                          // to obtain the current server's time
   end? : number; // End time of the current period, in seconds
   isDynamic : boolean; // Whether the Manifest can evolve with time
+  isLowLatency : boolean;
   start : number; // Start time of the current period, in seconds
 }
 
@@ -187,6 +188,7 @@ export default function parseAdaptationSets(
         clockOffset: periodInfos.clockOffset,
         end: periodInfos.end,
         isDynamic: periodInfos.isDynamic,
+        isLowLatency: periodInfos.isLowLatency,
         start: periodInfos.start,
       });
       const adaptationMimeType = adaptation.attributes.mimeType;

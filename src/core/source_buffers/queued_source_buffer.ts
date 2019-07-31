@@ -469,6 +469,7 @@ export default class QueuedSourceBuffer<T> {
           if (isInit) {
             this._lastInitSegment = segment;
           }
+          this._sourceBuffer.timestampOffset = -0.64; // XXX TODO
           this._sourceBuffer.appendBuffer(segment);
           break;
         case SourceBufferAction.Remove:

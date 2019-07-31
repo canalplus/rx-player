@@ -86,8 +86,7 @@ export interface IClockTick extends IMediaInfos {
   stalled : stalledStatus; // see type
 }
 
-const { SAMPLING_INTERVAL_MEDIASOURCE,
-        SAMPLING_INTERVAL_NO_MEDIASOURCE,
+const { SAMPLING_INTERVAL,
         RESUME_GAP_AFTER_SEEKING,
         RESUME_GAP_AFTER_NOT_ENOUGH_DATA,
         RESUME_GAP_AFTER_BUFFERING,
@@ -117,14 +116,14 @@ function getResumeGap(stalled : stalledStatus, lowLatencyMode : boolean) : numbe
   if (!stalled) {
     return 0;
   }
-  const suffix : "LOW_LATENCY" | "DEFAULT" = lowLatencyMode ? "LOW_LATENCY" :
-                                                              "DEFAULT";
+  const suffix : "LOW_LATENCY_MODE" | "DEFAULT" = lowLatencyMode ? "LOW_LATENCY_MODE" :
+                                                                   "DEFAULT";
 
   switch (stalled.reason) {
     case "seeking":
       return RESUME_GAP_AFTER_SEEKING[suffix];
     case "not-ready":
-      return RESUME_GAP_AFTER_NOT_ENOUGH_DATA[suffix];
+      return RESUME_GAP_AFTER_NOT_ENOUGH_DATA;
     default:
       return RESUME_GAP_AFTER_BUFFERING[suffix];
   }
@@ -141,8 +140,8 @@ function hasLoadedUntilTheEnd(
   duration : number,
   lowLatencyMode : boolean
 ) : boolean {
-  const suffix : "LOW_LATENCY" | "DEFAULT" = lowLatencyMode ? "LOW_LATENCY" :
-                                                              "DEFAULT";
+  const suffix : "LOW_LATENCY_MODE" | "DEFAULT" = lowLatencyMode ? "LOW_LATENCY_MODE" :
+                                                                   "DEFAULT";
   return currentRange != null &&
          (duration - currentRange.end) <= STALL_GAP[suffix];
 }
@@ -222,7 +221,7 @@ function getStalledStatus(
 
   if (withMediaSource) {
     if (canStall &&
-        (bufferGap <= (lowLatencyMode ? STALL_GAP.LOW_LATENCY : STALL_GAP.DEFAULT) ||
+        (bufferGap <= (lowLatencyMode ? STALL_GAP.LOW_LATENCY_MODE : STALL_GAP.DEFAULT) ||
          bufferGap === Infinity || readyState === 1)
     ) {
       shouldStall = true;
@@ -326,8 +325,9 @@ function createClock(
         observableFromEvent(mediaElement, eventName)
           .pipe(mapTo(eventName)));
 
-    const interval = options.withMediaSource ? SAMPLING_INTERVAL_MEDIASOURCE :
-                                               SAMPLING_INTERVAL_NO_MEDIASOURCE;
+    const interval = options.lowLatencyMode ? SAMPLING_INTERVAL.LOW_LATENCY_MODE :
+      options.withMediaSource ? SAMPLING_INTERVAL.MEDIASOURCE :
+                                SAMPLING_INTERVAL.NO_MEDIASOURCE;
 
     const interval$ : Observable<"timeupdate"> =
       observableInterval(interval)

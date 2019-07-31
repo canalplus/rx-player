@@ -63,6 +63,9 @@ export default function parser({ response,
                                                       segment,
                                                       nextSegments,
                                                       init);
+    if (chunkInfos) {
+      chunkInfos.time -= 16;
+    } // XXX TODO
     const chunkOffset = segment.timestampOffset || 0;
     return observableOf({ chunkData, chunkInfos, chunkOffset });
   } else { // it is an initialization segment

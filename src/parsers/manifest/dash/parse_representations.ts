@@ -38,6 +38,7 @@ export interface IAdaptationInfos {
                          // to obtain the current server's time
   end? : number; // End time of the current period, in seconds
   isDynamic : boolean; // Whether the Manifest can evolve with time
+  isLowLatency : boolean;
   start : number; // Start time of the current period, in seconds
 }
 
@@ -52,6 +53,7 @@ interface IIndexContext {
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
   isDynamic : boolean; // Whether the Manifest can evolve with time
+  isLowLatency : boolean;
 }
 
 /**
@@ -111,6 +113,7 @@ export default function parseRepresentations(
       isDynamic: adaptationInfos.isDynamic,
       periodEnd: adaptationInfos.end,
       periodStart: adaptationInfos.start,
+      isLowLatency: adaptationInfos.isLowLatency,
       representationBaseURL,
       representationBitrate: representation.attributes.bitrate,
       representationId: representation.attributes.id,
