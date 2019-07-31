@@ -25,10 +25,11 @@ import parseAdaptationSets from "./parse_adaptation_sets";
 const generatePeriodID = idGenerator();
 
 export interface IManifestInfos {
-  isDynamic : boolean;
-  availabilityStartTime? : number;
-  duration? : number;
+  availabilityStartTime : number; // Time from which the content starts
   baseURL? : string;
+  clockOffset? : number;
+  duration? : number;
+  isDynamic : boolean;
 }
 
 /**
@@ -89,10 +90,12 @@ export default function parsePeriods(
       (periodStart + periodDuration) : undefined;
 
     const adaptations = parseAdaptationSets(period.children.adaptations, {
+      availabilityStartTime: manifestInfos.availabilityStartTime,
+      baseURL: periodBaseURL,
+      clockOffset: manifestInfos.clockOffset,
+      end: periodEnd,
       isDynamic: manifestInfos.isDynamic,
       start: periodStart,
-      end: periodEnd,
-      baseURL: periodBaseURL,
     });
     const parsedPeriod : IParsedPeriod = {
       id: periodID,

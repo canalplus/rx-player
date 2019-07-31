@@ -31,11 +31,14 @@ import parseRepresentations from "./parse_representations";
 
 // Supplementary context about the current Period
 export interface IPeriodInfos {
-  isDynamic : boolean; // Whether the Manifest can evolve with time
-  start : number; // Start time of the current period, in seconds
-  end? : number; // End time of the current period, in seconds
+  availabilityStartTime : number; // Time from which the content starts
   baseURL? : string; // Eventual URL from which every relative URL will be based
                      // on
+  clockOffset? : number; // If set, offset to add to `performance.now()`
+                         // to obtain the current server's time
+  end? : number; // End time of the current period, in seconds
+  isDynamic : boolean; // Whether the Manifest can evolve with time
+  start : number; // Start time of the current period, in seconds
 }
 
 // Supplementary informations for "switchable" AdaptationSets of the same Period
@@ -77,7 +80,7 @@ function isVisuallyImpaired(
  */
 function isHardOfHearing(
   accessibility: { schemeIdUri? : string; value? : string }
-) {
+) : boolean {
   if (!accessibility) {
     return false;
   }
@@ -179,10 +182,12 @@ export default function parseAdaptationSets(
       const parsedAdaptations = acc.adaptations;
       const representationsIR = adaptation.children.representations;
       const representations = parseRepresentations(representationsIR, adaptation, {
+        availabilityStartTime: periodInfos.availabilityStartTime,
+        baseURL: resolveURL(periodInfos.baseURL, adaptationChildren.baseURL),
+        clockOffset: periodInfos.clockOffset,
+        end: periodInfos.end,
         isDynamic: periodInfos.isDynamic,
         start: periodInfos.start,
-        end: periodInfos.end,
-        baseURL: resolveURL(periodInfos.baseURL, adaptationChildren.baseURL),
       });
       const adaptationMimeType = adaptation.attributes.mimeType;
       const adaptationCodecs = adaptation.attributes.codecs;
