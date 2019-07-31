@@ -17,16 +17,14 @@
 import { IParsedManifest } from "../types";
 import getMaximumTime from "./get_maximum_time";
 
-interface ITimeValue {
-  isContinuous : boolean;
-  value : number;
-  time : number;
-}
+interface ITimeValue { isContinuous : boolean;
+                       value : number;
+                       time : number; }
 
 export default function getTimeLimits(
   parsedMPD : IParsedManifest,
-  lastTimeReference? : number,
-  timeShiftBufferDepth? : number
+  timeShiftBufferDepth? : number,
+  lastTimeReference? : number
 ) : [ ITimeValue, /* minimum */ ITimeValue, /* maximum */ ]
 {
   const time = performance.now();

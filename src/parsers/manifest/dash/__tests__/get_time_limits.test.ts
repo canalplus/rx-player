@@ -28,7 +28,7 @@ describe("DASH Parser - getTimeLimits", () => {
     const parsedMPD1 = { availabilityStartTime: 5 };
     const parsedMPD2 = { availabilityStartTime: 6 };
 
-    const timeLimits1 = getTimeLimits(parsedMPD1, 4, 3);
+    const timeLimits1 = getTimeLimits(parsedMPD1, 3, 4);
 
     const maximumTime = { isContinuous: true,
                           value: 79,
@@ -53,7 +53,7 @@ describe("DASH Parser - getTimeLimits", () => {
     getMaximumTimeSpy.mockClear();
     performanceMock.mockClear();
 
-    const timeLimits3 = getTimeLimits(parsedMPD2, 4, 3);
+    const timeLimits3 = getTimeLimits(parsedMPD2, 3, 4);
 
     expect(timeLimits3[1]).toEqual(maximumTime);
     expect(performanceMock).toHaveBeenCalledTimes(1);
@@ -81,8 +81,8 @@ describe("DASH Parser - getTimeLimits", () => {
     const minimumTime = { isContinuous: false,
                           time: 34,
                           value: 4 };
-    expect(getTimeLimits(parsedMPD, 5)).toEqual([minimumTime, maximumTime]);
-    expect(getTimeLimits(parsedMPD, 5555)).toEqual([minimumTime, maximumTime]);
+    expect(getTimeLimits(parsedMPD, undefined, 5)).toEqual([minimumTime, maximumTime]);
+    expect(getTimeLimits(parsedMPD, undefined, 5555)).toEqual([minimumTime, maximumTime]);
     expect(getTimeLimits(parsedMPD)).toEqual([minimumTime, maximumTime]);
 
     getMaximumTimeSpy.mockRestore();
@@ -106,19 +106,19 @@ describe("DASH Parser - getTimeLimits", () => {
     const minimumTime1 = { isContinuous: true,
                            time: 34,
                            value: 95 };
-    expect(getTimeLimits(parsedMPD, 5, 8))
+    expect(getTimeLimits(parsedMPD, 8, 5))
       .toEqual([minimumTime1, maximumTime]);
 
     const minimumTime2 = { isContinuous: true,
                            time: 34,
                            value: 25 };
-    expect(getTimeLimits(parsedMPD, 5555, 78))
+    expect(getTimeLimits(parsedMPD, 78, 5555))
       .toEqual([minimumTime2, maximumTime]);
 
     const minimumTime3 = { isContinuous: true,
                            time: 34,
                            value: 69 };
-    expect(getTimeLimits(parsedMPD, undefined, 34))
+    expect(getTimeLimits(parsedMPD, 34))
       .toEqual([minimumTime3, maximumTime]);
 
     getMaximumTimeSpy.mockRestore();
@@ -142,13 +142,13 @@ describe("DASH Parser - getTimeLimits", () => {
     const minimumTime = { isContinuous: true,
                           time: 34,
                           value: 100 };
-    expect(getTimeLimits(parsedMPD, 5, 3))
+    expect(getTimeLimits(parsedMPD, 3, 5))
       .toEqual([minimumTime, maximumTime]);
-    expect(getTimeLimits(parsedMPD, 5, 2))
+    expect(getTimeLimits(parsedMPD, 2, 5))
       .toEqual([minimumTime, maximumTime]);
-    expect(getTimeLimits(parsedMPD, 5, 1))
+    expect(getTimeLimits(parsedMPD, 1, 5))
       .toEqual([minimumTime, maximumTime]);
-    expect(getTimeLimits(parsedMPD, 5, 0))
+    expect(getTimeLimits(parsedMPD, 0, 5))
       .toEqual([minimumTime, maximumTime]);
 
     getMaximumTimeSpy.mockRestore();

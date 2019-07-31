@@ -87,16 +87,44 @@ export interface ITemplateIndexIndexArgument {
 
 // Aditional argument for a SegmentTemplate RepresentationIndex
 export interface ITemplateIndexContextArgument {
+  availabilityStartTime : number; // Time from which the content starts
+  clockOffset? : number; // If set, offset to add to `performance.now()`
+                         // to obtain the current server's time
+  isDynamic : boolean; // if true, the MPD can update over time
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
+  periodEnd : number|undefined; // End of the period concerned by this
+                                // RepresentationIndex, in seconds
   representationBaseURL : string; // Base URL for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
 }
 
+/**
+ * Get maximum timescaled position from this point in time.
+ * @param {number|undefined} periodEnd
+ * @param {number|undefined} liveEdgeOffset
+ * @returns {number}
+ */
+function getMaximumPosition(
+  periodEnd : number|undefined,
+  liveEdgeOffset : number|undefined,
+  timescale : number
+) : number {
+  if (periodEnd != null) {
+    return periodEnd * timescale;
+  }
+  if (liveEdgeOffset != null) {
+    return performance.now() + liveEdgeOffset;
+  }
+  return Number.MAX_VALUE;
+}
+
 export default class TemplateRepresentationIndex implements IRepresentationIndex {
   private _index : ITemplateIndex;
   private _periodStart : number;
+  private _periodEnd? : number;
+  private _liveEdgeOffset? : number;
 
   /**
    * @param {Object} index
@@ -106,16 +134,21 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     index : ITemplateIndexIndexArgument,
     context : ITemplateIndexContextArgument
   ) {
-    const { periodStart,
+    const { availabilityStartTime,
+            clockOffset,
+            isDynamic,
+            periodEnd,
+            periodStart,
             representationBaseURL,
             representationId,
             representationBitrate } = context;
 
     this._periodStart = periodStart;
+    this._periodEnd = periodEnd;
     const presentationTimeOffset = index.presentationTimeOffset != null ?
-      index.presentationTimeOffset : 0;
-    const indexTimeOffset =
-      presentationTimeOffset - periodStart * index.timescale;
+                                     index.presentationTimeOffset :
+                                     0;
+    const indexTimeOffset = presentationTimeOffset - periodStart * index.timescale;
 
     this._index = { duration: index.duration,
                     timescale: index.timescale,
@@ -134,6 +167,18 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                                              representationBitrate),
                     presentationTimeOffset,
                     startNumber: index.startNumber };
+
+    if (isDynamic && periodEnd == null) {
+      if (clockOffset != null) {
+        this._liveEdgeOffset = clockOffset - availabilityStartTime;
+      } else {
+        log.warn("DASH Parser: no clock synchronization mechanism found." +
+                 " Setting a live gap of 10 seconds as a security.");
+        const now = Date.now() - 10000;
+        const maximumSegmentTime = now / 1000 - availabilityStartTime;
+        this._liveEdgeOffset = maximumSegmentTime - performance.now();
+      }
+    }
   }
 
   /**
@@ -151,21 +196,26 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    */
   getSegments(fromTime : number, dur : number) : ISegment[] {
     const index = this._index;
+    const { duration, startNumber, timescale, mediaURL } = index;
     const { up, to } = getTimescaledRange(index, fromTime, dur);
-    if (to <= up) {
+    const scaledMaxPosition = getMaximumPosition(this._periodEnd,
+                                                 this._liveEdgeOffset,
+                                                 timescale);
+    const endPosition = Math.min(scaledMaxPosition, to);
+    if (endPosition <= up) {
       return [];
     }
 
-    const { duration, startNumber, timescale, mediaURL } = index;
     const segments : ISegment[] = [];
     const scaledStart = this._periodStart * this._index.timescale;
+
     const relativeStart = up - scaledStart;
     const numberOffset = startNumber == null ? 1 :
                                                startNumber;
     let numberIndexedToZero = Math.floor(relativeStart / duration);
 
     for (let presentationTime = numberIndexedToZero * duration + scaledStart;
-         presentationTime < to;
+         presentationTime < endPosition;
          presentationTime += duration)
     {
       const manifestTime = numberIndexedToZero * duration +
