@@ -70,6 +70,7 @@ export interface IFetchManifestResult { manifest : Manifest;
  */
 export default function createManifestPipeline(
   pipelines : ITransportPipelines,
+  lowLatencyMode : boolean,
   pipelineOptions : IManifestPipelineLoaderOptions,
   warning$ : Subject<ICustomError>
 ) : (args : IFetchManifestOptions) => Observable<IFetchManifestResult> {
@@ -118,7 +119,8 @@ export default function createManifestPipeline(
         return parser({ response: value,
                         url,
                         externalClockOffset,
-                        scheduleRequest }
+                        scheduleRequest,
+                        lowLatencyMode }
         ).pipe(
           catchError((error: unknown) => {
             throw formatError(error, {

@@ -86,7 +86,7 @@ export default function(
     },
 
     parser(
-      { response, url: loaderURL, scheduleRequest, externalClockOffset } :
+      { response, url: loaderURL, scheduleRequest, externalClockOffset, lowLatencyMode } :
       IManifestParserArguments< Document | string, string >
     ) : IManifestParserObservable {
       const url = response.url == null ? loaderURL :
@@ -100,6 +100,7 @@ export default function(
         url,
         referenceDateTime,
         externalClockOffset,
+        lowLatencyMode,
       });
       return loadExternalResources(parsedManifest);
 

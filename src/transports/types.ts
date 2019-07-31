@@ -146,6 +146,7 @@ export interface IManifestParserArguments<T, U> {
 
   // allow the parser to load supplementary ressources (of type U)
   scheduleRequest : (request : () => Observable<U>) => Observable<U>;
+  lowLatencyMode : boolean;
 }
 
 export interface ISegmentParserArguments<T> {

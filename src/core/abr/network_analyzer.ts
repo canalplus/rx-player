@@ -166,7 +166,8 @@ function estimateStarvationModeBitrate(
  */
 function shouldDirectlySwitchToLowBitrate(
   clock : INetworkAnalizerClockTick,
-  currentRequests : IRequestInfo[]
+  currentRequests : IRequestInfo[],
+  starvationGap: number
 ) : boolean {
    const nextNeededPosition = clock.currentTime + clock.bufferGap;
    const requests = currentRequests.sort((a, b) => a.time - b.time);
@@ -192,7 +193,7 @@ function shouldDirectlySwitchToLowBitrate(
    const remainingTime = estimateRemainingTime(lastProgressEvent, bandwidthEstimate);
    if (
      (now - lastProgressEvent.timestamp) / 1000 <= (remainingTime * 1.2) &&
-     remainingTime < ((clock.bufferGap / clock.speed) + ABR_STARVATION_GAP)
+     remainingTime < ((clock.bufferGap / clock.speed) + starvationGap)
    ) {
      return false;
    }
@@ -207,10 +208,13 @@ function shouldDirectlySwitchToLowBitrate(
 export default class NetworkAnalyzer {
   private _inStarvationMode: boolean;
   private _initialBitrate: number;
+  private _suffix: "LOW_BUFFER_GAP"|"DEFAULT";
 
-  constructor(initialBitrate: number) {
+  constructor(initialBitrate: number, lowBufferGapMode: boolean) {
     this._initialBitrate = initialBitrate;
     this._inStarvationMode = false;
+    this._suffix = lowBufferGapMode ? "LOW_BUFFER_GAP" :
+                                      "DEFAULT";
   }
 
   public getBandwidthEstimate(
@@ -228,10 +232,11 @@ export default class NetworkAnalyzer {
     if (isNaN(duration) ||
         bufferGap + currentTime < duration - ABR_STARVATION_DURATION_DELTA)
     {
-      if (!this._inStarvationMode && bufferGap <= ABR_STARVATION_GAP) {
+      if (!this._inStarvationMode && bufferGap <= ABR_STARVATION_GAP[this._suffix]) {
         log.info("ABR: enter starvation mode.");
         this._inStarvationMode = true;
-      } else if (this._inStarvationMode && bufferGap >= OUT_OF_STARVATION_GAP) {
+      } else if (this._inStarvationMode &&
+                 bufferGap >= OUT_OF_STARVATION_GAP[this._suffix]) {
         log.info("ABR: exit starvation mode.");
         this._inStarvationMode = false;
       }
@@ -264,12 +269,12 @@ export default class NetworkAnalyzer {
 
       if (bandwidthEstimate != null) {
         newBitrateCeil = this._inStarvationMode ?
-          bandwidthEstimate * ABR_STARVATION_FACTOR :
-          bandwidthEstimate * ABR_REGULAR_FACTOR;
+          bandwidthEstimate * ABR_STARVATION_FACTOR[this._suffix] :
+          bandwidthEstimate * ABR_REGULAR_FACTOR[this._suffix];
       } else if (lastEstimatedBitrate != null) {
         newBitrateCeil = this._inStarvationMode ?
-          lastEstimatedBitrate * ABR_STARVATION_FACTOR :
-          lastEstimatedBitrate * ABR_REGULAR_FACTOR;
+          lastEstimatedBitrate * ABR_STARVATION_FACTOR[this._suffix] :
+          lastEstimatedBitrate * ABR_REGULAR_FACTOR[this._suffix];
       } else {
         newBitrateCeil = this._initialBitrate;
       }
@@ -301,6 +306,7 @@ export default class NetworkAnalyzer {
     } else if (bitrate > currentRepresentation.bitrate) {
       return !this._inStarvationMode;
     }
-    return shouldDirectlySwitchToLowBitrate(clockTick, currentRequests);
+    return shouldDirectlySwitchToLowBitrate(
+      clockTick, currentRequests, ABR_STARVATION_GAP[this._suffix]);
   }
 }

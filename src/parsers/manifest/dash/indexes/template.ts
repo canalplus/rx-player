@@ -87,6 +87,7 @@ export interface ITemplateIndexContextArgument {
   isDynamic : boolean; // if true, the MPD can be updated over time
   periodEnd : number|undefined; // End of the Period concerned by this
                                 // RepresentationIndex, in seconds
+  lowLatencyMode : boolean;
   periodStart : number; // Start of the Period concerned by this
                         // RepresentationIndex, in seconds
   representationBaseURL : string; // Base URL for the Representation concerned
@@ -133,6 +134,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   private _relativePeriodEnd? : number;
   private _liveEdgeOffset? : number;
   private _scaledBufferDepth? : number;
+  private _lowLatencyMode : boolean;
 
   // Whether this RepresentationIndex can change over time.
   private _isDynamic : boolean;
@@ -149,6 +151,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const { availabilityStartTime,
             clockOffset,
             isDynamic,
+            lowLatencyMode,
             periodEnd,
             periodStart,
             representationBaseURL,
@@ -156,6 +159,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             representationBitrate,
             timeShiftBufferDepth } = context;
 
+    this._lowLatencyMode = lowLatencyMode;
     this._scaledBufferDepth = timeShiftBufferDepth == null ?
       undefined :
       timeShiftBufferDepth * timescale;
@@ -192,9 +196,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         const perfOffset = (clockOffset / 1000) - availabilityStartTime;
         this._liveEdgeOffset = perfOffset - periodStart;
       } else {
+        const securityLiveGap = this._lowLatencyMode ? 3 : 10;
         log.warn("DASH Parser: no clock synchronization mechanism found." +
-                 " Setting a live gap of 10 seconds as a security.");
-        const now = Date.now() - 10000;
+                 " Setting a live gap of " + securityLiveGap + " seconds as a security.");
+        const now = Date.now() - securityLiveGap * 1000;
         const maximumSegmentTimeInSec = now / 1000 - availabilityStartTime;
         const receivedTime = context.manifestReceivedTime == null ?
                                performance.now() :
@@ -396,7 +401,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                                                            this._liveEdgeOffset)
                                 * timescale;
       const maxPossibleStart = Math.max(scaledMaxPosition - duration, 0);
-      numberIndexedToZero = Math.floor(maxPossibleStart / duration);
+      numberIndexedToZero = this._lowLatencyMode ?
+        Math.ceil(maxPossibleStart / duration) :
+        Math.floor(maxPossibleStart / duration);
       return numberIndexedToZero * duration;
     } else {
       const maximumTime = (this._relativePeriodEnd || 0) * timescale;

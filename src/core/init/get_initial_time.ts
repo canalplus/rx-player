@@ -85,7 +85,7 @@ export default function getInitialTime(
     if (sgp != null) {
       return Math.max(max - sgp, min);
     }
-    const defaultStartingPos = max - (lowLatencyMode ? DEFAULT_LIVE_GAP.LOW_LATENCY :
+    const defaultStartingPos = max - (lowLatencyMode ? DEFAULT_LIVE_GAP.LOW_LATENCY_MODE :
                                                        DEFAULT_LIVE_GAP.DEFAULT);
     return Math.max(defaultStartingPos, min);
   }

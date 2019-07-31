@@ -168,6 +168,7 @@ export default function InitializeOnMediaSource(
   // Throttled to avoid doing multiple simultaneous requests.
   const manifestPipelineOptions = getManifestPipelineOptions(networkConfig);
   const fetchManifest = throttle(createManifestPipeline(pipelines,
+                                                        lowLatencyMode,
                                                         manifestPipelineOptions,
                                                         warning$));
 
@@ -176,7 +177,7 @@ export default function InitializeOnMediaSource(
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".
-  const abrManager = new ABRManager(adaptiveOptions);
+  const abrManager = new ABRManager(adaptiveOptions, lowLatencyMode);
 
   // Create and open a new MediaSource object on the given media element.
   const openMediaSource$ = openMediaSource(mediaElement).pipe(

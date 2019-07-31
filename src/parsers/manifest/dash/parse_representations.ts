@@ -38,6 +38,7 @@ export interface IAdaptationInfos {
                          // to obtain the current server's time
   end? : number; // End time of the current period, in seconds
   isDynamic : boolean; // Whether the Manifest can evolve with time
+  lowLatencyMode : boolean; // Whether the content playing in low latency mode
   start : number; // Start time of the current period, in seconds
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
                                   // in seconds
@@ -58,6 +59,7 @@ interface IIndexContext {
   representationBitrate? : number; // Bitrate of the Representation concerned
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
                                   // in seconds
+  lowLatencyMode : boolean; // Whether the content playing in low latency mode
 }
 
 /**
@@ -119,7 +121,8 @@ export default function parseRepresentations(
                       representationBaseURL,
                       representationBitrate: representation.attributes.bitrate,
                       representationId: representation.attributes.id,
-                      timeShiftBufferDepth: adaptationInfos.timeShiftBufferDepth };
+                      timeShiftBufferDepth: adaptationInfos.timeShiftBufferDepth,
+                      lowLatencyMode: adaptationInfos.lowLatencyMode };
     let representationIndex : IRepresentationIndex;
     if (representation.children.segmentBase != null) {
       const { segmentBase } = representation.children;
