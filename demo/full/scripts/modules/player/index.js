@@ -41,6 +41,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
     isBuffering: false,
     isContentLoaded: false,
     isLive: false,
+    isLowLatency: false,
     isLoading: false,
     isPaused: false,
     isReloading: false,

@@ -441,6 +441,20 @@ body {
   margin: 0 3px 0 3px;
 }
 
+.control-live {
+  color: #5c5c5c;
+  border: #5c5c5c 1px solid;
+  padding: 2px 9px;
+  border-radius: 3px;
+  margin: 5px;
+  background: none;
+}
+
+.control-live.activated {
+  color: #bb0000;
+  border: #bb0000 1px solid;
+}
+
 .control-button:hover {
   color: #fff;
 }

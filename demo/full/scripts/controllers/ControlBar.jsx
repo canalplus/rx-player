@@ -14,6 +14,9 @@ function ControlBar({
   videoElement,
   isContentLoaded,
   isLive,
+  isLowLatency,
+  isCatchingUp,
+  toggleLive,
   isStopped,
   currentTime,
   duration,
@@ -33,6 +36,11 @@ function ControlBar({
     }
   })();
 
+  const liveGap = player.get("liveGap");
+  const liveGapCeil = isLowLatency ? 4 : 20;
+  const activateLive = liveGap < liveGapCeil ||
+                       isLowLatency && isCatchingUp;
+
   return (
     <div className="controls-bar-container">
       <Progressbar player={player} />
@@ -49,6 +57,17 @@ function ControlBar({
         />
         { positionElement }
         <div className="controls-right-side">
+          { isLive ?
+            <Button
+              className={"control-live" + (activateLive ? " activated" : "")}
+              onClick={() => {
+                if (!activateLive) {
+                  toggleLive();
+                }
+              }}
+              value={"Live"}
+            /> : null
+          }
           <Button
             disabled={!isContentLoaded}
             className='control-button'

@@ -21,6 +21,7 @@ class Player extends React.Component {
       displaySpinner: false,
       displaySettings: false,
       isStopped: true,
+      isCatchingUp: false,
     };
   }
 
@@ -42,6 +43,35 @@ class Player extends React.Component {
         isReloading,
         isStopped,
       ]) => {
+        if (this._intervalId) {
+          clearInterval(this._intervalId);
+        }
+        this._intervalId = setInterval(() => {
+          const { isCatchingUp } = this.state;
+          if (player) {
+            const liveGap = player.get("liveGap");
+            const isLowLatency = player.get("isLowLatency");
+
+            const shouldCatchUp = isLowLatency &&
+                                  ((liveGap > 4 || liveGap < 1) && (isBuffering || isCatchingUp)) &&
+                                  !isSeeking;
+
+            this.setState({
+              isLowLatency,
+              isCatchingUp: shouldCatchUp,
+            });
+
+            if (shouldCatchUp) {
+              const factor = (liveGap - 4) / 4;
+              const rate = liveGap > 4 ? Math.min(5, 1.05 + factor) :
+                liveGap < 1 ? Math.max(0.5, liveGap) : 1;
+              player.dispatch("SET_PLAYBACK_RATE", rate);
+            } else if (isCatchingUp) {
+              player.dispatch("SET_PLAYBACK_RATE", 1);
+            }
+          }
+        }, 200);
+
         this.setState({ isStopped });
         if (isLoading || isReloading) {
           this.setState({ displaySpinner: true });
@@ -71,6 +101,9 @@ class Player extends React.Component {
 
   // will never happen, but still
   componentWillUnmount() {
+    if (this._intervalId != null) {
+      clearInterval(this._intervalId);
+    }
     if (this._$destroySubject) {
       this._$destroySubject.next();
       this._$destroySubject.complete();
@@ -92,7 +125,8 @@ class Player extends React.Component {
   }
 
   render() {
-    const { player, displaySpinner, isStopped } = this.state;
+    const { player, displaySpinner, isStopped, isCatchingUp, isLowLatency } = this.state;
+
     const loadVideo = (video) => this.state.player.dispatch("LOAD", video);
     const stopVideo = () => this.state.player.dispatch("STOP");
 
@@ -101,6 +135,12 @@ class Player extends React.Component {
     };
     const toggleSettings = () => {
       this.setState({ displaySettings: !this.state.displaySettings });
+    };
+
+    const toggleLive = () => {
+      debugger;
+      const maximumPosition = player.get("maximumPosition");
+      this.state.player.dispatch("SEEK", maximumPosition - 3);
     };
 
     return (
@@ -147,6 +187,9 @@ class Player extends React.Component {
                   player={player}
                   videoElement={this.playerWrapperElement}
                   toggleSettings={toggleSettings}
+                  isCatchingUp={isCatchingUp}
+                  isLowLatency={isLowLatency}
+                  toggleLive={toggleLive}
                   stopVideo={stopVideo}
                 /> : null}
           </div>
