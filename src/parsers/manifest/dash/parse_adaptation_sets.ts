@@ -39,6 +39,8 @@ export interface IPeriodInfos {
   end? : number; // End time of the current period, in seconds
   isDynamic : boolean; // Whether the Manifest can evolve with time
   start : number; // Start time of the current period, in seconds
+  timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
+                                  // in seconds
 }
 
 // Supplementary informations for "switchable" AdaptationSets of the same Period
@@ -173,22 +175,25 @@ export default function parseAdaptationSets(
   periodInfos : IPeriodInfos
 ): IParsedAdaptations {
   return adaptationsIR
-    .reduce<{
-      adaptations : IParsedAdaptations;
-      adaptationSwitchingInfos : IAdaptationSwitchingInfos;
-      videoMainAdaptation : IParsedAdaptation|null;
-    }>((acc, adaptation) => {
+    .reduce<{ adaptations : IParsedAdaptations;
+              adaptationSwitchingInfos : IAdaptationSwitchingInfos;
+              videoMainAdaptation : IParsedAdaptation|null; }>
+    ((acc, adaptation) => {
       const adaptationChildren = adaptation.children;
       const parsedAdaptations = acc.adaptations;
       const representationsIR = adaptation.children.representations;
-      const representations = parseRepresentations(representationsIR, adaptation, {
+      const adaptationInfos = {
         availabilityStartTime: periodInfos.availabilityStartTime,
         baseURL: resolveURL(periodInfos.baseURL, adaptationChildren.baseURL),
         clockOffset: periodInfos.clockOffset,
         end: periodInfos.end,
         isDynamic: periodInfos.isDynamic,
         start: periodInfos.start,
-      });
+        timeShiftBufferDepth: periodInfos.timeShiftBufferDepth,
+      };
+      const representations = parseRepresentations(representationsIR,
+                                                   adaptation,
+                                                   adaptationInfos);
       const adaptationMimeType = adaptation.attributes.mimeType;
       const adaptationCodecs = adaptation.attributes.codecs;
       const representationMimeTypes = representations
@@ -197,13 +202,11 @@ export default function parseAdaptationSets(
       const representationCodecs = representations
         .map(representation => representation.codecs)
         .filter((codecs : string|undefined) : codecs is string => codecs != null);
-      const type = inferAdaptationType(
-        adaptationMimeType || null,
-        representationMimeTypes,
-        adaptationCodecs || null,
-        representationCodecs,
-        adaptationChildren.roles || null
-      );
+      const type = inferAdaptationType(adaptationMimeType || null,
+                                       representationMimeTypes,
+                                       adaptationCodecs || null,
+                                       representationCodecs,
+                                       adaptationChildren.roles || null);
 
       const originalID = adaptation.attributes.id;
       let newID : string;
@@ -219,18 +222,23 @@ export default function parseAdaptationSets(
         videoMainAdaptation.representations.push(...representations);
         newID = videoMainAdaptation.id;
       } else {
-        const isClosedCaption = type === "text" && adaptationChildren.accessibility &&
-          isHardOfHearing(adaptationChildren.accessibility) ? true : undefined;
+        const { accessibility } = adaptationChildren;
+        const isClosedCaption = type === "text" &&
+                                accessibility != null &&
+                                isHardOfHearing(accessibility) ? true :
+                                                                 undefined;
         const isAudioDescription = type === "audio" &&
-          adaptationChildren.accessibility &&
-          isVisuallyImpaired(adaptationChildren.accessibility) ? true : undefined;
-        const adaptationID = newID = getAdaptationID(adaptation, representations,
-          { isClosedCaption, isAudioDescription, type });
-        const parsedAdaptationSet : IParsedAdaptation = {
-          id: adaptationID,
-          representations,
-          type,
-        };
+                                   accessibility != null &&
+                                   isVisuallyImpaired(accessibility) ? true :
+                                                                       undefined;
+        const adaptationID = newID = getAdaptationID(adaptation,
+                                                     representations,
+                                                     { isClosedCaption,
+                                                       isAudioDescription,
+                                                       type });
+        const parsedAdaptationSet : IParsedAdaptation = { id: adaptationID,
+                                                          representations,
+                                                          type };
         if (adaptation.attributes.language != null) {
           parsedAdaptationSet.language = adaptation.attributes.language;
         }
@@ -254,20 +262,19 @@ export default function parseAdaptationSets(
           for (let k = 0; k < adaptationSetSwitchingIDs.length; k++) {
             const id : string = adaptationSetSwitchingIDs[k];
             const switchingInfos = acc.adaptationSwitchingInfos[id];
-            if (
-              switchingInfos != null && switchingInfos.newID !== newID &&
-              arrayIncludes(switchingInfos.adaptationSetSwitchingIDs, originalID)
-            ) {
-              const adaptationToMergeInto =
-                arrayFind(adaptationsOfTheSameType, (a) => a.id === id);
-              if (
-                adaptationToMergeInto != null &&
-                adaptationToMergeInto.audioDescription ===
-                  parsedAdaptationSet.audioDescription &&
-                adaptationToMergeInto.closedCaption ===
-                  parsedAdaptationSet.closedCaption &&
-                adaptationToMergeInto.language === parsedAdaptationSet.language
-              ) {
+            if (switchingInfos != null &&
+                switchingInfos.newID !== newID &&
+                arrayIncludes(switchingInfos.adaptationSetSwitchingIDs, originalID))
+            {
+              const adaptationToMergeInto = arrayFind(adaptationsOfTheSameType,
+                                                      (a) => a.id === id);
+              if (adaptationToMergeInto != null &&
+                  adaptationToMergeInto.audioDescription ===
+                    parsedAdaptationSet.audioDescription &&
+                  adaptationToMergeInto.closedCaption ===
+                    parsedAdaptationSet.closedCaption &&
+                  adaptationToMergeInto.language === parsedAdaptationSet.language)
+              {
                 log.info("DASH Parser: merging \"switchable\" AdaptationSets",
                   originalID, id);
                 adaptationToMergeInto.representations
@@ -300,17 +307,15 @@ export default function parseAdaptationSets(
       }
 
       if (originalID != null && acc.adaptationSwitchingInfos[originalID] == null) {
-        acc.adaptationSwitchingInfos[originalID] = { newID, adaptationSetSwitchingIDs };
+        acc.adaptationSwitchingInfos[originalID] = { newID,
+                                                     adaptationSetSwitchingIDs };
       }
 
-      return {
-        adaptations: parsedAdaptations,
-        adaptationSwitchingInfos: acc.adaptationSwitchingInfos,
-        videoMainAdaptation: acc.videoMainAdaptation,
-      };
-    }, {
-      adaptations: {},
-      videoMainAdaptation: null,
-      adaptationSwitchingInfos: {},
-    }).adaptations;
+      return { adaptations: parsedAdaptations,
+               adaptationSwitchingInfos: acc.adaptationSwitchingInfos,
+               videoMainAdaptation: acc.videoMainAdaptation };
+    }, { adaptations: {},
+         videoMainAdaptation: null,
+         adaptationSwitchingInfos: {} }
+    ).adaptations;
 }

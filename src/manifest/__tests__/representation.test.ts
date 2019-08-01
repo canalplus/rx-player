@@ -23,6 +23,7 @@ const minimalIndex = {
   getFirstPosition() : undefined { return ; },
   getLastPosition() : undefined { return ; },
   checkDiscontinuity() { return -1; },
+  isSegmentStillAvailable() : undefined { return undefined; },
   _update() { /* noop */ },
   _addSegments() { /* noop */ },
 };

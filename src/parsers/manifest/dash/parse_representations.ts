@@ -39,11 +39,16 @@ export interface IAdaptationInfos {
   end? : number; // End time of the current period, in seconds
   isDynamic : boolean; // Whether the Manifest can evolve with time
   start : number; // Start time of the current period, in seconds
+  timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
+                                  // in seconds
 }
 
 // base context given to the various indexes
 interface IIndexContext {
   availabilityStartTime : number; // Time from which the content starts
+  clockOffset? : number; // If set, offset to add to `performance.now()`
+                         // to obtain the current server's time
+  isDynamic : boolean; // Whether the Manifest can evolve with time
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
   periodEnd : number|undefined; // End of the period concerned by this
@@ -51,7 +56,8 @@ interface IIndexContext {
   representationBaseURL : string; // Base URL for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
-  isDynamic : boolean; // Whether the Manifest can evolve with time
+  timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
+                                  // in seconds
 }
 
 /**
@@ -105,16 +111,15 @@ export default function parseRepresentations(
     const representationBaseURL = resolveURL(adaptationInfos.baseURL, baseURL);
 
     // 4-2-1. Find Index
-    const context = {
-      availabilityStartTime: adaptationInfos.availabilityStartTime,
-      clockOffset: adaptationInfos.clockOffset,
-      isDynamic: adaptationInfos.isDynamic,
-      periodEnd: adaptationInfos.end,
-      periodStart: adaptationInfos.start,
-      representationBaseURL,
-      representationBitrate: representation.attributes.bitrate,
-      representationId: representation.attributes.id,
-    };
+    const context = { availabilityStartTime: adaptationInfos.availabilityStartTime,
+                      clockOffset: adaptationInfos.clockOffset,
+                      isDynamic: adaptationInfos.isDynamic,
+                      periodEnd: adaptationInfos.end,
+                      periodStart: adaptationInfos.start,
+                      representationBaseURL,
+                      representationBitrate: representation.attributes.bitrate,
+                      representationId: representation.attributes.id,
+                      timeShiftBufferDepth: adaptationInfos.timeShiftBufferDepth };
     let representationIndex : IRepresentationIndex;
     if (representation.children.segmentBase != null) {
       const { segmentBase } = representation.children;
@@ -143,31 +148,24 @@ export default function parseRepresentations(
     // 4-2-3. Set ID
     const representationID = representation.attributes.id != null ?
       representation.attributes.id :
-      (
-        representation.attributes.bitrate +
-        (
-          representation.attributes.height != null ?
-          ("-" + representation.attributes.height) : ""
-        ) +
-        (
-          representation.attributes.width != null ?
-          ("-" + representation.attributes.width) : ""
-        ) +
-        (
-          representation.attributes.mimeType != null ?
-          ("-" + representation.attributes.mimeType) : ""
-        ) +
-        (
-          representation.attributes.codecs != null ?
-          ("-" + representation.attributes.codecs) : ""
-        )
-      );
+      (representation.attributes.bitrate +
+         (representation.attributes.height != null ?
+            ("-" + representation.attributes.height) :
+            "") +
+         (representation.attributes.width != null ?
+            ("-" + representation.attributes.width) :
+            "") +
+         (representation.attributes.mimeType != null ?
+            ("-" + representation.attributes.mimeType) :
+            "") +
+         (representation.attributes.codecs != null ?
+            ("-" + representation.attributes.codecs) :
+            ""));
     // 4-2-4. Construct Representation Base
-    const parsedRepresentation : IParsedRepresentation = {
-      bitrate: representationBitrate,
-      index: representationIndex,
-      id: representationID,
-    };
+    const parsedRepresentation : IParsedRepresentation =
+      { bitrate: representationBitrate,
+        index: representationIndex,
+        id: representationID };
     // 4-2-5. Add optional attributes
     let codecs : string|undefined;
     if (representation.attributes.codecs != null) {

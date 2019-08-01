@@ -186,14 +186,14 @@ export default function RepresentationBuffer<T>({
     initSegment == null ? { segmentData: null, segmentInfos: null, segmentOffset: 0 } :
                           null;
 
-  // Subject to start/restart a Buffer Queue.
-  const startQueue$ = new ReplaySubject<void>(1);
-
   // Segments queued for download in the BufferQueue.
   let downloadQueue : IQueuedSegment[] = [];
 
-  // Emit when the current queue of download is finished
-  const finishedDownloadQueue$ = new Subject<void>();
+  // Subject to start/restart a Buffer Queue.
+  const startQueue$ = new ReplaySubject<void>(1);
+
+  // Emit when the RepresentationBuffer asks to re-check which segments are needed.
+  const reCheckNeededSegments$ = new Subject<void>();
 
   // Keep track of the informations about the pending Segment request.
   // null if no request is pending.
@@ -209,7 +209,7 @@ export default function RepresentationBuffer<T>({
     terminate$.pipe(take(1),
                     mapTo(true),
                     startWith(false)),
-    finishedDownloadQueue$.pipe(startWith(undefined)) ]
+    reCheckNeededSegments$.pipe(startWith(undefined)) ]
   ).pipe(
     withLatestFrom(fastSwitchingStep$),
     map(function getCurrentStatus(
@@ -363,7 +363,10 @@ export default function RepresentationBuffer<T>({
    *
    * Important side-effects:
    *   - Mutates `currentSegmentRequest` when doing and finishing a request.
-   *   - Will emit from finishedDownloadQueue$ Subject after it's done.
+   *   - Will emit from reCheckNeededSegments$ Subject:
+   *       1. when it's done.
+   *       2. when the currently downloaded segment seems to not be available
+   *          anymore
    * @returns {Observable}
    */
   function loadSegmentsFromQueue() : Observable<ISegmentLoadingEvent<T>> {
@@ -371,7 +374,7 @@ export default function RepresentationBuffer<T>({
       observableDefer(() : Observable<ISegmentLoadingEvent<T>> => {
         const currentNeededSegment = downloadQueue.shift();
         if (currentNeededSegment == null) {
-          nextTick(() => { finishedDownloadQueue$.next(); });
+          nextTick(() => { reCheckNeededSegments$.next(); });
           return EMPTY;
         }
 
@@ -382,8 +385,17 @@ export default function RepresentationBuffer<T>({
         currentSegmentRequest = { segment, priority, request$ };
         const response$ = request$
           .pipe(mergeMap((evt) : Observable<ISegmentLoadingEvent<T>> => {
-            if (evt.type !== "response") {
-              return observableOf(evt);
+            if (evt.type === "warning") {
+              // we're retrying, notify and re-check availability
+              return observableConcat(
+                observableOf(evt),
+                observableDefer(() => { // better if done after warning is emitted
+                  const repIndex = representation.index;
+                  if (repIndex.isSegmentStillAvailable(segment) === false) {
+                    reCheckNeededSegments$.next();
+                  }
+                  return EMPTY;
+                }));
             }
 
             currentSegmentRequest = null;

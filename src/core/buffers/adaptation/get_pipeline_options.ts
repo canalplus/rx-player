@@ -30,7 +30,8 @@ const { DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
  */
 export default function getPipelineOptions(
   bufferType : string,
-  { retry, offlineRetry } : { retry? : number; offlineRetry? : number }
+  { segmentRetry, offlineRetry } : { segmentRetry? : number;
+                                     offlineRetry? : number; }
 ) : IPipelineOptions<any, any> {
   const cache = arrayIncludes(["audio", "video"], bufferType) ?
     new InitializationSegmentCache<any>() :
@@ -42,8 +43,8 @@ export default function getPipelineOptions(
   if (bufferType === "image") {
     maxRetry = 0; // Deactivate BIF fetching if it fails
   } else {
-    maxRetry = retry != null ? retry :
-                               DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR;
+    maxRetry = segmentRetry != null ? segmentRetry :
+                                      DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR;
   }
   maxRetryOffline = offlineRetry != null ? offlineRetry :
                                            DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE;

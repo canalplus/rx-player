@@ -23,8 +23,7 @@ import { IParsedManifest } from "../types";
 import checkManifestIDs from "../utils/check_manifest_ids";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
-import getLastTimeReference from "./get_last_time_reference";
-import getTimeLimits from "./get_time_limits";
+import getMinimumAndMaximumPosition from "./get_last_time_reference";
 import {
   createMPDIntermediateRepresentation,
   IMPDIntermediateRepresentation,
@@ -181,36 +180,32 @@ function parseCompleteIntermediateRepresentation(
 ) : IParserResponse<IParsedManifest> {
   const { children: rootChildren,
           attributes: rootAttributes } = mpdIR;
-
   const isDynamic : boolean = rootAttributes.type === "dynamic";
-
   const baseURL = resolveURL(normalizeBaseURL(args.url), rootChildren.baseURL);
-
   const availabilityStartTime = parseAvailabilityStartTime(rootAttributes,
                                                            args.referenceDateTime);
-
+  const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
   const clockOffset = args.externalClockOffset;
-  const parsedPeriods = parsePeriods(rootChildren.periods,
-                                     { availabilityStartTime,
-                                       baseURL,
-                                       clockOffset,
-                                       duration: rootAttributes.duration,
-                                       isDynamic });
-
+  const manifestInfos = { availabilityStartTime,
+                          baseURL,
+                          clockOffset,
+                          duration: rootAttributes.duration,
+                          isDynamic,
+                          timeShiftBufferDepth };
+  const parsedPeriods = parsePeriods(rootChildren.periods, manifestInfos);
   const duration = parseDuration(rootAttributes, parsedPeriods);
-
   const parsedMPD : IParsedManifest = {
     availabilityStartTime,
     baseURL,
+    clockOffset: args.externalClockOffset,
     duration,
     id: rootAttributes.id != null ? rootAttributes.id :
                                     "gen-dash-manifest-" + generateManifestID(),
-    periods: parsedPeriods,
-    transportType: "dash",
     isLive: isDynamic,
-    uris: [args.url, ...rootChildren.locations],
+    periods: parsedPeriods,
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay,
-    clockOffset: args.externalClockOffset,
+    transportType: "dash",
+    uris: [args.url, ...rootChildren.locations],
   };
 
   // -- add optional fields --
@@ -222,12 +217,23 @@ function parseCompleteIntermediateRepresentation(
 
   checkManifestIDs(parsedMPD);
   if (parsedMPD.isLive) {
-    const lastTimeReference = getLastTimeReference(parsedMPD);
-    const [minTime, maxTime] = getTimeLimits(parsedMPD,
-                                             rootAttributes.timeShiftBufferDepth,
-                                             lastTimeReference);
-    parsedMPD.minimumTime = minTime;
-    parsedMPD.maximumTime = maxTime;
+    const [minTime, maxTime] = getMinimumAndMaximumPosition(parsedMPD);
+    const now = performance.now();
+    if (minTime != null) {
+      parsedMPD.minimumTime = { isContinuous: timeShiftBufferDepth != null,
+                                value: minTime,
+                                time: now };
+    }
+    if (maxTime != null) {
+      parsedMPD.maximumTime = { isContinuous: true,
+                                value: maxTime,
+                                time: now };
+      if (minTime == null) {
+        parsedMPD.minimumTime = { isContinuous: true,
+                                  value: maxTime,
+                                  time: now };
+      }
+    }
   }
 
   return { type: "done", value: parsedMPD };

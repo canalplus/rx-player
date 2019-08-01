@@ -40,12 +40,9 @@ export default function getWantedRange(
   paddings : { low : number; high : number }
 ) : { start : number; end : number } {
   const currentTime = tick.currentTime + tick.wantedTimeOffset;
-  const limitEnd = tick.liveGap == null ? hardLimits.end :
-                                          Math.min(hardLimits.end || Infinity,
-                                                   tick.currentTime + tick.liveGap);
   const boundedLimits = {
     start: Math.max(hardLimits.start || 0, currentTime),
-    end: limitEnd,
+    end: hardLimits.end,
   };
 
   const { low: lowPadding, high: highPadding } = paddings;
