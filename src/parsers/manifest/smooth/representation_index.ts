@@ -162,407 +162,407 @@ interface ISmoothInitSegmentPrivateInfos {
  * @class SmoothRepresentationIndex
  */
 export default class SmoothRepresentationIndex implements IRepresentationIndex {
-    // Informations needed to generate an initialization segment.
-    // Taken from the Manifest.
-    private _initSegmentInfos : { codecPrivateData? : string;
-                                  bitsPerSample? : number;
-                                  channels? : number;
-                                  packetSize? : number;
-                                  samplingRate? : number;
-                                  protection? : { keyId : Uint8Array;
-                                                  keySystems: Array<{
-                                                    systemId : string;
-                                                    privateData : Uint8Array;
-                                                  }>; }; };
+  // Informations needed to generate an initialization segment.
+  // Taken from the Manifest.
+  private _initSegmentInfos : { codecPrivateData? : string;
+                                bitsPerSample? : number;
+                                channels? : number;
+                                packetSize? : number;
+                                samplingRate? : number;
+                                protection? : { keyId : Uint8Array;
+                                                keySystems: Array<{
+                                                  systemId : string;
+                                                  privateData : Uint8Array;
+                                                }>; }; };
 
-    // if true, this class will return segments even if we're not sure they had
-    // time to be generated on the server side.
-    private _isAggressiveMode? : boolean;
+  // if true, this class will return segments even if we're not sure they had
+  // time to be generated on the server side.
+  private _isAggressiveMode? : boolean;
 
-    // (only calculated for live contents)
-    // Calculates the difference, in timescale, between the current time (as
-    // calculated via performance.now()) and the time of the last segment known
-    // to have been generated on the server-side.
-    // Useful to know if a segment present in the timeline has actually been
-    // generated on the server-side
-    private _scaledLiveGap? : number;
+  // (only calculated for live contents)
+  // Calculates the difference, in timescale, between the current time (as
+  // calculated via performance.now()) and the time of the last segment known
+  // to have been generated on the server-side.
+  // Useful to know if a segment present in the timeline has actually been
+  // generated on the server-side
+  private _scaledLiveGap? : number;
 
-    // Defines the end of the latest available segment when this index was known to
-    // be valid.
-    private _initialLastPosition? : number;
+  // Defines the end of the latest available segment when this index was known to
+  // be valid.
+  private _initialLastPosition? : number;
 
-    // Defines the earliest time when this index was known to be valid (that is, when
-    // all segments declared in it are available). This means either:
-    //   - the manifest downloading time, if known
-    //   - else, the time of creation of this RepresentationIndex, as the best guess
-    private _indexValidityTime : number;
+  // Defines the earliest time when this index was known to be valid (that is, when
+  // all segments declared in it are available). This means either:
+  //   - the manifest downloading time, if known
+  //   - else, the time of creation of this RepresentationIndex, as the best guess
+  private _indexValidityTime : number;
 
-    private _index : ITimelineIndex;
+  private _index : ITimelineIndex;
 
-    constructor(index : ITimelineIndex, options : ISmoothRIOptions) {
-      const { aggressiveMode, segmentPrivateInfos } = options;
-      const estimatedReceivedTime = index.manifestReceivedTime == null ?
-        performance.now() :
-        index.manifestReceivedTime;
-      this._index = index;
-      this._indexValidityTime = estimatedReceivedTime;
+  constructor(index : ITimelineIndex, options : ISmoothRIOptions) {
+    const { aggressiveMode, segmentPrivateInfos } = options;
+    const estimatedReceivedTime = index.manifestReceivedTime == null ?
+      performance.now() :
+      index.manifestReceivedTime;
+    this._index = index;
+    this._indexValidityTime = estimatedReceivedTime;
 
-      this._initSegmentInfos = { bitsPerSample: segmentPrivateInfos.bitsPerSample,
-                                 channels: segmentPrivateInfos.channels,
-                                 codecPrivateData: segmentPrivateInfos.codecPrivateData,
-                                 packetSize: segmentPrivateInfos.packetSize,
-                                 samplingRate: segmentPrivateInfos.samplingRate,
-                                 protection: segmentPrivateInfos.protection };
+    this._initSegmentInfos = { bitsPerSample: segmentPrivateInfos.bitsPerSample,
+                               channels: segmentPrivateInfos.channels,
+                               codecPrivateData: segmentPrivateInfos.codecPrivateData,
+                               packetSize: segmentPrivateInfos.packetSize,
+                               samplingRate: segmentPrivateInfos.samplingRate,
+                               protection: segmentPrivateInfos.protection };
 
-      this._isAggressiveMode = aggressiveMode;
+    this._isAggressiveMode = aggressiveMode;
 
-      if (index.timeline.length) {
-        const lastItem = index.timeline[index.timeline.length - 1];
-        const scaledEnd = getIndexSegmentEnd(lastItem, null);
-        this._initialLastPosition = scaledEnd / index.timescale;
+    if (index.timeline.length) {
+      const lastItem = index.timeline[index.timeline.length - 1];
+      const scaledEnd = getIndexSegmentEnd(lastItem, null);
+      this._initialLastPosition = scaledEnd / index.timescale;
 
-        if (index.isLive) {
-          const scaledReceivedTime = (estimatedReceivedTime / 1000) * index.timescale;
-          this._scaledLiveGap = scaledReceivedTime - scaledEnd;
-        }
+      if (index.isLive) {
+        const scaledReceivedTime = (estimatedReceivedTime / 1000) * index.timescale;
+        this._scaledLiveGap = scaledReceivedTime - scaledEnd;
       }
     }
+  }
 
-    /**
-     * Construct init Segment compatible with a Smooth Manifest.
-     * @returns {Object}
-     */
-    getInitSegment() : ISegment {
-      return { id: "init",
-               isInit: true,
-               time: 0,
-               timescale: this._index.timescale,
-               privateInfos: { smoothInit: this._initSegmentInfos },
-               mediaURL: null };
-    }
+  /**
+   * Construct init Segment compatible with a Smooth Manifest.
+   * @returns {Object}
+   */
+  getInitSegment() : ISegment {
+    return { id: "init",
+             isInit: true,
+             time: 0,
+             timescale: this._index.timescale,
+             privateInfos: { smoothInit: this._initSegmentInfos },
+             mediaURL: null };
+  }
 
-    /**
-     * Generate a list of Segments for a particular period of time.
-     *
-     * @param {Number} _up
-     * @param {Number} _to
-     * @returns {Array.<Object>}
-     */
-    getSegments(_up : number, _to : number) : ISegment[] {
-      this._refreshTimeline();
-      const index = this._index;
-      const { up, to } = normalizeRange(index, _up, _to);
-      const { timeline, timescale, media } = index;
+  /**
+   * Generate a list of Segments for a particular period of time.
+   *
+   * @param {Number} _up
+   * @param {Number} _to
+   * @returns {Array.<Object>}
+   */
+  getSegments(_up : number, _to : number) : ISegment[] {
+    this._refreshTimeline();
+    const index = this._index;
+    const { up, to } = normalizeRange(index, _up, _to);
+    const { timeline, timescale, media } = index;
 
-      let currentNumber : number|undefined;
-      const segments : ISegment[] = [];
+    let currentNumber : number|undefined;
+    const segments : ISegment[] = [];
 
-      const timelineLength = timeline.length;
+    const timelineLength = timeline.length;
 
-      // TODO(pierre): use @maxSegmentDuration if possible
-      let maxEncounteredDuration = (timeline.length && timeline[0].duration) || 0;
+    // TODO(pierre): use @maxSegmentDuration if possible
+    let maxEncounteredDuration = (timeline.length && timeline[0].duration) || 0;
 
-      const maxPosition = this._isAggressiveMode || this._scaledLiveGap == null ?
-        undefined : ((performance.now() / 1000) * timescale) - this._scaledLiveGap;
+    const maxPosition = this._isAggressiveMode || this._scaledLiveGap == null ?
+      undefined : ((performance.now() / 1000) * timescale) - this._scaledLiveGap;
 
-      for (let i = 0; i < timelineLength; i++) {
-        const segmentRange = timeline[i];
-        const { duration, start } = segmentRange;
+    for (let i = 0; i < timelineLength; i++) {
+      const segmentRange = timeline[i];
+      const { duration, start } = segmentRange;
 
-        maxEncounteredDuration = Math.max(maxEncounteredDuration, duration || 0);
+      maxEncounteredDuration = Math.max(maxEncounteredDuration, duration || 0);
 
-        // live-added segments have @d attribute equals to -1
-        if (duration != null && duration < 0) {
-          const approximateEnd = start + maxEncounteredDuration;
-          if (approximateEnd < to &&
-              (maxPosition == null || approximateEnd <= maxPosition))
-          {
-            const time = start;
-            const segment = { id: "" + time,
-                              time,
-                              isInit: false,
-                              timescale,
-                              number: currentNumber != null ? currentNumber :
-                                                              undefined,
-                              mediaURL: replaceSegmentSmoothTokens(media, time) };
-            segments.push(segment);
-          }
-          return segments;
-        }
-
-        const repeat = calculateRepeat(segmentRange, timeline[i + 1]);
-        let segmentNumberInCurrentRange = getSegmentNumber(start, up, duration);
-        let segmentTime = start + segmentNumberInCurrentRange *
-          (duration == null ? 0 : duration);
-        while (segmentTime < to &&
-               segmentNumberInCurrentRange <= repeat &&
-               (maxPosition == null || (segmentTime + duration) <= maxPosition))
+      // live-added segments have @d attribute equals to -1
+      if (duration != null && duration < 0) {
+        const approximateEnd = start + maxEncounteredDuration;
+        if (approximateEnd < to &&
+            (maxPosition == null || approximateEnd <= maxPosition))
         {
-          const time = segmentTime;
-          const number = currentNumber != null ?
-            currentNumber + segmentNumberInCurrentRange :
-            undefined;
-          const segment = { id: "" + segmentTime,
+          const time = start;
+          const segment = { id: "" + time,
                             time,
                             isInit: false,
-                            duration,
                             timescale,
-                            number,
+                            number: currentNumber != null ? currentNumber :
+                                                            undefined,
                             mediaURL: replaceSegmentSmoothTokens(media, time) };
           segments.push(segment);
-
-          // update segment number and segment time for the next segment
-          segmentNumberInCurrentRange++;
-          segmentTime = start + segmentNumberInCurrentRange * duration;
         }
-
-        if (segmentTime >= to) {
-          // we reached ``to``, we're done
-          return segments;
-        }
-
-        if (currentNumber != null) {
-          currentNumber += repeat + 1;
-        }
+        return segments;
       }
 
-      return segments;
+      const repeat = calculateRepeat(segmentRange, timeline[i + 1]);
+      let segmentNumberInCurrentRange = getSegmentNumber(start, up, duration);
+      let segmentTime = start + segmentNumberInCurrentRange *
+        (duration == null ? 0 : duration);
+      while (segmentTime < to &&
+             segmentNumberInCurrentRange <= repeat &&
+             (maxPosition == null || (segmentTime + duration) <= maxPosition))
+      {
+        const time = segmentTime;
+        const number = currentNumber != null ?
+          currentNumber + segmentNumberInCurrentRange :
+          undefined;
+        const segment = { id: "" + segmentTime,
+                          time,
+                          isInit: false,
+                          duration,
+                          timescale,
+                          number,
+                          mediaURL: replaceSegmentSmoothTokens(media, time) };
+        segments.push(segment);
+
+        // update segment number and segment time for the next segment
+        segmentNumberInCurrentRange++;
+        segmentTime = start + segmentNumberInCurrentRange * duration;
+      }
+
+      if (segmentTime >= to) {
+        // we reached ``to``, we're done
+        return segments;
+      }
+
+      if (currentNumber != null) {
+        currentNumber += repeat + 1;
+      }
     }
 
-    /**
-     * Returns true if, based on the arguments, the index should be refreshed.
-     * (If we should re-fetch the manifest)
-     * @param {Number} from
-     * @param {Number} to
-     * @returns {Boolean}
-     */
-    shouldRefresh(up : number, to : number) : boolean {
-      this._refreshTimeline();
-      if (!this._index.isLive) {
-        return false;
-      }
-      const { timeline, timescale } = this._index;
+    return segments;
+  }
 
-      const lastSegmentInCurrentTimeline = timeline[timeline.length - 1];
-      if (!lastSegmentInCurrentTimeline) {
-        return false;
-      }
+  /**
+   * Returns true if, based on the arguments, the index should be refreshed.
+   * (If we should re-fetch the manifest)
+   * @param {Number} from
+   * @param {Number} to
+   * @returns {Boolean}
+   */
+  shouldRefresh(up : number, to : number) : boolean {
+    this._refreshTimeline();
+    if (!this._index.isLive) {
+      return false;
+    }
+    const { timeline, timescale } = this._index;
 
-      const repeat = lastSegmentInCurrentTimeline.repeatCount || 0;
-      const endOfLastSegmentInCurrentTimeline =
-        lastSegmentInCurrentTimeline.start + (repeat + 1) *
-          lastSegmentInCurrentTimeline.duration;
-
-      if (to * timescale < endOfLastSegmentInCurrentTimeline) {
-        return false;
-      }
-
-      if (up * timescale >= endOfLastSegmentInCurrentTimeline) {
-        return true;
-      }
-
-      // ----
-
-      const startOfLastSegmentInCurrentTimeline =
-        lastSegmentInCurrentTimeline.start + repeat *
-          lastSegmentInCurrentTimeline.duration;
-
-      return (up * timescale) > startOfLastSegmentInCurrentTimeline;
+    const lastSegmentInCurrentTimeline = timeline[timeline.length - 1];
+    if (!lastSegmentInCurrentTimeline) {
+      return false;
     }
 
-    /**
-     * Returns first position available in the index.
-     *
-     * @param {Object} index
-     * @returns {Number}
-     */
-    getFirstPosition() : number|undefined {
-      this._refreshTimeline();
-      const index = this._index;
-      if (!index.timeline.length) {
-        return undefined;
-      }
-      return index.timeline[0].start / index.timescale;
+    const repeat = lastSegmentInCurrentTimeline.repeatCount || 0;
+    const endOfLastSegmentInCurrentTimeline =
+      lastSegmentInCurrentTimeline.start + (repeat + 1) *
+        lastSegmentInCurrentTimeline.duration;
+
+    if (to * timescale < endOfLastSegmentInCurrentTimeline) {
+      return false;
     }
 
-    /**
-     * Returns last position available in the index.
-     * @param {Object} index
-     * @returns {Number}
-     */
-    getLastPosition() : number|undefined {
-      this._refreshTimeline();
-      const index = this._index;
-      for (let i = index.timeline.length - 1; i >= 0; i--) {
-        const lastTimelineElement = index.timeline[i];
-        if (this._isAggressiveMode || this._scaledLiveGap == null) {
-          return getIndexSegmentEnd(lastTimelineElement, null) / index.timescale;
-        }
-        const timescaledNow = (performance.now() / 1000) * index.timescale;
-        const { start, duration, repeatCount } = lastTimelineElement;
-        for (let j = repeatCount; j >= 0; j--) {
-          const end = start + (duration * (j + 1));
-          if (end <= timescaledNow - this._scaledLiveGap) {
-            return end / index.timescale;
-          }
-        }
-      }
+    if (up * timescale >= endOfLastSegmentInCurrentTimeline) {
+      return true;
+    }
+
+    // ----
+
+    const startOfLastSegmentInCurrentTimeline =
+      lastSegmentInCurrentTimeline.start + repeat *
+        lastSegmentInCurrentTimeline.duration;
+
+    return (up * timescale) > startOfLastSegmentInCurrentTimeline;
+  }
+
+  /**
+   * Returns first position available in the index.
+   *
+   * @param {Object} index
+   * @returns {Number}
+   */
+  getFirstPosition() : number|undefined {
+    this._refreshTimeline();
+    const index = this._index;
+    if (!index.timeline.length) {
       return undefined;
     }
+    return index.timeline[0].start / index.timescale;
+  }
 
-    /**
-     * Checks if the time given is in a discontinuity. That is:
-     *   - We're on the upper bound of the current range (end of the range - time
-     *     is inferior to the timescale)
-     *   - The next range starts after the end of the current range.
-     *
-     * @param {Number} _time
-     * @returns {Number} - If a discontinuity is present, this is the Starting
-     * time for the next (discontinuited) range. If not this is equal to -1.
-     */
-    checkDiscontinuity(_time : number) : number {
-      this._refreshTimeline();
-      const index = this._index;
-      const { timeline, timescale = 1 } = index;
-      const time = _time * timescale;
-
-      if (time <= 0) {
-        return -1;
+  /**
+   * Returns last position available in the index.
+   * @param {Object} index
+   * @returns {Number}
+   */
+  getLastPosition() : number|undefined {
+    this._refreshTimeline();
+    const index = this._index;
+    for (let i = index.timeline.length - 1; i >= 0; i--) {
+      const lastTimelineElement = index.timeline[i];
+      if (this._isAggressiveMode || this._scaledLiveGap == null) {
+        return getIndexSegmentEnd(lastTimelineElement, null) / index.timescale;
       }
-
-      const segmentIndex = getSegmentIndex(index, time);
-      if (segmentIndex < 0 || segmentIndex >= timeline.length - 1) {
-        return -1;
+      const timescaledNow = (performance.now() / 1000) * index.timescale;
+      const { start, duration, repeatCount } = lastTimelineElement;
+      for (let j = repeatCount; j >= 0; j--) {
+        const end = start + (duration * (j + 1));
+        if (end <= timescaledNow - this._scaledLiveGap) {
+          return end / index.timescale;
+        }
       }
+    }
+    return undefined;
+  }
 
-      const range = timeline[segmentIndex];
-      if (range.duration === -1) {
-        return -1;
-      }
+  /**
+   * Checks if the time given is in a discontinuity. That is:
+   *   - We're on the upper bound of the current range (end of the range - time
+   *     is inferior to the timescale)
+   *   - The next range starts after the end of the current range.
+   *
+   * @param {Number} _time
+   * @returns {Number} - If a discontinuity is present, this is the Starting
+   * time for the next (discontinuited) range. If not this is equal to -1.
+   */
+  checkDiscontinuity(_time : number) : number {
+    this._refreshTimeline();
+    const index = this._index;
+    const { timeline, timescale = 1 } = index;
+    const time = _time * timescale;
 
-      const rangeUp = range.start;
-      const rangeTo = getIndexSegmentEnd(range, null);
-      const nextRange = timeline[segmentIndex + 1];
-
-      // when we are actually inside the found range and this range has
-      // an explicit discontinuity with the next one
-      if (rangeTo !== nextRange.start &&
-          time >= rangeUp &&
-          time <= rangeTo &&
-          (rangeTo - time) < timescale) {
-        return nextRange.start / timescale;
-      }
-
+    if (time <= 0) {
       return -1;
     }
 
-    isSegmentStillAvailable(segment : ISegment) : boolean | undefined {
-      if (segment.isInit) {
-        return true;
-      }
-      this._refreshTimeline();
-      const { timeline, timescale } = this._index;
-      return isSegmentStillAvailable(segment, timeline, timescale, 0);
+    const segmentIndex = getSegmentIndex(index, time);
+    if (segmentIndex < 0 || segmentIndex >= timeline.length - 1) {
+      return -1;
     }
 
-    /**
-     * Update this RepresentationIndex by a newly downloaded one.
-     * Check if the old index had more informations about new segments and
-     * re-add them if that's the case.
-     * @param {Object} newIndex
-     */
-    _update(newIndex : SmoothRepresentationIndex) : void {
-      const oldTimeline = this._index.timeline;
-      const newTimeline = newIndex._index.timeline;
-      const oldTimescale = this._index.timescale;
-      const newTimescale = newIndex._index.timescale;
+    const range = timeline[segmentIndex];
+    if (range.duration === -1) {
+      return -1;
+    }
 
-      this._index = newIndex._index;
-      this._initialLastPosition = newIndex._initialLastPosition;
-      this._indexValidityTime = newIndex._indexValidityTime;
-      this._scaledLiveGap = newIndex._scaledLiveGap;
+    const rangeUp = range.start;
+    const rangeTo = getIndexSegmentEnd(range, null);
+    const nextRange = timeline[segmentIndex + 1];
 
-      if (!oldTimeline.length || !newTimeline.length || oldTimescale !== newTimescale) {
-        return; // don't take risk, if something is off, take the new one
-      }
+    // when we are actually inside the found range and this range has
+    // an explicit discontinuity with the next one
+    if (rangeTo !== nextRange.start &&
+        time >= rangeUp &&
+        time <= rangeTo &&
+        (rangeTo - time) < timescale) {
+      return nextRange.start / timescale;
+    }
 
-      const lastOldTimelineElement = oldTimeline[oldTimeline.length - 1];
-      const lastNewTimelineElement = newTimeline[newTimeline.length - 1];
-      const newEnd = getIndexSegmentEnd(lastNewTimelineElement, null);
-      if (getIndexSegmentEnd(lastOldTimelineElement, null) <= newEnd) {
+    return -1;
+  }
+
+  isSegmentStillAvailable(segment : ISegment) : boolean | undefined {
+    if (segment.isInit) {
+      return true;
+    }
+    this._refreshTimeline();
+    const { timeline, timescale } = this._index;
+    return isSegmentStillAvailable(segment, timeline, timescale, 0);
+  }
+
+  /**
+   * Update this RepresentationIndex by a newly downloaded one.
+   * Check if the old index had more informations about new segments and
+   * re-add them if that's the case.
+   * @param {Object} newIndex
+   */
+  _update(newIndex : SmoothRepresentationIndex) : void {
+    const oldTimeline = this._index.timeline;
+    const newTimeline = newIndex._index.timeline;
+    const oldTimescale = this._index.timescale;
+    const newTimescale = newIndex._index.timescale;
+
+    this._index = newIndex._index;
+    this._initialLastPosition = newIndex._initialLastPosition;
+    this._indexValidityTime = newIndex._indexValidityTime;
+    this._scaledLiveGap = newIndex._scaledLiveGap;
+
+    if (!oldTimeline.length || !newTimeline.length || oldTimescale !== newTimescale) {
+      return; // don't take risk, if something is off, take the new one
+    }
+
+    const lastOldTimelineElement = oldTimeline[oldTimeline.length - 1];
+    const lastNewTimelineElement = newTimeline[newTimeline.length - 1];
+    const newEnd = getIndexSegmentEnd(lastNewTimelineElement, null);
+    if (getIndexSegmentEnd(lastOldTimelineElement, null) <= newEnd) {
+      return;
+    }
+
+    for (let i = 0; i < oldTimeline.length; i++) {
+      const oldTimelineRange = oldTimeline[i];
+      const oldEnd = getIndexSegmentEnd(oldTimelineRange, null);
+      if (oldEnd === newEnd) { // just add the supplementary segments
+        this._index.timeline = this._index.timeline.concat(oldTimeline.slice(i + 1));
         return;
       }
 
-      for (let i = 0; i < oldTimeline.length; i++) {
-        const oldTimelineRange = oldTimeline[i];
-        const oldEnd = getIndexSegmentEnd(oldTimelineRange, null);
-        if (oldEnd === newEnd) { // just add the supplementary segments
-          this._index.timeline = this._index.timeline.concat(oldTimeline.slice(i + 1));
+      if (oldEnd > newEnd) { // adjust repeatCount + add supplementary segments
+        if (oldTimelineRange.duration !== lastNewTimelineElement.duration) {
           return;
         }
 
-        if (oldEnd > newEnd) { // adjust repeatCount + add supplementary segments
-          if (oldTimelineRange.duration !== lastNewTimelineElement.duration) {
-            return;
-          }
-
-          const rangeDuration = newEnd - oldTimelineRange.start;
-          if (rangeDuration === 0) {
-            log.warn("Smooth Parser: a discontinuity detected in the previous manifest" +
-              " has been resolved.");
-            this._index.timeline = this._index.timeline.concat(oldTimeline.slice(i));
-            return;
-          }
-          if (rangeDuration < 0 || rangeDuration % oldTimelineRange.duration !== 0) {
-            return;
-          }
-
-          const repeatWithOld = (rangeDuration / oldTimelineRange.duration) - 1;
-          const relativeRepeat = oldTimelineRange.repeatCount - repeatWithOld;
-          if (relativeRepeat < 0) {
-            return;
-          }
-          lastNewTimelineElement.repeatCount += relativeRepeat;
-          const supplementarySegments = oldTimeline.slice(i + 1);
-          this._index.timeline = this._index.timeline.concat(supplementarySegments);
+        const rangeDuration = newEnd - oldTimelineRange.start;
+        if (rangeDuration === 0) {
+          log.warn("Smooth Parser: a discontinuity detected in the previous manifest" +
+            " has been resolved.");
+          this._index.timeline = this._index.timeline.concat(oldTimeline.slice(i));
           return;
         }
-      }
-    }
+        if (rangeDuration < 0 || rangeDuration % oldTimelineRange.duration !== 0) {
+          return;
+        }
 
-    _addSegments(
-      nextSegments : Array<{ duration : number;
-                             time : number;
-                             timescale : number; }>,
-      currentSegment : { duration : number;
-                         time : number;
-                         timescale : number; }
-    ) : void {
-      this._refreshTimeline();
-      for (let i = 0; i < nextSegments.length; i++) {
-        addSegmentInfos(this._index, nextSegments[i], currentSegment);
-      }
-    }
-
-    /**
-     * Clean-up timeline to remove segment informations which should not be
-     * available due to the timeshift window
-     */
-    private _refreshTimeline() : void {
-      // clean segments before time shift buffer depth
-      if (this._initialLastPosition == null) {
+        const repeatWithOld = (rangeDuration / oldTimelineRange.duration) - 1;
+        const relativeRepeat = oldTimelineRange.repeatCount - repeatWithOld;
+        if (relativeRepeat < 0) {
+          return;
+        }
+        lastNewTimelineElement.repeatCount += relativeRepeat;
+        const supplementarySegments = oldTimeline.slice(i + 1);
+        this._index.timeline = this._index.timeline.concat(supplementarySegments);
         return;
       }
-      const index = this._index;
-      const { timeShiftBufferDepth } = index;
-      const timeSinceLastRealUpdate = (performance.now() -
-                                       this._indexValidityTime) / 1000;
-      const lastPositionEstimate = timeSinceLastRealUpdate + this._initialLastPosition;
-
-      if (timeShiftBufferDepth != null) {
-        const minimumPosition = (lastPositionEstimate - timeShiftBufferDepth) *
-                                index.timescale;
-        clearTimelineFromPosition(index.timeline, minimumPosition);
-      }
     }
+  }
+
+  _addSegments(
+    nextSegments : Array<{ duration : number;
+                           time : number;
+                           timescale : number; }>,
+    currentSegment : { duration : number;
+                       time : number;
+                       timescale : number; }
+  ) : void {
+    this._refreshTimeline();
+    for (let i = 0; i < nextSegments.length; i++) {
+      addSegmentInfos(this._index, nextSegments[i], currentSegment);
+    }
+  }
+
+  /**
+   * Clean-up timeline to remove segment informations which should not be
+   * available due to the timeshift window
+   */
+  private _refreshTimeline() : void {
+    // clean segments before time shift buffer depth
+    if (this._initialLastPosition == null) {
+      return;
+    }
+    const index = this._index;
+    const { timeShiftBufferDepth } = index;
+    const timeSinceLastRealUpdate = (performance.now() -
+                                     this._indexValidityTime) / 1000;
+    const lastPositionEstimate = timeSinceLastRealUpdate + this._initialLastPosition;
+
+    if (timeShiftBufferDepth != null) {
+      const minimumPosition = (lastPositionEstimate - timeShiftBufferDepth) *
+                              index.timescale;
+      clearTimelineFromPosition(index.timeline, minimumPosition);
+    }
+  }
 }
