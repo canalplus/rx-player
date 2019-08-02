@@ -507,6 +507,7 @@ export default class QueuedSourceBuffer<T> {
           if (isInit) {
             this._lastInitSegment = segment;
           }
+          this._sourceBuffer.timestampOffset = -0.64; // XXX TODO => FOR ANEVIA STREAM !
           this._sourceBuffer.appendBuffer(segment);
           break;
         case SourceBufferAction.Remove:

@@ -64,6 +64,9 @@ export default function parser({ content,
                                                       segment,
                                                       nextSegments,
                                                       init);
+    if (chunkInfos) {
+      chunkInfos.time -= 16;
+    } // XXX TODO => FOR ANEVIA STREAM !
     const chunkOffset = segment.timestampOffset || 0;
     return observableOf({ chunkData,
                           chunkInfos,
