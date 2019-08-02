@@ -232,7 +232,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const lastSegmentStart = this._getLastSegmentStart();
     const startPosition = Math.max(firstSegmentStart, upFromPeriodStart);
     const lastWantedStartPosition = Math.min(lastSegmentStart, toFromPeriodStart);
-    if (lastWantedStartPosition < startPosition) {
+    if ((lastWantedStartPosition + duration) <= startPosition) {
       return [];
     }
 
