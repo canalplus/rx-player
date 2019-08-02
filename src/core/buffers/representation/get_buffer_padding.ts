@@ -20,16 +20,15 @@ import { Adaptation } from "../../../manifest";
 const { BUFFER_PADDING } = config;
 
 /**
- * Get safety paddings (low and high) for the size of buffer that won't
- * be flushed when switching representation for smooth transitions
- * and avoiding buffer underflows.
+ * Get safety padding or the size of buffer that won't be flushed when
+ * switching representation for smooth transitions and avoiding buffer underflows.
  *
  * @param {Object} adaptation
- * @returns {Object}
+ * @returns {number}
  */
-export default function getBufferPaddings(
+export default function getBufferPadding(
   adaptation : Adaptation
-) : { high : number; low : number } {
+) : number {
   switch (adaptation.type) {
     case "audio":
     case "video":

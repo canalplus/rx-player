@@ -37,7 +37,7 @@ export default function getWantedRange(
   buffered : TimeRanges,
   tick : IClockTick,
   bufferGoal : number,
-  paddings : { low : number; high : number }
+  padding : number
 ) : { start : number; end : number } {
   const currentTime = tick.currentTime + tick.wantedTimeOffset;
   const limitEnd = tick.liveGap == null ? hardLimits.end :
@@ -48,17 +48,15 @@ export default function getWantedRange(
     end: limitEnd,
   };
 
-  const { low: lowPadding, high: highPadding } = paddings;
-
   // Difference between the current time and the end of the current range
   const bufferGap = getLeftSizeOfRange(buffered, currentTime);
 
   // the timestamp padding is the time offset that we want to apply to our
   // current start in order to calculate the starting point of the list of
   // segments to inject.
-  const timestampPadding = bufferGap > lowPadding &&
-                           bufferGap < Infinity ? Math.min(bufferGap, highPadding) :
-                                                  0;
+  const timestampPadding = bufferGap !== Infinity ? Math.min(padding, bufferGap) :
+                                                    0;
+
   return {
     start: Math.min(boundedLimits.end || Infinity,
                     Math.max(currentTime + timestampPadding,
