@@ -28,7 +28,6 @@ import {
   NEVER,
   Observable,
   of as observableOf,
-  timer,
 } from "rxjs";
 import {
   delay,
@@ -197,8 +196,9 @@ function isActive() {
   return visibilityChange().pipe(
     switchMap((x) => {
       if (!x) {
-        return timer(INACTIVITY_DELAY)
-          .pipe(mapTo(x));
+        return observableOf(x).pipe(
+          delay(INACTIVITY_DELAY)
+        );
       }
       return observableOf(x);
     })
