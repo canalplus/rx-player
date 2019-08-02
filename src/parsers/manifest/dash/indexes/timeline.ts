@@ -476,14 +476,14 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   private _getTheoriticalLastPosition() : number | undefined {
     const index = this._index;
     if (index.timeline.length <= 0) {
-      return;
+      return undefined;
     }
 
     const lastTimelineElement = index.timeline[index.timeline.length - 1];
     const lastPosition = getIndexSegmentEnd(lastTimelineElement,
                                             null,
                                             this._scaledPeriodEnd);
-    if (this._isDynamic !== true) {
+    if (!this._isDynamic) {
       return lastPosition;
     }
     const lastSegmentDuration = lastTimelineElement.duration;

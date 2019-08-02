@@ -26,7 +26,7 @@ const minimalRepresentationIndex = {
   getFirstPosition() : undefined { return ; },
   getLastPosition() : undefined { return ; },
   checkDiscontinuity() { return -1; },
-  isSegmentStillAvailable() : undefined { return undefined; },
+  isSegmentStillAvailable() : undefined { return ; },
   _update() { /* noop */ },
   _addSegments() { /* noop */ },
 };

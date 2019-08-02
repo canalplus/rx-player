@@ -352,7 +352,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * @returns {number}
    */
   private _getFirstSegmentStart() : number {
-    if (this._isDynamic !== true) {
+    if (!this._isDynamic) {
       return 0; // it is the start of the Period
     }
 
@@ -377,7 +377,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * @returns {number}
    */
   private _getLastSegmentStart() : number {
-    if (this._isDynamic !== true) {
+    if (!this._isDynamic) {
       return this._relativePeriodEnd || 0;
     }
     const { duration } = this._index;
