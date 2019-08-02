@@ -183,11 +183,11 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     this._isDynamic = isDynamic;
     this._periodStart = periodStart;
     this._relativePeriodEnd = periodEnd == null ? undefined :
-                                                (periodEnd - periodStart) * timescale;
+                                                periodEnd - periodStart;
     if (isDynamic && periodEnd == null) {
       if (clockOffset != null) {
         const perfOffset = (clockOffset / 1000) - availabilityStartTime;
-        this._liveEdgeOffset = (perfOffset - periodStart) / timescale;
+        this._liveEdgeOffset = perfOffset - periodStart;
       } else {
         log.warn("DASH Parser: no clock synchronization mechanism found." +
                  " Setting a live gap of 10 seconds as a security.");
@@ -197,7 +197,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                                performance.now() :
                                context.manifestReceivedTime;
         const perfOffset =  maximumSegmentTimeInSec - (receivedTime / 1000);
-        this._liveEdgeOffset = (perfOffset - periodStart) / timescale;
+        this._liveEdgeOffset = perfOffset - periodStart;
       }
     }
   }
@@ -378,11 +378,12 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    */
   private _getLastSegmentStart() : number {
     if (!this._isDynamic) {
-      return this._relativePeriodEnd || 0;
+      return (this._relativePeriodEnd || 0) * this._index.timescale;
     }
-    const { duration } = this._index;
+    const { duration, timescale } = this._index;
     const scaledMaxPosition = getMaximumRelativePosition(this._relativePeriodEnd,
-                                                         this._liveEdgeOffset);
+                                                         this._liveEdgeOffset)
+                              * timescale;
     const maxPossibleStart = Math.max(scaledMaxPosition - duration, 0);
     const numberIndexedToZero = Math.floor(maxPossibleStart / duration);
     return numberIndexedToZero * duration;
