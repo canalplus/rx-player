@@ -97,8 +97,8 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
     } else if (arg === "LOADED") {
       stateUpdates.isPaused = true;
       stateUpdates.isLive = player.isLive();
-      stateUpdates.isLowLatency = player.isLowLatency();
     } else if (arg === "STOPPED") {
+      stateUpdates.isLowLatency = false;
       stateUpdates.audioBitrate = undefined;
       stateUpdates.videoBitrate = undefined;
       stateUpdates.availableAudioBitrates = [];

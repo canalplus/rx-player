@@ -81,7 +81,8 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
         },
         manualBitrateSwitchingMode: "direct",
       }, arg));
-      state.set({ loadedVideo: arg });
+      state.set({ loadedVideo: arg,
+                  isLowLatency: arg.lowLatencyMode === true });
     },
 
     PLAY: () => {

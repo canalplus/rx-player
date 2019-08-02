@@ -461,11 +461,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private readonly _priv_stopAtEnd : boolean;
 
   /**
-   * Whether the content is playing in low latency mode or not
-   */
-  private _priv_lowLatencyMode : boolean;
-
-  /**
    * All possible Error types emitted by the RxPlayer.
    * @type {Object}
    */
@@ -613,7 +608,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_preferredAudioTracks = new BehaviorSubject(preferredAudioTracks);
     this._priv_preferredTextTracks = new BehaviorSubject(preferredTextTracks);
-    this._priv_lowLatencyMode = false;
   }
 
   /**
@@ -684,8 +678,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             transport,
             transportOptions,
             url } = options;
-
-    this._priv_lowLatencyMode = lowLatencyMode;
 
     // Perform multiple checks on the given options
     if (!this.videoElement) {
@@ -1021,16 +1013,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return false;
     }
     return manifest.isLive;
-  }
-
-  /**
-   * Returns true if both:
-   *   - a content is loaded
-   *   - the content loaded is a low latency content
-   * @returns {Boolean}
-   */
-  isLowLatency() : boolean {
-    return this._priv_lowLatencyMode;
   }
 
   /**
