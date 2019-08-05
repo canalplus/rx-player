@@ -174,7 +174,8 @@ function visibilityChange() : Observable<boolean> {
     return observableFromEvent(document, visibilityChangeEvent)
       .pipe(
         map(() => !(document[hidden as "hidden"])),
-        startWith(!isHidden)
+        startWith(!isHidden),
+        distinctUntilChanged()
       );
   });
 }
@@ -192,7 +193,7 @@ function videoSizeChange() : Observable<unknown> {
  * Emit the original value on subscription.
  * @returns {Observable}
  */
-function isActive() {
+function isActive() : Observable<boolean> {
   return visibilityChange().pipe(
     switchMap((x) => {
       if (!x) {
@@ -275,10 +276,11 @@ function isVideoVisible(
 ) : Observable<boolean> {
   return observableCombineLatest([visibilityChange(), pip$]).pipe(
     switchMap(([ isVisible, pip ]) => {
-      const videoVisible = pip.isEnabled || isVisible;
-      return observableOf(videoVisible).pipe(
-        delay((!videoVisible) ? INACTIVITY_DELAY : 0)
-      );
+      if (pip.isEnabled || isVisible) {
+        return observableOf(true);
+      }
+      return observableOf(false)
+        .pipe(delay(INACTIVITY_DELAY));
     }),
     distinctUntilChanged()
   );
