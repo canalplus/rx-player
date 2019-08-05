@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { ICustomError } from "../../errors";
+
 // privateInfos specific to Smooth Initialization Segments
 export interface ISmoothInitSegmentPrivateInfos { codecPrivateData? : string;
                                                   bitsPerSample? : number;
@@ -111,6 +113,16 @@ export default interface IRepresentationIndex {
    * @returns {Boolean|undefined}
    */
   isSegmentStillAvailable(segment : ISegment) : boolean | undefined;
+
+  /**
+   * Returns true if the Error given can indicate that the local index became
+   * "unsynchronized" with the server.
+   * Some transport cannot become unsynchronized and can return false directly.
+   * Note: This API assumes that the user first checked that the segment is
+   * still available through `isSegmentStillAvailable`.
+   * @returns {Boolean}
+   */
+  canBeOutOfSyncError(error : ICustomError) : boolean;
 
   /**
    * Checks if the given time - in seconds - is in a discontinuity. That is:

@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+import {
+ ICustomError,
+ NetworkError,
+} from "../../../../errors";
 import log from "../../../../log";
 import {
   IRepresentationIndex,
@@ -296,9 +300,11 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
 
   /**
    * Returns true if the index should be refreshed.
+   * @param {Number} _up
+   * @param {Number} to
    * @returns {Boolean}
    */
-  shouldRefresh() : boolean {
+  shouldRefresh(_up : number, to : number) : boolean {
     this._refreshTimeline();
     if (!this._isDynamic) {
       return false;
@@ -311,6 +317,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const lastTime = getIndexSegmentEnd(lastTimelineElt,
                                         null,
                                         this._scaledPeriodEnd);
+    if (to * this._index.timescale < lastTime) {
+      return false;
+    }
     const lastTheoriticalPosition = this._getTheoriticalLastPosition();
     if (lastTheoriticalPosition == null) {
       return true;
@@ -421,6 +430,18 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
 
     return -1;
+  }
+
+  /**
+   * @param {Error} error
+   * @returns {Boolean}
+   */
+  canBeOutOfSyncError(error : ICustomError) : boolean {
+    if (!this._isDynamic) {
+      return false;
+    }
+    return error instanceof NetworkError &&
+           error.isHttpError(404);
   }
 
   /**

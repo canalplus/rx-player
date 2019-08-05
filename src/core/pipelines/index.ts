@@ -15,6 +15,7 @@
  */
 
 import createManifestPipeline, {
+  IFetchManifestOptions,
   IFetchManifestResult,
 } from "./manifest";
 import SegmentPipelinesManager, {
@@ -29,6 +30,7 @@ export {
   createManifestPipeline,
   SegmentPipelinesManager,
 
+  IFetchManifestOptions,
   IFetchManifestResult,
 
   IPrioritizedSegmentFetcher,

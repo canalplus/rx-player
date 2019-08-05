@@ -332,6 +332,14 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   }
 
   /**
+   * SegmentTemplate without a SegmentTimeline should not be updated.
+   * @returns {Boolean}
+   */
+  canBeOutOfSyncError() : false {
+    return false;
+  }
+
+  /**
    * We do not have to add new segments to SegmentList-based indexes.
    * @returns {Array}
    */

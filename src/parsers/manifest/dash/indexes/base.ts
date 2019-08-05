@@ -259,6 +259,14 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * SegmentBase should not be updated.
+   * @returns {Boolean}
+   */
+  canBeOutOfSyncError() : false {
+    return false;
+  }
+
+  /**
    * @param {Object} newIndex
    */
   _update(newIndex : BaseRepresentationIndex) : void {

@@ -18,7 +18,6 @@ import { ICustomError } from "../../errors";
 import Manifest, {
   Period,
 } from "../../manifest";
-import ABRManager from "../abr";
 import { IRepresentationChangeEvent } from "../buffers";
 import { IBufferType } from "../source_buffers";
 import { IStallingItem } from "./get_stalled_events";
@@ -55,11 +54,9 @@ function stalled(stalling : IStallingItem|null) : IStalledEvent {
  * @returns {Object}
  */
 function manifestReady(
-  abrManager : ABRManager,
   manifest : Manifest
 ) : IManifestReadyEvent {
-  return { type: "manifestReady",
-           value: { abrManager, manifest } };
+  return { type: "manifestReady", value: { manifest } };
 }
 
 /**

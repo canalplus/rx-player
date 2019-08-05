@@ -49,6 +49,7 @@ import {
   withLatestFrom,
 } from "rxjs/operators";
 import config from "../../../config";
+import { ICustomError } from "../../../errors";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
@@ -67,6 +68,7 @@ import EVENTS from "../events_generators";
 import SegmentBookkeeper from "../segment_bookkeeper";
 import {
   IBufferEventAddedSegment,
+  IBufferManifestMightBeOutOfSync,
   IBufferNeededActions,
   IBufferStateActive,
   IBufferStateFull,
@@ -137,8 +139,14 @@ interface IParsedSegmentEvent<T> {
   value : IParsedSegmentEventValue<T>;
 }
 
+interface ILoaderRetryEvent {
+  type : "retry";
+  value : { segment : ISegment;
+            error : ICustomError; };
+}
+
 type ISegmentLoadingEvent<T> = IParsedSegmentEvent<T> |
-                               ISegmentFetcherWarning;
+                               ILoaderRetryEvent;
 
 // Object describing a pending Segment request
 interface ISegmentRequestObject<T> {
@@ -301,7 +309,7 @@ export default function RepresentationBuffer<T>({
         neededActions.push(EVENTS.discontinuityEncountered(bufferType, seekTo));
       }
       if (status.shouldRefreshManifest) {
-        neededActions.push(EVENTS.needsManifestRefresh(bufferType));
+        neededActions.push(EVENTS.needsManifestRefresh());
       }
 
       if (mostNeededSegment == null) {
@@ -363,10 +371,12 @@ export default function RepresentationBuffer<T>({
    *
    * Important side-effects:
    *   - Mutates `currentSegmentRequest` when doing and finishing a request.
-   *   - Will emit from reCheckNeededSegments$ Subject:
-   *       1. when it's done.
-   *       2. when the currently downloaded segment seems to not be available
-   *          anymore
+   *   - Will emit from reCheckNeededSegments$ Subject when it's done.
+   *
+   * Might emit warnings when a request is retried.
+   *
+   * Throws when the request will not be retried (configuration or un-retryable
+   * error).
    * @returns {Observable}
    */
   function loadSegmentsFromQueue() : Observable<ISegmentLoadingEvent<T>> {
@@ -386,16 +396,9 @@ export default function RepresentationBuffer<T>({
         const response$ = request$
           .pipe(mergeMap((evt) : Observable<ISegmentLoadingEvent<T>> => {
             if (evt.type === "warning") {
-              // we're retrying, notify and re-check availability
-              return observableConcat(
-                observableOf(evt),
-                observableDefer(() => { // better if done after warning is emitted
-                  const repIndex = representation.index;
-                  if (repIndex.isSegmentStillAvailable(segment) === false) {
-                    reCheckNeededSegments$.next();
-                  }
-                  return EMPTY;
-                }));
+              return observableOf({ type: "retry" as const,
+                                    value: { segment,
+                                             error: evt.value } });
             }
 
             currentSegmentRequest = null;
@@ -417,39 +420,67 @@ export default function RepresentationBuffer<T>({
   }
 
   /**
-   * Append the given segment to the SourceBuffer.
-   * Emit the right event when it succeeds.
+   * If the segment was loaded:
+   *   1. Append the given segment to the SourceBuffer.
+   *   2. Emit the right event when it succeeds.
+   *
+   * If the request was retried:
    * @param {Object} evt
    * @returns {Observable}
    */
   function onLoaderEvent(
     evt : ISegmentLoadingEvent<T>
-  ) : Observable<IBufferEventAddedSegment<T>|ISegmentFetcherWarning> {
-    return observableDefer(() => {
-      if (evt.type !== "parsed-segment") {
-        return observableOf(evt);
-      }
-
+  ) : Observable<IBufferEventAddedSegment<T> |
+                 ISegmentFetcherWarning |
+                 IBufferManifestMightBeOutOfSync>
+  {
+    if (evt.type === "parsed-segment") {
       const { segment } = evt.value;
       if (segment.isInit) {
         initSegmentObject = evt.value.data;
       }
+      return pushSegment(segment, evt.value.data);
+    }
+    return observableConcat(
+      observableOf({ type: "warning" as const, value: evt.value.error }),
+      observableDefer(() => { // better if done after warning is emitted
+        const retriedSegment = evt.value.segment;
+        const { index } = representation;
+        if (index.isSegmentStillAvailable(retriedSegment) === false) {
+          reCheckNeededSegments$.next();
+        } else if (index.canBeOutOfSyncError(evt.value.error)) {
+          return observableOf(EVENTS.manifestMightBeOufOfSync());
+        }
+        return EMPTY;
+      }));
+  }
 
-      const { segmentInfos, segmentData, segmentOffset } = evt.value.data;
+  /**
+   * Push a given segment to a QueuedSourceBuffer.
+   * @param {Object} segment
+   * @param {Object} segmentObject
+   * @returns {Observable}
+   */
+  function pushSegment(
+    segment : ISegment,
+    { segmentInfos,
+      segmentData,
+      segmentOffset } : ISegmentObject<T>
+  ) : Observable<IBufferEventAddedSegment<T>> {
+    return observableDefer(() => {
       if (segmentData == null) {
         // no segmentData to add here (for example, a text init segment)
         // just complete directly without appending anything
         return EMPTY;
       }
 
-      const append$ = appendDataInSourceBuffer(clock$, queuedSourceBuffer, {
-        initSegment: initSegmentObject &&
-                     initSegmentObject.segmentData,
-        segment: segment.isInit ? null :
-                                  segmentData,
-        timestampOffset: segmentOffset,
-        codec,
-      });
+      const dataInfos = { initSegment: initSegmentObject &&
+                                       initSegmentObject.segmentData,
+                          segment: segment.isInit ? null :
+                                                    segmentData,
+                          timestampOffset: segmentOffset,
+                          codec };
+      const append$ = appendDataInSourceBuffer(clock$, queuedSourceBuffer, dataInfos);
 
       sourceBufferWaitingQueue.add(segment.id);
 

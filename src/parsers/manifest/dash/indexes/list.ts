@@ -244,6 +244,14 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * SegmentList should not be updated.
+   * @returns {Boolean}
+   */
+  canBeOutOfSyncError() : false {
+    return false;
+  }
+
+  /**
    * @param {Object} newIndex
    */
   _update(newIndex : ListRepresentationIndex) : void {

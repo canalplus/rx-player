@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+import {
+ ICustomError,
+ NetworkError,
+} from "../../../errors";
 import log from "../../../log";
 import {
   IRepresentationIndex,
@@ -139,8 +143,9 @@ function calculateRepeat(
 }
 
 export interface ISmoothRIOptions {
-  segmentPrivateInfos : ISmoothInitSegmentPrivateInfos;
   aggressiveMode : boolean;
+  isLive : boolean;
+  segmentPrivateInfos : ISmoothInitSegmentPrivateInfos;
 }
 
 interface ISmoothInitSegmentPrivateInfos {
@@ -197,10 +202,12 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   //   - else, the time of creation of this RepresentationIndex, as the best guess
   private _indexValidityTime : number;
 
+  private _isLive : boolean;
+
   private _index : ITimelineIndex;
 
   constructor(index : ITimelineIndex, options : ISmoothRIOptions) {
-    const { aggressiveMode, segmentPrivateInfos } = options;
+    const { aggressiveMode, isLive, segmentPrivateInfos } = options;
     const estimatedReceivedTime = index.manifestReceivedTime == null ?
       performance.now() :
       index.manifestReceivedTime;
@@ -215,6 +222,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
                                protection: segmentPrivateInfos.protection };
 
     this._isAggressiveMode = aggressiveMode;
+    this._isLive = isLive;
 
     if (index.timeline.length) {
       const lastItem = index.timeline[index.timeline.length - 1];
@@ -332,7 +340,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   /**
    * Returns true if, based on the arguments, the index should be refreshed.
    * (If we should re-fetch the manifest)
-   * @param {Number} from
+   * @param {Number} up
    * @param {Number} to
    * @returns {Boolean}
    */
@@ -463,6 +471,18 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
     this._refreshTimeline();
     const { timeline, timescale } = this._index;
     return isSegmentStillAvailable(segment, timeline, timescale, 0);
+  }
+
+  /**
+   * @param {Error} error
+   * @returns {Boolean}
+   */
+  canBeOutOfSyncError(error : ICustomError) : boolean {
+    if (!this._isLive) {
+      return false;
+    }
+    return error instanceof NetworkError &&
+           (error.isHttpError(404) || error.isHttpError(412));
   }
 
   /**

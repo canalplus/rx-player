@@ -41,9 +41,14 @@ export interface IBufferEventAddedSegment<T> {
 // The buffer might still download segments after this message
 export interface IBufferNeedsManifestRefresh {
   type : "needs-manifest-refresh";
-  value : {
-    bufferType : IBufferType; // The type of the Representation
-  };
+  value : undefined;
+}
+
+// The Manifest is possibly out-of-sync and needs to be refreshed
+// and reseted
+export interface IBufferManifestMightBeOutOfSync {
+  type : "manifest-might-be-out-of-sync";
+  value : undefined;
 }
 
 // Emit when a discontinuity is encountered and the user is "stuck" on it.
@@ -78,7 +83,8 @@ export interface IBufferStateFull {
 // State emitted when the buffer waits
 export type IRepresentationBufferStateEvent = IBufferNeededActions |
                                               IBufferStateFull |
-                                              IBufferStateActive;
+                                              IBufferStateActive |
+                                              IBufferManifestMightBeOutOfSync;
 
 // Events emitted by the Buffer
 export type IRepresentationBufferEvent<T> = IBufferEventAddedSegment<T> |

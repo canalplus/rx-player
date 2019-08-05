@@ -680,6 +680,18 @@ export default {
   /* tslint:enable no-object-literal-type-assertion */
 
   /**
+   * When we detect that the local Manifest might be out-of-sync with the
+   * server's one, we schedule a Manifest refresh.
+   * However, as this "unsynchronization" is only a theory and as we do not want
+   * to send too many Manifest requests, we keep a delay between the last
+   * Manifest refresh done and that one.
+   * This value indicates which delay we want. Note that the Manifest could
+   * still be refreshed before this delay for other reasons.
+   * @type {Number}
+   */
+  OUT_OF_SYNC_MANIFEST_REFRESH_DELAY: 3000,
+
+  /**
    * Max simultaneous MediaKeySessions that will be kept as a cache to avoid
    * doing superfluous license requests.
    * If this number is reached, any new session creation will close the oldest
