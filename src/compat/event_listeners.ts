@@ -30,14 +30,13 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
-  debounceTime,
+  delay,
   distinctUntilChanged,
-  filter,
   map,
   mapTo,
-  mergeMap,
   startWith,
   switchMap,
+  throttleTime,
 } from "rxjs/operators";
 import config from "../config";
 import log from "../log";
@@ -175,7 +174,8 @@ function visibilityChange() : Observable<boolean> {
     return observableFromEvent(document, visibilityChangeEvent)
       .pipe(
         map(() => !(document[hidden as "hidden"])),
-        startWith(!isHidden)
+        startWith(!isHidden),
+        distinctUntilChanged()
       );
   });
 }
@@ -187,17 +187,6 @@ function videoSizeChange() : Observable<unknown> {
   return observableFromEvent(window, "resize");
 }
 
-// Emit `true` when visible
-const isVisible$ = visibilityChange()
-  .pipe(filter((x) => x));
-
-// Emit `false` if the page is hidden for `INACTIVITY_DELAY` seconds
-const isInactive$ = visibilityChange()
-  .pipe(
-    debounceTime(INACTIVITY_DELAY),
-    filter((x) => !x)
-  );
-
 /**
  * Emit `true` if the page is considered active.
  * `false` when considered inactive.
@@ -205,7 +194,16 @@ const isInactive$ = visibilityChange()
  * @returns {Observable}
  */
 function isActive() : Observable<boolean> {
-  return observableMerge(isVisible$, isInactive$);
+  return visibilityChange().pipe(
+    switchMap((x) => {
+      if (!x) {
+        return observableOf(x).pipe(
+          delay(INACTIVITY_DELAY)
+        );
+      }
+      return observableOf(x);
+    })
+  );
 }
 
 /**
@@ -277,11 +275,12 @@ function isVideoVisible(
   pip$ : Observable<IPictureInPictureEvent>
 ) : Observable<boolean> {
   return observableCombineLatest([visibilityChange(), pip$]).pipe(
-    mergeMap(([ isVisible, pip ]) => {
-      const videoVisible = pip.isEnabled || isVisible;
-      return observableOf(videoVisible).pipe(
-        debounceTime((!videoVisible) ? INACTIVITY_DELAY : 0)
-      );
+    switchMap(([ isVisible, pip ]) => {
+      if (pip.isEnabled || isVisible) {
+        return observableOf(true);
+      }
+      return observableOf(false)
+        .pipe(delay(INACTIVITY_DELAY));
     }),
     distinctUntilChanged()
   );
@@ -300,7 +299,7 @@ function videoWidth$(
   return observableCombineLatest([
     pip$,
     observableInterval(20000).pipe(startWith(null)),
-    videoSizeChange().pipe(debounceTime(500), startWith(null)),
+    videoSizeChange().pipe(throttleTime(500), startWith(null)),
   ]).pipe(
     switchMap(([ pip ]) : Observable<number> => {
       if (!pip.isEnabled) {
