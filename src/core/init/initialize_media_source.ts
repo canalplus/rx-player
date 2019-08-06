@@ -50,7 +50,6 @@ import throttle from "../../utils/rx-throttle";
 import ABRManager, {
   IABRManagerArguments,
 } from "../abr";
-import { INeedsMediaSourceReload } from "../buffers";
 import {
   IEMEManagerEvent,
   IKeySystemOption,
@@ -279,22 +278,22 @@ export default function InitializeOnMediaSource(
       position : number,
       shouldPlay : boolean
     ) : Observable<IInitEvent> {
+      const reloadMediaSource$ = new Subject<{ currentTime : number;
+                                               isPaused : boolean; }>();
       const mediaSourceLoader$ = mediaSourceLoader(mediaSource, position, shouldPlay)
         .pipe(tap(evt => {
-                if (evt.type === "needs-manifest-refresh") {
-                  scheduleManifestRefresh$.next(0);
-                } else if (evt.type === "manifest-might-be-out-of-sync") {
-                  scheduleManifestRefresh$.next(OUT_OF_SYNC_MANIFEST_REFRESH_DELAY);
+                switch (evt.type) {
+                  case "needs-manifest-refresh":
+                    scheduleManifestRefresh$.next(0);
+                    break;
+                  case "manifest-might-be-out-of-sync":
+                    scheduleManifestRefresh$.next(OUT_OF_SYNC_MANIFEST_REFRESH_DELAY);
+                    break;
+                  case "needs-media-source-reload":
+                    reloadMediaSource$.next(evt.value);
+                    break;
                 }
-              }),
-              observeOn(asapScheduler),
-              share());
-
-      const reloadMediaSource$ = mediaSourceLoader$
-        .pipe(filter((evt) : evt is INeedsMediaSourceReload =>
-                evt.type === "needs-media-source-reload"
-              ),
-              map(evt => evt.value));
+              }));
 
       const currentLoad$ = observableConcat(
         observableOf(EVENTS.manifestReady(manifest)),
