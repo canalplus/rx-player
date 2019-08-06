@@ -30,6 +30,7 @@ import {
 } from "rxjs";
 import {
   filter,
+  finalize,
   ignoreElements,
   map,
   mergeMap,
@@ -261,7 +262,11 @@ export default function InitializeOnMediaSource(
                 ignoreElements());
       }));
 
-    return observableMerge(manifestRefresh$, recursiveLoad$);
+    return observableMerge(manifestRefresh$, recursiveLoad$)
+      .pipe(finalize(() => {
+        manifestRefreshed$.complete();
+        scheduleManifestRefresh$.complete();
+      }));
 
     /**
      * Load the content defined by the Manifest in the mediaSource given at the
