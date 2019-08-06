@@ -20,18 +20,13 @@ import {
   BehaviorSubject,
   combineLatest as observableCombineLatest,
   concat as observableConcat,
-  EMPTY,
   merge as observableMerge,
   Observable,
   of as observableOf,
-  ReplaySubject,
   Subject,
-  timer as observableTimer,
 } from "rxjs";
 import {
   filter,
-  finalize,
-  ignoreElements,
   map,
   mergeMap,
   observeOn,
@@ -40,12 +35,10 @@ import {
   switchMap,
   take,
   takeUntil,
-  tap,
 } from "rxjs/operators";
 import config from "../../config";
 import { ICustomError } from "../../errors";
 import log from "../../log";
-import Manifest from "../../manifest";
 import { ITransportPipelines } from "../../transports";
 import throttle from "../../utils/rx-throttle";
 import ABRManager, {
@@ -73,7 +66,6 @@ import isEMEReadyEvent from "./is_eme_ready";
 import createMediaSourceLoader, {
   IMediaSourceLoaderEvent,
 } from "./load_on_media_source";
-import refreshManifest from "./refresh_manifest";
 import throwOnMediaError from "./throw_on_media_error";
 import {
   IInitClockTick,
@@ -196,7 +188,7 @@ export default function InitializeOnMediaSource(
     openMediaSource$,
     fetchManifest({ url }),
     emeManager$.pipe(filter(isEMEReadyEvent), take(1)),
-  ]).pipe(mergeMap(([ initialMediaSource, { manifest, sendingTime } ]) => {
+  ]).pipe(mergeMap(([ initialMediaSource, { manifest } ]) => {
 
     log.debug("Init: Calculating initial time");
     const initialTime = getInitialTime(manifest, startAt);
@@ -219,50 +211,7 @@ export default function InitializeOnMediaSource(
                                                         initialTime,
                                                         autoPlay);
 
-    // Emit each time the manifest is refreshed.
-    const manifestRefreshed$ = new ReplaySubject<{ manifest : Manifest;
-                                                   sendingTime? : number; }>(1);
-
-    // Emit when we want to manually update the manifest.
-    // The value allow to set a delay relatively to the last Manifest refresh
-    // (to avoid asking for it too often).
-    const scheduleManifestRefresh$ = new Subject<number>();
-
-    // Emit when the manifest should be refreshed. Either when:
-    //   - A buffer asks for it to be refreshed
-    //   - its lifetime expired.
-    // TODO if we go a little more clever, manifestRefreshed$ could be removed
-    const manifestRefresh$ = manifestRefreshed$.pipe(
-      startWith({ manifest, sendingTime }),
-      switchMap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
-        const manualRefresh$ = scheduleManifestRefresh$.pipe(
-          mergeMap((delay) => {
-            // schedule a Manifest refresh to avoid sending too much request.
-            const timeSinceLastRefresh = newSendingTime == null ?
-                                           0 :
-                                           performance.now() - newSendingTime;
-            return observableTimer(delay - timeSinceLastRefresh);
-          }));
-
-        const autoRefresh$ = (() => {
-          if (newManifest.lifetime == null || newManifest.lifetime <= 0) {
-            return EMPTY;
-          }
-          const timeSinceRequest = newSendingTime == null ?
-                                     0 :
-                                     performance.now() - newSendingTime;
-          const updateTimeout = newManifest.lifetime * 1000 - timeSinceRequest;
-          return observableTimer(updateTimeout);
-        })();
-
-        return observableMerge(autoRefresh$, manualRefresh$)
-          .pipe(take(1),
-                mergeMap(() => refreshManifest(manifest, fetchManifest)),
-                tap(val => manifestRefreshed$.next(val)),
-                ignoreElements());
-      }));
-
-    return observableMerge(manifestRefresh$, recursiveLoad$);
+    return recursiveLoad$;
 
     /**
      * Load the content defined by the Manifest in the mediaSource given at the
@@ -280,12 +229,7 @@ export default function InitializeOnMediaSource(
       shouldPlay : boolean
     ) : Observable<IInitEvent> {
       const mediaSourceLoader$ = mediaSourceLoader(mediaSource, position, shouldPlay)
-        .pipe(tap(evt => {
-                if (evt.type === "needs-manifest-refresh") {
-                  scheduleManifestRefresh$.next(0);
-                }
-              }),
-              observeOn(asapScheduler),
+        .pipe(observeOn(asapScheduler),
               share());
 
       const reloadMediaSource$ = mediaSourceLoader$
@@ -308,11 +252,7 @@ export default function InitializeOnMediaSource(
           );
         }));
 
-      return observableMerge(handleReloads$, currentLoad$)
-        .pipe(finalize(() => {
-          manifestRefreshed$.complete();
-          scheduleManifestRefresh$.complete();
-        }));
+      return observableMerge(handleReloads$, currentLoad$);
     }
   }));
 
