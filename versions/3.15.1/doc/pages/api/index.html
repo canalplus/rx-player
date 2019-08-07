@@ -1,0 +1,1398 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>RxPlayer API - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-RxPlayer%20API">RxPlayer API</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-Instantiation">Instantiation</a></li>
+<li><a href="#chapter-Static%20properties">Static properties</a>
+<ul>
+<li><a href="#subchapter-version">version</a></li>
+<li><a href="#subchapter-ErrorTypes">ErrorTypes</a></li>
+<li><a href="#subchapter-ErrorCodes">ErrorCodes</a></li>
+<li><a href="#subchapter-LogLevel">LogLevel</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Tools">Tools</a>
+<ul>
+<li><a href="#subchapter-MediaCapabilitiesProber">MediaCapabilitiesProber</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Methods">Methods</a>
+<ul>
+<li><a href="#subchapter-loadVideo">loadVideo</a></li>
+<li><a href="#subchapter-getVideoElement">getVideoElement</a></li>
+<li><a href="#subchapter-getPlayerState">getPlayerState</a></li>
+<li><a href="#subchapter-addEventListener">addEventListener</a></li>
+<li><a href="#subchapter-removeEventListener">removeEventListener</a></li>
+<li><a href="#subchapter-play">play</a></li>
+<li><a href="#subchapter-pause">pause</a></li>
+<li><a href="#subchapter-stop">stop</a></li>
+<li><a href="#subchapter-getPosition">getPosition</a></li>
+<li><a href="#subchapter-getWallClockTime">getWallClockTime</a></li>
+<li><a href="#subchapter-getVideoDuration">getVideoDuration</a></li>
+<li><a href="#subchapter-getVolume">getVolume</a></li>
+<li><a href="#subchapter-getError">getError</a></li>
+<li><a href="#subchapter-seekTo">seekTo</a></li>
+<li><a href="#subchapter-isLive">isLive</a></li>
+<li><a href="#subchapter-getUrl">getUrl</a></li>
+<li><a href="#subchapter-getAvailableVideoBitrates">getAvailableVideoBitrates</a></li>
+<li><a href="#subchapter-getAvailableAudioBitrates">getAvailableAudioBitrates</a></li>
+<li><a href="#subchapter-getVideoBitrate">getVideoBitrate</a></li>
+<li><a href="#subchapter-getAudioBitrate">getAudioBitrate</a></li>
+<li><a href="#subchapter-getMaxVideoBitrate">getMaxVideoBitrate</a></li>
+<li><a href="#subchapter-getMaxAudioBitrate">getMaxAudioBitrate</a></li>
+<li><a href="#subchapter-setVideoBitrate">setVideoBitrate</a></li>
+<li><a href="#subchapter-setAudioBitrate">setAudioBitrate</a></li>
+<li><a href="#subchapter-getManualVideoBitrate">getManualVideoBitrate</a></li>
+<li><a href="#subchapter-getManualAudioBitrate">getManualAudioBitrate</a></li>
+<li><a href="#subchapter-setMaxVideoBitrate">setMaxVideoBitrate</a></li>
+<li><a href="#subchapter-setMaxAudioBitrate">setMaxAudioBitrate</a></li>
+<li><a href="#subchapter-setWantedBufferAhead">setWantedBufferAhead</a></li>
+<li><a href="#subchapter-getWantedBufferAhead">getWantedBufferAhead</a></li>
+<li><a href="#subchapter-setMaxBufferBehind">setMaxBufferBehind</a></li>
+<li><a href="#subchapter-getMaxBufferBehind">getMaxBufferBehind</a></li>
+<li><a href="#subchapter-setMaxBufferAhead">setMaxBufferAhead</a></li>
+<li><a href="#subchapter-getMaxBufferAhead">getMaxBufferAhead</a></li>
+<li><a href="#subchapter-setVolume">setVolume</a></li>
+<li><a href="#subchapter-mute">mute</a></li>
+<li><a href="#subchapter-unMute">unMute</a></li>
+<li><a href="#subchapter-isMute">isMute</a></li>
+<li><a href="#subchapter-getAvailableAudioTracks">getAvailableAudioTracks</a></li>
+<li><a href="#subchapter-getAvailableTextTracks">getAvailableTextTracks</a></li>
+<li><a href="#subchapter-getAvailableVideoTracks">getAvailableVideoTracks</a></li>
+<li><a href="#subchapter-getAudioTrack">getAudioTrack</a></li>
+<li><a href="#subchapter-getTextTrack">getTextTrack</a></li>
+<li><a href="#subchapter-getVideoTrack">getVideoTrack</a></li>
+<li><a href="#subchapter-setAudioTrack">setAudioTrack</a></li>
+<li><a href="#subchapter-setTextTrack">setTextTrack</a></li>
+<li><a href="#subchapter-disableTextTrack">disableTextTrack</a></li>
+<li><a href="#subchapter-setVideoTrack">setVideoTrack</a></li>
+<li><a href="#subchapter-setPreferredAudioTracks">setPreferredAudioTracks</a></li>
+<li><a href="#subchapter-getPreferredAudioTracks">getPreferredAudioTracks</a></li>
+<li><a href="#subchapter-setPreferredTextTracks">setPreferredTextTracks</a></li>
+<li><a href="#subchapter-getPreferredTextTracks">getPreferredTextTracks</a></li>
+<li><a href="#subchapter-getManifest">getManifest</a></li>
+<li><a href="#subchapter-getCurrentAdaptations">getCurrentAdaptations</a></li>
+<li><a href="#subchapter-getCurrentRepresentations">getCurrentRepresentations</a></li>
+<li><a href="#subchapter-dispose">dispose</a></li>
+<li><a href="#subchapter-getVideoLoadedTime">getVideoLoadedTime</a></li>
+<li><a href="#subchapter-getVideoPlayedTime">getVideoPlayedTime</a></li>
+<li><a href="#subchapter-getVideoBufferGap">getVideoBufferGap</a></li>
+<li><a href="#subchapter-getPlaybackRate">getPlaybackRate</a></li>
+<li><a href="#subchapter-setPlaybackRate">setPlaybackRate</a></li>
+<li><a href="#subchapter-getCurrentKeySystem">getCurrentKeySystem</a></li>
+<li><a href="#subchapter-getImageTrackData">getImageTrackData</a></li>
+<li><a href="#subchapter-getMinimumPosition">getMinimumPosition</a></li>
+<li><a href="#subchapter-getMaximumPosition">getMaximumPosition</a></li>
+<li><a href="#subchapter-setFullscreen">setFullscreen</a></li>
+<li><a href="#subchapter-exitFullscreen">exitFullscreen</a></li>
+<li><a href="#subchapter-isFullscreen">isFullscreen</a></li>
+<li><a href="#subchapter-getNativeTextTrack">getNativeTextTrack</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-RxPlayer%20API"></a></p>
+<h1>RxPlayer API</h1>
+<p><a name="overview"></a>
+<a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>The RxPlayer has a complete API allowing you to:</p>
+<ul>
+<li>load and stop video or audio contents</li>
+<li>perform trickmodes (play, pause, seek, etc.) as a content is loaded.</li>
+<li>get multiple informations on the current content and on the player&#x2019;s state.</li>
+<li>choose a specific audio language or subtitles track</li>
+<li>set your own bitrate and buffer length</li>
+<li>and more</li>
+</ul>
+<p>The following pages define the entire API.</p>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> Only variables and methods defined here are considered as part of the
+API. Any other property or method you might find by using our library can change
+without notice (not considered as part of the API).</p>
+<p>Only use the documented variables and open an issue if you think it&#x2019;s not
+enough.</p>
+<p><em>Note: As some terms used here might be too foreign or slightly different than
+the one you&#x2019;re used to, we also wrote a list of terms and definitions used by
+the RxPlayer <a href="../terms.html">here</a>.</em></p>
+<p><a name="instantiation"></a>
+<a name="chapter-Instantiation"></a></p>
+<h2>Instantiation</h2>
+<p>Instantiating a new player is straightforward:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player&quot;</span>;
+<span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> RxPlayer(options);
+</code></pre>
+<p>The options are all&#x2026; optional. They are all defined in the <a href="player_options.html">Player Options
+page</a>.</p>
+<p><a name="static"></a>
+<a name="chapter-Static%20properties"></a></p>
+<h2>Static properties</h2>
+<p><a name="static-version"></a>
+<a name="subchapter-version"></a></p>
+<h3>version</h3>
+<p><em>type</em>: <code>Number</code></p>
+<p>The current version of the RxPlayer.</p>
+<p><a name="static-ErrorTypes"></a>
+<a name="subchapter-ErrorTypes"></a></p>
+<h3>ErrorTypes</h3>
+<p><em>type</em>: <code>Object</code></p>
+<p>The different &#x201C;types&#x201D; of Error you can get on playback error,</p>
+<p>See <a href="errors.html">the Player Error documentation</a> for more informations.</p>
+<p><a name="static-ErrorCodes"></a>
+<a name="subchapter-ErrorCodes"></a></p>
+<h3>ErrorCodes</h3>
+<p><em>type</em>: <code>Object</code></p>
+<p>The different Error &#x201C;codes&#x201D; you can get on playback error,</p>
+<p>See <a href="errors.html">the Player Error documentation</a> for more informations.</p>
+<p><a name="static-LogLevel"></a>
+<a name="subchapter-LogLevel"></a></p>
+<h3>LogLevel</h3>
+<p><em>type</em>: <code>string</code></p>
+<p><em>default</em>: <code>&quot;NONE&quot;</code></p>
+<p>The current level of verbosity for the RxPlayer logs. Those logs all use the
+console.</p>
+<p>From the less verbose to the most:</p>
+<ul>
+<li>
+<p><code>&quot;NONE&quot;</code>: no log</p>
+</li>
+<li>
+<p><code>&quot;ERROR&quot;</code>: unexpected errors (via <code>console.error</code>)</p>
+</li>
+<li>
+<p><code>&quot;WARNING&quot;</code>: The previous level + minor problems encountered (via
+<code>console.warn</code>)</p>
+</li>
+<li>
+<p><code>&quot;INFO&quot;</code>: The previous levels + noteworthy events (via <code>console.info</code>)</p>
+</li>
+<li>
+<p><code>&quot;DEBUG&quot;</code>: The previous levels + normal events of the player (via
+<code>console.log</code>)</p>
+</li>
+</ul>
+<p>If the value set to this property is different than those, it will be
+automatically set to <code>&quot;NONE&quot;</code>.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player&quot;</span>;
+RxPlayer.LogLevel = <span class="hljs-string">&quot;WARNING&quot;</span>;
+</code></pre>
+<p><a name="tools"></a>
+<a name="chapter-Tools"></a></p>
+<h2>Tools</h2>
+<p><a name="tools-mediaCapabilitiesProber"></a>
+<a name="subchapter-MediaCapabilitiesProber"></a></p>
+<h3>MediaCapabilitiesProber</h3>
+<p><em>type</em>: <code>Object</code></p>
+<p>An experimental tool to probe browser media capabilities:</p>
+<ul>
+<li>Decoding capabilities</li>
+<li>DRM support</li>
+<li>HDCP support</li>
+<li>Display capabilities</li>
+</ul>
+<p>You can find its documentation <a href="mediaCapabilitiesProber.html">here</a>.</p>
+<p><a name="meth"></a>
+<a name="chapter-Methods"></a></p>
+<h2>Methods</h2>
+<p><a name="meth-loadVideo"></a>
+<a name="subchapter-loadVideo"></a></p>
+<h3>loadVideo</h3>
+<p><em>arguments</em>:</p>
+<ul>
+<li><em>options</em> (<code>Object</code>)</li>
+</ul>
+<p>Loads a new video described in the argument.</p>
+<p>The options possible as arguments are all defined in <a href="loadVideo_options.html">this
+page</a>.</p>
+<h4>Example</h4>
+<pre><code class="language-js">player.loadVideo({
+  <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd&quot;</span>,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">autoPlay</span>: <span class="hljs-literal">true</span>,
+});
+</code></pre>
+<p><a name="meth-getVideoElement"></a>
+<a name="subchapter-getVideoElement"></a></p>
+<h3>getVideoElement</h3>
+<p><em>return value</em>: <code>HTMLMediaElement</code></p>
+<p>Returns the video element used by the player.</p>
+<p>You&#x2019;re not encouraged to use its API, you should always prefer the Player&#x2019;s API.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> videoElement = player.getVideoElement();
+videoElement.className = <span class="hljs-string">&quot;my-video-element&quot;</span>;
+</code></pre>
+<p><a name="meth-getPlayerState"></a>
+<a name="subchapter-getPlayerState"></a></p>
+<h3>getPlayerState</h3>
+<p><em>return value</em>: <code>string</code></p>
+<p>The current player&#x2019;s state.
+Can be either one of those strings:</p>
+<ul>
+<li>
+<p><code>&quot;STOPPED&quot;</code>: The player is idle. No content is loading nor is loaded.</p>
+</li>
+<li>
+<p><code>&quot;LOADING&quot;</code>: The player is loading a new content.
+Most APIs related to the current content are not yet available while the
+content is loading.</p>
+</li>
+<li>
+<p><code>&quot;LOADED&quot;</code>: The player has loaded the new content, it is now ready to
+play.
+From this point onward you can use APIs interacting with the current content
+such as <code>seekTo</code> or <code>setAudioTrack</code>.</p>
+</li>
+<li>
+<p><code>&quot;PLAYING&quot;</code>: The player is currently playing the content.</p>
+</li>
+<li>
+<p><code>&quot;PAUSED&quot;</code>: The player has paused.</p>
+</li>
+<li>
+<p><code>&quot;ENDED&quot;</code>: The player has reached the end of the current content.</p>
+</li>
+<li>
+<p><code>&quot;BUFFERING&quot;</code>: the player has reached the end of the buffer and is waiting
+for data to be appended.</p>
+</li>
+<li>
+<p><code>&quot;SEEKING&quot;</code>: The player has reached the end of the buffer because a seek
+has been performed, new segments are being loaded.</p>
+</li>
+<li>
+<p><code>&quot;RELOADING&quot;</code>: The player needs to reload its current (for example, when
+switching the current video track).
+While this state is active, most API related to the currently playing
+content are not available. This state should be treated like the <code>LOADING</code>
+state.</p>
+</li>
+</ul>
+<p>As it is a central part of our API and can be difficult concept to understand,
+we have a special <a href="states.html">page of documentation on player states</a>.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">switch</span> (player.getPlayerState()) {
+  <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;STOPPED&quot;</span>:
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;No content is/will be playing&quot;</span>);
+    <span class="hljs-keyword">break</span>;
+  <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;LOADING&quot;</span>:
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;A new content is currently loading&quot;</span>);
+    <span class="hljs-keyword">break</span>;
+  <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;LOADED&quot;</span>:
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The new content is loaded and ready to be played&quot;</span>);
+    <span class="hljs-keyword">break</span>;
+  <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;PLAYING&quot;</span>:
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The content is currently playing&quot;</span>);
+    <span class="hljs-keyword">break</span>;
+  <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;PAUSED&quot;</span>:
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The content is currently paused&quot;</span>);
+    <span class="hljs-keyword">break</span>;
+  <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;BUFFERING&quot;</span>:
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The content is buffering new data&quot;</span>);
+    <span class="hljs-keyword">break</span>;
+  <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;SEEKING&quot;</span>:
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The content is still seeking, waiting for new data&quot;</span>);
+    <span class="hljs-keyword">break</span>;
+  <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;ENDED&quot;</span>:
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The content has reached the end.&quot;</span>);
+    <span class="hljs-keyword">break</span>;
+  <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;RELOADING&quot;</span>:
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The content is currently reloading&quot;</span>);
+    <span class="hljs-keyword">break</span>;
+  <span class="hljs-keyword">default</span>:
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;This is impossible (issue material!).&quot;</span>)
+    <span class="hljs-keyword">break</span>;
+}
+</code></pre>
+<p><a name="meth-addEventListener"></a>
+<a name="subchapter-addEventListener"></a></p>
+<h3>addEventListener</h3>
+<p><em>arguments</em>:</p>
+<ul>
+<li>
+<p><em>event</em> (<code>string</code>): The event name.</p>
+</li>
+<li>
+<p><em>callback</em> (<code>Function</code>): The callback for the event.
+The same callback may be used again when calling <code>removeEventListener</code>.</p>
+</li>
+</ul>
+<p>Add an event listener to trigger a callback as it happens. The callback will
+have the event payload as a single argument.</p>
+<p>To have the complete list of player events, consult the <a href="player_events.html">Player events
+page</a>.</p>
+<h4>Example</h4>
+<pre><code class="language-js">player.addEventListener(<span class="hljs-string">&quot;Error&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">err</span>) </span>{
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`The player crashed: <span class="hljs-subst">${err.message}</span>`</span>);
+});
+</code></pre>
+<p><a name="meth-removeEventListener"></a>
+<a name="subchapter-removeEventListener"></a></p>
+<h3>removeEventListener</h3>
+<p><em>arguments</em>:</p>
+<ul>
+<li><em>event</em> (<code>string</code>): The event name.</li>
+<li><em>callback</em> (optional) (<code>Function</code>): The callback given when calling the
+corresponding <code>addEventListener</code> API.</li>
+</ul>
+<p>Remove an event listener. That is, stop your registered callback (with
+<code>addEventListener</code>) to be called as events happen and free up ressources.</p>
+<p>The callback given is optional: if not given, <em>every</em> registered callback to
+that event will be removed. That&#x2019;s why using both arguments is recommended for
+most usecase.</p>
+<h4>Example</h4>
+<pre><code class="language-js">player.removeEventListener(<span class="hljs-string">&quot;playerStateChange&quot;</span>, listenerCallback);
+</code></pre>
+<p><a name="meth-play"></a>
+<a name="subchapter-play"></a></p>
+<h3>play</h3>
+<p><em>return value</em>: <code>Promise.&lt;void&gt;</code></p>
+<p>Play/resume the current video. Equivalent to a video element&#x2019;s play method.</p>
+<p>The returned Promise informs you on the result:</p>
+<ul>
+<li>
+<p>if playback succeeds, the Promise is fulfilled</p>
+</li>
+<li>
+<p>if playback fails, the Promise is rejected along with an error message
+explaining the failure - coming directly from the browser.</p>
+<p>Such failure can for example be due to your browser&#x2019;s policy, which may
+forbid to call play on a media element without any user interaction.
+Please note that in that case, you will also receive a
+<a href="errors.html">warning event</a> containing a <code>MEDIA_ERROR</code> with the code:
+<code>MEDIA_ERR_PLAY_NOT_ALLOWED</code>.</p>
+</li>
+</ul>
+<p>Note: On browsers which do not support Promises natively (such as Internet
+Explorer 11), a JavaScript implementation is provided instead. This
+implementation has the exact same implementation than <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">ES2015
+Promises</a>.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> resumeContent = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+  player.play();
+};
+</code></pre>
+<p><a name="meth-pause"></a>
+<a name="subchapter-pause"></a></p>
+<h3>pause</h3>
+<p>Pause the current video. Equivalent to a video element&#x2019;s pause method.</p>
+<p>Note that a content can be paused even if its current state is <code>BUFFERING</code> or
+<code>SEEKING</code>.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> pauseContent = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+  player.pause();
+};
+</code></pre>
+<p><a name="meth-stop"></a>
+<a name="subchapter-stop"></a></p>
+<h3>stop</h3>
+<p>Stop playback of the current content if one.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> stopVideo = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+  player.stop();
+};
+</code></pre>
+<p><a name="meth-getPosition"></a>
+<a name="subchapter-getPosition"></a></p>
+<h3>getPosition</h3>
+<p><em>return value</em>: <code>Number</code></p>
+<p>Returns the video element&#x2019;s current position, in seconds.</p>
+<p>The difference with the <code>getWallClockTime</code> method is that for live contents
+the position is not re-calculated to match a live timestamp.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> pos = player.getPosition();
+<span class="hljs-built_in">console</span>.log(<span class="hljs-string">`The video element&apos;s current position is: <span class="hljs-subst">${pos}</span> second(s)`</span>);
+</code></pre>
+<p><a name="meth-getWallClockTime"></a>
+<a name="subchapter-getWallClockTime"></a></p>
+<h3>getWallClockTime</h3>
+<p><em>return value</em>: <code>Number</code></p>
+<p>Returns the wall-clock-time of the current position in seconds.</p>
+<p>That is:</p>
+<ul>
+<li>for live content, get a timestamp in seconds of the current position.</li>
+<li>for static content, returns the position from beginning, also in seconds.</li>
+</ul>
+<p>Use this method to display the current position to the user.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> wallClockTime = player.getWallClockTime();
+<span class="hljs-keyword">const</span> nowInSeconds = <span class="hljs-built_in">Date</span>.now() / <span class="hljs-number">1000</span>;
+<span class="hljs-keyword">const</span> delta = nowInSeconds - wallClockTime;
+
+<span class="hljs-keyword">if</span> (delta &lt; <span class="hljs-number">5</span>) { <span class="hljs-comment">// (5 seconds of margin)</span>
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;You&apos;re playing live&quot;</span>);
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`You&apos;re playing <span class="hljs-subst">${delta}</span> seconds behind the live content`</span>);
+}
+</code></pre>
+<p><a name="meth-getVideoDuration"></a>
+<a name="subchapter-getVideoDuration"></a></p>
+<h3>getVideoDuration</h3>
+<p><em>return value</em>: <code>Number</code></p>
+<p>Returns the duration of the current video, directly from the video element.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> pos = player.getPosition();
+<span class="hljs-keyword">const</span> dur = player.getVideoDuration();
+
+<span class="hljs-built_in">console</span>.log(<span class="hljs-string">`current position: <span class="hljs-subst">${pos}</span> / <span class="hljs-subst">${dur}</span>`</span>);
+</code></pre>
+<p><a name="meth-getVolume"></a>
+<a name="subchapter-getVolume"></a></p>
+<h3>getVolume</h3>
+<p><em>return value</em>: <code>Number</code></p>
+<p>Current volume of the player, from 0 (no sound) to 1 (maximum sound). 0 if muted
+(different than videoElement.muted).</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> volume = player.getVolume();
+
+<span class="hljs-keyword">if</span> (volume === <span class="hljs-number">1</span>) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;You&apos;re playing at maximum volume&quot;</span>);
+} <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (volume === <span class="hljs-number">0</span>) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;You&apos;re playing at no volume&quot;</span>);
+} <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (volume &gt; <span class="hljs-number">0.5</span>) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;You&apos;re playing at a high volume&quot;</span>);
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;You&apos;re playing at a low volume&quot;</span>);
+}
+</code></pre>
+<p><a name="meth-getError"></a>
+<a name="subchapter-getError"></a></p>
+<h3>getError</h3>
+<p><em>return value</em>: <code>Error|null</code></p>
+<p>Returns the fatal error if it happened. null otherwise.</p>
+<p>See <a href="errors.html">the Player Error documentation</a> for more informations.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> error = player.getError();
+
+<span class="hljs-keyword">if</span> (!error) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The player did not crash&quot;</span>);
+} <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (error.code === <span class="hljs-string">&quot;PIPELINE_LOAD_ERROR&quot;</span>) {
+  <span class="hljs-built_in">console</span>.error(<span class="hljs-string">&quot;The player crashed due to a failing request&quot;</span>);
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-built_in">console</span>.error(<span class="hljs-string">`The player crashed: <span class="hljs-subst">${error.code}</span>`</span>);
+}
+</code></pre>
+<p><a name="meth-seekTo"></a>
+<a name="subchapter-seekTo"></a></p>
+<h3>seekTo</h3>
+<p><em>arguments</em>: <code>Object|Number</code></p>
+<p>Seek in the current content.</p>
+<p>The argument can be an object with a single <code>Number</code> property, either:</p>
+<ul>
+<li>
+<p><code>relative</code>: seek relatively to the current position</p>
+</li>
+<li>
+<p><code>position</code>: seek to the given absolute position (equivalent to
+<code>player.getVideoElement().currentTime = newPosition</code>)</p>
+</li>
+<li>
+<p><code>wallClockTime</code>: seek to the given wallClock position, as returned by
+<code>getWallClockTime</code>.</p>
+</li>
+</ul>
+<p>The argument can also just be a <code>Number</code> property, which will have the same
+effect than the <code>position</code> property (absolute position).</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// seeking to 54 seconds from the start of the content</span>
+player.seekTo({ <span class="hljs-attr">position</span>: <span class="hljs-number">54</span> });
+
+<span class="hljs-comment">// equivalent to just:</span>
+player.seekTo(<span class="hljs-number">54</span>);
+
+<span class="hljs-comment">// seeking 5 seconds after the current position</span>
+player.seekTo({ <span class="hljs-attr">relative</span>: <span class="hljs-number">5</span> });
+
+<span class="hljs-comment">// seeking 5 seconds before the current position</span>
+player.seekTo({ <span class="hljs-attr">relative</span>: <span class="hljs-number">-5</span> });
+
+<span class="hljs-comment">// seeking to live content</span>
+player.seekTo({ <span class="hljs-attr">wallClockTime</span>: <span class="hljs-built_in">Date</span>.now() / <span class="hljs-number">1000</span> });
+</code></pre>
+<p><a name="meth-isLive"></a>
+<a name="subchapter-isLive"></a></p>
+<h3>isLive</h3>
+<p><em>return value</em>: <code>Boolean</code></p>
+<p>Returns <code>true</code> if the content is a &#x201C;live&#x201D; content (e.g. a live TV Channel).
+<code>false</code> otherwise.</p>
+<p>Also <code>false</code> if no content is loaded yet.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">if</span> (player.isLive()) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;We&apos;re playing a live content&quot;</span>);
+}
+</code></pre>
+<p><a name="meth-getUrl"></a>
+<a name="subchapter-getUrl"></a></p>
+<h3>getUrl</h3>
+<p><em>return value</em>: <code>string|undefined</code></p>
+<p>Returns the URL of the downloaded <a href="../terms.html#manifest">Manifest</a>.</p>
+<p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>), returns the URL of the content
+being played.</p>
+<p>Returns <code>undefined</code> if no content is loaded yet.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> url = player.getUrl();
+<span class="hljs-keyword">if</span> (url) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;We are playing the following content:&quot;</span>, url);
+}
+</code></pre>
+<p><a name="meth-getAvailableVideoBitrates"></a>
+<a name="subchapter-getAvailableVideoBitrates"></a></p>
+<h3>getAvailableVideoBitrates</h3>
+<p><em>return value</em>: <code>Array.&lt;Number&gt;</code></p>
+<p>The different bitrates available for the current video
+<a href="../terms.html#adaptation">Adaptation</a>, in bits per seconds.</p>
+<p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>), returns an empty Array.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> videoBitrates = player.getAvailableVideoBitrates();
+<span class="hljs-keyword">if</span> (videoBitrates.length) {
+  <span class="hljs-built_in">console</span>.log(
+    <span class="hljs-string">&quot;The current video is available in the following bitrates&quot;</span>,
+    videoBitrates.join(<span class="hljs-string">&quot;, &quot;</span>)
+  );
+}
+</code></pre>
+<p><a name="meth-getAvailableAudioBitrates"></a>
+<a name="subchapter-getAvailableAudioBitrates"></a></p>
+<h3>getAvailableAudioBitrates</h3>
+<p><em>return value</em>: <code>Array.&lt;Number&gt;</code></p>
+<p>The different bitrates available for the current audio
+<a href="../terms.html#adaptation">Adaptation</a>, in bits per seconds.</p>
+<p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>), returns an empty Array.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> audioBitrates = player.getAvailableAudioBitrates();
+<span class="hljs-keyword">if</span> (audioBitrates.length) {
+  <span class="hljs-built_in">console</span>.log(
+    <span class="hljs-string">&quot;The current audio is available in the following bitrates&quot;</span>,
+    audioBitrates.join(<span class="hljs-string">&quot;, &quot;</span>)
+  );
+}
+</code></pre>
+<p><a name="meth-getVideoBitrate"></a>
+<a name="subchapter-getVideoBitrate"></a></p>
+<h3>getVideoBitrate</h3>
+<p><em>return value</em>: <code>Number|undefined</code></p>
+<p>Returns the video bitrate of the last downloaded video segment, in bits per
+seconds.</p>
+<p>Returns <code>undefined</code> if no content is loaded.</p>
+<p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>), returns <code>undefined</code>.</p>
+<p><a name="meth-getAudioBitrate"></a>
+<a name="subchapter-getAudioBitrate"></a></p>
+<h3>getAudioBitrate</h3>
+<p><em>return value</em>: <code>Number|undefined</code></p>
+<p>Returns the audio bitrate of the last downloaded audio segment, in bits per
+seconds.</p>
+<p>Returns <code>undefined</code> if no content is loaded.</p>
+<p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>), returns <code>undefined</code>.</p>
+<p><a name="meth-getMaxVideoBitrate"></a>
+<a name="subchapter-getMaxVideoBitrate"></a></p>
+<h3>getMaxVideoBitrate</h3>
+<p><em>return value</em>: <code>Number|undefined</code></p>
+<p>Returns the maximum set video bitrate to which switching is possible, in bits
+per seconds.</p>
+<p>This only affects adaptive strategies (you can bypass this limit by calling
+<code>setVideoBitrate</code>), and is set to <code>Infinity</code> when no limit has been set.</p>
+<p><a name="meth-getMaxAudioBitrate"></a>
+<a name="subchapter-getMaxAudioBitrate"></a></p>
+<h3>getMaxAudioBitrate</h3>
+<p><em>return value</em>: <code>Number&quot;undefined</code></p>
+<p>Returns the maximum set audio bitrate to which switching is possible, in bits
+per seconds.</p>
+<p>This only affects adaptive strategies (you can bypass this limit by calling
+<code>setAudioBitrate</code>), and is set to <code>Infinity</code> when no limit has been set.</p>
+<p><a name="meth-setVideoBitrate"></a>
+<a name="subchapter-setVideoBitrate"></a></p>
+<h3>setVideoBitrate</h3>
+<p><em>arguments</em>: <code>Number</code></p>
+<p>Force the current video track to be of a certain bitrate.</p>
+<p>If an video <a href="../terms.html#representation">Representation</a> (in the current video
+<a href="../terms.html#adaptation">Adaptation</a>) is found with the exact same bitrate, this
+Representation will be set.</p>
+<p>If no video Representation is found with the exact same bitrate, either:</p>
+<ul>
+<li>
+<p>the video Representation immediately inferior to it will be chosen instead
+(the closest inferior)</p>
+</li>
+<li>
+<p>if no video Representation has a bitrate lower than that value, the video
+Representation with the lowest bitrate will be chosen instead.</p>
+</li>
+</ul>
+<p>Set to <code>-1</code> to deactivate (and thus re-activate adaptive streaming for video
+tracks).</p>
+<p>When active (called with a positive value), adaptive streaming for video tracks
+will be disabled to stay in the chosen Representation.</p>
+<p>You can use <code>getAvailableVideoBitrates</code> to get the list of available bitrates
+you can set on the current content.</p>
+<p>Note that the value set is persistent between <code>loadVideo</code> calls.
+As such, this method can also be called when no content is playing (the same
+rules apply for future contents).</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-setAudioBitrate"></a>
+<a name="subchapter-setAudioBitrate"></a></p>
+<h3>setAudioBitrate</h3>
+<p><em>arguments</em>: <code>Number</code></p>
+<p>Force the current audio track to be of a certain bitrate.</p>
+<p>If an audio <a href="../terms.html#representation">Representation</a> (in the current audio
+<a href="../terms.html#adaptation">Adaptation</a>) is found with the exact same bitrate, this
+Representation will be set.</p>
+<p>If no audio Representation is found with the exact same bitrate, either:</p>
+<ul>
+<li>
+<p>the audio Representation immediately inferior to it will be chosen instead
+(the closest inferior)</p>
+</li>
+<li>
+<p>if no audio Representation has a bitrate lower than that value, the audio
+Representation with the lowest bitrate will be chosen instead.</p>
+</li>
+</ul>
+<p>Set to <code>-1</code> to deactivate (and thus re-activate adaptive streaming for audio
+tracks).</p>
+<p>When active (called with a positive value), adaptive streaming for audio tracks
+will be disabled to stay in the chosen Representation.</p>
+<p>You can use <code>getAvailableAudioBitrates</code> to get the list of available bitrates
+you can set on the current content.</p>
+<p>Note that the value set is persistent between <code>loadVideo</code> calls.
+As such, this method can also be called when no content is playing (the same
+rules apply for future contents).</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-getManualVideoBitrate"></a>
+<a name="subchapter-getManualVideoBitrate"></a></p>
+<h3>getManualVideoBitrate</h3>
+<p><em>arguments</em>: <code>Number</code></p>
+<p>Get the last video bitrate manually set. Either via <code>setVideoBitrate</code> or via
+the <code>initialVideoBitrate</code> constructor option.</p>
+<p>This value can be different than the one returned by <code>getVideoBitrate</code>:</p>
+<ul>
+<li><code>getManualVideoBitrate</code> returns the last bitrate set manually by the user</li>
+<li><code>getVideoBitrate</code> returns the actual bitrate of the current video track</li>
+</ul>
+<p><code>-1</code> when no video bitrate is forced.</p>
+<p><a name="meth-getManualAudioBitrate"></a>
+<a name="subchapter-getManualAudioBitrate"></a></p>
+<h3>getManualAudioBitrate</h3>
+<p><em>arguments</em>: <code>Number</code></p>
+<p>Get the last audio bitrate manually set. Either via <code>setAudioBitrate</code> or via
+the <code>initialAudioBitrate</code> constructor option.</p>
+<p>This value can be different than the one returned by <code>getAudioBitrate</code>:</p>
+<ul>
+<li><code>getManualAudioBitrate</code> returns the last bitrate set manually by the user</li>
+<li><code>getAudioBitrate</code> returns the actual bitrate of the current audio track</li>
+</ul>
+<p><code>-1</code> when no audio bitrate is forced.</p>
+<p><a name="meth-setMaxVideoBitrate"></a>
+<a name="subchapter-setMaxVideoBitrate"></a></p>
+<h3>setMaxVideoBitrate</h3>
+<p><em>arguments</em>: <code>Number</code></p>
+<p>Set the maximum video bitrate reachable through adaptive streaming. The player
+will never automatically switch to a video
+<a href="../terms.html#representation">Representation</a> with a higher bitrate.</p>
+<p>This limit can be removed by setting it to <code>Infinity</code>:</p>
+<pre><code class="language-js"><span class="hljs-comment">// remove video bitrate limit</span>
+player.setMaxVideoBitrate(<span class="hljs-literal">Infinity</span>);
+</code></pre>
+<p>This only affects adaptive strategies (you can bypass this limit by calling
+<code>setVideoBitrate</code>).</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-setMaxAudioBitrate"></a>
+<a name="subchapter-setMaxAudioBitrate"></a></p>
+<h3>setMaxAudioBitrate</h3>
+<p><em>arguments</em>: <code>Number</code></p>
+<p>Set the maximum audio bitrate reachable through adaptive streaming. The player
+will never automatically switch to a audio
+<a href="../terms.html#representation">Representation</a> with a higher bitrate.</p>
+<p>This limit can be removed by setting it to <code>Infinity</code>:</p>
+<pre><code class="language-js"><span class="hljs-comment">// remove audio bitrate limit</span>
+player.setMaxAudioBitrate(<span class="hljs-literal">Infinity</span>);
+</code></pre>
+<p>This only affects adaptive strategies (you can bypass this limit by calling
+<code>setAudioBitrate</code>).</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-setWantedBufferAhead"></a>
+<a name="subchapter-setWantedBufferAhead"></a></p>
+<h3>setWantedBufferAhead</h3>
+<p><em>arguments</em>: <code>Number</code></p>
+<p>Set the buffering goal, as a duration ahead of the current position, in seconds.
+Once this size of buffer reached, the player won&#x2019;t try to download new video
+segments anymore.</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-getWantedBufferAhead"></a>
+<a name="subchapter-getWantedBufferAhead"></a></p>
+<h3>getWantedBufferAhead</h3>
+<p><em>return value</em>: <code>Number</code>
+<em>defaults</em>: <code>30</code></p>
+<p>returns the buffering goal, as a duration ahead of the current position, in
+seconds.</p>
+<p><a name="meth-setMaxBufferBehind"></a>
+<a name="subchapter-setMaxBufferBehind"></a></p>
+<h3>setMaxBufferBehind</h3>
+<p><em>arguments</em>: <code>Number</code></p>
+<p>Set the maximum kept past buffer, in seconds.
+Everything before that limit (<code>currentPosition - maxBufferBehind</code>) will be
+automatically garbage collected.</p>
+<p>This feature is not necessary as the browser is already supposed to deallocate
+memory from old segments if/when the memory is scarce.</p>
+<p>However on some custom targets, or just to better control the memory imprint
+of the player, you might want to set this limit. You can set it to
+<code>Infinity</code> to remove any limit and just let the browser do this job.</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-getMaxBufferBehind"></a>
+<a name="subchapter-getMaxBufferBehind"></a></p>
+<h3>getMaxBufferBehind</h3>
+<p><em>return value</em>: <code>Number</code>
+<em>defaults</em>: <code>Infinity</code></p>
+<p>Returns the maximum kept past buffer, in seconds.</p>
+<p><a name="meth-setMaxBufferAhead"></a>
+<a name="subchapter-setMaxBufferAhead"></a></p>
+<h3>setMaxBufferAhead</h3>
+<p><em>arguments</em>: <code>Number</code></p>
+<p>Set the maximum kept buffer ahead of the current position, in seconds.
+Everything superior to that limit (<code>currentPosition + maxBufferAhead</code>) will
+be automatically garbage collected. This feature is not necessary as
+the browser is already supposed to deallocate memory from old segments if/when
+the memory is scarce.</p>
+<p>However on some custom targets, or just to better control the memory imprint of
+the player, you might want to set this limit. You can set it to <code>Infinity</code> to
+remove any limit and just let the browser do this job.</p>
+<p>The minimum value between this one and the one returned by
+<code>getWantedBufferAhead</code> will be considered when downloading new segments.</p>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> Bear in mind that a too-low configuration there (e.g. inferior to
+<code>10</code>) might prevent the browser to play the content at all.</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-getMaxBufferAhead"></a>
+<a name="subchapter-getMaxBufferAhead"></a></p>
+<h3>getMaxBufferAhead</h3>
+<p><em>return value</em>: <code>Number</code>
+<em>defaults</em>: <code>Infinity</code></p>
+<p>Returns the maximum kept buffer ahead of the current position, in seconds.</p>
+<p><a name="meth-setVolume"></a>
+<a name="subchapter-setVolume"></a></p>
+<h3>setVolume</h3>
+<p><em>arguments</em>: <code>Number</code></p>
+<p>Set the new volume, from 0 (no sound) to 1 (the maximum sound level).</p>
+<p><a name="meth-mute"></a>
+<a name="subchapter-mute"></a></p>
+<h3>mute</h3>
+<p>Cut the volume. Basically set the volume to 0 while keeping in memory the
+previous volume.</p>
+<p><a name="meth-unMute"></a>
+<a name="subchapter-unMute"></a></p>
+<h3>unMute</h3>
+<p>Restore the volume when it has been muted, to the one previous the <code>mute</code>
+call.</p>
+<p><a name="meth-isMute"></a>
+<a name="subchapter-isMute"></a></p>
+<h3>isMute</h3>
+<p><em>returns</em>: <code>Boolean</code></p>
+<p>Returns true if the volume is muted i.e., set to 0.</p>
+<p><a name="meth-getAvailableAudioTracks"></a>
+<a name="subchapter-getAvailableAudioTracks"></a></p>
+<h3>getAvailableAudioTracks</h3>
+<p><em>returns</em>: <code>Array.&lt;Object&gt;</code></p>
+<p>Returns the list of available audio tracks for the current content.</p>
+<p>Each of the objects in the returned array have the following properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
+setting the track via <code>setAudioTrack</code>.</p>
+</li>
+<li>
+<p><code>language</code> (<code>string</code>): The language the audio track is in, as set in
+the <a href="../terms.html#manifest">Manifest</a>.</p>
+</li>
+<li>
+<p><code>normalized</code> (<code>string</code>): An attempt to translate the <code>language</code>
+property into an ISO 639-3 language code (for now only support translations
+from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
+fails (no corresponding ISO 639-3 language code is found), it will equal the
+value of <code>language</code></p>
+</li>
+<li>
+<p><code>audioDescription</code> (<code>Boolean</code>): Whether the track is an audio
+description (for the visually impaired or not).</p>
+</li>
+<li>
+<p><code>active</code> (<code>Boolean</code>): Whether the track is the one currently active or
+not.</p>
+</li>
+</ul>
+<p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>), returns an empty Array.</p>
+<p><a name="meth-getAvailableTextTracks"></a>
+<a name="subchapter-getAvailableTextTracks"></a></p>
+<h3>getAvailableTextTracks</h3>
+<p><em>returns</em>: <code>Array.&lt;Object&gt;</code></p>
+<p>Returns the list of available text tracks (subtitles) for the current content.</p>
+<p>Each of the objects in the returned array have the following properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
+setting the track via <code>setTextTrack</code>.</p>
+</li>
+<li>
+<p><code>language</code> (<code>string</code>): The language the text track is in, as set in the
+<a href="../terms.html#manifest">Manifest</a>.</p>
+</li>
+<li>
+<p><code>normalized</code> (<code>string</code>): An attempt to translate the <code>language</code>
+property into an ISO 639-3 language code (for now only support translations
+from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
+fails (no corresponding ISO 639-3 language code is found), it will equal the
+value of <code>language</code></p>
+</li>
+<li>
+<p><code>closedCaption</code> (<code>Boolean</code>): Whether the track is specially adapted for
+the hard of hearing or not.</p>
+</li>
+<li>
+<p><code>active</code> (<code>Boolean</code>): Whether the track is the one currently active or
+not.</p>
+</li>
+</ul>
+<p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>), returns an empty Array.</p>
+<p><a name="meth-getAvailableVideoTracks"></a>
+<a name="subchapter-getAvailableVideoTracks"></a></p>
+<h3>getAvailableVideoTracks</h3>
+<p><em>returns</em>: <code>Array.&lt;Object&gt;</code></p>
+<p>Returns the list of available video tracks for the current content.</p>
+<p>Each of the objects in the returned array have the following properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
+setting the track via <code>setVideoTrack</code>.</p>
+</li>
+<li>
+<p><code>active</code> (<code>Boolean</code>): Whether this track is the one currently
+active or not.</p>
+</li>
+<li>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>):
+<a href="../terms.html#representation">Representations</a> of this video track, with
+attributes:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number</code>): The bitrate of this Representation, in bits per
+seconds.</p>
+</li>
+<li>
+<p><code>width</code> (<code>Number|undefined</code>): The width of video, in pixels.</p>
+</li>
+<li>
+<p><code>height</code> (<code>Number|undefined</code>): The height of video, in pixels.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec given in standard MIME type
+format.</p>
+</li>
+<li>
+<p><code>frameRate</code> (<code>string|undefined</code>): The video framerate.</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>), returns an empty Array.</p>
+<p><a name="meth-getAudioTrack"></a>
+<a name="subchapter-getAudioTrack"></a></p>
+<h3>getAudioTrack</h3>
+<p><em>returns</em>: <code>Object|null|undefined</code></p>
+<p>Get the audio track currently set. <code>null</code> if no audio track is enabled right
+now.</p>
+<p>The track is an object with the following properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>Number|string</code>): The id used to identify the track. Use it for
+setting the track via <code>setAudioTrack</code>.</p>
+</li>
+<li>
+<p><code>language</code> (<code>string</code>): The language the audio track is in, as set in the
+<a href="../terms.html#manifest">Manifest</a>.</p>
+</li>
+<li>
+<p><code>normalized</code> (<code>string</code>): An attempt to translate the <code>language</code>
+property into an ISO 639-3 language code (for now only support translations
+from ISO 639-1 and ISO 639-3 language codes). If the translation attempt
+fails (no corresponding ISO 639-3 language code is found), it will equal the
+value of <code>language</code></p>
+</li>
+<li>
+<p><code>audioDescription</code> (<code>Boolean</code>): Whether the track is an audio
+description (for the visually impaired or not).</p>
+</li>
+</ul>
+<p><code>undefined</code> if no content has been loaded yet.</p>
+<p><code>undefined</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<p><a name="meth-getTextTrack"></a>
+<a name="subchapter-getTextTrack"></a></p>
+<h3>getTextTrack</h3>
+<p><em>returns</em>: <code>Object|null</code></p>
+<p>Get the audio track currently set. <code>null</code> if no text track is enabled right
+now.</p>
+<p>The track is an object with the following properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>Number|string</code>): The id used to identify the track. Use it for
+setting the track via <code>setTextTrack</code>.</p>
+</li>
+<li>
+<p><code>language</code> (<code>string</code>): The language the text track is in, as set in the
+<a href="../terms.html#manifest">Manifest</a>.</p>
+</li>
+<li>
+<p><code>normalized</code> (<code>string</code>): An attempt to translate the <code>language</code>
+property into an ISO 639-3 language code (for now only support translations
+from ISO 639-1 and ISO 639-3 language codes). If the translation attempt
+fails (no corresponding ISO 639-3 language code is found), it will equal the
+value of <code>language</code></p>
+</li>
+<li>
+<p><code>closedCaption</code> (<code>Boolean</code>): Whether the track is specially adapted for
+the hard of hearing or not.</p>
+</li>
+</ul>
+<p><code>undefined</code> if no content has been loaded yet.</p>
+<p><code>undefined</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<p><a name="meth-getVideoTrack"></a>
+<a name="subchapter-getVideoTrack"></a></p>
+<h3>getVideoTrack</h3>
+<p><em>returns</em>: <code>Object|null|undefined</code></p>
+<p>Get the video track currently set. <code>null</code> if no video track is enabled right
+now.</p>
+<p>The track is an object with the following properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for setting
+the track via <code>setVideoTrack</code>.</p>
+</li>
+<li>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>):
+<a href="../terms.html#representation">Representations</a> of this video track, with
+attributes:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number</code>): The bitrate of this Representation, in bits per
+seconds.</p>
+</li>
+<li>
+<p><code>width</code> (<code>Number|undefined</code>): The width of video, in pixels.</p>
+</li>
+<li>
+<p><code>height</code> (<code>Number|undefined</code>): The height of video, in pixels.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec given in standard MIME type
+format.</p>
+</li>
+<li>
+<p><code>frameRate</code> (<code>string|undefined</code>): The video framerate.</p>
+</li>
+</ul>
+</li>
+</ul>
+<p><code>undefined</code> if no content has been loaded yet.</p>
+<p><code>undefined</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<p><a name="meth-setAudioTrack"></a>
+<a name="subchapter-setAudioTrack"></a></p>
+<h3>setAudioTrack</h3>
+<p><em>arguments</em>: <code>string|Number</code></p>
+<p>Set a new audio track from its id, recuperated from <code>getAvailableAudioTracks</code>.</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-setTextTrack"></a>
+<a name="subchapter-setTextTrack"></a></p>
+<h3>setTextTrack</h3>
+<p><em>arguments</em>: <code>string</code></p>
+<p>Set a new text track from its id, recuperated from <code>getAvailableTextTracks</code>.</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-disableTextTrack"></a>
+<a name="subchapter-disableTextTrack"></a></p>
+<h3>disableTextTrack</h3>
+<p>Deactivate the current text track, if one.</p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-setVideoTrack"></a>
+<a name="subchapter-setVideoTrack"></a></p>
+<h3>setVideoTrack</h3>
+<p><em>arguments</em>: <code>string|Number</code></p>
+<p>Set a new video track from its id, recuperated from <code>getAvailableVideoTracks</code>.</p>
+<p>Setting a new video track when a previous one was already playing can lead the
+rx-player to &#x201C;reload&#x201D; this content.</p>
+<p>During this period of time:</p>
+<ul>
+<li>the player will have the state <code>RELOADING</code></li>
+<li>Multiple APIs linked to the current content might not work.
+Most notably:
+<ul>
+<li><code>play</code> will not work</li>
+<li><code>pause</code> will not work</li>
+<li><code>seekTo</code> will not work</li>
+<li><code>getPosition</code> will return 0</li>
+<li><code>getWallClockTime</code> will return 0</li>
+<li><code>getVideoDuration</code> will return <code>NaN</code></li>
+<li><code>getAvailableAudioTracks</code> will return an empty array</li>
+<li><code>getAvailableTextTracks</code> will return an empty array</li>
+<li><code>getAvailableVideoTracks</code> will return an empty array</li>
+<li><code>getTextTrack</code> will return <code>null</code></li>
+<li><code>getAudioTrack</code> will return <code>null</code></li>
+<li><code>setAudioTrack</code> will throw</li>
+<li><code>setTextTrack</code> will throw</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-setPreferredAudioTracks"></a>
+<a name="subchapter-setPreferredAudioTracks"></a></p>
+<h3>setPreferredAudioTracks</h3>
+<p><em>arguments</em>: <code>Array.&lt;Object&gt;</code></p>
+<p>Update the audio language preferences at any time.</p>
+<p>This method takes an array of objects describing the languages wanted:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+  audioDescription: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the audio track should be an</span>
+                          <span class="hljs-comment">// audio description for the visually impaired</span>
+}
+</code></pre>
+<p>All elements in that Array should be set in preference order: from the most
+preferred to the least preferred.</p>
+<p>When encountering a new Period or a new content, the RxPlayer will then try to
+choose its audio track by comparing what is available with your current
+preferences (i.e. if the most preferred is not available, it will look if the
+second one is etc.).</p>
+<p>Please note that those preferences will only apply either to the next loaded
+content or to the next newly encountered Period.
+Simply put, once set this preference will be applied to all contents but:</p>
+<ul>
+<li>
+<p>the current Period being played (or the current loaded content, in the case
+of Smooth streaming). In that case, the current audio preference will stay
+in place.</p>
+</li>
+<li>
+<p>the Periods which have already been played in the current loaded content.
+Those will keep the last set audio preference at the time it was played.</p>
+</li>
+</ul>
+<p>To update the current audio track in those cases, you should use the
+<code>setAudioTrack</code> method.</p>
+<h4>Example</h4>
+<p>Let&#x2019;s imagine that you prefer to have french or italian over all other audio
+languages. If not found, you want to fallback to english.
+You will thus call <code>setPreferredAudioTracks</code> that way.</p>
+<pre><code class="language-js">player.setPreferredAudioTracks([
+  { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+  { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;ita&quot;</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+  { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;eng&quot;</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }
+])
+</code></pre>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-getPreferredAudioTracks"></a>
+<a name="subchapter-getPreferredAudioTracks"></a></p>
+<h3>getPreferredAudioTracks</h3>
+<p><em>return value</em>: <code>Array.&lt;Object&gt;</code></p>
+<p>Returns the current list of preferred audio tracks - by order of preference.</p>
+<p>This returns the data in the same format that it was given to either the
+<code>preferredAudioTracks</code> constructor option or the last <code>setPreferredAudioTracks</code>
+if it was called:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+  audioDescription: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the audio track should be an</span>
+                          <span class="hljs-comment">// audio description for the visually impaired</span>
+}
+</code></pre>
+<p><a name="meth-setPreferredTextTracks"></a>
+<a name="subchapter-setPreferredTextTracks"></a></p>
+<h3>setPreferredTextTracks</h3>
+<p><em>arguments</em>: <code>Array.&lt;Object|null&gt;</code></p>
+<p>Update the text track (or subtitles) preferences at any time.</p>
+<p>This method takes an array of objects describing the languages wanted:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+  closedCaption: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
+                       <span class="hljs-comment">// caption for the hard of hearing</span>
+}
+</code></pre>
+<p>All elements in that Array should be set in preference order: from the most
+preferred to the least preferred. You can set <code>null</code> for no subtitles.</p>
+<p>When encountering a new Period or a new content, the RxPlayer will then try to
+choose its text track by comparing what is available with your current
+preferences (i.e. if the most preferred is not available, it will look if the
+second one is etc.).</p>
+<p>Please note that those preferences will only apply either to the next loaded
+content or to the next newly encountered Period.
+Simply put, once set this preference will be applied to all contents but:</p>
+<ul>
+<li>
+<p>the current Period being played (or the current loaded content, in the case
+of Smooth streaming). In that case, the current text track preference will
+stay in place.</p>
+</li>
+<li>
+<p>the Periods which have already been played in the current loaded content.
+Those will keep the last set text track preference at the time it was
+played.</p>
+</li>
+</ul>
+<p>To update the current text track in those cases, you should use the
+<code>setTextTrack</code> method.</p>
+<h4>Example</h4>
+<p>Let&#x2019;s imagine that you prefer to have french or italian subtitles.If not found,
+you want no subtitles at all.</p>
+<p>You will thus call <code>setPreferredTextTracks</code> that way.</p>
+<pre><code class="language-js">player.setPreferredTextTracks([
+  { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
+  { <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;ita&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
+  <span class="hljs-literal">null</span>
+])
+</code></pre>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method will have no effect for contents loaded in <em>DirectFile</em>
+mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<hr>
+<p><a name="meth-getPreferredTextTracks"></a>
+<a name="subchapter-getPreferredTextTracks"></a></p>
+<h3>getPreferredTextTracks</h3>
+<p><em>return value</em>: <code>Array.&lt;Object|null&gt;</code></p>
+<p>Returns the current list of preferred text tracks - by order of preference.</p>
+<p>This returns the data in the same format that it was given to either the
+<code>preferredTextTracks</code> constructor option or the last <code>setPreferredTextTracks</code> if
+it was called:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+  closedCaption: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
+                       <span class="hljs-comment">// caption for the hard of hearing</span>
+}
+</code></pre>
+<p><a name="meth-getManifest"></a>
+<a name="subchapter-getManifest"></a></p>
+<h3>getManifest</h3>
+<p><em>return value</em>: <code>Manifest|null</code></p>
+<p>Returns the current loaded <a href="../terms.html#manifest">Manifest</a> if one.
+The Manifest object structure is relatively complex and is described in the
+<a href="manifest.html">Manifest Object structure page</a>.</p>
+<p><code>null</code> if the player is either stopped or not loaded.</p>
+<p><code>null</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<p>The Manifest will be available before the player reaches the <code>&quot;LOADED&quot;</code> state.</p>
+<p><a name="meth-getCurrentAdaptations"></a>
+<a name="subchapter-getCurrentAdaptations"></a></p>
+<h3>getCurrentAdaptations</h3>
+<p><em>return value</em>: <code>Object|null</code></p>
+<p>Returns the <a href="../terms.html#adaptation">Adaptations</a> being loaded per type if a
+<a href="../terms.html#manifest">Manifest</a> is loaded. The returned object will have at
+most a key for each type (&#x201C;video&#x201D;, &#x201C;audio&#x201D;, &#x201C;text&#x201D; and &#x201C;image&#x201D;) which will each
+contain an array of Adaptation Objects.</p>
+<p>The Adaptation object structure is relatively complex and is described in the
+<a href="manifest.html#adaptation">Manifest Object structure page</a>.</p>
+<p><code>null</code> if the current Adaptations are not known yet.</p>
+<p><code>null</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<p><a name="meth-getCurrentRepresentations"></a>
+<a name="subchapter-getCurrentRepresentations"></a></p>
+<h3>getCurrentRepresentations</h3>
+<p><em>return value</em>: <code>Object|null</code></p>
+<p>Returns the <a href="../terms.html#representation">Representations</a> being loaded per type
+if a <a href="../terms.html#manifest">Manifest</a> is loaded. The returned object will have
+at most a key for each type (&#x201C;video&#x201D;, &#x201C;audio&#x201D;, &#x201C;text&#x201D; and &#x201C;image&#x201D;) which will
+each contain an array of Representation Objects.</p>
+<p>An Representation object structure is relatively complex and is described in the
+<a href="manifest.html#representation">Manifest Object structure page</a>.</p>
+<p><code>null</code> if the current Representations are not known yet.</p>
+<p><code>null</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<p><a name="meth-dispose"></a>
+<a name="subchapter-dispose"></a></p>
+<h3>dispose</h3>
+<p>Free the ressources used by the player.</p>
+<p>!warning!: The player won&#x2019;t work correctly after calling this method.</p>
+<p><a name="meth-getVideoLoadedTime"></a>
+<a name="subchapter-getVideoLoadedTime"></a></p>
+<h3>getVideoLoadedTime</h3>
+<p><em>return value</em>: <code>Number</code></p>
+<p>Returns in seconds the difference between:</p>
+<ul>
+<li>the start of the current contiguous loaded range.</li>
+<li>the end of it.</li>
+</ul>
+<p><a name="meth-getVideoPlayedTime"></a>
+<a name="subchapter-getVideoPlayedTime"></a></p>
+<h3>getVideoPlayedTime</h3>
+<p><em>return value</em>: <code>Number</code></p>
+<p>Returns in seconds the difference between:</p>
+<ul>
+<li>the start of the current contiguous loaded range.</li>
+<li>the current time.</li>
+</ul>
+<p><a name="meth-getVideoBufferGap"></a>
+<a name="subchapter-getVideoBufferGap"></a></p>
+<h3>getVideoBufferGap</h3>
+<p><em>return value</em>: <code>Number</code></p>
+<p>Returns in seconds the difference between:</p>
+<ul>
+<li>the current time.</li>
+<li>the end of the current contiguous loaded range.</li>
+</ul>
+<p><a name="meth-getPlaybackRate"></a>
+<a name="subchapter-getPlaybackRate"></a></p>
+<h3>getPlaybackRate</h3>
+<p><em>return value</em>: <code>Number</code></p>
+<p>Returns the current video normal playback rate (speed when playing). <code>1</code> for
+normal playback, <code>2</code> when playing *2, etc.</p>
+<p><a name="meth-setPlaybackRate"></a>
+<a name="subchapter-setPlaybackRate"></a></p>
+<h3>setPlaybackRate</h3>
+<p><em>arguments</em>: <code>Number</code></p>
+<p>Updates the &#x201C;normal&#x201D; (when playing) playback rate for the video.</p>
+<p><a name="meth-getCurrentKeySystem"></a>
+<a name="subchapter-getCurrentKeySystem"></a></p>
+<h3>getCurrentKeySystem</h3>
+<p><em>return value</em>: <code>string|undefined</code></p>
+<p>Returns the type of keySystem used for DRM-protected contents.</p>
+<p><a name="meth-getImageTrackData"></a>
+<a name="subchapter-getImageTrackData"></a></p>
+<h3>getImageTrackData</h3>
+<p><em>return value</em>: <code>Array.&lt;Object&gt;|null</code></p>
+<p>The current image track&#x2019;s data, null if no content is loaded / no image track
+data is available.</p>
+<p>The returned array follows the usual image playlist structure, defined
+<a href="images.html#api-structure">here</a>.</p>
+<p><code>null</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<p><a name="meth-getMinimumPosition"></a>
+<a name="subchapter-getMinimumPosition"></a></p>
+<h3>getMinimumPosition</h3>
+<p><em>return value</em>: <code>Number|null</code></p>
+<p>The minimum seekable player position. <code>null</code> if no content is loaded.</p>
+<p>This is useful for live contents, where server-side buffer size are often not
+infinite. This method allows thus to seek at the earliest possible time.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// seeking to the earliest position possible (beginning of the buffer for live</span>
+<span class="hljs-comment">// contents, position &apos;0&apos; for non-live contents).</span>
+player.seekTo({
+  <span class="hljs-attr">position</span>: player.getMinimumPosition()
+});
+</code></pre>
+<p><a name="meth-getMaximumPosition"></a>
+<a name="subchapter-getMaximumPosition"></a></p>
+<h3>getMaximumPosition</h3>
+<p><em>return value</em>: <code>Number|null</code></p>
+<p>The maximum seekable player position. <code>null</code> if no content is loaded.</p>
+<p>This is useful for live contents, where the buffer end updates continously.
+This method allows thus to seek directly at the live edge of the content.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-comment">// seeking to the end</span>
+player.seekTo({
+  <span class="hljs-attr">position</span>: player.getMaximumPosition()
+});
+</code></pre>
+<p><a name="meth-setFullscreen"></a>
+<a name="subchapter-setFullscreen"></a></p>
+<h3>setFullscreen</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
+<p><em>arguments</em>: <code>Boolean</code></p>
+<p>Switch or exit the <code>&lt;video&gt;</code> element to fullscreen mode. The argument is an
+optional boolean:</p>
+<ul>
+<li>
+<p>if set:</p>
+<ul>
+<li><code>true</code>: enters fullscreen</li>
+<li><code>false</code>: exit fullscreen</li>
+</ul>
+</li>
+<li>
+<p>if not set: enter fullscreen</p>
+</li>
+</ul>
+<p>Note that <strong>only the video element will be set to fullscreen mode</strong>. You might
+prefer to implement your own method to include your controls in the final UI.</p>
+<p><a name="meth-exitFullscreen"></a>
+<a name="subchapter-exitFullscreen"></a></p>
+<h3>exitFullscreen</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
+<p>Exit fullscreen mode. Same than <code>setFullscreen(false)</code>.</p>
+<p><a name="meth-isFullscreen"></a>
+<a name="subchapter-isFullscreen"></a></p>
+<h3>isFullscreen</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
+<p><em>return value</em>: <code>Boolean</code></p>
+<p>Returns <code>true</code> if the video element is in fullscreen mode, <code>false</code>
+otherwise.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">if</span> (player.isFullscreen()) {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;The player is in fullscreen mode&quot;</span>);
+}
+</code></pre>
+<p><a name="meth-getNativeTextTrack"></a>
+<a name="subchapter-getNativeTextTrack"></a></p>
+<h3>getNativeTextTrack</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
+<p><em>return value</em>: <code>TextTrack|null</code></p>
+<p>Returns the first text track of the video&#x2019;s element, null if none.</p>
+<p>This is equivalent to:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> el = player.getVideoElement();
+<span class="hljs-keyword">const</span> textTrack = el.textTracks.length ? el.textTracks[<span class="hljs-number">0</span>] : <span class="hljs-literal">null</span>;
+</code></pre>
+</body></html></div></div></div></body>
