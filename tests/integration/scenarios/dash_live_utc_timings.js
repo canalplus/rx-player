@@ -37,9 +37,9 @@ describe("DASH live - UTCTimings", () => {
       await xhrMock.flush();
       await sleep(1);
       expect(player.getMinimumPosition()).to.be
-        .closeTo(1553517851, 1);
+        .closeTo(1553521448, 1);
       expect(player.getMaximumPosition()).to.be
-        .closeTo(1553518148, 1);
+        .closeTo(1553521748, 1);
     });
   });
 
@@ -61,12 +61,11 @@ describe("DASH live - UTCTimings", () => {
     });
 
     it("should fetch the clock and then calculate the right bounds", async () => {
-      // const url = URL.createObjectURL(new Blob(["2019-03-25T12:49:08.014Z"]));
       xhrMock.respondTo("GET",
                         "https://time.akamai.com/?iso",
                         [ 200,
                           { "Content-Type": "text/plain"},
-                          "2019-03-25T12:49:08.014Z"]);
+                          "2019-03-25T13:49:08.014Z"]);
       xhrMock.lock();
 
       player.loadVideo({
@@ -82,7 +81,7 @@ describe("DASH live - UTCTimings", () => {
       await xhrMock.flush(); // Once for the init segment
       await sleep(1);
       expect(player.getMinimumPosition()).to.be
-        .closeTo(1553517851, 1);
+        .closeTo(1553521448, 1);
     });
   });
 
@@ -114,7 +113,7 @@ describe("DASH live - UTCTimings", () => {
       await sleep(10);
 
       const { availabilityStartTime } = player.getManifest();
-      const timeShiftBufferDepth = (5 * 60) - 3;
+      const timeShiftBufferDepth = 5 * 60;
       const maximumPosition = (Date.now() - 10000) / 1000 -
         availabilityStartTime;
       const minimumPosition = maximumPosition - timeShiftBufferDepth;
@@ -153,7 +152,7 @@ describe("DASH live - UTCTimings", () => {
       await xhrMock.flush();
       await sleep(1);
       expect(player.getMinimumPosition()).to.be
-        .closeTo(1553517851, 1);
+        .closeTo(1553521448, 1);
 
       const requestsDone = xhrMock.getLockedXHR().map(r => r.url);
       expect(requestsDone)

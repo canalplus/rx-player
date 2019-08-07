@@ -11,7 +11,6 @@ export default {
   url: BASE_URL + "Manifest_no-timeShiftBufferDepth.mpd",
   transport: "dash",
   isLive: true,
-  availabilityStartTime: 300,
   periods: [
     {
       adaptations: {

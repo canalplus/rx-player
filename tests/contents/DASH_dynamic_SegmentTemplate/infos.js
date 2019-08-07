@@ -11,7 +11,6 @@ export default {
   url: BASE_URL + "Manifest.mpd",
   transport: "dash",
   isLive: true,
-  availabilityStartTime: 0,
   periods: [
     {
       adaptations: {
