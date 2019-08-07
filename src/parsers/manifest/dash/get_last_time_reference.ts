@@ -92,17 +92,65 @@ export default function getMinimumAndMaximumPosition(
   if (manifest.periods.length === 0) {
     throw new Error("DASH Parser: no period available for a live content");
   }
-  const lastPeriodAdaptations =
-    manifest.periods[manifest.periods.length - 1].adaptations;
-  const firstAdaptationsFromLastPeriod =
-    lastPeriodAdaptations.video || lastPeriodAdaptations.audio;
-  if (!firstAdaptationsFromLastPeriod || !firstAdaptationsFromLastPeriod.length) {
+  const firstPeriodAdaptations = manifest.periods[0].adaptations;
+  const lastPeriodAdaptations = manifest.periods[manifest.periods.length - 1]
+                                  .adaptations;
+  const firstAudioAdaptationFromFirstPeriod = firstPeriodAdaptations.audio == null ?
+                                                undefined :
+                                                firstPeriodAdaptations.audio[0];
+  const firstVideoAdaptationFromFirstPeriod = firstPeriodAdaptations.video == null ?
+                                                undefined :
+                                                firstPeriodAdaptations.video[0];
+  const firstAudioAdaptationFromLastPeriod = lastPeriodAdaptations.audio == null ?
+                                               undefined :
+                                               lastPeriodAdaptations.audio[0];
+  const firstVideoAdaptationFromLastPeriod =  lastPeriodAdaptations.video == null ?
+                                               undefined :
+                                               lastPeriodAdaptations.video[0];
+
+  if ((firstAudioAdaptationFromFirstPeriod == null &&
+       firstVideoAdaptationFromFirstPeriod == null) ||
+      (firstAudioAdaptationFromLastPeriod == null &&
+       firstVideoAdaptationFromLastPeriod == null))
+  {
     throw new Error("DASH Parser: Can't find first adaptation from last period");
   }
-  const firstAdaptationFromLastPeriod = firstAdaptationsFromLastPeriod[0];
-  if (firstAdaptationsFromLastPeriod == null) {
-    return [undefined, undefined];
-  }
-  return [ getFirstTimeReferenceFromAdaptation(firstAdaptationFromLastPeriod),
-           getLastTimeReferenceFromAdaptation(firstAdaptationFromLastPeriod) ];
+
+  const minimumAudioPosition = firstAudioAdaptationFromFirstPeriod == null ?
+    undefined :
+    getFirstTimeReferenceFromAdaptation(firstAudioAdaptationFromFirstPeriod);
+
+  const minimumVideoPosition = firstVideoAdaptationFromFirstPeriod == null ?
+    undefined :
+    getFirstTimeReferenceFromAdaptation(firstVideoAdaptationFromFirstPeriod);
+
+  const maximumAudioPosition = firstAudioAdaptationFromLastPeriod == null ?
+    undefined :
+    getLastTimeReferenceFromAdaptation(firstAudioAdaptationFromLastPeriod);
+
+  const maximumVideoPosition = firstVideoAdaptationFromLastPeriod == null ?
+    undefined :
+    getLastTimeReferenceFromAdaptation(firstVideoAdaptationFromLastPeriod);
+
+  const minimumPosition = [minimumAudioPosition, minimumVideoPosition]
+                            .reduce<number|undefined>((acc, pos) => {
+                              if (acc == null) {
+                                return pos;
+                              } else if (pos == null) {
+                                return acc;
+                              }
+                              return Math.max(acc, pos);
+                            }, undefined);
+
+  const maximumPosition = [maximumAudioPosition, maximumVideoPosition]
+                            .reduce<number|undefined>((acc, pos) => {
+                              if (acc == null) {
+                                return pos;
+                              } else if (pos == null) {
+                                return acc;
+                              }
+                              return Math.min(acc, pos);
+                            }, undefined);
+
+  return [minimumPosition, maximumPosition];
 }
