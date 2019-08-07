@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../../../../config";
 import log from "../../../../log";
 import {
   IRepresentationIndex,
@@ -24,6 +25,8 @@ import {
   createIndexURL,
   replaceSegmentDASHTokens,
 } from "./tokens";
+
+const { MINIMUM_SEGMENT_SIZE } = config;
 
 // index property defined for a SegmentTemplate RepresentationIndex
 export interface ITemplateIndex {
@@ -223,6 +226,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             mediaURL } = index;
 
     const scaledStart = this._periodStart * timescale;
+    const scaledEnd = this._relativePeriodEnd == null ?
+      undefined :
+      this._relativePeriodEnd * timescale;
 
     // Convert the asked position to the right timescales, and consider them
     // relatively to the Period's start.
@@ -253,6 +259,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       // To obtain the real number, adds the real number from the Period's start
       const realNumber = numberIndexedToZero + numberOffset;
 
+      const realDuration = scaledEnd != null &&
+                           timeFromPeriodStart + duration > scaledEnd ?
+                             scaledEnd - timeFromPeriodStart :
+                             duration;
       const realTime = timeFromPeriodStart + scaledStart;
       const manifestTime = timeFromPeriodStart + this._index.presentationTimeOffset;
       const realURL = replaceSegmentDASHTokens(mediaURL, manifestTime, realNumber);
@@ -260,7 +270,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                      number: realNumber,
                      time: realTime,
                      isInit: false,
-                     duration,
+                     duration: realDuration,
                      timescale,
                      mediaURL: realURL,
                      timestampOffset: -(index.indexTimeOffset / timescale) };
@@ -379,12 +389,31 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    */
   private _getLastSegmentStart() : number {
     const { duration, timescale } = this._index;
-    const scaledMaxPosition = this._isDynamic ?
-      getMaximumRelativePosition(this._relativePeriodEnd,
-                                 this._liveEdgeOffset) * timescale :
-      (this._relativePeriodEnd || 0) * timescale;
-    const maxPossibleStart = Math.max(scaledMaxPosition - duration, 0);
-    const numberIndexedToZero = Math.floor(maxPossibleStart / duration);
-    return numberIndexedToZero * duration;
+
+    let numberIndexedToZero : number;
+    if (this._isDynamic) {
+      const scaledMaxPosition = getMaximumRelativePosition(this._relativePeriodEnd,
+                                                           this._liveEdgeOffset)
+                                * timescale;
+      const maxPossibleStart = Math.max(scaledMaxPosition - duration, 0);
+      numberIndexedToZero = Math.floor(maxPossibleStart / duration);
+      return numberIndexedToZero * duration;
+    } else {
+      const maximumTime = (this._relativePeriodEnd || 0) * timescale;
+      numberIndexedToZero = Math.ceil(maximumTime / duration) - 1;
+      const regularLastSegmentStart = numberIndexedToZero * duration;
+
+      // In some SegmentTemplate, we could think that there is one more
+      // segment that there actually is due to a very little difference between
+      // the period's duration and a multiple of a segment's duration.
+      // Check that we're within a good margin
+      const minimumDuration = MINIMUM_SEGMENT_SIZE * timescale;
+      if (maximumTime - regularLastSegmentStart > minimumDuration ||
+          numberIndexedToZero === 0)
+      {
+        return regularLastSegmentStart;
+      }
+      return (numberIndexedToZero - 1) * duration;
+    }
   }
 }
