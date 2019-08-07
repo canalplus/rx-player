@@ -23081,7 +23081,7 @@ object-assign
                         }
                     }
                     firstTimeReferences.length && (firstTimeReference = Math.max.apply(Math, firstTimeReferences)), 
-                    lastTimeReferences.length && (lastTimeReference = Math.max.apply(Math, lastTimeReferences));
+                    lastTimeReferences.length && (lastTimeReference = Math.min.apply(Math, lastTimeReferences));
                 }
                 if (isLive) {
                     suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY, availabilityStartTime = REFERENCE_DATE_TIME;
