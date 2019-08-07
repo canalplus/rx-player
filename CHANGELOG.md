@@ -1,5 +1,21 @@
 # Changelog
 
+## v3.15.1 (2019/08/07)
+
+### Bug fixes
+
+  - api: fix `networkConfig.segmentRetry` `loadVideo` option. Due to a typo, it was forced to the default value (4)
+  - api/abr: when the `throttleVideoBitrateWhenHidden` option is set to true, wait 60 seconds (as documented) after the page is hidden before switching to a lower bitrate
+  - dash: fix segment indexing for SegmentList-based MPD with a period start different than 0
+
+### Other improvements
+
+  - dash/smooth: check if the segment should still be available before retrying it (avoid unnecessary HTTP 404 errors)
+  - dash/smooth: the Manifest can now be refreshed due to unexpected 404 HTTP errors on a segment request (only on particular conditions)
+  - dash: better handle segments overlapping multiple periods by using the data that is only within the concerned Period's bounds
+  - demo: authorize to play stored contents with an HTTP Manifest in the HTTPS demo
+
+
 ## v3.15.0 (2019/07/24)
 
 ### Features

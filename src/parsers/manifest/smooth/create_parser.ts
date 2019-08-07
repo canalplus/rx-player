@@ -499,7 +499,7 @@ function createSmoothStreamingParser(
       }
 
       if (lastTimeReferences.length) {
-        lastTimeReference = Math.max(...lastTimeReferences);
+        lastTimeReference = Math.min(...lastTimeReferences);
       }
     }
 
