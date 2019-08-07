@@ -360,21 +360,14 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * @returns {number}
    */
   private _getFirstSegmentStart() : number {
-    if (!this._isDynamic) {
+    if (!this._isDynamic || this._scaledBufferDepth == null) {
       return 0; // it is the start of the Period
     }
-
     const { duration } = this._index;
-    let scaledMinimum : number;
-
-    if (this._scaledBufferDepth == null) {
-      scaledMinimum = 0;
-    } else {
-      const lastSegmentStart = this._getLastSegmentStart();
-      const lastSegmentEnd = lastSegmentStart + this._index.duration;
-      scaledMinimum = Math.max(lastSegmentEnd - this._scaledBufferDepth,
-                               0);
-    }
+    const lastSegmentStart = this._getLastSegmentStart();
+    const lastSegmentEnd = lastSegmentStart + this._index.duration;
+    const scaledMinimum = Math.max(lastSegmentEnd - this._scaledBufferDepth,
+                                   0);
     const numberIndexedToZero = Math.floor(scaledMinimum / duration);
     return numberIndexedToZero * duration;
   }
@@ -385,13 +378,11 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * @returns {number}
    */
   private _getLastSegmentStart() : number {
-    if (!this._isDynamic) {
-      return (this._relativePeriodEnd || 0) * this._index.timescale;
-    }
     const { duration, timescale } = this._index;
-    const scaledMaxPosition = getMaximumRelativePosition(this._relativePeriodEnd,
-                                                         this._liveEdgeOffset)
-                              * timescale;
+    const scaledMaxPosition = this._isDynamic ?
+      getMaximumRelativePosition(this._relativePeriodEnd,
+                                 this._liveEdgeOffset) * timescale :
+      (this._relativePeriodEnd || 0) * timescale;
     const maxPossibleStart = Math.max(scaledMaxPosition - duration, 0);
     const numberIndexedToZero = Math.floor(maxPossibleStart / duration);
     return numberIndexedToZero * duration;
