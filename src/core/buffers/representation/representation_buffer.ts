@@ -126,6 +126,7 @@ interface ISegmentObject<T> {
   segmentInfos : ISegmentInfos|null; // informations about the segment's start
                                      // and duration
   segmentOffset : number; // Offset to add to the segment at decode time
+  appendWindow : [ number | undefined, number | undefined ];
 }
 
 // Informations about a loaded and parsed Segment
@@ -191,7 +192,10 @@ export default function RepresentationBuffer<T>({
 
   // Saved initSegment state for this representation.
   let initSegmentObject : ISegmentObject<T>|null =
-    initSegment == null ? { segmentData: null, segmentInfos: null, segmentOffset: 0 } :
+    initSegment == null ? { segmentData: null,
+                            segmentInfos: null,
+                            segmentOffset: 0,
+                            appendWindow: [undefined, undefined] } :
                           null;
 
   // Segments queued for download in the BufferQueue.
@@ -465,7 +469,8 @@ export default function RepresentationBuffer<T>({
     segment : ISegment,
     { segmentInfos,
       segmentData,
-      segmentOffset } : ISegmentObject<T>
+      segmentOffset,
+      appendWindow } : ISegmentObject<T>
   ) : Observable<IBufferEventAddedSegment<T>> {
     return observableDefer(() => {
       if (segmentData == null) {
@@ -479,6 +484,7 @@ export default function RepresentationBuffer<T>({
                           segment: segment.isInit ? null :
                                                     segmentData,
                           timestampOffset: segmentOffset,
+                          appendWindow,
                           codec };
       const append$ = appendDataInSourceBuffer(clock$, queuedSourceBuffer, dataInfos);
 
@@ -489,8 +495,15 @@ export default function RepresentationBuffer<T>({
           if (!segment.isInit) {
             const { time, duration, timescale } = segmentInfos != null ? segmentInfos :
                                                                          segment;
-            const start = time / timescale;
-            const end = duration && (time + duration) / timescale;
+            const start = Math.max(time / timescale,
+                                   appendWindow[0] != null ? appendWindow[0] :
+                                                             0);
+            let end : number | undefined;
+            if (duration != null) {
+              end = Math.min((time + duration) / timescale,
+                             appendWindow[1] != null ? appendWindow[1] :
+                                                       Infinity);
+            }
             segmentBookkeeper
               .insert(period, adaptation, representation, segment, start, end);
           }

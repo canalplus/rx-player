@@ -44,9 +44,15 @@ class ImageSourceBuffer
   _append(data : IImageTrackSegmentData) {
     log.debug("ImageSourceBuffer: appending new data.");
     const { start, end, timescale } = data;
-    this.buffered.insert(start / timescale,
-                         end == null ? Number.MAX_VALUE :
-                                       end / timescale);
+
+    const timescaledStart = start / timescale;
+    const timescaledEnd = end == null ? Number.MAX_VALUE :
+                                        end / timescale;
+
+    const startTime = Math.max(this.appendWindowStart, timescaledStart);
+    const endTime = Math.min(this.appendWindowEnd, timescaledEnd);
+
+    this.buffered.insert(startTime, endTime);
   }
 
   /**

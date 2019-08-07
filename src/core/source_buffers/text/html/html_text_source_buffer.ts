@@ -167,9 +167,38 @@ export default class HTMLTextSourceBuffer
                                           this.timestampOffset,
                                           language);
 
+    if (this.appendWindowStart !== 0 && this.appendWindowEnd !== Infinity) {
+      // Removing before window start
+      let i = 0;
+      while (i < cues.length && cues[i].end <= this.appendWindowStart) {
+        i++;
+      }
+      cues.splice(0, i);
+
+      i = 0;
+      while (i < cues.length && cues[i].start < this.appendWindowStart) {
+        cues[i].start = this.appendWindowStart;
+        i++;
+      }
+
+      // Removing after window end
+      i = cues.length - 1;
+
+      while (i >= 0 && cues[i].start >= this.appendWindowEnd) {
+        i--;
+      }
+      cues.splice(i, cues.length);
+
+      i = cues.length - 1;
+      while (i >= 0 && cues[i].end > this.appendWindowEnd) {
+        cues[i].end = this.appendWindowEnd;
+        i--;
+      }
+    }
+
     let start : number;
     if (startTime != null) {
-      start = startTime;
+      start = Math.max(this.appendWindowStart, startTime);
     } else {
       if (cues.length <= 0) {
         log.warn("HTSB: Current text tracks have no cues nor start time. Aborting");
@@ -181,7 +210,7 @@ export default class HTMLTextSourceBuffer
 
     let end : number;
     if (endTime != null) {
-      end = endTime;
+      end = Math.min(this.appendWindowEnd, endTime);
     } else {
       if (cues.length <= 0) {
         log.warn("HTSB: Current text tracks have no cues nor end time. Aborting");

@@ -160,6 +160,12 @@ export interface ISegmentParserResponse<T> {
                           // Note that `segmentInfos` needs not to be offseted
                           // as it should already contain the correct time
                           // information.
+  appendWindow : [ number | undefined, // start window for the segment
+                                       // (part of the segment before that time
+                                       // will be ignored)
+                   number | undefined ]; // end window for the segment
+                                         // (part of the segment after that time
+                                         // will be ignored)
 }
 
 // Response object returned by the video's segment parser

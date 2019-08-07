@@ -32,6 +32,7 @@ import {
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 
 export default function parser({ segment,
+                                 period,
                                  representation,
                                  response,
                                  init } : ISegmentParserArguments< Uint8Array |
@@ -42,7 +43,8 @@ export default function parser({ segment,
   if (responseData == null) {
     return observableOf({ segmentData: null,
                           segmentInfos: null,
-                          segmentOffset: 0 });
+                          segmentOffset: 0,
+                          appendWindow: [period.start, period.end] });
   }
   const segmentData : Uint8Array = responseData instanceof Uint8Array ?
                                      responseData :
@@ -61,7 +63,10 @@ export default function parser({ segment,
         timescale: segment.timescale } :
       getISOBMFFTimingInfos(segment, segmentData, nextSegments, init);
     const segmentOffset = segment.timestampOffset || 0;
-    return observableOf({ segmentData, segmentInfos, segmentOffset });
+    return observableOf({ segmentData,
+                          segmentInfos,
+                          segmentOffset,
+                          appendWindow: [period.start, period.end] });
   }
 
   if (nextSegments) {
@@ -73,5 +78,6 @@ export default function parser({ segment,
                         segmentInfos: timescale && timescale > 0 ?
                           { time: -1, duration: 0, timescale } :
                           null,
-                        segmentOffset: segment.timestampOffset || 0 });
+                        segmentOffset: segment.timestampOffset || 0,
+                        appendWindow: [period.start, period.end] });
 }
