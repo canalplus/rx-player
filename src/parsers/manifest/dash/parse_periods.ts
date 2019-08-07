@@ -25,10 +25,13 @@ import parseAdaptationSets from "./parse_adaptation_sets";
 const generatePeriodID = idGenerator();
 
 export interface IManifestInfos {
-  isDynamic : boolean;
-  availabilityStartTime? : number;
-  duration? : number;
+  availabilityStartTime : number; // Time from which the content starts
   baseURL? : string;
+  clockOffset? : number;
+  duration? : number;
+  isDynamic : boolean;
+  timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
+                                  // in seconds
 }
 
 /**
@@ -61,9 +64,10 @@ export default function parsePeriods(
       periodStart = period.attributes.start;
     } else {
       if (i === 0) {
-        periodStart = (
-          !manifestInfos.isDynamic || manifestInfos.availabilityStartTime == null
-        ) ?  0 : manifestInfos.availabilityStartTime;
+        periodStart = (!manifestInfos.isDynamic ||
+                       manifestInfos.availabilityStartTime == null) ?
+                         0 :
+                         manifestInfos.availabilityStartTime;
       } else {
         const prevPeriod = parsedPeriods[i - 1];
         if (prevPeriod && prevPeriod.duration != null && prevPeriod.start != null) {
@@ -85,22 +89,23 @@ export default function parsePeriods(
       periodDuration = manifestInfos.duration;
     }
 
-    const periodEnd = periodDuration != null ?
-      (periodStart + periodDuration) : undefined;
+    const periodEnd = periodDuration != null ? (periodStart + periodDuration) :
+                                               undefined;
 
-    const adaptations = parseAdaptationSets(period.children.adaptations, {
-      isDynamic: manifestInfos.isDynamic,
-      start: periodStart,
-      end: periodEnd,
-      baseURL: periodBaseURL,
-    });
-    const parsedPeriod : IParsedPeriod = {
-      id: periodID,
-      start: periodStart,
-      end: periodEnd,
-      duration: periodDuration,
-      adaptations,
-    };
+    const periodInfos = { availabilityStartTime: manifestInfos.availabilityStartTime,
+                          baseURL: periodBaseURL,
+                          clockOffset: manifestInfos.clockOffset,
+                          end: periodEnd,
+                          isDynamic: manifestInfos.isDynamic,
+                          start: periodStart,
+                          timeShiftBufferDepth: manifestInfos.timeShiftBufferDepth };
+    const adaptations = parseAdaptationSets(period.children.adaptations,
+                                            periodInfos);
+    const parsedPeriod : IParsedPeriod = { id: periodID,
+                                           start: periodStart,
+                                           end: periodEnd,
+                                           duration: periodDuration,
+                                           adaptations };
     parsedPeriods.push(parsedPeriod);
   }
   return flattenOverlappingPeriods(parsedPeriods);

@@ -19,19 +19,17 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
-import {
-  createIndexURL,
-  getInitSegment,
-  getTimescaledRange,
-} from "./helpers";
+import { getTimescaledRange } from "../../utils/index_helpers";
+import getInitSegment from "./get_init_segment";
+import { createIndexURL } from "./tokens";
 
 // index property defined for a SegmentList RepresentationIndex
 export interface IListIndex {
   timescale : number; // timescale to convert a time given here into seconds.
                       // This is done by this simple operation:
                       // ``timeInSeconds = timeInIndex * timescale``
-  duration : number; // duration of each element in the timeline, in the
-                     // timescale given (see timescale and timeline)
+  duration : number; // duration of each element in the list, in the
+                     // timescale given (see timescale and list)
   list: Array<{ // List of Segments for this index
     mediaURL : string; // URL of the segment
     mediaRange? : [number, number]; // possible byte-range of the segment
@@ -57,21 +55,42 @@ export interface IListIndex {
 }
 
 // `index` Argument for a SegmentList RepresentationIndex
-// Most of the properties here are already defined in IListIndex.
+// Those properties come generally come from a SegmentList Node in an MPD.
 export interface IListIndexIndexArgument {
-  duration : number;
-  list: Array<{
-    media? : string;
-    mediaRange? : [number, number];
+  duration : number; // duration of each element in the list, in the
+                     // timescale given (see timescale and list)
+  indexRange?: [number, number]; // byte range for a possible index of segments
+                                 // in the server
+  initialization?: { // data allowing to download the init segment
+    media? : string; // URL of the init segment
+    range?: [number, number]; // possible byte-range for the init segment
+  };
+  list: Array<{ // List of Segments for this index
+    media? : string; // URL of the segment
+    mediaRange? : [number, number]; // possible byte-range of the segment
   }>;
-  timescale : number;
-
-  indexRange?: [number, number];
-  initialization?: { media? : string; range?: [number, number] };
-  presentationTimeOffset?: number;
+  presentationTimeOffset? : number; // Offset present in the index to convert
+                                    // from the mediaTime (time declared in the
+                                    // media segments and in this index) to the
+                                    // presentationTime (time wanted when
+                                    // decoding the segment).
+                                    // Basically by doing something along the
+                                    // line of:
+                                    // ```
+                                    // presentationTimeInSeconds =
+                                    //   mediaTimeInSeconds -
+                                    //   presentationTimeOffsetInSeconds +
+                                    //   periodStartInSeconds
+                                    // ```
+                                    // The time given here is in the current
+                                    // timescale (see timescale)
+  timescale : number; // timescale to convert a time given here into seconds.
+                      // This is done by this simple operation:
+                      // ``timeInSeconds = timeInIndex * timescale``
 }
 
 // Aditional argument for a SegmentList RepresentationIndex
+// Offers some context about the current Representation
 export interface IListIndexContextArgument {
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
@@ -138,10 +157,11 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    */
   getSegments(fromTime : number, dur : number) : ISegment[] {
     const index = this._index;
-    const fromTimeInPeriod = fromTime + this._periodStart;
-    const { up, to } = getTimescaledRange(index, fromTimeInPeriod, dur);
-
     const { duration, list, timescale } = index;
+    const fromTimeInPeriod = fromTime - this._periodStart;
+    const [ up, to ] = getTimescaledRange(fromTimeInPeriod, dur, timescale);
+
+    const scaledStart = this._periodStart * timescale;
     const length = Math.min(list.length - 1, Math.floor(to / duration));
     const segments : ISegment[] = [];
     let i = Math.floor(up / duration);
@@ -149,7 +169,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
       const range = list[i].mediaRange;
       const mediaURL = list[i].mediaURL;
       const args = { id: "" + i,
-                     time: i * duration,
+                     time: i * duration + scaledStart,
                      isInit: false,
                      range,
                      duration,
@@ -170,13 +190,10 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    * @returns {Boolean}
    */
   shouldRefresh(_fromTime : number, toTime : number) : boolean {
-    const { timescale,
-            duration,
-            list } = this._index;
-
+    const { timescale, duration, list } = this._index;
     const scaledTo = toTime * timescale;
     const i = Math.floor(scaledTo / duration);
-    return !(i >= 0 && i < list.length);
+    return i < 0 || i >= list.length;
   }
 
   /**
@@ -198,11 +215,40 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * Returns true if a Segment returned by this index is still considered
+   * available.
+   * @param {Object} segment
+   * @returns {Boolean|undefined}
+   */
+  isSegmentStillAvailable(segment : ISegment) : boolean {
+    if (segment.isInit) {
+      return true;
+    }
+    const index = this._index;
+    const scaledStart = this._periodStart * index.timescale;
+    const scaledSegmentStartInPeriod = segment.timescale !== index.timescale ?
+      ((segment.time * index.timescale) / segment.timescale) + scaledStart :
+      segment.time - scaledStart;
+
+    const { duration } = index;
+    const segmentNb = scaledSegmentStartInPeriod / duration;
+    return segmentNb > 0 && segmentNb % 1 === 0;
+  }
+
+  /**
    * We do not check for discontinuity in SegmentList-based indexes.
    * @returns {Number}
    */
   checkDiscontinuity() : -1 {
     return -1;
+  }
+
+  /**
+   * SegmentList should not be updated.
+   * @returns {Boolean}
+   */
+  canBeOutOfSyncError() : false {
+    return false;
   }
 
   /**

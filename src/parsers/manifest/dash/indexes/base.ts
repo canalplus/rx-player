@@ -19,18 +19,17 @@ import {
   ISegment,
 } from "../../../../manifest";
 import {
-  createIndexURL,
   fromIndexTime,
   getIndexSegmentEnd,
-  getInitSegment,
-  getSegmentsFromTimeline,
   IIndexSegment,
-} from "./helpers";
+  toIndexTime,
+} from "../../utils/index_helpers";
+import getInitSegment from "./get_init_segment";
+import getSegmentsFromTimeline from "./get_segments_from_timeline";
+import { createIndexURL } from "./tokens";
 
 // index property defined for a SegmentBase RepresentationIndex
 export interface IBaseIndex {
-  duration? : number; // duration of each element in the timeline, in the
-                      // timescale given (see timescale and timeline)
   indexRange?: [number, number]; // byte range for a possible index of segments
                                  // in the server
   indexTimeOffset : number; // Temporal offset, in the current timescale (see
@@ -53,8 +52,6 @@ export interface IBaseIndex {
   startNumber? : number; // number from which the first segments in this index
                          // starts with
   timeline : IIndexSegment[]; // Every segments defined in this index
-  timelineEnd : number|undefined; // Absolute end of the timeline, in the
-                                  // current timescale
   timescale : number; // timescale to convert a time given here into seconds.
                       // This is done by this simple operation:
                       // ``timeInSeconds = timeInIndex * timescale``
@@ -65,7 +62,6 @@ export interface IBaseIndex {
 export interface IBaseIndexIndexArgument {
   timeline : IIndexSegment[];
   timescale : number;
-  duration? : number;
   media? : string;
   indexRange?: [number, number];
   initialization?: { media?: string; range?: [number, number] };
@@ -138,6 +134,9 @@ function _addSegmentInfos(
 export default class BaseRepresentationIndex implements IRepresentationIndex {
   private _index : IBaseIndex;
 
+  // absolute end of the period, timescaled and converted to index time
+  private _scaledPeriodEnd : number | undefined;
+
   /**
    * @param {Object} index
    * @param {Object} context
@@ -155,8 +154,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
     const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
 
-    this._index = { duration: index.duration,
-                    indexRange: index.indexRange,
+    this._index = { indexRange: index.indexRange,
                     indexTimeOffset,
                     initialization: index.initialization && {
                       mediaURL: createIndexURL(representationBaseURL,
@@ -171,9 +169,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
                                              representationBitrate),
                     startNumber: index.startNumber,
                     timeline: index.timeline,
-                    timelineEnd: periodEnd == null ? undefined : periodEnd * timescale,
-                    timescale,
-    };
+                    timescale };
+    this._scaledPeriodEnd = periodEnd == null ? undefined :
+                                                toIndexTime(periodEnd, this._index);
   }
 
   /**
@@ -190,7 +188,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @returns {Array.<Object>}
    */
   getSegments(_up : number, _to : number) : ISegment[] {
-    return getSegmentsFromTimeline(this._index, _up, _to);
+    return getSegmentsFromTimeline(this._index, _up, _to, this._scaledPeriodEnd);
   }
 
   /**
@@ -210,7 +208,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     if (index.timeline.length === 0) {
       return undefined;
     }
-    return fromIndexTime(index, index.timeline[0].start);
+    return fromIndexTime(index.timeline[0].start, index);
   }
 
   /**
@@ -218,14 +216,23 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @returns {Number|undefined}
    */
   getLastPosition() : number|undefined {
-    const { timeline, timelineEnd } = this._index;
+    const { timeline } = this._index;
     if (timeline.length === 0) {
       return undefined;
     }
     const lastTimelineElement = timeline[timeline.length - 1];
+    const lastTime = getIndexSegmentEnd(lastTimelineElement,
+                                        null,
+                                        this._scaledPeriodEnd);
+    return fromIndexTime(lastTime, this._index);
+  }
 
-    const lastTime = getIndexSegmentEnd(lastTimelineElement, null, timelineEnd);
-    return fromIndexTime(this._index, lastTime);
+  /**
+   * Segments in a segmentBase scheme should stay available.
+   * @returns {Boolean|undefined}
+   */
+  isSegmentStillAvailable() : true {
+    return true;
   }
 
   /**
@@ -249,6 +256,14 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     for (let i = 0; i < nextSegments.length; i++) {
       _addSegmentInfos(this._index, nextSegments[i]);
     }
+  }
+
+  /**
+   * SegmentBase should not be updated.
+   * @returns {Boolean}
+   */
+  canBeOutOfSyncError() : false {
+    return false;
   }
 
   /**

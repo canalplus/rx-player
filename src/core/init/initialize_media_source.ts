@@ -30,6 +30,7 @@ import {
 } from "rxjs";
 import {
   filter,
+  finalize,
   ignoreElements,
   map,
   mergeMap,
@@ -71,6 +72,7 @@ import isEMEReadyEvent from "./is_eme_ready";
 import createMediaSourceLoader, {
   IMediaSourceLoaderEvent,
 } from "./load_on_media_source";
+import refreshManifest from "./refresh_manifest";
 import throwOnMediaError from "./throw_on_media_error";
 import {
   IInitClockTick,
@@ -80,7 +82,8 @@ import {
 } from "./types";
 
 const { DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-        DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR } = config;
+        DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
+        OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config;
 
 /**
  * Returns pipeline options based on the global config and the user config.
@@ -128,47 +131,43 @@ export type IInitEvent = IManifestReadyEvent |
                          IReloadingMediaSourceEvent |
                          IWarningEvent;
 
-// Informations needed when reloading the MediaSource
-interface IReloadingInfos { currentTime : number;
-                            isPaused : boolean; }
-
 /**
  * Central part of the player.
  *
  * Play a content described by the given Manifest.
  *
  * On subscription:
- *  - Creates the MediaSource and attached sourceBuffers instances.
- *  - download the content's manifest
- *  - Perform EME management if needed
- *  - get Buffers for each active adaptations.
- *  - give choice of the adaptation to the caller (e.g. to choose a language)
- *  - returns Observable emitting notifications about the content lifecycle.
+ *   - Creates the MediaSource and attached sourceBuffers instances.
+ *   - download the content's Manifest and handle its refresh logic
+ *   - Perform EME management if needed
+ *   - get Buffers for each active adaptations.
+ *   - give choice of the adaptation to the caller (e.g. to choose a language)
+ *   - returns Observable emitting notifications about the content lifecycle.
  * @param {Object} args
  * @returns {Observable}
  */
-export default function InitializeOnMediaSource({
-  adaptiveOptions,
-  autoPlay,
-  bufferOptions,
-  clock$,
-  keySystems,
-  mediaElement,
-  networkConfig,
-  speed$,
-  startAt,
-  textTrackOptions,
-  pipelines,
-  url,
-} : IInitializeOptions) : Observable<IInitEvent> {
+export default function InitializeOnMediaSource(
+  { adaptiveOptions,
+    autoPlay,
+    bufferOptions,
+    clock$,
+    keySystems,
+    mediaElement,
+    networkConfig,
+    speed$,
+    startAt,
+    textTrackOptions,
+    pipelines,
+    url } : IInitializeOptions
+) : Observable<IInitEvent> {
   const warning$ = new Subject<ICustomError>();
 
   // Fetch and parse the manifest from the URL given.
   // Throttled to avoid doing multiple simultaneous requests.
-  const fetchManifest = throttle(
-    createManifestPipeline(pipelines,
-                           getManifestPipelineOptions(networkConfig),
-                           warning$));
+  const manifestPipelineOptions = getManifestPipelineOptions(networkConfig);
+  const fetchManifest = throttle(createManifestPipeline(pipelines,
+                                                        manifestPipelineOptions,
+                                                        warning$));
 
   // Creates pipelines for downloading segments.
   const segmentPipelinesManager = new SegmentPipelinesManager<any>(pipelines);
@@ -193,39 +192,17 @@ export default function InitializeOnMediaSource({
   // through a throwing Observable.
   const mediaError$ = throwOnMediaError(mediaElement);
 
-  // Emit each time the manifest is refreshed.
-  const manifestRefreshed$ =
-    new ReplaySubject<{ manifest : Manifest; sendingTime? : number }>(1);
-
   const loadContent$ = observableCombineLatest([
     openMediaSource$,
     fetchManifest({ url }),
     emeManager$.pipe(filter(isEMEReadyEvent), take(1)),
-  ]).pipe(mergeMap(([ mediaSource, { manifest, sendingTime } ]) => {
+  ]).pipe(mergeMap(([ initialMediaSource, { manifest, sendingTime } ]) => {
 
-    /**
-     * Refresh the manifest on subscription.
-     * @returns {Observable}
-     */
-    function refreshManifest() : Observable<never> {
-      const refreshURL = manifest.getUrl();
-      if (!refreshURL) {
-        log.warn("Init: Cannot refresh the manifest: no url");
-        return EMPTY;
-      }
+    log.debug("Init: Calculating initial time");
+    const initialTime = getInitialTime(manifest, startAt);
+    log.debug("Init: Initial time calculated:", initialTime);
 
-      const externalClockOffset = manifest.getClockOffset();
-      return fetchManifest({ url: refreshURL, externalClockOffset }).pipe(
-        tap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
-          manifest.update(newManifest);
-          manifestRefreshed$.next({ manifest, sendingTime: newSendingTime });
-        }),
-        ignoreElements(),
-        share() // share the previous side-effect
-      );
-    }
-
-    const loadOnMediaSource = createMediaSourceLoader({ // Behold!
+    const mediaSourceLoader = createMediaSourceLoader({
       mediaElement,
       manifest,
       clock$,
@@ -238,80 +215,111 @@ export default function InitializeOnMediaSource({
                                   bufferOptions),
     });
 
-    log.debug("Init: Calculating initial time");
-    const initialTime = getInitialTime(manifest, startAt);
-    log.debug("Init: Initial time calculated:", initialTime);
+    const recursiveLoad$ = recursivelyLoadOnMediaSource(initialMediaSource,
+                                                        initialTime,
+                                                        autoPlay);
 
-    const reloadMediaSource$ = new Subject<IReloadingInfos>();
-    const onEvent = createEventListener(reloadMediaSource$,
-                                        refreshManifest);
-    const handleReloads$ : Observable<IInitEvent> = reloadMediaSource$.pipe(
-      switchMap(({ currentTime, isPaused }) => {
-        return openMediaSource(mediaElement).pipe(
-          mergeMap(newMS => loadOnMediaSource(newMS, currentTime, !isPaused)),
-          mergeMap(onEvent),
-          startWith(EVENTS.reloadingMediaSource())
-        );
-      })
-    );
+    // Emit each time the manifest is refreshed.
+    const manifestRefreshed$ = new ReplaySubject<{ manifest : Manifest;
+                                                   sendingTime? : number; }>(1);
 
-    const loadOnMediaSource$ = observableConcat(
-      observableOf(EVENTS.manifestReady(abrManager, manifest)),
-      loadOnMediaSource(mediaSource, initialTime, autoPlay).pipe(
-        takeUntil(reloadMediaSource$),
-        mergeMap(onEvent)
-      )
-    );
+    // Emit when we want to manually update the manifest.
+    // The value allow to set a delay relatively to the last Manifest refresh
+    // (to avoid asking for it too often).
+    const scheduleManifestRefresh$ = new Subject<number>();
 
-    // Emit when the manifest should be refreshed due to its lifetime being expired
-    const manifestAutoRefresh$ = manifestRefreshed$.pipe(
+    // Emit when the manifest should be refreshed. Either when:
+    //   - A buffer asks for it to be refreshed
+    //   - its lifetime expired.
+    // TODO if we go a little more clever, manifestRefreshed$ could be removed
+    const manifestRefresh$ = manifestRefreshed$.pipe(
       startWith({ manifest, sendingTime }),
       switchMap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
-        if (newManifest.lifetime) {
+        const manualRefresh$ = scheduleManifestRefresh$.pipe(
+          mergeMap((delay) => {
+            // schedule a Manifest refresh to avoid sending too much request.
+            const timeSinceLastRefresh = newSendingTime == null ?
+                                           0 :
+                                           performance.now() - newSendingTime;
+            return observableTimer(delay - timeSinceLastRefresh);
+          }));
+
+        const autoRefresh$ = (() => {
+          if (newManifest.lifetime == null || newManifest.lifetime <= 0) {
+            return EMPTY;
+          }
           const timeSinceRequest = newSendingTime == null ?
                                      0 :
                                      performance.now() - newSendingTime;
           const updateTimeout = newManifest.lifetime * 1000 - timeSinceRequest;
           return observableTimer(updateTimeout);
-        }
-        return EMPTY;
-      })
-    ).pipe(mergeMap(refreshManifest));
+        })();
 
-    return observableMerge(loadOnMediaSource$, handleReloads$, manifestAutoRefresh$);
+        return observableMerge(autoRefresh$, manualRefresh$)
+          .pipe(take(1),
+                mergeMap(() => refreshManifest(manifest, fetchManifest)),
+                tap(val => manifestRefreshed$.next(val)),
+                ignoreElements());
+      }));
+
+    return observableMerge(manifestRefresh$, recursiveLoad$)
+      .pipe(finalize(() => {
+        manifestRefreshed$.complete();
+        scheduleManifestRefresh$.complete();
+      }));
+
+    /**
+     * Load the content defined by the Manifest in the mediaSource given at the
+     * given position and playing status.
+     * This function recursively re-call itself when a MediaSource reload is
+     * wanted.
+     * @param {MediaSource} mediaSource
+     * @param {number} position
+     * @param {boolean} shouldPlay
+     * @returns {Observable}
+     */
+    function recursivelyLoadOnMediaSource(
+      mediaSource : MediaSource,
+      position : number,
+      shouldPlay : boolean
+    ) : Observable<IInitEvent> {
+      const reloadMediaSource$ = new Subject<{ currentTime : number;
+                                               isPaused : boolean; }>();
+      const mediaSourceLoader$ = mediaSourceLoader(mediaSource, position, shouldPlay)
+        .pipe(tap(evt => {
+                switch (evt.type) {
+                  case "needs-manifest-refresh":
+                    scheduleManifestRefresh$.next(0);
+                    break;
+                  case "manifest-might-be-out-of-sync":
+                    scheduleManifestRefresh$.next(OUT_OF_SYNC_MANIFEST_REFRESH_DELAY);
+                    break;
+                  case "needs-media-source-reload":
+                    reloadMediaSource$.next(evt.value);
+                    break;
+                }
+              }));
+
+      const currentLoad$ = observableConcat(
+        observableOf(EVENTS.manifestReady(manifest)),
+        mediaSourceLoader$.pipe(takeUntil(reloadMediaSource$)));
+
+      const handleReloads$ = reloadMediaSource$.pipe(
+        switchMap(({ currentTime, isPaused }) => {
+          return openMediaSource(mediaElement).pipe(
+            mergeMap(newMS => recursivelyLoadOnMediaSource(newMS,
+                                                           currentTime,
+                                                           !isPaused)),
+            startWith(EVENTS.reloadingMediaSource())
+          );
+        }));
+
+      return observableMerge(handleReloads$, currentLoad$);
+    }
   }));
 
   return observableMerge(loadContent$,
                          mediaError$,
                          emeManager$,
-                         warning$.pipe(map(EVENTS.warning))
-  );
-}
-
-/**
- * Generate function reacting to playback events.
- * @param {Subject} reloadMediaSource$
- * @param {Function} refreshManifest
- * @returns {Function}
- */
-function createEventListener(
-  reloadMediaSource$ : Subject<IReloadingInfos>,
-  refreshManifest : () => Observable<never>
-) : (evt : IMediaSourceLoaderEvent) => Observable<IInitEvent> {
-  /**
-   * React to playback events.
-   * @param {Object} evt
-   * @returns {Observable}
-   */
-  return function onEvent(evt : IMediaSourceLoaderEvent) {
-    switch (evt.type) {
-      case "needs-media-source-reload":
-        reloadMediaSource$.next(evt.value);
-        break;
-
-      case "needs-manifest-refresh":
-        return refreshManifest();
-    }
-    return observableOf(evt);
-  };
+                         warning$.pipe(map(EVENTS.warning)));
 }

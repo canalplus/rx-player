@@ -16,7 +16,6 @@
 
 import { ICustomError } from "../../errors";
 import Manifest from "../../manifest";
-import ABRManager from "../abr";
 import { IRepresentationChangeEvent } from "../buffers";
 import { IStallingItem } from "./get_stalled_events";
 
@@ -41,8 +40,7 @@ export interface IInitClockTick { currentTime : number;
 
 // The manifest has been downloaded and parsed for the first time
 export interface IManifestReadyEvent { type : "manifestReady";
-                                       value : { abrManager : ABRManager;
-                                                 manifest : Manifest; }; }
+                                       value : { manifest : Manifest }; }
 
 // A minor error happened
 export interface IWarningEvent { type : "warning";

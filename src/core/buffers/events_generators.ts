@@ -28,6 +28,7 @@ import {
   IAdaptationChangeEvent,
   IBitrateEstimationChangeEvent,
   IBufferEventAddedSegment,
+  IBufferManifestMightBeOutOfSync,
   IBufferNeedsDiscontinuitySeek,
   IBufferNeedsManifestRefresh,
   IBufferStateActive,
@@ -110,9 +111,14 @@ const EVENTS = {
              value: { bufferType } };
   },
 
-  needsManifestRefresh(bufferType : IBufferType) : IBufferNeedsManifestRefresh {
+  needsManifestRefresh() : IBufferNeedsManifestRefresh {
     return { type : "needs-manifest-refresh",
-             value : { bufferType } };
+             value :  undefined };
+  },
+
+  manifestMightBeOufOfSync() : IBufferManifestMightBeOutOfSync {
+    return { type : "manifest-might-be-out-of-sync",
+             value : undefined };
   },
 
   needsMediaSourceReload(

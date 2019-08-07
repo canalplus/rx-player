@@ -8,6 +8,7 @@
          <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
          <SegmentTemplate initialization="$RepresentationID$/init.mp4" media="$RepresentationID$/t$Time$.m4s" timescale="48000">
 <SegmentTimeline>
+<S d="287744" t="0" r="33688627" />
 <S d="288768" t="73320372578304" />
 <S d="287744" />
 <S d="288768" r="2" />
@@ -44,6 +45,7 @@
          <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
          <SegmentTemplate initialization="$RepresentationID$/init.mp4" media="$RepresentationID$/t$Time$.m4s" timescale="90000">
 <SegmentTimeline>
+<S d="540000" r="33688626" t="540000" />
 <S d="540000" r="49" t="137475698580000" />
 </SegmentTimeline>
 </SegmentTemplate>

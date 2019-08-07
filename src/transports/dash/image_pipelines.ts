@@ -38,7 +38,9 @@ export function imageLoader(
 }
 
 export function imageParser(
-  { response, segment } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
+  { response,
+    segment,
+    period } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
 ) : IImageParserObservable {
   const { responseData } = response;
 
@@ -50,7 +52,8 @@ export function imageParser(
                               time: segment.isInit ? -1 : segment.time,
                               timescale: segment.timescale } :
                             null,
-                          segmentOffset: segment.timestampOffset || 0 });
+                          segmentOffset: segment.timestampOffset || 0,
+                          appendWindow: [period.start, period.end] });
   }
 
   const bifObject = features.imageParser(new Uint8Array(responseData));
@@ -63,5 +66,6 @@ export function imageParser(
                         segmentInfos: { time: 0,
                                         duration: Number.MAX_VALUE,
                                         timescale: bifObject.timescale },
-                        segmentOffset: segment.timestampOffset || 0 });
+                        segmentOffset: segment.timestampOffset || 0,
+                        appendWindow: [period.start, period.end] });
 }

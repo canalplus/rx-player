@@ -332,9 +332,10 @@ function createSmoothStreamingParser(
 
       const representation : IParsedRepresentation = objectAssign({}, qualityLevel, {
         index: new RepresentationIndex(repIndex, {
-                 segmentPrivateInfos,
                  aggressiveMode: parserOptions.aggressiveMode == null ?
                    DEFAULT_AGGRESSIVE_MODE : parserOptions.aggressiveMode,
+                 isLive,
+                 segmentPrivateInfos,
                }),
         mimeType,
         codecs,

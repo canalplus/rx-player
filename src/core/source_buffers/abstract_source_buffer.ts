@@ -42,6 +42,8 @@ export default abstract class AbstractSourceBuffer<T>
   public updating : boolean;
   public buffered : ManualTimeRanges;
   public readyState : string;
+  public appendWindowStart : number;
+  public appendWindowEnd : number;
 
   constructor() {
     super();
@@ -49,6 +51,8 @@ export default abstract class AbstractSourceBuffer<T>
     this.readyState = "opened";
     this.buffered = new ManualTimeRanges();
     this.timestampOffset = 0;
+    this.appendWindowStart = 0;
+    this.appendWindowEnd = Infinity;
   }
 
   /**

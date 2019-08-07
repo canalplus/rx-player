@@ -20,6 +20,37 @@ import {
 } from "../types";
 
 /**
+ * Returns "first time of reference" from the adaptation given, considering a
+ * live content.
+ * Undefined if a time could not be found.
+ *
+ * We consider the latest first time from every representations in the given
+ * adaptation.
+ * @param {Object} adaptation
+ * @returns {Number|undefined}
+ */
+function getFirstTimeReferenceFromAdaptation(
+  adaptation: IParsedAdaptation
+) : number | undefined {
+  if (!adaptation) {
+    return undefined;
+  }
+  const representations = adaptation.representations || [];
+  const firstTimeReferences: Array<number | undefined> = representations
+    .map(representation => {
+      const firstPosition = representation.index.getFirstPosition();
+      return firstPosition != null ? firstPosition : undefined;
+    });
+
+  if (firstTimeReferences.some((x) => x == null)) {
+    return undefined;
+  }
+
+  const representationsMin = Math.max(...firstTimeReferences as number[]);
+  return isNaN(representationsMin) ? undefined : representationsMin;
+}
+
+/**
  * Returns "last time of reference" from the adaptation given, considering a
  * live content.
  * Undefined if a time could not be found.
@@ -32,16 +63,6 @@ import {
 function getLastTimeReferenceFromAdaptation(
   adaptation: IParsedAdaptation
 ) : number | undefined {
-  // Here's how we do, for each possibility:
-  //
-  //  1. every representations have an index:
-  //    - returns minimum for every representations
-  //
-  //  2. no index for 1+ representation(s):
-  //    - returns undefined
-  //
-  //  3. Invalid index found somewhere:
-  //    - returns undefined
   if (!adaptation) {
     return undefined;
   }
@@ -65,20 +86,71 @@ function getLastTimeReferenceFromAdaptation(
  * @param {Object} manifest
  * @returns {number}
  */
-export default function getLastTimeReference(
+export default function getMinimumAndMaximumPosition(
   manifest: IParsedManifest
-) : number|undefined {
+) : [number|undefined, number|undefined] {
   if (manifest.periods.length === 0) {
     throw new Error("DASH Parser: no period available for a live content");
   }
-  const lastPeriodAdaptations =
-    manifest.periods[manifest.periods.length - 1].adaptations;
-  const firstAdaptationsFromLastPeriod =
-    lastPeriodAdaptations.video || lastPeriodAdaptations.audio;
-  if (!firstAdaptationsFromLastPeriod || !firstAdaptationsFromLastPeriod.length) {
+  const firstPeriodAdaptations = manifest.periods[0].adaptations;
+  const lastPeriodAdaptations = manifest.periods[manifest.periods.length - 1]
+                                  .adaptations;
+  const firstAudioAdaptationFromFirstPeriod = firstPeriodAdaptations.audio == null ?
+                                                undefined :
+                                                firstPeriodAdaptations.audio[0];
+  const firstVideoAdaptationFromFirstPeriod = firstPeriodAdaptations.video == null ?
+                                                undefined :
+                                                firstPeriodAdaptations.video[0];
+  const firstAudioAdaptationFromLastPeriod = lastPeriodAdaptations.audio == null ?
+                                               undefined :
+                                               lastPeriodAdaptations.audio[0];
+  const firstVideoAdaptationFromLastPeriod =  lastPeriodAdaptations.video == null ?
+                                               undefined :
+                                               lastPeriodAdaptations.video[0];
+
+  if ((firstAudioAdaptationFromFirstPeriod == null &&
+       firstVideoAdaptationFromFirstPeriod == null) ||
+      (firstAudioAdaptationFromLastPeriod == null &&
+       firstVideoAdaptationFromLastPeriod == null))
+  {
     throw new Error("DASH Parser: Can't find first adaptation from last period");
   }
-  const firstAdaptationFromLastPeriod = firstAdaptationsFromLastPeriod[0];
-  return firstAdaptationsFromLastPeriod == null ?
-    undefined : getLastTimeReferenceFromAdaptation(firstAdaptationFromLastPeriod);
+
+  const minimumAudioPosition = firstAudioAdaptationFromFirstPeriod == null ?
+    undefined :
+    getFirstTimeReferenceFromAdaptation(firstAudioAdaptationFromFirstPeriod);
+
+  const minimumVideoPosition = firstVideoAdaptationFromFirstPeriod == null ?
+    undefined :
+    getFirstTimeReferenceFromAdaptation(firstVideoAdaptationFromFirstPeriod);
+
+  const maximumAudioPosition = firstAudioAdaptationFromLastPeriod == null ?
+    undefined :
+    getLastTimeReferenceFromAdaptation(firstAudioAdaptationFromLastPeriod);
+
+  const maximumVideoPosition = firstVideoAdaptationFromLastPeriod == null ?
+    undefined :
+    getLastTimeReferenceFromAdaptation(firstVideoAdaptationFromLastPeriod);
+
+  const minimumPosition = [minimumAudioPosition, minimumVideoPosition]
+                            .reduce<number|undefined>((acc, pos) => {
+                              if (acc == null) {
+                                return pos;
+                              } else if (pos == null) {
+                                return acc;
+                              }
+                              return Math.max(acc, pos);
+                            }, undefined);
+
+  const maximumPosition = [maximumAudioPosition, maximumVideoPosition]
+                            .reduce<number|undefined>((acc, pos) => {
+                              if (acc == null) {
+                                return pos;
+                              } else if (pos == null) {
+                                return acc;
+                              }
+                              return Math.min(acc, pos);
+                            }, undefined);
+
+  return [minimumPosition, maximumPosition];
 }

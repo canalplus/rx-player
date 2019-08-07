@@ -23,8 +23,7 @@ import { IParsedManifest } from "../types";
 import checkManifestIDs from "../utils/check_manifest_ids";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
-import getLastTimeReference from "./get_last_time_reference";
-import getTimeLimits from "./get_time_limits";
+import getMinimumAndMaximumPosition from "./get_last_time_reference";
 import {
   createMPDIntermediateRepresentation,
   IMPDIntermediateRepresentation,
@@ -74,11 +73,56 @@ export default function parseMPD(
  */
 function loadExternalRessourcesAndParse(
   mpdIR : IMPDIntermediateRepresentation,
-  args : IMPDParserArguments
+  args : IMPDParserArguments,
+  hasLoadedClock? : boolean
 ) : IParserResponse<IParsedManifest> {
+  const { children: rootChildren,
+          attributes: rootAttributes } = mpdIR;
+
+  if (args.externalClockOffset == null) {
+    const isDynamic : boolean = rootAttributes.type === "dynamic";
+
+    const directTiming = arrayFind(rootChildren.utcTimings, (utcTiming) => {
+      return utcTiming.schemeIdUri === "urn:mpeg:dash:utc:direct:2014" &&
+             utcTiming.value != null;
+    });
+
+    const clockOffsetFromDirectUTCTiming =
+      directTiming != null &&
+      directTiming.value != null ? getClockOffset(directTiming.value) :
+                                   undefined;
+    let clockOffset = clockOffsetFromDirectUTCTiming != null &&
+                      !isNaN(clockOffsetFromDirectUTCTiming) ?
+                        clockOffsetFromDirectUTCTiming :
+                        undefined;
+
+    if (clockOffset != null) {
+      args.externalClockOffset = clockOffset;
+    } else if (isDynamic && hasLoadedClock !== true) {
+      const UTCTimingHTTPURL = getHTTPUTCTimingURL(mpdIR);
+      if (UTCTimingHTTPURL != null && UTCTimingHTTPURL.length > 0) {
+        // TODO fetch UTCTiming and XLinks at the same time
+        return {
+          type: "needs-ressources",
+          value: {
+            ressources: [UTCTimingHTTPURL],
+            continue: function continueParsingMPD(loadedRessources : string[]) {
+              if (loadedRessources.length !== 1) {
+                throw new Error("DASH parser: wrong number of loaded ressources.");
+              }
+              clockOffset = getClockOffset(loadedRessources[0]);
+              args.externalClockOffset = clockOffset;
+              return loadExternalRessourcesAndParse(mpdIR, args, true);
+            },
+          },
+        };
+      }
+    }
+  }
+
   const xlinksToLoad : Array<{ index : number; ressource : string }> = [];
-  for (let i = 0; i < mpdIR.children.periods.length; i++) {
-    const { xlinkHref, xlinkActuate } = mpdIR.children.periods[i].attributes;
+  for (let i = 0; i < rootChildren.periods.length; i++) {
+    const { xlinkHref, xlinkActuate } = rootChildren.periods[i].attributes;
     if (xlinkHref != null && xlinkActuate === "onLoad") {
       xlinksToLoad.push({ index: i, ressource: xlinkHref });
     }
@@ -116,7 +160,7 @@ function loadExternalRessourcesAndParse(
           }
 
           // replace original "xlinked" periods by the real deal
-          mpdIR.children.periods.splice(index, 1, ...periodsIR);
+          rootChildren.periods.splice(index, 1, ...periodsIR);
         }
         return loadExternalRessourcesAndParse(mpdIR, args);
       },
@@ -136,90 +180,60 @@ function parseCompleteIntermediateRepresentation(
 ) : IParserResponse<IParsedManifest> {
   const { children: rootChildren,
           attributes: rootAttributes } = mpdIR;
-
-  const baseURL = resolveURL(normalizeBaseURL(args.url),
-                             rootChildren.baseURL);
-
+  const isDynamic : boolean = rootAttributes.type === "dynamic";
+  const baseURL = resolveURL(normalizeBaseURL(args.url), rootChildren.baseURL);
   const availabilityStartTime = parseAvailabilityStartTime(rootAttributes,
                                                            args.referenceDateTime);
-
-  const isDynamic : boolean = rootAttributes.type === "dynamic";
-  const parsedPeriods = parsePeriods(rootChildren.periods,
-                                     { availabilityStartTime,
-                                       duration: rootAttributes.duration,
-                                       isDynamic,
-                                       baseURL });
-
-  const duration : number|undefined = parseDuration(rootAttributes, parsedPeriods);
-
-  const directTiming = arrayFind(rootChildren.utcTimings, (utcTiming) =>
-                         utcTiming.schemeIdUri === "urn:mpeg:dash:utc:direct:2014" &&
-                         utcTiming.value != null);
-
-  // second condition not needed but TS did not help there, even with a `is`
-  const clockOffsetFromDirectUTCTiming =
-    directTiming != null &&
-    directTiming.value != null ? getClockOffset(directTiming.value) :
-                                 undefined;
-
+  const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
+  const clockOffset = args.externalClockOffset;
+  const manifestInfos = { availabilityStartTime,
+                          baseURL,
+                          clockOffset,
+                          duration: rootAttributes.duration,
+                          isDynamic,
+                          timeShiftBufferDepth };
+  const parsedPeriods = parsePeriods(rootChildren.periods, manifestInfos);
+  const duration = parseDuration(rootAttributes, parsedPeriods);
   const parsedMPD : IParsedManifest = {
     availabilityStartTime,
     baseURL,
+    clockOffset: args.externalClockOffset,
     duration,
     id: rootAttributes.id != null ? rootAttributes.id :
                                     "gen-dash-manifest-" + generateManifestID(),
-    periods: parsedPeriods,
-    transportType: "dash",
     isLive: isDynamic,
-    uris: [args.url, ...rootChildren.locations],
+    periods: parsedPeriods,
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay,
-    clockOffset: clockOffsetFromDirectUTCTiming != null &&
-                 !isNaN(clockOffsetFromDirectUTCTiming) ?
-                   clockOffsetFromDirectUTCTiming :
-                   undefined,
+    transportType: "dash",
+    uris: [args.url, ...rootChildren.locations],
   };
-
-  if (parsedMPD.clockOffset == null && args.externalClockOffset != null) {
-    parsedMPD.clockOffset = args.externalClockOffset;
-  }
 
   // -- add optional fields --
   if (rootAttributes.minimumUpdatePeriod != null
-      && rootAttributes.minimumUpdatePeriod > 0) {
+      && rootAttributes.minimumUpdatePeriod > 0)
+  {
     parsedMPD.lifetime = rootAttributes.minimumUpdatePeriod;
   }
 
   checkManifestIDs(parsedMPD);
   if (parsedMPD.isLive) {
-    const lastTimeReference = getLastTimeReference(parsedMPD);
-    if (parsedMPD.clockOffset == null && lastTimeReference == null) {
-      const UTCTimingHTTPURL = getHTTPUTCTimingURL(mpdIR);
-      if (UTCTimingHTTPURL != null && UTCTimingHTTPURL.length > 0) {
-        return {
-          type: "needs-ressources",
-          value: {
-            ressources: [UTCTimingHTTPURL],
-            continue: function continueParsingMPD(loadedRessources : string[]) {
-              if (loadedRessources.length !== 1) {
-                throw new Error("DASH parser: wrong number of loaded ressources.");
-              }
-              parsedMPD.clockOffset = getClockOffset(loadedRessources[0]);
-              const timeLimits = getTimeLimits(parsedMPD,
-                                               lastTimeReference,
-                                               rootAttributes.timeShiftBufferDepth);
-              parsedMPD.minimumTime = timeLimits[0];
-              parsedMPD.maximumTime = timeLimits[1];
-              return { type: "done", value: parsedMPD };
-            },
-          },
-        };
+    const [minTime, maxTime] = getMinimumAndMaximumPosition(parsedMPD);
+    const now = performance.now();
+    if (minTime != null) {
+      parsedMPD.minimumTime = { isContinuous: timeShiftBufferDepth != null,
+                                value: minTime,
+                                time: now };
+    }
+    if (maxTime != null) {
+      parsedMPD.maximumTime = { isContinuous: true,
+                                value: maxTime,
+                                time: now };
+      if (minTime == null) {
+        parsedMPD.minimumTime = { isContinuous: true,
+                                  value: maxTime,
+                                  time: now };
       }
     }
-    const [minTime, maxTime] = getTimeLimits(parsedMPD,
-                                             lastTimeReference,
-                                             rootAttributes.timeShiftBufferDepth);
-    parsedMPD.minimumTime = minTime;
-    parsedMPD.maximumTime = maxTime;
   }
 
   return { type: "done", value: parsedMPD };

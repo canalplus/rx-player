@@ -85,6 +85,7 @@ function TextTrackLoader({ segment,
  * @returns {Observable.<Object>}
  */
 function TextTrackParser({ response,
+                           period,
                            segment,
                            adaptation,
                            representation,
@@ -105,7 +106,8 @@ function TextTrackParser({ response,
                                                      segment.time,
                               timescale: segment.timescale } :
                             null,
-                          segmentOffset: segment.timestampOffset || 0 });
+                          segmentOffset: segment.timestampOffset || 0,
+                          appendWindow: [period.start, period.end] });
   }
 
   let responseData : Uint8Array|string;
@@ -220,7 +222,8 @@ function TextTrackParser({ response,
   }
   return observableOf({ segmentData,
                         segmentInfos,
-                        segmentOffset: segment.timestampOffset || 0 });
+                        segmentOffset: segment.timestampOffset || 0,
+                        appendWindow: [period.start, period.end] });
 }
 
 export {

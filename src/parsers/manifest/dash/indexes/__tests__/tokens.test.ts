@@ -17,9 +17,9 @@
 import {
   replaceRepresentationDASHTokens,
   replaceSegmentDASHTokens,
-} from "../helpers";
+} from "../tokens";
 
-describe("dash parser helpers", function() {
+describe("dash parser tokens helpers", function() {
   describe("replaceSegmentDASHTokens", () => {
     it("should correctly parse time token", function() {
       expect(replaceSegmentDASHTokens("Example_Token_$Time$", 1000))

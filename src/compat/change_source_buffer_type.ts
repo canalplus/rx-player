@@ -27,6 +27,8 @@ export interface ICustomSourceBuffer<T>
     buffered : TimeRanges;
     changeType? : (type: string) => void;
     updating : boolean;
+    appendWindowStart : number;
+    appendWindowEnd : number;
     timestampOffset : number;
     appendBuffer(data : T) : void;
     remove(from : number, to : number) : void;

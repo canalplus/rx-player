@@ -88,9 +88,38 @@ export default class NativeTextSourceBuffer
                                       this.timestampOffset,
                                       language);
 
+    if (this.appendWindowStart !== 0 && this.appendWindowEnd !== Infinity) {
+      // Removing before window start
+      let i = 0;
+      while (i < cues.length && cues[i].endTime <= this.appendWindowStart) {
+        i++;
+      }
+      cues.splice(0, i);
+
+      i = 0;
+      while (i < cues.length && cues[i].startTime < this.appendWindowStart) {
+        cues[i].startTime = this.appendWindowStart;
+        i++;
+      }
+
+      // Removing after window end
+      i = cues.length - 1;
+
+      while (i >= 0 && cues[i].startTime >= this.appendWindowEnd) {
+        i--;
+      }
+      cues.splice(i, cues.length);
+
+      i = cues.length - 1;
+      while (i >= 0 && cues[i].endTime > this.appendWindowEnd) {
+        cues[i].endTime = this.appendWindowEnd;
+        i--;
+      }
+    }
+
     let start : number;
     if (startTime != null) {
-      start = startTime;
+      start = Math.max(this.appendWindowStart, startTime);
     } else {
       if (cues.length <= 0) {
         log.warn("NTSB: Current text tracks have no cues nor start time. Aborting");
@@ -102,7 +131,7 @@ export default class NativeTextSourceBuffer
 
     let end : number;
     if (endTime != null) {
-      end = endTime;
+      end = Math.min(this.appendWindowEnd, endTime);
     } else {
       if (cues.length <= 0) {
         log.warn("NTSB: Current text tracks have no cues nor end time. Aborting");

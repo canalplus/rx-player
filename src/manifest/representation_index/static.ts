@@ -91,6 +91,21 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
     return -1;
   }
 
+  /**
+   * Returns true as a static file should never need lose availability.
+   * @returns {Boolean}
+   */
+  isSegmentStillAvailable() : true {
+    return true;
+  }
+
+  /**
+   * @returns {Boolean}
+   */
+  canBeOutOfSyncError() : false {
+    return false;
+  }
+
   _addSegments() : void {
     log.warn("Tried add Segments to a static RepresentationIndex");
   }

@@ -55,7 +55,10 @@ interface IParsedSegment<T> { segmentData : T;
                               segmentInfos : { duration? : number;
                                                time : number;
                                                timescale : number; };
-                              segmentOffset : number; }
+                              segmentOffset : number;
+                              appendWindow: [ number | undefined,
+                                              number | undefined ]; }
+
 export interface ISegmentFetcherResponseEvent<T> {
   type : "response";
   parse : (init? : ISegmentTimingInfos) => Observable<IParsedSegment<T>>;

@@ -53,7 +53,12 @@ export interface IAppendBufferInfos<T> {
   codec : string; // string corresponding to the mime-type + codec to set the
                   // underlying SourceBuffer to.
   timestampOffset : number; // time offset in seconds to apply to this segment.
-}
+  appendWindow: [ number | undefined, // start window for the segment
+                                      // (part of the segment before that time
+                                      // will be ignored)
+                 number | undefined ]; // end window for the segment
+}                                      // (part of the segment after that time
+                                       // will be ignored)
 
 // Item waiting in the queue to append a new segment to the SourceBuffer.
 // T is the type of the segment pushed.
@@ -61,7 +66,9 @@ interface IAppendQueueItem<T> { type : SourceBufferAction.Append;
                                 value : { initSegment : T|null;
                                           segment : T|null;
                                           codec : string;
-                                          timestampOffset? : number; };
+                                          timestampOffset? : number;
+                                          appendWindow : [ number | undefined,
+                                                           number | undefined ]; };
                                 subject : Subject<unknown>; }
 
 // Item waiting in the queue to remove segment(s) from the SourceBuffer.
@@ -89,7 +96,9 @@ interface IAppendAction<T> { type : SourceBufferAction.Append;
                              value : { segment : T;
                                        isInit : boolean;
                                        codec : string;
-                                       timestampOffset? : number; }; }
+                                       timestampOffset? : number;
+                                       appendWindow : [ number | undefined,
+                                                       number | undefined ]; }; }
 
 interface IRemoveAction { type : SourceBufferAction.Remove;
                           value : { start : number;
@@ -340,7 +349,11 @@ export default class QueuedSourceBuffer<T> {
       const subject = new Subject<unknown>();
 
       if (order.type === SourceBufferAction.Append) {
-        const { segment, initSegment, timestampOffset, codec } = order.value;
+        const { segment,
+                initSegment,
+                timestampOffset,
+                codec,
+                appendWindow } = order.value;
         if (initSegment === null && segment === null) {
           log.warn("QSB: no segment to append.", this.bufferType);
           obs.next(null);
@@ -351,6 +364,7 @@ export default class QueuedSourceBuffer<T> {
                       value: { initSegment,
                                segment,
                                timestampOffset,
+                               appendWindow,
                                codec },
                       subject };
       } else if (order.type === SourceBufferAction.Remove) {
@@ -403,7 +417,8 @@ export default class QueuedSourceBuffer<T> {
                        value: { isInit: true,
                                 segment: newQueueItem.value.initSegment,
                                 codec: newQueueItem.value.codec,
-                                timestampOffset: newQueueItem.value.timestampOffset } });
+                                timestampOffset: newQueueItem.value.timestampOffset,
+                                appendWindow: newQueueItem.value.appendWindow } });
         } else if (newQueueItem.value.segment === null) {
           newQueueItem.subject.next();
           newQueueItem.subject.complete();
@@ -413,8 +428,8 @@ export default class QueuedSourceBuffer<T> {
                        value: { segment: newQueueItem.value.segment,
                                 isInit: false,
                                 codec: newQueueItem.value.codec,
-                                timestampOffset: newQueueItem.value.timestampOffset },
-          });
+                                timestampOffset: newQueueItem.value.timestampOffset,
+                                appendWindow: newQueueItem.value.appendWindow }, });
         }
       } else {
         tasks.push({ type: SourceBufferAction.Remove,
@@ -439,7 +454,11 @@ export default class QueuedSourceBuffer<T> {
     try {
       switch (task.type) {
         case SourceBufferAction.Append:
-          const { segment, isInit, timestampOffset = 0, codec } = task.value;
+          const { segment,
+                  isInit,
+                  timestampOffset = 0,
+                  appendWindow,
+                  codec } = task.value;
           if (isInit && this._lastInitSegment === segment) {
             this._flush(); // nothing to do
             return;
@@ -463,6 +482,25 @@ export default class QueuedSourceBuffer<T> {
                       this._sourceBuffer.timestampOffset,
                       newTimestampOffset);
             this._sourceBuffer.timestampOffset = newTimestampOffset;
+          }
+
+          if (appendWindow[0] == null) {
+            if (this._sourceBuffer.appendWindowStart > 0) {
+              this._sourceBuffer.appendWindowStart = 0;
+            }
+          } else if (appendWindow[0] !== this._sourceBuffer.appendWindowStart) {
+            if (appendWindow[0] >= this._sourceBuffer.appendWindowEnd) {
+              this._sourceBuffer.appendWindowEnd = appendWindow[0] + 1;
+            }
+            this._sourceBuffer.appendWindowStart = appendWindow[0];
+          }
+
+          if (appendWindow[1] == null) {
+            if (this._sourceBuffer.appendWindowEnd !== Infinity) {
+              this._sourceBuffer.appendWindowEnd = Infinity;
+            }
+          } else if (appendWindow[1] !== this._sourceBuffer.appendWindowEnd) {
+            this._sourceBuffer.appendWindowEnd = appendWindow[1];
           }
 
           log.debug("QSB: pushing new data to SourceBuffer", this.bufferType);

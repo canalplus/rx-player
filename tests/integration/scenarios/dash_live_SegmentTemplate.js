@@ -43,8 +43,6 @@ describe("DASH live content (SegmentTemplate)", function() {
     expect(typeof manifest.id).to.equal("string");
     expect(manifest.isLive).to.equal(true);
     expect(manifest.getUrl()).to.equal(manifestInfos.url);
-    expect(manifest.availabilityStartTime)
-      .to.equal(manifestInfos.availabilityStartTime);
 
     const adaptations = manifest.periods[0].adaptations;
     const firstPeriodAdaptationsInfos = manifestInfos.periods[0].adaptations;
@@ -317,8 +315,7 @@ describe("DASH live content (SegmentTemplate)", function() {
       await sleep(1);
       await xhrMock.flush();
       await sleep(1);
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(1553517851.013, 1);
+      expect(player.getMinimumPosition()).to.be.closeTo(1553521448, 1);
     });
   });
 
@@ -334,8 +331,7 @@ describe("DASH live content (SegmentTemplate)", function() {
       await sleep(1);
       await xhrMock.flush();
       await sleep(1);
-      expect(player.getMaximumPosition()).to.be
-        .closeTo(1553518148, 1);
+      expect(player.getMaximumPosition()).to.be.closeTo(1553521748, 1);
     });
   });
 });
@@ -376,8 +372,6 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
     expect(typeof manifest.id).to.equal("string");
     expect(manifest.isLive).to.equal(true);
     expect(manifest.getUrl()).to.equal(noTimeShiftBufferDepthManifestInfos.url);
-    expect(manifest.availabilityStartTime)
-      .to.equal(noTimeShiftBufferDepthManifestInfos.availabilityStartTime);
 
     const adaptations = manifest.periods[0].adaptations;
     const firstPeriodAdaptationsInfos =
@@ -640,7 +634,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
   });
 
   describe("getMinimumPosition", () => {
-    it("should return the last position minus the TimeShift window", async () => {
+    it("should return the period start if one", async () => {
       xhrMock.lock();
 
       player.loadVideo({
@@ -651,7 +645,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
       await sleep(1);
       await xhrMock.flush();
       await sleep(1);
-      expect(player.getMinimumPosition()).to.equal(300);
+      expect(player.getMinimumPosition()).to.equal(1553515200);
     });
   });
 
@@ -668,7 +662,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
       await xhrMock.flush();
       await sleep(1);
       expect(player.getMaximumPosition()).to.be
-        .closeTo(1553517848, 1);
+        .closeTo(1553521448, 1);
     });
   });
 });
