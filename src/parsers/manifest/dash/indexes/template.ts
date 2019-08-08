@@ -196,9 +196,12 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         const perfOffset = (clockOffset / 1000) - availabilityStartTime;
         this._liveEdgeOffset = perfOffset - periodStart;
       } else {
-        const securityLiveGap = this._lowLatencyMode ? 3 : 10;
+        const securityLiveGap = this._lowLatencyMode ? 0 :
+                                                       10;
         log.warn("DASH Parser: no clock synchronization mechanism found." +
-                 " Setting a live gap of " + securityLiveGap + " seconds as a security.");
+                 (securityLiveGap > 0) ?
+                   ` Setting a live gap of ${securityLiveGap} seconds as a security.` :
+                   "");
         const now = Date.now() - securityLiveGap * 1000;
         const maximumSegmentTimeInSec = now / 1000 - availabilityStartTime;
         const receivedTime = context.manifestReceivedTime == null ?
