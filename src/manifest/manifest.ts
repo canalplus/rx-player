@@ -475,16 +475,17 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
       const adaptationID = "gen-image-ada-" + generateNewId();
       const representationID = "gen-image-rep-" + generateNewId();
-      const newAdaptation = new Adaptation({
-        id: adaptationID,
-        type: "image",
-        representations: [{
-          bitrate: 0,
-          id: representationID,
-          mimeType,
-          index: new StaticRepresentationIndex({ media: url }),
-        }],
-      }, { isManuallyAdded: true });
+      const newAdaptation = new Adaptation({ id: adaptationID,
+                                             type: "image",
+                                             representations: [{
+                                               bitrate: 0,
+                                               id: representationID,
+                                               mimeType,
+                                               index: new StaticRepresentationIndex({
+                                                 media: url,
+                                               }),
+                                             }], },
+                                             { isManuallyAdded: true });
       this.parsingErrors.push(...newAdaptation.parsingErrors);
       return newAdaptation;
     });
@@ -521,19 +522,20 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       return allSubs.concat(langsToMapOn.map((_language) => {
         const adaptationID = "gen-text-ada-" + generateNewId();
         const representationID = "gen-text-rep-" + generateNewId();
-        const newAdaptation = new Adaptation({
-          id: adaptationID,
-          type: "text",
-          language: _language,
-          closedCaption,
-          representations: [{
-            bitrate: 0,
-            id: representationID,
-            mimeType,
-            codecs,
-            index: new StaticRepresentationIndex({ media: url }),
-          }],
-        }, { isManuallyAdded: true });
+        const newAdaptation = new Adaptation({ id: adaptationID,
+                                               type: "text",
+                                               language: _language,
+                                               closedCaption,
+                                               representations: [{
+                                                 bitrate: 0,
+                                                 id: representationID,
+                                                 mimeType,
+                                                 codecs,
+                                                 index: new StaticRepresentationIndex({
+                                                   media: url,
+                                                 }),
+                                               }], },
+                                               { isManuallyAdded: true });
         this.parsingErrors.push(...newAdaptation.parsingErrors);
         return newAdaptation;
       }));
