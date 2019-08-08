@@ -14,30 +14,12 @@
  * limitations under the License.
  */
 
-import { IParsedRepresentation } from "../parsers/manifest";
+import {
+  IContentProtections,
+  IParsedRepresentation,
+} from "../parsers/manifest";
 import { areBytesEqual } from "../utils/byte_parsing";
 import IRepresentationIndex from "./representation_index";
-
-interface IContentProtectionKIDs { keyId : Uint8Array;
-                                   systemId?: string; }
-
-interface IContentProtectionInitData { type : string;
-                                       data : Uint8Array; }
-
-interface IContentProtections { keyIds : IContentProtectionKIDs[];
-                                initData : IContentProtectionInitData[]; }
-
-export interface IRepresentationArguments { bitrate : number;
-                                            id : string;
-                                            index : IRepresentationIndex;
-
-                                            // -- optional
-                                            codecs? : string;
-                                            contentProtections? : IContentProtections;
-                                            frameRate? : string;
-                                            height? : number;
-                                            mimeType? : string;
-                                            width? : number; }
 
 /**
  * Normalized Representation structure.

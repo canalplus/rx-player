@@ -89,7 +89,7 @@ export default class Adaptation {
 
   // `true` if this Adaptation was not present in the original Manifest, but was
   // manually added after through the corresponding APIs.
-  public manuallyAdded : boolean;
+  public manuallyAdded? : boolean;
 
   // Array containing every errors that happened when the Adaptation has been
   // created, in the order they have happened.
