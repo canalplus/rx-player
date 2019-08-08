@@ -408,6 +408,7 @@ describe("API - parseLoadVideoOptions", () => {
     defaultTextTrack: undefined,
     hideNativeSubtitle: false,
     keySystems: [],
+    lowLatencyMode: false,
     manualBitrateSwitchingMode: false,
     networkConfig: {},
     startAt: undefined,
@@ -676,6 +677,29 @@ describe("API - parseLoadVideoOptions", () => {
       expect(err.message).toEqual(
         "Invalid key system given: Missing type string or getLicense callback");
     }
+  });
+
+  it("should authorize setting a lowLatencyMode option", () => {
+    expect(parseLoadVideoOptions({
+      lowLatencyMode: false,
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      lowLatencyMode: false,
+    });
+    expect(parseLoadVideoOptions({
+      lowLatencyMode: true,
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      lowLatencyMode: true,
+    });
   });
 
   it("should authorize setting a valid manualBitrateSwitchingMode option", () => {
