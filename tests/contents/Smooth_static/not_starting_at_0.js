@@ -9,14 +9,14 @@ const manifestInfos = {
   url: BASE_URL + "Manifest_Not_Starting_at_0.xml",
   transport: "smooth",
   isLive: false,
-  duration: 75.0079999 + 9,
+  duration: 75 + 9,
   minimumPosition: 9,
-  maximumPosition: 75.0079999 + 9,
+  maximumPosition: 75 + 9,
   availabilityStartTime: 0,
   periods: [
     {
       start: 0,
-      duration: 75.0079999 + 9,
+      duration: 75 + 9,
       adaptations: {
         audio: [
           {

@@ -9,14 +9,14 @@ const manifestInfos = {
   url: BASE_URL + "Manifest_Regular.xml",
   transport: "smooth",
   isLive: false,
-  duration: 75.0079999,
+  duration: 75,
   minimumPosition: 0,
-  maximumPosition: 75.0079999,
+  maximumPosition: 75,
   availabilityStartTime: 0,
   periods: [
     {
       start: 0,
-      duration: 75.0079999,
+      duration: 75,
       adaptations: {
         audio: [
           {
