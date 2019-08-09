@@ -28,6 +28,7 @@ import { formatError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
   ISegmentLoaderArguments,
+  ISegmentParserResponse,
   ISegmentTimingInfos,
   ITransportPipelines,
 } from "../../../transports";
@@ -43,25 +44,11 @@ import createLoader, {
   IPipelineWarning,
 } from "../utils/create_loader";
 
-export type ISegmentFetcherContent = ISegmentLoaderArguments;
 export type ISegmentFetcherWarning = IPipelineWarning;
-
-export interface ISegmentFetcherMetrics { type : "metrics";
-                                          value : { size? : number;
-                                                    duration? : number;
-                                                    content: ISegmentFetcherContent; }; }
-
-interface IParsedSegment<T> { segmentData : T;
-                              segmentInfos : { duration? : number;
-                                               time : number;
-                                               timescale : number; };
-                              segmentOffset : number;
-                              appendWindow: [ number | undefined,
-                                              number | undefined ]; }
 
 export interface ISegmentFetcherResponseEvent<T> {
   type : "response";
-  parse : (init? : ISegmentTimingInfos) => Observable<IParsedSegment<T>>;
+  parse : (init? : ISegmentTimingInfos) => Observable<ISegmentParserResponse<T>>;
 }
 
 export type ISegmentFetcherEvent<T> = ISegmentFetcherResponseEvent<T> |
@@ -172,7 +159,7 @@ export default function createSegmentFetcher<T>(
            * @param {Object} [init]
            * @returns {Observable}
            */
-          parse(init? : ISegmentTimingInfos) : Observable<IParsedSegment<T>> {
+          parse(init? : ISegmentTimingInfos) : Observable<ISegmentParserResponse<T>> {
             const parserArg = objectAssign({ response: evt.value, init }, content);
             return segmentParser(parserArg)
               .pipe(catchError((error: unknown) => {
