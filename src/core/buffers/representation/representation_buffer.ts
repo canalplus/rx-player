@@ -74,11 +74,11 @@ import {
   IBufferStateFull,
   IRepresentationBufferEvent,
 } from "../types";
-import appendDataInSourceBuffer from "./append_data";
 import getBufferPadding from "./get_buffer_padding";
 import getSegmentPriority from "./get_segment_priority";
 import getSegmentsNeeded from "./get_segments_needed";
 import getWantedRange from "./get_wanted_range";
+import pushDataToSourceBufferWithRetries from "./push_data";
 import shouldReplaceSegment from "./should_replace_segment";
 
 // Item emitted by the Buffer's clock$
@@ -233,7 +233,7 @@ export default function RepresentationBuffer<T>({
           neededSegments : IQueuedSegment[];
           shouldRefreshManifest : boolean; }
     {
-      const buffered = queuedSourceBuffer.getBuffered();
+      const buffered = queuedSourceBuffer.getBufferedRanges();
       segmentBookkeeper.synchronizeBuffered(buffered);
 
       const neededRange =
@@ -512,10 +512,10 @@ export default function RepresentationBuffer<T>({
                           timestampOffset: chunkOffset,
                           appendWindow,
                           codec };
-      const append$ = appendDataInSourceBuffer(clock$, queuedSourceBuffer, dataInfos);
-
+      const append$ = pushDataToSourceBufferWithRetries(clock$,
+                                                        queuedSourceBuffer,
+                                                        dataInfos);
       sourceBufferWaitingQueue.add(segment.id);
-
       return append$.pipe(
         map(() => { // add to SegmentBookkeeper
           // if (!segment.isInit) {
@@ -533,7 +533,7 @@ export default function RepresentationBuffer<T>({
           //   segmentBookkeeper
           //     .insert(period, adaptation, representation, segment, start, end);
           // }
-          const buffered = queuedSourceBuffer.getBuffered();
+          const buffered = queuedSourceBuffer.getBufferedRanges();
           return EVENTS.addedSegment(content, segment, buffered, chunkData);
         }),
         finalize(() => { // remove from queue
