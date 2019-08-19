@@ -28,7 +28,7 @@ import {
 } from "rxjs/operators";
 import { MediaError } from "../../../errors";
 import {
-  IAppendBufferInfos,
+  IPushChunkInfos,
   QueuedSourceBuffer,
 } from "../../source_buffers";
 import forceGarbageCollection from "./force_garbage_collection";
@@ -46,7 +46,7 @@ import forceGarbageCollection from "./force_garbage_collection";
 export default function pushDataToSourceBufferWithRetries<T>(
   clock$ : Observable<{ currentTime : number }>,
   queuedSourceBuffer : QueuedSourceBuffer<T>,
-  dataInfos : IAppendBufferInfos<T>
+  dataInfos : IPushChunkInfos<T>
 ) : Observable<unknown> {
   const append$ = queuedSourceBuffer.pushChunk(dataInfos);
 

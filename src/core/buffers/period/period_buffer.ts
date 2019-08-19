@@ -51,7 +51,6 @@ import SourceBuffersManager, {
 } from "../../source_buffers";
 import AdaptationBuffer from "../adaptation";
 import EVENTS from "../events_generators";
-import SegmentBookkeeper from "../segment_bookkeeper";
 import {
   IAdaptationBufferEvent,
   IBufferWarningEvent,
@@ -81,7 +80,6 @@ export interface IPeriodBufferArguments {
   content : { manifest : Manifest;
               period : Period; };
   garbageCollectors : WeakMapMemory<QueuedSourceBuffer<unknown>, Observable<never>>;
-  segmentBookkeepers : WeakMapMemory<QueuedSourceBuffer<unknown>, SegmentBookkeeper>;
   segmentPipelinesManager : SegmentPipelinesManager<any>;
   sourceBuffersManager : SourceBuffersManager;
   options: { manualBitrateSwitchingMode : "seamless" | "direct";
@@ -107,7 +105,6 @@ export default function PeriodBuffer({
   clock$,
   content,
   garbageCollectors,
-  segmentBookkeepers,
   segmentPipelinesManager,
   sourceBuffersManager,
   options,
@@ -189,7 +186,6 @@ export default function PeriodBuffer({
     qSourceBuffer : QueuedSourceBuffer<T>
   ) : Observable<IAdaptationBufferEvent<T>|IBufferWarningEvent> {
     const { manifest } = content;
-    const segmentBookkeeper = segmentBookkeepers.get(qSourceBuffer);
     const adaptationBufferClock$ = clock$.pipe(map(tick => {
       const buffered = qSourceBuffer.getBufferedRanges();
       return objectAssign({},
@@ -202,7 +198,6 @@ export default function PeriodBuffer({
                               content: { manifest, period, adaptation },
                               options,
                               queuedSourceBuffer: qSourceBuffer,
-                              segmentBookkeeper,
                               segmentPipelinesManager,
                               wantedBufferAhead$ })
     .pipe(catchError((error : unknown) => {
