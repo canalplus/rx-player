@@ -59,7 +59,6 @@ import EVENTS from "./events_generators";
 import PeriodBuffer, {
   IPeriodBufferClockTick,
 } from "./period";
-import SegmentBookkeeper from "./segment_bookkeeper";
 import {
   IBufferOrchestratorEvent,
   IMultiplePeriodBuffersEvent,
@@ -140,11 +139,6 @@ export default function BufferOrchestrator(
                            .pipe(map(val => Math.min(val, defaultMaxAhead))),
       });
     });
-
-  // Keep track of a unique segmentBookkeeper created per QueuedSourceBuffer.
-  const segmentBookkeepers =
-    new WeakMapMemory<QueuedSourceBuffer<unknown>, SegmentBookkeeper>(() =>
-      new SegmentBookkeeper());
 
   // trigger warnings when the wanted time is before or after the manifest's
   // segments
@@ -360,7 +354,6 @@ export default function BufferOrchestrator(
                                          clock$,
                                          content: { manifest, period: basePeriod },
                                          garbageCollectors,
-                                         segmentBookkeepers,
                                          segmentPipelinesManager,
                                          sourceBuffersManager,
                                          options,
