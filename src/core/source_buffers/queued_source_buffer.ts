@@ -109,10 +109,9 @@ type IQSBOrders<T> = IAppendOrder<T> |
                      IRemoveOrder;
 
 /**
- * Wrap a SourceBuffer and append/remove segments in it in a queue.
- *
- * Wait for the previous buffer action to be finished (updateend event) to
- * perform the next in the queue.
+ * Allows to push and remove new Segments to a SourceBuffer in a FIFO queue (not
+ * doing so can lead to browser Errors) while keeping an inventory of what has
+ * been pushed.
  *
  * To work correctly, only a single QueuedSourceBuffer per SourceBuffer should
  * be created.
@@ -226,7 +225,11 @@ export default class QueuedSourceBuffer<T> {
   }
 
   /**
-   * Append media segment to the attached SourceBuffer, in a FIFO queue.
+   * Push a chunk of the media segment given to the attached SourceBuffer, in a
+   * FIFO queue.
+   *
+   * Once all chunks have been pushed, you can call `validateSegment` to
+   * indicate that the whole Segment has been pushed.
    *
    * Depending on the type of data appended, this might need an associated
    * initialization segment.
@@ -242,11 +245,10 @@ export default class QueuedSourceBuffer<T> {
    * You can also only push an initialization segment by setting the
    * infos.segment argument to null.
    *
-   * @param {string} codec
    * @param {Object} infos
    * @returns {Observable}
    */
-  public appendBuffer(infos : IAppendBufferInfos<T>) : Observable<unknown> {
+  public pushChunk(infos : IAppendBufferInfos<T>) : Observable<unknown> {
     log.debug("QSB: receiving order to push data to the SourceBuffer",
               this.bufferType);
     return this._addToQueue({ type: SourceBufferAction.Append,
@@ -254,7 +256,7 @@ export default class QueuedSourceBuffer<T> {
   }
 
   /**
-   * Remove data from the attached SourceBuffer, in a FIFO queue.
+   * Remove buffered data (added to the same FIFO queue than `pushChunk`).
    * @param {number} start - start position, in seconds
    * @param {number} end - end position, in seconds
    * @returns {Observable}
@@ -270,7 +272,7 @@ export default class QueuedSourceBuffer<T> {
    * Returns the currently buffered data, in a TimeRanges object.
    * @returns {TimeRanges}
    */
-  public getBuffered() : TimeRanges|ICustomTimeRanges {
+  public getBufferedRanges() : TimeRanges|ICustomTimeRanges {
     return this._sourceBuffer.buffered;
   }
 

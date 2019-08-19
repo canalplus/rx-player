@@ -43,12 +43,12 @@ import forceGarbageCollection from "./force_garbage_collection";
  * @param {Object} dataInfos
  * @returns {Observable}
  */
-export default function appendDataToSourceBufferWithRetries<T>(
+export default function pushDataToSourceBufferWithRetries<T>(
   clock$ : Observable<{ currentTime : number }>,
   queuedSourceBuffer : QueuedSourceBuffer<T>,
   dataInfos : IAppendBufferInfos<T>
 ) : Observable<unknown> {
-  const append$ = queuedSourceBuffer.appendBuffer(dataInfos);
+  const append$ = queuedSourceBuffer.pushChunk(dataInfos);
 
   return append$.pipe(
     catchError((appendError : unknown) => {

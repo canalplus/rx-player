@@ -148,7 +148,8 @@ export default function PeriodBuffer({
                                                                 bufferType,
                                                                 adaptation,
                                                                 options);
-          const strategy = getAdaptationSwitchStrategy(qSourceBuffer.getBuffered(),
+          const buffered = qSourceBuffer.getBufferedRanges();
+          const strategy = getAdaptationSwitchStrategy(buffered,
                                                        period,
                                                        bufferType,
                                                        tick);
@@ -190,7 +191,7 @@ export default function PeriodBuffer({
     const { manifest } = content;
     const segmentBookkeeper = segmentBookkeepers.get(qSourceBuffer);
     const adaptationBufferClock$ = clock$.pipe(map(tick => {
-      const buffered = qSourceBuffer.getBuffered();
+      const buffered = qSourceBuffer.getBufferedRanges();
       return objectAssign({},
                           tick,
                           { bufferGap: getLeftSizeOfRange(buffered,
