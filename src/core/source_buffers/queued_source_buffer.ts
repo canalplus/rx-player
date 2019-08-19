@@ -187,6 +187,8 @@ export default class QueuedSourceBuffer<T> {
 
   /**
    * @constructor
+   * @param {string} bufferType
+   * @param {string} codec
    * @param {SourceBuffer} sourceBuffer
    */
   constructor(
