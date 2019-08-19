@@ -86,7 +86,7 @@ function clearBuffer(
   const cleanedupRanges : Array<{ start : number;
                                   end: number; }> = [];
   const { innerRange, outerRanges } =
-    getInnerAndOuterTimeRanges(qSourceBuffer.getBuffered(),
+    getInnerAndOuterTimeRanges(qSourceBuffer.getBufferedRanges(),
                                position);
 
   const collectBufferBehind = () => {
