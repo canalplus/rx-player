@@ -68,7 +68,6 @@ import EVENTS from "../events_generators";
 import RepresentationBuffer, {
   IRepresentationBufferClockTick,
 } from "../representation";
-import SegmentBookkeeper from "../segment_bookkeeper";
 import {
   IAdaptationBufferEvent,
   IBufferEventAddedSegment,
@@ -99,7 +98,6 @@ export interface IAdaptationBufferArguments<T> {
              offlineRetry? : number; // Retry count when offline
              segmentRetry? : number; }; // Retry count on retryable error
   queuedSourceBuffer : QueuedSourceBuffer<T>; // Interact with the SourceBuffer
-  segmentBookkeeper : SegmentBookkeeper; // Inventory of segments in the SourceBuffer
   segmentPipelinesManager : SegmentPipelinesManager<any>; // Load and parse segments
   wantedBufferAhead$ : BehaviorSubject<number>; // Buffer goal wanted by the user
 }
@@ -122,7 +120,6 @@ export default function AdaptationBuffer<T>({
   content,
   options,
   queuedSourceBuffer,
-  segmentBookkeeper,
   segmentPipelinesManager,
   wantedBufferAhead$,
 } : IAdaptationBufferArguments<T>) : Observable<IAdaptationBufferEvent<T>> {
@@ -261,7 +258,6 @@ export default function AdaptationBuffer<T>({
                                                period,
                                                manifest },
                                     queuedSourceBuffer,
-                                    segmentBookkeeper,
                                     segmentFetcher,
                                     terminate$: terminateCurrentBuffer$,
                                     bufferGoal$,
