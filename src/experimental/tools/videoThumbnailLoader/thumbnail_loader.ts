@@ -130,7 +130,7 @@ export default class VideoThumbnailLoader {
       this._thumbnailVideoElement,
       this._thumbnailTrack.codec
     ).pipe(
-      mergeMap(({ videoSourceBuffer }) => {
+      mergeMap((videoSourceBuffer) => {
         const { initURL: init, codec } = this._thumbnailTrack;
         return request({ url: init,
                          responseType: "arraybuffer",
@@ -179,63 +179,63 @@ export default class VideoThumbnailLoader {
 
       return { thumbnails, time };
     }),
-      distinctUntilChanged((a, b) => {
-        if (a.thumbnails.length !== b.thumbnails.length) {
+    distinctUntilChanged((a, b) => {
+      if (a.thumbnails.length !== b.thumbnails.length) {
+        return false;
+      }
+      for (let i = 0; i < a.thumbnails.length; i++) {
+        if (a.thumbnails[i].start !== b.thumbnails[i].start ||
+            a.thumbnails[i].duration !== b.thumbnails[i].duration ||
+            a.thumbnails[i].mediaURL !== b.thumbnails[i].mediaURL) {
           return false;
         }
-        for (let i = 0; i < a.thumbnails.length; i++) {
-          if (a.thumbnails[i].start !== b.thumbnails[i].start ||
-              a.thumbnails[i].duration !== b.thumbnails[i].duration ||
-              a.thumbnails[i].mediaURL !== b.thumbnails[i].mediaURL) {
-            return false;
-          }
-        }
-        return true;
-      }),
-      switchMap(({ thumbnails, time }) => {
-        return videoSourceInfos$.pipe(
-          mergeMap((videoSourceBuffer) => {
-            return castToObservable(this.removeBuffers(videoSourceBuffer, time)).pipe(
-              mergeMap(() => {
-                if (!this._thumbnailTrack) {
-                  throw new Error(
-                    "VideoThumbnailLoaderError: No thumbnail track given.");
-                }
+      }
+      return true;
+    }),
+    switchMap(({ thumbnails, time }) => {
+      return videoSourceInfos$.pipe(
+        mergeMap((videoSourceBuffer) => {
+          return castToObservable(this.removeBuffers(videoSourceBuffer, time)).pipe(
+            mergeMap(() => {
+              if (!this._thumbnailTrack) {
+                throw new Error(
+                  "VideoThumbnailLoaderError: No thumbnail track given.");
+              }
 
-                return getSegmentsData(thumbnails, videoElement).pipe(
-                  mergeMap((data) => {
-                    if (data) {
-                      const appendBuffer$ = videoSourceBuffer
-                        .appendBuffer({
-                          segment: data,
-                          initSegment: null,
-                          codec: this._thumbnailTrack.codec,
-                          timestampOffset: 0,
-                          appendWindow: [undefined, undefined],
-                        });
-                      return appendBuffer$.pipe(
-                          mergeMap(() => {
-                            thumbnails.forEach((t) => {
-                              this._bufferedDataRanges.push({
-                                start: t.start,
-                                end: t.start + t.duration,
-                              });
+              return getSegmentsData(thumbnails, videoElement).pipe(
+                mergeMap((data) => {
+                  if (data) {
+                    const appendBuffer$ = videoSourceBuffer
+                      .appendBuffer({
+                        segment: data,
+                        initSegment: null,
+                        codec: this._thumbnailTrack.codec,
+                        timestampOffset: 0,
+                        appendWindow: [undefined, undefined],
+                      });
+                    return appendBuffer$.pipe(
+                        mergeMap(() => {
+                          thumbnails.forEach((t) => {
+                            this._bufferedDataRanges.push({
+                              start: t.start,
+                              end: t.start + t.duration,
                             });
-                            this._thumbnailVideoElement.currentTime = time;
-                            return observableOf(null);
-                          }),
-                          catchError((err) => {
-                            throw new Error(
-                              "VideoThumbnailLoaderError: Couldn't append buffer :" +
-                              err.message || err
-                            );
-                          })
-                        );
-                    }
-                    return observableOf(null);
-                  })
-                );
-              }));
+                          });
+                          this._thumbnailVideoElement.currentTime = time;
+                          return observableOf(null);
+                        }),
+                        catchError((err) => {
+                          throw new Error(
+                            "VideoThumbnailLoaderError: Couldn't append buffer :" +
+                            err.message || err
+                          );
+                        })
+                      );
+                  }
+                  return observableOf(null);
+                })
+              );
+            }));
           })
         );
       }),
@@ -296,11 +296,10 @@ export default class VideoThumbnailLoader {
   }
 
   /**
-   * Dispose media source.
-   * @param {Function|undefined} _resolve
-   * @returns {Promise}
+   * Dispose thumbnail loader.
+   * @returns {Observable}
    */
-  dispose(_retry?: number): void {
+  dispose(): void {
     this._setTimeSubscription$.unsubscribe();
     return;
   }

@@ -15,24 +15,24 @@
  */
 
 import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
+import { mergeMap } from "rxjs/operators";
 import openMediaSource from "../../../core/init/create_media_source";
 import { QueuedSourceBuffer } from "../../../core/source_buffers";
 
 export default function prepareSourceBuffer(
   elt: HTMLVideoElement, codec: string
-): Observable<{
-  mediaSource: MediaSource;
-  videoSourceBuffer: QueuedSourceBuffer<any>;
-}> {
+): Observable<QueuedSourceBuffer<BufferSource>> {
   return openMediaSource(elt).pipe(
-    map((mediaSource) => {
-      const sourceBuffer = mediaSource.addSourceBuffer(codec);
-      return {
-        mediaSource,
-        videoSourceBuffer:
-          new QueuedSourceBuffer("video", codec, sourceBuffer),
-      };
+    mergeMap((mediaSource) => {
+      return new Observable<QueuedSourceBuffer<BufferSource>>((obs) => {
+        const sourceBuffer = mediaSource.addSourceBuffer(codec);
+        const queuedSourceBuffer =
+          new QueuedSourceBuffer("video", codec, sourceBuffer);
+        obs.next(queuedSourceBuffer);
+        return () => {
+          queuedSourceBuffer.dispose();
+        };
+      });
     })
   );
 }
