@@ -38,6 +38,7 @@ export interface IAdaptationInfos {
                          // to obtain the current server's time
   end? : number; // End time of the current period, in seconds
   isDynamic : boolean; // Whether the Manifest can evolve with time
+  lowLatencyMode : boolean; // Whether the content playing in low latency mode
   start : number; // Start time of the current period, in seconds
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
                                   // in seconds
@@ -49,6 +50,7 @@ interface IIndexContext {
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time
   isDynamic : boolean; // Whether the Manifest can evolve with time
+  lowLatencyMode : boolean; // Whether the content playing in low latency mode
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
   periodEnd : number|undefined; // End of the period concerned by this
@@ -114,6 +116,7 @@ export default function parseRepresentations(
     const context = { availabilityStartTime: adaptationInfos.availabilityStartTime,
                       clockOffset: adaptationInfos.clockOffset,
                       isDynamic: adaptationInfos.isDynamic,
+                      lowLatencyMode: adaptationInfos.lowLatencyMode,
                       periodEnd: adaptationInfos.end,
                       periodStart: adaptationInfos.start,
                       representationBaseURL,

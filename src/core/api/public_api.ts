@@ -724,7 +724,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         throw new Error(`transport "${transport}" not supported`);
       }
 
-      const pipelines = transportFn(objectAssign({ supplementaryTextTracks,
+      const pipelines = transportFn(objectAssign({ lowLatencyMode,
+                                                   supplementaryTextTracks,
                                                    supplementaryImageTracks },
                                                  transportOptions));
       // Options used by the ABR Manager.

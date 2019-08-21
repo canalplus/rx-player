@@ -132,7 +132,7 @@ function getMetaPlaylistPrivateInfos(segment : ISegment) : IMetaPlaylistPrivateI
   }
   return privateInfos.metaplaylistInfos;
 }
-export default function(options: ITransportOptions = {}): ITransportPipelines {
+export default function(options : ITransportOptions): ITransportPipelines {
   const transports : Partial<Record<string, ITransportPipelines>> = {};
 
   const manifestLoader = generateManifestLoader({

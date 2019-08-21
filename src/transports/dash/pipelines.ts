@@ -72,9 +72,7 @@ function requestStringResource(
  * implementation. Used for each generated http request.
  * @returns {Object}
  */
-export default function(
-  options : ITransportOptions = {}
-) : ITransportPipelines {
+export default function(options : ITransportOptions) : ITransportPipelines {
   const manifestLoader = generateManifestLoader({
     customManifestLoader: options.manifestLoader,
   });
@@ -99,9 +97,12 @@ export default function(
                                                      "text/xml") :
                      response.responseData as Document;
 
-      const parsedManifest = dashManifestParser(data, { url,
-                                                        referenceDateTime,
-                                                        externalClockOffset });
+      const parsedManifest = dashManifestParser(data, {
+        lowLatencyMode: options.lowLatencyMode,
+        url,
+        referenceDateTime,
+        externalClockOffset,
+      });
       return loadExternalResources(parsedManifest);
 
       function loadExternalResources(
