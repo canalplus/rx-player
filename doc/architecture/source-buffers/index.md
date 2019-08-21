@@ -3,30 +3,15 @@
 
 ## Overview ####################################################################
 
-Technically speaking ``SourceBuffer``s are browser objects allowing JavaScript
-applications to "append" media segments for them to be decoded at the right time
-through their attached media element (e.g. ``<audio>`` or ``<video>`` media
-elements).
+The ``core/source-buffer`` directory contains the part of the code directly
+related to the insertion and removal of media segments.
 
-Likewise in the RxPlayer code, the ``core/source-buffer`` directory contains the
-part of the code directly related to the insertion and removal of media
-segments.
+This is done through `SourceBuffers`, which are JavaScript objects.
 
-You'll find there:
-
-  - code that interacts with browser ``SourceBuffer`` Objects.
-
-  - custom implementations of the ``SourceBuffer`` interface for ``text``
-    (subtitles) or ``image`` (thumbnails) buffers.
-
-  - decoders for the custom SourceBuffer implementation (e.g. the ``text``
-    decoder parse subtitles and display them on screen at the right time).
-
-  - functions which help to perform memory management on custom
-    SourceBuffer implementations as well as native ones (this is mostly needed
-    on some peculiar low-memory target with legacy browsers, but you might want
-    to control at best your memory footprint even on a classical
-    web-applications).
+Some `SourceBuffers` are directly defined by the browser like the audio and
+video ones. Others, like for subtitles for example, are defined by the RxPlayer.
+Those custom `SourceBuffers` definitions are written in the
+`src/custom_source_buffers` directory.
 
 
 

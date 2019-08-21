@@ -19,9 +19,9 @@ import {
   Observable,
   of as observableOf,
 } from "rxjs";
-import { ICustomSourceBuffer } from "../../compat";
-import EventEmitter from "../../utils/event_emitter";
-import tryCatch from "../../utils/rx-try_catch";
+import { ICustomSourceBuffer } from "../compat";
+import EventEmitter from "../utils/event_emitter";
+import tryCatch from "../utils/rx-try_catch";
 import ManualTimeRanges from "./time_ranges";
 
 interface IAbstractSourceBufferEvent { updatestart : undefined;
