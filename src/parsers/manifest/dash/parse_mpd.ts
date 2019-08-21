@@ -43,6 +43,7 @@ export interface IMPDParserArguments {
                                  // to obtain the current server's time
   referenceDateTime? : number; // Default base time, in seconds
   url? : string; // URL of the manifest (post-redirection if one)
+  lowLatencyMode : boolean;
 }
 
 export type IParserResponse<T> = { type : "needs-ressources";
@@ -193,6 +194,7 @@ function parseCompleteIntermediateRepresentation(
                           baseURL,
                           clockOffset,
                           duration: rootAttributes.duration,
+                          lowLatencyMode: args.lowLatencyMode,
                           isDynamic,
                           timeShiftBufferDepth };
   const parsedPeriods = parsePeriods(rootChildren.periods, manifestInfos);
