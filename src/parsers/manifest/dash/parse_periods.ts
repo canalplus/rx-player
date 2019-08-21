@@ -40,6 +40,7 @@ export interface IManifestInfos {
   isDynamic : boolean;
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
                                   // in seconds
+  lowLatencyMode : boolean;
 }
 
 /**
@@ -93,7 +94,8 @@ export default function parsePeriods(
                           end: periodEnd,
                           isDynamic,
                           start: periodStart,
-                          timeShiftBufferDepth };
+                          timeShiftBufferDepth,
+                          lowLatencyMode: manifestInfos.lowLatencyMode };
     const adaptations = parseAdaptationSets(periodIR.children.adaptations,
                                             periodInfos);
     const parsedPeriod : IParsedPeriod = { id: periodID,

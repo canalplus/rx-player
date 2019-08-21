@@ -81,9 +81,7 @@ function addNextSegments(
   }
 }
 
-export default function(
-  options : ITransportOptions = {}
-) : ITransportPipelines {
+export default function(options : ITransportOptions) : ITransportPipelines {
   const smoothManifestParser = createSmoothManifestParser(options);
   const segmentLoader = generateSegmentLoader(options.segmentLoader);
 

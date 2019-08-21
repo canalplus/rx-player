@@ -93,6 +93,7 @@ export interface ITemplateIndexContextArgument {
                                    // which the Manifest file was received
   periodEnd : number|undefined; // End of the Period concerned by this
                                 // RepresentationIndex, in seconds
+  lowLatencyMode : boolean;
   periodStart : number; // Start of the Period concerned by this
                         // RepresentationIndex, in seconds
   representationBaseURL : string; // Base URL for the Representation concerned
@@ -111,6 +112,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   private _periodStart : number;
   private _relativePeriodEnd? : number;
   private _liveEdgeOffset? : number;
+  private _lowLatencyMode : boolean;
   private _manifestBoundsCalculator : ManifestBoundsCalculator;
 
   // Whether this RepresentationIndex can change over time.
@@ -129,6 +131,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             manifestBoundsCalculator,
             clockOffset,
             isDynamic,
+            lowLatencyMode,
             periodEnd,
             periodStart,
             representationBaseURL,
@@ -136,6 +139,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             representationBitrate } = context;
 
     this._manifestBoundsCalculator = manifestBoundsCalculator;
+    this._lowLatencyMode = lowLatencyMode;
     const presentationTimeOffset = index.presentationTimeOffset != null ?
                                      index.presentationTimeOffset :
                                      0;
@@ -169,9 +173,13 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         const perfOffset = (clockOffset / 1000) - availabilityStartTime;
         this._liveEdgeOffset = perfOffset - periodStart;
       } else {
+        const securityLiveGap = this._lowLatencyMode ? 0 :
+                                                       10;
         log.warn("DASH Parser: no clock synchronization mechanism found." +
-                 " Setting a live gap of 10 seconds as a security.");
-        const now = Date.now() - 10000;
+                 (securityLiveGap > 0) ?
+                   ` Setting a live gap of ${securityLiveGap} seconds as a security.` :
+                   "");
+        const now = Date.now() - securityLiveGap * 1000;
         const maximumSegmentTimeInSec = now / 1000 - availabilityStartTime;
         const receivedTime = context.manifestReceivedTime == null ?
                                performance.now() :
@@ -449,7 +457,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         return null;
       }
       const maxPossibleStart = Math.max(scaledMaxPosition - duration, 0);
-      const numberIndexedToZero = Math.floor(maxPossibleStart / duration);
+      const numberIndexedToZero = this._lowLatencyMode ?
+        Math.ceil(maxPossibleStart / duration) :
+        Math.floor(maxPossibleStart / duration);
       return numberIndexedToZero * duration;
     } else {
       const maximumTime = (this._relativePeriodEnd || 0) * timescale;

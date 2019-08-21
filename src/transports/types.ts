@@ -343,6 +343,7 @@ interface IParsedKeySystem { systemId : string;
 export interface ITransportOptions {
   aggressiveMode? : boolean;
   keySystems? : (hex? : Uint8Array) => IParsedKeySystem[]; // TODO deprecate
+  lowLatencyMode : boolean;
   manifestLoader?: CustomManifestLoader;
   minRepresentationBitrate? : number; // TODO deprecate
   referenceDateTime? : number;
@@ -353,7 +354,7 @@ export interface ITransportOptions {
   supplementaryTextTracks? : ISupplementaryTextTrack[];
 }
 
-export type ITransportFunction = (options? : ITransportOptions) =>
+export type ITransportFunction = (options : ITransportOptions) =>
                                    ITransportPipelines;
 
 export type CustomSegmentLoader = (
