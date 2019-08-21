@@ -40,7 +40,7 @@ import BufferOrchestrator, {
   IBufferOrchestratorEvent,
 } from "../buffers";
 import { SegmentPipelinesManager } from "../pipelines";
-import SourceBuffersManager, {
+import SourceBuffersStore, {
   ITextTrackSourceBufferOptions,
 } from "../source_buffers";
 import createBufferClock from "./create_buffer_clock";
@@ -128,9 +128,9 @@ export default function createMediaSourceLoader({
                            "Wanted starting time not found in the Manifest.");
     }
 
-    // Creates SourceBuffersManager allowing to create and keep track of a
+    // Creates SourceBuffersStore allowing to create and keep track of a
     // single SourceBuffer per type.
-    const sourceBuffersManager = new SourceBuffersManager(mediaElement, mediaSource);
+    const sourceBuffersStore = new SourceBuffersStore(mediaElement, mediaSource);
 
     // Initialize all native source buffers from the first period at the same
     // time.
@@ -142,7 +142,7 @@ export default function createMediaSourceLoader({
     //    exception if the media element has reached the HAVE_METADATA
     //    readyState. This can occur if the user agent's media engine
     //    does not support adding more tracks during playback.
-    createNativeSourceBuffersForPeriod(sourceBuffersManager, initialPeriod);
+    createNativeSourceBuffersForPeriod(sourceBuffersStore, initialPeriod);
 
     const { seek$, load$ } =
       seekAndLoadOnMediaEvents(clock$, mediaElement, initialTime, autoPlay);
@@ -162,7 +162,7 @@ export default function createMediaSourceLoader({
     const buffers$ = BufferOrchestrator({ manifest, initialPeriod },
                                         bufferClock$,
                                         abrManager,
-                                        sourceBuffersManager,
+                                        sourceBuffersStore,
                                         segmentPipelinesManager,
                                         bufferOptions
     ).pipe(
@@ -178,7 +178,7 @@ export default function createMediaSourceLoader({
             cancelEndOfStream$.next(null);
             return EMPTY;
           case "discontinuity-encountered":
-            if (SourceBuffersManager.isNative(evt.value.bufferType)) {
+            if (SourceBuffersStore.isNative(evt.value.bufferType)) {
               log.warn("Init: Explicit discontinuity seek", evt.value.nextTime);
               mediaElement.currentTime = evt.value.nextTime;
             }
@@ -220,7 +220,7 @@ export default function createMediaSourceLoader({
     return observableMerge(loadedEvent$, playbackRate$, stalled$, buffers$)
       .pipe(finalize(() => {
         // clean-up every created SourceBuffers
-        sourceBuffersManager.disposeAll();
+        sourceBuffersStore.disposeAll();
       }));
   };
 }
@@ -232,22 +232,22 @@ export default function createMediaSourceLoader({
  * the content.
  * Custom source buffers (entirely managed in JS) can generally be created and
  * disposed at will during the lifecycle of the content.
- * @param {SourceBuffersManager} sourceBuffersManager
+ * @param {SourceBuffersStore} sourceBuffersStore
  * @param {Period} period
  */
 function createNativeSourceBuffersForPeriod(
-  sourceBuffersManager : SourceBuffersManager,
+  sourceBuffersStore : SourceBuffersStore,
   period : Period
 ) : void {
   Object.keys(period.adaptations).forEach(bufferType => {
-    if (SourceBuffersManager.isNative(bufferType)) {
+    if (SourceBuffersStore.isNative(bufferType)) {
       const adaptations = period.adaptations[bufferType] || [];
       const representations = adaptations != null &&
                               adaptations.length ? adaptations[0].representations :
                                                    [];
       if (representations.length) {
         const codec = representations[0].getMimeTypeString();
-        sourceBuffersManager.createSourceBuffer(bufferType, codec);
+        sourceBuffersStore.createSourceBuffer(bufferType, codec);
       }
     }
   });
