@@ -165,7 +165,17 @@ export default class VideoThumbnailLoader {
               const range = { start: payload.time - thumbnailDuration,
                               end: payload.time + thumbnailDuration };
               const tRange = { start: t.start, end: t.start + t.duration };
-              return areRangesOverlapping(range, tRange);
+              const rangesAreOverlapping = areRangesOverlapping(range, tRange);
+              let hasBuffered = false;
+              const { buffered } = videoElement;
+              for (let i = 0; i < buffered.length; i++) {
+                if (buffered.start(i) <= tRange.start &&
+                    buffered.end(i) >= tRange.end)
+                {
+                  hasBuffered = true;
+                }
+              }
+              return rangesAreOverlapping && !hasBuffered;
             });
 
       if (thumbnails.length === 0) {
