@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import assert from "../../utils/assert";
+import assert from "../utils/assert";
 import {
   insertInto,
   keepRangeIntersection,
-} from "../../utils/ranges";
+} from "../utils/ranges";
 
 /**
  * Simulate TimeRanges as returned by SourceBuffer.prototype.buffered.

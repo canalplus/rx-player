@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import htmlTextBuffer from "../../core/source_buffers/text/html";
+import htmlTextBuffer from "../../custom_source_buffers/text/html";
 import { IFeaturesObject } from "../types";
 
 /**

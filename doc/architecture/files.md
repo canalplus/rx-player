@@ -13,6 +13,7 @@ a single directory or subdirectory, in alphabetical order.
 - [src/: the source code](#src)
   - [src/compat/: The compatibility files](#src-compat)
   - [src/core/: The core files](#src-core)
+  - [src/custom_source_buffers/: Custom SourceBuffers definitions](#src-sb)
   - [src/errors/: Error definitions](#src-errors)
   - [src/experimental/: Experimental features](#src-experimental)
   - [src/features/: Feature switching](#src-features)
@@ -123,6 +124,17 @@ That's where:
 
 This directory contains other subdirectories which are listed in the next
 chapter.
+
+
+<a name="src-csb"></a>
+### src/custom_source_buffers/: Custom SourceBuffers definitions ###############
+
+SourceBuffers are the JavaScript objects through which media segments are added
+to the browser.
+
+Definition are usually already provided by the browser for Audio and Video
+contents. This directory allows to implement completely in JavaScript
+SourceBuffers for other type of media (e.g. text, overlays, images...).
 
 
 <a name="src-errors"></a>
@@ -253,12 +265,12 @@ core.
 <a name="core-sb"></a>
 ### src/core/source_buffers/: SourceBuffers definitions ########################
 
-Provide multiple abstraction to manage SourceBuffers, which are the objects
-through which media segments are added to the browser.
+Code allowing to interact with the `SourceBuffers`, the JavaScript object
+through which media segments are pushed to be able to play a content.
 
-In this directory, you have code for both SourceBuffer managed natively (i.e.
-Audio and Video SourceBuffers) and SourceBuffer implementations for other types
-of content (text, images etc.).
+For Audio and Video, SourceBuffers are already provided by the browser,
+for other type of contents (like subtitles), we rely on Custom SourceBuffers
+defined in `src/custom_source_buffers`.
 
 
 <a name="core-init"></a>

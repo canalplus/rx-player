@@ -18,9 +18,9 @@ import {
   addTextTrack,
   ICompatTextTrack,
   ICustomSourceBuffer,
-} from "../../../../compat";
-import removeCue from "../../../../compat/remove_cue";
-import log from "../../../../log";
+} from "../../../compat";
+import removeCue from "../../../compat/remove_cue";
+import log from "../../../log";
 import AbstractSourceBuffer from "../../abstract_source_buffer";
 import parseTextTrackToCues from "./parsers";
 

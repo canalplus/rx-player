@@ -14,16 +14,5 @@
  * limitations under the License.
  */
 
-import imageBuffer from "../../custom_source_buffers/image";
-import { IFeaturesObject } from "../types";
-
-/**
- * Add ability to display image tracks.
- * @param {Object} features
- */
-function addImageBufferFeature(features : IFeaturesObject) : void {
-  features.imageBuffer = imageBuffer;
-}
-
-export { addImageBufferFeature as IMAGE_BUFFER };
-export default addImageBufferFeature;
+import ManualTimeRanges from "./time_ranges";
+export { ManualTimeRanges };
