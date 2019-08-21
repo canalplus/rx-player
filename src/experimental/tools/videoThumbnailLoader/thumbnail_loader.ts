@@ -32,12 +32,10 @@ import {
   shareReplay,
   switchMap,
   take,
+  tap,
 } from "rxjs/operators";
-import { QueuedSourceBuffer } from "../../../core/source_buffers";
 import { Representation } from "../../../manifest";
 import arrayFindIndex from "../../../utils/array_find_index";
-import castToObservable from "../../../utils/cast_to_observable";
-import PPromise from "../../../utils/promise";
 import {
   areRangesOverlapping,
   convertToRanges,
@@ -56,8 +54,6 @@ interface IThumbnailTrack {
   initURL: string;
   codec: string;
 }
-
-const MAXIMUM_MEDIA_BUFFERED = 2;
 
 /**
  * Load needed segment data.
@@ -105,10 +101,6 @@ function getSegmentsData(
  */
 export default class VideoThumbnailLoader {
   private readonly _thumbnailVideoElement: HTMLVideoElement;
-  private readonly _bufferedDataRanges: Array<{
-    start: number;
-    end: number;
-  }>;
 
   private _thumbnailTrack: IThumbnailTrack;
 
@@ -123,7 +115,6 @@ export default class VideoThumbnailLoader {
   ) {
     // readonly
     this._thumbnailVideoElement = videoElement;
-    this._bufferedDataRanges = [];
 
     // nullable
     this._thumbnailTrack = this.updateThumbnailTrack(trickModeTrack);
@@ -200,7 +191,7 @@ export default class VideoThumbnailLoader {
     switchMap(({ thumbnails, payload: { time, resolve, reject } }) => {
       return videoSourceInfos$.pipe(
         mergeMap((videoSourceBuffer) => {
-          return castToObservable(this.removeBuffers(videoSourceBuffer, time)).pipe(
+          return videoSourceBuffer.removeBuffer(time - 5, time + 5).pipe(
             mergeMap(() => {
               if (!this._thumbnailTrack) {
                 throw new Error(
@@ -219,23 +210,10 @@ export default class VideoThumbnailLoader {
                         appendWindow: [undefined, undefined],
                       });
                     return appendBuffer$.pipe(
-                        mergeMap(() => {
-                          thumbnails.forEach((t) => {
-                            this._bufferedDataRanges.push({
-                              start: t.start,
-                              end: t.start + t.duration,
-                            });
-                          });
-                          this._thumbnailVideoElement.currentTime = time;
-                          return observableOf(null);
-                        }),
-                        catchError((err) => {
-                          throw new Error(
-                            "VideoThumbnailLoaderError: Couldn't append buffer :" +
-                            err.message || err
-                          );
-                        })
-                      );
+                      tap(() => {
+                        this._thumbnailVideoElement.currentTime = time;
+                      })
+                    );
                   }
                   return observableOf(null);
                 }),
@@ -316,41 +294,5 @@ export default class VideoThumbnailLoader {
   dispose(): void {
     this._setTimeSubscription$.unsubscribe();
     return;
-  }
-
-  /**
-   * @param {Object} videoSourceBuffer
-   * @returns {Promise}
-   */
-  private removeBuffers<T>(
-    videoSourceBuffer: QueuedSourceBuffer<T>,
-    time: number
-  ): Promise<unknown> {
-    const bufferToRemove: Array<{
-      start: number;
-      end: number;
-    }> = [];
-    while (this._bufferedDataRanges.length > MAXIMUM_MEDIA_BUFFERED) {
-      const newBuffer = this._bufferedDataRanges.shift();
-      if (newBuffer) {
-        bufferToRemove.push(newBuffer);
-      }
-    }
-
-    const removeBufferActions$: Array<Promise<void>> = [];
-    bufferToRemove.forEach(({ start, end }) => {
-      const prm = videoSourceBuffer.removeBuffer(start, end)
-        .toPromise(PPromise).then(() => {
-          const bufferIdx =
-            arrayFindIndex(this._bufferedDataRanges, ({ start: s, end: e }) => {
-              return s <= time && e > time;
-            });
-          if (bufferIdx > -1) {
-            this._bufferedDataRanges.splice(bufferIdx, 1);
-          }
-        });
-      removeBufferActions$.push(prm);
-    });
-    return PPromise.all(removeBufferActions$);
   }
 }
