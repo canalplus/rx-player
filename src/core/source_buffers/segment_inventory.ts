@@ -70,19 +70,19 @@ function areSameContent(
  * @class SegmentInventory
  */
 export default class SegmentInventory {
+  // The inventory keep track of all the segments which should be currently
+  // in the browser's memory.
+  // This array contains objects, each being related to a single downloaded
+  // segment which is at least partially added in a SourceBuffer.
   private inventory : IBufferedChunk[];
 
   constructor() {
-    /**
-     * The inventory keep track of all the segments which should be currently
-     * in the browser's memory.
-     * This array contains objects, each being related to a single downloaded
-     * segment which is at least partially added in a SourceBuffer.
-     * @type {Array.<Object>}
-     */
     this.inventory = [];
   }
 
+  /**
+   * Reset the whole inventory.
+   */
   public reset() {
     this.inventory.length = 0;
   }

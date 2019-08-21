@@ -329,6 +329,11 @@ export default class QueuedSourceBuffer<T> {
     this._segmentInventory.synchronizeBuffered(this.getBufferedRanges());
   }
 
+  /**
+   * @param {Object} wantedRange
+   * @param {Object} segmentInfos
+   * @returns {Object|null}
+   */
   public hasPlayableSegment(
     wantedRange : { start : number;
                     end : number; },
