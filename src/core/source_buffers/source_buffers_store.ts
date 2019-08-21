@@ -81,9 +81,9 @@ type INativeSourceBufferType = "audio" | "video";
  * The returned SourceBuffer is actually a QueuedSourceBuffer instance which
  * wrap a SourceBuffer implementation to queue all its actions.
  *
- * @class SourceBuffersManager
+ * @class SourceBuffersStore
  */
-export default class SourceBuffersManager {
+export default class SourceBuffersStore {
   /**
    * Returns true if the SourceBuffer is "native" (has to be attached to the
    * mediaSource before playback).
@@ -232,7 +232,7 @@ export default class SourceBuffersManager {
   }
 
   /**
-   * Dispose of all QueuedSourceBuffer created on this SourceBuffersManager.
+   * Dispose of all QueuedSourceBuffer created on this SourceBuffersStore.
    */
   public disposeAll() {
     POSSIBLE_BUFFER_TYPES.forEach((bufferType : IBufferType) => {

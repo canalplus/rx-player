@@ -46,7 +46,7 @@ import SortedList from "../../utils/sorted_list";
 import WeakMapMemory from "../../utils/weak_map_memory";
 import ABRManager from "../abr";
 import { SegmentPipelinesManager } from "../pipelines";
-import SourceBuffersManager, {
+import SourceBuffersStore, {
   BufferGarbageCollector,
   getBufferTypes,
   IBufferType,
@@ -92,7 +92,7 @@ const { MAXIMUM_MAX_BUFFER_AHEAD,
  * @param {Observable} clock$ - Emit position informations
  * @param {Object} abrManager - Emit bitrate estimation and best Representation
  * to play.
- * @param {Object} sourceBuffersManager - Will be used to lazily create
+ * @param {Object} sourceBuffersStore - Will be used to lazily create
  * SourceBuffer instances associated with the current content.
  * @param {Object} segmentPipelinesManager - Download segments
  * @param {Object} options
@@ -106,7 +106,7 @@ export default function BufferOrchestrator(
               initialPeriod : Period; },
   clock$ : Observable<IBufferOrchestratorClockTick>,
   abrManager : ABRManager,
-  sourceBuffersManager : SourceBuffersManager,
+  sourceBuffersStore : SourceBuffersStore,
   segmentPipelinesManager : SegmentPipelinesManager<any>,
   options: { wantedBufferAhead$ : BehaviorSubject<number>;
              maxBufferAhead$ : Observable<number>;
@@ -355,7 +355,7 @@ export default function BufferOrchestrator(
                                          content: { manifest, period: basePeriod },
                                          garbageCollectors,
                                          segmentPipelinesManager,
-                                         sourceBuffersManager,
+                                         sourceBuffersStore,
                                          options,
                                          wantedBufferAhead$, }
     ).pipe(
