@@ -25,6 +25,7 @@ import {
   catchError,
   distinctUntilChanged,
   filter,
+  finalize,
   map,
   mapTo,
   mergeMap,
@@ -111,7 +112,9 @@ export default class VideoThumbnailLoader {
 
   private _thumbnailTrack: IThumbnailTrack;
 
-  private _setTime$: Subject<number>;
+  private _setTime$: Subject<{ time: number;
+                               resolve: () => void;
+                               reject: (err: Error) => void; }>;
   private _setTimeSubscription$: Subscription;
 
   constructor(
@@ -155,8 +158,10 @@ export default class VideoThumbnailLoader {
     );
 
     this._setTimeSubscription$ = this._setTime$.pipe(
-      filter((time, i) => time !== this._thumbnailVideoElement.currentTime || i === 0),
-      map((time) => {
+      filter(({ time }, i) => {
+        return time !== this._thumbnailVideoElement.currentTime || i === 0;
+      }),
+      map((payload) => {
         if (!this._thumbnailTrack) {
           throw new Error(
             "VideoThumbnailLoaderError: No thumbnail track given.");
@@ -166,8 +171,8 @@ export default class VideoThumbnailLoader {
           this._thumbnailTrack.thumbnailInfos
             .filter((t) => {
               const thumbnailDuration = t.duration;
-              const range = { start: time - thumbnailDuration,
-                              end: time + thumbnailDuration };
+              const range = { start: payload.time - thumbnailDuration,
+                              end: payload.time + thumbnailDuration };
               const tRange = { start: t.start, end: t.start + t.duration };
               return areRangesOverlapping(range, tRange);
             });
@@ -177,7 +182,7 @@ export default class VideoThumbnailLoader {
           "VideoThumbnailLoaderError: Couldn't find thumbnail.");
       }
 
-      return { thumbnails, time };
+      return { thumbnails, payload };
     }),
     distinctUntilChanged((a, b) => {
       if (a.thumbnails.length !== b.thumbnails.length) {
@@ -192,7 +197,7 @@ export default class VideoThumbnailLoader {
       }
       return true;
     }),
-    switchMap(({ thumbnails, time }) => {
+    switchMap(({ thumbnails, payload: { time, resolve, reject } }) => {
       return videoSourceInfos$.pipe(
         mergeMap((videoSourceBuffer) => {
           return castToObservable(this.removeBuffers(videoSourceBuffer, time)).pipe(
@@ -233,9 +238,16 @@ export default class VideoThumbnailLoader {
                       );
                   }
                   return observableOf(null);
+                }),
+                finalize(() => {
+                  resolve();
                 })
               );
             }));
+          }),
+          catchError((err) => {
+            reject(err);
+            return EMPTY;
           })
         );
       }),
@@ -253,11 +265,13 @@ export default class VideoThumbnailLoader {
    * - Load data
    * - Append data
    * Resolves when time is set.
-   * @param {number} time, this._thumbnailVideoElement.currentTime
+   * @param {number} time
    * @returns {Promise}
    */
   setTime(time: number) {
-    this._setTime$.next(time);
+    return new Promise((resolve, reject) => {
+      this._setTime$.next({ time, resolve, reject });
+    });
   }
 
   /**
