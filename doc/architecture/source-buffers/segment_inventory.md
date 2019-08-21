@@ -1,9 +1,9 @@
-# SegmentBookkeeper ############################################################
+# SegmentInventory #############################################################
 
 
 ## Overview ####################################################################
 
-The SegmentBookkeeper is a class which registers informations about every
+The SegmentInventory is a class which registers informations about every
 segments currently present in a SourceBuffer.
 The RxPlayer creates one of them for each SourceBuffer created.
 
@@ -36,13 +36,13 @@ On the contrary, we need to download the segment in the following cases:
   - A segment has been pushed but is not exactly the content we want
     (example: it is in another language)
 
-Thanks to the SegmentBookkeeper, we can infer on which situation we are at any time.
+Thanks to the SegmentInventory, we can infer on which situation we are at any time.
 
 
 
 ## Implementation ##############################################################
 
-The SegmentBookkeeper is merely a "Store", meaning it will just store and
+The SegmentInventory is merely a "Store", meaning it will just store and
 process the data you give to it, without searching for the information itself.
 
 It contains in its state an array, the _inventory_, which stores every segments

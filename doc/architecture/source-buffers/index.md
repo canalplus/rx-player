@@ -50,6 +50,9 @@ sequentially.
 Basically, it waits for the previous action to be finished before going on the
 next step.
 
+It also keeps an inventory of all segments currently push through it, with the
+help of a `SegmentInventory` (see corresponding chapter).
+
 It is the main interface the rest of the RxPlayer code has with SourceBuffers.
 As a wrapper it copy most of the original browser API to lower the cognitive
 complexity of using it.
@@ -79,3 +82,13 @@ ensure that the volume of data before and ahead of the current position does not
 grow into a larger value than what is configured.
 
 One of them is created per SourceBuffer.
+
+
+
+## The SegmentInventory ########################################################
+
+The ``SegmentInventory`` keeps track of which segments is currently bufferized
+to avoid unnecessary re-downloadings of them.
+
+You can have more informations on it in [the SegmentInventory
+documentation](./segment_inventory.md).
