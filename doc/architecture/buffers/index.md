@@ -58,13 +58,3 @@ should be downloaded.
 
 You can have more informations on it in [the RepresentationBuffer
 documentation](./representation_buffer.md).
-
-
-
-## The SegmentBookkeeper #######################################################
-
-The ``SegmentBookkeeper`` keeps track of which segments is currently bufferized
-to avoid unnecessary re-downloadings of them.
-
-You can have more informations on it in [the SegmentBookkeeper
-documentation](./segment_bookkeeper.md).
