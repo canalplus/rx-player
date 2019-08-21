@@ -35,6 +35,7 @@ import {
   take,
   takeUntil,
   tap,
+  withLatestFrom,
 } from "rxjs/operators";
 import config from "../../config";
 import { MediaError } from "../../errors";
@@ -181,22 +182,16 @@ export default function BufferOrchestrator(
       areComplete ? EVENTS.endOfStream() : EVENTS.resumeStream()
     ));
 
-  // TODO do not reload whole content when the decipherability changes
-  const reloadOnDecipherabilityUpdate$ = fromEvent(manifest, "decipherability-update")
-    .pipe(mergeMap(() =>
-      clock$.pipe(take(1), map(e => EVENTS.needsMediaSourceReload(e)))));
-
-  return observableMerge(reloadOnDecipherabilityUpdate$,
-                         ...buffersArray,
+  return observableMerge(...buffersArray,
                          activePeriodChanged$,
                          endOfStream$,
                          outOfManifest$);
 
   /**
-   * Manage creation and removal of Buffers for every Periods.
+   * Manage creation and removal of Buffers for every Periods for a given type.
    *
    * Works by creating consecutive buffers through the
-   * manageConsecutivePeriodBuffers function, and restarting it when the clock
+   * `manageConsecutivePeriodBuffers` function, and restarting it when the clock
    * goes out of the bounds of these buffers.
    * @param {string} bufferType - e.g. "audio" or "video"
    * @param {Period} basePeriod - Initial Period downloaded.
@@ -278,8 +273,35 @@ export default function BufferOrchestrator(
       })
     );
 
-    return observableMerge(launchConsecutiveBuffersForPeriod(basePeriod),
-                           restartBuffersWhenOutOfBounds$);
+    const handleDecipherabilityUpdate$ = fromEvent(manifest, "decipherability-update")
+      .pipe(mergeMap((updates) => {
+        if (!hasLoadedABuffer) {
+          return EMPTY;
+        }
+        const hasType = updates.some(update =>
+                          update.adaptation.type === bufferType);
+        const queuedSourceBuffer = sourceBuffersManager.get(bufferType);
+        if (!hasType || queuedSourceBuffer == null) {
+          return EMPTY; // no need to stop the current buffers
+        }
+
+        destroyBuffers$.next();
+        return queuedSourceBuffer.removeBuffer(0, Infinity).pipe(
+          withLatestFrom(clock$),
+          mergeMap(([_, lastTick]) => {
+            const lastPosition = lastTick.currentTime + lastTick.wantedTimeOffset;
+            const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
+            if (newInitialPeriod == null) {
+              throw new MediaError("MEDIA_TIME_NOT_FOUND",
+                                   "The wanted position is not found in the Manifest.");
+            }
+            return launchConsecutiveBuffersForPeriod(newInitialPeriod);
+          }));
+      }));
+
+    return observableMerge(restartBuffersWhenOutOfBounds$,
+                           handleDecipherabilityUpdate$,
+                           launchConsecutiveBuffersForPeriod(basePeriod));
   }
 
   /**
