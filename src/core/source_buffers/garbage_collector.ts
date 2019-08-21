@@ -29,6 +29,15 @@ import log from "../../log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
 import QueuedSourceBuffer from "./queued_source_buffer";
 
+export interface IGarbageCollectorArgument {
+  queuedSourceBuffer : QueuedSourceBuffer<unknown>; // interact with the SourceBuffer
+  clock$ : Observable<number>; // Emit current position in seconds regularly
+  maxBufferBehind$ : Observable<number>; // Maximum time to keep behind current
+                                         // time position, in seconds
+  maxBufferAhead$ : Observable<number>; // Minimum time to keep behind current
+                                        // time position, in seconds
+}
+
 /**
  * Perform cleaning of the buffer according to the values set by the user
  * at each clock tick and each times the maxBufferBehind/maxBufferAhead values
@@ -42,12 +51,7 @@ export default function BufferGarbageCollector({
   clock$,
   maxBufferBehind$,
   maxBufferAhead$,
-} : {
-  queuedSourceBuffer : QueuedSourceBuffer<unknown>;
-  clock$ : Observable<number>;
-  maxBufferBehind$ : Observable<number>;
-  maxBufferAhead$ : Observable<number>;
-}) : Observable<never> {
+} : IGarbageCollectorArgument) : Observable<never> {
   return observableCombineLatest([clock$, maxBufferBehind$, maxBufferAhead$]).pipe(
     mergeMap(([currentTime, maxBufferBehind, maxBufferAhead]) => {
       return clearBuffer(queuedSourceBuffer,
