@@ -142,6 +142,7 @@ export default class VideoThumbnailLoader {
               segment: null,
               codec,
               timestampOffset: 0,
+              appendWindow: [undefined, undefined],
             });
           }),
           mapTo(videoSourceBuffer)
@@ -210,6 +211,7 @@ export default class VideoThumbnailLoader {
                           initSegment: null,
                           codec: this._thumbnailTrack.codec,
                           timestampOffset: 0,
+                          appendWindow: [undefined, undefined],
                         });
                       return appendBuffer$.pipe(
                           mergeMap(() => {
