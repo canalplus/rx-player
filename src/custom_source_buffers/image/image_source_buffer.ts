@@ -19,8 +19,8 @@
  * It always should be imported through the `features` object.
  */
 
-import log from "../../../log";
-import { IBifThumbnail } from "../../../parsers/images/bif";
+import log from "../../log";
+import { IBifThumbnail } from "../../parsers/images/bif";
 import AbstractSourceBuffer from "../abstract_source_buffer";
 
 export interface IImageTrackSegmentData {

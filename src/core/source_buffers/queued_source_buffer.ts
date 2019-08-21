@@ -31,6 +31,7 @@ import {
   tryToChangeSourceBufferType,
 } from "../../compat";
 import config from "../../config";
+import { ManualTimeRanges } from "../../custom_source_buffers";
 import log from "../../log";
 import {
   Adaptation,
@@ -41,7 +42,6 @@ import {
 import SegmentInventory, {
   IBufferedChunk,
 } from "./segment_inventory";
-import ICustomTimeRanges from "./time_ranges";
 
 const { SOURCE_BUFFER_FLUSHING_INTERVAL } = config;
 
@@ -313,7 +313,7 @@ export default class QueuedSourceBuffer<T> {
    * Returns the currently buffered data, in a TimeRanges object.
    * @returns {TimeRanges}
    */
-  public getBufferedRanges() : TimeRanges | ICustomTimeRanges {
+  public getBufferedRanges() : TimeRanges | ManualTimeRanges {
     return this._sourceBuffer.buffered;
   }
 

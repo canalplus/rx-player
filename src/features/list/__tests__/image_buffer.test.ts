@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import imageBuffer from "../../../core/source_buffers/image";
+import imageBuffer from "../../../custom_source_buffers/image";
 import addImageBufferFeature from "../image_buffer";
 
 describe("Features list - HTML Text Buffer", () => {

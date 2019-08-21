@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import htmlTextTracksBuffer from "../../../core/source_buffers/text/html";
+import htmlTextTracksBuffer from "../../../custom_source_buffers/text/html";
 import addHTMLTextBuffer from "../html_text_buffer";
 
-jest.mock("../../../core/source_buffers/text/html", () => ({
+jest.mock("../../../custom_source_buffers/text/html", () => ({
   __esModule: true,
   default: jest.fn(),
 }));
