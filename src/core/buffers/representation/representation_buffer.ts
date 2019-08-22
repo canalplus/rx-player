@@ -49,7 +49,6 @@ import {
   takeWhile,
   withLatestFrom,
 } from "rxjs/operators";
-import config from "../../../config";
 import { ICustomError } from "../../../errors";
 import log from "../../../log";
 import Manifest, {
@@ -79,7 +78,7 @@ import getSegmentPriority from "./get_segment_priority";
 import getSegmentsNeeded from "./get_segments_needed";
 import getWantedRange from "./get_wanted_range";
 import pushDataToSourceBufferWithRetries from "./push_data";
-import shouldReplaceSegment from "./should_replace_segment";
+import shouldDownloadSegment from "./should_download_segment";
 
 // Item emitted by the Buffer's clock$
 export interface IRepresentationBufferClockTick {
@@ -155,8 +154,6 @@ interface ISegmentRequestObject<T> {
   request$ : Observable<ISegmentFetcherEvent<T>>; // The request itself
   priority : number; // The current priority of the request
 }
-
-const { MINIMUM_SEGMENT_SIZE } = config;
 
 /**
  * Build up buffer for a single Representation.
@@ -247,14 +244,16 @@ export default function RepresentationBuffer<T>({
         representation.index.shouldRefresh(neededRange.start,
                                            neededRange.end);
 
+      const segmentInventory = queuedSourceBuffer.getInventory();
       let neededSegments = getSegmentsNeeded(representation, neededRange)
-        .filter((segment) =>
-          shouldDownloadSegment(segment, neededRange, fastSwitchingStep)
-        )
-        .map((segment) => ({
-          priority: getSegmentPriority(segment, timing),
-          segment,
-        }));
+        .filter((segment) => shouldDownloadSegment({ content,
+                                                     fastSwitchingStep,
+                                                     loadedSegmentPendingPush,
+                                                     neededRange,
+                                                     segment,
+                                                     segmentInventory }))
+        .map((segment) => ({ priority: getSegmentPriority(segment, timing),
+                             segment }));
 
       if (initSegment != null && initSegmentObject == null) {
         // prepend initialization segment
@@ -544,41 +543,5 @@ export default function RepresentationBuffer<T>({
         return EVENTS.addedSegment(content, segment, buffered, chunkData);
       }));
     });
-  }
-
-  /**
-   * Return true if the given segment should be downloaded. false otherwise.
-   * @param {Object} segment
-   * @param {Array.<Object>} neededRange
-   * @param {number | undefined} fastSwitchingStep
-   * @returns {Boolean}
-   */
-  function shouldDownloadSegment(
-    segment : ISegment,
-    neededRange : { start: number; end: number },
-    fastSwitchingStep : number | undefined
-  ) : boolean {
-    if (loadedSegmentPendingPush.test(segment.id)) {
-      return false; // we're already pushing it
-    }
-
-    const { duration, time, timescale } = segment;
-    if (segment.isInit || duration == null) {
-      return true;
-    }
-    if (duration / timescale < MINIMUM_SEGMENT_SIZE) {
-      return false;
-    }
-
-    const currentSegment = queuedSourceBuffer
-      .hasPlayableSegment(neededRange, { duration, time, timescale });
-
-    if (currentSegment == null) {
-      return true;
-    }
-
-    return shouldReplaceSegment(currentSegment.infos,
-                                objectAssign({ segment }, content),
-                                fastSwitchingStep);
   }
 }

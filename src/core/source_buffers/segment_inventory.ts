@@ -25,8 +25,7 @@ import {
 import { convertToRanges } from "../../utils/ranges";
 import takeFirstSet from "../../utils/take_first_set";
 
-const { MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,
-        MAX_BUFFERED_DISTANCE,
+const { MAX_BUFFERED_DISTANCE,
         MINIMUM_SEGMENT_SIZE } = config;
 
 interface IBufferedChunkInfos { adaptation : Adaptation;
@@ -476,6 +475,12 @@ export default class SegmentInventory {
     }
   }
 
+  /**
+   * Indicate that inserted chunks can now be considered as a complete segment.
+   * Take in argument the same content than what was given to `insertChunk` for
+   * the corresponding chunks.
+   * @param {Object} content
+   */
   public completeSegment(
     content : { period: Period;
                 adaptation: Adaptation;
@@ -514,167 +519,9 @@ export default class SegmentInventory {
   }
 
   /**
-   * Returns segment infos for a segment corresponding to the given time,
-   * duration and timescale.
-   *
-   * Returns null if either:
-   *   - no segment can be linked exactly to the given time/duration
-   *   - a segment is linked to this information, but is currently considered
-   *     "incomplete" to be playable, in the sourceBuffer. We check if all
-   *     needed data for playback (from wanted range) is loaded.
-   *
-   * The main purpose of this method is to know if the segment asked should be
-   * downloaded (or re-downloaded).
-   *
-   * /!\ Make sure that this class is synchronized with the sourceBuffer
-   * (see addBufferedInfos method of the same class) before calling this method,
-   * as it depends on it to categorize "incomplete" from "complete" segments.
-   *
-   * @param {Object} wantedRange
-   * @param {Object} segmentInfos
-   * @returns {Object|null}
+   * @returns {Array.<Object>}
    */
-  public hasPlayableSegment(
-    wantedRange : { start : number;
-                    end : number; },
-    segmentInfos : { time : number;
-                     duration : number;
-                     timescale : number; }
-  ) : IBufferedChunk|null {
-    const { time, duration, timescale } = segmentInfos;
-    const { inventory } = this;
-
-    for (let i = inventory.length - 1; i >= 0; i--) {
-      const currentSegmentI = inventory[i];
-      if (currentSegmentI.isCompleteSegment) {
-        const prevSegmentI = inventory[i - 1];
-        const nextSegmentI = inventory[i + 1];
-
-        const segment = currentSegmentI.infos.segment;
-
-        let _time = time;
-        let _duration = duration;
-        if (segment.timescale !== timescale) {
-          // Note: we could get rounding errors here
-          _time = (time * segment.timescale) / timescale;
-          _duration = (duration * segment.timescale) / timescale;
-        }
-
-        if (segment.time === _time && segment.duration === _duration) {
-          // false negatives are better than false positives here.
-          // When impossible to know, say the segment is not complete
-          if (hasEnoughInfos(currentSegmentI, prevSegmentI, nextSegmentI)) {
-            if (hasWantedRange(wantedRange,
-                               currentSegmentI,
-                               prevSegmentI,
-                               nextSegmentI)
-            ) {
-              return currentSegmentI;
-            }
-          }
-        }
-      }
-    }
-    return null;
-
-    // -- Helpers
-
-    /**
-     * Check if segment can be evaluated.
-     * @param {Object} currentSegmentI
-     * @param {Object} prevSegmentI
-     * @param {Object} nextSegmentI
-     * @returns {Boolean}
-     */
-    function hasEnoughInfos(
-      currentSegmentI : IBufferedChunk,
-      prevSegmentI : IBufferedChunk,
-      nextSegmentI : IBufferedChunk
-    ) : boolean {
-      if ((prevSegmentI && prevSegmentI.bufferedEnd == null) ||
-          currentSegmentI.bufferedStart == null
-      ) {
-        return false;
-      }
-
-      if ((nextSegmentI && nextSegmentI.bufferedStart == null) ||
-          currentSegmentI.bufferedEnd == null
-      ) {
-        return false;
-      }
-
-      return true;
-    }
-
-    /**
-     * Returns true if the segment given can be played for the wanted range.
-     * @param {Object} _wantedRange
-     * @param {Object} currentSegmentI
-     * @param {Object} prevSegmentI
-     * @param {Object} nextSegmentI
-     * @returns {Boolean}
-     */
-    function hasWantedRange(
-      _wantedRange : {
-        start : number;
-        end : number;
-      },
-      currentSegmentI : IBufferedChunk,
-      prevSegmentI : IBufferedChunk,
-      nextSegmentI : IBufferedChunk
-    ) : boolean {
-      if (!prevSegmentI ||
-          prevSegmentI.bufferedEnd == null ||
-          currentSegmentI.bufferedStart == null ||
-          prevSegmentI.bufferedEnd < currentSegmentI.bufferedStart
-      ) {
-        if (currentSegmentI.bufferedStart == null) {
-          return false;
-        }
-        const timeDiff = currentSegmentI.bufferedStart - currentSegmentI.start;
-        if (_wantedRange.start > currentSegmentI.start) {
-          const wantedDiff = currentSegmentI.bufferedStart - _wantedRange.start;
-          if (wantedDiff > 0 && timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
-            log.debug("SI: The wanted segment has been garbage collected",
-                      currentSegmentI);
-            return false;
-          }
-        } else {
-          if (timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
-            log.debug("SI: The wanted segment has been garbage collected",
-                      currentSegmentI);
-            return false;
-          }
-        }
-      }
-
-      if (currentSegmentI.end === null) {
-        return false;
-      } else if (!nextSegmentI ||
-                 nextSegmentI.bufferedStart == null ||
-                 currentSegmentI.bufferedEnd == null ||
-                 nextSegmentI.bufferedStart > currentSegmentI.bufferedEnd
-      ) {
-        if (currentSegmentI.bufferedEnd == null) {
-          return false;
-        }
-        const timeDiff = currentSegmentI.end - currentSegmentI.bufferedEnd;
-        if (_wantedRange.end < currentSegmentI.end) {
-          const wantedDiff = _wantedRange.end - currentSegmentI.bufferedEnd;
-          if (wantedDiff > 0 && timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
-            log.debug("SI: The wanted segment has been garbage collected",
-                      currentSegmentI);
-            return false;
-          }
-        } else {
-          if (timeDiff > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
-            log.debug("SI: The wanted segment has been garbage collected",
-                      currentSegmentI);
-            return false;
-          }
-        }
-      }
-      return true;
-    }
+  public getInventory() : IBufferedChunk[] {
+    return this.inventory;
   }
 }

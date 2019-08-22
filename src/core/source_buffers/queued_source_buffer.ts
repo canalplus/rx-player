@@ -310,6 +310,18 @@ export default class QueuedSourceBuffer<T> {
   }
 
   /**
+   * The maintained inventory can fall out of sync from garbage collection or
+   * other events.
+   *
+   * This methods allow to manually trigger a synchronization. It should be
+   * called before retrieving Segment information from it (e.g. with
+   * `getInventory`).
+   */
+  public synchronizeInventory() : void {
+    this._segmentInventory.synchronizeBuffered(this.getBufferedRanges());
+  }
+
+  /**
    * Returns the currently buffered data, in a TimeRanges object.
    * @returns {TimeRanges}
    */
@@ -318,30 +330,15 @@ export default class QueuedSourceBuffer<T> {
   }
 
   /**
-   * The maintained list of Segments and the real buffered ranges can fall out
-   * of sync from garbage collection or other events.
-   *
-   * This methods allow to manually trigger a synchronization. It should be
-   * called before retrieving Segment information from it (e.g. with
-   * `getSegmentsFor`).
+   * Returns the currently buffered data for which the content is known with
+   * the corresponding content information.
+   * /!\ This data can fall out of sync with the real buffered ranges. Please
+   * call `synchronizeInventory` before to make sure it is correctly
+   * synchronized.
+   * @returns {Array.<Object>}
    */
-  public synchronizeInventory() : void {
-    this._segmentInventory.synchronizeBuffered(this.getBufferedRanges());
-  }
-
-  /**
-   * @param {Object} wantedRange
-   * @param {Object} segmentInfos
-   * @returns {Object|null}
-   */
-  public hasPlayableSegment(
-    wantedRange : { start : number;
-                    end : number; },
-    segmentInfos : { time : number;
-                     duration : number;
-                     timescale : number; }
-  ) : IBufferedChunk | null {
-    return this._segmentInventory.hasPlayableSegment(wantedRange, segmentInfos);
+  public getInventory() : IBufferedChunk[] {
+    return this._segmentInventory.getInventory();
   }
 
   /**
@@ -613,3 +610,5 @@ function convertQueueItemToTask<T>(
   }
   return null;
 }
+
+export { IBufferedChunk };
