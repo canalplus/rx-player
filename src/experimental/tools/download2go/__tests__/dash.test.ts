@@ -15,7 +15,6 @@
  */
 
 import { IParsedRepresentation } from "../../../../parsers/manifest/types";
-import { buildInitIndexSegment } from "../apis/dash/dashConnectivity";
 import { chooseVideoQuality } from "../apis/dash/dashTools";
 
 const resForMakeHTTPRequest = new Int16Array(0);
@@ -24,26 +23,6 @@ jest.mock("../utils.ts", () => ({
 }));
 
 describe("Download2go - dash content manipulation", () => {
-  describe("dashConnectivity", () => {
-    describe("[buildInitIndexSegment]", () => {
-      it("should return an Init and index segment", () => {
-        return buildInitIndexSegment({
-          segmentBase: { indexRange: [0, 200] },
-          initialization: {
-            range: [300, 700],
-            mediaURL:
-              "http://dash-vod-aka-test.canal-bis.com/multicodec/index.mpd",
-          },
-        }).then(res => {
-          expect(res).toEqual({
-            initSegment: resForMakeHTTPRequest,
-            indexSegment: resForMakeHTTPRequest,
-          });
-        });
-      });
-    });
-  });
-
   describe("dashTools", () => {
     describe("[chooseVideoQuality]", () => {
       it("should return the only quality available", () => {

@@ -32,16 +32,7 @@ import {
   takeUntil,
 } from "rxjs/operators";
 
-import arrayFindIndex from "../../../../../utils/array_find_index";
-import { concat as concatBytes } from "../../../../../utils/byte_parsing";
-import PPromise from "../../../../../utils/promise";
-import xhrRequest from "../../../../../utils/request";
-import { SegmentConstuctionError } from "../../utils";
-import getLicense from "../drm/keySystems";
-import { initParsedManifest } from "../publicApi/offlineDownload";
-import { createSegment } from "./dashConnectivity";
-import { chooseVideoQuality, emitEveryNth } from "./dashTools";
-
+import isOffline from "../../../../../compat/is_offline";
 import IRepresentationIndex, {
   ISegment
 } from "../../../../../manifest/representation_index/types";
@@ -50,11 +41,20 @@ import {
   IParsedAdaptation,
   IParsedManifest
 } from "../../../../../parsers/manifest/types";
+import arrayFindIndex from "../../../../../utils/array_find_index";
+import { concat as concatBytes } from "../../../../../utils/byte_parsing";
+import PPromise from "../../../../../utils/promise";
+import xhrRequest from "../../../../../utils/request";
 import {
   IProgressBarBuilderAbstract,
   ISettingsDownloader,
   IUtils,
 } from "../../types";
+import { SegmentConstuctionError } from "../../utils";
+import getLicense from "../drm/keySystems";
+import { initParsedManifest } from "../publicApi/offlineDownload";
+import { createSegment } from "./dashConnectivity";
+import { chooseVideoQuality, emitEveryNth } from "./dashTools";
 import {
   IDownloaderManagerAbstract,
   IDownloadManagerOutput,
@@ -362,14 +362,27 @@ export function downloadManagerSubscription(
           }),
         ]);
       },
-      err => {
+      (err: Error) => {
         progressSetupUnsubFn.unsubscribe();
         delete activeSubsDownloader[contentID];
-        emitter.trigger("error", {
-          action: "download",
-          contentID,
-          error: err,
-        });
+        switch (err.message) {
+          case "ERROR_EVENT":
+            if (isOffline()) {
+              emitter.trigger("error", {
+                action: "download",
+                contentID,
+                error: new Error("NETWORK_ERROR"),
+              });
+              return;
+            }
+          default:
+            emitter.trigger("error", {
+              action: "download",
+              contentID,
+              error: err,
+            });
+            return;
+        }
       },
       () => {
         progressSetupUnsubFn.unsubscribe();
