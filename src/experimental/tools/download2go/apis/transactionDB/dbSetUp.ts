@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 CANAL+ Group
+ * Copyright 2019 CANAL+ Group
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,15 +31,13 @@ export const isIndexDBSupported = (): boolean => "indexedDB" in window;
  * @returns The IndexDB object
  *
  */
-export async function setUpDb(
-  nameDB: string
-): Promise<IDBPDatabase | void> {
+export function setUpDb(nameDB: string): Promise<IDBPDatabase | void> {
   if (!isIndexDBSupported()) {
     throw new IndexDBError("IndexDB is not supported in your browser");
   }
 
   try {
-    const dbOpened = await openDB(nameDB, 1, {
+    return openDB(nameDB, 1, {
       upgrade(db) {
         db.createObjectStore("manifests", {
           keyPath: "contentID",
@@ -55,7 +53,6 @@ export async function setUpDb(
         });
       },
     });
-    return dbOpened;
   } catch (e) {
     throw new IndexDBError(e.message);
   }

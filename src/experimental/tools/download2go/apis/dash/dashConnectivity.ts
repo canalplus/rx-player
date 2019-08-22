@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 CANAL+ Group
+ * Copyright 2019 CANAL+ Group
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,24 @@ import {
  * @returns The manifest parsed IParserResponse<IParsedManifest>
  *
  */
+export const getOnlineManifest = (url: string) => {
+  return xhrRequest({
+    url,
+    responseType: "text",
+  }).pipe(
+    mergeMap(({ value }) =>
+      of(
+        parseManifest(
+          new DOMParser().parseFromString(value.responseData, "text/xml"),
+          {
+            url,
+          }
+        )
+      )
+    )
+  );
+};
+
 export const getOnlineMPDParsed = async (
   url: string
 ): Promise<IParserResponse<IParsedManifest>> => {

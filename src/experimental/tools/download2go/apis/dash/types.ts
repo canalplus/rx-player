@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 CANAL+ Group
+ * Copyright 2019 CANAL+ Group
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,7 +104,7 @@ export interface ILocalRepresentationOnline {
 }
 
 export interface ILocalAdaptationOnline {
-  type: "audio" | "video" | "text";
+  type: string;
   audioDescription?: boolean;
   closedCaption?: boolean;
   language?: string;
@@ -122,6 +122,11 @@ export interface ILocalManifestOnline {
   duration: number;
   periods: ILocalPeriodOnline[];
   isFinished: boolean;
+}
+
+export interface ISegmentIndexBuilder {
+  init: string;
+  segments: ISegmentBuilder[];
 }
 
 export interface ISegmentBuilder {
@@ -146,7 +151,7 @@ export type ISegmentIndex =
       type: "TemplateRepresentationIndex";
     }
   | {
-      dataInit: ITypedArray;
+      dataInit: ITypedArray | ArrayBuffer;
       mediaURL: string | null;
       duration: number;
       nextSegmentsRanges: ISidxSegment[] | null;

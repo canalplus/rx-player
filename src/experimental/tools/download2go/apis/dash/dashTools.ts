@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 CANAL+ Group
+ * Copyright 2019 CANAL+ Group
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,13 +33,9 @@ import {
   withLatestFrom,
 } from "rxjs/operators";
 import find from "../../../../../utils/array_find";
-import { concat as concatBytes } from "../../../../../utils/byte_parsing";
 
-import { makeHTTPRequest, SegmentConstuctionError } from "../../utils";
-import { buildInitIndexSegment } from "./dashConnectivity";
+import { SegmentConstuctionError } from "../../utils";
 
-import { ISegment } from "../../../../../manifest";
-import { getSegmentsFromSidx } from "../../../../../parsers/containers/isobmff";
 import { IParsedRepresentation } from "../../../../../parsers/manifest/types";
 import {
   IProgressBarBuilderAbstract,
@@ -49,10 +45,8 @@ import {
 import {
   IDownloadManagerOutput,
   ILocalManifestOnline,
-  ISegmentIndex,
   Quality,
 } from "../dash/types";
-import { ITypedArray } from "../drm/keySystems";
 
 /**
  * A tool function to choose quality depending of what we receive
@@ -117,46 +111,6 @@ export const chooseVideoQuality = (
           Math.floor(sortedRepresentationsByDESC.length / 2)
         ],
       ];
-  }
-};
-
-export const getBaseSegments = async (
-  Segment: ISegment
-): Promise<ISegmentIndex> => {
-  const { indexRange, range, mediaURL, duration = 0 } = Segment;
-  if (indexRange && range) {
-    const { initSegment, indexSegment } = await buildInitIndexSegment({
-      initialization: { range, mediaURL },
-      segmentBase: { indexRange },
-    });
-    const dataInit = concatBytes(
-      new Uint8Array(initSegment),
-      new Uint8Array(indexSegment)
-    );
-    const nextSegmentsRanges = getSegmentsFromSidx(
-      dataInit,
-      indexRange ? indexRange[0] : 0
-    );
-    return {
-      dataInit,
-      duration,
-      mediaURL,
-      nextSegmentsRanges,
-      type: "BaseRepresentationIndex",
-    };
-  } else {
-    const dataInit = await makeHTTPRequest<ITypedArray | ArrayBuffer>(
-      mediaURL || "",
-      {
-        method: "GET",
-        responseType: "arraybuffer",
-      }
-    );
-    return {
-      dataInit,
-      mediaURL,
-      type: "TemplateRepresentationIndex",
-    };
   }
 };
 

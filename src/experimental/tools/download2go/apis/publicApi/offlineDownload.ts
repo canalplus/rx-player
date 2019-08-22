@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 CANAL+ Group
+ * Copyright 2019 CANAL+ Group
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,11 @@
  */
 
 import { IDBPDatabase } from "idb";
+import { EMPTY, Observable, of } from "rxjs";
+import { mergeMap } from "rxjs/operators";
 
-import { ValidationArgsError } from "../../utils";
-import { getOnlineMPDParsed } from "../dash/dashConnectivity";
-import { fillStructMapping } from "../dash/dashSegmentsBuilder";
+import { getOnlineManifest } from "../dash/dashConnectivity";
 
-import { IParserResponse } from "../../../../../parsers/manifest/dash/parse_mpd";
 import {
   ILocalAdaptation,
   ILocalIndexSegment,
@@ -29,38 +28,8 @@ import {
   ILocalRepresentation,
 } from "../../../../../parsers/manifest/local/types";
 import { IParsedManifest } from "../../../../../parsers/manifest/types";
-import { ISettingsDownloader } from "../../types";
-import { ILocalManifestOnline, IOptionsBuilder } from "../dash/types";
-import { IUtils } from "./../../types";
+import { ILocalManifestOnline } from "../dash/types";
 import { ISegmentInitStored, ISegmentStored } from "./types";
-
-/**
- * Check the parsed dash manifest then launch the pipeline building of the structure
- *
- * @param IParserResponse - dash parsed manifest
- * @param IOptionsBuilder - Variables needed to construct the loader
- * @returns The rxpManifest ready to be inserted in IndexDB
- *
- */
-export async function buildRxpManifestPipeline(
-  dashParsedStruct: IParserResponse<IParsedManifest>,
-  builderSettings: IOptionsBuilder,
-  utilsBuilder: IUtils
-): Promise<ILocalManifestOnline> {
-  if (
-    dashParsedStruct.type === "done" &&
-    dashParsedStruct.value.transportType === "dash"
-  ) {
-    const rxpManifestOnline = await fillStructMapping(
-      builderSettings,
-      utilsBuilder
-    )(dashParsedStruct.value);
-    return rxpManifestOnline;
-  }
-  throw new Error(
-    "The MPD needs external resources or is not at a valid transport type (dash)"
-  );
-}
 
 /**
  * Launch the pipeline by url or by parsed dash manifest directly
@@ -69,31 +38,16 @@ export async function buildRxpManifestPipeline(
  * @returns The rxpManifest ready to be inserted in IndexDB
  *
  */
-export async function initDownloaderAssets(
-  settings: ISettingsDownloader,
-  { db, emitter, progressBarBuilder$ }: IUtils
-): Promise<ILocalManifestOnline | never> {
-  const {
-    url,
-    dbSettings: { contentID },
-    videoSettings: { quality, keySystems },
-  } = settings;
-  if (url) {
-    return buildRxpManifestPipeline(
-      await getOnlineMPDParsed(url),
-      {
-        contentID,
-        keySystemsOptions: keySystems,
-        quality,
-      },
-      {
-        db,
-        emitter,
-        ...(progressBarBuilder$ && { progressBarBuilder$ }),
+export function initParsedManifest(url: string): Observable<IParsedManifest> {
+  return getOnlineManifest(url).pipe(
+    mergeMap(manifest => {
+      if (manifest.type === "done") {
+        return of(manifest.value);
       }
-    );
-  }
-  throw new ValidationArgsError("Need the url of the dash file");
+      // handle the "need-ressource case here..."
+      return EMPTY;
+    })
+  );
 }
 
 /**
@@ -119,6 +73,7 @@ export function constructOfflineManifest(
         adaptations: period.adaptations.map(
           (adaptation): ILocalAdaptation => ({
             ...adaptation,
+            type: adaptation.type as "audio" | "video" | "text",
             representations: adaptation.representations.map(
               (representation): ILocalRepresentation => {
                 return {

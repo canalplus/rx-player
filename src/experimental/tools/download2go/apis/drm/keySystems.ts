@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 CANAL+ Group
+ * Copyright 2019 CANAL+ Group
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,7 @@ import {
   IKeySystemOption,
   IPersistedSessionData,
 } from "../../../../../core/eme/types";
-import createMediaSource, {
-  resetMediaSource,
-} from "../../../../../core/init/create_media_source";
+import createMediaSource from "../../../../../core/init/create_media_source";
 import { IUtils } from "../../types";
 
 export type ITypedArray =
@@ -99,13 +97,10 @@ function getLicense(
         tap(segmentData => sourceBuffer.appendBuffer(segmentData))
       );
       return combineLatest([sessionsUpdate$, appendedSegment$]).pipe(
-        finalize(() => resetMediaSource(video, mediaSource))
+        finalize(() => video.remove())
       );
     }),
-    take(2),
-    finalize(() => {
-      video.remove();
-    })
+    take(1)
   );
 }
 
