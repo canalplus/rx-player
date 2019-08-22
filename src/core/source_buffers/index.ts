@@ -16,6 +16,7 @@
 
 import BufferGarbageCollector from "./garbage_collector";
 import QueuedSourceBuffer, {
+  IBufferedChunk,
   IBufferType,
   IPushChunkInfos,
 } from "./queued_source_buffer";
@@ -28,6 +29,7 @@ import SourceBuffersStore, {
 export default SourceBuffersStore;
 export {
   BufferGarbageCollector,
+  IBufferedChunk,
   IBufferType,
   IPushChunkInfos,
   ISourceBufferOptions,
