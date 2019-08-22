@@ -14,6 +14,7 @@
     - [textTrackMode](#prop-textTrackMode)
     - [textTrackElement](#prop-textTrackElement)
     - [manualBitrateSwitchingMode](#prop-manualBitrateSwitchingMode)
+    - [lowLatencyMode](#prop-lowLatencyMode)
     - [supplementaryTextTracks](#prop-supplementaryTextTracks)
     - [supplementaryImageTracks](#prop-supplementaryImageTracks)
     - [hideNativeSubtitle](#prop-hideNativeSubtitle)
@@ -589,6 +590,21 @@ There is two possible values:
 
     [1] More informations about the ``"RELOADING"`` state can be found in [the
     player states documentation](./states).
+
+
+<a name="prop-lowLatencyMode"></a>
+### lowLatencyMode #############################################################
+
+_type_: ``Boolean``
+
+_defaults_: ``false``
+
+Allow to play DASH low-latency contents (with Chunk-encoded CMAF segments) with
+a low latency efficiently.
+
+More informations on playing low-latency DASH contents can be found in the
+[corresponding documentation page](./low_latency.md).
+
 
 
 <a name="prop-supplementaryTextTracks"></a>
