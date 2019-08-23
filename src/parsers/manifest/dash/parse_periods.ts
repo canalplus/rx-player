@@ -34,6 +34,67 @@ export interface IManifestInfos {
                                   // in seconds
 }
 
+interface IPeriodTimeInformations {
+  periodStart: number;
+  periodDuration?: number;
+  periodEnd?: number;
+}
+
+/**
+ * Get period time informations from current, next and previous
+ * periods.
+ * @param {Array.<Object>} periodsIR
+ * @param {Object} manifestInfos
+ * @return {Array.<Object>}
+ */
+function getPeriodTimeInformations(
+  periodsIR: IPeriodIntermediateRepresentation[],
+  manifestInfos: IManifestInfos
+): IPeriodTimeInformations[] {
+  return periodsIR.map((currentPeriod, i) => {
+    const prevPeriod = periodsIR[i - 1];
+    const nextPeriod = periodsIR[i + 1];
+
+    let periodStart : number;
+    if (currentPeriod.attributes.start != null) {
+      periodStart = currentPeriod.attributes.start;
+    } else {
+      if (i === 0) {
+        periodStart = (!manifestInfos.isDynamic ||
+                       manifestInfos.availabilityStartTime == null) ?
+                         0 :
+                         manifestInfos.availabilityStartTime;
+      } else {
+        if (prevPeriod &&
+            prevPeriod.attributes.duration != null &&
+            prevPeriod.attributes.start != null
+        ) {
+          periodStart = prevPeriod.attributes.start + prevPeriod.attributes.duration;
+        } else {
+          throw new Error("Missing start time when parsing periods.");
+        }
+      }
+    }
+
+    let periodDuration : number|undefined;
+    if (currentPeriod.attributes.duration != null) {
+      periodDuration = currentPeriod.attributes.duration;
+    } else if (i === 0 && manifestInfos.duration) {
+      periodDuration = manifestInfos.duration;
+    } else if (nextPeriod && nextPeriod.attributes.start != null) {
+      periodDuration = nextPeriod.attributes.start - periodStart;
+    }
+
+    const periodEnd = periodDuration != null ? (periodStart + periodDuration) :
+                                               undefined;
+    return {
+      periodStart,
+      periodDuration,
+      periodEnd,
+    };
+  });
+}
+
 /**
  * Process intermediate periods to create final parsed periods.
  * @param {Array.<Object>} periodsIR
@@ -44,12 +105,18 @@ export default function parsePeriods(
   periodsIR : IPeriodIntermediateRepresentation[],
   manifestInfos : IManifestInfos
 ): IParsedPeriod[] {
+  const periodTimeInformations = getPeriodTimeInformations(periodsIR, manifestInfos);
   const parsedPeriods : IParsedPeriod[] = [];
+
   for (let i = 0; i < periodsIR.length; i++) {
     const period = periodsIR[i];
+    const { periodStart,
+            periodDuration,
+            periodEnd,
+    } = periodTimeInformations[i];
+
     const periodBaseURL = resolveURL(manifestInfos.baseURL, period.children.baseURL);
 
-    // 2. Generate ID
     let periodID : string;
     if (period.attributes.id == null) {
       log.warn("DASH: No usable id found in the Period. Generating one.");
@@ -57,40 +124,6 @@ export default function parsePeriods(
     } else {
       periodID = period.attributes.id;
     }
-
-    // 3. Find the start of the Period (required)
-    let periodStart : number;
-    if (period.attributes.start != null) {
-      periodStart = period.attributes.start;
-    } else {
-      if (i === 0) {
-        periodStart = (!manifestInfos.isDynamic ||
-                       manifestInfos.availabilityStartTime == null) ?
-                         0 :
-                         manifestInfos.availabilityStartTime;
-      } else {
-        const prevPeriod = parsedPeriods[i - 1];
-        if (prevPeriod && prevPeriod.duration != null && prevPeriod.start != null) {
-          periodStart = prevPeriod.start + prevPeriod.duration;
-        } else {
-          throw new Error("Missing start time when parsing periods.");
-        }
-      }
-    }
-
-    if (i > 0 && parsedPeriods[i - 1].duration === undefined) {
-      parsedPeriods[i - 1].duration = periodStart - parsedPeriods[i - 1].start;
-    }
-
-    let periodDuration : number|undefined;
-    if (period.attributes.duration != null) {
-      periodDuration = period.attributes.duration;
-    } else if (i === 0 && manifestInfos.duration) {
-      periodDuration = manifestInfos.duration;
-    }
-
-    const periodEnd = periodDuration != null ? (periodStart + periodDuration) :
-                                               undefined;
 
     const periodInfos = { availabilityStartTime: manifestInfos.availabilityStartTime,
                           baseURL: periodBaseURL,
