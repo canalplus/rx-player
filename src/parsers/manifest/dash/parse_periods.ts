@@ -19,6 +19,7 @@ import idGenerator from "../../../utils/id_generator";
 import resolveURL from "../../../utils/resolve_url";
 import { IParsedPeriod } from "../types";
 import flattenOverlappingPeriods from "./flatten_overlapping_periods";
+import getPeriodsTimeInformations from "./get_periods_time_infos";
 import { IPeriodIntermediateRepresentation } from "./node_parsers/Period";
 import parseAdaptationSets from "./parse_adaptation_sets";
 
@@ -34,67 +35,6 @@ export interface IManifestInfos {
                                   // in seconds
 }
 
-interface IPeriodTimeInformations {
-  periodStart: number;
-  periodDuration?: number;
-  periodEnd?: number;
-}
-
-/**
- * Get period time informations from current, next and previous
- * periods.
- * @param {Array.<Object>} periodsIR
- * @param {Object} manifestInfos
- * @return {Array.<Object>}
- */
-function getPeriodTimeInformations(
-  periodsIR: IPeriodIntermediateRepresentation[],
-  manifestInfos: IManifestInfos
-): IPeriodTimeInformations[] {
-  return periodsIR.map((currentPeriod, i) => {
-    const prevPeriod = periodsIR[i - 1];
-    const nextPeriod = periodsIR[i + 1];
-
-    let periodStart : number;
-    if (currentPeriod.attributes.start != null) {
-      periodStart = currentPeriod.attributes.start;
-    } else {
-      if (i === 0) {
-        periodStart = (!manifestInfos.isDynamic ||
-                       manifestInfos.availabilityStartTime == null) ?
-                         0 :
-                         manifestInfos.availabilityStartTime;
-      } else {
-        if (prevPeriod &&
-            prevPeriod.attributes.duration != null &&
-            prevPeriod.attributes.start != null
-        ) {
-          periodStart = prevPeriod.attributes.start + prevPeriod.attributes.duration;
-        } else {
-          throw new Error("Missing start time when parsing periods.");
-        }
-      }
-    }
-
-    let periodDuration : number|undefined;
-    if (currentPeriod.attributes.duration != null) {
-      periodDuration = currentPeriod.attributes.duration;
-    } else if (i === 0 && manifestInfos.duration) {
-      periodDuration = manifestInfos.duration;
-    } else if (nextPeriod && nextPeriod.attributes.start != null) {
-      periodDuration = nextPeriod.attributes.start - periodStart;
-    }
-
-    const periodEnd = periodDuration != null ? (periodStart + periodDuration) :
-                                               undefined;
-    return {
-      periodStart,
-      periodDuration,
-      periodEnd,
-    };
-  });
-}
-
 /**
  * Process intermediate periods to create final parsed periods.
  * @param {Array.<Object>} periodsIR
@@ -105,7 +45,7 @@ export default function parsePeriods(
   periodsIR : IPeriodIntermediateRepresentation[],
   manifestInfos : IManifestInfos
 ): IParsedPeriod[] {
-  const periodTimeInformations = getPeriodTimeInformations(periodsIR, manifestInfos);
+  const periodsTimeInformations = getPeriodsTimeInformations(periodsIR, manifestInfos);
   const parsedPeriods : IParsedPeriod[] = [];
 
   for (let i = 0; i < periodsIR.length; i++) {
@@ -113,7 +53,7 @@ export default function parsePeriods(
     const { periodStart,
             periodDuration,
             periodEnd,
-    } = periodTimeInformations[i];
+    } = periodsTimeInformations[i];
 
     const periodBaseURL = resolveURL(manifestInfos.baseURL, period.children.baseURL);
 
