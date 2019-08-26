@@ -84,8 +84,7 @@ export default function extractTimingsInfos(
   // If the estimate is too far from what the segment seems to imply, take
   // the segment infos instead.
   const maxDecodeTimeDelta = Math.min(segment.timescale * 0.9,
-                                      segment.duration != null ? segment.duration / 4 :
-                                                                 0.25);
+                                      segment.duration / 4);
 
   const trunDuration = getDurationFromTrun(data);
   if (trunDuration >= 0 && (segment.duration == null ||
