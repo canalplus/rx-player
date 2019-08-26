@@ -76,11 +76,8 @@ function getSegmentIndex(index : ITimelineIndex, start : number) : number {
 function getSegmentNumber(
   start : number,
   up : number,
-  duration? : number
+  duration : number
 ) : number {
-  if (!duration) {
-    return 0;
-  }
   const diff = up - start;
   return diff > 0 ? Math.floor(diff / duration) :
                     0;
@@ -244,6 +241,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
     return { id: "init",
              isInit: true,
              time: 0,
+             duration: 0,
              timescale: this._index.timescale,
              privateInfos: { smoothInit: this._initSegmentInfos },
              mediaURL: null };
@@ -276,9 +274,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
       const { duration, start } = segmentRange;
       const repeat = calculateRepeat(segmentRange, timeline[i + 1]);
       let segmentNumberInCurrentRange = getSegmentNumber(start, up, duration);
-      let segmentTime = start + segmentNumberInCurrentRange *
-        (duration == null ? 0 : duration);
-
+      let segmentTime = start + segmentNumberInCurrentRange * duration;
       const timeToAddToCheckMaxPosition = isAggressive ? 0 :
                                                          duration;
       while (segmentTime < to &&

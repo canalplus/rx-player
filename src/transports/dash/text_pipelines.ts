@@ -106,7 +106,7 @@ function parseMP4EmbeddedTrack({ response,
 
   if (isInit) {
     const mdhdTimescale = getMDHDTimescale(chunkBytes);
-    const chunkInfos = mdhdTimescale > 0 ? { time: -1,
+    const chunkInfos = mdhdTimescale > 0 ? { time: 0,
                                              duration: 0,
                                              timescale: mdhdTimescale } :
                                            null;
@@ -131,15 +131,14 @@ function parseMP4EmbeddedTrack({ response,
         log.warn("DASH: Unavailable time data for current text track.");
       } else {
         startTime = segment.time;
-        endTime = segment.duration == null ? undefined :
-                                             startTime + segment.duration;
+        endTime = startTime + segment.duration;
         timescale = segment.timescale;
       }
     } else {
       startTime = chunkInfos.time;
       if (chunkInfos.duration != null) {
         endTime = startTime + chunkInfos.duration;
-      } else if (!isChunked && segment.duration != null) {
+      } else if (!isChunked) {
         endTime = startTime + segment.duration;
       }
       timescale = chunkInfos.timescale;
@@ -202,15 +201,12 @@ function parsePlainTextTrack({ response,
     textTrackData = data;
   }
 
-  const duration = segment.duration == null ? undefined :
-                                              segment.duration;
   let start : number | undefined;
   let end : number | undefined;
   let timescale : number = 1;
   if (!isChunked) {
     start = segment.time;
-    end = duration == null ? undefined :
-                             start + duration;
+    end = start + segment.duration;
     timescale = segment.timescale;
   } else {
     log.warn("DASH: Unavailable time data for current text track.");

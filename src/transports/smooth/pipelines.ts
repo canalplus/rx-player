@@ -170,7 +170,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         // smooth init segments are crafted by hand. Their timescale is the one
         // from the manifest.
         const initSegmentInfos = { timescale: segment.timescale,
-                                   time: -1,
+                                   time: 0,
                                    duration: 0 };
         return observableOf({ chunkData: data,
                               chunkInfos: initSegmentInfos,
@@ -262,8 +262,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
             log.warn("Smooth: Unavailable time data for current text track.");
           } else {
             _sdStart = segment.time;
-            _sdEnd = segment.duration == null ? undefined :
-                                                _sdStart + segment.duration;
+            _sdEnd = _sdStart + segment.duration;
             _sdTimescale = segment.timescale;
           }
         } else {
@@ -301,8 +300,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
 
         // vod is simple WebVTT or TTML text
         _sdStart = segmentTime;
-        _sdEnd = segment.duration != null ? segmentTime + segment.duration :
-                                            undefined;
+        _sdEnd = segmentTime + segment.duration;
         _sdTimescale = segment.timescale;
 
         switch (mimeType) {
@@ -377,7 +375,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         return observableOf({ chunkData: null,
                               chunkInfos: segment.timescale > 0 ?
                                 { duration: segment.isInit ? 0 : segment.duration,
-                                  time: segment.isInit ? -1 : segment.time,
+                                  time: segment.isInit ? 0 : segment.time,
                                   timescale: segment.timescale } :
                                 null,
                               chunkOffset: 0,

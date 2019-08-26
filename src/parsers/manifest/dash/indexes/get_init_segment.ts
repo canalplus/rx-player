@@ -31,6 +31,7 @@ export default function getInitSegment(
   return { id: "init",
            isInit: true,
            time: 0,
+           duration: 0,
            range: initialization ? initialization.range || undefined :
                                    undefined,
            indexRange: index.indexRange || undefined,
