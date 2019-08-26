@@ -362,13 +362,13 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * Returns first position available in the index.
    *
    * @param {Object} index
-   * @returns {Number}
+   * @returns {Number|null}
    */
-  getFirstPosition() : number|undefined {
+  getFirstPosition() : number|null {
     this._refreshTimeline();
     const index = this._index;
     if (!index.timeline.length) {
-      return undefined;
+      return null;
     }
     return index.timeline[0].start / index.timescale;
   }

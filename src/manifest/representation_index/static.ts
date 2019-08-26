@@ -61,19 +61,18 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
 
   /**
    * Returns first position in index.
-   * @returns {undefined}
+   * @returns {null}
    */
-  getFirstPosition() : undefined {
-    return ;
-    /* tslint:enable return-undefined */
+  getFirstPosition() : null {
+    return null;
   }
 
   /**
    * Returns last position in index.
-   * @returns {undefined}
+   * @returns {null}
    */
-  getLastPosition() : undefined {
-    return ;
+  getLastPosition() : null {
+    return null;
   }
 
   /**

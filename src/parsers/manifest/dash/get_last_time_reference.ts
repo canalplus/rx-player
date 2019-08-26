@@ -92,65 +92,78 @@ export default function getMinimumAndMaximumPosition(
   if (manifest.periods.length === 0) {
     throw new Error("DASH Parser: no period available for a live content");
   }
-  const firstPeriodAdaptations = manifest.periods[0].adaptations;
-  const lastPeriodAdaptations = manifest.periods[manifest.periods.length - 1]
-                                  .adaptations;
-  const firstAudioAdaptationFromFirstPeriod = firstPeriodAdaptations.audio == null ?
-                                                undefined :
-                                                firstPeriodAdaptations.audio[0];
-  const firstVideoAdaptationFromFirstPeriod = firstPeriodAdaptations.video == null ?
-                                                undefined :
-                                                firstPeriodAdaptations.video[0];
-  const firstAudioAdaptationFromLastPeriod = lastPeriodAdaptations.audio == null ?
-                                               undefined :
-                                               lastPeriodAdaptations.audio[0];
-  const firstVideoAdaptationFromLastPeriod =  lastPeriodAdaptations.video == null ?
-                                               undefined :
-                                               lastPeriodAdaptations.video[0];
 
-  if ((firstAudioAdaptationFromFirstPeriod == null &&
-       firstVideoAdaptationFromFirstPeriod == null) ||
-      (firstAudioAdaptationFromLastPeriod == null &&
-       firstVideoAdaptationFromLastPeriod == null))
-  {
-    throw new Error("DASH Parser: Can't find first adaptation from last period");
+  let maximumPosition;
+
+  for (let i = manifest.periods.length - 1; i > 0; i--) {
+    const periodAdaptations = manifest.periods[i].adaptations;
+    const firstAudioAdaptationFromPeriod = periodAdaptations.audio == null ?
+      undefined :
+      periodAdaptations.audio[0];
+    const firstVideoAdaptationFromPeriod =  periodAdaptations.video == null ?
+      undefined :
+      periodAdaptations.video[0];
+    if (firstAudioAdaptationFromPeriod != null &&
+        firstVideoAdaptationFromPeriod != null
+    ) {
+      const maximumAudioPosition = firstAudioAdaptationFromPeriod == null ?
+        undefined :
+        getLastTimeReferenceFromAdaptation(firstAudioAdaptationFromPeriod);
+
+      const maximumVideoPosition = firstVideoAdaptationFromPeriod == null ?
+        undefined :
+        getLastTimeReferenceFromAdaptation(firstVideoAdaptationFromPeriod);
+
+      const newMaximumPosition = [maximumAudioPosition, maximumVideoPosition]
+                                .reduce<number|undefined>((acc, pos) => {
+                                  if (acc == null) {
+                                    return pos;
+                                  } else if (pos == null) {
+                                    return acc;
+                                  }
+                                  return Math.min(acc, pos);
+                                }, undefined);
+      if (newMaximumPosition != null) {
+        maximumPosition = newMaximumPosition;
+        break;
+      }
+    }
   }
 
-  const minimumAudioPosition = firstAudioAdaptationFromFirstPeriod == null ?
-    undefined :
-    getFirstTimeReferenceFromAdaptation(firstAudioAdaptationFromFirstPeriod);
+  let minimumPosition;
 
-  const minimumVideoPosition = firstVideoAdaptationFromFirstPeriod == null ?
-    undefined :
-    getFirstTimeReferenceFromAdaptation(firstVideoAdaptationFromFirstPeriod);
+  for (let j = 0; j < manifest.periods.length; j++) {
+    const minPeriodAdaptations = manifest.periods[j].adaptations;
+    const minFirstAudioAdaptationFromPeriod = minPeriodAdaptations.audio == null ?
+      undefined :
+      minPeriodAdaptations.audio[0];
+    const minFirstVideoAdaptationFromPeriod =  minPeriodAdaptations.video == null ?
+      undefined :
+      minPeriodAdaptations.video[0];
 
-  const maximumAudioPosition = firstAudioAdaptationFromLastPeriod == null ?
-    undefined :
-    getLastTimeReferenceFromAdaptation(firstAudioAdaptationFromLastPeriod);
-
-  const maximumVideoPosition = firstVideoAdaptationFromLastPeriod == null ?
-    undefined :
-    getLastTimeReferenceFromAdaptation(firstVideoAdaptationFromLastPeriod);
-
-  const minimumPosition = [minimumAudioPosition, minimumVideoPosition]
-                            .reduce<number|undefined>((acc, pos) => {
-                              if (acc == null) {
-                                return pos;
-                              } else if (pos == null) {
-                                return acc;
-                              }
-                              return Math.max(acc, pos);
-                            }, undefined);
-
-  const maximumPosition = [maximumAudioPosition, maximumVideoPosition]
-                            .reduce<number|undefined>((acc, pos) => {
-                              if (acc == null) {
-                                return pos;
-                              } else if (pos == null) {
-                                return acc;
-                              }
-                              return Math.min(acc, pos);
-                            }, undefined);
-
+    if (minFirstAudioAdaptationFromPeriod != null &&
+      minFirstVideoAdaptationFromPeriod != null
+    ) {
+      const minimumAudioPosition = minFirstAudioAdaptationFromPeriod == null ?
+        undefined :
+        getFirstTimeReferenceFromAdaptation(minFirstAudioAdaptationFromPeriod);
+      const minimumVideoPosition = minFirstVideoAdaptationFromPeriod == null ?
+        undefined :
+        getFirstTimeReferenceFromAdaptation(minFirstVideoAdaptationFromPeriod);
+      const newMinimumPosition = [minimumAudioPosition, minimumVideoPosition]
+                                .reduce<number|undefined>((acc, pos) => {
+                                  if (acc == null) {
+                                    return pos;
+                                  } else if (pos == null) {
+                                    return acc;
+                                  }
+                                  return Math.min(acc, pos);
+                                }, undefined);
+      if (newMinimumPosition != null) {
+        minimumPosition = newMinimumPosition;
+        break;
+      }
+    }
+  }
   return [minimumPosition, maximumPosition];
 }

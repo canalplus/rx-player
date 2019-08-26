@@ -201,24 +201,24 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
   /**
    * Returns first position in index.
-   * @returns {Number|undefined}
+   * @returns {Number|null}
    */
-  getFirstPosition() : number|undefined {
+  getFirstPosition() : number|null {
     const index = this._index;
     if (index.timeline.length === 0) {
-      return undefined;
+      return null;
     }
     return fromIndexTime(index.timeline[0].start, index);
   }
 
   /**
    * Returns last position in index.
-   * @returns {Number|undefined}
+   * @returns {Number|null}
    */
-  getLastPosition() : number|undefined {
+  getLastPosition() : number|null {
     const { timeline } = this._index;
     if (timeline.length === 0) {
-      return undefined;
+      return null;
     }
     const lastTimelineElement = timeline[timeline.length - 1];
     const lastTime = getIndexSegmentEnd(lastTimelineElement,
