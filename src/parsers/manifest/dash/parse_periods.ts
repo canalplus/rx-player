@@ -46,26 +46,29 @@ export default function parsePeriods(
   manifestInfos : IManifestInfos
 ): IParsedPeriod[] {
   const periodsTimeInformations = getPeriodsTimeInformations(periodsIR, manifestInfos);
-  const parsedPeriods : IParsedPeriod[] = [];
-
   if (periodsTimeInformations.length !== periodsIR.length) {
     throw new Error("MPD parsing error: the time informations are incoherent.");
   }
 
-  for (let i = 0; i < periodsIR.length; i++) {
-    const period = periodsIR[i];
+  const { parsedPeriods } = periodsIR.reverse().reduce((
+    acc: {
+      parsedPeriods: IParsedPeriod[];
+      getLastPositionByType: Partial<Record<string, () => number|undefined>>;
+    },
+    periodIR, i
+  ) => {
+    const periodBaseURL = resolveURL(manifestInfos.baseURL, periodIR.children.baseURL);
+
     const { periodStart,
             periodDuration,
             periodEnd } = periodsTimeInformations[i];
 
-    const periodBaseURL = resolveURL(manifestInfos.baseURL, period.children.baseURL);
-
     let periodID : string;
-    if (period.attributes.id == null) {
+    if (periodIR.attributes.id == null) {
       log.warn("DASH: No usable id found in the Period. Generating one.");
       periodID = "gen-dash-period-" + generatePeriodID();
     } else {
-      periodID = period.attributes.id;
+      periodID = periodIR.attributes.id;
     }
 
     const periodInfos = { availabilityStartTime: manifestInfos.availabilityStartTime,
@@ -75,14 +78,32 @@ export default function parsePeriods(
                           isDynamic: manifestInfos.isDynamic,
                           start: periodStart,
                           timeShiftBufferDepth: manifestInfos.timeShiftBufferDepth };
-    const adaptations = parseAdaptationSets(period.children.adaptations,
-                                            periodInfos);
+    const adaptations = parseAdaptationSets(periodIR.children.adaptations,
+                                            periodInfos,
+                                            acc.getLastPositionByType);
     const parsedPeriod : IParsedPeriod = { id: periodID,
                                            start: periodStart,
                                            end: periodEnd,
                                            duration: periodDuration,
                                            adaptations };
-    parsedPeriods.push(parsedPeriod);
-  }
+    acc.parsedPeriods.unshift(parsedPeriod);
+
+    if (i === 0) {
+      const types = ["video", "audio"];
+      types.forEach((type) => {
+        acc.getLastPositionByType[type] = () => {
+          const typedAdaptations = adaptations[type];
+          return typedAdaptations ?
+            typedAdaptations[0].representations[0].index.getLastPosition() :
+            undefined;
+        };
+      });
+    }
+
+    return acc;
+  }, {
+    parsedPeriods: [] as IParsedPeriod[],
+    getLastPositionByType: {},
+  });
   return flattenOverlappingPeriods(parsedPeriods);
 }

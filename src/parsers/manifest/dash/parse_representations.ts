@@ -58,6 +58,7 @@ interface IIndexContext {
   representationBitrate? : number; // Bitrate of the Representation concerned
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
                                   // in seconds
+  getLastPositionByType? : () => number|undefined; //
 }
 
 /**
@@ -104,7 +105,8 @@ function findAdaptationIndex(
 export default function parseRepresentations(
   representationsIR : IRepresentationIntermediateRepresentation[],
   adaptation : IAdaptationSetIntermediateRepresentation,
-  adaptationInfos : IAdaptationInfos
+  adaptationInfos : IAdaptationInfos,
+  getLastPosition? : () => number|undefined
 ): IParsedRepresentation[] {
   return representationsIR.map((representation) => {
     const baseURL = representation.children.baseURL;
@@ -119,7 +121,8 @@ export default function parseRepresentations(
                       representationBaseURL,
                       representationBitrate: representation.attributes.bitrate,
                       representationId: representation.attributes.id,
-                      timeShiftBufferDepth: adaptationInfos.timeShiftBufferDepth };
+                      timeShiftBufferDepth: adaptationInfos.timeShiftBufferDepth,
+                      getLastPosition };
     let representationIndex : IRepresentationIndex;
     if (representation.children.segmentBase != null) {
       const { segmentBase } = representation.children;

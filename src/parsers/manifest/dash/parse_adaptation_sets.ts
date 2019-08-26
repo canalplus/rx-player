@@ -172,7 +172,8 @@ function getAdaptationSetSwitchingIDs(
  */
 export default function parseAdaptationSets(
   adaptationsIR : IAdaptationSetIntermediateRepresentation[],
-  periodInfos : IPeriodInfos
+  periodInfos : IPeriodInfos,
+  getLastPositionByType : Partial<Record<string, () => number|undefined>>
 ): IParsedAdaptations {
   return adaptationsIR
     .reduce<{ adaptations : IParsedAdaptations;
@@ -191,22 +192,16 @@ export default function parseAdaptationSets(
         start: periodInfos.start,
         timeShiftBufferDepth: periodInfos.timeShiftBufferDepth,
       };
-      const representations = parseRepresentations(representationsIR,
-                                                   adaptation,
-                                                   adaptationInfos);
       const adaptationMimeType = adaptation.attributes.mimeType;
       const adaptationCodecs = adaptation.attributes.codecs;
-      const representationMimeTypes = representations
-        .map(representation => representation.mimeType)
-        .filter((mimeType : string|undefined) : mimeType is string => mimeType != null);
-      const representationCodecs = representations
-        .map(representation => representation.codecs)
-        .filter((codecs : string|undefined) : codecs is string => codecs != null);
-      const type = inferAdaptationType(adaptationMimeType || null,
-                                       representationMimeTypes,
+      const type = inferAdaptationType(representationsIR,
+                                       adaptationMimeType || null,
                                        adaptationCodecs || null,
-                                       representationCodecs,
                                        adaptationChildren.roles || null);
+      const representations = parseRepresentations(representationsIR,
+                                                   adaptation,
+                                                   adaptationInfos,
+                                                   getLastPositionByType[type]);
 
       const originalID = adaptation.attributes.id;
       let newID : string;

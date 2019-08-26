@@ -97,6 +97,7 @@ export interface ITemplateIndexContextArgument {
                                   // in seconds
   manifestReceivedTime? : number; // time (in terms of `performance.now`) at
                                    // which the Manifest file was received
+  getLastPosition? : () => number|undefined;
 }
 
 /**
@@ -110,6 +111,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   private _relativePeriodEnd? : number;
   private _liveEdgeOffset? : number;
   private _scaledBufferDepth? : number;
+  private _getLastContentPosition? : () => number|undefined;
 
   // Whether this RepresentationIndex can change over time.
   private _isDynamic : boolean;
@@ -131,8 +133,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             representationBaseURL,
             representationId,
             representationBitrate,
-            timeShiftBufferDepth } = context;
+            timeShiftBufferDepth,
+            getLastPosition } = context;
 
+    this._getLastContentPosition = getLastPosition;
     this._scaledBufferDepth = timeShiftBufferDepth == null ?
       undefined :
       timeShiftBufferDepth * timescale;
@@ -391,14 +395,24 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       return 0; // it is the start of the Period
     }
     const { duration } = this._index;
-    const lastSegmentStart = this._getLastSegmentStart();
 
-    // No segment is available
-    if (lastSegmentStart === null) {
-      return null;
+    const lastPosition = this._getLastContentPosition ?
+      this._getLastContentPosition() : undefined;
+    let scaledLastPosition = lastPosition ?
+      (lastPosition * this._index.timescale) - this._periodStart :
+      undefined;
+
+    if (scaledLastPosition == null) {
+      const lastSegmentStart = this._getLastSegmentStart();
+
+      // No segment is available
+      if (lastSegmentStart === null) {
+        return null;
+      }
+      const lastSegmentEnd = lastSegmentStart + this._index.duration;
+      scaledLastPosition = lastSegmentEnd;
     }
-    const lastSegmentEnd = lastSegmentStart + this._index.duration;
-    const scaledMinimum = Math.max(lastSegmentEnd - this._scaledBufferDepth,
+    const scaledMinimum = Math.max(scaledLastPosition - this._scaledBufferDepth,
                                    0);
     const numberIndexedToZero = Math.floor(scaledMinimum / duration);
     return numberIndexedToZero * duration;
