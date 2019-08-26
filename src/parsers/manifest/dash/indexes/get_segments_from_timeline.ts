@@ -77,28 +77,6 @@ export default function getSegmentsFromTimeline(
 
     maxEncounteredDuration = Math.max(maxEncounteredDuration, duration);
 
-    // live-added segments have @d attribute equals to -1
-    if (duration < 0) {
-      // what? May be to play it safe and avoid adding segments which are
-      // not completely generated
-      if (start + maxEncounteredDuration < scaledTo) {
-        const segmentNumber = currentNumber != null ? currentNumber : undefined;
-        const segment = { id: "" + start,
-                          time: start - index.indexTimeOffset,
-                          isInit: false,
-                          range,
-                          duration: undefined,
-                          timescale,
-                          mediaURL: replaceSegmentDASHTokens(mediaURL,
-                                                             start,
-                                                             segmentNumber),
-                          number: segmentNumber,
-                          timestampOffset: -(index.indexTimeOffset / timescale) };
-        segments.push(segment);
-      }
-      return segments;
-    }
-
     const repeat = calculateRepeat(timelineItem, timeline[i + 1], maximumTime);
     let segmentNumberInCurrentRange = getWantedRepeatIndex(start, duration, scaledUp);
     let segmentTime = start + segmentNumberInCurrentRange * duration;

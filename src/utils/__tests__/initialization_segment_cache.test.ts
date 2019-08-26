@@ -57,28 +57,28 @@ const representation2 = {
 const initSegment1 = {
   id: "init1",
   isInit: true,
-  time: -1,
+  time: 0,
   timescale: 1000,
   mediaURL: "http://www.example.com/some.URLinit1",
-  duration: -1,
+  duration: 0,
 };
 
 const initSegment2 = {
   id: "init2",
   isInit: true,
-  time: -1,
+  time: 0,
   timescale: 1000,
   mediaURL: "http://www.example.com/some.URLinit2",
-  duration: -1,
+  duration: 0,
 };
 
 const initSegment3 = {
   id: "init3",
   isInit: true,
-  time: -1,
+  time: 0,
   timescale: 1000,
   mediaURL: "http://www.example.com/some.URLinit3",
-  duration: -1,
+  duration: 0,
 };
 
 const segment1 = {

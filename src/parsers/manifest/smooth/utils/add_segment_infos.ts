@@ -44,8 +44,8 @@ export default function _addSegmentInfos(
                  duration : number;
                  timescale : number; },
   currentSegment : { time : number;
-                     duration? : number;
-                     timescale? : number; }
+                     duration : number;
+                     timescale : number; }
 ) : boolean {
   const { timeline, timescale } = index;
   const timelineLength = timeline.length;
@@ -66,53 +66,25 @@ export default function _addSegmentInfos(
   }
 
   // in some circumstances, the new segment informations are only
-  // duration informations that we can use to deduct the start of the
+  // duration informations that we could use to deduct the start of the
   // next segment. this is the case where the new segment are
   // associated to a current segment and have the same start
+  // However, we prefer to be sure of the duration of the new segments
+  // before adding such segments.
   const shouldDeductNextSegment = scaledCurrentTime != null &&
     (scaledNewSegment.time === scaledCurrentTime);
   if (shouldDeductNextSegment) {
-    const newSegmentStart = scaledNewSegment.time + scaledNewSegment.duration;
-    const lastSegmentStart = (last.start + (last.duration || 0) * last.repeatCount);
-    const startDiff = newSegmentStart - lastSegmentStart;
-
-    if (startDiff <= 0) { // same segment / behind the last
-      return false;
-    }
-
-    // try to use the compact notation with @r attribute on the last
-    // to elements of the timeline if we find out they have the same
-    // duration
-    if (last.duration === -1) {
-      const prev = timeline[timelineLength - 2];
-      if (prev && prev.duration === startDiff) {
-        prev.repeatCount++;
-        timeline.pop();
-      } else {
-        last.duration = startDiff;
-      }
-    }
-
-    index.timeline.push({
-      duration: -1,
-      start: newSegmentStart,
-      repeatCount: 0,
-    });
-    return true;
-  }
-
-  // if the given timing has a timestamp after the timeline end we
-  // just need to push a new element in the timeline, or increase
-  // the @r attribute of the last element.
-  else if (scaledNewSegment.time >= getIndexSegmentEnd(last, null)) {
+    return false;
+  } else if (scaledNewSegment.time >= getIndexSegmentEnd(last, null)) {
+    // if the given timing has a timestamp after the timeline end we
+    // just need to push a new element in the timeline, or increase
+    // the @r attribute of the last element.
     if (last.duration === scaledNewSegment.duration) {
       last.repeatCount++;
     } else {
-      index.timeline.push({
-        duration: scaledNewSegment.duration,
-        start: scaledNewSegment.time,
-        repeatCount: 0,
-      });
+      index.timeline.push({ duration: scaledNewSegment.duration,
+                            start: scaledNewSegment.time,
+                            repeatCount: 0 });
     }
     return true;
   }

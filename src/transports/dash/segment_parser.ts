@@ -77,7 +77,7 @@ export default function parser({ content,
     const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
                                getMDHDTimescale(chunkData);
 
-    const chunkInfos = timescale != null && timescale > 0 ? { time: -1,
+    const chunkInfos = timescale != null && timescale > 0 ? { time: 0,
                                                               duration: 0,
                                                               timescale } :
                                                             null;
