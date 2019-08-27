@@ -81,8 +81,8 @@ interface IPushedChunkInventoryInfos {
   period : Period;
   representation : Representation;
   segment : ISegment; // The  segment object linked to the chunk.
-  estimatedStart : number; // Estimated start time, in s, of the chunk (/!\ not
-                           // the segment).
+  estimatedStart? : number; // Estimated start time, in s, of the chunk (/!\ not
+                            // the segment).
   estimatedEnd? : number; // Estimated end time, in s, of the chunk (/!\ not the
                           // segment).
 }

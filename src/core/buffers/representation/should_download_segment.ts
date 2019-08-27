@@ -119,34 +119,17 @@ export default function shouldDownloadSegment({
     return true;
   }
 
-  // trim chunks not needed and ensure the rest is contiguous
-  for (let i = 0; i < overlappingChunks.length; i++) {
+  // if there is multiple ones check that they are contiguous.
+  for (let i = 1; i < overlappingChunks.length; i++) {
     const overlChunk = overlappingChunks[i];
-    const overlStart = overlChunk.bufferedStart == null ? overlChunk.start :
-                                                          overlChunk.bufferedStart;
-    const overlEnd = overlChunk.bufferedEnd == null ? overlChunk.end :
-                                                      overlChunk.bufferedEnd;
-
-    // if chunk is not needed at all
-    if (overlEnd <= neededRange.start || overlStart >= neededRange.end) {
-      overlappingChunks.splice(i, 1);
-      i--;
-
-    // else, and if there is multiple ones check that they are contiguous.
-    } else if (i > 0) {
-      const prevOverlChunk = overlappingChunks[i - 1];
-      if (prevOverlChunk.bufferedEnd == null || overlChunk.bufferedStart == null) {
-        return true;
-      }
-      const delta = overlChunk.bufferedStart - prevOverlChunk.bufferedEnd;
-      if (Math.abs(delta) > 1 / 60) { // 1/60 for rounding errors
-        return true;
-      }
+    const prevOverlChunk = overlappingChunks[i - 1];
+    if (prevOverlChunk.bufferedEnd == null || overlChunk.bufferedStart == null) {
+      return true;
     }
-  }
-
-  if (overlappingChunks.length <= 0) {
-    return true;
+    const delta = overlChunk.bufferedStart - prevOverlChunk.bufferedEnd;
+    if (Math.abs(delta) > 1 / 60) { // 1/60 for rounding errors
+      return true;
+    }
   }
 
   const firstOverlSegment = overlappingChunks[0];

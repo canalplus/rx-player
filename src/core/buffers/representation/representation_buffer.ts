@@ -507,17 +507,20 @@ export default function RepresentationBuffer<T>({
         return EMPTY;
       }
 
-      const { time, duration, timescale } = chunkInfos != null ? chunkInfos :
-                                                                 segment;
-      const estimatedStart = Math.max(time / timescale,
-                                      appendWindow[0] != null ? appendWindow[0] :
-                                                                0);
+      let estimatedStart : number | undefined;
       let estimatedEnd : number | undefined;
-      if (duration != null) {
-        estimatedEnd = Math.min((time + duration) / timescale,
-                                 appendWindow[1] != null ? appendWindow[1] :
-                                                           Infinity);
+      if (chunkInfos != null) {
+        estimatedStart = Math.max(chunkInfos.time / chunkInfos.timescale,
+                                  appendWindow[0] != null ? appendWindow[0] :
+                                                            0);
+        if (chunkInfos.duration != null) {
+          estimatedEnd = Math.min((chunkInfos.time + chunkInfos.duration) /
+                                    chunkInfos.timescale,
+                                  appendWindow[1] != null ? appendWindow[1] :
+                                                            Infinity);
+        }
       }
+
       const data = { initSegment: initSegmentObject &&
                                   initSegmentObject.chunkData,
                      chunk: segment.isInit ? null :
