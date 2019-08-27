@@ -23,14 +23,17 @@
  * position and what is currently buffered.
  */
 
+import objectAssign from "object-assign";
 import config from "../../../config";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
+  areSameContent,
   ISegment,
   Period,
   Representation,
 } from "../../../manifest";
+import arrayFind from "../../../utils/array_find";
 import SimpleSet from "../../../utils/simple_set";
 import { IBufferedChunk } from "../../source_buffers";
 
@@ -62,6 +65,9 @@ function getCorrespondingBufferedSegments(
   segmentEnd : number,
   segmentInventory : IBufferedChunk[]
 ) : IBufferedChunk[] {
+  const segmentRoundingError = Math.max(1 / 60,
+                                        MINIMUM_SEGMENT_SIZE);
+
   const overlappingChunks : IBufferedChunk[] = [];
   for (let i = segmentInventory.length - 1; i >= 0; i--) {
     const eltInventory = segmentInventory[i];
@@ -72,11 +78,12 @@ function getCorrespondingBufferedSegments(
                                 inventorySegment.timescale;
       const eltInventoryEnd = inventorySegment.duration == null ?
         eltInventory.end :
-        eltInventoryStart + inventorySegment.duration / inventorySegment.timescale;
-      if (eltInventoryEnd > (segmentStart + 1 / 60) // 1 / 60 for rounding errors
-          && eltInventoryStart < (segmentEnd - 1 / 60))
+        eltInventoryStart + inventorySegment.duration /
+          inventorySegment.timescale;
+      if (eltInventoryEnd > (segmentStart + segmentRoundingError)
+          && eltInventoryStart < (segmentEnd - segmentRoundingError))
       {
-        overlappingChunks.push(eltInventory);
+        overlappingChunks.unshift(eltInventory);
       }
     }
   }
@@ -112,11 +119,21 @@ export default function shouldDownloadSegment({
   const scaledTime = time / timescale;
   const scaledDuration = duration / timescale;
   const scaledEnd = scaledTime + scaledDuration;
-  const overlappingChunks =
+  let overlappingChunks =
     getCorrespondingBufferedSegments(scaledTime, scaledEnd, segmentInventory);
 
   if (overlappingChunks.length <= 0) {
     return true;
+  }
+
+  if (overlappingChunks.length > 1) {
+    const currentContent = objectAssign({ segment }, content);
+    // if we find the same content overlapping, just consider that one.
+    const sameSegment = arrayFind(overlappingChunks, (chunk) =>
+      areSameContent(currentContent, chunk.infos));
+    if (sameSegment != null) {
+      overlappingChunks = [sameSegment];
+    }
   }
 
   // if there is multiple ones check that they are contiguous.
