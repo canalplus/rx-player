@@ -25,17 +25,14 @@ import {
 import { IBufferType } from "../source_buffers";
 
 // Emitted after a new segment has been added to the SourceBuffer
-// XXX TODO
 export interface IBufferEventAddedSegment<T> {
   type : "added-segment";
-  value : {
-    content: { period : Period;
-               adaptation : Adaptation;
-               representation : Representation; };
-    segment : ISegment; // The concerned Segment
-    buffered : TimeRanges; // TimeRanges of the concerned SourceBuffer
-    segmentData : T; // The data pushed
-  };
+  value : { content: { period : Period;
+                       adaptation : Adaptation;
+                       representation : Representation; };
+            segment : ISegment; // The concerned Segment
+            buffered : TimeRanges; // TimeRanges of the concerned SourceBuffer
+            segmentData : T; /* The data pushed */ };
 }
 
 // The Manifest needs to be refreshed.
