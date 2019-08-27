@@ -22,7 +22,7 @@ import { Representation } from "../../manifest";
  * @param {Representation} representation
  * @returns {Boolean}
  */
-export default function isMP4EmbeddedTrack(
+export default function isMP4EmbeddedTextTrack(
   representation : Representation
 ) : boolean {
   return representation.mimeType === "application/mp4";
