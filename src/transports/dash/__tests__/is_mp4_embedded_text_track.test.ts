@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import isMP4EmbeddedTrack from "../is_mp4_embedded_track";
+import isMP4EmbeddedTextTrack from "../is_mp4_embedded_text_track";
 
 const mp4EmbeddedMimeTypes = [
   "application/mp4",
 ];
 
-describe("DASH - isMP4EmbeddedTrack", () => {
+describe("DASH - isMP4EmbeddedTextTrack", () => {
   it("should return true for any mp4-embedded mimeTypes", () => {
     mp4EmbeddedMimeTypes.forEach(mimeType => {
-      expect(isMP4EmbeddedTrack({ bitrate: 0,
+      expect(isMP4EmbeddedTextTrack({ bitrate: 0,
                                   id: "1",
                                   index: {},
                                   mimeType } as any))
@@ -32,19 +32,19 @@ describe("DASH - isMP4EmbeddedTrack", () => {
   });
 
   it("should return false for no mimeType", () => {
-    expect(isMP4EmbeddedTrack({ bitrate: 0,
+    expect(isMP4EmbeddedTextTrack({ bitrate: 0,
                                 id: "1",
                                 index: {} } as any))
       .toBe(false);
   });
 
   it("should return false for a video or audio mimeType", () => {
-    expect(isMP4EmbeddedTrack({ bitrate: 0,
+    expect(isMP4EmbeddedTextTrack({ bitrate: 0,
                                 id: "1",
                                 index: {},
                                 mimeType: "audio/mp4" } as any))
       .toBe(false);
-    expect(isMP4EmbeddedTrack({ bitrate: 0,
+    expect(isMP4EmbeddedTextTrack({ bitrate: 0,
                                 id: "1",
                                 index: {},
                                 mimeType: "video/mp4" } as any))
@@ -52,7 +52,7 @@ describe("DASH - isMP4EmbeddedTrack", () => {
   });
 
   it("should return false for any other mimeType", () => {
-    expect(isMP4EmbeddedTrack({ bitrate: 0,
+    expect(isMP4EmbeddedTextTrack({ bitrate: 0,
                                 id: "1",
                                 index: {},
                                 mimeType: "foo/bar" } as any))
