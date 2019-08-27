@@ -37,9 +37,11 @@ rxPlayer.loadVideo({
 ```
 
 When set, this option will perform multiple optimizations specific to
-low-latency contents:
+low-latency contents. For live contents:
 
   - it will by default play much closer to the live edge
+
+  - it will begin to play faster and seek in non-buffered parts faster
 
   - it will request segments which did not have time to be completely encoded on
     the server-side (as long as the beginning should be available)
@@ -48,6 +50,12 @@ low-latency contents:
     higher chances of rebuffering)
 
   - and multiple other minor optimizations
+
+Note that you can also set the `lowLatencyMode` mode for VoD (non-live)
+contents.
+In that case, the main advantage would be to be able to play and seek faster as
+long as the content is compatible (again, with CMAF and Chunked Transfer
+Encoding).
 
 
 ### Note about rebuffering and other delay-creating situations #################
