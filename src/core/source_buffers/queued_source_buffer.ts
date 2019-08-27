@@ -274,7 +274,8 @@ export default class QueuedSourceBuffer<T> {
    */
   public pushChunk(infos : IPushChunkInfos<T>) : Observable<unknown> {
     log.debug("QSB: receiving order to push data to the SourceBuffer",
-              this.bufferType);
+              this.bufferType,
+              infos);
     return this._addToQueue({ type: SourceBufferAction.Push,
                               value: infos });
   }
@@ -287,7 +288,9 @@ export default class QueuedSourceBuffer<T> {
    */
   public removeBuffer(start : number, end : number) : Observable<unknown> {
     log.debug("QSB: receiving order to remove data from the SourceBuffer",
-              this.bufferType);
+              this.bufferType,
+              start,
+              end);
     return this._addToQueue({ type: SourceBufferAction.Remove,
                               value: { start, end } });
   }
