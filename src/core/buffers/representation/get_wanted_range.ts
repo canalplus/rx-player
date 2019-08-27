@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import { getLeftSizeOfRange } from "../../../utils/ranges";
-
 export interface IClockTick {
   currentTime : number;
   wantedTimeOffset : number;
@@ -34,32 +32,18 @@ export interface IClockTick {
  */
 export default function getWantedRange(
   hardLimits : { start? : number; end? : number },
-  buffered : TimeRanges,
   tick : IClockTick,
-  bufferGoal : number,
-  padding : number
+  bufferGoal : number
 ) : { start : number; end : number } {
   const currentTime = tick.currentTime + tick.wantedTimeOffset;
-  const boundedLimits = {
-    start: Math.max(hardLimits.start || 0, currentTime),
-    end: hardLimits.end,
-  };
+  const boundedLimits = { start: Math.max(hardLimits.start || 0, currentTime),
+                          end: hardLimits.end };
 
-  // Difference between the current time and the end of the current range
-  const bufferGap = getLeftSizeOfRange(buffered, currentTime);
-
-  // the timestamp padding is the time offset that we want to apply to our
-  // current start in order to calculate the starting point of the list of
-  // segments to inject.
-  const timestampPadding = bufferGap !== Infinity ? Math.min(padding, bufferGap) :
-                                                    0;
-
-  return {
-    start: Math.min(boundedLimits.end || Infinity,
-                    Math.max(currentTime + timestampPadding,
-                             boundedLimits.start)),
-    end: Math.min(boundedLimits.end || Infinity,
-                  Math.max(currentTime + bufferGoal,
-                           boundedLimits.start)),
+  return { start: Math.min(boundedLimits.end || Infinity,
+                           Math.max(currentTime,
+                                    boundedLimits.start)),
+           end: Math.min(boundedLimits.end || Infinity,
+                         Math.max(currentTime + bufferGoal,
+                                  boundedLimits.start)),
   };
 }
