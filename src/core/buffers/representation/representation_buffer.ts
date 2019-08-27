@@ -73,7 +73,6 @@ import {
   IBufferStateFull,
   IRepresentationBufferEvent,
 } from "../types";
-import getBufferPadding from "./get_buffer_padding";
 import getSegmentPriority from "./get_segment_priority";
 import getSegmentsNeeded from "./get_segments_needed";
 import getWantedRange from "./get_wanted_range";
@@ -182,10 +181,6 @@ export default function RepresentationBuffer<T>({
   const bufferType = adaptation.type;
   const initSegment = representation.index.getInitSegment();
 
-  // Compute padding, then used to calculate the wanted range of Segments
-  // wanted.
-  const padding = getBufferPadding(adaptation);
-
   // Saved initSegment state for this representation.
   let initSegmentObject : ISegmentObject<T>|null =
     initSegment == null ? { chunkData: null,
@@ -230,10 +225,7 @@ export default function RepresentationBuffer<T>({
           shouldRefreshManifest : boolean; }
     {
       queuedSourceBuffer.synchronizeInventory();
-
-      const buffered = queuedSourceBuffer.getBufferedRanges();
-      const neededRange =
-        getWantedRange(period, buffered, timing, bufferGoal, padding);
+      const neededRange = getWantedRange(period, timing, bufferGoal);
 
       // TODO Refacto discontinuity logic
       const discontinuity = timing.stalled && manifest.isLive ?
