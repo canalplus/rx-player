@@ -18,6 +18,7 @@ import request from "../../utils/request";
 
 import {
   CustomManifestLoader,
+  IManifestLoaderArguments,
   IManifestLoaderObservable,
 } from "../types";
 import callCustomManifestLoader from "./call_custom_manifest_loader";
@@ -27,7 +28,9 @@ import callCustomManifestLoader from "./call_custom_manifest_loader";
  * @param {string} url
  * @returns {Observable}
  */
-function regularManifestLoader(url? : string) : IManifestLoaderObservable {
+function regularManifestLoader(
+  { url } : IManifestLoaderArguments
+) : IManifestLoaderObservable {
   if (url == null) {
     throw new Error("Cannot perform HTTP(s) request. URL not known");
   }
@@ -39,14 +42,12 @@ function regularManifestLoader(url? : string) : IManifestLoaderObservable {
  * @param {Function} [customManifestLoader]
  * @returns {Function}
  */
-const manifestPreLoader = (
-  options: { customManifestLoader?: CustomManifestLoader }
-) => (url? : string) : IManifestLoaderObservable => {
-    const { customManifestLoader } = options;
-    if (!customManifestLoader) {
-      return regularManifestLoader(url);
-    }
-    return callCustomManifestLoader(customManifestLoader, regularManifestLoader, url);
-  };
-
-export default manifestPreLoader;
+export default function generateManifestLoader(
+   { customManifestLoader } : { customManifestLoader?: CustomManifestLoader }
+) : (x : IManifestLoaderArguments) => IManifestLoaderObservable {
+  if (customManifestLoader == null) {
+    return regularManifestLoader;
+  }
+  return callCustomManifestLoader(customManifestLoader,
+                                  regularManifestLoader);
+}

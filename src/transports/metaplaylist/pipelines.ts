@@ -38,8 +38,6 @@ import {
   IImageParserObservable,
   ILoaderDataLoaded,
   ILoaderDataLoadedValue,
-  IManifestLoaderArguments,
-  IManifestLoaderObservable,
   IManifestParserArguments,
   IManifestParserObservable,
   ISegmentLoaderArguments,
@@ -148,12 +146,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
                                                supplementaryImageTracks: [] });
 
   const manifestPipeline = {
-    loader(
-      { url } : IManifestLoaderArguments
-    ) : IManifestLoaderObservable {
-      return manifestLoader(url);
-    },
-
+    loader: manifestLoader,
     parser(
       { response,
         url: loaderURL,

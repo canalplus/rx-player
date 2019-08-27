@@ -14,50 +14,29 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  Observer,
-  of as observableOf,
-} from "rxjs";
+import { of as observableOf } from "rxjs";
 import {
   mergeMap,
   scan,
 } from "rxjs/operators";
 import log from "../../log";
 import { concat } from "../../utils/byte_parsing";
-import xhrRequest from "../../utils/request";
 import fetchRequest, {
   IDataChunk,
   IDataComplete,
 } from "../../utils/request/fetch";
 import {
-  CustomSegmentLoader,
   ILoaderChunkedDataEvent,
-  ILoaderRegularDataEvent,
   ISegmentLoaderArguments,
   ISegmentLoaderObservable,
 } from "../types";
 import byteRange from "../utils/byte_range";
 import extractCompleteChunks from "./extract_complete_chunks";
 
-interface IRegularSegmentLoaderArguments extends ISegmentLoaderArguments {
-  url : string;
-}
-
-type ICustomSegmentLoaderObserver =
-  Observer<ILoaderRegularDataEvent<Uint8Array|ArrayBuffer>>;
-
-/**
- * Segment loader triggered if there was no custom-defined one in the API.
- * @param {Object} opt
- * @returns {Observable}
- */
-function regularSegmentLoader(
-  { url, segment } : IRegularSegmentLoaderArguments
+export default function lowLatencySegmentLoader(
+  url : string,
+  args : ISegmentLoaderArguments
 ) : ISegmentLoaderObservable<ArrayBuffer> {
-  const headers = segment.range != null ? { Range: byteRange(segment.range) } :
-                                          undefined;
-
   // Items emitted after processing fetch events
   interface IScannedChunk {
     event: IDataChunk | IDataComplete | null; // Event received from fetch
@@ -65,16 +44,12 @@ function regularSegmentLoader(
     partialChunk: Uint8Array | null; // Remaining incomplete chunk received on the event
   }
 
-  if (segment.isInit) {
-    return xhrRequest({ url,
-                        headers,
-                        responseType: "arraybuffer",
-                        sendProgressEvents: true });
-  }
+  const { segment } = args;
+  const headers = segment.range != null ? { Range: byteRange(segment.range) } :
+                                          undefined;
 
   return fetchRequest({ url, headers })
     .pipe(
-
       scan<IDataChunk | IDataComplete, IScannedChunk>((acc, evt) => {
         if (evt.type === "data-complete") {
           if (acc.partialChunk != null) {
@@ -119,96 +94,3 @@ function regularSegmentLoader(
         return observableOf(...emitted);
       }));
 }
-
-/**
- * Generate a segment loader for the application
- * @param {Function} [customSegmentLoader]
- * @returns {Function}
- */
-const segmentPreLoader = (customSegmentLoader? : CustomSegmentLoader) => ({
-  adaptation,
-  manifest,
-  period,
-  representation,
-  segment,
-} : ISegmentLoaderArguments)
-  : ISegmentLoaderObservable< Uint8Array | ArrayBuffer | null> => {
-  const { mediaURL } = segment;
-
-  if (mediaURL == null) {
-    return observableOf({ type: "data-created" as const,
-                          value: { responseData: null } });
-  }
-
-  const args = { adaptation,
-                 manifest,
-                 period,
-                 representation,
-                 segment,
-                 transport: "dash",
-                 url: mediaURL };
-
-  if (!customSegmentLoader) {
-    return regularSegmentLoader(args);
-  }
-
-  return new Observable((obs : ICustomSegmentLoaderObserver) => {
-    let hasFinished = false;
-    let hasFallbacked = false;
-
-    /**
-     * Callback triggered when the custom segment loader has a response.
-     * @param {Object} args
-     */
-    const resolve = (_args : {
-      data : ArrayBuffer|Uint8Array;
-      size? : number;
-      duration? : number;
-    }) => {
-      if (!hasFallbacked) {
-        hasFinished = true;
-        obs.next({ type: "data-loaded" as const,
-                   value: { responseData: _args.data,
-                            size: _args.size,
-                            duration: _args.duration } });
-        obs.complete();
-      }
-    };
-
-    /**
-     * Callback triggered when the custom segment loader fails
-     * @param {*} err - The corresponding error encountered
-     */
-    const reject = (err = {}) => {
-      if (!hasFallbacked) {
-        hasFinished = true;
-        obs.error(err);
-      }
-    };
-
-    /**
-     * Callback triggered when the custom segment loader wants to fallback to
-     * the "regular" implementation
-     */
-    const fallback = () => {
-      hasFallbacked = true;
-
-      // HACK What is TypeScript/RxJS doing here??????
-      /* tslint:disable deprecation */
-      // @ts-ignore
-      regularSegmentLoader(args).subscribe(obs);
-      /* tslint:enable deprecation */
-    };
-
-    const callbacks = { reject, resolve, fallback };
-    const abort = customSegmentLoader(args, callbacks);
-
-    return () => {
-      if (!hasFinished && !hasFallbacked && typeof abort === "function") {
-        abort();
-      }
-    };
-  });
-};
-
-export default segmentPreLoader;

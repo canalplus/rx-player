@@ -38,7 +38,6 @@ import {
   IChunkTimingInfos,
   IImageParserObservable,
   IManifestLoaderArguments,
-  IManifestLoaderObservable,
   IManifestParserArguments,
   IManifestParserObservable,
   INextSegmentsInfos,
@@ -120,11 +119,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       })));
     },
 
-    loader(
-      { url } : IManifestLoaderArguments
-    ) : IManifestLoaderObservable {
-      return manifestLoader(url);
-    },
+    loader: manifestLoader,
 
     parser(
       { response, url: reqURL } : IManifestParserArguments

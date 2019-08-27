@@ -19,6 +19,8 @@ import { be4toi } from "../../utils/byte_parsing";
 /**
  * Find the offset for the first declaration of the given box in an isobmff.
  * Returns -1 if not found.
+ *
+ * This function does not throw or log in case of partial segments.
  * @param {Uint8Array} buf - the isobmff
  * @param {Number} wantedName
  * @returns {Number} - Offset where the box begins. -1 if not found.
@@ -29,7 +31,7 @@ function findBox(buf : Uint8Array, wantedName : number) : number {
   while (i + 8 < len) {
     const size = be4toi(buf, i);
     if (size <= 0) {
-      return - 1;
+      return -1;
     }
 
     const name = be4toi(buf, i + 4);

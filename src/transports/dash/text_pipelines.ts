@@ -28,7 +28,7 @@ import {
 import request from "../../utils/request";
 import stringFromUTF8 from "../../utils/string_from_utf8";
 import byteRange from "../utils/byte_range";
-import isMP4EmbeddedTrack from "./is_mp4_embedded_track";
+import isMP4EmbeddedTextTrack from "./is_mp4_embedded_text_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 
 import {
@@ -37,44 +37,52 @@ import {
   ISegmentParserArguments,
   ITextParserObservable,
 } from "../types";
+import initSegmentLoader from "./init_segment_loader";
+import lowLatencySegmentLoader from "./low_latency_segment_loader";
 
 /**
  * Perform requests for "text" segments
- * @param {Object} infos
- * @returns {Observable.<Object>}
+ * @param {boolean} lowLatencyMode
+ * @returns {Function}
  */
-function TextTrackLoader(
-  { segment, representation } : ISegmentLoaderArguments
-) : ISegmentLoaderObservable<ArrayBuffer|string|null> {
-  const { mediaURL,
-          range,
-          indexRange } = segment;
+export function generateTextTrackLoader(
+  lowLatencyMode : boolean
+) : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< ArrayBuffer |
+                                                               string |
+                                                               null > {
+  /**
+   * @param {Object} args
+   * @returns {Observable}
+   */
+  return (
+    args : ISegmentLoaderArguments
+  ) : ISegmentLoaderObservable< ArrayBuffer | string | null > => {
+    const { mediaURL,
+            range } = args.segment;
 
-  // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
-  const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" :
-                                                            "text";
+    if (mediaURL == null) {
+      return observableOf({ type: "data-created",
+                            value: { responseData: null } });
+    }
 
-  // init segment without initialization media/range/indexRange:
-  // we do nothing on the network
-  if (mediaURL == null) {
-    return observableOf({ type: "data-created",
-                          value: { responseData: null } });
-  }
+    if (args.segment.isInit) {
+      return initSegmentLoader(mediaURL, args);
+    }
 
-  // fire a single time for init and index ranges
-  if (range != null && indexRange != null) {
-    return request({ url: mediaURL,
-                     responseType,
-                     headers: { Range: byteRange([ Math.min(range[0], indexRange[0]),
-                                                   Math.max(range[1],
-                                                            indexRange[1]) ]) },
-                     sendProgressEvents: true });
-  }
-  return request<ArrayBuffer|string>({ url: mediaURL,
-                                       responseType,
-                                       headers: range ? { Range: byteRange(range) } :
-                                                        null,
-                                       sendProgressEvents: true });
+    const isMP4Embedded = isMP4EmbeddedTextTrack(args.representation);
+    if (lowLatencyMode && isMP4Embedded) {
+      return lowLatencySegmentLoader(mediaURL, args);
+    }
+
+    // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
+    const responseType = isMP4Embedded ?  "arraybuffer" :
+                                          "text";
+    return request<ArrayBuffer|string>({ url: mediaURL,
+                                         responseType,
+                                         headers: range ? { Range: byteRange(range) } :
+                                                          null,
+                                         sendProgressEvents: true });
+  };
 }
 
 /**
@@ -255,7 +263,7 @@ function parsePlainTextTrack({ response,
  * @param {Object} infos
  * @returns {Observable.<Object>}
  */
-function TextTrackParser({ response,
+export function textTrackParser({ response,
                            content,
                            init } : ISegmentParserArguments< Uint8Array |
                                                              ArrayBuffer |
@@ -271,15 +279,10 @@ function TextTrackParser({ response,
                           appendWindow: [period.start, period.end] });
   }
 
-  const isMP4 = isMP4EmbeddedTrack(representation);
+  const isMP4 = isMP4EmbeddedTextTrack(representation);
   if (isMP4) {
     return parseMP4EmbeddedTrack({ response: { data, isChunked }, content, init });
   } else {
     return parsePlainTextTrack({ response: { data, isChunked }, content });
   }
 }
-
-export {
-  TextTrackLoader as loader,
-  TextTrackParser as parser,
-};

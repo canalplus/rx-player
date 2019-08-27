@@ -15,56 +15,21 @@
  */
 
 import {
-  combineLatest as observableCombineLatest,
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
-  filter,
-  map,
-  mergeMap,
-} from "rxjs/operators";
-import Manifest from "../../manifest";
-import dashManifestParser, {
-  IMPDParserResponse,
-} from "../../parsers/manifest/dash";
-import request from "../../utils/request";
-import {
-  ILoaderDataLoadedValue,
-  IManifestLoaderArguments,
-  IManifestLoaderObservable,
-  IManifestParserArguments,
-  IManifestParserObservable,
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
 import generateManifestLoader from "../utils/document_manifest_loader";
-import generateSegmentLoader from "./generate_segment_loader";
 import {
   imageLoader,
   imageParser,
 } from "./image_pipelines";
+import generateManifestParser from "./manifest_parser";
+import generateSegmentLoader from "./segment_loader";
 import segmentParser from "./segment_parser";
 import {
-  loader as TextTrackLoader,
-  parser as TextTrackParser,
+  generateTextTrackLoader,
+  textTrackParser,
 } from "./text_pipelines";
-
-/**
- * Request external "xlink" ressource from a MPD.
- * @param {string} xlinkURL
- * @returns {Observable}
- */
-function requestStringResource(
-  url : string
-) : Observable< ILoaderDataLoadedValue < string > > {
-  return request({ url,
-                   responseType: "text" })
-  .pipe(
-    filter((e) => e.type === "data-loaded"),
-    map((e) => e.value)
-  );
-}
 
 /**
  * Returns pipelines used for DASH streaming.
@@ -76,69 +41,19 @@ export default function(options : ITransportOptions) : ITransportPipelines {
   const manifestLoader = generateManifestLoader({
     customManifestLoader: options.manifestLoader,
   });
-  const segmentLoader = generateSegmentLoader(options.segmentLoader);
-  const { referenceDateTime } = options;
+  const manifestParser = generateManifestParser(options);
+  const segmentLoader = generateSegmentLoader(options.lowLatencyMode,
+                                              options.segmentLoader);
+  const textTrackLoader = generateTextTrackLoader(options.lowLatencyMode);
 
-  const manifestPipeline = {
-    loader(
-      { url } : IManifestLoaderArguments
-    ) : IManifestLoaderObservable {
-      return manifestLoader(url);
-    },
-
-    parser(
-      { response, url: loaderURL, scheduleRequest, externalClockOffset } :
-      IManifestParserArguments
-    ) : IManifestParserObservable {
-      const url = response.url == null ? loaderURL :
-                                         response.url;
-      const data = typeof response.responseData === "string" ?
-                     new DOMParser().parseFromString(response.responseData,
-                                                     "text/xml") :
-                     response.responseData as Document;
-
-      const parsedManifest = dashManifestParser(data, {
-        lowLatencyMode: options.lowLatencyMode,
-        url,
-        referenceDateTime,
-        externalClockOffset,
-      });
-      return loadExternalResources(parsedManifest);
-
-      function loadExternalResources(
-        parserResponse : IMPDParserResponse
-      ) : IManifestParserObservable {
-        if (parserResponse.type === "done") {
-          const manifest = new Manifest(parserResponse.value, options);
-          return observableOf({ manifest, url });
-        }
-
-        const { ressources, continue: continueParsing } = parserResponse.value;
-
-        const externalResources$ = ressources
-          .map(resource => scheduleRequest(() => requestStringResource(resource)));
-
-        return observableCombineLatest(externalResources$)
-          .pipe(mergeMap(loadedResources => {
-            const resourceData = loadedResources.map(r => {
-              if (typeof r.responseData !== "string") {
-                throw new Error("External DASH resources should only be strings");
-              }
-              return r.responseData;
-            });
-            return loadExternalResources(continueParsing(resourceData));
-          }));
-      }
-    },
-  };
-
-  return { manifest: manifestPipeline,
+  return { manifest: { loader: manifestLoader,
+                       parser: manifestParser },
            audio: { loader: segmentLoader,
                     parser: segmentParser },
            video: { loader: segmentLoader,
                     parser: segmentParser },
-           text: { loader: TextTrackLoader,
-                   parser: TextTrackParser },
+           text: { loader: textTrackLoader,
+                   parser: textTrackParser },
            image: { loader: imageLoader,
                     parser: imageParser } };
 }

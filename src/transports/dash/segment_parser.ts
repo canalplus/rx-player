@@ -29,6 +29,7 @@ import {
   ISegmentParserArguments,
   ISegmentParserObservable,
 } from "../types";
+import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 
 export default function parser({ content,
@@ -50,8 +51,7 @@ export default function parser({ content,
                                                  new Uint8Array(data);
 
   const indexRange = segment.indexRange;
-  const isWEBM = representation.mimeType === "video/webm" ||
-                 representation.mimeType === "audio/webm";
+  const isWEBM = isWEBMEmbeddedTrack(representation);
 
   const nextSegments = isWEBM ?
     getSegmentsFromCues(chunkData, 0) :
