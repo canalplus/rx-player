@@ -522,20 +522,20 @@ export default {
   MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT: 0.12,
 
   /**
-   * The maximum time, in seconds, the real buffered time in the sourcebuffer
-   * can be superior to the time inferred by the rx-player (the "real" buffered
-   * start inferior to the inferred start and the "real" buffered end superior
-   * to the inferred end).
-   * This limit allows to avoid resizing too much downloaded segments because
-   * no other segment is linked to a buffered part.
+   * The maximum authorized difference, in seconds, between the real buffered
+   * time of a given chunk and what the segment informations of the Manifest
+   * tells us.
    *
    * Setting a value too high can lead to parts of the SourceBuffer being
-   * linked to the wrong segments.
+   * linked to the wrong segments and to segments wrongly believed to be still
+   * complete (instead of garbage collected).
+   *
    * Setting a value too low can lead to parts of the SourceBuffer not being
-   * linked to the concerned segment.
+   * linked to the concerned segment and to segments wrongly believed to be
+   * partly garbage collected (instead of complete segments).
    * @type {Number}
    */
-  MAX_BUFFERED_DISTANCE: 0.1,
+  MAX_MANIFEST_BUFFERED_DIFFERENCE: 0.4,
 
   /**
    * Minimum duration in seconds a segment should be into a buffered range to be
