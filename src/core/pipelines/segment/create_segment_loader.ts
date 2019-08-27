@@ -246,9 +246,7 @@ export default function createSegmentLoader<T>(
                                   pipelineInputData,
                                   { responseData: arg.value.responseData }),
             });
-            const complete$ = observableOf({ type: "chunk-complete" as const,
-                                             value: null });
-            return observableConcat(chunck$, complete$, metrics$);
+            return observableConcat(chunck$, metrics$);
           case "request":
           case "progress":
             return observableOf(arg);
