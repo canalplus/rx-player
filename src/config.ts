@@ -348,6 +348,12 @@ export default {
   SAMPLING_INTERVAL_MEDIASOURCE: 1000,
 
   /**
+   * Same than SAMPLING_INTERVAL_MEDIASOURCE but for lowLatency mode.
+   * @type {Number}
+   */
+  SAMPLING_INTERVAL_LOW_LATENCY: 300,
+
+  /**
    * Same than SAMPLING_INTERVAL_MEDIASOURCE but for the directfile API.
    * @type {Number}
    */
