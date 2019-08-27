@@ -87,6 +87,7 @@ export interface IClockTick extends IMediaInfos {
 }
 
 const { SAMPLING_INTERVAL_MEDIASOURCE,
+        SAMPLING_INTERVAL_LOW_LATENCY,
         SAMPLING_INTERVAL_NO_MEDIASOURCE,
         RESUME_GAP_AFTER_SEEKING,
         RESUME_GAP_AFTER_NOT_ENOUGH_DATA,
@@ -326,8 +327,9 @@ function createClock(
         observableFromEvent(mediaElement, eventName)
           .pipe(mapTo(eventName)));
 
-    const interval = options.withMediaSource ? SAMPLING_INTERVAL_MEDIASOURCE :
-                                               SAMPLING_INTERVAL_NO_MEDIASOURCE;
+    const interval = options.lowLatencyMode  ? SAMPLING_INTERVAL_LOW_LATENCY :
+                     options.withMediaSource ? SAMPLING_INTERVAL_MEDIASOURCE :
+                     SAMPLING_INTERVAL_NO_MEDIASOURCE;
 
     const interval$ : Observable<"timeupdate"> =
       observableInterval(interval)
