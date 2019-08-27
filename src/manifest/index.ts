@@ -19,6 +19,7 @@ import Adaptation, {
   IRepresentationFilter,
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "./adaptation";
+import areSameContent from "./are_same_content";
 import Manifest, {
   IManifestParsingOptions,
   ISupplementaryImageTrack,
@@ -35,6 +36,9 @@ import IRepresentationIndex, {
 
 export default Manifest;
 export {
+  // utils
+  areSameContent,
+
   // classes
   Period,
   Adaptation,

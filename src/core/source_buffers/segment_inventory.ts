@@ -18,6 +18,7 @@ import config from "../../config";
 import log from "../../log";
 import {
   Adaptation,
+  areSameContent,
   ISegment,
   Period,
   Representation,
@@ -55,22 +56,6 @@ export interface IBufferedChunk {
                                // pushed. If false, it is either still pending
                                // or it has not been pushed till the end.
   start : number; // Supposed start the segment should start from
-}
-
-/**
- * Check if two contents are the same
- * @param {Object} content1
- * @param {Object} content2
- * @returns {boolean}
- */
-function areSameContent(
-  content1: IBufferedChunkInfos,
-  content2: IBufferedChunkInfos
-): boolean {
-  return (content1.segment.id === content2.segment.id &&
-          content1.representation.id === content2.representation.id &&
-          content1.adaptation.id === content2.adaptation.id &&
-          content1.period.id === content2.period.id);
 }
 
 /**
