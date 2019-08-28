@@ -96,7 +96,7 @@ export default function parseMetaPlaylist(
                     "The `type` property is not set to `MPL`");
   }
 
-  if (typeof version !== "string" || version.split(".")[0] !== "0") {
+  if (version !== "0.1") {
     throw new Error("MPL Parser: Bad MetaPlaylist version");
   }
 
