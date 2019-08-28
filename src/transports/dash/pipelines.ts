@@ -30,6 +30,7 @@ import dashManifestParser, {
 } from "../../parsers/manifest/dash";
 import request from "../../utils/request";
 import {
+  ILoaderDataLoadedValue,
   IManifestLoaderArguments,
   IManifestLoaderObservable,
   IManifestParserArguments,
@@ -37,7 +38,7 @@ import {
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
-import generateManifestLoader from "../utils/manifest_loader";
+import generateManifestLoader from "../utils/document_manifest_loader";
 import generateSegmentLoader from "./generate_segment_loader";
 import {
   imageLoader,
@@ -54,12 +55,14 @@ import {
  * @param {string} xlinkURL
  * @returns {Observable}
  */
-function requestStringResource(url : string) : Observable<string> {
+function requestStringResource(
+  url : string
+) : Observable< ILoaderDataLoadedValue < string > > {
   return request({ url,
                    responseType: "text" })
   .pipe(
     filter((e) => e.type === "data-loaded"),
-    map((e) => e.value.responseData)
+    map((e) => e.value)
   );
 }
 
@@ -81,26 +84,24 @@ export default function(
   const manifestPipeline = {
     loader(
       { url } : IManifestLoaderArguments
-    ) : IManifestLoaderObservable< Document | string > {
+    ) : IManifestLoaderObservable {
       return manifestLoader(url);
     },
 
     parser(
       { response, url: loaderURL, scheduleRequest, externalClockOffset } :
-      IManifestParserArguments< Document | string, string >
+      IManifestParserArguments
     ) : IManifestParserObservable {
       const url = response.url == null ? loaderURL :
                                          response.url;
       const data = typeof response.responseData === "string" ?
                      new DOMParser().parseFromString(response.responseData,
                                                      "text/xml") :
-                     response.responseData;
+                     response.responseData as Document;
 
-      const parsedManifest = dashManifestParser(data, {
-        externalClockOffset,
-        referenceDateTime,
-        url,
-      });
+      const parsedManifest = dashManifestParser(data, { url,
+                                                        referenceDateTime,
+                                                        externalClockOffset });
       return loadExternalResources(parsedManifest);
 
       function loadExternalResources(
@@ -117,9 +118,15 @@ export default function(
           .map(resource => scheduleRequest(() => requestStringResource(resource)));
 
         return observableCombineLatest(externalResources$)
-          .pipe(mergeMap(loadedResources =>
-            loadExternalResources(continueParsing(loadedResources))
-          ));
+          .pipe(mergeMap(loadedResources => {
+            const resourceData = loadedResources.map(r => {
+              if (typeof r.responseData !== "string") {
+                throw new Error("External DASH resources should only be strings");
+              }
+              return r.responseData;
+            });
+            return loadExternalResources(continueParsing(resourceData));
+          }));
       }
     },
   };

@@ -47,7 +47,7 @@ import {
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
-import generateManifestLoader from "../utils/manifest_loader";
+import generateManifestLoader from "../utils/document_manifest_loader";
 import extractTimingsInfos from "./extract_timings_infos";
 import { patchSegment } from "./isobmff";
 import generateSegmentLoader from "./segment_loader";
@@ -91,10 +91,12 @@ export default function(
     resolver(
       { url } : IManifestLoaderArguments
     ) : Observable<IManifestLoaderArguments> {
-      let resolving;
-      const token = extractToken(url);
+      if (url == null) {
+        return observableOf({ url : undefined });
+      }
 
       // TODO Remove WSX logic
+      let resolving;
       if (WSX_REG.test(url)) {
         warnOnce("Giving WSX URL to loadVideo is deprecated." +
           " You should only give Manifest URLs.");
@@ -114,6 +116,7 @@ export default function(
         resolving = observableOf(url);
       }
 
+      const token = extractToken(url);
       return resolving
         .pipe(map((_url) => ({
           url: replaceToken(resolveManifest(_url), token),
@@ -122,18 +125,18 @@ export default function(
 
     loader(
       { url } : IManifestLoaderArguments
-    ) : IManifestLoaderObservable<Document|string> {
+    ) : IManifestLoaderObservable {
       return manifestLoader(url);
     },
 
     parser(
-      { response, url: reqURL } : IManifestParserArguments<Document|string, string>
+      { response, url: reqURL } : IManifestParserArguments
     ) : IManifestParserObservable {
       const url = response.url == null ? reqURL :
                                          response.url;
       const data = typeof response.responseData === "string" ?
         new DOMParser().parseFromString(response.responseData, "text/xml") :
-        response.responseData;
+        response.responseData as Document;
       const { receivedTime: manifestReceivedTime } = response;
       const parserResult = smoothManifestParser(data, url, manifestReceivedTime);
       const manifest = new Manifest(parserResult, {
@@ -169,7 +172,7 @@ export default function(
       adaptation,
       manifest,
     } : ISegmentParserArguments< ArrayBuffer | Uint8Array | null >
-    ) : ISegmentParserObservable< ArrayBuffer | Uint8Array | null > {
+    ) : ISegmentParserObservable< ArrayBuffer | Uint8Array > {
       const { responseData } = response;
       if (responseData == null) {
         return observableOf({ segmentData: null,
