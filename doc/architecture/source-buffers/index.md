@@ -19,7 +19,7 @@ Those custom `SourceBuffers` definitions are written in the
 
 The ``SourceBuffersStore`` is the main export from there. It facilitates the
 creation and destruction of SourceBuffers.
-More specifically, it keep track of every ``SourceBuffer`` created for a given
+More specifically, it keeps track of every ``SourceBuffer`` created for a given
 content.
 
 As a rule, only ONE ``SourceBuffer`` is allowed by type of buffer (e.g.
@@ -35,7 +35,7 @@ sequentially.
 Basically, it waits for the previous action to be finished before going on the
 next step.
 
-It also keeps an inventory of all segments currently push through it, with the
+It also keeps an inventory of all segments currently contained in it, with the
 help of a `SegmentInventory` (see corresponding chapter).
 
 It is the main interface the rest of the RxPlayer code has with SourceBuffers.

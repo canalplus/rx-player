@@ -48,13 +48,15 @@ process the data you give to it, without searching for the information itself.
 It contains in its state an array, the _inventory_, which stores every segments
 which should be present in the SourceBuffer in a chronological order.
 
-To construct this inventory, two methods can be used:
+To construct this inventory, three methods can be used:
 
-  - one to add informations about a new segment, which should have been pushed
-    to the SourceBuffer
+  - one to add informations about a new chunk (part of a segment or the whole
+    segment), which should have been pushed to the SourceBuffer.
+
+  - one to indicate that every chunks from a given segment have been pushed.
 
   - one to synchronize the currently pushed segments with what the real
-    SourceBuffer says it has buffered
+    SourceBuffer says it has buffered.
 
 After calling the synchronization one, you should be able to tell which parts of
 which segments are currently _living_ in your SourceBuffer.
