@@ -128,7 +128,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                                          response.url;
       const data = typeof response.responseData === "string" ?
         new DOMParser().parseFromString(response.responseData, "text/xml") :
-        response.responseData as Document;
+        response.responseData as Document; // TODO find a way to check if Document?
       const { receivedTime: manifestReceivedTime } = response;
       const parserResult = smoothManifestParser(data, url, manifestReceivedTime);
       const manifest = new Manifest(parserResult, {

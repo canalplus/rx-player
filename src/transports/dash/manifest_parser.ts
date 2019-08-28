@@ -65,6 +65,7 @@ export default function generateManifestParser(
     const data = typeof response.responseData === "string" ?
                    new DOMParser().parseFromString(response.responseData,
                                                    "text/xml") :
+                   // TODO find a way to check if Document?
                    response.responseData as Document;
 
     const parsedManifest = dashManifestParser(data, { lowLatencyMode,
