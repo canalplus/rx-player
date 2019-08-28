@@ -111,7 +111,7 @@ finished downloading it:
 The Manifest parser is a function whose role is to parse the Manifest in its
 original form to convert it to the RxPlayer's internal representation of it.
 
-It receives an argument the downloaded Manifest, some manifest-related
+It receives in argument the downloaded Manifest, some manifest-related
 information (e.g. its URL) and a specific function called `scheduleRequest`,
 allowing it to ask for supplementary requests before completing (e.g. to fetch
 the current time from an URL or to load sub-parts of the Manifests only known
@@ -142,10 +142,10 @@ segment's data.
 
 It receives information linked to the segment you want to download:
   - The related `Manifest` data structure
-  - The `Period`
-  - The `Adaptation`
-  - The `Representation`
-  - The `Segment`
+  - The `Period` it is linked to
+  - The `Adaptation` it is linked to
+  - The `Representation` it is linked to
+  - The `Segment` object it is linked to
 
 It then return an Observable which send events as it loads the corresponding
 segment.
@@ -209,8 +209,8 @@ In the low-latency mode, the following events can be sent instead:
   - `"data-chunk"`: A sub-segment (or chunk) of the data is currently available.
     The corresponding sub-segment is communicated via this event.
 
-    This event can be communicated multiple times until a `"data-complete"`
-    event is received.
+    This event can be communicated multiple times until a
+    `"data-chunk-complete"` event is received.
 
   - `"data-chunk-complete"`: The segment request just finished. All
     corresponding data has been sent through `"data-chunk"` events.

@@ -19,13 +19,13 @@ import fetchRequest, {
   IDataChunk,
   IDataComplete,
 } from "./fetch";
-import xhrRequest, {
+import xhr, {
   IRequestOptions,
   IRequestProgress,
   IRequestResponse,
 } from "./xhr";
 
-export default xhrRequest;
+export default xhr;
 export {
   fetchIsSupported,
   fetchRequest,
@@ -34,5 +34,5 @@ export {
   IRequestOptions,
   IRequestProgress,
   IRequestResponse,
-  xhrRequest,
+  xhr,
 };
