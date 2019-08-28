@@ -113,7 +113,7 @@ function createSmoothStreamingParser(
   parserOptions : IHSSParserConfiguration = {}
 ) : (
   manifest : Document,
-  url : string,
+  url? : string,
   manifestReceivedTime? : number
 ) => IParsedManifest {
 
@@ -368,10 +368,10 @@ function createSmoothStreamingParser(
 
   function parseFromDocument(
     doc : Document,
-    url : string,
+    url? : string,
     manifestReceivedTime? : number
   ) : IParsedManifest {
-    const rootURL = normalizeBaseURL(url);
+    const rootURL = normalizeBaseURL(url == null ? "" : url);
     const root = doc.documentElement;
     if (!root || root.nodeName !== "SmoothStreamingMedia") {
       throw new Error("document root should be SmoothStreamingMedia");
@@ -503,8 +503,10 @@ function createSmoothStreamingParser(
       }
     }
 
+    let periodStart : number;
     let duration : number|undefined;
     if (isLive) {
+      periodStart = 0;
       suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
       availabilityStartTime = REFERENCE_DATE_TIME;
 
@@ -531,6 +533,8 @@ function createSmoothStreamingParser(
         (+manifestDuration / timescale) : undefined;
 
     } else {
+      periodStart = firstTimeReference != null ? firstTimeReference :
+                                                 0;
       minimumTime = { isContinuous: false,
                       value: firstTimeReference != null ? firstTimeReference :
                                                           0,
@@ -549,23 +553,24 @@ function createSmoothStreamingParser(
       }
     }
 
+    const periodDuration = duration != null ? duration - periodStart :
+                                              undefined;
     const manifest = {
-      id: "gen-smooth-manifest-" + generateManifestID(),
-      isLive,
-      periods: [{
-        id: "gen-smooth-period-0",
-        duration,
-        adaptations,
-        start: 0,
-      }],
-      transportType: "smooth",
-
       availabilityStartTime: availabilityStartTime || 0,
       duration,
+      id: "gen-smooth-manifest-" + generateManifestID(),
+      isLive,
       maximumTime,
       minimumTime,
+      periods: [{ adaptations,
+                  duration: periodDuration,
+                  end: periodDuration == null ? undefined :
+                                                periodStart + periodDuration,
+                  id: "gen-smooth-period-0",
+                  start: periodStart }],
       suggestedPresentationDelay,
-      uris: [url],
+      transportType: "smooth",
+      uris: url == null ? [] : [url],
     };
     checkManifestIDs(manifest);
     return manifest;

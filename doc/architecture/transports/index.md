@@ -27,7 +27,7 @@ the `transports` code.
 
 This code is completely divided by streaming protocols used.
 E.g.  `DASH` streaming is entirely defined in its own directory and same thing
-for `Smooth Streaming`.
+for `Smooth Streaming` or `MetaPlaylist` contents.
 When playing a `DASH` content only the DASH-related code will be called. When
 switching to a `Smooth Streaming` content, only the `Smooth Streaming` code
 will be used instead.
@@ -48,3 +48,14 @@ a single `transport` function.
 
 The object returned by that function is often referenced as the `transport
 pipelines`. It is documented [here](./pipeline.md).
+
+
+
+## MetaPlaylist implementation #################################################
+
+A MetaPlaylist is a specific case, as it wraps other streaming protocols.
+
+More documentation about it can be found in [the corresponding API
+documentation](../api/metaplaylist.md).
+
+Architecture informations on it can also be found [here](./metaplaylist.md).

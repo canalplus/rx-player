@@ -1,3 +1,5 @@
+import MetaPlaylistDASHSmoothURL from "./metaplaylist_url";
+
 export default [
   {
     "name": "DASH-IF - SegmentTimeline live stream",
@@ -158,5 +160,10 @@ export default [
       "mimeType": "application/bif",
       "url": "http://dash-vod-aka-test.canal-bis.com/test/bif/index.bif",
     },
+  },
+  {
+    "name": "Mix of DASH and Smooth VOD Contents",
+    "url": MetaPlaylistDASHSmoothURL,
+    "transport": "metaplaylist",
   },
 ];
