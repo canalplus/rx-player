@@ -46,15 +46,11 @@ import createManifestLoader, {
   IPipelineLoaderResponseValue,
 } from "./create_manifest_loader";
 
-export interface IFetchManifestOptions {
-  manifestURL : string; // URL from which the manifest was requested
-  externalClockOffset? : number; // If set, offset to add to `performance.now()`
-                                 // to obtain the current server's time
-}
-
+// What will be sent once parsed
 export interface IFetchManifestResult { manifest : Manifest;
                                         sendingTime? : number; }
 
+// The Manifest Pipeline generated here
 export interface ICoreManifestPipeline {
   fetch(url? : string) : Observable<IPipelineLoaderResponse<ILoadedManifest>>;
   parse(response : IPipelineLoaderResponseValue<ILoadedManifest>,
@@ -67,15 +63,19 @@ export interface ICoreManifestPipeline {
  *
  * @example
  * ```js
- * const manifestPipeline = createManifestPipeline(transport, options, warning$);
- * manifestPipeline(manifestURL)
- *  .subscribe(manifest => console.log("Manifest:", manifest));
+ * const manifestPipeline = createManifestPipeline(pipelines, options, warning$);
+ * manifestPipeline.fetch(manifestURL)
+ *  .mergeMap((evt) => {
+ *    if (evt.type !== "response") { // Might also receive warning events
+ *      return EMPTY;
+ *    }
+ *    return manifestPipeline.parse(evt.value);
+ *  }).subscribe(({ manifest }) => console.log("Manifest:", manifest));
  * ```
  *
- * @param {Object} transport
+ * @param {Object} pipelines
+ * @param {Subject} pipelineOptions
  * @param {Subject} warning$
- * @param {Array.<Object>|undefined} supplementaryTextTracks
- * @param {Array.<Object>|undefined} supplementaryImageTrack
  * @returns {Function}
  */
 export default function createManifestPipeline(

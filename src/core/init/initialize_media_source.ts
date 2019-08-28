@@ -57,6 +57,7 @@ import {
 } from "../eme";
 import {
   createManifestPipeline,
+  IFetchManifestResult,
   SegmentPipelinesManager,
 } from "../pipelines";
 import { ITextTrackSourceBufferOptions } from "../source_buffers";
@@ -172,8 +173,9 @@ export default function InitializeOnMediaSource(
   // Fetch and parse the manifest from the URL given.
   // Throttled to avoid doing multiple simultaneous requests.
   const fetchManifest = throttle(
-    (args: { manifestURL? : string; externalClockOffset?: number }) => {
-      const { manifestURL, externalClockOffset } = args;
+    (manifestURL : string | undefined,
+     externalClockOffset : number | undefined)
+    : Observable<IFetchManifestResult> => {
       return manifestPipelines.fetch(manifestURL).pipe(
         mergeMap((response) =>
           manifestPipelines.parse(response.value, manifestURL, externalClockOffset)
@@ -208,7 +210,7 @@ export default function InitializeOnMediaSource(
 
   const loadContent$ = observableCombineLatest([
     openMediaSource$,
-    fetchManifest({ manifestURL: url }),
+    fetchManifest(url, undefined),
     emeManager$.pipe(filter(isEMEReadyEvent), take(1)),
   ]).pipe(mergeMap(([ initialMediaSource, { manifest, sendingTime } ]) => {
 
