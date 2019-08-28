@@ -151,7 +151,7 @@ function createManifest(
   const { contents } = mplData;
   const minimumTime = contents.length ? contents[0].startTime :
                                         0;
-  const maximumTime = contents.length ? contents[contents.length - 1].startTime :
+  const maximumTime = contents.length ? contents[contents.length - 1].endTime :
                                         0;
   const isLive = mplData.dynamic === true;
   let duration : number|undefined = 0;
