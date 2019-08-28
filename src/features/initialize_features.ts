@@ -48,6 +48,9 @@ export default function initializeFeaturesObject() : void {
   if (__FEATURES__.DASH) {
     features.transports.dash = require(__RELATIVE_PATH__.DASH).default;
   }
+  if (__FEATURES__.METAPLAYLIST) {
+    features.transports.metaplaylist = require(__RELATIVE_PATH__.METAPLAYLIST).default;
+  }
   /* tslint:enable no-var-requires */
 
   /* tslint:disable no-var-requires */
