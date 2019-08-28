@@ -1,6 +1,8 @@
 # MetaPlaylist #################################################################
 
-The MetaPlaylist principle and usage is defined [here](../api/metaplaylist.md).
+The MetaPlaylist is a specific kind of transport: a playlist of different
+Manifest.
+Its principle and usage is defined [here](../api/metaplaylist.md).
 
 
 ## How the original Manifest files are considered ##############################
@@ -14,10 +16,14 @@ We then merge each of these Manifest, to construct an internal
 would have with a DASH or Smooth manifest.
 
 The trick is to consider each of those original Manifest as different Periods
-(like DASH Periods). Each Period is concatenated one after the other with the
-time information anounced in the MetaPlaylist file. If an original Manifest
-already has multiple Periods, each of them are also processed as different
-Period so that no feature from the original content is lost.
+(like DASH Periods). The trick works here because the RxPlayer's definition of a
+transport (and of the underlying properties) is much more flexible than in DASH.
+If an original MPD already has multiple Periods, each of them are also
+converted as different RxPlayer's Period so that no feature from the original
+content is lost.
+
+Each of those Period is then concatenated one after the other thanks to the time
+information anounced in the MetaPlaylist file.
 
 
 
@@ -55,7 +61,7 @@ To illustrate, it kind of goes like this:
 |                |  4. Gives segment infos asked (offseted) |              |
 |                |                                          |              |
 |      CORE      |                                          | METAPLAYLIST |
-|                |                                          |              |
+|                |                                          |    WRAPPER   |
 |                | 5. Ask to download segment (offseted)    |              |
 |                | ---------------------------------------> |              |
 |                |                                          |              |
@@ -65,21 +71,21 @@ To illustrate, it kind of goes like this:
                                                              | |     |  |
                                                              | |     |  |
    +------------+   2. get segment infos from t-offset to t+n-offset |  |
-   | +-------+  | <------------------------------------------+ |     |  |
-   | |       |  |                                              |     |  |
-   | |  HLS  |  |                                              |     |  |
-   | |       |  |  3. Gives segment infos asked                |     |  |
-   | +-------+  | ---------------------------------------------+     |  |
+   | +--------+ | <------------------------------------------+ |     |  |
+   | |        | |                                              |     |  |
+   | |  DASH  | |                                              |     |  |
+   | |        | |  3. Gives segment infos asked                |     |  |
+   | +--------+ | ---------------------------------------------+     |  |
    | +-------+  |                                                    |  |
    | |       |  |                                                    |  |
    | |  HSS  |  |                                                    |  |
    | |       |  |                                                    |  |
    | +-------+  |                                                    |  |
-   | +--------+ |  6. Ask to download non-offseted (normal) segments |  |
-   | |        | | <--------------------------------------------------+  |
-   | |  DASH  | |                                                       |
-   | |        | |  7. Gives normal segment                              |
-   | +--------+ | ------------------------------------------------------+
+   | +-------+  |  6. Ask to download non-offseted (normal) segments |  |
+   | |       |  | <--------------------------------------------------+  |
+   | |  ...  |  |                                                       |
+   | |       |  |  7. Gives normal segment                              |
+   | +-------+  | ------------------------------------------------------+
    +------------+
 ```
 
