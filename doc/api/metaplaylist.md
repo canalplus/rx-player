@@ -189,8 +189,10 @@ list of its properties:
       - Smooth content that have their `isLive` attribute not set to `true`
     (Simply put, only on-demand contents are supported for the moment).
 
-  - startTime (`number`): unix time at which the content should begin to be
-    played
+  - startTime (`number`): time at which the beginning of this content should be
+    played.
+    This will correspond to the start time of the first Period in DASH or the
+    first Chunk defined for Smooth content.
 
   - endTime (`number`): unix time at which the content should end. It the
     original content is longer, it will be finished at that time instead.
