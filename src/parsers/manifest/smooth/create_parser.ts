@@ -503,8 +503,10 @@ function createSmoothStreamingParser(
       }
     }
 
+    let periodStart : number;
     let duration : number|undefined;
     if (isLive) {
+      periodStart = 0;
       suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
       availabilityStartTime = REFERENCE_DATE_TIME;
 
@@ -531,6 +533,8 @@ function createSmoothStreamingParser(
         (+manifestDuration / timescale) : undefined;
 
     } else {
+      periodStart = firstTimeReference != null ? firstTimeReference :
+                                                 0;
       minimumTime = { isContinuous: false,
                       value: firstTimeReference != null ? firstTimeReference :
                                                           0,
@@ -549,23 +553,23 @@ function createSmoothStreamingParser(
       }
     }
 
+    const periodDuration = duration != null ? duration - periodStart :
+                                              undefined;
     const manifest = {
-      id: "gen-smooth-manifest-" + generateManifestID(),
-      isLive,
-      periods: [{
-        id: "gen-smooth-period-0",
-        duration,
-        adaptations,
-        start: isLive ? 0 :
-                        minimumTime.value,
-      }],
-      transportType: "smooth",
-
       availabilityStartTime: availabilityStartTime || 0,
       duration,
+      id: "gen-smooth-manifest-" + generateManifestID(),
+      isLive,
       maximumTime,
       minimumTime,
+      periods: [{ adaptations,
+                  duration: periodDuration,
+                  end: periodDuration == null ? undefined :
+                                                periodStart + periodDuration,
+                  id: "gen-smooth-period-0",
+                  start: periodStart }],
       suggestedPresentationDelay,
+      transportType: "smooth",
       uris: url == null ? [] : [url],
     };
     checkManifestIDs(manifest);
