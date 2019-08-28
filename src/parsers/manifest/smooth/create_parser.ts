@@ -556,7 +556,8 @@ function createSmoothStreamingParser(
         id: "gen-smooth-period-0",
         duration,
         adaptations,
-        start: 0,
+        start: isLive ? 0 :
+                        minimumTime.value,
       }],
       transportType: "smooth",
 
