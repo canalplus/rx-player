@@ -46,9 +46,6 @@ import createManifestLoader, {
   IPipelineLoaderResponseValue,
 } from "./create_manifest_loader";
 
-export interface IRequestSchedulerOptions { maxRetry : number;
-                                            maxRetryOffline : number; }
-
 export interface IFetchManifestOptions {
   manifestURL : string; // URL from which the manifest was requested
   externalClockOffset? : number; // If set, offset to add to `performance.now()`
