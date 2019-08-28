@@ -159,9 +159,12 @@ function createManifest(
   const periods : IParsedPeriod[] = [];
   for (let iMan = 0; iMan < contents.length; iMan++) {
     const content = contents[iMan];
-    const contentOffset = content.startTime;
-    const contentEnd = content.endTime;
     const currentManifest = manifests[iMan];
+    if (currentManifest.periods.length <= 0) {
+      continue;
+    }
+    const contentOffset = content.startTime - currentManifest.periods[0].start;
+    const contentEnd = content.endTime;
 
     const manifestPeriods = [];
     for (let iPer = 0; iPer < currentManifest.periods.length; iPer++) {
