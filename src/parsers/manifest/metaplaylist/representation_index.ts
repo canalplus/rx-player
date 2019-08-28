@@ -25,7 +25,7 @@ import {
 /**
  * The MetaRepresentationIndex is wrapper for all kind of indexes (dash, smooth, etc)
  *
- * Ut wraps methods from origin indexes, while taking into account of the offset induced
+ * It wraps methods from origin indexes, while taking into account of the offset induced
  * by metaplaylist. It makes a bridge between the metaplaylist timeline, and the original
  * timeline of content. (e.g. the segment whose "meta" time is 1500, is actually a
  * segment whose original time is 200, played with an offset of 1300)
