@@ -15,12 +15,8 @@
  */
 
 import createManifestPipeline, {
-  IFetchManifestOptions,
   IFetchManifestResult,
 } from "./create_manifest_pipeline";
 
 export default createManifestPipeline;
-export {
-  IFetchManifestOptions,
-  IFetchManifestResult,
-};
+export { IFetchManifestResult };
