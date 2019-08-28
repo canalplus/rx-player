@@ -25,65 +25,14 @@ import {
   bytesToStr,
   strToBytes,
 } from "../../utils/byte_parsing";
-import request from "../../utils/request";
 import stringFromUTF8 from "../../utils/string_from_utf8";
-import byteRange from "../utils/byte_range";
 import isMP4EmbeddedTextTrack from "./is_mp4_embedded_text_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 
 import {
-  ISegmentLoaderArguments,
-  ISegmentLoaderObservable,
   ISegmentParserArguments,
   ITextParserObservable,
 } from "../types";
-import initSegmentLoader from "./init_segment_loader";
-import lowLatencySegmentLoader from "./low_latency_segment_loader";
-
-/**
- * Perform requests for "text" segments
- * @param {boolean} lowLatencyMode
- * @returns {Function}
- */
-export function generateTextTrackLoader(
-  lowLatencyMode : boolean
-) : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< ArrayBuffer |
-                                                               string |
-                                                               null > {
-  /**
-   * @param {Object} args
-   * @returns {Observable}
-   */
-  return (
-    args : ISegmentLoaderArguments
-  ) : ISegmentLoaderObservable< ArrayBuffer | string | null > => {
-    const { mediaURL,
-            range } = args.segment;
-
-    if (mediaURL == null) {
-      return observableOf({ type: "data-created",
-                            value: { responseData: null } });
-    }
-
-    if (args.segment.isInit) {
-      return initSegmentLoader(mediaURL, args);
-    }
-
-    const isMP4Embedded = isMP4EmbeddedTextTrack(args.representation);
-    if (lowLatencyMode && isMP4Embedded) {
-      return lowLatencySegmentLoader(mediaURL, args);
-    }
-
-    // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
-    const responseType = isMP4Embedded ?  "arraybuffer" :
-                                          "text";
-    return request<ArrayBuffer|string>({ url: mediaURL,
-                                         responseType,
-                                         headers: range ? { Range: byteRange(range) } :
-                                                          null,
-                                         sendProgressEvents: true });
-  };
-}
 
 /**
  * Parse TextTrack data.
@@ -220,8 +169,7 @@ function parsePlainTextTrack({ response,
     log.warn("DASH: Unavailable time data for current text track.");
   }
 
-  let type;
-
+  let type : string | undefined;
   const { mimeType = "" } = representation;
   switch (representation.mimeType) {
     case "application/ttml+xml":
@@ -263,7 +211,7 @@ function parsePlainTextTrack({ response,
  * @param {Object} infos
  * @returns {Observable.<Object>}
  */
-export function textTrackParser({ response,
+export default function textTrackParser({ response,
                            content,
                            init } : ISegmentParserArguments< Uint8Array |
                                                              ArrayBuffer |

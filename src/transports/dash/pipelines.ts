@@ -26,10 +26,8 @@ import {
 import generateManifestParser from "./manifest_parser";
 import generateSegmentLoader from "./segment_loader";
 import segmentParser from "./segment_parser";
-import {
-  generateTextTrackLoader,
-  textTrackParser,
-} from "./text_pipelines";
+import generateTextTrackLoader from "./text_loader";
+import textTrackParser from "./text_parser";
 
 /**
  * Returns pipelines used for DASH streaming.
