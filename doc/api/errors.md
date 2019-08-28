@@ -111,8 +111,8 @@ Among its properties, you have:
       - ``"ERROR_HTTP_CODE"``: The request finished with a status code not in
         the 2xx range.
 
-    - ``code`` (``number``): The HTTP code of the request at the time of the
-      error (`0` if no request has been done yet)
+  - ``code`` (``number``): The HTTP code of the request at the time of the
+    error (`0` if no request has been done yet)
 
   - ``xhr`` (``XMLHttpRequest|undefined``): The xhr associated with the request.
     Not defined if the current content has been launched in `lowLatencyMode`.
