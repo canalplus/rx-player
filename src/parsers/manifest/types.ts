@@ -21,6 +21,7 @@ export interface IContentProtection {
   keyId : Uint8Array;
 }
 
+// Representation of a "quality" available in any Adaptation
 export interface IParsedRepresentation {
   // required
   bitrate : number;
@@ -36,32 +37,45 @@ export interface IParsedRepresentation {
   width?: number;
 }
 
+// Collection of multiple `Adaptation`, regrouped by type
 export type IParsedAdaptations =
   Partial<Record<string, IParsedAdaptation[]>>;
 
+// Representation of a "track" available in any Period
 export interface IParsedAdaptation {
   // required
-  id: string;
-  representations: IParsedRepresentation[];
-  type: string;
+  id: string; // Unique ID for all Adaptation of that Period
+  representations: IParsedRepresentation[]; // Qualities available for that Adaptation
+  type: string; // `Type` of Adaptation (e.g. `audio`, `video`, `text`, `image`...)
 
   // optional
-  audioDescription? : boolean;
-  closedCaption? : boolean;
-  language?: string;
+  audioDescription? : boolean; // Whether this Adaptation is an audio-track for
+                               // the visually impaired
+  closedCaption? : boolean; // Whether this Adaptation are closed caption for
+                            // the hard of hearing
+  language?: string; // Language the `Adaptation` is in, if it can be applied
 }
 
+// Representation of a given period of time in the Manifest
 export interface IParsedPeriod {
   // required
-  id : string;
-  start : number;
-  adaptations : IParsedAdaptations;
+  id : string; // Unique ID amongst Periods of the Manifest
+  start : number; // Start time at which the Period begins.
+                  // For static contents, the start of the first Period should
+                  // corresponds to the time of the first available segment
+  adaptations : IParsedAdaptations; // Available tracks for this Period
 
   // optional
-  duration? : number;
-  end? : number;
+  duration? : number; // duration of the Period (from the start to the end),
+                      // in seconds.
+                      // `undefined` if the Period is the last one and is still
+                      // being updated
+  end? : number; // end time at which the Period ends, in seconds.
+                 // `undefined` if the Period is the last one and is still
+                 // being updated
 }
 
+// Representation of the whole Manifest file
 export interface IParsedManifest {
   // required
   id: string; // Unique ID for the manifest.
@@ -72,9 +86,10 @@ export interface IParsedManifest {
   // optional
   availabilityStartTime? : number; // Base time from which the segments are generated.
   baseURL? : string; // Base URL for relative URLs given in that Manifest.
-  clockOffset?: number; // Offset, in milliseconds, the client's clock has
-                        // relatively to the server's
-  duration? : number; // Last time in the content. Only useful for non-live contents.
+  clockOffset?: number; // Offset, in milliseconds, the client's clock (in terms
+                        // of `performance.now`) has relatively to the server's
+  duration? : number; // Last time available in the content.
+                      // `undefined` for live contents.
   lifetime?: number; // Duration of the validity of this Manifest, after which it
                      // should be refreshed.
   maximumTime? : { // Informations on the maximum seekable position.
