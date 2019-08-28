@@ -136,9 +136,9 @@ export interface IParsedConstructorOptions {
 }
 
 export interface ILoadVideoOptions {
-  url : string;
   transport : string;
 
+  url? : string;
   autoPlay? : boolean;
   keySystems? : IKeySystemOption[];
   transportOptions? : ITransportOptions|undefined;
@@ -155,7 +155,7 @@ export interface ILoadVideoOptions {
 }
 
 interface IParsedLoadVideoOptionsBase {
-  url : string;
+  url? : string;
   transport : string;
   autoPlay : boolean;
   keySystems : IKeySystemOption[];
@@ -354,7 +354,7 @@ function parseConstructorOptions(
 function parseLoadVideoOptions(
   options : ILoadVideoOptions
 ) : IParsedLoadVideoOptions {
-  let url : string;
+  let url : string|undefined;
   let transport : string;
   let keySystems : IKeySystemOption[];
   let supplementaryTextTracks : ISupplementaryTextTrackOption[];
@@ -363,10 +363,17 @@ function parseLoadVideoOptions(
   let textTrackElement : HTMLElement|undefined;
   let startAt : IParsedStartAtOption|undefined;
 
-  if (!options || options.url == null) {
-    throw new Error("No url set on loadVideo");
-  } else {
+  if (options == null) {
+    throw new Error("No option set on loadVideo");
+  }
+
+  if (options.url != null) {
     url = String(options.url);
+  } else if (
+    options.transportOptions == null ||
+    options.transportOptions.manifestLoader == null
+  ) {
+    throw new Error("No url set on loadVideo");
   }
 
   if (options.transport == null) {
