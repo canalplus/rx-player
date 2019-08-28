@@ -24,6 +24,10 @@ import {
   ISegmentParserArguments,
 } from "../types";
 
+/**
+ * @param {Object} args
+ * @returns {Observable}
+ */
 export function imageLoader(
   { segment } : ISegmentLoaderArguments
 ) : ISegmentLoaderObservable< ArrayBuffer | null > {
@@ -37,6 +41,10 @@ export function imageLoader(
                    sendProgressEvents: true });
 }
 
+/**
+ * @param {Object} args
+ * @returns {Observable}
+ */
 export function imageParser(
   { response,
     content } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
