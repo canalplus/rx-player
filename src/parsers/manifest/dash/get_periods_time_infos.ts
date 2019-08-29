@@ -34,8 +34,10 @@ export default function getPeriodsTimeInformations(
   periodsIR: IPeriodIntermediateRepresentation[],
   manifestInfos: IManifestInfos
 ): IPeriodTimeInformations[] {
-  return periodsIR.map((currentPeriod, i) => {
-    const prevPeriod = periodsIR[i - 1];
+  const periodsTimeInformations: IPeriodTimeInformations[] = [];
+  periodsIR.forEach((currentPeriod, i) => {
+    const prevPeriodInfos =
+      periodsTimeInformations[periodsTimeInformations.length - 1];
     const nextPeriod = periodsIR[i + 1];
 
     let periodStart : number;
@@ -48,11 +50,11 @@ export default function getPeriodsTimeInformations(
                          0 :
                          manifestInfos.availabilityStartTime;
       } else {
-        if (prevPeriod &&
-            prevPeriod.attributes.duration != null &&
-            prevPeriod.attributes.start != null
+        if (prevPeriodInfos &&
+            prevPeriodInfos.periodDuration != null &&
+            prevPeriodInfos.periodStart != null
         ) {
-          periodStart = prevPeriod.attributes.start + prevPeriod.attributes.duration;
+          periodStart = prevPeriodInfos.periodStart + prevPeriodInfos.periodDuration;
         } else {
           throw new Error("Missing start time when parsing periods.");
         }
@@ -70,10 +72,11 @@ export default function getPeriodsTimeInformations(
 
     const periodEnd = periodDuration != null ? (periodStart + periodDuration) :
                                                undefined;
-    return {
+    periodsTimeInformations.push({
       periodStart,
       periodDuration,
       periodEnd,
-    };
+    });
   });
+  return periodsTimeInformations;
 }
