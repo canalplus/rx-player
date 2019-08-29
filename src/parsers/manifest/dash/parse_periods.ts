@@ -61,7 +61,8 @@ export default function parsePeriods(
 
     const { periodStart,
             periodDuration,
-            periodEnd } = periodsTimeInformations[i];
+            periodEnd } =
+      periodsTimeInformations[periodsTimeInformations.length - (i + 1)];
 
     let periodID : string;
     if (periodIR.attributes.id == null) {
