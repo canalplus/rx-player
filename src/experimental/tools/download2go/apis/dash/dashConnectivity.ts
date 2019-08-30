@@ -15,23 +15,15 @@
  */
 
 import { Observable, of, throwError } from "rxjs";
-import { mergeMap } from "rxjs/operators";
+import { map, mergeMap } from "rxjs/operators";
 
 import { ISegment } from "../../../../../manifest";
 import { ISidxSegment } from "../../../../../parsers/containers/isobmff";
 import parseManifest from "../../../../../parsers/manifest/dash/index";
-import { IParserResponse } from "../../../../../parsers/manifest/dash/parse_mpd";
-import { IParsedManifest } from "../../../../../parsers/manifest/types";
 import xhrRequest from "../../../../../utils/request";
-import { makeHTTPRequest, SegmentConstuctionError } from "../../utils";
-import { ITypedArray } from "../drm/keySystems";
+import { SegmentConstuctionError } from "../../utils";
 import { IUtils } from "./../../types";
-import {
-  IRepresentation,
-  ISegmentBuilder,
-  ISegmentBuilt,
-  ISegmentsBuiltType,
-} from "./types";
+import { ISegmentBuilder, ISegmentBuilt, ISegmentsBuiltType } from "./types";
 
 /**
  * Get a manifest from a server and parse it.
@@ -40,71 +32,20 @@ import {
  * @returns The manifest parsed IParserResponse<IParsedManifest>
  *
  */
-export const getOnlineManifest = (url: string) => {
-  return xhrRequest({
+export const getOnlineManifest = (url: string) =>
+  xhrRequest({
     url,
     responseType: "text",
   }).pipe(
-    mergeMap(({ value }) =>
-      of(
-        parseManifest(
-          new DOMParser().parseFromString(value.responseData, "text/xml"),
-          {
-            url,
-          }
-        )
+    map(({ value }) =>
+      parseManifest(
+        new DOMParser().parseFromString(value.responseData, "text/xml"),
+        {
+          url,
+        }
       )
     )
   );
-};
-
-export const getOnlineMPDParsed = async (
-  url: string
-): Promise<IParserResponse<IParsedManifest>> => {
-  const data = await makeHTTPRequest<string>(url, {
-    method: "GET",
-    responseType: "text",
-  });
-  return parseManifest(new DOMParser().parseFromString(data, "text/xml"), {
-    url,
-  });
-};
-
-/**
- * Build the init segments to be able to retieve SIDX (index/init)
- *
- * @param IRepresentation - The segmentBase and initialization segment
- * @returns The initSegment and indexSegment
- *
- */
-export const buildInitIndexSegment = async ({
-  segmentBase,
-  initialization,
-}: IRepresentation): Promise<{
-initSegment: ITypedArray | ArrayBuffer;
-indexSegment: ITypedArray | ArrayBuffer;
-}> => {
-  try {
-    if (!initialization.mediaURL) {
-      throw new Error("MediaURL from the initialization segment is broken");
-    }
-    const [initSegment, indexSegment] = await Promise.all([
-      makeHTTPRequest<ITypedArray | ArrayBuffer>(initialization.mediaURL, {
-        headers: { Range: `bytes=${initialization.range.join("-")}` },
-        method: "GET",
-        responseType: "arraybuffer",
-      }),
-      makeHTTPRequest<ITypedArray | ArrayBuffer>(initialization.mediaURL, {
-        headers: { Range: `bytes=${segmentBase.indexRange.join("-")}` },
-        method: "GET",
-        responseType: "arraybuffer",
-      }),
-    ]);
-    return { initSegment, indexSegment };
-  } catch (e) {
-    throw new SegmentConstuctionError(e.message);
-  }
-};
 
 /**
  * Get a segment from a server.
@@ -119,9 +60,9 @@ export const getSegmentBuffer = ({
   url,
   type,
 }: {
-segment: ISidxSegment | ISegment;
-url: string | null;
-type: "TemplateRepresentationIndex" | "BaseRepresentationIndex";
+  segment: ISidxSegment | ISegment;
+  url: string | null;
+  type: "TemplateRepresentationIndex" | "BaseRepresentationIndex";
 }): Observable<ISegmentsBuiltType> => {
   if (type === "BaseRepresentationIndex") {
     if (!url) {
@@ -135,14 +76,12 @@ type: "TemplateRepresentationIndex" | "BaseRepresentationIndex";
       headers: { Range: `bytes=${range.join("-")}` },
       responseType: "arraybuffer",
     }).pipe(
-      mergeMap(({ value }) => {
-        return of({
-          data: value.responseData,
-          duration,
-          time,
-          timescale,
-        });
-      })
+      map(({ value }) => ({
+        data: value.responseData,
+        duration,
+        time,
+        timescale,
+      }))
     );
   } else {
     const { mediaURL, duration = 0, timescale, time } = segment as ISegment;
@@ -150,14 +89,12 @@ type: "TemplateRepresentationIndex" | "BaseRepresentationIndex";
       url: mediaURL || "",
       responseType: "arraybuffer",
     }).pipe(
-      mergeMap(({ value }) => {
-        return of({
-          data: value.responseData,
-          duration,
-          time,
-          timescale,
-        });
-      })
+      map(({ value }) => ({
+        data: value.responseData,
+        duration,
+        time,
+        timescale,
+      }))
     );
   }
 };

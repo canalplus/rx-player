@@ -16,14 +16,13 @@
 
 import { IDBPDatabase } from "idb";
 
-import { RequestError, RequestErrorTypes } from "../../../errors";
 import includes from "../../../utils/array_includes";
 import {
   IActiveSubs,
   IEmitterLoaderBuilder,
   IProgressBarBuilder,
 } from "./apis/dash/types";
-import { IRequestArgs, ISettingsDownloader, IStoredManifest } from "./types";
+import { ISettingsDownloader, IStoredManifest } from "./types";
 
 /* tslint:disable */
 
@@ -156,45 +155,4 @@ export function progressBuilder(
   }
   progressBarBuilder.progress += segmentDownloaded;
   return;
-}
-
-export function makeHTTPRequest<T>(
-  url: string,
-  { method, headers, responseType }: IRequestArgs
-): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const req = new XMLHttpRequest();
-    req.open(method, url, true);
-    for (const key in headers) {
-      if (headers.hasOwnProperty(key)) {
-        req.setRequestHeader(key, headers[key]);
-      }
-    }
-    if (responseType) {
-      req.responseType = responseType;
-    }
-
-    req.onerror = function onXHRError() {
-      const errorCode = RequestErrorTypes.ERROR_HTTP_CODE;
-      reject(new RequestError(req, url, errorCode));
-      return;
-    };
-
-    req.onload = function onXHRLoad() {
-      if (req.readyState === 4 && req.status >= 200 && req.status < 300) {
-        if (req.response == null) {
-          const errorCode = RequestErrorTypes.ERROR_HTTP_CODE;
-          reject(new RequestError(req, url, errorCode));
-          return;
-        }
-
-        resolve(req.response);
-      } else {
-        const errorCode = RequestErrorTypes.ERROR_HTTP_CODE;
-        reject(new RequestError(req, url, errorCode));
-        return;
-      }
-    };
-    req.send();
-  });
 }

@@ -17,11 +17,6 @@
 import { IParsedRepresentation } from "../../../../parsers/manifest/types";
 import { chooseVideoQuality } from "../apis/dash/dashTools";
 
-const resForMakeHTTPRequest = new Int16Array(0);
-jest.mock("../utils.ts", () => ({
-  makeHTTPRequest: () => resForMakeHTTPRequest,
-}));
-
 describe("Download2go - dash content manipulation", () => {
   describe("dashTools", () => {
     describe("[chooseVideoQuality]", () => {

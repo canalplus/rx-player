@@ -207,12 +207,12 @@ const getInitSegments = (Segment: ISegment): Observable<ISegmentIndex> => {
         url: mediaURL || "",
         headers: { Range: `bytes=${range.join("-")}` },
         responseType: "arraybuffer",
-      }).pipe(mergeMap(({ value }) => of(value.responseData))),
+      }).pipe(map(({ value }) => value.responseData)),
       indexSegment: xhrRequest({
         url: mediaURL || "",
         headers: { Range: `bytes=${indexRange.join("-")}` },
         responseType: "arraybuffer",
-      }).pipe(mergeMap(({ value }) => of(value.responseData))),
+      }).pipe(map(({ value }) => value.responseData)),
     }).pipe(
       mergeMap(({ initSegment, indexSegment }) => {
         const dataInit = concatBytes(
@@ -237,8 +237,7 @@ const getInitSegments = (Segment: ISegment): Observable<ISegmentIndex> => {
     url: mediaURL || "",
     responseType: "arraybuffer",
   }).pipe(
-    mergeMap(({ value }) =>
-      of({
+    map(({ value }) => ({
         dataInit: value.responseData,
         mediaURL,
         type: "TemplateRepresentationIndex" as const,
