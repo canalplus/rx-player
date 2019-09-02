@@ -106,7 +106,8 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "./scripts/git-hooks/pre-commit"
+      "pre-commit": "./scripts/git-hooks/pre-commit",
+      "pre-push": "./scripts/git-hooks/pre-push"
     }
   },
   "repository": {
