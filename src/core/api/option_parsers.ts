@@ -54,11 +54,15 @@ const { DEFAULT_AUTO_PLAY,
 
 export { IKeySystemOption };
 
+interface IServerSyncInfos { serverTimestamp : number;
+                             clientTime : number; }
+
 export interface ITransportOptions { aggressiveMode? : boolean;
                                      manifestLoader? : CustomManifestLoader;
                                      segmentLoader? : CustomSegmentLoader;
                                      representationFilter? : IRepresentationFilter;
-                                     referenceDateTime? : number; }
+                                     referenceDateTime? : number;
+                                     serverSyncInfos? : IServerSyncInfos; }
 
 export interface ISupplementaryTextTrackOption { url : string;
                                                  language : string;
