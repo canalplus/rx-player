@@ -19,7 +19,6 @@
 local_branch="$(git rev-parse --abbrev-ref HEAD)"
 valid_branch_regex="^(feat|fix|test|demo|doc|code|tools|release|misc)\/[A-Za-z0-9._-]+$"
 
-echo $local_branch
 if [[ ! $local_branch =~ $valid_branch_regex ]]
 then
   # my best contribution yet: shamelessly copy-pasting a friendly-looking ASCII
