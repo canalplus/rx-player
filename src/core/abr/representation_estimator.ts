@@ -138,6 +138,7 @@ export interface IRepresentationEstimatorArguments {
   maxAutoBitrate$ : Observable<number>; // Set a maximum value for the
                                         // adaptative bitrate
   representations : Representation[]; // List of Representations to choose from
+  lowBufferGap : boolean; // Playback has low buffer gap due to low latency streaming
 }
 
 /**
@@ -181,9 +182,10 @@ export default function RepresentationEstimator({
   manualBitrate$,
   maxAutoBitrate$,
   representations,
+  lowBufferGap,
 } : IRepresentationEstimatorArguments) : Observable<IABREstimate> {
   const scoreCalculator = new RepresentationScoreCalculator();
-  const networkAnalyzer = new NetworkAnalyzer(initialBitrate || 0);
+  const networkAnalyzer = new NetworkAnalyzer(initialBitrate || 0, lowBufferGap);
   const requestsStore = new PendingRequestsStore();
 
   /**

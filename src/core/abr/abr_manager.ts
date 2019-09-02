@@ -43,6 +43,7 @@ export interface IABRManagerArguments {
   maxAutoBitrates: Partial<Record<IBufferType, Observable<number>>>;
   initialBitrates: Partial<Record<IBufferType, number>>;
   throttlers: IRepresentationEstimatorsThrottlers;
+  lowBufferGap: boolean;
 }
 
 /**
@@ -58,6 +59,7 @@ export default class ABRManager {
   private _initialBitrates : Partial<Record<IBufferType, number>>;
   private _throttlers : IRepresentationEstimatorsThrottlers;
   private _bandwidthEstimators : Partial<Record<IBufferType, BandwidthEstimator>>;
+  private _lowBufferGap : boolean;
 
   /**
    * @param {Object} options
@@ -68,6 +70,7 @@ export default class ABRManager {
     this._initialBitrates = options.initialBitrates || {};
     this._throttlers = options.throttlers || {};
     this._bandwidthEstimators = {};
+    this._lowBufferGap = options.lowBufferGap;
   }
 
   /**
@@ -100,7 +103,8 @@ export default class ABRManager {
                                      initialBitrate,
                                      manualBitrate$,
                                      maxAutoBitrate$,
-                                     representations });
+                                     representations,
+                                     lowBufferGap: this._lowBufferGap });
   }
 
   /**

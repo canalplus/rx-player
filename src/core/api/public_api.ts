@@ -755,6 +755,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
               .pipe(takeUntil(this._priv_stopCurrentContent$)), } :
           {},
         },
+        lowBufferGap: lowLatencyMode,
       };
 
       // Options used by the TextTrack SourceBuffer
