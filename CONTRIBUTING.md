@@ -57,7 +57,7 @@ The type should be one of the following:
   - `demo`: For demo improvements/fixes
   - `tests`: For tests improvements/fixes
   - `code`: For refactoring code which brings no fix or no new feature
-  - `tools`: For tooling improvements (webpack, scripts, typescript...)
+  - `tools`: For improvements related to the RxPlayer's tools
   - `misc`: For unclassifiable other improvements
 
 ---
