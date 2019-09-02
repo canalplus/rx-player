@@ -484,6 +484,44 @@ considered stable:
     Manifest / MPD does not already contain an offset (example: an
     availabilityStartTime in a DASH MPD).
 
+  - ``serverSyncInfos`` (``Object``): Mainly useful for live DASH contents
+    based on a SegmentTemplate scheme without SegmentTimeline elements.
+
+    Allows to provide a time synchronization mechanism between the client and
+    the server.
+    The `serverSyncInfos` object contains two keys:
+      - `serverTimestamp` (`number`): Unix timestamp of the server at a given
+        point in time, in milliseconds.
+      - `clientTime` (`number`): Value of the `performance.now()` API at the
+        time the `serverTimestamp` value was true. Please note that if your page
+        contains multiple worker, the `performance.now()` call should be done on
+        the same worker than the one in which loadVideo is called.
+
+    The `performance.now()` API is used here because it is the main API to
+    obtain a monotically increasing clock on the client-side.
+
+    Example:
+    ```js
+    const timeResponse = await fetch(serverTimeURL);
+    const serverTimestamp = await timeResponse.text();
+    const clientTime = performance.now();
+    const serverSyncInfos = { serverTimestamp, clientTime };
+    rxPlayer.loadVideo({
+      // ...
+      transportOptions: { serverSyncInfos }
+    })
+    ```
+
+    If indicated, we will ignore any time indication on the MPD and only
+    consider `serverSyncInfos` to calculate the time on the server side.
+
+    This value is mostly useful for low-latency contents, as some of them do not
+    indicate any server's time, relying on the client one instead.
+
+    Note that there is a risk of us losing synchronization when leap seconds
+    are added/substracted to unix time. However we consider those situations
+    rare enough (and the effect should be relatively weak) to let this as is for
+    the moment.
 
 
 <a name="prop-textTrackMode"></a>

@@ -56,10 +56,15 @@ export default function generateManifestParser(
   options : ITransportOptions
 ) : (x : IManifestParserArguments) => IManifestParserObservable {
   const { lowLatencyMode, referenceDateTime } = options;
+  const serverTimeOffset = options.serverSyncInfos != null ?
+    options.serverSyncInfos.serverTimestamp - options.serverSyncInfos.clientTime :
+    undefined;
   return function manifestParser(
-    { response, url: loaderURL, scheduleRequest, externalClockOffset } :
-    IManifestParserArguments
+    args : IManifestParserArguments
   ) : IManifestParserObservable {
+    const { response, scheduleRequest } = args;
+    const argClockOffset = args.externalClockOffset;
+    const loaderURL = args.url;
     const url = response.url == null ? loaderURL :
                                        response.url;
     const data = typeof response.responseData === "string" ?
@@ -68,6 +73,8 @@ export default function generateManifestParser(
                    // TODO find a way to check if Document?
                    response.responseData as Document;
 
+    const externalClockOffset = serverTimeOffset == null ? argClockOffset :
+                                                           serverTimeOffset;
     const parsedManifest = dashManifestParser(data, { lowLatencyMode,
                                                       url,
                                                       referenceDateTime,

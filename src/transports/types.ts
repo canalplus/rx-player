@@ -340,6 +340,9 @@ export interface ITransportPipelines { manifest : ITransportManifestPipeline;
 interface IParsedKeySystem { systemId : string;
                              privateData : Uint8Array; }
 
+interface IServerSyncInfos { serverTimestamp : number;
+                             clientTime : number; }
+
 export interface ITransportOptions {
   aggressiveMode? : boolean;
   keySystems? : (hex? : Uint8Array) => IParsedKeySystem[]; // TODO deprecate
@@ -349,6 +352,7 @@ export interface ITransportOptions {
   referenceDateTime? : number;
   representationFilter? : IRepresentationFilter;
   segmentLoader? : CustomSegmentLoader;
+  serverSyncInfos? : IServerSyncInfos;
   suggestedPresentationDelay? : number;
   supplementaryImageTracks? : ISupplementaryImageTrack[];
   supplementaryTextTracks? : ISupplementaryTextTrack[];
