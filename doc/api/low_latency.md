@@ -58,6 +58,81 @@ long as the content is compatible (again, with CMAF and Chunked Transfer
 Encoding).
 
 
+### Note about time synchronization ############################################
+
+In most cases, DASH low-latency contents rely on time synchronization between
+the server and the client without providing a synchronization mechanism.
+
+This means that, on poorly configurated client (with bad clock settings), you
+could lose latency or worse: obtain playback issues.
+
+To work around that problem, the RxPlayer allows you to provide a
+synchronization mechanism to loadVideo. This is done through the
+``serverSyncInfos`` ``transportOptions``. Which itself is a `loadVideo` option.
+
+TL;DR You can look at the [API
+documentation](./loadVideo_options.md#prop-transportOptions) for a quick
+explanation of what to put in it.
+
+---
+
+Here how it works:
+
+Imagine you have an URL allowing you to know the UTC time on the server's side.
+Let's call it `serverTimeURL`.
+
+Now you can have the server's time at a particular point in time (!). The
+problem is that time continously changes: a time synchronization mechanism will
+have to be aware of how much time passed since the last request to obtain that
+time.
+
+We could asks for the client's timestamp - obtained thanks to the `Date.now()`
+API - at the time of the request.
+This would allow us to know how much time have passed since that event by
+calling `Date.now()` again in the future and calculating the difference.
+The problem however is that `Date.now()` will instantly change if the user
+updates its system clock. If that happens, we will lose the ability to know how
+much time has elapsed since the request.
+
+To workaround this issue, we can use instead `performance.now()`, which does not
+rely on the system's clock.
+However, we are still left with two other issues:
+
+  1. `performance.now()` comparisons are useful only if both values were
+     obtained in the same JS worker.
+     So we have to make sure each `performance.now()` call is done in the same
+     worker.
+
+  2. `performance.now()` doesn't integrate the notion of leap seconds whereas
+     unix time (the server's time) does. This could mean small time
+     de-synchronization when leap seconds are added or substracted.
+
+We however consider those last two problems minor when compared to
+`Date.now()`'s problem (which is the fact that it "breaks" if the system clock
+is updated). If you would prefer to provide `Date.now()` anyway, you can open
+an issue and we will think about a possible implementation.
+
+So we now have two values:
+  - `serverTimestamp` (`number`): Unix timestamp of the server at a given
+    point in time.
+  - `clientTime` (`number`): Value of the `performance.now()` API at the
+    time the `serverTimestamp` value was true. Please note that if your page
+    contains multiple worker, the `performance.now()` call should be done on
+    the same worker than the one in which loadVideo is called.
+
+Those two values can be combined in the `serverSyncInfos` option like this:
+```js
+const timeResponse = await fetch(serverTimeURL);
+const serverTimestamp = await timeResponse.text();
+const clientTime = performance.now();
+const serverSyncInfos = { serverTimestamp, clientTime };
+rxPlayer.loadVideo({
+  // ...
+  transportOptions: { serverSyncInfos }
+})
+```
+
+
 ### Note about rebuffering and other delay-creating situations #################
 
 When playing in low latency mode, it is still possible to rebuffer or pause the
