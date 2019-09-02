@@ -384,16 +384,22 @@ export default {
   /**
    * Factor with which is multiplied the bandwidth estimate when the ABR is in
    * starvation mode.
-   * @type {Number}
+   * @type {Object}
    */
-  ABR_STARVATION_FACTOR: 0.72,
+  ABR_STARVATION_FACTOR: {
+    DEFAULT: 0.72,
+    LOW_BUFFER_GAP: 0.52,
+  },
 
   /**
    * Factor with which is multiplied the bandwidth estimate when the ABR is not
    * in starvation mode.
-   * @type {Number}
+   * @type {Object}
    */
-  ABR_REGULAR_FACTOR: 0.90,
+  ABR_REGULAR_FACTOR: {
+    DEFAULT: 0.90,
+    LOW_BUFFER_GAP: 0.7,
+  },
 
   /**
    * If a SourceBuffer has less than ABR_STARVATION_GAP in seconds ahead of the
@@ -412,10 +418,16 @@ export default {
    *     If the request is considered too long, the bitrate will be hastily
    *     re-calculated from this single request.
    *
-   * @type {Number}
+   * @type {Object}
    */
-  ABR_STARVATION_GAP: 5,
-  OUT_OF_STARVATION_GAP: 7,
+  ABR_STARVATION_GAP: {
+    DEFAULT: 5,
+    LOW_BUFFER_GAP: 0.7,
+  },
+  OUT_OF_STARVATION_GAP: {
+    DEFAULT: 7,
+    LOW_BUFFER_GAP: 2,
+  },
 
   /**
    * This is a security to avoid going into starvation mode when the content is
