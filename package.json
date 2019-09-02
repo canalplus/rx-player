@@ -104,6 +104,11 @@
     "update-version": "npm run version --git-tag-version=false",
     "version": "./scripts/update-version"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "./scripts/git-hooks/pre-commit"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/canalplus/rx-player.git"
@@ -138,6 +143,7 @@
     "express": "4.17.1",
     "file-loader": "4.2.0",
     "highlight.js": "9.15.10",
+    "husky": "3.0.5",
     "istanbul-instrumenter-loader": "3.0.1",
     "jest": "24.9.0",
     "jsx-loader": "0.13.2",
