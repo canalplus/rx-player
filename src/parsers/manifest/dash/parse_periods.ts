@@ -33,6 +33,8 @@ import parseAdaptationSets from "./parse_adaptation_sets";
 const generatePeriodID = idGenerator();
 
 export interface IManifestInfos {
+  aggressiveMode : boolean; // Whether we should request new segments even if
+                            // they are not yet finished (e.g. for low-latency)
   availabilityStartTime : number; // Time from which the content starts
   baseURL? : string;
   clockOffset? : number;
@@ -40,7 +42,6 @@ export interface IManifestInfos {
   isDynamic : boolean;
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
                                   // in seconds
-  lowLatencyMode : boolean;
 }
 
 /**
@@ -87,15 +88,15 @@ export default function parsePeriods(
       periodID = periodIR.attributes.id;
     }
 
-    const periodInfos = { availabilityStartTime,
+    const periodInfos = { aggressiveMode: manifestInfos.aggressiveMode,
+                          availabilityStartTime,
                           baseURL: periodBaseURL,
                           manifestBoundsCalculator,
                           clockOffset: manifestInfos.clockOffset,
                           end: periodEnd,
                           isDynamic,
                           start: periodStart,
-                          timeShiftBufferDepth,
-                          lowLatencyMode: manifestInfos.lowLatencyMode };
+                          timeShiftBufferDepth };
     const adaptations = parseAdaptationSets(periodIR.children.adaptations,
                                             periodInfos);
     const parsedPeriod : IParsedPeriod = { id: periodID,

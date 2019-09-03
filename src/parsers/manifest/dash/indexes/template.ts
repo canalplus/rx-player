@@ -81,6 +81,10 @@ export interface ITemplateIndexIndexArgument {
 
 // Aditional argument for a SegmentTemplate RepresentationIndex
 export interface ITemplateIndexContextArgument {
+  aggressiveMode : boolean; // If `true`, this index will return segments which
+                            // which had time to be started but not finished.
+                            // This is at the basis of Low-latency contents via
+                            // Chunk encoding
   availabilityStartTime : number; // Time from which the content starts
                                   // i.e. The `0` time is at that timestamp
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the
@@ -93,7 +97,6 @@ export interface ITemplateIndexContextArgument {
                                    // which the Manifest file was received
   periodEnd : number|undefined; // End of the Period concerned by this
                                 // RepresentationIndex, in seconds
-  lowLatencyMode : boolean;
   periodStart : number; // Start of the Period concerned by this
                         // RepresentationIndex, in seconds
   representationBaseURL : string; // Base URL for the Representation concerned
@@ -108,12 +111,12 @@ export interface ITemplateIndexContextArgument {
  * @class TemplateRepresentationIndex
  */
 export default class TemplateRepresentationIndex implements IRepresentationIndex {
+  private _aggressiveMode : boolean;
   private _index : ITemplateIndex;
+  private _liveEdgeOffset? : number;
+  private _manifestBoundsCalculator : ManifestBoundsCalculator;
   private _periodStart : number;
   private _relativePeriodEnd? : number;
-  private _liveEdgeOffset? : number;
-  private _lowLatencyMode : boolean;
-  private _manifestBoundsCalculator : ManifestBoundsCalculator;
 
   // Whether this RepresentationIndex can change over time.
   private _isDynamic : boolean;
@@ -127,11 +130,11 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     context : ITemplateIndexContextArgument
   ) {
     const { timescale } = index;
-    const { availabilityStartTime,
+    const { aggressiveMode,
+            availabilityStartTime,
             manifestBoundsCalculator,
             clockOffset,
             isDynamic,
-            lowLatencyMode,
             periodEnd,
             periodStart,
             representationBaseURL,
@@ -139,7 +142,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             representationBitrate } = context;
 
     this._manifestBoundsCalculator = manifestBoundsCalculator;
-    this._lowLatencyMode = lowLatencyMode;
+    this._aggressiveMode = aggressiveMode;
     const presentationTimeOffset = index.presentationTimeOffset != null ?
                                      index.presentationTimeOffset :
                                      0;
@@ -173,7 +176,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         const perfOffset = (clockOffset / 1000) - availabilityStartTime;
         this._liveEdgeOffset = perfOffset - periodStart;
       } else {
-        const securityLiveGap = this._lowLatencyMode ? 0 :
+        const securityLiveGap = this._aggressiveMode ? 0 :
                                                        10;
         log.warn("DASH Parser: no clock synchronization mechanism found." +
                  (securityLiveGap > 0) ?
@@ -457,7 +460,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         return null;
       }
       const maxPossibleStart = Math.max(scaledMaxPosition - duration, 0);
-      const numberIndexedToZero = this._lowLatencyMode ?
+      const numberIndexedToZero = this._aggressiveMode ?
         Math.ceil(maxPossibleStart / duration) :
         Math.floor(maxPossibleStart / duration);
       return numberIndexedToZero * duration;

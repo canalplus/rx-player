@@ -463,7 +463,8 @@ considered stable:
 
     In that mode, we request segments we guess will be available without being
     absolutely sure they had time to be generated. For the moment, this mode has
-    only an effect for Smooth streaming contents.
+    only an effect for DASH contents relying on a SegmentTemplate without
+    SegmentTimeline elements or Smooth streaming contents.
 
     The upside is that you will have more segments close to the live edge.
 
@@ -471,6 +472,9 @@ considered stable:
     generate will trigger a `NetworkError`. Depending on your other settings
     (especially the `networkConfig` loadVideo options), those errors might just
     be sent as warnings and the corresponding requests be retried.
+
+    Note that enabling `lowLatencyMode` (through the corresponding `loadVideo`
+    option) implicitely enable `aggressiveMode`.
 
   - ``referenceDateTime`` (``Number``): Only useful for live contents. This is
     the default amount of time, in seconds, to add as an offset to a given media

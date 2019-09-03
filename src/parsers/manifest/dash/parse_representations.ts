@@ -32,6 +32,8 @@ import {
 
 // Supplementary context about the current AdaptationSet
 export interface IAdaptationInfos {
+  aggressiveMode : boolean; // Whether we should request new segments even if
+                            // they are not yet finished (e.g. for low-latency)
   availabilityStartTime : number; // Time from which the content starts
   baseURL? : string; // Eventual URL from which every relative URL will be based
                      // on
@@ -42,7 +44,6 @@ export interface IAdaptationInfos {
                          // to obtain the current server's time
   end? : number; // End time of the current period, in seconds
   isDynamic : boolean; // Whether the Manifest can evolve with time
-  lowLatencyMode : boolean; // Whether the content playing in low latency mode
   start : number; // Start time of the current period, in seconds
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
                                   // in seconds
@@ -50,6 +51,8 @@ export interface IAdaptationInfos {
 
 // base context given to the various indexes
 interface IIndexContext {
+  aggressiveMode : boolean; // Whether we should request new segments even if
+                            // they are not yet finished (e.g. for low-latency)
   availabilityStartTime : number; // Time from which the content starts
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
                                                        // available position of a live
@@ -57,7 +60,6 @@ interface IIndexContext {
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time
   isDynamic : boolean; // Whether the Manifest can evolve with time
-  lowLatencyMode : boolean; // Whether the content playing in low latency mode
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
   periodEnd : number|undefined; // End of the period concerned by this
@@ -120,11 +122,11 @@ export default function parseRepresentations(
     const representationBaseURL = resolveURL(adaptationInfos.baseURL, baseURL);
 
     // 4-2-1. Find Index
-    const context = { availabilityStartTime: adaptationInfos.availabilityStartTime,
+    const context = { aggressiveMode: adaptationInfos.aggressiveMode,
+                      availabilityStartTime: adaptationInfos.availabilityStartTime,
                       manifestBoundsCalculator: adaptationInfos.manifestBoundsCalculator,
                       clockOffset: adaptationInfos.clockOffset,
                       isDynamic: adaptationInfos.isDynamic,
-                      lowLatencyMode: adaptationInfos.lowLatencyMode,
                       periodEnd: adaptationInfos.end,
                       periodStart: adaptationInfos.start,
                       representationBaseURL,
