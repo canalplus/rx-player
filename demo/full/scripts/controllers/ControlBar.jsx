@@ -14,12 +14,17 @@ function ControlBar({
   videoElement,
   isContentLoaded,
   isLive,
+  hasSeeked,
+  toggleHasSeeked,
   isStopped,
   currentTime,
   duration,
   toggleSettings,
   stopVideo,
+  lowLatencyMode,
+  liveGap,
 }) {
+  const isNearLiveEdge = lowLatencyMode ? liveGap < 6 : liveGap < 15;
   const positionElement = (() => {
     if (!isContentLoaded) {
       return null;
@@ -32,10 +37,12 @@ function ControlBar({
       />;
     }
   })();
-
   return (
     <div className="controls-bar-container">
-      <Progressbar player={player} />
+      <Progressbar
+        player={player}
+        hasManuallySeeked={() => toggleHasSeeked(true)}
+      />
       <div className="controls-bar">
         <PlayPauseButton
           className={"control-button"}
@@ -48,7 +55,19 @@ function ControlBar({
           disabled={isStopped}
         />
         { positionElement }
+        { (isContentLoaded && isNearLiveEdge) ? <div className="dot"></div> : null}
         <div className="controls-right-side">
+          { isLive ?
+            <Button
+              className={"control-live" + (hasSeeked ? " activated" : "")}
+              onClick={() => {
+                if (hasSeeked) {
+                  toggleHasSeeked(false);
+                }
+              }}
+              value={String.fromCharCode(0xf01e)}
+            /> : null
+          }
           <Button
             disabled={!isContentLoaded}
             className='control-button'
@@ -83,5 +102,7 @@ export default withModulesState({
     currentTime: "currentTime",
     duration: "duration",
     isStopped: "isStopped",
+    lowLatencyMode: "lowLatencyMode",
+    liveGap: "liveGap",
   },
 })(ControlBar);
