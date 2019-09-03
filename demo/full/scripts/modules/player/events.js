@@ -105,6 +105,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
       stateUpdates.availableVideoTracks = [];
       stateUpdates.availableLanguages = [];
       stateUpdates.availableSubtitles = [];
+      stateUpdates.lowLatencyMode = false;
       stateUpdates.images = [];
       stateUpdates.subtitle = null;
       stateUpdates.language = null;

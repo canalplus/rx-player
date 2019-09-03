@@ -21,6 +21,9 @@ class Player extends React.Component {
       displaySpinner: false,
       displaySettings: false,
       isStopped: true,
+      isCatchingUp: false,
+      lastCatchUpRate: undefined,
+      hasSeeked: false,
     };
   }
 
@@ -33,7 +36,14 @@ class Player extends React.Component {
     this._$destroySubject = new Subject();
     this._$destroySubject.subscribe(() => player.destroy());
 
-    player.$get("isSeeking", "isBuffering", "isLoading", "isReloading", "isStopped")
+    player.$get("isSeeking",
+                "isBuffering",
+                "isLoading",
+                "isReloading",
+                "isStopped",
+                "liveGap",
+                "lowLatencyMode"
+    )
       .pipe(takeUntil(this._$destroySubject))
       .subscribe(([
         isSeeking,
@@ -41,7 +51,50 @@ class Player extends React.Component {
         isLoading,
         isReloading,
         isStopped,
+        liveGap,
+        lowLatencyMode,
       ]) => {
+        const { isCatchingUp,
+                lastCatchUpRate,
+                hasSeeked } = this.state;
+
+        if (player) {
+          const shouldCatchUp = (liveGap > 6 ||
+                                 isCatchingUp && liveGap > 4) &&
+                                !hasSeeked;
+
+          if (shouldCatchUp) {
+            if (liveGap > (lowLatencyMode ? 10 : 20)) {
+              const maximumPosition = player.get("maximumPosition");
+              const distanceToLiveEdge = lowLatencyMode ? 4 : 10;
+              player.dispatch("SEEK", maximumPosition - distanceToLiveEdge);
+            } else if (lowLatencyMode) {
+              const factor = (liveGap - 4) / 4;
+              const rate = Math.round(
+                (liveGap > 4 ? Math.min(10, 1.1 + factor) : 1) * 10
+              ) / 10;
+              if (rate !== lastCatchUpRate) {
+                this.setState({
+                  lastCatchUpRate: rate,
+                  lowLatencyMode,
+                  isCatchingUp: true,
+                });
+                player.dispatch("SET_PLAYBACK_RATE", rate);
+              }
+            }
+          } else if (isCatchingUp) {
+            this.setState({
+              lastCatchUpRate: 1,
+              isCatchingUp: false,
+            });
+            player.dispatch("SET_PLAYBACK_RATE", 1);
+          } else {
+            this.setState({
+              lastCatchUpRate: undefined,
+            });
+          }
+        }
+
         this.setState({ isStopped });
         if (isLoading || isReloading) {
           this.setState({ displaySpinner: true });
@@ -92,7 +145,9 @@ class Player extends React.Component {
   }
 
   render() {
-    const { player, displaySpinner, isStopped } = this.state;
+    const { player, displaySpinner, isStopped, hasSeeked } =
+      this.state;
+
     const loadVideo = (video) => this.state.player.dispatch("LOAD", video);
     const stopVideo = () => this.state.player.dispatch("STOP");
 
@@ -101,6 +156,10 @@ class Player extends React.Component {
     };
     const toggleSettings = () => {
       this.setState({ displaySettings: !this.state.displaySettings });
+    };
+
+    const toggleHasSeeked = (hasSeeked) => {
+      this.setState({ hasSeeked });
     };
 
     return (
@@ -147,6 +206,8 @@ class Player extends React.Component {
                   player={player}
                   videoElement={this.playerWrapperElement}
                   toggleSettings={toggleSettings}
+                  toggleHasSeeked={toggleHasSeeked}
+                  hasSeeked={hasSeeked}
                   stopVideo={stopVideo}
                 /> : null}
           </div>
