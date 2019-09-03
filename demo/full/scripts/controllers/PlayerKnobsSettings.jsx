@@ -12,6 +12,7 @@ const PlayerKnobsSettings = ({
   close,
   player,
   availableVideoTracks,
+  lowLatencyMode,
   isContentLoaded,
 }) => {
 
@@ -33,7 +34,11 @@ const PlayerKnobsSettings = ({
         </span>
       </div>
       <div className="player-knobs-content">
-        <PlaybackRateKnob className="black-knob" player={player} />
+        {
+          lowLatencyMode ?
+            null : // In lowLatencyMode, we take back control of the rate
+            <PlaybackRateKnob className="black-knob" player={player} />
+        }
         <AudioBitrateKnob className="black-knob" player={player} />
         <VideoBitrateKnob className="black-knob" player={player} />
         <LanguageKnob className="black-knob" player={player} />
@@ -49,6 +54,7 @@ const PlayerKnobsSettings = ({
 
 export default withModulesState({
   player: {
+    lowLatencyMode: "lowLatencyMode",
     isStopped: "isStopped",
     isContentLoaded: "isContentLoaded",
     availableVideoTracks: "availableVideoTracks",
