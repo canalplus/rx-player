@@ -58,6 +58,7 @@ long as the content is compatible (again, with CMAF and Chunked Transfer
 Encoding).
 
 
+<a name="note-time-sync"></a>
 ### Note about time synchronization ############################################
 
 In most cases, DASH low-latency contents rely on time synchronization between
