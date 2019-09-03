@@ -537,14 +537,14 @@ export default function launchTestsForContent(
         expect(bufferGap).to.be.at.least(19.5);
         expect(bufferGap).to.be.at.most(20 + 10);
 
-        player.seekTo(10);
+        player.seekTo(minimumPosition + 10);
         await sleep(500);
         expect(player.getWantedBufferAhead()).to.equal(20);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(19.5);
         expect(bufferGap).to.be.at.most(20 + 10);
 
-        player.seekTo(10 + 30);
+        player.seekTo(minimumPosition + 10 + 30);
         await sleep(500);
         expect(player.getWantedBufferAhead()).to.equal(20);
         bufferGap = player.getVideoBufferGap();
@@ -556,9 +556,11 @@ export default function launchTestsForContent(
         await sleep(1500);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be
-          .at.least(player.getMaximumPosition() - (10 + 30) - 2);
+          .at.least(player.getMaximumPosition() -
+                      minimumPosition - (10 + 30) - 2);
         expect(bufferGap).to.be
-          .at.most(player.getMaximumPosition() - (10 + 30) + 10);
+          .at.most(player.getMaximumPosition() -
+                     minimumPosition - (10 + 30) + 10);
       });
     });
 
@@ -613,7 +615,7 @@ export default function launchTestsForContent(
         await waitForLoadedStateAfterLoadVideo(player);
         await sleep(100);
 
-        expect(player.getPosition()).to.equal(minimumPosition);
+        expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.001);
         expect(player.getVideoPlayedTime()).to.equal(0);
 
         xhrMock.lock();
@@ -646,7 +648,7 @@ export default function launchTestsForContent(
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getWallClockTime()).to.equal(minimumPosition);
+        expect(player.getWallClockTime()).to.be.closeTo(minimumPosition, 0.001);
       });
 
       it("should return the starting position if one", async () => {
@@ -656,7 +658,8 @@ export default function launchTestsForContent(
           startAt: { position: minimumPosition + 4 },
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getWallClockTime()).to.equal(minimumPosition + 4);
+        expect(player.getWallClockTime()).to.be
+          .closeTo(minimumPosition + 4, 0.001);
       });
 
       it("should update as soon as we seek", async () => {
@@ -679,7 +682,7 @@ export default function launchTestsForContent(
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition()).to.equal(minimumPosition);
+        expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.001);
       });
 
       it("should return the starting position if one", async () => {
@@ -689,7 +692,7 @@ export default function launchTestsForContent(
           startAt: { position: minimumPosition + 4 },
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition()).to.equal(minimumPosition + 4);
+        expect(player.getPosition()).to.be.closeTo(minimumPosition + 4, 0.001);
       });
 
       it("should update as soon as we seek", async () => {
@@ -747,7 +750,7 @@ export default function launchTestsForContent(
         });
 
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition()).to.equal(minimumPosition);
+        expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.001);
         player.setPlaybackRate(1);
         player.play();
         await sleep(900);

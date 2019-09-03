@@ -68,6 +68,11 @@ module.exports = [
     path: path.join(__dirname, "media/ateam.mpd"),
     contentType: "application/dash+xml",
   },
+  {
+    url: BASE_URL + "not_starting_at_0.mpd",
+    path: path.join(__dirname, "media/not_starting_at_0.mpd"),
+    contentType: "application/dash+xml",
+  },
 
   // Audio initialization segment
   {
