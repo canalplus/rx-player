@@ -525,7 +525,9 @@ considered stable:
     Note that there is a risk of us losing synchronization when leap seconds
     are added/substracted to unix time. However we consider those situations
     rare enough (and the effect should be relatively weak) to let this as is for
-    the moment.
+    the moment. For a more complete explanation, you can look at the
+    [corresponding chapter of the low-latency
+    documentation](./low_latency.md#note-time-sync).
 
 
 <a name="prop-textTrackMode"></a>
