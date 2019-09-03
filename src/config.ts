@@ -500,7 +500,7 @@ export default {
    */
   STALL_GAP: {
     DEFAULT: 0.5,
-    LOW_LATENCY: 0.001,
+    LOW_LATENCY: 0.2,
   },
 
   /**
