@@ -216,9 +216,24 @@ function parseCompleteIntermediateRepresentation(
   }
 
   checkManifestIDs(parsedMPD);
-  if (parsedMPD.isLive) {
-    const [minTime, maxTime] = getMinimumAndMaximumPosition(parsedMPD);
-    const now = performance.now();
+  const [minTime, maxTime] = getMinimumAndMaximumPosition(parsedMPD);
+  const now = performance.now();
+  if (!isDynamic) {
+    if (minTime != null) {
+      parsedMPD.minimumTime = { isContinuous: false,
+                                value: minTime,
+                                time: now };
+    }
+    if (duration != null) {
+      parsedMPD.maximumTime = { isContinuous: false,
+                                value: duration,
+                                time: now };
+    } else if (maxTime != null) {
+      parsedMPD.maximumTime = { isContinuous: false,
+                                value: maxTime,
+                                time: now };
+    }
+  } else {
     if (minTime != null) {
       parsedMPD.minimumTime = { isContinuous: timeShiftBufferDepth != null,
                                 value: minTime,
