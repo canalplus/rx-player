@@ -119,9 +119,9 @@ describe("DASH live - UTCTimings", () => {
       const minimumPosition = maximumPosition - timeShiftBufferDepth;
 
       expect(player.getMinimumPosition()).to.be
-        .closeTo(minimumPosition, 1);
+        .closeTo(minimumPosition, 2);
       expect(player.getMaximumPosition()).to.be
-        .closeTo(maximumPosition, 1);
+        .closeTo(maximumPosition, 2);
     });
   });
 
