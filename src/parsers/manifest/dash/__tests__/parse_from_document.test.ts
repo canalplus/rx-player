@@ -28,13 +28,13 @@ describe("parseFromDocument", () => {
       parseFromDocument(doc, {
         url: "",
         externalClockOffset: 10,
-        lowLatencyMode: false,
+        aggressiveMode: false,
       });
     }).toThrow("document root should be MPD");
     expect(function() {
       parseFromDocument(doc, {
         url: "",
-        lowLatencyMode: false,
+        aggressiveMode: false,
       });
     }).toThrow("document root should be MPD");
   });
