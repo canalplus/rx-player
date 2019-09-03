@@ -80,6 +80,10 @@ export interface ITemplateIndexIndexArgument {
 
 // Aditional argument for a SegmentTemplate RepresentationIndex
 export interface ITemplateIndexContextArgument {
+  aggressiveMode : boolean; // If `true`, this index will return segments which
+                            // which had time to be started but not finished.
+                            // This is at the basis of Low-latency contents via
+                            // Chunk encoding
   availabilityStartTime : number; // Time from which the content starts
                                   // i.e. The `0` time is at that timestamp
   clockOffset? : number; // If set, offset to add to `performance.now()`
@@ -87,7 +91,6 @@ export interface ITemplateIndexContextArgument {
   isDynamic : boolean; // if true, the MPD can be updated over time
   periodEnd : number|undefined; // End of the Period concerned by this
                                 // RepresentationIndex, in seconds
-  lowLatencyMode : boolean;
   periodStart : number; // Start of the Period concerned by this
                         // RepresentationIndex, in seconds
   representationBaseURL : string; // Base URL for the Representation concerned
@@ -111,7 +114,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   private _relativePeriodEnd? : number;
   private _liveEdgeOffset? : number;
   private _scaledBufferDepth? : number;
-  private _lowLatencyMode : boolean;
+  private _aggressiveMode : boolean;
 
   // Whether this RepresentationIndex can change over time.
   private _isDynamic : boolean;
@@ -125,10 +128,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     context : ITemplateIndexContextArgument
   ) {
     const { timescale } = index;
-    const { availabilityStartTime,
+    const { aggressiveMode,
+            availabilityStartTime,
             clockOffset,
             isDynamic,
-            lowLatencyMode,
             periodEnd,
             periodStart,
             representationBaseURL,
@@ -136,7 +139,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             representationBitrate,
             timeShiftBufferDepth } = context;
 
-    this._lowLatencyMode = lowLatencyMode;
+    this._aggressiveMode = aggressiveMode;
     this._scaledBufferDepth = timeShiftBufferDepth == null ?
       undefined :
       timeShiftBufferDepth * timescale;
@@ -173,7 +176,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         const perfOffset = (clockOffset / 1000) - availabilityStartTime;
         this._liveEdgeOffset = perfOffset - periodStart;
       } else {
-        const securityLiveGap = this._lowLatencyMode ? 0 :
+        const securityLiveGap = this._aggressiveMode ? 0 :
                                                        10;
         log.warn("DASH Parser: no clock synchronization mechanism found." +
                  (securityLiveGap > 0) ?
@@ -438,7 +441,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         }
       }
       const maxPossibleStart = Math.max(scaledMaxPosition - duration, 0);
-      numberIndexedToZero = this._lowLatencyMode ?
+      numberIndexedToZero = this._aggressiveMode ?
         Math.ceil(maxPossibleStart / duration) :
         Math.floor(maxPossibleStart / duration);
       return numberIndexedToZero * duration;

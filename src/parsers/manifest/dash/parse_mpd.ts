@@ -39,11 +39,12 @@ import parsePeriods from "./parse_periods";
 const generateManifestID = idGenerator();
 
 export interface IMPDParserArguments {
+  aggressiveMode : boolean; // Whether we should request new segments even if
+                            // they are not yet finished (e.g. for low-latency)
   url? : string; // URL of the manifest (post-redirection if one)
   referenceDateTime? : number; // Default base time, in seconds
   externalClockOffset? : number; // If set, offset to add to `performance.now()`
                                  // to obtain the current server's time
-  lowLatencyMode : boolean;
 }
 
 export type IParserResponse<T> = { type : "needs-ressources";
@@ -189,11 +190,11 @@ function parseCompleteIntermediateRepresentation(
                                                            args.referenceDateTime);
   const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
   const clockOffset = args.externalClockOffset;
-  const manifestInfos = { availabilityStartTime,
+  const manifestInfos = { aggressiveMode: args.aggressiveMode,
+                          availabilityStartTime,
                           baseURL,
                           clockOffset,
                           duration: rootAttributes.duration,
-                          lowLatencyMode: args.lowLatencyMode,
                           isDynamic,
                           timeShiftBufferDepth };
   const parsedPeriods = parsePeriods(rootChildren.periods, manifestInfos);
