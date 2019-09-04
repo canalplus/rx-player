@@ -48,12 +48,15 @@ export default function parsePeriods(
   const periodsTimeInformations = getPeriodsTimeInformations(periodsIR, manifestInfos);
   const parsedPeriods : IParsedPeriod[] = [];
 
+  if (periodsTimeInformations.length !== periodsIR.length) {
+    throw new Error("MPD parsing error: the time informations are incoherent.");
+  }
+
   for (let i = 0; i < periodsIR.length; i++) {
     const period = periodsIR[i];
     const { periodStart,
             periodDuration,
-            periodEnd,
-    } = periodsTimeInformations[i];
+            periodEnd } = periodsTimeInformations[i];
 
     const periodBaseURL = resolveURL(manifestInfos.baseURL, period.children.baseURL);
 
