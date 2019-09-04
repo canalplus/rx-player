@@ -265,10 +265,20 @@ export default function RepresentationBuffer<T>({
                            ...neededSegments ];
       }
 
-      const isFull = !neededSegments.length &&
-                     period.end != null &&
-                     neededRange.end >= period.end &&
-                     representation.index.isFinished();
+      let isFull : boolean;
+      if (neededSegments.length > 0 || period.end == null) {
+        isFull = false;
+      } else {
+        const lastPosition = representation.index.getLastPosition();
+        if (lastPosition === undefined) {
+          isFull = false;
+        } else if (lastPosition == null) {
+          isFull = representation.index.isFinished();
+        } else {
+          isFull = neededRange.end >= lastPosition &&
+                   representation.index.isFinished();
+        }
+      }
 
       return { discontinuity,
                isFull,
