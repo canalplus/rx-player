@@ -144,8 +144,10 @@ export default function generateSegmentLoader(
         const regular$ = regularSegmentLoader(mediaURL, content, lowLatencyMode);
 
         // HACK What is TypeScript/RxJS doing here??????
+        /* tslint:disable deprecation */
         // @ts-ignore
         regular$.subscribe(obs);
+        /* tslint:enable deprecation */
       };
 
       const callbacks = { reject, resolve, fallback };
