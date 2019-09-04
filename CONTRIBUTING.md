@@ -57,7 +57,7 @@ The type should be one of the following:
   - `demo`: For demo improvements/fixes
   - `tests`: For tests improvements/fixes
   - `code`: For refactoring code which brings no fix or no new feature
-  - `tools`: For tooling improvements (webpack, scripts, typescript...)
+  - `tools`: For improvements related to the RxPlayer's tools
   - `misc`: For unclassifiable other improvements
 
 ---
@@ -151,6 +151,9 @@ The following class:
 Every commits in a PR should pass our quick checks (linter, typescript check
 and unit tests). To check if that's the case, you can run locally the `check`
 script by calling `npm run check`.
+
+In any case, the type checking and linting of the `src` directory is
+automatically done before each commit thanks to a git hook.
 
 Those checks allow us to guarantee that every merged commit in the `master`
 branch is stable enough.

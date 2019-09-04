@@ -1,0 +1,75 @@
+#!/bin/sh
+
+# Hook script to verify what is about to be pushed.
+# Called by "git push" after it has checked the remote status, but before
+# anything has been pushed. If this script exits with a non-zero status
+# nothing will be pushed.
+
+local_branch="$(git rev-parse --abbrev-ref HEAD)"
+valid_branch_regex="^(feat|fix|test|demo|doc|code|tools|release|misc)\/[A-Za-z0-9._-]+$"
+
+if [[ ! $local_branch =~ $valid_branch_regex ]]
+then
+  # my best contribution yet: shamelessly copy-pasting a friendly-looking ASCII
+  # bear from the web. Do not look for a relation to the RxPlayer, there's none.
+  cat >&2 << 'EOF'
+Error: Invalid branch name.
+                     ,---.           ,---.
+                    / /"`.\.--"""--./,'"\ \
+                    \ \    _       _    / /
+                     `./  / __   __ \  \,'
+                      /    /_O)_(_O\    \
+                      |  .-'  ___  `-.  |
+                   .--|       \_/       |--.
+                 ,'    \   \   |   /   /    `.
+                /       `.  `--^--'  ,'       \
+             .-"""""-.    `--.___.--'     .-"""""-.
+.-----------/         \------------------/         \--------------------.
+| .---------\         /----------------- \         /------------------. |
+| |          `-`--`--'                    `--'--'-'                   | |
+| |  ____                       _                                     | |
+| | |  _ \                     | |                                    | |
+| | | |_) |_ __ __ _ _ __   ___| |__      _ __   __ _ _ __ ___   ___  | |
+| | |  _ <| '__/ _` | '_ \ / __| '_ \    | '_ \ / _` | '_ ` _ \ / _ \ | |
+| | | |_) | | | (_| | | | | (__| | | |   | | | | (_| | | | | | |  __/ | |
+| | |____/|_|  \__,_|_| |_|\___|_| |_|   |_| |_|\__,_|_| |_| |_|\___| | |
+| |                                _                                  | |
+| |                               | |                                 | |
+| |                     _ __ _   _| | ___  ___                        | |
+| |                    | '__| | | | |/ _ \/ __|                       | |
+| |                    | |  | |_| | |  __/\__ \                       | |
+| |                    |_|   \__,_|_|\___||___/                       | |
+| |                                                                   | |
+| |                                                                   | |
+| |___________________________________________________________________| |
+|_______________________________________________________________________|
+                   )__________|__|__________(
+                  |            ||            |
+                  |____________||____________|
+                    ),-----.(      ),-----.(
+                  ,'   ==.   \    /  .==    `.
+                 /            )  (            \
+                 `==========='    `==========='
+  
+A valid branch name should start either with:
+  - "feat/" for a feature
+  - "fix/" for a bug fix
+  - "test/" for unit or integration tests improvements
+  - "demo/" for demo improvements
+  - "doc/" for documentation updates
+  - "code/" for refactoring code which brings no fix or no new feature
+  - "tools/" for improvements related to the RxPlayer's tools
+  - "release/" for a candidate branch for a new release
+  - "misc/" for miscellenaous other matters (dependency updates, scripts...)
+
+A valid branch name should then have a short title representing what it does.
+This title should contain only the characters presents in the following list:
+  - Alphanumeric ASCII character(s) (A-Z, a-z and 0-9)
+  - Hyphen(s) ("-")
+  - Underscore(s) ("_")
+  - Point(s) (".")
+
+Please rename the current branch before pushing.
+EOF
+  exit 1
+fi
