@@ -36,9 +36,6 @@ export default function getPeriodsTimeInformations(
 ): IPeriodTimeInformations[] {
   const periodsTimeInformations: IPeriodTimeInformations[] = [];
   periodsIR.forEach((currentPeriod, i) => {
-    const prevPeriodInfos =
-      periodsTimeInformations[periodsTimeInformations.length - 1];
-    const nextPeriod = periodsIR[i + 1];
 
     let periodStart : number;
     if (currentPeriod.attributes.start != null) {
@@ -50,33 +47,32 @@ export default function getPeriodsTimeInformations(
                          0 :
                          manifestInfos.availabilityStartTime;
       } else {
-        if (prevPeriodInfos &&
-            prevPeriodInfos.periodDuration != null &&
-            prevPeriodInfos.periodStart != null
-        ) {
-          periodStart = prevPeriodInfos.periodStart + prevPeriodInfos.periodDuration;
+        // take time informations from previous period
+        const prevPeriodInfos =
+          periodsTimeInformations[periodsTimeInformations.length - 1];
+        if (prevPeriodInfos != null && prevPeriodInfos.periodEnd != null) {
+          periodStart = prevPeriodInfos.periodEnd;
         } else {
           throw new Error("Missing start time when parsing periods.");
         }
       }
     }
 
-    let periodDuration : number|undefined;
+    let periodDuration : number | undefined;
+    const nextPeriod = periodsIR[i + 1];
     if (currentPeriod.attributes.duration != null) {
       periodDuration = currentPeriod.attributes.duration;
-    } else if (i === 0 && manifestInfos.duration) {
+    } else if (i === periodsIR.length - 1) {
       periodDuration = manifestInfos.duration;
-    } else if (nextPeriod && nextPeriod.attributes.start != null) {
+    } else if (nextPeriod.attributes.start != null) {
       periodDuration = nextPeriod.attributes.start - periodStart;
     }
 
     const periodEnd = periodDuration != null ? (periodStart + periodDuration) :
                                                undefined;
-    periodsTimeInformations.push({
-      periodStart,
-      periodDuration,
-      periodEnd,
-    });
+    periodsTimeInformations.push({ periodStart,
+                                   periodDuration,
+                                   periodEnd });
   });
   return periodsTimeInformations;
 }
