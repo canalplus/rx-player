@@ -267,6 +267,13 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * @returns {Boolean}
+   */
+  isFinished() : true {
+    return true;
+  }
+
+  /**
    * @param {Object} newIndex
    */
   _update(newIndex : BaseRepresentationIndex) : void {

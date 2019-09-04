@@ -265,15 +265,10 @@ export default function RepresentationBuffer<T>({
                            ...neededSegments ];
       }
 
-      const lastPosition = representation.index.getLastPosition();
-      const endOfPeriodIsAvailable = lastPosition != null &&
-                                     period.end != null &&
-                                     lastPosition >= period.end;
-
       const isFull = !neededSegments.length &&
                      period.end != null &&
                      neededRange.end >= period.end &&
-                     endOfPeriodIsAvailable;
+                     representation.index.isFinished();
 
       return { discontinuity,
                isFull,

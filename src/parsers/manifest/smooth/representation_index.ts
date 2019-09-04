@@ -535,6 +535,13 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
     }
   }
 
+  /**
+   * @returns {Boolean | undefined}
+   */
+  isFinished() : boolean {
+    return !this._isLive;
+  }
+
   _addSegments(
     nextSegments : Array<{ duration : number;
                            time : number;

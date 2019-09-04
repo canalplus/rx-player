@@ -252,6 +252,13 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * @returns {Boolean}
+   */
+  isFinished() : true {
+    return true;
+  }
+
+  /**
    * @param {Object} newIndex
    */
   _update(newIndex : ListRepresentationIndex) : void {

@@ -469,6 +469,27 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   }
 
   /**
+   * @returns {Boolean}
+   */
+  isFinished() : boolean {
+    if (!this._isDynamic) {
+      return true;
+    }
+    const { timeline } = this._index;
+    if (this._scaledPeriodEnd == null || timeline.length === 0) {
+      return false;
+    }
+    const lastTimelineElement = timeline[timeline.length - 1];
+    const lastTime = getIndexSegmentEnd(lastTimelineElement,
+                                        null,
+                                        this._scaledPeriodEnd);
+
+    // We can never be truly sure if a SegmentTimeline-based index is finished
+    // or not (1 / 60 for possible rounding errors)
+    return (lastTime + 1 / 60) >= this._scaledPeriodEnd;
+  }
+
+  /**
    * Clean-up timeline to remove segment informations which should not be
    * available due to timeshifting.
    */
