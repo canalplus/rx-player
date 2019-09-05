@@ -22,7 +22,6 @@ class Player extends React.Component {
       displaySettings: false,
       isStopped: true,
       isCatchingUp: false,
-      lastCatchUpRate: undefined,
       hasSeeked: false,
     };
   }
@@ -55,7 +54,6 @@ class Player extends React.Component {
         lowLatencyMode,
       ]) => {
         const { isCatchingUp,
-                lastCatchUpRate,
                 hasSeeked } = this.state;
 
         if (player) {
@@ -73,9 +71,9 @@ class Player extends React.Component {
               const rate = Math.round(
                 (liveGap > 4 ? Math.min(10, 1.1 + factor) : 1) * 10
               ) / 10;
+              const lastCatchUpRate = player.get("playbackPosition");
               if (rate !== lastCatchUpRate) {
                 this.setState({
-                  lastCatchUpRate: rate,
                   lowLatencyMode,
                   isCatchingUp: true,
                 });
@@ -84,14 +82,9 @@ class Player extends React.Component {
             }
           } else if (isCatchingUp) {
             this.setState({
-              lastCatchUpRate: 1,
               isCatchingUp: false,
             });
             player.dispatch("SET_PLAYBACK_RATE", 1);
-          } else {
-            this.setState({
-              lastCatchUpRate: undefined,
-            });
           }
         }
 
