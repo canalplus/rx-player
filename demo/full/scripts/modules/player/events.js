@@ -67,6 +67,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         minimumPosition: player.getMinimumPosition(),
         maximumPosition: player.getMaximumPosition(),
         liveGap: player.getMaximumPosition() - player.getPosition(),
+        playbackPosition: player.getPlaybackRate(),
       };
     }),
     takeUntil($destroy)
