@@ -275,7 +275,10 @@ export default function RepresentationBuffer<T>({
         } else if (lastPosition == null) {
           isFull = representation.index.isFinished();
         } else {
-          isFull = neededRange.end >= lastPosition &&
+          const endOfRange = period.end != null ? Math.min(period.end,
+                                                           lastPosition) :
+                                                  lastPosition;
+          isFull = neededRange.end >= endOfRange &&
                    representation.index.isFinished();
         }
       }
