@@ -23,7 +23,7 @@ import { IParsedManifest } from "../types";
 import checkManifestIDs from "../utils/check_manifest_ids";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
-import getMinimumAndMaximumPosition from "./get_last_time_reference";
+import getMinimumAndMaximumPosition from "./get_minimum_and_maximum_positions";
 import {
   createMPDIntermediateRepresentation,
   IMPDIntermediateRepresentation,

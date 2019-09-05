@@ -378,10 +378,8 @@ describe("DASH live content (SegmentTimeline)", function () {
     it("should return the last position minus the TimeShift window", async () => {
       xhrMock.lock();
 
-      player.loadVideo({
-        url: manifestInfos.url,
-        transport:manifestInfos.transport,
-      });
+      player.loadVideo({ url: manifestInfos.url,
+                         transport:manifestInfos.transport });
 
       await sleep(1);
       await xhrMock.flush();
