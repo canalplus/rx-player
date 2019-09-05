@@ -25,7 +25,7 @@ import getFirstPositionFromAdaptation from "./get_first_time_from_adaptation";
 export default function getMinimumPosition(
   manifest: IParsedManifest
 ) : number | undefined {
-  for (let i = 0; i <= manifest.periods.length - 1; i--) {
+  for (let i = 0; i <= manifest.periods.length - 1; i++) {
     const periodAdaptations = manifest.periods[i].adaptations;
     const firstAudioAdaptationFromPeriod = periodAdaptations.audio == null ?
       undefined :
