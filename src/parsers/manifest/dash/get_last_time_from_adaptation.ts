@@ -46,5 +46,5 @@ export default function getLastPositionFromAdaptation(
   if (min === null) { // It means that all positions were null === no segments (yet?)
     return null;
   }
-  return isNaN(min) ? undefined : min;
+  return min;
 }
