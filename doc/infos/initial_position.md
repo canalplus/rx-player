@@ -1,0 +1,96 @@
+# At what position does the RxPlayer start a content ###########################
+
+## Overview ####################################################################
+
+When you give it a content to load, the RxPlayer has to set at one point the
+starting playback position.
+
+This documentation page explain how that position is calculated.
+
+Basically, we can separate four specific cases:
+
+  - a valid `startAt` option has been set to `loadVideo`, in which case we use
+    it to define the initial position.
+
+  - no `startAt` option has been set and we're playing a VoD content.
+
+  - no `startAt` option has been set and we're playing a live content.
+
+  - no `startAt` option has been set and we're playing a directfile content.
+
+
+## About the minimum and maximum position ######################################
+
+Regardless of the method, the minimum and maximum position of the content might
+be defined and used to calculate that starting position.
+
+Those position are inferred directly from the Manifest (when not playing a
+directfile content). Most Manifests declare segments currently available, in
+which case we will take the starting position of the first one for the minimum
+position and the end of the last one for the maximum position.
+
+In some other Manifest files, both segments that are available and others that
+are not available can be undefined. In those case, the minimum and maximum
+position use other properties declared in the Manifest, often by making usage of
+a synchronized clock between the client and the server.
+
+For "directfile" contents, we directly interogate the browser to obtain the
+duration of the content. The minimum position here is always inferred to be `0`
+(for the moment at least).
+
+
+## When a startAt option has been set ##########################################
+
+You can define yoursel the start position at which we should play. This is
+configurable thanks to the startAt option, documented
+[here in the API documentation](../api/loadVideo_options.md#prop-startAt).
+
+Please note however that there is a catch: everyone of the possible values you
+will set will be "bounded" to the maximum and minimum position actually detected
+for the content.
+
+This means that if your startAt indicate that we should start at a position of
+`10` seconds but the content starts at `15` seconds, we will actually start
+at `15` seconds instead.
+
+You can check at which position we actually loaded when the player's state
+(accessible either through the `getPlayerState` method or through the
+`playerStateChanged` event) changed to `"LOADED"`.
+
+
+## When no startAt option has been set and we're playing a VoD content #########
+
+For VoD contents, we will just start to play at the minimum detected position in
+the Manifest (or at `0` seconds for now for directfile contents).
+
+
+## When no startAt option has been set and we're playing a live content ########
+
+For live contents, we have here two cases:
+  - In the case where we found a way to define a clock synchronized with the
+    server[1], we will try to play close to[2] the current date, if it is
+    defined in the manifest.
+
+  - if either we do not have a synchronized clock[1] or if we have one but no
+    position is defined for the current date, we will play close to[2] the
+    maximum calculated position.
+
+[1] We can obtain a synchronized clock allowing us to to know which content
+should be broadcasted at which time by either of those means:
+  - the Manifest document defines one (e.g. `UTCTiming` elements for DASH
+    contents).
+  - One was provided to `loadVideo` thanks to the `serverSyncInfos` transport
+    option [see loadVideo
+    documentation](../api/loadVideo_options.md#prop-transportOptions).
+
+[2] I wrote "close to" in both cases as we might substract some seconds from
+that value. How much we might do, depends on:
+  - if the manifest suggest us a delay relative to the live, in which case we
+    apply it
+  - if not, we set it to the default: `10` seconds
+
+
+## When no startAt option has been set and we're playing a directfile content ##
+
+For directfile contents, we for now just start at `0` if no `startAt` is
+defined.
