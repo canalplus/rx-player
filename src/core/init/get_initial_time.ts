@@ -89,11 +89,11 @@ export default function getInitialTime(
     const maximumPosition = manifest.getMaximumPosition();
     let liveTime : number;
     if (clockOffset == null) {
-      log.info("Init: no clock offset found for a live content, ",
+      log.info("Init: no clock offset found for a live content, " +
                "starting close to maximum available position");
       liveTime = maximumPosition;
     } else {
-      log.info("Init: clock offset found for a live content, ",
+      log.info("Init: clock offset found for a live content, " +
                "checking if we can start close to it");
       const ast = manifest.availabilityStartTime || 0;
       liveTime = Math.min(maximumPosition,
@@ -107,6 +107,6 @@ export default function getInitialTime(
   }
 
   const minimumPosition = manifest.getMinimumPosition();
-  log.info("Init: starting at the minimum available position: ", minimumPosition);
+  log.info("Init: starting at the minimum available position:", minimumPosition);
   return minimumPosition;
 }
