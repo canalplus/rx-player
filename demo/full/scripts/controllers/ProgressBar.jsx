@@ -97,10 +97,10 @@ class Progressbar extends React.Component {
       isLive,
       bufferGap,
       player,
-      hasManuallySeeked,
+      onSeek,
     } = this.props;
     const seek = position => {
-      hasManuallySeeked();
+      onSeek();
       player.dispatch("SEEK", position);
     };
     const onMouseOut = () => {
