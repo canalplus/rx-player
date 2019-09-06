@@ -213,7 +213,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const toFromPeriodStart = (fromTime + dur) * timescale - scaledStart;
     const firstSegmentStart = this._getFirstSegmentStart();
     const lastSegmentStart = this._getLastSegmentStart();
-    if (firstSegmentStart === undefined || lastSegmentStart === undefined) {
+    if (firstSegmentStart === null || lastSegmentStart === null) {
       return [];
     }
     const startPosition = Math.max(firstSegmentStart, upFromPeriodStart);
@@ -267,7 +267,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    */
   getFirstPosition() : number|null {
     const firstSegmentStart = this._getFirstSegmentStart();
-    if (firstSegmentStart === undefined) {
+    if (firstSegmentStart === null) {
       return null;
     }
     return (firstSegmentStart / this._index.timescale) + this._periodStart;
@@ -279,7 +279,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    */
   getLastPosition() : number|null {
     const lastSegmentStart = this._getLastSegmentStart();
-    if (lastSegmentStart === undefined) {
+    if (lastSegmentStart === null) {
       return null;
     }
     const lastSegmentEnd = lastSegmentStart + this._index.duration;
@@ -355,7 +355,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
 
     // As last segment start is undefined if live time is before
     // current period, consider the index not to be finished.
-    if (lastSegmentStart === undefined) {
+    if (lastSegmentStart === null) {
       return false;
     }
     const lastSegmentEnd = lastSegmentStart + this._index.duration;
@@ -384,9 +384,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   /**
    * Returns the timescaled start of the first segment that should be available,
    * relatively to the start of the Period.
-   * @returns {number|undefined}
+   * @returns {number|null}
    */
-  private _getFirstSegmentStart() : number|undefined {
+  private _getFirstSegmentStart() : number|null {
     if (!this._isDynamic || this._scaledBufferDepth == null) {
       return 0; // it is the start of the Period
     }
@@ -394,8 +394,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const lastSegmentStart = this._getLastSegmentStart();
 
     // No segment start is available
-    if (lastSegmentStart === undefined) {
-      return undefined;
+    if (lastSegmentStart === null) {
+      return null;
     }
     const lastSegmentEnd = lastSegmentStart + this._index.duration;
     const scaledMinimum = Math.max(lastSegmentEnd - this._scaledBufferDepth,
@@ -407,10 +407,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   /**
    * Returns the timescaled start of the last segment that should be available,
    * relatively to the start of the Period.
-   * Returns undefined if live time is before current period.
-   * @returns {number|undefined}
+   * Returns null if live time is before current period.
+   * @returns {number|null}
    */
-  private _getLastSegmentStart() : number|undefined {
+  private _getLastSegmentStart() : number|null {
     const { duration, timescale } = this._index;
 
     let numberIndexedToZero : number;
@@ -423,10 +423,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         // reflect exactly the real server-side value. As segments are
         // generated discretely.
         scaledMaxPosition = this._liveEdgeOffset + (performance.now() / 1000);
-        // Maximum position is past from this period.
+        // Maximum position is before this period.
         // No segment start is available
         if (scaledMaxPosition < 0) {
-          return undefined;
+          return null;
         }
       }
       const maxPossibleStart = Math.max(scaledMaxPosition - duration, 0);
