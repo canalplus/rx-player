@@ -186,7 +186,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     this._isDynamic = isDynamic;
     this._periodStart = periodStart;
     this._relativePeriodEnd = periodEnd == null ? undefined :
-                                                periodEnd - periodStart;
+                                                  periodEnd - periodStart;
     if (isDynamic && periodEnd == null) {
       if (clockOffset != null) {
         const perfOffset = (clockOffset / 1000) - availabilityStartTime;
@@ -347,6 +347,27 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    */
   canBeOutOfSyncError() : false {
     return false;
+  }
+
+  /**
+   * @returns {Boolean}
+   */
+  isFinished() : boolean {
+    if (!this._isDynamic) {
+      return true;
+    }
+    if (this._relativePeriodEnd == null) {
+      return false;
+    }
+
+    const { timescale } = this._index;
+    const lastSegmentStart = this._getLastSegmentStart();
+    const lastSegmentEnd = lastSegmentStart + this._index.duration;
+
+    // (1 / 60 for possible rounding errors)
+    const roundingError = (1 / 60) * timescale;
+    return (lastSegmentEnd + roundingError) >=
+           (this._relativePeriodEnd * timescale);
   }
 
   /**

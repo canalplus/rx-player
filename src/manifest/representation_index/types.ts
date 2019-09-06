@@ -136,6 +136,13 @@ export default interface IRepresentationIndex {
   checkDiscontinuity(time : number) : number;
 
   /**
+   * Returns true if the last segments in this index have already been generated
+   * so that we can freely go to the next period.
+   * @returns {boolean}
+   */
+  isFinished() : boolean;
+
+  /**
    * Update the index with another one, such as after a Manifest update.
    * TODO Both this and _addSegments mutate the index. They should not be
    * accessible like that.

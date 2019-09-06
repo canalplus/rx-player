@@ -265,9 +265,34 @@ export default function RepresentationBuffer<T>({
                            ...neededSegments ];
       }
 
-      const isFull = !neededSegments.length &&
-                     period.end != null &&
-                     neededRange.end >= period.end;
+      let isFull : boolean; // True if the current buffer is full and the one
+                            // from the next Period can be created
+      if (neededSegments.length > 0 || period.end == null) {
+        // Either we still have segments to download or the current Period is
+        // not yet ended: not full
+        isFull = false;
+      } else {
+        const lastPosition = representation.index.getLastPosition();
+        if (lastPosition === undefined) {
+          // We do not know the end of this index. Stay not full to be safe.
+          isFull = false;
+        } else if (lastPosition === null) {
+          // There is no available segment in the index currently. If the index
+          // tells us it has finished generating new segments, we're done.
+          isFull = representation.index.isFinished();
+        } else {
+          // We have a declared end. Check that our range went until the last
+          // position available in the index. If that's the case and we're left
+          // with no segments after filtering them, it means we already have
+          // downloaded the last segments and have nothing left to do: full.
+          const endOfRange = period.end != null ? Math.min(period.end,
+                                                           lastPosition) :
+                                                  lastPosition;
+          isFull = neededRange.end >= endOfRange &&
+                   representation.index.isFinished();
+        }
+      }
+
       return { discontinuity,
                isFull,
                terminate,

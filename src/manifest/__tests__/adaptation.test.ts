@@ -28,6 +28,7 @@ const minimalRepresentationIndex = {
   checkDiscontinuity() { return -1; },
   isSegmentStillAvailable() : undefined { return ; },
   canBeOutOfSyncError() : true { return true; },
+  isFinished() : true { return true; },
   _update() { /* noop */ },
   _addSegments() { /* noop */ },
 };
