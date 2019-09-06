@@ -20,6 +20,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
+import LiveEdgeCalculator from "../live_edge_calculator";
 import getInitSegment from "./get_init_segment";
 import {
   createIndexURL,
@@ -85,6 +86,11 @@ export interface ITemplateIndexContextArgument {
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time, in milliseconds
   isDynamic : boolean; // if true, the MPD can be updated over time
+  liveEdgeCalculator : LiveEdgeCalculator; // Allows to obtain the live edge of
+                                           // the whole MPD at any time, once it
+                                           // is known
+  manifestReceivedTime? : number; // time (in terms of `performance.now`) at
+                                   // which the Manifest file was received
   periodEnd : number|undefined; // End of the Period concerned by this
                                 // RepresentationIndex, in seconds
   periodStart : number; // Start of the Period concerned by this
@@ -95,9 +101,6 @@ export interface ITemplateIndexContextArgument {
   representationId? : string; // ID of the Representation concerned
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
                                   // in seconds
-  manifestReceivedTime? : number; // time (in terms of `performance.now`) at
-                                   // which the Manifest file was received
-  getLastPosition? : () => number|undefined;
 }
 
 /**
@@ -111,7 +114,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   private _relativePeriodEnd? : number;
   private _liveEdgeOffset? : number;
   private _scaledBufferDepth? : number;
-  private _getLastContentPosition? : () => number|undefined;
+  private _liveEdgeCalculator : LiveEdgeCalculator;
 
   // Whether this RepresentationIndex can change over time.
   private _isDynamic : boolean;
@@ -128,15 +131,15 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const { availabilityStartTime,
             clockOffset,
             isDynamic,
+            liveEdgeCalculator,
             periodEnd,
             periodStart,
             representationBaseURL,
             representationId,
             representationBitrate,
-            timeShiftBufferDepth,
-            getLastPosition } = context;
+            timeShiftBufferDepth } = context;
 
-    this._getLastContentPosition = getLastPosition;
+    this._liveEdgeCalculator = liveEdgeCalculator;
     this._scaledBufferDepth = timeShiftBufferDepth == null ?
       undefined :
       timeShiftBufferDepth * timescale;
@@ -170,6 +173,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                                                   periodEnd - periodStart;
     if (isDynamic && periodEnd == null) {
       if (clockOffset != null) {
+        // XXX TODO
         const perfOffset = (clockOffset / 1000) - availabilityStartTime;
         this._liveEdgeOffset = perfOffset - periodStart;
       } else {
@@ -396,8 +400,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     }
     const { duration } = this._index;
 
-    const lastPosition = this._getLastContentPosition ?
-      this._getLastContentPosition() : undefined;
+    const lastPosition = this._liveEdgeCalculator.getCurrentLiveEdge();
     let scaledLastPosition = lastPosition ?
       (lastPosition * this._index.timescale) - this._periodStart :
       undefined;

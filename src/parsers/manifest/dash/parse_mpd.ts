@@ -24,6 +24,7 @@ import checkManifestIDs from "../utils/check_manifest_ids";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
 import getMinimumAndMaximumPosition from "./get_minimum_and_maximum_positions";
+import LiveEdgeCalculator from "./live_edge_calculator";
 import {
   createMPDIntermediateRepresentation,
   IMPDIntermediateRepresentation,
@@ -186,11 +187,17 @@ function parseCompleteIntermediateRepresentation(
                                                            args.referenceDateTime);
   const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
   const clockOffset = args.externalClockOffset;
+
+  const liveEdgeCalculator = new LiveEdgeCalculator();
+  if (clockOffset != null) {
+    liveEdgeCalculator.setLiveEdgeOffset(clockOffset);
+  }
   const manifestInfos = { availabilityStartTime,
                           baseURL,
                           clockOffset,
                           duration: rootAttributes.duration,
                           isDynamic,
+                          liveEdgeCalculator,
                           timeShiftBufferDepth };
   const parsedPeriods = parsePeriods(rootChildren.periods, manifestInfos);
   const duration = parseDuration(rootAttributes, parsedPeriods);

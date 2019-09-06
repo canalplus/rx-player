@@ -31,6 +31,7 @@ import {
   toIndexTime,
 } from "../../utils/index_helpers";
 import isSegmentStillAvailable from "../../utils/is_segment_still_available";
+import LiveEdgeCalculator from "../live_edge_calculator";
 import getInitSegment from "./get_init_segment";
 import getSegmentsFromTimeline from "./get_segments_from_timeline";
 import { createIndexURL } from "./tokens";
@@ -96,6 +97,11 @@ export interface ITimelineIndexIndexArgument {
 
 // Aditional argument for a SegmentTimeline RepresentationIndex
 export interface ITimelineIndexContextArgument {
+  liveEdgeCalculator : LiveEdgeCalculator; // Allows to obtain the live edge of
+                                           // the whole MPD at any time, once it
+                                           // is known
+  manifestReceivedTime? : number; // time (in terms of `performance.now`) at
+                                   // which the Manifest file was received
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
   periodEnd : number|undefined; // End of the period concerned by this
@@ -105,8 +111,6 @@ export interface ITimelineIndexContextArgument {
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
   timeShiftBufferDepth? : number; // Timeshift window, in seconds
-  manifestReceivedTime? : number; // time (in terms of `performance.now`) at
-                                   // which the Manifest file was received
 }
 
 /**
@@ -209,6 +213,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   // Whether this RepresentationIndex can change over time.
   private _isDynamic : boolean;
 
+  // Provide the live edge once it is known
+  private _liveEdgeCalculator : LiveEdgeCalculator;
+
   /**
    * @param {Object} index
    * @param {Object} context
@@ -218,6 +225,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     context : ITimelineIndexContextArgument
   ) {
     const { isDynamic,
+            liveEdgeCalculator,
             representationBaseURL,
             representationId,
             representationBitrate,
@@ -247,6 +255,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       }
     }
 
+    this._liveEdgeCalculator = liveEdgeCalculator;
+
+    // XXX TODO
     this._lastManifestUpdate = context.manifestReceivedTime == null ?
                                  performance.now() :
                                  context.manifestReceivedTime;
@@ -494,14 +505,14 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       return;
     }
 
-    const lastTheoriticalPosition = this._getTheoriticalLastPosition();
-    if (lastTheoriticalPosition == null) {
-      return;
+    const liveEdge = this._liveEdgeCalculator.getCurrentLiveEdge();
+    if (liveEdge == null) {
+      return; // we don't know yet
     }
 
-    const firstAvailablePosition = Math.max(lastTheoriticalPosition -
-                                              this._scaledTimeShiftBufferDepth,
-                                            this._scaledPeriodStart);
+    const firstAvailablePosition =
+      Math.max(liveEdge - this._scaledTimeShiftBufferDepth,
+               this._scaledPeriodStart);
 
     clearTimelineFromPosition(this._index.timeline, firstAvailablePosition);
   }

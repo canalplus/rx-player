@@ -22,6 +22,7 @@ import BaseRepresentationIndex from "./indexes/base";
 import ListRepresentationIndex from "./indexes/list";
 import TemplateRepresentationIndex from "./indexes/template";
 import TimelineRepresentationIndex from "./indexes/timeline";
+import LiveEdgeCalculator from "./live_edge_calculator";
 import {
   IAdaptationSetIntermediateRepresentation
 } from "./node_parsers/AdaptationSet";
@@ -37,6 +38,9 @@ export interface IAdaptationInfos {
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time
   end? : number; // End time of the current period, in seconds
+  liveEdgeCalculator : LiveEdgeCalculator; // Allows to obtain the live edge of
+                                           // the whole MPD at any time, once it
+                                           // is known
   isDynamic : boolean; // Whether the Manifest can evolve with time
   start : number; // Start time of the current period, in seconds
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
@@ -49,6 +53,9 @@ interface IIndexContext {
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time
   isDynamic : boolean; // Whether the Manifest can evolve with time
+  liveEdgeCalculator : LiveEdgeCalculator; // Allows to obtain the live edge of
+                                           // the whole MPD at any time, once it
+                                           // is known
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
   periodEnd : number|undefined; // End of the period concerned by this
@@ -58,7 +65,6 @@ interface IIndexContext {
   representationBitrate? : number; // Bitrate of the Representation concerned
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
                                   // in seconds
-  getLastPositionByType? : () => number|undefined; //
 }
 
 /**
@@ -105,8 +111,7 @@ function findAdaptationIndex(
 export default function parseRepresentations(
   representationsIR : IRepresentationIntermediateRepresentation[],
   adaptation : IAdaptationSetIntermediateRepresentation,
-  adaptationInfos : IAdaptationInfos,
-  getLastPosition? : () => number|undefined
+  adaptationInfos : IAdaptationInfos
 ): IParsedRepresentation[] {
   return representationsIR.map((representation) => {
     const baseURL = representation.children.baseURL;
@@ -116,13 +121,13 @@ export default function parseRepresentations(
     const context = { availabilityStartTime: adaptationInfos.availabilityStartTime,
                       clockOffset: adaptationInfos.clockOffset,
                       isDynamic: adaptationInfos.isDynamic,
+                      liveEdgeCalculator: adaptationInfos.liveEdgeCalculator,
                       periodEnd: adaptationInfos.end,
                       periodStart: adaptationInfos.start,
                       representationBaseURL,
                       representationBitrate: representation.attributes.bitrate,
                       representationId: representation.attributes.id,
-                      timeShiftBufferDepth: adaptationInfos.timeShiftBufferDepth,
-                      getLastPosition };
+                      timeShiftBufferDepth: adaptationInfos.timeShiftBufferDepth };
     let representationIndex : IRepresentationIndex;
     if (representation.children.segmentBase != null) {
       const { segmentBase } = representation.children;

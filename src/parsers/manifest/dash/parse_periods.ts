@@ -20,6 +20,7 @@ import resolveURL from "../../../utils/resolve_url";
 import { IParsedPeriod } from "../types";
 import flattenOverlappingPeriods from "./flatten_overlapping_periods";
 import getPeriodsTimeInformations from "./get_periods_time_infos";
+import LiveEdgeCalculator from "./live_edge_calculator";
 import { IPeriodIntermediateRepresentation } from "./node_parsers/Period";
 import parseAdaptationSets from "./parse_adaptation_sets";
 
@@ -30,6 +31,9 @@ export interface IManifestInfos {
   baseURL? : string;
   clockOffset? : number;
   duration? : number;
+  liveEdgeCalculator : LiveEdgeCalculator; // Allows to obtain the live edge of
+                                           // the whole MPD at any time, once it
+                                           // is known
   isDynamic : boolean;
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
                                   // in seconds
@@ -50,13 +54,14 @@ export default function parsePeriods(
     throw new Error("MPD parsing error: the time informations are incoherent.");
   }
 
-  const { parsedPeriods } = periodsIR.reverse().reduce((
-    acc: {
-      parsedPeriods: IParsedPeriod[];
-      getLastPositionByType: Partial<Record<string, () => number|undefined>>;
-    },
-    periodIR, i
-  ) => {
+  const parsedPeriods : IParsedPeriod[] = [];
+
+  // XXX TODO
+  // We parse it in reverse because if not define, we need to obtain the live
+  // edge from the last index which actually
+  const { liveEdgeCalculator } = manifestInfos;
+  for (let i = periodsIR.length - 1; i >= 0; i--) {
+    const periodIR = periodsIR[i];
     const periodBaseURL = resolveURL(manifestInfos.baseURL, periodIR.children.baseURL);
 
     const { periodStart,
@@ -77,34 +82,30 @@ export default function parsePeriods(
                           clockOffset: manifestInfos.clockOffset,
                           end: periodEnd,
                           isDynamic: manifestInfos.isDynamic,
+                          liveEdgeCalculator: manifestInfos.liveEdgeCalculator,
                           start: periodStart,
                           timeShiftBufferDepth: manifestInfos.timeShiftBufferDepth };
     const adaptations = parseAdaptationSets(periodIR.children.adaptations,
-                                            periodInfos,
-                                            acc.getLastPositionByType);
+                                            periodInfos);
     const parsedPeriod : IParsedPeriod = { id: periodID,
                                            start: periodStart,
                                            end: periodEnd,
                                            duration: periodDuration,
                                            adaptations };
-    acc.parsedPeriods.unshift(parsedPeriod);
+    parsedPeriods.push(parsedPeriod);
 
-    if (i === 0) {
-      const types = ["video", "audio"];
-      types.forEach((type) => {
-        acc.getLastPositionByType[type] = () => {
-          const typedAdaptations = adaptations[type];
-          return typedAdaptations ?
-            typedAdaptations[0].representations[0].index.getLastPosition() :
-            undefined;
-        };
-      });
+    // XXX TODO
+    if (!liveEdgeCalculator.knowCurrentLiveEdge()) {
+      // TODO check each representation of the first adaptation
+      // If some (at least one) has some kind of last position set, set the
+      // minimum between all of them as the live edge
+      // If not, check through Date.now() and period.start if this looks like
+      // the current period:
+      //   - if Date.now() is before period.start + availabilityStartTime, parse
+      //     previous period
+      //   - if Date.now() is in or even before the period, set date.now() minus
+      //     something as the live edge
     }
-
-    return acc;
-  }, {
-    parsedPeriods: [] as IParsedPeriod[],
-    getLastPositionByType: {},
-  });
+  }
   return flattenOverlappingPeriods(parsedPeriods);
 }

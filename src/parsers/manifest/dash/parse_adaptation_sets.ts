@@ -24,6 +24,7 @@ import {
   IParsedRepresentation,
 } from "../types";
 import inferAdaptationType from "./infer_adaptation_type";
+import LiveEdgeCalculator from "./live_edge_calculator";
 import {
   IAdaptationSetIntermediateRepresentation,
 } from "./node_parsers/AdaptationSet";
@@ -37,6 +38,9 @@ export interface IPeriodInfos {
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time
   end? : number; // End time of the current period, in seconds
+  liveEdgeCalculator : LiveEdgeCalculator; // Allows to obtain the live edge of
+                                           // the whole MPD at any time, once it
+                                           // is known
   isDynamic : boolean; // Whether the Manifest can evolve with time
   start : number; // Start time of the current period, in seconds
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
@@ -172,8 +176,7 @@ function getAdaptationSetSwitchingIDs(
  */
 export default function parseAdaptationSets(
   adaptationsIR : IAdaptationSetIntermediateRepresentation[],
-  periodInfos : IPeriodInfos,
-  getLastPositionByType : Partial<Record<string, () => number|undefined>>
+  periodInfos : IPeriodInfos
 ): IParsedAdaptations {
   return adaptationsIR
     .reduce<{ adaptations : IParsedAdaptations;
@@ -188,6 +191,7 @@ export default function parseAdaptationSets(
         baseURL: resolveURL(periodInfos.baseURL, adaptationChildren.baseURL),
         clockOffset: periodInfos.clockOffset,
         end: periodInfos.end,
+        liveEdgeCalculator: periodInfos.liveEdgeCalculator,
         isDynamic: periodInfos.isDynamic,
         start: periodInfos.start,
         timeShiftBufferDepth: periodInfos.timeShiftBufferDepth,
@@ -200,8 +204,7 @@ export default function parseAdaptationSets(
                                        adaptationChildren.roles || null);
       const representations = parseRepresentations(representationsIR,
                                                    adaptation,
-                                                   adaptationInfos,
-                                                   getLastPositionByType[type]);
+                                                   adaptationInfos);
 
       const originalID = adaptation.attributes.id;
       let newID : string;
