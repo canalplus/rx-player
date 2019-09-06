@@ -96,8 +96,9 @@ export default function getInitialTime(
       log.info("Init: clock offset found for a live content, " +
                "checking if we can start close to it");
       const ast = manifest.availabilityStartTime || 0;
+      const clockRelativeLiveTime = (performance.now() + clockOffset) / 1000 - ast;
       liveTime = Math.min(maximumPosition,
-                          performance.now() - clockOffset) / 1000 - ast;
+                          clockRelativeLiveTime);
     }
     log.debug(`Init: ${liveTime} defined as the live time, applying a live gap` +
               ` of ${sgp}`);
