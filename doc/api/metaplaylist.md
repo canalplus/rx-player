@@ -33,6 +33,8 @@ MetaPlaylist has several advantages. Some of them are:
 
     A MetaPlaylist file is much more strict in this regard.
 
+    This is still a work-in-progress.
+
   - it's a format especially intended to be a concatenation of multiple
     contents to be played on the web.
 
@@ -52,8 +54,8 @@ MetaPlaylist has several advantages. Some of them are:
     For example, different license servers for different contents could be
     integrated. This is still a work-in-progress.
 
-  - the specification is simple, allow no interpretation and is strict on what
-    is permitted.
+  - the specification is simple, try to allow no interpretation and is strict on
+    what is permitted.
 
   - All its features have been tested on web applications, meaning that you have
     the guarantee everything will work on any browser, even IE11.
@@ -171,6 +173,8 @@ Here is an exhaustive list:
     If set to a positive number, this is the maximum interval in milliseconds
     the MetaPlaylist file should be fetched from the server.
 
+    This is mainly useful for dynamic contents, which evolve over time.
+
 
 ### The contents ###############################################################
 
@@ -255,6 +259,7 @@ RXP_METAPLAYLIST=true npm run build:min
 More informations about any of that can be found in the [minimal player
 documentation](./minimal_player.md).
 
+
 ### Loading a MetaPlaylist content #############################################
 
 A MetaPlaylist content can simply be played by setting a `"metaplaylist"`
@@ -282,3 +287,35 @@ player.loadVideo({
 ```
 More infos on the `manifestLoader` can be found
 [here](./plugins.md#manifestLoader).
+
+
+### Defining an initial position for a dynamic MetaPlaylist ####################
+
+As already explained, a MetaPlaylist can either be dynamic or not.
+
+For calculating the initial position of those contents, the RxPlayer will obey
+[the same rules than for other contents](../infos/initial_position.md).
+
+As such, dynamic MetaPlaylist contents will by default start just before the end
+of the last defined content which might not be what you want.
+
+In those case, you can make usage of the `serverSyncInfos` transport options
+when calling `loadVideo`, to indicate which time in the MetaPlaylist is the live
+time.
+The `serverSyncInfos` option is explained [in the `transportOptions`
+documentation](./loadVideo_options.md#prop-transportOptions).
+
+For example, if you trust the user's clock to indicate that time, you can use
+the `Date.now()` api:
+```js
+const serverSyncInfos = {
+  serverTimestamp: Date.now(),
+  clientTime: performance.now(),
+};
+
+player.loadVideo({
+  transport: "metaplaylist",
+  url: "https://www.example.com/metaplaylist",
+  transportOptions: { serverSyncInfos },
+});
+```
