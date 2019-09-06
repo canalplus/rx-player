@@ -100,29 +100,6 @@ export interface ITemplateIndexContextArgument {
 }
 
 /**
- * Get maximum timescaled position relatively to the start of the Period.
- * /!\ This number augments continuously and might not reflect exactly the real
- * server-side value. As segments are generated discretely.
- * @param {number|undefined} relativePeriodEnd - Period end relative to the
- * start of the Period, in the right timescale.
- * @param {number|undefined} liveEdgeOffset - Value we can add `performance.now`
- * converted in seconds to to obtain the edge of the live.
- * @returns {number}
- */
-function getMaximumRelativePosition(
-  relativePeriodEnd : number|undefined,
-  liveEdgeOffset : number|undefined
-) : number {
-  if (relativePeriodEnd != null) {
-    return relativePeriodEnd;
-  }
-  if (liveEdgeOffset != null) {
-    return liveEdgeOffset + (performance.now() / 1000);
-  }
-  return Number.MAX_VALUE;
-}
-
-/**
  * IRepresentationIndex implementation for DASH' SegmentTemplate without a
  * SegmentTimeline.
  * @class TemplateRepresentationIndex
@@ -375,6 +352,12 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
 
     const { timescale } = this._index;
     const lastSegmentStart = this._getLastSegmentStart();
+
+    // As last segment start is undefined if live time is before
+    // current period, consider the index not to be finished.
+    if (lastSegmentStart === undefined) {
+      return false;
+    }
     const lastSegmentEnd = lastSegmentStart + this._index.duration;
 
     // (1 / 60 for possible rounding errors)
@@ -424,6 +407,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   /**
    * Returns the timescaled start of the last segment that should be available,
    * relatively to the start of the Period.
+   * Returns undefined if live time is before current period.
    * @returns {number|undefined}
    */
   private _getLastSegmentStart() : number|undefined {
@@ -431,13 +415,19 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
 
     let numberIndexedToZero : number;
     if (this._isDynamic) {
-      const scaledMaxPosition = getMaximumRelativePosition(this._relativePeriodEnd,
-                                                           this._liveEdgeOffset)
-                                * timescale;
-      // Maximum position is past from this period.
-      // No segment start is available
-      if (scaledMaxPosition < 0) {
-        return undefined;
+      let scaledMaxPosition = Number.MAX_VALUE;
+      if (this._relativePeriodEnd) {
+        scaledMaxPosition = this._relativePeriodEnd;
+      } else if (this._liveEdgeOffset) {
+        // /!\ The scaled max position augments continuously and might not
+        // reflect exactly the real server-side value. As segments are
+        // generated discretely.
+        scaledMaxPosition = this._liveEdgeOffset + (performance.now() / 1000);
+        // Maximum position is past from this period.
+        // No segment start is available
+        if (scaledMaxPosition < 0) {
+          return undefined;
+        }
       }
       const maxPossibleStart = Math.max(scaledMaxPosition - duration, 0);
       numberIndexedToZero = Math.floor(maxPossibleStart / duration);
