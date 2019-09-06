@@ -28,6 +28,7 @@ function generateRepresentationIndex(
     getLastPosition() : number|undefined|null { return lastPosition; },
     checkDiscontinuity() { return -1; },
     isSegmentStillAvailable() : undefined { return ; },
+    isFinished() { return false; },
     canBeOutOfSyncError() : true { return true; },
     _update() { /* noop */ },
     _addSegments() { /* noop */ },
