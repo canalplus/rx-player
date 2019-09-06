@@ -15,6 +15,7 @@
  */
 
 import config from "../../config";
+import log from "../../log";
 import Manifest from "../../manifest";
 
 const { DEFAULT_LIVE_GAP } = config;
@@ -41,13 +42,16 @@ export default function getInitialTime(
   manifest : Manifest,
   startAt? : IInitialTimeOptions
 ) : number {
+  log.debug("Init: calculating initial time");
   if (startAt) {
     const min = manifest.getMinimumPosition();
     const max = manifest.getMaximumPosition();
     if (startAt.position != null) {
+      log.debug("Init: using startAt.minimumPosition");
       return Math.max(Math.min(startAt.position, max), min);
     }
     else if (startAt.wallClockTime != null) {
+      log.debug("Init: using startAt.wallClockTime");
       const position = manifest.isLive ?
         startAt.wallClockTime - (manifest.availabilityStartTime || 0) :
         startAt.wallClockTime;
@@ -55,15 +59,18 @@ export default function getInitialTime(
       return Math.max(Math.min(position, max), min);
     }
     else if (startAt.fromFirstPosition != null) {
+      log.debug("Init: using startAt.fromFirstPosition");
       const { fromFirstPosition } = startAt;
       return fromFirstPosition <= 0 ? min :
                                       Math.min(max, min + fromFirstPosition);
     }
     else if (startAt.fromLastPosition != null) {
+      log.debug("Init: using startAt.fromLastPosition");
       const { fromLastPosition } = startAt;
       return fromLastPosition >= 0 ? max :
                                      Math.max(min, max + fromLastPosition);
     } else if (startAt.percentage != null) {
+      log.debug("Init: using startAt.percentage");
       const { percentage } = startAt;
       if (percentage > 100) {
         return max;
@@ -78,11 +85,29 @@ export default function getInitialTime(
 
   if (manifest.isLive) {
     const sgp = manifest.suggestedPresentationDelay;
-    const defaultStartingPos = manifest.getMaximumPosition() -
-                               (sgp == null ? DEFAULT_LIVE_GAP :
-                                              sgp);
+    const clockOffset = manifest.getClockOffset();
+    const maximumPosition = manifest.getMaximumPosition();
+    let liveTime : number;
+    if (clockOffset == null) {
+      log.info("Init: no clock offset found for a live content, " +
+               "starting close to maximum available position");
+      liveTime = maximumPosition;
+    } else {
+      log.info("Init: clock offset found for a live content, " +
+               "checking if we can start close to it");
+      const ast = manifest.availabilityStartTime || 0;
+      const clockRelativeLiveTime = (performance.now() + clockOffset) / 1000 - ast;
+      liveTime = Math.min(maximumPosition,
+                          clockRelativeLiveTime);
+    }
+    log.debug(`Init: ${liveTime} defined as the live time, applying a live gap` +
+              ` of ${sgp}`);
+    const defaultStartingPos = liveTime - (sgp == null ? DEFAULT_LIVE_GAP :
+                                                         sgp);
     return Math.max(defaultStartingPos, manifest.getMinimumPosition());
   }
 
-  return manifest.getMinimumPosition();
+  const minimumPosition = manifest.getMinimumPosition();
+  log.info("Init: starting at the minimum available position:", minimumPosition);
+  return minimumPosition;
 }
