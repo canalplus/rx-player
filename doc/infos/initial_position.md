@@ -46,7 +46,7 @@ You can define yourself the start position at which we should play. This is
 configurable thanks to the startAt option, documented
 [here in the API documentation](../api/loadVideo_options.md#prop-startAt).
 
-Please note however that there is a catch: everyone of the possible values you
+Please note however that there is a catch: every of the possible values you
 will set will be "bounded" to the maximum and minimum position actually detected
 for the content.
 
