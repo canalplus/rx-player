@@ -41,7 +41,7 @@ export default class XHRMock {
         }
 
         const [ method, url ] = args;
-        if (!url === "" || url == null) {
+        if (url === "" || url == null) {
           return false;
         }
 
