@@ -362,6 +362,10 @@ If the value set is inferior to the minimum possible position, the minimum
 possible position will be used instead. If it is superior to the maximum
 possible position, the maximum will be used instead as well.
 
+More informations on how the initial position is chosen can be found [in the
+specific documentation page on this subject](../infos/initial_position.md).
+
+
 #### Notes for live contents
 For live contents, ``startAt`` could work not as expected:
 
