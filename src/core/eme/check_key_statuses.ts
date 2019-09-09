@@ -26,6 +26,16 @@ const KEY_STATUSES = { EXPIRED: "expired",
                        OUTPUT_RESTRICTED: "output-restricted" };
 
 /**
+ * Throw a KEY_STATUS_CHANGE_ERROR
+ * @param {String} keyStatus
+ */
+function throwKeyStatusChangeError(keyStatus: string): void {
+  throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
+                                "An invalid key status has been " +
+                                "encountered: " + keyStatus);
+}
+
+/**
  * Look at the current key statuses in the sessions and construct the
  * appropriate warnings
  *
@@ -64,15 +74,11 @@ export default function checkKeyStatuses(
       }
 
       case KEY_STATUSES.INTERNAL_ERROR: {
-        throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                      "An invalid key status has been " +
-                                      "encountered: " + keyStatus);
+        throwKeyStatusChangeError(keyStatus);
       }
 
       case KEY_STATUSES.OUTPUT_RESTRICTED: {
-        throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                      "An invalid key status has been " +
-                                      "encountered: " + keyStatus);
+        throwKeyStatusChangeError(keyStatus);
       }
     }
   });
