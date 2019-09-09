@@ -62,8 +62,8 @@ export function storeContent(content) {
     index = localStorageContents.findIndex(e => e.id === id);
   } else {
     const lastContentID = localStorageContents.reduce((acc, val) => {
-      const id = val.id || 0;
-      return Math.max(acc, id);
+      const contentId = val.id || 0;
+      return Math.max(acc, contentId);
     }, 0);
     id = lastContentID + 1;
     index = -1;

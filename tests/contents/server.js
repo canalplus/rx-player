@@ -46,7 +46,7 @@ module.exports = function createServer(port) {
         return;
       }
     } else {
-      let data = urlObj.data;
+      data = urlObj.data;
       try { data = Buffer.from(data); } catch (_e) {}
       answerWithCORS(res, 200, data);
       return;
