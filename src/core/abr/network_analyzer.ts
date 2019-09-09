@@ -161,15 +161,15 @@ function estimateStarvationModeBitrate(
  * Returns false if it estimates that you have time before switching to a lower
  * bitrate.
  * @param {Object} clock
- * @param {Object} pendingRequests
+ * @param {Object} requests - Every requests pending, in a chronological
+ * order in terms of segment time.
  * @returns {boolean}
  */
 function shouldDirectlySwitchToLowBitrate(
   clock : INetworkAnalizerClockTick,
-  currentRequests : IRequestInfo[]
+  requests : IRequestInfo[]
 ) : boolean {
    const nextNeededPosition = clock.currentTime + clock.bufferGap;
-   const requests = currentRequests.sort((a, b) => a.time - b.time);
 
    const nextNeededRequest = arrayFind(requests, (r) =>
      (r.time + r.duration) > nextNeededPosition

@@ -111,11 +111,13 @@ export default class PendingRequestsStore {
   }
 
   /**
-   * Returns informations about all pending requests.
+   * Returns informations about all pending requests, in segment's chronological
+   * order.
    * @returns {Array.<Object>}
    */
   public getRequests() : IRequestInfo[] {
     return objectValues(this._currentRequests)
-      .filter((x) : x is IRequestInfo => x != null);
+      .filter((x) : x is IRequestInfo => x != null)
+      .sort();
   }
 }
