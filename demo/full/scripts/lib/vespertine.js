@@ -178,13 +178,13 @@ const createModule = (module, payload) => {
   const moduleActions = module(moduleArgs, payload);
 
   return {
-    dispatch: (actionName, payload) => {
+    dispatch: (actionName, actionPayload) => {
       if (!moduleActions || typeof moduleActions[actionName] !== "function") {
         throw new Error(
           `The ${actionName} action does not exist on this module.`
         );
       }
-      return moduleActions[actionName](payload);
+      return moduleActions[actionName](actionPayload);
     },
 
     get: getFromModule,
