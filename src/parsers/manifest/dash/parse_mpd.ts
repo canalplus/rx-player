@@ -190,7 +190,7 @@ function parseCompleteIntermediateRepresentation(
 
   const liveEdgeCalculator = new LiveEdgeCalculator();
   if (clockOffset != null) {
-    liveEdgeCalculator.setLiveEdgeOffset(clockOffset);
+    liveEdgeCalculator.setLiveEdgeOffset(clockOffset / 1000);
   }
   const manifestInfos = { availabilityStartTime,
                           baseURL,

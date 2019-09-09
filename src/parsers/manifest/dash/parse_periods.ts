@@ -15,9 +15,15 @@
  */
 
 import log from "../../../log";
+import flatMap from "../../../utils/flat_map";
 import idGenerator from "../../../utils/id_generator";
+import objectValues from "../../../utils/object_values";
 import resolveURL from "../../../utils/resolve_url";
-import { IParsedPeriod } from "../types";
+import {
+  IParsedAdaptation,
+  IParsedAdaptations,
+  IParsedPeriod,
+} from "../types";
 import flattenOverlappingPeriods from "./flatten_overlapping_periods";
 import getPeriodsTimeInformations from "./get_periods_time_infos";
 import LiveEdgeCalculator from "./live_edge_calculator";
@@ -49,16 +55,14 @@ export default function parsePeriods(
   periodsIR : IPeriodIntermediateRepresentation[],
   manifestInfos : IManifestInfos
 ): IParsedPeriod[] {
+  const parsedPeriods : IParsedPeriod[] = [];
   const periodsTimeInformations = getPeriodsTimeInformations(periodsIR, manifestInfos);
   if (periodsTimeInformations.length !== periodsIR.length) {
     throw new Error("MPD parsing error: the time informations are incoherent.");
   }
 
-  const parsedPeriods : IParsedPeriod[] = [];
-
-  // XXX TODO
-  // We parse it in reverse because if not define, we need to obtain the live
-  // edge from the last index which actually
+  // We parse it in reverse because we might need to deduce the live edge from
+  // the last Periods' indexes
   const { liveEdgeCalculator } = manifestInfos;
   for (let i = periodsIR.length - 1; i >= 0; i--) {
     const periodIR = periodsIR[i];
@@ -66,8 +70,7 @@ export default function parsePeriods(
 
     const { periodStart,
             periodDuration,
-            periodEnd } =
-      periodsTimeInformations[periodsTimeInformations.length - (i + 1)];
+            periodEnd } = periodsTimeInformations[i];
 
     let periodID : string;
     if (periodIR.attributes.id == null) {
@@ -94,18 +97,67 @@ export default function parsePeriods(
                                            adaptations };
     parsedPeriods.push(parsedPeriod);
 
-    // XXX TODO
     if (!liveEdgeCalculator.knowCurrentLiveEdge()) {
-      // TODO check each representation of the first adaptation
-      // If some (at least one) has some kind of last position set, set the
-      // minimum between all of them as the live edge
-      // If not, check through Date.now() and period.start if this looks like
-      // the current period:
-      //   - if Date.now() is before period.start + availabilityStartTime, parse
-      //     previous period
-      //   - if Date.now() is in or even before the period, set date.now() minus
-      //     something as the live edge
+      const lastPosition = getMaximumLastPosition(adaptations);
+      if (lastPosition !== null) {
+        let liveEdgeOffset : number;
+        if (typeof lastPosition === "number") {
+          liveEdgeOffset = lastPosition +
+                           manifestInfos.availabilityStartTime -
+                           performance.now() / 1000;
+        } else {
+          log.warn("DASH Parser: no clock synchronization mechanism found." +
+                   " Setting a live gap of 10 seconds relatively to the system " +
+                   "clock as a security.");
+          liveEdgeOffset = (Date.now() - 10000 - performance.now()) / 1000;
+        }
+        liveEdgeCalculator.setLiveEdgeOffset(liveEdgeOffset);
+      }
     }
   }
   return flattenOverlappingPeriods(parsedPeriods);
+}
+
+/**
+ * Try to extract the last position declared for any segments in a Period:
+ *   - If at least a single index' last position is defined, take the maximum
+ *     among them.
+ *   - If segments are available but we cannot define the last position
+ *     return undefined.
+ *   - If no segment are available in that period, return null
+ * @param {Object} adaptationsPerType
+ * @returns {number|null|undefined}
+ */
+function getMaximumLastPosition(
+  adaptationsPerType : IParsedAdaptations
+) : number | null | undefined {
+  let maxEncounteredPosition : number | null = null;
+  let allIndexAreEmpty = true;
+  const adaptationsVal = objectValues(adaptationsPerType)
+    .filter((ada) : ada is IParsedAdaptation[] => ada != null);
+  const allAdaptations = flatMap(adaptationsVal,
+                                 (adaptationsForType) => adaptationsForType);
+  for (let adapIndex = 0; adapIndex < allAdaptations.length; adapIndex++) {
+    const representations = allAdaptations[adapIndex].representations;
+    for (let repIndex = 0; repIndex < representations.length; repIndex++) {
+      const representation = representations[repIndex];
+      const position = representation.index.getLastPosition();
+      if (position !== null) {
+        allIndexAreEmpty = false;
+        if (typeof position === "number") {
+          maxEncounteredPosition =
+            maxEncounteredPosition == null ? position :
+                                             Math.max(maxEncounteredPosition,
+                                                      position);
+        }
+      }
+    }
+  }
+
+  if (maxEncounteredPosition != null) {
+    return maxEncounteredPosition;
+  } else if (allIndexAreEmpty) {
+    return null;
+  }
+  return undefined;
 }
