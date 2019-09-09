@@ -31,8 +31,10 @@ describe("getBufferLevels", () => {
   });
 
   it("should set progressive steps in ascending order", () => {
-    expect(getBufferLevels([1, 7, 8, 9])).toEqual(getBufferLevels([1, 7, 8, 9]).sort());
-    expect(getBufferLevels([1, 1.1])).toEqual(getBufferLevels([1, 1.1]).sort());
+    expect(getBufferLevels([1, 7, 8, 9]))
+      .toEqual(getBufferLevels([1, 7, 8, 9]).sort((a, b) => a - b));
+    expect(getBufferLevels([1, 1.1]))
+      .toEqual(getBufferLevels([1, 1.1]).sort((a, b) => a - b));
   });
 
   // it.only("should set higher steps differences for higher bitrate differences", () => {
