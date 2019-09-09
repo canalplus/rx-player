@@ -353,7 +353,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const { timescale } = this._index;
     const lastSegmentStart = this._getLastSegmentStart();
 
-    // As last segment start is undefined if live time is before
+    // As last segment start is null if live time is before
     // current period, consider the index not to be finished.
     if (lastSegmentStart === null) {
       return false;
@@ -393,7 +393,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const { duration } = this._index;
     const lastSegmentStart = this._getLastSegmentStart();
 
-    // No segment start is available
+    // No segment is available
     if (lastSegmentStart === null) {
       return null;
     }
@@ -424,7 +424,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         // generated discretely.
         scaledMaxPosition = this._liveEdgeOffset + (performance.now() / 1000);
         // Maximum position is before this period.
-        // No segment start is available
+        // No segment is yet available here
         if (scaledMaxPosition < 0) {
           return null;
         }
