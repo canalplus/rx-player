@@ -330,15 +330,13 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   /**
    * Returns the starting time, in seconds, of the earliest segment currently
    * available.
-   * Returns undefined if either:
-   *   - we cannot known that value
-   *   - nothing is in the index
-   * @returns {Number|undefined}
+   * Returns null if nothing is in the index
+   * @returns {Number|null}
    */
-  getFirstPosition() : number|undefined {
+  getFirstPosition() : number|null {
     this._refreshTimeline();
     const index = this._index;
-    return index.timeline.length === 0 ? undefined :
+    return index.timeline.length === 0 ? null :
                                          fromIndexTime(index.timeline[0].start,
                                                        index);
   }
@@ -346,16 +344,14 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   /**
    * Returns the ending time, in seconds, of the last segment currently
    * available.
-   * Returns undefined if either:
-   *   - we cannot known that value
-   *   - nothing is in the index
-   * @returns {Number|undefined}
+   * Returns null if nothing is in the index
+   * @returns {Number|null}
    */
-  getLastPosition() : number|undefined {
+  getLastPosition() : number|null {
     this._refreshTimeline();
     const { timeline } = this._index;
     if (timeline.length === 0) {
-      return undefined;
+      return null;
     }
     const lastTimelineElement = timeline[timeline.length - 1];
     const lastTime = getIndexSegmentEnd(lastTimelineElement,

@@ -10,6 +10,7 @@ const urls5 = require("./DASH_dynamic_SegmentTimeline/urls");
 const urls6 = require("./DASH_static_SegmentBase_multi_codecs/urls");
 const urls7 = require("./DASH_static_SegmentTemplate_Multi_Periods/urls");
 const urls8 = require("./directfile_webm/urls");
+const urls9 = require("./DASH_dynamic_SegmentTemplate_Multi_Periods/urls");
 
 module.exports = [
   ...urls1,
@@ -20,4 +21,5 @@ module.exports = [
   ...urls6,
   ...urls7,
   ...urls8,
+  ...urls9,
 ];
