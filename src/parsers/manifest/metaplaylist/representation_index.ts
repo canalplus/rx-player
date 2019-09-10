@@ -31,7 +31,7 @@ import {
  * segment whose original time is 200, played with an offset of 1300)
  */
 export default class MetaRepresentationIndex implements IRepresentationIndex {
-  private _wrappedIndex : IRepresentationIndex;
+  protected _wrappedIndex : IRepresentationIndex;
   private _timeOffset : number;
   private _contentEnd : number | undefined;
   private _transport : string;
@@ -112,8 +112,15 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
     return this._wrappedIndex.checkDiscontinuity(time - this._timeOffset);
   }
 
-  public _update(newIndex : MetaRepresentationIndex): void {
-    return this._wrappedIndex._update(newIndex._wrappedIndex);
+  public isFinished() : boolean {
+    return this._wrappedIndex.isFinished();
+  }
+
+  public _update(newIndex : IRepresentationIndex): void {
+    if (!(newIndex instanceof MetaRepresentationIndex)) {
+      throw new Error("A MetaPlaylist can only be updated with another MetaPlaylist");
+    }
+    this._wrappedIndex._update(newIndex._wrappedIndex);
   }
 
   public _addSegments(
