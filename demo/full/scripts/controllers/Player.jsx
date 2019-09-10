@@ -149,7 +149,7 @@ class Player extends React.Component {
       this.setState({ displaySettings: !this.state.displaySettings });
     };
 
-    const stickToTheLiveEdge = (shouldStick) => {
+    const changeStickToLiveEdge = (shouldStick) => {
       this.setState({ isStickingToTheLiveEdge: shouldStick });
     };
 
@@ -197,7 +197,7 @@ class Player extends React.Component {
                   player={player}
                   videoElement={this.playerWrapperElement}
                   toggleSettings={toggleSettings}
-                  stickToTheLiveEdge={stickToTheLiveEdge}
+                  changeStickToLiveEdge={changeStickToLiveEdge}
                   isStickingToTheLiveEdge={isStickingToTheLiveEdge}
                   stopVideo={stopVideo}
                   isCatchingUp={isCatchingUp}
