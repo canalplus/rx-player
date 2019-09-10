@@ -94,7 +94,7 @@
     "test:integration:coverage": "node tests/integration/run.js --bchromehl --bfirefoxhl --coverage",
     "test:integration:firefox": "node tests/integration/run.js --bfirefox",
     "test:integration:firefox:watch": "node tests/integration/run.js --bfirefox --watch",
-    "test:integration:travis": "node tests/integration/run.js --bchromehl --bfirefoxhl",
+    "test:integration:travis": "node tests/integration/run.js --bchromehl",
     "test:memory": "node tests/memory/run.js --bchromehl",
     "test:memory:chrome:watch": "node tests/memory/run.js --bchrome --watch",
     "test:memory:travis": "node tests/memory/run.js --bchromehl",
