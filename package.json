@@ -91,7 +91,7 @@
     "test:integration:appveyor": "node --max-old-space-size=2048 ./tests/integration/run.js --bchromehl",
     "test:integration:chrome": "node tests/integration/run.js --bchrome",
     "test:integration:chrome:watch": "node tests/integration/run.js --bchrome --watch",
-    "test:integration:coverage": "node tests/integration/run.js --bchromehl --bfirefox --coverage",
+    "test:integration:coverage": "node tests/integration/run.js --bchromehl --bfirefoxhl --coverage",
     "test:integration:firefox": "node tests/integration/run.js --bfirefox",
     "test:integration:firefox:watch": "node tests/integration/run.js --bfirefox --watch",
     "test:integration:travis": "node tests/integration/run.js --bchromehl",
