@@ -97,7 +97,7 @@ describe("DASH live content (SegmentTimeline)", function () {
       .equal(audioRepresentationIndexInfos.init.mediaURL);
 
     const nextAudioSegment1 = audioRepresentationIndex
-      .getSegments(1527507768, 5);
+      .getSegments(1527507769, 4);
     expect(nextAudioSegment1.length).to.equal(1);
     expect(nextAudioSegment1[0].duration)
       .to.equal(audioRepresentationIndexInfos.segments[0].duration);
@@ -111,7 +111,7 @@ describe("DASH live content (SegmentTimeline)", function () {
       .to.equal(audioRepresentationIndexInfos.segments[0].mediaURL);
 
     const nextAudioSegment2 = audioRepresentationIndex
-      .getSegments(1527507768, 11);
+      .getSegments(1527507769, 10);
     expect(nextAudioSegment2.length).to.equal(2);
     expect(nextAudioSegment2[1].duration)
       .to.equal(audioRepresentationIndexInfos.segments[1].duration);
@@ -124,12 +124,12 @@ describe("DASH live content (SegmentTimeline)", function () {
     expect(nextAudioSegment2[1].mediaURL)
       .to.equal(audioRepresentationIndexInfos.segments[1].mediaURL);
 
-    expect(audioRepresentationIndex.getSegments(1527507768, 288).length)
+    expect(audioRepresentationIndex.getSegments(1527507769, 287).length)
       .to.equal(48);
-    expect(audioRepresentationIndex.getSegments(1527507768, 289).length)
+    expect(audioRepresentationIndex.getSegments(1527507769, 288).length)
       .to.equal(49);
     expect(
-      audioRepresentationIndex.getSegments(1527507768, 300000000000).length
+      audioRepresentationIndex.getSegments(1527507769, 300000000000).length
     ).to.equal(49);
 
     const videoRepresentation = adaptations.video[0].representations[0];
@@ -159,7 +159,7 @@ describe("DASH live content (SegmentTimeline)", function () {
       .to.equal(videoRepresentationIndexInfos.init.mediaURL);
 
     const nextVideoSegment1 = videoRepresentationIndex
-      .getSegments(1527507768, 5);
+      .getSegments(1527507769, 4);
     expect(nextVideoSegment1.length).to.equal(1);
     expect(nextVideoSegment1[0].duration)
       .to.equal(videoRepresentationIndexInfos.segments[0].duration);
@@ -173,7 +173,7 @@ describe("DASH live content (SegmentTimeline)", function () {
       .to.equal(videoRepresentationIndexInfos.segments[0].mediaURL);
 
     const nextVideoSegment2 = videoRepresentationIndex
-      .getSegments(1527507768, 11);
+      .getSegments(1527507769, 10);
     expect(nextVideoSegment2.length).to.equal(2);
     expect(nextVideoSegment2[1].duration)
       .to.equal(videoRepresentationIndexInfos.segments[1].duration);
@@ -186,12 +186,12 @@ describe("DASH live content (SegmentTimeline)", function () {
     expect(nextVideoSegment2[1].mediaURL)
       .to.equal(videoRepresentationIndexInfos.segments[1].mediaURL);
 
-    expect(videoRepresentationIndex.getSegments(1527507768, 288).length)
+    expect(videoRepresentationIndex.getSegments(1527507769, 287).length)
       .to.equal(48);
-    expect(videoRepresentationIndex.getSegments(1527507768, 289).length)
+    expect(videoRepresentationIndex.getSegments(1527507769, 288).length)
       .to.equal(49);
     expect(
-      videoRepresentationIndex.getSegments(1527507768, 300000000000).length
+      videoRepresentationIndex.getSegments(1527507769, 300000000000).length
     ).to.equal(49);
 
     expect(xhrMock.getLockedXHR().length).to.be.at.least(2);
@@ -385,7 +385,7 @@ describe("DASH live content (SegmentTimeline)", function () {
       await xhrMock.flush();
       await sleep(1);
       expect(player.getMinimumPosition()).to.be
-        .closeTo(1527507768, 1);
+        .closeTo(1527507762, 1);
     });
   });
 
