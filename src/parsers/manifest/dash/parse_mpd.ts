@@ -21,10 +21,10 @@ import resolveURL, {
 } from "../../../utils/resolve_url";
 import { IParsedManifest } from "../types";
 import checkManifestIDs from "../utils/check_manifest_ids";
+import BufferDepthCalculator from "./buffer_depth_calculator";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
 import getMinimumAndMaximumPosition from "./get_minimum_and_maximum_positions";
-import LiveEdgeCalculator from "./live_edge_calculator";
 import {
   createMPDIntermediateRepresentation,
   IMPDIntermediateRepresentation,
@@ -40,10 +40,10 @@ import parsePeriods from "./parse_periods";
 const generateManifestID = idGenerator();
 
 export interface IMPDParserArguments {
-  url : string; // URL of the manifest (post-redirection if one)
-  referenceDateTime? : number; // Default base time, in seconds
   externalClockOffset? : number; // If set, offset to add to `performance.now()`
                                  // to obtain the current server's time
+  referenceDateTime? : number; // Default base time, in seconds
+  url : string; // URL of the manifest (post-redirection if one)
 }
 
 export type IParserResponse<T> = { type : "needs-ressources";
@@ -188,16 +188,16 @@ function parseCompleteIntermediateRepresentation(
   const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
   const clockOffset = args.externalClockOffset;
 
-  const liveEdgeCalculator = new LiveEdgeCalculator();
-  if (clockOffset != null) {
-    liveEdgeCalculator.setLiveEdgeOffset(clockOffset / 1000);
-  }
+  // We might to communicate the depth of the Buffer while parsing
+  const bufferDepthCalculator = new BufferDepthCalculator({ availabilityStartTime,
+                                                            isDynamic,
+                                                            timeShiftBufferDepth });
   const manifestInfos = { availabilityStartTime,
                           baseURL,
+                          bufferDepthCalculator,
                           clockOffset,
                           duration: rootAttributes.duration,
                           isDynamic,
-                          liveEdgeCalculator,
                           timeShiftBufferDepth };
   const parsedPeriods = parsePeriods(rootChildren.periods, manifestInfos);
   const duration = parseDuration(rootAttributes, parsedPeriods);

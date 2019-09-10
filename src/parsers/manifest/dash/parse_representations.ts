@@ -18,11 +18,11 @@ import log from "../../../log";
 import IRepresentationIndex from "../../../manifest/representation_index";
 import resolveURL from "../../../utils/resolve_url";
 import { IParsedRepresentation } from "../types";
+import BufferDepthCalculator from "./buffer_depth_calculator";
 import BaseRepresentationIndex from "./indexes/base";
 import ListRepresentationIndex from "./indexes/list";
 import TemplateRepresentationIndex from "./indexes/template";
 import TimelineRepresentationIndex from "./indexes/timeline";
-import LiveEdgeCalculator from "./live_edge_calculator";
 import {
   IAdaptationSetIntermediateRepresentation
 } from "./node_parsers/AdaptationSet";
@@ -35,12 +35,12 @@ export interface IAdaptationInfos {
   availabilityStartTime : number; // Time from which the content starts
   baseURL? : string; // Eventual URL from which every relative URL will be based
                      // on
+  bufferDepthCalculator : BufferDepthCalculator; // Allows to obtain the first
+                                                 // available position of a live
+                                                 // content
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time
   end? : number; // End time of the current period, in seconds
-  liveEdgeCalculator : LiveEdgeCalculator; // Allows to obtain the live edge of
-                                           // the whole MPD at any time, once it
-                                           // is known
   isDynamic : boolean; // Whether the Manifest can evolve with time
   start : number; // Start time of the current period, in seconds
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
@@ -50,12 +50,12 @@ export interface IAdaptationInfos {
 // base context given to the various indexes
 interface IIndexContext {
   availabilityStartTime : number; // Time from which the content starts
+  bufferDepthCalculator : BufferDepthCalculator; // Allows to obtain the first
+                                                 // available position of a live
+                                                 // content
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time
   isDynamic : boolean; // Whether the Manifest can evolve with time
-  liveEdgeCalculator : LiveEdgeCalculator; // Allows to obtain the live edge of
-                                           // the whole MPD at any time, once it
-                                           // is known
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
   periodEnd : number|undefined; // End of the period concerned by this
@@ -119,9 +119,9 @@ export default function parseRepresentations(
 
     // 4-2-1. Find Index
     const context = { availabilityStartTime: adaptationInfos.availabilityStartTime,
+                      bufferDepthCalculator: adaptationInfos.bufferDepthCalculator,
                       clockOffset: adaptationInfos.clockOffset,
                       isDynamic: adaptationInfos.isDynamic,
-                      liveEdgeCalculator: adaptationInfos.liveEdgeCalculator,
                       periodEnd: adaptationInfos.end,
                       periodStart: adaptationInfos.start,
                       representationBaseURL,

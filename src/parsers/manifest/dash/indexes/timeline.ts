@@ -31,7 +31,7 @@ import {
   toIndexTime,
 } from "../../utils/index_helpers";
 import isSegmentStillAvailable from "../../utils/is_segment_still_available";
-import LiveEdgeCalculator from "../live_edge_calculator";
+import BufferDepthCalculator from "../buffer_depth_calculator";
 import getInitSegment from "./get_init_segment";
 import getSegmentsFromTimeline from "./get_segments_from_timeline";
 import { createIndexURL } from "./tokens";
@@ -97,9 +97,9 @@ export interface ITimelineIndexIndexArgument {
 
 // Aditional argument for a SegmentTimeline RepresentationIndex
 export interface ITimelineIndexContextArgument {
-  liveEdgeCalculator : LiveEdgeCalculator; // Allows to obtain the live edge of
-                                           // the whole MPD at any time, once it
-                                           // is known
+  bufferDepthCalculator : BufferDepthCalculator; // Allows to obtain the first
+                                                 // available position of a live
+                                                 // content
   manifestReceivedTime? : number; // time (in terms of `performance.now`) at
                                    // which the Manifest file was received
   periodStart : number; // Start of the period concerned by this
@@ -110,7 +110,6 @@ export interface ITimelineIndexContextArgument {
   representationBaseURL : string; // Base URL for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
-  timeShiftBufferDepth? : number; // Timeshift window, in seconds
 }
 
 /**
@@ -201,9 +200,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   // time, in terms of `performance.now`, of the last Manifest update
   private _lastManifestUpdate : number;
 
-  // timeshift window, timescaled
-  private _scaledTimeShiftBufferDepth : number | undefined;
-
   // absolute start of the period, timescaled and converted to index time
   private _scaledPeriodStart : number;
 
@@ -213,8 +209,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   // Whether this RepresentationIndex can change over time.
   private _isDynamic : boolean;
 
-  // Provide the live edge once it is known
-  private _liveEdgeCalculator : LiveEdgeCalculator;
+  private _bufferDepthCalculator : BufferDepthCalculator;
 
   /**
    * @param {Object} index
@@ -224,14 +219,13 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     index : ITimelineIndexIndexArgument,
     context : ITimelineIndexContextArgument
   ) {
-    const { isDynamic,
-            liveEdgeCalculator,
+    const { bufferDepthCalculator,
+            isDynamic,
             representationBaseURL,
             representationId,
             representationBitrate,
             periodStart,
-            periodEnd,
-            timeShiftBufferDepth } = context;
+            periodEnd } = context;
     const { timescale } = index;
 
     const presentationTimeOffset = index.presentationTimeOffset != null ?
@@ -255,9 +249,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       }
     }
 
-    this._liveEdgeCalculator = liveEdgeCalculator;
+    this._bufferDepthCalculator = bufferDepthCalculator;
 
-    // XXX TODO
     this._lastManifestUpdate = context.manifestReceivedTime == null ?
                                  performance.now() :
                                  context.manifestReceivedTime;
@@ -282,9 +275,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._scaledPeriodStart = toIndexTime(periodStart, this._index);
     this._scaledPeriodEnd = periodEnd == null ? undefined :
                                                 toIndexTime(periodEnd, this._index);
-    this._scaledTimeShiftBufferDepth = timeShiftBufferDepth == null ?
-                                         undefined :
-                                         timeShiftBufferDepth * timescale;
   }
 
   /**
@@ -459,7 +449,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._isDynamic = newIndex._isDynamic;
     this._scaledPeriodStart = newIndex._scaledPeriodStart;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
-    this._scaledTimeShiftBufferDepth = newIndex._scaledTimeShiftBufferDepth;
     this._lastManifestUpdate = newIndex._lastManifestUpdate;
   }
 
@@ -501,20 +490,12 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * available due to timeshifting.
    */
   private _refreshTimeline() : void {
-    if (this._scaledTimeShiftBufferDepth == null) {
-      return;
-    }
-
-    const liveEdge = this._liveEdgeCalculator.getCurrentLiveEdge();
-    if (liveEdge == null) {
+    const bufferDepth = this._bufferDepthCalculator.getFirstAvailablePosition();
+    if (bufferDepth == null) {
       return; // we don't know yet
     }
-
-    const firstAvailablePosition =
-      Math.max(liveEdge - this._scaledTimeShiftBufferDepth,
-               this._scaledPeriodStart);
-
-    clearTimelineFromPosition(this._index.timeline, firstAvailablePosition);
+    const scaledFirstPosition = toIndexTime(bufferDepth, this._index);
+    clearTimelineFromPosition(this._index.timeline, scaledFirstPosition);
   }
 
   /**

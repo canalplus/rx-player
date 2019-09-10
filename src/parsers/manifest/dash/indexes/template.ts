@@ -20,7 +20,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
-import LiveEdgeCalculator from "../live_edge_calculator";
+import BufferDepthCalculator from "../buffer_depth_calculator";
 import getInitSegment from "./get_init_segment";
 import {
   createIndexURL,
@@ -83,12 +83,12 @@ export interface ITemplateIndexIndexArgument {
 export interface ITemplateIndexContextArgument {
   availabilityStartTime : number; // Time from which the content starts
                                   // i.e. The `0` time is at that timestamp
+  bufferDepthCalculator : BufferDepthCalculator; // Allows to obtain the first
+                                                 // available position of a live
+                                                 // content
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time, in milliseconds
   isDynamic : boolean; // if true, the MPD can be updated over time
-  liveEdgeCalculator : LiveEdgeCalculator; // Allows to obtain the live edge of
-                                           // the whole MPD at any time, once it
-                                           // is known
   manifestReceivedTime? : number; // time (in terms of `performance.now`) at
                                    // which the Manifest file was received
   periodEnd : number|undefined; // End of the Period concerned by this
@@ -99,8 +99,6 @@ export interface ITemplateIndexContextArgument {
                                   // i.e. Common beginning of the URL
   representationBitrate? : number; // Bitrate of the Representation concerned
   representationId? : string; // ID of the Representation concerned
-  timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
-                                  // in seconds
 }
 
 /**
@@ -113,8 +111,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   private _periodStart : number;
   private _relativePeriodEnd? : number;
   private _liveEdgeOffset? : number;
-  private _scaledBufferDepth? : number;
-  private _liveEdgeCalculator : LiveEdgeCalculator;
+  private _bufferDepthCalculator : BufferDepthCalculator;
 
   // Whether this RepresentationIndex can change over time.
   private _isDynamic : boolean;
@@ -129,20 +126,16 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   ) {
     const { timescale } = index;
     const { availabilityStartTime,
+            bufferDepthCalculator,
             clockOffset,
             isDynamic,
-            liveEdgeCalculator,
             periodEnd,
             periodStart,
             representationBaseURL,
             representationId,
-            representationBitrate,
-            timeShiftBufferDepth } = context;
+            representationBitrate } = context;
 
-    this._liveEdgeCalculator = liveEdgeCalculator;
-    this._scaledBufferDepth = timeShiftBufferDepth == null ?
-      undefined :
-      timeShiftBufferDepth * timescale;
+    this._bufferDepthCalculator = bufferDepthCalculator;
     const presentationTimeOffset = index.presentationTimeOffset != null ?
                                      index.presentationTimeOffset :
                                      0;
@@ -220,6 +213,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const upFromPeriodStart = fromTime * timescale - scaledStart;
     const toFromPeriodStart = (fromTime + dur) * timescale - scaledStart;
     const firstSegmentStart = this._getFirstSegmentStart();
+    if (firstSegmentStart == null) {
+      return [];
+    }
     const lastSegmentStart = this._getLastSegmentStart();
     if (firstSegmentStart === null || lastSegmentStart === null) {
       return [];
@@ -271,12 +267,12 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
 
   /**
    * Returns first possible position in the index.
-   * @returns {number|null}
+   * @returns {number|null|undefined}
    */
-  getFirstPosition() : number|null {
+  getFirstPosition() : number | null | undefined {
     const firstSegmentStart = this._getFirstSegmentStart();
-    if (firstSegmentStart === null) {
-      return null;
+    if (firstSegmentStart == null) {
+      return firstSegmentStart; // return undefined or null
     }
     return (firstSegmentStart / this._index.timescale) + this._periodStart;
   }
@@ -324,8 +320,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
 
     const firstSegmentStart = this._getFirstSegmentStart();
     const lastSegmentStart = this._getLastSegmentStart();
-
-    if (firstSegmentStart == null || lastSegmentStart == null) {
+    if (firstSegmentStart === undefined) {
+      return undefined;
+    }
+    if (firstSegmentStart === null || lastSegmentStart === null) {
       return false;
     }
     if (timeRelativeToPeriodStart < firstSegmentStart) {
@@ -392,32 +390,36 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   /**
    * Returns the timescaled start of the first segment that should be available,
    * relatively to the start of the Period.
-   * @returns {number|null}
+   * @returns {number | null | undefined}
    */
-  private _getFirstSegmentStart() : number|null {
-    if (!this._isDynamic || this._scaledBufferDepth == null) {
+  private _getFirstSegmentStart() : number | null | undefined {
+    if (!this._isDynamic) {
       return 0; // it is the start of the Period
     }
-    const { duration } = this._index;
 
-    const lastPosition = this._liveEdgeCalculator.getCurrentLiveEdge();
-    let scaledLastPosition = lastPosition ?
-      (lastPosition * this._index.timescale) - this._periodStart :
-      undefined;
-
-    if (scaledLastPosition == null) {
-      const lastSegmentStart = this._getLastSegmentStart();
-
-      // No segment is available
-      if (lastSegmentStart === null) {
+    // 1 - check that this index is already available
+    if (!this._relativePeriodEnd && this._liveEdgeOffset != null) {
+      // /!\ The scaled max position augments continuously and might not
+      // reflect exactly the real server-side value. As segments are
+      // generated discretely.
+      const scaledMaxPosition = this._liveEdgeOffset + (performance.now() / 1000);
+      // Maximum position is before this period.
+      // No segment is yet available here
+      if (scaledMaxPosition < 0) {
         return null;
       }
-      const lastSegmentEnd = lastSegmentStart + this._index.duration;
-      scaledLastPosition = lastSegmentEnd;
     }
-    const scaledMinimum = Math.max(scaledLastPosition - this._scaledBufferDepth,
-                                   0);
-    const numberIndexedToZero = Math.floor(scaledMinimum / duration);
+
+    const { duration, timescale } = this._index;
+    const firstPos = this._bufferDepthCalculator.getFirstAvailablePosition();
+    if (firstPos == null) {
+      return undefined;
+    }
+
+    const segmentTime = firstPos > this._periodStart ?
+      (firstPos - this._periodStart) * timescale :
+      0;
+    const numberIndexedToZero = Math.floor(segmentTime / duration);
     return numberIndexedToZero * duration;
   }
 
@@ -427,7 +429,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * Returns null if live time is before current period.
    * @returns {number|null}
    */
-  private _getLastSegmentStart() : number|null {
+  private _getLastSegmentStart() : number | null {
     const { duration, timescale } = this._index;
 
     let numberIndexedToZero : number;
@@ -440,6 +442,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         // reflect exactly the real server-side value. As segments are
         // generated discretely.
         scaledMaxPosition = this._liveEdgeOffset + (performance.now() / 1000);
+
         // Maximum position is before this period.
         // No segment is yet available here
         if (scaledMaxPosition < 0) {
@@ -467,4 +470,4 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       return (numberIndexedToZero - 1) * duration;
     }
   }
-}
+    }

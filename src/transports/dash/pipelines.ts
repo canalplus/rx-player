@@ -97,9 +97,9 @@ export default function(
                      response.responseData;
 
       const parsedManifest = dashManifestParser(data, {
-        url,
-        referenceDateTime,
         externalClockOffset,
+        referenceDateTime,
+        url,
       });
       return loadExternalResources(parsedManifest);
 

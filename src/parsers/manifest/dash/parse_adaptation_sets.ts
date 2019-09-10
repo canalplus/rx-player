@@ -23,8 +23,8 @@ import {
   IParsedAdaptations,
   IParsedRepresentation,
 } from "../types";
+import BufferDepthCalculator from "./buffer_depth_calculator";
 import inferAdaptationType from "./infer_adaptation_type";
-import LiveEdgeCalculator from "./live_edge_calculator";
 import {
   IAdaptationSetIntermediateRepresentation,
 } from "./node_parsers/AdaptationSet";
@@ -35,12 +35,12 @@ export interface IPeriodInfos {
   availabilityStartTime : number; // Time from which the content starts
   baseURL? : string; // Eventual URL from which every relative URL will be based
                      // on
+  bufferDepthCalculator : BufferDepthCalculator; // Allows to obtain the first
+                                                 // available position of a live
+                                                 // content
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time
   end? : number; // End time of the current period, in seconds
-  liveEdgeCalculator : LiveEdgeCalculator; // Allows to obtain the live edge of
-                                           // the whole MPD at any time, once it
-                                           // is known
   isDynamic : boolean; // Whether the Manifest can evolve with time
   start : number; // Start time of the current period, in seconds
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
@@ -189,9 +189,9 @@ export default function parseAdaptationSets(
       const adaptationInfos = {
         availabilityStartTime: periodInfos.availabilityStartTime,
         baseURL: resolveURL(periodInfos.baseURL, adaptationChildren.baseURL),
+        bufferDepthCalculator: periodInfos.bufferDepthCalculator,
         clockOffset: periodInfos.clockOffset,
         end: periodInfos.end,
-        liveEdgeCalculator: periodInfos.liveEdgeCalculator,
         isDynamic: periodInfos.isDynamic,
         start: periodInfos.start,
         timeShiftBufferDepth: periodInfos.timeShiftBufferDepth,

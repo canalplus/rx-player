@@ -24,9 +24,9 @@ import {
   IParsedAdaptations,
   IParsedPeriod,
 } from "../types";
+import BufferDepthCalculator from "./buffer_depth_calculator";
 import flattenOverlappingPeriods from "./flatten_overlapping_periods";
 import getPeriodsTimeInformations from "./get_periods_time_infos";
-import LiveEdgeCalculator from "./live_edge_calculator";
 import { IPeriodIntermediateRepresentation } from "./node_parsers/Period";
 import parseAdaptationSets from "./parse_adaptation_sets";
 
@@ -35,11 +35,11 @@ const generatePeriodID = idGenerator();
 export interface IManifestInfos {
   availabilityStartTime : number; // Time from which the content starts
   baseURL? : string;
+  bufferDepthCalculator : BufferDepthCalculator; // Allows to obtain the first
+                                                 // available position of a live
+                                                 // content
   clockOffset? : number;
   duration? : number;
-  liveEdgeCalculator : LiveEdgeCalculator; // Allows to obtain the live edge of
-                                           // the whole MPD at any time, once it
-                                           // is known
   isDynamic : boolean;
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
                                   // in seconds
@@ -61,9 +61,9 @@ export default function parsePeriods(
     throw new Error("MPD parsing error: the time informations are incoherent.");
   }
 
-  // We parse it in reverse because we might need to deduce the live edge from
+  // We parse it in reverse because we might need to deduce the buffer depth from
   // the last Periods' indexes
-  const { liveEdgeCalculator } = manifestInfos;
+  const { bufferDepthCalculator } = manifestInfos;
   for (let i = periodsIR.length - 1; i >= 0; i--) {
     const periodIR = periodsIR[i];
     const periodBaseURL = resolveURL(manifestInfos.baseURL, periodIR.children.baseURL);
@@ -82,10 +82,10 @@ export default function parsePeriods(
 
     const periodInfos = { availabilityStartTime: manifestInfos.availabilityStartTime,
                           baseURL: periodBaseURL,
+                          bufferDepthCalculator: manifestInfos.bufferDepthCalculator,
                           clockOffset: manifestInfos.clockOffset,
                           end: periodEnd,
                           isDynamic: manifestInfos.isDynamic,
-                          liveEdgeCalculator: manifestInfos.liveEdgeCalculator,
                           start: periodStart,
                           timeShiftBufferDepth: manifestInfos.timeShiftBufferDepth };
     const adaptations = parseAdaptationSets(periodIR.children.adaptations,
@@ -95,27 +95,82 @@ export default function parsePeriods(
                                            end: periodEnd,
                                            duration: periodDuration,
                                            adaptations };
-    parsedPeriods.push(parsedPeriod);
+    parsedPeriods.unshift(parsedPeriod);
 
-    if (!liveEdgeCalculator.knowCurrentLiveEdge()) {
+    if (manifestInfos.isDynamic && !bufferDepthCalculator.lastPositionIsKnown()) {
+      // Try to guess last position to obtain the buffer depth
       const lastPosition = getMaximumLastPosition(adaptations);
-      if (lastPosition !== null) {
-        let liveEdgeOffset : number;
-        if (typeof lastPosition === "number") {
-          liveEdgeOffset = lastPosition +
-                           manifestInfos.availabilityStartTime -
-                           performance.now() / 1000;
-        } else {
-          log.warn("DASH Parser: no clock synchronization mechanism found." +
-                   " Setting a live gap of 10 seconds relatively to the system " +
-                   "clock as a security.");
-          liveEdgeOffset = (Date.now() - 10000 - performance.now()) / 1000;
+      if (typeof lastPosition === "number") { // last position is available
+        const lastPositionOffset = lastPosition - performance.now() / 1000;
+        bufferDepthCalculator.setLastPositionOffset(lastPositionOffset);
+      } else {
+        const lastPositionOffset = guessLastPositionOffsetFromClock(manifestInfos,
+                                                                    periodStart);
+        if (lastPositionOffset != null) {
+          bufferDepthCalculator.setLastPositionOffset(lastPositionOffset);
         }
-        liveEdgeCalculator.setLiveEdgeOffset(liveEdgeOffset);
       }
     }
   }
+
+  if (manifestInfos.isDynamic && !bufferDepthCalculator.lastPositionIsKnown()) {
+    // Guess a last time the last position
+    const lastPositionOffset = guessLastPositionOffsetFromClock(manifestInfos, 0);
+    if (lastPositionOffset != null) {
+      bufferDepthCalculator.setLastPositionOffset(lastPositionOffset);
+    }
+  }
   return flattenOverlappingPeriods(parsedPeriods);
+}
+
+/**
+ * Try to guess the "last position offset" - which is the last position
+ * available in the manifest in seconds to which is substracted
+ * `performance.now()` - from the clock (either the system's or the server's if
+ * one).
+ *
+ * This value allows to retrieve at any time in the future the new last
+ * position, by adding to it the new value returned by `performance.now`.
+ *
+ * The last position position offset is returned by this function if and only if
+ * it would indicate a last position superior to the `minimumTime` given.
+ *
+ * This last part allows for example to detect which Period is likely to be the
+ * "live" one in multi-periods contents. By giving the Period's start as a
+ * `minimumTime`, you ensure that you will get a value only if the live time is
+ * in that period.
+ *
+ * This is useful as guessing the live time from the clock can be seen as a last
+ * resort. By detecting that the live time is before the currently considered
+ * Period, we can just parse and look at the previous Period. If we can guess
+ * the live time more directly from that previous one, we might be better off
+ * than just using the clock.
+ *
+ * @param {Object} manifestInfos
+ * @param {number} minimumTime
+ * @returns {number|undefined}
+ */
+function guessLastPositionOffsetFromClock(
+  manifestInfos : IManifestInfos,
+  minimumTime : number
+) : number | undefined {
+  if (manifestInfos.clockOffset != null) {
+    const timeInSec = (performance.now() + manifestInfos.clockOffset) / 1000 -
+                      manifestInfos.availabilityStartTime;
+    if (timeInSec >= minimumTime) {
+      return manifestInfos.clockOffset / 1000 -
+               manifestInfos.availabilityStartTime;
+    }
+  } else {
+    const now = (Date.now() - 10000) / 1000;
+    if (now >= minimumTime) {
+      log.warn("DASH Parser: no clock synchronization mechanism found." +
+               " Setting a live gap of 10 seconds relatively to the " +
+               "system clock as a security.");
+      return now - manifestInfos.availabilityStartTime -
+             performance.now() / 1000;
+    }
+  }
 }
 
 /**
