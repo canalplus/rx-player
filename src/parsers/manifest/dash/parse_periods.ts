@@ -24,9 +24,9 @@ import {
   IParsedAdaptations,
   IParsedPeriod,
 } from "../types";
-import BufferDepthCalculator from "./buffer_depth_calculator";
 import flattenOverlappingPeriods from "./flatten_overlapping_periods";
 import getPeriodsTimeInformations from "./get_periods_time_infos";
+import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import { IPeriodIntermediateRepresentation } from "./node_parsers/Period";
 import parseAdaptationSets from "./parse_adaptation_sets";
 
@@ -35,9 +35,9 @@ const generatePeriodID = idGenerator();
 export interface IManifestInfos {
   availabilityStartTime : number; // Time from which the content starts
   baseURL? : string;
-  bufferDepthCalculator : BufferDepthCalculator; // Allows to obtain the first
-                                                 // available position of a live
-                                                 // content
+  manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
+                                                       // available position of a live
+                                                       // content
   clockOffset? : number;
   duration? : number;
   isDynamic : boolean;
@@ -63,7 +63,7 @@ export default function parsePeriods(
 
   // We parse it in reverse because we might need to deduce the buffer depth from
   // the last Periods' indexes
-  const { bufferDepthCalculator } = manifestInfos;
+  const { manifestBoundsCalculator } = manifestInfos;
   for (let i = periodsIR.length - 1; i >= 0; i--) {
     const periodIR = periodsIR[i];
     const periodBaseURL = resolveURL(manifestInfos.baseURL, periodIR.children.baseURL);
@@ -82,7 +82,8 @@ export default function parsePeriods(
 
     const periodInfos = { availabilityStartTime: manifestInfos.availabilityStartTime,
                           baseURL: periodBaseURL,
-                          bufferDepthCalculator: manifestInfos.bufferDepthCalculator,
+                          manifestBoundsCalculator:
+                            manifestInfos.manifestBoundsCalculator,
                           clockOffset: manifestInfos.clockOffset,
                           end: periodEnd,
                           isDynamic: manifestInfos.isDynamic,
@@ -97,27 +98,36 @@ export default function parsePeriods(
                                            adaptations };
     parsedPeriods.unshift(parsedPeriod);
 
-    if (manifestInfos.isDynamic && !bufferDepthCalculator.lastPositionIsKnown()) {
+    if (manifestInfos.isDynamic && !manifestBoundsCalculator.lastPositionIsKnown()) {
+      if (manifestInfos.isDynamic) {
       // Try to guess last position to obtain the buffer depth
       const lastPosition = getMaximumLastPosition(adaptations);
       if (typeof lastPosition === "number") { // last position is available
-        const lastPositionOffset = lastPosition - performance.now() / 1000;
-        bufferDepthCalculator.setLastPositionOffset(lastPositionOffset);
+        const clockOffset = performance.now() / 1000;
+        manifestBoundsCalculator.setLastPosition(lastPosition, clockOffset);
       } else {
-        const lastPositionOffset = guessLastPositionOffsetFromClock(manifestInfos,
-                                                                    periodStart);
-        if (lastPositionOffset != null) {
-          bufferDepthCalculator.setLastPositionOffset(lastPositionOffset);
+        const [guessedLastPosition, guessedClockOffset] =
+          guessLastPositionOffsetFromClock(manifestInfos, periodStart);
+        if (guessedLastPosition != null && guessedClockOffset != null) {
+          manifestBoundsCalculator.setLastPosition(
+            guessedLastPosition, guessedClockOffset);
         }
+      }
+      } else if (manifestInfos.duration != null) {
+        manifestBoundsCalculator.setLastPosition(manifestInfos.duration);
       }
     }
   }
-
-  if (manifestInfos.isDynamic && !bufferDepthCalculator.lastPositionIsKnown()) {
-    // Guess a last time the last position
-    const lastPositionOffset = guessLastPositionOffsetFromClock(manifestInfos, 0);
-    if (lastPositionOffset != null) {
-      bufferDepthCalculator.setLastPositionOffset(lastPositionOffset);
+  if (!manifestBoundsCalculator.lastPositionIsKnown()) {
+    if (manifestInfos.isDynamic) {
+      // Guess a last time the last position
+      const [lastPosition, clockOffset] =
+        guessLastPositionOffsetFromClock(manifestInfos, 0);
+      if (lastPosition != null && clockOffset != null) {
+        manifestBoundsCalculator.setLastPosition(lastPosition, clockOffset);
+      }
+    } else if (manifestInfos.duration != null) {
+      manifestBoundsCalculator.setLastPosition(manifestInfos.duration);
     }
   }
   return flattenOverlappingPeriods(parsedPeriods);
@@ -153,13 +163,14 @@ export default function parsePeriods(
 function guessLastPositionOffsetFromClock(
   manifestInfos : IManifestInfos,
   minimumTime : number
-) : number | undefined {
+) : [number | undefined, number | undefined] {
   if (manifestInfos.clockOffset != null) {
     const timeInSec = (performance.now() + manifestInfos.clockOffset) / 1000 -
                       manifestInfos.availabilityStartTime;
     if (timeInSec >= minimumTime) {
-      return manifestInfos.clockOffset / 1000 -
-               manifestInfos.availabilityStartTime;
+      const lastPosition = manifestInfos.clockOffset / 1000 -
+        manifestInfos.availabilityStartTime;
+      return [lastPosition, 0];
     }
   } else {
     const now = (Date.now() - 10000) / 1000;
@@ -167,10 +178,12 @@ function guessLastPositionOffsetFromClock(
       log.warn("DASH Parser: no clock synchronization mechanism found." +
                " Setting a live gap of 10 seconds relatively to the " +
                "system clock as a security.");
-      return now - manifestInfos.availabilityStartTime -
-             performance.now() / 1000;
+      const lastPosition = now - manifestInfos.availabilityStartTime;
+      const clockOffset = performance.now() / 1000;
+      return [lastPosition, clockOffset];
     }
   }
+  return [undefined, undefined];
 }
 
 /**

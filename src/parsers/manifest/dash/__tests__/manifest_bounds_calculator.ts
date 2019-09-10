@@ -14,82 +14,82 @@
  * limitations under the License.
  */
 
-import BufferDepthCalculator from "../buffer_depth_calculator";
+import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 
-describe("DASH parsers - BufferDepthCalculator", () => {
+describe("DASH parsers - ManifestBoundsCalculator", () => {
   /* tslint:disable max-line-length */
   it("should return undefined through `getFirstAvailablePosition` if the live edge was never set for a dynamic content with a timeShiftBufferDepth", () => {
   /* tslint:enable max-line-length */
-    const bufferDepthCalculator = new BufferDepthCalculator({
+    const manifestBoundsCalculator = new ManifestBoundsCalculator({
       availabilityStartTime: 10,
       isDynamic: true,
       timeShiftBufferDepth: 5,
     });
-    expect(bufferDepthCalculator.getFirstAvailablePosition()).toEqual(undefined);
-    expect(bufferDepthCalculator.getFirstAvailablePosition()).toEqual(undefined);
-    expect(bufferDepthCalculator.getFirstAvailablePosition()).toEqual(undefined);
+    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(undefined);
+    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(undefined);
+    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(undefined);
   });
 
   /* tslint:disable max-line-length */
   it("should return 0 through `getFirstAvailablePosition` if the live edge was never set for a static content", () => {
   /* tslint:enable max-line-length */
-    const bufferDepthCalculator = new BufferDepthCalculator({
+    const manifestBoundsCalculator = new ManifestBoundsCalculator({
       availabilityStartTime: 10,
       isDynamic: false,
       timeShiftBufferDepth: 5,
     });
-    expect(bufferDepthCalculator.getFirstAvailablePosition()).toEqual(0);
-    expect(bufferDepthCalculator.getFirstAvailablePosition()).toEqual(0);
-    expect(bufferDepthCalculator.getFirstAvailablePosition()).toEqual(0);
+    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(0);
+    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(0);
+    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(0);
   });
 
   /* tslint:disable max-line-length */
   it("should return 0 through `getFirstAvailablePosition` if the live edge was never set for a dynamic content with no timeShiftBufferDepth", () => {
   /* tslint:enable max-line-length */
-    const bufferDepthCalculator = new BufferDepthCalculator({
+    const manifestBoundsCalculator = new ManifestBoundsCalculator({
       availabilityStartTime: 10,
       isDynamic: false,
     });
-    expect(bufferDepthCalculator.getFirstAvailablePosition()).toEqual(0);
-    expect(bufferDepthCalculator.getFirstAvailablePosition()).toEqual(0);
-    expect(bufferDepthCalculator.getFirstAvailablePosition()).toEqual(0);
+    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(0);
+    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(0);
+    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(0);
   });
 
   /* tslint:disable max-line-length */
   it("should return `false` through `lastPositionIsKnown` if `setLastPositionOffset` was never called", () => {
   /* tslint:enable max-line-length */
-    const bufferDepthCalculator = new BufferDepthCalculator({
+    const manifestBoundsCalculator = new ManifestBoundsCalculator({
       availabilityStartTime: 10,
       isDynamic: true,
       timeShiftBufferDepth: 5,
     });
-    expect(bufferDepthCalculator.lastPositionIsKnown()).toEqual(false);
-    expect(bufferDepthCalculator.getFirstAvailablePosition()).toEqual(undefined);
-    expect(bufferDepthCalculator.lastPositionIsKnown()).toEqual(false);
+    expect(manifestBoundsCalculator.lastPositionIsKnown()).toEqual(false);
+    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(undefined);
+    expect(manifestBoundsCalculator.lastPositionIsKnown()).toEqual(false);
   });
 
   /* tslint:disable max-line-length */
   it("should return `true` through `lastPositionIsKnown` if `setLastPositionOffset` was called for a dynamic content", () => {
   /* tslint:enable max-line-length */
-    const bufferDepthCalculator = new BufferDepthCalculator({
+    const manifestBoundsCalculator = new ManifestBoundsCalculator({
       availabilityStartTime: 10,
       isDynamic: true,
       timeShiftBufferDepth: 5,
     });
-    bufferDepthCalculator.setLastPositionOffset(1000);
-    expect(bufferDepthCalculator.lastPositionIsKnown()).toEqual(true);
+    manifestBoundsCalculator.setLastPosition(1000, 0);
+    expect(manifestBoundsCalculator.lastPositionIsKnown()).toEqual(true);
   });
 
   /* tslint:disable max-line-length */
   it("should return `true` through `lastPositionIsKnown` if `setLastPositionOffset` was called for a non dynamic content", () => {
   /* tslint:enable max-line-length */
-    const bufferDepthCalculator = new BufferDepthCalculator({
+    const manifestBoundsCalculator = new ManifestBoundsCalculator({
       availabilityStartTime: 10,
       isDynamic: false,
       timeShiftBufferDepth: 5,
     });
-    bufferDepthCalculator.setLastPositionOffset(1000);
-    expect(bufferDepthCalculator.lastPositionIsKnown()).toEqual(true);
+    manifestBoundsCalculator.setLastPosition(1000, 0);
+    expect(manifestBoundsCalculator.lastPositionIsKnown()).toEqual(true);
   });
 
   /* tslint:disable max-line-length */
@@ -98,16 +98,16 @@ describe("DASH parsers - BufferDepthCalculator", () => {
     let date = 5000;
     const performanceSpy = jest.spyOn(performance, "now")
       .mockImplementation(jest.fn(() => date));
-    const bufferDepthCalculator = new BufferDepthCalculator({
+    const manifestBoundsCalculator = new ManifestBoundsCalculator({
       availabilityStartTime: 10,
       isDynamic: true,
       timeShiftBufferDepth: 5,
     });
-    bufferDepthCalculator.setLastPositionOffset(1000);
+    manifestBoundsCalculator.setLastPosition(1000, 10);
     date = 25000;
-    expect(bufferDepthCalculator.getFirstAvailablePosition()).toEqual(1010);
+    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(1000);
     date = 35000;
-    expect(bufferDepthCalculator.getFirstAvailablePosition()).toEqual(1020);
+    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(1010);
     performanceSpy.mockRestore();
   });
 
@@ -117,16 +117,16 @@ describe("DASH parsers - BufferDepthCalculator", () => {
     let date = 5000;
     const performanceSpy = jest.spyOn(performance, "now")
       .mockImplementation(jest.fn(() => date));
-    const bufferDepthCalculator = new BufferDepthCalculator({
+    const manifestBoundsCalculator = new ManifestBoundsCalculator({
       availabilityStartTime: 10,
       isDynamic: false,
       timeShiftBufferDepth: 5,
     });
-    bufferDepthCalculator.setLastPositionOffset(1000);
+    manifestBoundsCalculator.setLastPosition(1000, 0);
     date = 25000;
-    expect(bufferDepthCalculator.getFirstAvailablePosition()).toEqual(0);
+    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(0);
     date = 35000;
-    expect(bufferDepthCalculator.getFirstAvailablePosition()).toEqual(0);
+    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(0);
     performanceSpy.mockRestore();
   });
 
@@ -136,17 +136,17 @@ describe("DASH parsers - BufferDepthCalculator", () => {
     let date = 5000;
     const performanceSpy = jest.spyOn(performance, "now")
       .mockImplementation(jest.fn(() => date));
-    const bufferDepthCalculator = new BufferDepthCalculator({
+    const manifestBoundsCalculator = new ManifestBoundsCalculator({
       availabilityStartTime: 10,
       isDynamic: true,
       timeShiftBufferDepth: 5,
     });
-    bufferDepthCalculator.setLastPositionOffset(1000);
+    manifestBoundsCalculator.setLastPosition(1000, 0);
     date = 50000;
-    expect(bufferDepthCalculator.getFirstAvailablePosition()).toEqual(1035);
-    bufferDepthCalculator.setLastPositionOffset(0);
+    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(1035);
+    manifestBoundsCalculator.setLastPosition(0, 0);
     date = 55000;
-    expect(bufferDepthCalculator.getFirstAvailablePosition()).toEqual(40);
+    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(40);
     performanceSpy.mockRestore();
   });
 });

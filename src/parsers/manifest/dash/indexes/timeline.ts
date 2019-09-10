@@ -31,7 +31,7 @@ import {
   toIndexTime,
 } from "../../utils/index_helpers";
 import isSegmentStillAvailable from "../../utils/is_segment_still_available";
-import BufferDepthCalculator from "../buffer_depth_calculator";
+import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import getSegmentsFromTimeline from "./get_segments_from_timeline";
 import { createIndexURL } from "./tokens";
@@ -97,9 +97,9 @@ export interface ITimelineIndexIndexArgument {
 
 // Aditional argument for a SegmentTimeline RepresentationIndex
 export interface ITimelineIndexContextArgument {
-  bufferDepthCalculator : BufferDepthCalculator; // Allows to obtain the first
-                                                 // available position of a live
-                                                 // content
+  manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
+                                                       // available position of a
+                                                       // content
   manifestReceivedTime? : number; // time (in terms of `performance.now`) at
                                    // which the Manifest file was received
   periodStart : number; // Start of the period concerned by this
@@ -209,7 +209,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   // Whether this RepresentationIndex can change over time.
   private _isDynamic : boolean;
 
-  private _bufferDepthCalculator : BufferDepthCalculator;
+  private _manifestBoundsCalculator : ManifestBoundsCalculator;
 
   /**
    * @param {Object} index
@@ -219,7 +219,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     index : ITimelineIndexIndexArgument,
     context : ITimelineIndexContextArgument
   ) {
-    const { bufferDepthCalculator,
+    const { manifestBoundsCalculator,
             isDynamic,
             representationBaseURL,
             representationId,
@@ -249,7 +249,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       }
     }
 
-    this._bufferDepthCalculator = bufferDepthCalculator;
+    this._manifestBoundsCalculator = manifestBoundsCalculator;
 
     this._lastManifestUpdate = context.manifestReceivedTime == null ?
                                  performance.now() :
@@ -490,11 +490,11 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * available due to timeshifting.
    */
   private _refreshTimeline() : void {
-    const bufferDepth = this._bufferDepthCalculator.getFirstAvailablePosition();
-    if (bufferDepth == null) {
+    const firstPos = this._manifestBoundsCalculator.getFirstAvailablePosition();
+    if (firstPos == null) {
       return; // we don't know yet
     }
-    const scaledFirstPosition = toIndexTime(bufferDepth, this._index);
+    const scaledFirstPosition = toIndexTime(firstPos, this._index);
     clearTimelineFromPosition(this._index.timeline, scaledFirstPosition);
   }
 

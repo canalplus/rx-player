@@ -21,10 +21,10 @@ import resolveURL, {
 } from "../../../utils/resolve_url";
 import { IParsedManifest } from "../types";
 import checkManifestIDs from "../utils/check_manifest_ids";
-import BufferDepthCalculator from "./buffer_depth_calculator";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
 import getMinimumAndMaximumPosition from "./get_minimum_and_maximum_positions";
+import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import {
   createMPDIntermediateRepresentation,
   IMPDIntermediateRepresentation,
@@ -189,12 +189,12 @@ function parseCompleteIntermediateRepresentation(
   const clockOffset = args.externalClockOffset;
 
   // We might to communicate the depth of the Buffer while parsing
-  const bufferDepthCalculator = new BufferDepthCalculator({ availabilityStartTime,
-                                                            isDynamic,
-                                                            timeShiftBufferDepth });
+  const manifestBoundsCalculator = new ManifestBoundsCalculator({ availabilityStartTime,
+                                                                  isDynamic,
+                                                                  timeShiftBufferDepth });
   const manifestInfos = { availabilityStartTime,
                           baseURL,
-                          bufferDepthCalculator,
+                          manifestBoundsCalculator,
                           clockOffset,
                           duration: rootAttributes.duration,
                           isDynamic,
