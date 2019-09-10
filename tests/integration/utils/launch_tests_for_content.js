@@ -524,7 +524,7 @@ export default function launchTestsForContent(
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        await sleep(500);
+        await sleep(900);
 
         let bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(9.5);
@@ -532,20 +532,20 @@ export default function launchTestsForContent(
 
         player.setWantedBufferAhead(20);
         expect(player.getWantedBufferAhead()).to.equal(20);
-        await sleep(500);
+        await sleep(900);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(19.5);
         expect(bufferGap).to.be.at.most(20 + 10);
 
         player.seekTo(minimumPosition + 10);
-        await sleep(500);
+        await sleep(900);
         expect(player.getWantedBufferAhead()).to.equal(20);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(19.5);
         expect(bufferGap).to.be.at.most(20 + 10);
 
         player.seekTo(minimumPosition + 10 + 30);
-        await sleep(500);
+        await sleep(900);
         expect(player.getWantedBufferAhead()).to.equal(20);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(19.5);
@@ -553,7 +553,7 @@ export default function launchTestsForContent(
 
         player.setWantedBufferAhead(Infinity);
         expect(player.getWantedBufferAhead()).to.equal(Infinity);
-        await sleep(1500);
+        await sleep(2000);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be
           .at.least(player.getMaximumPosition() -
@@ -1612,7 +1612,7 @@ export default function launchTestsForContent(
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        await sleep(200);
+        await sleep(500);
         let buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(1);
         expect(buffered.start(0)).to.be.closeTo(minimumPosition, 0.5);
@@ -1624,7 +1624,7 @@ export default function launchTestsForContent(
 
         player.setWantedBufferAhead(20);
         expect(player.getWantedBufferAhead()).to.equal(20);
-        await sleep(300);
+        await sleep(500);
         buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(1);
         expect(buffered.start(0)).to.be.closeTo(minimumPosition, 0.5);
@@ -1635,7 +1635,7 @@ export default function launchTestsForContent(
           .at.most(minimumPosition + 20 + 10);
 
         player.seekTo(minimumPosition + 10);
-        await sleep(300);
+        await sleep(600);
         buffered = player.getVideoElement().buffered;
         expect(player.getWantedBufferAhead()).to.equal(20);
         expect(buffered.length).to.equal(1);
@@ -1650,7 +1650,7 @@ export default function launchTestsForContent(
           .at.most(minimumPosition + 10 + 20 + 10);
 
         player.seekTo(minimumPosition + 10 + 20 + 10 + 10);
-        await sleep(500);
+        await sleep(1000);
         buffered = player.getVideoElement().buffered;
         expect(player.getWantedBufferAhead()).to.equal(20);
         expect(buffered.length).to.equal(2);
