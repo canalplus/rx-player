@@ -19,14 +19,6 @@ class ControlBar extends React.Component {
     };
   }
 
-  componentDidMount() {
-    const { player } = this.props;
-    if (player) {
-      player.$get("loadedVideo")
-        .subscribe(() => player.dispatch("SET_PLAYBACK_RATE", 1));
-    }
-  }
-
   render() {
     const changeStickToLiveEdge = (shouldStick) => {
       this.setState({ isStickingToTheLiveEdge: shouldStick });
@@ -185,6 +177,5 @@ export default withModulesState({
     isStopped: "isStopped",
     lowLatencyMode: "lowLatencyMode",
     liveGap: "liveGap",
-    hasCurrentContent: "hasCurrentContent",
   },
 })(ControlBar);
