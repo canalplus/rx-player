@@ -281,6 +281,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   getLastPosition() : number|null|undefined {
     const lastSegmentStart = this._getLastSegmentStart();
     if (lastSegmentStart == null) {
+      // In that case (null or undefined), getLastPosition should reflect
+      // the result of getLastSegmentStart, as the meaning is the same for
+      // the two functions. So, we return the result of the latter.
       return lastSegmentStart;
     }
     const lastSegmentEnd = lastSegmentStart + this._index.duration;
@@ -409,7 +412,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
 
     const { duration, timescale } = this._index;
     const firstPos = this._manifestBoundsCalculator.getFirstAvailablePosition();
-    if (firstPos == null) {
+    if (firstPos === undefined) {
       return undefined;
     }
 
@@ -466,4 +469,4 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       return (numberIndexedToZero - 1) * duration;
     }
   }
-    }
+}
