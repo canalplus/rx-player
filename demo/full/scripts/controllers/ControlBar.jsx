@@ -139,7 +139,7 @@ class ControlBar extends React.Component {
               }}
             /> : null}
           <div className="controls-right-side">
-            {(isLive && lowLatencyMode && playbackRate !== 1) ?
+            {isCatchingUp ?
               <div className="catch-up">
                 {"Catch-up playback rate: " + playbackRate}
               </div> : null
