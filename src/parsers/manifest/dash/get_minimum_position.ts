@@ -57,17 +57,21 @@ export default function getMinimumPosition(
         minimumVideoPosition = firstPosition;
       }
 
-      if (minimumAudioPosition === null || minimumVideoPosition === null) {
+      if ((firstAudioAdaptationFromPeriod != null && minimumAudioPosition === null) ||
+          (firstVideoAdaptationFromPeriod != null && minimumVideoPosition === null)) {
         log.info("DASH Parser: found Period with no segment. ",
                  "Going to next one to calculate first position");
-      } else {
-        if (firstVideoAdaptationFromPeriod == null) {
-          return minimumAudioPosition;
+        return;
+      }
+
+      if (minimumVideoPosition != null) {
+        if (minimumAudioPosition != null) {
+          return Math.max(minimumAudioPosition, minimumVideoPosition);
         }
-        if (firstAudioAdaptationFromPeriod == null) {
-          return minimumVideoPosition;
-        }
-        return Math.max(minimumAudioPosition, minimumVideoPosition);
+        return minimumVideoPosition;
+      }
+      if (minimumAudioPosition != null) {
+        return minimumAudioPosition;
       }
     }
   }
