@@ -104,6 +104,8 @@ class ControlBar extends React.Component {
       }
     })();
 
+    const isAtLiveEdge = isCloseToLive && !isCatchingUp;
+
     return (
       <div className="controls-bar-container">
         <Progressbar
@@ -131,9 +133,9 @@ class ControlBar extends React.Component {
           {positionElement}
           {isContentLoaded ?
             <Button
-              className={"dot" + ((isCloseToLive && !isCatchingUp) ? " live" : "")}
+              className={"dot" + (isAtLiveEdge ? " live" : "")}
               onClick={() => {
-                if (isCatchingUp || !isCloseToLive) {
+                if (!isAtLiveEdge) {
                   player.dispatch("SEEK", maximumPosition - (lowLatencyMode ? 4 : 10));
                 }
               }}
