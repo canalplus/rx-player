@@ -48,6 +48,12 @@ class ControlBar extends React.Component {
       isCloseToLive = lowLatencyMode ? liveGap < 7 : liveGap < 15;
     }
 
+    if (isCatchingUp && isStopped) {
+      // We stopped the player while catching up. Reset playback rate
+      player.dispatch("SET_PLAYBACK_RATE", 1);
+      this.setState({ isCatchingUp: false });
+    }
+
     /**
      * Catch-up :
      * - If current position is too far from live edge,
@@ -78,8 +84,8 @@ class ControlBar extends React.Component {
       if (shouldCatchUp) {
         catchUp();
       } else if (isCatchingUp) {
-        this.setState({ isCatchingUp: false });
         player.dispatch("SET_PLAYBACK_RATE", 1);
+        this.setState({ isCatchingUp: false });
       }
     }
 

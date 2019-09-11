@@ -33,12 +33,7 @@ class Player extends React.Component {
     this._$destroySubject = new Subject();
     this._$destroySubject.subscribe(() => player.destroy());
 
-    player.$get("isSeeking",
-                "isBuffering",
-                "isLoading",
-                "isReloading",
-                "isStopped",
-    )
+    player.$get("isSeeking", "isBuffering", "isLoading", "isReloading", "isStopped")
       .pipe(takeUntil(this._$destroySubject))
       .subscribe(([
         isSeeking,
@@ -47,9 +42,6 @@ class Player extends React.Component {
         isReloading,
         isStopped,
       ]) => {
-        if (isStopped) {
-          player.dispatch("SET_PLAYBACK_RATE", 1);
-        }
         this.setState({ isStopped });
         if (isLoading || isReloading) {
           this.setState({ displaySpinner: true });
@@ -64,9 +56,7 @@ class Player extends React.Component {
           }
 
           if (this.state.displaySpinner) {
-            this.setState({
-              displaySpinner: false,
-            });
+            this.setState({ displaySpinner: false });
           }
         }
 
