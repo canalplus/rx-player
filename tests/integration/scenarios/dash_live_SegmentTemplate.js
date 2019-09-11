@@ -662,7 +662,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
       await xhrMock.flush();
       await sleep(1);
       expect(player.getMaximumPosition()).to.be
-        .closeTo(1553521448, 1);
+        .closeTo(1553521448, 3);
     });
   });
 });
