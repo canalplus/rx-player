@@ -121,12 +121,13 @@ class ControlBar extends React.Component {
             value={String.fromCharCode(0xf04d)}
             disabled={isStopped}
           />
-          <StickToLiveEdgeButton
-            isContentLoaded={isContentLoaded}
-            lowLatencyMode={lowLatencyMode}
-            isStickingToTheLiveEdge={isStickingToTheLiveEdge}
-            changeStickToLiveEdge={changeStickToLiveEdge}
-          />
+          {
+            (isContentLoaded && lowLatencyMode) ?
+              <StickToLiveEdgeButton
+                isStickingToTheLiveEdge={isStickingToTheLiveEdge}
+                changeStickToLiveEdge={changeStickToLiveEdge}
+              /> : null
+          }
           {positionElement}
           {isContentLoaded ?
             <Button
