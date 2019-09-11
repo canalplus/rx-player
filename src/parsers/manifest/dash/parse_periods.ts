@@ -98,7 +98,7 @@ export default function parsePeriods(
                                            adaptations };
     parsedPeriods.unshift(parsedPeriod);
 
-    if (manifestInfos.isDynamic && !manifestBoundsCalculator.lastPositionIsKnown()) {
+    if (!manifestBoundsCalculator.lastPositionIsKnown()) {
       if (manifestInfos.isDynamic) {
       // Try to guess last position to obtain the buffer depth
       const lastPosition = getMaximumLastPosition(adaptations);
