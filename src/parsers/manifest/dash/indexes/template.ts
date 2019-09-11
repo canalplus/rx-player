@@ -431,7 +431,6 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   private _getLastSegmentStart() : number | null | undefined {
     const { duration, timescale } = this._index;
 
-    let numberIndexedToZero : number;
     if (this._isDynamic) {
       const lastPos = this._manifestBoundsCalculator.getLastAvailablePosition();
       if (lastPos === undefined) {
@@ -450,11 +449,11 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         return null;
       }
       const maxPossibleStart = Math.max(scaledMaxPosition - duration, 0);
-      numberIndexedToZero = Math.floor(maxPossibleStart / duration);
+      const numberIndexedToZero = Math.floor(maxPossibleStart / duration);
       return numberIndexedToZero * duration;
     } else {
       const maximumTime = (this._relativePeriodEnd || 0) * timescale;
-      numberIndexedToZero = Math.ceil(maximumTime / duration) - 1;
+      const numberIndexedToZero = Math.ceil(maximumTime / duration) - 1;
       const regularLastSegmentStart = numberIndexedToZero * duration;
 
       // In some SegmentTemplate, we could think that there is one more
