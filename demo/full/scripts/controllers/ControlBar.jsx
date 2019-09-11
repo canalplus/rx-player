@@ -16,7 +16,6 @@ class ControlBar extends React.Component {
     this.state = {
       isCatchingUp: false,
       isStickingToTheLiveEdge: true,
-      lowLatencyMode: undefined,
     };
   }
 
@@ -38,7 +37,6 @@ class ControlBar extends React.Component {
       player,
       maximumPosition,
       playbackRate,
-      playbackPosition,
       videoElement,
       toggleSettings,
       lowLatencyMode,
@@ -50,23 +48,34 @@ class ControlBar extends React.Component {
       isCloseToLive = lowLatencyMode ? liveGap < 7 : liveGap < 15;
     }
 
+    /**
+     * Catch-up :
+     * - If current position is too far from live edge,
+     * then we should seek near to live edge.
+     * - If not, changed playback rate in order to move back
+     * close to the live.
+     */
+    const catchUp = () => {
+      if (liveGap > 10) {
+        player.dispatch("SEEK", maximumPosition - 5);
+      } else {
+        const factor = (liveGap - 5) / 4;
+        const rate = Math.round(
+          (liveGap > 5 ? Math.min(10, 1.1 + factor) : 1) * 10
+        ) / 10;
+        if (rate !== playbackRate) {
+          this.setState({ isCatchingUp: true });
+          player.dispatch("SET_PLAYBACK_RATE", rate);
+        }
+      }
+    };
+
     if (player) {
       const shouldCatchUp = (liveGap > 7 || isCatchingUp && liveGap > 5) &&
                             isStickingToTheLiveEdge &&
                             lowLatencyMode;
       if (shouldCatchUp) {
-        if (liveGap > 10) {
-          player.dispatch("SEEK", maximumPosition - 5);
-        } else {
-          const factor = (liveGap - 5) / 4;
-          const rate = Math.round(
-            (liveGap > 5 ? Math.min(10, 1.1 + factor) : 1) * 10
-          ) / 10;
-          if (rate !== playbackPosition) {
-            this.setState({ isCatchingUp: true });
-            player.dispatch("SET_PLAYBACK_RATE", rate);
-          }
-        }
+        catchUp();
       } else if (isCatchingUp) {
         this.setState({ isCatchingUp: false });
         player.dispatch("SET_PLAYBACK_RATE", 1);
