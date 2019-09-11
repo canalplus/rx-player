@@ -96,7 +96,7 @@ class ControlBar extends React.Component {
       }
     })();
 
-    const isAtLiveEdge = isCloseToLive && !isCatchingUp;
+    const isAtLiveEdge = isLive && isCloseToLive && !isCatchingUp;
 
     return (
       <div className="controls-bar-container">
@@ -123,7 +123,7 @@ class ControlBar extends React.Component {
               /> : null
           }
           {positionElement}
-          {isContentLoaded ?
+          {isLive && isContentLoaded ?
             <Button
               className={"dot" + (isAtLiveEdge ? " live" : "")}
               onClick={() => {
