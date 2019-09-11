@@ -107,7 +107,7 @@ export default function parsePeriods(
           manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
         } else {
           const [guessedLastPosition, guessedPositionTime] =
-            guessLastPositionOffsetFromClock(manifestInfos, periodStart);
+            guessLastPositionAndPositionTimeFromClock(manifestInfos, periodStart);
           if (guessedLastPosition != null && guessedPositionTime != null) {
             manifestBoundsCalculator.setLastPosition(
               guessedLastPosition, guessedPositionTime);
@@ -122,7 +122,7 @@ export default function parsePeriods(
     if (manifestInfos.isDynamic) {
       // Guess a last time the last position
       const [lastPosition, positionTime] =
-        guessLastPositionOffsetFromClock(manifestInfos, 0);
+        guessLastPositionAndPositionTimeFromClock(manifestInfos, 0);
       if (lastPosition != null && positionTime != null) {
         manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
       }
@@ -134,15 +134,15 @@ export default function parsePeriods(
 }
 
 /**
- * Try to guess the "last position offset" - which is the last position
- * available in the manifest in seconds to which is substracted
- * `performance.now()` - from the clock (either the system's or the server's if
- * one).
+ * Try to guess the "last position", which is the last position
+ * available in the manifest in seconds, and the "position time", the time
+ * (`performance.now()`) in which the last position was collected.
  *
- * This value allows to retrieve at any time in the future the new last
- * position, by adding to it the new value returned by `performance.now`.
+ * These values allows to retrieve at any time in the future the new last
+ * position, by substracting the position time to the last position, and
+ * adding to it the new value returned by `performance.now`.
  *
- * The last position position offset is returned by this function if and only if
+ * The last position and position time are returned by this function if and only if
  * it would indicate a last position superior to the `minimumTime` given.
  *
  * This last part allows for example to detect which Period is likely to be the
@@ -158,19 +158,19 @@ export default function parsePeriods(
  *
  * @param {Object} manifestInfos
  * @param {number} minimumTime
- * @returns {number|undefined}
+ * @returns {Array.<number|undefined>}
  */
-function guessLastPositionOffsetFromClock(
+function guessLastPositionAndPositionTimeFromClock(
   manifestInfos : IManifestInfos,
   minimumTime : number
 ) : [number | undefined, number | undefined] {
   if (manifestInfos.clockOffset != null) {
-    const timeInSec = (performance.now() + manifestInfos.clockOffset) / 1000 -
-                      manifestInfos.availabilityStartTime;
+    const lastPosition = manifestInfos.clockOffset / 1000 -
+      manifestInfos.availabilityStartTime;
+    const positionTime = performance.now() / 1000;
+    const timeInSec = positionTime + lastPosition;
     if (timeInSec >= minimumTime) {
-      const lastPosition = manifestInfos.clockOffset / 1000 -
-        manifestInfos.availabilityStartTime;
-      return [lastPosition, 0];
+      return [timeInSec, positionTime];
     }
   } else {
     const now = (Date.now() - 10000) / 1000;
