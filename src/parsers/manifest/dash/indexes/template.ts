@@ -213,11 +213,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const upFromPeriodStart = fromTime * timescale - scaledStart;
     const toFromPeriodStart = (fromTime + dur) * timescale - scaledStart;
     const firstSegmentStart = this._getFirstSegmentStart();
-    if (firstSegmentStart == null) {
-      return [];
-    }
     const lastSegmentStart = this._getLastSegmentStart();
-    if (firstSegmentStart === null || lastSegmentStart == null) {
+    if (firstSegmentStart == null || lastSegmentStart == null) {
       return [];
     }
     const startPosition = Math.max(firstSegmentStart, upFromPeriodStart);
