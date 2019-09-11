@@ -183,8 +183,8 @@ function guessLastPositionFromClock(
                " Setting a live gap of 10 seconds relatively to the " +
                "system clock as a security.");
       const lastPosition = now - manifestInfos.availabilityStartTime;
-      const clockOffset = performance.now() / 1000;
-      return [lastPosition, clockOffset];
+      const positionTime = performance.now() / 1000;
+      return [lastPosition, positionTime];
     }
   }
   return undefined;
