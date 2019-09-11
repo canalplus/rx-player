@@ -351,7 +351,7 @@ export default {
    * Same than SAMPLING_INTERVAL_MEDIASOURCE but for lowLatency mode.
    * @type {Number}
    */
-  SAMPLING_INTERVAL_LOW_LATENCY: 300,
+  SAMPLING_INTERVAL_LOW_LATENCY: 250,
 
   /**
    * Same than SAMPLING_INTERVAL_MEDIASOURCE but for the directfile API.
@@ -388,7 +388,7 @@ export default {
    */
   ABR_STARVATION_FACTOR: {
     DEFAULT: 0.72,
-    LOW_LATENCY: 0.52,
+    LOW_LATENCY: 0.64,
   },
 
   /**
@@ -398,7 +398,7 @@ export default {
    */
   ABR_REGULAR_FACTOR: {
     DEFAULT: 0.90,
-    LOW_LATENCY: 0.7,
+    LOW_LATENCY: 0.90,
   },
 
   /**
@@ -422,11 +422,11 @@ export default {
    */
   ABR_STARVATION_GAP: {
     DEFAULT: 5,
-    LOW_LATENCY: 0.7,
+    LOW_LATENCY: 5,
   },
   OUT_OF_STARVATION_GAP: {
     DEFAULT: 7,
-    LOW_LATENCY: 2,
+    LOW_LATENCY: 7,
   },
 
   /**
