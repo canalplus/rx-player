@@ -49,8 +49,8 @@
  * // given parsed period
  * const lastPosition = getLastPositionForPeriod(somePeriod);
  * if (lastPosition != null) {
- *   const clockOffset = performance.now() / 1000;
- *   manifestBoundsCalculator.setLastPosition(lastPosition, clockOffset);
+ *   const positionTime = performance.now() / 1000;
+ *   manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
  *   // `getLastPosition` will now be correctly communicate the last position
  *   // (it returned `undefined` until then).
  * }
@@ -60,9 +60,8 @@
 export default class ManifestBoundsCalculator {
   private _timeShiftBufferDepth : number | null;
   private _availabilityStartTime : number;
-  private _clockOffset : number | undefined;
+  private _positionTime : number | undefined;
   private _lastPosition : number | undefined;
-  private _firstPosition : number | undefined;
   private _isDynamic : boolean;
 
   constructor(args : { timeShiftBufferDepth? : number;
@@ -70,7 +69,6 @@ export default class ManifestBoundsCalculator {
                        isDynamic : boolean; }
   ) {
     this._isDynamic = args.isDynamic;
-    this._firstPosition = !args.isDynamic ? 0 : undefined;
     this._timeShiftBufferDepth = !args.isDynamic ||
                                  args.timeShiftBufferDepth == null ?
                                    null :
@@ -79,33 +77,33 @@ export default class ManifestBoundsCalculator {
   }
 
   /**
-   * Set the last position and the clock offset (the value of `performance.now()`
+   * Set the last position and the position time (the value of `performance.now()`
    * at the time that position was true converted into seconds).
    *
    * @example
    * Example if you trust `Date.now()` to give you a reliable offset:
    * ```js
    * const lastPosition = Date.now();
-   * const clockOffset = performance.now() / 1000;
-   * manifestBoundsCalculator.setLastPosition(lastPosition, clockOffset);
+   * const positionTime = performance.now() / 1000;
+   * manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
    * ```
    *
    * @param {number} lastPositionOffset
    */
-  setLastPosition(lastPosition : number, clockOffset?: number) {
+  setLastPosition(lastPosition : number, positionTime?: number) {
     this._lastPosition = lastPosition;
-    this._clockOffset = clockOffset;
+    this._positionTime = positionTime;
   }
 
   /**
-   * Returns `true` if the last position and the clock offset (for live content only)
-   * have been comunicated.
+   * Returns `true` if the last position and the position time
+   * (for live content only) have been comunicated.
    * `false` otherwise.
    * @returns {boolean}
    */
   lastPositionIsKnown() : boolean {
     if (this._isDynamic) {
-      return this._clockOffset != null && this._lastPosition != null;
+      return this._positionTime != null && this._lastPosition != null;
     }
     return this._lastPosition != null;
   }
@@ -115,15 +113,18 @@ export default class ManifestBoundsCalculator {
    * @return {number|undefined}
    */
   getFirstAvailablePosition(): number | undefined {
-    const lastAvailablePosition = this.getLastAvailablePosition();
-    if (this._isDynamic && lastAvailablePosition != null) {
-      if (this._timeShiftBufferDepth == null) {
-        return undefined;
-      }
-      const firstAvailablePosition = lastAvailablePosition - this._timeShiftBufferDepth;
-      return firstAvailablePosition;
+    if (!this._isDynamic) {
+      return 0;
     }
-    return this._firstPosition;
+    if (this._timeShiftBufferDepth === null) {
+      return undefined;
+    }
+    const lastAvailablePosition = this.getLastAvailablePosition();
+    if (lastAvailablePosition === undefined) {
+      return undefined;
+    }
+    const firstAvailablePosition = lastAvailablePosition - this._timeShiftBufferDepth;
+    return firstAvailablePosition;
   }
 
   /**
@@ -134,10 +135,10 @@ export default class ManifestBoundsCalculator {
    */
   getLastAvailablePosition() : number | undefined {
     if (this._isDynamic &&
-        this._clockOffset != null &&
+        this._positionTime != null &&
         this._lastPosition != null
       ) {
-      return Math.max((this._lastPosition - this._clockOffset) +
+      return Math.max((this._lastPosition - this._positionTime) +
                         (performance.now() / 1000) - this._availabilityStartTime,
                       0);
     }
