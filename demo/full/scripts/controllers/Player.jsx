@@ -21,8 +21,6 @@ class Player extends React.Component {
       displaySpinner: false,
       displaySettings: false,
       isStopped: true,
-      isCatchingUp: false,
-      isStickingToTheLiveEdge: true,
     };
   }
 
@@ -40,8 +38,6 @@ class Player extends React.Component {
                 "isLoading",
                 "isReloading",
                 "isStopped",
-                "liveGap",
-                "lowLatencyMode"
     )
       .pipe(takeUntil(this._$destroySubject))
       .subscribe(([
@@ -50,42 +46,7 @@ class Player extends React.Component {
         isLoading,
         isReloading,
         isStopped,
-        liveGap,
-        lowLatencyMode,
       ]) => {
-        const { isCatchingUp,
-                isStickingToTheLiveEdge } = this.state;
-
-        if (player) {
-          const shouldCatchUp = (liveGap > 7 ||
-                                 isCatchingUp && liveGap > 5) &&
-                                 isStickingToTheLiveEdge &&
-                                 lowLatencyMode;
-
-          if (shouldCatchUp) {
-            if (liveGap > 10) {
-              const maximumPosition = player.get("maximumPosition");
-              player.dispatch("SEEK", maximumPosition - 5);
-            } else {
-              const factor = (liveGap - 5) / 4;
-              const rate = Math.round(
-                (liveGap > 5 ? Math.min(10, 1.1 + factor) : 1) * 10
-              ) / 10;
-              const lastCatchUpRate = player.get("playbackPosition");
-              if (rate !== lastCatchUpRate) {
-                this.setState({
-                  lowLatencyMode,
-                  isCatchingUp: true,
-                });
-                player.dispatch("SET_PLAYBACK_RATE", rate);
-              }
-            }
-          } else if (isCatchingUp) {
-            this.setState({ isCatchingUp: false });
-            player.dispatch("SET_PLAYBACK_RATE", 1);
-          }
-        }
-
         this.setState({ isStopped });
         if (isLoading || isReloading) {
           this.setState({ displaySpinner: true });
@@ -136,8 +97,7 @@ class Player extends React.Component {
   }
 
   render() {
-    const { player, displaySpinner, isStopped, isStickingToTheLiveEdge, isCatchingUp } =
-      this.state;
+    const { player, displaySpinner, isStopped } = this.state;
 
     const loadVideo = (video) => this.state.player.dispatch("LOAD", video);
     const stopVideo = () => this.state.player.dispatch("STOP");
@@ -147,10 +107,6 @@ class Player extends React.Component {
     };
     const toggleSettings = () => {
       this.setState({ displaySettings: !this.state.displaySettings });
-    };
-
-    const changeStickToLiveEdge = (shouldStick) => {
-      this.setState({ isStickingToTheLiveEdge: shouldStick });
     };
 
     return (
@@ -197,11 +153,9 @@ class Player extends React.Component {
                   player={player}
                   videoElement={this.playerWrapperElement}
                   toggleSettings={toggleSettings}
-                  changeStickToLiveEdge={changeStickToLiveEdge}
-                  isStickingToTheLiveEdge={isStickingToTheLiveEdge}
                   stopVideo={stopVideo}
-                  isCatchingUp={isCatchingUp}
-                /> : null}
+                /> : null
+            }
           </div>
           {player ?  <ChartsManager player={player} /> : null }
           {player ?  <LogDisplayer player={player} /> : null}
