@@ -553,7 +553,7 @@ export default function launchTestsForContent(
 
         player.setWantedBufferAhead(Infinity);
         expect(player.getWantedBufferAhead()).to.equal(Infinity);
-        await sleep(2000);
+        await sleep(4000);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be
           .at.least(player.getMaximumPosition() -
