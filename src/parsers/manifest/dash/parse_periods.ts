@@ -100,19 +100,19 @@ export default function parsePeriods(
 
     if (!manifestBoundsCalculator.lastPositionIsKnown()) {
       if (manifestInfos.isDynamic) {
-      // Try to guess last position to obtain the buffer depth
-      const lastPosition = getMaximumLastPosition(adaptations);
-      if (typeof lastPosition === "number") { // last position is available
-        const clockOffset = performance.now() / 1000;
-        manifestBoundsCalculator.setLastPosition(lastPosition, clockOffset);
-      } else {
-        const [guessedLastPosition, guessedClockOffset] =
-          guessLastPositionOffsetFromClock(manifestInfos, periodStart);
-        if (guessedLastPosition != null && guessedClockOffset != null) {
-          manifestBoundsCalculator.setLastPosition(
-            guessedLastPosition, guessedClockOffset);
+        // Try to guess last position to obtain the buffer depth
+        const lastPosition = getMaximumLastPosition(adaptations);
+        if (typeof lastPosition === "number") { // last position is available
+          const positionTime = performance.now() / 1000;
+          manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
+        } else {
+          const [guessedLastPosition, guessedPositionTime] =
+            guessLastPositionOffsetFromClock(manifestInfos, periodStart);
+          if (guessedLastPosition != null && guessedPositionTime != null) {
+            manifestBoundsCalculator.setLastPosition(
+              guessedLastPosition, guessedPositionTime);
+          }
         }
-      }
       } else if (manifestInfos.duration != null) {
         manifestBoundsCalculator.setLastPosition(manifestInfos.duration);
       }
@@ -121,10 +121,10 @@ export default function parsePeriods(
   if (!manifestBoundsCalculator.lastPositionIsKnown()) {
     if (manifestInfos.isDynamic) {
       // Guess a last time the last position
-      const [lastPosition, clockOffset] =
+      const [lastPosition, positionTime] =
         guessLastPositionOffsetFromClock(manifestInfos, 0);
-      if (lastPosition != null && clockOffset != null) {
-        manifestBoundsCalculator.setLastPosition(lastPosition, clockOffset);
+      if (lastPosition != null && positionTime != null) {
+        manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
       }
     } else if (manifestInfos.duration != null) {
       manifestBoundsCalculator.setLastPosition(manifestInfos.duration);
