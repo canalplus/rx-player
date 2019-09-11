@@ -9,14 +9,14 @@ const manifestInfos = {
   url: BASE_URL + "Manifest_Not_Starting_at_0.xml",
   transport: "smooth",
   isLive: false,
-  duration: 75 + 9,
-  minimumPosition: 9,
-  maximumPosition: 75 + 9,
+  duration: 75,
+  minimumPosition: 6.016,
+  maximumPosition: 75,
   availabilityStartTime: 0,
   periods: [
     {
       start: 0,
-      duration: 75 + 9,
+      duration: 75,
       adaptations: {
         audio: [
           {
@@ -32,10 +32,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 90000000,
+                      time: 60160000,
                       timescale: 10000000,
-                      duration: 20053333,
-                      mediaURL: BASE_URL + "QualityLevels96000/Fragmentsaudio_und=90000000",
+                      duration: 19840000,
+                      mediaURL: BASE_URL + "QualityLevels96000/Fragmentsaudio_und=60160000",
                     },
                   ],
                   // ...
@@ -59,10 +59,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 90000000,
+                      time: 60000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: BASE_URL + "QualityLevels300000/Fragmentsvideo=90000000",
+                      mediaURL: BASE_URL + "QualityLevels300000/Fragmentsvideo=60000000",
                     },
                     // ...
                   ],
@@ -78,10 +78,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 90000000,
+                      time: 60000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: BASE_URL + "QualityLevels750000/Fragmentsvideo=90000000",
+                      mediaURL: BASE_URL + "QualityLevels750000/Fragmentsvideo=60000000",
                     },
                     // ...
                   ],
@@ -97,10 +97,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 90000000,
+                      time: 60000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: BASE_URL + "QualityLevels1100000/Fragmentsvideo=90000000",
+                      mediaURL: BASE_URL + "QualityLevels1100000/Fragmentsvideo=60000000",
                     },
                     // ...
                   ],
@@ -116,10 +116,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 90000000,
+                      time: 60000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: BASE_URL + "QualityLevels1500000/Fragmentsvideo=90000000",
+                      mediaURL: BASE_URL + "QualityLevels1500000/Fragmentsvideo=60000000",
                     },
                     // ...
                   ],
@@ -135,10 +135,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 90000000,
+                      time: 60000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: BASE_URL + "QualityLevels2100000/Fragmentsvideo=90000000",
+                      mediaURL: BASE_URL + "QualityLevels2100000/Fragmentsvideo=60000000",
                     },
                     // ...
                   ],
@@ -154,10 +154,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 90000000,
+                      time: 60000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: BASE_URL + "QualityLevels3400000/Fragmentsvideo=90000000",
+                      mediaURL: BASE_URL + "QualityLevels3400000/Fragmentsvideo=60000000",
                     },
                     // ...
                   ],
@@ -173,10 +173,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 90000000,
+                      time: 60000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: BASE_URL + "QualityLevels4000000/Fragmentsvideo=90000000",
+                      mediaURL: BASE_URL + "QualityLevels4000000/Fragmentsvideo=60000000",
                     },
                     // ...
                   ],
@@ -192,10 +192,10 @@ const manifestInfos = {
                   init: null,
                   segments: [
                     {
-                      time: 90000000,
+                      time: 60000000,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: BASE_URL + "QualityLevels5000000/Fragmentsvideo=90000000",
+                      mediaURL: BASE_URL + "QualityLevels5000000/Fragmentsvideo=60000000",
                     },
                     // ...
                   ],

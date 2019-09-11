@@ -9,37 +9,7 @@
     <QualityLevel Index="5" Bitrate="3400000" CodecPrivateData="000000016764001fac1b29405005bb016a02020280000003008000001970400019f0a00026e8ff89f076870c65800000000168e9093525" FourCC="H264" MaxWidth="1280" MaxHeight="720" />
     <QualityLevel Index="6" Bitrate="4000000" CodecPrivateData="000000016764001fac1b29405005bb016a0202028000000300800000197040001e8480002dc6ff89f076870c65800000000168e9093525" FourCC="H264" MaxWidth="1280" MaxHeight="720" />
     <QualityLevel Index="7" Bitrate="5000000" CodecPrivateData="0000000167640029ac1b2940780227e5c05a808080a000000300200000065c500004c4b0000e4e1fe27c1da1c319600000000168e9093525" FourCC="H264" MaxWidth="1920" MaxHeight="1080" />
-    <c t="90000000" d="20000000">
-      <f i="0" s="13" />
-      <f i="1" s="16" />
-      <f i="2" s="16" />
-      <f i="3" s="17" />
-      <f i="4" s="22" />
-      <f i="5" s="27" />
-      <f i="6" s="29" />
-      <f i="7" s="31" />
-    </c>
-    <c d="20000000">
-      <f i="0" s="15" />
-      <f i="1" s="19" />
-      <f i="2" s="19" />
-      <f i="3" s="22" />
-      <f i="4" s="28" />
-      <f i="5" s="36" />
-      <f i="6" s="38" />
-      <f i="7" s="64" />
-    </c>
-    <c d="20000000">
-      <f i="0" s="16" />
-      <f i="1" s="22" />
-      <f i="2" s="26" />
-      <f i="3" s="27" />
-      <f i="4" s="36" />
-      <f i="5" s="49" />
-      <f i="6" s="52" />
-      <f i="7" s="61" />
-    </c>
-    <c d="20000000">
+    <c t="60000000" d="20000000">
       <f i="0" s="19" />
       <f i="1" s="22" />
       <f i="2" s="25" />
@@ -392,16 +362,7 @@
   </StreamIndex>
   <StreamIndex Type="audio" Name="audio_und" Language="UND" Subtype="" Chunks="38" Url="QualityLevels{bitrate}/Fragmentsaudio_und={start time}" QualityLevels="1">
     <QualityLevel Index="0" Bitrate="96000" CodecPrivateData="1190" FourCC="AACL" AudioTag="255" Channels="2" SamplingRate="48000" BitsPerSample="16" PacketSize="4" />
-    <c t="90000000" d="20053333">
-      <f i="0" s="24" />
-    </c>
-    <c d="20053333">
-      <f i="0" s="24" />
-    </c>
-    <c d="20053334">
-      <f i="0" s="24" />
-    </c>
-    <c d="19840000">
+    <c t="60160000" d="19840000">
       <f i="0" s="24" />
     </c>
     <c d="20053333">
