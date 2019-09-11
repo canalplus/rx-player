@@ -388,7 +388,7 @@ export default {
    */
   ABR_STARVATION_FACTOR: {
     DEFAULT: 0.72,
-    LOW_BUFFER_GAP: 0.52,
+    LOW_LATENCY: 0.52,
   },
 
   /**
@@ -398,7 +398,7 @@ export default {
    */
   ABR_REGULAR_FACTOR: {
     DEFAULT: 0.90,
-    LOW_BUFFER_GAP: 0.7,
+    LOW_LATENCY: 0.7,
   },
 
   /**
@@ -422,11 +422,11 @@ export default {
    */
   ABR_STARVATION_GAP: {
     DEFAULT: 5,
-    LOW_BUFFER_GAP: 0.7,
+    LOW_LATENCY: 0.7,
   },
   OUT_OF_STARVATION_GAP: {
     DEFAULT: 7,
-    LOW_BUFFER_GAP: 2,
+    LOW_LATENCY: 2,
   },
 
   /**

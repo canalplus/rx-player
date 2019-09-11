@@ -731,6 +731,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       // Options used by the ABR Manager.
       const adaptiveOptions = {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
+        lowLatencyMode,
         manualBitrates: this._priv_bitrateInfos.manualBitrates,
         maxAutoBitrates: this._priv_bitrateInfos.maxAutoBitrates,
         throttlers: {
@@ -755,7 +756,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
               .pipe(takeUntil(this._priv_stopCurrentContent$)), } :
           {},
         },
-        lowBufferGap: lowLatencyMode,
       };
 
       // Options used by the TextTrack SourceBuffer
