@@ -47,6 +47,9 @@ class Player extends React.Component {
         isReloading,
         isStopped,
       ]) => {
+        if (isStopped) {
+          player.dispatch("SET_PLAYBACK_RATE", 1);
+        }
         this.setState({ isStopped });
         if (isLoading || isReloading) {
           this.setState({ displaySpinner: true });
