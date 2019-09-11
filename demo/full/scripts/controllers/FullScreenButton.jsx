@@ -31,7 +31,7 @@ function removeFullscreenListener(listener) {
  * otherwise it's false.
  * @returns {boolean}
  */
-function isFullscreen() {
+function isInFullscreen() {
   return !!(
     document.fullscreenElement ||
     document.mozFullScreenElement ||
@@ -46,7 +46,7 @@ function isFullscreen() {
  * rs-detect)
  */
 function requestFullscreen(elt) {
-  if (!isFullscreen()) {
+  if (!isInFullscreen()) {
     if (elt.requestFullscreen) {
       elt.requestFullscreen();
     } else if (elt.msRequestFullscreen) {
@@ -66,7 +66,7 @@ function requestFullscreen(elt) {
  * fullscreen, is it really what we want?
  */
 function exitFullscreen() {
-  if (isFullscreen()) {
+  if (isInFullscreen()) {
     if (document.exitFullscreen) {
       document.exitFullscreen();
     } else if (document.msExitFullscreen) {
@@ -95,10 +95,10 @@ function exitFullscreen() {
 class FullscreenButton extends React.Component {
   constructor() {
     super();
-    this.state = { isFullscreen: isFullscreen() };
+    this.state = { isFullscreen: isInFullscreen() };
 
     this._fullscreenListener = () => {
-      const isInFullscreen = isFullscreen();
+      const isInFullscreen = isInFullscreen();
       if (!isInFullscreen) {
         this.props.videoElement.classList.remove("fullscreen");
       }

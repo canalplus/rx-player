@@ -154,9 +154,9 @@ class ContentList extends React.Component {
   componentDidMount() {
     // estimate first index which should be selected
     const contentList = this.state.contentsPerType[this.state.transportType];
-    const contentChoiceIndex = getIndexOfFirstEnabledContent(contentList);
-    const content = contentList[contentChoiceIndex];
-    this.changeSelectedContent(contentChoiceIndex, content);
+    const firstEnabledContentIndex = getIndexOfFirstEnabledContent(contentList);
+    const content = contentList[firstEnabledContentIndex];
+    this.changeSelectedContent(firstEnabledContentIndex, content);
   }
 
   /**
@@ -316,9 +316,10 @@ class ContentList extends React.Component {
 
         // update content selection
         const contents = contentsPerType[newTransportType];
-        const contentChoiceIndex = getIndexOfFirstEnabledContent(contents);
-        this.changeSelectedContent(contentChoiceIndex,
-                                   contents[contentChoiceIndex]);
+        const firstEnabledContentIndex =
+          getIndexOfFirstEnabledContent(contents);
+        this.changeSelectedContent(firstEnabledContentIndex,
+                                   contents[firstEnabledContentIndex]);
       }
     };
 
@@ -353,21 +354,21 @@ class ContentList extends React.Component {
       const storedContent = storeContent(contentToSave);
 
       // reconstruct list of contents
-      const contentsPerType = constructContentList();
-      this.setState({ contentsPerType,
+      const contentList = constructContentList();
+      this.setState({ contentsPerType: contentList,
                       isSavingOrUpdating: false });
 
       // update content selection
       const contents = contentsPerType[transportType];
-      const contentChoiceIndex = contents
+      const firstEnabledContentIndex = contents
         .findIndex(c => c.id === storedContent.id);
-      if (contentChoiceIndex < 0) {
+      if (firstEnabledContentIndex < 0) {
         /* eslint-disable-next-line no-console */
         console.warn("Stored content not found in local storage.");
         this.changeSelectedContent(0, contents[0]);
       } else {
-        this.changeSelectedContent(contentChoiceIndex,
-                                   contents[contentChoiceIndex]);
+        this.changeSelectedContent(firstEnabledContentIndex,
+                                   contents[firstEnabledContentIndex]);
       }
     };
 
@@ -380,8 +381,8 @@ class ContentList extends React.Component {
         const hasRemoved = removeStoredContent(content.id);
         if (hasRemoved) {
           // reconstruct list of contents
-          const contentsPerType = constructContentList();
-          this.setState({ contentsPerType });
+          const contentList = constructContentList();
+          this.setState({ contentsPerType: contentList });
 
           // update content selection
           const contents = contentsPerType[transportType];

@@ -63,17 +63,11 @@ export default function checkKeyStatuses(
         break;
       }
 
-      case KEY_STATUSES.INTERNAL_ERROR: {
+      case KEY_STATUSES.OUTPUT_RESTRICTED:
+      case KEY_STATUSES.INTERNAL_ERROR:
         throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
                                       "An invalid key status has been " +
                                       "encountered: " + keyStatus);
-      }
-
-      case KEY_STATUSES.OUTPUT_RESTRICTED: {
-        throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                      "An invalid key status has been " +
-                                      "encountered: " + keyStatus);
-      }
     }
   });
   return warnings;

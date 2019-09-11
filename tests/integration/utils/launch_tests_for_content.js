@@ -275,14 +275,14 @@ export default function launchTestsForContent(
                   const timescale = reprIndexInfos.segments[0].timescale;
                   const firstSegmentTime =
                     reprIndexInfos.segments[0].time / timescale;
-                  const duration = (
+                  const rangeDuration = (
                     (
                       reprIndexInfos.segments[0].time +
                       reprIndexInfos.segments[0].duration / 2
                     ) / timescale
                   ) - firstSegmentTime;
                   const firstSegments =
-                    reprIndex.getSegments(firstSegmentTime, duration);
+                    reprIndex.getSegments(firstSegmentTime, rangeDuration);
 
                   expect(firstSegments.length).to.equal(1);
 
