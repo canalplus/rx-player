@@ -33,33 +33,43 @@ export type IABRManagerClockTick = IRepresentationEstimatorClockTick;
 
 // Options for every RepresentationEstimator
 interface IRepresentationEstimatorsThrottlers {
-  limitWidth : Partial<Record<IBufferType, Observable<number>>>;
-  throttle : Partial<Record<IBufferType, Observable<number>>>;
-  throttleBitrate : Partial<Record<IBufferType, Observable<number>>>;
+  limitWidth : Partial<Record<IBufferType,
+                              Observable<number>>>;
+  throttle : Partial<Record<IBufferType,
+                            Observable<number>>>;
+  throttleBitrate : Partial<Record<IBufferType,
+                                   Observable<number>>>;
 }
 
 export interface IABRManagerArguments {
-  manualBitrates: Partial<Record<IBufferType, Observable<number>>>;
-  maxAutoBitrates: Partial<Record<IBufferType, Observable<number>>>;
-  initialBitrates: Partial<Record<IBufferType, number>>;
-  throttlers: IRepresentationEstimatorsThrottlers;
-  lowBufferGap: boolean;
+  initialBitrates: Partial<Record<IBufferType, // Initial bitrate chosen, per
+                                  number>>;    // type (minimum if not set)
+  lowLatencyMode: boolean; // Some settings can depend on wether you're playing a
+                           // low-latency content. Set it to `true` if you're playing
+                           // such content.
+  maxAutoBitrates: Partial<Record<IBufferType,          // Maximum bitrate chosen
+                                  Observable<number>>>; // when in auto mode, per
+                                                        // type (Infinity by default)
+  manualBitrates: Partial<Record<IBufferType,          // Manual bitrate set for
+                                 Observable<number>>>; // a given type (-1 for
+                                                       // auto mode)
+  throttlers: IRepresentationEstimatorsThrottlers; // Throttle from external events
 }
 
 /**
  * Adaptive BitRate Manager.
  *
- * Select the right representation from the network and buffer infos it
+ * Select the right Representation from the network and buffer infos it
  * receives.
  * @class ABRManager
  */
 export default class ABRManager {
+  private _bandwidthEstimators : Partial<Record<IBufferType, BandwidthEstimator>>;
+  private _initialBitrates : Partial<Record<IBufferType, number>>;
   private _manualBitrates : Partial<Record<IBufferType, Observable<number>>>;
   private _maxAutoBitrates : Partial<Record<IBufferType, Observable<number>>>;
-  private _initialBitrates : Partial<Record<IBufferType, number>>;
   private _throttlers : IRepresentationEstimatorsThrottlers;
-  private _bandwidthEstimators : Partial<Record<IBufferType, BandwidthEstimator>>;
-  private _lowBufferGap : boolean;
+  private _lowLatencyMode : boolean;
 
   /**
    * @param {Object} options
@@ -70,7 +80,7 @@ export default class ABRManager {
     this._initialBitrates = options.initialBitrates || {};
     this._throttlers = options.throttlers || {};
     this._bandwidthEstimators = {};
-    this._lowBufferGap = options.lowBufferGap;
+    this._lowLatencyMode = options.lowLatencyMode;
   }
 
   /**
@@ -104,7 +114,7 @@ export default class ABRManager {
                                      manualBitrate$,
                                      maxAutoBitrate$,
                                      representations,
-                                     lowBufferGap: this._lowBufferGap });
+                                     lowLatencyMode: this._lowLatencyMode });
   }
 
   /**

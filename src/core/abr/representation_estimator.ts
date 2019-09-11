@@ -134,11 +134,13 @@ export interface IRepresentationEstimatorArguments {
   clock$ : Observable<IRepresentationEstimatorClockTick>; // current playback situation
   filters$ : Observable<IABRFilters>; // Filter possible choices
   initialBitrate?: number; // The initial wanted bitrate
+  lowLatencyMode: boolean; // Some settings can depend on wether you're playing a
+                           // low-latency content. Set it to `true` if you're playing
+                           // such content.
   manualBitrate$ : Observable<number>; // Force bitrate to a given value
   maxAutoBitrate$ : Observable<number>; // Set a maximum value for the
                                         // adaptative bitrate
   representations : Representation[]; // List of Representations to choose from
-  lowBufferGap : boolean; // Playback has low buffer gap due to low latency streaming
 }
 
 /**
@@ -179,13 +181,13 @@ export default function RepresentationEstimator({
   clock$,
   filters$,
   initialBitrate,
+  lowLatencyMode,
   manualBitrate$,
   maxAutoBitrate$,
   representations,
-  lowBufferGap,
 } : IRepresentationEstimatorArguments) : Observable<IABREstimate> {
   const scoreCalculator = new RepresentationScoreCalculator();
-  const networkAnalyzer = new NetworkAnalyzer(initialBitrate || 0, lowBufferGap);
+  const networkAnalyzer = new NetworkAnalyzer(initialBitrate || 0, lowLatencyMode);
   const requestsStore = new PendingRequestsStore();
 
   /**
