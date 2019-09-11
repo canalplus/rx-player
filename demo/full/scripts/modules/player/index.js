@@ -123,16 +123,12 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
 
     SET_AUDIO_BITRATE: (bitrate) => {
       player.setAudioBitrate(bitrate || -1);
-      state.set({
-        audioBitrateAuto: !bitrate,
-      });
+      state.set({ audioBitrateAuto: !bitrate });
     },
 
     SET_VIDEO_BITRATE: (bitrate) => {
       player.setVideoBitrate(bitrate || -1);
-      state.set({
-        videoBitrateAuto: !bitrate,
-      });
+      state.set({ videoBitrateAuto: !bitrate });
     },
 
     SET_AUDIO_TRACK: (track) => {
@@ -153,9 +149,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
 
     SET_PLAYBACK_RATE: (rate) => {
       player.setPlaybackRate(rate);
-      state.set({
-        playbackRate: rate,
-      });
+      state.set({ playbackRate: rate });
     },
   };
 };

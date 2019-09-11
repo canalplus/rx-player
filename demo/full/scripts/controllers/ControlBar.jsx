@@ -10,22 +10,35 @@ import Progressbar from "./ProgressBar.jsx";
 import VolumeButton from "./VolumeButton.jsx";
 import VolumeBar from "./VolumeBar.jsx";
 
+// Distance from live edge we try to reach when the catching up button
+// is enabled.
+const LIVE_GAP_GOAL_WHEN_CATCHING_UP = 5;
+
+// Distance from live edge from which we are considered too far too just
+// change the playback rate. In the case the current distance is superior
+// to that value, we will seek to a LIVE_GAP_GOAL_WHEN_CATCHING_UP distance
+// directly instead.
+const CATCH_UP_SEEKING_STEP = 10;
+
+// Maximum playback rate we can set when catching up.
+const MAX_RATE = 10;
+
 class ControlBar extends React.Component {
   constructor(...args) {
     super(...args);
     this.state = {
       isCatchingUp: false,
-      isStickingToTheLiveEdge: true,
+      stickToTheLiveEdgeInLowLatencyMode: true,
     };
   }
 
   render() {
     const changeStickToLiveEdge = (shouldStick) => {
-      this.setState({ isStickingToTheLiveEdge: shouldStick });
+      this.setState({ stickToTheLiveEdgeInLowLatencyMode: shouldStick });
     };
 
     const { isCatchingUp,
-            isStickingToTheLiveEdge } = this.state;
+            stickToTheLiveEdgeInLowLatencyMode } = this.state;
 
     const {
       isContentLoaded,
@@ -61,32 +74,34 @@ class ControlBar extends React.Component {
      * - If not, changed playback rate in order to move back
      * close to the live.
      */
-    const catchUp = () => {
-      if (liveGap > 10) {
-        player.dispatch("SEEK", maximumPosition - 5);
+    const checkCatchUp = () => {
+      if (player == null) {
+        return;
+      }
+      if (liveGap > CATCH_UP_SEEKING_STEP) {
+        player.dispatch("SEEK", maximumPosition - LIVE_GAP_GOAL_WHEN_CATCHING_UP);
+      } else if (liveGap <= LIVE_GAP_GOAL_WHEN_CATCHING_UP) { // we're done
+        if (!this.state.isCatchingUp) {
+          return;
+        }
+        player.dispatch("SET_PLAYBACK_RATE", 1);
+        this.setState({ isCatchingUp: false });
       } else {
-        const factor = (liveGap - 5) / 4;
-        const rate = Math.round(
-          (liveGap > 5 ? Math.min(10, 1.1 + factor) : 1) * 10
-        ) / 10;
-        if (rate !== playbackRate) {
+        const factor = (liveGap - LIVE_GAP_GOAL_WHEN_CATCHING_UP) / 4;
+        const rate = Math.round(Math.min(MAX_RATE, 1.1 + factor) * 10) / 10;
+        if (!this.state.isCatchingUp) {
           this.setState({ isCatchingUp: true });
+        }
+        if (rate !== playbackRate) {
           player.dispatch("SET_PLAYBACK_RATE", rate);
         }
       }
     };
 
-    if (player) {
-      const shouldCatchUp = isContentLoaded &&
-                            (liveGap > 7 || isCatchingUp && liveGap > 5) &&
-                            isStickingToTheLiveEdge &&
-                            lowLatencyMode;
-      if (shouldCatchUp) {
-        catchUp();
-      } else if (isCatchingUp) {
-        player.dispatch("SET_PLAYBACK_RATE", 1);
-        this.setState({ isCatchingUp: false });
-      }
+    if (isContentLoaded &&
+        lowLatencyMode &&
+        stickToTheLiveEdgeInLowLatencyMode) {
+      checkCatchUp();
     }
 
     const positionElement = (() => {
@@ -124,8 +139,10 @@ class ControlBar extends React.Component {
           {
             (isContentLoaded && lowLatencyMode) ?
               <StickToLiveEdgeButton
-                isStickingToTheLiveEdge={isStickingToTheLiveEdge}
-                changeStickToLiveEdge={changeStickToLiveEdge}
+                isStickingToTheLiveEdge={stickToTheLiveEdgeInLowLatencyMode}
+                changeStickToLiveEdge={() =>
+                  changeStickToLiveEdge(!stickToTheLiveEdgeInLowLatencyMode)
+                }
               /> : null
           }
           {positionElement}
