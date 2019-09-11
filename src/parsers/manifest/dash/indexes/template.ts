@@ -410,13 +410,13 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     }
 
     const { duration, timescale } = this._index;
-    const firstPos = this._manifestBoundsCalculator.getFirstAvailablePosition();
-    if (firstPos === undefined) {
+    const firstPosition = this._manifestBoundsCalculator.getMinimumBound();
+    if (firstPosition === undefined) {
       return undefined;
     }
 
-    const segmentTime = firstPos > this._periodStart ?
-      (firstPos - this._periodStart) * timescale :
+    const segmentTime = firstPosition > this._periodStart ?
+      (firstPosition - this._periodStart) * timescale :
       0;
     const numberIndexedToZero = Math.floor(segmentTime / duration);
     return numberIndexedToZero * duration;
@@ -432,7 +432,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const { duration, timescale } = this._index;
 
     if (this._isDynamic) {
-      const lastPos = this._manifestBoundsCalculator.getLastAvailablePosition();
+      const lastPos = this._manifestBoundsCalculator.getMaximumBound();
       if (lastPos === undefined) {
         return undefined;
       }

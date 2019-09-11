@@ -24,7 +24,6 @@ import checkManifestIDs from "../utils/check_manifest_ids";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
 import getMinimumAndMaximumPosition from "./get_minimum_and_maximum_positions";
-import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import {
   createMPDIntermediateRepresentation,
   IMPDIntermediateRepresentation,
@@ -188,13 +187,8 @@ function parseCompleteIntermediateRepresentation(
   const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
   const clockOffset = args.externalClockOffset;
 
-  // We might to communicate the depth of the Buffer while parsing
-  const manifestBoundsCalculator = new ManifestBoundsCalculator({ availabilityStartTime,
-                                                                  isDynamic,
-                                                                  timeShiftBufferDepth });
   const manifestInfos = { availabilityStartTime,
                           baseURL,
-                          manifestBoundsCalculator,
                           clockOffset,
                           duration: rootAttributes.duration,
                           isDynamic,

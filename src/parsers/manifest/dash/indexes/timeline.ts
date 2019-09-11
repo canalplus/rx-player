@@ -490,11 +490,11 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * available due to timeshifting.
    */
   private _refreshTimeline() : void {
-    const firstPos = this._manifestBoundsCalculator.getFirstAvailablePosition();
-    if (firstPos == null) {
+    const firstPosition = this._manifestBoundsCalculator.getMinimumBound();
+    if (firstPosition == null) {
       return; // we don't know yet
     }
-    const scaledFirstPosition = toIndexTime(firstPos, this._index);
+    const scaledFirstPosition = toIndexTime(firstPosition, this._index);
     clearTimelineFromPosition(this._index.timeline, scaledFirstPosition);
   }
 

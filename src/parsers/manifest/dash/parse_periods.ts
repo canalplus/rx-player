@@ -35,9 +35,6 @@ const generatePeriodID = idGenerator();
 export interface IManifestInfos {
   availabilityStartTime : number; // Time from which the content starts
   baseURL? : string;
-  manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
-                                                       // available position of a live
-                                                       // content
   clockOffset? : number;
   duration? : number;
   isDynamic : boolean;
@@ -63,7 +60,12 @@ export default function parsePeriods(
 
   // We parse it in reverse because we might need to deduce the buffer depth from
   // the last Periods' indexes
-  const { manifestBoundsCalculator } = manifestInfos;
+
+  const { availabilityStartTime, isDynamic, timeShiftBufferDepth } = manifestInfos;
+  // We might to communicate the depth of the Buffer while parsing
+  const manifestBoundsCalculator = new ManifestBoundsCalculator({ availabilityStartTime,
+                                                                  isDynamic,
+                                                                  timeShiftBufferDepth });
   for (let i = periodsIR.length - 1; i >= 0; i--) {
     const periodIR = periodsIR[i];
     const periodBaseURL = resolveURL(manifestInfos.baseURL, periodIR.children.baseURL);
@@ -82,8 +84,7 @@ export default function parsePeriods(
 
     const periodInfos = { availabilityStartTime: manifestInfos.availabilityStartTime,
                           baseURL: periodBaseURL,
-                          manifestBoundsCalculator:
-                            manifestInfos.manifestBoundsCalculator,
+                          manifestBoundsCalculator,
                           clockOffset: manifestInfos.clockOffset,
                           end: periodEnd,
                           isDynamic: manifestInfos.isDynamic,
@@ -106,9 +107,11 @@ export default function parsePeriods(
           const positionTime = performance.now() / 1000;
           manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
         } else {
-          const [guessedLastPosition, guessedPositionTime] =
-            guessLastPositionAndPositionTimeFromClock(manifestInfos, periodStart);
-          if (guessedLastPosition != null && guessedPositionTime != null) {
+          const guessedLastPositionFromClock =
+            guessLastPositionFromClock(manifestInfos, periodStart);
+          if (guessedLastPositionFromClock !== undefined) {
+            const [guessedLastPosition, guessedPositionTime] =
+              guessedLastPositionFromClock;
             manifestBoundsCalculator.setLastPosition(
               guessedLastPosition, guessedPositionTime);
           }
@@ -121,9 +124,10 @@ export default function parsePeriods(
   if (!manifestBoundsCalculator.lastPositionIsKnown()) {
     if (manifestInfos.isDynamic) {
       // Guess a last time the last position
-      const [lastPosition, positionTime] =
-        guessLastPositionAndPositionTimeFromClock(manifestInfos, 0);
-      if (lastPosition != null && positionTime != null) {
+      const guessedLastPositionFromClock =
+        guessLastPositionFromClock(manifestInfos, 0);
+      if (guessedLastPositionFromClock !== undefined) {
+        const [lastPosition, positionTime] = guessedLastPositionFromClock;
         manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
       }
     } else if (manifestInfos.duration != null) {
@@ -160,10 +164,10 @@ export default function parsePeriods(
  * @param {number} minimumTime
  * @returns {Array.<number|undefined>}
  */
-function guessLastPositionAndPositionTimeFromClock(
+function guessLastPositionFromClock(
   manifestInfos : IManifestInfos,
   minimumTime : number
-) : [number | undefined, number | undefined] {
+) : [number, number] | undefined {
   if (manifestInfos.clockOffset != null) {
     const lastPosition = manifestInfos.clockOffset / 1000 -
       manifestInfos.availabilityStartTime;
@@ -183,7 +187,7 @@ function guessLastPositionAndPositionTimeFromClock(
       return [lastPosition, clockOffset];
     }
   }
-  return [undefined, undefined];
+  return undefined;
 }
 
 /**

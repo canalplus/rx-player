@@ -18,41 +18,41 @@ import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 
 describe("DASH parsers - ManifestBoundsCalculator", () => {
   /* tslint:disable max-line-length */
-  it("should return undefined through `getFirstAvailablePosition` if the live edge was never set for a dynamic content with a timeShiftBufferDepth", () => {
+  it("should return undefined through `getMinimumBound` if the live edge was never set for a dynamic content with a timeShiftBufferDepth", () => {
   /* tslint:enable max-line-length */
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       availabilityStartTime: 10,
       isDynamic: true,
       timeShiftBufferDepth: 5,
     });
-    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(undefined);
-    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(undefined);
-    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(undefined);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(undefined);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(undefined);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(undefined);
   });
 
   /* tslint:disable max-line-length */
-  it("should return 0 through `getFirstAvailablePosition` if the live edge was never set for a static content", () => {
+  it("should return 0 through `getMinimumBound` if the live edge was never set for a static content", () => {
   /* tslint:enable max-line-length */
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       availabilityStartTime: 10,
       isDynamic: false,
       timeShiftBufferDepth: 5,
     });
-    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(0);
-    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(0);
-    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(0);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(0);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(0);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(0);
   });
 
   /* tslint:disable max-line-length */
-  it("should return 0 through `getFirstAvailablePosition` if the live edge was never set for a dynamic content with no timeShiftBufferDepth", () => {
+  it("should return 0 through `getMinimumBound` if the live edge was never set for a dynamic content with no timeShiftBufferDepth", () => {
   /* tslint:enable max-line-length */
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       availabilityStartTime: 10,
       isDynamic: false,
     });
-    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(0);
-    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(0);
-    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(0);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(0);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(0);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(0);
   });
 
   /* tslint:disable max-line-length */
@@ -64,7 +64,7 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
       timeShiftBufferDepth: 5,
     });
     expect(manifestBoundsCalculator.lastPositionIsKnown()).toEqual(false);
-    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(undefined);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(undefined);
     expect(manifestBoundsCalculator.lastPositionIsKnown()).toEqual(false);
   });
 
@@ -93,7 +93,7 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
   });
 
   /* tslint:disable max-line-length */
-  it("should return how much time has elapsed through `getFirstAvailablePosition` since the live edge was set for a dynamic content", () => {
+  it("should return how much time has elapsed through `getMinimumBound` since the live edge was set for a dynamic content", () => {
   /* tslint:enable max-line-length */
     let date = 5000;
     const performanceSpy = jest.spyOn(performance, "now")
@@ -105,9 +105,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     });
     manifestBoundsCalculator.setLastPosition(1000, 10);
     date = 25000;
-    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(1000);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(1000);
     date = 35000;
-    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(1010);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(1010);
     performanceSpy.mockRestore();
   });
 
@@ -124,9 +124,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     });
     manifestBoundsCalculator.setLastPosition(1000, 0);
     date = 25000;
-    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(0);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(0);
     date = 35000;
-    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(0);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(0);
     performanceSpy.mockRestore();
   });
 
@@ -143,10 +143,10 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     });
     manifestBoundsCalculator.setLastPosition(1000, 0);
     date = 50000;
-    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(1035);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(1035);
     manifestBoundsCalculator.setLastPosition(0, 0);
     date = 55000;
-    expect(manifestBoundsCalculator.getFirstAvailablePosition()).toEqual(40);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(40);
     performanceSpy.mockRestore();
   });
 });

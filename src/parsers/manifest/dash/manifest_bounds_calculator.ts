@@ -47,7 +47,7 @@
  * // ...
  * // Let's imagine a function which try to guess the last position based on a
  * // given parsed period
- * const lastPosition = getLastPositionForPeriod(somePeriod);
+ * const lastPosition = getMaximumBound(somePeriod);
  * if (lastPosition != null) {
  *   const positionTime = performance.now() / 1000;
  *   manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
@@ -109,31 +109,31 @@ export default class ManifestBoundsCalculator {
   }
 
   /**
-   * Get first available position.
+   * Get minimum bound of content.
    * @return {number|undefined}
    */
-  getFirstAvailablePosition(): number | undefined {
+  getMinimumBound(): number | undefined {
     if (!this._isDynamic) {
       return 0;
     }
     if (this._timeShiftBufferDepth === null) {
       return undefined;
     }
-    const lastAvailablePosition = this.getLastAvailablePosition();
-    if (lastAvailablePosition === undefined) {
+    const maximumBound = this.getMaximumBound();
+    if (maximumBound === undefined) {
       return undefined;
     }
-    const firstAvailablePosition = lastAvailablePosition - this._timeShiftBufferDepth;
-    return firstAvailablePosition;
+    const minimumBound = maximumBound - this._timeShiftBufferDepth;
+    return minimumBound;
   }
 
   /**
-   * Calculate the current last available position by using both the calculated
-   * last position offset and the timeshift buffer depth.
-   * `undefined` if the last position offset has never been communicated.
+   * Calculate the current maximum bound by using both the calculated
+   * last position and the timeshift buffer depth.
+   * `undefined` if the last position has never been communicated.
    * @return {number|undefined}
    */
-  getLastAvailablePosition() : number | undefined {
+  getMaximumBound() : number | undefined {
     if (this._isDynamic &&
         this._positionTime != null &&
         this._lastPosition != null
