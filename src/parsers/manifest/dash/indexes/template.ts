@@ -441,8 +441,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       // /!\ The scaled max position augments continuously and might not
       // reflect exactly the real server-side value. As segments are
       // generated discretely.
-      const scaledMaxPosition = Math.min(lastPos - this._periodStart,
-                                         this._relativePeriodEnd || Infinity);
+      const scaledMaxPosition = this._relativePeriodEnd != null ?
+        Math.min(lastPos - this._periodStart, this._relativePeriodEnd) :
+        lastPos - this._periodStart;
+
       // Maximum position is before this period.
       // No segment is yet available here
       if (scaledMaxPosition < 0) {
