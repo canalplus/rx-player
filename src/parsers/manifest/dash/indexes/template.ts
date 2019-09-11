@@ -83,8 +83,9 @@ export interface ITemplateIndexIndexArgument {
 export interface ITemplateIndexContextArgument {
   availabilityStartTime : number; // Time from which the content starts
                                   // i.e. The `0` time is at that timestamp
-  manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
-                                                       // available position of a
+  manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the
+                                                       // availability start
+                                                       // and end time from a
                                                        // content
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time, in milliseconds
@@ -166,7 +167,6 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                                                   periodEnd - periodStart;
     if (isDynamic && periodEnd == null) {
       if (clockOffset != null) {
-        // XXX TODO
         const perfOffset = (clockOffset / 1000) - availabilityStartTime;
         this._liveEdgeOffset = perfOffset - periodStart;
       } else {
