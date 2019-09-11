@@ -84,9 +84,8 @@ export interface ITemplateIndexContextArgument {
   availabilityStartTime : number; // Time from which the content starts
                                   // i.e. The `0` time is at that timestamp
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the
-                                                       // availability start
-                                                       // and end time from a
-                                                       // content
+                                                       // minimum and maximum
+                                                       // of a content
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time, in milliseconds
   isDynamic : boolean; // if true, the MPD can be updated over time

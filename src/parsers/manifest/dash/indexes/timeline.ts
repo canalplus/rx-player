@@ -98,9 +98,8 @@ export interface ITimelineIndexIndexArgument {
 // Aditional argument for a SegmentTimeline RepresentationIndex
 export interface ITimelineIndexContextArgument {
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the
-                                                       // availability start
-                                                       // and end time from a
-                                                       // content
+                                                       // minimum and maximum
+                                                       // of a content
   manifestReceivedTime? : number; // time (in terms of `performance.now`) at
                                    // which the Manifest file was received
   periodStart : number; // Start of the period concerned by this
