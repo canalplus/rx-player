@@ -23,7 +23,6 @@ import {
   map,
   mergeMap,
 } from "rxjs/operators";
-import config from "../../../config";
 import { ICustomError } from "../../../errors";
 import {
   ILoadedManifest,
@@ -36,9 +35,6 @@ import {
 import tryCatch from "../../../utils/rx-try_catch";
 import backoff from "../utils/backoff";
 import errorSelector from "../utils/error_selector";
-
-const { INITIAL_BACKOFF_DELAY_BASE,
-        MAX_BACKOFF_DELAY_BASE } = config;
 
 // An Error happened while loading (usually a request error)
 export interface IPipelineLoaderWarning { type : "warning";
@@ -64,11 +60,11 @@ export type IManifestPipelineLoaderEvent = IManifestPipelineLoaderResponse |
 
 // Options you can pass on to the loader
 export interface IManifestPipelineLoaderOptions {
-  lowLatencyMode : boolean; // Whether the content is a low-latency content
-                            // This has an impact on default backoff delays
   maxRetry : number; // Maximum number of time a request on error will be retried
   maxRetryOffline : number; // Maximum number of time a request be retried when
                             // the user is offline
+  baseDelay : number; // initial delay when retrying a request
+  maxDelay : number; // maximum delay when retrying a request
 }
 
 /**
@@ -96,7 +92,7 @@ export default function createManifestLoader(
   manifestPipeline : ITransportManifestPipeline,
   options : IManifestPipelineLoaderOptions
 ) : (x : IManifestLoaderArguments) => Observable<IManifestPipelineLoaderEvent> {
-  const { lowLatencyMode, maxRetry, maxRetryOffline } = options;
+  const { maxRetry, maxRetryOffline } = options;
   const loader : IManifestLoaderFunction = manifestPipeline.loader;
 
   // TODO Remove the resolver completely
@@ -107,12 +103,8 @@ export default function createManifestLoader(
                                         /* tslint:enable deprecation */
 
   // Backoff options given to the backoff retry done with the loader function.
-  const baseDelay = lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY :
-                                     INITIAL_BACKOFF_DELAY_BASE.REGULAR;
-  const maxDelay = lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY :
-                                    MAX_BACKOFF_DELAY_BASE.REGULAR;
-  const backoffOptions = { baseDelay,
-                           maxDelay,
+  const backoffOptions = { baseDelay: options.baseDelay,
+                           maxDelay: options.maxDelay,
                            maxRetryRegular: maxRetry,
                            maxRetryOffline };
   /**

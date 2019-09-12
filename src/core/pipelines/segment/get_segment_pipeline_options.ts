@@ -35,8 +35,8 @@ export interface ISegmentPipelineLoaderOptions<T> {
   maxRetry : number; // Maximum number of time a request on error will be retried
   maxRetryOffline : number; // Maximum number of time a request be retried when
                             // the user is offline
-  initialBackoffDelay : number;
-  maximumBackoffDelay : number;
+  initialBackoffDelay : number; // initial delay when retrying a request
+  maximumBackoffDelay : number; // maximum delay when retrying a request
 }
 
 /**

@@ -17,7 +17,9 @@
 import config from "../../../config";
 
 const { DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-        DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR } = config;
+        DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
+        INITIAL_BACKOFF_DELAY_BASE,
+        MAX_BACKOFF_DELAY_BASE } = config;
 
 /**
  * Parse config to replace missing manifest pipeline options.
@@ -30,8 +32,18 @@ export default function parseManifestPipelineOptions(
     lowLatencyMode }: { manifestRetry? : number;
                         offlineRetry? : number;
                         lowLatencyMode : boolean; }
-) : { maxRetry: number; maxRetryOffline: number; lowLatencyMode : boolean } {
+) : { baseDelay : number;
+      lowLatencyMode : boolean;
+      maxDelay : number;
+      maxRetry : number;
+      maxRetryOffline : number; } {
+  const baseDelay = lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY :
+                                     INITIAL_BACKOFF_DELAY_BASE.REGULAR;
+  const maxDelay = lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY :
+                                    MAX_BACKOFF_DELAY_BASE.REGULAR;
   return {
+    baseDelay,
+    maxDelay,
     maxRetry: manifestRetry != null ? manifestRetry :
                                       DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
     maxRetryOffline: offlineRetry != null ? offlineRetry :

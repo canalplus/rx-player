@@ -27,7 +27,6 @@ import {
   mergeMap,
   tap,
 } from "rxjs/operators";
-import config from "../../../config";
 import {
   formatError,
   ICustomError,
@@ -45,9 +44,6 @@ import createManifestLoader, {
   IPipelineLoaderResponseValue,
 } from "./create_manifest_loader";
 import parseManifestPipelineOptions from "./parse_manifest_pipeline_options";
-
-const { INITIAL_BACKOFF_DELAY_BASE,
-        MAX_BACKOFF_DELAY_BASE } = config;
 
 // What will be sent once parsed
 export interface IFetchManifestResult { manifest : Manifest;
@@ -96,11 +92,6 @@ export default function createManifestPipeline(
 ) : ICoreManifestPipeline {
   const parsedOptions = parseManifestPipelineOptions(pipelineOptions);
   const loader = createManifestLoader(pipelines.manifest, parsedOptions);
-  const { lowLatencyMode, maxRetry, maxRetryOffline } = parsedOptions;
-  const baseDelay = lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY :
-                                     INITIAL_BACKOFF_DELAY_BASE.REGULAR;
-  const maxDelay = lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY :
-                                    MAX_BACKOFF_DELAY_BASE.REGULAR;
   const { parser } = pipelines.manifest;
 
   /**
@@ -110,10 +101,10 @@ export default function createManifestPipeline(
    * @returns {Function}
    */
   function scheduleRequest<T>(request : () => Observable<T>) : Observable<T> {
-    const backoffOptions = { baseDelay,
-                             maxDelay,
-                             maxRetryRegular: maxRetry,
-                             maxRetryOffline };
+    const backoffOptions = { baseDelay: parsedOptions.baseDelay,
+                             maxDelay: parsedOptions.maxDelay,
+                             maxRetryRegular: parsedOptions.maxRetry,
+                             maxRetryOffline: parsedOptions.maxRetryOffline };
     return backoff(tryCatch(request, undefined), backoffOptions).pipe(
       mergeMap(evt => {
         if (evt.type === "retry") {
