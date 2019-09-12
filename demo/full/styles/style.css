@@ -442,15 +442,16 @@ body {
 }
 
 .running {
+  margin: auto;
   background: none;
   border: none;
   border-radius: 3px;
-  padding: 5px;
+  padding: 6px;
   cursor: pointer;
 }
 
 .running > svg {
-  width: 20px;
+  width: 22px;
   fill: #ccc;
   transform: scale(-1, 1);
 }
