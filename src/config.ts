@@ -219,7 +219,7 @@ export default {
    */
   DEFAULT_LIVE_GAP: {
     DEFAULT: 10,
-    LOW_LATENCY: 2,
+    LOW_LATENCY: 3.5,
   },
 
   /**
