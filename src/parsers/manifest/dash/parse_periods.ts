@@ -62,8 +62,7 @@ export default function parsePeriods(
 
   // We might to communicate the depth of the Buffer while parsing
   const { availabilityStartTime, isDynamic, timeShiftBufferDepth } = manifestInfos;
-  const manifestBoundsCalculator = new ManifestBoundsCalculator({ availabilityStartTime,
-                                                                  isDynamic,
+  const manifestBoundsCalculator = new ManifestBoundsCalculator({ isDynamic,
                                                                   timeShiftBufferDepth });
 
   if (!isDynamic && manifestInfos.duration != null) {
