@@ -6,6 +6,7 @@ export default function StickToLiveEdgeButton({
 }) {
   return (<div
     className={"running" + (isStickingToTheLiveEdge ? " clicked" : "")}
+    title="Stick to the live edge"
     onClick={() => changeStickToLiveEdge(!isStickingToTheLiveEdge)}
   >
     <svg version="1.1" viewBox="0 0 21.803 21.803">
