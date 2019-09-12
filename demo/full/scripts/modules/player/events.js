@@ -1,12 +1,12 @@
 import {
   interval as intervalObservable,
-  Observable,
 } from "rxjs";
 import {
   takeUntil,
   distinctUntilChanged,
   map,
 } from "rxjs/operators";
+import fromPlayerEvent from "./fromPlayerEvent";
 
 const POSITION_UPDATES_INTERVAL = 100;
 
@@ -19,18 +19,8 @@ const POSITION_UPDATES_INTERVAL = 100;
  * @param {Subject} $destroy
  */
 const linkPlayerEventsToState = (player, state, $destroy) => {
-  const fromPlayerEvent = (event) =>
-    new Observable(obs => {
-      const func = (payload) => obs.next(payload);
-      player.addEventListener(event, func);
-
-      return () => {
-        player.removeEventListener(event, func);
-      };
-    });
-
   const linkPlayerEventToState = (event, stateItem) =>
-    fromPlayerEvent(event)
+    fromPlayerEvent(player, event)
       .pipe(takeUntil($destroy))
       .subscribe(arg => state.set({ [stateItem]: arg }));
 
@@ -48,7 +38,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
   linkPlayerEventToState("availableVideoBitratesChange", "availableVideoBitrates");
 
 
-  fromPlayerEvent("imageTrackUpdate").pipe(
+  fromPlayerEvent(player, "imageTrackUpdate").pipe(
     distinctUntilChanged(),
     takeUntil($destroy),
     map(({ data }) => data)
@@ -75,7 +65,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
     state.set(arg);
   });
 
-  fromPlayerEvent("playerStateChange").pipe(
+  fromPlayerEvent(player, "playerStateChange").pipe(
     distinctUntilChanged(),
     takeUntil($destroy)
   ).subscribe((arg) => {
@@ -127,7 +117,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
     state.set(stateUpdates);
   });
 
-  fromPlayerEvent("warning").pipe(
+  fromPlayerEvent(player, "warning").pipe(
     takeUntil($destroy)
   ).subscribe(warning => {
     if (warning && warning.code === "MEDIA_ERR_NOT_LOADED_METADATA") {

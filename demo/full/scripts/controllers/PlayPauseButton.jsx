@@ -31,7 +31,10 @@ const PlayPauseButton = ({
     (disabled  ? " disabled" : "");
 
   const play = () => player.dispatch("PLAY");
-  const pause = () => player.dispatch("PAUSE");
+  const pause = () => {
+    player.dispatch("DISABLE_LIVE_CATCH_UP");
+    player.dispatch("PAUSE");
+  };
 
   return (
     <Button
