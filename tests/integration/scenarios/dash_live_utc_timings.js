@@ -160,7 +160,7 @@ describe("DASH live - UTCTimings", () => {
 
       const { availabilityStartTime } = player.getManifest();
       const timeShiftBufferDepth = 5 * 60;
-      const maximumPosition = (Date.now() - 10000) / 1000 -
+      const maximumPosition = (Date.now()) / 1000 -
         availabilityStartTime;
       const minimumPosition = maximumPosition - timeShiftBufferDepth;
 

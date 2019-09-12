@@ -57,7 +57,7 @@ describe("DASH live content multi-periods (SegmentTemplate)", function() {
     const { periods } = manifest;
 
     expect(periods.length).to.equal(3);
-    const now = 1567781280 + 500 - 10;
+    const now = 1567781280 + 500;
     const maxPos = player.getMaximumPosition();
     expect(maxPos).to.be.closeTo(now, 2);
   });
