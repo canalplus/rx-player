@@ -58,14 +58,18 @@ export default function parsePeriods(
     throw new Error("MPD parsing error: the time informations are incoherent.");
   }
 
-  // We parse it in reverse because we might need to deduce the buffer depth from
-  // the last Periods' indexes
-
-  const { availabilityStartTime, isDynamic, timeShiftBufferDepth } = manifestInfos;
   // We might to communicate the depth of the Buffer while parsing
+  const { availabilityStartTime, isDynamic, timeShiftBufferDepth } = manifestInfos;
   const manifestBoundsCalculator = new ManifestBoundsCalculator({ availabilityStartTime,
                                                                   isDynamic,
                                                                   timeShiftBufferDepth });
+
+  if (!isDynamic && manifestInfos.duration != null) {
+    manifestBoundsCalculator.setLastPosition(manifestInfos.duration);
+  }
+
+  // We parse it in reverse because we might need to deduce the buffer depth from
+  // the last Periods' indexes
   for (let i = periodsIR.length - 1; i >= 0; i--) {
     const periodIR = periodsIR[i];
     const periodBaseURL = resolveURL(manifestInfos.baseURL, periodIR.children.baseURL);
@@ -82,14 +86,14 @@ export default function parsePeriods(
       periodID = periodIR.attributes.id;
     }
 
-    const periodInfos = { availabilityStartTime: manifestInfos.availabilityStartTime,
+    const periodInfos = { availabilityStartTime,
                           baseURL: periodBaseURL,
                           manifestBoundsCalculator,
                           clockOffset: manifestInfos.clockOffset,
                           end: periodEnd,
-                          isDynamic: manifestInfos.isDynamic,
+                          isDynamic,
                           start: periodStart,
-                          timeShiftBufferDepth: manifestInfos.timeShiftBufferDepth };
+                          timeShiftBufferDepth };
     const adaptations = parseAdaptationSets(periodIR.children.adaptations,
                                             periodInfos);
     const parsedPeriod : IParsedPeriod = { id: periodID,
@@ -100,10 +104,13 @@ export default function parsePeriods(
     parsedPeriods.unshift(parsedPeriod);
 
     if (!manifestBoundsCalculator.lastPositionIsKnown()) {
-      if (manifestInfos.isDynamic) {
-        // Try to guess last position to obtain the buffer depth
-        const lastPosition = getMaximumLastPosition(adaptations);
-        if (typeof lastPosition === "number") { // last position is available
+      const lastPosition = getMaximumLastPosition(adaptations);
+      if (!isDynamic) {
+        if (typeof lastPosition === "number") {
+          manifestBoundsCalculator.setLastPosition(lastPosition);
+        }
+      } else {
+        if (typeof lastPosition === "number") {
           const positionTime = performance.now() / 1000;
           manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
         } else {
@@ -116,22 +123,16 @@ export default function parsePeriods(
               guessedLastPosition, guessedPositionTime);
           }
         }
-      } else if (manifestInfos.duration != null) {
-        manifestBoundsCalculator.setLastPosition(manifestInfos.duration);
       }
     }
   }
-  if (!manifestBoundsCalculator.lastPositionIsKnown()) {
-    if (manifestInfos.isDynamic) {
-      // Guess a last time the last position
-      const guessedLastPositionFromClock =
-        guessLastPositionFromClock(manifestInfos, 0);
-      if (guessedLastPositionFromClock !== undefined) {
-        const [lastPosition, positionTime] = guessedLastPositionFromClock;
-        manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
-      }
-    } else if (manifestInfos.duration != null) {
-      manifestBoundsCalculator.setLastPosition(manifestInfos.duration);
+
+  if (manifestInfos.isDynamic && !manifestBoundsCalculator.lastPositionIsKnown()) {
+    // Guess a last time the last position
+    const guessedLastPositionFromClock = guessLastPositionFromClock(manifestInfos, 0);
+    if (guessedLastPositionFromClock !== undefined) {
+      const [lastPosition, positionTime] = guessedLastPositionFromClock;
+      manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
     }
   }
   return flattenOverlappingPeriods(parsedPeriods);
