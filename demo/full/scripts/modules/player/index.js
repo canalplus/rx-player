@@ -7,6 +7,9 @@
  */
 
 import { linkPlayerEventsToState } from "./events.js";
+import { Subject } from "rxjs";
+import { takeUntil } from "rxjs/operators";
+import $handleCatchUpMode from "./catchUp";
 
 const RxPlayer = window.RxPlayer;
 
@@ -37,6 +40,8 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
     error: null,
     hasEnded: false,
     hasCurrentContent: false,
+    isCatchingUp: false,
+    isCatchUpEnabled: false,
     images: [],
     isBuffering: false,
     isContentLoaded: false,
@@ -62,6 +67,11 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
   });
 
   linkPlayerEventsToState(player, state, $destroy);
+
+  const $switchCatchUpMode = new Subject();
+  $handleCatchUpMode($switchCatchUpMode, player, state)
+    .pipe(takeUntil($destroy))
+    .subscribe();
 
   // dispose of the RxPlayer when destroyed
   $destroy.subscribe(() => player.dispose());
@@ -135,7 +145,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
       player.setAudioTrack(track.id);
     },
 
-    SET_VIDEO_TRACK: (track) => {
+    ET_VIDEO_TRACK: (track) => {
       player.setVideoTrack(track.id);
     },
 
@@ -150,6 +160,14 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
     SET_PLAYBACK_RATE: (rate) => {
       player.setPlaybackRate(rate);
       state.set({ playbackRate: rate });
+    },
+
+    ENABLE_LIVE_CATCH_UP() {
+      $switchCatchUpMode.next(true);
+    },
+
+    DISABLE_LIVE_CATCH_UP() {
+      $switchCatchUpMode.next(false);
     },
   };
 };
