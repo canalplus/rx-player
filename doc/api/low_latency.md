@@ -58,6 +58,29 @@ long as the content is compatible (again, with CMAF and Chunked Transfer
 Encoding).
 
 
+### Playing even closer to the live edge! ######################################
+
+By default, we set a distance of 3.5 seconds relative to the live edge when we
+start a low latency content.
+
+We found that value to be just at the right boundary between rebuffering risks,
+and delay to the live edge.
+
+However, you can still provide a lower distance through the `startAt`
+`loadVideo` option (documented [here](./loadVideo_options.md#prop-startAt)):
+```js
+rxPlayer.loadVideo({
+  url: "https://www.example.com/content.mpd",
+  transport: "dash",
+  lowLatencyMode: true,
+  startAt: { fromLastPosition: 2 }, // Play 2 seconds from the live edge instead
+                                    // (beware of much more frequent rebuffering
+                                    // risks)
+})
+```
+
+
+
 <a name="note-time-sync"></a>
 ### Note about time synchronization ############################################
 
