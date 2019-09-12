@@ -110,11 +110,8 @@ export default class ManifestBoundsCalculator {
    * @return {number|undefined}
    */
   getMinimumBound(): number | undefined {
-    if (!this._isDynamic) {
+    if (!this._isDynamic || this._timeShiftBufferDepth === null) {
       return 0;
-    }
-    if (this._timeShiftBufferDepth === null) {
-      return undefined;
     }
     const maximumBound = this.getMaximumBound();
     if (maximumBound === undefined) {
