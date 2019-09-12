@@ -61,7 +61,7 @@ export default function getMinimumPosition(
           (firstVideoAdaptationFromPeriod != null && minimumVideoPosition === null)) {
         log.info("DASH Parser: found Period with no segment. ",
                  "Going to next one to calculate first position");
-        return;
+        return undefined;
       }
 
       if (minimumVideoPosition != null) {
