@@ -144,7 +144,7 @@ export default function createSegmentLoader<T>(
 
   // Backoff options given to the backoff retry done with the loader function.
   const backoffOptions = { baseDelay: options.initialBackoffDelay,
-                           maxDelay: options.initialBackoffDelay,
+                           maxDelay: options.maximumBackoffDelay,
                            maxRetryRegular: maxRetry,
                            maxRetryOffline };
 
