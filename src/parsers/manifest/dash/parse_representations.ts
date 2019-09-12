@@ -33,15 +33,12 @@ import {
 // Supplementary context about the current AdaptationSet
 export interface IAdaptationInfos {
   aggressiveMode : boolean; // Whether we should request new segments even if
-                            // they are not yet finished (e.g. for low-latency)
-  availabilityStartTime : number; // Time from which the content starts
+                            // they are not yet finished
   baseURL? : string; // Eventual URL from which every relative URL will be based
                      // on
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
                                                  // available position of a live
                                                  // content
-  clockOffset? : number; // If set, offset to add to `performance.now()`
-                         // to obtain the current server's time
   end? : number; // End time of the current period, in seconds
   isDynamic : boolean; // Whether the Manifest can evolve with time
   start : number; // Start time of the current period, in seconds
@@ -52,13 +49,10 @@ export interface IAdaptationInfos {
 // base context given to the various indexes
 interface IIndexContext {
   aggressiveMode : boolean; // Whether we should request new segments even if
-                            // they are not yet finished (e.g. for low-latency)
-  availabilityStartTime : number; // Time from which the content starts
+                            // they are not yet finished
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
                                                        // available position of a live
                                                        // content
-  clockOffset? : number; // If set, offset to add to `performance.now()`
-                         // to obtain the current server's time
   isDynamic : boolean; // Whether the Manifest can evolve with time
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
@@ -123,9 +117,7 @@ export default function parseRepresentations(
 
     // 4-2-1. Find Index
     const context = { aggressiveMode: adaptationInfos.aggressiveMode,
-                      availabilityStartTime: adaptationInfos.availabilityStartTime,
                       manifestBoundsCalculator: adaptationInfos.manifestBoundsCalculator,
-                      clockOffset: adaptationInfos.clockOffset,
                       isDynamic: adaptationInfos.isDynamic,
                       periodEnd: adaptationInfos.end,
                       periodStart: adaptationInfos.start,

@@ -40,7 +40,7 @@ const generateManifestID = idGenerator();
 
 export interface IMPDParserArguments {
   aggressiveMode : boolean; // Whether we should request new segments even if
-                            // they are not yet finished (e.g. for low-latency)
+                            // they are not yet finished
   externalClockOffset? : number; // If set, offset to add to `performance.now()`
                                  // to obtain the current server's time
   referenceDateTime? : number; // Default base time, in seconds

@@ -83,15 +83,9 @@ export interface ITemplateIndexIndexArgument {
 export interface ITemplateIndexContextArgument {
   aggressiveMode : boolean; // If `true`, this index will return segments which
                             // which had time to be started but not finished.
-                            // This is at the basis of Low-latency contents via
-                            // Chunk encoding
-  availabilityStartTime : number; // Time from which the content starts
-                                  // i.e. The `0` time is at that timestamp
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the
                                                        // minimum and maximum
                                                        // of a content
-  clockOffset? : number; // If set, offset to add to `performance.now()`
-                         // to obtain the current server's time, in milliseconds
   isDynamic : boolean; // if true, the MPD can be updated over time
   manifestReceivedTime? : number; // time (in terms of `performance.now`) at
                                    // which the Manifest file was received
@@ -113,7 +107,6 @@ export interface ITemplateIndexContextArgument {
 export default class TemplateRepresentationIndex implements IRepresentationIndex {
   private _aggressiveMode : boolean;
   private _index : ITemplateIndex;
-  private _liveEdgeOffset? : number;
   private _manifestBoundsCalculator : ManifestBoundsCalculator;
   private _periodStart : number;
   private _relativePeriodEnd? : number;
@@ -131,9 +124,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   ) {
     const { timescale } = index;
     const { aggressiveMode,
-            availabilityStartTime,
             manifestBoundsCalculator,
-            clockOffset,
             isDynamic,
             periodEnd,
             periodStart,
@@ -171,26 +162,6 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     this._periodStart = periodStart;
     this._relativePeriodEnd = periodEnd == null ? undefined :
                                                   periodEnd - periodStart;
-    if (isDynamic && periodEnd == null) {
-      if (clockOffset != null) {
-        const perfOffset = (clockOffset / 1000) - availabilityStartTime;
-        this._liveEdgeOffset = perfOffset - periodStart;
-      } else {
-        const securityLiveGap = this._aggressiveMode ? 0 :
-                                                       10;
-        log.warn("DASH Parser: no clock synchronization mechanism found." +
-                 (securityLiveGap > 0) ?
-                   ` Setting a live gap of ${securityLiveGap} seconds as a security.` :
-                   "");
-        const now = Date.now() - securityLiveGap * 1000;
-        const maximumSegmentTimeInSec = now / 1000 - availabilityStartTime;
-        const receivedTime = context.manifestReceivedTime == null ?
-                               performance.now() :
-                               context.manifestReceivedTime;
-        const perfOffset =  maximumSegmentTimeInSec - (receivedTime / 1000);
-        this._liveEdgeOffset = perfOffset - periodStart;
-      }
-    }
   }
 
   /**
@@ -408,14 +379,14 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     }
 
     // 1 - check that this index is already available
-    if (!this._relativePeriodEnd && this._liveEdgeOffset != null) {
+    if (!this._relativePeriodEnd) {
       // /!\ The scaled max position augments continuously and might not
       // reflect exactly the real server-side value. As segments are
       // generated discretely.
-      const scaledMaxPosition = this._liveEdgeOffset + (performance.now() / 1000);
-      // Maximum position is before this period.
-      // No segment is yet available here
-      if (scaledMaxPosition < 0) {
+      const maximumBound = this._manifestBoundsCalculator.getMaximumBound();
+      if (maximumBound !== undefined && maximumBound < this._periodStart) {
+        // Maximum position is before this period.
+        // No segment is yet available here
         return null;
       }
     }

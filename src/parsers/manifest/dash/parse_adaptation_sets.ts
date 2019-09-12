@@ -33,14 +33,11 @@ import parseRepresentations from "./parse_representations";
 // Supplementary context about the current Period
 export interface IPeriodInfos {
   aggressiveMode : boolean; // Whether we should request new segments even if
-                            // they are not yet finished (e.g. for low-latency)
-  availabilityStartTime : number; // Time from which the content starts
+                            // they are not yet finished
   baseURL? : string; // Eventual URL from which every relative URL will be based
                      // on
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
                                                        // available position of a content
-  clockOffset? : number; // If set, offset to add to `performance.now()`
-                         // to obtain the current server's time
   end? : number; // End time of the current period, in seconds
   isDynamic : boolean; // Whether the Manifest can evolve with time
   start : number; // Start time of the current period, in seconds
@@ -189,10 +186,8 @@ export default function parseAdaptationSets(
       const representationsIR = adaptation.children.representations;
       const adaptationInfos = {
         aggressiveMode: periodInfos.aggressiveMode,
-        availabilityStartTime: periodInfos.availabilityStartTime,
         baseURL: resolveURL(periodInfos.baseURL, adaptationChildren.baseURL),
         manifestBoundsCalculator: periodInfos.manifestBoundsCalculator,
-        clockOffset: periodInfos.clockOffset,
         end: periodInfos.end,
         isDynamic: periodInfos.isDynamic,
         start: periodInfos.start,

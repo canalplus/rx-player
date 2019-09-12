@@ -34,7 +34,7 @@ const generatePeriodID = idGenerator();
 
 export interface IManifestInfos {
   aggressiveMode : boolean; // Whether we should request new segments even if
-                            // they are not yet finished (e.g. for low-latency)
+                            // they are not yet finished
   availabilityStartTime : number; // Time from which the content starts
   baseURL? : string;
   clockOffset? : number;
@@ -61,7 +61,7 @@ export default function parsePeriods(
   }
 
   // We might to communicate the depth of the Buffer while parsing
-  const { availabilityStartTime, isDynamic, timeShiftBufferDepth } = manifestInfos;
+  const { isDynamic, timeShiftBufferDepth } = manifestInfos;
   const manifestBoundsCalculator = new ManifestBoundsCalculator({ isDynamic,
                                                                   timeShiftBufferDepth });
 
@@ -88,10 +88,8 @@ export default function parsePeriods(
     }
 
     const periodInfos = { aggressiveMode: manifestInfos.aggressiveMode,
-                          availabilityStartTime,
                           baseURL: periodBaseURL,
                           manifestBoundsCalculator,
-                          clockOffset: manifestInfos.clockOffset,
                           end: periodEnd,
                           isDynamic,
                           start: periodStart,
