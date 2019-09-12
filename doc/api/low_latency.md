@@ -43,9 +43,6 @@ low-latency contents. For live contents:
 
   - it will begin to play faster and seek in non-buffered parts faster
 
-  - it will request segments which did not have time to be completely encoded on
-    the server-side (as long as the beginning should be available)
-
   - it will be safer when choosing the right video / audio quality (to avoid the
     higher chances of rebuffering)
 
@@ -78,6 +75,24 @@ rxPlayer.loadVideo({
                                     // risks)
 })
 ```
+
+To improve even more the possibility to stay closer to the live edge you can
+even set the `aggressiveMode` `transportOptions` in you loadVideo call.
+
+You might experience much more request error but segments will be made available
+faster:
+```js
+rxPlayer.loadVideo({
+  url: "https://www.example.com/content.mpd",
+  transport: "dash",
+  lowLatencyMode: true,
+  transportOptions: { aggressiveMode: true },
+  startAt: { fromLastPosition: 2 },
+})
+```
+
+More informations on that property can be found [in the aggressiveMode
+documentation](./loadVideo_options.md#prop-transportOptions).
 
 
 

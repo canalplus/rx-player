@@ -473,9 +473,6 @@ considered stable:
     (especially the `networkConfig` loadVideo options), those errors might just
     be sent as warnings and the corresponding requests be retried.
 
-    Note that enabling `lowLatencyMode` (through the corresponding `loadVideo`
-    option) implicitely enable `aggressiveMode`.
-
   - ``referenceDateTime`` (``Number``): Only useful for live contents. This is
     the default amount of time, in seconds, to add as an offset to a given media
     content's time, to obtain the real live time.
