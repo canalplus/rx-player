@@ -14,11 +14,11 @@
   - dash: fix minimum time calculation for Multi-Period MPDs with SegmentTemplate segment indexes but no SegmentTimeline
   - dash: play static MPD not declaring any segment for a time of 0 seconds at the minimum possible time by default
   - dash: fix maximum position calculation for live Multi-Period contents where the currently generated period is not the last one declared in the MPD
-  - api: authorize to set no `url` to `loadVideo` if the `manifestLoader` `transportOption` is set
-  - smooth: the `aggressiveMode` option now only allows requests for segments which had time to at least begin to be generated to avoid too much HTTP 412
 
 ### Other improvements
 
+  - api: authorize to set no `url` to `loadVideo` if the `manifestLoader` `transportOption` is set
+  - smooth: the `aggressiveMode` option now only allows requests for segments which had time to at least begin to be generated to avoid too much HTTP 412
   - dash: the `aggressiveMode` now also have an effect for some SegmentTemplate DASH contents (download segments even if they're not finished)
   - code: add pre-commit and pre-push git hooks to automate checking and facilitate bisecting
   - dash: better handle live Multi-Period contents where the currently broadcasted period is not the last one declared in the MPD
