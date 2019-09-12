@@ -58,12 +58,6 @@ export default function $handleCatchUpMode(
   }
 
   return $switchCatchUpMode.pipe(switchMap((isCatchUpEnabled) => {
-    state.set({ isCatchUpEnabled });
-
-    if (!isCatchUpEnabled) {
-      return stopCatchingUp();
-    }
-
     return fromPlayerEvent(rxPlayer, "playerStateChange").pipe(
       startWith(rxPlayer.getPlayerState()),
       distinctUntilChanged(),
@@ -75,9 +69,16 @@ export default function $handleCatchUpMode(
                playerState === "SEEKING";
       }),
       switchMap(canCatchUp => {
-        if (!canCatchUp) {
+        if (!rxPlayer.isLive()) {
+          state.set({ isCatchUpEnabled: false });
           return stopCatchingUp();
         }
+        state.set({ isCatchUpEnabled });
+
+        if (!isCatchUpEnabled || !canCatchUp) {
+          return stopCatchingUp();
+        }
+
         return interval(200).pipe(
           startWith(0),
           map(() => [ rxPlayer.getMaximumPosition(), rxPlayer.getPosition() ]),
