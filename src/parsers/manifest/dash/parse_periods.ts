@@ -180,11 +180,10 @@ function guessLastPositionFromClock(
       return [timeInSec, positionTime];
     }
   } else {
-    const now = (Date.now() - 10000) / 1000;
+    const now = Date.now() / 1000;
     if (now >= minimumTime) {
       log.warn("DASH Parser: no clock synchronization mechanism found." +
-               " Setting a live gap of 10 seconds relatively to the " +
-               "system clock as a security.");
+               " Using the system clock instead.");
       const lastPosition = now - manifestInfos.availabilityStartTime;
       const positionTime = performance.now() / 1000;
       return [lastPosition, positionTime];
