@@ -380,7 +380,7 @@ class ContentList extends React.Component {
                       isSavingOrUpdating: false });
 
       // update content selection
-      const contents = contentsPerType[transportType];
+      const contents = contentList[transportType];
       const firstEnabledContentIndex = contents
         .findIndex(c => c.id === storedContent.id);
       if (firstEnabledContentIndex < 0) {
@@ -406,8 +406,8 @@ class ContentList extends React.Component {
           this.setState({ contentsPerType: contentList });
 
           // update content selection
-          const contents = contentsPerType[transportType];
-          if (contentChoiceIndex >= contentsPerType.length) {
+          const contents = contentList[transportType];
+          if (contentChoiceIndex >= contentList.length) {
             this.changeSelectedContent(0, contents[0]);
           } else {
             this.changeSelectedContent(contentChoiceIndex,
