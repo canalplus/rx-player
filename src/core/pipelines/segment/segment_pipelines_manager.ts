@@ -22,6 +22,7 @@ import {
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
 import { ISegmentPipelineLoaderOptions } from "./create_segment_loader";
+import getSegmentPipelineOptions from "./get_segment_pipeline_options";
 import applyPrioritizerToSegmentFetcher, {
   IPrioritizedSegmentFetcher,
 } from "./prioritized_segment_fetcher";
@@ -29,6 +30,16 @@ import ObservablePrioritizer from "./prioritizer";
 import createSegmentFetcher, {
   ISegmentFetcherEvent,
 } from "./segment_fetcher";
+
+export interface ISegmentPipelineManagerOptions {
+  lowLatencyMode : boolean; // Whether the content is a low-latency content
+                            // This has an impact on default backoff delays
+  offlineRetry? : number; // Configuration for the maximum number of retries
+                          // the pipeline will do when the user is offline
+  segmentRetry? : number; // Configuration for the maximum number of retries
+                          // the pipeline will do when the request failed on
+                          // a retryable error
+}
 
 /**
  * Interact with the networking pipelines to download segments with the right
@@ -63,13 +74,18 @@ import createSegmentFetcher, {
 export default class SegmentPipelinesManager<T> {
   private readonly _transport : ITransportPipelines;
   private readonly _prioritizer : ObservablePrioritizer<ISegmentFetcherEvent<T>>;
+  private readonly _pipelineOptions : ISegmentPipelineManagerOptions;
 
   /**
    * @param {Object} transport
    */
-  constructor(transport : ITransportPipelines) {
+  constructor(
+    transport : ITransportPipelines,
+    options : ISegmentPipelineManagerOptions
+  ) {
     this._transport = transport;
     this._prioritizer = new ObservablePrioritizer();
+    this._pipelineOptions = options;
   }
 
   /**
@@ -80,9 +96,9 @@ export default class SegmentPipelinesManager<T> {
    */
   createPipeline(
     bufferType : IBufferType,
-    requests$ : Subject<IABRRequest | IABRMetric>,
-    options : ISegmentPipelineLoaderOptions<T>
+    requests$ : Subject<IABRRequest | IABRMetric>
   ) : IPrioritizedSegmentFetcher<T> {
+    const options = getSegmentPipelineOptions(bufferType, this._pipelineOptions);
     const segmentFetcher = createSegmentFetcher<T>(bufferType,
                                                    this._transport,
                                                    requests$,

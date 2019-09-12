@@ -111,8 +111,6 @@ export default function BufferOrchestrator(
   options: { wantedBufferAhead$ : BehaviorSubject<number>;
              maxBufferAhead$ : Observable<number>;
              maxBufferBehind$ : Observable<number>;
-             segmentRetry? : number;
-             offlineRetry? : number;
              textTrackOptions? : ITextTrackSourceBufferOptions;
              manualBitrateSwitchingMode : "seamless" | "direct"; }
 ) : Observable<IBufferOrchestratorEvent> {

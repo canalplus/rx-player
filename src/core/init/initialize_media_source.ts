@@ -82,26 +82,7 @@ import {
   IWarningEvent,
 } from "./types";
 
-const { DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-        DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
-        OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config;
-
-/**
- * Returns pipeline options based on the global config and the user config.
- * @param {Object} networkConfig
- * @returns {Object}
- */
-function getManifestPipelineOptions(
-  { manifestRetry, offlineRetry }: { manifestRetry? : number;
-                                     offlineRetry? : number; }
-) : { maxRetry: number; maxRetryOffline: number } {
-  return {
-    maxRetry: manifestRetry != null ? manifestRetry :
-                                      DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-    maxRetryOffline: offlineRetry != null ? offlineRetry :
-                                            DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
-  };
-}
+const { OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config;
 
 // Arguments to give to the `initialize` function
 export interface IInitializeOptions {
@@ -167,7 +148,9 @@ export default function InitializeOnMediaSource(
 
   const manifestPipelines =
     createManifestPipeline(pipelines,
-                           getManifestPipelineOptions(networkConfig),
+                           { lowLatencyMode,
+                             manifestRetry: networkConfig.manifestRetry,
+                             offlineRetry: networkConfig.offlineRetry },
                            warning$);
 
   // Fetch and parse the manifest from the URL given.
@@ -186,7 +169,11 @@ export default function InitializeOnMediaSource(
   );
 
   // Creates pipelines for downloading segments.
-  const segmentPipelinesManager = new SegmentPipelinesManager<any>(pipelines);
+  const segmentPipelinesManager = new SegmentPipelinesManager<any>(pipelines, {
+    lowLatencyMode,
+    offlineRetry: networkConfig.offlineRetry,
+    segmentRetry: networkConfig.segmentRetry,
+  });
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".
@@ -225,10 +212,7 @@ export default function InitializeOnMediaSource(
       speed$,
       abrManager,
       segmentPipelinesManager,
-      bufferOptions: objectAssign({ textTrackOptions,
-                                    offlineRetry: networkConfig.offlineRetry,
-                                    segmentRetry: networkConfig.segmentRetry },
-                                  bufferOptions),
+      bufferOptions: objectAssign({ textTrackOptions }, bufferOptions),
     });
 
     const recursiveLoad$ = recursivelyLoadOnMediaSource(initialMediaSource,

@@ -73,8 +73,6 @@ export interface IMediaSourceLoaderArguments {
     wantedBufferAhead$ : BehaviorSubject<number>;
     maxBufferAhead$ : Observable<number>;
     maxBufferBehind$ : Observable<number>;
-    offlineRetry? : number;
-    segmentRetry? : number;
     textTrackOptions : ITextTrackSourceBufferOptions;
     manualBitrateSwitchingMode : "seamless"|"direct";
   };

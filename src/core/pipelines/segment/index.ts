@@ -22,7 +22,7 @@ import {
   ISegmentFetcherWarning,
 } from "./segment_fetcher";
 import SegmentPipelinesManager, {
-  ISegmentPipelineOptions,
+  ISegmentPipelineManagerOptions,
 } from "./segment_pipelines_manager";
 
 export default SegmentPipelinesManager;
@@ -32,5 +32,5 @@ export {
   ISegmentFetcherChunkEvent,
   ISegmentFetcherEvent,
   ISegmentFetcherWarning,
-  ISegmentPipelineOptions,
+  ISegmentPipelineManagerOptions,
 };

@@ -83,8 +83,6 @@ export interface IPeriodBufferArguments {
   segmentPipelinesManager : SegmentPipelinesManager<any>;
   sourceBuffersStore : SourceBuffersStore;
   options: { manualBitrateSwitchingMode : "seamless" | "direct";
-             offlineRetry? : number;
-             segmentRetry? : number;
              textTrackOptions? : ITextTrackSourceBufferOptions; };
   wantedBufferAhead$ : BehaviorSubject<number>;
 }

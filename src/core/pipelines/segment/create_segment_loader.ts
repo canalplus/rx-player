@@ -39,7 +39,6 @@ import castToObservable from "../../../utils/cast_to_observable";
 import tryCatch from "../../../utils/rx-try_catch";
 import backoff from "../utils/backoff";
 import errorSelector from "../utils/error_selector";
-import getBackoffOptions from "../utils/get_backoff_options";
 
 // Data comes from a local cache (no request was done)
 interface IPipelineLoaderCache<T> { type : "cache";
@@ -92,6 +91,8 @@ export interface ISegmentPipelineLoaderOptions<T> {
   maxRetry : number; // Maximum number of time a request on error will be retried
   maxRetryOffline : number; // Maximum number of time a request be retried when
                             // the user is offline
+  initialBackoffDelay : number;
+  maximumBackoffDelay : number;
 }
 
 export type ISegmentPipelineLoader<T> =
@@ -142,7 +143,10 @@ export default function createSegmentLoader<T>(
   const { cache, maxRetry, maxRetryOffline } = options;
 
   // Backoff options given to the backoff retry done with the loader function.
-  const backoffOptions = getBackoffOptions(maxRetry, maxRetryOffline);
+  const backoffOptions = { baseDelay: options.initialBackoffDelay,
+                           maxDelay: options.initialBackoffDelay,
+                           maxRetryRegular: maxRetry,
+                           maxRetryOffline };
 
   /**
    * Load wanted data:

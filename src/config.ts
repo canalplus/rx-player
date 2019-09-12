@@ -317,7 +317,10 @@ export default {
    * Please note that this delay is not exact, as it will be fuzzed.
    * @type {Number}
    */
-  INITIAL_BACKOFF_DELAY_BASE: 200,
+  INITIAL_BACKOFF_DELAY_BASE: {
+    REGULAR: 200,
+    LOW_LATENCY: 50,
+  },
 
   /**
    * Maximum backoff delay when a segment / manifest download fails, in
@@ -326,7 +329,10 @@ export default {
    * Please note that this delay is not exact, as it will be fuzzed.
    * @type {Number}
    */
-  MAX_BACKOFF_DELAY_BASE: 3000,
+  MAX_BACKOFF_DELAY_BASE: {
+    REGULAR: 3000,
+    LOW_LATENCY: 1000,
+  },
 
   /**
    * Minimum interval at which timeupdate events will be "constructed". This

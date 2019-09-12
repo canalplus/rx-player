@@ -78,7 +78,6 @@ import {
   IRepresentationBufferEvent,
   IRepresentationChangeEvent,
 } from "../types";
-import getPipelineOptions from "./get_pipeline_options";
 
 export interface IAdaptationBufferClockTick extends IRepresentationBufferClockTick {
   bufferGap : number; // /!\ bufferGap of the SourceBuffer
@@ -94,9 +93,7 @@ export interface IAdaptationBufferArguments<T> {
   content : { manifest : Manifest;
               period : Period;
               adaptation : Adaptation; }; // content to download
-  options: { manualBitrateSwitchingMode : "seamless" | "direct"; // Switch strategy
-             offlineRetry? : number; // Retry count when offline
-             segmentRetry? : number; }; // Retry count on retryable error
+  options: { manualBitrateSwitchingMode : "seamless" | "direct" }; // Switch strategy
   queuedSourceBuffer : QueuedSourceBuffer<T>; // Interact with the SourceBuffer
   segmentPipelinesManager : SegmentPipelinesManager<any>; // Load and parse segments
   wantedBufferAhead$ : BehaviorSubject<number>; // Buffer goal wanted by the user
@@ -151,10 +148,8 @@ export default function AdaptationBuffer<T>({
     abrManager.get$(adaptation.type, representations, clock$, abrEvents$)
       .pipe(observeOn(asapScheduler), share());
 
-  const pipelineOptions = getPipelineOptions(adaptation.type, options);
   const segmentFetcher = segmentPipelinesManager.createPipeline(adaptation.type,
-                                                                requestsEvents$,
-                                                                pipelineOptions);
+                                                                requestsEvents$);
 
   // Bitrate higher or equal to this value should not be replaced by segments of
   // better quality.

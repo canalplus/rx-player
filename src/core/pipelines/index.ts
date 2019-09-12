@@ -23,7 +23,7 @@ import SegmentPipelinesManager, {
   ISegmentFetcherChunkEvent,
   ISegmentFetcherEvent,
   ISegmentFetcherWarning,
-  ISegmentPipelineOptions,
+  ISegmentPipelineManagerOptions,
 } from "./segment";
 
 export {
@@ -35,7 +35,7 @@ export {
   IPrioritizedSegmentFetcher,
   ISegmentFetcherEvent,
 
-  ISegmentPipelineOptions,
+  ISegmentPipelineManagerOptions,
 
   ISegmentFetcherChunkEvent,
   ISegmentFetcherChunkCompleteEvent,
