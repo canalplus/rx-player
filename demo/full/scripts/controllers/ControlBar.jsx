@@ -37,7 +37,7 @@ function ControlBar ({
   };
 
   let isCloseToLive = undefined;
-  if (lowLatencyMode != null && liveGap != null) {
+  if (isLive && lowLatencyMode != null && liveGap != null) {
     isCloseToLive = lowLatencyMode ? liveGap < 7 : liveGap < 15;
   }
 
@@ -74,7 +74,7 @@ function ControlBar ({
           disabled={isStopped}
         />
         {
-          (isContentLoaded && lowLatencyMode) ?
+          (isContentLoaded && isLive && lowLatencyMode) ?
             <StickToLiveEdgeButton
               isStickingToTheLiveEdge={isCatchUpEnabled}
               changeStickToLiveEdge={() =>
