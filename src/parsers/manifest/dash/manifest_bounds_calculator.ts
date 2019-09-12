@@ -59,13 +59,11 @@
  */
 export default class ManifestBoundsCalculator {
   private _timeShiftBufferDepth : number | null;
-  private _availabilityStartTime : number;
   private _positionTime : number | undefined;
   private _lastPosition : number | undefined;
   private _isDynamic : boolean;
 
   constructor(args : { timeShiftBufferDepth? : number;
-                       availabilityStartTime : number;
                        isDynamic : boolean; }
   ) {
     this._isDynamic = args.isDynamic;
@@ -73,7 +71,6 @@ export default class ManifestBoundsCalculator {
                                  args.timeShiftBufferDepth == null ?
                                    null :
                                    args.timeShiftBufferDepth;
-    this._availabilityStartTime = args.availabilityStartTime;
   }
 
   /**
@@ -139,7 +136,7 @@ export default class ManifestBoundsCalculator {
         this._lastPosition != null
       ) {
       return Math.max((this._lastPosition - this._positionTime) +
-                        (performance.now() / 1000) - this._availabilityStartTime,
+                        (performance.now() / 1000),
                       0);
     }
     return this._lastPosition;

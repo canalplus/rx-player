@@ -21,7 +21,6 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
   it("should return undefined through `getMinimumBound` if the live edge was never set for a dynamic content with a timeShiftBufferDepth", () => {
   /* tslint:enable max-line-length */
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
-      availabilityStartTime: 10,
       isDynamic: true,
       timeShiftBufferDepth: 5,
     });
@@ -34,7 +33,6 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
   it("should return 0 through `getMinimumBound` if the live edge was never set for a static content", () => {
   /* tslint:enable max-line-length */
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
-      availabilityStartTime: 10,
       isDynamic: false,
       timeShiftBufferDepth: 5,
     });
@@ -47,7 +45,6 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
   it("should return 0 through `getMinimumBound` if the live edge was never set for a dynamic content with no timeShiftBufferDepth", () => {
   /* tslint:enable max-line-length */
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
-      availabilityStartTime: 10,
       isDynamic: false,
     });
     expect(manifestBoundsCalculator.getMinimumBound()).toEqual(0);
@@ -59,7 +56,6 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
   it("should return `false` through `lastPositionIsKnown` if `setLastPositionOffset` was never called", () => {
   /* tslint:enable max-line-length */
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
-      availabilityStartTime: 10,
       isDynamic: true,
       timeShiftBufferDepth: 5,
     });
@@ -72,7 +68,6 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
   it("should return `true` through `lastPositionIsKnown` if `setLastPositionOffset` was called for a dynamic content", () => {
   /* tslint:enable max-line-length */
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
-      availabilityStartTime: 10,
       isDynamic: true,
       timeShiftBufferDepth: 5,
     });
@@ -84,7 +79,6 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
   it("should return `true` through `lastPositionIsKnown` if `setLastPositionOffset` was called for a non dynamic content", () => {
   /* tslint:enable max-line-length */
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
-      availabilityStartTime: 10,
       isDynamic: false,
       timeShiftBufferDepth: 5,
     });
@@ -99,7 +93,6 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     const performanceSpy = jest.spyOn(performance, "now")
       .mockImplementation(jest.fn(() => date));
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
-      availabilityStartTime: 10,
       isDynamic: true,
       timeShiftBufferDepth: 5,
     });
@@ -118,7 +111,6 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     const performanceSpy = jest.spyOn(performance, "now")
       .mockImplementation(jest.fn(() => date));
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
-      availabilityStartTime: 10,
       isDynamic: false,
       timeShiftBufferDepth: 5,
     });
@@ -137,7 +129,6 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     const performanceSpy = jest.spyOn(performance, "now")
       .mockImplementation(jest.fn(() => date));
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
-      availabilityStartTime: 10,
       isDynamic: true,
       timeShiftBufferDepth: 5,
     });
