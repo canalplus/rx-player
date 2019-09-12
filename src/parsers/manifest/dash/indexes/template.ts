@@ -459,11 +459,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       if (scaledMaxPosition < 0) {
         return null;
       }
-      const maxPossibleStart = Math.max(scaledMaxPosition - duration, 0);
-      const numberIndexedToZero = this._aggressiveMode ?
-        Math.ceil(maxPossibleStart / duration) :
-        Math.floor(maxPossibleStart / duration);
-      return numberIndexedToZero * duration;
+      const numberIndexedToOne = this._aggressiveMode ?
+        Math.ceil(scaledMaxPosition / duration) :
+        Math.floor(scaledMaxPosition / duration);
+      return (numberIndexedToOne - 1) * duration;
     } else {
       const maximumTime = (this._relativePeriodEnd || 0) * timescale;
       const numberIndexedToZero = Math.ceil(maximumTime / duration) - 1;
