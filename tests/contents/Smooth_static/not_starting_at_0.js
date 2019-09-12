@@ -15,8 +15,8 @@ const manifestInfos = {
   availabilityStartTime: 0,
   periods: [
     {
-      start: 9,
-      duration: 69,
+      start: 6.016,
+      duration: 68.984,
       adaptations: {
         audio: [
           {
