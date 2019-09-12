@@ -39,10 +39,10 @@ import parsePeriods from "./parse_periods";
 const generateManifestID = idGenerator();
 
 export interface IMPDParserArguments {
-  url : string; // URL of the manifest (post-redirection if one)
-  referenceDateTime? : number; // Default base time, in seconds
   externalClockOffset? : number; // If set, offset to add to `performance.now()`
                                  // to obtain the current server's time
+  referenceDateTime? : number; // Default base time, in seconds
+  url : string; // URL of the manifest (post-redirection if one)
 }
 
 export type IParserResponse<T> = { type : "needs-ressources";
@@ -186,6 +186,7 @@ function parseCompleteIntermediateRepresentation(
                                                            args.referenceDateTime);
   const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
   const clockOffset = args.externalClockOffset;
+
   const manifestInfos = { availabilityStartTime,
                           baseURL,
                           clockOffset,

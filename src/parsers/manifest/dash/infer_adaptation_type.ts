@@ -16,6 +16,7 @@
 
 import arrayFind from "../../../utils/array_find";
 import arrayIncludes from "../../../utils/array_includes";
+import { IRepresentationIntermediateRepresentation } from "./node_parsers/Representation";
 
 const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
@@ -40,10 +41,9 @@ interface IScheme {
  * @returns {string} - "audio"|"video"|"text"|"image"|"metadata"|"unknown"
  */
 export default function inferAdaptationType(
+  representations: IRepresentationIntermediateRepresentation[],
   adaptationMimeType : string|null,
-  representationMimeTypes : string[],
   adaptationCodecs : string|null,
-  representationCodecs : string[],
   adaptationRoles : IScheme[]|null
 ) : string {
   function fromMimeType(
@@ -109,6 +109,14 @@ export default function inferAdaptationType(
       return typeFromCodecs;
     }
   }
+
+  const representationMimeTypes = representations
+    .map(representation => representation.attributes.mimeType)
+    .filter((mimeType : string|undefined) : mimeType is string => mimeType != null);
+  const representationCodecs = representations
+    .map(representation => representation.attributes.codecs)
+    .filter((codecs : string|undefined) : codecs is string => codecs != null);
+
   for (let i = 0; i < representationMimeTypes.length; i++) {
     const representationMimeType = representationMimeTypes[i];
     if (representationMimeType != null) {

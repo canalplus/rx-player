@@ -22,6 +22,7 @@ import BaseRepresentationIndex from "./indexes/base";
 import ListRepresentationIndex from "./indexes/list";
 import TemplateRepresentationIndex from "./indexes/template";
 import TimelineRepresentationIndex from "./indexes/timeline";
+import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import {
   IAdaptationSetIntermediateRepresentation
 } from "./node_parsers/AdaptationSet";
@@ -34,6 +35,9 @@ export interface IAdaptationInfos {
   availabilityStartTime : number; // Time from which the content starts
   baseURL? : string; // Eventual URL from which every relative URL will be based
                      // on
+  manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
+                                                 // available position of a live
+                                                 // content
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time
   end? : number; // End time of the current period, in seconds
@@ -46,6 +50,9 @@ export interface IAdaptationInfos {
 // base context given to the various indexes
 interface IIndexContext {
   availabilityStartTime : number; // Time from which the content starts
+  manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
+                                                       // available position of a live
+                                                       // content
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time
   isDynamic : boolean; // Whether the Manifest can evolve with time
@@ -112,6 +119,7 @@ export default function parseRepresentations(
 
     // 4-2-1. Find Index
     const context = { availabilityStartTime: adaptationInfos.availabilityStartTime,
+                      manifestBoundsCalculator: adaptationInfos.manifestBoundsCalculator,
                       clockOffset: adaptationInfos.clockOffset,
                       isDynamic: adaptationInfos.isDynamic,
                       periodEnd: adaptationInfos.end,

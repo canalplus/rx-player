@@ -20,6 +20,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
+import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import {
   createIndexURL,
@@ -82,9 +83,14 @@ export interface ITemplateIndexIndexArgument {
 export interface ITemplateIndexContextArgument {
   availabilityStartTime : number; // Time from which the content starts
                                   // i.e. The `0` time is at that timestamp
+  manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the
+                                                       // minimum and maximum
+                                                       // of a content
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time, in milliseconds
   isDynamic : boolean; // if true, the MPD can be updated over time
+  manifestReceivedTime? : number; // time (in terms of `performance.now`) at
+                                   // which the Manifest file was received
   periodEnd : number|undefined; // End of the Period concerned by this
                                 // RepresentationIndex, in seconds
   periodStart : number; // Start of the Period concerned by this
@@ -93,10 +99,6 @@ export interface ITemplateIndexContextArgument {
                                   // i.e. Common beginning of the URL
   representationBitrate? : number; // Bitrate of the Representation concerned
   representationId? : string; // ID of the Representation concerned
-  timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
-                                  // in seconds
-  manifestReceivedTime? : number; // time (in terms of `performance.now`) at
-                                   // which the Manifest file was received
 }
 
 /**
@@ -109,7 +111,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   private _periodStart : number;
   private _relativePeriodEnd? : number;
   private _liveEdgeOffset? : number;
-  private _scaledBufferDepth? : number;
+  private _manifestBoundsCalculator : ManifestBoundsCalculator;
 
   // Whether this RepresentationIndex can change over time.
   private _isDynamic : boolean;
@@ -124,18 +126,16 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   ) {
     const { timescale } = index;
     const { availabilityStartTime,
+            manifestBoundsCalculator,
             clockOffset,
             isDynamic,
             periodEnd,
             periodStart,
             representationBaseURL,
             representationId,
-            representationBitrate,
-            timeShiftBufferDepth } = context;
+            representationBitrate } = context;
 
-    this._scaledBufferDepth = timeShiftBufferDepth == null ?
-      undefined :
-      timeShiftBufferDepth * timescale;
+    this._manifestBoundsCalculator = manifestBoundsCalculator;
     const presentationTimeOffset = index.presentationTimeOffset != null ?
                                      index.presentationTimeOffset :
                                      0;
@@ -213,7 +213,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const toFromPeriodStart = (fromTime + dur) * timescale - scaledStart;
     const firstSegmentStart = this._getFirstSegmentStart();
     const lastSegmentStart = this._getLastSegmentStart();
-    if (firstSegmentStart === null || lastSegmentStart === null) {
+    if (firstSegmentStart == null || lastSegmentStart == null) {
       return [];
     }
     const startPosition = Math.max(firstSegmentStart, upFromPeriodStart);
@@ -263,12 +263,12 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
 
   /**
    * Returns first possible position in the index.
-   * @returns {number|null}
+   * @returns {number|null|undefined}
    */
-  getFirstPosition() : number|null {
+  getFirstPosition() : number | null | undefined {
     const firstSegmentStart = this._getFirstSegmentStart();
-    if (firstSegmentStart === null) {
-      return null;
+    if (firstSegmentStart == null) {
+      return firstSegmentStart; // return undefined or null
     }
     return (firstSegmentStart / this._index.timescale) + this._periodStart;
   }
@@ -277,10 +277,13 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * Returns last possible position in the index.
    * @returns {number|null}
    */
-  getLastPosition() : number|null {
+  getLastPosition() : number|null|undefined {
     const lastSegmentStart = this._getLastSegmentStart();
-    if (lastSegmentStart === null) {
-      return null;
+    if (lastSegmentStart == null) {
+      // In that case (null or undefined), getLastPosition should reflect
+      // the result of getLastSegmentStart, as the meaning is the same for
+      // the two functions. So, we return the result of the latter.
+      return lastSegmentStart;
     }
     const lastSegmentEnd = lastSegmentStart + this._index.duration;
     return (lastSegmentEnd / this._index.timescale) + this._periodStart;
@@ -316,8 +319,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
 
     const firstSegmentStart = this._getFirstSegmentStart();
     const lastSegmentStart = this._getLastSegmentStart();
-
-    if (firstSegmentStart == null || lastSegmentStart == null) {
+    if (firstSegmentStart === undefined || lastSegmentStart === undefined) {
+      return undefined;
+    }
+    if (firstSegmentStart === null || lastSegmentStart === null) {
       return false;
     }
     if (timeRelativeToPeriodStart < firstSegmentStart) {
@@ -355,7 +360,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
 
     // As last segment start is null if live time is before
     // current period, consider the index not to be finished.
-    if (lastSegmentStart === null) {
+    if (lastSegmentStart == null) {
       return false;
     }
     const lastSegmentEnd = lastSegmentStart + this._index.duration;
@@ -384,23 +389,36 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   /**
    * Returns the timescaled start of the first segment that should be available,
    * relatively to the start of the Period.
-   * @returns {number|null}
+   * @returns {number | null | undefined}
    */
-  private _getFirstSegmentStart() : number|null {
-    if (!this._isDynamic || this._scaledBufferDepth == null) {
+  private _getFirstSegmentStart() : number | null | undefined {
+    if (!this._isDynamic) {
       return 0; // it is the start of the Period
     }
-    const { duration } = this._index;
-    const lastSegmentStart = this._getLastSegmentStart();
 
-    // No segment is available
-    if (lastSegmentStart === null) {
-      return null;
+    // 1 - check that this index is already available
+    if (!this._relativePeriodEnd && this._liveEdgeOffset != null) {
+      // /!\ The scaled max position augments continuously and might not
+      // reflect exactly the real server-side value. As segments are
+      // generated discretely.
+      const scaledMaxPosition = this._liveEdgeOffset + (performance.now() / 1000);
+      // Maximum position is before this period.
+      // No segment is yet available here
+      if (scaledMaxPosition < 0) {
+        return null;
+      }
     }
-    const lastSegmentEnd = lastSegmentStart + this._index.duration;
-    const scaledMinimum = Math.max(lastSegmentEnd - this._scaledBufferDepth,
-                                   0);
-    const numberIndexedToZero = Math.floor(scaledMinimum / duration);
+
+    const { duration, timescale } = this._index;
+    const firstPosition = this._manifestBoundsCalculator.getMinimumBound();
+    if (firstPosition === undefined) {
+      return undefined;
+    }
+
+    const segmentTime = firstPosition > this._periodStart ?
+      (firstPosition - this._periodStart) * timescale :
+      0;
+    const numberIndexedToZero = Math.floor(segmentTime / duration);
     return numberIndexedToZero * duration;
   }
 
@@ -408,33 +426,34 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * Returns the timescaled start of the last segment that should be available,
    * relatively to the start of the Period.
    * Returns null if live time is before current period.
-   * @returns {number|null}
+   * @returns {number|null|undefined}
    */
-  private _getLastSegmentStart() : number|null {
+  private _getLastSegmentStart() : number | null | undefined {
     const { duration, timescale } = this._index;
 
-    let numberIndexedToZero : number;
     if (this._isDynamic) {
-      let scaledMaxPosition = Number.MAX_VALUE;
-      if (this._relativePeriodEnd) {
-        scaledMaxPosition = this._relativePeriodEnd;
-      } else if (this._liveEdgeOffset) {
-        // /!\ The scaled max position augments continuously and might not
-        // reflect exactly the real server-side value. As segments are
-        // generated discretely.
-        scaledMaxPosition = this._liveEdgeOffset + (performance.now() / 1000);
-        // Maximum position is before this period.
-        // No segment is yet available here
-        if (scaledMaxPosition < 0) {
-          return null;
-        }
+      const lastPos = this._manifestBoundsCalculator.getMaximumBound();
+      if (lastPos === undefined) {
+        return undefined;
+      }
+      // /!\ The scaled max position augments continuously and might not
+      // reflect exactly the real server-side value. As segments are
+      // generated discretely.
+      const scaledMaxPosition = (this._relativePeriodEnd != null ?
+        Math.min(lastPos - this._periodStart, this._relativePeriodEnd) :
+        lastPos - this._periodStart) * timescale;
+
+      // Maximum position is before this period.
+      // No segment is yet available here
+      if (scaledMaxPosition < 0) {
+        return null;
       }
       const maxPossibleStart = Math.max(scaledMaxPosition - duration, 0);
-      numberIndexedToZero = Math.floor(maxPossibleStart / duration);
+      const numberIndexedToZero = Math.floor(maxPossibleStart / duration);
       return numberIndexedToZero * duration;
     } else {
       const maximumTime = (this._relativePeriodEnd || 0) * timescale;
-      numberIndexedToZero = Math.ceil(maximumTime / duration) - 1;
+      const numberIndexedToZero = Math.ceil(maximumTime / duration) - 1;
       const regularLastSegmentStart = numberIndexedToZero * duration;
 
       // In some SegmentTemplate, we could think that there is one more

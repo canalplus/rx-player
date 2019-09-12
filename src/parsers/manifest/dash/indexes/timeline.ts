@@ -31,6 +31,7 @@ import {
   toIndexTime,
 } from "../../utils/index_helpers";
 import isSegmentStillAvailable from "../../utils/is_segment_still_available";
+import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import getSegmentsFromTimeline from "./get_segments_from_timeline";
 import { createIndexURL } from "./tokens";
@@ -96,6 +97,11 @@ export interface ITimelineIndexIndexArgument {
 
 // Aditional argument for a SegmentTimeline RepresentationIndex
 export interface ITimelineIndexContextArgument {
+  manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the
+                                                       // minimum and maximum
+                                                       // of a content
+  manifestReceivedTime? : number; // time (in terms of `performance.now`) at
+                                   // which the Manifest file was received
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
   periodEnd : number|undefined; // End of the period concerned by this
@@ -104,9 +110,6 @@ export interface ITimelineIndexContextArgument {
   representationBaseURL : string; // Base URL for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
-  timeShiftBufferDepth? : number; // Timeshift window, in seconds
-  manifestReceivedTime? : number; // time (in terms of `performance.now`) at
-                                   // which the Manifest file was received
 }
 
 /**
@@ -197,9 +200,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   // time, in terms of `performance.now`, of the last Manifest update
   private _lastManifestUpdate : number;
 
-  // timeshift window, timescaled
-  private _scaledTimeShiftBufferDepth : number | undefined;
-
   // absolute start of the period, timescaled and converted to index time
   private _scaledPeriodStart : number;
 
@@ -209,6 +209,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   // Whether this RepresentationIndex can change over time.
   private _isDynamic : boolean;
 
+  private _manifestBoundsCalculator : ManifestBoundsCalculator;
+
   /**
    * @param {Object} index
    * @param {Object} context
@@ -217,13 +219,13 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     index : ITimelineIndexIndexArgument,
     context : ITimelineIndexContextArgument
   ) {
-    const { isDynamic,
+    const { manifestBoundsCalculator,
+            isDynamic,
             representationBaseURL,
             representationId,
             representationBitrate,
             periodStart,
-            periodEnd,
-            timeShiftBufferDepth } = context;
+            periodEnd } = context;
     const { timescale } = index;
 
     const presentationTimeOffset = index.presentationTimeOffset != null ?
@@ -246,6 +248,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
         timeline.push(timelineElement);
       }
     }
+
+    this._manifestBoundsCalculator = manifestBoundsCalculator;
 
     this._lastManifestUpdate = context.manifestReceivedTime == null ?
                                  performance.now() :
@@ -271,9 +275,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._scaledPeriodStart = toIndexTime(periodStart, this._index);
     this._scaledPeriodEnd = periodEnd == null ? undefined :
                                                 toIndexTime(periodEnd, this._index);
-    this._scaledTimeShiftBufferDepth = timeShiftBufferDepth == null ?
-                                         undefined :
-                                         timeShiftBufferDepth * timescale;
   }
 
   /**
@@ -448,7 +449,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._isDynamic = newIndex._isDynamic;
     this._scaledPeriodStart = newIndex._scaledPeriodStart;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
-    this._scaledTimeShiftBufferDepth = newIndex._scaledTimeShiftBufferDepth;
     this._lastManifestUpdate = newIndex._lastManifestUpdate;
   }
 
@@ -490,20 +490,12 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * available due to timeshifting.
    */
   private _refreshTimeline() : void {
-    if (this._scaledTimeShiftBufferDepth == null) {
-      return;
+    const firstPosition = this._manifestBoundsCalculator.getMinimumBound();
+    if (firstPosition == null) {
+      return; // we don't know yet
     }
-
-    const lastTheoriticalPosition = this._getTheoriticalLastPosition();
-    if (lastTheoriticalPosition == null) {
-      return;
-    }
-
-    const firstAvailablePosition = Math.max(lastTheoriticalPosition -
-                                              this._scaledTimeShiftBufferDepth,
-                                            this._scaledPeriodStart);
-
-    clearTimelineFromPosition(this._index.timeline, firstAvailablePosition);
+    const scaledFirstPosition = toIndexTime(firstPosition, this._index);
+    clearTimelineFromPosition(this._index.timeline, scaledFirstPosition);
   }
 
   /**

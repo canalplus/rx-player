@@ -24,6 +24,7 @@ import {
   IParsedRepresentation,
 } from "../types";
 import inferAdaptationType from "./infer_adaptation_type";
+import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import {
   IAdaptationSetIntermediateRepresentation,
 } from "./node_parsers/AdaptationSet";
@@ -34,6 +35,8 @@ export interface IPeriodInfos {
   availabilityStartTime : number; // Time from which the content starts
   baseURL? : string; // Eventual URL from which every relative URL will be based
                      // on
+  manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
+                                                       // available position of a content
   clockOffset? : number; // If set, offset to add to `performance.now()`
                          // to obtain the current server's time
   end? : number; // End time of the current period, in seconds
@@ -185,28 +188,22 @@ export default function parseAdaptationSets(
       const adaptationInfos = {
         availabilityStartTime: periodInfos.availabilityStartTime,
         baseURL: resolveURL(periodInfos.baseURL, adaptationChildren.baseURL),
+        manifestBoundsCalculator: periodInfos.manifestBoundsCalculator,
         clockOffset: periodInfos.clockOffset,
         end: periodInfos.end,
         isDynamic: periodInfos.isDynamic,
         start: periodInfos.start,
         timeShiftBufferDepth: periodInfos.timeShiftBufferDepth,
       };
+      const adaptationMimeType = adaptation.attributes.mimeType;
+      const adaptationCodecs = adaptation.attributes.codecs;
+      const type = inferAdaptationType(representationsIR,
+                                       adaptationMimeType || null,
+                                       adaptationCodecs || null,
+                                       adaptationChildren.roles || null);
       const representations = parseRepresentations(representationsIR,
                                                    adaptation,
                                                    adaptationInfos);
-      const adaptationMimeType = adaptation.attributes.mimeType;
-      const adaptationCodecs = adaptation.attributes.codecs;
-      const representationMimeTypes = representations
-        .map(representation => representation.mimeType)
-        .filter((mimeType : string|undefined) : mimeType is string => mimeType != null);
-      const representationCodecs = representations
-        .map(representation => representation.codecs)
-        .filter((codecs : string|undefined) : codecs is string => codecs != null);
-      const type = inferAdaptationType(adaptationMimeType || null,
-                                       representationMimeTypes,
-                                       adaptationCodecs || null,
-                                       representationCodecs,
-                                       adaptationChildren.roles || null);
 
       const originalID = adaptation.attributes.id;
       let newID : string;
