@@ -46,6 +46,9 @@ low-latency contents. For live contents:
   - it will be safer when choosing the right video / audio quality (to avoid the
     higher chances of rebuffering)
 
+  - the delay we use when retrying a failed segment or manifest request will be
+    lower
+
   - and multiple other minor optimizations
 
 Note that you can also set the `lowLatencyMode` mode for VoD (non-live)
