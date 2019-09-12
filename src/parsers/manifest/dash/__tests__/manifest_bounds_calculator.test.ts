@@ -98,9 +98,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     });
     manifestBoundsCalculator.setLastPosition(1000, 10);
     date = 25000;
-    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(1000);
-    date = 35000;
     expect(manifestBoundsCalculator.getMinimumBound()).toEqual(1010);
+    date = 35000;
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(1020);
     performanceSpy.mockRestore();
   });
 
@@ -134,10 +134,10 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     });
     manifestBoundsCalculator.setLastPosition(1000, 0);
     date = 50000;
-    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(1035);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(1045);
     manifestBoundsCalculator.setLastPosition(0, 0);
     date = 55000;
-    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(40);
+    expect(manifestBoundsCalculator.getMinimumBound()).toEqual(50);
     performanceSpy.mockRestore();
   });
 });
