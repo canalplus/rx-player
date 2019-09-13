@@ -53,7 +53,7 @@ function regularSegmentLoader(
   }
 
   const isWEBM = isWEBMEmbeddedTrack(args.representation);
-  if (lowLatencyMode && fetchIsSupported() && !isWEBM) {
+  if (lowLatencyMode && !isWEBM) {
     if (fetchIsSupported()) {
       return lowLatencySegmentLoader(url, args);
     } else {
