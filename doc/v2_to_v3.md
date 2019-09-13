@@ -1444,7 +1444,7 @@ Three things have changed comparatively:
 
 This is to support edge cases where the ``<track>`` element could be modified by
 the user of our library, in which case the RxPlayer could give false
-informations. Also, this allows to signal when a ``TextTrack`` has been removed
+information. Also, this allows to signal when a ``TextTrack`` has been removed
 from the DOM to help you free up ressources on your side.
 
 #### Replacement example

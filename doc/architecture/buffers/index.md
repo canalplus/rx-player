@@ -25,7 +25,7 @@ It completely takes care of segment downloading and pushing for a whole content.
 
 To do so, it creates the right ``PeriodBuffer``s depending on the current
 conditions.
-For more informations on it, you can look at [the BufferOrchestrator
+For more information on it, you can look at [the BufferOrchestrator
 documentation](./buffer_orchestrator.md).
 
 
@@ -56,7 +56,7 @@ segment-downloading and pushing itself.
 The ``RepresentationBuffer`` is the part that actually calculates which segments
 should be downloaded.
 
-You can have more informations on it in [the RepresentationBuffer
+You can have more information on it in [the RepresentationBuffer
 documentation](./representation_buffer.md).
 
 

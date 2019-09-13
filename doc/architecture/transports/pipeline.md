@@ -23,13 +23,13 @@ A loader in the transport pipeline is a function whose role is to "load" the
 resource.
 
 Depending on the streaming technology, this can mean doing a request or just
-creating it from the informations given.
+creating it from the information given.
 
 Its concept can be illustrated as such:
 ```
   INPUT:                                 OUTPUT:
   ------                                 -------
-  URL and other informations +--------+  loaded resource
+  URL and other information  +--------+  loaded resource
   about the wanted resource  |        |
 ============================>| LOADER |==============================>
                              |        |
@@ -47,7 +47,7 @@ HTTP error.
 
 ## A parser ####################################################################
 
-A parser's role is to extract the data and other important informations from a
+A parser's role is to extract the data and other important information from a
 loaded resource.
 It is connected in some ways to the response of the loader (which gives the
 loaded resource) and will be the last step before that resource is actually
@@ -58,7 +58,7 @@ Its concept can be illustrated as such:
   INPUT:                                OUTPUT:
   ------                                -------
   loaded resource +                     exploitable resource and
-  resource informations +    +--------+ parsed informations from it
+  resource information +     +--------+ parsed information from it
   request scheduler [1]      |        |
 ============================>| PARSER |==============================>
                              |        |
@@ -68,7 +68,7 @@ Its concept can be illustrated as such:
 The parser returns an Observable which will emit the parsed resource when done.
 
 This Observable will throw if the resource is corrupted or miss crucial
-informations.
+information.
 
 [1] the parser could also need to perform requests (e.g. it needs to fetch the
 current time from a server).
@@ -104,7 +104,7 @@ The Manifest parser is a function whose role is to parse the Manifest in its
 original form to convert it to the RxPlayer's internal representation of it.
 
 It receives an argument the downloaded Manifest, some manifest-related
-informations (e.g. its URL) and a specific function called `scheduleRequest`,
+information (e.g. its URL) and a specific function called `scheduleRequest`,
 allowing it to ask for supplementary requests before completing (e.g. to fetch
 the current time from an URL or to load sub-parts of the Manifests only known
 at parse-time).
@@ -132,7 +132,7 @@ text, video...)
 A segment loader is the "loader" for any segment. Its role is to retrieve a given
 segment's data.
 
-It receives informations linked to the segment you want to download:
+It receives information linked to the segment you want to download:
   - The related `Manifest` data structure
   - The `Period`
   - The `Adaptation`
@@ -145,7 +145,7 @@ segment.
 ```
   INPUT:                              OUTPUT:
   ------                              -------
-  Segment informations  +----------+  Segment in a generic format
+  Segment information   +----------+  Segment in a generic format
                         |          |  (e.g. ArrayBuffer, string...)
 =======================>| SEGMENT  |=================================>
                         |  LOADER  |
@@ -179,19 +179,19 @@ The following events can then be sent by the segment loader's Observable:
 
 ## Segment parser ##############################################################
 
-A segment parser is a function whose role is to extract some informations from
+A segment parser is a function whose role is to extract some information from
 the segment's data:
   - what its precize start time and duration is
   - whether the segment should be offseted when decoded and by what amount
   - the decodable data (which can be wrapped in a container e.g.  subtitles
     in an ISOBMFF file).
 
-It receives the segment or sub-segment as argument and related informations
+It receives the segment or sub-segment as argument and related information
 ```
   INPUT:                                      OUTPUT:
   ------                                      -------
   Segment in a generic format +  +----------+ Decodable data +
-  Segment informations           |          | time informations
+  Segment information            |          | time information
  ===============================>| SEGMENT  |===========================>
                                  |  PARSER  |
                                  |          |

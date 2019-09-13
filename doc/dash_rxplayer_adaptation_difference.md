@@ -54,7 +54,7 @@ all those conditions are filled:
 
   - they are of the same language, if one (letter-for-letter in the manifest)
 
-  - they have the same accessibility informations (e.g. both are closed
+  - they have the same accessibility information (e.g. both are closed
     captions or audio description for the visually impaired).
 
 If any of these conditions is not filled, the concerned `AdaptationSet`s stay

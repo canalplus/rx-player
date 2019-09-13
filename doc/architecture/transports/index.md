@@ -12,7 +12,7 @@ Its roles are to:
     by the core of the rx-player
 
   - download segments, convert them into a decodable format if needed, and
-    report important informations about them (like the duration of a segment)
+    report important information about them (like the duration of a segment)
 
   - give networking metrics to allow the core to better adapt to poor networking
     conditions

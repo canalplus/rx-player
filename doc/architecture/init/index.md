@@ -83,7 +83,7 @@ Thus, there is three ways the API and Init can communicate:
 Events allows the Init to reports milestones of the content playback, such as
 when the content is ready to play.
 
-It's also a way for the Init to communicate informations about the content and
+It's also a way for the Init to communicate information about the content and
 give some controls to the user.
 
 For example, as available audio languages are only known after the manifest has

@@ -3,7 +3,7 @@
 
 ## Overview ####################################################################
 
-The SegmentBookkeeper is a class which registers informations about every
+The SegmentBookkeeper is a class which registers information about every
 segments currently present in a SourceBuffer.
 The RxPlayer creates one of them for each SourceBuffer created.
 
@@ -50,7 +50,7 @@ which should be present in the SourceBuffer in a chronological order.
 
 To construct this inventory, two methods can be used:
 
-  - one to add informations about a new segment, which should have been pushed
+  - one to add information about a new segment, which should have been pushed
     to the SourceBuffer
 
   - one to synchronize the currently pushed segments with what the real

@@ -70,7 +70,7 @@ we have a special [page of documentation on player states](./states.md).
 
 _payload type_: ``Object``
 
-Emit informations about the current position at most every seconds (also emits
+Emit information about the current position at most every seconds (also emits
 every time various player events are received).
 
 The object emitted as the following properties:
@@ -460,7 +460,7 @@ _payload type_: ``Error``
 Triggered each time a non-fatal (for content playback) error happened.
 
 The payload is the corresponding error. See [the Player Error
-documentation](./errors.md) for more informations.
+documentation](./errors.md) for more information.
 
 
 <a name="events-error"></a>
@@ -471,7 +471,7 @@ _payload type_: ``Error``
 Triggered each time a fatal (for content playback) error happened.
 
 The payload is the corresponding error. See [the Player Error
-documentation](./errors.md) for more informations.
+documentation](./errors.md) for more information.
 
 
 <a name="events-nativeTextTracksChange"></a>
@@ -515,4 +515,4 @@ options](./loadVideo_options.md#prop-transport)).
 Triggered when the current [Period](../terms.md#period) being seen changes.
 
 The payload is the corresponding Period. See [the Manifest
-documentation](./manifest.md#period) for more informations.
+documentation](./manifest.md#period) for more information.
