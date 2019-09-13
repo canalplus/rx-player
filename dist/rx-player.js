@@ -950,7 +950,7 @@ and limitations under the License.
             MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT: .12,
             /**
    * The maximum authorized difference, in seconds, between the real buffered
-   * time of a given chunk and what the segment informations of the Manifest
+   * time of a given chunk and what the segment information of the Manifest
    * tells us.
    *
    * Setting a value too high can lead to parts of the SourceBuffer being
@@ -5353,7 +5353,7 @@ object-assign
  *   - ...
  * while staying agnostic of the transport protocol used (Smooth or DASH).
  *
- * The Manifest and its contained informations can evolve over time (like when
+ * The Manifest and its contained information can evolve over time (like when
  * updating a live manifest of when right management forbid some tracks from
  * being played).
  * To perform actions on those changes, any module using this Manifest can
@@ -10095,7 +10095,7 @@ object-assign
         /**
  * Set representing persisted licenses. Depends on a simple local-
  * storage implementation with a `save`/`load` synchronous interface
- * to persist informations on persisted sessions.
+ * to persist information on persisted sessions.
  *
  * This set is used only for a cdm/keysystem with license persistency
  * supported.
@@ -13001,7 +13001,7 @@ object-assign
  * If that's the case, re-calculate the bandwidth urgently based on
  * this single request.
  * @param {Object} pendingRequests - Current pending requests.
- * @param {Object} clock - Informations on the current playback.
+ * @param {Object} clock - Information on the current playback.
  * @param {Number} lastEstimatedBitrate - Last bitrate estimation emitted.
  * @returns {Number|undefined}
  */        function estimateStarvationModeBitrate(pendingRequests, clock, currentRepresentation, lastEstimatedBitrate) {
@@ -13095,7 +13095,7 @@ object-assign
                 this._currentRequests = {};
             }
             /**
-   * Add informations about a new pending request.
+   * Add information about a new pending request.
    * @param {string} id
    * @param {Object} payload
    */            var _proto = PendingRequestsStore.prototype;
@@ -13122,7 +13122,7 @@ object-assign
                 this._currentRequests[id] || log.a.warn("ABR: can't remove unknown request"), delete this._currentRequests[id];
             }
             /**
-   * Returns informations about all pending requests, in segment's chronological
+   * Returns information about all pending requests, in segment's chronological
    * order.
    * @returns {Array.<Object>}
    */ , _proto.getRequests = function getRequests() {
@@ -14044,7 +14044,7 @@ object-assign
  *   - as the request progresses (type "progress").
  *
  *   - each time a request ends (type "metrics").
- *     This event contains informations about the metrics of the request.
+ *     This event contains information about the metrics of the request.
  *
  *   - each time a minor request error is encountered (type "warning").
  *     With the error as a value.
@@ -14471,7 +14471,7 @@ object-assign
  * Returns the calculated initial time for the content described by the given
  * Manifest:
  *   1. if a start time is defined by user, calculate starting time from the
- *      manifest informations
+ *      manifest information
  *   2. else if the media is live, use the live edge and suggested delays from
  *      it
  *   3. else returns the minimum time announced in the manifest
@@ -14933,7 +14933,7 @@ object-assign
    * Note: As new segments can "replace" partially or completely old ones, we
    * have to perform a complex logic and might update previously added segments.
    *
-   * @param {Object} chunkInformations
+   * @param {Object} chunkInformation
    */ , _proto.insertChunk = function insertChunk(_ref) {
                 var period = _ref.period, adaptation = _ref.adaptation, representation = _ref.representation, segment = _ref.segment, estimatedStart = _ref.estimatedStart, estimatedEnd = _ref.estimatedEnd;
                 if (!segment.isInit) {
@@ -15758,9 +15758,9 @@ object-assign
  * ```
  *
  * @param {Array.<string>} bufferTypes - Every buffer types in the content.
- * @param {Observable} addPeriodBuffer$ - Emit PeriodBuffer informations when
+ * @param {Observable} addPeriodBuffer$ - Emit PeriodBuffer information when
  * one is added.
- * @param {Observable} removePeriodBuffer$ - Emit PeriodBuffer informations when
+ * @param {Observable} removePeriodBuffer$ - Emit PeriodBuffer information when
  * one is removed.
  * @returns {Observable}
  */        function ActivePeriodEmitter(buffers$) {
@@ -17094,7 +17094,7 @@ object-assign
  * transitions between periods.
  * To do this, we dynamically create or destroy buffers as they are needed.
  * @param {Object} content
- * @param {Observable} clock$ - Emit position informations
+ * @param {Observable} clock$ - Emit position information
  * @param {Object} abrManager - Emit bitrate estimation and best Representation
  * to play.
  * @param {Object} sourceBuffersStore - Will be used to lazily create
@@ -20132,7 +20132,7 @@ object-assign
  * limitations under the License.
  */
         /**
- * Get presentation live gap from manifest informations.
+ * Get presentation live gap from manifest information.
  * @param {Object} manifest
  * @returns {number}
  */        function getMinimumAndMaximumPosition(manifest) {
@@ -21241,30 +21241,30 @@ object-assign
  * limitations under the License.
  */
         /**
- * Get periods time informations from current, next and previous
+ * Get periods time information from current, next and previous
  * periods.
  * @param {Array.<Object>} periodsIR
  * @param {Object} manifestInfos
  * @return {Array.<Object>}
- */        function getPeriodsTimeInformations(periodsIR, manifestInfos) {
-            var periodsTimeInformations = [];
+ */        function getPeriodsTimeInformation(periodsIR, manifestInfos) {
+            var periodsTimeInformation = [];
             return periodsIR.forEach(function(currentPeriod, i) {
                 var periodStart, periodDuration;
                 if (null != currentPeriod.attributes.start) periodStart = currentPeriod.attributes.start; else if (0 === i) periodStart = manifestInfos.isDynamic && null != manifestInfos.availabilityStartTime ? manifestInfos.availabilityStartTime : 0; else {
-                    // take time informations from previous period
-                    var prevPeriodInfos = periodsTimeInformations[periodsTimeInformations.length - 1];
+                    // take time information from previous period
+                    var prevPeriodInfos = periodsTimeInformation[periodsTimeInformation.length - 1];
                     if (null == prevPeriodInfos || null == prevPeriodInfos.periodEnd) throw new Error("Missing start time when parsing periods.");
                     periodStart = prevPeriodInfos.periodEnd;
                 }
                 var nextPeriod = periodsIR[i + 1];
                 null != currentPeriod.attributes.duration ? periodDuration = currentPeriod.attributes.duration : i === periodsIR.length - 1 ? periodDuration = manifestInfos.duration : null != nextPeriod.attributes.start && (periodDuration = nextPeriod.attributes.start - periodStart);
                 var periodEnd = null != periodDuration ? periodStart + periodDuration : void 0;
-                periodsTimeInformations.push({
+                periodsTimeInformation.push({
                     periodStart: periodStart,
                     periodDuration: periodDuration,
                     periodEnd: periodEnd
                 });
-            }), periodsTimeInformations;
+            }), periodsTimeInformation;
         }
         // CONCATENATED MODULE: ./src/parsers/manifest/dash/manifest_bounds_calculator.ts
         /**
@@ -22033,7 +22033,7 @@ object-assign
             }, TemplateRepresentationIndex;
         }(), network_error = __webpack_require__(157), clear_timeline_from_position = __webpack_require__(99), is_segment_still_available = __webpack_require__(98);
         // CONCATENATED MODULE: ./src/parsers/manifest/dash/indexes/list.ts
-        /**
+        /*
  * Copyright 2015 CANAL+ Group
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22251,7 +22251,7 @@ object-assign
                 return Object(index_helpers.c)(lastTimelineElement, null, this._scaledPeriodEnd) + 1 / 60 >= this._scaledPeriodEnd;
             }
             /**
-   * Clean-up timeline to remove segment informations which should not be
+   * Clean-up timeline to remove segment information which should not be
    * available due to timeshifting.
    */ , _proto._refreshTimeline = function _refreshTimeline() {
                 var firstPosition = this._manifestBoundsCalculator.getMinimumBound();
@@ -22406,7 +22406,7 @@ object-assign
             return !!accessibility && ("urn:tva:metadata:cs:AudioPurposeCS:2007" === accessibility.schemeIdUri && "2" === accessibility.value);
         }
         /**
- * Contruct Adaptation ID from the informations we have.
+ * Contruct Adaptation ID from the information we have.
  * @param {Object} adaptation
  * @param {Array.<Object>} representations
  * @param {Object} infos
@@ -22535,8 +22535,8 @@ object-assign
  * @param {Object} manifestInfos
  * @returns {Array.<Object>}
  */        function parsePeriods(periodsIR, manifestInfos) {
-            var parsedPeriods = [], periodsTimeInformations = getPeriodsTimeInformations(periodsIR, manifestInfos);
-            if (periodsTimeInformations.length !== periodsIR.length) throw new Error("MPD parsing error: the time informations are incoherent.");
+            var parsedPeriods = [], periodsTimeInformation = getPeriodsTimeInformation(periodsIR, manifestInfos);
+            if (periodsTimeInformation.length !== periodsIR.length) throw new Error("MPD parsing error: the time information are incoherent.");
  // We might to communicate the depth of the Buffer while parsing
                         var isDynamic = manifestInfos.isDynamic, timeShiftBufferDepth = manifestInfos.timeShiftBufferDepth, manifestBoundsCalculator = new ManifestBoundsCalculator({
                 isDynamic: isDynamic,
@@ -22546,7 +22546,7 @@ object-assign
  // We parse it in reverse because we might need to deduce the buffer depth from
             // the last Periods' indexes
                         for (var i = periodsIR.length - 1; 0 <= i; i--) {
-                var periodIR = periodsIR[i], periodBaseURL = Object(resolve_url.a)(manifestInfos.baseURL, periodIR.children.baseURL), _periodsTimeInformati = periodsTimeInformations[i], periodStart = _periodsTimeInformati.periodStart, periodDuration = _periodsTimeInformati.periodDuration, periodEnd = _periodsTimeInformati.periodEnd, periodID = void 0;
+                var periodIR = periodsIR[i], periodBaseURL = Object(resolve_url.a)(manifestInfos.baseURL, periodIR.children.baseURL), _periodsTimeInformati = periodsTimeInformation[i], periodStart = _periodsTimeInformati.periodStart, periodDuration = _periodsTimeInformati.periodDuration, periodEnd = _periodsTimeInformati.periodEnd, periodID = void 0;
                 periodID = null == periodIR.attributes.id ? (log.a.warn("DASH: No usable id found in the Period. Generating one."), 
                 "gen-dash-period-" + generatePeriodID()) : periodIR.attributes.id;
                 var periodInfos = {
@@ -23908,7 +23908,7 @@ object-assign
             } ];
         }
         /**
- * Parse "Protection" Node, which contains DRM informations
+ * Parse "Protection" Node, which contains DRM information
  * @param {Element} protectionNode
  * @returns {Object}
  */        function parseProtectionNode(protectionNode, keySystemCreator) {
@@ -24224,8 +24224,8 @@ object-assign
             }
             /**
    * Update this RepresentationIndex by a newly downloaded one.
-   * Check if the old index had more informations about new segments and
-   * re-add them if that's the case.
+   * Check if the old index had more information about new segments and re-add
+   * them if that's the case.
    * @param {Object} newIndex
    */ , _proto._update = function _update(newIndex) {
                 var oldTimeline = this._index.timeline, newTimeline = newIndex._index.timeline, oldTimescale = this._index.timescale, newTimescale = newIndex._index.timescale;
@@ -24263,7 +24263,7 @@ object-assign
                 for (var i = 0; i < nextSegments.length; i++) _addSegmentInfos(this._index, nextSegments[i], currentSegment);
             }
             /**
-   * Clean-up timeline to remove segment informations which should not be
+   * Clean-up timeline to remove segment information which should not be
    * available due to the timeshift window
    */ , _proto._refreshTimeline = function _refreshTimeline() {
                 // clean segments before time shift buffer depth
@@ -25200,7 +25200,7 @@ object-assign
             }), Object(create_box.b)("moov", children);
         }
         /**
- * Create an initialization segment with the informations given.
+ * Create an initialization segment with the information given.
  * @param {Number} timescale
  * @param {string} type
  * @param {Uint8Array} stsd
@@ -25485,7 +25485,7 @@ object-assign
  * @param {Object} dlSegment
  * @param {Object} nextSegments
  */        function addNextSegments(adaptation, nextSegments, dlSegment) {
-            log.a.debug("Smooth Parser: update segments informations.");
+            log.a.debug("Smooth Parser: update segments information.");
             for (var representations = adaptation.representations, i = 0; i < representations.length; i++) {
                 representations[i].index._addSegments(nextSegments, dlSegment);
             }
@@ -25551,7 +25551,7 @@ object-assign
                         });
                     }
                     var responseBuffer = data instanceof Uint8Array ? data : new Uint8Array(data), _extractTimingsInfos = extractTimingsInfos(responseBuffer, isChunked, segment, manifest.isLive), nextSegments = _extractTimingsInfos.nextSegments, chunkInfos = _extractTimingsInfos.chunkInfos;
-                    if (null == chunkInfos) throw new Error("Smooth Segment without time informations");
+                    if (null == chunkInfos) throw new Error("Smooth Segment without time information");
                     var chunkData = patchSegment(responseBuffer, chunkInfos.time);
                     return nextSegments && addNextSegments(adaptation, nextSegments, chunkInfos), Object(of.a)({
                         chunkData: chunkData,
@@ -28310,7 +28310,7 @@ object-assign
  *
  * @param {Uint8Array} buf
  * @param {Number} initialOffset
- * @returns {Object|null} {Array.<Object>} - Informations about each subsegment.
+ * @returns {Object|null} {Array.<Object>} - Information about each subsegment.
  * Contains those keys:
  *   - time {Number}: starting _presentation time_ for the subsegment,
  *     timescaled
@@ -28433,7 +28433,7 @@ object-assign
             return duration;
         }
         /**
- * Get various informations from a movie header box. Found in init segments.
+ * Get various information from a movie header box. Found in init segments.
  * null if not found or not parsed.
  *
  * This timescale is the default timescale used for segments.
