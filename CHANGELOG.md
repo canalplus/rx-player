@@ -235,7 +235,7 @@
 
   - dash: better infer unknown Period durations
   - dash: better manage overlapping Periods by giving more importance to the last chronological one
-  - memory: clean-up ``Adaptation`` and ``Representation`` informations on Periods which are not considered anymore
+  - memory: clean-up ``Adaptation`` and ``Representation`` information on Periods which are not considered anymore
   - log: warn through our logs every time a warning event is sent by the API
   - demo: authorize DRMs in IE11 or Safari when in HTTP in the demo page
   - demo: fix time indication for non-live contents
@@ -272,8 +272,8 @@
 
 ### Other improvements
 
-  - smooth: keep supplementary segment informations when updating the manifest
-  - smooth: when updating segment informations, perform garbage-collection of those concerning unreachable segments
+  - smooth: keep supplementary segment information when updating the manifest
+  - smooth: when updating segment information, perform garbage-collection of those concerning unreachable segments
 
 
 ## v3.9.0 (2018/11/08)
