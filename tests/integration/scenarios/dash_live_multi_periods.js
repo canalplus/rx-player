@@ -62,7 +62,7 @@ describe("DASH live content multi-periods (SegmentTemplate)", function() {
     expect(maxPos).to.be.closeTo(now, 2);
   });
 
-  xit("should return correct minimum position", async () => {
+  it("should return correct minimum position", async () => {
     xhrMock.lock();
 
     player.loadVideo({
