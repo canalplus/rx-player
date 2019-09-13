@@ -363,7 +363,7 @@ If the value set is inferior to the minimum possible position, the minimum
 possible position will be used instead. If it is superior to the maximum
 possible position, the maximum will be used instead as well.
 
-More informations on how the initial position is chosen can be found [in the
+More information on how the initial position is chosen can be found [in the
 specific documentation page on this subject](../infos/initial_position.md).
 
 
@@ -665,7 +665,7 @@ that's the case, you can disable the `aggressiveMode` `transportOptions`,
 defined [in the `transportOptions` documentation](#prop-transportOptions), this
 will disable that optimization.
 
-More informations on playing low-latency DASH contents can be found in the
+More information on playing low-latency DASH contents can be found in the
 [corresponding documentation page](./low_latency.md).
 
 

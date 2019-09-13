@@ -15,7 +15,7 @@ To vulgarize, such segments are divided into multiple chunks which can be
 requested while the whole segment is still being encoded - through Chunked
 transfer encoding HTTP requests.
 
-If you want more informations on this technology, the best for us is probably to
+If you want more information on this technology, the best for us is probably to
 redirect you to the multiple resources you can probably find with your favorite
 search engine!
 

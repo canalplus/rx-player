@@ -256,7 +256,7 @@ have to set to `true`:
 RXP_METAPLAYLIST=true npm run build:min
 ```
 
-More informations about any of that can be found in the [minimal player
+More information about any of that can be found in the [minimal player
 documentation](./minimal_player.md).
 
 
