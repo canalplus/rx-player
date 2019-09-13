@@ -55,8 +55,11 @@ function requestStringResource(
 export default function generateManifestParser(
   options : ITransportOptions
 ) : (x : IManifestParserArguments) => IManifestParserObservable {
-  const { aggressiveMode,
+  const { aggressiveMode: _aggressiveMode,
+          lowLatencyMode,
           referenceDateTime } = options;
+  const aggressiveMode = lowLatencyMode ? _aggressiveMode !== false :
+                                          _aggressiveMode === true;
   const serverTimeOffset = options.serverSyncInfos != null ?
     options.serverSyncInfos.serverTimestamp - options.serverSyncInfos.clientTime :
     undefined;
@@ -76,7 +79,7 @@ export default function generateManifestParser(
 
     const externalClockOffset = serverTimeOffset == null ? argClockOffset :
                                                            serverTimeOffset;
-    const parsedManifest = dashManifestParser(data, { aggressiveMode: !!aggressiveMode,
+    const parsedManifest = dashManifestParser(data, { aggressiveMode,
                                                       url,
                                                       referenceDateTime,
                                                       externalClockOffset });
