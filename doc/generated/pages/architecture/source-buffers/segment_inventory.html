@@ -1,13 +1,13 @@
-<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>SegmentBookkeeper - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-SegmentBookkeeper">SegmentBookkeeper</a></p>
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../../styles/style.css"/><link rel="stylesheet" href="../../../styles/code.css"/><title>SegmentInventory - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-SegmentInventory">SegmentInventory</a></p>
 <ul>
 <li><a href="#chapter-Overview">Overview</a></li>
 <li><a href="#chapter-Implementation">Implementation</a></li>
 </ul>
-</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-SegmentBookkeeper"></a></p>
-<h1>SegmentBookkeeper</h1>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-SegmentInventory"></a></p>
+<h1>SegmentInventory</h1>
 <p><a name="chapter-Overview"></a></p>
 <h2>Overview</h2>
-<p>The SegmentBookkeeper is a class which registers information about every
+<p>The SegmentInventory is a class which registers some information about every
 segments currently present in a SourceBuffer.
 The RxPlayer creates one of them for each SourceBuffer created.</p>
 <p>This helps buffers to avoid re-downloading segments unnecessarily and know when
@@ -47,22 +47,25 @@ is just too short).</p>
 (example: it is in another language)</p>
 </li>
 </ul>
-<p>Thanks to the SegmentBookkeeper, we can infer on which situation we are at any time.</p>
+<p>Thanks to the SegmentInventory, we can infer on which situation we are at any time.</p>
 <p><a name="chapter-Implementation"></a></p>
 <h2>Implementation</h2>
-<p>The SegmentBookkeeper is merely a &#x201C;Store&#x201D;, meaning it will just store and
+<p>The SegmentInventory is merely a &#x201C;Store&#x201D;, meaning it will just store and
 process the data you give to it, without searching for the information itself.</p>
 <p>It contains in its state an array, the <em>inventory</em>, which stores every segments
 which should be present in the SourceBuffer in a chronological order.</p>
-<p>To construct this inventory, two methods can be used:</p>
+<p>To construct this inventory, three methods can be used:</p>
 <ul>
 <li>
-<p>one to add information about a new segment, which should have been pushed
-to the SourceBuffer</p>
+<p>one to add information about a new chunk (part of a segment or the whole
+segment), which should have been pushed to the SourceBuffer.</p>
+</li>
+<li>
+<p>one to indicate that every chunks from a given segment have been pushed.</p>
 </li>
 <li>
 <p>one to synchronize the currently pushed segments with what the real
-SourceBuffer says it has buffered</p>
+SourceBuffer says it has buffered.</p>
 </li>
 </ul>
 <p>After calling the synchronization one, you should be able to tell which parts of

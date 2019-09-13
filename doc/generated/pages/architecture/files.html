@@ -8,6 +8,7 @@
 <ul>
 <li><a href="#subchapter-src/compat/:%20The%20compatibility%20files">src/compat/: The compatibility files</a></li>
 <li><a href="#subchapter-src/core/:%20The%20core%20files">src/core/: The core files</a></li>
+<li><a href="#subchapter-src/custom_source_buffers/:%20Custom%20SourceBuffers%20definitions">src/custom_source_buffers/: Custom SourceBuffers definitions</a></li>
 <li><a href="#subchapter-src/errors/:%20Error%20definitions">src/errors/: Error definitions</a></li>
 <li><a href="#subchapter-src/experimental/:%20Experimental%20features">src/experimental/: Experimental features</a></li>
 <li><a href="#subchapter-src/features/:%20Feature%20switching">src/features/: Feature switching</a></li>
@@ -118,6 +119,14 @@ the streaming technology used.</p>
 </ul>
 <p>This directory contains other subdirectories which are listed in the next
 chapter.</p>
+<p><a name="src-csb"></a>
+<a name="subchapter-src/custom_source_buffers/:%20Custom%20SourceBuffers%20definitions"></a></p>
+<h3>src/custom_source_buffers/: Custom SourceBuffers definitions</h3>
+<p>SourceBuffers are the JavaScript objects through which media segments are added
+to the browser.</p>
+<p>Definition are usually already provided by the browser for Audio and Video
+contents. This directory allows to implement completely in JavaScript
+SourceBuffers for other type of media (e.g. text, overlays, images&#x2026;).</p>
 <p><a name="src-errors"></a>
 <a name="subchapter-src/errors/:%20Error%20definitions"></a></p>
 <h3>src/errors/: Error definitions</h3>
@@ -212,11 +221,11 @@ core.</p>
 <p><a name="core-sb"></a>
 <a name="subchapter-src/core/source_buffers/:%20SourceBuffers%20definitions"></a></p>
 <h3>src/core/source_buffers/: SourceBuffers definitions</h3>
-<p>Provide multiple abstraction to manage SourceBuffers, which are the objects
-through which media segments are added to the browser.</p>
-<p>In this directory, you have code for both SourceBuffer managed natively (i.e.
-Audio and Video SourceBuffers) and SourceBuffer implementations for other types
-of content (text, images etc.).</p>
+<p>Code allowing to interact with the <code>SourceBuffers</code>, the JavaScript object
+through which media segments are pushed to be able to play a content.</p>
+<p>For Audio and Video, SourceBuffers are already provided by the browser,
+for other type of contents (like subtitles), we rely on Custom SourceBuffers
+defined in <code>src/custom_source_buffers</code>.</p>
 <p><a name="core-init"></a>
 <a name="subchapter-src/core/init/:%20Content%20initialization"></a></p>
 <h3>src/core/init/: Content initialization</h3>

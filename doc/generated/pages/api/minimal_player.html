@@ -81,8 +81,26 @@ MinimalRxPlayer.addFeatures([DASH, SMOOTH]);
 
 MinimalRxPlayer.addFeatures([DASH, SMOOTH]);
 </code></pre>
-<p>By doing that, you will reduce the final bundle file <strong>if tree-shaking is
-performed on the final code</strong> (like in webpack&#x2019;s production mode).</p>
+<p>There is also &#x201C;experimental&#x201D; features. Such features can completely change from
+one version to the next - unlike regular features which just follows semantic
+versioning. This means that you may have to keep the concerned code up-to-date
+each time you depend on a new RxPlayer version.
+Such features are imported from <code>&quot;rx-player/experimental/features&quot;</code> instead:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> MinimalRxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/minimal&quot;</span>;
+<span class="hljs-keyword">import</span> { METAPLAYLIST } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/features&quot;</span>;
+
+MinimalRxPlayer.addFeatures([METAPLAYLIST]);
+</code></pre>
+<p>You can of course depend on both experimental and regular features:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> MinimalRxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/minimal&quot;</span>;
+<span class="hljs-keyword">import</span> { DASH, SMOOTH } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/features&quot;</span>;
+<span class="hljs-keyword">import</span> { METAPLAYLIST } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/features&quot;</span>;
+
+MinimalRxPlayer.addFeatures([DASH, SMOOTH, METAPLAYLIST]);
+</code></pre>
+<p>By using the minimal version, you will reduce the final bundle file <strong>if
+tree-shaking is performed on the final code</strong> (like in webpack&#x2019;s production
+mode).</p>
 <p>The key is just to know which feature does what. The next chapter will list
 and explain the role of every one of them.</p>
 <p><a name="subchapter-List%20of%20features"></a></p>
@@ -161,6 +179,10 @@ are all objects declared in upper-case.</p>
 <tr>
 <td><code>BIF_PARSER</code> [4]</td>
 <td>Parse BIF image tracks for the image buffer</td>
+</tr>
+<tr>
+<td><code>METAPLAYLIST</code> [5]</td>
+<td>Enable playback of &#x201C;metaplaylist&#x201D; contents</td>
 </tr>
 </tbody>
 </table>
@@ -246,6 +268,10 @@ ignored during a build.</p>
 <h4>RXP_DIRECTFILE</h4>
 <p>True by default. If set to &#x201C;false&#x201D;, all code relative to directfile streaming
 will be ignored during a build.</p>
+<p><a name="env-metaplaylist"></a></p>
+<h4>RXP_METAPLAYLIST</h4>
+<p>False by default. If set to &#x201C;true&#x201D;, all code relative to metaplaylist streaming
+will be included during a build.</p>
 <p><a name="env-eme"></a></p>
 <h4>RXP_EME</h4>
 <p>True by default. If set to &#x201C;false&#x201D;, all code relative to encrypted contents will
@@ -286,10 +312,10 @@ text tracks<a href="#note-1">[1]</a> will be ignored during a build.</p>
 <h4>RXP_BIF_PARSER</h4>
 <p>True by default. If set to &#x201C;false&#x201D;, all code relative to BIF image parsing will
 be ignored during a build.</p>
-<p><a name="env-bif"></a></p>
+<p><a name="env-barebone"></a></p>
 <h4>RXP_BAREBONE</h4>
-<p>If set to true, no feature is activated by default and previously-defined
-environment variables here are all considered as false by default.</p>
+<p>If set to true, no feature is activated by default and all other environment
+variables are considered as false by default (unless set).</p>
 <p>For example, to only activate DASH, you could do:</p>
 <pre><code class="language-sh">RXP_BAREBONE=<span class="hljs-literal">true</span> RXP_DASH=<span class="hljs-literal">true</span> npm run build:min
 </code></pre>
