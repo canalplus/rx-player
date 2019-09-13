@@ -45,9 +45,9 @@ You can also be warned of any non-fatal error by:
     documentation](./player_events.md)). The event listener will take the
     non-fatal error directly in argument.
 
-All of those are in essence ``Error`` instances with added informations.
+All of those are in essence ``Error`` instances with added information.
 
-Those supplementary informations are described in this page.
+Those supplementary information are described in this page.
 
 
 <a name="structure"></a>
@@ -92,7 +92,7 @@ A NetworkError can only have the following code (``code`` property):
   - ``"PIPELINE_LOAD_ERROR"``: the [Manifest](../terms.md#manifest) or segment
     request failed.
 
-#### more informations #########################################################
+#### more information ##########################################################
 
 A NetworkError provide much more infos than this code.
 

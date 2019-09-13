@@ -230,7 +230,7 @@ The representationFilter will be called each time we load a
     A `Representation` structure's is described [in the Manifest structure
     documentation](./manifest.md#representation).
 
-  - representationInfos ``{Object}``: Basic informations about this
+  - representationInfos ``{Object}``: Basic information about this
     ``Representation``. Contains the following keys:
 
       - bufferType ``{string}``: The concerned type of buffer. Can be
@@ -263,7 +263,7 @@ For example, here is a `representationFilter` that removes video
 /**
  * @param {Object} representation - The Representation object, as defined in
  * the documentation linked bellow [1]
- * @param {Object} infos - supplementary informations about the given
+ * @param {Object} infos - supplementary information about the given
  * Representation.
  * @returns {boolean}
  */

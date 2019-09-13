@@ -90,7 +90,7 @@
 The RxPlayer has a complete API allowing you to:
   - load and stop video or audio contents
   - perform trickmodes (play, pause, seek, etc.) as a content is loaded.
-  - get multiple informations on the current content and on the player's state.
+  - get multiple information on the current content and on the player's state.
   - choose a specific audio language or subtitles track
   - set your own bitrate and buffer length
   - and more
@@ -142,7 +142,7 @@ _type_: ``Object``
 
 The different "types" of Error you can get on playback error,
 
-See [the Player Error documentation](./errors.md) for more informations.
+See [the Player Error documentation](./errors.md) for more information.
 
 
 <a name="static-ErrorCodes"></a>
@@ -152,7 +152,7 @@ _type_: ``Object``
 
 The different Error "codes" you can get on playback error,
 
-See [the Player Error documentation](./errors.md) for more informations.
+See [the Player Error documentation](./errors.md) for more information.
 
 
 <a name="static-LogLevel"></a>
@@ -525,7 +525,7 @@ _return value_: ``Error|null``
 
 Returns the fatal error if it happened. null otherwise.
 
-See [the Player Error documentation](./errors.md) for more informations.
+See [the Player Error documentation](./errors.md) for more information.
 
 #### Example
 ```js

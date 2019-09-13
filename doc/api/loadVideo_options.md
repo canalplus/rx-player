@@ -324,7 +324,7 @@ can be either:
   - ``position`` (``Number``): The starting position, in seconds.
 
   - ``wallClockTime`` (``Number|Date``): The starting wall-clock time (re-scaled
-    position from [Manifest](../terms.md#manifest) informations to obtain a
+    position from [Manifest](../terms.md#manifest) information to obtain a
     timestamp on live contents), in seconds.
     Useful to use the type of time returned by the ``getWallClockTime`` API for
     live contents. If a Date object is given, it will automatically be converted
@@ -579,7 +579,7 @@ There is two possible values:
       - the previous content will be entirely removed
       - you will only have content with the new quality
 
-    [1] More informations about the ``"RELOADING"`` state can be found in [the
+    [1] More information about the ``"RELOADING"`` state can be found in [the
     player states documentation](./states).
 
 
@@ -596,7 +596,7 @@ option](#prop-transport)).
 
 ---
 
-This option allows to specify informations about supplementary text tracks you
+This option allows to specify information about supplementary text tracks you
 might want to add to those already declared in the
 [Manifest](../terms.md#manifest).
 
@@ -606,7 +606,7 @@ This only work under the following conditions:
 
   - the text track can be retrieved by fetching a single URL
 
-  - the text track is in an understood format and enough informations has been
+  - the text track is in an understood format and enough information has been
     given to infer it.
 
 Each of those can have the following properties:
@@ -659,7 +659,7 @@ option](#prop-transport)).
 
 ---
 
-This option allows to specify informations about supplementary image tracks you
+This option allows to specify information about supplementary image tracks you
 might want to add to those already declared in the
 [Manifest](../terms.md#manifest).
 
@@ -669,7 +669,7 @@ This only work under the following conditions:
 
   - the image track can be retrieved by fetching a single URL
 
-  - the image track is in an understood format and enough informations has been
+  - the image track is in an understood format and enough information has been
     given to infer it.
 
 

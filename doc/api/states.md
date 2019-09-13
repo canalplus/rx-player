@@ -68,7 +68,7 @@ are now available.
 If the `autoPlay` [loadVideo option](./loadVideo_options.md) has been set to
 true, the state will then switch to `PLAYING` directly. Else, the player will
 usually be paused and stay in the `LOADED` state (there is some edge cases, see
-the "Possible state transitions" chapter for more informations).
+the "Possible state transitions" chapter for more information).
 
 
 ### The PLAYING state ##########################################################
@@ -143,7 +143,7 @@ This is why we sometime recommend to manage this state as if it was the
 
 However, the player won't go to the `LOADED` state after `RELOADING`, you will
 instead know that it had finished reloading simply when it goes out of this
-state (see the "Possible state transitions" chapter for more informations).
+state (see the "Possible state transitions" chapter for more information).
 
 
 ## Possible state transitions ##################################################

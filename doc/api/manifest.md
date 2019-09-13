@@ -103,7 +103,7 @@ console.log(manifest.adaptations);
 console.log(manifest.periods[0].adaptations);
 ```
 
-See [the Period chapter](#period-props) for more informations on Adaptations.
+See [the Period chapter](#period-props) for more information on Adaptations.
 
 
 #### isLive

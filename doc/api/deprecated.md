@@ -67,7 +67,7 @@ an issue if you use this API.
 ### isFullscreen ###############################################################
 
 ``isFullscreen`` has been deprecated as it is part of our Fullscreen APIs, see
-[the related chapter](#fullscreen-apis) for more informations.
+[the related chapter](#fullscreen-apis) for more information.
 
 ``isFullscreen`` just checked that ANY element was fullscreen. As such, it can
 easily be replace for the majority of browsers with the following code:
@@ -87,7 +87,7 @@ function isFullscreen() {
 ### setFullscreen ##############################################################
 
 ``setFullscreen`` has been deprecated as it is part of our Fullscreen APIs, see
-[the related chapter](#fullscreen-apis) for more informations.
+[the related chapter](#fullscreen-apis) for more information.
 
 ``setFullscreen`` allowed to set the media element in fullscreen mode (or exit
 fullscreen mode, if `false` was given as argument).
@@ -130,7 +130,7 @@ your own element into fullscreen mode instead.
 ### exitFullscreen #############################################################
 
 ``exitFullscreen`` has been deprecated as it is part of our Fullscreen APIs, see
-[the related chapter](#fullscreen-apis) for more informations.
+[the related chapter](#fullscreen-apis) for more information.
 
 ``exitFullscreen`` just ``exited`` any element put in fullscreen mode. As such,
 its code can easily be replaced by:
@@ -171,7 +171,7 @@ by an ``html`` text track mode.
 ## fullscreenChange ############################################################
 
 ``fullscreenChange`` events have been deprecated as it is part of our Fullscreen
-APIs, see [the related chapter](#fullscreen-apis) for more informations.
+APIs, see [the related chapter](#fullscreen-apis) for more information.
 
 The ``fullscreenChange`` event was sent when the media element got in or out of
 fullscreen mode, with agg boolean as a payload:

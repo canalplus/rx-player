@@ -20,7 +20,7 @@ change at any new release. This is not because it is not stable (it is actually)
 or should not be used in production. This is just because we want to receive
 your feedbacks before locking definitely the API.
 
-We can for example add supplementary informations of even explode the
+We can for example add supplementary information of even explode the
 MediaCapabilitiesProber into several tools to lower the size of the import.
 We're waiting for your feedbacks!
 
@@ -81,7 +81,7 @@ If the value set to this property is different than those, it will be
 automatically set to ``"NONE"``.
 
 It is set to ``"WARNING"`` by default as it allows you to know if you forgot to
-set required informations on each APIs, if some APIs are missing in your
+set required information on each APIs, if some APIs are missing in your
 browser, etc.
 
 You might want to set it to ``"NONE"`` when in production.
