@@ -1601,7 +1601,7 @@ export default function launchTestsForContent(
     describe("setWantedBufferAhead", () => {
       // TODO handle live contents
       it("should download until a set wanted buffer ahead", async function() {
-        this.timeout(6000);
+        this.timeout(8000);
         player.setVideoBitrate(0);
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
