@@ -430,10 +430,12 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       if (scaledMaxPosition < 0) {
         return null;
       }
-      const numberIndexedToOne = this._aggressiveMode ?
+      const numberOfSegmentsAvailable = this._aggressiveMode ?
         Math.ceil(scaledMaxPosition / duration) :
         Math.floor(scaledMaxPosition / duration);
-      return (numberIndexedToOne - 1) * duration;
+      return numberOfSegmentsAvailable <= 0 ?
+               null :
+               (numberOfSegmentsAvailable - 1) * duration;
     } else {
       const maximumTime = (this._relativePeriodEnd || 0) * timescale;
       const numberIndexedToZero = Math.ceil(maximumTime / duration) - 1;
