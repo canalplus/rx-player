@@ -1601,7 +1601,7 @@ export default function launchTestsForContent(
     describe("setWantedBufferAhead", () => {
       // TODO handle live contents
       it("should download until a set wanted buffer ahead", async function() {
-        this.timeout(5000);
+        this.timeout(6000);
         player.setVideoBitrate(0);
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
@@ -1612,7 +1612,7 @@ export default function launchTestsForContent(
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        await sleep(500);
+        await sleep(800);
         let buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(1);
         expect(buffered.start(0)).to.be.closeTo(minimumPosition, 0.5);
@@ -1624,7 +1624,7 @@ export default function launchTestsForContent(
 
         player.setWantedBufferAhead(20);
         expect(player.getWantedBufferAhead()).to.equal(20);
-        await sleep(500);
+        await sleep(800);
         buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(1);
         expect(buffered.start(0)).to.be.closeTo(minimumPosition, 0.5);
@@ -1635,7 +1635,7 @@ export default function launchTestsForContent(
           .at.most(minimumPosition + 20 + 10);
 
         player.seekTo(minimumPosition + 10);
-        await sleep(600);
+        await sleep(800);
         buffered = player.getVideoElement().buffered;
         expect(player.getWantedBufferAhead()).to.equal(20);
         expect(buffered.length).to.equal(1);
@@ -1650,7 +1650,7 @@ export default function launchTestsForContent(
           .at.most(minimumPosition + 10 + 20 + 10);
 
         player.seekTo(minimumPosition + 10 + 20 + 10 + 10);
-        await sleep(1000);
+        await sleep(1200);
         buffered = player.getVideoElement().buffered;
         expect(player.getWantedBufferAhead()).to.equal(20);
         expect(buffered.length).to.equal(2);
@@ -1667,7 +1667,7 @@ export default function launchTestsForContent(
 
         player.setWantedBufferAhead(Infinity);
         expect(player.getWantedBufferAhead()).to.equal(Infinity);
-        await sleep(1800);
+        await sleep(2000);
         buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(2);
         expect(buffered.start(1)).to.be
