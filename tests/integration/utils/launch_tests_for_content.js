@@ -753,9 +753,9 @@ export default function launchTestsForContent(
         expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.001);
         player.setPlaybackRate(1);
         player.play();
-        await sleep(900);
+        await sleep(1200);
         const initialPosition = player.getPosition();
-        expect(initialPosition).to.be.closeTo(minimumPosition + 0.900, 0.150);
+        expect(initialPosition).to.be.closeTo(minimumPosition + 1.2, 0.3);
 
         player.setPlaybackRate(3);
         await sleep(2000);
