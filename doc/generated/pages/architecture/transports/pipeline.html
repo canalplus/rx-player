@@ -28,11 +28,11 @@ and returns an object. This object is often referenced as the <code>transport pi
 <p>A loader in the transport pipeline is a function whose role is to &#x201C;load&#x201D; the
 resource.</p>
 <p>Depending on the streaming technology, this can mean doing a request or just
-creating it from the informations given.</p>
+creating it from the information given.</p>
 <p>Its concept can be illustrated as such:</p>
 <pre><code>  INPUT:                                 OUTPUT:
   ------                                 -------
-  URL and other informations +--------+  loaded resource
+  URL and other information  +--------+  loaded resource
   about the wanted resource  |        |
 ============================&gt;| LOADER |==============================&gt;
                              |        |
@@ -45,7 +45,7 @@ is then emitted through it.</p>
 HTTP error.</p>
 <p><a name="chapter-A%20parser"></a></p>
 <h2>A parser</h2>
-<p>A parser&#x2019;s role is to extract the data and other important informations from a
+<p>A parser&#x2019;s role is to extract the data and other important information from a
 loaded resource.
 It is connected in some ways to the response of the loader (which gives the
 loaded resource) and will be the last step before that resource is actually
@@ -54,7 +54,7 @@ handled by the rest of the player.</p>
 <pre><code>  INPUT:                                OUTPUT:
   ------                                -------
   loaded resource +                     exploitable resource and
-  resource informations +    +--------+ parsed informations from it
+  resource information +     +--------+ parsed information from it
   request scheduler [1]      |        |
 ============================&gt;| PARSER |==============================&gt;
                              |        |
@@ -62,7 +62,7 @@ handled by the rest of the player.</p>
 </code></pre>
 <p>The parser returns an Observable which will emit the parsed resource when done.</p>
 <p>This Observable will throw if the resource is corrupted or miss crucial
-informations.</p>
+information.</p>
 <p>[1] the parser could also need to perform requests (e.g. it needs to fetch the
 current time from a server).
 In such cases, the parser is given a special callback, which allows it to
@@ -88,7 +88,7 @@ finished downloading it:</p>
 <p>The Manifest parser is a function whose role is to parse the Manifest in its
 original form to convert it to the RxPlayer&#x2019;s internal representation of it.</p>
 <p>It receives an argument the downloaded Manifest, some manifest-related
-informations (e.g. its URL) and a specific function called <code>scheduleRequest</code>,
+information (e.g. its URL) and a specific function called <code>scheduleRequest</code>,
 allowing it to ask for supplementary requests before completing (e.g. to fetch
 the current time from an URL or to load sub-parts of the Manifests only known
 at parse-time).</p>
@@ -109,7 +109,7 @@ Manifest:</p>
 text, video&#x2026;)</p>
 <p>A segment loader is the &#x201C;loader&#x201D; for any segment. Its role is to retrieve a given
 segment&#x2019;s data.</p>
-<p>It receives informations linked to the segment you want to download:</p>
+<p>It receives information linked to the segment you want to download:</p>
 <ul>
 <li>The related <code>Manifest</code> data structure</li>
 <li>The <code>Period</code></li>
@@ -121,7 +121,7 @@ segment&#x2019;s data.</p>
 segment.</p>
 <pre><code>  INPUT:                              OUTPUT:
   ------                              -------
-  Segment informations  +----------+  Segment in a generic format
+  Segment information   +----------+  Segment in a generic format
                         |          |  (e.g. ArrayBuffer, string...)
 =======================&gt;| SEGMENT  |=================================&gt;
                         |  LOADER  |
@@ -154,7 +154,7 @@ succesfully.</p>
 </ul>
 <p><a name="chapter-Segment%20parser"></a></p>
 <h2>Segment parser</h2>
-<p>A segment parser is a function whose role is to extract some informations from
+<p>A segment parser is a function whose role is to extract some information from
 the segment&#x2019;s data:</p>
 <ul>
 <li>what its precize start time and duration is</li>
@@ -162,11 +162,11 @@ the segment&#x2019;s data:</p>
 <li>the decodable data (which can be wrapped in a container e.g.  subtitles
 in an ISOBMFF file).</li>
 </ul>
-<p>It receives the segment or sub-segment as argument and related informations</p>
+<p>It receives the segment or sub-segment as argument and related information</p>
 <pre><code>  INPUT:                                      OUTPUT:
   ------                                      -------
   Segment in a generic format +  +----------+ Decodable data +
-  Segment informations           |          | time informations
+  Segment information            |          | time information
  ===============================&gt;| SEGMENT  |===========================&gt;
                                  |  PARSER  |
                                  |          |
