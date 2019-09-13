@@ -13,7 +13,7 @@ import fromPlayerEvent from "./fromPlayerEvent";
 
 // Distance from live edge we try to reach when the catching up button
 // is enabled.
-const LIVE_GAP_GOAL_WHEN_CATCHING_UP = 4;
+const LIVE_GAP_GOAL_WHEN_CATCHING_UP = 3;
 
 // Distance from live edge from which we begin to update the playback rate, as
 // we're considered too far from the live edge.
