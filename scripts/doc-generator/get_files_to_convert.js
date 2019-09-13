@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 /**
- * Returns informations about every Markdown files we have to convert to HTML
+ * Returns information about every Markdown files we have to convert to HTML
  * in an array.
  *
  * The returned Array contains Objects with the following keys:

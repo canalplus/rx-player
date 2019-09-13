@@ -7,8 +7,8 @@ import XHRMock from "../../utils/request_mock";
 /**
  * Performs a serie of basic tests on a content.
  *
- * @param {Object} manifestInfos - informations about what should be found in
- * the manifest.
+ * @param {Object} manifestInfos - information about what should be found in the
+ * manifest.
  * Structure of manifestInfos:
  * ```
  * url {string}

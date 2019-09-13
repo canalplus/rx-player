@@ -122,7 +122,7 @@ We will try our best to answer them as quickly as possible.
 Details on how to contribute is written in the [CONTRIBUTING.md
 file](./CONTRIBUTING.md) at the root of this repository.
 
-If you need more informations, you can contact us via our [gitter
+If you need more information, you can contact us via our [gitter
 room](https://gitter.im/canalplus/rx-player).
 
 We also began to add a little architecture documentation [here
