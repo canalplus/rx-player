@@ -19,7 +19,10 @@ import {
   Observer,
   of as observableOf,
 } from "rxjs";
-import xhr from "../../utils/request";
+import log from "../../log";
+import xhr, {
+  fetchIsSupported,
+} from "../../utils/request";
 import {
   CustomSegmentLoader,
   ILoaderRegularDataEvent,
@@ -50,8 +53,13 @@ function regularSegmentLoader(
   }
 
   const isWEBM = isWEBMEmbeddedTrack(args.representation);
-  if (lowLatencyMode && !isWEBM) {
-    return lowLatencySegmentLoader(url, args);
+  if (lowLatencyMode && fetchIsSupported() && !isWEBM) {
+    if (fetchIsSupported()) {
+      return lowLatencySegmentLoader(url, args);
+    } else {
+      log.warn("DASH: Your browser does not have the fetch API. You will have " +
+               "a higher chance of rebuffering when playing close to the live edge");
+    }
   }
 
   const { segment } = args;

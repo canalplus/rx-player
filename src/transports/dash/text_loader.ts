@@ -15,7 +15,10 @@
  */
 
 import { of as observableOf } from "rxjs";
-import request from "../../utils/request";
+import log from "../../log";
+import request, {
+  fetchIsSupported,
+} from "../../utils/request";
 import {
   ISegmentLoaderArguments,
   ISegmentLoaderObservable,
@@ -56,7 +59,12 @@ export default function generateTextTrackLoader(
 
     const isMP4Embedded = isMP4EmbeddedTextTrack(args.representation);
     if (lowLatencyMode && isMP4Embedded) {
-      return lowLatencySegmentLoader(mediaURL, args);
+      if (fetchIsSupported()) {
+        return lowLatencySegmentLoader(mediaURL, args);
+      } else {
+        log.warn("DASH: Your browser does not have the fetch API. You will have " +
+                 "a higher chance of rebuffering when playing close to the live edge");
+      }
     }
 
     // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
