@@ -2112,20 +2112,19 @@ object-assign
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/isArray.js
-                var isArray = __webpack_require__(47), isObject = __webpack_require__(87), isFunction = __webpack_require__(54);
+                var isArray = __webpack_require__(47), isObject = __webpack_require__(87), isFunction = __webpack_require__(54), UnsubscriptionError = /* */ function() {
+            function UnsubscriptionErrorImpl(errors) {
+                return Error.call(this), this.message = errors ? errors.length + " errors occurred during unsubscription:\n" + errors.map(function(err, i) {
+                    return i + 1 + ") " + err.toString();
+                }).join("\n  ") : "", this.name = "UnsubscriptionError", this.errors = errors, this;
+            }
+            return UnsubscriptionErrorImpl.prototype = /* */ Object.create(Error.prototype), 
+            UnsubscriptionErrorImpl;
+        }();
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/util/isObject.js
-                // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/UnsubscriptionError.js
-        /** PURE_IMPORTS_START  PURE_IMPORTS_END */
-        function UnsubscriptionErrorImpl(errors) {
-            return Error.call(this), this.message = errors ? errors.length + " errors occurred during unsubscription:\n" + errors.map(function(err, i) {
-                return i + 1 + ") " + err.toString();
-            }).join("\n  ") : "", this.name = "UnsubscriptionError", this.errors = errors, this;
-        }
-        UnsubscriptionErrorImpl.prototype = /* */ Object.create(Error.prototype);
-        var UnsubscriptionError = UnsubscriptionErrorImpl;
-        //# sourceMappingURL=UnsubscriptionError.js.map
+                //# sourceMappingURL=UnsubscriptionError.js.map
         // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/Subscription.js
-        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
+        /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() {
             return Subscription_Subscription;
         });
         /** PURE_IMPORTS_START _util_isArray,_util_isObject,_util_isFunction,_util_UnsubscriptionError PURE_IMPORTS_END */
@@ -3863,9 +3862,11 @@ object-assign
             return isArray;
         });
         /** PURE_IMPORTS_START  PURE_IMPORTS_END */
-        var isArray = Array.isArray || function(x) {
-            return x && "number" == typeof x.length;
-        };
+        var isArray = /* */ function() {
+            return Array.isArray || function(x) {
+                return x && "number" == typeof x.length;
+            };
+        }();
         //# sourceMappingURL=isArray.js.map
         /***/    }, 
     /* 48 */
@@ -3875,7 +3876,9 @@ object-assign
             return observable;
         });
         /** PURE_IMPORTS_START  PURE_IMPORTS_END */
-        var observable = "function" == typeof Symbol && Symbol.observable || "@@observable";
+        var observable = /* */ function() {
+            return "function" == typeof Symbol && Symbol.observable || "@@observable";
+        }();
         //# sourceMappingURL=observable.js.map
         /***/    }, 
     /* 49 */
@@ -3935,18 +3938,19 @@ object-assign
     /* 51 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* harmony export (binding) */        
-        /** PURE_IMPORTS_START  PURE_IMPORTS_END */
-        function ObjectUnsubscribedErrorImpl() {
-            return Error.call(this), this.message = "object unsubscribed", this.name = "ObjectUnsubscribedError", 
-            this;
-        }
-        __webpack_require__.d(__webpack_exports__, "a", function() {
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return ObjectUnsubscribedError;
-        }), ObjectUnsubscribedErrorImpl.prototype = /* */ Object.create(Error.prototype);
-        var ObjectUnsubscribedError = ObjectUnsubscribedErrorImpl;
-        //# sourceMappingURL=ObjectUnsubscribedError.js.map
-        /***/    }, 
+        });
+        /** PURE_IMPORTS_START  PURE_IMPORTS_END */
+        var ObjectUnsubscribedError = /* */ function() {
+            function ObjectUnsubscribedErrorImpl() {
+                return Error.call(this), this.message = "object unsubscribed", this.name = "ObjectUnsubscribedError", 
+                this;
+            }
+            return ObjectUnsubscribedErrorImpl.prototype = /* */ Object.create(Error.prototype), 
+            ObjectUnsubscribedErrorImpl;
+        }();
+    }, 
     /* 52 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
@@ -4524,7 +4528,9 @@ object-assign
         });
         /* unused harmony export $$rxSubscriber */
         /** PURE_IMPORTS_START  PURE_IMPORTS_END */
-        var rxSubscriber = "function" == typeof Symbol ? /* */ Symbol("rxSubscriber") : "@@rxSubscriber_" + /* */ Math.random();
+        var rxSubscriber = /* */ function() {
+            return "function" == typeof Symbol ? /* */ Symbol("rxSubscriber") : "@@rxSubscriber_" + /* */ Math.random();
+        }();
     }, 
     /* 65 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
@@ -6077,7 +6083,7 @@ object-assign
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         // EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-                var tslib_es6 = __webpack_require__(2), Subject = __webpack_require__(41), Observable = __webpack_require__(10), Subscriber = __webpack_require__(6), Subscription = __webpack_require__(16), refCount = __webpack_require__(109), connectableProto = /* */ function(_super) {
+                var tslib_es6 = __webpack_require__(2), Subject = __webpack_require__(41), Observable = __webpack_require__(10), Subscriber = __webpack_require__(6), Subscription = __webpack_require__(16), refCount = __webpack_require__(109), ConnectableObservable_ConnectableObservable = /* */ function(_super) {
             function ConnectableObservable(source, subjectFactory) {
                 var _this = _super.call(this) || this;
                 return _this.source = source, _this.subjectFactory = subjectFactory, _this._refCount = 0, 
@@ -6097,39 +6103,42 @@ object-assign
             }, ConnectableObservable.prototype.refCount = function() {
                 return Object(refCount.a)()(this);
             }, ConnectableObservable;
-        }(Observable.a).prototype, connectableObservableDescriptor = {
-            operator: {
-                value: null
-            },
-            _refCount: {
-                value: 0,
-                writable: !0
-            },
-            _subject: {
-                value: null,
-                writable: !0
-            },
-            _connection: {
-                value: null,
-                writable: !0
-            },
-            _subscribe: {
-                value: connectableProto._subscribe
-            },
-            _isComplete: {
-                value: connectableProto._isComplete,
-                writable: !0
-            },
-            getSubject: {
-                value: connectableProto.getSubject
-            },
-            connect: {
-                value: connectableProto.connect
-            },
-            refCount: {
-                value: connectableProto.refCount
-            }
-        }, ConnectableObservable_ConnectableSubscriber = /* */ function(_super) {
+        }(Observable.a), connectableObservableDescriptor = /* */ function() {
+            var connectableProto = ConnectableObservable_ConnectableObservable.prototype;
+            return {
+                operator: {
+                    value: null
+                },
+                _refCount: {
+                    value: 0,
+                    writable: !0
+                },
+                _subject: {
+                    value: null,
+                    writable: !0
+                },
+                _connection: {
+                    value: null,
+                    writable: !0
+                },
+                _subscribe: {
+                    value: connectableProto._subscribe
+                },
+                _isComplete: {
+                    value: connectableProto._isComplete,
+                    writable: !0
+                },
+                getSubject: {
+                    value: connectableProto.getSubject
+                },
+                connect: {
+                    value: connectableProto.connect
+                },
+                refCount: {
+                    value: connectableProto.refCount
+                }
+            };
+        }(), ConnectableObservable_ConnectableSubscriber = /* */ function(_super) {
             function ConnectableSubscriber(destination, connectable) {
                 var _this = _super.call(this, destination) || this;
                 return _this.connectable = connectable, _this;
@@ -7289,18 +7298,19 @@ object-assign
     /* 107 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* harmony export (binding) */        
-        /** PURE_IMPORTS_START  PURE_IMPORTS_END */
-        function ArgumentOutOfRangeErrorImpl() {
-            return Error.call(this), this.message = "argument out of range", this.name = "ArgumentOutOfRangeError", 
-            this;
-        }
-        __webpack_require__.d(__webpack_exports__, "a", function() {
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "a", function() {
             return ArgumentOutOfRangeError;
-        }), ArgumentOutOfRangeErrorImpl.prototype = /* */ Object.create(Error.prototype);
-        var ArgumentOutOfRangeError = ArgumentOutOfRangeErrorImpl;
-        //# sourceMappingURL=ArgumentOutOfRangeError.js.map
-        /***/    }, 
+        });
+        /** PURE_IMPORTS_START  PURE_IMPORTS_END */
+        var ArgumentOutOfRangeError = /* */ function() {
+            function ArgumentOutOfRangeErrorImpl() {
+                return Error.call(this), this.message = "argument out of range", this.name = "ArgumentOutOfRangeError", 
+                this;
+            }
+            return ArgumentOutOfRangeErrorImpl.prototype = /* */ Object.create(Error.prototype), 
+            ArgumentOutOfRangeErrorImpl;
+        }();
+    }, 
     /* 108 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
@@ -10250,15 +10260,14 @@ object-assign
             }));
         }
         // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/TimeoutError.js
-        /** PURE_IMPORTS_START  PURE_IMPORTS_END */        function TimeoutErrorImpl() {
-            return Error.call(this), this.message = "Timeout has occurred", this.name = "TimeoutError", 
-            this;
-        }
-        TimeoutErrorImpl.prototype = /* */ Object.create(Error.prototype);
-        var TimeoutError = TimeoutErrorImpl, Subject = __webpack_require__(41), identity = __webpack_require__(154), scheduler_async = __webpack_require__(40), tslib_es6 = __webpack_require__(2), isDate = __webpack_require__(93), OuterSubscriber = __webpack_require__(23), subscribeToResult = __webpack_require__(22);
-        //# sourceMappingURL=TimeoutError.js.map
-        // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Subject.js
-                // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/operators/timeoutWith.js
+        /** PURE_IMPORTS_START  PURE_IMPORTS_END */        var TimeoutError = /* */ function() {
+            function TimeoutErrorImpl() {
+                return Error.call(this), this.message = "Timeout has occurred", this.name = "TimeoutError", 
+                this;
+            }
+            return TimeoutErrorImpl.prototype = /* */ Object.create(Error.prototype), TimeoutErrorImpl;
+        }(), Subject = __webpack_require__(41), identity = __webpack_require__(154), scheduler_async = __webpack_require__(40), tslib_es6 = __webpack_require__(2), isDate = __webpack_require__(93), OuterSubscriber = __webpack_require__(23), subscribeToResult = __webpack_require__(22);
+        // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/operators/timeoutWith.js
         /** PURE_IMPORTS_START tslib,_scheduler_async,_util_isDate,_OuterSubscriber,_util_subscribeToResult PURE_IMPORTS_END */
         function timeoutWith(due, withObservable, scheduler) {
             return void 0 === scheduler && (scheduler = scheduler_async.a), function(source) {
@@ -12261,7 +12270,7 @@ object-assign
                     this.destination.error(err);
                 }
             }, SkipWhileSubscriber;
-        }(Subscriber.a), switchMapTo = __webpack_require__(217), mergeMapTo = __webpack_require__(165), catchError = __webpack_require__(203), config = __webpack_require__(3), log = __webpack_require__(0), event_emitter = __webpack_require__(37), noop = __webpack_require__(28), promise = __webpack_require__(29), utils_ranges = __webpack_require__(15), warn_once = __webpack_require__(26), compat = __webpack_require__(7), fullscreen = __webpack_require__(85), error_codes = __webpack_require__(33), media_error = __webpack_require__(53), encrypted_media_error = __webpack_require__(77), network_error = __webpack_require__(157), error_message = __webpack_require__(60);
+        }(Subscriber.a), switchMapTo = __webpack_require__(217), mergeMapTo = __webpack_require__(165), catchError = __webpack_require__(203), config = __webpack_require__(3), log = __webpack_require__(0), event_emitter = __webpack_require__(37), noop = __webpack_require__(28), promise = __webpack_require__(29), utils_ranges = __webpack_require__(15), warn_once = __webpack_require__(26), compat = __webpack_require__(7), fullscreen = __webpack_require__(85), media_error = __webpack_require__(53), encrypted_media_error = __webpack_require__(77), error_codes = __webpack_require__(33), network_error = __webpack_require__(157), error_message = __webpack_require__(60);
         // CONCATENATED MODULE: ./src/errors/other_error.ts
         function _assertThisInitialized(self) {
             if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
@@ -14794,8 +14803,9 @@ object-assign
  * limitations under the License.
  */
         function takeFirstSet() {
-            for (var i = 0, len = arguments.length; i < len; ) {
-                var arg = i < 0 || arguments.length <= i ? void 0 : arguments[i];
+            for (var i = 0, _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) args[_key] = arguments[_key];
+            for (var len = args.length; i < len; ) {
+                var arg = args[i];
                 if (null != arg) return arg;
                 i++;
             }
@@ -15578,8 +15588,22 @@ object-assign
  */        var source_buffers_store_SourceBuffersStore = 
         /* */
         function() {
+            /**
+   * @param {HTMLMediaElement} mediaElement
+   * @param {MediaSource} mediaSource
+   * @constructor
+   */
             function SourceBuffersStore(mediaElement, mediaSource) {
                 this._mediaElement = mediaElement, this._mediaSource = mediaSource, this._initializedSourceBuffers = {};
+            }
+            /**
+   * Returns true if the SourceBuffer is "native" (has to be attached to the
+   * mediaSource before playback).
+   * @static
+   * @param {string} bufferType
+   * @returns {Boolean}
+   */            SourceBuffersStore.isNative = function isNative(bufferType) {
+                return shouldHaveNativeSourceBuffer(bufferType);
             }
             /**
    * Returns the created QueuedSourceBuffer for the given type.
@@ -15587,21 +15611,6 @@ object-assign
    *
    * @param {string} bufferType
    * @returns {QueuedSourceBuffer|null}
-   */            
-            /**
-   * Returns true if the SourceBuffer is "native" (has to be attached to the
-   * mediaSource before playback).
-   * @static
-   * @param {string} bufferType
-   * @returns {Boolean}
-   */
-            SourceBuffersStore.isNative = function isNative(bufferType) {
-                return shouldHaveNativeSourceBuffer(bufferType);
-            }
-            /**
-   * @param {HTMLMediaElement} mediaElement
-   * @param {MediaSource} mediaSource
-   * @constructor
    */;
             var _proto = SourceBuffersStore.prototype;
             return _proto.get = function get(bufferType) {
@@ -18559,6 +18568,10 @@ object-assign
  */        var DEFAULT_UNMUTED_VOLUME = config.a.DEFAULT_UNMUTED_VOLUME, isActive = compat.a.isActive, isVideoVisible = compat.a.isVideoVisible, onEnded$ = compat.a.onEnded$, onFullscreenChange$ = compat.a.onFullscreenChange$, onPlayPause$ = compat.a.onPlayPause$, onPictureInPictureEvent$ = compat.a.onPictureInPictureEvent$, onSeeking$ = compat.a.onSeeking$, onTextTrackChanges$ = compat.a.onTextTrackChanges$, videoWidth$ = compat.a.videoWidth$, public_api_Player = 
         /* */
         function(_EventEmitter) {
+            /**
+   * @constructor
+   * @param {Object} options
+   */
             function Player(options) {
                 var _this;
                 void 0 === options && (options = {}), _this = _EventEmitter.call(this) || this;
@@ -18621,49 +18634,13 @@ object-assign
                 _this;
             }
             /**
-   * Stop the playback for the current content.
-   */            public_api_inheritsLoose(Player, _EventEmitter), public_api_createClass(Player, null, [ {
-                key: "ErrorTypes",
-                /**
-     * All possible Error types emitted by the RxPlayer.
-     * @type {Object}
-     */
-                get: function get() {
-                    return error_codes.b;
-                }
-                /**
-     * All possible Error codes emitted by the RxPlayer.
-     * @type {Object}
-     */            }, {
-                key: "ErrorCodes",
-                get: function get() {
-                    return error_codes.a;
-                }
-                /**
-     * Current log level.
-     * Update current log level.
-     * Should be either (by verbosity ascending):
-     *   - "NONE"
-     *   - "ERROR"
-     *   - "WARNING"
-     *   - "INFO"
-     *   - "DEBUG"
-     * Any other value will be translated to "NONE".
-     * @type {string}
-     */            }, {
-                key: "LogLevel",
-                get: function get() {
-                    return log.a.getLevel();
-                },
-                set: function set(logLevel) {
-                    log.a.setLevel(logLevel);
-                }
-                /**
-     * @constructor
-     * @param {Object} options
-     */            } ]);
+   * All possible Error types emitted by the RxPlayer.
+   * @type {Object}
+   */            public_api_inheritsLoose(Player, _EventEmitter);
             var _proto = Player.prototype;
-            return _proto.stop = function stop() {
+            /**
+   * Stop the playback for the current content.
+   */            return _proto.stop = function stop() {
                 this.state !== PLAYER_STATES_STOPPED && (this._priv_stopCurrentContent$.next(), 
                 this._priv_cleanUpCurrentContentState(), this._priv_setPlayerState(PLAYER_STATES_STOPPED));
             }
@@ -19726,7 +19703,39 @@ object-assign
                         }
                     }
                 } else log.a.warn("API: Cannot perform time update: no content loaded.");
-            }, Player;
+            }, public_api_createClass(Player, null, [ {
+                key: "ErrorTypes",
+                get: function get() {
+                    return error_codes.b;
+                }
+                /**
+     * All possible Error codes emitted by the RxPlayer.
+     * @type {Object}
+     */            }, {
+                key: "ErrorCodes",
+                get: function get() {
+                    return error_codes.a;
+                }
+                /**
+     * Current log level.
+     * Update current log level.
+     * Should be either (by verbosity ascending):
+     *   - "NONE"
+     *   - "ERROR"
+     *   - "WARNING"
+     *   - "INFO"
+     *   - "DEBUG"
+     * Any other value will be translated to "NONE".
+     * @type {string}
+     */            }, {
+                key: "LogLevel",
+                get: function get() {
+                    return log.a.getLevel();
+                },
+                set: function set(logLevel) {
+                    log.a.setLevel(logLevel);
+                }
+            } ]), Player;
         }(event_emitter.a);
         public_api_Player.version = 
         /*PLAYER_VERSION*/
@@ -27596,8 +27605,7 @@ object-assign
             return fromEvent;
         });
         /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10), _util_isArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(47), _util_isFunction__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(54), _operators_map__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(38);
-        /* harmony import */        Object.prototype.toString;
-        function fromEvent(target, eventName, options, resultSelector) {
+        /* harmony import */        function fromEvent(target, eventName, options, resultSelector) {
             return Object(_util_isFunction__WEBPACK_IMPORTED_MODULE_2__.a)(options) && (resultSelector = options, 
             options = void 0), resultSelector ? fromEvent(target, eventName, options).pipe(Object(_operators_map__WEBPACK_IMPORTED_MODULE_3__.a)(function(args) {
                 return Object(_util_isArray__WEBPACK_IMPORTED_MODULE_1__.a)(args) ? resultSelector.apply(void 0, args) : resultSelector(args);
