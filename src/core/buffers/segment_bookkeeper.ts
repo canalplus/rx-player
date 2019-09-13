@@ -38,7 +38,7 @@ interface IBufferedSegment {
   bufferedEnd : number|undefined; // Last inferred end in the SourceBuffer
   bufferedStart : number|undefined; // Last inferred start in the SourceBuffer
   end : number; // Supposed end the segment should reach
-  infos : IBufferedSegmentInfos; // Informations on what this segment is
+  infos : IBufferedSegmentInfos; // Information on what this segment is
   start : number; // Supposed start the segment should start from
 }
 

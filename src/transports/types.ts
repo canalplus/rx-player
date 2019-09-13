@@ -29,7 +29,7 @@ import Manifest, {
 } from "../manifest";
 import { IBifThumbnail } from "../parsers/images/bif";
 
-// Contains timings informations on a single segment.
+// Contains timings information on a single segment.
 // Those variables expose the best guess we have on the effective duration and
 // starting time that the corresponding segment should have at decoding time.
 export interface ISegmentTimingInfos {
@@ -45,7 +45,7 @@ export interface ISegmentTimingInfos {
                       //   durationInSeconds = duration / timescale
 }
 
-// Contains timing informations on new segments indicated in the metadata of
+// Contains timing information on new segments indicated in the metadata of
 // a previous segment
 export interface INextSegmentsInfos {
   duration : number; // duration of the segment, in the corresponding timescale

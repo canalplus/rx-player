@@ -107,13 +107,13 @@ export interface IRepresentationBufferArguments<T> {
   fastSwitchingStep$: Observable< undefined | number>;
 }
 
-// Informations about a Segment waiting for download
+// Information about a Segment waiting for download
 interface IQueuedSegment {
   priority : number; // Priority of the request (lower number = higher priority)
   segment : ISegment; // Segment wanted
 }
 
-// temporal informations of a Segment
+// temporal information of a Segment
 interface ISegmentInfos {
   duration? : number; // timescaled duration of the Segment
   time : number; // timescaled start time of the Segment
@@ -123,13 +123,13 @@ interface ISegmentInfos {
 // Parsed Segment information
 interface ISegmentObject<T> {
   segmentData : T|null; // What will be pushed to the SourceBuffer
-  segmentInfos : ISegmentInfos|null; // informations about the segment's start
+  segmentInfos : ISegmentInfos|null; // information about the segment's start
                                      // and duration
   segmentOffset : number; // Offset to add to the segment at decode time
   appendWindow : [ number | undefined, number | undefined ];
 }
 
-// Informations about a loaded and parsed Segment
+// Information about a loaded and parsed Segment
 interface IParsedSegmentEventValue<T> {
   segment : ISegment; // Concerned Segment
   data : ISegmentObject<T>; // parsed Data
@@ -171,8 +171,8 @@ const { MINIMUM_SEGMENT_SIZE } = config;
  * @returns {Observable}
  */
 export default function RepresentationBuffer<T>({
-  clock$, // emit current playback informations
-  content, // all informations about the content we want to play
+  clock$, // emit current playback information
+  content, // all information about the content we want to play
   queuedSourceBuffer, // allows to interact with the SourceBuffer
   segmentBookkeeper, // keep track of what segments already are in the SourceBuffer
   segmentFetcher, // allows to download new segments
@@ -207,7 +207,7 @@ export default function RepresentationBuffer<T>({
   // Emit when the RepresentationBuffer asks to re-check which segments are needed.
   const reCheckNeededSegments$ = new Subject<void>();
 
-  // Keep track of the informations about the pending Segment request.
+  // Keep track of the information about the pending Segment request.
   // null if no request is pending.
   let currentSegmentRequest : ISegmentRequestObject<T>|null = null;
 

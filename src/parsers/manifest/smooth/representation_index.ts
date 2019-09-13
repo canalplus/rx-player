@@ -167,7 +167,7 @@ interface ISmoothInitSegmentPrivateInfos {
  * @class SmoothRepresentationIndex
  */
 export default class SmoothRepresentationIndex implements IRepresentationIndex {
-  // Informations needed to generate an initialization segment.
+  // Information needed to generate an initialization segment.
   // Taken from the Manifest.
   private _initSegmentInfos : { codecPrivateData? : string;
                                 bitsPerSample? : number;
@@ -472,8 +472,8 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
 
   /**
    * Update this RepresentationIndex by a newly downloaded one.
-   * Check if the old index had more informations about new segments and
-   * re-add them if that's the case.
+   * Check if the old index had more information about new segments and re-add
+   * them if that's the case.
    * @param {Object} newIndex
    */
   _update(newIndex : SmoothRepresentationIndex) : void {
@@ -557,7 +557,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * Clean-up timeline to remove segment informations which should not be
+   * Clean-up timeline to remove segment information which should not be
    * available due to the timeshift window
    */
   private _refreshTimeline() : void {

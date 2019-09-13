@@ -19,7 +19,7 @@ import getMaximumPosition from "./get_maximum_position";
 import getMinimumPosition from "./get_minimum_position";
 
 /**
- * Get presentation live gap from manifest informations.
+ * Get presentation live gap from manifest information.
  * @param {Object} manifest
  * @returns {number}
  */

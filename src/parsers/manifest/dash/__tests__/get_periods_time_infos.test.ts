@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import getPeriodsTimeInformations from "../get_periods_time_infos";
+import getPeriodsTimeInformation from "../get_periods_time_infos";
 
-describe("DASH Parser - getPeriodsTimeInformations", () => {
+describe("DASH Parser - getPeriodsTimeInformation", () => {
   it("should guess duration and end from next period.", () => {
     const periodsInfos = [
       { attributes: { start: 0 }},
       { attributes: { start: 10 }},
     ];
-    const timeInfos = getPeriodsTimeInformations(periodsInfos as any, {} as any);
+    const timeInfos = getPeriodsTimeInformation(periodsInfos as any, {} as any);
     expect(timeInfos[0].periodDuration).toBe(10);
     expect(timeInfos[0].periodEnd).toBe(10);
     expect(timeInfos[1].periodDuration).toBe(undefined);
@@ -34,7 +34,7 @@ describe("DASH Parser - getPeriodsTimeInformations", () => {
       { attributes: { start: 0, duration: 10 }},
       { attributes: { duration: 10 }},
     ];
-    const timeInfos = getPeriodsTimeInformations(periodsInfos as any, {} as any);
+    const timeInfos = getPeriodsTimeInformation(periodsInfos as any, {} as any);
     expect(timeInfos[0].periodEnd).toBe(10);
     expect(timeInfos[1].periodStart).toBe(10);
     expect(timeInfos[1].periodEnd).toBe(20);
@@ -45,7 +45,7 @@ describe("DASH Parser - getPeriodsTimeInformations", () => {
       { attributes: { start: 0, duration: 5 }},
       { attributes: { start: 5, duration: 10 }},
     ];
-    const timeInfos = getPeriodsTimeInformations(periodsInfos as any, {} as any);
+    const timeInfos = getPeriodsTimeInformation(periodsInfos as any, {} as any);
     expect(timeInfos[0].periodStart).toEqual(periodsInfos[0].attributes.start);
     expect(timeInfos[0].periodDuration).toEqual(periodsInfos[0].attributes.duration);
     expect(timeInfos[1].periodStart).toEqual(periodsInfos[1].attributes.start);
@@ -60,7 +60,7 @@ describe("DASH Parser - getPeriodsTimeInformations", () => {
       duration: 20,
     };
     const timeInfos =
-      getPeriodsTimeInformations(periodsInfos as any, manifestInfos as any);
+      getPeriodsTimeInformation(periodsInfos as any, manifestInfos as any);
     expect(timeInfos[0].periodDuration).toEqual(manifestInfos.duration);
   });
 
@@ -73,7 +73,7 @@ describe("DASH Parser - getPeriodsTimeInformations", () => {
       availabilityStartTime: 500,
     };
     const timeInfos =
-      getPeriodsTimeInformations(periodsInfos as any, manifestInfos as any);
+      getPeriodsTimeInformation(periodsInfos as any, manifestInfos as any);
     expect(timeInfos[0].periodStart).toBe(500);
     expect(timeInfos[0].periodDuration).toBe(10);
     expect(timeInfos[0].periodEnd).toBe(510);
@@ -87,7 +87,7 @@ describe("DASH Parser - getPeriodsTimeInformations", () => {
       isDynamic: false,
     };
     const timeInfos =
-      getPeriodsTimeInformations(periodsInfos as any, manifestInfos as any);
+      getPeriodsTimeInformation(periodsInfos as any, manifestInfos as any);
     expect(timeInfos[0].periodStart).toBe(0);
     expect(timeInfos[0].periodDuration).toBe(10);
     expect(timeInfos[0].periodEnd).toBe(10);

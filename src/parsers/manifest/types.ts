@@ -77,12 +77,12 @@ export interface IParsedManifest {
   duration? : number; // Last time in the content. Only useful for non-live contents.
   lifetime?: number; // Duration of the validity of this Manifest, after which it
                      // should be refreshed.
-  maximumTime? : { // Informations on the maximum seekable position.
+  maximumTime? : { // Information on the maximum seekable position.
     isContinuous : boolean; // Whether this value linearly evolves over time.
     value : number; // Maximum seekable time in seconds calculated at `time`.
     time : number; // `Performance.now()` output at the time `value` was calculated.
   };
-  minimumTime? : { // Informations on the minimum seekable position.
+  minimumTime? : { // Information on the minimum seekable position.
     isContinuous : boolean; // Whether this value linearly evolves over time.
     value : number; // minimum seekable time in seconds calculated at `time`.
     time : number; // `Performance.now()` output at the time `value` was calculated.

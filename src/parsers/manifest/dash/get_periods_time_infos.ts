@@ -17,24 +17,24 @@
 import { IPeriodIntermediateRepresentation } from "./node_parsers/Period";
 import { IManifestInfos } from "./parse_periods";
 
-interface IPeriodTimeInformations {
+interface IPeriodTimeInformation {
   periodStart: number;
   periodDuration?: number;
   periodEnd?: number;
 }
 
 /**
- * Get periods time informations from current, next and previous
+ * Get periods time information from current, next and previous
  * periods.
  * @param {Array.<Object>} periodsIR
  * @param {Object} manifestInfos
  * @return {Array.<Object>}
  */
-export default function getPeriodsTimeInformations(
+export default function getPeriodsTimeInformation(
   periodsIR: IPeriodIntermediateRepresentation[],
   manifestInfos: IManifestInfos
-): IPeriodTimeInformations[] {
-  const periodsTimeInformations: IPeriodTimeInformations[] = [];
+): IPeriodTimeInformation[] {
+  const periodsTimeInformation: IPeriodTimeInformation[] = [];
   periodsIR.forEach((currentPeriod, i) => {
 
     let periodStart : number;
@@ -47,9 +47,9 @@ export default function getPeriodsTimeInformations(
                          0 :
                          manifestInfos.availabilityStartTime;
       } else {
-        // take time informations from previous period
+        // take time information from previous period
         const prevPeriodInfos =
-          periodsTimeInformations[periodsTimeInformations.length - 1];
+          periodsTimeInformation[periodsTimeInformation.length - 1];
         if (prevPeriodInfos != null && prevPeriodInfos.periodEnd != null) {
           periodStart = prevPeriodInfos.periodEnd;
         } else {
@@ -70,9 +70,9 @@ export default function getPeriodsTimeInformations(
 
     const periodEnd = periodDuration != null ? (periodStart + periodDuration) :
                                                undefined;
-    periodsTimeInformations.push({ periodStart,
+    periodsTimeInformation.push({ periodStart,
                                    periodDuration,
                                    periodEnd });
   });
-  return periodsTimeInformations;
+  return periodsTimeInformation;
 }

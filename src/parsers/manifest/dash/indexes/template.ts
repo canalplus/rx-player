@@ -39,7 +39,7 @@ export interface ITemplateIndex {
 
   indexRange?: [number, number]; // byte range for a possible index of segments
                                  // in the server
-  initialization?: { // informations on the initialization segment
+  initialization?: { // information on the initialization segment
     mediaURL: string; // URL to access the initialization segment
     range?: [number, number]; // possible byte range to request it
   };

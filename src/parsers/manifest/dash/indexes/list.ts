@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015 CANAL+ Group
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,7 +46,7 @@ export interface IListIndex {
                             // beginning at:
                             // ``` T * timescale + indexTimeOffset ```
 
-  initialization? : { // informations on the initialization segment
+  initialization? : { // information on the initialization segment
     mediaURL: string; // URL to access the initialization segment
     range?: [number, number]; // possible byte range to request it
   };

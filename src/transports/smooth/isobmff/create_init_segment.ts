@@ -58,7 +58,7 @@ function createMOOVBox(
 }
 
 /**
- * Create an initialization segment with the informations given.
+ * Create an initialization segment with the information given.
  * @param {Number} timescale
  * @param {string} type
  * @param {Uint8Array} stsd

@@ -79,19 +79,19 @@ export interface ITMTextTrackListItem
 export interface ITMVideoTrackListItem
   extends ITMVideoTrack { active : boolean; }
 
-// stored audio informations for a single period
+// stored audio information for a single period
 interface ITMPeriodAudioInfos { adaptations : Adaptation[];
                                 adaptation$ : Subject<Adaptation|null>; }
 
-// stored text informations for a single period
+// stored text information for a single period
 interface ITMPeriodTextInfos { adaptations : Adaptation[];
                                adaptation$ : Subject<Adaptation|null>; }
 
-// stored video informations for a single period
+// stored video information for a single period
 interface ITMPeriodVideoInfos { adaptations : Adaptation[];
                                 adaptation$ : Subject<Adaptation|null>; }
 
-// stored informations for a single period
+// stored information for a single period
 interface ITMPeriodInfos { period : Period;
                            audio? : ITMPeriodAudioInfos;
                            text? : ITMPeriodTextInfos;

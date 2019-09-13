@@ -301,7 +301,7 @@ describe("Manifest - Manifest", () => {
     logSpy.mockRestore();
   });
 
-  it("should correctly parse every manifest informations given", () => {
+  it("should correctly parse every manifest information given", () => {
     const log = { warn: () => undefined };
     jest.mock("../../log", () =>  ({
       __esModule: true,

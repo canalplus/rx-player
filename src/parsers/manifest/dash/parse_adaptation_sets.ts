@@ -46,7 +46,7 @@ export interface IPeriodInfos {
                                   // in seconds
 }
 
-// Supplementary informations for "switchable" AdaptationSets of the same Period
+// Supplementary information for "switchable" AdaptationSets of the same Period
 interface IAdaptationSwitchingInfos  {
   [originalID : string] : { // ID as announced in the MPD
     newID : string; // ID in the currently parsed Manifest
@@ -97,7 +97,7 @@ function isHardOfHearing(
 }
 
 /**
- * Contruct Adaptation ID from the informations we have.
+ * Contruct Adaptation ID from the information we have.
  * @param {Object} adaptation
  * @param {Array.<Object>} representations
  * @param {Object} infos

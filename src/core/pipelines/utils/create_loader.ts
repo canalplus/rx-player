@@ -120,7 +120,7 @@ function errorSelector(error : unknown) : ICustomError {
  *   - as the request progresses (type "progress").
  *
  *   - each time a request ends (type "metrics").
- *     This event contains informations about the metrics of the request.
+ *     This event contains information about the metrics of the request.
  *
  *   - each time a minor request error is encountered (type "error").
  *     With the error as a value.

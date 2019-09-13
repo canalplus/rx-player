@@ -48,7 +48,7 @@ export interface IProgressEventValue {
 }
 
 /**
- * Store informations about pending requests, like informations about:
+ * Store information about pending requests, like information about:
  *   - for which segments they are
  *   - how the request's progress goes
  * @class PendingRequestsStore
@@ -61,7 +61,7 @@ export default class PendingRequestsStore {
   }
 
   /**
-   * Add informations about a new pending request.
+   * Add information about a new pending request.
    * @param {string} id
    * @param {Object} payload
    */
@@ -111,7 +111,7 @@ export default class PendingRequestsStore {
   }
 
   /**
-   * Returns informations about all pending requests, in segment's chronological
+   * Returns information about all pending requests, in segment's chronological
    * order.
    * @returns {Array.<Object>}
    */

@@ -64,7 +64,7 @@ export interface IMediaSourceLoaderArguments {
                                    // played
   manifest : Manifest; // Manifest of the content we want to
                                          // play
-  clock$ : Observable<IInitClockTick>; // Emit position informations
+  clock$ : Observable<IInitClockTick>; // Emit position information
   speed$ : Observable<number>; // Emit the speed.
                                // /!\ Should replay the last value on subscription.
   abrManager : ABRManager;

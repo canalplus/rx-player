@@ -44,7 +44,7 @@ export type IBufferType = "audio" |
 enum SourceBufferAction { Append,
                           Remove }
 
-// Informations to give when appending a new segment.
+// Information to give when appending a new segment.
 export interface IAppendBufferInfos<T> {
   initSegment : T|null; // initialization segment related to the segment.
                         // null if none.
@@ -150,7 +150,7 @@ export default class QueuedSourceBuffer<T> {
   private _queue : Array<IQSBQueueItems<T>>;
 
   /**
-   * Informations about the current order processed by the QueuedSourceBuffer.
+   * Information about the current order processed by the QueuedSourceBuffer.
    * If equal to null, it means that no order from the queue is currently
    * being processed.
    * @private

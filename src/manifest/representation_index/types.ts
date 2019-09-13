@@ -52,8 +52,8 @@ export interface ISegment {
                              // concerned segment will be offseted when
                              // decoded.
   privateInfos? : IPrivateInfos; // Allows a RepresentationIndex to store
-                                 // supplementary informations in a given
-                                 // Segment for later downloading/parsing
+                                 // supplementary information in a given Segment
+                                 // for later downloading/parsing
 }
 
 export interface IRepresentationIndexSegmentInfos { duration : number;

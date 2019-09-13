@@ -28,7 +28,7 @@ import { ISegmentTimingInfos } from "../types";
  * Get precize start and duration of a segment from ISOBMFF.
  *   1. get start from tfdt
  *   2. get duration from trun
- *   3. if at least one is missing, get both informations from sidx
+ *   3. if at least one is missing, get both information from sidx
  *   4. As a fallback take segment infos.
  * @param {Object} segment
  * @param {UInt8Array} buffer - The entire isobmff container

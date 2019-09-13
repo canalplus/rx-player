@@ -53,7 +53,7 @@ export interface ITimelineIndex {
                             // actually will look for a segment in the index
                             // beginning at:
                             // ``` T * timescale + indexTimeOffset ```
-  initialization? : { // informations on the initialization segment
+  initialization? : { // information on the initialization segment
     mediaURL: string; // URL to access the initialization segment
     range?: [number, number]; // possible byte range to request it
   };
@@ -486,7 +486,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   }
 
   /**
-   * Clean-up timeline to remove segment informations which should not be
+   * Clean-up timeline to remove segment information which should not be
    * available due to timeshifting.
    */
   private _refreshTimeline() : void {

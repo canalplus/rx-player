@@ -68,7 +68,7 @@ class Representation {
   // in pixel of the corresponding video data.
   public height? : number;
 
-  // DRM Informations for this Representation.
+  // DRM Information for this Representation.
   public contentProtections? : IContentProtection[];
 
   /**

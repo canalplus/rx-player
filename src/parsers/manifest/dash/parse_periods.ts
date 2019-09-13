@@ -25,7 +25,7 @@ import {
   IParsedPeriod,
 } from "../types";
 import flattenOverlappingPeriods from "./flatten_overlapping_periods";
-import getPeriodsTimeInformations from "./get_periods_time_infos";
+import getPeriodsTimeInformation from "./get_periods_time_infos";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import { IPeriodIntermediateRepresentation } from "./node_parsers/Period";
 import parseAdaptationSets from "./parse_adaptation_sets";
@@ -53,9 +53,9 @@ export default function parsePeriods(
   manifestInfos : IManifestInfos
 ): IParsedPeriod[] {
   const parsedPeriods : IParsedPeriod[] = [];
-  const periodsTimeInformations = getPeriodsTimeInformations(periodsIR, manifestInfos);
-  if (periodsTimeInformations.length !== periodsIR.length) {
-    throw new Error("MPD parsing error: the time informations are incoherent.");
+  const periodsTimeInformation = getPeriodsTimeInformation(periodsIR, manifestInfos);
+  if (periodsTimeInformation.length !== periodsIR.length) {
+    throw new Error("MPD parsing error: the time information are incoherent.");
   }
 
   // We might to communicate the depth of the Buffer while parsing
@@ -76,7 +76,7 @@ export default function parsePeriods(
 
     const { periodStart,
             periodDuration,
-            periodEnd } = periodsTimeInformations[i];
+            periodEnd } = periodsTimeInformation[i];
 
     let periodID : string;
     if (periodIR.attributes.id == null) {

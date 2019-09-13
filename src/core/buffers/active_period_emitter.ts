@@ -73,9 +73,9 @@ type IPeriodsList = Partial<Record<string, IPeriodObject>>;
  * ```
  *
  * @param {Array.<string>} bufferTypes - Every buffer types in the content.
- * @param {Observable} addPeriodBuffer$ - Emit PeriodBuffer informations when
+ * @param {Observable} addPeriodBuffer$ - Emit PeriodBuffer information when
  * one is added.
- * @param {Observable} removePeriodBuffer$ - Emit PeriodBuffer informations when
+ * @param {Observable} removePeriodBuffer$ - Emit PeriodBuffer information when
  * one is removed.
  * @returns {Observable}
  */

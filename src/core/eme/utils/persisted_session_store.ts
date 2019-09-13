@@ -35,7 +35,7 @@ function checkStorage(storage : IPersistedSessionStorage) : void {
 /**
  * Set representing persisted licenses. Depends on a simple local-
  * storage implementation with a `save`/`load` synchronous interface
- * to persist informations on persisted sessions.
+ * to persist information on persisted sessions.
  *
  * This set is used only for a cdm/keysystem with license persistency
  * supported.

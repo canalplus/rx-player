@@ -48,7 +48,7 @@ export interface IPeriodArguments {
 
 /**
  * Class representing a single `Period` of the Manifest.
- * A Period contains every informations about the content available for a
+ * A Period contains every information about the content available for a
  * specific period in time.
  * @class Period
  */

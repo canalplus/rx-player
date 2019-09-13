@@ -90,7 +90,7 @@ const { MAXIMUM_MAX_BUFFER_AHEAD,
  * transitions between periods.
  * To do this, we dynamically create or destroy buffers as they are needed.
  * @param {Object} content
- * @param {Observable} clock$ - Emit position informations
+ * @param {Observable} clock$ - Emit position information
  * @param {Object} abrManager - Emit bitrate estimation and best Representation
  * to play.
  * @param {Object} sourceBuffersManager - Will be used to lazily create

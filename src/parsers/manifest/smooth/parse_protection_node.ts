@@ -45,7 +45,7 @@ function createWidevineKeySystem(
 }
 
 /**
- * Parse "Protection" Node, which contains DRM informations
+ * Parse "Protection" Node, which contains DRM information
  * @param {Element} protectionNode
  * @returns {Object}
  */

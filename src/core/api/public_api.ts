@@ -270,7 +270,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   };
 
   /**
-   * Informations on the current bitrate settings.
+   * Information on the current bitrate settings.
    * @private
    * @type {Object}
    */
@@ -307,7 +307,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_currentError : Error|null;
 
   /**
-   * Informations about the current content being played.
+   * Information about the current content being played.
    * null when no content is launched.
    * @private
    * @type {Object|null}

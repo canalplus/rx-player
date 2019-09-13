@@ -29,7 +29,7 @@ export interface IInitialTimeOptions { position? : number;
  * Returns the calculated initial time for the content described by the given
  * Manifest:
  *   1. if a start time is defined by user, calculate starting time from the
- *      manifest informations
+ *      manifest information
  *   2. else if the media is live, use the live edge and suggested delays from
  *      it
  *   3. else returns the minimum time announced in the manifest

@@ -65,10 +65,10 @@ export default function _addSegmentInfos(
       (currentSegment.time / currentSegment.timescale) * timescale;
   }
 
-  // in some circumstances, the new segment informations are only
-  // duration informations that we can use to deduct the start of the
-  // next segment. this is the case where the new segment are
-  // associated to a current segment and have the same start
+  // in some circumstances, the new segment information are only duration
+  // information that we can use to deduct the start of the next segment.
+  // This is the case where the new segment are
+  // associated to a current segment and have the same start.
   const shouldDeductNextSegment = scaledCurrentTime != null &&
     (scaledNewSegment.time === scaledCurrentTime);
   if (shouldDeductNextSegment) {

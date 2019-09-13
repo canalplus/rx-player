@@ -70,7 +70,7 @@ function addNextSegments(
   nextSegments : INextSegmentsInfos[],
   dlSegment? : ISegmentTimingInfos
 ) : void {
-  log.debug("Smooth Parser: update segments informations.");
+  log.debug("Smooth Parser: update segments information.");
   const representations = adaptation.representations;
   for (let i = 0; i < representations.length; i++) {
     const representation = representations[i];

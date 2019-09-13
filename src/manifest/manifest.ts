@@ -62,12 +62,12 @@ interface IManifestArguments {
   duration? : number; // Last time in the content. Only useful for non-live contents.
   lifetime? : number; // Duration of the validity of this Manifest, after which it
                       // should be refreshed.
-  maximumTime? : { // Informations on the maximum seekable position.
+  maximumTime? : { // Information on the maximum seekable position.
     isContinuous : boolean; // Whether this value linearly evolves over time.
     value : number; // Maximum seekable time in milliseconds calculated at `time`.
     time : number; // `Performance.now()` output at the time `value` was calculated.
   };
-  minimumTime? : { // Informations on the minimum seekable position.
+  minimumTime? : { // Information on the minimum seekable position.
     isContinuous : boolean; // Whether this value linearly evolves over time.
     value : number; // minimum seekable time in milliseconds calculated at `time`.
     time : number; // `Performance.now()` output at the time `value` was calculated.
@@ -98,7 +98,7 @@ export interface IManifestEvents {
  *   - ...
  * while staying agnostic of the transport protocol used (Smooth or DASH).
  *
- * The Manifest and its contained informations can evolve over time (like when
+ * The Manifest and its contained information can evolve over time (like when
  * updating a live manifest of when right management forbid some tracks from
  * being played).
  * To perform actions on those changes, any module using this Manifest can
@@ -118,7 +118,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   public adaptations : ManifestAdaptations;
 
   // List every `Period` in that Manifest chronologically (from its start time).
-  // A `Period` contains content informations about the content available for
+  // A `Period` contains content information about the content available for
   // a specific period in time.
   public readonly periods : Period[];
 
@@ -152,14 +152,14 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   // begins.
   public availabilityStartTime? : number;
 
-  // Informations about the first seekable position.
+  // Information about the first seekable position.
   public minimumTime? : {
     isContinuous : boolean; // Whether this value continuously evolve over time
     value : number; // Minimum seekable time in milliseconds calculated at `time`.
     time : number; // `Performance.now()` output at the time `value` was calculated
   };
 
-  // Informations about the last seekable position.
+  // Information about the last seekable position.
   public maximumTime? : {
     isContinuous : boolean; // Whether this value continuously evolve over time
     value : number; // Maximum seekable time in milliseconds calculated at `time`.

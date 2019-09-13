@@ -83,7 +83,7 @@ export interface ISidxSegment {
  *
  * @param {Uint8Array} buf
  * @param {Number} initialOffset
- * @returns {Object|null} {Array.<Object>} - Informations about each subsegment.
+ * @returns {Object|null} {Array.<Object>} - Information about each subsegment.
  * Contains those keys:
  *   - time {Number}: starting _presentation time_ for the subsegment,
  *     timescaled
@@ -313,7 +313,7 @@ function getDurationFromTrun(buffer : Uint8Array) : number {
 }
 
 /**
- * Get various informations from a movie header box. Found in init segments.
+ * Get various information from a movie header box. Found in init segments.
  * null if not found or not parsed.
  *
  * This timescale is the default timescale used for segments.

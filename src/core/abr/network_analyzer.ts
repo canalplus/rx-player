@@ -103,7 +103,7 @@ function estimateRemainingTime(
  * If that's the case, re-calculate the bandwidth urgently based on
  * this single request.
  * @param {Object} pendingRequests - Current pending requests.
- * @param {Object} clock - Informations on the current playback.
+ * @param {Object} clock - Information on the current playback.
  * @param {Number} lastEstimatedBitrate - Last bitrate estimation emitted.
  * @returns {Number|undefined}
  */

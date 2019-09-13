@@ -17,7 +17,7 @@
 /**
  * This file defines a global clock for the RxPlayer.
  *
- * Each clock tick also pass informations about the current state of the
+ * Each clock tick also pass information about the current state of the
  * media element to sub-parts of the player.
  */
 
@@ -54,7 +54,7 @@ export type IMediaInfosState = "init" | // set once on first emit
                                "ratechange" | // HTML5 Event
                                "timeupdate"; // Interval
 
-// Informations recuperated on the media element on each clock
+// Information recuperated on the media element on each clock
 // tick
 interface IMediaInfos {
   bufferGap : number; // Gap between `currentTime` and the next position with
@@ -81,7 +81,7 @@ type stalledStatus = { // set if the player is stalled
                      } |
                      null; // the player is not stalled
 
-// Global informations emitted on each clock tick
+// Global information emitted on each clock tick
 export interface IClockTick extends IMediaInfos {
   stalled : stalledStatus; // see type
 }
