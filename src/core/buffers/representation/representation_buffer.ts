@@ -264,8 +264,11 @@ export default function RepresentationBuffer<T>({
       } else {
         const lastPosition = representation.index.getLastPosition();
         if (lastPosition === undefined) {
-          // We do not know the end of this index. Stay not full to be safe.
-          isFull = false;
+          // We do not know the end of this index.
+          // If we reached the end of the period, check that all segments are
+          // available.
+          isFull = neededRange.end >= period.end &&
+                   representation.index.isFinished();
         } else if (lastPosition === null) {
           // There is no available segment in the index currently. If the index
           // tells us it has finished generating new segments, we're done.
