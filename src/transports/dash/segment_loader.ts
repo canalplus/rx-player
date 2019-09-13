@@ -19,10 +19,10 @@ import {
   Observer,
   of as observableOf,
 } from "rxjs";
-import log from "../../log";
 import xhr, {
   fetchIsSupported,
 } from "../../utils/request";
+import warnOnce from "../../utils/warn_once";
 import {
   CustomSegmentLoader,
   ILoaderRegularDataEvent,
@@ -57,7 +57,7 @@ function regularSegmentLoader(
     if (fetchIsSupported()) {
       return lowLatencySegmentLoader(url, args);
     } else {
-      log.warn("DASH: Your browser does not have the fetch API. You will have " +
+      warnOnce("DASH: Your browser does not have the fetch API. You will have " +
                "a higher chance of rebuffering when playing close to the live edge");
     }
   }

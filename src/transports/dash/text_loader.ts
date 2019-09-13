@@ -15,10 +15,10 @@
  */
 
 import { of as observableOf } from "rxjs";
-import log from "../../log";
 import request, {
   fetchIsSupported,
 } from "../../utils/request";
+import warnOnce from "../../utils/warn_once";
 import {
   ISegmentLoaderArguments,
   ISegmentLoaderObservable,
@@ -62,7 +62,7 @@ export default function generateTextTrackLoader(
       if (fetchIsSupported()) {
         return lowLatencySegmentLoader(mediaURL, args);
       } else {
-        log.warn("DASH: Your browser does not have the fetch API. You will have " +
+        warnOnce("DASH: Your browser does not have the fetch API. You will have " +
                  "a higher chance of rebuffering when playing close to the live edge");
       }
     }
