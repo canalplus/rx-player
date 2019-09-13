@@ -4,7 +4,7 @@
 
 ### Features
 
-  - dash: add `lowLatencyMode` `loadVideo` option to play low-latency DASH contents with Chunked transfer encoding close to the live edge efficiently
+  - dash: add `lowLatencyMode` `loadVideo` option to play low-latency DASH contents with chunk-encoded CMAF and chunked transfer encoding close to the live edge efficiently
   - metaplaylist: add the experimental `metaplaylist` transport, which allows to smoothly play a concatenation of multiple contents
   - api: add `serverSyncInfos` to `transportOptions` (`loadVideo` option)
   - errors: add `code` property to a `NetworkError` indicating the corresponding HTTP status
