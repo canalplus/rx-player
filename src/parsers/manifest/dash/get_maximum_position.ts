@@ -57,17 +57,22 @@ export default function getMaximumPosition(
         maximumVideoPosition = lastPosition;
       }
 
-      if (maximumAudioPosition === null || maximumVideoPosition === null) {
+      if ((firstAudioAdaptationFromPeriod != null && maximumAudioPosition === null) ||
+          (firstVideoAdaptationFromPeriod != null && maximumVideoPosition === null)
+      ) {
         log.info("DASH Parser: found Period with no segment. ",
-                 "Going to previous one to calculate last position");
-      } else {
-        if (firstVideoAdaptationFromPeriod == null) {
-          return maximumAudioPosition;
+                 "Going to next one to calculate last position");
+        return undefined;
+      }
+
+      if (maximumVideoPosition != null) {
+        if (maximumAudioPosition != null) {
+          return Math.min(maximumAudioPosition, maximumVideoPosition);
         }
-        if (firstAudioAdaptationFromPeriod == null) {
-          return maximumVideoPosition;
-        }
-        return Math.min(maximumAudioPosition, maximumVideoPosition);
+        return maximumVideoPosition;
+      }
+      if (maximumAudioPosition != null) {
+        return maximumAudioPosition;
       }
     }
   }
