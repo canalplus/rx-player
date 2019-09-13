@@ -629,7 +629,7 @@ export default function launchTestsForContent(
         expect(player.getVideoPlayedTime()).to.equal(5);
 
         player.seekTo(minimumPosition + 30);
-        await sleep(300);
+        await sleep(800);
         const initialLoadedTime = player.getVideoPlayedTime();
         expect(initialLoadedTime).to.be.closeTo(0, 4);
 
