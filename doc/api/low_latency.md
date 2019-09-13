@@ -5,7 +5,7 @@
 
 The RxPlayer can play DASH contents specifically crafted to be played with a
 low latency (read close to the live edge) through a technology called something
-along the lines of "CMAF with Chunked Transfer Encoding".
+along the lines of "Chunked-encoded CMAF and Chunked transfer encoding".
 
 Such contents are backward-compatible DASH contents (meaning they can be played
 in a regular non-low-latency way) which serves CMAF segment with an HTTP 1.1
@@ -30,7 +30,7 @@ to set the `lowLatencyMode` `loadVideo` option.
 
 ```js
 rxPlayer.loadVideo({
-  url: "https://www.example.com/content.mpd",
+  url: "https://www.example.com/low-latency-content.mpd",
   transport: "dash",
   lowLatencyMode: true,
 })
@@ -43,6 +43,9 @@ low-latency contents. For live contents:
 
   - it will begin to play faster and seek in non-buffered parts faster
 
+  - it will request segments which did not have time to be completely encoded on
+    the server-side (as long as the beginning should be available)
+
   - it will be safer when choosing the right video / audio quality (to avoid the
     higher chances of rebuffering)
 
@@ -50,6 +53,22 @@ low-latency contents. For live contents:
     lower
 
   - and multiple other minor optimizations
+
+Some low-latency contents miss an optimization which allows us to request
+segments before they have been completely generated. With that sort of contents,
+you might see multiple 404 or 415 HTTP errors for new segments requests. If that
+is the case, you can disable that optimization by setting the `aggressiveMode`
+`transportOptions` to false:
+```js
+rxPlayer.loadVideo({
+  url: "https://www.example.com/content.mpd",
+  transport: "dash",
+  lowLatencyMode: true,
+  transportOptions: { aggressiveMode: false },
+})
+```
+That option (is documented [in the `transportOptions`
+documentation](./loadVideo_options.md#prop-transportOptions)):
 
 Note that you can also set the `lowLatencyMode` mode for VoD (non-live)
 contents.
@@ -78,24 +97,6 @@ rxPlayer.loadVideo({
                                     // risks)
 })
 ```
-
-To improve even more the possibility to stay closer to the live edge you can
-even set the `aggressiveMode` `transportOptions` in you loadVideo call.
-
-You might experience much more request error but segments will be made available
-faster:
-```js
-rxPlayer.loadVideo({
-  url: "https://www.example.com/content.mpd",
-  transport: "dash",
-  lowLatencyMode: true,
-  transportOptions: { aggressiveMode: true },
-  startAt: { fromLastPosition: 2 },
-})
-```
-
-More informations on that property can be found [in the aggressiveMode
-documentation](./loadVideo_options.md#prop-transportOptions).
 
 
 
@@ -183,3 +184,23 @@ content, which could lead the user to being far from the live edge.
 As several applications could want several workaround to that possible issue
 (like updating the speed, seeking or just signaling the delay to the user), we
 choose to let that happen by default with the RxPlayer.
+
+As an example, ou demo page choose the following strategy for now:
+
+  - When falling between 6 to 15 seconds behind the live edge, the playback rate
+    is updated proportionally to our delay until we reach 3 seconds behind the
+    live edge.
+
+  - When falling to 15 seconds behind the live edge or more, we will simply seek
+    to 3 seconds behind the live edge.
+
+  - When seeking manually or pausing, this logic is disabled (with the
+    possibility to re-enable it).
+
+The live edge is obtainable through the `rxPlayer.getMaximumPosition()` API,
+the current position thanks to the `rxPlayer.getPosition()` API. The distance to
+the live edge is thus easily computable:
+
+```js
+rxPlayer.getMaximumPosition() - rxPlayer.getPosition()
+```
