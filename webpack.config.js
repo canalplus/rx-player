@@ -136,8 +136,8 @@ module.exports = {
     ],
   },
   performance: {
-    maxEntrypointSize: shouldMinify ? 400000 : 1500000,
-    maxAssetSize: shouldMinify ? 400000 : 1500000,
+    maxEntrypointSize: shouldMinify ? 400000 : 1700000,
+    maxAssetSize: shouldMinify ? 400000 : 1700000,
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
