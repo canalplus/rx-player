@@ -24,7 +24,7 @@
   - dash: better handle live Multi-Period contents where the currently broadcasted period is not the last one declared in the MPD
   - dash: better infer the end of a Period if the start of the next one is defined
   - api: always start live contents at the live edge if one is defined and not just before the last available segments
-  - ci: run integration tests with Travis again
+  - ci: run integration tests with Travis and appveyor again
 
 
 ## v3.15.1 (2019/08/07)
