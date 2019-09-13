@@ -23155,7 +23155,7 @@ object-assign
  */        function regularSegmentLoader(url, args, lowLatencyMode) {
             if (args.segment.isInit) return initSegmentLoader(url, args);
             var isWEBM = isWEBMEmbeddedTrack(args.representation);
-            if (lowLatencyMode && Object(fetch.b)() && !isWEBM) {
+            if (lowLatencyMode && !isWEBM) {
                 if (Object(fetch.b)()) return lowLatencySegmentLoader(url, args);
                 log.a.warn("DASH: Your browser does not have the fetch API. You will have a higher chance of rebuffering when playing close to the live edge");
             }
