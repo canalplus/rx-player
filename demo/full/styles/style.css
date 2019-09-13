@@ -1015,6 +1015,10 @@ input:checked + .slider:before {
   .button-gh {
     display: none;
   }
+
+  .catch-up {
+    display: none;
+  }
 }
 
 @media only screen and (max-width: 500px) {
