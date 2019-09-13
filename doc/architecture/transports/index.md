@@ -58,4 +58,4 @@ A MetaPlaylist is a specific case, as it wraps other streaming protocols.
 More documentation about it can be found in [the corresponding API
 documentation](../api/metaplaylist.md).
 
-Architecture informations on it can also be found [here](./metaplaylist.md).
+Architecture information on it can also be found [here](./metaplaylist.md).

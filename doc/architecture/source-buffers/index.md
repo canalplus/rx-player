@@ -75,5 +75,5 @@ One of them is created per SourceBuffer.
 The ``SegmentInventory`` keeps track of which segments is currently bufferized
 to avoid unnecessary re-downloadings of them.
 
-You can have more informations on it in [the SegmentInventory
+You can have more information on it in [the SegmentInventory
 documentation](./segment_inventory.md).
