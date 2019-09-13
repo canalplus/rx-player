@@ -5841,8 +5841,10 @@ object-assign
     /* 79 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
-        /* unused harmony export fetchIsSupported */
-        /* harmony import */        var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10), _config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3), _errors__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(122), _errors__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(33), _log__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(0);
+        /* harmony export (binding) */        __webpack_require__.d(__webpack_exports__, "b", function() {
+            return fetchIsSupported;
+        });
+        /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10), _config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3), _errors__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(122), _errors__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(33), _log__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(0);
         /* harmony import */        function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
             try {
                 var info = gen[key](arg), value = info.value;
@@ -5881,7 +5883,14 @@ object-assign
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */        var DEFAULT_REQUEST_TIMEOUT = _config__WEBPACK_IMPORTED_MODULE_1__.a.DEFAULT_REQUEST_TIMEOUT, _Headers = "function" == typeof Headers ? Headers : null, _AbortController = "function" == typeof AbortController ? AbortController : null;
-        /* harmony default export */ __webpack_exports__.a = function fetchRequest(options) {
+        /**
+ * Returns true if fetch should be supported in the current browser.
+ * @return {boolean}
+ */
+        function fetchIsSupported() {
+            return !(!window.fetch || null == _AbortController || null == _Headers);
+        }
+        /* harmony default export */        __webpack_exports__.a = function fetchRequest(options) {
             var headers;
             if (null != options.headers) if (null == _Headers) headers = options.headers; else {
                 headers = new _Headers();
@@ -5982,11 +5991,7 @@ object-assign
                     hasAborted = !0, abortRequest();
                 };
             });
-        }
-        /**
- * Returns true if fetch should be supported in the current browser.
- * @return {boolean}
- */;
+        };
     }, 
     /* 80 */
     /***/ function(module, __webpack_exports__, __webpack_require__) {
@@ -22886,8 +22891,8 @@ object-assign
             };
         }
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/Observable.js + 3 modules
-                var Observable = __webpack_require__(10), byte_range = __webpack_require__(42);
-        // EXTERNAL MODULE: ./src/transports/utils/byte_range.ts
+                var Observable = __webpack_require__(10), fetch = __webpack_require__(79), byte_range = __webpack_require__(42);
+        // EXTERNAL MODULE: ./src/utils/request/fetch.ts
                 // CONCATENATED MODULE: ./src/transports/dash/init_segment_loader.ts
         /**
  * Copyright 2015 CANAL+ Group
@@ -22986,9 +22991,8 @@ object-assign
             return "video/webm" === representation.mimeType || "audio/webm" === representation.mimeType;
         }
         // EXTERNAL MODULE: ./node_modules/rxjs/_esm5/internal/operators/scan.js
-                var scan = __webpack_require__(216), fetch = __webpack_require__(79);
-        // EXTERNAL MODULE: ./src/utils/request/fetch.ts
-                // CONCATENATED MODULE: ./src/transports/dash/extract_complete_chunks.ts
+                var scan = __webpack_require__(216);
+        // CONCATENATED MODULE: ./src/transports/dash/extract_complete_chunks.ts
         /**
  * Copyright 2015 CANAL+ Group
  *
@@ -23012,8 +23016,7 @@ object-assign
  * @param {Uint8Array} buf - the isobmff
  * @param {Number} wantedName
  * @returns {Number} - Offset where the box begins. -1 if not found.
- */
-        function findBox(buf, wantedName) {
+ */        function findBox(buf, wantedName) {
             for (var len = buf.length, i = 0; i + 8 < len; ) {
                 var size = Object(byte_parsing.c)(buf, i);
                 if (size <= 0) return -1;
@@ -23152,7 +23155,10 @@ object-assign
  */        function regularSegmentLoader(url, args, lowLatencyMode) {
             if (args.segment.isInit) return initSegmentLoader(url, args);
             var isWEBM = isWEBMEmbeddedTrack(args.representation);
-            if (lowLatencyMode && !isWEBM) return lowLatencySegmentLoader(url, args);
+            if (lowLatencyMode && Object(fetch.b)() && !isWEBM) {
+                if (Object(fetch.b)()) return lowLatencySegmentLoader(url, args);
+                log.a.warn("DASH: Your browser does not have the fetch API. You will have a higher chance of rebuffering when playing close to the live edge");
+            }
             var segment = args.segment;
             return Object(request.a)({
                 url: url,
@@ -23550,7 +23556,10 @@ object-assign
                 });
                 if (args.segment.isInit) return initSegmentLoader(mediaURL, args);
                 var isMP4Embedded = isMP4EmbeddedTextTrack(args.representation);
-                if (lowLatencyMode && isMP4Embedded) return lowLatencySegmentLoader(mediaURL, args);
+                if (lowLatencyMode && isMP4Embedded) {
+                    if (Object(fetch.b)()) return lowLatencySegmentLoader(mediaURL, args);
+                    log.a.warn("DASH: Your browser does not have the fetch API. You will have a higher chance of rebuffering when playing close to the live edge");
+                }
  // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
                                 var responseType = isMP4Embedded ? "arraybuffer" : "text";
                 return Object(request.a)({
