@@ -16467,8 +16467,10 @@ object-assign
                 isFull = !1; else {
                     var lastPosition = representation.index.getLastPosition();
                     if (void 0 === lastPosition) 
-                    // We do not know the end of this index. Stay not full to be safe.
-                    isFull = !1; else if (null === lastPosition) 
+                    // We do not know the end of this index.
+                    // If we reached the end of the period, check that all segments are
+                    // available.
+                    isFull = neededRange.end >= period.end && representation.index.isFinished(); else if (null === lastPosition) 
                     // There is no available segment in the index currently. If the index
                     // tells us it has finished generating new segments, we're done.
                     isFull = representation.index.isFinished(); else {
