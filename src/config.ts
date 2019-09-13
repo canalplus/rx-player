@@ -547,7 +547,7 @@ export default {
 
   /**
    * The maximum authorized difference, in seconds, between the real buffered
-   * time of a given chunk and what the segment informations of the Manifest
+   * time of a given chunk and what the segment information of the Manifest
    * tells us.
    *
    * Setting a value too high can lead to parts of the SourceBuffer being

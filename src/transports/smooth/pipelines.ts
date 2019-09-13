@@ -181,7 +181,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                                                                segment,
                                                                manifest.isLive);
       if (chunkInfos == null) {
-        throw new Error("Smooth Segment without time informations");
+        throw new Error("Smooth Segment without time information");
       }
       const chunkData = patchSegment(responseBuffer, chunkInfos.time);
       if (nextSegments) {
