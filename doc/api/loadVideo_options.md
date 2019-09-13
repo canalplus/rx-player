@@ -652,6 +652,12 @@ _defaults_: ``false``
 Allow to play DASH low-latency contents (with Chunk-encoded and
 chunk-transferred CMAF segments) with a low latency efficiently.
 
+In the some rare browsers who do not support the `fetch` API (like IE11 or the
+BlackBerry browser), we might be more prone to rebuffering in that mode the
+first few seconds. If you want to have a better experience on those browsers,
+you might want to begin to play further from the live edge in those cases
+through the `startAt` option.
+
 Note: Some DASH low-latency contents do not use a Chunk-transfer optimization
 which let us download segments before they have been completely generated. On
 those, you might see multiple 404/415 HTTP errors for segment requests. If
