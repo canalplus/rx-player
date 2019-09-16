@@ -6,18 +6,18 @@ const MetaPlaylistDASHSmooth = {
     {
       "url": "https://www.bok.net/dash/tears_of_steel/cleartext/stream.mpd",
       "startTime": 0,
-      "endTime": 734,
+      "endTime": 733.95,
       "transport": "dash",
     },
     {
       "url": "https://amssamples.streaming.mediaservices.windows.net/683f7e47-bd83-4427-b0a3-26a6c4547782/BigBuckBunny.ism/manifest",
-      "startTime": 734,
-      "endTime": 1367,
+      "startTime": 733.95,
+      "endTime": 1366.85,
       "transport": "smooth",
     },
     {
       "url": "https://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd",
-      "startTime": 1367,
+      "startTime": 1366.85,
       "endTime": 1470,
       "transport": "dash",
     },
