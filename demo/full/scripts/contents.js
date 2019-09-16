@@ -80,12 +80,6 @@ export default [
     "transport": "dash",
   },
   {
-    "name": "DASH-IF XLinks (onLoad)",
-    "url": "http://vm2.dashif.org/livesim-dev/periods_60/xlink_30/insertad_2/testpic_2s/Manifest.mpd",
-    "transport": "dash",
-    "live": true,
-  },
-  {
     "name": "Super SpeedWay",
     "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
     "transport": "smooth",
