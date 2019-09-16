@@ -33,7 +33,7 @@ documentation](./buffer_orchestrator.md).
 ## The PeriodBuffer ############################################################
 
 The ``PeriodBuffer`` creates and destroys ``AdaptationBuffer``s for a single
-manifest's Period.
+Manifest's Period.
 If no SourceBuffer was created, it lazily creates one (this only applies to
 custom SourceBuffer - not managed by the browser - like text).
 

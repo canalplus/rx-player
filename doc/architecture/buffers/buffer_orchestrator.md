@@ -22,11 +22,11 @@ Basically, the _BufferOrchestrator_:
 ## Multiple types handling #####################################################
 
 More often than not, content are divised into multiple "types": "audio", "video"
-or "text" segments, for example. They are often completely distinct in a
-manifest and as such, have to be downloaded and decoded separately.
+and "text" segments, for example. They are often completely distinct in a
+Manifest and as such, have to be downloaded and decoded separately.
 
 Each type has its own _SourceBuffer_. For "audio"/"video" contents, we use
-regular _MSE_ SourceBuffers.
+regular browser-defined _MSE_ SourceBuffers.
 For any other types, such as "text" and "image", we defined custom SourceBuffers
 implementation adapted to these type of contents.
 
@@ -79,6 +79,9 @@ Native SourceBuffers have several differences with the custom ones, especially:
   - They are in a way more "important" than custom ones. If a problem happens
     with a native SourceBuffer, we interrupt playback. For a custom one, we can
     just deactivate the SourceBuffer for the content.
+
+    For example, a problem with subtitles would just disable those with a
+    warning. For a video problem however, we fail immediately.
 
   - They affect buffering when custom SourceBuffers do not (no text segment for
     a part of the content means we will just not have subtitles, no audio
@@ -240,7 +243,8 @@ Which will then also download segments:
    ^
 ```
 
-If P1 needs segments again however (e.g. when the bitrate changes...)
+If P1 needs segments again however (e.g. when the bitrate or the language is
+changed):
 
 ```
    P1     P2
@@ -266,7 +270,8 @@ Once P1, goes full again, we re-create P2:
    ^
 ```
 
-_Note that we still have the segment pushed to P2 available_
+_Note that we still have the segment pushed to P2 available in the corresponding
+SourceBuffer_
 
 When the current position go ahead of a _PeriodBuffer_ (here ahead of P1):
 

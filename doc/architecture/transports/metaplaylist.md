@@ -2,7 +2,7 @@
 
 The MetaPlaylist is a specific kind of transport: a playlist of different
 Manifest.
-Its principle and usage is defined [here](../api/metaplaylist.md).
+Its principle and usage is defined [here](../../api/metaplaylist.md).
 
 
 ## How the original Manifest files are considered ##############################
@@ -12,8 +12,8 @@ downloaded and parsed through their original logic (a `MPD` through DASH's
 logic and a Smooth Manifest through Smooth's logic).
 
 We then merge each of these Manifest, to construct an internal
-[manifest object](./manifest.md) with the same structure and properties than we
-would have with a DASH or Smooth manifest.
+[Manifest object](../../api/manifest.md) with the same structure and properties
+than we would have with a DASH or Smooth manifest.
 
 The trick is to consider each of those original Manifest as different Periods
 (like DASH Periods). The trick works here because the RxPlayer's definition of a

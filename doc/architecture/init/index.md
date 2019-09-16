@@ -8,7 +8,7 @@ The Init is the part of the code starting the logic behind playing a content.
 Its code is written in the ``src/core/init`` directory.
 
 Every time you're calling the API to load a new video, the init is called by it
-with a handful of arguments.
+(with multiple options).
 
 The Init then starts loading the content and communicate back its progress to
 the API through events.
@@ -27,7 +27,7 @@ the API through events.
                                             +--------------+
 ```
 During the various events happening on content playback, the Init will create /
-destroy / update various player blocks. Such example of blocks are:
+destroy / update various player blocks. Example of such blocks are:
 
   - Adaptive streaming management
 
@@ -75,7 +75,8 @@ Thus, there is three ways the API and Init can communicate:
 
   - Init -> API: Through events emitted by the returned Observable
 
-  - API -> Init: Through Observables/Subjects the Init is in possession of.
+  - API -> Init: Through Observables/Subjects the Init function is in possession
+    of.
 
 
 ### Emitted Events #############################################################
@@ -107,4 +108,4 @@ There can be three occasions for these updates:
     API set another speed.
 
   - the content has built enough buffer to un-pause.
-    The regular speed set by the user will be set.
+    The regular speed set by the user will be set again in that case.

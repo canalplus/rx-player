@@ -39,15 +39,14 @@ It also keeps an inventory of all segments currently contained in it, with the
 help of a `SegmentInventory` (see corresponding chapter).
 
 It is the main interface the rest of the RxPlayer code has with SourceBuffers.
-As a wrapper it copy most of the original browser API to lower the cognitive
-complexity of using it.
 
 
 
 ## BufferGarbageCollector ######################################################
 
 The BufferGarbageCollector is a function used by the RxPlayer to
-periodically perform "garbage collection" manually on a given SourceBuffer.
+periodically perform "garbage collection" manually on a given
+`QueuedSourceBuffer`.
 
 It is based on the following building bricks:
 
@@ -66,14 +65,12 @@ Basically, each times the given clock ticks, the BufferGarbageCollector will
 ensure that the volume of data before and ahead of the current position does not
 grow into a larger value than what is configured.
 
-One of them is created per SourceBuffer.
-
 
 
 ## The SegmentInventory ########################################################
 
-The ``SegmentInventory`` keeps track of which segments is currently bufferized
-to avoid unnecessary re-downloadings of them.
+The ``SegmentInventory`` keeps track of which segments are currently bufferized
+to avoid unnecessary re-downloads.
 
 You can have more information on it in [the SegmentInventory
 documentation](./segment_inventory.md).

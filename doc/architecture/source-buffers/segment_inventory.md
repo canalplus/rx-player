@@ -5,7 +5,7 @@
 
 The SegmentInventory is a class which registers some information about every
 segments currently present in a SourceBuffer.
-The RxPlayer creates one of them for each SourceBuffer created.
+One of them is created for every new `QueuedSourceBuffer`.
 
 This helps buffers to avoid re-downloading segments unnecessarily and know when
 old one have been garbage collected.

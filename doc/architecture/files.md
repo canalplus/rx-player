@@ -54,7 +54,8 @@ At the time of writing, there are two demos:
 Store the player builds of the last version released.
 
 Contains two files: the minified (``rx-player.min.js``) and the non-minified
-files (``rx-player.js``). Both are automatically generated with scripts.
+files (``rx-player.js``). Both are automatically generated with scripts at every
+new release.
 
 Two directories, namely ``_esm5.raw`` and ``_esm5.processed`` can also be
 generated in here if the right scripts are called.
@@ -81,8 +82,10 @@ Contains various scripts used to help the test and the management of the player
 code.
 
 For example:
+  - generating one of the demo and starting the server to run it
   - deploying the demo or doc to github pages
-  - updating the player version...
+  - updating the player version
+  - generating the rx-player build before publishing on npm
 
 
 <a name="src"></a>
@@ -132,9 +135,15 @@ chapter.
 SourceBuffers are the JavaScript objects through which media segments are added
 to the browser.
 
-Definition are usually already provided by the browser for Audio and Video
-contents. This directory allows to implement completely in JavaScript
-SourceBuffers for other type of media (e.g. text, overlays, images...).
+Definition are usually already provided by the browser for the Audio and Video
+SourceBuffers. This directory allows to implement in JavaScript SourceBuffers
+for other type of media (e.g. text, overlays, images...).
+
+For example, when a new text chunk is pushed to the text SourceBuffer, the
+custom text SourceBuffer will:
+  - update its buffered information
+  - call the corresponding text parser
+  - display the right subtitle at the right timecode
 
 
 <a name="src-errors"></a>
@@ -147,8 +156,8 @@ accessible through the API.
 <a name="src-experimental"></a>
 ### src/experimental/: Experimental features ###################################
 
-You will find here experimental features, which are features who might
-completely change their API in each player version.
+You will find here experimental features. Those are tested features who might
+completely change their API in new player versions.
 
 
 <a name="src-features"></a>
@@ -164,8 +173,9 @@ to initialize and update them.
 <a name="src-manifest"></a>
 ### src/manifest/: The Manifest class ##########################################
 
-Defines a common manifest class, regardless of the streaming technology (DASH,
-HSS...).
+Defines a common `Manifest` class, regardless of the streaming technology (DASH,
+HSS...). This class is then used by the rest of the RxPlayer, to allow
+interaction with it without considering the underlying technology used.
 
 
 <a name="src-transports"></a>
@@ -173,8 +183,8 @@ HSS...).
 
 Defines a common interface for multiple streaming technologies (DASH, HSS).
 
-What is exported there are functions to load and parse:
-  - manifests
+What is exported there are functions to load:
+  - Manifests/MPDs
   - video/audio segments
   - subtitles tracks
   - image tracks
@@ -186,10 +196,15 @@ the code is exported in the index.js file at the root of this directory.
 
 
 <a name="src-parsers"></a>
-### src/parsers/: The parsing files ############################################
+### src/parsers/: The parsers ##################################################
 
-Functions to parse given formats (isobmff, ttml, sami, DASH and HSS manifests
-etc.).
+Functions to parse various formats into the same interface.
+
+The parsed data being either:
+  - Manifest documents: DASH's MPD, HSS's Manifest...
+  - containers: ISOBMFF (CMAF, fMP4, MP4), Matroska (MKV, WEBM)
+  - text tracks: TTML, SAMI, SRT, WebVTT
+  - image containers: BIF
 
 
 <a name="src-typings"></a>
@@ -242,7 +257,7 @@ interact with.
 ### src/core/buffers/: The Buffer management ###################################
 
 The code there calculate which segments should be downloaded, ask for their
-download and push the segments into the sourceBuffers.
+download and push the segments into the SourceBuffers.
 
 
 <a name="core-eme"></a>
@@ -258,8 +273,8 @@ Handle the segment downloading pipelines (load and parse) as defined in the
 ``src/transports/`` directory.
 
 This is the layer directly interacting with the transport part (HSS, DASH).
-It facilitates the role of loading manifest and new segments for the rest of the
-core.
+It facilitates the role of loading the Manifest and new segments for the rest of
+the core.
 
 
 <a name="core-sb"></a>

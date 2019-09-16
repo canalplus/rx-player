@@ -111,7 +111,7 @@ finished downloading it:
 The Manifest parser is a function whose role is to parse the Manifest in its
 original form to convert it to the RxPlayer's internal representation of it.
 
-It receives in argument the downloaded Manifest, some manifest-related
+It receives in argument the downloaded Manifest, some Manifest-related
 information (e.g. its URL) and a specific function called `scheduleRequest`,
 allowing it to ask for supplementary requests before completing (e.g. to fetch
 the current time from an URL or to load sub-parts of the Manifests only known
@@ -161,8 +161,8 @@ segment.
                         +----------+
 ```
 
-The events sent depend on the "mode" chosen by the loader to download the
-segment. There is two possible modes:
+The events sent in output depend on the "mode" chosen by the loader to download
+the segment. There are two possible modes:
 
   - the regular mode, where the loader wait for the segments to be completely
     downloaded before sending it
@@ -171,13 +171,18 @@ segment. There is two possible modes:
     time they are downloaded.
 
 The latter mode is usually active under the following conditions:
-  - low-latency streaming is enabled through the corresponding `loadVideo` option
+  - low-latency streaming is enabled through the corresponding `loadVideo`
+    option
   - we're loading a DASH content.
   - we're not loading an initialization segment.
+  - the segment is in a CMAF container
+  - the `Fetch` JS API is available
 
 In most other cases, it will be in the regular mode.
 
-You can deduce which mode it was in simply by looking a the events it sends.
+You can deduce which mode we are in simply by looking a the events the loader
+sends.
+
 In the regular mode, any of the following events can be sent through the
 Observable:
 
@@ -186,19 +191,19 @@ Observable:
 
   - `"data-created"`: The segment is available without needing to perform a
     network request. This is usually the case when segments are generated like
-    smooth's initialization segments.
+    Smooth Streaming's initialization segments.
     The segment's data is also communicated via this event.
 
     The `"data-created"` event, when sent, is the last event sent from the
-    loader. The loader will complete just after.
+    loader. The loader will complete just after emitting it.
 
   - `"data-loaded"`: The segment has been compeletely downloaded from the
     network. The segment's data is also communicated via this event.
 
     Like `"data-created"`, the `"data-loaded"` will be the last event sent by
     the loader.
-    This means that you either have a single `"data-created"` event or a single
-    `"data-loaded"` event with the data when the segment has been loaded
+    This means that you will either have a single `"data-created"` event or a
+    single `"data-loaded"` event with the data when the segment has been loaded
     succesfully.
 
 In the low-latency mode, the following events can be sent instead:
@@ -207,7 +212,7 @@ In the low-latency mode, the following events can be sent instead:
     currently downloaded, the time since the beginning of the request...)
 
   - `"data-chunk"`: A sub-segment (or chunk) of the data is currently available.
-    The corresponding sub-segment is communicated via this event.
+    The corresponding sub-segment is communicated in the payload of this event.
 
     This event can be communicated multiple times until a
     `"data-chunk-complete"` event is received.
@@ -215,7 +220,8 @@ In the low-latency mode, the following events can be sent instead:
   - `"data-chunk-complete"`: The segment request just finished. All
     corresponding data has been sent through `"data-chunk"` events.
 
-    If sent, this is the last event sent by a segment loader.
+    If sent, this is the last event sent by a segment loader. The loader will
+    complete just after emitting it.
 
 
 
@@ -225,10 +231,10 @@ A segment parser is a function whose role is to extract some information from
 the segment's data:
   - what its precize start time and duration is
   - whether the segment should be offseted when decoded and by what amount
-  - the decodable data (which can be wrapped in a container e.g.  subtitles
-    in an ISOBMFF file).
+  - the decodable data (which can be wrapped in a container e.g. subtitles in an
+    ISOBMFF container).
 
-It receives the segment or sub-segment as argument and related information
+It receives the segment or sub-segment as argument and related information:
 ```
  INPUT:                                       OUTPUT:
  ------                                       -------

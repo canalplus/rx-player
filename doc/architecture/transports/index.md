@@ -8,7 +8,7 @@ the streaming protocols available into a unified API.
 
 Its roles are to:
 
-  - download the manifest and parse it into an object that can be understood
+  - download the Manifest and parse it into an object that can be understood
     by the core of the rx-player
 
   - download segments, convert them into a decodable format if needed, and
@@ -21,13 +21,18 @@ Its roles are to:
 As such, most network request needed by the player are directly performed by
 the `transports` code.
 
+Note: the only HTTP request which might be done elsewhere would be the request
+for a `directfile` content. That request is not done explicely with a JavaScript
+API but implicitely by the browser (inclusion of an `src` attribute).
+
 
 
 ## Implementation ##############################################################
 
 This code is completely divided by streaming protocols used.
-E.g.  `DASH` streaming is entirely defined in its own directory and same thing
-for `Smooth Streaming` or `MetaPlaylist` contents.
+E.g.  `DASH` streaming is entirely defined in its own directory and the same
+thing is true for `Smooth Streaming` or `MetaPlaylist` contents.
+
 When playing a `DASH` content only the DASH-related code will be called. When
 switching to a `Smooth Streaming` content, only the `Smooth Streaming` code
 will be used instead.
@@ -37,11 +42,12 @@ the same interface and abstracts the difference to the rest of the code.
 For the core of the rx-player, we do not have any difference between playing
 any of the streaming protocols available.
 
-This also means that all code relative to a specific streaming technology is
-completely within the `transports` directory.
+This also means that the code relative to a specific streaming technology is
+within the `transports` directory.
 This allows to greatly simplify code maintenance and evolutivity. For example,
 managing a new streaming protocol would mainly just need us to add some code
-there. Same thing for adding a new feature to e.g. `DASH` or `Smooth`.
+there (you might also need to add parsers in the `parsers` directory). Same
+thing for adding a new feature to e.g. `DASH` or `Smooth`.
 
 Each streaming protocol implementation present in the `transports` code exports
 a single `transport` function.

@@ -39,10 +39,10 @@ To do so, the SegmentPipelineManager creates Pipelines of different types
 Through those Pipelines, you can then schedule various segment requests with a
 given priority.
 
-The priority of this request is then corroborated with the
-priority of all requests currently pending in the SegmentPipelineManager (and
-not only with those on the current pipeline) to know when the request should
-effectively be done.
+The priority of this request is then corroborated with the priority of all
+requests currently pending in the SegmentPipelineManager (and not only with
+those on the current pipeline) to know when the request should effectively be
+done.
 
 During the lifecycle of the request, the Pipeline will communicate about data
 and metrics through several means - documented in the code.
@@ -51,7 +51,11 @@ and metrics through several means - documented in the code.
 
 Each Segment request can be linked to a priorization number.
 Such number will indicate which segment is needed more immediately than other
-(lower it is, the higher the priority of the segment is).
+(the lower it is, the higher the priority of the segment is).
+
+This is for example used to indicate that a very close video segment has a
+higher priority than some distant audio segment (both might be scheduled at the
+same time depending on the Buffer's logic).
 
 If the request has no priorization number, the lowest priorization number
 (the highest priority) will be set on it: ``0``

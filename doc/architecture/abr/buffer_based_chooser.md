@@ -6,7 +6,7 @@
                                   |
                                   v
                        +- - - - - + - - - - - - +
-    buffer gap [2]     | compute BOLA steps [1] |   maintanability score [3]
+    buffer gap [2]     | compute BOLA steps [1] |   maintainability score [3]
          |             +- - - - - - - - - - - - +           +
          |                        |                         |
          |                        v                         |
@@ -45,15 +45,16 @@ gap is updated).
 
 The RxPlayer has a mecanism that allows to replace low-quality buffered segments
 by higher quality ones if the current conditions improve.
-That leads to buffer gap not increasing when a chunk is added.
+That leads to the buffer gap not increasing when a chunk is added.
 That could mislead BOLA, and cause oscillations between chosen qualities.
 
-[3] In order to avoid this trend, we compute a maintanability score for currently
-downloaded quality. It is an [EWMA](https://en.wikipedia.org/wiki/EWMA) of the
-ratio between segment duration and segment download time. If the score points
-that a quality is "maintanable", the algorithm shall not decide to decrease quality
-and is "allowed" to pick an upper quality. Conversely, when a quality may
-not be downloadable fast enough, the BOLA is "allowed" to decrease the estimated
-quality, and shall not decide tu increase it.
+[3] In order to avoid this trend, we compute a maintainability score for the
+currently downloaded quality. It is an [EWMA
+](https://en.wikipedia.org/wiki/EWMA) of the ratio between segment duration and
+segment download time. If the score points that a quality is "maintainable", the
+algorithm shall not decide to decrease quality and is "allowed" to pick an upper
+quality. Conversely, when a quality may not be downloadable fast enough, the
+BOLA is "allowed" to decrease the estimated quality, and shall not decide to
+increase it.
 
-If no maintanability score is computed, then BOLA works in a normal way.
+If no maintanaibility score is computed, then BOLA works the regular way.

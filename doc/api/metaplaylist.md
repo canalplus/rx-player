@@ -45,7 +45,7 @@ MetaPlaylist has several advantages. Some of them are:
   - this file rarely needs to be updated, improving the caching of this
     ressource.
 
-  - its format is extremely simple and in JSON, which is easy to integrate with
+  - its format is very simple and in JSON, which is easy to integrate with
     JavaScript codebases. The file can even be very easily generated directly on
     the client's page. This paves the way for contents personalized to a single
     customer.
@@ -58,7 +58,8 @@ MetaPlaylist has several advantages. Some of them are:
     what is permitted.
 
   - All its features have been tested on web applications, meaning that you have
-    the guarantee everything will work on any browser, even IE11.
+    the guarantee everything will work on most MSE-compatible browsers, even
+    IE11.
 
 
 
@@ -77,19 +78,19 @@ For a VOD content:
     {
       "url": "http://url.to.some/DASH/first_content.mpd",
       "startTime": 0,
-      "endTime": 10000,
+      "endTime": 100.38,
       "transport": "dash"
     },
     {
       "url": "http://url.to.some/DASH/second_content.Manifest",
-      "startTime": 10000,
-      "endTime": 40000,
+      "startTime": 100.38,
+      "endTime": 372,
       "transport": "smooth"
     },
     {
       "url": "http://url.to.some/Smooth/third_content.mpd",
-      "startTime": 40000,
-      "endTime": 60000,
+      "startTime": 372,
+      "endTime": 450.787,
       "transport": "dash"
     }
   ]
@@ -102,24 +103,24 @@ For a live content:
   "type": "MPL",
   "version": "0.1",
   "dynamic": true,
-  "pollInterval": 10000,
+  "pollInterval": 5,
   "contents": [
     {
       "url": "http://url.to.some/DASH/content.mpd",
-      "startTime": 1545845950176,
-      "endTime": 1545845985571,
+      "startTime": 1545845950.176,
+      "endTime": 1545845985.571,
       "transport": "dash"
     },
     {
       "url": "http://url.to.some/other/DASH/content.mpd",
-      "startTime": 1545845985571,
-      "endTime": 1545845998710,
+      "startTime": 1545845985.571,
+      "endTime": 1545845998.710,
       "transport": "dash"
     },
     {
       "url": "http://url.to.some/Smooth/content.Manifest",
-      "startTime": 1545845998710,
-      "endTime": 1545845117106,
+      "startTime": 1545845998.710,
+      "endTime": 1545845117,
       "transport": "smooth"
     }
   ]
@@ -132,11 +133,16 @@ Let's define nonetheless every property in that JSON file.
 
 ### the header #################################################################
 
-What I call the "header" here is roughly all properties but "contents".
+What I call the "header" here is roughly all root properties but "contents".
 
-Here is an exhaustive list:
+Here is an exhaustive list of what you should put there:
 
-  - type (`string`): should always be equal to `"MPL"`, for "MetaPlayList"
+  - type (`string`): should always be equal to `"MPL"`, for "MetaPlayList".
+
+    The purpose of this value is to facilitate the checks a player might want to
+    perform to verify that it is handling a MetaPlaylist file.
+    The end goal would be for example to improve error reporting for very
+    frequent mistakes like not providing the URL of the right content.
 
   - version (`string`): version of the MetaPlaylist file. Separated in two parts
     by a point ('.').
@@ -163,17 +169,21 @@ Here is an exhaustive list:
     content: A player should end when the end of the last content has been
     reached.
 
-    By default, it is considered as not dynamic (so `false`).
+    This property is not mandatory and as such can be omitted. By default, it is
+    considered as not dynamic (so `false`).
 
-  - pollInterval (`number`|`undefined`): This property is not required.
+  - pollInterval (`number`|`undefined`): If not set or set to a negative number,
+    the MetaPlaylist file does not need to be reloaded.
 
-    If not set or set to a negative number, you do not need to refresh the
-    MetaPlaylist file.
+    If set to a positive number, this is the maximum interval in seconds at
+    which the MetaPlaylist file should be fetched from the server (which means
+    that the MetaPlaylist could be refreshed more often depending on the current
+    conditions).
 
-    If set to a positive number, this is the maximum interval in milliseconds
-    the MetaPlaylist file should be fetched from the server.
+    This should only be defined for dynamic contents.
 
-    This is mainly useful for dynamic contents, which evolve over time.
+    This property is not mandatory and as such can be omitted. By default, it is
+    equivalent to `-1` (which means no reload).
 
 
 ### The contents ###############################################################
@@ -193,13 +203,13 @@ list of its properties:
       - Smooth content that have their `isLive` attribute not set to `true`
     (Simply put, only on-demand contents are supported for the moment).
 
-  - startTime (`number`): time at which the beginning of this content should be
-    played.
+  - startTime (`number`): time, in seconds, at which the beginning of this
+    content should be played.
     This will correspond to the start time of the first Period in DASH or the
     first Chunk defined for Smooth content.
 
-  - endTime (`number`): unix time at which the content should end. It the
-    original content is longer, it will be finished at that time instead.
+  - endTime (`number`): time, in seconds, at which the content should end. It
+    the original content is longer, it will be finished at that time instead.
     The original content should not be shorter.
 
   - transport (`string`): indicates the original streaming protocol.
@@ -221,7 +231,8 @@ should be the same value than the `startTime` of the following one).
 The `"METAPLAYLIST"` feature is not included in the default RxPlayer build.
 
 There's two way you can import it, depending on if you're relying on the minimal
-version or if you prefer to make use of environment variables.
+version or if you prefer to make use of environment variables and build the
+player manually.
 
 
 #### Through the minimal version of the RxPlayer
@@ -278,8 +289,10 @@ it, you can serve directly the file through the use of a Manifest Loader:
 player.loadVideo({
   transport: "metaplaylist",
   transportOptions: {
-    // Note: `_url` will here be `undefined`
+    // Note: `_url` here will be `undefined`
     manifestLoader(_url, callbacks) {
+      // where `myMetaPlaylistObject` is the MetaPlaylist in either Object or
+      // String form
       callbacks.resolve({ data: myMetaPlaylistObject });
     }
   }
@@ -291,7 +304,7 @@ More infos on the `manifestLoader` can be found
 
 ### Defining an initial position for a dynamic MetaPlaylist ####################
 
-As already explained, a MetaPlaylist can either be dynamic or not.
+As already explained, a MetaPlaylist can either be dynamic or static.
 
 For calculating the initial position of those contents, the RxPlayer will obey
 [the same rules than for other contents](../infos/initial_position.md).
@@ -299,14 +312,15 @@ For calculating the initial position of those contents, the RxPlayer will obey
 As such, dynamic MetaPlaylist contents will by default start just before the end
 of the last defined content which might not be what you want.
 
-In those case, you can make usage of the `serverSyncInfos` transport options
-when calling `loadVideo`, to indicate which time in the MetaPlaylist is the live
-time.
+In those cases, you can make usage of the `serverSyncInfos` transport options
+when calling `loadVideo` to indicate the current time and construct the
+MetaPlaylist by using unix time for each content's `startTime` and `endTime`.
+
 The `serverSyncInfos` option is explained [in the `transportOptions`
 documentation](./loadVideo_options.md#prop-transportOptions).
 
-For example, if you trust the user's clock to indicate that time, you can use
-the `Date.now()` api:
+For example, if you trust the user's system clock to indicate the current live
+time (in most cases this is risky however), you can use the `Date.now()` api:
 ```js
 const serverSyncInfos = {
   serverTimestamp: Date.now(),

@@ -45,8 +45,8 @@ This algorithm constructs a queue of segments to download at any time, and
 regularly checks that the segment currently downloaded still corresponds to the
 currently most needed Segment.
 
-This list of segments is based on a simple calculus between the current position
-and the buffer size we want to achieve.
+This list of segments is based on a simple calculation between the current
+position and the buffer size we want to achieve.
 This list goes then through multiple filters to ensure we're not queueing them
 unnecessarly. Such cases would be, for example, if the segment is already
 present in the SourceBuffer at a better quality.
