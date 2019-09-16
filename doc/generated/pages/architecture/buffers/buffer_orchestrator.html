@@ -32,10 +32,10 @@ play in the best conditions possible.</p>
 <p><a name="chapter-Multiple%20types%20handling"></a></p>
 <h2>Multiple types handling</h2>
 <p>More often than not, content are divised into multiple &#x201C;types&#x201D;: &#x201C;audio&#x201D;, &#x201C;video&#x201D;
-or &#x201C;text&#x201D; segments, for example. They are often completely distinct in a
-manifest and as such, have to be downloaded and decoded separately.</p>
+and &#x201C;text&#x201D; segments, for example. They are often completely distinct in a
+Manifest and as such, have to be downloaded and decoded separately.</p>
 <p>Each type has its own <em>SourceBuffer</em>. For &#x201C;audio&#x201D;/&#x201C;video&#x201D; contents, we use
-regular <em>MSE</em> SourceBuffers.
+regular browser-defined <em>MSE</em> SourceBuffers.
 For any other types, such as &#x201C;text&#x201D; and &#x201C;image&#x201D;, we defined custom SourceBuffers
 implementation adapted to these type of contents.</p>
 <p>We then create a different Buffer for each type. Each will progressively
@@ -89,6 +89,8 @@ has been linked to the MediaSource</p>
 <p>They are in a way more &#x201C;important&#x201D; than custom ones. If a problem happens
 with a native SourceBuffer, we interrupt playback. For a custom one, we can
 just deactivate the SourceBuffer for the content.</p>
+<p>For example, a problem with subtitles would just disable those with a
+warning. For a video problem however, we fail immediately.</p>
 </li>
 <li>
 <p>They affect buffering when custom SourceBuffers do not (no text segment for
@@ -222,7 +224,8 @@ actively downloading segments (the &#x201C;^&#x201D; sign is the current positio
 |======|==    |
    ^
 </code></pre>
-<p>If P1 needs segments again however (e.g. when the bitrate changes&#x2026;)</p>
+<p>If P1 needs segments again however (e.g. when the bitrate or the language is
+changed):</p>
 <pre><code>   P1     P2
 |===   |==    |
    ^
@@ -238,7 +241,8 @@ actively downloading segments (the &#x201C;^&#x201D; sign is the current positio
 |======|==    |
    ^
 </code></pre>
-<p><em>Note that we still have the segment pushed to P2 available</em></p>
+<p><em>Note that we still have the segment pushed to P2 available in the corresponding
+SourceBuffer</em></p>
 <p>When the current position go ahead of a <em>PeriodBuffer</em> (here ahead of P1):</p>
 <pre><code>   P1     P2
 |======|===   |

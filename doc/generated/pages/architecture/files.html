@@ -14,7 +14,7 @@
 <li><a href="#subchapter-src/features/:%20Feature%20switching">src/features/: Feature switching</a></li>
 <li><a href="#subchapter-src/manifest/:%20The%20Manifest%20class">src/manifest/: The Manifest class</a></li>
 <li><a href="#subchapter-src/transports/:%20The%20transport%20protocols">src/transports/: The transport protocols</a></li>
-<li><a href="#subchapter-src/parsers/:%20The%20parsing%20files">src/parsers/: The parsing files</a></li>
+<li><a href="#subchapter-src/parsers/:%20The%20parsers">src/parsers/: The parsers</a></li>
 <li><a href="#subchapter-src/typings/:%20Typescript%20typings">src/typings/: Typescript typings</a></li>
 <li><a href="#subchapter-src/utils/:%20The%20utils">src/utils/: The utils</a></li>
 </ul>
@@ -57,7 +57,8 @@ the displayed page.</p>
 <h2>The dist/ directory: Player builds</h2>
 <p>Store the player builds of the last version released.</p>
 <p>Contains two files: the minified (<code>rx-player.min.js</code>) and the non-minified
-files (<code>rx-player.js</code>). Both are automatically generated with scripts.</p>
+files (<code>rx-player.js</code>). Both are automatically generated with scripts at every
+new release.</p>
 <p>Two directories, namely <code>_esm5.raw</code> and <code>_esm5.processed</code> can also be
 generated in here if the right scripts are called.
 These allow to publish more modular codebases to npm.</p>
@@ -84,8 +85,10 @@ APIs are deprecated)</p>
 code.</p>
 <p>For example:</p>
 <ul>
+<li>generating one of the demo and starting the server to run it</li>
 <li>deploying the demo or doc to github pages</li>
-<li>updating the player version&#x2026;</li>
+<li>updating the player version</li>
+<li>generating the rx-player build before publishing on npm</li>
 </ul>
 <p><a name="src"></a>
 <a name="chapter-The%20src/%20directory:%20the%20source%20code"></a></p>
@@ -124,9 +127,16 @@ chapter.</p>
 <h3>src/custom_source_buffers/: Custom SourceBuffers definitions</h3>
 <p>SourceBuffers are the JavaScript objects through which media segments are added
 to the browser.</p>
-<p>Definition are usually already provided by the browser for Audio and Video
-contents. This directory allows to implement completely in JavaScript
-SourceBuffers for other type of media (e.g. text, overlays, images&#x2026;).</p>
+<p>Definition are usually already provided by the browser for the Audio and Video
+SourceBuffers. This directory allows to implement in JavaScript SourceBuffers
+for other type of media (e.g. text, overlays, images&#x2026;).</p>
+<p>For example, when a new text chunk is pushed to the text SourceBuffer, the
+custom text SourceBuffer will:</p>
+<ul>
+<li>update its buffered information</li>
+<li>call the corresponding text parser</li>
+<li>display the right subtitle at the right timecode</li>
+</ul>
 <p><a name="src-errors"></a>
 <a name="subchapter-src/errors/:%20Error%20definitions"></a></p>
 <h3>src/errors/: Error definitions</h3>
@@ -135,8 +145,8 @@ accessible through the API.</p>
 <p><a name="src-experimental"></a>
 <a name="subchapter-src/experimental/:%20Experimental%20features"></a></p>
 <h3>src/experimental/: Experimental features</h3>
-<p>You will find here experimental features, which are features who might
-completely change their API in each player version.</p>
+<p>You will find here experimental features. Those are tested features who might
+completely change their API in new player versions.</p>
 <p><a name="src-features"></a>
 <a name="subchapter-src/features/:%20Feature%20switching"></a></p>
 <h3>src/features/: Feature switching</h3>
@@ -147,15 +157,16 @@ to initialize and update them.</p>
 <p><a name="src-manifest"></a>
 <a name="subchapter-src/manifest/:%20The%20Manifest%20class"></a></p>
 <h3>src/manifest/: The Manifest class</h3>
-<p>Defines a common manifest class, regardless of the streaming technology (DASH,
-HSS&#x2026;).</p>
+<p>Defines a common <code>Manifest</code> class, regardless of the streaming technology (DASH,
+HSS&#x2026;). This class is then used by the rest of the RxPlayer, to allow
+interaction with it without considering the underlying technology used.</p>
 <p><a name="src-transports"></a>
 <a name="subchapter-src/transports/:%20The%20transport%20protocols"></a></p>
 <h3>src/transports/: The transport protocols</h3>
 <p>Defines a common interface for multiple streaming technologies (DASH, HSS).</p>
-<p>What is exported there are functions to load and parse:</p>
+<p>What is exported there are functions to load:</p>
 <ul>
-<li>manifests</li>
+<li>Manifests/MPDs</li>
 <li>video/audio segments</li>
 <li>subtitles tracks</li>
 <li>image tracks</li>
@@ -164,10 +175,16 @@ HSS&#x2026;).</p>
 <p>As in most of the code of the rx-player, everything used in the other parts of
 the code is exported in the index.js file at the root of this directory.</p>
 <p><a name="src-parsers"></a>
-<a name="subchapter-src/parsers/:%20The%20parsing%20files"></a></p>
-<h3>src/parsers/: The parsing files</h3>
-<p>Functions to parse given formats (isobmff, ttml, sami, DASH and HSS manifests
-etc.).</p>
+<a name="subchapter-src/parsers/:%20The%20parsers"></a></p>
+<h3>src/parsers/: The parsers</h3>
+<p>Functions to parse various formats into the same interface.</p>
+<p>The parsed data being either:</p>
+<ul>
+<li>Manifest documents: DASH&#x2019;s MPD, HSS&#x2019;s Manifest&#x2026;</li>
+<li>containers: ISOBMFF (CMAF, fMP4, MP4), Matroska (MKV, WEBM)</li>
+<li>text tracks: TTML, SAMI, SRT, WebVTT</li>
+<li>image containers: BIF</li>
+</ul>
 <p><a name="src-typings"></a>
 <a name="subchapter-src/typings/:%20Typescript%20typings"></a></p>
 <h3>src/typings/: Typescript typings</h3>
@@ -205,7 +222,7 @@ interact with.</p>
 <a name="subchapter-src/core/buffers/:%20The%20Buffer%20management"></a></p>
 <h3>src/core/buffers/: The Buffer management</h3>
 <p>The code there calculate which segments should be downloaded, ask for their
-download and push the segments into the sourceBuffers.</p>
+download and push the segments into the SourceBuffers.</p>
 <p><a name="core-eme"></a>
 <a name="subchapter-src/core/eme/:%20Encryption%20management"></a></p>
 <h3>src/core/eme/: Encryption management</h3>
@@ -216,8 +233,8 @@ download and push the segments into the sourceBuffers.</p>
 <p>Handle the segment downloading pipelines (load and parse) as defined in the
 <code>src/transports/</code> directory.</p>
 <p>This is the layer directly interacting with the transport part (HSS, DASH).
-It facilitates the role of loading manifest and new segments for the rest of the
-core.</p>
+It facilitates the role of loading the Manifest and new segments for the rest of
+the core.</p>
 <p><a name="core-sb"></a>
 <a name="subchapter-src/core/source_buffers/:%20SourceBuffers%20definitions"></a></p>
 <h3>src/core/source_buffers/: SourceBuffers definitions</h3>

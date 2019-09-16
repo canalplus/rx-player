@@ -94,7 +94,7 @@ finished downloading it:</p>
 <h2>Manifest parser</h2>
 <p>The Manifest parser is a function whose role is to parse the Manifest in its
 original form to convert it to the RxPlayer&#x2019;s internal representation of it.</p>
-<p>It receives in argument the downloaded Manifest, some manifest-related
+<p>It receives in argument the downloaded Manifest, some Manifest-related
 information (e.g. its URL) and a specific function called <code>scheduleRequest</code>,
 allowing it to ask for supplementary requests before completing (e.g. to fetch
 the current time from an URL or to load sub-parts of the Manifests only known
@@ -135,8 +135,8 @@ segment.</p>
                         |          |
                         +----------+
 </code></pre>
-<p>The events sent depend on the &#x201C;mode&#x201D; chosen by the loader to download the
-segment. There is two possible modes:</p>
+<p>The events sent in output depend on the &#x201C;mode&#x201D; chosen by the loader to download
+the segment. There are two possible modes:</p>
 <ul>
 <li>
 <p>the regular mode, where the loader wait for the segments to be completely
@@ -149,13 +149,17 @@ time they are downloaded.</p>
 </ul>
 <p>The latter mode is usually active under the following conditions:</p>
 <ul>
-<li>low-latency streaming is enabled through the corresponding <code>loadVideo</code> option</li>
+<li>low-latency streaming is enabled through the corresponding <code>loadVideo</code>
+option</li>
 <li>we&#x2019;re loading a DASH content.</li>
 <li>we&#x2019;re not loading an initialization segment.</li>
+<li>the segment is in a CMAF container</li>
+<li>the <code>Fetch</code> JS API is available</li>
 </ul>
 <p>In most other cases, it will be in the regular mode.</p>
-<p>You can deduce which mode it was in simply by looking a the events it sends.
-In the regular mode, any of the following events can be sent through the
+<p>You can deduce which mode we are in simply by looking a the events the loader
+sends.</p>
+<p>In the regular mode, any of the following events can be sent through the
 Observable:</p>
 <ul>
 <li>
@@ -165,18 +169,18 @@ currently downloaded, the time since the beginning of the request&#x2026;)</p>
 <li>
 <p><code>&quot;data-created&quot;</code>: The segment is available without needing to perform a
 network request. This is usually the case when segments are generated like
-smooth&#x2019;s initialization segments.
+Smooth Streaming&#x2019;s initialization segments.
 The segment&#x2019;s data is also communicated via this event.</p>
 <p>The <code>&quot;data-created&quot;</code> event, when sent, is the last event sent from the
-loader. The loader will complete just after.</p>
+loader. The loader will complete just after emitting it.</p>
 </li>
 <li>
 <p><code>&quot;data-loaded&quot;</code>: The segment has been compeletely downloaded from the
 network. The segment&#x2019;s data is also communicated via this event.</p>
 <p>Like <code>&quot;data-created&quot;</code>, the <code>&quot;data-loaded&quot;</code> will be the last event sent by
 the loader.
-This means that you either have a single <code>&quot;data-created&quot;</code> event or a single
-<code>&quot;data-loaded&quot;</code> event with the data when the segment has been loaded
+This means that you will either have a single <code>&quot;data-created&quot;</code> event or a
+single <code>&quot;data-loaded&quot;</code> event with the data when the segment has been loaded
 succesfully.</p>
 </li>
 </ul>
@@ -188,14 +192,15 @@ currently downloaded, the time since the beginning of the request&#x2026;)</p>
 </li>
 <li>
 <p><code>&quot;data-chunk&quot;</code>: A sub-segment (or chunk) of the data is currently available.
-The corresponding sub-segment is communicated via this event.</p>
+The corresponding sub-segment is communicated in the payload of this event.</p>
 <p>This event can be communicated multiple times until a
 <code>&quot;data-chunk-complete&quot;</code> event is received.</p>
 </li>
 <li>
 <p><code>&quot;data-chunk-complete&quot;</code>: The segment request just finished. All
 corresponding data has been sent through <code>&quot;data-chunk&quot;</code> events.</p>
-<p>If sent, this is the last event sent by a segment loader.</p>
+<p>If sent, this is the last event sent by a segment loader. The loader will
+complete just after emitting it.</p>
 </li>
 </ul>
 <p><a name="chapter-Segment%20parser"></a></p>
@@ -205,10 +210,10 @@ the segment&#x2019;s data:</p>
 <ul>
 <li>what its precize start time and duration is</li>
 <li>whether the segment should be offseted when decoded and by what amount</li>
-<li>the decodable data (which can be wrapped in a container e.g.  subtitles
-in an ISOBMFF file).</li>
+<li>the decodable data (which can be wrapped in a container e.g. subtitles in an
+ISOBMFF container).</li>
 </ul>
-<p>It receives the segment or sub-segment as argument and related information</p>
+<p>It receives the segment or sub-segment as argument and related information:</p>
 <pre><code> INPUT:                                       OUTPUT:
  ------                                       -------
  Segment in a generic format +                Decodable data + time

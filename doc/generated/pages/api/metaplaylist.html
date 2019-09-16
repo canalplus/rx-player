@@ -59,7 +59,7 @@ request at the exact same time are much easier to implement.</p>
 ressource.</p>
 </li>
 <li>
-<p>its format is extremely simple and in JSON, which is easy to integrate with
+<p>its format is very simple and in JSON, which is easy to integrate with
 JavaScript codebases. The file can even be very easily generated directly on
 the client&#x2019;s page. This paves the way for contents personalized to a single
 customer.</p>
@@ -75,7 +75,8 @@ what is permitted.</p>
 </li>
 <li>
 <p>All its features have been tested on web applications, meaning that you have
-the guarantee everything will work on any browser, even IE11.</p>
+the guarantee everything will work on most MSE-compatible browsers, even
+IE11.</p>
 </li>
 </ul>
 <p><a name="chapter-Structure%20of%20a%20MetaPlaylist"></a></p>
@@ -90,19 +91,19 @@ the guarantee everything will work on any browser, even IE11.</p>
     {
       <span class="hljs-attr">&quot;url&quot;</span>: <span class="hljs-string">&quot;http://url.to.some/DASH/first_content.mpd&quot;</span>,
       <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">0</span>,
-      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">10000</span>,
+      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">100.38</span>,
       <span class="hljs-attr">&quot;transport&quot;</span>: <span class="hljs-string">&quot;dash&quot;</span>
     },
     {
       <span class="hljs-attr">&quot;url&quot;</span>: <span class="hljs-string">&quot;http://url.to.some/DASH/second_content.Manifest&quot;</span>,
-      <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">10000</span>,
-      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">40000</span>,
+      <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">100.38</span>,
+      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">372</span>,
       <span class="hljs-attr">&quot;transport&quot;</span>: <span class="hljs-string">&quot;smooth&quot;</span>
     },
     {
       <span class="hljs-attr">&quot;url&quot;</span>: <span class="hljs-string">&quot;http://url.to.some/Smooth/third_content.mpd&quot;</span>,
-      <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">40000</span>,
-      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">60000</span>,
+      <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">372</span>,
+      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">450.787</span>,
       <span class="hljs-attr">&quot;transport&quot;</span>: <span class="hljs-string">&quot;dash&quot;</span>
     }
   ]
@@ -113,24 +114,24 @@ the guarantee everything will work on any browser, even IE11.</p>
   <span class="hljs-attr">&quot;type&quot;</span>: <span class="hljs-string">&quot;MPL&quot;</span>,
   <span class="hljs-attr">&quot;version&quot;</span>: <span class="hljs-string">&quot;0.1&quot;</span>,
   <span class="hljs-attr">&quot;dynamic&quot;</span>: <span class="hljs-literal">true</span>,
-  <span class="hljs-attr">&quot;pollInterval&quot;</span>: <span class="hljs-number">10000</span>,
+  <span class="hljs-attr">&quot;pollInterval&quot;</span>: <span class="hljs-number">5</span>,
   <span class="hljs-attr">&quot;contents&quot;</span>: [
     {
       <span class="hljs-attr">&quot;url&quot;</span>: <span class="hljs-string">&quot;http://url.to.some/DASH/content.mpd&quot;</span>,
-      <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">1545845950176</span>,
-      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">1545845985571</span>,
+      <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">1545845950.176</span>,
+      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">1545845985.571</span>,
       <span class="hljs-attr">&quot;transport&quot;</span>: <span class="hljs-string">&quot;dash&quot;</span>
     },
     {
       <span class="hljs-attr">&quot;url&quot;</span>: <span class="hljs-string">&quot;http://url.to.some/other/DASH/content.mpd&quot;</span>,
-      <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">1545845985571</span>,
-      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">1545845998710</span>,
+      <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">1545845985.571</span>,
+      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">1545845998.710</span>,
       <span class="hljs-attr">&quot;transport&quot;</span>: <span class="hljs-string">&quot;dash&quot;</span>
     },
     {
       <span class="hljs-attr">&quot;url&quot;</span>: <span class="hljs-string">&quot;http://url.to.some/Smooth/content.Manifest&quot;</span>,
-      <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">1545845998710</span>,
-      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">1545845117106</span>,
+      <span class="hljs-attr">&quot;startTime&quot;</span>: <span class="hljs-number">1545845998.710</span>,
+      <span class="hljs-attr">&quot;endTime&quot;</span>: <span class="hljs-number">1545845117</span>,
       <span class="hljs-attr">&quot;transport&quot;</span>: <span class="hljs-string">&quot;smooth&quot;</span>
     }
   ]
@@ -140,11 +141,15 @@ the guarantee everything will work on any browser, even IE11.</p>
 Let&#x2019;s define nonetheless every property in that JSON file.</p>
 <p><a name="subchapter-the%20header"></a></p>
 <h3>the header</h3>
-<p>What I call the &#x201C;header&#x201D; here is roughly all properties but &#x201C;contents&#x201D;.</p>
-<p>Here is an exhaustive list:</p>
+<p>What I call the &#x201C;header&#x201D; here is roughly all root properties but &#x201C;contents&#x201D;.</p>
+<p>Here is an exhaustive list of what you should put there:</p>
 <ul>
 <li>
-<p>type (<code>string</code>): should always be equal to <code>&quot;MPL&quot;</code>, for &#x201C;MetaPlayList&#x201D;</p>
+<p>type (<code>string</code>): should always be equal to <code>&quot;MPL&quot;</code>, for &#x201C;MetaPlayList&#x201D;.</p>
+<p>The purpose of this value is to facilitate the checks a player might want to
+perform to verify that it is handling a MetaPlaylist file.
+The end goal would be for example to improve error reporting for very
+frequent mistakes like not providing the URL of the right content.</p>
 </li>
 <li>
 <p>version (<code>string</code>): version of the MetaPlaylist file. Separated in two parts
@@ -168,15 +173,19 @@ finished, and might need to be updated. If <code>false</code>, the MetaPlaylist 
 still need to be updated but its current content indicates a finished
 content: A player should end when the end of the last content has been
 reached.</p>
-<p>By default, it is considered as not dynamic (so <code>false</code>).</p>
+<p>This property is not mandatory and as such can be omitted. By default, it is
+considered as not dynamic (so <code>false</code>).</p>
 </li>
 <li>
-<p>pollInterval (<code>number</code>|<code>undefined</code>): This property is not required.</p>
-<p>If not set or set to a negative number, you do not need to refresh the
-MetaPlaylist file.</p>
-<p>If set to a positive number, this is the maximum interval in milliseconds
-the MetaPlaylist file should be fetched from the server.</p>
-<p>This is mainly useful for dynamic contents, which evolve over time.</p>
+<p>pollInterval (<code>number</code>|<code>undefined</code>): If not set or set to a negative number,
+the MetaPlaylist file does not need to be reloaded.</p>
+<p>If set to a positive number, this is the maximum interval in seconds at
+which the MetaPlaylist file should be fetched from the server (which means
+that the MetaPlaylist could be refreshed more often depending on the current
+conditions).</p>
+<p>This should only be defined for dynamic contents.</p>
+<p>This property is not mandatory and as such can be omitted. By default, it is
+equivalent to <code>-1</code> (which means no reload).</p>
 </li>
 </ul>
 <p><a name="subchapter-The%20contents"></a></p>
@@ -198,14 +207,14 @@ For now, only a subset of such contents is supported, mainly:</p>
 </ul>
 </li>
 <li>
-<p>startTime (<code>number</code>): time at which the beginning of this content should be
-played.
+<p>startTime (<code>number</code>): time, in seconds, at which the beginning of this
+content should be played.
 This will correspond to the start time of the first Period in DASH or the
 first Chunk defined for Smooth content.</p>
 </li>
 <li>
-<p>endTime (<code>number</code>): unix time at which the content should end. It the
-original content is longer, it will be finished at that time instead.
+<p>endTime (<code>number</code>): time, in seconds, at which the content should end. It
+the original content is longer, it will be finished at that time instead.
 The original content should not be shorter.</p>
 </li>
 <li>
@@ -227,7 +236,8 @@ should be the same value than the <code>startTime</code> of the following one).<
 <h3>Importing the METAPLAYLIST feature</h3>
 <p>The <code>&quot;METAPLAYLIST&quot;</code> feature is not included in the default RxPlayer build.</p>
 <p>There&#x2019;s two way you can import it, depending on if you&#x2019;re relying on the minimal
-version or if you prefer to make use of environment variables.</p>
+version or if you prefer to make use of environment variables and build the
+player manually.</p>
 <h4>Through the minimal version of the RxPlayer</h4>
 <p>If you&#x2019;re using the &#x201C;minimal&#x201D; version of the RxPlayer (through the
 <code>&quot;rx-player/minimal&quot;</code> import), you will need to import:</p>
@@ -267,8 +277,10 @@ it, you can serve directly the file through the use of a Manifest Loader:</p>
 <pre><code class="language-js">player.loadVideo({
   <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;metaplaylist&quot;</span>,
   <span class="hljs-attr">transportOptions</span>: {
-    <span class="hljs-comment">// Note: `_url` will here be `undefined`</span>
+    <span class="hljs-comment">// Note: `_url` here will be `undefined`</span>
     manifestLoader(_url, callbacks) {
+      <span class="hljs-comment">// where `myMetaPlaylistObject` is the MetaPlaylist in either Object or</span>
+      <span class="hljs-comment">// String form</span>
       callbacks.resolve({ <span class="hljs-attr">data</span>: myMetaPlaylistObject });
     }
   }
@@ -278,18 +290,18 @@ it, you can serve directly the file through the use of a Manifest Loader:</p>
 <a href="plugins.html#manifestLoader">here</a>.</p>
 <p><a name="subchapter-Defining%20an%20initial%20position%20for%20a%20dynamic%20MetaPlaylist"></a></p>
 <h3>Defining an initial position for a dynamic MetaPlaylist</h3>
-<p>As already explained, a MetaPlaylist can either be dynamic or not.</p>
+<p>As already explained, a MetaPlaylist can either be dynamic or static.</p>
 <p>For calculating the initial position of those contents, the RxPlayer will obey
 <a href="../infos/initial_position.html">the same rules than for other contents</a>.</p>
 <p>As such, dynamic MetaPlaylist contents will by default start just before the end
 of the last defined content which might not be what you want.</p>
-<p>In those case, you can make usage of the <code>serverSyncInfos</code> transport options
-when calling <code>loadVideo</code>, to indicate which time in the MetaPlaylist is the live
-time.
-The <code>serverSyncInfos</code> option is explained <a href="loadVideo_options.html#prop-transportOptions">in the <code>transportOptions</code>
+<p>In those cases, you can make usage of the <code>serverSyncInfos</code> transport options
+when calling <code>loadVideo</code> to indicate the current time and construct the
+MetaPlaylist by using unix time for each content&#x2019;s <code>startTime</code> and <code>endTime</code>.</p>
+<p>The <code>serverSyncInfos</code> option is explained <a href="loadVideo_options.html#prop-transportOptions">in the <code>transportOptions</code>
 documentation</a>.</p>
-<p>For example, if you trust the user&#x2019;s clock to indicate that time, you can use
-the <code>Date.now()</code> api:</p>
+<p>For example, if you trust the user&#x2019;s system clock to indicate the current live
+time (in most cases this is risky however), you can use the <code>Date.now()</code> api:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> serverSyncInfos = {
   <span class="hljs-attr">serverTimestamp</span>: <span class="hljs-built_in">Date</span>.now(),
   <span class="hljs-attr">clientTime</span>: performance.now(),

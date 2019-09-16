@@ -13,7 +13,7 @@ the streaming protocols available into a unified API.</p>
 <p>Its roles are to:</p>
 <ul>
 <li>
-<p>download the manifest and parse it into an object that can be understood
+<p>download the Manifest and parse it into an object that can be understood
 by the core of the rx-player</p>
 </li>
 <li>
@@ -27,23 +27,27 @@ conditions</p>
 </ul>
 <p>As such, most network request needed by the player are directly performed by
 the <code>transports</code> code.</p>
+<p>Note: the only HTTP request which might be done elsewhere would be the request
+for a <code>directfile</code> content. That request is not done explicely with a JavaScript
+API but implicitely by the browser (inclusion of an <code>src</code> attribute).</p>
 <p><a name="chapter-Implementation"></a></p>
 <h2>Implementation</h2>
 <p>This code is completely divided by streaming protocols used.
-E.g.  <code>DASH</code> streaming is entirely defined in its own directory and same thing
-for <code>Smooth Streaming</code> or <code>MetaPlaylist</code> contents.
-When playing a <code>DASH</code> content only the DASH-related code will be called. When
+E.g.  <code>DASH</code> streaming is entirely defined in its own directory and the same
+thing is true for <code>Smooth Streaming</code> or <code>MetaPlaylist</code> contents.</p>
+<p>When playing a <code>DASH</code> content only the DASH-related code will be called. When
 switching to a <code>Smooth Streaming</code> content, only the <code>Smooth Streaming</code> code
 will be used instead.</p>
 <p>To allow this logic, any streaming protocol exposed in <code>transports</code> exposes
 the same interface and abstracts the difference to the rest of the code.
 For the core of the rx-player, we do not have any difference between playing
 any of the streaming protocols available.</p>
-<p>This also means that all code relative to a specific streaming technology is
-completely within the <code>transports</code> directory.
+<p>This also means that the code relative to a specific streaming technology is
+within the <code>transports</code> directory.
 This allows to greatly simplify code maintenance and evolutivity. For example,
 managing a new streaming protocol would mainly just need us to add some code
-there. Same thing for adding a new feature to e.g. <code>DASH</code> or <code>Smooth</code>.</p>
+there (you might also need to add parsers in the <code>parsers</code> directory). Same
+thing for adding a new feature to e.g. <code>DASH</code> or <code>Smooth</code>.</p>
 <p>Each streaming protocol implementation present in the <code>transports</code> code exports
 a single <code>transport</code> function.</p>
 <p>The object returned by that function is often referenced as the <code>transport pipelines</code>. It is documented <a href="pipeline.html">here</a>.</p>
