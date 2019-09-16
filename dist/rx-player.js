@@ -25820,11 +25820,9 @@ object-assign
  * limitations under the License.
  */
         /**
- *
  * Parse style element from WebVTT.
- * @param {Array.<string>} styleBlock
- * @param {Object} baseStyleElements
- * @return {Array.<Object>} classes
+ * @param {Array.<Array.<string>>} styleBlocks
+ * @return {Object}
  */        function parseStyleBlocks(styleBlocks) {
             var classes = createDefaultStyleElements(), global = "";
             return styleBlocks.forEach(function(styleBlock) {
