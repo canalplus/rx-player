@@ -1,34 +1,32 @@
-import React from "react";
+import React, {
+  useEffect,
+  useRef,
+} from "react";
 
 /**
  * Simple text input which is focused when mounted.
  * Call `onChange` when updated.
  */
-export default class FocusedInput extends React.Component {
-  componentDidMount(){
-    if (this._input != null) {
-      this._input.focus();
+export default function FocusedInput({
+  className = "",
+  onChange,
+  value = "",
+  placeholder = "",
+}) {
+  const inputEl = useRef(null);
+  useEffect(() => {
+    if (inputEl.current != null) {
+      inputEl.current.focus();
     }
-  }
-
-  render() {
-    const { className = "",
-            onChange,
-            value = "",
-            placeholder = "" } = this.props;
-
-    const saveRef = ref => {
-      this._input = ref;
-    };
-    return (
-      <input
-        ref={saveRef}
-        className={"input " + className}
-        type="text"
-        placeholder={placeholder}
-        onChange={onChange}
-        value={value}
-      />
-    );
-  }
+  }, [] /* trigger only when mounted */);
+  return (
+    <input
+      ref={inputEl}
+      className={"input " + className}
+      type="text"
+      placeholder={placeholder}
+      onChange={onChange}
+      value={value}
+    />
+  );
 }
