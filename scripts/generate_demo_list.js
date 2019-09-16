@@ -11,16 +11,27 @@
  * versions of the rx-player.
  *
  * The demo should entirely be present in a directory called:
- * INITIAL_PAGE/versions/VERSION_NUMBER/demo
+ * `/versions/VERSION_NUMBER/demo`
  *
- * Where INITIAL_PATH is a variable defined below and VERSION_NUMBER is the
- * version number in a semantic versioning scheme.
+ * Where VERSION_NUMBER is the version number in a semantic versioning scheme.
  *
  * The documentation homepage should be present in:
- * INITIAL_PAGE/versions/VERSION_NUMBER/demo/index.html
+ * `/versions/VERSION_NUMBER/demo/index.html`
  *
  * This script was not written with portability in mind (it would have taken too
  * much time). It might thus break if file organization changes in this project.
+ *
+ *
+ * ## How to run it
+ *
+ * To run this:
+ *
+ *   1. Be sure you are in the gh-pages branch
+ *
+ *   2. Call this script directly
+ *
+ *   3. a new file, `demo_page_by_version.html` should have been generated with
+ *      all the right links.
  */
 
 const fs = require("fs");

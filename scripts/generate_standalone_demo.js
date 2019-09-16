@@ -1,6 +1,17 @@
 #!/usr/bin/env node
 /* eslint-env node */
 
+/**
+ * Build the standalone demo
+ * =========================
+ *
+ * This script allows to build the simple standalone demo locally.
+ *
+ * You can run it as a script through `node generate_standalone_demo.js`.
+ * Be aware that this demo will be built again every time one of the library
+ * file is updated.
+ */
+
 const Webpack = require("webpack");
 const path = require("path");
 const displayWebpackErrors = require("./display_webpack_errors");
@@ -13,6 +24,12 @@ webpackConfig.entry = path.join(__dirname, "../src/exports.ts");
 webpackConfig.output.path = __dirname;
 webpackConfig.output.filename = "../demo/standalone/lib.js";
 
+/* eslint-disable no-console */
+console.log(
+  `\x1b[35m[${getHumanReadableHours()}]\x1b[0m ` +
+    "Building demo..."
+);
+/* eslint-enable no-console */
 const compiler = Webpack(webpackConfig);
 
 const compilerWatching = compiler.watch({

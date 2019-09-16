@@ -6,7 +6,7 @@
 # nothing will be pushed.
 
 local_branch="$(git rev-parse --abbrev-ref HEAD)"
-valid_branch_regex="^((feat|fix|test|demo|doc|code|tools|release|misc)\/[A-Za-z0-9._-]+)|(next)|(master)$"
+valid_branch_regex="^((feat|fix|test|demo|doc|code|tools|release|misc)\/[A-Za-z0-9._-]+)|(next)|(dev)|(master)$"
 
 if [[ ! $local_branch =~ $valid_branch_regex ]]
 then
@@ -14,19 +14,19 @@ then
   # bear from the web. Do not look for a relation to the RxPlayer, there's none.
   cat >&2 << 'EOF'
 Error: Invalid branch name.
-                     ,---.           ,---.
-                    / /"`.\.--"""--./,'"\ \
-                    \ \    _       _    / /
-                     `./  / __   __ \  \,'
-                      /    /_O)_(_O\    \
-                      |  .-'  ___  `-.  |
-                   .--|       \_/       |--.
-                 ,'    \   \   |   /   /    `.
-                /       `.  `--^--'  ,'       \
-             .-"""""-.    `--.___.--'     .-"""""-.
-.-----------/         \------------------/         \--------------------.
-| .---------\         /----------------- \         /------------------. |
-| |          `-`--`--'                    `--'--'-'                   | |
+                          ,---.           ,---.
+                         / /"`.\.--"""--./,'"\ \
+                         \ \    _       _    / /
+                          `./  / __   __ \  \,'
+                           /    /_O)_(_O\    \
+                           |  .-'  ___  `-.  |
+                        .--|       \_/       |--.
+                      ,'    \   \   |   /   /    `.
+                     /       `.  `--^--'  ,'       \
+                  .-"""""-.    `--.___.--'     .-"""""-.
+.----------------/         \------------------/         \---------------.
+| .--------------\         /----------------- \         /-------------. |
+| |               `-`--`--'                    `--'--'-'              | |
 | |  ____                       _                                     | |
 | | |  _ \                     | |                                    | |
 | | | |_) |_ __ __ _ _ __   ___| |__      _ __   __ _ _ __ ___   ___  | |
@@ -43,13 +43,13 @@ Error: Invalid branch name.
 | |                                                                   | |
 | |___________________________________________________________________| |
 |_______________________________________________________________________|
-                   )__________|__|__________(
-                  |            ||            |
-                  |____________||____________|
-                    ),-----.(      ),-----.(
-                  ,'   ==.   \    /  .==    `.
-                 /            )  (            \
-                 `==========='    `==========='
+                        )__________|__|__________(
+                       |            ||            |
+                       |____________||____________|
+                         ),-----.(      ),-----.(
+                       ,'   ==.   \    /  .==    `.
+                      /            )  (            \
+                      `==========='    `==========='
   
 A valid branch name should start either with:
   - "feat/" for a feature
@@ -68,6 +68,16 @@ This title should contain only the characters presents in the following list:
   - Hyphen(s) ("-")
   - Underscore(s) ("_")
   - Point(s) (".")
+
+Examples:
+  - fix/dash-minimum_position
+  - fix/webm-duration_calculation
+  - fix/ttml-background_color
+  - feat/dash-utc_timing
+  - code/manifest_as_event_emitter
+  - tests/eme-attach_media_keys
+  - tools/webpack-4
+  - doc/public_api_typos
 
 Please rename the current branch before pushing.
 EOF

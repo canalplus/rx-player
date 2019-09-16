@@ -5,6 +5,11 @@
 #
 # This script allows to automatically generate a modular build with all its
 # associated files and directories.
+#
+# To use it:
+#   1. Be sure that you're on the branch you want to build.
+#   2. Call this script and wait...
+#   3. That's it!
 
 set -e
 

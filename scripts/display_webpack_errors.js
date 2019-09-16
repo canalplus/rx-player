@@ -1,5 +1,15 @@
 /* eslint-env node */
 
+/**
+ * This file is a node module. It should not be run directly.
+ */
+
+/**
+ * Format errors returned by webpack and display it through a `console.log`
+ * call.
+ * @param {Array.<Object>} errors
+ * @param {Array.<Object>} warnings
+ */
 module.exports = function displayWebpackErrors(errors, warnings) {
   /* eslint-disable no-console */
   for (let i = 0; i < warnings.length; i++) {
