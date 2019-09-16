@@ -57,7 +57,7 @@
     "test:memory:chrome:watch": "Launch memory tests in Chrome each times the files update",
     "test:unit": "Launch unit tests",
     "test:unit:coverage": "Launch unit tests and produce a coverage report",
-    "update-version": "Update the version to the string given in argument (example: `npm run n pdate-version 3.8.0`). Will update the codebase and perform every builds."
+    "update-version": "Update the version to the string given in argument (example: `npm run update-version 3.8.0`). Will update the codebase and perform every builds."
   },
   "scripts": {
     "build": "webpack --progress --config webpack.config.js",
