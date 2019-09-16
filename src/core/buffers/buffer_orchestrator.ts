@@ -280,7 +280,7 @@ export default function BufferOrchestrator(
         }
         const hasType = updates.some(update =>
                           update.adaptation.type === bufferType);
-        const queuedSourceBuffer = sourceBuffersManager.get(bufferType);
+        const queuedSourceBuffer = sourceBuffersStore.get(bufferType);
         if (!hasType || queuedSourceBuffer == null) {
           return EMPTY; // no need to stop the current buffers
         }
