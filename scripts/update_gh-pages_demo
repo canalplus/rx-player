@@ -84,6 +84,7 @@ ln -s "./versions/$current_version/demo/assets" assets
 ln -s "./versions/$current_version/demo/styles" styles
 
 node generate_demo_list.js
+rm generate_demo_list.js
 
 if [ -n "$(git status --porcelain lib.js bundle.js styles fonts assets index.html "versions/$current_version/demo" demo_page_by_version.html)" ]; then
   echo "-- Current Status on gh-pages: --"
