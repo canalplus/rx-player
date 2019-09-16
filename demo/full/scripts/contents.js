@@ -1,3 +1,5 @@
+import MetaPlaylistDASHSmoothURL from "./metaplaylist_url";
+
 export default [
   {
     "name": "DASH-IF - SegmentTimeline live stream",
@@ -78,12 +80,6 @@ export default [
     "transport": "dash",
   },
   {
-    "name": "DASH-IF XLinks (onLoad)",
-    "url": "http://vm2.dashif.org/livesim-dev/periods_60/xlink_30/insertad_2/testpic_2s/Manifest.mpd",
-    "transport": "dash",
-    "live": true,
-  },
-  {
     "name": "Super SpeedWay",
     "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
     "transport": "smooth",
@@ -158,5 +154,10 @@ export default [
       "mimeType": "application/bif",
       "url": "http://dash-vod-aka-test.canal-bis.com/test/bif/index.bif",
     },
+  },
+  {
+    "name": "Mix of DASH and Smooth VOD Contents",
+    "url": MetaPlaylistDASHSmoothURL,
+    "transport": "metaplaylist",
   },
 ];

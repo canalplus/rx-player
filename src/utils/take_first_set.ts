@@ -19,12 +19,23 @@
  * @param {...*} args
  * @returns {*}
  */
-export default function takeFirstSet<T>(...args : T[]) : T|undefined {
+export default function takeFirstSet<T>(a : T,
+                                        b? : undefined | null | T) : T;
+export default function takeFirstSet<T>(a : T | undefined | null, b : T) : T;
+export default function takeFirstSet<T>(a? : undefined|null,
+                                        b? : undefined|null) : undefined;
+export default function takeFirstSet<T>(
+                                         ...args : Array<T|null|undefined>
+                                       ) : T | undefined;
+export default function takeFirstSet<T>(
+  ...args : Array<T|null|undefined>
+) : T | undefined {
   let i = 0;
   const len = args.length;
   while (i < len) {
-    if (args[i] != null) {
-      return args[i];
+    const arg = args[i];
+    if (arg != null) {
+      return arg;
     }
     i++;
   }

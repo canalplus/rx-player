@@ -14,22 +14,26 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
-import { Observable, Subject } from "rxjs";
+import {
+  concat as observableConcat,
+  Observable,
+  of as observableOf,
+  Subject,
+} from "rxjs";
 import {
   catchError,
   filter,
   finalize,
-  map,
+  mergeMap,
   share,
   tap,
 } from "rxjs/operators";
 import { formatError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
+  IChunkTimingInfos,
   ISegmentLoaderArguments,
   ISegmentParserResponse,
-  ISegmentTimingInfos,
   ITransportPipelines,
 } from "../../../transports";
 import idGenerator from "../../../utils/id_generator";
@@ -38,20 +42,25 @@ import {
   IABRRequest,
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
-import createLoader, {
-  IPipelineLoaderOptions,
-  IPipelineLoaderResponse,
-  IPipelineWarning,
-} from "../utils/create_loader";
+import createSegmentLoader, {
+  IPipelineLoaderChunk,
+  IPipelineLoaderChunkComplete,
+  IPipelineLoaderData,
+  IPipelineLoaderWarning,
+  ISegmentPipelineLoaderOptions,
+} from "./create_segment_loader";
 
-export type ISegmentFetcherWarning = IPipelineWarning;
+export type ISegmentFetcherWarning = IPipelineLoaderWarning;
 
-export interface ISegmentFetcherResponseEvent<T> {
-  type : "response";
-  parse : (init? : ISegmentTimingInfos) => Observable<ISegmentParserResponse<T>>;
+export interface ISegmentFetcherChunkEvent<T> {
+  type : "chunk";
+  parse : (init? : IChunkTimingInfos) => Observable<ISegmentParserResponse<T>>;
 }
 
-export type ISegmentFetcherEvent<T> = ISegmentFetcherResponseEvent<T> |
+export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete"; }
+
+export type ISegmentFetcherEvent<T> = ISegmentFetcherChunkCompleteEvent |
+                                      ISegmentFetcherChunkEvent<T> |
                                       ISegmentFetcherWarning;
 
 export type ISegmentFetcher<T> = (content : ISegmentLoaderArguments) =>
@@ -72,9 +81,9 @@ export default function createSegmentFetcher<T>(
   bufferType : IBufferType,
   transport : ITransportPipelines,
   requests$ : Subject<IABRMetric | IABRRequest>,
-  options : IPipelineLoaderOptions<ISegmentLoaderArguments, T>
+  options : ISegmentPipelineLoaderOptions<any>
 ) : ISegmentFetcher<T> {
-  const segmentLoader = createLoader(transport[bufferType], options);
+  const segmentLoader = createSegmentLoader(transport[bufferType].loader, options);
   const segmentParser = transport[bufferType].parser as any; // deal with it
 
   /**
@@ -93,51 +102,51 @@ export default function createSegmentFetcher<T>(
     let requestBeginSent = false;
     return segmentLoader(content).pipe(
       tap((arg) => {
-      switch (arg.type) {
-        case "metrics": {
-          const { value } = arg;
-          const { size, duration } = value; // unwrapping for TS
+        switch (arg.type) {
+          case "metrics": {
+            const { value } = arg;
+            const { size, duration } = value; // unwrapping for TS
 
-          // format it for ABR Handling
-          if (size != null && duration != null) {
-            requests$.next({ type: "metrics",
-                            value: { size, duration, content } });
+            // format it for ABR Handling
+            if (size != null && duration != null) {
+              requests$.next({ type: "metrics",
+                              value: { size, duration, content } });
+            }
+            break;
           }
-          break;
-        }
 
-        case "request": {
-          const { value } = arg;
+          case "request": {
+            const { value } = arg;
 
-          // format it for ABR Handling
-          const segment : ISegment|undefined = value && value.segment;
-          if (segment == null || segment.duration == null) {
-            return;
-          }
-          requestBeginSent = true;
-          const duration = segment.duration / segment.timescale;
-          const time = segment.time / segment.timescale;
-          requests$.next({ type: "requestBegin",
-                           value: { duration,
-                                    time,
-                                    requestTimestamp: performance.now(),
-                                    id } });
-          break;
-        }
-
-        case "progress": {
-          const { value } = arg;
-          if (value.totalSize != null && value.size < value.totalSize) {
-            requests$.next({ type: "progress",
-                             value: { duration: value.duration,
-                                      size: value.size,
-                                      totalSize: value.totalSize,
-                                      timestamp: performance.now(),
+            // format it for ABR Handling
+            const segment : ISegment|undefined = value && value.segment;
+            if (segment == null || segment.duration == null) {
+              return;
+            }
+            requestBeginSent = true;
+            const duration = segment.duration / segment.timescale;
+            const time = segment.time / segment.timescale;
+            requests$.next({ type: "requestBegin",
+                             value: { duration,
+                                      time,
+                                      requestTimestamp: performance.now(),
                                       id } });
+            break;
           }
-          break;
+
+          case "progress": {
+            const { value } = arg;
+            if (value.totalSize != null && value.size < value.totalSize) {
+              requests$.next({ type: "progress",
+                               value: { duration: value.duration,
+                                        size: value.size,
+                                        totalSize: value.totalSize,
+                                        timestamp: performance.now(),
+                                        id } });
+            }
+            break;
+          }
         }
-      }
       }),
 
       finalize(() => {
@@ -145,29 +154,46 @@ export default function createSegmentFetcher<T>(
           requests$.next({ type: "requestEnd", value: { id } });
         }
       }),
-      filter((e) : e is IPipelineLoaderResponse<T> | IPipelineWarning => {
-        return e.type === "warning" || e.type === "response";
-      }),
-      map((evt) => {
+
+      filter((e) : e is IPipelineLoaderChunk |
+                        IPipelineLoaderChunkComplete |
+                        IPipelineLoaderData<T> |
+                        ISegmentFetcherWarning => e.type === "warning" ||
+                                                  e.type === "chunk" ||
+                                                  e.type === "chunk-complete" ||
+                                                  e.type === "data"),
+
+      mergeMap((evt) => {
         if (evt.type === "warning") {
-          return evt;
+          return observableOf(evt);
         }
-        return {
-          type: "response" as const,
+        if (evt.type === "chunk-complete") {
+          return observableOf({ type: "chunk-complete" as const });
+        }
+
+        const isChunked = evt.type === "chunk";
+        const data = {
+          type: "chunk" as const,
           /**
            * Parse the loaded data.
            * @param {Object} [init]
            * @returns {Observable}
            */
-          parse(init? : ISegmentTimingInfos) : Observable<ISegmentParserResponse<T>> {
-            const parserArg = objectAssign({ response: evt.value, init }, content);
-            return segmentParser(parserArg)
+          parse(init? : IChunkTimingInfos) : Observable<ISegmentParserResponse<T>> {
+            const response = { data: evt.value.responseData, isChunked };
+            return segmentParser({ response, init, content })
               .pipe(catchError((error: unknown) => {
                 throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
                                            defaultReason: "Unknown parsing error" });
               }));
           },
         };
+
+        if (isChunked) {
+          return observableOf(data);
+        }
+        return observableConcat(observableOf(data),
+                                observableOf({ type: "chunk-complete" as const }));
       }),
       share() // avoid multiple side effects if multiple subs
     );

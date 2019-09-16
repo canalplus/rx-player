@@ -54,11 +54,15 @@ const { DEFAULT_AUTO_PLAY,
 
 export { IKeySystemOption };
 
+interface IServerSyncInfos { serverTimestamp : number;
+                             clientTime : number; }
+
 export interface ITransportOptions { aggressiveMode? : boolean;
                                      manifestLoader? : CustomManifestLoader;
                                      segmentLoader? : CustomSegmentLoader;
                                      representationFilter? : IRepresentationFilter;
-                                     referenceDateTime? : number; }
+                                     referenceDateTime? : number;
+                                     serverSyncInfos? : IServerSyncInfos; }
 
 export interface ISupplementaryTextTrackOption { url : string;
                                                  language : string;
@@ -136,9 +140,9 @@ export interface IParsedConstructorOptions {
 }
 
 export interface ILoadVideoOptions {
-  url : string;
   transport : string;
 
+  url? : string;
   autoPlay? : boolean;
   keySystems? : IKeySystemOption[];
   transportOptions? : ITransportOptions|undefined;
@@ -146,6 +150,7 @@ export interface ILoadVideoOptions {
   supplementaryImageTracks? : ISupplementaryImageTrackOption[];
   defaultAudioTrack? : IDefaultAudioTrackOption|null|undefined;
   defaultTextTrack? : IDefaultTextTrackOption|null|undefined;
+  lowLatencyMode? : boolean;
   networkConfig? : INetworkConfigOption;
   startAt? : IStartAtOption;
   textTrackMode? : "native"|"html";
@@ -155,10 +160,11 @@ export interface ILoadVideoOptions {
 }
 
 interface IParsedLoadVideoOptionsBase {
-  url : string;
+  url? : string;
   transport : string;
   autoPlay : boolean;
   keySystems : IKeySystemOption[];
+  lowLatencyMode : boolean;
   networkConfig: INetworkConfigOption;
   transportOptions : ITransportOptions;
   supplementaryTextTracks : ISupplementaryTextTrackOption[];
@@ -354,7 +360,7 @@ function parseConstructorOptions(
 function parseLoadVideoOptions(
   options : ILoadVideoOptions
 ) : IParsedLoadVideoOptions {
-  let url : string;
+  let url : string|undefined;
   let transport : string;
   let keySystems : IKeySystemOption[];
   let supplementaryTextTracks : ISupplementaryTextTrackOption[];
@@ -363,10 +369,17 @@ function parseLoadVideoOptions(
   let textTrackElement : HTMLElement|undefined;
   let startAt : IParsedStartAtOption|undefined;
 
-  if (!options || options.url == null) {
-    throw new Error("No url set on loadVideo");
-  } else {
+  if (options == null) {
+    throw new Error("No option set on loadVideo");
+  }
+
+  if (options.url != null) {
     url = String(options.url);
+  } else if (
+    options.transportOptions == null ||
+    options.transportOptions.manifestLoader == null
+  ) {
+    throw new Error("No url set on loadVideo");
   }
 
   if (options.transport == null) {
@@ -454,6 +467,8 @@ function parseLoadVideoOptions(
              "`setPreferredTextTracks` method instead");
   }
   const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
+  const lowLatencyMode = options.lowLatencyMode == null ? false :
+                                                          !!options.lowLatencyMode;
   const hideNativeSubtitle = options.hideNativeSubtitle == null ?
     !DEFAULT_SHOW_NATIVE_SUBTITLE :
     !!options.hideNativeSubtitle;
@@ -504,6 +519,7 @@ function parseLoadVideoOptions(
            defaultTextTrack,
            hideNativeSubtitle,
            keySystems,
+           lowLatencyMode,
            manualBitrateSwitchingMode,
            networkConfig,
            startAt,

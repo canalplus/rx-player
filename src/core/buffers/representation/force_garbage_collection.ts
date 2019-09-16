@@ -50,7 +50,7 @@ export default function forceGarbageCollection(
     take(1),
     mergeMap((timing) => {
       log.warn("Buffer: Running garbage collector");
-      const buffered = bufferingQueue.getBuffered();
+      const buffered = bufferingQueue.getBufferedRanges();
       let cleanedupRanges = selectGCedRanges(timing.currentTime, buffered, GC_GAP_CALM);
 
       // more aggressive GC if we could not find any range to clean

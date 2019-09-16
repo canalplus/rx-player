@@ -5,7 +5,6 @@
 <li><a href="#chapter-The%20PeriodBuffer">The PeriodBuffer</a></li>
 <li><a href="#chapter-The%20AdaptationBuffer">The AdaptationBuffer</a></li>
 <li><a href="#chapter-The%20RepresentationBuffer">The RepresentationBuffer</a></li>
-<li><a href="#chapter-The%20SegmentBookkeeper">The SegmentBookkeeper</a></li>
 </ul>
 </div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-The%20Buffers"></a></p>
 <h1>The Buffers</h1>
@@ -39,7 +38,7 @@ documentation</a>.</p>
 <p><a name="chapter-The%20PeriodBuffer"></a></p>
 <h2>The PeriodBuffer</h2>
 <p>The <code>PeriodBuffer</code> creates and destroys <code>AdaptationBuffer</code>s for a single
-manifest&#x2019;s Period.
+Manifest&#x2019;s Period.
 If no SourceBuffer was created, it lazily creates one (this only applies to
 custom SourceBuffer - not managed by the browser - like text).</p>
 <p><a name="chapter-The%20AdaptationBuffer"></a></p>
@@ -55,11 +54,5 @@ segment-downloading and pushing itself.</p>
 <p>The <code>RepresentationBuffer</code> is the part that actually calculates which segments
 should be downloaded.</p>
 <p>You can have more information on it in <a href="representation_buffer.html">the RepresentationBuffer
-documentation</a>.</p>
-<p><a name="chapter-The%20SegmentBookkeeper"></a></p>
-<h2>The SegmentBookkeeper</h2>
-<p>The <code>SegmentBookkeeper</code> keeps track of which segments is currently bufferized
-to avoid unnecessary re-downloadings of them.</p>
-<p>You can have more informations on it in <a href="segment_bookkeeper.html">the SegmentBookkeeper
 documentation</a>.</p>
 </body></html></div></div></div></body>

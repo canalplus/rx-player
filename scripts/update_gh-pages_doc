@@ -8,14 +8,13 @@
 #
 # To use it:
 #
-#   1. Go to a clean master branch
+#   1. Be sure that you're on a clean (no staged files and no diff) master
+#      branch.
 #
-#   2. Perform the modifications you want to do on the "doc" directory.
-#
-#   3. Call this script.
+#   2. Call this script.
 #      Some user interactions will be needed to avoid doing unwanted commits.
 #
-#   4. That's it!
+#   3. That's it!
 #      A commit should have been pushed to the gh-pages.
 
 set -e
@@ -55,8 +54,9 @@ ln -s "./versions/$current_version/doc" doc
 mv $tmpDocList  generate_documentation_list.js
 
 node generate_documentation_list.js
+rm generate_documentation_list.js
 
-if [ -n "$(git status --porcelain)" ]; then
+if [ -n "$(git status --porcelain doc "versions/$current_version/doc" documentation_pages_by_version.html)" ]; then
   echo "-- Current Status on gh-pages: --"
   echo ""
   git status doc "versions/$current_version/doc" documentation_pages_by_version.html

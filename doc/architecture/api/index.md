@@ -65,7 +65,7 @@ To facilitate those actions, the API relies on multiple building blocks:
   - __the Clock__
 
     Provide an Observable emitting regularly the current viewing conditions for
-    the Player. Many RxPlayer modules rely on a clock.
+    the Player. Many RxPlayer modules rely on that clock.
 
 
   - __the TrackManager__

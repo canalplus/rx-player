@@ -22,9 +22,12 @@ import { tap } from "rxjs/operators";
 import log from "../../log";
 import Manifest from "../../manifest";
 import {
-  IFetchManifestOptions,
   IFetchManifestResult,
 } from "../pipelines";
+
+export type IManifestFetcher =
+    (manifestURL? : string, externalClockOffset?: number) =>
+      Observable<IFetchManifestResult>;
 
 /**
  * Refresh the manifest on subscription.
@@ -32,7 +35,7 @@ import {
  */
 export default function refreshManifest(
   manifest : Manifest,
-  fetchManifest : (x : IFetchManifestOptions) => Observable<IFetchManifestResult>
+  fetchManifest : IManifestFetcher
 ) : Observable<IFetchManifestResult> {
   const refreshURL = manifest.getUrl();
   if (!refreshURL) {
@@ -41,7 +44,7 @@ export default function refreshManifest(
   }
 
   const externalClockOffset = manifest.getClockOffset();
-  return fetchManifest({ url: refreshURL, externalClockOffset })
+  return fetchManifest(refreshURL, externalClockOffset)
     .pipe(tap(({ manifest: newManifest }) => {
             manifest.update(newManifest);
           }));

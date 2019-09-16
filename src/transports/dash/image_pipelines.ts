@@ -24,6 +24,10 @@ import {
   ISegmentParserArguments,
 } from "../types";
 
+/**
+ * @param {Object} args
+ * @returns {Observable}
+ */
 export function imageLoader(
   { segment } : ISegmentLoaderArguments
 ) : ISegmentLoaderObservable< ArrayBuffer | null > {
@@ -37,35 +41,43 @@ export function imageLoader(
                    sendProgressEvents: true });
 }
 
+/**
+ * @param {Object} args
+ * @returns {Observable}
+ */
 export function imageParser(
   { response,
-    segment,
-    period } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
+    content } : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
 ) : IImageParserObservable {
-  const { responseData } = response;
+  const { segment, period } = content;
+  const { data, isChunked } = response;
+
+  if (isChunked) {
+    throw new Error("Image data should not be downloaded in chunks");
+  }
 
   // TODO image Parsing should be more on the sourceBuffer side, no?
-  if (responseData === null || features.imageParser == null) {
-    return observableOf({ segmentData: null,
-                          segmentInfos: segment.timescale > 0 ?
+  if (data === null || features.imageParser == null) {
+    return observableOf({ chunkData: null,
+                          chunkInfos: segment.timescale > 0 ?
                             { duration: segment.isInit ? 0 : segment.duration,
                               time: segment.isInit ? -1 : segment.time,
                               timescale: segment.timescale } :
                             null,
-                          segmentOffset: segment.timestampOffset || 0,
+                          chunkOffset: segment.timestampOffset || 0,
                           appendWindow: [period.start, period.end] });
   }
 
-  const bifObject = features.imageParser(new Uint8Array(responseData));
-  const data = bifObject.thumbs;
-  return observableOf({ segmentData: { data,
+  const bifObject = features.imageParser(new Uint8Array(data));
+  const thumbsData = bifObject.thumbs;
+  return observableOf({ chunkData: { data: thumbsData,
                                        start: 0,
                                        end: Number.MAX_VALUE,
                                        timescale: 1,
                                        type: "bif" },
-                        segmentInfos: { time: 0,
+                        chunkInfos: { time: 0,
                                         duration: Number.MAX_VALUE,
                                         timescale: bifObject.timescale },
-                        segmentOffset: segment.timestampOffset || 0,
+                        chunkOffset: segment.timestampOffset || 0,
                         appendWindow: [period.start, period.end] });
 }

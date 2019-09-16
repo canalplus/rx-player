@@ -33,6 +33,8 @@ import parseAdaptationSets from "./parse_adaptation_sets";
 const generatePeriodID = idGenerator();
 
 export interface IManifestInfos {
+  aggressiveMode : boolean; // Whether we should request new segments even if
+                            // they are not yet finished
   availabilityStartTime : number; // Time from which the content starts
   baseURL? : string;
   clockOffset? : number;
@@ -59,9 +61,8 @@ export default function parsePeriods(
   }
 
   // We might to communicate the depth of the Buffer while parsing
-  const { availabilityStartTime, isDynamic, timeShiftBufferDepth } = manifestInfos;
-  const manifestBoundsCalculator = new ManifestBoundsCalculator({ availabilityStartTime,
-                                                                  isDynamic,
+  const { isDynamic, timeShiftBufferDepth } = manifestInfos;
+  const manifestBoundsCalculator = new ManifestBoundsCalculator({ isDynamic,
                                                                   timeShiftBufferDepth });
 
   if (!isDynamic && manifestInfos.duration != null) {
@@ -86,10 +87,9 @@ export default function parsePeriods(
       periodID = periodIR.attributes.id;
     }
 
-    const periodInfos = { availabilityStartTime,
+    const periodInfos = { aggressiveMode: manifestInfos.aggressiveMode,
                           baseURL: periodBaseURL,
                           manifestBoundsCalculator,
-                          clockOffset: manifestInfos.clockOffset,
                           end: periodEnd,
                           isDynamic,
                           start: periodStart,
@@ -178,11 +178,10 @@ function guessLastPositionFromClock(
       return [timeInSec, positionTime];
     }
   } else {
-    const now = (Date.now() - 10000) / 1000;
+    const now = Date.now() / 1000;
     if (now >= minimumTime) {
       log.warn("DASH Parser: no clock synchronization mechanism found." +
-               " Setting a live gap of 10 seconds relatively to the " +
-               "system clock as a security.");
+               " Using the system clock instead.");
       const lastPosition = now - manifestInfos.availabilityStartTime;
       const positionTime = performance.now() / 1000;
       return [lastPosition, positionTime];

@@ -167,7 +167,8 @@ function estimateStarvationModeBitrate(
  */
 function shouldDirectlySwitchToLowBitrate(
   clock : INetworkAnalizerClockTick,
-  requests : IRequestInfo[]
+  requests : IRequestInfo[],
+  abrStarvationGap : number
 ) : boolean {
    const nextNeededPosition = clock.currentTime + clock.bufferGap;
 
@@ -190,10 +191,9 @@ function shouldDirectlySwitchToLowBitrate(
    }
 
    const remainingTime = estimateRemainingTime(lastProgressEvent, bandwidthEstimate);
-   if (
-     (now - lastProgressEvent.timestamp) / 1000 <= (remainingTime * 1.2) &&
-     remainingTime < ((clock.bufferGap / clock.speed) + ABR_STARVATION_GAP)
-   ) {
+   if ((now - lastProgressEvent.timestamp) / 1000 <= (remainingTime * 1.2) &&
+       remainingTime < ((clock.bufferGap / clock.speed) + abrStarvationGap))
+  {
      return false;
    }
    return true;
@@ -205,12 +205,27 @@ function shouldDirectlySwitchToLowBitrate(
  * @class NetworkAnalyzer
  */
 export default class NetworkAnalyzer {
-  private _inStarvationMode: boolean;
-  private _initialBitrate: number;
+  private _inStarvationMode : boolean;
+  private _initialBitrate : number;
+  private _config : { starvationGap : number;
+                      outOfStarvationGap : number;
+                      starvationBitrateFactor : number;
+                      regularBitrateFactor : number; };
 
-  constructor(initialBitrate: number) {
+  constructor(initialBitrate: number, lowLatencyMode: boolean) {
     this._initialBitrate = initialBitrate;
     this._inStarvationMode = false;
+    if (lowLatencyMode) {
+    this._config = { starvationGap: ABR_STARVATION_GAP.LOW_LATENCY,
+                     outOfStarvationGap: OUT_OF_STARVATION_GAP.LOW_LATENCY,
+                     starvationBitrateFactor: ABR_STARVATION_FACTOR.LOW_LATENCY,
+                     regularBitrateFactor: ABR_REGULAR_FACTOR.LOW_LATENCY };
+    } else {
+      this._config = { starvationGap: ABR_STARVATION_GAP.DEFAULT,
+                       outOfStarvationGap: OUT_OF_STARVATION_GAP.DEFAULT,
+                       starvationBitrateFactor: ABR_STARVATION_FACTOR.DEFAULT,
+                       regularBitrateFactor: ABR_REGULAR_FACTOR.DEFAULT };
+    }
   }
 
   public getBandwidthEstimate(
@@ -222,16 +237,17 @@ export default class NetworkAnalyzer {
   ) : { bandwidthEstimate? : number; bitrateChosen : number } {
     let newBitrateCeil; // bitrate ceil for the chosen Representation
     let bandwidthEstimate;
+    const localConf = this._config;
     const { bufferGap, currentTime, duration } = clockTick;
 
     // check if should get in/out of starvation mode
     if (isNaN(duration) ||
         bufferGap + currentTime < duration - ABR_STARVATION_DURATION_DELTA)
     {
-      if (!this._inStarvationMode && bufferGap <= ABR_STARVATION_GAP) {
+      if (!this._inStarvationMode && bufferGap <= localConf.starvationGap) {
         log.info("ABR: enter starvation mode.");
         this._inStarvationMode = true;
-      } else if (this._inStarvationMode && bufferGap >= OUT_OF_STARVATION_GAP) {
+      } else if (this._inStarvationMode && bufferGap >= localConf.outOfStarvationGap) {
         log.info("ABR: exit starvation mode.");
         this._inStarvationMode = false;
       }
@@ -263,13 +279,13 @@ export default class NetworkAnalyzer {
       bandwidthEstimate = bandwidthEstimator.getEstimate();
 
       if (bandwidthEstimate != null) {
-        newBitrateCeil = this._inStarvationMode ?
-          bandwidthEstimate * ABR_STARVATION_FACTOR :
-          bandwidthEstimate * ABR_REGULAR_FACTOR;
+        newBitrateCeil = bandwidthEstimate *
+          (this._inStarvationMode ? localConf.starvationBitrateFactor :
+                                    localConf.regularBitrateFactor);
       } else if (lastEstimatedBitrate != null) {
-        newBitrateCeil = this._inStarvationMode ?
-          lastEstimatedBitrate * ABR_STARVATION_FACTOR :
-          lastEstimatedBitrate * ABR_REGULAR_FACTOR;
+        newBitrateCeil = lastEstimatedBitrate *
+          (this._inStarvationMode ? localConf.starvationBitrateFactor :
+                                    localConf.regularBitrateFactor);
       } else {
         newBitrateCeil = this._initialBitrate;
       }
@@ -301,6 +317,8 @@ export default class NetworkAnalyzer {
     } else if (bitrate > currentRepresentation.bitrate) {
       return !this._inStarvationMode;
     }
-    return shouldDirectlySwitchToLowBitrate(clockTick, currentRequests);
+    return shouldDirectlySwitchToLowBitrate(clockTick,
+                                            currentRequests,
+                                            this._config.starvationGap);
   }
 }

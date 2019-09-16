@@ -26,6 +26,8 @@ const plugins = [
         process.env.RXP_DASH === "true" :
         process.env.RXP_DASH !== "false",
 
+      METAPLAYLIST: process.env.RXP_METAPLAYLIST === "true",
+
       DIRECTFILE: isBarebone ?
         process.env.RXP_DIRECTFILE === "true" :
         process.env.RXP_DIRECTFILE !== "false",
@@ -74,16 +76,17 @@ const plugins = [
     // Path relative to src/features where optional features are implemented
     __RELATIVE_PATH__: {
       EME_MANAGER: JSON.stringify("../core/eme/index.ts"),
-      IMAGE_BUFFER: JSON.stringify("../core/source_buffers/image/index.ts"),
+      IMAGE_BUFFER: JSON.stringify("../custom_source_buffers/image/index.ts"),
       BIF_PARSER: JSON.stringify("../parsers/images/bif.ts"),
       SMOOTH: JSON.stringify("../transports/smooth/index.ts"),
       DASH: JSON.stringify("../transports/dash/index.ts"),
-      NATIVE_TEXT_BUFFER: JSON.stringify("../core/source_buffers/text/native/index.ts"),
+      METAPLAYLIST: JSON.stringify("../transports/metaplaylist/index.ts"),
+      NATIVE_TEXT_BUFFER: JSON.stringify("../custom_source_buffers/text/native/index.ts"),
       NATIVE_VTT: JSON.stringify("../parsers/texttracks/webvtt/native/index.ts"),
       NATIVE_SRT: JSON.stringify("../parsers/texttracks/srt/native.ts"),
       NATIVE_TTML: JSON.stringify("../parsers/texttracks/ttml/native/index.ts"),
       NATIVE_SAMI: JSON.stringify("../parsers/texttracks/sami/native.ts"),
-      HTML_TEXT_BUFFER: JSON.stringify("../core/source_buffers/text/html/index.ts"),
+      HTML_TEXT_BUFFER: JSON.stringify("../custom_source_buffers/text/html/index.ts"),
       HTML_VTT: JSON.stringify("../parsers/texttracks/webvtt/html/index.ts"),
       HTML_SRT: JSON.stringify("../parsers/texttracks/srt/html.ts"),
       HTML_TTML: JSON.stringify("../parsers/texttracks/ttml/html/index.ts"),
@@ -133,8 +136,8 @@ module.exports = {
     ],
   },
   performance: {
-    maxEntrypointSize: shouldMinify ? 400000 : 1500000,
-    maxAssetSize: shouldMinify ? 400000 : 1500000,
+    maxEntrypointSize: shouldMinify ? 400000 : 1700000,
+    maxAssetSize: shouldMinify ? 400000 : 1700000,
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],

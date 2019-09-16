@@ -29,7 +29,8 @@ const HAS_EME_APIs = (
 );
 
 const IS_HTTPS = window.location.protocol.startsWith("https");
-const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile"];
+
+const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile", "MetaPlaylist"];
 const DRM_TYPES = ["Widevine", "Playready", "Clearkey"];
 
 const DISABLE_ENCRYPTED_CONTENT = !HAS_EME_APIs && !IS_HTTPS;
@@ -80,6 +81,7 @@ function formatContent(content) {
            drmInfos: content.drmInfos,
            displayName,
            isDisabled,
+           isLowLatency: !!content.lowLatency,
            isLocalContent };
 }
 
@@ -101,7 +103,8 @@ function constructContentList() {
                                 drmInfos: [],
                                 displayName: "Custom link",
                                 isLocalContent: false,
-                                isDisabled: false };
+                                isDisabled: false,
+                                isLowLatency: false };
     acc[tech] = [customLinkContent]
       .concat(storedAndRegularContents
         .filter(({ transport }) => transport === tech.toLowerCase())
@@ -147,6 +150,7 @@ class ContentList extends React.Component {
                    displayDRMSettings: false,
                    isSavingOrUpdating: false,
                    licenseServerUrl: "",
+                   lowLatencyChecked: false,
                    serverCertificateUrl: "",
                    transportType };
   }
@@ -175,6 +179,7 @@ class ContentList extends React.Component {
             transport,
             supplementaryImageTracks,
             supplementaryTextTracks,
+            isLowLatency,
             drmInfos = [] } = content;
 
     parseDRMConfigurations(drmInfos)
@@ -185,6 +190,7 @@ class ContentList extends React.Component {
                     supplementaryImageTracks,
                     supplementaryTextTracks,
                     textTrackMode: "html",
+                    lowLatencyMode: isLowLatency,
                     keySystems });
       });
   }
@@ -197,6 +203,8 @@ class ContentList extends React.Component {
    */
   loadUrl(url, drmInfos, autoPlay) {
     const { loadVideo } = this.props;
+    const { lowLatencyChecked } = this.state;
+
     parseDRMConfigurations(drmInfos)
       .then((keySystems) => {
         loadVideo({ url,
@@ -207,7 +215,8 @@ class ContentList extends React.Component {
                     // stylized subs.  We force HTML textTrackMode to vizualise
                     // styles.
                     textTrackMode: "html",
-                    keySystems });
+                    keySystems,
+                    lowLatencyMode: lowLatencyChecked });
       });
   }
 
@@ -223,6 +232,7 @@ class ContentList extends React.Component {
                     displayDRMSettings: false,
                     isSavingOrUpdating: false,
                     licenseServerUrl: "",
+                    lowLatencyChecked: false,
                     serverCertificateUrl: "",
                     transportType });
   }
@@ -242,6 +252,7 @@ class ContentList extends React.Component {
     let drm  = null;
     currentManifestURL = content.url;
     contentNameField = content.contentName;
+    const isLowLatency = !!content.isLowLatency;
     if (hasDRMSettings) {
       drm = content.drmInfos[0].drm;
       licenseServerUrl = content.drmInfos[0].licenseServerUrl;
@@ -253,6 +264,7 @@ class ContentList extends React.Component {
                     currentManifestURL,
                     displayDRMSettings: hasDRMSettings,
                     isSavingOrUpdating: false,
+                    lowLatencyChecked: isLowLatency,
                     licenseServerUrl,
                     serverCertificateUrl });
   }
@@ -286,6 +298,13 @@ class ContentList extends React.Component {
     this.setState({ autoPlay: value });
   }
 
+  onLowLatencyClick(evt) {
+    const { target } = evt;
+    const value = target.type === "checkbox" ?
+      target.checked : target.value;
+    this.setState({ lowLatencyChecked: value });
+  }
+
   render() {
     const { autoPlay,
             contentChoiceIndex,
@@ -296,6 +315,7 @@ class ContentList extends React.Component {
             displayDRMSettings,
             isSavingOrUpdating,
             licenseServerUrl,
+            lowLatencyChecked,
             serverCertificateUrl,
             transportType } = this.state;
 
@@ -343,6 +363,7 @@ class ContentList extends React.Component {
     const saveCurrentContent = () => {
       const contentToSave = { name: contentNameField,
                               url: currentManifestURL,
+                              lowLatency: lowLatencyChecked,
                               transport: transportType.toLowerCase(),
                               drmInfos: displayDRMSettings ?
                                 [ { drm: currentDRMType,
@@ -359,7 +380,7 @@ class ContentList extends React.Component {
                       isSavingOrUpdating: false });
 
       // update content selection
-      const contents = contentsPerType[transportType];
+      const contents = contentList[transportType];
       const firstEnabledContentIndex = contents
         .findIndex(c => c.id === storedContent.id);
       if (firstEnabledContentIndex < 0) {
@@ -385,8 +406,8 @@ class ContentList extends React.Component {
           this.setState({ contentsPerType: contentList });
 
           // update content selection
-          const contents = contentsPerType[transportType];
-          if (contentChoiceIndex >= contentsPerType.length) {
+          const contents = contentList[transportType];
+          if (contentChoiceIndex >= contentList.length) {
             this.changeSelectedContent(0, contents[0]);
           } else {
             this.changeSelectedContent(contentChoiceIndex,
@@ -413,6 +434,10 @@ class ContentList extends React.Component {
 
     const onAutoPlayClick = (evt) =>
       this.onChangeAutoPlay(evt);
+
+    const onLowLatencyClick = (evt) => {
+      this.onLowLatencyClick(evt);
+    };
 
     const onDRMTypeClick = (type) => {
       this.setState({ currentDRMType: type });
@@ -571,6 +596,13 @@ class ContentList extends React.Component {
                       </div> :
                       null
                   }
+                </div>
+                <div class="player-box button-low-latency">
+                  Low-Latency content
+                  <label class="input switch">
+                    <input type="checkbox" checked={lowLatencyChecked} onChange={onLowLatencyClick} />
+                    <span class="slider round"></span>
+                  </label>
                 </div>
               </div>
             ) : null

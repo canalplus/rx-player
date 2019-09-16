@@ -44,14 +44,13 @@ import { getLeftSizeOfRange } from "../../../utils/ranges";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
 import { SegmentPipelinesManager } from "../../pipelines";
-import SourceBuffersManager, {
+import SourceBuffersStore, {
   IBufferType,
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
 } from "../../source_buffers";
 import AdaptationBuffer from "../adaptation";
 import EVENTS from "../events_generators";
-import SegmentBookkeeper from "../segment_bookkeeper";
 import {
   IAdaptationBufferEvent,
   IBufferWarningEvent,
@@ -81,12 +80,9 @@ export interface IPeriodBufferArguments {
   content : { manifest : Manifest;
               period : Period; };
   garbageCollectors : WeakMapMemory<QueuedSourceBuffer<unknown>, Observable<never>>;
-  segmentBookkeepers : WeakMapMemory<QueuedSourceBuffer<unknown>, SegmentBookkeeper>;
   segmentPipelinesManager : SegmentPipelinesManager<any>;
-  sourceBuffersManager : SourceBuffersManager;
+  sourceBuffersStore : SourceBuffersStore;
   options: { manualBitrateSwitchingMode : "seamless" | "direct";
-             offlineRetry? : number;
-             segmentRetry? : number;
              textTrackOptions? : ITextTrackSourceBufferOptions; };
   wantedBufferAhead$ : BehaviorSubject<number>;
 }
@@ -107,9 +103,8 @@ export default function PeriodBuffer({
   clock$,
   content,
   garbageCollectors,
-  segmentBookkeepers,
   segmentPipelinesManager,
-  sourceBuffersManager,
+  sourceBuffersStore,
   options,
   wantedBufferAhead$,
 } : IPeriodBufferArguments) : Observable<IPeriodBufferEvent> {
@@ -122,7 +117,7 @@ export default function PeriodBuffer({
     switchMap((adaptation) => {
       if (adaptation == null) {
         log.info(`Buffer: Set no ${bufferType} Adaptation`, period);
-        const previousQSourceBuffer = sourceBuffersManager.get(bufferType);
+        const previousQSourceBuffer = sourceBuffersStore.get(bufferType);
         let cleanBuffer$ : Observable<unknown>;
 
         if (previousQSourceBuffer != null) {
@@ -144,11 +139,12 @@ export default function PeriodBuffer({
       const newBuffer$ = clock$.pipe(
         take(1),
         mergeMap((tick) => {
-          const qSourceBuffer = createOrReuseQueuedSourceBuffer(sourceBuffersManager,
+          const qSourceBuffer = createOrReuseQueuedSourceBuffer(sourceBuffersStore,
                                                                 bufferType,
                                                                 adaptation,
                                                                 options);
-          const strategy = getAdaptationSwitchStrategy(qSourceBuffer.getBuffered(),
+          const buffered = qSourceBuffer.getBufferedRanges();
+          const strategy = getAdaptationSwitchStrategy(buffered,
                                                        period,
                                                        bufferType,
                                                        tick);
@@ -188,9 +184,8 @@ export default function PeriodBuffer({
     qSourceBuffer : QueuedSourceBuffer<T>
   ) : Observable<IAdaptationBufferEvent<T>|IBufferWarningEvent> {
     const { manifest } = content;
-    const segmentBookkeeper = segmentBookkeepers.get(qSourceBuffer);
     const adaptationBufferClock$ = clock$.pipe(map(tick => {
-      const buffered = qSourceBuffer.getBuffered();
+      const buffered = qSourceBuffer.getBufferedRanges();
       return objectAssign({},
                           tick,
                           { bufferGap: getLeftSizeOfRange(buffered,
@@ -201,16 +196,15 @@ export default function PeriodBuffer({
                               content: { manifest, period, adaptation },
                               options,
                               queuedSourceBuffer: qSourceBuffer,
-                              segmentBookkeeper,
                               segmentPipelinesManager,
                               wantedBufferAhead$ })
     .pipe(catchError((error : unknown) => {
       // non native buffer should not impact the stability of the
       // player. ie: if a text buffer sends an error, we want to
       // continue playing without any subtitles
-      if (!SourceBuffersManager.isNative(bufferType)) {
+      if (!SourceBuffersStore.isNative(bufferType)) {
         log.error(`Buffer: Custom ${bufferType} buffer crashed. Aborting it.`, error);
-        sourceBuffersManager.disposeSourceBuffer(bufferType);
+        sourceBuffersStore.disposeSourceBuffer(bufferType);
 
         const formattedError = formatError(error, {
           defaultCode: "NONE",
@@ -233,19 +227,19 @@ export default function PeriodBuffer({
  * @returns {Object}
  */
 function createOrReuseQueuedSourceBuffer<T>(
-  sourceBuffersManager : SourceBuffersManager,
+  sourceBuffersStore : SourceBuffersStore,
   bufferType : IBufferType,
   adaptation : Adaptation,
   options: { textTrackOptions? : ITextTrackSourceBufferOptions }
 ) : QueuedSourceBuffer<T> {
-  const currentQSourceBuffer = sourceBuffersManager.get(bufferType);
+  const currentQSourceBuffer = sourceBuffersStore.get(bufferType);
   if (currentQSourceBuffer != null) {
     log.info("Buffer: Reusing a previous SourceBuffer for the type", bufferType);
     return currentQSourceBuffer;
   }
   const codec = getFirstDeclaredMimeType(adaptation);
   const sbOptions = bufferType === "text" ?  options.textTrackOptions : undefined;
-  return sourceBuffersManager.createSourceBuffer(bufferType, codec, sbOptions);
+  return sourceBuffersStore.createSourceBuffer(bufferType, codec, sbOptions);
 }
 
 /**

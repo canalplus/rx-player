@@ -43,6 +43,14 @@ is then emitted through it.
 This Observable will throw on any problem arising during that step, such as an
 HTTP error.
 
+In some specific conditions, the loader can also emit the wanted resource in
+multiple sub-parts. This allows for example to play a media file while still
+downloading it and is at the basis of low-latency streaming.
+To allow such use cases, the segment loaders can also emit the wanted resource
+by cutting it into chunks and emitting them through the Observable as they are
+available.
+This is better explained in the related chapter below.
+
 
 
 ## A parser ####################################################################
@@ -103,7 +111,7 @@ finished downloading it:
 The Manifest parser is a function whose role is to parse the Manifest in its
 original form to convert it to the RxPlayer's internal representation of it.
 
-It receives an argument the downloaded Manifest, some manifest-related
+It receives in argument the downloaded Manifest, some Manifest-related
 information (e.g. its URL) and a specific function called `scheduleRequest`,
 allowing it to ask for supplementary requests before completing (e.g. to fetch
 the current time from an URL or to load sub-parts of the Manifests only known
@@ -134,10 +142,10 @@ segment's data.
 
 It receives information linked to the segment you want to download:
   - The related `Manifest` data structure
-  - The `Period`
-  - The `Adaptation`
-  - The `Representation`
-  - The `Segment`
+  - The `Period` it is linked to
+  - The `Adaptation` it is linked to
+  - The `Representation` it is linked to
+  - The `Segment` object it is linked to
 
 It then return an Observable which send events as it loads the corresponding
 segment.
@@ -153,27 +161,67 @@ segment.
                         +----------+
 ```
 
-The following events can then be sent by the segment loader's Observable:
+The events sent in output depend on the "mode" chosen by the loader to download
+the segment. There are two possible modes:
+
+  - the regular mode, where the loader wait for the segments to be completely
+    downloaded before sending it
+
+  - the low-latency mode, where the loader emits segments by chunks at the same
+    time they are downloaded.
+
+The latter mode is usually active under the following conditions:
+  - low-latency streaming is enabled through the corresponding `loadVideo`
+    option
+  - we're loading a DASH content.
+  - we're not loading an initialization segment.
+  - the segment is in a CMAF container
+  - the `Fetch` JS API is available
+
+In most other cases, it will be in the regular mode.
+
+You can deduce which mode we are in simply by looking a the events the loader
+sends.
+
+In the regular mode, any of the following events can be sent through the
+Observable:
 
   - `"progress"`: We have new metrics on the current download (e.g. the amount
     currently downloaded, the time since the beginning of the request...)
 
   - `"data-created"`: The segment is available without needing to perform a
     network request. This is usually the case when segments are generated like
-    smooth's initialization segments.
+    Smooth Streaming's initialization segments.
     The segment's data is also communicated via this event.
 
     The `"data-created"` event, when sent, is the last event sent from the
-    loader. The loader will complete just after.
+    loader. The loader will complete just after emitting it.
 
   - `"data-loaded"`: The segment has been compeletely downloaded from the
     network. The segment's data is also communicated via this event.
 
     Like `"data-created"`, the `"data-loaded"` will be the last event sent by
     the loader.
-    This means that you either have a single `"data-created"` event or a single
-    `"data-loaded"` event with the data when the segment has been loaded
+    This means that you will either have a single `"data-created"` event or a
+    single `"data-loaded"` event with the data when the segment has been loaded
     succesfully.
+
+In the low-latency mode, the following events can be sent instead:
+
+  - `"progress"`: We have new metrics on the current download (e.g. the amount
+    currently downloaded, the time since the beginning of the request...)
+
+  - `"data-chunk"`: A sub-segment (or chunk) of the data is currently available.
+    The corresponding sub-segment is communicated in the payload of this event.
+
+    This event can be communicated multiple times until a
+    `"data-chunk-complete"` event is received.
+
+  - `"data-chunk-complete"`: The segment request just finished. All
+    corresponding data has been sent through `"data-chunk"` events.
+
+    If sent, this is the last event sent by a segment loader. The loader will
+    complete just after emitting it.
 
 
 
@@ -183,17 +231,22 @@ A segment parser is a function whose role is to extract some information from
 the segment's data:
   - what its precize start time and duration is
   - whether the segment should be offseted when decoded and by what amount
-  - the decodable data (which can be wrapped in a container e.g.  subtitles
-    in an ISOBMFF file).
+  - the decodable data (which can be wrapped in a container e.g. subtitles in an
+    ISOBMFF container).
 
-It receives the segment or sub-segment as argument and related information
+It receives the segment or sub-segment as argument and related information:
 ```
-  INPUT:                                      OUTPUT:
-  ------                                      -------
-  Segment in a generic format +  +----------+ Decodable data +
-  Segment information            |          | time information
+ INPUT:                                       OUTPUT:
+ ------                                       -------
+ Segment in a generic format +                Decodable data + time
+ isChunked? [1] + Segment        +----------+ information
+ information                     |          |
  ===============================>| SEGMENT  |===========================>
                                  |  PARSER  |
                                  |          |
                                  +----------+
 ```
+
+[1] The parser can make different guess on the time information of the
+segment depending on if the loaded segment corresponds to the whole segment or
+just a small chunk of it. The `isChunked` boolean allows it to be aware of that.

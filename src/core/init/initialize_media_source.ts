@@ -57,6 +57,7 @@ import {
 } from "../eme";
 import {
   createManifestPipeline,
+  IFetchManifestResult,
   SegmentPipelinesManager,
 } from "../pipelines";
 import { ITextTrackSourceBufferOptions } from "../source_buffers";
@@ -81,26 +82,7 @@ import {
   IWarningEvent,
 } from "./types";
 
-const { DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-        DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
-        OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config;
-
-/**
- * Returns pipeline options based on the global config and the user config.
- * @param {Object} networkConfig
- * @returns {Object}
- */
-function getManifestPipelineOptions(
-  { manifestRetry, offlineRetry }: { manifestRetry? : number;
-                                     offlineRetry? : number; }
-) : { maxRetry: number; maxRetryOffline: number } {
-  return {
-    maxRetry: manifestRetry != null ? manifestRetry :
-                                      DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-    maxRetryOffline: offlineRetry != null ? offlineRetry :
-                                            DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
-  };
-}
+const { OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config;
 
 // Arguments to give to the `initialize` function
 export interface IInitializeOptions {
@@ -112,6 +94,7 @@ export interface IInitializeOptions {
                     manualBitrateSwitchingMode : "seamless" | "direct"; };
   clock$ : Observable<IInitClockTick>;
   keySystems : IKeySystemOption[];
+  lowLatencyMode : boolean;
   mediaElement : HTMLMediaElement;
   networkConfig: { manifestRetry? : number;
                    offlineRetry? : number;
@@ -120,7 +103,7 @@ export interface IInitializeOptions {
   startAt? : IInitialTimeOptions;
   textTrackOptions : ITextTrackSourceBufferOptions;
   pipelines : ITransportPipelines;
-  url : string;
+  url? : string;
 }
 
 // Every events emitted by Init.
@@ -152,6 +135,7 @@ export default function InitializeOnMediaSource(
     bufferOptions,
     clock$,
     keySystems,
+    lowLatencyMode,
     mediaElement,
     networkConfig,
     speed$,
@@ -162,15 +146,34 @@ export default function InitializeOnMediaSource(
 ) : Observable<IInitEvent> {
   const warning$ = new Subject<ICustomError>();
 
+  const manifestPipelines =
+    createManifestPipeline(pipelines,
+                           { lowLatencyMode,
+                             manifestRetry: networkConfig.manifestRetry,
+                             offlineRetry: networkConfig.offlineRetry },
+                           warning$);
+
   // Fetch and parse the manifest from the URL given.
   // Throttled to avoid doing multiple simultaneous requests.
-  const manifestPipelineOptions = getManifestPipelineOptions(networkConfig);
-  const fetchManifest = throttle(createManifestPipeline(pipelines,
-                                                        manifestPipelineOptions,
-                                                        warning$));
+  const fetchManifest = throttle(
+    (manifestURL : string | undefined,
+     externalClockOffset : number | undefined)
+    : Observable<IFetchManifestResult> => {
+      return manifestPipelines.fetch(manifestURL).pipe(
+        mergeMap((response) =>
+          manifestPipelines.parse(response.value, manifestURL, externalClockOffset)
+        ),
+        share()
+      );
+    }
+  );
 
   // Creates pipelines for downloading segments.
-  const segmentPipelinesManager = new SegmentPipelinesManager<any>(pipelines);
+  const segmentPipelinesManager = new SegmentPipelinesManager<any>(pipelines, {
+    lowLatencyMode,
+    offlineRetry: networkConfig.offlineRetry,
+    segmentRetry: networkConfig.segmentRetry,
+  });
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".
@@ -194,12 +197,12 @@ export default function InitializeOnMediaSource(
 
   const loadContent$ = observableCombineLatest([
     openMediaSource$,
-    fetchManifest({ url }),
+    fetchManifest(url, undefined),
     emeManager$.pipe(filter(isEMEReadyEvent), take(1)),
   ]).pipe(mergeMap(([ initialMediaSource, { manifest, sendingTime } ]) => {
 
     log.debug("Init: Calculating initial time");
-    const initialTime = getInitialTime(manifest, startAt);
+    const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
     log.debug("Init: Initial time calculated:", initialTime);
 
     const mediaSourceLoader = createMediaSourceLoader({
@@ -209,10 +212,7 @@ export default function InitializeOnMediaSource(
       speed$,
       abrManager,
       segmentPipelinesManager,
-      bufferOptions: objectAssign({ textTrackOptions,
-                                    offlineRetry: networkConfig.offlineRetry,
-                                    segmentRetry: networkConfig.segmentRetry },
-                                  bufferOptions),
+      bufferOptions: objectAssign({ textTrackOptions }, bufferOptions),
     });
 
     const recursiveLoad$ = recursivelyLoadOnMediaSource(initialMediaSource,

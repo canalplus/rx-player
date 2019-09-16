@@ -113,7 +113,7 @@ export interface IDirectFileOptions { autoPlay : boolean;
                                       mediaElement : HTMLMediaElement;
                                       speed$ : Observable<number>;
                                       startAt? : IInitialTimeOptions;
-                                      url : string; }
+                                      url? : string; }
 
 // Events emitted by `initializeDirectfileContent`
 export type IDirectfileEvent = ISpeedChangedEvent |
@@ -139,6 +139,10 @@ export default function initializeDirectfileContent({
 } : IDirectFileOptions) : Observable<IDirectfileEvent> {
 
   clearElementSrc(mediaElement);
+
+  if (url == null) {
+    throw new Error("No URL for a DirectFile content");
+  }
 
   // Start everything! (Just put the URL in the element's src).
   const linkURL$ = setElementSrc$(mediaElement, url);

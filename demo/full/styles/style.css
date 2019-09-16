@@ -441,6 +441,66 @@ body {
   margin: 0 3px 0 3px;
 }
 
+.running {
+  display: inline;
+  position: relative;
+  margin: auto;
+  background: none;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+}
+
+.running:hover:after {
+  background: #ed3656;
+  background: rgba(237,54,86,.9);
+  bottom: 40px;
+  color: #fff;
+  content: attr(title);
+  left: 32%;
+  padding: 5px 15px;
+  position: absolute;
+  text-align: center;
+  z-index: 10000;
+  width: 175px;
+}
+
+.running:hover:before{
+    border: solid;
+    border-color: #ed3656 transparent;
+    border-width: 6px 6px 0 6px;
+    bottom: 35px;
+    content: "";
+    left: 32%;
+    position: absolute;
+    z-index: 10001;
+}
+
+.running > svg {
+  width: 22px;
+  fill: #ccc;
+  transform: scale(-1, 1);
+}
+
+.running:hover > svg {
+  fill: #fff;
+}
+
+.running.clicked > svg {
+  fill: #ed3656;
+}
+
+.running.clicked:hover > svg {
+  fill: #f3687f;
+}
+
+.catch-up {
+  color: #ed3656;
+  border: solid 1px #ed3656;
+  border-radius: 3px;
+  padding: 2px 9px;
+}
+
 .control-button:hover {
   color: #fff;
 }
@@ -520,7 +580,23 @@ body {
   margin: auto;
   margin-left: 10px;
   font-size: 0.8em;
-  flex-grow: 1;
+}
+
+.dot {
+  height: 10px;
+  width: 10px;
+  background-color: #666;
+  border-radius: 50%;
+  margin: auto;
+  margin-left: 6px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.dot.live {
+  background-color: #ed3656;
+  cursor: default;
 }
 
 .settings-button {
@@ -709,6 +785,7 @@ body {
   background-color: white;
   border-radius: 5px;
   padding: 10px;
+  margin: 10px 0px;
 }
 
 .encryption-checkbox {
@@ -936,6 +1013,10 @@ input:checked + .slider:before {
 
 @media only screen and (max-width: 650px) {
   .button-gh {
+    display: none;
+  }
+
+  .catch-up {
     display: none;
   }
 }

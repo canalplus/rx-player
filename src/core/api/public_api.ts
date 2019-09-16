@@ -317,7 +317,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * URL of the content currently being played.
      * @type {string}
      */
-    url : string;
+    url? : string;
 
     /**
      * true if the current content is in DirectFile mode.
@@ -520,7 +520,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.15.1";
+    this.version = /*PLAYER_VERSION*/"3.16.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -669,6 +669,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             defaultAudioTrack,
             defaultTextTrack,
             keySystems,
+            lowLatencyMode,
             manualBitrateSwitchingMode,
             networkConfig,
             startAt,
@@ -706,7 +707,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const videoElement = this.videoElement;
 
     // Global clock used for the whole application.
-    const clock$ = createClock(videoElement, { withMediaSource: !isDirectFile });
+    const clock$ = createClock(videoElement, { withMediaSource: !isDirectFile,
+                                               lowLatencyMode });
 
     const contentIsStopped$ = observableMerge(
       this._priv_stopCurrentContent$,
@@ -722,12 +724,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         throw new Error(`transport "${transport}" not supported`);
       }
 
-      const pipelines = transportFn(objectAssign({ supplementaryTextTracks,
+      const pipelines = transportFn(objectAssign({ lowLatencyMode,
+                                                   supplementaryTextTracks,
                                                    supplementaryImageTracks },
                                                  transportOptions));
       // Options used by the ABR Manager.
       const adaptiveOptions = {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
+        lowLatencyMode,
         manualBitrates: this._priv_bitrateInfos.manualBitrates,
         maxAutoBitrates: this._priv_bitrateInfos.maxAutoBitrates,
         throttlers: {
@@ -770,6 +774,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                     bufferOptions,
                                                     clock$,
                                                     keySystems,
+                                                    lowLatencyMode,
                                                     mediaElement: videoElement,
                                                     networkConfig,
                                                     pipelines,
@@ -2361,6 +2366,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.trigger("positionUpdate", positionData);
   }
 }
-Player.version = /*PLAYER_VERSION*/"3.15.1";
+Player.version = /*PLAYER_VERSION*/"3.16.0";
 
 export default Player;

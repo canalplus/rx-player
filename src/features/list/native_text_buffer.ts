@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import nativeTextBuffer from "../../core/source_buffers/text/native";
+import nativeTextBuffer from "../../custom_source_buffers/text/native";
 import { IFeaturesObject } from "../types";
 
 /**

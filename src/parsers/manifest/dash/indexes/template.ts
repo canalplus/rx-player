@@ -81,13 +81,11 @@ export interface ITemplateIndexIndexArgument {
 
 // Aditional argument for a SegmentTemplate RepresentationIndex
 export interface ITemplateIndexContextArgument {
-  availabilityStartTime : number; // Time from which the content starts
-                                  // i.e. The `0` time is at that timestamp
+  aggressiveMode : boolean; // If `true`, this index will return segments which
+                            // which had time to be started but not finished.
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the
                                                        // minimum and maximum
                                                        // of a content
-  clockOffset? : number; // If set, offset to add to `performance.now()`
-                         // to obtain the current server's time, in milliseconds
   isDynamic : boolean; // if true, the MPD can be updated over time
   manifestReceivedTime? : number; // time (in terms of `performance.now`) at
                                    // which the Manifest file was received
@@ -107,11 +105,11 @@ export interface ITemplateIndexContextArgument {
  * @class TemplateRepresentationIndex
  */
 export default class TemplateRepresentationIndex implements IRepresentationIndex {
+  private _aggressiveMode : boolean;
   private _index : ITemplateIndex;
+  private _manifestBoundsCalculator : ManifestBoundsCalculator;
   private _periodStart : number;
   private _relativePeriodEnd? : number;
-  private _liveEdgeOffset? : number;
-  private _manifestBoundsCalculator : ManifestBoundsCalculator;
 
   // Whether this RepresentationIndex can change over time.
   private _isDynamic : boolean;
@@ -125,9 +123,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     context : ITemplateIndexContextArgument
   ) {
     const { timescale } = index;
-    const { availabilityStartTime,
+    const { aggressiveMode,
             manifestBoundsCalculator,
-            clockOffset,
             isDynamic,
             periodEnd,
             periodStart,
@@ -136,6 +133,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             representationBitrate } = context;
 
     this._manifestBoundsCalculator = manifestBoundsCalculator;
+    this._aggressiveMode = aggressiveMode;
     const presentationTimeOffset = index.presentationTimeOffset != null ?
                                      index.presentationTimeOffset :
                                      0;
@@ -164,22 +162,6 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     this._periodStart = periodStart;
     this._relativePeriodEnd = periodEnd == null ? undefined :
                                                   periodEnd - periodStart;
-    if (isDynamic && periodEnd == null) {
-      if (clockOffset != null) {
-        const perfOffset = (clockOffset / 1000) - availabilityStartTime;
-        this._liveEdgeOffset = perfOffset - periodStart;
-      } else {
-        log.warn("DASH Parser: no clock synchronization mechanism found." +
-                 " Setting a live gap of 10 seconds as a security.");
-        const now = Date.now() - 10000;
-        const maximumSegmentTimeInSec = now / 1000 - availabilityStartTime;
-        const receivedTime = context.manifestReceivedTime == null ?
-                               performance.now() :
-                               context.manifestReceivedTime;
-        const perfOffset =  maximumSegmentTimeInSec - (receivedTime / 1000);
-        this._liveEdgeOffset = perfOffset - periodStart;
-      }
-    }
   }
 
   /**
@@ -397,14 +379,14 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     }
 
     // 1 - check that this index is already available
-    if (!this._relativePeriodEnd && this._liveEdgeOffset != null) {
+    if (!this._relativePeriodEnd) {
       // /!\ The scaled max position augments continuously and might not
       // reflect exactly the real server-side value. As segments are
       // generated discretely.
-      const scaledMaxPosition = this._liveEdgeOffset + (performance.now() / 1000);
-      // Maximum position is before this period.
-      // No segment is yet available here
-      if (scaledMaxPosition < 0) {
+      const maximumBound = this._manifestBoundsCalculator.getMaximumBound();
+      if (maximumBound !== undefined && maximumBound < this._periodStart) {
+        // Maximum position is before this period.
+        // No segment is yet available here
         return null;
       }
     }
@@ -448,9 +430,12 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       if (scaledMaxPosition < 0) {
         return null;
       }
-      const maxPossibleStart = Math.max(scaledMaxPosition - duration, 0);
-      const numberIndexedToZero = Math.floor(maxPossibleStart / duration);
-      return numberIndexedToZero * duration;
+      const numberOfSegmentsAvailable = this._aggressiveMode ?
+        Math.ceil(scaledMaxPosition / duration) :
+        Math.floor(scaledMaxPosition / duration);
+      return numberOfSegmentsAvailable <= 0 ?
+               null :
+               (numberOfSegmentsAvailable - 1) * duration;
     } else {
       const maximumTime = (this._relativePeriodEnd || 0) * timescale;
       const numberIndexedToZero = Math.ceil(maximumTime / duration) - 1;

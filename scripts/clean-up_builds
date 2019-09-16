@@ -5,6 +5,8 @@
 #
 # This script removes the directories automatically generated when doing a
 # modular build.
+#
+# You can call it at any time, it will not update any staged file.
 
 set -e
 rm -rf dist/_esm5.processed

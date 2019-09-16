@@ -16,22 +16,24 @@
 
 import BufferGarbageCollector from "./garbage_collector";
 import QueuedSourceBuffer, {
-  IAppendBufferInfos,
+  IBufferedChunk,
   IBufferType,
+  IPushChunkInfos,
 } from "./queued_source_buffer";
-import SourceBuffersManager, {
+import SourceBuffersStore, {
   getBufferTypes,
   ISourceBufferOptions,
   ITextTrackSourceBufferOptions,
-} from "./source_buffers_manager";
+} from "./source_buffers_store";
 
-export default SourceBuffersManager;
+export default SourceBuffersStore;
 export {
   BufferGarbageCollector,
-  getBufferTypes,
-  IAppendBufferInfos,
+  IBufferedChunk,
   IBufferType,
+  IPushChunkInfos,
   ISourceBufferOptions,
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,
+  getBufferTypes,
 };

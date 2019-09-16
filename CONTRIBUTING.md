@@ -3,16 +3,20 @@
 ## Table of contents ###########################################################
 
 - [Issues and new features](#issues)
+- [Reading the current code](#reading)
 - [Creating a branch](#branch)
   - [Naming convention](#branch-name)
 - [Code style](#code)
     - [Linting](#code-lint)
     - [Types](#code-types)
     - [Forbidden functions and classes](#code-forbidden)
+- [Starting the demo page](#demo)
+  - [Building the demo and serving it](#demo-running)
+  - [Using HTTPS](#demo-https)
 - [Creating a commit](#commit)
   - [Checks](#commit-checks)
   - [Naming convention](#commit-name)
-- [Testing](#testing)
+- [The test suite](#testing)
   - [Unit tests](#testing-unit)
   - [Integration tests](#testing-integration)
   - [Memory tests](#testing-memory)
@@ -33,6 +37,27 @@ We'll try to acknowledge it as soon as possible.
 
 If that issue is not already worked on, we will usually accept pull requests.
 Those have to follow the conventions defined below.
+
+
+
+<a name="reading"></a>
+## Reading the current code ####################################################
+
+Even if we hope the current code is straightforward, readable and commented
+enough we can still admit that going blind into the codebase can be hard at
+first (as it would be for any non-small codebase).
+
+We thus encourage you to rely on [the architecture documentation
+](https://canalplus.github.io/rx-player/doc/pages/architecture/index.html)
+(note: this page is updated with each new version. For any older version, it can
+also be found in the `doc/architecture/` directory, in the markdown format).
+
+A good place to start would be the [file organization of the project
+](https://canalplus.github.io/rx-player/doc/pages/architecture/files.html).
+
+The code of the RxPlayer being heavily modularized, you should not need to read
+the whole documentation to be ready, only the parts you want to update
+(hopefully!).
 
 
 
@@ -104,7 +129,7 @@ directory) by calling `npm run lint:tests`.
 
 We try to be as strict as possible with types:
 
-  - `any` types should be avoided
+  - the `any` type should be avoided
 
   - the `as` keyword should also be avoided as much as possible.
 
@@ -142,6 +167,71 @@ The following class:
 
 
 
+<a name="demo"></a>
+## Starting the demo page ######################################################
+
+<a name="demo-running"></a>
+### Building the demo and serving it ###########################################
+
+You might want to quickly test your code modification(s) on a real use case.
+
+For those types of need, we developped two demo pages:
+
+  - the _full demo_ page, which is also the one used to showcase the player.
+
+    This demo has a user-friendly interface and allow the most frequent API
+    interactions.
+
+    It also exposes both the RxPlayer class through `window.RxPlayer` and the
+    rxPlayer instance through `window.rxPlayer` - both in the global scope. You
+    can thus open a debugger/inspector in your favorite browser to exploit
+    directly the player's API.
+
+  - the _standalone demo_ page, which is just a `<video />` tag linked to a
+    RxPlayer instance.
+
+    In this demo too, `window.RxPlayer` and `window.rxPlayer` link to the
+    RxPlayer class and the rxPlayer instance respectively.
+
+To use the full demo page, you can build it and run a local HTTP server on the
+port 8000 by running the following npm script.
+```sh
+npm run start
+```
+
+To use the standalone demo page, you can build it and run a local HTTP server on
+the port 8001 by running the following npm script.
+```sh
+npm run standalone
+```
+
+Both will detect when the RxPlayer's files (or even the demo files) are updated
+and perform a new build when that's the case. In that way, the server will
+always serve the last local version of the code.
+
+<a name="demo-https"></a>
+### Serving the demo page through HTTPS ########################################
+
+You might want to serve the demo via HTTPS. This is for example needed to be
+able to play encrypted contents in Chrome.
+
+Thankfully, we have an npm script which generates a local self-signed
+certificate with the help of `openssl`:
+```sh
+npm run certificate
+```
+
+You can then run the same demo script defined previously.
+The _full demo_ will now serve HTTPS through the port 8443 and the _standalone
+demo_ through the port 8444. Both still serve HTTP on the same ports than
+before.
+
+Note that such self-signed certificates are usually (rightfully) considered
+suspicious by web browsers. As such, you might first encounter a warning screen
+when going to one of the demo pages in HTTPS. In most browsers, you can however
+safely ignore that warning.
+
+
 <a name="commit"></a>
 ## Creating a commit ###########################################################
 
@@ -155,7 +245,7 @@ script by calling `npm run check`.
 In any case, the type checking and linting of the `src` directory is
 automatically done before each commit thanks to a git hook.
 
-Those checks allow us to guarantee that every merged commit in the `master`
+Those checks give us some guarantees that every merged commit in the `master`
 branch is stable enough.
 
 This gives us more confidence on our code and also allows  more advanced
@@ -187,6 +277,7 @@ It usually is one of the following:
   - `matroska`
   - `pipelines`
   - `sami`
+  - `scripts`
   - `smooth`
   - `source-buffers`
   - `srt`
@@ -206,7 +297,7 @@ problematic commit if a regression is detected.
 
 
 <a name="testing"></a>
-## Testing #####################################################################
+## The test suite ##############################################################
 
 <a name="testing-unit"></a>
 ### Unit tests #################################################################
@@ -214,7 +305,7 @@ problematic commit if a regression is detected.
 Unit tests test function implementations. Mostly to check if they give a sane
 output for every input given.
 
-Writing unit tests for new code is highly encouraged.
+Writing unit tests for new code is encouraged.
 
 Unit tests are written in a \_\_tests\_\_ directory, itself created in the same
 directory that the code it tests.
@@ -239,13 +330,15 @@ It you want to improve our integration tests, you are welcome to do so.
 Those are wrote in `tests/integration` with the help of the Mocha, Chai and
 Sinon libraries.
 
+We also use a homemade library and server to serve media contents to our tests.
+If you want to know how it works, we invite you to rely on the already created
+tests and to read the corresponding files.
+
 
 <a name="testing-memory"></a>
 ### Memory tests ###############################################################
 
 Memory tests replicate simple scenarios and try to detect memory leaks.
-
-Like integration tests, memory tests are not required for each new code.
 
 You can also help us improving our memory tests. Those are written in
 `test/memory`. The testing stack used is Mocha, Chai and Sinon.

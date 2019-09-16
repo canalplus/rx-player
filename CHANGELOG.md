@@ -1,5 +1,32 @@
 # Changelog
 
+## v3.16.0 (2019/09/16)
+
+### Features
+
+  - dash: add `lowLatencyMode` `loadVideo` option to play low-latency DASH contents with chunk-encoded CMAF and chunked transfer encoding close to the live edge efficiently
+  - metaplaylist: add the experimental `metaplaylist` transport, which allows to smoothly play a concatenation of multiple contents
+  - api: add `serverSyncInfos` to `transportOptions` (`loadVideo` option)
+  - errors: add `code` property to a `NetworkError` indicating the corresponding HTTP status
+
+### Bug fixes
+
+  - dash: fix minimum time calculation for Multi-Period MPDs with SegmentTemplate segment indexes but no SegmentTimeline
+  - dash: play static MPD not declaring any segment for a time of 0 seconds at the minimum possible time by default
+  - dash: fix maximum position calculation for live Multi-Period contents where the currently generated period is not the last one declared in the MPD
+
+### Other improvements
+
+  - api: authorize to set no `url` to `loadVideo` if the `manifestLoader` `transportOption` is set
+  - smooth: the `aggressiveMode` option now only allows requests for segments which had time to at least begin to be generated to avoid too much HTTP 412
+  - dash: the `aggressiveMode` now also have an effect for some SegmentTemplate DASH contents (download segments even if they're not finished)
+  - code: add pre-commit and pre-push git hooks to automate checking and facilitate bisecting
+  - dash: better handle live Multi-Period contents where the currently broadcasted period is not the last one declared in the MPD
+  - dash: better infer the end of a Period if the start of the next one is defined
+  - api: always start live contents at the live edge if one is defined and not just before the last available segments
+  - ci: run integration tests with Travis and appveyor again
+
+
 ## v3.15.1 (2019/08/07)
 
 ### Bug fixes

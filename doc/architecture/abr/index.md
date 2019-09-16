@@ -14,7 +14,7 @@ It does so by receiving various values such as:
   - user settings (maximum authorized bitrate/width etc.)
   - the available qualities
 
-With all those variables in hand, it then proposes the quality which seems to
+With all those variables at hand, it then proposes the quality which seems to
 be the most adapted, that is the quality which:
   - will respect user settings (example: a Maximum bitrate is set)
   - will maximize the user experience (example: a quality too high for the
@@ -24,5 +24,5 @@ be the most adapted, that is the quality which:
 In order to estimate the quality that maximizes the playback experience, the ABR
 relies on two "estimators". The [bandwidth estimator](./bandwidth_estimator.md)
 picks a quality from network conditions. The
-[buffer based estimator](./buffer_based_estimator.md) relies on buffering
-conditions to make his choices.
+[buffer based chooser](./buffer_based_chooser.md) relies on buffering conditions
+to make his choices.

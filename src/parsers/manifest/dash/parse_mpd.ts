@@ -39,10 +39,12 @@ import parsePeriods from "./parse_periods";
 const generateManifestID = idGenerator();
 
 export interface IMPDParserArguments {
+  aggressiveMode : boolean; // Whether we should request new segments even if
+                            // they are not yet finished
   externalClockOffset? : number; // If set, offset to add to `performance.now()`
                                  // to obtain the current server's time
   referenceDateTime? : number; // Default base time, in seconds
-  url : string; // URL of the manifest (post-redirection if one)
+  url? : string; // URL of the manifest (post-redirection if one)
 }
 
 export type IParserResponse<T> = { type : "needs-ressources";
@@ -181,13 +183,16 @@ function parseCompleteIntermediateRepresentation(
   const { children: rootChildren,
           attributes: rootAttributes } = mpdIR;
   const isDynamic : boolean = rootAttributes.type === "dynamic";
-  const baseURL = resolveURL(normalizeBaseURL(args.url), rootChildren.baseURL);
+  const baseURL = resolveURL(normalizeBaseURL(args.url == null ? "" :
+                                                                 args.url),
+                             rootChildren.baseURL);
   const availabilityStartTime = parseAvailabilityStartTime(rootAttributes,
                                                            args.referenceDateTime);
   const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
   const clockOffset = args.externalClockOffset;
 
-  const manifestInfos = { availabilityStartTime,
+  const manifestInfos = { aggressiveMode: args.aggressiveMode,
+                          availabilityStartTime,
                           baseURL,
                           clockOffset,
                           duration: rootAttributes.duration,
@@ -206,7 +211,8 @@ function parseCompleteIntermediateRepresentation(
     periods: parsedPeriods,
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay,
     transportType: "dash",
-    uris: [args.url, ...rootChildren.locations],
+    uris: args.url == null ?
+      rootChildren.locations : [args.url, ...rootChildren.locations],
   };
 
   // -- add optional fields --

@@ -21,11 +21,9 @@ export interface IStyleElements {
 }
 
 /**
- *
  * Parse style element from WebVTT.
- * @param {Array.<string>} styleBlock
- * @param {Object} baseStyleElements
- * @return {Array.<Object>} classes
+ * @param {Array.<Array.<string>>} styleBlocks
+ * @return {Object}
  */
 export default function parseStyleBlocks(styleBlocks : string[][]) : {
   classes : IStyleElements;

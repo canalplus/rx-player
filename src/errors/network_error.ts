@@ -34,7 +34,7 @@ export default class NetworkError extends Error {
   public readonly type : string;
   public readonly message : string;
   public readonly code : INetworkErrorCode;
-  public readonly xhr : XMLHttpRequest;
+  public readonly xhr : XMLHttpRequest | null;
   public readonly url : string;
   public readonly status : number;
   public readonly errorType : IRequestErrorType;

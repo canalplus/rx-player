@@ -87,6 +87,7 @@ export interface IClockTick extends IMediaInfos {
 }
 
 const { SAMPLING_INTERVAL_MEDIASOURCE,
+        SAMPLING_INTERVAL_LOW_LATENCY,
         SAMPLING_INTERVAL_NO_MEDIASOURCE,
         RESUME_GAP_AFTER_SEEKING,
         RESUME_GAP_AFTER_NOT_ENOUGH_DATA,
@@ -110,34 +111,41 @@ const SCANNED_MEDIA_ELEMENTS_EVENTS : IMediaInfosState[] = [ "canplay",
  * current position before resuming playback. Based on the infos of the stall.
  * Waiting time differs between a "seeking" stall and a buffering stall.
  * @param {Object|null} stalled
+ * @param {Boolean} lowLatencyMode
  * @returns {Number}
  */
-function getResumeGap(stalled : stalledStatus) : number {
+function getResumeGap(stalled : stalledStatus, lowLatencyMode : boolean) : number {
   if (!stalled) {
     return 0;
   }
+  const suffix : "LOW_LATENCY" | "DEFAULT" = lowLatencyMode ? "LOW_LATENCY" :
+                                                              "DEFAULT";
 
   switch (stalled.reason) {
     case "seeking":
-      return RESUME_GAP_AFTER_SEEKING;
+      return RESUME_GAP_AFTER_SEEKING[suffix];
     case "not-ready":
-      return RESUME_GAP_AFTER_NOT_ENOUGH_DATA;
+      return RESUME_GAP_AFTER_NOT_ENOUGH_DATA[suffix];
     default:
-      return RESUME_GAP_AFTER_BUFFERING;
+      return RESUME_GAP_AFTER_BUFFERING[suffix];
   }
 }
 
 /**
  * @param {Object} currentRange
  * @param {Number} duration
+ * @param {Boolean} lowLatencyMode
  * @returns {Boolean}
  */
 function hasLoadedUntilTheEnd(
   currentRange : { start : number; end : number }|null,
-  duration : number
+  duration : number,
+  lowLatencyMode : boolean
 ) : boolean {
+  const suffix : "LOW_LATENCY" | "DEFAULT" = lowLatencyMode ? "LOW_LATENCY" :
+                                                              "DEFAULT";
   return currentRange != null &&
-         (duration - currentRange.end) <= STALL_GAP;
+         (duration - currentRange.end) <= STALL_GAP[suffix];
 }
 
 /**
@@ -182,13 +190,13 @@ function getMediaInfos(
  * the different properties needed.
  * @param {Object} currentTimings - Current timings object. This does not need
  * to have every single infos, see function to know which properties are needed.
- * @param {Boolean} withMediaSource - False if the directfile API is used.
+ * @param {Object} options
  * @returns {Object|null}
  */
 function getStalledStatus(
   prevTimings : IClockTick,
   currentTimings : IMediaInfos,
-  withMediaSource : boolean
+  { withMediaSource, lowLatencyMode } : IClockOptions
 ) : stalledStatus {
   const { state: currentState,
           currentTime,
@@ -203,7 +211,7 @@ function getStalledStatus(
           state: prevState,
           currentTime: prevTime } = prevTimings;
 
-  const fullyLoaded = hasLoadedUntilTheEnd(currentRange, duration);
+  const fullyLoaded = hasLoadedUntilTheEnd(currentRange, duration, lowLatencyMode);
 
   const canStall = (readyState >= 1 &&
                     currentState !== "loadedmetadata" &&
@@ -215,13 +223,15 @@ function getStalledStatus(
 
   if (withMediaSource) {
     if (canStall &&
-        (bufferGap <= STALL_GAP || bufferGap === Infinity || readyState === 1)
+        (bufferGap <= (lowLatencyMode ? STALL_GAP.LOW_LATENCY : STALL_GAP.DEFAULT) ||
+         bufferGap === Infinity || readyState === 1)
     ) {
       shouldStall = true;
     } else if (prevStalled &&
                readyState > 1 &&
                bufferGap < Infinity &&
-               (bufferGap > getResumeGap(prevStalled) || fullyLoaded || ended)
+               (bufferGap > getResumeGap(prevStalled, lowLatencyMode) ||
+                fullyLoaded || ended)
     ) {
       shouldUnstall = true;
     }
@@ -241,7 +251,8 @@ function getStalledStatus(
                (currentState !== "seeking" && currentTime !== prevTime ||
                 currentState === "canplay" ||
                 bufferGap < Infinity &&
-                (bufferGap > getResumeGap(prevStalled) || fullyLoaded || ended))
+                (bufferGap > getResumeGap(prevStalled, lowLatencyMode) ||
+                 fullyLoaded || ended))
     ) {
       shouldUnstall = true;
     }
@@ -265,6 +276,11 @@ function getStalledStatus(
   else {
     return prevStalled;
   }
+}
+
+export interface IClockOptions {
+  withMediaSource : boolean;
+  lowLatencyMode : boolean;
 }
 
 /**
@@ -292,7 +308,7 @@ function getStalledStatus(
  */
 function createClock(
   mediaElement : HTMLMediaElement,
-  { withMediaSource } : { withMediaSource : boolean }
+  options : IClockOptions
 ) : Observable<IClockTick> {
   return observableDefer(() : Observable<IClockTick> => {
     let lastTimings : IClockTick = objectAssign(getMediaInfos(mediaElement, "init"),
@@ -300,7 +316,7 @@ function createClock(
 
     function getCurrentClockTick(state : IMediaInfosState) : IClockTick {
       const mediaTimings = getMediaInfos(mediaElement, state);
-      const stalledState = getStalledStatus(lastTimings, mediaTimings, withMediaSource);
+      const stalledState = getStalledStatus(lastTimings, mediaTimings, options);
 
       // /!\ Mutate mediaTimings
       return objectAssign(mediaTimings, { stalled: stalledState });
@@ -311,8 +327,9 @@ function createClock(
         observableFromEvent(mediaElement, eventName)
           .pipe(mapTo(eventName)));
 
-    const interval = withMediaSource ? SAMPLING_INTERVAL_MEDIASOURCE :
-                                       SAMPLING_INTERVAL_NO_MEDIASOURCE;
+    const interval = options.lowLatencyMode  ? SAMPLING_INTERVAL_LOW_LATENCY :
+                     options.withMediaSource ? SAMPLING_INTERVAL_MEDIASOURCE :
+                     SAMPLING_INTERVAL_NO_MEDIASOURCE;
 
     const interval$ : Observable<"timeupdate"> =
       observableInterval(interval)

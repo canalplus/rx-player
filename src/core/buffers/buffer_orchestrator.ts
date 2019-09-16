@@ -46,7 +46,7 @@ import SortedList from "../../utils/sorted_list";
 import WeakMapMemory from "../../utils/weak_map_memory";
 import ABRManager from "../abr";
 import { SegmentPipelinesManager } from "../pipelines";
-import SourceBuffersManager, {
+import SourceBuffersStore, {
   BufferGarbageCollector,
   getBufferTypes,
   IBufferType,
@@ -59,7 +59,6 @@ import EVENTS from "./events_generators";
 import PeriodBuffer, {
   IPeriodBufferClockTick,
 } from "./period";
-import SegmentBookkeeper from "./segment_bookkeeper";
 import {
   IBufferOrchestratorEvent,
   IMultiplePeriodBuffersEvent,
@@ -93,7 +92,7 @@ const { MAXIMUM_MAX_BUFFER_AHEAD,
  * @param {Observable} clock$ - Emit position information
  * @param {Object} abrManager - Emit bitrate estimation and best Representation
  * to play.
- * @param {Object} sourceBuffersManager - Will be used to lazily create
+ * @param {Object} sourceBuffersStore - Will be used to lazily create
  * SourceBuffer instances associated with the current content.
  * @param {Object} segmentPipelinesManager - Download segments
  * @param {Object} options
@@ -107,13 +106,11 @@ export default function BufferOrchestrator(
               initialPeriod : Period; },
   clock$ : Observable<IBufferOrchestratorClockTick>,
   abrManager : ABRManager,
-  sourceBuffersManager : SourceBuffersManager,
+  sourceBuffersStore : SourceBuffersStore,
   segmentPipelinesManager : SegmentPipelinesManager<any>,
   options: { wantedBufferAhead$ : BehaviorSubject<number>;
              maxBufferAhead$ : Observable<number>;
              maxBufferBehind$ : Observable<number>;
-             segmentRetry? : number;
-             offlineRetry? : number;
              textTrackOptions? : ITextTrackSourceBufferOptions;
              manualBitrateSwitchingMode : "seamless" | "direct"; }
 ) : Observable<IBufferOrchestratorEvent> {
@@ -140,11 +137,6 @@ export default function BufferOrchestrator(
                            .pipe(map(val => Math.min(val, defaultMaxAhead))),
       });
     });
-
-  // Keep track of a unique segmentBookkeeper created per QueuedSourceBuffer.
-  const segmentBookkeepers =
-    new WeakMapMemory<QueuedSourceBuffer<unknown>, SegmentBookkeeper>(() =>
-      new SegmentBookkeeper());
 
   // trigger warnings when the wanted time is before or after the manifest's
   // segments
@@ -360,9 +352,8 @@ export default function BufferOrchestrator(
                                          clock$,
                                          content: { manifest, period: basePeriod },
                                          garbageCollectors,
-                                         segmentBookkeepers,
                                          segmentPipelinesManager,
-                                         sourceBuffersManager,
+                                         sourceBuffersStore,
                                          options,
                                          wantedBufferAhead$, }
     ).pipe(

@@ -29,55 +29,61 @@ import {
   ISegmentParserArguments,
   ISegmentParserObservable,
 } from "../types";
+import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 
-export default function parser({ segment,
-                                 period,
-                                 representation,
+export default function parser({ content,
                                  response,
                                  init } : ISegmentParserArguments< Uint8Array |
                                                                    ArrayBuffer |
                                                                    null >
-) : ISegmentParserObservable< Uint8Array | ArrayBuffer | null > {
-  const { responseData } = response;
-  if (responseData == null) {
-    return observableOf({ segmentData: null,
-                          segmentInfos: null,
-                          segmentOffset: 0,
+) : ISegmentParserObservable< Uint8Array | ArrayBuffer > {
+  const { period, representation, segment } = content;
+  const { data, isChunked } = response;
+  if (data == null) {
+    return observableOf({ chunkData: null,
+                          chunkInfos: null,
+                          chunkOffset: 0,
                           appendWindow: [period.start, period.end] });
   }
-  const segmentData : Uint8Array = responseData instanceof Uint8Array ?
-                                     responseData :
-                                     new Uint8Array(responseData);
+
+  const chunkData = data instanceof Uint8Array ? data :
+                                                 new Uint8Array(data);
+
   const indexRange = segment.indexRange;
-  const isWEBM = representation.mimeType === "video/webm" ||
-                 representation.mimeType === "audio/webm";
+  const isWEBM = isWEBMEmbeddedTrack(representation);
+
   const nextSegments = isWEBM ?
-    getSegmentsFromCues(segmentData, 0) :
-    getSegmentsFromSidx(segmentData, indexRange ? indexRange[0] : 0);
+    getSegmentsFromCues(chunkData, 0) :
+    getSegmentsFromSidx(chunkData, indexRange ? indexRange[0] : 0);
 
   if (!segment.isInit) {
-    const segmentInfos = isWEBM ?
-      { time: segment.time,
-        duration: segment.duration,
-        timescale: segment.timescale } :
-      getISOBMFFTimingInfos(segment, segmentData, nextSegments, init);
-    const segmentOffset = segment.timestampOffset || 0;
-    return observableOf({ segmentData,
-                          segmentInfos,
-                          segmentOffset,
+    const chunkInfos = isWEBM ? null : // TODO extract from webm
+                                getISOBMFFTimingInfos(chunkData,
+                                                      isChunked,
+                                                      segment,
+                                                      nextSegments,
+                                                      init);
+    const chunkOffset = segment.timestampOffset || 0;
+    return observableOf({ chunkData,
+                          chunkInfos,
+                          chunkOffset,
+                          appendWindow: [period.start, period.end] });
+  } else { // it is an initialization segment
+    if (nextSegments) {
+      representation.index._addSegments(nextSegments);
+    }
+
+    const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
+                               getMDHDTimescale(chunkData);
+
+    const chunkInfos = timescale != null && timescale > 0 ? { time: 0,
+                                                              duration: 0,
+                                                              timescale } :
+                                                            null;
+    return observableOf({ chunkData,
+                          chunkInfos,
+                          chunkOffset: segment.timestampOffset || 0,
                           appendWindow: [period.start, period.end] });
   }
-
-  if (nextSegments) {
-    representation.index._addSegments(nextSegments);
-  }
-  const timescale = isWEBM ?  getTimeCodeScale(segmentData, 0) :
-                              getMDHDTimescale(segmentData);
-  return observableOf({ segmentData,
-                        segmentInfos: timescale && timescale > 0 ?
-                          { time: -1, duration: 0, timescale } :
-                          null,
-                        segmentOffset: segment.timestampOffset || 0,
-                        appendWindow: [period.start, period.end] });
 }

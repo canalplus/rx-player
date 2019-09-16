@@ -14,6 +14,7 @@
     - [textTrackMode](#prop-textTrackMode)
     - [textTrackElement](#prop-textTrackElement)
     - [manualBitrateSwitchingMode](#prop-manualBitrateSwitchingMode)
+    - [lowLatencyMode](#prop-lowLatencyMode)
     - [supplementaryTextTracks](#prop-supplementaryTextTracks)
     - [supplementaryImageTracks](#prop-supplementaryImageTracks)
     - [hideNativeSubtitle](#prop-hideNativeSubtitle)
@@ -31,12 +32,11 @@ method to use to load a new video.
 These options take the form of a single objects with multiple properties, like
 this:
 ```js
-// Setting the only two mandatory keys for a clear content (without DRM).
+// Simply loading a DASH MPD
 const options = {
   transport: "dash",
   url: myManifestUrl
 };
-
 player.loadVideo(options);
 ```
 
@@ -67,6 +67,8 @@ Can be either:
     This is documented in the documentation of each concerned method, option or
     event in the API.
 
+  - ``"metaplaylist"`` for [MetaPlaylist](./metaplaylist.md) streams
+
 This property is mandatory.
 
 
@@ -75,12 +77,15 @@ This property is mandatory.
 
 _type_: ``string|undefined``
 
-For Smooth or DASH contents, the URL to the [Manifest](../terms.md#manifest).
+For Smooth, DASH or MetaPlaylist contents, the URL to the
+[Manifest](../terms.md#manifest) (or equivalent)
 
 For _DirectFile_ mode contents, the URL of the content (the supported contents
 depends on the current browser).
 
-This property is mandatory.
+This property is mandatory unless a `manifestLoader` is defined in the
+[transportOptions](#prop-transportOptions), in which case that callback will be
+called instead any time we want to load the Manifest.
 
 
 <a name="prop-keySystems"></a>
@@ -358,6 +363,10 @@ If the value set is inferior to the minimum possible position, the minimum
 possible position will be used instead. If it is superior to the maximum
 possible position, the maximum will be used instead as well.
 
+More information on how the initial position is chosen can be found [in the
+specific documentation page on this subject](../infos/initial_position.md).
+
+
 #### Notes for live contents
 For live contents, ``startAt`` could work not as expected:
 
@@ -449,19 +458,29 @@ considered stable:
     them.
     More infos on it can be found [here](./plugins.md#representationFilter).
 
-  - ``aggressiveMode`` (``Boolean``): If set to true, we will download live
-    contents in what we call the "aggressiveMode".
+  - ``aggressiveMode`` (``Boolean``): If set to true, we will download segments
+    as soon as their encoding should have begun on the server-side, even if we
+    are not sure they had time to be completely generated.
 
-    In that mode, we request segments we guess will be available without being
-    absolutely sure they had time to be generated. For the moment, this mode has
-    only an effect for Smooth streaming contents.
+    For the moment, this mode has only an effect for all Smooth contents and
+    some DASH contents relying on a number-based SegmentTemplate segment
+    indexing scheme.
 
-    The upside is that you will have more segments close to the live edge.
+    The upside is that you might have more segments close to the live edge.
 
     The downside is that requests for segments which did not had time to
-    generate will trigger a `NetworkError`. Depending on your other settings
+    generate might trigger a `NetworkError`. Depending on your other settings
     (especially the `networkConfig` loadVideo options), those errors might just
     be sent as warnings and the corresponding requests be retried.
+
+    Note that the `aggressiveMode` is set to `true` by default when enabling
+    `lowLatencyMode` (through the corresponding `loadVideo` option), as most
+    DASH low-latency contents rely on this same trick to strip even more latency
+    from their contents.
+
+    Some low-latency contents however do not rely on this "trick". If you see a
+    lot of NetworkError with a low-latency content you're testing, you can try
+    setting this option to `false`.
 
   - ``referenceDateTime`` (``Number``): Only useful for live contents. This is
     the default amount of time, in seconds, to add as an offset to a given media
@@ -475,6 +494,46 @@ considered stable:
     Manifest / MPD does not already contain an offset (example: an
     availabilityStartTime in a DASH MPD).
 
+  - ``serverSyncInfos`` (``Object``): Mainly useful for live DASH contents
+    based on a SegmentTemplate scheme without SegmentTimeline elements.
+
+    Allows to provide a time synchronization mechanism between the client and
+    the server.
+    The `serverSyncInfos` object contains two keys:
+      - `serverTimestamp` (`number`): Unix timestamp of the server at a given
+        point in time, in milliseconds.
+      - `clientTime` (`number`): Value of the `performance.now()` API at the
+        time the `serverTimestamp` value was true. Please note that if your page
+        contains multiple worker, the `performance.now()` call should be done on
+        the same worker than the one in which loadVideo is called.
+
+    The `performance.now()` API is used here because it is the main API to
+    obtain a monotically increasing clock on the client-side.
+
+    Example:
+    ```js
+    const timeResponse = await fetch(serverTimeURL);
+    const serverTimestamp = await timeResponse.text();
+    const clientTime = performance.now();
+    const serverSyncInfos = { serverTimestamp, clientTime };
+    rxPlayer.loadVideo({
+      // ...
+      transportOptions: { serverSyncInfos }
+    })
+    ```
+
+    If indicated, we will ignore any time indication on the MPD and only
+    consider `serverSyncInfos` to calculate the time on the server side.
+
+    This value is mostly useful for low-latency contents, as some of them do not
+    indicate any server's time, relying on the client one instead.
+
+    Note that there is a risk of us losing synchronization when leap seconds
+    are added/substracted to unix time. However we consider those situations
+    rare enough (and the effect should be relatively weak) to let this as is for
+    the moment. For a more complete explanation, you can look at the
+    [corresponding chapter of the low-latency
+    documentation](./low_latency.md#note-time-sync).
 
 
 <a name="prop-textTrackMode"></a>
@@ -581,6 +640,34 @@ There is two possible values:
 
     [1] More information about the ``"RELOADING"`` state can be found in [the
     player states documentation](./states).
+
+
+<a name="prop-lowLatencyMode"></a>
+### lowLatencyMode #############################################################
+
+_type_: ``Boolean``
+
+_defaults_: ``false``
+
+Allow to play DASH low-latency contents (with Chunk-encoded and
+chunk-transferred CMAF segments) with a low latency efficiently.
+
+In the some rare browsers who do not support the `fetch` API (like IE11 or the
+BlackBerry browser), we might be more prone to rebuffering in that mode the
+first few seconds. If you want to have a better experience on those browsers,
+you might want to begin to play further from the live edge in those cases
+through the `startAt` option.
+
+Note: Some DASH low-latency contents do not use a Chunk-transfer optimization
+which let us download segments before they have been completely generated. On
+those, you might see multiple 404/415 HTTP errors for segment requests. If
+that's the case, you can disable the `aggressiveMode` `transportOptions`,
+defined [in the `transportOptions` documentation](#prop-transportOptions), this
+will disable that optimization.
+
+More information on playing low-latency DASH contents can be found in the
+[corresponding documentation page](./low_latency.md).
+
 
 
 <a name="prop-supplementaryTextTracks"></a>

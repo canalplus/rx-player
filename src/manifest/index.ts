@@ -19,8 +19,8 @@ import Adaptation, {
   IRepresentationFilter,
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "./adaptation";
+import areSameContent from "./are_same_content";
 import Manifest, {
-  IManifestArguments,
   IManifestParsingOptions,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
@@ -28,11 +28,17 @@ import Manifest, {
 import Period from "./period";
 import Representation from "./representation";
 import IRepresentationIndex, {
+  IBaseContentInfos,
+  IMetaPlaylistPrivateInfos,
   ISegment,
+  StaticRepresentationIndex,
 } from "./representation_index";
 
 export default Manifest;
 export {
+  // utils
+  areSameContent,
+
   // classes
   Period,
   Adaptation,
@@ -40,12 +46,14 @@ export {
 
   // types
   IAdaptationType,
-  IManifestArguments,
+  IBaseContentInfos,
   IManifestParsingOptions,
+  IMetaPlaylistPrivateInfos,
   IRepresentationFilter,
   IRepresentationIndex,
   ISegment,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
+  StaticRepresentationIndex,
   SUPPORTED_ADAPTATIONS_TYPE,
 };

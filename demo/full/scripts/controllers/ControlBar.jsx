@@ -3,23 +3,44 @@ import withModulesState from "../lib/withModulesState.jsx";
 import Button from "../components/Button.jsx";
 import PositionInfos from "../components/PositionInfos.jsx";
 import LivePosition from "../components/LivePosition.jsx";
+import StickToLiveEdgeButton from "../components/StickToLiveEdgeButton.jsx";
 import PlayPauseButton from "./PlayPauseButton.jsx";
 import FullscreenButton from "./FullScreenButton.jsx";
 import Progressbar from "./ProgressBar.jsx";
 import VolumeButton from "./VolumeButton.jsx";
 import VolumeBar from "./VolumeBar.jsx";
 
-function ControlBar({
-  player,
-  videoElement,
-  isContentLoaded,
-  isLive,
-  isStopped,
+function ControlBar ({
   currentTime,
   duration,
-  toggleSettings,
+  isCatchUpEnabled,
+  isCatchingUp,
+  isContentLoaded,
+  isLive,
+  isPaused,
+  isStopped,
+  liveGap,
+  lowLatencyMode,
+  maximumPosition,
+  playbackRate,
+  player,
   stopVideo,
+  toggleSettings,
+  videoElement,
 }) {
+  const changeStickToLiveEdge = (shouldStick) => {
+    if (shouldStick) {
+      player.dispatch("ENABLE_LIVE_CATCH_UP");
+    } else {
+      player.dispatch("DISABLE_LIVE_CATCH_UP");
+    }
+  };
+
+  let isCloseToLive = undefined;
+  if (isLive && lowLatencyMode != null && liveGap != null) {
+    isCloseToLive = lowLatencyMode ? liveGap < 7 : liveGap < 15;
+  }
+
   const positionElement = (() => {
     if (!isContentLoaded) {
       return null;
@@ -33,9 +54,14 @@ function ControlBar({
     }
   })();
 
+  const isAtLiveEdge = isLive && isCloseToLive && !isCatchingUp;
+
   return (
     <div className="controls-bar-container">
-      <Progressbar player={player} />
+      <Progressbar
+        player={player}
+        onSeek={() => changeStickToLiveEdge(false)}
+      />
       <div className="controls-bar">
         <PlayPauseButton
           className={"control-button"}
@@ -47,8 +73,31 @@ function ControlBar({
           value={String.fromCharCode(0xf04d)}
           disabled={isStopped}
         />
-        { positionElement }
+        {
+          (isContentLoaded && isLive && lowLatencyMode) ?
+            <StickToLiveEdgeButton
+              isStickingToTheLiveEdge={isCatchUpEnabled}
+              changeStickToLiveEdge={() =>
+                changeStickToLiveEdge(!isCatchUpEnabled)
+              }
+            /> : null
+        }
+        {positionElement}
+        {isLive && isContentLoaded ?
+          <Button
+            className={"dot" + (isAtLiveEdge ? " live" : "")}
+            onClick={() => {
+              if (!isAtLiveEdge) {
+                player.dispatch("SEEK", maximumPosition - (lowLatencyMode ? 4 : 10));
+              }
+            }}
+          /> : null}
         <div className="controls-right-side">
+          {!isPaused && isCatchingUp && playbackRate > 1 ?
+            <div className="catch-up">
+              {"Catch-up playback rate: " + playbackRate}
+            </div> : null
+          }
           <Button
             disabled={!isContentLoaded}
             className='control-button'
@@ -78,10 +127,17 @@ function ControlBar({
 
 export default withModulesState({
   player: {
-    isContentLoaded: "isContentLoaded",
-    isLive: "isLive",
     currentTime: "currentTime",
     duration: "duration",
+    isCatchUpEnabled: "isCatchUpEnabled",
+    isCatchingUp: "isCatchingUp",
+    isContentLoaded: "isContentLoaded",
+    isLive: "isLive",
+    isPaused: "isPaused",
     isStopped: "isStopped",
+    liveGap: "liveGap",
+    lowLatencyMode: "lowLatencyMode",
+    maximumPosition: "maximumPosition",
+    playbackRate: "playbackRate",
   },
 })(ControlBar);

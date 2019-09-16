@@ -217,7 +217,10 @@ export default {
    * suggested, in seconds.
    * @type {Number}
    */
-  DEFAULT_LIVE_GAP: 10,
+  DEFAULT_LIVE_GAP: {
+    DEFAULT: 10,
+    LOW_LATENCY: 3,
+  },
 
   /**
    * Maximum time, in seconds, the player should automatically skip when stalled
@@ -314,7 +317,10 @@ export default {
    * Please note that this delay is not exact, as it will be fuzzed.
    * @type {Number}
    */
-  INITIAL_BACKOFF_DELAY_BASE: 200,
+  INITIAL_BACKOFF_DELAY_BASE: {
+    REGULAR: 200,
+    LOW_LATENCY: 50,
+  },
 
   /**
    * Maximum backoff delay when a segment / manifest download fails, in
@@ -323,7 +329,10 @@ export default {
    * Please note that this delay is not exact, as it will be fuzzed.
    * @type {Number}
    */
-  MAX_BACKOFF_DELAY_BASE: 3000,
+  MAX_BACKOFF_DELAY_BASE: {
+    REGULAR: 3000,
+    LOW_LATENCY: 1000,
+  },
 
   /**
    * Minimum interval at which timeupdate events will be "constructed". This
@@ -343,6 +352,12 @@ export default {
    * @type {Number}
    */
   SAMPLING_INTERVAL_MEDIASOURCE: 1000,
+
+  /**
+   * Same than SAMPLING_INTERVAL_MEDIASOURCE but for lowLatency mode.
+   * @type {Number}
+   */
+  SAMPLING_INTERVAL_LOW_LATENCY: 250,
 
   /**
    * Same than SAMPLING_INTERVAL_MEDIASOURCE but for the directfile API.
@@ -375,16 +390,22 @@ export default {
   /**
    * Factor with which is multiplied the bandwidth estimate when the ABR is in
    * starvation mode.
-   * @type {Number}
+   * @type {Object}
    */
-  ABR_STARVATION_FACTOR: 0.72,
+  ABR_STARVATION_FACTOR: {
+    DEFAULT: 0.72,
+    LOW_LATENCY: 0.64,
+  },
 
   /**
    * Factor with which is multiplied the bandwidth estimate when the ABR is not
    * in starvation mode.
-   * @type {Number}
+   * @type {Object}
    */
-  ABR_REGULAR_FACTOR: 0.90,
+  ABR_REGULAR_FACTOR: {
+    DEFAULT: 0.90,
+    LOW_LATENCY: 0.90,
+  },
 
   /**
    * If a SourceBuffer has less than ABR_STARVATION_GAP in seconds ahead of the
@@ -403,10 +424,16 @@ export default {
    *     If the request is considered too long, the bitrate will be hastily
    *     re-calculated from this single request.
    *
-   * @type {Number}
+   * @type {Object}
    */
-  ABR_STARVATION_GAP: 5,
-  OUT_OF_STARVATION_GAP: 7,
+  ABR_STARVATION_GAP: {
+    DEFAULT: 5,
+    LOW_LATENCY: 5,
+  },
+  OUT_OF_STARVATION_GAP: {
+    DEFAULT: 7,
+    LOW_LATENCY: 7,
+  },
 
   /**
    * This is a security to avoid going into starvation mode when the content is
@@ -444,21 +471,30 @@ export default {
    * seeking on an unbuffered part of the content.
    * @type {Number}
    */
-  RESUME_GAP_AFTER_SEEKING: 1.5,
+  RESUME_GAP_AFTER_SEEKING: {
+    DEFAULT: 1.5,
+    LOW_LATENCY: 0.5,
+  },
 
   /**
    * Number of seconds ahead in the buffer after which playback will resume when
    * the player was stalled due to a low readyState.
    * @type {Number}
    */
-  RESUME_GAP_AFTER_NOT_ENOUGH_DATA: 0.5,
+  RESUME_GAP_AFTER_NOT_ENOUGH_DATA: {
+    DEFAULT: 0.5,
+    LOW_LATENCY: 0.5,
+  },
 
   /**
    * Number of seconds ahead in the buffer after which playback will resume
    * after the player went through a buffering step.
    * @type {Number}
    */
-  RESUME_GAP_AFTER_BUFFERING: 5,
+  RESUME_GAP_AFTER_BUFFERING: {
+    DEFAULT: 5,
+    LOW_LATENCY: 0.5,
+  },
 
   /**
    * Maximum number of seconds in the buffer based on which a "stalling"
@@ -468,7 +504,10 @@ export default {
    * buffering.
    * @type {Number}
    */
-  STALL_GAP: 0.5,
+  STALL_GAP: {
+    DEFAULT: 0.5,
+    LOW_LATENCY: 0.2,
+  },
 
   /**
    * Maximum difference allowed between a segment _announced_ start (what the
@@ -507,20 +546,20 @@ export default {
   MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT: 0.12,
 
   /**
-   * The maximum time, in seconds, the real buffered time in the sourcebuffer
-   * can be superior to the time inferred by the rx-player (the "real" buffered
-   * start inferior to the inferred start and the "real" buffered end superior
-   * to the inferred end).
-   * This limit allows to avoid resizing too much downloaded segments because
-   * no other segment is linked to a buffered part.
+   * The maximum authorized difference, in seconds, between the real buffered
+   * time of a given chunk and what the segment information of the Manifest
+   * tells us.
    *
    * Setting a value too high can lead to parts of the SourceBuffer being
-   * linked to the wrong segments.
+   * linked to the wrong segments and to segments wrongly believed to be still
+   * complete (instead of garbage collected).
+   *
    * Setting a value too low can lead to parts of the SourceBuffer not being
-   * linked to the concerned segment.
+   * linked to the concerned segment and to segments wrongly believed to be
+   * partly garbage collected (instead of complete segments).
    * @type {Number}
    */
-  MAX_BUFFERED_DISTANCE: 0.1,
+  MAX_MANIFEST_BUFFERED_DIFFERENCE: 0.4,
 
   /**
    * Minimum duration in seconds a segment should be into a buffered range to be
@@ -540,7 +579,7 @@ export default {
    * this logic could lead to bugs with the current code.
    * @type {Number}
    */
-  MINIMUM_SEGMENT_SIZE: 0.1,
+  MINIMUM_SEGMENT_SIZE: 0.05,
 
   /**
    * Maximum interval at which text tracks are refreshed in an "html"

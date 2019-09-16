@@ -14,15 +14,25 @@
  * limitations under the License.
  */
 
-import xhrRequest, {
+import fetchRequest, {
+  fetchIsSupported,
+  IDataChunk,
+  IDataComplete,
+} from "./fetch";
+import xhr, {
   IRequestOptions,
   IRequestProgress,
   IRequestResponse,
 } from "./xhr";
 
-export default xhrRequest;
+export default xhr;
 export {
+  fetchIsSupported,
+  fetchRequest,
+  IDataChunk,
+  IDataComplete,
   IRequestOptions,
   IRequestProgress,
   IRequestResponse,
+  xhr,
 };

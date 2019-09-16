@@ -25,62 +25,44 @@ import {
   filter,
   map,
   mergeMap,
-  share,
   tap,
 } from "rxjs/operators";
-import config from "../../../config";
 import {
   formatError,
   ICustomError,
-  NetworkError,
-  RequestError,
 } from "../../../errors";
 import Manifest from "../../../manifest";
 import {
-  IManifestLoaderArguments,
+  ILoadedManifest,
   ITransportPipelines,
 } from "../../../transports";
 import tryCatch from "../../../utils/rx-try_catch";
 import backoff from "../utils/backoff";
-import createLoader, {
-  IPipelineLoaderOptions,
+import errorSelector from "../utils/error_selector";
+import createManifestLoader, {
   IPipelineLoaderResponse,
-} from "../utils/create_loader";
+  IPipelineLoaderResponseValue,
+} from "./create_manifest_loader";
+import parseManifestPipelineOptions from "./parse_manifest_pipeline_options";
 
-const { MAX_BACKOFF_DELAY_BASE,
-        INITIAL_BACKOFF_DELAY_BASE } = config;
-
-export interface IRequestSchedulerOptions { maxRetry : number;
-                                            maxRetryOffline : number; }
-
-export interface IFetchManifestOptions {
-  url : string; // URL from which the manifest was requested
-  externalClockOffset? : number; // If set, offset to add to `performance.now()`
-                                 // to obtain the current server's time
-}
-
-type IPipelineManifestOptions =
-  IPipelineLoaderOptions<IManifestLoaderArguments, Document|string>;
-
+// What will be sent once parsed
 export interface IFetchManifestResult { manifest : Manifest;
                                         sendingTime? : number; }
 
-/**
- * Generate a new error from the infos given.
- * @param {string} code
- * @param {Error} error
- * @returns {Error}
- */
-function errorSelector(
-  error : unknown
-) : ICustomError {
-  if (error instanceof RequestError) {
-    return new NetworkError("PIPELINE_LOAD_ERROR", error);
-  }
-  return formatError(error, {
-    defaultCode: "PIPELINE_LOAD_ERROR",
-    defaultReason: "Unknown error when fetching the Manifest",
-  });
+// The Manifest Pipeline generated here
+export interface ICoreManifestPipeline {
+  fetch(url? : string) : Observable<IPipelineLoaderResponse<ILoadedManifest>>;
+  parse(response : IPipelineLoaderResponseValue<ILoadedManifest>,
+        url? : string,
+        externalClockOffset? : number) : Observable<IFetchManifestResult>;
+}
+
+export interface IManifestPipelineOptions {
+  lowLatencyMode : boolean; // Whether the content is a low-latency content
+                            // This has an impact on default backoff delays
+  manifestRetry? : number; // Maximum number of time a request on error will be retried
+  offlineRetry? : number; // Maximum number of time a request be retried when
+                          // the user is offline
 }
 
 /**
@@ -88,25 +70,28 @@ function errorSelector(
  *
  * @example
  * ```js
- * const manifestPipeline = createManifestPipeline(transport, options, warning$);
- * manifestPipeline(manifestURL)
- *  .subscribe(manifest => console.log("Manifest:", manifest));
+ * const manifestPipeline = createManifestPipeline(pipelines, options, warning$);
+ * manifestPipeline.fetch(manifestURL)
+ *  .mergeMap((evt) => {
+ *    if (evt.type !== "response") { // Might also receive warning events
+ *      return EMPTY;
+ *    }
+ *    return manifestPipeline.parse(evt.value);
+ *  }).subscribe(({ manifest }) => console.log("Manifest:", manifest));
  * ```
  *
- * @param {Object} transport
+ * @param {Object} pipelines
+ * @param {Subject} pipelineOptions
  * @param {Subject} warning$
- * @param {Array.<Object>|undefined} supplementaryTextTracks
- * @param {Array.<Object>|undefined} supplementaryImageTrack
  * @returns {Function}
  */
 export default function createManifestPipeline(
   pipelines : ITransportPipelines,
-  pipelineOptions : IPipelineManifestOptions,
+  pipelineOptions : IManifestPipelineOptions,
   warning$ : Subject<ICustomError>
-) : (args : IFetchManifestOptions) => Observable<IFetchManifestResult> {
-  const loader = createLoader<
-    IManifestLoaderArguments, Document|string
-  >(pipelines.manifest, pipelineOptions);
+) : ICoreManifestPipeline {
+  const parsedOptions = parseManifestPipelineOptions(pipelineOptions);
+  const loader = createManifestLoader(pipelines.manifest, parsedOptions);
   const { parser } = pipelines.manifest;
 
   /**
@@ -116,15 +101,10 @@ export default function createManifestPipeline(
    * @returns {Function}
    */
   function scheduleRequest<T>(request : () => Observable<T>) : Observable<T> {
-    const { maxRetry, maxRetryOffline } = pipelineOptions;
-
-    const backoffOptions = { baseDelay: INITIAL_BACKOFF_DELAY_BASE,
-                             maxDelay: MAX_BACKOFF_DELAY_BASE,
-                             maxRetryRegular: maxRetry,
-                             maxRetryOffline,
-                             onRetry: (error : unknown) => {
-                               warning$.next(errorSelector(error)); } };
-
+    const backoffOptions = { baseDelay: parsedOptions.baseDelay,
+                             maxDelay: parsedOptions.maxDelay,
+                             maxRetryRegular: parsedOptions.maxRetry,
+                             maxRetryOffline: parsedOptions.maxRetryOffline };
     return backoff(tryCatch(request, undefined), backoffOptions).pipe(
       mergeMap(evt => {
         if (evt.type === "retry") {
@@ -138,49 +118,57 @@ export default function createManifestPipeline(
       }));
   }
 
-  /**
-   * Fetch and parse the manifest corresponding to the URL given.
-   * @param {Object} options
-   * @returns {Observable}
-   */
-  return function fetchManifest(
-    { url, externalClockOffset } : IFetchManifestOptions
-  ) : Observable<IFetchManifestResult> {
-    return loader({ url }).pipe(
+  return {
+    /**
+     * Fetch the manifest corresponding to the URL given.
+     * @param {string} url - URL of the manifest
+     * @returns {Observable}
+     */
+    fetch(url : string) : Observable<IPipelineLoaderResponse<ILoadedManifest>> {
+      return loader({ url }).pipe(
+        tap((arg) => {
+          if (arg.type === "warning") {
+            warning$.next(arg.value); // TODO not through warning$
+          }
+        }),
+        filter((arg) : arg is IPipelineLoaderResponse<ILoadedManifest> =>
+          arg.type === "response"
+        )
+      );
+    },
 
-      tap((arg) => {
-        if (arg.type === "warning") {
-          warning$.next(arg.value);
-        }
-      }),
-
-      filter((arg) : arg is IPipelineLoaderResponse<Document|string> =>
-        arg.type === "response"
-      ),
-
-      mergeMap(({ value }) => {
-        const { sendingTime } = value;
-        return parser({ response: value,
-                        url,
-                        externalClockOffset,
-                        scheduleRequest }
-        ).pipe(
-          catchError((error: unknown) => {
-            throw formatError(error, {
-              defaultCode: "PIPELINE_PARSE_ERROR",
-              defaultReason: "Unknown error when parsing the Manifest",
-            });
-          }),
-          map(({ manifest }) => {
-            const warnings = manifest.parsingErrors;
-            for (let i = 0; i < warnings.length; i++) {
-              warning$.next(warnings[i]); // TODO not through warning$
-            }
-            return { manifest, sendingTime };
-          })
-        );
-      }),
-      share()
-    );
+    /**
+     * Fetch the manifest corresponding to the URL given.
+     * @param {Object} value - The Manifest document to parse.
+     * @param {string} [url] - URL of the manifest
+     * @param {number} [externalClockOffset]
+     * @returns {Observable}
+     */
+    parse(
+      value : IPipelineLoaderResponseValue<ILoadedManifest>,
+      fetchedURL? : string,
+      externalClockOffset? : number
+    ) : Observable<IFetchManifestResult> {
+      const { sendingTime } = value;
+      return parser({ response: value,
+                      url: fetchedURL,
+                      externalClockOffset,
+                      scheduleRequest,
+      }).pipe(
+        catchError((error: unknown) => {
+          throw formatError(error, {
+            defaultCode: "PIPELINE_PARSE_ERROR",
+            defaultReason: "Unknown error when parsing the Manifest",
+          });
+        }),
+        map(({ manifest }) => {
+          const warnings = manifest.parsingErrors;
+          for (let i = 0; i < warnings.length; i++) {
+            warning$.next(warnings[i]); // TODO not through warning$
+          }
+          return { manifest, sendingTime };
+        })
+      );
+    },
   };
 }

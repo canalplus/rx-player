@@ -282,8 +282,8 @@ The following RxPlayer constructor options are deprecated.
 ``throttleWhenHidden``has been deprecated as video visibility relies only on
 page visibility API and document hiddenness.
 
-A video should be visible if the Picture-In-Picture mode is activated, even 
-if the `hidden` attribute of `document` is set to `true`. 
+A video should be visible if the Picture-In-Picture mode is activated, even
+if the `hidden` attribute of `document` is set to `true`.
 
 ``throttleVideoBitrateWhenHidden`` relies on both and can be used like this :
 

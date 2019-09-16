@@ -33,6 +33,7 @@ class Player extends React.Component {
     this._$destroySubject = new Subject();
     this._$destroySubject.subscribe(() => player.destroy());
 
+    // update isStopped and displaySpinner
     player.$get("isSeeking", "isBuffering", "isLoading", "isReloading", "isStopped")
       .pipe(takeUntil(this._$destroySubject))
       .subscribe(([
@@ -56,12 +57,9 @@ class Player extends React.Component {
           }
 
           if (this.state.displaySpinner) {
-            this.setState({
-              displaySpinner: false,
-            });
+            this.setState({ displaySpinner: false });
           }
         }
-
       });
 
     this.setState({ player });
@@ -88,12 +86,25 @@ class Player extends React.Component {
       return;
     }
 
-    this.state.player.dispatch(isPaused ? "PLAY"  : "PAUSE");
+    if (isPaused) {
+      this.state.player.dispatch("PLAY");
+    } else {
+      this.state.player.dispatch("DISABLE_LIVE_CATCH_UP");
+      this.state.player.dispatch("PAUSE");
+    }
   }
 
   render() {
     const { player, displaySpinner, isStopped } = this.state;
-    const loadVideo = (video) => this.state.player.dispatch("LOAD", video);
+
+    const loadVideo = (video) => {
+      if (video.lowLatencyMode) {
+        this.state.player.dispatch("ENABLE_LIVE_CATCH_UP");
+      } else {
+        this.state.player.dispatch("DISABLE_LIVE_CATCH_UP");
+      }
+      this.state.player.dispatch("LOAD", video);
+    };
     const stopVideo = () => this.state.player.dispatch("STOP");
 
     const closeSettings = () => {
@@ -148,7 +159,8 @@ class Player extends React.Component {
                   videoElement={this.playerWrapperElement}
                   toggleSettings={toggleSettings}
                   stopVideo={stopVideo}
-                /> : null}
+                /> : null
+            }
           </div>
           {player ?  <ChartsManager player={player} /> : null }
           {player ?  <LogDisplayer player={player} /> : null}

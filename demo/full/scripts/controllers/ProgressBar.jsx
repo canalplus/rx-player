@@ -97,8 +97,12 @@ class Progressbar extends React.Component {
       isLive,
       bufferGap,
       player,
+      onSeek,
     } = this.props;
-    const seek = position => player.dispatch("SEEK", position);
+    const seek = position => {
+      onSeek();
+      player.dispatch("SEEK", position);
+    };
     const onMouseOut = () => {
       this.hideTimeIndicator();
       this.hideImageTip();

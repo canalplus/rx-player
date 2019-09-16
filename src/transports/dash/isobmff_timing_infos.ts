@@ -14,45 +14,55 @@
  * limitations under the License.
  */
 
-import assert from "../../utils/assert";
-
 import { ISegment } from "../../manifest";
 import {
   getDurationFromTrun,
   getTrackFragmentDecodeTime,
   ISidxSegment,
 } from "../../parsers/containers/isobmff";
-import { ISegmentTimingInfos } from "../types";
+import { IChunkTimingInfos } from "../types";
 
 /**
- * Get precize start and duration of a segment from ISOBMFF.
- *   1. get start from tfdt
- *   2. get duration from trun
- *   3. if at least one is missing, get both information from sidx
- *   4. As a fallback take segment infos.
+ * Get precize start and duration of a chunk.
+ * @param {UInt8Array} buffer - An ISOBMFF container (at least a `moof` + a
+ * `mdat` box.
+ * @param {Boolean} isChunked - If true, the whole segment was chunked into
+ * multiple parts and buffer is one of them. If false, buffer is the whole
+ * segment.
  * @param {Object} segment
- * @param {UInt8Array} buffer - The entire isobmff container
  * @param {Array.<Object>|undefined} sidxSegments - Segments from sidx. Here
  * pre-parsed for performance reasons as it is usually available when
  * this function is called.
- * @param {Object} initInfos
+ * @param {Object|undefined} initInfos
  * @returns {Object}
  */
 function getISOBMFFTimingInfos(
-  segment : ISegment,
   buffer : Uint8Array,
+  isChunked : boolean,
+  segment : ISegment,
   sidxSegments : ISidxSegment[]|null,
-  initInfos? : ISegmentTimingInfos
-) : ISegmentTimingInfos {
+  initInfos? : IChunkTimingInfos
+) : IChunkTimingInfos | null {
   const _sidxSegments = sidxSegments || [];
   let startTime;
   let duration;
-
-  const baseDecodeTime = getTrackFragmentDecodeTime(buffer);
   const trunDuration = getDurationFromTrun(buffer);
-
   const timescale = initInfos && initInfos.timescale ? initInfos.timescale :
                                                        segment.timescale;
+
+  const baseDecodeTime = getTrackFragmentDecodeTime(buffer);
+  if (isChunked) { // when chunked, no mean to know the duration for now
+    if (initInfos == null) {
+      return null;
+    }
+    if (baseDecodeTime < 0) {
+      return null;
+    }
+    return { time: baseDecodeTime,
+             duration: trunDuration >= 0 ? trunDuration :
+                                           undefined,
+             timescale: initInfos.timescale };
+  }
 
   // we could always make a mistake when reading a container.
   // If the estimate is too far from what the segment seems to imply, take
@@ -127,14 +137,9 @@ function getISOBMFFTimingInfos(
     }
   }
 
-  if (__DEV__) {
-    assert(startTime != null);
-    assert(duration != null);
-  }
-
   return { timescale,
            time: startTime || 0,
-           duration: duration || 0 };
+           duration };
 }
 
 export default getISOBMFFTimingInfos;

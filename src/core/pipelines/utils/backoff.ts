@@ -44,6 +44,9 @@ function shouldRetry(error : unknown) : boolean {
   if (error.type === RequestErrorTypes.ERROR_HTTP_CODE) {
     return error.status >= 500 ||
            error.status === 404 ||
+           error.status === 415 || // some CDN seems to use that code when
+                                   // requesting low-latency segments too much
+                                   // in advance
            error.status === 412;
   }
   return error.type === RequestErrorTypes.TIMEOUT ||
@@ -61,10 +64,10 @@ function isOfflineRequestError(error : RequestError) : boolean {
          isOffline();
 }
 
-interface IBackoffOptions { baseDelay : number;
-                            maxDelay : number;
-                            maxRetryRegular : number;
-                            maxRetryOffline : number; }
+export interface IBackoffOptions { baseDelay : number;
+                                   maxDelay : number;
+                                   maxRetryRegular : number;
+                                   maxRetryOffline : number; }
 
 export interface IBackoffRetry {
   type : "retry";

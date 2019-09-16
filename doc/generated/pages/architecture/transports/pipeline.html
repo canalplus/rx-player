@@ -43,6 +43,13 @@ request has to be performed), the loader returns an Observable and the resource
 is then emitted through it.</p>
 <p>This Observable will throw on any problem arising during that step, such as an
 HTTP error.</p>
+<p>In some specific conditions, the loader can also emit the wanted resource in
+multiple sub-parts. This allows for example to play a media file while still
+downloading it and is at the basis of low-latency streaming.
+To allow such use cases, the segment loaders can also emit the wanted resource
+by cutting it into chunks and emitting them through the Observable as they are
+available.
+This is better explained in the related chapter below.</p>
 <p><a name="chapter-A%20parser"></a></p>
 <h2>A parser</h2>
 <p>A parser&#x2019;s role is to extract the data and other important information from a
@@ -87,7 +94,7 @@ finished downloading it:</p>
 <h2>Manifest parser</h2>
 <p>The Manifest parser is a function whose role is to parse the Manifest in its
 original form to convert it to the RxPlayer&#x2019;s internal representation of it.</p>
-<p>It receives an argument the downloaded Manifest, some manifest-related
+<p>It receives in argument the downloaded Manifest, some Manifest-related
 information (e.g. its URL) and a specific function called <code>scheduleRequest</code>,
 allowing it to ask for supplementary requests before completing (e.g. to fetch
 the current time from an URL or to load sub-parts of the Manifests only known
@@ -112,10 +119,10 @@ segment&#x2019;s data.</p>
 <p>It receives information linked to the segment you want to download:</p>
 <ul>
 <li>The related <code>Manifest</code> data structure</li>
-<li>The <code>Period</code></li>
-<li>The <code>Adaptation</code></li>
-<li>The <code>Representation</code></li>
-<li>The <code>Segment</code></li>
+<li>The <code>Period</code> it is linked to</li>
+<li>The <code>Adaptation</code> it is linked to</li>
+<li>The <code>Representation</code> it is linked to</li>
+<li>The <code>Segment</code> object it is linked to</li>
 </ul>
 <p>It then return an Observable which send events as it loads the corresponding
 segment.</p>
@@ -128,7 +135,32 @@ segment.</p>
                         |          |
                         +----------+
 </code></pre>
-<p>The following events can then be sent by the segment loader&#x2019;s Observable:</p>
+<p>The events sent in output depend on the &#x201C;mode&#x201D; chosen by the loader to download
+the segment. There are two possible modes:</p>
+<ul>
+<li>
+<p>the regular mode, where the loader wait for the segments to be completely
+downloaded before sending it</p>
+</li>
+<li>
+<p>the low-latency mode, where the loader emits segments by chunks at the same
+time they are downloaded.</p>
+</li>
+</ul>
+<p>The latter mode is usually active under the following conditions:</p>
+<ul>
+<li>low-latency streaming is enabled through the corresponding <code>loadVideo</code>
+option</li>
+<li>we&#x2019;re loading a DASH content.</li>
+<li>we&#x2019;re not loading an initialization segment.</li>
+<li>the segment is in a CMAF container</li>
+<li>the <code>Fetch</code> JS API is available</li>
+</ul>
+<p>In most other cases, it will be in the regular mode.</p>
+<p>You can deduce which mode we are in simply by looking a the events the loader
+sends.</p>
+<p>In the regular mode, any of the following events can be sent through the
+Observable:</p>
 <ul>
 <li>
 <p><code>&quot;progress&quot;</code>: We have new metrics on the current download (e.g. the amount
@@ -137,19 +169,38 @@ currently downloaded, the time since the beginning of the request&#x2026;)</p>
 <li>
 <p><code>&quot;data-created&quot;</code>: The segment is available without needing to perform a
 network request. This is usually the case when segments are generated like
-smooth&#x2019;s initialization segments.
+Smooth Streaming&#x2019;s initialization segments.
 The segment&#x2019;s data is also communicated via this event.</p>
 <p>The <code>&quot;data-created&quot;</code> event, when sent, is the last event sent from the
-loader. The loader will complete just after.</p>
+loader. The loader will complete just after emitting it.</p>
 </li>
 <li>
 <p><code>&quot;data-loaded&quot;</code>: The segment has been compeletely downloaded from the
 network. The segment&#x2019;s data is also communicated via this event.</p>
 <p>Like <code>&quot;data-created&quot;</code>, the <code>&quot;data-loaded&quot;</code> will be the last event sent by
 the loader.
-This means that you either have a single <code>&quot;data-created&quot;</code> event or a single
-<code>&quot;data-loaded&quot;</code> event with the data when the segment has been loaded
+This means that you will either have a single <code>&quot;data-created&quot;</code> event or a
+single <code>&quot;data-loaded&quot;</code> event with the data when the segment has been loaded
 succesfully.</p>
+</li>
+</ul>
+<p>In the low-latency mode, the following events can be sent instead:</p>
+<ul>
+<li>
+<p><code>&quot;progress&quot;</code>: We have new metrics on the current download (e.g. the amount
+currently downloaded, the time since the beginning of the request&#x2026;)</p>
+</li>
+<li>
+<p><code>&quot;data-chunk&quot;</code>: A sub-segment (or chunk) of the data is currently available.
+The corresponding sub-segment is communicated in the payload of this event.</p>
+<p>This event can be communicated multiple times until a
+<code>&quot;data-chunk-complete&quot;</code> event is received.</p>
+</li>
+<li>
+<p><code>&quot;data-chunk-complete&quot;</code>: The segment request just finished. All
+corresponding data has been sent through <code>&quot;data-chunk&quot;</code> events.</p>
+<p>If sent, this is the last event sent by a segment loader. The loader will
+complete just after emitting it.</p>
 </li>
 </ul>
 <p><a name="chapter-Segment%20parser"></a></p>
@@ -159,17 +210,21 @@ the segment&#x2019;s data:</p>
 <ul>
 <li>what its precize start time and duration is</li>
 <li>whether the segment should be offseted when decoded and by what amount</li>
-<li>the decodable data (which can be wrapped in a container e.g.  subtitles
-in an ISOBMFF file).</li>
+<li>the decodable data (which can be wrapped in a container e.g. subtitles in an
+ISOBMFF container).</li>
 </ul>
-<p>It receives the segment or sub-segment as argument and related information</p>
-<pre><code>  INPUT:                                      OUTPUT:
-  ------                                      -------
-  Segment in a generic format +  +----------+ Decodable data +
-  Segment information            |          | time information
+<p>It receives the segment or sub-segment as argument and related information:</p>
+<pre><code> INPUT:                                       OUTPUT:
+ ------                                       -------
+ Segment in a generic format +                Decodable data + time
+ isChunked? [1] + Segment        +----------+ information
+ information                     |          |
  ===============================&gt;| SEGMENT  |===========================&gt;
                                  |  PARSER  |
                                  |          |
                                  +----------+
 </code></pre>
+<p>[1] The parser can make different guess on the time information of the
+segment depending on if the loaded segment corresponds to the whole segment or
+just a small chunk of it. The <code>isChunked</code> boolean allows it to be aware of that.</p>
 </body></html></div></div></div></body>

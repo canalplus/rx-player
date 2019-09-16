@@ -5,21 +5,19 @@
 #
 # This script allows to automatically create a new demo page on the gh-pages
 # branch.
+# /!\ This script deploy a non-minified version.
 #
 # To use it:
 #
-#   1. Go to a clean master branch
+#   1. Check that you're on the branch you want to deploy and that this branch
+#      is clean (has no staged files or diff)
 #
-#   2. Make sure the rx-player you want to use is bundled as
-#      dist/rx-player.js
-#
-#   3. Update the full demo files (in demo/full) as you want
-#
-#   4. Call this script with the wanted directory name in argument.
+#   2. Call this script with the wanted directory name in argument (e.g.
+#      `./deploy_new_demo my_new_page`).
 #      Some user interactions will be needed to avoid doing unwanted commits.
 #
-#   5. That's it!
-#      A commit should have been pushed to the gh-pages.
+#   3. That's it!
+#      A commit with the new directory should have been pushed to the gh-pages.
 
 set -e
 
@@ -38,7 +36,7 @@ if [ -z "$deployed_branch" ] ||
   echo "ERROR: Invalid branch name"
   exit 1;
 fi
- 
+
 # Generate demo
 npm run demo
 
@@ -54,16 +52,14 @@ tmpDemoFile=$(mktemp)
 tmpRxPlayerFile=$(mktemp)
 tmpIndexFile=$(mktemp)
 tmpFaviconFile=$(mktemp)
-tmpDemoList=$(mktemp)
 
 cp -r demo/full/fonts $tmpFontsDir -v
 cp -r demo/full/assets $tmpAssetsDir -v
 cp -r demo/full/styles $tmpStylesDir -v
 cp demo/full/bundle.js $tmpDemoFile -v
+cp demo/full/lib.js $tmpRxPlayerFile -v
 cp demo/full/index.html $tmpIndexFile -v
 cp demo/full/plus.ico $tmpFaviconFile -v
-cp dist/rx-player.js $tmpRxPlayerFile -v
-cp scripts/generate_demo_list.js $tmpDemoList -v
 
 # update gh-pages
 git checkout gh-pages
@@ -79,7 +75,7 @@ mv $tmpFontsDir/fonts "${deployed_branch}/fonts"
 mv $tmpAssetsDir/assets "${deployed_branch}/assets"
 mv $tmpStylesDir/styles "${deployed_branch}/styles"
 
-if [ -n "$(git status --porcelain)" ]; then
+if [ -n "$(git status --porcelain $deployed_branch)" ]; then
   echo "-- Current Status on gh-pages: --"
   echo ""
   git status "$deployed_branch"
