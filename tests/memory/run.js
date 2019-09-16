@@ -71,6 +71,10 @@ const server = new Server(karmaConf, function(exitCode) {
 });
 server.start();
 
+/**
+ * Display through `console.log` an helping message relative to how to run this
+ * script.
+ */
 function displayHelp() {
   /* eslint-disable no-console */
   console.log(
