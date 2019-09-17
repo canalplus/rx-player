@@ -454,7 +454,7 @@ describe("Manifest - Manifest", () => {
       __esModule: true,
       default: fakePeriod,
     }));
-    jest.mock("../update_period", () =>  ({
+    jest.mock("../update_period_in_place", () =>  ({
       __esModule: true,
       default: fakeUpdatePeriodInPlace,
     }));
@@ -579,7 +579,7 @@ describe("Manifest - Manifest", () => {
       __esModule: true,
       default: fakePeriod,
     }));
-    jest.mock("../update_period", () =>  ({
+    jest.mock("../update_period_in_place", () =>  ({
       __esModule: true,
       default: fakeUpdatePeriodInPlace,
     }));
@@ -591,19 +591,19 @@ describe("Manifest - Manifest", () => {
 
     const newPeriod1 = {
       id: "pre0",
-      start: 4,
+      start: 0,
       adaptations: {},
       parsingErrors: [],
     };
     const newPeriod2 = {
       id: "pre1",
-      start: 12,
+      start: 2,
       adaptations: {},
       parsingErrors: [],
     };
     const newPeriod3 = {
       id: "foo1",
-      start: 16,
+      start: 4,
       adaptations: {},
       parsingErrors: [],
     };
@@ -681,7 +681,7 @@ describe("Manifest - Manifest", () => {
       __esModule: true,
       default: fakePeriod,
     }));
-    jest.mock("../update_period", () =>  ({
+    jest.mock("../update_period_in_place", () =>  ({
       __esModule: true,
       default: fakeUpdatePeriodInPlace,
     }));
@@ -766,7 +766,7 @@ describe("Manifest - Manifest", () => {
       __esModule: true,
       default: fakePeriod,
     }));
-    jest.mock("../update_period", () =>  ({
+    jest.mock("../update_period_in_place", () =>  ({
       __esModule: true,
       default: fakeUpdatePeriodInPlace,
     }));
@@ -823,7 +823,9 @@ describe("Manifest - Manifest", () => {
       lifetime: 13,
       minimumTime: 4,
       parsingErrors: [new Error("a"), new Error("b")],
-      periods: [{ id: "1" }, { id: "2" }, { id: "3" }],
+      periods: [{ id: "1", start: 2 },
+                { id: "2", start: 4 },
+                { id: "3", start: 6 }],
       suggestedPresentationDelay: 99,
       transportType: "foobar",
       uris: ["url1", "url2"],
@@ -842,12 +844,13 @@ describe("Manifest - Manifest", () => {
         delete oldPeriod[key];
       });
       oldPeriod.id = newPeriod.id;
+      oldPeriod.start = newPeriod.start;
     });
     jest.mock("../period", () =>  ({
       __esModule: true,
       default: fakePeriod,
     }));
-    jest.mock("../update_period", () =>  ({
+    jest.mock("../update_period_in_place", () =>  ({
       __esModule: true,
       default: fakeUpdatePeriodInPlace,
     }));
@@ -857,11 +860,11 @@ describe("Manifest - Manifest", () => {
 
     const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
 
-    const newPeriod1 = { id: "pre0" };
-    const newPeriod2 = { id: "foo1" };
-    const newPeriod3 = { id: "diff0" };
-    const newPeriod4 = { id: "foo2" };
-    const newPeriod5 = { id: "post0" };
+    const newPeriod1 = { id: "pre0", start: 0 };
+    const newPeriod2 = { id: "foo1", start: 2 };
+    const newPeriod3 = { id: "diff0", start: 3 };
+    const newPeriod4 = { id: "foo2", start: 4 };
+    const newPeriod5 = { id: "post0", start: 5 };
     const newManifest = {
         _duration: 13,
       adaptations: {},
