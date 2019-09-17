@@ -366,6 +366,11 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    */
   _update(newIndex : TemplateRepresentationIndex) : void {
     this._index = newIndex._index;
+    this._aggressiveMode = newIndex._aggressiveMode;
+    this._isDynamic = newIndex._isDynamic;
+    this._periodStart = newIndex._periodStart;
+    this._relativePeriodEnd = newIndex._relativePeriodEnd;
+    this._manifestBoundsCalculator = newIndex._manifestBoundsCalculator;
   }
 
   /**
