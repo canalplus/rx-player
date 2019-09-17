@@ -86,3 +86,7 @@ stat -c %s dist/rx-player.min.js >> sizes
 RXP_METAPLAYLIST=true npm run build:min
 echo -n "with METAPLAYLIST: " >> sizes
 stat -c %s dist/rx-player.min.js >> sizes
+
+RXP_LOCAL_MANIFEST=true npm run build:min
+echo -n "with LOCAL_MANIFEST: " >> sizes
+stat -c %s dist/rx-player.min.js >> sizes

@@ -14,4 +14,5 @@
  * limitations under the License.
  */
 
+export { LOCAL_MANIFEST } from "./local";
 export { METAPLAYLIST } from "./metaplaylist";

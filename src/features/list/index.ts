@@ -24,7 +24,6 @@ export { HTML_TEXT_BUFFER } from "./html_text_buffer";
 export { HTML_TTML_PARSER } from "./html_ttml_parser";
 export { HTML_VTT_PARSER } from "./html_vtt_parser";
 export { IMAGE_BUFFER } from "./image_buffer";
-export { LOCAL_MANIFEST } from "./local_manifest";
 export { NATIVE_SAMI_PARSER } from "./native_sami_parser";
 export { NATIVE_SRT_PARSER } from "./native_srt_parser";
 export { NATIVE_TEXT_BUFFER } from "./native_text_buffer";

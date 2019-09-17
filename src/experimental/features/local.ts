@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
+import { IFeaturesObject } from "../../features/types";
 import local from "../../transports/local";
-import { IFeaturesObject } from "../types";
 
-/**
- * Add ability to play contents based on a local Manifest.
- * @param {Object} features
- */
-function addLocalManifestFeature(features : IFeaturesObject) {
+function addLocalManifestFeature(features: IFeaturesObject) {
   features.transports.local = local;
 }
 
