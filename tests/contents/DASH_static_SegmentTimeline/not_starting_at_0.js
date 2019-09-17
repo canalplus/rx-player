@@ -7,6 +7,7 @@ const BASE_URL = "http://" +
 export default {
   url: BASE_URL + "not_starting_at_0.mpd",
   transport: "dash",
+  isDynamic: false,
   isLive: false,
   duration: 101.568367,
   minimumPosition: 12.032222222222222,
