@@ -27,28 +27,25 @@ export default function updatePeriods(
   oldPeriods: Period[],
   newPeriods: Period[]
 ): void {
-  let newPeriodsLastModifiedIndex = 0;
+  let lastHandledNewPeriodIdx = 0;
   for (let i = 0; i < newPeriods.length; i++) {
     const newPeriod = newPeriods[i];
-    for (let j = newPeriodsLastModifiedIndex; j < oldPeriods.length; j++) {
+    for (let j = lastHandledNewPeriodIdx; j < oldPeriods.length; j++) {
       const oldPeriod = oldPeriods[j];
       if (oldPeriod && newPeriod && newPeriod.id === oldPeriod.id) {
         updatePeriodInPlace(oldPeriod, newPeriod);
-        const periodsToInclude = newPeriods.slice(newPeriodsLastModifiedIndex, i);
+        const periodsToInclude = newPeriods.slice(lastHandledNewPeriodIdx, i);
         oldPeriods.splice(j, 0, ...periodsToInclude);
-        newPeriodsLastModifiedIndex = i + 1;
+        lastHandledNewPeriodIdx = i + 1;
         break;
       }
     }
   }
 
   // take the remaining new periods and replace undesired periods with them
-  const maxIndex = Math.max(newPeriods.length, oldPeriods.length);
-  for (let k = newPeriodsLastModifiedIndex; k < maxIndex; k++) {
-    if (oldPeriods[k] != null && newPeriods[k] == null) {
-      oldPeriods.splice(k, 1);
-      break;
-    }
-    oldPeriods.splice(k, 1, newPeriods[k]);
-  }
+  const lastNewPeriods = newPeriods.slice(lastHandledNewPeriodIdx,
+                                          newPeriods.length);
+  oldPeriods.splice(lastHandledNewPeriodIdx,
+                    oldPeriods.length - lastHandledNewPeriodIdx,
+                    ...lastNewPeriods);
 }
