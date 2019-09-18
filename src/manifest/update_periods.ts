@@ -30,15 +30,16 @@ export default function updatePeriods(
   let lastHandledNewPeriodIdx = 0;
   for (let i = 0; i < newPeriods.length; i++) {
     const newPeriod = newPeriods[i];
-    for (let j = lastHandledNewPeriodIdx; j < oldPeriods.length; j++) {
-      const oldPeriod = oldPeriods[j];
-      if (oldPeriod && newPeriod && newPeriod.id === oldPeriod.id) {
-        updatePeriodInPlace(oldPeriod, newPeriod);
-        const periodsToInclude = newPeriods.slice(lastHandledNewPeriodIdx, i);
-        oldPeriods.splice(j, 0, ...periodsToInclude);
-        lastHandledNewPeriodIdx = i + 1;
-        break;
-      }
+    let j = lastHandledNewPeriodIdx;
+    let oldPeriod = oldPeriods[j];
+    while (oldPeriod != null && oldPeriod.id !== newPeriod.id) {
+      oldPeriod = oldPeriods[j++];
+    }
+    if (oldPeriod != null) {
+      updatePeriodInPlace(oldPeriod, newPeriod);
+      const periodsToInclude = newPeriods.slice(lastHandledNewPeriodIdx, i);
+      oldPeriods.splice(j, 0, ...periodsToInclude);
+      lastHandledNewPeriodIdx = i + 1;
     }
   }
 
