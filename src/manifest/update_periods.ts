@@ -32,8 +32,7 @@ export default function updatePeriods(
     const newPeriod = newPeriods[i];
     for (let j = newPeriodsLastModifiedIndex; j < oldPeriods.length; j++) {
       const oldPeriod = oldPeriods[j];
-      if (newPeriod.id === oldPeriod.id &&
-          newPeriod.start === oldPeriod.start) {
+      if (oldPeriod && newPeriod && newPeriod.id === oldPeriod.id) {
         updatePeriodInPlace(oldPeriod, newPeriod);
         const periodsToInclude = newPeriods.slice(newPeriodsLastModifiedIndex, i);
         oldPeriods.splice(j, 0, ...periodsToInclude);
