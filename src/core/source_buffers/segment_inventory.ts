@@ -23,10 +23,10 @@ import {
   Period,
   Representation,
 } from "../../manifest";
-import { convertToRanges } from "../../utils/ranges";
 import takeFirstSet from "../../utils/take_first_set";
 
-const { MAX_MANIFEST_BUFFERED_DIFFERENCE,
+const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
+        MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE,
         MINIMUM_SEGMENT_SIZE } = config;
 
 interface IBufferedChunkInfos { adaptation : Adaptation;
@@ -34,40 +34,61 @@ interface IBufferedChunkInfos { adaptation : Adaptation;
                                 representation : Representation;
                                 segment : ISegment; }
 
+// Stored information for each chunk
 export interface IBufferedChunk {
-  bufferedEnd : number|undefined; // Last inferred end in the SourceBuffer
+  bufferedEnd : number|undefined; // Last inferred end in the SourceBuffer this
+                                  // chunk ends at, in seconds
   bufferedStart : number|undefined; // Last inferred start in the SourceBuffer
-  end : number; // Supposed end the segment should reach
+                                    // this chunk starts at, in seconds
+  end : number; // Supposed end, in seconds, the chunk is expected to reach
   precizeEnd : boolean; // if `true` the `end` property is an estimate we have
-                        // enough confidence in.
+                        // enough confidence in (and thus `bufferedEnd` should
+                        // be very close to that value when that chunk has been
+                        // pushed).
                         // if `false`, it is just a guess based on segment
                         // information. in that case, we might update that
                         // value the next time we check the state of the
                         // buffered segments.
   precizeStart : boolean; // if `true` the `start` is an estimate we have enough
-                          // confidence in.
+                          // confidence in (and thus `bufferedStart` should
+                          // be very close to that value when that chunk has
+                          // been pushed).
                           // if `false`, it is just a guess based on segment
                           // information. in that case, we might update that
                           // value the next time we check the state of the
                           // buffered segments.
   infos : IBufferedChunkInfos; // Information on what this segment is in terms
                                // of content.
-  isCompleteSegment : boolean; // If true, the whole segment has been completely
-                               // pushed. If false, it is either still pending
-  start : number; // Supposed start the segment should start from
+  isCompleteSegment : boolean; // If `true`, the whole segment has been
+                               // completely pushed. If false, it is just a
+                               // chunk of the whole segment which has yet to be
+                               // finished to be pushed
+  start : number; // Supposed start the segment should start from, in seconds
+}
+
+// information to provide when inserting a new chunk
+export interface IInsertedChunkInfos {
+  adaptation : Adaptation;
+  period : Period;
+  representation : Representation;
+  segment : ISegment;
+  start : number; // Start time the segment should most probably begin from when
+                  // pushed, in seconds
+  end : number; // End time at which the segment should most probably end when
+                // pushed, in seconds
 }
 
 /**
- * Keep track of every segment downloaded and currently in the browser's memory.
+ * Keep track of every chunk downloaded and currently in the browser's memory.
  *
- * The main point of this class is to know which CDN segments are already
+ * The main point of this class is to know which CDN chunks are already
  * pushed to the SourceBuffer, at which bitrate, and which have been
  * garbage-collected since by the browser (and thus should be re-downloaded).
  * @class SegmentInventory
  */
 export default class SegmentInventory {
-  // The inventory keep track of all the segments which should be currently
-  // in the browser's memory.
+  // The inventory keeps track of all the segments which should be currently in
+  // the browser's memory.
   // This array contains objects, each being related to a single downloaded
   // segment which is at least partially added in a SourceBuffer.
   private inventory : IBufferedChunk[];
@@ -90,185 +111,121 @@ export default class SegmentInventory {
    */
   public synchronizeBuffered(buffered : TimeRanges) : void {
     const { inventory } = this;
-    const ranges = convertToRanges(buffered);
-
-    // Current inventory index considered.
-    let inventoryIndex = 0;
-
-    // Current segmentInfos considered
-    let thisSegment = inventory[0];
-
-    const rangesLength = ranges.length;
+    let inventoryIndex = 0; // Current index considered.
+    let thisSegment = inventory[0]; // Current segmentInfos considered
+    const rangesLength = buffered.length;
     for (let i = 0; i < rangesLength; i++) {
-      if (thisSegment == null) {
-        // If thisSegment is not set, it means that we arrived at the end of
-        // our inventory.
-        // This TimeRange do not link to any segment and neither will any
-        // subsequent one.
+      if (thisSegment === undefined) { // we arrived at the end of our inventory
         return;
       }
 
-      const { start: rangeStart, end: rangeEnd } = ranges[i];
-
-      // if current TimeRange is too small to contain a segment, go to next one
+      // take the i'nth contiguous buffered TimeRange
+      const rangeStart = buffered.start(i);
+      const rangeEnd = buffered.end(i);
       if (rangeEnd - rangeStart < MINIMUM_SEGMENT_SIZE) {
+        log.warn("SI: skipped TimeRange when synchronizing because it was too small",
+                 rangeStart, rangeEnd);
         continue;
       }
 
-      // Inventory index of the last segment not contained in the current range.
-      // Will be used to know how many segments have been garbage collected.
-      const indexBefore = inventoryIndex;
+      const indexBefore = inventoryIndex; // keep track of that number
 
-      // Find the first segment either within this TimeRange or past it:
-      // skip until first segment with at least MINIMUM_SEGMENT_SIZE past the
+      // Find the first segment either within this TimeRange or completely past
+      // it:
+      // skip until first segment with at least `MINIMUM_SEGMENT_SIZE` past the
       // start of that range.
-      while (thisSegment &&
-            (takeFirstSet<number>(thisSegment.bufferedEnd, thisSegment.end)
-              - rangeStart
-            ) < MINIMUM_SEGMENT_SIZE
-      ) {
+      while (thisSegment !== undefined &&
+             (takeFirstSet<number>(thisSegment.bufferedEnd, thisSegment.end)
+               - rangeStart) < MINIMUM_SEGMENT_SIZE)
+      {
         thisSegment = inventory[++inventoryIndex];
       }
 
-      // Contains the end of the last garbage-collected segment before
-      // thisSegment.
-      // Might be useful to infer later the bufferedStart of thisSegment.
-      //
-      // -1 if no segment have been garbage-collected before thisSegment.
-      let lastDeletedSegmentEnd = -1;
+      // Contains infos about the last garbage-collected segment before
+      // `thisSegment`.
+      const lastDeletedSegmentInfos = { end: -1, precizeEnd: false };
 
       // remove garbage-collected segments
       // (not in that TimeRange nor in the previous one)
       const numberOfSegmentToDelete = inventoryIndex - indexBefore;
       if (numberOfSegmentToDelete > 0) {
-        // last garbage-collected segment
-        const lastDeletedSegment =
+        const lastDeletedSegment = // last garbage-collected segment
           inventory[indexBefore + numberOfSegmentToDelete - 1];
 
-        lastDeletedSegmentEnd = takeFirstSet<number>(lastDeletedSegment.bufferedEnd,
-                                                     lastDeletedSegment.end);
-        // mutate inventory
+        lastDeletedSegmentInfos.end =
+          takeFirstSet<number>(lastDeletedSegment.bufferedEnd, lastDeletedSegment.end);
+        lastDeletedSegmentInfos.precizeEnd = lastDeletedSegment.precizeEnd;
+        log.debug(`SI: ${numberOfSegmentToDelete} segments GCed.`);
         inventory.splice(indexBefore, numberOfSegmentToDelete);
         inventoryIndex = indexBefore;
       }
 
-      // if no segment is left for that range (or any other one), quit
-      if (thisSegment == null) {
+      if (thisSegment === undefined) {
         return;
       }
 
-      // Infer the bufferedStart for this segment, and the bufferedStart and
-      // bufferedEnd for the following segments included in that range.
-      //
       // If the current segment is actually completely outside that range (it
       // is contained in one of the next one), skip that part.
       if (rangeEnd -
           takeFirstSet<number>(thisSegment.bufferedStart, thisSegment.start)
             >= MINIMUM_SEGMENT_SIZE
       ) {
-        // set the bufferedStart of the first segment in that range
-        if (thisSegment.bufferedStart != null &&
-            thisSegment.bufferedStart < rangeStart)
-        {
-          // the segment appears to have been partially garbage collected:
-          // Update bufferedStart
-          thisSegment.bufferedStart = rangeStart;
-          if (!thisSegment.precizeStart &&
-              Math.abs(thisSegment.start - thisSegment.bufferedStart) <=
-                MAX_MANIFEST_BUFFERED_DIFFERENCE)
-          {
-            thisSegment.precizeStart = true;
-            thisSegment.start = thisSegment.bufferedStart;
-          }
-        } else if (thisSegment.bufferedStart == null) {
-          if (thisSegment.precizeStart) {
-            thisSegment.bufferedStart = thisSegment.start;
-          } else if (lastDeletedSegmentEnd !== -1 &&
-                     lastDeletedSegmentEnd > rangeStart &&
-                     thisSegment.start - lastDeletedSegmentEnd <=
-                       MAX_MANIFEST_BUFFERED_DIFFERENCE)
-          {
-            thisSegment.start = lastDeletedSegmentEnd;
-            thisSegment.precizeStart = true;
-            thisSegment.bufferedStart = lastDeletedSegmentEnd;
-          } else if (thisSegment.start - rangeStart <=
-                       MAX_MANIFEST_BUFFERED_DIFFERENCE)
-          {
-            thisSegment.start = rangeStart;
-            thisSegment.precizeStart = true;
-            thisSegment.bufferedStart = rangeStart;
-          } else {
-            thisSegment.bufferedStart = thisSegment.start;
-          }
+        guessBufferedStartFromRangeStart(thisSegment,
+                                         rangeStart,
+                                         lastDeletedSegmentInfos);
+
+        if (inventoryIndex === inventory.length - 1) {
+          guessBufferedEndFromRangeEnd(thisSegment, rangeEnd);
+          return;
         }
 
         thisSegment = inventory[++inventoryIndex];
 
         // Make contiguous until first segment outside that range
-        // (i.e until the start of the next segment can not constitute a segment
-        // in that range == less than MINIMUM_SEGMENT_SIZE into that range)
-        while (thisSegment &&
-               (rangeEnd -
-                takeFirstSet<number>(thisSegment.bufferedStart, thisSegment.start)
-               ) >= MINIMUM_SEGMENT_SIZE
-        ) {
+        let thisSegmentStart = takeFirstSet<number>(thisSegment.bufferedStart,
+                                                    thisSegment.start);
+        let thisSegmentEnd =  takeFirstSet<number>(thisSegment.bufferedEnd,
+                                                   thisSegment.end);
+        const nextRangeStart = i < rangesLength - 1 ? buffered.start(i + 1) :
+                                                      undefined;
+        while (thisSegment !== undefined &&
+               (rangeEnd - thisSegmentStart) >= MINIMUM_SEGMENT_SIZE &&
+               (nextRangeStart === undefined ||
+                 rangeEnd - thisSegmentStart >= thisSegmentEnd - nextRangeStart))
+        {
           const prevSegment = inventory[inventoryIndex - 1];
 
           // those segments are contiguous, we have no way to infer their real
           // end
-          if (prevSegment.bufferedEnd == null) {
+          if (prevSegment.bufferedEnd === undefined) {
             prevSegment.bufferedEnd = thisSegment.precizeStart ? thisSegment.start :
-                                                               prevSegment.end;
+                                                                 prevSegment.end;
+            log.debug("SI: calculating buffered end of contiguous segment",
+                      prevSegment.bufferedEnd, prevSegment.end);
           }
 
           thisSegment.bufferedStart = prevSegment.bufferedEnd;
           thisSegment = inventory[++inventoryIndex];
+          if (thisSegment !== undefined) {
+            thisSegmentStart = takeFirstSet<number>(thisSegment.bufferedStart,
+                                                    thisSegment.start);
+            thisSegmentEnd =  takeFirstSet<number>(thisSegment.bufferedEnd,
+                                                   thisSegment.end);
+          }
         }
       }
 
       // update the bufferedEnd of the last segment in that range
       const lastSegmentInRange = inventory[inventoryIndex - 1];
-      if (lastSegmentInRange) {
-        if (lastSegmentInRange.bufferedEnd != null &&
-            lastSegmentInRange.bufferedEnd > rangeEnd
-        ) {
-          // the segment appears to have been partially garbage collected:
-          // Update bufferedEnd
-          lastSegmentInRange.bufferedEnd = rangeEnd;
-          if (!lastSegmentInRange.precizeEnd &&
-              Math.abs(lastSegmentInRange.end - lastSegmentInRange.bufferedEnd) <=
-                MAX_MANIFEST_BUFFERED_DIFFERENCE)
-          {
-            lastSegmentInRange.precizeEnd = true;
-            lastSegmentInRange.end = lastSegmentInRange.bufferedEnd;
-          }
-        } else if (lastSegmentInRange.bufferedEnd == null) {
-          const bufferedEnd = rangeEnd - lastSegmentInRange.end <=
-                                MAX_MANIFEST_BUFFERED_DIFFERENCE ? rangeEnd :
-                                                       lastSegmentInRange.end;
-          lastSegmentInRange.bufferedEnd = bufferedEnd;
-          if (!lastSegmentInRange.precizeEnd) {
-            if (lastSegmentInRange.precizeStart) {
-              const segmentDuration = lastSegmentInRange.infos.segment.duration /
-                                      lastSegmentInRange.infos.segment.timescale;
-              lastSegmentInRange.end = Math.min(lastSegmentInRange.end,
-                                                lastSegmentInRange.start +
-                                                  segmentDuration);
-            }
-            if (Math.abs(bufferedEnd - lastSegmentInRange.end) <=
-                  MAX_MANIFEST_BUFFERED_DIFFERENCE)
-            {
-              lastSegmentInRange.end = bufferedEnd;
-              lastSegmentInRange.precizeEnd = true;
-            }
-          }
-        }
+      if (lastSegmentInRange !== undefined) {
+        guessBufferedEndFromRangeEnd(lastSegmentInRange, rangeEnd);
       }
     }
 
     // if we still have segments left, they are not affiliated to any range.
     // They might have been garbage collected, delete them from here.
     if (thisSegment) {
+      log.debug("SI: last segments have been GCed", inventoryIndex, inventory.length);
       inventory.splice(inventoryIndex, inventory.length - inventoryIndex);
     }
   }
@@ -286,42 +243,27 @@ export default class SegmentInventory {
       adaptation,
       representation,
       segment,
-      estimatedStart,
-      estimatedEnd } : { adaptation : Adaptation;
-                         period : Period;
-                         representation : Representation;
-                         segment : ISegment;
-                         estimatedStart? : number;
-                         estimatedEnd? : number; }
+      start,
+      end } : IInsertedChunkInfos
   ) : void {
     if (segment.isInit) {
       return;
     }
-
-    const start = estimatedStart == null ? segment.time / segment.timescale :
-                                           estimatedStart;
-
-    const end = estimatedEnd == null ? ((segment.time + segment.duration) /
-                                         segment.timescale) :
-                                       estimatedEnd;
-
     if (start >= end) {
+      log.warn("SI: Invalid chunked inserted: starts before it ends", start, end);
       return;
     }
 
     const { inventory } = this;
-
     const newSegment = { isCompleteSegment: false,
+                         estimatedStart: start,
                          start,
                          end,
-                         precizeStart: estimatedStart != null,
-                         precizeEnd: estimatedEnd != null,
+                         precizeStart: false,
+                         precizeEnd: false,
                          bufferedStart: undefined,
                          bufferedEnd: undefined,
-                         infos: { segment,
-                                  period,
-                                  adaptation,
-                                  representation } };
+                         infos: { segment, period, adaptation, representation } };
 
     // begin by the end as in most use cases this will be faster
     for (let i = inventory.length - 1; i >= 0; i--) {
@@ -340,6 +282,7 @@ export default class SegmentInventory {
           //   prevSegment  : |------|
           //   newSegment   :          |======|
           //   ===>         : |------| |======|
+          log.debug("SI: Pushing segment strictly after previous one.");
           this.inventory.splice(i + 1, 0, newSegment);
 
           i += 2; // Go to segment immediately after newSegment
@@ -353,10 +296,11 @@ export default class SegmentInventory {
               //   newSegment   :        |======|
               //   nextSegment  :            |----|
               //   ===>         : |------|======|-|
+              log.debug("SI: Segment pushed updates the start of the next one");
               inventory[i].start = newSegment.end;
               inventory[i].bufferedStart = undefined;
               inventory[i].precizeStart = inventory[i].precizeStart &&
-                                        newSegment.precizeEnd;
+                                          newSegment.precizeEnd;
               return;
             }
             // The next segment was completely contained in newSegment.
@@ -373,6 +317,7 @@ export default class SegmentInventory {
             //   newSegment   :        |======|
             //   nextSegment  :          |----|
             //   ===>         : |------|======|
+            log.debug("SI: Segment pushed removes the next one");
             inventory.splice(i, 1);
           }
           return;
@@ -390,6 +335,7 @@ export default class SegmentInventory {
               //  prevSegment  : |-------|
               //  newSegment   : |==========|
               //  ===>         : |==========|
+              log.debug("SI: Segment pushed replace another one");
               this.inventory.splice(i, 1, newSegment);
               i += 1; // Go to segment immediately after newSegment
               while (i < inventory.length && inventory[i].start < newSegment.end) {
@@ -401,6 +347,7 @@ export default class SegmentInventory {
                   //   newSegment   : |======|
                   //   nextSegment  :      |----|
                   //   ===>         : |======|--|
+                  log.debug("SI: Segment pushed updates the start of the next one");
                   inventory[i].start = newSegment.end;
                   inventory[i].bufferedStart = undefined;
                   inventory[i].precizeStart = inventory[i].precizeStart &&
@@ -419,6 +366,7 @@ export default class SegmentInventory {
                 //   newSegment   : |======|
                 //   nextSegment  :   |----|
                 //   ===>         : |======|
+                log.debug("SI: Segment pushed removes the next one");
                 inventory.splice(i, 1);
               }
               return;
@@ -432,6 +380,7 @@ export default class SegmentInventory {
               //  prevSegment  : |------------|
               //  newSegment   : |==========|
               //  ===>         : |==========|-|
+              log.debug("SI: Segment pushed ends before another with the same start");
               inventory.splice(i, 0, newSegment);
               segmentI.start = newSegment.end;
               segmentI.bufferedStart = undefined;
@@ -453,6 +402,7 @@ export default class SegmentInventory {
               //  prevSegment  : |-------|
               //  newSegment   :    |====|
               //  ===>         : |--|====|
+              log.debug("SI: Segment pushed updates end of previous one");
               this.inventory.splice(i + 1, 0, newSegment);
               segmentI.end = newSegment.start;
               segmentI.bufferedEnd = undefined;
@@ -468,6 +418,7 @@ export default class SegmentInventory {
                   //   newSegment   : |======|
                   //   nextSegment  :      |----|
                   //   ===>         : |======|--|
+                  log.debug("SI: Segment pushed updates the start of the next one");
                   inventory[i].start = newSegment.end;
                   inventory[i].bufferedStart = undefined;
                   inventory[i].precizeStart = inventory[i].precizeStart &&
@@ -486,6 +437,7 @@ export default class SegmentInventory {
                 //   newSegment   : |======|
                 //   nextSegment  :   |----|
                 //   ===>         : |======|
+                log.debug("SI: Segment pushed removes the next one");
                 inventory.splice(i, 1);
               }
               return;
@@ -498,6 +450,7 @@ export default class SegmentInventory {
               //  prevSegment  : |---------|
               //  newSegment   :    |====|
               //  ===>         : |--|====|-|
+              log.debug("SI: Segment pushed is contained in a previous one");
               const nextSegment = { isCompleteSegment: segmentI.isCompleteSegment,
                                     start: newSegment.end,
                                     end: segmentI.end,
@@ -511,7 +464,7 @@ export default class SegmentInventory {
               segmentI.end = newSegment.start;
               segmentI.bufferedEnd = undefined;
               segmentI.precizeEnd = segmentI.precizeEnd &&
-                                  newSegment.precizeStart;
+                                    newSegment.precizeStart;
               inventory.splice(i + 1, 0, newSegment);
               inventory.splice(i + 2, 0, nextSegment);
               return;
@@ -525,6 +478,7 @@ export default class SegmentInventory {
     // check bounds of the previous first segment
     const firstSegment = this.inventory[0];
     if (!firstSegment) { // we do not have any segment yet
+      log.debug("SI: Segment pushed comes after all previous ones");
       this.inventory.push(newSegment);
       return;
     }
@@ -534,22 +488,29 @@ export default class SegmentInventory {
       //
       // Case 1:
       //  firstSegment :      |----|
-      //  newSegment   : |----|
+      //  newSegment   : |====|
+      //  ===>         : |====|----|
       //
       // Case 2:
       //  firstSegment :        |----|
-      //  newSegment   : |----|
+      //  newSegment   : |====|
+      //  ===>         : |====| |----|
+      log.debug("SI: Segment pushed comes before all previous ones");
       this.inventory.splice(0, 0, newSegment);
     } else if (firstSegment.end <= end) {
       // Our segment is bigger, replace the first
       //
       // Case 1:
       //  firstSegment :   |---|
-      //  newSegment   : |-------|
+      //  newSegment   : |=======|
+      //  ===>         : |=======|
       //
       // Case 2:
       //  firstSegment :   |-----|
-      //  newSegment   : |-------|
+      //  newSegment   : |=======|
+      //  ===>         : |=======|
+      log.debug("SI: Segment pushed starts before and completely " +
+                "recovers the previous first one");
       this.inventory.splice(0, 1, newSegment);
       while (inventory.length > 1 && inventory[1].start < newSegment.end) {
         if (inventory[1].end > newSegment.end) {
@@ -560,6 +521,7 @@ export default class SegmentInventory {
           //   newSegment   : |======|
           //   nextSegment  :      |----|
           //   ===>         : |======|--|
+          log.debug("SI: Segment pushed updates the start of the next one");
           inventory[1].start = newSegment.end;
           inventory[1].bufferedStart = undefined;
           inventory[1].precizeStart = newSegment.precizeEnd;
@@ -577,6 +539,7 @@ export default class SegmentInventory {
         //   newSegment   : |======|
         //   nextSegment  :   |----|
         //   ===>         : |======|
+        log.debug("SI: Segment pushed removes the next one");
         inventory.splice(1, 1);
       }
       return;
@@ -588,6 +551,7 @@ export default class SegmentInventory {
       //  firstSegment :    |------|
       //  newSegment   : |======|
       //  ===>         : |======|--|
+      log.debug("SI: Segment pushed start of the next one");
       firstSegment.start = end;
       firstSegment.bufferedStart = undefined;
       firstSegment.precizeStart = newSegment.precizeEnd;
@@ -653,5 +617,168 @@ export default class SegmentInventory {
    */
   public getInventory() : IBufferedChunk[] {
     return this.inventory;
+  }
+}
+
+/**
+ * Returns `true` if the buffered start of the given chunk looks coherent enough
+ * relatively to what is anounced in the Manifest.
+ * @param {Object} thisSegment
+ * @returns {Boolean}
+ */
+function bufferedStartLooksCoherent(
+  thisSegment : IBufferedChunk
+) : boolean {
+  if (thisSegment.bufferedStart === undefined ||
+      !thisSegment.isCompleteSegment)
+  {
+    return false;
+  }
+  const { start, end } = thisSegment;
+  return Math.abs(start - thisSegment.bufferedStart) <=
+           MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE &&
+         (thisSegment.bufferedEnd === undefined ||
+           thisSegment.bufferedEnd > thisSegment.bufferedStart &&
+           Math.abs(thisSegment.bufferedEnd - thisSegment.bufferedStart -
+             (end - start)) <= MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE);
+
+         // thisSegment.bufferedEnd != null &&
+         // thisSegment.bufferedEnd > thisSegment.bufferedStart &&
+         // Math.abs(thisSegment.bufferedEnd - thisSegment.bufferedStart -
+         //   (end - start)) <= MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE;
+}
+
+/**
+ * Returns `true` if the buffered end of the given chunk looks coherent enough
+ * relatively to what is anounced in the Manifest.
+ * @param {Object} thisSegment
+ * @returns {Boolean}
+ */
+function bufferedEndLooksCoherent(
+  thisSegment : IBufferedChunk
+) : boolean {
+  if (thisSegment.bufferedEnd === undefined ||
+      !thisSegment.isCompleteSegment)
+  {
+    return false;
+  }
+  const { start, end } = thisSegment;
+  return Math.abs(end - thisSegment.bufferedEnd) <=
+           MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE &&
+         thisSegment.bufferedStart != null &&
+         thisSegment.bufferedEnd > thisSegment.bufferedStart &&
+         Math.abs(thisSegment.bufferedEnd - thisSegment.bufferedStart -
+           (end - start)) <= MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE;
+}
+
+/**
+ * Evaluate the given buffered Chunk's buffered start from its range's start,
+ * considering that this chunk is the first one in it.
+ * @param {Object} firstSegmentInRange
+ * @param {number} rangeStart
+ * @param {Object} lastDeletedSegmentInfos
+ */
+function guessBufferedStartFromRangeStart(
+  firstSegmentInRange : IBufferedChunk,
+  rangeStart : number,
+  lastDeletedSegmentInfos : { end : number; precizeEnd : boolean }
+) : void {
+  if (firstSegmentInRange.bufferedStart !== undefined) {
+    if (firstSegmentInRange.bufferedStart < rangeStart) {
+      log.debug("SI: Segment partially GCed at the start",
+                firstSegmentInRange.bufferedStart, rangeStart);
+      firstSegmentInRange.bufferedStart = rangeStart;
+    }
+
+    if (!firstSegmentInRange.precizeStart &&
+        bufferedStartLooksCoherent(firstSegmentInRange))
+    {
+      firstSegmentInRange.start = firstSegmentInRange.bufferedStart;
+      firstSegmentInRange.precizeStart = true;
+    }
+  } else if (firstSegmentInRange.precizeStart) {
+    log.debug("SI: buffered start is precize start", firstSegmentInRange.start);
+    firstSegmentInRange.bufferedStart = firstSegmentInRange.start;
+  } else if (lastDeletedSegmentInfos.end >= 0 &&
+             lastDeletedSegmentInfos.end > rangeStart &&
+               (lastDeletedSegmentInfos.precizeEnd ||
+                firstSegmentInRange.start - lastDeletedSegmentInfos.end <=
+                  MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE))
+  {
+    log.debug("SI: buffered start is end of previous segment",
+              rangeStart, firstSegmentInRange.start, lastDeletedSegmentInfos.end);
+    firstSegmentInRange.bufferedStart = lastDeletedSegmentInfos.end;
+    if (bufferedStartLooksCoherent(firstSegmentInRange)) {
+      firstSegmentInRange.start = lastDeletedSegmentInfos.end;
+      firstSegmentInRange.precizeStart = true;
+    }
+  } else if (firstSegmentInRange.start - rangeStart <=
+               MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE)
+  {
+    log.debug("SI: found true buffered start",
+              rangeStart, firstSegmentInRange.start);
+    firstSegmentInRange.bufferedStart = rangeStart;
+    if (bufferedStartLooksCoherent(firstSegmentInRange)) {
+      firstSegmentInRange.start = rangeStart;
+      firstSegmentInRange.precizeStart = true;
+    }
+  } else if (rangeStart < firstSegmentInRange.start) {
+    log.debug("SI: range start too far from expected start",
+              rangeStart, firstSegmentInRange.start);
+  } else {
+    log.debug("SI: Segment appears immediately garbage collected at the start",
+              firstSegmentInRange.bufferedStart, rangeStart);
+    firstSegmentInRange.bufferedStart = rangeStart;
+  }
+}
+
+/**
+ * Evaluate the given buffered Chunk's buffered end from its range's end,
+ * considering that this chunk is the last one in it.
+ * @param {Object} firstSegmentInRange
+ * @param {number} rangeStart
+ * @param {Object} infos
+ */
+function guessBufferedEndFromRangeEnd(
+  lastSegmentInRange : IBufferedChunk,
+  rangeEnd : number
+) : void {
+  if (lastSegmentInRange.bufferedEnd !== undefined) {
+    if (lastSegmentInRange.bufferedEnd > rangeEnd) {
+      log.debug("SI: Segment partially GCed at the end",
+                lastSegmentInRange.bufferedEnd, rangeEnd);
+      lastSegmentInRange.bufferedEnd = rangeEnd;
+    }
+    if (!lastSegmentInRange.precizeEnd &&
+        bufferedEndLooksCoherent(lastSegmentInRange))
+    {
+      lastSegmentInRange.precizeEnd = true;
+      lastSegmentInRange.end = rangeEnd;
+    }
+  } else if (lastSegmentInRange.precizeEnd) {
+    log.debug("SI: buffered end is precize end", lastSegmentInRange.end);
+    lastSegmentInRange.bufferedEnd = lastSegmentInRange.end;
+  } else if (rangeEnd - lastSegmentInRange.end <=
+               MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE)
+  {
+    log.debug("SI: found true buffered end", rangeEnd, lastSegmentInRange.end);
+    lastSegmentInRange.bufferedEnd = rangeEnd;
+    if (bufferedEndLooksCoherent(lastSegmentInRange)) {
+      lastSegmentInRange.end = rangeEnd;
+      lastSegmentInRange.precizeEnd = true;
+    }
+  } else if (rangeEnd > lastSegmentInRange.end) {
+    log.debug("SI: range end too far from expected end",
+              rangeEnd, lastSegmentInRange.end);
+    lastSegmentInRange.bufferedEnd = lastSegmentInRange.end;
+    if (bufferedEndLooksCoherent(lastSegmentInRange)) {
+      lastSegmentInRange.end = rangeEnd;
+      lastSegmentInRange.precizeEnd = true;
+    }
+
+  } else {
+    log.debug("SI: Segment appears immediately garbage collected at the end",
+              lastSegmentInRange.bufferedEnd, rangeEnd);
+    lastSegmentInRange.bufferedEnd = rangeEnd;
   }
 }

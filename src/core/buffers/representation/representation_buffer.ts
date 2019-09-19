@@ -510,20 +510,6 @@ export default function RepresentationBuffer<T>({
         return EMPTY;
       }
 
-      let estimatedStart : number | undefined;
-      let estimatedEnd : number | undefined;
-      if (chunkInfos != null) {
-        estimatedStart = Math.max(chunkInfos.time / chunkInfos.timescale,
-                                  appendWindow[0] != null ? appendWindow[0] :
-                                                            0);
-        if (chunkInfos.duration != null) {
-          estimatedEnd = Math.min((chunkInfos.time + chunkInfos.duration) /
-                                    chunkInfos.timescale,
-                                  appendWindow[1] != null ? appendWindow[1] :
-                                                            Infinity);
-        }
-      }
-
       const data = { initSegment: initSegmentObject &&
                                   initSegmentObject.chunkData,
                      chunk: segment.isInit ? null :
@@ -531,7 +517,17 @@ export default function RepresentationBuffer<T>({
                      timestampOffset: chunkOffset,
                      appendWindow,
                      codec };
-      const inventoryInfos = objectAssign({ segment, estimatedStart, estimatedEnd },
+      let estimatedStart : number|undefined;
+      let estimatedDuration : number|undefined;
+      if (chunkInfos !== null) {
+        estimatedStart = chunkInfos.time / chunkInfos.timescale;
+        estimatedDuration = chunkInfos.duration !== undefined ?
+          chunkInfos.duration / chunkInfos.timescale :
+          undefined;
+      }
+      const inventoryInfos = objectAssign({ segment,
+                                            estimatedStart,
+                                            estimatedDuration },
                                           content);
       const append$ = pushDataToSourceBufferWithRetries(clock$,
                                                         queuedSourceBuffer,
