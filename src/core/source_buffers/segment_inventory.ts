@@ -617,7 +617,7 @@ export default class SegmentInventory {
     for (let i = 0; i < inventory.length; i++) {
       if (areSameContent(inventory[i].infos, content)) {
         if (foundIt) {
-          log.warn("SI: Completed Segment is splitted.");
+          log.warn("SI: Completed Segment is splitted.", content);
         }
         foundIt = true;
 
@@ -644,7 +644,7 @@ export default class SegmentInventory {
     }
 
     if (!foundIt) {
-      log.warn("SI: Completed Segment not found");
+      log.warn("SI: Completed Segment not found", content);
     }
   }
 
