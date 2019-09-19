@@ -60,12 +60,10 @@ function canPlay(
       const { seeking, stalled, readyState, currentRange } = tick;
       return !seeking &&
              stalled == null &&
-            (
-              readyState === 4 ||
+             (readyState === 4 ||
               readyState === 3 &&
               currentRange != null) &&
-            (
-              !shouldValidateMetadata() ||
+             (!shouldValidateMetadata() ||
               mediaElement.duration > 0);
     }),
     take(1),
