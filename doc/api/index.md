@@ -12,6 +12,7 @@
     - [LogLevel](#static-LogLevel)
 - [Tools](#tools)
     - [Experimental - MediaCapabilitiesProber](#tools-mediaCapabilitiesProber)
+    - [Experimental - Download2Go](#tools-download2Go)
 - [Methods](#meth)
     - [loadVideo](#meth-loadVideo)
     - [getVideoElement](#meth-getVideoElement)
@@ -207,7 +208,20 @@ An experimental tool to probe browser media capabilities:
 
 You can find its documentation [here](./mediaCapabilitiesProber.md).
 
+<a name="tools-download2go"></a>
+### Download2Go ####################################################
 
+_type_: ``Object - download2Go``
+
+Provide a full API to be able to download a video content in the browser:
+  - Everything is in the browser
+  - DRM support
+  - Priorize Download
+  - Resume and Pause a download
+  - Get the available spaces left
+  - And more ...
+
+You can find its documentation [here](./download2Go.md).
 
 <a name="meth"></a>
 ## Methods #####################################################################

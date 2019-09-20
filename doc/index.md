@@ -25,8 +25,7 @@ For a shortcut, here are some other quick links you might want to check:
   - [Player Events](./api/player_events.md)
   - [Text track handling](./api/text_tracks.md)
   - [Import a minimal version of the Player](./api/minimal_player.md)
-
-
+  - [Download2Go](./api/download2Go.md)
 
 ## Tutorials ###################################################################
 
