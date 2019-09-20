@@ -40,6 +40,8 @@ export interface IPeriodInfos {
                                                        // available position of a content
   end? : number; // End time of the current period, in seconds
   isDynamic : boolean; // Whether the Manifest can evolve with time
+  receivedTime? : number; // time (in terms of `performance.now`) at which the
+                          // XML file containing this AdaptationSet was received
   start : number; // Start time of the current period, in seconds
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
                                   // in seconds
@@ -190,6 +192,7 @@ export default function parseAdaptationSets(
         manifestBoundsCalculator: periodInfos.manifestBoundsCalculator,
         end: periodInfos.end,
         isDynamic: periodInfos.isDynamic,
+        receivedTime: periodInfos.receivedTime,
         start: periodInfos.start,
         timeShiftBufferDepth: periodInfos.timeShiftBufferDepth,
       };

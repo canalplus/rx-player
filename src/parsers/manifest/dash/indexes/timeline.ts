@@ -100,13 +100,13 @@ export interface ITimelineIndexContextArgument {
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the
                                                        // minimum and maximum
                                                        // of a content
-  manifestReceivedTime? : number; // time (in terms of `performance.now`) at
-                                   // which the Manifest file was received
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
   periodEnd : number|undefined; // End of the period concerned by this
                                 // RepresentationIndex, in seconds
   isDynamic : boolean; // Whether the corresponding Manifest is dynamic
+  receivedTime? : number; // time (in terms of `performance.now`) at which the
+                          // XML file containing this index was received
   representationBaseURL : string; // Base URL for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
@@ -198,7 +198,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   protected _index : ITimelineIndex;
 
   // time, in terms of `performance.now`, of the last Manifest update
-  private _lastManifestUpdate : number;
+  private _lastUpdate : number;
 
   // absolute start of the period, timescaled and converted to index time
   private _scaledPeriodStart : number;
@@ -251,9 +251,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
 
     this._manifestBoundsCalculator = manifestBoundsCalculator;
 
-    this._lastManifestUpdate = context.manifestReceivedTime == null ?
+    this._lastUpdate = context.receivedTime == null ?
                                  performance.now() :
-                                 context.manifestReceivedTime;
+                                 context.receivedTime;
 
     this._isDynamic = isDynamic;
     this._index = { indexRange: index.indexRange,
@@ -449,7 +449,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._isDynamic = newIndex._isDynamic;
     this._scaledPeriodStart = newIndex._scaledPeriodStart;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
-    this._lastManifestUpdate = newIndex._lastManifestUpdate;
+    this._lastUpdate = newIndex._lastUpdate;
     this._manifestBoundsCalculator = newIndex._manifestBoundsCalculator;
   }
 
@@ -518,7 +518,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       return lastPosition;
     }
     const lastSegmentDuration = lastTimelineElement.duration;
-    const timeDiffInSeconds = (performance.now() - this._lastManifestUpdate) / 1000;
+    const timeDiffInSeconds = (performance.now() - this._lastUpdate) / 1000;
     const timeDiffTS = timeDiffInSeconds * index.timescale;
     if (timeDiffTS < lastSegmentDuration) {
       return lastPosition;

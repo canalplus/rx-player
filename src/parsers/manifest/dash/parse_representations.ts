@@ -41,6 +41,8 @@ export interface IAdaptationInfos {
                                                  // content
   end? : number; // End time of the current period, in seconds
   isDynamic : boolean; // Whether the Manifest can evolve with time
+  receivedTime? : number; // time (in terms of `performance.now`) at which the
+                          // XML file containing this Representation was received
   start : number; // Start time of the current period, in seconds
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
                                   // in seconds
@@ -121,6 +123,7 @@ export default function parseRepresentations(
                       isDynamic: adaptationInfos.isDynamic,
                       periodEnd: adaptationInfos.end,
                       periodStart: adaptationInfos.start,
+                      receivedTime: adaptationInfos.receivedTime,
                       representationBaseURL,
                       representationBitrate: representation.attributes.bitrate,
                       representationId: representation.attributes.id,

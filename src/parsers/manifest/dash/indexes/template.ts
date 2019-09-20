@@ -87,8 +87,6 @@ export interface ITemplateIndexContextArgument {
                                                        // minimum and maximum
                                                        // of a content
   isDynamic : boolean; // if true, the MPD can be updated over time
-  manifestReceivedTime? : number; // time (in terms of `performance.now`) at
-                                   // which the Manifest file was received
   periodEnd : number|undefined; // End of the Period concerned by this
                                 // RepresentationIndex, in seconds
   periodStart : number; // Start of the Period concerned by this

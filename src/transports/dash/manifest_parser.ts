@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import objectAssign from "object-assign";
 import {
   combineLatest as observableCombineLatest,
   Observable,
@@ -100,13 +101,17 @@ export default function generateManifestParser(
 
       return observableCombineLatest(externalResources$)
         .pipe(mergeMap(loadedResources => {
-          const resourceData = loadedResources.map(r => {
-            if (typeof r.responseData !== "string") {
+          const resources : Array<ILoaderDataLoadedValue<string>> = [];
+          for (let i = 0; i < loadedResources.length; i++) {
+            const resource = loadedResources[i];
+            if (typeof resource.responseData !== "string") {
               throw new Error("External DASH resources should only be strings");
             }
-            return r.responseData;
-          });
-          return loadExternalResources(continueParsing(resourceData));
+            // Normally not needed but TypeScript is just dumb here
+            resources.push(objectAssign(resource,
+                                        { responseData: resource.responseData }));
+          }
+          return loadExternalResources(continueParsing(resources));
         }));
     }
   };
