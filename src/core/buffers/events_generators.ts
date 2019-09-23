@@ -94,11 +94,11 @@ const EVENTS = {
   },
 
   discontinuityEncountered(
-    bufferType : IBufferType,
-    nextTime : number
+    gap : [number, number],
+    bufferType? : IBufferType
   ) : IBufferNeedsDiscontinuitySeek {
     return { type : "discontinuity-encountered",
-             value : { bufferType, nextTime } };
+             value : { bufferType, gap } };
   },
 
   endOfStream() : IEndOfStreamEvent {

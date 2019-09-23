@@ -29,6 +29,8 @@ import {
   map,
   mergeMap,
   takeUntil,
+  tap,
+  withLatestFrom,
 } from "rxjs/operators";
 import { MediaError } from "../../errors";
 import log from "../../log";
@@ -47,6 +49,7 @@ import createBufferClock from "./create_buffer_clock";
 import { setDurationToMediaSource } from "./create_media_source";
 import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
+import getBufferDiscontinuities from "./get_buffer_discontinuities";
 import getStalledEvents from "./get_stalled_events";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
 import {
@@ -130,6 +133,10 @@ export default function createMediaSourceLoader({
     // single SourceBuffer per type.
     const sourceBuffersStore = new SourceBuffersStore(mediaElement, mediaSource);
 
+    // Each time the content buffers detect a discontinuity, emit
+    // through this subject to handle it.
+    const contentDiscontinuities$ = new Subject<[number, number]>();
+
     // Initialize all native source buffers from the first period at the same
     // time.
     // We cannot lazily create native sourcebuffers since the spec does not
@@ -176,9 +183,9 @@ export default function createMediaSourceLoader({
             cancelEndOfStream$.next(null);
             return EMPTY;
           case "discontinuity-encountered":
-            if (SourceBuffersStore.isNative(evt.value.bufferType)) {
-              log.warn("Init: Explicit discontinuity seek", evt.value.nextTime);
-              mediaElement.currentTime = evt.value.nextTime;
+            const { bufferType, gap } = evt.value;
+            if (bufferType === undefined || SourceBuffersStore.isNative(bufferType)) {
+              contentDiscontinuities$.next(gap);
             }
             return EMPTY;
           default:
@@ -195,8 +202,23 @@ export default function createMediaSourceLoader({
 
     // Create Stalling Manager, an observable which will try to get out of
     // various infinite stalling issues
-    const stalled$ = getStalledEvents(mediaElement, clock$)
+    const stalled$ = getStalledEvents(clock$)
       .pipe(map(EVENTS.stalled));
+
+    const handleDiscontinuities$ = observableMerge(contentDiscontinuities$,
+                                                   getBufferDiscontinuities(clock$)
+    ).pipe(
+      withLatestFrom(clock$),
+      tap(([gap, clock]) => {
+        if (gap[1] >= mediaElement.currentTime &&
+            !clock.stalled
+           ) {
+          log.warn("Init: discontinuity seek", mediaElement.currentTime, gap[1]);
+          mediaElement.currentTime = gap[1];
+        }
+      }),
+      ignoreElements()
+    );
 
     const loadedEvent$ = load$
       .pipe(mergeMap((evt) => {
@@ -215,8 +237,12 @@ export default function createMediaSourceLoader({
         return observableOf(EVENTS.loaded());
       }));
 
-    return observableMerge(loadedEvent$, playbackRate$, stalled$, buffers$)
-      .pipe(finalize(() => {
+    return observableMerge(handleDiscontinuities$,
+                           loadedEvent$,
+                           playbackRate$,
+                           stalled$,
+                           buffers$
+    ).pipe(finalize(() => {
         // clean-up every created SourceBuffers
         sourceBuffersStore.disposeAll();
       }));
@@ -238,7 +264,7 @@ function createNativeSourceBuffersForPeriod(
   period : Period
 ) : void {
   Object.keys(period.adaptations).forEach(bufferType => {
-    if (SourceBuffersStore.isNative(bufferType)) {
+    if (bufferType && SourceBuffersStore.isNative(bufferType)) {
       const adaptations = period.adaptations[bufferType] || [];
       const representations = adaptations != null &&
                               adaptations.length ? adaptations[0].representations :

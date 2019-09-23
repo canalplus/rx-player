@@ -174,7 +174,7 @@ export default function initializeDirectfileContent({
 
   // Create Stalling Manager, an observable which will try to get out of
   // various infinite stalling issues
-  const stalled$ = getStalledEvents(mediaElement, clock$)
+  const stalled$ = getStalledEvents(clock$)
     .pipe(map(EVENTS.stalled));
 
   // Manage "loaded" event and warn if autoplay is blocked on the current browser

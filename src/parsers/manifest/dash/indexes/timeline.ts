@@ -420,7 +420,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     // an explicit discontinuity with the next one
     if (rangeTo !== nextTimelineItem.start &&
         scaledTime >= rangeUp &&
-        scaledTime <= rangeTo &&
         (rangeTo - scaledTime) < timescale)
     {
       return fromIndexTime(nextTimelineItem.start, this._index);

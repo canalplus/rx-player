@@ -25,6 +25,7 @@ import {
   Subject,
 } from "rxjs";
 import {
+  distinctUntilChanged,
   exhaustMap,
   filter,
   ignoreElements,
@@ -54,6 +55,7 @@ import SourceBuffersStore, {
   QueuedSourceBuffer,
 } from "../source_buffers";
 import ActivePeriodEmitter from "./active_period_emitter";
+import { IBufferNeedsDiscontinuitySeek } from "./adaptation/adaptation_buffer";
 import areBuffersComplete from "./are_buffers_complete";
 import EVENTS from "./events_generators";
 import PeriodBuffer, {
@@ -180,7 +182,31 @@ export default function BufferOrchestrator(
       areComplete ? EVENTS.endOfStream() : EVENTS.resumeStream()
     ));
 
-  return observableMerge(...buffersArray,
+  // Detect discontinuities between periods, and send an event if
+  // encontered discontinuities.
+  const periodsDiscontinuities$ = clock$.pipe(
+    filter(({ stalled }) => !!stalled),
+    map(({ currentTime }) => {
+      const currentPeriod = manifest.getPeriodForTime(currentTime);
+      if (currentPeriod) {
+        const nextPeriod = manifest.getPeriodAfter(currentPeriod);
+        if (currentPeriod != null &&
+            currentPeriod.end != null &&
+            nextPeriod != null &&
+            currentTime > (currentPeriod.end - 1) &&
+            currentTime <= nextPeriod.start &&
+            nextPeriod.start - currentPeriod.end === 0) {
+          return EVENTS.discontinuityEncountered([currentPeriod.end,
+                                                  nextPeriod.start]);
+        }
+      }
+    }),
+    filter((x): x is IBufferNeedsDiscontinuitySeek => !!x),
+    distinctUntilChanged()
+  );
+
+  return observableMerge(periodsDiscontinuities$,
+                         ...buffersArray,
                          activePeriodChanged$,
                          endOfStream$,
                          outOfManifest$);
