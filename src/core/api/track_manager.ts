@@ -198,7 +198,8 @@ export default class TrackManager {
   }
 
   /**
-   * Remove Subject to choose an "audio" or "text" Adaptation for a Period.
+   * Remove Subject to choose an "audio", "video" or "text" Adaptation for a
+   * Period.
    * @param {string} bufferType - The concerned buffer type
    * @param {Period} period - The concerned Period.
    */
