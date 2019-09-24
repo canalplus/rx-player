@@ -16,6 +16,7 @@
 
 import {
   convertToRanges,
+  excludeFromRanges,
   getInnerAndOuterTimeRanges,
   getLeftSizeOfRange,
   getNextRangeGap,
@@ -482,6 +483,57 @@ describe("utils - ranges", () => {
       ];
       expect(keepRangeIntersection(timeRanges1, timeRanges2)).toEqual(result);
       expect(keepRangeIntersection(timeRanges2, timeRanges1)).toEqual(result);
+    });
+  });
+
+  describe("excludeFromRanges", () => {
+    it("should return no range if both given are equal", () => {
+      const timeRanges = [
+        { start: 0, end: 10 },
+        { start: 20, end: 30 },
+        { start: 50, end: 70 },
+      ];
+      expect(excludeFromRanges(timeRanges, timeRanges)).toEqual([]);
+    });
+
+    it.only("should return no range if the second contains the first", () => {
+      const timeRanges1 = [
+        { start: 0, end: 10 },
+        { start: 20, end: 30 },
+        { start: 50, end: 70 },
+      ];
+      const timeRanges2 = [
+        { start: 0, end: 70},
+        { start: 90, end: 100},
+        { start: 100, end: 120},
+      ];
+      expect(excludeFromRanges(timeRanges1, timeRanges2)).toEqual([]);
+    });
+
+    /* tslint:disable max-line-length */
+    it("should return the part of the first range not included in the second range", () => {
+    /* tslint:enable max-line-length */
+      const timeRanges1 = [
+        { start: 10, end: 50 },
+        { start: 80, end: 90 },
+        { start: 105, end: 123 },
+        { start: 150, end: 190 },
+      ];
+      const timeRanges2 = [
+        { start: 20, end: 24 },
+        { start: 40, end: 83 },
+        { start: 105, end: 106 },
+        { start: 106, end: 109 },
+        { start: 120, end: 123 },
+      ];
+      const result = [
+        { start: 10, end: 20 },
+        { start: 24, end: 40 },
+        { start: 83, end: 90 },
+        { start: 109, end: 120 },
+        { start: 150, end: 190 },
+      ];
+      expect(excludeFromRanges(timeRanges1, timeRanges2)).toEqual(result);
     });
   });
 
