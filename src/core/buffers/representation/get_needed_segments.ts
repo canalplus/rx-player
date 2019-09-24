@@ -1,0 +1,227 @@
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * This file allows to create RepresentationBuffers.
+ *
+ * A RepresentationBuffer downloads and push segment for a single
+ * Representation (e.g. a single video stream of a given quality).
+ * It chooses which segments should be downloaded according to the current
+ * position and what is currently buffered.
+ */
+
+// import objectAssign from "object-assign";
+import config from "../../../config";
+import log from "../../../log";
+import Manifest, {
+  Adaptation,
+  // areSameContent,
+  ISegment,
+  Period,
+  Representation,
+} from "../../../manifest";
+import SimpleSet from "../../../utils/simple_set";
+import { IBufferedChunk } from "../../source_buffers";
+
+const { BITRATE_REBUFFERING_RATIO,
+        MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,
+        MINIMUM_SEGMENT_SIZE } = config;
+
+export interface ISegmentFilterArgument { content: { adaptation : Adaptation;
+                                                     manifest : Manifest;
+                                                     period : Period;
+                                                     representation : Representation; };
+                                          fastSwitchingStep : number | undefined;
+                                          loadedSegmentPendingPush : SimpleSet;
+                                          neededRange : { start: number;
+                                                          end: number; };
+                                          segmentInventory : IBufferedChunk[]; }
+
+/**
+ * @param {Object} segmentFilterArgument
+ * @returns {Array.<Object>}
+ */
+export default function getNeededSegments({
+  content,
+  fastSwitchingStep,
+  loadedSegmentPendingPush,
+  neededRange,
+  segmentInventory,
+} : ISegmentFilterArgument) : ISegment[] {
+  // 1 - construct lists of segments possible and actually pushed
+  const possibleSegments = content.representation.index
+    .getSegments(neededRange.start, neededRange.end - neededRange.start);
+  const currentSegments = getCorrespondingBufferedSegments(neededRange,
+                                                           segmentInventory);
+
+  // 2 - remove from pushed list of current segments the contents we want to replace
+  const consideredSegments = currentSegments.filter((bufferedSegment) => {
+    if (bufferedSegment.infos.period.id !== content.period.id) {
+      return true; // keep segments from another Period by default.
+    }
+
+    if (bufferedSegment.infos.adaptation.id !== content.adaptation.id) {
+      return false; // replace segments from another Adaptation
+    }
+
+    const currentSegmentBitrate = bufferedSegment.infos.representation.bitrate;
+    if (fastSwitchingStep == null) {
+      // only re-load comparatively-poor bitrates for the same Adaptation.
+      const bitrateCeil = currentSegmentBitrate * BITRATE_REBUFFERING_RATIO;
+      return content.representation.bitrate <= bitrateCeil;
+    }
+    return currentSegmentBitrate >= fastSwitchingStep;
+  });
+
+  // 3 - remove from that list the segments who appeared to have been GCed
+  const completeSegments : IBufferedChunk[] = [];
+  for (let i = 0; i < consideredSegments.length; i++) {
+    let segmentStartIsComplete = true;
+    let segmentEndIsComplete = true;
+
+    const currentSeg = consideredSegments[i];
+    const prevSeg = i === 0 ? null :
+                              consideredSegments[i - 1];
+    const nextSeg = i >= consideredSegments.length - 1 ? null :
+                                                         consideredSegments[i + 1];
+    if (currentSeg.bufferedStart === undefined) {
+      segmentStartIsComplete = false;
+    } else if ((prevSeg === null ||
+                prevSeg.bufferedEnd === undefined ||
+                prevSeg.bufferedEnd !== currentSeg.bufferedStart) &&
+               neededRange.start < currentSeg.bufferedStart &&
+               currentSeg.bufferedStart - currentSeg.start >
+                 MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
+    {
+      log.info("Buffer: The start of the wanted segment has been garbage collected",
+               currentSeg);
+      segmentStartIsComplete = false;
+    }
+
+    if (currentSeg.bufferedEnd === undefined) {
+      segmentEndIsComplete = false;
+    } else if ((nextSeg === null ||
+                nextSeg.bufferedEnd === undefined ||
+                nextSeg.bufferedEnd !== currentSeg.bufferedStart) &&
+               neededRange.end > currentSeg.bufferedEnd &&
+               currentSeg.end - currentSeg.bufferedEnd >
+                 MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
+    {
+      log.info("Buffer: The end of the wanted segment has been garbage collected",
+                currentSeg);
+      segmentEndIsComplete = false;
+    }
+
+    if (segmentStartIsComplete && segmentEndIsComplete) {
+      completeSegments.push(currentSeg);
+    }
+  }
+
+  // 4 - now filter the list of segments we can download
+  const roundingError = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
+  return possibleSegments.filter(segment => {
+    if (loadedSegmentPendingPush.test(segment.id)) {
+      return false; // we're already pushing it
+    }
+
+    const { duration, time, timescale } = segment;
+    if (segment.isInit || duration === undefined) {
+      return true; // never skip those
+    }
+
+    if (duration / timescale < MINIMUM_SEGMENT_SIZE) {
+      return false; // too small
+    }
+
+    const scaledTime = time / timescale;
+    const scaledDuration = duration / timescale;
+    const scaledEnd = scaledTime + scaledDuration;
+
+    // check if the segment is already downloaded
+    for (let i = 0; i < completeSegments.length; i++) {
+      const completeSeg = completeSegments[i];
+      const segTime = completeSeg.infos.segment.time;
+      const segDuration = completeSeg.infos.segment.duration;
+      const segTimeScale = completeSeg.infos.segment.timescale;
+      const scaledSegTime = segTime / segTimeScale;
+      const scaledSegEnd = scaledSegTime + segDuration / segTimeScale;
+      if (scaledTime - scaledSegTime > -roundingError &&
+          scaledSegEnd - scaledEnd > -roundingError)
+      {
+        return false; // already downloaded
+      }
+    }
+
+    // check if there is an hole in place of the segment currently
+    for (let i = 0; i < completeSegments.length; i++) {
+      const completeSeg = completeSegments[i];
+      if (completeSeg.end > scaledTime) {
+        if (completeSeg.start > scaledTime + roundingError) {
+          return true;
+        }
+        let j = i + 1;
+        while (j < completeSegments.length - 1 &&
+               completeSegments[j - 1].end === completeSegments[j].start)
+        {
+          j++;
+        }
+        if (j >= completeSegments.length) {
+          j = completeSegments.length - 1;
+        }
+
+        return completeSegments[j].end < scaledEnd + roundingError;
+      }
+    }
+    return true;
+  });
+}
+
+/**
+ * From the given SegmentInventory, filters the buffered Segment Object which
+ * overlap with the given range.
+ * @param {Object} neededRange
+ * @param {Array.<Object>} segmentInventory
+ * @returns {Array.<Object>}
+ */
+function getCorrespondingBufferedSegments(
+  neededRange : { start : number; end : number },
+  segmentInventory : IBufferedChunk[]
+) : IBufferedChunk[] {
+  const segmentRoundingError = Math.max(1 / 60, MINIMUM_SEGMENT_SIZE);
+  const minEnd = neededRange.start + segmentRoundingError;
+  const maxStart = neededRange.end - segmentRoundingError;
+
+  const overlappingChunks : IBufferedChunk[] = [];
+  for (let i = segmentInventory.length - 1; i >= 0; i--) {
+    const eltInventory = segmentInventory[i];
+
+    if (eltInventory.isCompleteSegment) {
+      const inventorySegment = eltInventory.infos.segment;
+      const eltInventoryStart = inventorySegment.time /
+                                inventorySegment.timescale;
+      const eltInventoryEnd = inventorySegment.duration == null ?
+        eltInventory.end :
+        eltInventoryStart + inventorySegment.duration /
+          inventorySegment.timescale;
+      if ((eltInventoryEnd > minEnd && eltInventoryStart < maxStart) ||
+          (eltInventory.end > minEnd && eltInventory.start < maxStart))
+      {
+        overlappingChunks.unshift(eltInventory);
+      }
+    }
+  }
+  return overlappingChunks;
+}

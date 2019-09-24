@@ -73,11 +73,10 @@ import {
   IBufferStateFull,
   IRepresentationBufferEvent,
 } from "../types";
+import getNeededSegments from "./get_needed_segments";
 import getSegmentPriority from "./get_segment_priority";
-import getSegmentsNeeded from "./get_segments_needed";
 import getWantedRange from "./get_wanted_range";
 import pushDataToSourceBufferWithRetries from "./push_data";
-import shouldDownloadSegment from "./should_download_segment";
 
 // Item emitted by the Buffer's clock$
 export interface IRepresentationBufferClockTick {
@@ -237,13 +236,11 @@ export default function RepresentationBuffer<T>({
                                            neededRange.end);
 
       const segmentInventory = queuedSourceBuffer.getInventory();
-      let neededSegments = getSegmentsNeeded(representation, neededRange)
-        .filter((segment) => shouldDownloadSegment({ content,
-                                                     fastSwitchingStep,
-                                                     loadedSegmentPendingPush,
-                                                     neededRange,
-                                                     segment,
-                                                     segmentInventory }))
+      let neededSegments = getNeededSegments({ content,
+                                               fastSwitchingStep,
+                                               loadedSegmentPendingPush,
+                                               neededRange,
+                                               segmentInventory })
         .map((segment) => ({ priority: getSegmentPriority(segment, timing),
                              segment }));
 
