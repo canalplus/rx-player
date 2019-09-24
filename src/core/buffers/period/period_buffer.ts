@@ -143,10 +143,9 @@ export default function PeriodBuffer({
                                                                 bufferType,
                                                                 adaptation,
                                                                 options);
-          const buffered = qSourceBuffer.getBufferedRanges();
-          const strategy = getAdaptationSwitchStrategy(buffered,
+          const strategy = getAdaptationSwitchStrategy(qSourceBuffer,
                                                        period,
-                                                       bufferType,
+                                                       adaptation,
                                                        tick);
           if (strategy.type === "needs-reload") {
             return observableOf(EVENTS.needsMediaSourceReload(tick));
