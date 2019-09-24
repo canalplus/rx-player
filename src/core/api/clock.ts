@@ -258,7 +258,9 @@ function getStalledStatus(
     }
   }
 
-  if (shouldStall) {
+  if (shouldUnstall) {
+    return null;
+  } else if (shouldStall || prevStalled !== null) {
     let reason : "seeking" | "not-ready" | "buffering";
     if (currentState === "seeking" || currentTimings.seeking) {
       reason = "seeking";
@@ -267,15 +269,13 @@ function getStalledStatus(
     } else {
       reason = "buffering";
     }
+    if (prevStalled !== null && prevStalled.reason === reason) {
+      return prevStalled;
+    }
     return { reason,
              timestamp: performance.now() };
   }
-  else if (shouldUnstall) {
-    return null;
-  }
-  else {
-    return prevStalled;
-  }
+  return null;
 }
 
 export interface IClockOptions {
