@@ -18,7 +18,6 @@ import { ISegment } from "../../manifest";
 import {
   getDurationFromTrun,
   getTrackFragmentDecodeTime,
-  ISidxSegment,
 } from "../../parsers/containers/isobmff";
 import { IChunkTimingInfos } from "../types";
 
@@ -40,10 +39,8 @@ function getISOBMFFTimingInfos(
   buffer : Uint8Array,
   isChunked : boolean,
   segment : ISegment,
-  sidxSegments : ISidxSegment[]|null,
   initInfos? : IChunkTimingInfos
 ) : IChunkTimingInfos | null {
-  const _sidxSegments = sidxSegments || [];
   let startTime;
   let duration;
   const trunDuration = getDurationFromTrun(buffer);
@@ -71,13 +68,11 @@ function getISOBMFFTimingInfos(
 
   // Scaled start time and duration as announced in the segment data
   let segmentDuration : number|undefined;
-  let segmentStart : number|undefined;
 
   if (timescale === segment.timescale) {
     maxDecodeTimeDelta = Math.min(timescale * 0.9,
                                   segment.duration != null ? segment.duration / 4 :
                                                              0.25);
-    segmentStart = segment.time;
     segmentDuration = segment.duration;
   } else {
     maxDecodeTimeDelta =
@@ -86,7 +81,6 @@ function getISOBMFFTimingInfos(
                  ((segment.duration / segment.timescale) * timescale) / 4 :
                    0.25
     );
-    segmentStart = ((segment.time || 0) / segment.timescale) * timescale;
     segmentDuration = segment.duration != null ?
                         (segment.duration / segment.timescale) * timescale :
                         undefined;
@@ -96,6 +90,8 @@ function getISOBMFFTimingInfos(
     startTime = segment.timestampOffset != null ?
                   baseDecodeTime + (segment.timestampOffset * timescale) :
                   baseDecodeTime;
+  } else {
+    return null;
   }
 
   if (trunDuration >= 0 &&
@@ -107,39 +103,7 @@ function getISOBMFFTimingInfos(
     duration = trunDuration;
   }
 
-  if (startTime == null) {
-    if (_sidxSegments.length === 0) {
-      startTime = segmentStart;
-    } else {
-      const sidxStart = _sidxSegments[0].time;
-      if (sidxStart >= 0) {
-        const sidxTimescale = _sidxSegments[0].timescale;
-        const baseStartTime = sidxTimescale != null &&
-                              sidxTimescale !== timescale ?
-                                (sidxStart / sidxTimescale) * timescale :
-                                sidxStart;
-        startTime = segment.timestampOffset != null ?
-                      baseStartTime + (segment.timestampOffset * timescale) :
-                      baseStartTime;
-      } else {
-        startTime = segmentStart;
-      }
-    }
-  }
-
-  if (duration == null) {
-    if (_sidxSegments.length) {
-      const sidxDuration = _sidxSegments.reduce((a, b) => a + (b.duration || 0), 0);
-      duration = sidxDuration >= 0 ? sidxDuration :
-                                     segmentDuration;
-    } else {
-      duration = segmentDuration;
-    }
-  }
-
-  return { timescale,
-           time: startTime || 0,
-           duration };
+  return { timescale, time: startTime, duration };
 }
 
 export default getISOBMFFTimingInfos;
