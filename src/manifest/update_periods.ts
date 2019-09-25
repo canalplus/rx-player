@@ -33,7 +33,8 @@ export default function updatePeriods(
     let j = lastHandledNewPeriodIdx;
     let oldPeriod = oldPeriods[j];
     while (oldPeriod != null && oldPeriod.id !== newPeriod.id) {
-      oldPeriod = oldPeriods[j++];
+      j++;
+      oldPeriod = oldPeriods[j];
     }
     if (oldPeriod != null) {
       updatePeriodInPlace(oldPeriod, newPeriod);
