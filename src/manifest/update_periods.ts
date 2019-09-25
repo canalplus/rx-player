@@ -27,10 +27,36 @@ export default function updatePeriods(
   oldPeriods: Period[],
   newPeriods: Period[]
 ): void {
-  let lastHandledNewPeriodIdx = 0;
+  let firstUnhandledPeriodIdx = 0;
+  // Example :
+  //
+  // old periods : [p0] [p2] [pX] [pF]
+  // new periods : [p1] [p2] [pM] [pX] [pU]
+  //
+  // The `for` loop will remove old periods and replace new ones
+  // between the common periods between the two, in the old periods array.
+  //
+  // - Step 1 : Handle common period p2
+  //    - the p0 is removed the p2
+  //    - the p1 is added before the p2
+  //
+  //                   First unhandled period index
+  //                             |
+  //                             v
+  //    old periods : [p1] [p2] [pX] [pF]
+  //    new periods : [p1] [p2] [pM] [pX] [pU]
+  //
+  // - Step 2 : Handle common period pX
+  //    - the pM is added before the pX
+  //
+  //                              First unhandled period index
+  //                                        |
+  //                                        v
+  // old periods : [p1]  [p2]  [pM]  [pX]  [pF]
+  // new periods : [p1]  [p2]  [pM]  [pX]  [pU]
   for (let i = 0; i < newPeriods.length; i++) {
     const newPeriod = newPeriods[i];
-    let j = lastHandledNewPeriodIdx;
+    let j = firstUnhandledPeriodIdx;
     let oldPeriod = oldPeriods[j];
     while (oldPeriod != null && oldPeriod.id !== newPeriod.id) {
       j++;
@@ -38,16 +64,27 @@ export default function updatePeriods(
     }
     if (oldPeriod != null) {
       updatePeriodInPlace(oldPeriod, newPeriod);
-      const periodsToInclude = newPeriods.slice(lastHandledNewPeriodIdx, i);
+      const periodsToInclude = newPeriods.slice(firstUnhandledPeriodIdx, i);
       oldPeriods.splice(j, 0, ...periodsToInclude);
-      lastHandledNewPeriodIdx = i + 1;
+      firstUnhandledPeriodIdx = i + 1;
     }
   }
 
-  // take the remaining new periods and replace undesired periods with them
-  const lastNewPeriods = newPeriods.slice(lastHandledNewPeriodIdx,
+  const remainingNewPeriods = newPeriods.slice(firstUnhandledPeriodIdx,
                                           newPeriods.length);
-  oldPeriods.splice(lastHandledNewPeriodIdx,
-                    oldPeriods.length - lastHandledNewPeriodIdx,
-                    ...lastNewPeriods);
+  // At this point, the first unhandled period index refers to the first
+  // position from which :
+  // - there are only undesired periods in old periods array.
+  // - there only new wanted periods in new periods array.
+  //
+  //                              First unhandled period index
+  //                                        |
+  //                                        v
+  // old periods : [p1]  [p2]  [pM]  [pX]  [pF (undesired)]
+  // new periods : [p1]  [p2]  [pM]  [pX]  [pU (wanted)]
+  //
+  // final array (old periods array) : [p1]  [p2]  [pM]  [pX]  [pU]
+  oldPeriods.splice(firstUnhandledPeriodIdx,
+                    oldPeriods.length - firstUnhandledPeriodIdx,
+                    ...remainingNewPeriods);
 }
