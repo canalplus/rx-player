@@ -211,7 +211,7 @@ export default function createMediaSourceLoader({
       withLatestFrom(clock$),
       tap(([gap, clock]) => {
         if (gap[1] >= mediaElement.currentTime &&
-            !clock.stalled
+            !!clock.stalled
            ) {
           log.warn("Init: discontinuity seek", mediaElement.currentTime, gap[1]);
           mediaElement.currentTime = gap[1];

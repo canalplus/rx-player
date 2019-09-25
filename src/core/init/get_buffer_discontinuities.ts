@@ -31,7 +31,7 @@ export default function getBufferDiscontinuities(
   clock$: Observable<IInitClockTick>
 ): Observable<[number, number]> {
   return clock$.pipe(
-    filter(({ stalled }) => !stalled),
+    filter(({ stalled }) => !!stalled),
     map((tick) => {
       // Perform various checks to try to get out of the stalled state:
       //   1. is it a browser bug? -> force seek at the same current time
