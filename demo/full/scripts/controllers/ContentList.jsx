@@ -114,6 +114,138 @@ function constructContentList() {
 }
 
 /**
+ * Generate URL with hash-string which can be used to reload the page with the
+ * current stored content or demo content. This can be used for example to
+ * share some content with other people.
+ * Returns null if it could not generate an URL for the current content.
+ * @param {Object} content - The content object as constructed in the
+ * ContentList.
+ * @param {Object} state - The current ContentList state.
+ * @returns {string|null}
+ */
+function generateLinkForContent(content, { autoPlay, transportType }) {
+  if (content == null) {
+    return null;
+  }
+  const licenseServerUrl = content.drmInfos && content.drmInfos[0] &&
+    content.drmInfos[0].licenseServerUrl;
+  const serverCertificateUrl = content.drmInfos && content.drmInfos[0] &&
+    content.drmInfos[0].serverCertificateUrl;
+  return generateLinkForCustomContent({
+    autoPlay,
+    currentDRMType: content.drmInfos && content.drmInfos[0] &&
+      content.drmInfos[0].drm,
+    currentManifestURL: content.url,
+    displayDRMSettings: !!licenseServerUrl || !!serverCertificateUrl,
+    licenseServerUrl,
+    lowLatencyChecked: !!content.isLowLatency,
+    serverCertificateUrl,
+    transportType,
+  });
+}
+
+/**
+ * Generate URL with hash-string which can be used to reload the page with the
+ * current non-stored custom content. This can be used for example to share some
+ * content with other people.
+ * Returns null if it could not generate an URL for the current content.
+ * @param {Object} state - The current ContentList state.
+ * @returns {string|null}
+ */
+function generateLinkForCustomContent({
+  autoPlay,
+  currentDRMType,
+  currentManifestURL,
+  displayDRMSettings,
+  licenseServerUrl,
+  lowLatencyChecked,
+  serverCertificateUrl,
+  transportType,
+}) {
+  let urlHash = "";
+  let transportHash = "";
+  let licenseServerUrlHash = "";
+  let serverCertificateUrlHash = "";
+  let drmTypeHash = "";
+  const lowLatencyVal = !!lowLatencyChecked;
+  if (currentManifestURL) {
+    urlHash = window.btoa(currentManifestURL);
+  }
+  if (transportType) {
+    transportHash = window.btoa(transportType);
+  }
+  if (currentDRMType) {
+    drmTypeHash = window.btoa(currentDRMType);
+  }
+  if (licenseServerUrl) {
+    licenseServerUrlHash = window.btoa(licenseServerUrl);
+  }
+  if (serverCertificateUrl) {
+    serverCertificateUrlHash = window.btoa(serverCertificateUrl);
+  }
+
+  if (!transportHash) {
+    return null;
+  }
+
+  return location.protocol + "//" +
+         location.hostname +
+         (location.port ? ":" + location.port : "") +
+         location.pathname +
+         (location.search ? location.search : "") +
+         `#tr=${transportHash}` +
+         (urlHash ? `#ma=${urlHash}` : "") +
+         (displayDRMSettings &&
+          licenseServerUrlHash ? `#li=${licenseServerUrlHash}` : "") +
+         (displayDRMSettings &&
+          serverCertificateUrlHash ? `#se=${serverCertificateUrlHash}` : "") +
+         (displayDRMSettings && drmTypeHash ? `#dr=${drmTypeHash}` : "") +
+         (autoPlay ? "#au=1" : "") +
+         (lowLatencyVal ? "#lo=1" : "");
+}
+
+/**
+ * Get informations about the possibly linked content by parsing the hash in the
+ * URL (what comes after the "#" character).
+ * Returns null if no content could have been parsed from the url.
+ * @param {string} hashInUrl
+ * @return {Object|null}
+ */
+function parseHashInURL(hashInUrl) {
+  const splitted = hashInUrl.split("#").filter(val => val.length > 3);
+  if (!splitted.length) {
+    return null;
+  }
+  const parsed = splitted.reduce((acc, val) => {
+    switch (val.substring(0, 3)) {
+      case "ma=":
+        acc.manifestURL = window.atob(val.substring(3));
+        return acc;
+      case "tr=":
+        acc.transport = window.atob(val.substring(3));
+        return acc;
+      case "li=":
+        acc.licenseServerUrl = window.atob(val.substring(3));
+        return acc;
+      case "se=":
+        acc.serverCertificateUrl = window.atob(val.substring(3));
+        return acc;
+      case "dr=":
+        acc.drmType = window.atob(val.substring(3));
+        return acc;
+      case "au=":
+        acc.autoPlay = val.substring(3) === "1";
+        return acc;
+      case "lo=":
+        acc.lowLatency = val.substring(3) === "1";
+        return acc;
+    }
+    return acc;
+  }, {});
+  return parsed;
+}
+
+/**
  * Returns index of the first content to display according to all contents
  * available.
  * @param {Array.<Object>} contentList
@@ -147,6 +279,7 @@ class ContentList extends React.Component {
                    contentsPerType,
                    currentDRMType: DRM_TYPES[0],
                    currentManifestURL: "",
+                   displayGeneratedLink: false,
                    displayDRMSettings: false,
                    isSavingOrUpdating: false,
                    licenseServerUrl: "",
@@ -156,6 +289,36 @@ class ContentList extends React.Component {
   }
 
   componentDidMount() {
+    const parsedHash = parseHashInURL(location.hash);
+    if (parsedHash !== null) {
+      const { transport } = parsedHash;
+      if (TRANSPORT_TYPES.includes(transport)) {
+        const newState = {
+          autoPlay: !!parsedHash.autoPlay,
+          contentChoiceIndex: 0,
+          contentNameField: "",
+          contentList: this.state.contentsPerType[transport],
+          currentManifestURL: parsedHash.manifestURL,
+          lowLatencyChecked: !!parsedHash.lowLatency,
+          transportType: transport,
+        };
+
+        const { licenseServerUrl, serverCertificateUrl } = parsedHash;
+        const drmType = DRM_TYPES.includes(parsedHash.drmType) ?
+          parsedHash.drmType : undefined;
+        if (drmType !== undefined &&
+            (!!licenseServerUrl || !!serverCertificateUrl))
+        {
+          newState.displayDRMSettings = true;
+          newState.currentDRMType = drmType;
+          newState.licenseServerUrl = licenseServerUrl;
+          newState.serverCertificateUrl = serverCertificateUrl;
+        }
+        this.setState(newState);
+        return;
+      }
+    }
+
     // estimate first index which should be selected
     const contentList = this.state.contentsPerType[this.state.transportType];
     const firstEnabledContentIndex = getIndexOfFirstEnabledContent(contentList);
@@ -230,6 +393,7 @@ class ContentList extends React.Component {
                     currentDRMType: DRM_TYPES[0],
                     currentManifestURL: "",
                     displayDRMSettings: false,
+                    displayGeneratedLink: false,
                     isSavingOrUpdating: false,
                     licenseServerUrl: "",
                     lowLatencyChecked: false,
@@ -263,6 +427,7 @@ class ContentList extends React.Component {
                     currentDRMType: drm != null ? drm : DRM_TYPES[0],
                     currentManifestURL,
                     displayDRMSettings: hasDRMSettings,
+                    displayGeneratedLink: false,
                     isSavingOrUpdating: false,
                     lowLatencyChecked: isLowLatency,
                     licenseServerUrl,
@@ -312,6 +477,7 @@ class ContentList extends React.Component {
             contentsPerType,
             currentDRMType,
             currentManifestURL,
+            displayGeneratedLink,
             displayDRMSettings,
             isSavingOrUpdating,
             licenseServerUrl,
@@ -323,6 +489,13 @@ class ContentList extends React.Component {
 
     const contentsToSelect = contentsPerType[transportType];
     const chosenContent = contentsToSelect[contentChoiceIndex];
+
+    let generatedLink = null;
+    if (displayGeneratedLink) {
+      generatedLink = contentChoiceIndex === 0 || isSavingOrUpdating ?
+        generateLinkForCustomContent(this.state) :
+        generateLinkForContent(chosenContent, this.state);
+    }
 
     const hasURL = currentManifestURL !== "";
     const isLocalContent = !!(chosenContent &&
@@ -460,6 +633,10 @@ class ContentList extends React.Component {
         />);
     };
 
+    const onClickGenerateLink = () => {
+      this.setState({ displayGeneratedLink: !displayGeneratedLink });
+    };
+
     const selectValues = contentsToSelect.map(c => {
       return { name: c.displayName,
                disabled: c.isDisabled };
@@ -467,12 +644,27 @@ class ContentList extends React.Component {
 
     return (
       <div className="choice-inputs-wrapper">
+        <span className={"generated-url" + (displayGeneratedLink ? " enabled" : "")}>
+          { displayGeneratedLink ?
+            [
+              "URL: ",
+              generatedLink ?
+                <a className="generated-url-link" href={generatedLink}>
+                  {generatedLink}
+                </a> :
+                <a className="generated-url-link none">
+                  Not a valid content!
+                </a>,
+            ] : ""
+          }
+        </span>
         <div className="content-inputs">
           <div className="content-inputs-selects">
             <Select
               className="choice-input transport-type-choice white-select"
               onChange={onTransportChange}
               options={TRANSPORT_TYPES}
+              selected={TRANSPORT_TYPES.indexOf(transportType)}
             />
             <Select
               className="choice-input content-choice white-select"
@@ -484,15 +676,23 @@ class ContentList extends React.Component {
           <div className="content-inputs-middle">
             {
               (isCustomContent || isLocalContent) ?
-                (<Button
-                  className={"choice-input-button content-button enter-name-button" +
-                    (!hasURL ? " disabled" : "")}
-                  onClick={onClickSaveOrUpdate}
-                  disabled={!hasURL || isSavingOrUpdating}
-                  value={isLocalContent ?
-                    (isSavingOrUpdating ? "Updating..." : "Update content") :
-                    (isSavingOrUpdating ? "Saving..." : "Store content")}
-                />) :
+                ([
+                  <Button
+                    className={"choice-input-button content-button enter-name-button" +
+                      (!hasURL ? " disabled" : "")}
+                    onClick={onClickSaveOrUpdate}
+                    disabled={!hasURL || isSavingOrUpdating}
+                    value={isLocalContent ?
+                      (isSavingOrUpdating ? "Updating..." : "Update content") :
+                      (isSavingOrUpdating ? "Saving..." : "Store content")}
+                  />,
+                  <Button
+                    className={"choice-input-button content-button link-button" +
+                      (displayGeneratedLink ? " enabled" : "")}
+                    onClick={onClickGenerateLink}
+                    value="link"
+                  />,
+                ]) :
                 null
             }
             {

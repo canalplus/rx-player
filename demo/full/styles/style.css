@@ -752,6 +752,38 @@ body {
   background-position: calc(100% - 8px) 50%;
 }
 
+.link-button.enabled {
+  color: #ffffff;
+  background-color: #ec3655;
+}
+
+.generated-url {
+  font-size: 0.8em;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 3px;
+  padding: 8px;
+  display: none;
+  -webkit-transition: opacity 2s; /* Safari prior 6.1 */
+  transition: opacity 2s;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.generated-url.enabled {
+  display: block;
+}
+
+.generated-url-link.none {
+  color: #222;
+  text-decoration: none;
+  font-style: italic;
+}
+.generated-url-link {
+  color: #ec3655;
+  text-decoration: underline;
+}
+
 .knob-value > select {
   width: 100%;
   border: 0;
