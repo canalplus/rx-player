@@ -299,7 +299,7 @@ class ContentList extends React.Component {
           contentNameField: "",
           contentList: this.state.contentsPerType[transport],
           currentManifestURL: parsedHash.manifestURL,
-          lowLatencyChecked: !!parsedHash.lowLatency,
+          lowLatencyChecked: transport === "DASH" && !!parsedHash.lowLatency,
           transportType: transport,
         };
 
@@ -760,7 +760,10 @@ class ContentList extends React.Component {
                   }
                 />
                 <div className="player-box">
-                  <span className={"encryption-checkbox" + (DISABLE_ENCRYPTED_CONTENT ? " disabled" : "")}>
+                  <span className={
+                    "encryption-checkbox custom-checkbox" +
+                    (DISABLE_ENCRYPTED_CONTENT ? " disabled" : "")}
+                  >
                     {(DISABLE_ENCRYPTED_CONTENT ? "[HTTPS only] " : "") + "Encrypted content"}
                     <label class="switch">
                       <input
@@ -797,13 +800,18 @@ class ContentList extends React.Component {
                       null
                   }
                 </div>
-                <div class="player-box button-low-latency">
-                  Low-Latency content
-                  <label class="input switch">
-                    <input type="checkbox" checked={lowLatencyChecked} onChange={onLowLatencyClick} />
-                    <span class="slider round"></span>
-                  </label>
-                </div>
+                { transportType === "DASH" ?
+                  <div class="player-box button-low-latency">
+                    <span className={"low-latency-checkbox custom-checkbox"}>
+                      Low-Latency content
+                      <label class="input switch">
+                        <input type="checkbox" checked={lowLatencyChecked} onChange={onLowLatencyClick} />
+                        <span class="slider round"></span>
+                      </label>
+                    </span>
+                  </div> :
+                  null
+                }
               </div>
             ) : null
         }
