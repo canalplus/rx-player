@@ -110,7 +110,8 @@ single, uncorellated [Buffer](#buffer) in the RxPlayer.
 <a name="chunk"></a>
 ### Chunk ######################################################################
 
-Synonymous to [Media Segment](#segment).
+Depending on the context, a chunk can be either a sub-part of a [Media
+Segment](#segment) or the Media segment itself.
 
 
 <a name="init-segment"></a>
