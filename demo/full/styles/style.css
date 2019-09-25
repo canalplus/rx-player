@@ -820,7 +820,7 @@ body {
   margin: 10px 0px;
 }
 
-.encryption-checkbox {
+.custom-checkbox {
   display: flex;
   align-items: center;
   justify-content: flex-start;
