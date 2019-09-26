@@ -6,6 +6,10 @@ import {
   removeStoredContent,
 } from "../lib/localStorage.js";
 import parseDRMConfigurations from "../lib/parseDRMConfigurations.js";
+import {
+  generateLinkForCustomContent,
+  parseHashInURL,
+} from "../lib/url_hash.js";
 import Button from "../components/Button.jsx";
 import FocusedTextInput from "../components/FocusedInput.jsx";
 import TextInput from "../components/Input.jsx";
@@ -133,116 +137,13 @@ function generateLinkForContent(content, { autoPlay, transportType }) {
     content.drmInfos[0].serverCertificateUrl;
   return generateLinkForCustomContent({
     autoPlay,
-    currentDRMType: content.drmInfos && content.drmInfos[0] &&
-      content.drmInfos[0].drm,
-    currentManifestURL: content.url,
-    displayDRMSettings: !!licenseServerUrl || !!serverCertificateUrl,
+    drmType: content.drmInfos && content.drmInfos[0] && content.drmInfos[0].drm,
+    manifestURL: content.url,
     licenseServerUrl,
-    lowLatencyChecked: !!content.isLowLatency,
+    lowLatency: !!content.isLowLatency,
     serverCertificateUrl,
-    transportType,
+    transport: transportType,
   });
-}
-
-/**
- * Generate URL with hash-string which can be used to reload the page with the
- * current non-stored custom content. This can be used for example to share some
- * content with other people.
- * Returns null if it could not generate an URL for the current content.
- * @param {Object} state - The current ContentList state.
- * @returns {string|null}
- */
-function generateLinkForCustomContent({
-  autoPlay,
-  currentDRMType,
-  currentManifestURL,
-  displayDRMSettings,
-  licenseServerUrl,
-  lowLatencyChecked,
-  serverCertificateUrl,
-  transportType,
-}) {
-  let urlHash = "";
-  let transportHash = "";
-  let licenseServerUrlHash = "";
-  let serverCertificateUrlHash = "";
-  let drmTypeHash = "";
-  const lowLatencyVal = !!lowLatencyChecked;
-  if (currentManifestURL) {
-    urlHash = window.btoa(currentManifestURL);
-  }
-  if (transportType) {
-    transportHash = window.btoa(transportType);
-  }
-  if (currentDRMType) {
-    drmTypeHash = window.btoa(currentDRMType);
-  }
-  if (licenseServerUrl) {
-    licenseServerUrlHash = window.btoa(licenseServerUrl);
-  }
-  if (serverCertificateUrl) {
-    serverCertificateUrlHash = window.btoa(serverCertificateUrl);
-  }
-
-  if (!transportHash) {
-    return null;
-  }
-
-  return location.protocol + "//" +
-         location.hostname +
-         (location.port ? ":" + location.port : "") +
-         location.pathname +
-         (location.search ? location.search : "") +
-         `#tr=${transportHash}` +
-         (urlHash ? `#ma=${urlHash}` : "") +
-         (displayDRMSettings &&
-          licenseServerUrlHash ? `#li=${licenseServerUrlHash}` : "") +
-         (displayDRMSettings &&
-          serverCertificateUrlHash ? `#se=${serverCertificateUrlHash}` : "") +
-         (displayDRMSettings && drmTypeHash ? `#dr=${drmTypeHash}` : "") +
-         (autoPlay ? "#au=1" : "") +
-         (lowLatencyVal ? "#lo=1" : "");
-}
-
-/**
- * Get informations about the possibly linked content by parsing the hash in the
- * URL (what comes after the "#" character).
- * Returns null if no content could have been parsed from the url.
- * @param {string} hashInUrl
- * @return {Object|null}
- */
-function parseHashInURL(hashInUrl) {
-  const splitted = hashInUrl.split("#").filter(val => val.length > 3);
-  if (!splitted.length) {
-    return null;
-  }
-  const parsed = splitted.reduce((acc, val) => {
-    switch (val.substring(0, 3)) {
-      case "ma=":
-        acc.manifestURL = window.atob(val.substring(3));
-        return acc;
-      case "tr=":
-        acc.transport = window.atob(val.substring(3));
-        return acc;
-      case "li=":
-        acc.licenseServerUrl = window.atob(val.substring(3));
-        return acc;
-      case "se=":
-        acc.serverCertificateUrl = window.atob(val.substring(3));
-        return acc;
-      case "dr=":
-        acc.drmType = window.atob(val.substring(3));
-        return acc;
-      case "au=":
-        acc.autoPlay = val.substring(3) === "1";
-        return acc;
-      case "lo=":
-        acc.lowLatency = val.substring(3) === "1";
-        return acc;
-    }
-    return acc;
-  }, {});
-  return parsed;
 }
 
 /**
@@ -291,28 +192,23 @@ class ContentList extends React.Component {
   componentDidMount() {
     const parsedHash = parseHashInURL(location.hash);
     if (parsedHash !== null) {
-      const { transport } = parsedHash;
-      if (TRANSPORT_TYPES.includes(transport)) {
-        const newState = {
-          autoPlay: !!parsedHash.autoPlay,
-          contentChoiceIndex: 0,
-          contentNameField: "",
-          contentList: this.state.contentsPerType[transport],
-          currentManifestURL: parsedHash.manifestURL,
-          lowLatencyChecked: transport === "DASH" && !!parsedHash.lowLatency,
-          transportType: transport,
-        };
+      const { tran } = parsedHash;
+      if (TRANSPORT_TYPES.includes(tran)) {
+        const newState = { autoPlay: !!parsedHash.aupl,
+                           contentChoiceIndex: 0,
+                           contentNameField: "",
+                           contentList: this.state.contentsPerType[tran],
+                           currentManifestURL: parsedHash.mani,
+                           lowLatencyChecked: tran === "DASH" && !!parsedHash.lowl,
+                           transportType: tran };
 
-        const { licenseServerUrl, serverCertificateUrl } = parsedHash;
-        const drmType = DRM_TYPES.includes(parsedHash.drmType) ?
-          parsedHash.drmType : undefined;
-        if (drmType !== undefined &&
-            (!!licenseServerUrl || !!serverCertificateUrl))
-        {
+        const drmType = DRM_TYPES.includes(parsedHash.drmt) ?
+          parsedHash.drmt : undefined;
+        if (drmType !== undefined) {
           newState.displayDRMSettings = true;
           newState.currentDRMType = drmType;
-          newState.licenseServerUrl = licenseServerUrl;
-          newState.serverCertificateUrl = serverCertificateUrl;
+          newState.licenseServerUrl = parsedHash.lice || "";
+          newState.serverCertificateUrl = parsedHash.cert || "";
         }
         this.setState(newState);
         return;
@@ -493,8 +389,21 @@ class ContentList extends React.Component {
     let generatedLink = null;
     if (displayGeneratedLink) {
       generatedLink = contentChoiceIndex === 0 || isSavingOrUpdating ?
-        generateLinkForCustomContent(this.state) :
-        generateLinkForContent(chosenContent, this.state);
+        generateLinkForCustomContent({
+          autoPlay,
+          drmType: displayDRMSettings ?
+            currentDRMType :
+            undefined,
+          manifestURL: currentManifestURL,
+          licenseServerUrl: displayDRMSettings ?
+            licenseServerUrl :
+            undefined,
+          lowLatency: lowLatencyChecked,
+          serverCertificateUrl: displayDRMSettings ?
+            serverCertificateUrl :
+            undefined,
+          transport: transportType,
+        }) : generateLinkForContent(chosenContent, this.state);
     }
 
     const hasURL = currentManifestURL !== "";
@@ -690,7 +599,7 @@ class ContentList extends React.Component {
                     className={"choice-input-button content-button link-button" +
                       (displayGeneratedLink ? " enabled" : "")}
                     onClick={onClickGenerateLink}
-                    value="link"
+                    value={0xf0c1}
                   />,
                 ]) :
                 null

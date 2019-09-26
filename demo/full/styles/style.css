@@ -752,6 +752,38 @@ body {
   background-position: calc(100% - 8px) 50%;
 }
 
+.link-button {
+  font-family: "icons";
+  position: relative;
+}
+
+.link-button:hover:after {
+  background: #ed3656;
+  background: rgba(237,54,86,.9);
+  bottom: 40px;
+  color: #fff;
+  font-size: 13px;
+  content: "Generate content link";
+  left: 32%;
+  padding: 5px 5px;
+  position: absolute;
+  text-align: center;
+  z-index: 10000;
+  width: 150px;
+  overflow: 
+}
+
+.link-button:hover:before{
+    border: solid;
+    border-color: #ed3656 transparent;
+    border-width: 6px 6px 0 6px;
+    bottom: 35px;
+    content: "";
+    left: 32%;
+    position: absolute;
+    z-index: 10001;
+}
+
 .link-button.enabled {
   color: #ffffff;
   background-color: #ec3655;
