@@ -19,11 +19,9 @@ import {
   asapScheduler,
   BehaviorSubject,
   combineLatest as observableCombineLatest,
-  concat as observableConcat,
   EMPTY,
   merge as observableMerge,
   Observable,
-  of as observableOf,
   ReplaySubject,
   Subject,
   timer as observableTimer,
@@ -262,8 +260,9 @@ export default function InitializeOnMediaSource(
                 ignoreElements());
       }));
 
-    return observableMerge(manifestRefresh$, recursiveLoad$)
-      .pipe(finalize(() => {
+    return observableMerge(manifestRefresh$, recursiveLoad$).pipe(
+      startWith(EVENTS.manifestReady(manifest)),
+      finalize(() => {
         manifestRefreshed$.complete();
         scheduleManifestRefresh$.complete();
       }));
@@ -300,9 +299,7 @@ export default function InitializeOnMediaSource(
                 }
               }));
 
-      const currentLoad$ = observableConcat(
-        observableOf(EVENTS.manifestReady(manifest)),
-        mediaSourceLoader$.pipe(takeUntil(reloadMediaSource$)));
+      const currentLoad$ = mediaSourceLoader$.pipe(takeUntil(reloadMediaSource$));
 
       const handleReloads$ = reloadMediaSource$.pipe(
         switchMap(({ currentTime, isPaused }) => {
