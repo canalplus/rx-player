@@ -15,6 +15,7 @@ import FocusedTextInput from "../components/FocusedInput.jsx";
 import TextInput from "../components/Input.jsx";
 import Select from "../components/Select.jsx";
 import contentsDatabase from "../contents.js";
+import GeneratedLink from "../components/GeneratedLink.jsx/index.js";
 
 const MediaKeys_ = window.MediaKeys ||
                    window.MozMediaKeys ||
@@ -556,7 +557,7 @@ class ContentList extends React.Component {
         <span className={"generated-url" + (displayGeneratedLink ? " enabled" : "")}>
           { displayGeneratedLink ?
             [
-              "URL: ",
+              "URL : ",
               generatedLink ?
                 <a className="generated-url-link" href={generatedLink}>
                   {generatedLink}
@@ -595,11 +596,9 @@ class ContentList extends React.Component {
                       (isSavingOrUpdating ? "Updating..." : "Update content") :
                       (isSavingOrUpdating ? "Saving..." : "Store content")}
                   />,
-                  <Button
-                    className={"choice-input-button content-button link-button" +
-                      (displayGeneratedLink ? " enabled" : "")}
-                    onClick={onClickGenerateLink}
-                    value={0xf0c1}
+                  <GeneratedLink
+                    enabledGenerateLink={displayGeneratedLink}
+                    onClickGenerateLink={onClickGenerateLink}
                   />,
                 ]) :
                 null

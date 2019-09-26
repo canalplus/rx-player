@@ -466,14 +466,14 @@ body {
 }
 
 .running:hover:before{
-    border: solid;
-    border-color: #ed3656 transparent;
-    border-width: 6px 6px 0 6px;
-    bottom: 35px;
-    content: "";
-    left: 32%;
-    position: absolute;
-    z-index: 10001;
+  border: solid;
+  border-color: #ed3656 transparent;
+  border-width: 6px 6px 0 6px;
+  bottom: 35px;
+  content: "";
+  left: 32%;
+  position: absolute;
+  z-index: 10001;
 }
 
 .running > svg {
@@ -492,6 +492,26 @@ body {
 
 .running.clicked:hover > svg {
   fill: #f3687f;
+}
+
+.link {
+  background-color: white;
+  cursor: pointer;
+  width: 19px;
+  height: 19px;
+  padding: 10px;
+  border-radius: 3px;
+  border: #d1d1d1 1px solid;
+  margin-left: 5px;
+}
+
+.link:hover {
+  color: #ed3656;
+}
+
+.link.enabled {
+  color: #ffffff;
+  background-color: #ec3655;
 }
 
 .catch-up {
@@ -752,54 +772,19 @@ body {
   background-position: calc(100% - 8px) 50%;
 }
 
-.link-button {
-  font-family: "icons";
-  position: relative;
-}
-
-.link-button:hover:after {
-  background: #ed3656;
-  background: rgba(237,54,86,.9);
-  bottom: 40px;
-  color: #fff;
-  font-size: 13px;
-  content: "Generate content link";
-  left: 32%;
-  padding: 5px 5px;
-  position: absolute;
-  text-align: center;
-  z-index: 10000;
-  width: 150px;
-  overflow: 
-}
-
-.link-button:hover:before{
-    border: solid;
-    border-color: #ed3656 transparent;
-    border-width: 6px 6px 0 6px;
-    bottom: 35px;
-    content: "";
-    left: 32%;
-    position: absolute;
-    z-index: 10001;
-}
-
-.link-button.enabled {
-  color: #ffffff;
-  background-color: #ec3655;
-}
-
 .generated-url {
+  color: #3a3a3a;
   font-size: 0.8em;
   background-color: rgba(255, 255, 255, 0.8);
   border-radius: 3px;
-  padding: 8px;
+  padding: 10px;
   display: none;
-  -webkit-transition: opacity 2s; /* Safari prior 6.1 */
+  -webkit-transition: opacity 2s;
   transition: opacity 2s;
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
+  margin-bottom: 10px;
 }
 
 .generated-url.enabled {
@@ -813,7 +798,7 @@ body {
 }
 .generated-url-link {
   color: #ec3655;
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .knob-value > select {
