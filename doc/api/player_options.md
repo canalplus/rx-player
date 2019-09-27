@@ -277,7 +277,7 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 <a name="prop-preferredTextTracks"></a>
 ### preferredTextTracks ########################################################
 
-_type_: ``Array.<Object>``
+_type_: ``Array.<Object|null>``
 
 _defaults_: ``[]``
 
@@ -295,7 +295,8 @@ subtitles:
 ```
 
 All elements in that Array should be set in preference order: from the most
-preferred to the least preferred. You can set `null` for no subtitles.
+preferred to the least preferred. You can set `null` in that array for no
+subtitles.
 
 When loading a content, the RxPlayer will then try to choose its text track by
 comparing what is available with your current preferences (i.e. if the most

@@ -1725,6 +1725,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Array.<Object>} tracks
    */
   setPreferredAudioTracks(tracks : IAudioTrackPreference[]) : void {
+    if (!Array.isArray(tracks)) {
+      throw new Error("Invalid `setPreferredAudioTracks` argument. " +
+                      "Should have been an Array.");
+    }
     return this._priv_preferredAudioTracks.next(tracks);
   }
 
@@ -1733,6 +1737,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Array.<Object>} tracks
    */
   setPreferredTextTracks(tracks : ITextTrackPreference[]) : void {
+    if (!Array.isArray(tracks)) {
+      throw new Error("Invalid `setPreferredTextTracks` argument. " +
+                      "Should have been an Array.");
+    }
     return this._priv_preferredTextTracks.next(tracks);
   }
 
