@@ -260,9 +260,10 @@ export default function InitializeOnMediaSource(
                 ignoreElements());
       }));
 
-    return observableMerge(manifestRefresh$, recursiveLoad$).pipe(
-      startWith(EVENTS.manifestReady(manifest)),
-      finalize(() => {
+    return observableMerge(manifestRefresh$, recursiveLoad$)
+      .pipe(
+        startWith(EVENTS.manifestReady(manifest)),
+        finalize(() => {
         manifestRefreshed$.complete();
         scheduleManifestRefresh$.complete();
       }));

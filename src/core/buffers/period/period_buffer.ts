@@ -115,15 +115,20 @@ export default function PeriodBuffer({
   const adaptation$ = new ReplaySubject<Adaptation|null>(1);
   return adaptation$.pipe(
     switchMap((adaptation) => {
+      // debugger;
       if (adaptation == null) {
         log.info(`Buffer: Set no ${bufferType} Adaptation`, period);
         const previousQSourceBuffer = sourceBuffersStore.get(bufferType);
         let cleanBuffer$ : Observable<unknown>;
 
         if (previousQSourceBuffer != null) {
-          log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
-          cleanBuffer$ = previousQSourceBuffer.removeBuffer(period.start,
-                                                            period.end || Infinity);
+          // log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
+          // cleanBuffer$ = previousQSourceBuffer.removeBuffer(period.start,
+          //                                                   period.end || Infinity);
+          return observableOf(EVENTS.needsMediaSourceReload({
+            currentTime: 20,
+            isPaused: false,
+          }));
         } else {
           cleanBuffer$ = observableOf(null);
         }

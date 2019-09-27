@@ -320,6 +320,10 @@ export default class TrackManager {
     const videoAdaptations = period.adaptations.video || [];
     const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
 
+    if (chosenVideoAdaptation === null) {
+      return videoInfos.adaptation$.next(null);
+    }
+
     if (chosenVideoAdaptation === undefined ||
         !arrayIncludes(videoAdaptations, chosenVideoAdaptation)
     ) {
@@ -458,6 +462,21 @@ export default class TrackManager {
 
     this._textChoiceMemory.set(period, null);
     textInfos.adaptation$.next(null);
+  }
+
+  public disableVideoTrack(period : Period) : void {
+    const periodItem = getPeriodItem(this._periods, period);
+    console.warn("ITEM", periodItem);
+    const videoInfos = periodItem && periodItem.video;
+    if (!videoInfos) {
+      throw new Error("TrackManager: Given Period not found.");
+    }
+    const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
+    if (chosenVideoAdaptation === null) {
+      return;
+    }
+    this._videoChoiceMemory.set(period, null);
+    videoInfos.adaptation$.next(null);
   }
 
   /**
