@@ -261,9 +261,13 @@ export default class TrackManager {
     const audioAdaptations = period.adaptations.audio || [];
     const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
 
-    if (chosenAudioAdaptation === undefined ||
-        !arrayIncludes(audioAdaptations, chosenAudioAdaptation)
+    if (chosenAudioAdaptation === null) {
+      // If the Period was previously without audio, keep it that way
+      audioInfos.adaptation$.next(null);
+    } else if (chosenAudioAdaptation === undefined ||
+               !arrayIncludes(audioAdaptations, chosenAudioAdaptation)
     ) {
+      // Find the optimal audio Adaptation
       const normalizedTracks = normalizeAudioTracks(preferredAudioTracks);
       const optimalAdaptation = findFirstOptimalAudioAdaptation(audioAdaptations,
                                                                 normalizedTracks);
@@ -271,7 +275,7 @@ export default class TrackManager {
       this._audioChoiceMemory.set(period, optimalAdaptation);
       audioInfos.adaptation$.next(optimalAdaptation);
     } else {
-      audioInfos.adaptation$.next(chosenAudioAdaptation);
+      audioInfos.adaptation$.next(chosenAudioAdaptation); // set last one
     }
   }
 
@@ -291,16 +295,20 @@ export default class TrackManager {
     const preferredTextTracks = this._preferredTextTracks.getValue();
     const textAdaptations = period.adaptations.text || [];
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
-    if (chosenTextAdaptation === undefined ||
-        !arrayIncludes(textAdaptations, chosenTextAdaptation)
+    if (chosenTextAdaptation === null) {
+      // If the Period was previously without text, keep it that way
+      textInfos.adaptation$.next(null);
+    } else if (chosenTextAdaptation === undefined ||
+               !arrayIncludes(textAdaptations, chosenTextAdaptation)
     ) {
+      // Find the optimal text Adaptation
       const normalizedTracks = normalizeTextTracks(preferredTextTracks);
       const optimalAdaptation = findFirstOptimalTextAdaptation(textAdaptations,
                                                                normalizedTracks);
       this._textChoiceMemory.set(period, optimalAdaptation);
       textInfos.adaptation$.next(optimalAdaptation);
     } else {
-      textInfos.adaptation$.next(chosenTextAdaptation);
+      textInfos.adaptation$.next(chosenTextAdaptation); // set last one
     }
   }
 
@@ -320,15 +328,17 @@ export default class TrackManager {
     const videoAdaptations = period.adaptations.video || [];
     const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
 
-    if (chosenVideoAdaptation === undefined ||
+    if (chosenVideoAdaptation === null) {
+      // If the Period was previously without video, keep it that way
+      videoInfos.adaptation$.next(null);
+    } else if (chosenVideoAdaptation === undefined ||
         !arrayIncludes(videoAdaptations, chosenVideoAdaptation)
     ) {
       const optimalAdaptation = videoAdaptations[0];
-
       this._videoChoiceMemory.set(period, optimalAdaptation);
       videoInfos.adaptation$.next(optimalAdaptation);
     } else {
-      videoInfos.adaptation$.next(chosenVideoAdaptation);
+      videoInfos.adaptation$.next(chosenVideoAdaptation); // set last one
     }
   }
 
