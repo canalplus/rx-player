@@ -458,6 +458,16 @@ considered stable:
     them.
     More infos on it can be found [here](./plugins.md#representationFilter).
 
+  - ``checkMediaSegmentIntegrity`` (``Boolean``): If set to true, the RxPlayer
+    will retry a media segment request - with the same retry rules than other
+    retry-able HTTP errors (like an HTTP 404) - if that segment seems corrupted.
+
+    If not set or set to false, the RxPlayer might interrupt playback in the
+    same situation.
+
+    You can set this option if you suspect the CDN providing your contents to
+    sometimes send you incomplete/corrupted segments.
+
   - ``aggressiveMode`` (``Boolean``): If set to true, we will download segments
     much sooner, even if we are not sure they had time to be completely
     generated.
