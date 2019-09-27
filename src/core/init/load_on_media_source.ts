@@ -51,6 +51,7 @@ import { maintainEndOfStream } from "./end_of_stream";
 import EVENTS from "./events_generators";
 import getBufferDiscontinuities from "./get_buffer_discontinuities";
 import getStalledEvents from "./get_stalled_events";
+import handleDiscontinuity from "./handle_discontinuity";
 import seekAndLoadOnMediaEvents from "./initial_seek_and_play";
 import {
   IInitClockTick,
@@ -133,10 +134,6 @@ export default function createMediaSourceLoader({
     // single SourceBuffer per type.
     const sourceBuffersStore = new SourceBuffersStore(mediaElement, mediaSource);
 
-    // Each time the content buffers detect a discontinuity, emit
-    // through this subject to handle it.
-    const contentDiscontinuities$ = new Subject<[number, number]>();
-
     // Initialize all native source buffers from the first period at the same
     // time.
     // We cannot lazily create native sourcebuffers since the spec does not
@@ -171,7 +168,8 @@ export default function createMediaSourceLoader({
                                         segmentPipelinesManager,
                                         bufferOptions
     ).pipe(
-      mergeMap((evt) : Observable<IMediaSourceLoaderEvent> => {
+      withLatestFrom(clock$),
+      mergeMap(([evt, { stalled }]) : Observable<IMediaSourceLoaderEvent> => {
         switch (evt.type) {
           case "end-of-stream":
             log.debug("Init: end-of-stream order received.");
@@ -185,7 +183,7 @@ export default function createMediaSourceLoader({
           case "discontinuity-encountered":
             const { bufferType, gap } = evt.value;
             if (bufferType === undefined || SourceBuffersStore.isNative(bufferType)) {
-              contentDiscontinuities$.next(gap);
+              handleDiscontinuity(gap[1], !!stalled, mediaElement);
             }
             return EMPTY;
           default:
@@ -205,17 +203,11 @@ export default function createMediaSourceLoader({
     const stalled$ = getStalledEvents(clock$)
       .pipe(map(EVENTS.stalled));
 
-    const handleDiscontinuities$ = observableMerge(contentDiscontinuities$,
-                                                   getBufferDiscontinuities(clock$)
-    ).pipe(
+    const handledBufferDiscontinuities$ = getBufferDiscontinuities(clock$).pipe(
       withLatestFrom(clock$),
       tap(([gap, clock]) => {
-        if (gap[1] >= mediaElement.currentTime &&
-            !!clock.stalled
-           ) {
-          log.warn("Init: discontinuity seek", mediaElement.currentTime, gap[1]);
-          mediaElement.currentTime = gap[1];
-        }
+        const seekTo = gap[1];
+        handleDiscontinuity(seekTo, !!clock.stalled, mediaElement);
       }),
       ignoreElements()
     );
@@ -237,7 +229,7 @@ export default function createMediaSourceLoader({
         return observableOf(EVENTS.loaded());
       }));
 
-    return observableMerge(handleDiscontinuities$,
+    return observableMerge(handledBufferDiscontinuities$,
                            loadedEvent$,
                            playbackRate$,
                            stalled$,
