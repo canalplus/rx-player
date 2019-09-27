@@ -416,9 +416,11 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                                        nextTimelineItem,
                                        this._scaledPeriodEnd);
 
-    // when we are actually inside the found range and this range has
-    // an explicit discontinuity with the next one
-    if (rangeTo !== nextTimelineItem.start &&
+    // Every segments defined in range (from rangeUp to rangeTo) are
+    // explicitely contiguous.
+    // We want to check that the range end is before the next timeline item
+    // start, and that scaled time is in this discontinuity.
+    if (rangeTo < nextTimelineItem.start &&
         scaledTime >= rangeUp &&
         (rangeTo - scaledTime) < timescale)
     {
