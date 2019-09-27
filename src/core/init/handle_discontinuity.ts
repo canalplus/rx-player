@@ -22,9 +22,8 @@ import log from "../../log";
  * @param {boolean} isStalled
  */
 export default function handleDiscontinuity(seekTo: number,
-                                            isStalled: boolean,
                                             mediaElement: HTMLMediaElement): void {
-  if (seekTo < mediaElement.currentTime || !isStalled) {
+  if (seekTo < mediaElement.currentTime) {
     return;
   }
   log.warn("Init: discontinuity seek", mediaElement.currentTime, seekTo);

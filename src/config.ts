@@ -227,7 +227,7 @@ export default {
    * because of a discontinuity in the downloaded range.
    * @type {Number}
    */
-  DISCONTINUITY_THRESHOLD: 1,
+  BUFFER_DISCONTINUITY_THRESHOLD: 1,
 
   /**
    * Ratio used to know if an already loaded segment should be re-buffered.
