@@ -32,6 +32,15 @@ import parseAdaptationSets from "./parse_adaptation_sets";
 
 const generatePeriodID = idGenerator();
 
+// Information about each linked Xlink.
+export type IXLinkInfos = WeakMap<IPeriodIntermediateRepresentation, {
+  url? : string; // real URL (post-redirection) used to download this xlink
+  sendingTime? : number; // time at which the request was sent (since the time
+                         // origin), in ms
+  receivedTime? : number; // time at which the request was received (since the
+                          // time origin), in ms
+}>;
+
 export interface IManifestInfos {
   aggressiveMode : boolean; // Whether we should request new segments even if
                             // they are not yet finished
@@ -40,8 +49,11 @@ export interface IManifestInfos {
   clockOffset? : number;
   duration? : number;
   isDynamic : boolean;
+  receivedTime? : number; // time (in terms of `performance.now`) at which the
+                          // XML file containing this Period was received
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
                                   // in seconds
+  xlinkInfos : IXLinkInfos;
 }
 
 /**
@@ -73,6 +85,7 @@ export default function parsePeriods(
   // the last Periods' indexes
   for (let i = periodsIR.length - 1; i >= 0; i--) {
     const periodIR = periodsIR[i];
+    const xlinkInfos = manifestInfos.xlinkInfos.get(periodIR);
     const periodBaseURL = resolveURL(manifestInfos.baseURL, periodIR.children.baseURL);
 
     const { periodStart,
@@ -87,11 +100,14 @@ export default function parsePeriods(
       periodID = periodIR.attributes.id;
     }
 
+    const receivedTime = xlinkInfos !== undefined ? xlinkInfos.receivedTime :
+                                                    manifestInfos.receivedTime;
     const periodInfos = { aggressiveMode: manifestInfos.aggressiveMode,
                           baseURL: periodBaseURL,
                           manifestBoundsCalculator,
                           end: periodEnd,
                           isDynamic,
+                          receivedTime,
                           start: periodStart,
                           timeShiftBufferDepth };
     const adaptations = parseAdaptationSets(periodIR.children.adaptations,

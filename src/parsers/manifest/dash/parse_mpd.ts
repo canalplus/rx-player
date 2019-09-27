@@ -34,7 +34,9 @@ import {
 } from "./node_parsers/Period";
 import parseAvailabilityStartTime from "./parse_availability_start_time";
 import parseDuration from "./parse_duration";
-import parsePeriods from "./parse_periods";
+import parsePeriods, {
+  IXLinkInfos,
+} from "./parse_periods";
 
 const generateManifestID = idGenerator();
 
@@ -43,14 +45,22 @@ export interface IMPDParserArguments {
                             // they are not yet finished
   externalClockOffset? : number; // If set, offset to add to `performance.now()`
                                  // to obtain the current server's time
+  manifestReceivedTime? : number; // Time, in terms of `performance.now` at
+                                  // which this MPD was received.
   referenceDateTime? : number; // Default base time, in seconds
   url? : string; // URL of the manifest (post-redirection if one)
 }
 
+interface ILoadedResource { url? : string;
+                            sendingTime? : number;
+                            receivedTime? : number;
+                            responseData : string; }
+
 export type IParserResponse<T> = { type : "needs-ressources";
                                    value : { ressources : string[];
-                                             continue : (loadedRessources : string[])
-                                                        => IParserResponse<T>; }; } |
+                                             continue : (
+                                               loadedRessources : ILoadedResource[]
+                                             ) => IParserResponse<T>; }; } |
                                  { type : "done";
                                    value : T; };
 /**
@@ -81,6 +91,7 @@ function loadExternalRessourcesAndParse(
   const { children: rootChildren,
           attributes: rootAttributes } = mpdIR;
 
+  const xlinkInfos : IXLinkInfos = new WeakMap();
   if (args.externalClockOffset == null) {
     const isDynamic : boolean = rootAttributes.type === "dynamic";
 
@@ -108,11 +119,11 @@ function loadExternalRessourcesAndParse(
           type: "needs-ressources",
           value: {
             ressources: [UTCTimingHTTPURL],
-            continue: function continueParsingMPD(loadedRessources : string[]) {
+            continue: function continueParsingMPD(loadedRessources : ILoadedResource[]) {
               if (loadedRessources.length !== 1) {
                 throw new Error("DASH parser: wrong number of loaded ressources.");
               }
-              clockOffset = getClockOffset(loadedRessources[0]);
+              clockOffset = getClockOffset(loadedRessources[0].responseData);
               args.externalClockOffset = clockOffset;
               return loadExternalRessourcesAndParse(mpdIR, args, true);
             },
@@ -131,14 +142,14 @@ function loadExternalRessourcesAndParse(
   }
 
   if (xlinksToLoad.length === 0) {
-    return parseCompleteIntermediateRepresentation(mpdIR, args);
+    return parseCompleteIntermediateRepresentation(mpdIR, args, xlinkInfos);
   }
 
   return {
     type: "needs-ressources",
     value: {
       ressources: xlinksToLoad.map(({ ressource }) => ressource),
-      continue: function continueParsingMPD(loadedRessources : string[]) {
+      continue: function continueParsingMPD(loadedRessources : ILoadedResource[]) {
         if (loadedRessources.length !== xlinksToLoad.length) {
           throw new Error("DASH parser: wrong number of loaded ressources.");
         }
@@ -147,7 +158,10 @@ function loadExternalRessourcesAndParse(
         // the resulting array, as we will potentially add elements to the array
         for (let i = loadedRessources.length - 1; i >= 0; i--) {
           const index = xlinksToLoad[i].index;
-          const xlinkData = loadedRessources[i];
+          const { responseData: xlinkData,
+                  receivedTime,
+                  sendingTime,
+                  url } = loadedRessources[i];
           const wrappedData = "<root>" + xlinkData + "</root>";
           const dataAsXML = new DOMParser().parseFromString(wrappedData, "text/xml");
           if (!dataAsXML || dataAsXML.children.length === 0) {
@@ -157,7 +171,9 @@ function loadExternalRessourcesAndParse(
           const periodsIR : IPeriodIntermediateRepresentation[] = [];
           for (let j = 0; j < periods.length; j++) {
             if (periods[j].nodeType === Node.ELEMENT_NODE) {
-              periodsIR.push(createPeriodIntermediateRepresentation(periods[j]));
+              const periodIR = createPeriodIntermediateRepresentation(periods[j]);
+              xlinkInfos.set(periodIR, { receivedTime, sendingTime, url });
+              periodsIR.push(periodIR);
             }
           }
 
@@ -178,7 +194,8 @@ function loadExternalRessourcesAndParse(
  */
 function parseCompleteIntermediateRepresentation(
   mpdIR : IMPDIntermediateRepresentation,
-  args : IMPDParserArguments
+  args : IMPDParserArguments,
+  xlinkInfos : IXLinkInfos
 ) : IParserResponse<IParsedManifest> {
   const { children: rootChildren,
           attributes: rootAttributes } = mpdIR;
@@ -197,7 +214,9 @@ function parseCompleteIntermediateRepresentation(
                           clockOffset,
                           duration: rootAttributes.duration,
                           isDynamic,
-                          timeShiftBufferDepth };
+                          receivedTime: args.manifestReceivedTime,
+                          timeShiftBufferDepth,
+                          xlinkInfos };
   const parsedPeriods = parsePeriods(rootChildren.periods, manifestInfos);
   const duration = parseDuration(rootAttributes, parsedPeriods);
   const parsedMPD : IParsedManifest = {

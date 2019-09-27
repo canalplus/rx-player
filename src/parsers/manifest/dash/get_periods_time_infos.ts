@@ -15,12 +15,17 @@
  */
 
 import { IPeriodIntermediateRepresentation } from "./node_parsers/Period";
-import { IManifestInfos } from "./parse_periods";
 
 interface IPeriodTimeInformation {
   periodStart: number;
   periodDuration?: number;
   periodEnd?: number;
+}
+
+export interface IParsedPeriodsContext {
+  availabilityStartTime : number; // Time from which the content starts
+  duration? : number;
+  isDynamic : boolean;
 }
 
 /**
@@ -31,8 +36,8 @@ interface IPeriodTimeInformation {
  * @return {Array.<Object>}
  */
 export default function getPeriodsTimeInformation(
-  periodsIR: IPeriodIntermediateRepresentation[],
-  manifestInfos: IManifestInfos
+  periodsIR : IPeriodIntermediateRepresentation[],
+  manifestInfos : IParsedPeriodsContext
 ): IPeriodTimeInformation[] {
   const periodsTimeInformation: IPeriodTimeInformation[] = [];
   periodsIR.forEach((currentPeriod, i) => {
