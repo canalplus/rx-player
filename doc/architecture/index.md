@@ -142,12 +142,12 @@ Buffers                          | ~                                            
 |                  (audio)   v ~  (video) V ~     (text) v ~     |                    | ~
 | Create the right +----------+   +----------+    +----------+   |  +--------------+  | ~
 | AdaptationBuffer |          |   |          |    |          |----> | SourceBuffer |  | ~
-| depending on the |  Period  |-+ |  Period  |-+  |  Period  |-+ |  |  Manager (1) |  | ~
+| depending on the |  Period  |-+ |  Period  |-+  |  Period  |-+ |  |   Store (1)  |  | ~
 | wanted track     |  Buffer  | | |  Buffer  | |  |  Buffer  | | |  +--------------+  | ~
-| (One per Period  |          | | |          | |  |          | | |  Create            | ~
-| and one per type +----------+ | +----------+ |  +----------+ | |  SourceBuffers     | ~
-| of media)         |           |  |           |   |           | |  (native and       | ~
-|                   +-----------+  +-----------+   +-----------+ |  custom)           | ~
+| (One per Period  |          | | |          | |  |          | | |  Create one        | ~
+| and one per type +----------+ | +----------+ |  +----------+ | |  SourceBuffer per  | ~
+| of media)         |           |  |           |   |           | |  type of media     | ~
+|                   +-----------+  +-----------+   +-----------+ |                    | ~
 |                          | ^            | ^            | ^     |                    | ~
 |                          | ~            | ~            | ~     |                    | ~
 |                          | ~            | ~            | ~     |                    | ~
@@ -159,7 +159,7 @@ Buffers                          | ~                                            
 | Buffer depending |  Buffer  | | |  Buffer  | |  |  Buffer  | | |  Find the best     | ~
 | on the current   |          | | |          | |  |          | | |  bitrate           | ~
 | network,         +----------+ | +----------+ |  +----------+ | |                    | ~
-| settings...).     |           |  |           |   |           | |                    | ~
+| settings...       |           |  |           |   |           | |                    | ~
 |                   +-----------+  +-----------+   +-----------+ |                    | ~
 |                          | ^            | ^            | ^     |                    | ~
 |                          | ~            | ~            | ~     |                    | ~
@@ -177,6 +177,6 @@ Buffers                          | ~                                            
 |                                                                |
 +----------------------------------------------------------------+
 
-(1) The SourceBuffer Manager, Segment Pipeline and ABRManager are actually created by the
+(1) The SourceBuffer Store, Segment Pipeline and ABRManager are actually created by the
 Init and then used by the Buffers.
 ```
