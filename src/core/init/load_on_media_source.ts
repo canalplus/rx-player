@@ -264,7 +264,7 @@ function createNativeSourceBuffersForPeriod(
   period : Period
 ) : void {
   Object.keys(period.adaptations).forEach(bufferType => {
-    if (bufferType && SourceBuffersStore.isNative(bufferType)) {
+    if (SourceBuffersStore.isNative(bufferType)) {
       const adaptations = period.adaptations[bufferType] || [];
       const representations = adaptations != null &&
                               adaptations.length ? adaptations[0].representations :
