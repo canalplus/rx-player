@@ -62,7 +62,7 @@ export type IParserResponse<T> = { type : "needs-ressources";
                                                loadedRessources : ILoadedResource[]
                                              ) => IParserResponse<T>; }; } |
                                  { type : "done";
-                                   value :  T; };
+                                   value : T; };
 /**
  * @param {Element} root - The MPD root.
  * @param {Object} args
