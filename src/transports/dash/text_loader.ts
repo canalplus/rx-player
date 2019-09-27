@@ -15,6 +15,7 @@
  */
 
 import { of as observableOf } from "rxjs";
+import { tap } from "rxjs/operators";
 import request, {
   fetchIsSupported,
 } from "../../utils/request";
@@ -24,6 +25,7 @@ import {
   ISegmentLoaderObservable,
 } from "../types";
 import byteRange from "../utils/byte_range";
+import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
 import initSegmentLoader from "./init_segment_loader";
 import isMP4EmbeddedTextTrack from "./is_mp4_embedded_text_track";
 import lowLatencySegmentLoader from "./low_latency_segment_loader";
@@ -34,17 +36,32 @@ import lowLatencySegmentLoader from "./low_latency_segment_loader";
  * @returns {Function}
  */
 export default function generateTextTrackLoader(
-  lowLatencyMode : boolean
+  { lowLatencyMode,
+    checkMediaSegmentIntegrity } : { lowLatencyMode : boolean;
+                                     checkMediaSegmentIntegrity? : boolean; }
 ) : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< ArrayBuffer |
                                                                string |
                                                                null > {
+  if (checkMediaSegmentIntegrity !== true) {
+    return textTrackLoader;
+  }
+  return (content) => textTrackLoader(content).pipe(tap(res => {
+    if ((res.type === "data-loaded" || res.type === "data-chunk") &&
+        res.value.responseData !== null &&
+        typeof res.value.responseData !== "string")
+    {
+      checkISOBMFFIntegrity(new Uint8Array(res.value.responseData),
+                            content.segment.isInit);
+    }
+  }));
+
   /**
    * @param {Object} args
    * @returns {Observable}
    */
-  return (
+  function textTrackLoader(
     args : ISegmentLoaderArguments
-  ) : ISegmentLoaderObservable< ArrayBuffer | string | null > => {
+  ) : ISegmentLoaderObservable< ArrayBuffer | string | null > {
     const { mediaURL,
             range } = args.segment;
 
@@ -75,5 +92,5 @@ export default function generateTextTrackLoader(
                                          headers: range ? { Range: byteRange(range) } :
                                                           null,
                                          sendProgressEvents: true });
-  };
+  }
 }

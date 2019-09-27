@@ -18,7 +18,10 @@ import {
   Observable,
   of as observableOf,
 } from "rxjs";
-import { map } from "rxjs/operators";
+import {
+  map,
+  tap,
+} from "rxjs/operators";
 import features from "../../features";
 import log from "../../log";
 import Manifest, {
@@ -49,6 +52,7 @@ import {
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
+import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
 import generateManifestLoader from "../utils/document_manifest_loader";
 import extractTimingsInfos from "./extract_timings_infos";
 import { patchSegment } from "./isobmff";
@@ -144,7 +148,17 @@ export default function(options : ITransportOptions) : ITransportPipelines {
     loader(
       content : ISegmentLoaderArguments
     ) : ISegmentLoaderObservable<ArrayBuffer|Uint8Array|null> {
-      return segmentLoader(content);
+      if (content.segment.isInit || options.checkMediaSegmentIntegrity !== true) {
+        return segmentLoader(content);
+      }
+      return segmentLoader(content).pipe(tap(res => {
+        if ((res.type === "data-loaded" || res.type === "data-chunk") &&
+            res.value.responseData !== null)
+        {
+          checkISOBMFFIntegrity(new Uint8Array(res.value.responseData),
+                                content.segment.isInit);
+        }
+      }));
     },
 
     parser({
@@ -204,11 +218,21 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         return observableOf({ type: "data-created" as const,
                               value: { responseData: null } });
       }
-      const responseType = isMP4EmbeddedTrack(representation) ? "arraybuffer" :
-                                                                "text";
+      const isMP4 = isMP4EmbeddedTrack(representation);
+      if (!isMP4 || options.checkMediaSegmentIntegrity !== true) {
+        return request({ url: segment.mediaURL,
+                         responseType: isMP4 ? "arraybuffer" : "text",
+                         sendProgressEvents: true });
+      }
       return request({ url: segment.mediaURL,
-                       responseType,
-                       sendProgressEvents: true });
+                       responseType: "arraybuffer",
+                       sendProgressEvents: true })
+        .pipe(tap(res => {
+          if (res.type === "data-loaded") {
+            checkISOBMFFIntegrity(new Uint8Array(res.value.responseData),
+                                  segment.isInit);
+          }
+        }));
     },
 
     parser({

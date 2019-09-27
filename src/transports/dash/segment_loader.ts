@@ -19,6 +19,7 @@ import {
   Observer,
   of as observableOf,
 } from "rxjs";
+import { tap } from "rxjs/operators";
 import xhr, {
   fetchIsSupported,
 } from "../../utils/request";
@@ -30,6 +31,7 @@ import {
   ISegmentLoaderObservable,
 } from "../types";
 import byteRange from "../utils/byte_range";
+import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
 import initSegmentLoader from "./init_segment_loader";
 import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
 import lowLatencySegmentLoader from "./low_latency_segment_loader";
@@ -79,16 +81,31 @@ function regularSegmentLoader(
  * @returns {Function}
  */
 export default function generateSegmentLoader(
-  lowLatencyMode: boolean,
-  customSegmentLoader? : CustomSegmentLoader
+  { lowLatencyMode,
+    segmentLoader: customSegmentLoader,
+    checkMediaSegmentIntegrity } : { lowLatencyMode: boolean;
+                                     segmentLoader? : CustomSegmentLoader;
+                                     checkMediaSegmentIntegrity? : boolean; }
 ) : (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
                                                                ArrayBuffer |
                                                                null > {
+  if (checkMediaSegmentIntegrity !== true) {
+    return segmentLoader;
+  }
+  return (content) => segmentLoader(content).pipe(tap(res => {
+    if ((res.type === "data-loaded" || res.type === "data-chunk") &&
+        res.value.responseData !== null)
+    {
+      checkISOBMFFIntegrity(new Uint8Array(res.value.responseData),
+                            content.segment.isInit);
+    }
+  }));
+
   /**
    * @param {Object} content
    * @returns {Observable}
    */
-  return function segmentLoader(
+  function segmentLoader(
     content : ISegmentLoaderArguments
   ) : ISegmentLoaderObservable< Uint8Array | ArrayBuffer | null > {
     const { mediaURL } = content.segment;
@@ -167,5 +184,5 @@ export default function generateSegmentLoader(
         }
       };
     });
-  };
+  }
 }

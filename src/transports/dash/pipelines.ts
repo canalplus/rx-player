@@ -40,9 +40,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
     customManifestLoader: options.manifestLoader,
   });
   const manifestParser = generateManifestParser(options);
-  const segmentLoader = generateSegmentLoader(options.lowLatencyMode,
-                                              options.segmentLoader);
-  const textTrackLoader = generateTextTrackLoader(options.lowLatencyMode);
+  const segmentLoader = generateSegmentLoader(options);
+  const textTrackLoader = generateTextTrackLoader(options);
 
   return { manifest: { loader: manifestLoader,
                        parser: manifestParser },

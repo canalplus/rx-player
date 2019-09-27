@@ -135,8 +135,8 @@ export type IManifestLoaderObserver = Observer<IManifestLoaderEvent>;
 export type ISegmentLoaderEvent<T> = ILoaderChunkedDataEvent |
                                      ILoaderRegularDataEvent<T>;
 
-export type ISegmentLoaderObservable<T> = Observable<ILoaderChunkedDataEvent> |
-                                          Observable<ILoaderRegularDataEvent<T>>;
+export type ISegmentLoaderObservable<T> = Observable<ILoaderChunkedDataEvent |
+                                                     ILoaderRegularDataEvent<T>>;
 
 // ---- PARSER ----
 
@@ -345,6 +345,7 @@ interface IServerSyncInfos { serverTimestamp : number;
 
 export interface ITransportOptions {
   aggressiveMode? : boolean;
+  checkMediaSegmentIntegrity? : boolean;
   keySystems? : (hex? : Uint8Array) => IParsedKeySystem[]; // TODO deprecate
   lowLatencyMode : boolean;
   manifestLoader?: CustomManifestLoader;

@@ -26,6 +26,7 @@ import {
 } from "rxjs/operators";
 import { isOffline } from "../../../compat";
 import {
+  isKnownError,
   NetworkErrorTypes,
   RequestError,
 } from "../../../errors";
@@ -38,19 +39,19 @@ import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
  * @returns {Boolean} - If true, the request can be retried.
  */
 function shouldRetry(error : unknown) : boolean {
-  if (!(error instanceof RequestError)) {
-    return false;
+  if (error instanceof RequestError) {
+    if (error.type === NetworkErrorTypes.ERROR_HTTP_CODE) {
+      return error.status >= 500 ||
+             error.status === 404 ||
+             error.status === 415 || // some CDN seems to use that code when
+                                     // requesting low-latency segments too much
+                                     // in advance
+             error.status === 412;
+    }
+    return error.type === NetworkErrorTypes.TIMEOUT ||
+           error.type === NetworkErrorTypes.ERROR_EVENT;
   }
-  if (error.type === NetworkErrorTypes.ERROR_HTTP_CODE) {
-    return error.status >= 500 ||
-           error.status === 404 ||
-           error.status === 415 || // some CDN seems to use that code when
-                                   // requesting low-latency segments too much
-                                   // in advance
-           error.status === 412;
-  }
-  return error.type === NetworkErrorTypes.TIMEOUT ||
-         error.type === NetworkErrorTypes.ERROR_EVENT;
+  return isKnownError(error) && error.code === "INTEGRITY_ERROR";
 }
 
 /**

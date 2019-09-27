@@ -58,6 +58,7 @@ export type INetworkErrorCode = "PIPELINE_LOAD_ERROR";
 
 export type IOtherErrorCode = "PIPELINE_LOAD_ERROR" |
                               "PIPELINE_PARSE_ERROR" |
+                              "INTEGRITY_ERROR" |
                               "NONE";
 
 export type IErrorCode = INetworkErrorCode |
@@ -87,6 +88,7 @@ const NetworkErrorTypes : Record<INetworkErrorType, INetworkErrorType> = {
 const ErrorCodes : Record<IErrorCode, IErrorCode>  = {
   PIPELINE_LOAD_ERROR: "PIPELINE_LOAD_ERROR",
   PIPELINE_PARSE_ERROR: "PIPELINE_PARSE_ERROR",
+  INTEGRITY_ERROR: "INTEGRITY_ERROR",
 
   MANIFEST_PARSE_ERROR: "MANIFEST_PARSE_ERROR",
   MANIFEST_INCOMPATIBLE_CODECS_ERROR: "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
