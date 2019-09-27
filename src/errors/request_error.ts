@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IRequestErrorType } from "./error_codes";
+import { INetworkErrorType } from "./error_codes";
 
 /**
  * Errors linked to the XHR implentation done in the RxPlayer.
@@ -24,9 +24,9 @@ import { IRequestErrorType } from "./error_codes";
  */
 export default class RequestError extends Error {
   public readonly name : "RequestError";
-  public readonly type : IRequestErrorType;
+  public readonly type : INetworkErrorType;
   public readonly message : string;
-  public readonly xhr : XMLHttpRequest|null;
+  public readonly xhr? : XMLHttpRequest;
   public readonly url : string;
   public readonly status : number;
 
@@ -36,10 +36,10 @@ export default class RequestError extends Error {
    * @param {string} type
    */
   constructor(
-    xhr : XMLHttpRequest | null,
     url : string,
     status : number,
-    type : IRequestErrorType
+    type : INetworkErrorType,
+    xhr? : XMLHttpRequest
   ) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class

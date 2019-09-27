@@ -17,11 +17,18 @@
 import {
   ErrorTypes,
   INetworkErrorCode,
-  IRequestErrorType,
-  RequestErrorTypes,
+  INetworkErrorType,
+  NetworkErrorTypes,
 } from "./error_codes";
 import errorMessage from "./error_message";
-import RequestError from "./request_error";
+
+export interface INetworkErrorOptions {
+  xhr? : XMLHttpRequest; // possible linked XHR to the error
+  url : string; // URL the request was on
+  status : number; // HTTP code of the response. 0 if not known.
+  type : INetworkErrorType; // Type of the error
+  message : string; // Message to display to the user
+}
 
 /**
  * Error linked to network interactions (requests).
@@ -37,15 +44,15 @@ export default class NetworkError extends Error {
   public readonly xhr : XMLHttpRequest | null;
   public readonly url : string;
   public readonly status : number;
-  public readonly errorType : IRequestErrorType;
+  public readonly errorType : INetworkErrorType;
   public fatal : boolean;
 
   /**
    * @param {string} code
-   * @param {Error} requestError
+   * @param {Error} options
    * @param {Boolean} fatal
    */
-  constructor(code : INetworkErrorCode, requestError : RequestError) {
+  constructor(code : INetworkErrorCode, options : INetworkErrorOptions) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, NetworkError.prototype);
@@ -53,13 +60,13 @@ export default class NetworkError extends Error {
     this.name = "NetworkError";
     this.type = ErrorTypes.NETWORK_ERROR;
 
-    this.xhr = requestError.xhr;
-    this.url = requestError.url;
-    this.status = requestError.status;
-    this.errorType = requestError.type;
+    this.xhr = options.xhr === undefined ? null : options.xhr;
+    this.url = options.url;
+    this.status = options.status;
+    this.errorType = options.type;
 
     this.code = code;
-    this.message = errorMessage(this.name, this.code, requestError.message);
+    this.message = errorMessage(this.name, this.code, options.message);
     this.fatal = false;
   }
 
@@ -69,7 +76,7 @@ export default class NetworkError extends Error {
    * @returns {Boolean}
    */
   isHttpError(httpErrorCode : number) : boolean {
-    return this.errorType === RequestErrorTypes.ERROR_HTTP_CODE &&
+    return this.errorType === NetworkErrorTypes.ERROR_HTTP_CODE &&
            this.status === httpErrorCode;
   }
 }

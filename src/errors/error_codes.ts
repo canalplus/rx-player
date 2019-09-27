@@ -65,7 +65,7 @@ export type IErrorCode = INetworkErrorCode |
                          IEncryptedMediaErrorCode |
                          IOtherErrorCode;
 
-export type IRequestErrorType = "TIMEOUT" |
+export type INetworkErrorType = "TIMEOUT" |
                                 "ERROR_EVENT" |
                                 "PARSE_ERROR" |
                                 "ERROR_HTTP_CODE";
@@ -77,7 +77,7 @@ const ErrorTypes : Record<IErrorType, IErrorType> = {
   OTHER_ERROR: "OTHER_ERROR",
 };
 
-const RequestErrorTypes : Record<IRequestErrorType, IRequestErrorType> = {
+const NetworkErrorTypes : Record<INetworkErrorType, INetworkErrorType> = {
   TIMEOUT: "TIMEOUT",
   ERROR_EVENT: "ERROR_EVENT",
   ERROR_HTTP_CODE: "ERROR_HTTP_CODE",
@@ -134,6 +134,6 @@ const ErrorCodes : Record<IErrorCode, IErrorCode>  = {
 
 export {
   ErrorTypes,
-  RequestErrorTypes,
+  NetworkErrorTypes,
   ErrorCodes,
 };

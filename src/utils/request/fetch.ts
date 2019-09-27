@@ -19,8 +19,8 @@ import {
 } from "rxjs";
 import config from "../../config";
 import {
+  NetworkErrorTypes,
   RequestError,
-  RequestErrorTypes
 } from "../../errors";
 import log from "../../log";
 
@@ -127,18 +127,16 @@ function fetchRequest(
       }
       if (response.status >= 300) {
         log.warn("Fetch: Request HTTP Error", response);
-        obs.error(new RequestError(null,
-                                   response.url,
+        obs.error(new RequestError(response.url,
                                    response.status,
-                                   RequestErrorTypes.ERROR_HTTP_CODE));
+                                   NetworkErrorTypes.ERROR_HTTP_CODE));
         return undefined;
       }
 
       if (response.body == null) {
-        obs.error(new RequestError(null,
-                                   response.url,
+        obs.error(new RequestError(response.url,
                                    response.status,
-                                   RequestErrorTypes.PARSE_ERROR));
+                                   NetworkErrorTypes.PARSE_ERROR));
         return undefined;
       }
 
@@ -189,17 +187,15 @@ function fetchRequest(
       }
       if (timeouted) {
         log.warn("Fetch: Request timeouted.");
-        obs.error(new RequestError(null,
-                                   options.url,
+        obs.error(new RequestError(options.url,
                                    0,
-                                   RequestErrorTypes.TIMEOUT));
+                                   NetworkErrorTypes.TIMEOUT));
         return;
       }
       log.warn("Fetch: Request Error", err && err.toString());
-      obs.error(new RequestError(null,
-                                 options.url,
+      obs.error(new RequestError(options.url,
                                  0,
-                                 RequestErrorTypes.ERROR_EVENT));
+                                 NetworkErrorTypes.ERROR_EVENT));
       return;
     });
 
@@ -314,6 +310,6 @@ export default fetchRequest;
 //   obs.error(new RequestError(null,
 //                              response.url,
 //                              response.status,
-//                              RequestErrorTypes.PARSE_ERROR));
+//                              NetworkErrorTypes.PARSE_ERROR));
 //   return;
 // });

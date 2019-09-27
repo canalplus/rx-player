@@ -21,7 +21,7 @@ import {
   ErrorTypes,
   IErrorCode,
   IErrorType,
-  RequestErrorTypes,
+  NetworkErrorTypes,
 } from "./error_codes";
 import formatError from "./format_error";
 import isKnownError, {
@@ -45,6 +45,6 @@ export {
   NetworkError,
   OtherError,
   RequestError,
-  RequestErrorTypes,
+  NetworkErrorTypes,
   isKnownError,
 };

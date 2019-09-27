@@ -20,7 +20,7 @@ describe("errors - RequestError", () => {
   it("should format a RequestError when called", () => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "http://www.example.com");
-    const requestError = new RequestError(xhr, "foo", 355, "ERROR_EVENT");
+    const requestError = new RequestError("foo", 355, "ERROR_EVENT", xhr);
     expect(requestError).toBeInstanceOf(Error);
     expect(requestError.name).toBe("RequestError");
     expect(requestError.url).toBe("foo");
@@ -29,5 +29,15 @@ describe("errors - RequestError", () => {
     expect(requestError.type).toBe("ERROR_EVENT");
     expect(requestError.message).toBe("ERROR_EVENT");
     xhr.abort();
+  });
+  it("should authorize no XHR", () => {
+    const requestError = new RequestError("foo", 355, "ERROR_EVENT");
+    expect(requestError).toBeInstanceOf(Error);
+    expect(requestError.name).toBe("RequestError");
+    expect(requestError.url).toBe("foo");
+    expect(requestError.xhr).toBe(undefined);
+    expect(requestError.status).toBe(355);
+    expect(requestError.type).toBe("ERROR_EVENT");
+    expect(requestError.message).toBe("ERROR_EVENT");
   });
 });

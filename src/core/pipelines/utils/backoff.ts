@@ -26,8 +26,8 @@ import {
 } from "rxjs/operators";
 import { isOffline } from "../../../compat";
 import {
+  NetworkErrorTypes,
   RequestError,
-  RequestErrorTypes,
 } from "../../../errors";
 import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
 
@@ -41,7 +41,7 @@ function shouldRetry(error : unknown) : boolean {
   if (!(error instanceof RequestError)) {
     return false;
   }
-  if (error.type === RequestErrorTypes.ERROR_HTTP_CODE) {
+  if (error.type === NetworkErrorTypes.ERROR_HTTP_CODE) {
     return error.status >= 500 ||
            error.status === 404 ||
            error.status === 415 || // some CDN seems to use that code when
@@ -49,8 +49,8 @@ function shouldRetry(error : unknown) : boolean {
                                    // in advance
            error.status === 412;
   }
-  return error.type === RequestErrorTypes.TIMEOUT ||
-         error.type === RequestErrorTypes.ERROR_EVENT;
+  return error.type === NetworkErrorTypes.TIMEOUT ||
+         error.type === NetworkErrorTypes.ERROR_EVENT;
 }
 
 /**
@@ -60,7 +60,7 @@ function shouldRetry(error : unknown) : boolean {
  * @returns {Boolean}
  */
 function isOfflineRequestError(error : RequestError) : boolean {
-  return error.type === RequestErrorTypes.ERROR_EVENT &&
+  return error.type === NetworkErrorTypes.ERROR_EVENT &&
          isOffline();
 }
 
