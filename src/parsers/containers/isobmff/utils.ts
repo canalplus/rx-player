@@ -150,7 +150,7 @@ function getSegmentsFromSidx(
 
     // when set to 1 indicates that the reference is to a sidx, else to media
     if (refType === 1) {
-      throw new Error("not implemented");
+      throw new Error("sidx with reference_type `1` not yet implemented");
     }
 
     const duration = be4toi(buf, pos);
@@ -164,13 +164,11 @@ function getSegmentsFromSidx(
     // let sapType = (sapChunk & 0x70000000) >>> 28;
     // let sapDelta = sapChunk & 0x0FFFFFFF;
 
-    segments.push({
-      time,
-      duration,
-      count: 0,
-      timescale,
-      range: [offset, offset + refSize - 1],
-    });
+    segments.push({ time,
+                    duration,
+                    count: 0,
+                    timescale,
+                    range: [offset, offset + refSize - 1] });
 
     time += duration;
     offset += refSize;
