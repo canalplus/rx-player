@@ -268,13 +268,27 @@ function parseConstructorOptions(
       !!options.throttleVideoBitrateWhenHidden;
   }
 
-  preferredAudioTracks = options.preferredAudioTracks == null ?
-    [] :
-    options.preferredAudioTracks;
+  if (options.preferredTextTracks !== undefined) {
+    if (!Array.isArray(options.preferredTextTracks)) {
+      warnOnce("Invalid `preferredTextTracks` option, it should be an Array");
+      preferredTextTracks = [];
+    } else {
+      preferredTextTracks = options.preferredTextTracks;
+    }
+  } else {
+    preferredTextTracks = [];
+  }
 
-  preferredTextTracks = options.preferredTextTracks == null ?
-    [] :
-    options.preferredTextTracks;
+  if (options.preferredAudioTracks !== undefined) {
+    if (!Array.isArray(options.preferredAudioTracks)) {
+      warnOnce("Invalid `preferredAudioTracks` option, it should be an Array");
+      preferredAudioTracks = [];
+    } else {
+      preferredAudioTracks = options.preferredAudioTracks;
+    }
+  } else {
+    preferredAudioTracks = [];
+  }
 
   if (options.videoElement == null) {
     videoElement = document.createElement("video");
