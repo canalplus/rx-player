@@ -120,12 +120,16 @@ export default function PeriodBuffer({
         let cleanBuffer$ : Observable<unknown>;
 
         if (sourceBufferStatus.type === "set") {
-          log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
-          const previousQSourceBuffer = sourceBufferStatus.value;
-          cleanBuffer$ = previousQSourceBuffer
-            .removeBuffer(period.start,
-                          period.end == null ? Infinity :
-                                               period.end);
+          // log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
+          // const previousQSourceBuffer = sourceBufferStatus.value;
+          // cleanBuffer$ = previousQSourceBuffer
+          //   .removeBuffer(period.start,
+          //                 period.end == null ? Infinity :
+          //                                      period.end);
+          return observableOf(EVENTS.needsMediaSourceReload({
+            currentTime: 20,
+            isPaused: false,
+          }));
         } else {
           if (sourceBufferStatus.type === "unset") {
             sourceBuffersStore.disableSourceBuffer(bufferType);
