@@ -498,6 +498,21 @@ export default class TrackChoiceManager {
     textInfos.adaptation$.next(null);
   }
 
+  public disableVideoTrack(period : Period) : void {
+    const periodItem = getPeriodItem(this._periods, period);
+    console.warn("ITEM", periodItem);
+    const videoInfos = periodItem && periodItem.video;
+    if (!videoInfos) {
+      throw new Error("TrackManager: Given Period not found.");
+    }
+    const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
+    if (chosenVideoAdaptation === null) {
+      return;
+    }
+    this._videoChoiceMemory.set(period, null);
+    videoInfos.adaptation$.next(null);
+  }
+
   /**
    * Returns an object describing the chosen audio track for the given audio
    * Period.
