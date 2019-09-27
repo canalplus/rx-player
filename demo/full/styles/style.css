@@ -5,6 +5,24 @@
   font-style: normal;
 }
 
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes grow-generated-url {
+  from {
+    opacity: 0;
+
+    /* XXX TODO - I don't know if we should set the hard value that way */
+    margin-top: -45px;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0px;
+  }
+}
+
 body {
   margin: 0px;
   font-family: "CanalDemiRomain", "Open Sans", sans-serif;
@@ -280,11 +298,6 @@ body {
   z-index: 1011;
   transform:scaleY(1);
   animation: fadein 0.6s;
-}
-
-@keyframes fadein {
-  from { opacity: 0; }
-  to   { opacity: 1; }
 }
 
 .image-tip {
@@ -774,13 +787,12 @@ body {
 
 .generated-url {
   color: #3a3a3a;
-  font-size: 0.8em;
+  font-size: 14px;
+  height: 15px; /* XXX TODO center text vertically */
   background-color: rgba(255, 255, 255, 0.8);
   border-radius: 3px;
   padding: 10px;
   display: none;
-  -webkit-transition: opacity 2s;
-  transition: opacity 2s;
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
@@ -788,6 +800,7 @@ body {
 }
 
 .generated-url.enabled {
+  animation: grow-generated-url 0.6s;
   display: block;
 }
 
