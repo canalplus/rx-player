@@ -427,28 +427,6 @@ export default class TrackManager {
   }
 
   /**
-   * Disable the given audio track for a given Period.
-   *
-   * @param {Period} period - The concerned Period.
-   *
-   * @throws Error - Throws if the period given has not been added
-   */
-  public disableAudioTrack(period : Period) : void {
-    const periodItem = getPeriodItem(this._periods, period);
-    const audioInfos = periodItem && periodItem.audio;
-    if (!audioInfos) {
-      throw new Error("TrackManager: Given Period not found.");
-    }
-    const chosenAudioAdaptation = this._audioChoiceMemory.get(period);
-    if (chosenAudioAdaptation === null) {
-      return;
-    }
-
-    this._audioChoiceMemory.set(period, null);
-    audioInfos.adaptation$.next(null);
-  }
-
-  /**
    * Disable the current text track for a given period.
    *
    * @param {Period} period - The concerned Period.
