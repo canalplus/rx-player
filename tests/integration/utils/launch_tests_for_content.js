@@ -776,10 +776,10 @@ export default function launchTestsForContent(
 
         expect(player.getAvailableVideoBitrates()).to.eql([]);
 
-        await sleep(1);
+        await sleep(5);
         expect(player.getAvailableVideoBitrates()).to.eql([]);
         await xhrMock.flush();
-        await sleep(1);
+        await sleep(5);
 
         expect(player.getAvailableVideoBitrates()).to.eql(videoBitrates);
       });
