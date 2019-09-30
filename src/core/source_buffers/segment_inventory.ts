@@ -635,17 +635,14 @@ function bufferedStartLooksCoherent(
     return false;
   }
   const { start, end } = thisSegment;
+  const duration = end - start;
   return Math.abs(start - thisSegment.bufferedStart) <=
            MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE &&
          (thisSegment.bufferedEnd === undefined ||
            thisSegment.bufferedEnd > thisSegment.bufferedStart &&
            Math.abs(thisSegment.bufferedEnd - thisSegment.bufferedStart -
-             (end - start)) <= MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE);
-
-         // thisSegment.bufferedEnd != null &&
-         // thisSegment.bufferedEnd > thisSegment.bufferedStart &&
-         // Math.abs(thisSegment.bufferedEnd - thisSegment.bufferedStart -
-         //   (end - start)) <= MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE;
+             duration) <= Math.min(MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE,
+                                   duration / 3));
 }
 
 /**
@@ -663,12 +660,14 @@ function bufferedEndLooksCoherent(
     return false;
   }
   const { start, end } = thisSegment;
+  const duration = end - start;
   return Math.abs(end - thisSegment.bufferedEnd) <=
            MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE &&
          thisSegment.bufferedStart != null &&
          thisSegment.bufferedEnd > thisSegment.bufferedStart &&
          Math.abs(thisSegment.bufferedEnd - thisSegment.bufferedStart -
-           (end - start)) <= MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE;
+           duration) <= Math.min(MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE,
+                                 duration / 3);
 }
 
 /**
