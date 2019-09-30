@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../log";
 import Period from "./period";
 import updatePeriodInPlace from "./update_period_in_place";
 
@@ -70,8 +71,11 @@ export default function updatePeriods(
     }
   }
 
-  const remainingNewPeriods = newPeriods.slice(firstUnhandledPeriodIdx,
-                                          newPeriods.length);
+  if (firstUnhandledPeriodIdx > oldPeriods.length) {
+    log.error("Manifest: error when updating Periods");
+    return;
+  }
+
   // At this point, the first unhandled period index refers to the first
   // position from which :
   // - there are only undesired periods in old periods array.
@@ -84,7 +88,13 @@ export default function updatePeriods(
   // new periods : [p1]  [p2]  [pM]  [pX]  [pU (wanted)]
   //
   // final array (old periods array) : [p1]  [p2]  [pM]  [pX]  [pU]
-  oldPeriods.splice(firstUnhandledPeriodIdx,
-                    oldPeriods.length - firstUnhandledPeriodIdx,
-                    ...remainingNewPeriods);
+  if (firstUnhandledPeriodIdx < oldPeriods.length) {
+    oldPeriods.splice(firstUnhandledPeriodIdx,
+                      oldPeriods.length - firstUnhandledPeriodIdx);
+  }
+  const remainingNewPeriods = newPeriods.slice(firstUnhandledPeriodIdx,
+                                               newPeriods.length);
+  if (remainingNewPeriods.length > 0) {
+    oldPeriods.push(...remainingNewPeriods);
+  }
 }
