@@ -68,67 +68,14 @@ export default function getNeededSegments({
                                                            segmentInventory);
 
   // 2 - remove from pushed list of current segments the contents we want to replace
-  const consideredSegments = currentSegments.filter((bufferedSegment) => {
-    if (bufferedSegment.infos.period.id !== content.period.id) {
-      return true; // keep segments from another Period by default.
-    }
-
-    if (bufferedSegment.infos.adaptation.id !== content.adaptation.id) {
-      return false; // replace segments from another Adaptation
-    }
-
-    const currentSegmentBitrate = bufferedSegment.infos.representation.bitrate;
-    if (fastSwitchingStep == null) {
-      // only re-load comparatively-poor bitrates for the same Adaptation.
-      const bitrateCeil = currentSegmentBitrate * BITRATE_REBUFFERING_RATIO;
-      return content.representation.bitrate <= bitrateCeil;
-    }
-    return currentSegmentBitrate >= fastSwitchingStep;
-  });
+  const consideredSegments = currentSegments
+    .filter((bufferedSegment) => !shouldContentBeReplaced(bufferedSegment.infos,
+                                                          content,
+                                                          fastSwitchingStep));
 
   // 3 - remove from that list the segments who appeared to have been GCed
-  const completeSegments : IBufferedChunk[] = [];
-  for (let i = 0; i < consideredSegments.length; i++) {
-    let segmentStartIsComplete = true;
-    let segmentEndIsComplete = true;
-
-    const currentSeg = consideredSegments[i];
-    const prevSeg = i === 0 ? null :
-                              consideredSegments[i - 1];
-    const nextSeg = i >= consideredSegments.length - 1 ? null :
-                                                         consideredSegments[i + 1];
-    if (currentSeg.bufferedStart === undefined) {
-      segmentStartIsComplete = false;
-    } else if ((prevSeg === null ||
-                prevSeg.bufferedEnd === undefined ||
-                prevSeg.bufferedEnd !== currentSeg.bufferedStart) &&
-               neededRange.start < currentSeg.bufferedStart &&
-               currentSeg.bufferedStart - currentSeg.start >
-                 MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
-    {
-      log.info("Buffer: The start of the wanted segment has been garbage collected",
-               currentSeg);
-      segmentStartIsComplete = false;
-    }
-
-    if (currentSeg.bufferedEnd === undefined) {
-      segmentEndIsComplete = false;
-    } else if ((nextSeg === null ||
-                nextSeg.bufferedEnd === undefined ||
-                nextSeg.bufferedEnd !== currentSeg.bufferedStart) &&
-               neededRange.end > currentSeg.bufferedEnd &&
-               currentSeg.end - currentSeg.bufferedEnd >
-                 MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
-    {
-      log.info("Buffer: The end of the wanted segment has been garbage collected",
-                currentSeg);
-      segmentEndIsComplete = false;
-    }
-
-    if (segmentStartIsComplete && segmentEndIsComplete) {
-      completeSegments.push(currentSeg);
-    }
-  }
+  const completeSegments = filterGarbageCollectedSegments(consideredSegments,
+                                                          neededRange);
 
   // 4 - now filter the list of segments we can download
   const roundingError = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
@@ -187,6 +134,97 @@ export default function getNeededSegments({
     }
     return true;
   });
+}
+
+/**
+ * Returns `true` if segments linked to the given `oldContent` currently present
+ * in the buffer should be replaced by segments coming from `currentContent`.
+ * @param {Object} oldContent
+ * @param {Object} currentContent
+ * @param {number} [fastSwitchingStep]
+ * @returns {boolean}
+ */
+function shouldContentBeReplaced(
+  oldContent : { adaptation : Adaptation;
+                 period : Period;
+                 representation : Representation;
+                 segment : ISegment; },
+  currentContent : { adaptation : Adaptation;
+                     period : Period;
+                     representation : Representation; },
+  fastSwitchingStep? : number
+) : boolean {
+  if (oldContent.period.id !== currentContent.period.id) {
+    return false; // keep segments from another Period by default.
+  }
+
+  if (oldContent.adaptation.id !== currentContent.adaptation.id) {
+    return true; // replace segments from another Adaptation
+  }
+
+  const oldContentBitrate = oldContent.representation.bitrate;
+  if (fastSwitchingStep === undefined) {
+    // only re-load comparatively-poor bitrates for the same Adaptation.
+    const bitrateCeil = oldContentBitrate * BITRATE_REBUFFERING_RATIO;
+    return currentContent.representation.bitrate > bitrateCeil;
+  }
+  return oldContentBitrate < fastSwitchingStep;
+}
+
+/**
+ * Returns an Array which removed the segments from `consideredSegments` which
+ * appeared to have been garbage collected.
+ * @param {Array.<Object>} consideredSegments
+ * @param {Object} neededRange
+ * @returns {Array.<Object>}
+ */
+function filterGarbageCollectedSegments(
+  consideredSegments : IBufferedChunk[],
+  neededRange : { start : number; end : number }
+) : IBufferedChunk[] {
+  const completeSegments : IBufferedChunk[] = [];
+  for (let i = 0; i < consideredSegments.length; i++) {
+    let segmentStartIsComplete = true;
+    let segmentEndIsComplete = true;
+
+    const currentSeg = consideredSegments[i];
+    const prevSeg = i === 0 ? null :
+                              consideredSegments[i - 1];
+    const nextSeg = i >= consideredSegments.length - 1 ? null :
+                                                         consideredSegments[i + 1];
+    if (currentSeg.bufferedStart === undefined) {
+      segmentStartIsComplete = false;
+    } else if ((prevSeg === null ||
+                prevSeg.bufferedEnd === undefined ||
+                prevSeg.bufferedEnd !== currentSeg.bufferedStart) &&
+               neededRange.start < currentSeg.bufferedStart &&
+               currentSeg.bufferedStart - currentSeg.start >
+                 MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
+    {
+      log.info("Buffer: The start of the wanted segment has been garbage collected",
+               currentSeg);
+      segmentStartIsComplete = false;
+    }
+
+    if (currentSeg.bufferedEnd === undefined) {
+      segmentEndIsComplete = false;
+    } else if ((nextSeg === null ||
+                nextSeg.bufferedEnd === undefined ||
+                nextSeg.bufferedEnd !== currentSeg.bufferedStart) &&
+               neededRange.end > currentSeg.bufferedEnd &&
+               currentSeg.end - currentSeg.bufferedEnd >
+                 MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
+    {
+      log.info("Buffer: The end of the wanted segment has been garbage collected",
+                currentSeg);
+      segmentEndIsComplete = false;
+    }
+
+    if (segmentStartIsComplete && segmentEndIsComplete) {
+      completeSegments.push(currentSeg);
+    }
+  }
+  return completeSegments;
 }
 
 /**
