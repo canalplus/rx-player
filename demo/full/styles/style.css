@@ -13,7 +13,7 @@
 @keyframes grow-generated-url {
   from {
     opacity: 0;
-    margin-top: -45px;
+    margin-top: -51px;
   }
   to {
     opacity: 1;
@@ -784,6 +784,7 @@ body {
 }
 
 .generated-url {
+  z-index: 1;
   color: #3a3a3a;
   font-size: 14px;
   height: 21px;
@@ -1007,12 +1008,14 @@ input:checked + .slider:before {
 }
 
 .nav-header {
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 15px 0 15px;
   background-color: #323435;
   color: #ffffff;
+  z-index: 10;
 }
 
 .nav-header a {
