@@ -27,7 +27,7 @@ import Adaptation, {
 } from "./adaptation";
 import Period from "./period";
 import { StaticRepresentationIndex } from "./representation_index";
-import updatePeriodInPlace from "./update_period";
+import updatePeriods from "./update_periods";
 
 const generateNewId = idGenerator();
 
@@ -315,36 +315,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.transport = newManifest.transport;
     this.uris = newManifest.uris;
 
-    const oldPeriods = this.periods;
-    const newPeriods = newManifest.periods;
+    updatePeriods(this.periods, newManifest.periods);
 
-    let oldPeriodCounter = 0;
-    let newPeriodCounter = 0;
-
-    // 2 - Update Periods in both Manifests
-    while (oldPeriodCounter < oldPeriods.length) {
-      const newPeriod = newPeriods[newPeriodCounter];
-      const oldPeriod = oldPeriods[oldPeriodCounter];
-
-      if (newPeriod == null) {
-        log.info(`Manifest: Period ${oldPeriod.id} not found after update. Removing.`);
-        oldPeriods.splice(oldPeriodCounter, 1);
-        oldPeriodCounter--;
-      } else if (newPeriod.id === oldPeriod.id) {
-        updatePeriodInPlace(oldPeriod, newPeriod);
-      } else {
-        log.info(`Manifest: Adding new Period ${newPeriod.id} after update.`);
-        this.periods.splice(oldPeriodCounter, 0, newPeriod);
-      }
-      oldPeriodCounter++;
-      newPeriodCounter++;
-    }
-
-    // adding - perhaps - new Period[s]
-    if (newPeriodCounter < newPeriods.length) {
-      log.info("Manifest: Adding new periods after update.");
-      this.periods.push(...newPeriods.slice(newPeriodCounter));
-    }
     this.trigger("manifestUpdate", null);
   }
 

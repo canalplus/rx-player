@@ -15,7 +15,7 @@
  */
 
 import log from "../../log";
-import updatePeriodInPlace from "../update_period";
+import updatePeriodInPlace from "../update_period_in_place";
 
 describe("Manifest - updatePeriodInPlace", () => {
   it("should update the first Period given by the second one", () => {
