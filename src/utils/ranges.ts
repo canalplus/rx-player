@@ -378,6 +378,26 @@ function keepRangeIntersection(
 
 /**
  * Exclude from the `baseRanges` everything that is in `rangesToExclude`.
+ * Example:
+ *
+ * Let's say we have the following base ranges:
+ *       |==========|        |===============| |======|    |==========|
+ *
+ * From which we want to "exclude" the following ranges:
+ *          |=========| |==|        |===|  |=====|
+ *
+ * We will obtain the first ranges from which we remove the second ranges:
+ * -----------------------------------------------------------------------
+ *       |==========|        |===============| |======|    |==========|
+ *          |=========| |==|        |===|  |=====|
+ * _______________________________________________________________________
+ *                                     |
+ *                                     |
+ *                                     V
+ * -----------------------------------------------------------------------
+ *       |==|                |======|   |==|     |====|    |==========|
+ * -----------------------------------------------------------------------
+ *
  * @param {Array.<Object} baseRanges
  * @param {Array.<Object} rangesToExclude
  * @return {Array.<Object>}
@@ -388,6 +408,8 @@ function excludeFromRanges(
 ) : IRange[] {
   const result : IRange[] = [];
 
+  // For every range in `baseRanges`, find overlapping ranges with
+  // `rangesToExclude` and remove them.
   for (let i = 0; i < baseRanges.length; i++) {
     const range = baseRanges[i];
     const intersections : IRange[] = [];
