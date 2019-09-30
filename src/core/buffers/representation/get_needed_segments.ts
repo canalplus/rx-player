@@ -208,7 +208,7 @@ function getCorrespondingBufferedSegments(
   for (let i = segmentInventory.length - 1; i >= 0; i--) {
     const eltInventory = segmentInventory[i];
 
-    if (eltInventory.isCompleteSegment) {
+    if (!eltInventory.partiallyPushed) {
       const inventorySegment = eltInventory.infos.segment;
       const eltInventoryStart = inventorySegment.time /
                                 inventorySegment.timescale;
