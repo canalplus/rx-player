@@ -59,10 +59,10 @@ export interface IBufferedChunk {
                           // buffered segments.
   infos : IBufferedChunkInfos; // Information on what this segment is in terms
                                // of content.
-  isCompleteSegment : boolean; // If `true`, the whole segment has been
-                               // completely pushed. If false, it is just a
-                               // chunk of the whole segment which has yet to be
-                               // finished to be pushed
+  partiallyPushed : boolean; // If `false`, the whole segment has been
+                             // completely pushed. If false, it is just a
+                             // chunk of the whole segment which has yet to be
+                             // finished to be pushed
   start : number; // Supposed start the segment should start from, in seconds
 }
 
@@ -255,7 +255,7 @@ export default class SegmentInventory {
     }
 
     const { inventory } = this;
-    const newSegment = { isCompleteSegment: false,
+    const newSegment = { partiallyPushed: true,
                          estimatedStart: start,
                          start,
                          end,
@@ -451,7 +451,7 @@ export default class SegmentInventory {
               //  newSegment   :    |====|
               //  ===>         : |--|====|-|
               log.debug("SI: Segment pushed is contained in a previous one");
-              const nextSegment = { isCompleteSegment: segmentI.isCompleteSegment,
+              const nextSegment = { partiallyPushed: segmentI.partiallyPushed,
                                     start: newSegment.end,
                                     end: segmentI.end,
                                     precizeStart: segmentI.precizeStart &&
@@ -601,7 +601,7 @@ export default class SegmentInventory {
           this.inventory.splice(firstI + 1, length);
           i -= length;
         }
-        this.inventory[firstI].isCompleteSegment = true;
+        this.inventory[firstI].partiallyPushed = false;
         this.inventory[firstI].end = lastEnd;
         this.inventory[firstI].bufferedEnd = lastBufferedEnd;
       }
@@ -630,7 +630,7 @@ function bufferedStartLooksCoherent(
   thisSegment : IBufferedChunk
 ) : boolean {
   if (thisSegment.bufferedStart === undefined ||
-      !thisSegment.isCompleteSegment)
+      thisSegment.partiallyPushed)
   {
     return false;
   }
@@ -658,7 +658,7 @@ function bufferedEndLooksCoherent(
   thisSegment : IBufferedChunk
 ) : boolean {
   if (thisSegment.bufferedEnd === undefined ||
-      !thisSegment.isCompleteSegment)
+      thisSegment.partiallyPushed)
   {
     return false;
   }
