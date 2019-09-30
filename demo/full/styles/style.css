@@ -5,6 +5,22 @@
   font-style: normal;
 }
 
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes grow-generated-url {
+  from {
+    opacity: 0;
+    margin-top: -51px;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0px;
+  }
+}
+
 body {
   margin: 0px;
   font-family: "CanalDemiRomain", "Open Sans", sans-serif;
@@ -282,11 +298,6 @@ body {
   animation: fadein 0.6s;
 }
 
-@keyframes fadein {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
 .image-tip {
   height: 100%;
 }
@@ -466,14 +477,14 @@ body {
 }
 
 .running:hover:before{
-    border: solid;
-    border-color: #ed3656 transparent;
-    border-width: 6px 6px 0 6px;
-    bottom: 35px;
-    content: "";
-    left: 32%;
-    position: absolute;
-    z-index: 10001;
+  border: solid;
+  border-color: #ed3656 transparent;
+  border-width: 6px 6px 0 6px;
+  bottom: 35px;
+  content: "";
+  left: 32%;
+  position: absolute;
+  z-index: 10001;
 }
 
 .running > svg {
@@ -492,6 +503,26 @@ body {
 
 .running.clicked:hover > svg {
   fill: #f3687f;
+}
+
+.link {
+  background-color: white;
+  cursor: pointer;
+  width: 19px;
+  height: 19px;
+  padding: 10px;
+  border-radius: 3px;
+  border: #d1d1d1 1px solid;
+  margin-left: 5px;
+}
+
+.link:hover {
+  color: #ed3656;
+}
+
+.link.enabled {
+  color: #ffffff;
+  background-color: #ec3655;
 }
 
 .catch-up {
@@ -752,6 +783,38 @@ body {
   background-position: calc(100% - 8px) 50%;
 }
 
+.generated-url {
+  z-index: 1;
+  color: #3a3a3a;
+  font-size: 14px;
+  height: 21px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 3px;
+  padding: 10px;
+  display: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.generated-url.enabled {
+  animation: grow-generated-url 0.6s;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.generated-url-link.none {
+  color: #222;
+  text-decoration: none;
+  font-style: italic;
+}
+.generated-url-link {
+  color: #ec3655;
+  text-decoration: none;
+}
+
 .knob-value > select {
   width: 100%;
   border: 0;
@@ -788,7 +851,7 @@ body {
   margin: 10px 0px;
 }
 
-.encryption-checkbox {
+.custom-checkbox {
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -945,12 +1008,14 @@ input:checked + .slider:before {
 }
 
 .nav-header {
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 15px 0 15px;
   background-color: #323435;
   color: #ffffff;
+  z-index: 10;
 }
 
 .nav-header a {

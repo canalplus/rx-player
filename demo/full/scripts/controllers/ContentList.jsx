@@ -6,11 +6,16 @@ import {
   removeStoredContent,
 } from "../lib/localStorage.js";
 import parseDRMConfigurations from "../lib/parseDRMConfigurations.js";
+import {
+  generateLinkForCustomContent,
+  parseHashInURL,
+} from "../lib/url_hash.js";
 import Button from "../components/Button.jsx";
 import FocusedTextInput from "../components/FocusedInput.jsx";
 import TextInput from "../components/Input.jsx";
 import Select from "../components/Select.jsx";
 import contentsDatabase from "../contents.js";
+import GenerateLinkButton from "../components/GenerateLinkButton.jsx";
 
 const MediaKeys_ = window.MediaKeys ||
                    window.MozMediaKeys ||
@@ -114,6 +119,35 @@ function constructContentList() {
 }
 
 /**
+ * Generate URL with hash-string which can be used to reload the page with the
+ * current stored content or demo content. This can be used for example to
+ * share some content with other people.
+ * Returns null if it could not generate an URL for the current content.
+ * @param {Object} content - The content object as constructed in the
+ * ContentList.
+ * @param {Object} state - The current ContentList state.
+ * @returns {string|null}
+ */
+function generateLinkForContent(content, { autoPlay, transportType }) {
+  if (content == null) {
+    return null;
+  }
+  const licenseServerUrl = content.drmInfos && content.drmInfos[0] &&
+    content.drmInfos[0].licenseServerUrl;
+  const serverCertificateUrl = content.drmInfos && content.drmInfos[0] &&
+    content.drmInfos[0].serverCertificateUrl;
+  return generateLinkForCustomContent({
+    autoPlay,
+    drmType: content.drmInfos && content.drmInfos[0] && content.drmInfos[0].drm,
+    manifestURL: content.url,
+    licenseServerUrl,
+    lowLatency: !!content.isLowLatency,
+    serverCertificateUrl,
+    transport: transportType,
+  });
+}
+
+/**
  * Returns index of the first content to display according to all contents
  * available.
  * @param {Array.<Object>} contentList
@@ -147,6 +181,7 @@ class ContentList extends React.Component {
                    contentsPerType,
                    currentDRMType: DRM_TYPES[0],
                    currentManifestURL: "",
+                   displayGeneratedLink: false,
                    displayDRMSettings: false,
                    isSavingOrUpdating: false,
                    licenseServerUrl: "",
@@ -156,6 +191,32 @@ class ContentList extends React.Component {
   }
 
   componentDidMount() {
+    const parsedHash = parseHashInURL(location.hash);
+    if (parsedHash !== null) {
+      const { tech } = parsedHash;
+      if (TRANSPORT_TYPES.includes(tech)) {
+        const newState = { autoPlay: !parsedHash.noAutoplay,
+                           contentChoiceIndex: 0,
+                           contentNameField: "",
+                           contentList: this.state.contentsPerType[tech],
+                           currentManifestURL: parsedHash.manifest,
+                           lowLatencyChecked: tech === "DASH" &&
+                             !!parsedHash.lowLatency,
+                           transportType: tech };
+
+        const drmType = DRM_TYPES.includes(parsedHash.drm) ?
+          parsedHash.drm : undefined;
+        if (drmType !== undefined) {
+          newState.displayDRMSettings = true;
+          newState.currentDRMType = drmType;
+          newState.licenseServerUrl = parsedHash.licenseServ || "";
+          newState.serverCertificateUrl = parsedHash.certServ || "";
+        }
+        this.setState(newState);
+        return;
+      }
+    }
+
     // estimate first index which should be selected
     const contentList = this.state.contentsPerType[this.state.transportType];
     const firstEnabledContentIndex = getIndexOfFirstEnabledContent(contentList);
@@ -230,6 +291,7 @@ class ContentList extends React.Component {
                     currentDRMType: DRM_TYPES[0],
                     currentManifestURL: "",
                     displayDRMSettings: false,
+                    displayGeneratedLink: false,
                     isSavingOrUpdating: false,
                     licenseServerUrl: "",
                     lowLatencyChecked: false,
@@ -263,6 +325,7 @@ class ContentList extends React.Component {
                     currentDRMType: drm != null ? drm : DRM_TYPES[0],
                     currentManifestURL,
                     displayDRMSettings: hasDRMSettings,
+                    displayGeneratedLink: false,
                     isSavingOrUpdating: false,
                     lowLatencyChecked: isLowLatency,
                     licenseServerUrl,
@@ -312,6 +375,7 @@ class ContentList extends React.Component {
             contentsPerType,
             currentDRMType,
             currentManifestURL,
+            displayGeneratedLink,
             displayDRMSettings,
             isSavingOrUpdating,
             licenseServerUrl,
@@ -323,6 +387,26 @@ class ContentList extends React.Component {
 
     const contentsToSelect = contentsPerType[transportType];
     const chosenContent = contentsToSelect[contentChoiceIndex];
+
+    let generatedLink = null;
+    if (displayGeneratedLink) {
+      generatedLink = contentChoiceIndex === 0 || isSavingOrUpdating ?
+        generateLinkForCustomContent({
+          autoPlay,
+          drmType: displayDRMSettings ?
+            currentDRMType :
+            undefined,
+          manifestURL: currentManifestURL,
+          licenseServerUrl: displayDRMSettings ?
+            licenseServerUrl :
+            undefined,
+          lowLatency: lowLatencyChecked,
+          serverCertificateUrl: displayDRMSettings ?
+            serverCertificateUrl :
+            undefined,
+          transport: transportType,
+        }) : generateLinkForContent(chosenContent, this.state);
+    }
 
     const hasURL = currentManifestURL !== "";
     const isLocalContent = !!(chosenContent &&
@@ -460,6 +544,10 @@ class ContentList extends React.Component {
         />);
     };
 
+    const onClickGenerateLink = () => {
+      this.setState({ displayGeneratedLink: !displayGeneratedLink });
+    };
+
     const selectValues = contentsToSelect.map(c => {
       return { name: c.displayName,
                disabled: c.isDisabled };
@@ -467,12 +555,27 @@ class ContentList extends React.Component {
 
     return (
       <div className="choice-inputs-wrapper">
+        <span className={"generated-url" + (displayGeneratedLink ? " enabled" : "")}>
+          { displayGeneratedLink ?
+            [
+              "URL : ",
+              generatedLink ?
+                <a className="generated-url-link" href={generatedLink}>
+                  {generatedLink}
+                </a> :
+                <a className="generated-url-link none">
+                  Not a valid content!
+                </a>,
+            ] : ""
+          }
+        </span>
         <div className="content-inputs">
           <div className="content-inputs-selects">
             <Select
               className="choice-input transport-type-choice white-select"
               onChange={onTransportChange}
               options={TRANSPORT_TYPES}
+              selected={TRANSPORT_TYPES.indexOf(transportType)}
             />
             <Select
               className="choice-input content-choice white-select"
@@ -484,15 +587,20 @@ class ContentList extends React.Component {
           <div className="content-inputs-middle">
             {
               (isCustomContent || isLocalContent) ?
-                (<Button
-                  className={"choice-input-button content-button enter-name-button" +
-                    (!hasURL ? " disabled" : "")}
-                  onClick={onClickSaveOrUpdate}
-                  disabled={!hasURL || isSavingOrUpdating}
-                  value={isLocalContent ?
-                    (isSavingOrUpdating ? "Updating..." : "Update content") :
-                    (isSavingOrUpdating ? "Saving..." : "Store content")}
-                />) :
+                ([
+                  <Button
+                    className={"choice-input-button content-button enter-name-button" +
+                      (!hasURL ? " disabled" : "")}
+                    onClick={onClickSaveOrUpdate}
+                    disabled={!hasURL || isSavingOrUpdating}
+                    value={isLocalContent ?
+                      (isSavingOrUpdating ? "Updating..." : "Update content") :
+                      (isSavingOrUpdating ? "Saving..." : "Store content")}
+                  />,
+                  <GenerateLinkButton
+                    enabled={displayGeneratedLink}
+                    onClick={onClickGenerateLink} />,
+                ]) :
                 null
             }
             {
@@ -560,7 +668,10 @@ class ContentList extends React.Component {
                   }
                 />
                 <div className="player-box">
-                  <span className={"encryption-checkbox" + (DISABLE_ENCRYPTED_CONTENT ? " disabled" : "")}>
+                  <span className={
+                    "encryption-checkbox custom-checkbox" +
+                    (DISABLE_ENCRYPTED_CONTENT ? " disabled" : "")}
+                  >
                     {(DISABLE_ENCRYPTED_CONTENT ? "[HTTPS only] " : "") + "Encrypted content"}
                     <label class="switch">
                       <input
@@ -597,13 +708,18 @@ class ContentList extends React.Component {
                       null
                   }
                 </div>
-                <div class="player-box button-low-latency">
-                  Low-Latency content
-                  <label class="input switch">
-                    <input type="checkbox" checked={lowLatencyChecked} onChange={onLowLatencyClick} />
-                    <span class="slider round"></span>
-                  </label>
-                </div>
+                { transportType === "DASH" ?
+                  <div class="player-box button-low-latency">
+                    <span className={"low-latency-checkbox custom-checkbox"}>
+                      Low-Latency content
+                      <label class="input switch">
+                        <input type="checkbox" checked={lowLatencyChecked} onChange={onLowLatencyClick} />
+                        <span class="slider round"></span>
+                      </label>
+                    </span>
+                  </div> :
+                  null
+                }
               </div>
             ) : null
         }
