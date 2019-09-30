@@ -13,8 +13,6 @@
 @keyframes grow-generated-url {
   from {
     opacity: 0;
-
-    /* XXX TODO - I don't know if we should set the hard value that way */
     margin-top: -45px;
   }
   to {
