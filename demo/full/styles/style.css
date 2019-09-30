@@ -788,7 +788,7 @@ body {
 .generated-url {
   color: #3a3a3a;
   font-size: 14px;
-  height: 15px; /* XXX TODO center text vertically */
+  height: 21px;
   background-color: rgba(255, 255, 255, 0.8);
   border-radius: 3px;
   padding: 10px;
@@ -801,7 +801,9 @@ body {
 
 .generated-url.enabled {
   animation: grow-generated-url 0.6s;
-  display: block;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 .generated-url-link.none {
