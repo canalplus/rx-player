@@ -53,7 +53,7 @@ export interface IBufferManifestMightBeOutOfSync {
 export interface IBufferNeedsDiscontinuitySeek {
   type : "discontinuity-encountered";
   value : {
-    bufferType? : IBufferType; // The type of the Representation
+    bufferType : IBufferType; // The type of the Representation
     gap : [number, number]; // the time we should seek to TODO this is ugly
   };
 }

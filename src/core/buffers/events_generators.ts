@@ -95,7 +95,7 @@ const EVENTS = {
 
   discontinuityEncountered(
     gap : [number, number],
-    bufferType? : IBufferType
+    bufferType : IBufferType
   ) : IBufferNeedsDiscontinuitySeek {
     return { type : "discontinuity-encountered",
              value : { bufferType, gap } };
