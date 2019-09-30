@@ -193,23 +193,24 @@ class ContentList extends React.Component {
   componentDidMount() {
     const parsedHash = parseHashInURL(location.hash);
     if (parsedHash !== null) {
-      const { tran } = parsedHash;
-      if (TRANSPORT_TYPES.includes(tran)) {
-        const newState = { autoPlay: !!parsedHash.aupl,
+      const { tech } = parsedHash;
+      if (TRANSPORT_TYPES.includes(tech)) {
+        const newState = { autoPlay: !parsedHash.noAutoplay,
                            contentChoiceIndex: 0,
                            contentNameField: "",
-                           contentList: this.state.contentsPerType[tran],
-                           currentManifestURL: parsedHash.mani,
-                           lowLatencyChecked: tran === "DASH" && !!parsedHash.lowl,
-                           transportType: tran };
+                           contentList: this.state.contentsPerType[tech],
+                           currentManifestURL: parsedHash.manifest,
+                           lowLatencyChecked: tech === "DASH" &&
+                             !!parsedHash.lowLatency,
+                           transportType: tech };
 
-        const drmType = DRM_TYPES.includes(parsedHash.drmt) ?
-          parsedHash.drmt : undefined;
+        const drmType = DRM_TYPES.includes(parsedHash.drm) ?
+          parsedHash.drm : undefined;
         if (drmType !== undefined) {
           newState.displayDRMSettings = true;
           newState.currentDRMType = drmType;
-          newState.licenseServerUrl = parsedHash.lice || "";
-          newState.serverCertificateUrl = parsedHash.cert || "";
+          newState.licenseServerUrl = parsedHash.licenseServ || "";
+          newState.serverCertificateUrl = parsedHash.certServ || "";
         }
         this.setState(newState);
         return;

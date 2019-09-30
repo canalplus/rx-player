@@ -1,85 +1,113 @@
-const FIELD_LENGTH = 4;
-
 /**
- * Get possible information given through the "hash" part of the URL (what comes
- * after the "#" character).
+ * Parse possible information given through the "hash" part of the URL (what
+ * comes after the "#" character).
+ *
+ * This format was done to be:
+ *   - easy to parse in JavaScript
+ *   - readable by a human, one should get roughly an idea of the information
+ *     given just by looking at that string.
+ *   - compact enough to be shareable through e-mails without cluttering it
+ *   - possible to copy sub-parts of that string (example an URL contained in
+ *     it) and use it without human effort (i.e. no string escaping)
  *
  * Here is how it works:
- * Two type of data can be communicated: string or booleans:
- * Each of those is linked to a "field" which is the property name coded on only
- * two characters.
- * In the URL fields are prepended by a "/". For boolean value the field is
- * followed by the next field or the end of the hash.
+ * The format is based on a key-value scheme. The type of the key is always a
+ * string and two types of value (for the moment?) can be communicated: strings
+ * and booleans.
+ *
+ * The key is designated by a name which is an UTF-16 string coded in any number
+ * of bytes. That string should not contain any backslash ("\") or underscore
+ * ("_") character as those are reserved, but could technically contain any
+ * other characters (we are though usually limited here by URL-encoding).
+ * Each of those keys are prepended by a backslash ("\") character.
+ *
+ * To communicate a boolean value, that key is immediately either followed by
+ * the next key or by the end of the whole string, which indicates the end of
+ * the data.
+ * A boolean value encountered is always inferred to be `true`. To set is to
+ * `false`, just remove the key from the string. There is no difference between
+ * `false` and a not-defined key.
  * Example:
- * http://www.example.com/#/lo/au
- * => will get you `{ lo: true, au: true }`.
+ * http://www.example.com/#\lowLatency\noAutoplay
+ * => will get you the following JS Object:
+ * ```js
+ * {
+ *   lowLatency: true,
+ *   noAutoplay: true
+ * }
+ * ```
  *
- * When the field has a string as a value, it is a little more complicated.
- * The field name is followed by the length of the data (as a JS UTF-16 string)
- * encoded in base-36 (think 0-9 then a-z).
- * The end of the length in the string correspond to the first "=" character
- * encountered. The data starts just after.
- * Example with both booleans and strings:
- * http://www.example.com/#/lo/au/ma=
- * => will get you `{ lo: true, au: true }`.
- *
- *
- *   - booleans
- *
- * Returns null if the data was malformed.
- * @param {string} hashInUrl
+ * When the key has a string as a value, things are a little different.
+ * The key is followed by an underscore ("_") character and then by the length
+ * of the data (the communicated string) in terms of UTF-16 bytes. That
+ * length itself should be converted in a base-36 number (think 0-9 then a-z).
+ * Because this length can, depending on the length of the data, need one or
+ * more Base-36 numbers, an equal ("=") sign is added to mark its end.
+ * The data then starts just after that equal sign and ends at the end of the
+ * announced length (followed either by the following field or the end of the
+ * string).
+ * Example with both booleans and strings and a `FIELD_LENGTH` of 4:
+ * http://www.example.com/#\lowLatency\manifest_1n=http://www.example.com/streaming/dash_contents/Manifest.mpd\foobar
+ * => will get you
+ * ```js
+ * {
+ *   lowLatency: true,
+ *   apla: true,
+ *   manifest: "http://www.example.com/streaming/dash_contents/Manifest.mpd",
+ *   foobar: true
+ * }
+ * ```
+
+ * If any invalid data is encountered, this function returns null.
+ * @param {string} hashStr
  * @return {Object|null}
  */
-export function parseHashInURL(hashInUrl) {
-  if (hashInUrl.length <= 1) {
+export function parseHashInURL(hashStr) {
+  if (hashStr.length <= 1) {
     return null;
   }
 
   const parsed = {};
-  let currentOffset = 2; // initial "#/"
+  let hashOffset = 2; // initial "#\"
 
-  function getNextData() {
-    const data = hashInUrl.substring(currentOffset).split("=");
-    if (!data.length) {
-      return null;
-    }
-    currentOffset += data[0].length + 1; // skip length + "="
-    const lenNb = parseInt(data[0], 36);
-    if (isNaN(lenNb)) {
-      return null;
-    }
-
-    const dataStart = currentOffset;
-    currentOffset += lenNb;
-    return hashInUrl.substring(dataStart, currentOffset);
-  }
-  while (currentOffset + FIELD_LENGTH <= hashInUrl.length) {
-    if (currentOffset + FIELD_LENGTH === hashInUrl.length ||
-        hashInUrl[currentOffset + FIELD_LENGTH] === "/")
+  const hashLen = hashStr.length;
+  while (hashOffset + 1 <= hashLen) {
+    const unparsedStr = hashStr.substring(hashOffset);
+    const nextBackSlash = unparsedStr.indexOf("\\");
+    const nextUnderscore = unparsedStr.indexOf("_");
+    if (nextUnderscore <= 0 ||
+        (nextBackSlash >= 0 && nextUnderscore > nextBackSlash))
     {
       // this is a boolean
-      const fieldName = hashInUrl.substring(currentOffset,
-                                            currentOffset + FIELD_LENGTH);
-      if (!fieldName) {
-        return parsed;
-      }
-      currentOffset += FIELD_LENGTH; // skip field name
+      const fieldLength = nextBackSlash >= 0 ?
+        nextBackSlash :
+        unparsedStr.length;
+      const fieldName = unparsedStr.substring(0, fieldLength);
+      hashOffset += fieldLength; // skip field name
       parsed[fieldName] = true;
     } else {
       // data in a string form
-      const fieldName = hashInUrl.substring(currentOffset,
-                                            currentOffset + FIELD_LENGTH);
-      if (!fieldName) {
-        return parsed;
+      const fieldName = unparsedStr.substring(0, nextUnderscore);
+      hashOffset += nextUnderscore + 1; // skip field name and its following
+                                        // underscore
+
+      const splitted = unparsedStr.substring(nextUnderscore + 1).split("=");
+      if (!splitted.length) {
+        return null;
       }
-      currentOffset += FIELD_LENGTH; // skip field name
-      const data = getNextData();
-      if (data === null) {
-        return parsed;
+      const dataLength = splitted[0];
+      const dataLengthLen = splitted[0].length + 1; // length + "="
+      hashOffset += dataLengthLen;
+      const lenNb = parseInt(dataLength, 36);
+      if (isNaN(lenNb)) {
+        return null;
       }
+      const dataStart = hashOffset;
+      hashOffset += lenNb;
+      const data = hashStr.substring(dataStart, hashOffset);
       parsed[fieldName] = data;
     }
-    currentOffset += 1; // skip next "/"
+    hashOffset += 1; // skip next "\"
   }
   return parsed;
 }
@@ -107,27 +135,27 @@ export function generateLinkForCustomContent({
   let serverCertificateUrlString = "";
   let drmTypeString = "";
   if (manifestURL) {
-    urlString = "/mani" +
+    urlString = "\\manifest_" +
                 manifestURL.length.toString(36) +
                 "=" + manifestURL;
   }
   if (transport) {
-    transportString = "/tran" +
+    transportString = "\\tech_" +
                       transport.length.toString(36) +
                       "=" + transport;
   }
   if (drmType) {
-    drmTypeString = "/drmt" +
+    drmTypeString = "\\drm_" +
                     drmType.length.toString(36) +
                     "=" + drmType;
   }
   if (licenseServerUrl) {
-    licenseServerUrlString = "/lice" +
+    licenseServerUrlString = "\\licenseServ_" +
                              licenseServerUrl.length.toString(36) +
                              "=" + licenseServerUrl;
   }
   if (serverCertificateUrl) {
-    serverCertificateUrlString = "/cert" +
+    serverCertificateUrlString = "\\certServ_" +
                                  serverCertificateUrl.length.toString(36) +
                                  "=" + serverCertificateUrl;
   }
@@ -142,8 +170,8 @@ export function generateLinkForCustomContent({
          location.pathname +
          (location.search ? location.search : "") +
          "#" +
-         (autoPlay ? "/aupl" : "") +
-         (lowLatency ? "/lowl" : "") +
+         (!autoPlay ? "\\noAutoplay" : "") +
+         (lowLatency ? "\\lowLatency" : "") +
          transportString +
          urlString +
          drmTypeString +
