@@ -128,6 +128,10 @@ export default function createMediaSourceLoader({
       throw new MediaError("MEDIA_STARTING_TIME_NOT_FOUND",
                            "Wanted starting time not found in the Manifest.");
     }
+    // if (bufferOptions.isAudioOnly) {
+    //   delete initialPeriod.adaptations.video;
+    // }
+    // console.warn("HELLO", bufferOptions.isAudioOnly);
 
     // Creates SourceBuffersStore allowing to create and keep track of a
     // single SourceBuffer per type.
