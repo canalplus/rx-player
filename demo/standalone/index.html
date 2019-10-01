@@ -6,12 +6,13 @@
       <title>RxPlayer - CANAL+ (stand-alone demo)</title>
     </head>
     <body>
-      <video controls id="video"></video>
+      <video controls id="video" width="250" height="250"></video>
       <button id="videoTrackToggle">Disable Video Track</button>
+      <button id="audioTrackOnlyOff">Enable Video Track</button>
       <script type="text/javascript" src="./lib.js" charset="utf-8"></script>
       <script charset="utf-8">
         const videoTrackToggle = document.querySelector('#videoTrackToggle');
-let isVideoTrackEnabled = false;
+        const audioTrackOnlyOff = document.querySelector('#audioTrackOnlyOff');
 
         const player = new window.RxPlayer({
           videoElement: document.getElementById("video")
@@ -22,15 +23,13 @@ let isVideoTrackEnabled = false;
   if (evt === 'LOADED') {
     console.warn('LOADED');
     videoTrackToggle.addEventListener('click', evt => {
-      player.setPreferredVideoTracks();
+      // player.setPreferredVideoTracks();
       player.disableVideoTrack();
-      console.warn('polo');
-      isVideoTrackEnabled = !isVideoTrackEnabled;
-      if (isVideoTrackEnabled) {
-        videoTrackToggle.textContent = 'Disable Video Track';
-      } else {
-        videoTrackToggle.textContent = 'Enable Video Track';
-      }
+      console.warn('DISABLE VIDEO TRACK');
+    });
+    audioTrackOnlyOff.addEventListener('click', evt => {
+      player.enableVideoTrack();
+      console.warn('ENABLE VIDEO TRACK');
     });
   }
 });
