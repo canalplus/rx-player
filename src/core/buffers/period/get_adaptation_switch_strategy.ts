@@ -15,13 +15,18 @@
  */
 
 import config from "../../../config";
-import { Period } from "../../../manifest";
+import {
+  Adaptation,
+  Period,
+} from "../../../manifest";
 import {
   convertToRanges,
+  excludeFromRanges,
+  IRange,
   isTimeInRange,
   keepRangeIntersection,
 } from "../../../utils/ranges";
-import { IBufferType } from "../../source_buffers";
+import { QueuedSourceBuffer } from "../../source_buffers";
 
 const { ADAPTATION_SWITCH_BUFFER_PADDINGS } = config;
 
@@ -33,63 +38,82 @@ export type IAdaptationSwitchStrategy =
 /**
  * Find out what to do when switching adaptation, based on the current
  * situation.
- * @param {TimeRanges} buffered
+ * @param {Object} queuedSourceBuffer
  * @param {Object} period
- * @param {string} bufferType
+ * @param {Object} adaptation
  * @param {Object} clockTick
  * @returns {Object}
  */
 export default function getAdaptationSwitchStrategy(
-  buffered : TimeRanges,
+  queuedSourceBuffer : QueuedSourceBuffer<unknown>,
   period : Period,
-  bufferType : IBufferType,
+  adaptation : Adaptation,
   clockTick : { currentTime : number; readyState : number }
 ) : IAdaptationSwitchStrategy {
-  if (!buffered.length) {
+  const buffered = queuedSourceBuffer.getBufferedRanges();
+  if (buffered.length === 0) {
     return { type: "continue", value: undefined };
   }
   const bufferedRanges = convertToRanges(buffered);
   const start = period.start;
   const end = period.end || Infinity;
   const intersection = keepRangeIntersection(bufferedRanges, [{ start, end }]);
-  if (!intersection.length) {
+  if (intersection.length === 0) {
     return { type: "continue", value: undefined };
   }
 
+  // remove from that intersection what we know to be the right Adaptation
+  const adaptationInBuffer = getBufferedRangesFromAdaptation(queuedSourceBuffer,
+                                                             period,
+                                                             adaptation);
   const { currentTime } = clockTick;
-  if (bufferType === "video" &&
+  if (adaptation.type === "video" &&
       clockTick.readyState > 1 &&
-      isTimeInRange({ start, end }, currentTime)
-  ) {
+      isTimeInRange({ start, end }, currentTime) &&
+      adaptationInBuffer.every((range) => !isTimeInRange(range, currentTime)))
+  {
     return { type: "needs-reload", value: undefined };
   }
 
+  const unwantedData = excludeFromRanges(intersection, adaptationInBuffer);
+  const bufferType = adaptation.type;
   const paddingBefore = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].before || 0;
   const paddingAfter = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].after || 0;
+  const toRemove = excludeFromRanges(unwantedData, [{
+    start: Math.max(currentTime - paddingBefore, start),
+    end: Math.min(currentTime + paddingAfter, end),
+  }]);
 
-  if (!paddingAfter && !paddingBefore ||
-      (currentTime - paddingBefore) >= end ||
-      (currentTime + paddingAfter) <= start
-  ) {
-    return { type: "clean-buffer",
-             value: [{ start, end }]};
-  }
+  return toRemove.length > 0 ?  { type: "clean-buffer", value: toRemove } :
+                                { type: "continue", value: undefined };
+}
 
-  if (currentTime - paddingBefore <= start) {
-    return { type: "clean-buffer",
-             value: [{ start: currentTime + paddingAfter,
-                       end }] };
-  }
-
-  if (currentTime + paddingAfter >= end) {
-    return { type: "clean-buffer",
-             value: [{ start,
-                       end: currentTime - paddingBefore }] };
-  }
-
-  return { type: "clean-buffer",
-           value: [ { start,
-                      end: currentTime - paddingBefore },
-                    { start: currentTime + paddingAfter,
-                      end } ] };
+/**
+ * Returns buffered ranges of what we know correspond to the given `adaptation`
+ * in the SourceBuffer.
+ * @param {Object} queuedSourceBuffer
+ * @param {Object} period
+ * @param {Object} adaptation
+ * @returns {Array.<Object>}
+ */
+function getBufferedRangesFromAdaptation(
+  queuedSourceBuffer : QueuedSourceBuffer<unknown>,
+  period : Period,
+  adaptation : Adaptation
+) : IRange[] {
+  queuedSourceBuffer.synchronizeInventory();
+  return queuedSourceBuffer.getInventory()
+    .reduce<IRange[]>((acc : IRange[], chunk) : IRange[] => {
+      if (chunk.infos.period.id !== period.id ||
+          chunk.infos.adaptation.id !== adaptation.id)
+      {
+        return acc;
+      }
+      const { bufferedStart, bufferedEnd } = chunk;
+      if (bufferedStart === undefined || bufferedEnd === undefined) {
+        return acc;
+      }
+      acc.push({ start: bufferedStart, end: bufferedEnd });
+      return acc;
+    }, []);
 }

@@ -510,40 +510,16 @@ export default {
   },
 
   /**
-   * Maximum difference allowed between a segment _announced_ start (what the
-   * rx-player infers to be the starting time) and its _real_  current starting
-   * time in the SourceBuffer, in seconds, until the segment is considered
-   * "incomplete".
-   * Same for the ending time announced and its effective end time in the source
-   * buffer.
+   * Maximum authorized difference between what we calculated to be the
+   * beginning or end of the segment in the SourceBuffer and what we
+   * actually are noticing now.
    *
-   * If the difference is bigger than this value, the segment will be considered
-   * incomplete (e.g. considered as partially garbage-collected) and as such
-   * might be re-downloaded.
-   *
-   * Keeping a too high value might lead to incomplete segments being wrongly
-   * considered as complete (and thus not be re-downloaded, this could lead the
-   * player to stall).
-   * Note that in a worst-case scenario this can happen for the end of a segment
-   * and the start of the contiguous segment, leading to a discontinuity two
-   * times this value.
-   *
-   * Keeping a too low value might lead to re-downloading the same segment
-   * multiple times (when the start and end times are badly estimated) as they
-   * will wrongly believed to be partially garbage-collected.
-   *
-   * If a segment has a perfect continuity with a previous/following one in the
-   * SourceBuffer the start/end of it will not be checked. This allows to limit
-   * the number of time this error-prone logic is applied.
-   *
-   * Note that in most cases, the rx-player's start and end times estimations
-   * are __really__ close to what they really are in the sourcebuffer (we
-   * usually have a difference in the order of 10^-7), as time information is
-   * most of the time directly parsed from the media container.
-   *
+   * If the segment seems to have removed more than this size in seconds, we
+   * will infer that the segment has been garbage collected and we might try to
+   * re-download it.
    * @type {Number}
    */
-  MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT: 0.12,
+  MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT: 0.15,
 
   /**
    * The maximum authorized difference, in seconds, between the real buffered
@@ -559,7 +535,24 @@ export default {
    * partly garbage collected (instead of complete segments).
    * @type {Number}
    */
-  MAX_MANIFEST_BUFFERED_DIFFERENCE: 0.4,
+  MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE: 0.4,
+
+  /**
+   * The maximum authorized difference, in seconds, between the duration a
+   * segment should have according to the Manifest and the actual duration it
+   * seems to have once pushed to the SourceBuffer.
+   *
+   * Setting a value too high can lead to parts of the SourceBuffer being
+   * linked to the wrong segments and to segments wrongly believed to be still
+   * complete (instead of garbage collected).
+   *
+   * Setting a value too low can lead to parts of the SourceBuffer not being
+   * linked to the concerned segment and to segments wrongly believed to be
+   * partly garbage collected (instead of complete segments). This last point
+   * could lead to unnecessary segment re-downloading.
+   * @type {Number}
+   */
+  MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE: 0.3,
 
   /**
    * Minimum duration in seconds a segment should be into a buffered range to be
@@ -579,7 +572,29 @@ export default {
    * this logic could lead to bugs with the current code.
    * @type {Number}
    */
-  MINIMUM_SEGMENT_SIZE: 0.05,
+  MINIMUM_SEGMENT_SIZE: 0.005,
+
+  /**
+   * Append windows allow to filter media data from segments if they are outside
+   * a given limit.
+   * Coded frames with presentation timestamp within this range are allowed to
+   * be appended to the SourceBuffer while coded frames outside this range are
+   * filtered out.
+   *
+   * Those are often set to be the start and end of the "Period" the segment is
+   * in.
+   * However, we noticed that some browsers were too aggressive when the exact
+   * limits were set: more data than needed was removed, often leading to
+   * discontinuities.
+   *
+   * Those securities are added to the set windows (substracted from the window
+   * start and added to the window end) to avoid those problems.
+   * @type {Object}
+   */
+  APPEND_WINDOW_SECURITIES: {
+    START: 0.2,
+    END: 0.1,
+  },
 
   /**
    * Maximum interval at which text tracks are refreshed in an "html"

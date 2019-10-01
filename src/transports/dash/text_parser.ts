@@ -75,11 +75,7 @@ function parseMP4EmbeddedTrack({ response,
                           chunkOffset: segment.timestampOffset || 0,
                           appendWindow: [period.start, period.end] });
   } else { // not init
-    const chunkInfos = getISOBMFFTimingInfos(chunkBytes,
-                                             isChunked,
-                                             segment,
-                                             sidxSegments,
-                                             init);
+    const chunkInfos = getISOBMFFTimingInfos(chunkBytes, isChunked, segment, init);
     let startTime : number | undefined;
     let endTime : number | undefined;
     let timescale : number = 1;

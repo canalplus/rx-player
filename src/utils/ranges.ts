@@ -376,8 +376,70 @@ function keepRangeIntersection(
   return result;
 }
 
+/**
+ * Exclude from the `baseRanges` everything that is in `rangesToExclude`.
+ * Example:
+ *
+ * Let's say we have the following base ranges:
+ *       |==========|        |===============| |======|    |==========|
+ *
+ * From which we want to "exclude" the following ranges:
+ *          |=========| |==|        |===|  |=====|
+ *
+ * We will obtain the first ranges from which we remove the second ranges:
+ * -----------------------------------------------------------------------
+ *       |==========|        |===============| |======|    |==========|
+ *          |=========| |==|        |===|  |=====|
+ * _______________________________________________________________________
+ *                                     |
+ *                                     |
+ *                                     V
+ * -----------------------------------------------------------------------
+ *       |==|                |======|   |==|     |====|    |==========|
+ * -----------------------------------------------------------------------
+ *
+ * @param {Array.<Object} baseRanges
+ * @param {Array.<Object} rangesToExclude
+ * @return {Array.<Object>}
+ */
+function excludeFromRanges(
+  baseRanges : IRange[],
+  rangesToExclude : IRange[]
+) : IRange[] {
+  const result : IRange[] = [];
+
+  // For every range in `baseRanges`, find overlapping ranges with
+  // `rangesToExclude` and remove them.
+  for (let i = 0; i < baseRanges.length; i++) {
+    const range = baseRanges[i];
+    const intersections : IRange[] = [];
+    const overlappingRanges = findOverlappingRanges(range, rangesToExclude);
+    if (overlappingRanges.length) {
+      for (let j = 0; j < overlappingRanges.length; j++) {
+        const overlappingRange = overlappingRanges[j];
+        intersections.push({ start: Math.max(range.start, overlappingRange.start),
+                             end: Math.min(range.end, overlappingRange.end) });
+      }
+    }
+    if (intersections.length === 0) {
+      result.push(range);
+    } else {
+      let lastStart : number = range.start;
+      for (let j = 0; j < overlappingRanges.length; j++) {
+        if (overlappingRanges[j].start > lastStart) {
+          result.push({ start: lastStart,
+                        end: overlappingRanges[j].start });
+        }
+        lastStart = overlappingRanges[j].end;
+      }
+    }
+  }
+  return result;
+}
+
 export {
   convertToRanges,
+  excludeFromRanges,
   getInnerAndOuterTimeRanges,
   getLeftSizeOfRange,
   getNextRangeGap,
@@ -385,6 +447,7 @@ export {
   getRange,
   getSizeOfRange,
   insertInto,
+  IRange,
   isAfter,
   isBefore,
   isTimeInRange,

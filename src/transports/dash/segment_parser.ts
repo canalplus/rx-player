@@ -62,7 +62,6 @@ export default function parser({ content,
                                 getISOBMFFTimingInfos(chunkData,
                                                       isChunked,
                                                       segment,
-                                                      nextSegments,
                                                       init);
     const chunkOffset = segment.timestampOffset || 0;
     return observableOf({ chunkData,

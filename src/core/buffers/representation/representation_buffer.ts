@@ -73,11 +73,10 @@ import {
   IBufferStateFull,
   IRepresentationBufferEvent,
 } from "../types";
+import getNeededSegments from "./get_needed_segments";
 import getSegmentPriority from "./get_segment_priority";
-import getSegmentsNeeded from "./get_segments_needed";
 import getWantedRange from "./get_wanted_range";
 import pushDataToSourceBufferWithRetries from "./push_data";
-import shouldDownloadSegment from "./should_download_segment";
 
 // Item emitted by the Buffer's clock$
 export interface IRepresentationBufferClockTick {
@@ -237,13 +236,11 @@ export default function RepresentationBuffer<T>({
                                            neededRange.end);
 
       const segmentInventory = queuedSourceBuffer.getInventory();
-      let neededSegments = getSegmentsNeeded(representation, neededRange)
-        .filter((segment) => shouldDownloadSegment({ content,
-                                                     fastSwitchingStep,
-                                                     loadedSegmentPendingPush,
-                                                     neededRange,
-                                                     segment,
-                                                     segmentInventory }))
+      let neededSegments = getNeededSegments({ content,
+                                               fastSwitchingStep,
+                                               loadedSegmentPendingPush,
+                                               neededRange,
+                                               segmentInventory })
         .map((segment) => ({ priority: getSegmentPriority(segment, timing),
                              segment }));
 
@@ -510,20 +507,6 @@ export default function RepresentationBuffer<T>({
         return EMPTY;
       }
 
-      let estimatedStart : number | undefined;
-      let estimatedEnd : number | undefined;
-      if (chunkInfos != null) {
-        estimatedStart = Math.max(chunkInfos.time / chunkInfos.timescale,
-                                  appendWindow[0] != null ? appendWindow[0] :
-                                                            0);
-        if (chunkInfos.duration != null) {
-          estimatedEnd = Math.min((chunkInfos.time + chunkInfos.duration) /
-                                    chunkInfos.timescale,
-                                  appendWindow[1] != null ? appendWindow[1] :
-                                                            Infinity);
-        }
-      }
-
       const data = { initSegment: initSegmentObject &&
                                   initSegmentObject.chunkData,
                      chunk: segment.isInit ? null :
@@ -531,7 +514,17 @@ export default function RepresentationBuffer<T>({
                      timestampOffset: chunkOffset,
                      appendWindow,
                      codec };
-      const inventoryInfos = objectAssign({ segment, estimatedStart, estimatedEnd },
+      let estimatedStart : number|undefined;
+      let estimatedDuration : number|undefined;
+      if (chunkInfos !== null) {
+        estimatedStart = chunkInfos.time / chunkInfos.timescale;
+        estimatedDuration = chunkInfos.duration !== undefined ?
+          chunkInfos.duration / chunkInfos.timescale :
+          undefined;
+      }
+      const inventoryInfos = objectAssign({ segment,
+                                            estimatedStart,
+                                            estimatedDuration },
                                           content);
       const append$ = pushDataToSourceBufferWithRetries(clock$,
                                                         queuedSourceBuffer,
