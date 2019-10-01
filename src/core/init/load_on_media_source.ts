@@ -127,10 +127,6 @@ export default function createMediaSourceLoader({
       throw new MediaError("MEDIA_STARTING_TIME_NOT_FOUND",
                            "Wanted starting time not found in the Manifest.");
     }
-    // if (bufferOptions.isAudioOnly) {
-    //   delete initialPeriod.adaptations.video;
-    // }
-    // console.warn("HELLO", bufferOptions.isAudioOnly);
 
     // Creates SourceBuffersStore allowing to create and keep track of a
     // single SourceBuffer per type.
@@ -146,7 +142,6 @@ export default function createMediaSourceLoader({
     //    exception if the media element has reached the HAVE_METADATA
     //    readyState. This can occur if the user agent's media engine
     //    does not support adding more tracks during playback.
-    // debugger;
     createNativeSourceBuffersForPeriod(sourceBuffersStore, initialPeriod, isAudioOnly);
 
     const { seek$, load$ } =

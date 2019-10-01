@@ -119,7 +119,7 @@ export default function PeriodBuffer({
         log.info(`Buffer: Set no ${bufferType} Adaptation`, period);
         const previousQSourceBuffer = sourceBuffersStore.get(bufferType);
         let cleanBuffer$ : Observable<unknown>;
-        
+
         if (previousQSourceBuffer != null) {
           log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
           cleanBuffer$ = previousQSourceBuffer.removeBuffer(period.start,

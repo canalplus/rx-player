@@ -283,7 +283,7 @@ export default function InitializeOnMediaSource(
       mediaSource : MediaSource,
       position : number,
       shouldPlay : boolean,
-      isAudioOnly : boolean
+      isAudioOnly : boolean,
     ) : Observable<IInitEvent> {
       const reloadMediaSource$ = new Subject<{ currentTime : number;
                                                isPaused : boolean;

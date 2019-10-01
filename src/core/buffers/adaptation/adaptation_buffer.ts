@@ -123,6 +123,7 @@ export default function AdaptationBuffer<T>({
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
   const { representations } = adaptation;
+
   // The buffer goal ratio limits the wanted buffer ahead to determine the
   // buffer goal.
   //
@@ -178,6 +179,7 @@ export default function AdaptationBuffer<T>({
     newRepresentation$
       .pipe(concatMapLatest((estimate, i) : Observable<IAdaptationBufferEvent<T>> => {
         const { representation } = estimate;
+
         // A manual bitrate switch might need an immediate feedback.
         // To do that properly, we need to reload the MediaSource
         if (directManualBitrateSwitching && estimate.manual && i !== 0) {
