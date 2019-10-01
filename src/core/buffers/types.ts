@@ -157,7 +157,8 @@ export interface ICompletedBufferEvent { type: "complete-buffer";
 // The MediaSource needs to be reloaded to continue
 export interface INeedsMediaSourceReload { type: "needs-media-source-reload";
                                            value: { currentTime : number;
-                                                    isPaused : boolean; }; }
+                                                    isPaused : boolean; 
+                                                    isAudioOnly : boolean }; }
 
 // Emitted after the buffers have been cleaned due to an update of the
 // decipherability status of some segment.

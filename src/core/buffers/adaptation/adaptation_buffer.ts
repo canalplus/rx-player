@@ -192,12 +192,15 @@ export default function AdaptationBuffer<T>({
     newRepresentation$
       .pipe(concatMapLatest((estimate, i) : Observable<IAdaptationBufferEvent<T>> => {
         const { representation } = estimate;
-
         // A manual bitrate switch might need an immediate feedback.
         // To do that properly, we need to reload the MediaSource
         if (directManualBitrateSwitching && estimate.manual && i !== 0) {
           return clock$.pipe(take(1),
-                             map(t => EVENTS.needsMediaSourceReload(t)));
+                             map(t => EVENTS.needsMediaSourceReload({
+                               currentTime: t.currentTime,
+                               isPaused: t.isPaused,
+                               isAudioOnly: false,
+                              })));
         }
 
         const representationChange$ =
