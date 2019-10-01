@@ -15,7 +15,7 @@
  */
 
 import { OtherError } from "../../errors";
-import findBox from "./find_box";
+import findCompleteBox from "./find_complete_box";
 
 /**
  * @param {Uint8Array} buffer
@@ -27,20 +27,20 @@ export default function checkISOBMFFIntegrity(
   isInit : boolean
 ) : void {
   if (isInit) {
-    const ftypIndex = findBox(buffer, 0x66747970 /* mdat */);
+    const ftypIndex = findCompleteBox(buffer, 0x66747970 /* ftyp */);
     if (ftypIndex < 0) {
       throw new OtherError("INTEGRITY_ERROR", "Incomplete `ftyp` box");
     }
-    const moovIndex = findBox(buffer, 0x6d6f6f76 /* moof */);
+    const moovIndex = findCompleteBox(buffer, 0x6d6f6f76 /* moov */);
     if (moovIndex < 0) {
       throw new OtherError("INTEGRITY_ERROR", "Incomplete `moov` box");
     }
   } else {
-    const moofIndex = findBox(buffer, 0x6d6f6f66 /* moof */);
+    const moofIndex = findCompleteBox(buffer, 0x6d6f6f66 /* moof */);
     if (moofIndex < 0) {
       throw new OtherError("INTEGRITY_ERROR", "Incomplete `moof` box");
     }
-    const mdatIndex = findBox(buffer, 0x6d646174 /* mdat */);
+    const mdatIndex = findCompleteBox(buffer, 0x6d646174 /* mdat */);
     if (mdatIndex < 0) {
       throw new OtherError("INTEGRITY_ERROR", "Incomplete `mdat` box");
     }
