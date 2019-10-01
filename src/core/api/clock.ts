@@ -144,7 +144,7 @@ function hasLoadedUntilTheEnd(
 ) : boolean {
   const suffix : "LOW_LATENCY" | "DEFAULT" = lowLatencyMode ? "LOW_LATENCY" :
                                                               "DEFAULT";
-  return currentRange != null &&
+  return currentRange !== null &&
          (duration - currentRange.end) <= STALL_GAP[suffix];
 }
 
@@ -229,8 +229,8 @@ function getStalledStatus(
       shouldStall = true;
     } else if (prevStalled &&
                readyState > 1 &&
-               bufferGap < Infinity &&
-               (bufferGap > getResumeGap(prevStalled, lowLatencyMode) ||
+               ((bufferGap < Infinity &&
+                 bufferGap > getResumeGap(prevStalled, lowLatencyMode)) ||
                 fullyLoaded || ended)
     ) {
       shouldUnstall = true;
