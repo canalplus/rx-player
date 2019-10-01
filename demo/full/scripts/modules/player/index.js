@@ -145,7 +145,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
       player.setAudioTrack(track.id);
     },
 
-    ET_VIDEO_TRACK: (track) => {
+    SET_VIDEO_TRACK: (track) => {
       player.setVideoTrack(track.id);
     },
 
