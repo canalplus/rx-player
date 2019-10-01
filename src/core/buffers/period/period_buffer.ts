@@ -115,20 +115,20 @@ export default function PeriodBuffer({
   const adaptation$ = new ReplaySubject<Adaptation|null>(1);
   return adaptation$.pipe(
     switchMap((adaptation) => {
-      // debugger;
       if (adaptation == null) {
         log.info(`Buffer: Set no ${bufferType} Adaptation`, period);
         const previousQSourceBuffer = sourceBuffersStore.get(bufferType);
         let cleanBuffer$ : Observable<unknown>;
-
+        
         if (previousQSourceBuffer != null) {
-          // log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
-          // cleanBuffer$ = previousQSourceBuffer.removeBuffer(period.start,
-          //                                                   period.end || Infinity);
-          return observableOf(EVENTS.needsMediaSourceReload({
-            currentTime: 20,
-            isPaused: false,
-          }));
+          log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
+          cleanBuffer$ = previousQSourceBuffer.removeBuffer(period.start,
+                                                            period.end || Infinity);
+          return clock$.pipe(map(tick => EVENTS.needsMediaSourceReload({
+            currentTime: tick.currentTime,
+            isPaused: tick.isPaused,
+            isAudioOnly: true,
+          })));
         } else {
           cleanBuffer$ = observableOf(null);
         }
@@ -137,6 +137,16 @@ export default function PeriodBuffer({
           cleanBuffer$.pipe(mapTo(EVENTS.adaptationChange(bufferType, null, period))),
           createEmptyBuffer(clock$, wantedBufferAhead$, bufferType, { period })
         );
+      }
+
+      // Check if we are in AudioOnly mode, if yes, revert to normal mode
+      const videoBuffer = sourceBuffersStore.get('video');
+      if (videoBuffer === null && adaptation.type === "video") {
+        return clock$.pipe(map(tick => EVENTS.needsMediaSourceReload({
+          currentTime: tick.currentTime,
+          isPaused: tick.isPaused,
+          isAudioOnly: false,
+        })));
       }
 
       log.info(`Buffer: Updating ${bufferType} adaptation`, adaptation, period);
@@ -154,7 +164,11 @@ export default function PeriodBuffer({
                                                        bufferType,
                                                        tick);
           if (strategy.type === "needs-reload") {
-            return observableOf(EVENTS.needsMediaSourceReload(tick));
+            return observableOf(EVENTS.needsMediaSourceReload({
+              currentTime: tick.currentTime,
+              isPaused: tick.isPaused,
+              isAudioOnly: false, 
+            }));
           }
 
           const cleanBuffer$ = strategy.type === "clean-buffer" ?

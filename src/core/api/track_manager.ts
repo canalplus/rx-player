@@ -310,7 +310,7 @@ export default class TrackManager {
    *   - the last choice for this period, if one
    * @param {Period} period - The concerned Period.
    */
-  public setInitialVideoTrack(period : Period) : void {
+  public setInitialVideoTrack(period : Period, isAudioOnly = false) : void {
     const periodItem = getPeriodItem(this._periods, period);
     const videoInfos = periodItem && periodItem.video;
     if (!videoInfos || !periodItem) {
@@ -320,7 +320,7 @@ export default class TrackManager {
     const videoAdaptations = period.adaptations.video || [];
     const chosenVideoAdaptation = this._videoChoiceMemory.get(period);
 
-    if (chosenVideoAdaptation === null) {
+    if (chosenVideoAdaptation === null && !isAudioOnly) {
       return videoInfos.adaptation$.next(null);
     }
 

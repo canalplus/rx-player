@@ -102,7 +102,8 @@ export default function createMediaSourceLoader({
 } : IMediaSourceLoaderArguments) : (
   mediaSource : MediaSource,
   position : number,
-  autoPlay : boolean
+  autoPlay : boolean,
+  isAudioOnly : boolean,
 ) => Observable<IMediaSourceLoaderEvent> {
   /**
    * Load the content on the given MediaSource.
@@ -113,7 +114,8 @@ export default function createMediaSourceLoader({
   return function loadContentOnMediaSource(
     mediaSource : MediaSource,
     initialTime : number,
-    autoPlay : boolean
+    autoPlay : boolean,
+    isAudioOnly : boolean,
   ) {
     // TODO Update the duration if it evolves?
     const duration = manifest.getDuration();
@@ -125,6 +127,10 @@ export default function createMediaSourceLoader({
       throw new MediaError("MEDIA_STARTING_TIME_NOT_FOUND",
                            "Wanted starting time not found in the Manifest.");
     }
+    // if (bufferOptions.isAudioOnly) {
+    //   delete initialPeriod.adaptations.video;
+    // }
+    // console.warn("HELLO", bufferOptions.isAudioOnly);
 
     // Creates SourceBuffersStore allowing to create and keep track of a
     // single SourceBuffer per type.
@@ -140,7 +146,8 @@ export default function createMediaSourceLoader({
     //    exception if the media element has reached the HAVE_METADATA
     //    readyState. This can occur if the user agent's media engine
     //    does not support adding more tracks during playback.
-    createNativeSourceBuffersForPeriod(sourceBuffersStore, initialPeriod);
+    // debugger;
+    createNativeSourceBuffersForPeriod(sourceBuffersStore, initialPeriod, isAudioOnly);
 
     const { seek$, load$ } =
       seekAndLoadOnMediaEvents(clock$, mediaElement, initialTime, autoPlay);
@@ -235,7 +242,8 @@ export default function createMediaSourceLoader({
  */
 function createNativeSourceBuffersForPeriod(
   sourceBuffersStore : SourceBuffersStore,
-  period : Period
+  period : Period,
+  isAudioOnly : boolean,
 ) : void {
   Object.keys(period.adaptations).forEach(bufferType => {
     if (SourceBuffersStore.isNative(bufferType)) {
@@ -245,7 +253,11 @@ function createNativeSourceBuffersForPeriod(
                                                    [];
       if (representations.length) {
         const codec = representations[0].getMimeTypeString();
-        sourceBuffersStore.createSourceBuffer(bufferType, codec);
+        if (isAudioOnly && bufferType !== 'video') {
+          sourceBuffersStore.createSourceBuffer(bufferType, codec);
+        } else if (!isAudioOnly) {
+          sourceBuffersStore.createSourceBuffer(bufferType, codec);
+        }
       }
     }
   });

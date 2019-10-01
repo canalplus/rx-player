@@ -1736,24 +1736,26 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return this._priv_preferredTextTracks.next(tracks);
   }
 
-  setPreferredVideoTracks() : void {
-    console.warn("setPreferredVideoTracks");
-  }
-
   disableVideoTrack() : void {
-    console.warn("CONTENTINFOS", this._priv_contentInfos)
     if (!this._priv_contentInfos) {
       return;
     }
     const { currentPeriod } = this._priv_contentInfos;
     if (!this._priv_trackManager || !currentPeriod) {
-      console.warn("POLOO")
       return;
     }
-    console.warn(currentPeriod)
     return this._priv_trackManager.disableVideoTrack(currentPeriod);
-    // return this._priv_trackManager.disableTextTrack(currentPeriod);
-    // console.warn("disableVideoTrack");
+  }
+
+  enableVideoTrack() {
+    if (!this._priv_contentInfos) {
+      return;
+    }
+    const { currentPeriod } = this._priv_contentInfos;
+    if (!this._priv_trackManager || !currentPeriod) {
+      return;
+    }
+    return this._priv_trackManager.setInitialVideoTrack(currentPeriod, true);
   }
 
   /**

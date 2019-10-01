@@ -215,7 +215,8 @@ export default function InitializeOnMediaSource(
 
     const recursiveLoad$ = recursivelyLoadOnMediaSource(initialMediaSource,
                                                         initialTime,
-                                                        autoPlay);
+                                                        autoPlay,
+                                                        false);
 
     // Emit each time the manifest is refreshed.
     const manifestRefreshed$ = new ReplaySubject<{ manifest : Manifest;
@@ -281,11 +282,13 @@ export default function InitializeOnMediaSource(
     function recursivelyLoadOnMediaSource(
       mediaSource : MediaSource,
       position : number,
-      shouldPlay : boolean
+      shouldPlay : boolean,
+      isAudioOnly : boolean
     ) : Observable<IInitEvent> {
       const reloadMediaSource$ = new Subject<{ currentTime : number;
-                                               isPaused : boolean; }>();
-      const mediaSourceLoader$ = mediaSourceLoader(mediaSource, position, shouldPlay)
+                                               isPaused : boolean;
+                                               isAudioOnly : boolean }>();
+      const mediaSourceLoader$ = mediaSourceLoader(mediaSource, position, shouldPlay, isAudioOnly)
         .pipe(tap(evt => {
                 switch (evt.type) {
                   case "needs-manifest-refresh":
@@ -303,11 +306,12 @@ export default function InitializeOnMediaSource(
       const currentLoad$ = mediaSourceLoader$.pipe(takeUntil(reloadMediaSource$));
 
       const handleReloads$ = reloadMediaSource$.pipe(
-        switchMap(({ currentTime, isPaused }) => {
+        switchMap(({ currentTime, isPaused, isAudioOnly }) => {
           return openMediaSource(mediaElement).pipe(
             mergeMap(newMS => recursivelyLoadOnMediaSource(newMS,
                                                            currentTime,
-                                                           !isPaused)),
+                                                           !isPaused,
+                                                           isAudioOnly)),
             startWith(EVENTS.reloadingMediaSource())
           );
         }));
