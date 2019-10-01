@@ -31,8 +31,8 @@ import {
   map,
   mergeMap,
   mergeMapTo,
-  observeOn,
   share,
+  subscribeOn,
   take,
 } from "rxjs/operators";
 import {
@@ -158,7 +158,7 @@ export default function initializeDirectfileContent({
   // issue.
   const emeManager$ = linkURL$.pipe(
     mergeMap(() => createEMEManager(mediaElement, keySystems)),
-    observeOn(asapScheduler), // multiple Observables here are based on this one
+    subscribeOn(asapScheduler), // multiple Observables here are based on this one
     share()
   );
 

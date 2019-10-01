@@ -42,9 +42,9 @@ import {
   ignoreElements,
   map,
   multicast,
-  observeOn,
   share,
   startWith,
+  subscribeOn,
   take,
   takeUntil,
   tap,
@@ -146,7 +146,7 @@ export default function AdaptationBuffer<T>({
 
   const abr$ : Observable<IABREstimate> =
     abrManager.get$(adaptation.type, representations, clock$, abrEvents$)
-      .pipe(observeOn(asapScheduler), share());
+      .pipe(subscribeOn(asapScheduler), share());
 
   const segmentFetcher = segmentPipelinesManager.createPipeline(adaptation.type,
                                                                 requestsEvents$);
