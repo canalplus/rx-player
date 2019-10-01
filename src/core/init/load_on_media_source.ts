@@ -180,7 +180,7 @@ export default function createMediaSourceLoader({
             return EMPTY;
           case "discontinuity-encountered":
             const { bufferType, gap } = evt.value;
-            if (bufferType === undefined || SourceBuffersStore.isNative(bufferType)) {
+            if (SourceBuffersStore.isNative(bufferType)) {
               handleDiscontinuity(gap[1], mediaElement);
             }
             return EMPTY;
