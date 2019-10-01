@@ -64,8 +64,10 @@ export default function getNeededSegments({
   // 1 - construct lists of segments possible and actually pushed
   const possibleSegments = content.representation.index
     .getSegments(neededRange.start, neededRange.end - neededRange.start);
-  const currentSegments = getCorrespondingBufferedSegments(neededRange,
-                                                           segmentInventory);
+  const currentSegments = getCorrespondingBufferedSegments({
+    start: Math.max(neededRange.start - 0.5, 0),
+    end: neededRange.end + 0.5,
+  }, segmentInventory);
 
   // 2 - remove from pushed list of current segments the contents we want to replace
   const consideredSegments = currentSegments
