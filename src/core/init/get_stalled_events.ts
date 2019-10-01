@@ -19,15 +19,8 @@ import {
   distinctUntilChanged,
   map,
   share,
-  tap,
 } from "rxjs/operators";
-import { isPlaybackStuck } from "../../compat";
-import config from "../../config";
-import log from "../../log";
-import { getNextRangeGap } from "../../utils/ranges";
 import { IInitClockTick } from "./types";
-
-const { DISCONTINUITY_THRESHOLD } = config;
 
 export interface IStallingItem {
   reason : "seeking" | "not-ready" | "buffering";
@@ -42,39 +35,9 @@ export interface IStallingItem {
  * @returns {Observable}
  */
 export default function getStalledEvents(
-  mediaElement : HTMLMediaElement,
   clock$ : Observable<IInitClockTick>
 ) : Observable<IStallingItem|null> {
   return clock$.pipe(
-    tap((tick) => {
-      if (!tick.stalled) {
-        return;
-      }
-
-      // Perform various checks to try to get out of the stalled state:
-      //   1. is it a browser bug? -> force seek at the same current time
-      //   2. is it a short discontinuity? -> Seek at the beginning of the
-      //                                      next range
-      const { buffered, currentTime } = tick;
-      const nextRangeGap = getNextRangeGap(buffered, currentTime);
-
-      // Discontinuity check in case we are close a buffered range but still
-      // calculate a stalled state. This is useful for some
-      // implementation that might drop an injected segment, or in
-      // case of small discontinuity in the content.
-      if (isPlaybackStuck(tick.currentTime,
-                          tick.currentRange,
-                          tick.state,
-                          !!tick.stalled)
-      ) {
-        log.warn("Init: After freeze seek", currentTime, tick.currentRange);
-        mediaElement.currentTime = currentTime;
-      } else if (nextRangeGap < DISCONTINUITY_THRESHOLD) {
-        const seekTo = (currentTime + nextRangeGap + 1 / 60);
-        log.warn("Init: Discontinuity seek", currentTime, nextRangeGap, seekTo);
-        mediaElement.currentTime = seekTo;
-      }
-    }),
     share(),
     map(tick => tick.stalled),
     distinctUntilChanged((wasStalled, isStalled) => {

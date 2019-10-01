@@ -226,10 +226,9 @@ export default function RepresentationBuffer<T>({
       queuedSourceBuffer.synchronizeInventory();
       const neededRange = getWantedRange(period, timing, bufferGoal);
 
-      // TODO Refacto discontinuity logic
-      const discontinuity = timing.stalled && manifest.isLive ?
-        representation.index.checkDiscontinuity(timing.currentTime) :
-        -1;
+      const discontinuity = timing.stalled ? representation.index
+                                               .checkDiscontinuity(timing.currentTime) :
+                                             -1;
 
       const shouldRefreshManifest =
         representation.index.shouldRefresh(neededRange.start,
@@ -323,9 +322,10 @@ export default function RepresentationBuffer<T>({
 
       const neededActions : IBufferNeededActions[] = [];
       if (status.discontinuity > 1) {
-        // TODO Refacto discontinuity logic
-        const seekTo = status.discontinuity + 1;
-        neededActions.push(EVENTS.discontinuityEncountered(bufferType, seekTo));
+        const nextTime = status.discontinuity + 1;
+        const gap: [number, number] = [status.discontinuity, nextTime];
+        neededActions.push(EVENTS.discontinuityEncountered(gap,
+                                                           bufferType));
       }
       if (status.shouldRefreshManifest) {
         neededActions.push(EVENTS.needsManifestRefresh());
