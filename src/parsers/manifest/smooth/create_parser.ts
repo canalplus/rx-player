@@ -15,6 +15,7 @@
  */
 
 import objectAssign from "object-assign";
+import log from "../../../log";
 import assert from "../../../utils/assert";
 import idGenerator from "../../../utils/id_generator";
 import resolveURL, {
@@ -89,20 +90,21 @@ export interface IHSSParserConfiguration {
 
 interface ISmoothParsedQualityLevel {
   // required
-  bitrate: number;
-  codecPrivateData: string;
+  bitrate : number;
+  codecPrivateData : string;
+  customAttributes : string[];
 
   // optional
-  audiotag?: number;
-  bitsPerSample?: number;
-  channels?: number;
-  codecs?: string;
-  height?: number;
-  id?: string;
-  mimeType?: string;
-  packetSize?: number;
-  samplingRate?: number;
-  width?: number;
+  audiotag? : number;
+  bitsPerSample? : number;
+  channels? : number;
+  codecs? : string;
+  height? : number;
+  id? : string;
+  mimeType? : string;
+  packetSize? : number;
+  samplingRate? : number;
+  width? : number;
 }
 
 /**
@@ -132,7 +134,24 @@ function createSmoothStreamingParser(
   function parseQualityLevel(
     q : Element,
     streamType : string
-  ) : ISmoothParsedQualityLevel {
+  ) : ISmoothParsedQualityLevel|null {
+
+    const customAttributes = reduceChildren<string[]>(q, (acc, qName, qNode) => {
+      if (qName === "CustomAttributes") {
+        acc.push(...reduceChildren<string[]>(qNode, (cAttrs, cName, cNode) => {
+          if (cName === "Attribute") {
+            const name = cNode.getAttribute("Name");
+            const value = cNode.getAttribute("Value");
+            if (name !== null && value !== null) {
+              cAttrs.push(name + "=" + value);
+            }
+          }
+          return cAttrs;
+        }, []));
+      }
+      return acc;
+    }, []);
+
     /**
      * @param {string} name
      * @returns {string|undefined}
@@ -161,6 +180,7 @@ function createSmoothStreamingParser(
             parseInt(bitsPerSample, 10) : bitsPerSample,
           channels: channels !== undefined ? parseInt(channels, 10) : channels,
           codecPrivateData: codecPrivateData || "",
+          customAttributes,
           mimeType: fourCC !== undefined ? MIME_TYPES[fourCC] : fourCC,
           packetSize: packetSize !== undefined ?
             parseInt(packetSize, 10) : packetSize,
@@ -178,6 +198,7 @@ function createSmoothStreamingParser(
 
         return {
           bitrate: bitrate ? parseInt(bitrate, 10) || 0 : 0,
+          customAttributes,
           mimeType: fourCC !== undefined ? MIME_TYPES[fourCC] : fourCC,
           codecPrivateData: codecPrivateData || "",
           codecs: getVideoCodecs(codecPrivateData || ""),
@@ -192,13 +213,15 @@ function createSmoothStreamingParser(
         const fourCC = getAttribute("FourCC");
         return {
           bitrate: bitrate ? parseInt(bitrate, 10) || 0 : 0,
+          customAttributes,
           mimeType: fourCC !== undefined ? MIME_TYPES[fourCC] : fourCC,
           codecPrivateData: codecPrivateData || "",
         };
       }
 
       default:
-        throw new Error("Unrecognized StreamIndex type: " + streamType);
+        log.error("Smooth Parser: Unrecognized StreamIndex type: " + streamType);
+        return null;
     }
   }
 
@@ -211,15 +234,13 @@ function createSmoothStreamingParser(
    * @returns {Object}
    */
   function parseAdaptation(args: IAdaptationParserArguments) : IParsedAdaptation|null {
-    const {
-      root,
-      timescale,
-      rootURL,
-      protections,
-      timeShiftBufferDepth,
-      manifestReceivedTime,
-      isLive,
-    } = args;
+    const { root,
+            timescale,
+            rootURL,
+            protections,
+            timeShiftBufferDepth,
+            manifestReceivedTime,
+            isLive } = args;
     const _timescale = root.hasAttribute("Timescale") ?
       +(root.getAttribute("Timescale") || 0) : timescale;
 
@@ -245,20 +266,20 @@ function createSmoothStreamingParser(
       switch (_name) {
         case "QualityLevel":
           const qualityLevel = parseQualityLevel(node, adaptationType);
+          if (qualityLevel === null) {
+            return res;
+          }
           if (adaptationType === "audio") {
             const fourCC = node.getAttribute("FourCC") || "";
 
-            qualityLevel.codecs = getAudioCodecs(
-              fourCC,
-              qualityLevel.codecPrivateData
-            );
+            qualityLevel.codecs = getAudioCodecs(fourCC,
+                                                 qualityLevel.codecPrivateData);
           }
 
           // filter out video qualityLevels with small bitrates
-          if (
-            adaptationType !== "video" ||
-            qualityLevel.bitrate > MIN_REPRESENTATION_BITRATE
-          ) {
+          if (adaptationType !== "video" ||
+              qualityLevel.bitrate > MIN_REPRESENTATION_BITRATE)
+          {
             res.qualityLevels.push(qualityLevel);
           }
           break;
@@ -267,10 +288,7 @@ function createSmoothStreamingParser(
           break;
       }
       return res;
-    }, {
-      qualityLevels: [],
-      cNodes: [],
-    });
+    }, { qualityLevels: [], cNodes: [] });
 
     const index = {
       timeline: parseCNodes(cNodes),
@@ -291,7 +309,9 @@ function createSmoothStreamingParser(
       const repIndex = {
         timeline: index.timeline,
         timescale: index.timescale,
-        media: replaceRepresentationSmoothTokens(path, qualityLevel.bitrate),
+        media: replaceRepresentationSmoothTokens(path,
+                                                 qualityLevel.bitrate,
+                                                 qualityLevel.customAttributes),
         isLive,
         timeShiftBufferDepth,
         manifestReceivedTime,

@@ -21,9 +21,13 @@
  */
 function replaceRepresentationSmoothTokens(
     url : string,
-    bitrate : string|number
+    bitrate : string|number,
+    customAttributes : string[]
   ) : string {
-    return url.replace(/\{bitrate\}/g, String(bitrate));
+    return url.replace(/\{bitrate\}/g, String(bitrate))
+              .replace(/{CustomAttributes}/g, customAttributes.length > 0 ?
+                                                customAttributes[0] :
+                                                "");
   }
 
 /**
