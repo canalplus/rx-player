@@ -35,8 +35,15 @@ const audioSegments = flatMap([
 });
 
 const videoSegments = flatMap(
-  [300000, 750000, 1100000, 1500000, 2100000, 3400000, 4000000, 5000000],
-  quality => {
+  [ [1000, 300000],
+    [2000, 750000],
+    [3000, 1100000],
+    [4000, 1500000],
+    [5000, 2100000],
+    [6000, 3400000],
+    [7000, 4000000],
+    [8000, 5000000] ],
+  ([hwProfile, quality]) => {
     const segments = flatMap([
       0, 20000000, 40000000, 60000000, 80000000, 100000000, 120000000,
       140000000, 160000000, 180000000, 200000000, 220000000, 240000000,
@@ -56,11 +63,20 @@ const videoSegments = flatMap(
           path: path.join(__dirname, `./media/${quality}-Fragments(video=0).mp4`),
           contentType: "video/mp4",
         },
+        {
+          url: BASE_URL + `QualityLevels${quality},hardwareProfile=${hwProfile}/Fragmentsvideo=${time}`,
+          path: path.join(__dirname, `./media/${quality}-Fragments(video=0).mp4`),
+          contentType: "video/mp4",
+        },
       ];
     });
 
     segments.push({
       url: BASE_URL + `QualityLevels${quality}/Fragmentsvideo=740000000`,
+      path: path.join(__dirname, `./media/${quality}-Fragments(video=740000000).mp4`),
+      contentType: "video/mp4",
+    }, {
+      url: BASE_URL + `QualityLevels${quality},hardwareProfile=${hwProfile}/Fragmentsvideo=740000000`,
       path: path.join(__dirname, `./media/${quality}-Fragments(video=740000000).mp4`),
       contentType: "video/mp4",
     });
@@ -82,6 +98,11 @@ module.exports = [
   {
     url: BASE_URL + "Manifest_Empty_Text_Track.xml",
     path: path.join(__dirname, "./media/Manifest_Empty_Text_Track.xml"),
+    contentType: "text/xml",
+  },
+  {
+    url: BASE_URL + "Manifest_Custom_Attributes.xml",
+    path: path.join(__dirname, "./media/Manifest_Custom_Attributes.xml"),
     contentType: "text/xml",
   },
   ...audioSegments,

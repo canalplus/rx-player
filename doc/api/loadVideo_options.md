@@ -459,8 +459,8 @@ considered stable:
     More infos on it can be found [here](./plugins.md#representationFilter).
 
   - ``aggressiveMode`` (``Boolean``): If set to true, we will download segments
-    as soon as their encoding should have begun on the server-side, even if we
-    are not sure they had time to be completely generated.
+    much sooner, even if we are not sure they had time to be completely
+    generated.
 
     For the moment, this mode has only an effect for all Smooth contents and
     some DASH contents relying on a number-based SegmentTemplate segment
@@ -472,15 +472,6 @@ considered stable:
     generate might trigger a `NetworkError`. Depending on your other settings
     (especially the `networkConfig` loadVideo options), those errors might just
     be sent as warnings and the corresponding requests be retried.
-
-    Note that the `aggressiveMode` is set to `true` by default when enabling
-    `lowLatencyMode` (through the corresponding `loadVideo` option), as most
-    DASH low-latency contents rely on this same trick to strip even more latency
-    from their contents.
-
-    Some low-latency contents however do not rely on this "trick". If you see a
-    lot of NetworkError with a low-latency content you're testing, you can try
-    setting this option to `false`.
 
   - ``referenceDateTime`` (``Number``): Only useful for live contents. This is
     the default amount of time, in seconds, to add as an offset to a given media
