@@ -91,8 +91,8 @@ export interface ILoaderDataLoaded<T> { type : "data-loaded";
                                         value : ILoaderDataLoadedValue<T>; }
 
 // Event emitted by a loader with the response when it did not perform any request
-interface ILoaderDataCreated<T> { type : "data-created";
-                                  value : { responseData : T }; }
+export interface ILoaderDataCreated<T> { type : "data-created";
+                                         value : { responseData : T }; }
 
 // Event emitted by loaders on xhr progress events
 export interface ILoaderProgress { type : "progress";
