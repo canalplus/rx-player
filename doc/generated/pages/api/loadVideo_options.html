@@ -447,8 +447,8 @@ More infos on it can be found <a href="plugins.html#representationFilter">here</
 </li>
 <li>
 <p><code>aggressiveMode</code> (<code>Boolean</code>): If set to true, we will download segments
-as soon as their encoding should have begun on the server-side, even if we
-are not sure they had time to be completely generated.</p>
+much sooner, even if we are not sure they had time to be completely
+generated.</p>
 <p>For the moment, this mode has only an effect for all Smooth contents and
 some DASH contents relying on a number-based SegmentTemplate segment
 indexing scheme.</p>
@@ -457,13 +457,6 @@ indexing scheme.</p>
 generate might trigger a <code>NetworkError</code>. Depending on your other settings
 (especially the <code>networkConfig</code> loadVideo options), those errors might just
 be sent as warnings and the corresponding requests be retried.</p>
-<p>Note that the <code>aggressiveMode</code> is set to <code>true</code> by default when enabling
-<code>lowLatencyMode</code> (through the corresponding <code>loadVideo</code> option), as most
-DASH low-latency contents rely on this same trick to strip even more latency
-from their contents.</p>
-<p>Some low-latency contents however do not rely on this &#x201C;trick&#x201D;. If you see a
-lot of NetworkError with a low-latency content you&#x2019;re testing, you can try
-setting this option to <code>false</code>.</p>
 </li>
 <li>
 <p><code>referenceDateTime</code> (<code>Number</code>): Only useful for live contents. This is

@@ -205,7 +205,7 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 <p><a name="prop-preferredTextTracks"></a>
 <a name="subchapter-preferredTextTracks"></a></p>
 <h3>preferredTextTracks</h3>
-<p><em>type</em>: <code>Array.&lt;Object&gt;</code></p>
+<p><em>type</em>: <code>Array.&lt;Object|null&gt;</code></p>
 <p><em>defaults</em>: <code>[]</code></p>
 <p>Set the initial text track languages preferences.</p>
 <p>This option takes an array of objects describing the languages wanted for
@@ -218,7 +218,8 @@ subtitles:</p>
 }
 </code></pre>
 <p>All elements in that Array should be set in preference order: from the most
-preferred to the least preferred. You can set <code>null</code> for no subtitles.</p>
+preferred to the least preferred. You can set <code>null</code> in that array for no
+subtitles.</p>
 <p>When loading a content, the RxPlayer will then try to choose its text track by
 comparing what is available with your current preferences (i.e. if the most
 preferred is not available, it will look if the second one etc.).</p>
