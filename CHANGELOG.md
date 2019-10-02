@@ -1,5 +1,33 @@
 # Changelog
 
+## v3.16.1 (2019/10/03)
+
+### Bug fixes
+
+  - dash: update timeshiftBufferDepth considered when refreshing the MPD
+  - dash: fix infinite rebuffering issue when refreshing a Multi-Period MPD with the oldest Periods removed
+  - dash/metaplaylist: be more tolerant with the appendWindows set as the previous behavior could lead to infinite rebuffering and segments re-downloading
+  - api: go to "SEEKING" state instead of "BUFFERING" when seeking while the player is in the "BUFFERING" state
+  - api: Avoid reinitializing the video, audio and text track choice after a `RELOADING` state
+  - api: When going back to a Period on which `disableTextTracks` was called, keep the text track disabled even if different `preferredTextTracks` are set
+  - smooth: Replace ``{CustomAttributes}`` token in a segment URL
+  - dash: load the last segment of a Period when it is declared in a SegmentTemplate (with no SegmentTimeline) and when its end is exactly equal to the end of the Period
+
+### Other improvements
+
+  - dash/metaplaylist/smooth: Better handle discontinuities in a VoD content
+  - dash/metaplaylist: Handle discontinuities between DASH Periods and between MetaPlaylist contents
+  - dash/smooth: Avoid requesting multiple time the last segment when the duration informations given in the Manifest are inexact
+  - smooth: Skip without throwing Manifest's StreamIndex with an unrecognized type
+  - dash: Improve prediction of when to update a dynamic MPD with xlinks
+  - dash: Be more tolerant of differences between a segment's time anounced by the Manifest and the reality to avoid multiple cases of segment re-downloading
+  - dash: Guess initialization range for segments defined in a SegmentBase without an Initialization element
+  - dash: Throw better error when a sidx with a reference_type `1` is encountered
+  - api: Throw a better error when setting a `preferredAudioTracks` or `preferredTextTracks` value in the wrong format
+  - demo: Allow to export and share demo links with custom contents
+  - demo: Fix video track switching in the demo page
+
+
 ## v3.16.0 (2019/09/16)
 
 ### Features
