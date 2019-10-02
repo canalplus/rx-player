@@ -421,21 +421,25 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       if (lastPos === undefined) {
         return undefined;
       }
-      // /!\ The scaled max position augments continuously and might not
+      if (this._relativePeriodEnd != null &&
+          this._relativePeriodEnd < (lastPos - this._periodStart)) {
+        const scaledRelativePeriodEnd = this._relativePeriodEnd * timescale;
+        return scaledRelativePeriodEnd <= 0 ? null :
+                                              scaledRelativePeriodEnd - duration;
+      }
+      // /!\ The scaled last position augments continuously and might not
       // reflect exactly the real server-side value. As segments are
       // generated discretely.
-      const scaledMaxPosition = (this._relativePeriodEnd != null ?
-        Math.min(lastPos - this._periodStart, this._relativePeriodEnd) :
-        lastPos - this._periodStart) * timescale;
+      const scaledLastPosition = (lastPos - this._periodStart) * timescale;
 
       // Maximum position is before this period.
       // No segment is yet available here
-      if (scaledMaxPosition < 0) {
+      if (scaledLastPosition < 0) {
         return null;
       }
       const numberOfSegmentsAvailable = this._aggressiveMode ?
-        Math.ceil(scaledMaxPosition / duration) :
-        Math.floor(scaledMaxPosition / duration);
+        Math.ceil(scaledLastPosition / duration) :
+        Math.floor(scaledLastPosition / duration);
       return numberOfSegmentsAvailable <= 0 ?
                null :
                (numberOfSegmentsAvailable - 1) * duration;
