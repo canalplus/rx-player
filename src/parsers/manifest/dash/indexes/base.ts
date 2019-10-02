@@ -154,15 +154,27 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
     const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
 
+    const mediaURL = createIndexURL(representationBaseURL,
+                                    index.initialization !== undefined ?
+                                      index.initialization.media :
+                                      undefined,
+                                    representationId,
+                                    representationBitrate);
+
+    // TODO If indexRange is either undefined or behind the initialization segment
+    // the following logic will not work.
+    // However taking the nth first bytes like `dash.js` does (where n = 1500) is
+    // not straightforward as we would need to clean-up the segment after that.
+    // The following logic corresponds to 100% of tested cases, so good enough for
+    // now.
+    const range : [number, number] | undefined =
+      index.initialization !== undefined ? index.initialization.range :
+      index.indexRange !== undefined ? [0, index.indexRange[0] - 1] :
+                                       undefined;
+
     this._index = { indexRange: index.indexRange,
                     indexTimeOffset,
-                    initialization: index.initialization && {
-                      mediaURL: createIndexURL(representationBaseURL,
-                                               index.initialization.media,
-                                               representationId,
-                                               representationBitrate),
-                      range: index.initialization.range,
-                    },
+                    initialization: { mediaURL, range },
                     mediaURL: createIndexURL(representationBaseURL,
                                              index.media,
                                              representationId,
