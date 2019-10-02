@@ -30,8 +30,8 @@ import {
   ignoreElements,
   map,
   mergeMap,
-  observeOn,
   share,
+  subscribeOn,
   take,
   takeUntil,
   tap,
@@ -162,7 +162,7 @@ export default function BufferOrchestrator(
   // Every PeriodBuffers for every possible types
   const buffersArray = bufferTypes.map((bufferType) => {
     return manageEveryBuffers(bufferType, initialPeriod)
-      .pipe(observeOn(asapScheduler), share());
+      .pipe(subscribeOn(asapScheduler), share());
   });
 
   // Emits the activePeriodChanged events every time the active Period changes.
