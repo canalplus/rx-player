@@ -8,7 +8,7 @@ import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState
  * Test ability to add an external text track when loading a video.
  */
 
-describe.only("external text track", function () {
+describe("external text track", function () {
   let player;
 
   beforeEach(() => {
