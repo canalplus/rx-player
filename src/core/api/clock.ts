@@ -262,7 +262,9 @@ function getStalledStatus(
     return null;
   } else if (shouldStall || prevStalled !== null) {
     let reason : "seeking" | "not-ready" | "buffering";
-    if (currentState === "seeking" || currentTimings.seeking) {
+    if (currentState === "seeking" ||
+        currentTimings.seeking ||
+        prevStalled !== null && prevStalled.reason === "seeking") {
       reason = "seeking";
     } else if (readyState === 1) {
       reason = "not-ready";
