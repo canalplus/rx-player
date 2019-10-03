@@ -106,6 +106,7 @@ class Player extends React.Component {
       } else {
         this.state.player.dispatch("DISABLE_LIVE_CATCH_UP");
       }
+      this.state.player.dispatch("SET_PLAYBACK_RATE", 1);
       this.state.player.dispatch("LOAD", video);
     };
     const stopVideo = () => this.state.player.dispatch("STOP");
