@@ -27,6 +27,7 @@
   - demo: Allow to export and share demo links with custom contents
   - demo: Fix video track switching in the demo page
   - demo: Fix spinner not hiding when playing on very specific conditions
+  - demo: reset playback rate before loading a content
 
 
 ## v3.16.0 (2019/09/16)
