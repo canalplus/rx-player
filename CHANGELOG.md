@@ -26,6 +26,7 @@
   - api: Throw a better error when setting a `preferredAudioTracks` or `preferredTextTracks` value in the wrong format
   - demo: Allow to export and share demo links with custom contents
   - demo: Fix video track switching in the demo page
+  - demo: Fix spinner not hiding when playing on very specific conditions
 
 
 ## v3.16.0 (2019/09/16)
