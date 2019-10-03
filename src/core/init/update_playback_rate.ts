@@ -20,9 +20,8 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
-  filter,
+  distinctUntilChanged,
   map,
-  pairwise,
   startWith,
   switchMap,
   tap,
@@ -56,22 +55,11 @@ export default function updatePlaybackRate(
   if (!pauseWhenStalled) {
     forcePause$ = observableOf(false);
   } else {
-    const lastTwoTicks$ : Observable<[IInitClockTick, IInitClockTick]> =
-      clock$.pipe(pairwise());
-
-    forcePause$ = lastTwoTicks$
+    forcePause$ = clock$
       .pipe(
-        map(([prevTiming, timing]) => {
-          const isStalled = timing.stalled;
-          const wasStalled = prevTiming.stalled;
-          if (!wasStalled !== !isStalled || // xor
-              (wasStalled && isStalled && wasStalled.reason !== isStalled.reason)
-          ) {
-            return !wasStalled;
-          }
-        }),
-        filter((val : boolean|undefined) : val is boolean => val != null),
-        startWith(false)
+        map((timing) => !!timing.stalled),
+        startWith(false),
+        distinctUntilChanged()
       );
   }
 
