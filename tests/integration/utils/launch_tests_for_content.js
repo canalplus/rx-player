@@ -604,6 +604,7 @@ export default function launchTestsForContent(
     describe("getVideoPlayedTime", () => {
       // TODO handle live contents
       it("should return the difference between the start of the current range and the current time", async function() {
+        this.timeout(3000);
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
 

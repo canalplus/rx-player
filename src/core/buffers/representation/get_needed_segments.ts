@@ -122,14 +122,15 @@ export default function getNeededSegments({
           return true;
         }
         let j = i + 1;
+
+        // go through all contiguous segments and take the last one
         while (j < completeSegments.length - 1 &&
-               completeSegments[j - 1].end === completeSegments[j].start)
+               (completeSegments[j - 1].end + roundingError) >
+                completeSegments[j].start)
         {
           j++;
         }
-        if (j >= completeSegments.length) {
-          j = completeSegments.length - 1;
-        }
+        j--; // index of last contiguous segment
 
         return completeSegments[j].end < scaledEnd + roundingError;
       }

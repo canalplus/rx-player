@@ -3,6 +3,9 @@
   -moz-box-sizing: border-box;
   box-sizing: border-box;
 }
+html {
+	scroll-behavior: smooth;
+}
 body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
@@ -251,6 +254,11 @@ table tr td {
   }
 }
 
+@media screen and (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+}
 @media (max-width: 350px) {
   .header .nav-text {
     display: none;

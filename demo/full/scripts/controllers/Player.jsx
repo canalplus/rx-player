@@ -47,6 +47,9 @@ class Player extends React.Component {
         if (isLoading || isReloading) {
           this.setState({ displaySpinner: true });
         } else if (isSeeking || isBuffering) {
+          if (this._displaySpinnerTimeout) {
+            clearTimeout(this._displaySpinnerTimeout);
+          }
           this._displaySpinnerTimeout = setTimeout(() => {
             this.setState({ displaySpinner: true });
           }, SPINNER_TIMEOUT);
@@ -103,6 +106,7 @@ class Player extends React.Component {
       } else {
         this.state.player.dispatch("DISABLE_LIVE_CATCH_UP");
       }
+      this.state.player.dispatch("SET_PLAYBACK_RATE", 1);
       this.state.player.dispatch("LOAD", video);
     };
     const stopVideo = () => this.state.player.dispatch("STOP");
