@@ -6,39 +6,12 @@
       <title>RxPlayer - CANAL+ (stand-alone demo)</title>
     </head>
     <body>
-      <video controls id="video" width="250" height="250"></video>
-      <button id="videoTrackToggle">Disable Video Track</button>
-      <button id="audioTrackOnlyOff">Enable Video Track</button>
+      <video id="video"></video>
       <script type="text/javascript" src="./lib.js" charset="utf-8"></script>
       <script charset="utf-8">
-        const videoTrackToggle = document.querySelector('#videoTrackToggle');
-        const audioTrackOnlyOff = document.querySelector('#audioTrackOnlyOff');
-
         const player = new window.RxPlayer({
           videoElement: document.getElementById("video")
         });
-
-        player.addEventListener('playerStateChange', evt => {
-  console.warn(evt);
-  if (evt === 'LOADED') {
-    console.warn('LOADED');
-    videoTrackToggle.addEventListener('click', evt => {
-      // player.setPreferredVideoTracks();
-      player.disableVideoTrack();
-      console.warn('DISABLE VIDEO TRACK');
-    });
-    audioTrackOnlyOff.addEventListener('click', evt => {
-      player.enableVideoTrack();
-      console.warn('ENABLE VIDEO TRACK');
-    });
-  }
-});
-
-player.loadVideo({
-  url: 'https://yt-dash-mse-test.commondatastorage.googleapis.com/media/car-20120827-manifest.mpd',
-  autoPlay: true,
-  transport: 'dash',
-});
 
         window.player = player;
       </script>
