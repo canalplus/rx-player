@@ -466,7 +466,6 @@ export default class TrackManager {
 
   public disableVideoTrack(period : Period) : void {
     const periodItem = getPeriodItem(this._periods, period);
-    console.warn("ITEM", periodItem);
     const videoInfos = periodItem && periodItem.video;
     if (!videoInfos) {
       throw new Error("TrackManager: Given Period not found.");
