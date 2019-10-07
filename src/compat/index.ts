@@ -51,6 +51,7 @@ import isOffline from "./is_offline";
 import isPlaybackStuck from "./is_playback_stuck";
 import isVTTCue from "./is_vtt_cue";
 import makeVTTCue from "./make_vtt_cue";
+import onHeightWidthChange from "./on_height_width_change";
 import patchWebkitSourceBuffer from "./patch_webkit_source_buffer";
 import play$ from "./play";
 import setElementSrc$ from "./set_element_src";
@@ -89,6 +90,7 @@ export {
   isVTTCue,
   makeVTTCue,
   MediaSource_,
+  onHeightWidthChange,
   play$,
   requestFullscreen,
   requestMediaKeySystemAccess,

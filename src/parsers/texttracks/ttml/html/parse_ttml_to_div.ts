@@ -34,34 +34,33 @@ import parseCue, {
   ITTMLHTMLCue,
 } from "./parse_cue";
 
- const STYLE_ATTRIBUTES = [
-  "backgroundColor",
-  "color",
-  "direction",
-  "display",
-  "displayAlign",
-  "extent",
-  "fontFamily",
-  "fontSize",
-  "fontStyle",
-  "fontWeight",
-  "lineHeight",
-  "opacity",
-  "origin",
-  "overflow",
-  "padding",
-  "textAlign",
-  "textDecoration",
-  "textOutline",
-  "unicodeBidi",
-  "visibility",
-  "wrapOption",
-  "writingMode",
+ const STYLE_ATTRIBUTES = [ "backgroundColor",
+                            "color",
+                            "direction",
+                            "display",
+                            "displayAlign",
+                            "extent",
+                            "fontFamily",
+                            "fontSize",
+                            "fontStyle",
+                            "fontWeight",
+                            "lineHeight",
+                            "opacity",
+                            "origin",
+                            "overflow",
+                            "padding",
+                            "textAlign",
+                            "textDecoration",
+                            "textOutline",
+                            "unicodeBidi",
+                            "visibility",
+                            "wrapOption",
+                            "writingMode",
 
-  // Not managed anywhere for now
-  // "showBackground",
-  // "zIndex",
-];
+                            // Not managed anywhere for now
+                            // "showBackground",
+                            // "zIndex",
+                            ];
 
 /**
  * Create array of objects which should represent the given TTML text track.
@@ -99,43 +98,39 @@ export default function parseTTMLStringToDIV(
     const styleNodes = getStyleNodes(tt);
     const regionNodes = getRegionNodes(tt);
     const paragraphNodes = getTextNodes(tt);
-    const params = getParameters(tt);
+    const ttParams = getParameters(tt);
 
-    // construct styles array based on the xml as an optimization
-    const styles : IStyleObject[]  = [];
+    // construct idStyles array based on the xml as an optimization
+    const idStyles : IStyleObject[]  = [];
     for (let i = 0; i <= styleNodes.length - 1; i++) {
       const styleNode = styleNodes[i];
       if (styleNode instanceof Element) {
         const styleID = styleNode.getAttribute("xml:id");
         if (styleID !== null) {
           // TODO styles referencing other styles
-          styles.push({
-            id: styleID,
-            style: getStylingFromElement(styleNode),
-          });
+          idStyles.push({ id: styleID,
+                          style: getStylingFromElement(styleNode) });
         }
       }
     }
 
-    // construct regions array based on the xml as an optimization
-    const regions : IStyleObject[] = [];
+    // construct regionStyles array based on the xml as an optimization
+    const regionStyles : IStyleObject[] = [];
     for (let i = 0; i <= regionNodes.length - 1; i++) {
       const regionNode = regionNodes[i];
       if (regionNode instanceof Element) {
         const regionID = regionNode.getAttribute("xml:id");
         if (regionID !== null) {
-          let regionStyle =
-            getStylingFromElement(regionNode);
-
+          let regionStyle = getStylingFromElement(regionNode);
           const associatedStyle = regionNode.getAttribute("style");
           if (isNonEmptyString(associatedStyle)) {
-            const style = arrayFind(styles, (x) => x.id === associatedStyle);
+            const style = arrayFind(idStyles, (x) => x.id === associatedStyle);
             if (style !== undefined) {
               regionStyle = objectAssign({}, style.style, regionStyle);
             }
           }
-          regions.push({ id: regionID,
-                         style: regionStyle });
+          regionStyles.push({ id: regionID,
+                              style: regionStyle });
         }
       }
     }
@@ -148,13 +143,13 @@ export default function parseTTMLStringToDIV(
     // style) to speed up the process even
     // more.
     const bodyStyle = body !== null ?
-      getStylingAttributes(STYLE_ATTRIBUTES, [body], styles, regions) :
-      getStylingAttributes(STYLE_ATTRIBUTES, [], styles, regions);
+      getStylingAttributes(STYLE_ATTRIBUTES, [body], idStyles, regionStyles) :
+      getStylingAttributes(STYLE_ATTRIBUTES, [], idStyles, regionStyles);
 
     const bodySpaceAttribute = body !== null ? body.getAttribute("xml:space") :
                                                undefined;
-    const shouldTrimWhiteSpaceOnBody =
-      bodySpaceAttribute === "default" || params.spaceStyle === "default";
+    const shouldTrimWhiteSpaceOnBody = bodySpaceAttribute === "default" ||
+                                       ttParams.spaceStyle === "default";
 
     for (let i = 0; i < paragraphNodes.length; i++) {
       const paragraph = paragraphNodes[i];
@@ -163,9 +158,10 @@ export default function parseTTMLStringToDIV(
         const paragraphStyle = objectAssign({},
                                             bodyStyle,
                                             getStylingAttributes(STYLE_ATTRIBUTES,
-                                                                 [paragraph, ...divs],
-                                                                 styles,
-                                                                 regions));
+                                                                 [paragraph,
+                                                                  ...divs],
+                                                                 idStyles,
+                                                                 regionStyles));
 
         const paragraphSpaceAttribute = paragraph.getAttribute("xml:space");
         const shouldTrimWhiteSpaceOnParagraph =
@@ -175,11 +171,11 @@ export default function parseTTMLStringToDIV(
 
         const cue = parseCue(paragraph,
                              timeOffset,
-                             styles,
-                             regions,
+                             idStyles,
+                             regionStyles,
                              body,
                              paragraphStyle,
-                             params,
+                             ttParams,
                              shouldTrimWhiteSpaceOnParagraph);
         if (cue !== null) {
           ret.push(cue);

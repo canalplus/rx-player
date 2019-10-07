@@ -37,11 +37,14 @@ const REGXP_TIME_HMS =
 // examples: 50% 10%
 const REGXP_PERCENT_VALUES = /^(\d{1,2}|100)% (\d{1,2}|100)%$/;
 
+const PROPORT_FONT_SIZE = /(\d)\s*c/i;
+
 const REGXP_8_HEX_COLOR =
   /^#([0-9A-f]{2})([0-9A-f]{2})([0-9A-f]{2})([0-9A-f]{2})$/;
 const REGXP_4_HEX_COLOR = /^#([0-9A-f])([0-9A-f])([0-9A-f])([0-9A-f])$/;
 
 export {
+  PROPORT_FONT_SIZE,
   REGXP_PERCENT_VALUES,
   REGXP_TIME_COLON,
   REGXP_TIME_COLON_FRAMES,
