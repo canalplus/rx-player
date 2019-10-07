@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-import mediaCapabilitiesProber from "./mediaCapabilitiesProber";
-import VideoThumbnailLoader from "./videoThumbnailLoader";
+import Logger from "../../../utils/logger";
 
-export {
-  mediaCapabilitiesProber,
-  VideoThumbnailLoader
-};
+const logger = new Logger();
+
+export default logger;

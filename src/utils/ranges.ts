@@ -442,6 +442,7 @@ function excludeFromRanges(
 }
 
 export {
+  areRangesOverlapping,
   convertToRanges,
   excludeFromRanges,
   getInnerAndOuterTimeRanges,

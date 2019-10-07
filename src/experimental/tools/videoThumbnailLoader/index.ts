@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-import mediaCapabilitiesProber from "./mediaCapabilitiesProber";
-import VideoThumbnailLoader from "./videoThumbnailLoader";
-
-export {
-  mediaCapabilitiesProber,
-  VideoThumbnailLoader
-};
+import VideoThumbnailLoader from "./thumbnail_loader";
+(window as any).VideoThumbnailLoader = VideoThumbnailLoader;
+export default VideoThumbnailLoader;
