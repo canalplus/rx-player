@@ -22,7 +22,10 @@ import {
   IStyleList,
   IStyleObject,
 } from "../get_styling";
-import { REGXP_PERCENT_VALUES } from "../regexps";
+import {
+  PROPORT_FONT_SIZE,
+  REGXP_PERCENT_VALUES,
+} from "../regexps";
 import generateCSSTextOutline from "./generate_css_test_outline";
 import ttmlColorToCSSColor from "./ttml_color_to_css_color";
 
@@ -165,8 +168,21 @@ function applyTextStyle(
   // applies to span
   const fontSize = style.fontSize;
   if (isNonEmptyString(fontSize)) {
-    // TODO Check if formats are always really 1:1
-    element.style.fontSize = fontSize;
+    const proportFont = PROPORT_FONT_SIZE.exec(fontSize);
+    if (proportFont !== null && proportFont.length >= 2) {
+      element.className += " proportional-font-size";
+      const fSize = proportFont[1];
+      if (fSize === undefined || isNaN(+fSize)) {
+        element.setAttribute("data-proportional-font-size", "1");
+      } else {
+        element.setAttribute("data-proportional-font-size", String(+fSize));
+      }
+    } else {
+      element.style.fontSize = fontSize;
+    }
+  } else {
+    element.className += " proportional-font-size";
+    element.setAttribute("data-proportional-font-size", "1");
   }
 
   // applies to p, span
@@ -467,12 +483,19 @@ export default function createElement(
   regions : IStyleObject[],
   styles : IStyleObject[],
   paragraphStyle : IStyleList,
-  shouldTrimWhiteSpace : boolean
+  { cellResolution,
+    shouldTrimWhiteSpace } : { shouldTrimWhiteSpace : boolean;
+                               cellResolution : { columns : number;
+                                                  rows : number; }; }
 ) : HTMLElement {
   const divs = getParentElementsByTagName(paragraph, "div");
 
   const parentElement = document.createElement("DIV");
   parentElement.className = "rxp-texttrack-region";
+  parentElement.setAttribute("data-resolution-columns",
+                             String(cellResolution.columns));
+  parentElement.setAttribute("data-resolution-rows",
+                             String(cellResolution.rows));
 
   applyGeneralStyle(parentElement, paragraphStyle);
   if (body !== null) {
