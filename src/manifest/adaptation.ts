@@ -47,8 +47,7 @@ export interface IRepresentationInfos { bufferType: IAdaptationType;
                                         normalizedLanguage? : string; }
 
 export type IRepresentationFilter = (representation: Representation,
-                                     adaptationInfos: IRepresentationInfos)
-                                    => boolean;
+                                     adaptationInfos: IRepresentationInfos) => boolean;
 
 /**
  * Normalized Adaptation structure.
@@ -90,6 +89,8 @@ export default class Adaptation {
   // created, in the order they have happened.
   public readonly parsingErrors : ICustomError[];
 
+  public readonly trickModeTrack? : Adaptation;
+
   /**
    * @constructor
    * @param {Object} parsedAdaptation
@@ -98,8 +99,9 @@ export default class Adaptation {
   constructor(parsedAdaptation : IParsedAdaptation, options : {
     representationFilter? : IRepresentationFilter;
     isManuallyAdded? : boolean;
+    trickModeTrack? : IParsedAdaptation;
   } = {}) {
-    const { representationFilter, isManuallyAdded } = options;
+    const { representationFilter, isManuallyAdded, trickModeTrack } = options;
     this.parsingErrors = [];
     this.id = parsedAdaptation.id;
 
@@ -133,6 +135,10 @@ export default class Adaptation {
     }
     if (parsedAdaptation.audioDescription != null) {
       this.isAudioDescription = parsedAdaptation.audioDescription;
+    }
+
+    if (trickModeTrack != null) {
+      this.trickModeTrack = new Adaptation(trickModeTrack);
     }
 
     this.representations = argsRepresentations

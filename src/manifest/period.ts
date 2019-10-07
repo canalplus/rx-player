@@ -77,8 +77,12 @@ export default class Period {
         const filteredAdaptations = adaptationsForType
           .map((adaptation) : Adaptation|null => {
             let newAdaptation : Adaptation|null = null;
+            const trickModeTrack = arrayFind(adaptationsForType, (a) => {
+              return a.isTrickModeFor === adaptation.id;
+            });
             try {
-              newAdaptation = new Adaptation(adaptation, { representationFilter });
+              newAdaptation = new Adaptation(adaptation,
+                                             { representationFilter, trickModeTrack });
             } catch (err) {
               if (isKnownError(err) &&
                   err.code === "MANIFEST_UNSUPPORTED_ADAPTATION_TYPE")

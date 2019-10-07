@@ -54,6 +54,7 @@ export interface IParsedAdaptation {
   closedCaption? : boolean; // Whether this Adaptation are closed caption for
                             // the hard of hearing
   language?: string; // Language the `Adaptation` is in, if it can be applied
+  isTrickModeFor? : string;
 }
 
 // Representation of a given period of time in the Manifest
