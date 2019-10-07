@@ -28,7 +28,10 @@ import {
   switchMapTo,
   takeUntil,
 } from "rxjs/operators";
-import { events } from "../../../compat";
+import {
+  events,
+  onHeightWidthChange,
+} from "../../../compat";
 import config from "../../../config";
 import log from "../../../log";
 import AbstractSourceBuffer from "../../abstract_source_buffer";
@@ -48,7 +51,8 @@ export interface IHTMLTextTrackData {
   language? : string; // language the texttrack is in
 }
 
-const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL } = config;
+const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL,
+        TEXT_TRACK_SIZE_CHECKS_INTERVAL } = config;
 
 /**
  * Generate the clock at which TextTrack HTML Cues should be refreshed.
@@ -73,16 +77,66 @@ function generateClock(videoElement : HTMLMediaElement) : Observable<boolean> {
 
 /**
  * @param {Element} element
- * @param {Element|null} [child]
+ * @param {Element} child
  */
-function safelyRemoveChild(element : Element, child : Element|null) {
-  if (child != null) {
-    try {
-      element.removeChild(child);
-    } catch (e) {
-      log.warn("HTSB: Can't remove text track: not in the element.");
+function safelyRemoveChild(element : Element, child : Element) {
+  try {
+    element.removeChild(child);
+  } catch (e) {
+    log.warn("HTSB: Can't remove text track: not in the element.");
+  }
+}
+
+/**
+ * Update size of element which are proportional to the current text track
+ * element.
+ * Returns `true` if at least a single styling information is proportional,
+ * `false` otherwise.
+ * @param {number} currentHeight
+ * @param {number} currentWidth
+ * @param {Object} resolution
+ * @param {HTMLElement} textTrackElement
+ * @returns {boolean}
+ */
+function updateProportionalElements(
+  currentHeight : number,
+  currentWidth : number,
+  resolution : { columns : number; rows : number },
+  textTrackElement : HTMLElement
+) : boolean {
+  const cellUnit = [ currentWidth / resolution.columns,
+                     currentHeight / resolution.rows];
+
+  const proportFontSizeElts = textTrackElement
+                               .getElementsByClassName("proportional-font-size");
+  for (let eltIdx = 0; eltIdx < proportFontSizeElts.length; eltIdx++) {
+    const elt = proportFontSizeElts[eltIdx];
+    const val = elt.getAttribute("data-proportional-font-size");
+    if (elt instanceof HTMLElement && val !== null && !isNaN(+val)) {
+      elt.style.fontSize = String(+val * cellUnit[1]) + "px";
     }
   }
+  return proportFontSizeElts.length > 0;
+}
+
+/**
+ * @param {HTMLElement} element
+ * @returns {Object|null}
+ */
+function getElementResolution(
+  element : HTMLElement
+) : { rows : number; columns : number } | null {
+  const strRows = element.getAttribute("data-resolution-rows");
+  const strColumns = element.getAttribute("data-resolution-columns");
+  if (strRows === null || strColumns === null) {
+    return null;
+  }
+  const rows = parseInt(strRows, 10);
+  const columns = parseInt(strColumns, 10);
+  if (rows === null || columns === null) {
+    return null;
+  }
+  return { rows, columns };
 }
 
 /**
@@ -92,12 +146,32 @@ function safelyRemoveChild(element : Element, child : Element|null) {
 export default class HTMLTextSourceBuffer
                extends AbstractSourceBuffer<IHTMLTextTrackData>
 {
+  // The video element the cues refer to.
+  // Used to know when the user is seeking, for example.
   private readonly _videoElement : HTMLMediaElement;
+
+  // When "nexting" that subject, every Observable declared here will be
+  // unsubscribed
+  // Used for clean-up
   private readonly _destroy$ : Subject<void>;
+
+  // HTMLElement which will contain the cues
   private readonly _textTrackElement : HTMLElement;
+
+  // Buffer containing the data
   private readonly _buffer : TextBufferManager;
 
-  private _currentElement : HTMLElement|null;
+  // We could need us to automatically update styling depending on
+  // `_textTrackElement`'s size. This Subject allows to stop that
+  // regular check.
+  private _clearSizeUpdates$ : Subject<void>;
+
+  // Information on the cue currently displayed in `_textTrackElement`.
+  private _currentCue : { element : HTMLElement;
+                          resolution : { columns : number;
+                                         rows : number; } |
+                                       null; } |
+                        null;
 
   /**
    * @param {HTMLMediaElement} videoElement
@@ -111,16 +185,17 @@ export default class HTMLTextSourceBuffer
     super();
     this._videoElement = videoElement;
     this._textTrackElement = textTrackElement;
+    this._clearSizeUpdates$ = new Subject();
     this._destroy$ = new Subject();
     this._buffer = new TextBufferManager();
-    this._currentElement = null;
+    this._currentCue = null;
 
+    // update text tracks
     generateClock(this._videoElement)
       .pipe(takeUntil(this._destroy$))
       .subscribe((shouldDisplay) => {
         if (!shouldDisplay) {
-          safelyRemoveChild(textTrackElement, this._currentElement);
-          this._currentElement = null;
+          this._hideCurrentCue();
           return;
         }
 
@@ -132,15 +207,10 @@ export default class HTMLTextSourceBuffer
                               0);
         const cue = this._buffer.get(time);
         if (cue === undefined) {
-          safelyRemoveChild(textTrackElement, this._currentElement);
-          this._currentElement = null;
-          return;
-        } else if (this._currentElement === cue.element) {
-          return;
+          this._hideCurrentCue();
+        } else {
+          this._displayCue(cue.element);
         }
-        safelyRemoveChild(textTrackElement, this._currentElement);
-        this._currentElement = cue.element;
-        textTrackElement.appendChild(this._currentElement);
       });
   }
 
@@ -245,9 +315,56 @@ export default class HTMLTextSourceBuffer
    */
   _abort() : void {
     log.debug("HTSB: Aborting html text track SourceBuffer");
+    this._hideCurrentCue();
     this._remove(0, Infinity);
     this._destroy$.next();
     this._destroy$.complete();
-    safelyRemoveChild(this._textTrackElement, this._currentElement);
+  }
+
+  /**
+   * Remove the current cue from being displayed.
+   */
+  private _hideCurrentCue() : void {
+    this._clearSizeUpdates$.next();
+    if (this._currentCue !== null) {
+      safelyRemoveChild(this._textTrackElement, this._currentCue.element);
+      this._currentCue = null;
+    }
+  }
+
+  /**
+   * Display a new Cue. If one was already present, it will be replaced.
+   * @param {HTMLElement} element
+   */
+  private _displayCue(element : HTMLElement) : void {
+    if (this._currentCue !== null && this._currentCue.element === element) {
+      return; // we're already good
+    }
+
+    this._clearSizeUpdates$.next();
+    if (this._currentCue !== null) {
+      safelyRemoveChild(this._textTrackElement, this._currentCue.element);
+    }
+
+    const resolution = getElementResolution(element);
+    this._currentCue = { element, resolution };
+    if (resolution !== null) {
+      // update propertionally-sized elements periodically
+      onHeightWidthChange(this._textTrackElement, TEXT_TRACK_SIZE_CHECKS_INTERVAL)
+        .pipe(takeUntil(this._clearSizeUpdates$),
+              takeUntil(this._destroy$))
+        .subscribe(({ height, width }) => {
+          if (this._currentCue !== null && this._currentCue.resolution !== null) {
+            const hasProport = updateProportionalElements(height,
+                                                          width,
+                                                          this._currentCue.resolution,
+                                                          this._currentCue.element);
+            if (!hasProport) {
+              this._clearSizeUpdates$.next();
+            }
+          }
+        });
+    }
+    this._textTrackElement.appendChild(element);
   }
 }

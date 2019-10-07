@@ -29,7 +29,7 @@ export default function generateCSSTextOutline(
   thickness : string|number
 ) : string {
   return `-1px -1px ${thickness} ${color},` +
-    `1px -1px ${thickness} ${color},` +
-    `-1px 1px ${thickness} ${color},` +
-    `1px 1px ${thickness} ${color}`;
+         `1px -1px ${thickness} ${color},` +
+         `-1px 1px ${thickness} ${color},` +
+         `1px 1px ${thickness} ${color}`;
 }
