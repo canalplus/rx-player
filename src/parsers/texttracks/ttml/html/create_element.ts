@@ -297,6 +297,8 @@ function applyPStyle(
   element : HTMLElement,
   style : Partial<Record<string, string>>
 ) {
+  element.style.margin = "0px";
+
   // applies to body, div, p, region, span
   const paragraphBackgroundColor = style.backgroundColor;
   if (isNonEmptyString(paragraphBackgroundColor)) {
