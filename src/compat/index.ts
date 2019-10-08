@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import addClassName from "./add_class_name";
 import addTextTrack from "./add_text_track";
 import {
   ICompatMediaKeySystemAccess,
@@ -65,6 +66,7 @@ import whenMediaSourceOpen$ from "./when_media_source_open";
 patchWebkitSourceBuffer();
 
 export {
+  addClassName,
   addTextTrack,
   canPatchISOBMFFSegment,
   clearElementSrc,
