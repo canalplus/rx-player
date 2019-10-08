@@ -37,6 +37,7 @@ import log from "../../../log";
 import AbstractSourceBuffer from "../../abstract_source_buffer";
 import TextBufferManager from "./buffer_manager";
 import parseTextTrackToElements from "./parsers";
+import updateProportionalElements from "./update_proportional_elements";
 
 const { onEnded$,
         onSeeked$,
@@ -85,38 +86,6 @@ function safelyRemoveChild(element : Element, child : Element) {
   } catch (e) {
     log.warn("HTSB: Can't remove text track: not in the element.");
   }
-}
-
-/**
- * Update size of element which are proportional to the current text track
- * element.
- * Returns `true` if at least a single styling information is proportional,
- * `false` otherwise.
- * @param {number} currentHeight
- * @param {number} currentWidth
- * @param {Object} resolution
- * @param {HTMLElement} textTrackElement
- * @returns {boolean}
- */
-function updateProportionalElements(
-  currentHeight : number,
-  currentWidth : number,
-  resolution : { columns : number; rows : number },
-  textTrackElement : HTMLElement
-) : boolean {
-  const cellUnit = [ currentWidth / resolution.columns,
-                     currentHeight / resolution.rows];
-
-  const proportFontSizeElts = textTrackElement
-                               .getElementsByClassName("proportional-font-size");
-  for (let eltIdx = 0; eltIdx < proportFontSizeElts.length; eltIdx++) {
-    const elt = proportFontSizeElts[eltIdx];
-    const val = elt.getAttribute("data-proportional-font-size");
-    if (elt instanceof HTMLElement && val !== null && !isNaN(+val)) {
-      elt.style.fontSize = String(+val * cellUnit[1]) + "px";
-    }
-  }
-  return proportFontSizeElts.length > 0;
 }
 
 /**
