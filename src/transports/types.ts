@@ -156,6 +156,14 @@ export interface IManifestParserArguments {
     Observable< ILoaderDataLoadedValue< Document | string > >;
 }
 
+export interface IContent {
+  manifest : Manifest; // Manifest related to this segment
+  period : Period; // Period related to this segment
+  adaptation : Adaptation; // Adaptation related to this segment
+  representation : Representation; // Representation related to this segment
+  segment : ISegment; // The segment we want to parse
+}
+
 export interface ISegmentParserArguments<T> {
   response : { data: T; // Segment's data
                isChunked : boolean; }; // If true, the given response corresponds
@@ -166,13 +174,8 @@ export interface ISegmentParserArguments<T> {
   // TODO just timescale?
   init? : IChunkTimingInfos; // Infos about the initialization segment of the
                              // corresponding Representation
-  content : {
-    manifest : Manifest; // Manifest related to this segment
-    period : Period; // Period related to this segment
-    adaptation : Adaptation; // Adaptation related to this segment
-    representation : Representation; // Representation related to this segment
-    segment : ISegment; // The segment we want to parse
-  };
+  content : IContent;
+  scheduleRequest?: <U>(request : () => Observable<U>) => Observable<U>;
 }
 
 // -- response

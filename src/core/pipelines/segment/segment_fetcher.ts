@@ -16,6 +16,7 @@
 
 import {
   concat as observableConcat,
+  EMPTY,
   Observable,
   of as observableOf,
   Subject,
@@ -28,6 +29,7 @@ import {
   share,
   tap,
 } from "rxjs/operators";
+import config from "../../../config";
 import { formatError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
@@ -37,11 +39,14 @@ import {
   ITransportPipelines,
 } from "../../../transports";
 import idGenerator from "../../../utils/id_generator";
+import tryCatch from "../../../utils/rx-try_catch";
 import {
   IABRMetric,
   IABRRequest,
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
+import backoff from "../utils/backoff";
+import errorSelector from "../utils/error_selector";
 import createSegmentLoader, {
   IPipelineLoaderChunk,
   IPipelineLoaderChunkComplete,
@@ -85,6 +90,30 @@ export default function createSegmentFetcher<T>(
 ) : ISegmentFetcher<T> {
   const segmentLoader = createSegmentLoader(transport[bufferType].loader, options);
   const segmentParser = transport[bufferType].parser as any; // deal with it
+
+  /**
+   * Allow the parser to schedule a new request.
+   * @param {Object} transportPipeline
+   * @param {Object} options
+   * @returns {Function}
+   */
+  function scheduleRequest<U>(request : () => Observable<U>) : Observable<U> {
+    const backoffOptions = { baseDelay: config.INITIAL_BACKOFF_DELAY_BASE.REGULAR,
+                             maxDelay: config.MAX_BACKOFF_DELAY_BASE.REGULAR,
+                             maxRetryRegular: options.maxRetry,
+                             maxRetryOffline: options.maxRetryOffline };
+    return backoff(tryCatch(request, undefined), backoffOptions).pipe(
+      mergeMap(evt => {
+        if (evt.type === "retry") {
+          // warning$.next(errorSelector(evt.value)); XXX TODO
+          return EMPTY;
+        }
+        return observableOf(evt.value);
+      }),
+      catchError((error : unknown) : Observable<never> => {
+        throw errorSelector(error);
+      }));
+  }
 
   /**
    * Process a pipeline observable to adapt it to the the rest of the code:
@@ -182,7 +211,7 @@ export default function createSegmentFetcher<T>(
           parse(init? : IChunkTimingInfos) : Observable<ISegmentParserResponse<T>> {
             const response = { data: evt.value.responseData, isChunked };
             /* tslint:disable no-unsafe-any */
-            return segmentParser({ response, init, content })
+            return segmentParser({ response, init, content, scheduleRequest })
             /* tslint:enable no-unsafe-any */
               .pipe(catchError((error: unknown) => {
                 throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",

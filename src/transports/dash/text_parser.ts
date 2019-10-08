@@ -14,25 +14,63 @@
  * limitations under the License.
  */
 
-import { of as observableOf } from "rxjs";
+import {
+  combineLatest as observableCombineLatest,
+  Observable,
+  of as observableOf,
+} from "rxjs";
+import {
+  filter,
+  map,
+  mergeMap,
+} from "rxjs/operators";
 import log from "../../log";
 import {
   getMDAT,
   getMDHDTimescale,
-  getSegmentsFromSidx,
+  getReferencesFromSidx,
+  ISidxReferences,
 } from "../../parsers/containers/isobmff";
 import {
   bytesToStr,
   strToBytes,
 } from "../../utils/byte_parsing";
+import request from "../../utils/request/xhr";
 import stringFromUTF8 from "../../utils/string_from_utf8";
 import isMP4EmbeddedTextTrack from "./is_mp4_embedded_text_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 
 import {
+  ILoaderDataLoadedValue,
   ISegmentParserArguments,
+  ISegmentParserResponse,
   ITextParserObservable,
+  ITextParserResponse,
+  ITextTrackSegmentData,
 } from "../types";
+import byteRange from "../utils/byte_range";
+
+/**
+ *
+ * @param {String} url
+ * @param {Object} range
+ */
+function requestResource(
+  url : string,
+  range? : [number, number]
+) : Observable<ILoaderDataLoadedValue<ArrayBuffer>> {
+  let headers = {};
+  if (range !== undefined) {
+    headers = { Range: byteRange(range) };
+  }
+  return request({ url,
+                   responseType: "arraybuffer",
+                   headers })
+  .pipe(
+    filter((e) => e.type === "data-loaded"),
+    map((e) => e.value)
+  );
+}
 
 /**
  * Parse TextTrack data.
@@ -44,7 +82,7 @@ function parseMP4EmbeddedTrack({ response,
                                  init } : ISegmentParserArguments< Uint8Array |
                                                                    ArrayBuffer |
                                                                    string>
-) : ITextParserObservable {
+) : { parsedTrackInfos: ITextParserResponse; externalRessources: any[] } {
   const { period, representation, segment } = content;
   const { isInit, indexRange, timestampOffset = 0 } = segment;
   const { language } = content.adaptation;
@@ -57,10 +95,21 @@ function parseMP4EmbeddedTrack({ response,
     chunkBytes = data instanceof Uint8Array ? data :
                                               new Uint8Array(data);
   }
+  const externalRessources: ISidxReferences[] = [];
+  const sidxReferences =
+    getReferencesFromSidx(chunkBytes,
+                          Array.isArray(indexRange) ? indexRange[0] : 0);
 
-  const sidxSegments = getSegmentsFromSidx(chunkBytes,
-                                           Array.isArray(indexRange) ? indexRange[0] :
-                                                                       0);
+  const sidxSegments = (sidxReferences !== null && sidxReferences.length > 0) ?
+    sidxReferences.filter((s) => s.type === 0) : undefined;
+
+  if (sidxReferences !== null && sidxReferences.length > 0) {
+    sidxReferences.forEach((s) => {
+      if (s.type === 1) {
+        externalRessources.push(s);
+      }
+    });
+  }
 
   if (isInit) {
     const mdhdTimescale = getMDHDTimescale(chunkBytes);
@@ -71,11 +120,14 @@ function parseMP4EmbeddedTrack({ response,
     if (Array.isArray(sidxSegments) && sidxSegments.length > 0) {
       representation.index._addSegments(sidxSegments);
     }
-    return observableOf({ chunkData: null,
-                          chunkInfos,
-                          chunkOffset: timestampOffset,
-                          segmentProtections: [],
-                          appendWindow: [period.start, period.end] });
+    const appendWindow: [number|undefined, number|undefined] =
+      [period.start, period.end];
+    const parsedTrackInfos = { chunkData: null,
+                               chunkInfos,
+                               chunkOffset: timestampOffset,
+                               segmentProtections: [],
+                               appendWindow };
+    return { parsedTrackInfos, externalRessources };
   } else { // not init
     const chunkInfos = getISOBMFFTimingInfos(chunkBytes, isChunked, segment, init);
     let startTime : number | undefined;
@@ -124,11 +176,14 @@ function parseMP4EmbeddedTrack({ response,
                         start: startTime,
                         end: endTime,
                         timescale } ;
-    return observableOf({ chunkData,
-                          chunkInfos,
-                          chunkOffset: timestampOffset,
-                          segmentProtections: [],
-                          appendWindow: [period.start, period.end] });
+    const appendWindow: [number|undefined, number|undefined] =
+      [period.start, period.end];
+    const parsedTrackInfos = { chunkData,
+                               chunkInfos,
+                               chunkOffset: timestampOffset,
+                               segmentProtections: [],
+                               appendWindow };
+    return { parsedTrackInfos, externalRessources };
   }
 }
 
@@ -214,11 +269,13 @@ function parsePlainTextTrack({ response,
  * @returns {Observable.<Object>}
  */
 export default function textTrackParser({ response,
-                           content,
-                           init } : ISegmentParserArguments< Uint8Array |
-                                                             ArrayBuffer |
-                                                             string |
-                                                             null >
+                                          content,
+                                          init,
+                                          scheduleRequest } :
+                                            ISegmentParserArguments< Uint8Array |
+                                                                     ArrayBuffer |
+                                                                     string |
+                                                                     null >
 ) : ITextParserObservable {
   const { period, representation, segment } = content;
   const { timestampOffset = 0 } = segment;
@@ -233,7 +290,73 @@ export default function textTrackParser({ response,
 
   const isMP4 = isMP4EmbeddedTextTrack(representation);
   if (isMP4) {
-    return parseMP4EmbeddedTrack({ response: { data, isChunked }, content, init });
+    const parserResponse =
+      parseMP4EmbeddedTrack({ response: { data, isChunked }, content, init });
+
+    function loadExternalRessources(
+      resp : { parsedTrackInfos : ISegmentParserResponse<ITextTrackSegmentData>;
+      externalRessources: ISidxReferences[]; }
+    ): Observable<ISegmentParserResponse<ITextTrackSegmentData>> {
+      if (scheduleRequest == null) {
+        throw new Error();
+      }
+      const loadedRessources$ = resp.externalRessources.map((ressource) => {
+        const range = ressource.range;
+        const url = content.segment.mediaURL;
+        if (url == null) {
+          throw new Error();
+        }
+        return scheduleRequest(() => requestResource(url, range)); // XXX TODO
+      });
+
+      return observableCombineLatest(loadedRessources$).pipe(
+        mergeMap((loadedRessources) => {
+          const { newSegments, newExternalRessources } = loadedRessources
+            .reduce((acc, loadedRessource) => {
+              const { responseData } = loadedRessource;
+              if (responseData !== undefined) {
+                const _data = new Uint8Array(responseData);
+                const references = getReferencesFromSidx(_data);
+                if (references !== null) {
+                  references.forEach((ref) => {
+                    if (ref.type === 0) {
+                      acc.newSegments.push(ref);
+                    } else {
+                      acc.newExternalRessources.push(ref);
+                    }
+                    return acc;
+                  });
+                }
+              }
+              return acc;
+            }, { newSegments: [] as ISidxReferences[],
+                 newExternalRessources: [] as ISidxReferences[],
+            });
+
+          if (newSegments.length > 0) {
+            content.representation.index._addSegments(newSegments);
+          }
+          if (newExternalRessources.length > 0) {
+            resp.externalRessources = newExternalRessources;
+            return loadExternalRessources(resp);
+          }
+          return observableOf(resp.parsedTrackInfos);
+        })
+      );
+    }
+
+    const { externalRessources, parsedTrackInfos } = parserResponse;
+
+    if (externalRessources == null ||
+      externalRessources.length === 0) {
+      return observableOf(parserResponse.parsedTrackInfos);
+    }
+
+    return loadExternalRessources({
+      parsedTrackInfos,
+      externalRessources,
+    });
+    // TOUT UN PROGRAMME
   } else {
     return parsePlainTextTrack({ response: { data, isChunked }, content });
   }
