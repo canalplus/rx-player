@@ -15,6 +15,7 @@
  */
 
 import objectAssign from "object-assign";
+import { addClassName } from "../../../../compat";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import getParentElementsByTagName from "../get_parent_elements_by_tag_name";
 import {
@@ -22,29 +23,28 @@ import {
   IStyleList,
   IStyleObject,
 } from "../get_styling";
-import {
-  PROPORT_FONT_SIZE,
-  REGXP_PERCENT_VALUES,
-} from "../regexps";
+import applyExtent from "./apply_extent";
+import applyFontSize from "./apply_font_size";
+import applyLineHeight from "./apply_line_height";
+import applyOrigin from "./apply_origin";
+import applyPadding from "./apply_padding";
 import generateCSSTextOutline from "./generate_css_test_outline";
 import ttmlColorToCSSColor from "./ttml_color_to_css_color";
 
 // Styling which can be applied to <span> from any level upper.
 // Added here as an optimization
-const SPAN_LEVEL_ATTRIBUTES = [
-  "color",
-  "direction",
-  "display",
-  "fontFamily",
-  "fontSize",
-  "fontStyle",
-  "fontWeight",
-  "textDecoration",
-  "textOutline",
-  "unicodeBidi",
-  "visibility",
-  "wrapOption",
-];
+const SPAN_LEVEL_ATTRIBUTES = [ "color",
+                                "direction",
+                                "display",
+                                "fontFamily",
+                                "fontSize",
+                                "fontStyle",
+                                "fontWeight",
+                                "textDecoration",
+                                "textOutline",
+                                "unicodeBidi",
+                                "visibility",
+                                "wrapOption" ];
 
 // TODO
 // tts:showBackground (applies to region)
@@ -94,8 +94,7 @@ function applyTextStyle(
         if (isFirstArgAColor) {
           const outlineColor = ttmlColorToCSSColor(outlineData[0]);
           const thickness = outlineData[1];
-          element.style.textShadow =
-            generateCSSTextOutline(outlineColor, thickness);
+          element.style.textShadow = generateCSSTextOutline(outlineColor, thickness);
         } else if (isNonEmptyString(color)) {
           const thickness = outlineData[0];
           element.style.textShadow = generateCSSTextOutline(color, thickness);
@@ -168,20 +167,9 @@ function applyTextStyle(
   // applies to span
   const fontSize = style.fontSize;
   if (isNonEmptyString(fontSize)) {
-    const proportFont = PROPORT_FONT_SIZE.exec(fontSize);
-    if (proportFont !== null && proportFont.length >= 2) {
-      element.className += " proportional-font-size";
-      const fSize = proportFont[1];
-      if (fSize === undefined || isNaN(+fSize)) {
-        element.setAttribute("data-proportional-font-size", "1");
-      } else {
-        element.setAttribute("data-proportional-font-size", String(+fSize));
-      }
-    } else {
-      element.style.fontSize = fontSize;
-    }
+    applyFontSize(element, fontSize);
   } else {
-    element.className += " proportional-font-size";
+    addClassName(element, "proportional-style");
     element.setAttribute("data-proportional-font-size", "1");
   }
 
@@ -237,11 +225,7 @@ function applyGeneralStyle(
   // applies to tt, region
   const extent = style.extent;
   if (isNonEmptyString(extent)) {
-    const results = REGXP_PERCENT_VALUES.exec(extent);
-    if (results != null) {
-      element.style.width = results[1] + "%";
-      element.style.height = results[2] + "%";
-    }
+    applyExtent(element, extent);
   }
 
   // applies to region
@@ -258,20 +242,13 @@ function applyGeneralStyle(
   // applies to region
   const padding = style.padding;
   if (isNonEmptyString(padding)) {
-    element.style.padding = padding;
+    applyPadding(element, padding);
   }
 
   // applies to region
   const origin = style.origin;
   if (isNonEmptyString(origin)) {
-    const resultsPercent = REGXP_PERCENT_VALUES.exec(origin);
-    if (resultsPercent != null) {
-      element.style.position = "relative";
-      element.style.left = resultsPercent[1] + "%";
-      element.style.top = resultsPercent[2] + "%";
-    } else {
-      // TODO also px
-    }
+    applyOrigin(element, origin);
   }
 
   // applies to region
@@ -329,7 +306,7 @@ function applyPStyle(
   // applies to p
   const lineHeight = style.lineHeight;
   if (isNonEmptyString(lineHeight)) {
-    element.style.lineHeight = lineHeight;
+    applyLineHeight(element, lineHeight);
   }
 
   // applies to p
@@ -441,31 +418,35 @@ function generateTextContent(
       } else if (currentNode.nodeName === "br") {
         const br = document.createElement("BR");
         elements.push(br);
-      } else if (
-        currentNode.nodeName === "span" &&
-        currentNode.nodeType === Node.ELEMENT_NODE &&
-        currentNode.childNodes.length > 0
-      ) {
+      } else if (currentNode.nodeName === "span" &&
+                 currentNode.nodeType === Node.ELEMENT_NODE &&
+                 currentNode.childNodes.length > 0)
+      {
         const spaceAttribute = (currentNode as Element).getAttribute("xml:space");
         const shouldTrimWhiteSpaceOnSpan =
           isNonEmptyString(spaceAttribute) ? spaceAttribute === "default" :
                                              shouldTrimWhiteSpaceFromParent;
 
         // compute the new applyable style
-        const newStyle = objectAssign({}, style, getStylingAttributes(
-          SPAN_LEVEL_ATTRIBUTES, [currentNode], styles, regions));
+        const newStyle = objectAssign({},
+                                      style,
+                                      getStylingAttributes(SPAN_LEVEL_ATTRIBUTES,
+                                                           [currentNode],
+                                                           styles,
+                                                           regions));
 
-        elements.push(...loop(
-          currentNode,
-          newStyle,
-          [currentNode, ...spans],
-          shouldTrimWhiteSpaceOnSpan)
-        );
+        elements.push(...loop(currentNode,
+                              newStyle,
+                              [currentNode, ...spans],
+                              shouldTrimWhiteSpaceOnSpan));
       }
     }
     return elements;
   }
-  return loop(paragraph, objectAssign({}, paragraphStyle), [], shouldTrimWhiteSpace);
+  return loop(paragraph,
+              objectAssign({}, paragraphStyle),
+              [],
+              shouldTrimWhiteSpace);
 }
 
 /**
