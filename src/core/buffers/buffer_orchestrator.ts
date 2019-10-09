@@ -295,12 +295,12 @@ export default function BufferOrchestrator(
             return EMPTY;
           }
 
-          const needsMediaSourceReload = rangesToClean
-            .some(range => isTimeInRange(range, currentTime));
-          if (needsMediaSourceReload) {
-            const evt = EVENTS.needsMediaSourceReload({ currentTime, isPaused });
-            return observableOf(evt);
-          }
+          // const needsMediaSourceReload = rangesToClean
+          //   .some(range => isTimeInRange(range, currentTime));
+          // if (needsMediaSourceReload) {
+          //   const evt = EVENTS.needsMediaSourceReload({ currentTime, isPaused });
+          //   return observableOf(evt);
+          // }
 
           return observableConcat(
             ...rangesToClean.map(({ start, end }) =>
