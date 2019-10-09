@@ -77,17 +77,19 @@ function formatContent(content) {
     isLocalContent = true;
   }
 
-  return { url: content.url,
-           contentName: content.name,
+  return { contentName: content.name,
+           displayName,
+           drmInfos: content.drmInfos,
+           fallbackKeyError: !!content.fallbackKeyError,
+           fallbackLicenseRequest: !!content.fallbackLicenseRequest,
            id: content.id,
-           transport: content.transport,
+           isDisabled,
+           isLocalContent,
+           isLowLatency: !!content.lowLatency,
            supplementaryImageTracks: content.supplementaryImageTracks,
            supplementaryTextTracks: content.supplementaryTextTracks,
-           drmInfos: content.drmInfos,
-           displayName,
-           isDisabled,
-           isLowLatency: !!content.lowLatency,
-           isLocalContent };
+           transport: content.transport,
+           url: content.url };
 }
 
 /**
@@ -128,7 +130,13 @@ function constructContentList() {
  * @param {Object} state - The current ContentList state.
  * @returns {string|null}
  */
-function generateLinkForContent(content, { autoPlay, transportType }) {
+function generateLinkForContent(
+  content,
+  { autoPlay,
+    transportType,
+    fallbackKeyError,
+    fallbackLicenseRequest },
+) {
   if (content == null) {
     return null;
   }
@@ -139,12 +147,23 @@ function generateLinkForContent(content, { autoPlay, transportType }) {
   return generateLinkForCustomContent({
     autoPlay,
     drmType: content.drmInfos && content.drmInfos[0] && content.drmInfos[0].drm,
+    fallbackKeyError,
+    fallbackLicenseRequest,
     manifestURL: content.url,
     licenseServerUrl,
     lowLatency: !!content.isLowLatency,
     serverCertificateUrl,
     transport: transportType,
   });
+}
+
+/**
+ * @param {HTMLElement} checkBoxElt
+ * @returns {boolean}
+ */
+function getCheckBoxValue(checkBoxElt) {
+  return checkBoxElt.type === "checkbox" ?
+    !!checkBoxElt.checked : !!checkBoxElt.value;
 }
 
 /**
@@ -183,6 +202,8 @@ class ContentList extends React.Component {
                    currentManifestURL: "",
                    displayGeneratedLink: false,
                    displayDRMSettings: false,
+                   fallbackKeyError: false,
+                   fallbackLicenseRequest: false,
                    isSavingOrUpdating: false,
                    licenseServerUrl: "",
                    lowLatencyChecked: false,
@@ -195,13 +216,17 @@ class ContentList extends React.Component {
     if (parsedHash !== null) {
       const { tech } = parsedHash;
       if (TRANSPORT_TYPES.includes(tech)) {
+        const { fallbackKeyError,
+                fallbackLicenseRequest,
+                lowLatency } = parsedHash;
         const newState = { autoPlay: !parsedHash.noAutoplay,
                            contentChoiceIndex: 0,
                            contentNameField: "",
                            contentList: this.state.contentsPerType[tech],
                            currentManifestURL: parsedHash.manifest,
-                           lowLatencyChecked: tech === "DASH" &&
-                             !!parsedHash.lowLatency,
+                           fallbackKeyError: !!fallbackKeyError,
+                           fallbackLicenseRequest: !!fallbackLicenseRequest,
+                           lowLatencyChecked: tech === "DASH" && !!lowLatency,
                            transportType: tech };
 
         const drmType = DRM_TYPES.includes(parsedHash.drm) ?
@@ -238,12 +263,15 @@ class ContentList extends React.Component {
 
     const { url,
             transport,
+            fallbackKeyError,
+            fallbackLicenseRequest,
             supplementaryImageTracks,
             supplementaryTextTracks,
             isLowLatency,
             drmInfos = [] } = content;
 
-    parseDRMConfigurations(drmInfos)
+    parseDRMConfigurations(drmInfos,
+                           { fallbackLicenseRequest, fallbackKeyError })
       .then((keySystems) => {
         loadVideo({ url,
                     transport,
@@ -264,9 +292,12 @@ class ContentList extends React.Component {
    */
   loadUrl(url, drmInfos, autoPlay) {
     const { loadVideo } = this.props;
-    const { lowLatencyChecked } = this.state;
+    const { lowLatencyChecked,
+            fallbackKeyError,
+            fallbackLicenseRequest } = this.state;
 
-    parseDRMConfigurations(drmInfos)
+    parseDRMConfigurations(drmInfos,
+                           { fallbackLicenseRequest, fallbackKeyError })
       .then((keySystems) => {
         loadVideo({ url,
                     transport: this.state.transportType.toLowerCase(),
@@ -292,6 +323,8 @@ class ContentList extends React.Component {
                     currentManifestURL: "",
                     displayDRMSettings: false,
                     displayGeneratedLink: false,
+                    fallbackLicenseRequest: false,
+                    fallbackKeyError: false,
                     isSavingOrUpdating: false,
                     licenseServerUrl: "",
                     lowLatencyChecked: false,
@@ -314,6 +347,8 @@ class ContentList extends React.Component {
     let drm  = null;
     currentManifestURL = content.url;
     contentNameField = content.contentName;
+    const fallbackKeyError = !!content.fallbackKeyError;
+    const fallbackLicenseRequest = !!content.fallbackLicenseRequest;
     const isLowLatency = !!content.isLowLatency;
     if (hasDRMSettings) {
       drm = content.drmInfos[0].drm;
@@ -326,46 +361,12 @@ class ContentList extends React.Component {
                     currentManifestURL,
                     displayDRMSettings: hasDRMSettings,
                     displayGeneratedLink: false,
+                    fallbackLicenseRequest,
+                    fallbackKeyError,
                     isSavingOrUpdating: false,
                     lowLatencyChecked: isLowLatency,
                     licenseServerUrl,
                     serverCertificateUrl });
-  }
-
-  /**
-   * Display/hide the DRM settings according to the checkbox state.
-   * @param {Event} evt - Event sent by the checkbox when it was changed.
-   */
-  onChangeDisplayDRMSettings(evt) {
-    const { target } = evt;
-    const value = target.type === "checkbox" ?
-      target.checked :
-      target.value;
-    if (value) {
-      this.setState({ displayDRMSettings: true });
-      return;
-    }
-    this.setState({ displayDRMSettings: false,
-                    licenseServerUrl: "",
-                    serverCertificateUrl: "" });
-  }
-
-  /**
-   * Enable/disable autoPlay according to the checkbox state.
-   * @param {Event} evt - Event sent by the checkbox when it was changed.
-   */
-  onChangeAutoPlay(evt) {
-    const { target } = evt;
-    const value = target.type === "checkbox" ?
-      target.checked : target.value;
-    this.setState({ autoPlay: value });
-  }
-
-  onLowLatencyClick(evt) {
-    const { target } = evt;
-    const value = target.type === "checkbox" ?
-      target.checked : target.value;
-    this.setState({ lowLatencyChecked: value });
   }
 
   render() {
@@ -377,6 +378,8 @@ class ContentList extends React.Component {
             currentManifestURL,
             displayGeneratedLink,
             displayDRMSettings,
+            fallbackKeyError,
+            fallbackLicenseRequest,
             isSavingOrUpdating,
             licenseServerUrl,
             lowLatencyChecked,
@@ -396,6 +399,8 @@ class ContentList extends React.Component {
           drmType: displayDRMSettings ?
             currentDRMType :
             undefined,
+          fallbackKeyError,
+          fallbackLicenseRequest,
           manifestURL: currentManifestURL,
           licenseServerUrl: displayDRMSettings ?
             licenseServerUrl :
@@ -447,6 +452,8 @@ class ContentList extends React.Component {
     const saveCurrentContent = () => {
       const contentToSave = { name: contentNameField,
                               url: currentManifestURL,
+                              fallbackLicenseRequest,
+                              fallbackKeyError,
                               lowLatency: lowLatencyChecked,
                               transport: transportType.toLowerCase(),
                               drmInfos: displayDRMSettings ?
@@ -513,14 +520,22 @@ class ContentList extends React.Component {
     const onServerCertificateInput = (evt) =>
       this.setState({ serverCertificateUrl: evt.target.value });
 
-    const onChangeDisplayDRMSettings = (evt) =>
-      this.onChangeDisplayDRMSettings(evt);
+    const onChangeDisplayDRMSettings = (evt) => {
+      const value = getCheckBoxValue(evt.target);
+      if (value) {
+        this.setState({ displayDRMSettings: true });
+        return;
+      }
+      this.setState({ displayDRMSettings: false,
+                      licenseServerUrl: "",
+                      serverCertificateUrl: "" });
+    };
 
     const onAutoPlayClick = (evt) =>
-      this.onChangeAutoPlay(evt);
+      this.setState({ autoPlay: getCheckBoxValue(evt.target) });
 
     const onLowLatencyClick = (evt) => {
-      this.onLowLatencyClick(evt);
+      this.setState({ lowLatencyChecked: getCheckBoxValue(evt.target) });
     };
 
     const onDRMTypeClick = (type) => {
@@ -546,6 +561,14 @@ class ContentList extends React.Component {
 
     const onClickGenerateLink = () => {
       this.setState({ displayGeneratedLink: !displayGeneratedLink });
+    };
+
+    const onChangeFallbackLicenseRequest = (evt) => {
+      this.setState({ fallbackLicenseRequest: getCheckBoxValue(evt.target) });
+    };
+
+    const onChangeFallbackKeyError = (evt) => {
+      this.setState({ fallbackKeyError: getCheckBoxValue(evt.target) });
     };
 
     const selectValues = contentsToSelect.map(c => {
@@ -618,16 +641,16 @@ class ContentList extends React.Component {
             }
           </div>
           <div className="choice-input-button-wrapper">
-            <div class="auto-play">
+            <div className="auto-play">
               AutoPlay
-              <label class="input switch">
+              <label className="input switch">
                 <input
                   type="checkbox"
                   aria-label="Enable/Disable AutoPlay"
                   checked={autoPlay}
                   onChange={onAutoPlayClick}
                 />
-                <span class="slider round"></span>
+                <span className="slider round"></span>
               </label>
             </div>
             <Button
@@ -687,7 +710,7 @@ class ContentList extends React.Component {
                     (DISABLE_ENCRYPTED_CONTENT ? " disabled" : "")}
                   >
                     {(DISABLE_ENCRYPTED_CONTENT ? "[HTTPS only] " : "") + "Encrypted content"}
-                    <label class="switch">
+                    <label className="switch">
                       <input
                         aria-label="Enable for an encrypted content"
                         disabled={DISABLE_ENCRYPTED_CONTENT}
@@ -696,7 +719,7 @@ class ContentList extends React.Component {
                         checked={displayDRMSettings}
                         onChange={onChangeDisplayDRMSettings}
                       />
-                      <span class="slider round"></span>
+                      <span className="slider round"></span>
                     </label>
                   </span>
                   {
@@ -721,22 +744,56 @@ class ContentList extends React.Component {
                           value={serverCertificateUrl}
                           placeholder={"Server certificate URL (optional)"}
                         />
+                        <div>
+                          <span className={"custom-checkbox fallback-checkbox"}>
+                            <span>
+                              {"Fallback if a key is refused "}
+                              <span className="checkbox-indication">
+                                (for content with multiple keys)
+                              </span>
+                            </span>
+                            <label className="input switch fallback-switch">
+                              <input
+                                type="checkbox"
+                                checked={fallbackKeyError}
+                                onChange={onChangeFallbackKeyError} />
+                              <span className="slider round"></span>
+                            </label>
+                          </span>
+                        </div>
+                        <div>
+                          <span className={"custom-checkbox fallback-checkbox"}>
+                            <span>
+                              {"Fallback if the license request fails "}
+                              <span className="checkbox-indication">
+                                (for content with multiple keys)
+                              </span>
+                            </span>
+                            <label className="input switch fallback-switch">
+                              <input
+                                type="checkbox"
+                                checked={fallbackLicenseRequest}
+                                onChange={onChangeFallbackLicenseRequest} />
+                              <span className="slider round"></span>
+                            </label>
+                          </span>
+                        </div>
                       </div> :
                       null
                   }
                 </div>
                 { transportType === "DASH" ?
-                  <div class="player-box player-box-load button-low-latency">
+                  <div className="player-box player-box-load button-low-latency">
                     <span className={"low-latency-checkbox custom-checkbox"}>
                       Low-Latency content
-                      <label class="input switch">
+                      <label className="input switch">
                         <input
                           aria-label="Enable for a low-latency content"
                           type="checkbox"
                           checked={lowLatencyChecked}
                           onChange={onLowLatencyClick}
                         />
-                        <span class="slider round"></span>
+                        <span className="slider round"></span>
                       </label>
                     </span>
                   </div> :

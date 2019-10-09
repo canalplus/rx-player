@@ -4,7 +4,10 @@ import {
   bytesToUTF16Str,
 } from "./bytes.js";
 
-export default function parseDRMConfigurations(drmConfigurations) {
+export default function parseDRMConfigurations(
+  drmConfigurations,
+  { fallbackKeyError, fallbackLicenseRequest }
+) {
   return Promise.all(drmConfigurations.map(drmConfig => {
     const { licenseServerUrl,
             serverCertificateUrl,
@@ -17,10 +20,12 @@ export default function parseDRMConfigurations(drmConfigurations) {
     const type = drm.toLowerCase();
     const keySystem = {
       type,
-      getLicense: generateGetLicense(licenseServerUrl, type),
+      getLicense: generateGetLicense(licenseServerUrl,
+                                     type,
+                                     !!fallbackLicenseRequest),
       fallbackOn: {
-        keyInternalError: true,
-        keyOutputRestricted: true,
+        keyInternalError: !!fallbackKeyError,
+        keyOutputRestricted: !!fallbackKeyError,
       },
     };
 
@@ -64,7 +69,7 @@ function formatPlayreadyChallenge(challenge) {
   return xml;
 }
 
-function generateGetLicense(licenseServerUrl, drmType) {
+function generateGetLicense(licenseServerUrl, drmType, fallbackOnLastTry) {
   const isPlayready = drmType.indexOf("playready") !== -1;
   return (rawChallenge) => {
     const challenge =  isPlayready ?
@@ -74,7 +79,7 @@ function generateGetLicense(licenseServerUrl, drmType) {
     return new Promise((resolve, reject) => {
       xhr.onerror = () => {
         const error = new Error("getLicense's request failed on an error");
-        error.fallbackOnLastTry = true;
+        error.fallbackOnLastTry = fallbackOnLastTry;
         reject(error);
       };
       xhr.onload = (evt) => {
@@ -84,7 +89,8 @@ function generateGetLicense(licenseServerUrl, drmType) {
         } else {
           const error = new Error("getLicense's request finished with a " +
                                   `${xhr.status} HTTP error`);
-          error.fallbackOnLastTry = true;
+          error.noRetry = fallbackOnLastTry;
+          error.fallbackOnLastTry = fallbackOnLastTry;
           reject(error);
         }
       };
