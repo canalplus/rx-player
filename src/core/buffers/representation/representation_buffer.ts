@@ -515,8 +515,7 @@ export default function RepresentationBuffer<T>({
       const protectedEvent$ = segmentProtection == null ?
         EMPTY :
         observableOf(EVENTS.protectedSegment(segmentProtection.type,
-                                             segmentProtection.value,
-                                             content));
+                                             segmentProtection.value));
       if (chunkData == null) {
         // no segmentData to add here (for example, a text init segment)
         // just complete directly without appending anything

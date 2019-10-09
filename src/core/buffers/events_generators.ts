@@ -16,7 +16,7 @@
 
 import { Subject } from "rxjs";
 import { ICustomError } from "../../errors";
-import Manifest, {
+import {
   Adaptation,
   ISegment,
   Period,
@@ -148,14 +148,10 @@ const EVENTS = {
 
   protectedSegment(
     type : string,
-    data : Uint8Array,
-    content: { adaptation : Adaptation;
-               manifest : Manifest;
-               period : Period;
-               representation: Representation; }
+    data : Uint8Array
   ) : IProtectedSegmentEvent {
     return { type: "protected-segment",
-             value: { type, data, content }};
+             value: { type, data }};
   },
 
   representationChange(
