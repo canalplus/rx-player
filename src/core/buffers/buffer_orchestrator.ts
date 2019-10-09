@@ -43,7 +43,6 @@ import Manifest, {
   Period,
 } from "../../manifest";
 import { fromEvent } from "../../utils/event_emitter";
-import { isTimeInRange } from "../../utils/ranges";
 import SortedList from "../../utils/sorted_list";
 import WeakMapMemory from "../../utils/weak_map_memory";
 import ABRManager from "../abr";
@@ -286,35 +285,25 @@ export default function BufferOrchestrator(
         if (!hasType || queuedSourceBuffer == null) {
           return EMPTY; // no need to stop the current buffers
         }
+        const rangesToClean = getBlacklistedRanges(queuedSourceBuffer, updates);
+        if (rangesToClean.length === 0) {
+          return EMPTY;
+        }
 
         enableOutOfBoundsCheck = false;
         destroyBuffers$.next();
-        return clock$.pipe(mergeMap(({ currentTime, isPaused }) => {
-          const rangesToClean = getBlacklistedRanges(queuedSourceBuffer, updates);
-          if (rangesToClean.length === 0) {
-            return EMPTY;
-          }
-
-          // const needsMediaSourceReload = rangesToClean
-          //   .some(range => isTimeInRange(range, currentTime));
-          // if (needsMediaSourceReload) {
-          //   const evt = EVENTS.needsMediaSourceReload({ currentTime, isPaused });
-          //   return observableOf(evt);
-          // }
-
-          return observableConcat(
-            ...rangesToClean.map(({ start, end }) =>
-              queuedSourceBuffer.removeBuffer(start, end).pipe(ignoreElements())),
-            clock$.pipe(take(1), mergeMap((lastTick) => {
-              const lastPosition = lastTick.currentTime + lastTick.wantedTimeOffset;
-              const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
-              if (newInitialPeriod == null) {
-                throw new MediaError("MEDIA_TIME_NOT_FOUND",
-                                     "The wanted position is not found in the Manifest.");
-              }
-              return launchConsecutiveBuffersForPeriod(newInitialPeriod);
-            })));
-          }));
+        return observableConcat(
+          ...rangesToClean.map(({ start, end }) =>
+            queuedSourceBuffer.removeBuffer(start, end).pipe(ignoreElements())),
+          clock$.pipe(take(1), mergeMap((lastTick) => {
+            const lastPosition = lastTick.currentTime + lastTick.wantedTimeOffset;
+            const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
+            if (newInitialPeriod == null) {
+              throw new MediaError("MEDIA_TIME_NOT_FOUND",
+                                   "The wanted position is not found in the Manifest.");
+            }
+            return launchConsecutiveBuffersForPeriod(newInitialPeriod);
+          })));
       }));
 
     return observableMerge(restartBuffersWhenOutOfBounds$,
