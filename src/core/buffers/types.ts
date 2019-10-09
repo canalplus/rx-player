@@ -16,7 +16,7 @@
 
 import { Subject } from "rxjs";
 import { ICustomError } from "../../errors";
-import Manifest, {
+import {
   Adaptation,
   ISegment,
   Period,
@@ -81,11 +81,7 @@ export interface IBufferStateFull {
 export interface IProtectedSegmentEvent {
   type : "protected-segment";
   value : { type : string;
-            data : Uint8Array;
-            content: { adaptation : Adaptation;
-                       manifest : Manifest;
-                       period : Period;
-                       representation : Representation; }; }; }
+            data : Uint8Array; }; }
 
 // State emitted when the buffer waits
 export type IRepresentationBufferStateEvent = IBufferNeededActions |
