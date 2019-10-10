@@ -906,6 +906,7 @@ body {
   background-color: #ccc;
   -webkit-transition: .2s;
   transition: .2s;
+  width: 30px;
 }
 
 .slider:before {
