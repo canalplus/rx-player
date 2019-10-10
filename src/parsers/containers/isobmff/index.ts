@@ -37,7 +37,7 @@ export {
   getTrackFragmentDecodeTime,
   getDurationFromTrun,
   getReferencesFromSidx,
-  ISidxReferences,
+  ISidxReference,
   patchPssh,
 } from "./utils";
 export { takePSSHOut };

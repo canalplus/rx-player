@@ -29,7 +29,7 @@ import {
   getMDAT,
   getMDHDTimescale,
   getReferencesFromSidx,
-  ISidxReferences,
+  ISidxReference,
 } from "../../parsers/containers/isobmff";
 import {
   bytesToStr,
@@ -95,18 +95,18 @@ function parseMP4EmbeddedTrack({ response,
     chunkBytes = data instanceof Uint8Array ? data :
                                               new Uint8Array(data);
   }
-  const externalRessources: ISidxReferences[] = [];
+  const externalRessources: ISidxReference[] = [];
   const initialOffset = Array.isArray(indexRange) ? indexRange[0] :
                                                     (range !== undefined) ? range[0] :
                                                                             undefined;
   const sidxReferences = getReferencesFromSidx(chunkBytes, initialOffset);
 
   const sidxSegments = (sidxReferences !== null && sidxReferences.length > 0) ?
-    sidxReferences.filter((s) => s.type === 0) : undefined;
+    sidxReferences.filter((s) => s.referenceTo === "segment") : undefined;
 
   if (sidxReferences !== null && sidxReferences.length > 0) {
     sidxReferences.forEach((s) => {
-      if (s.type === 1) {
+      if (s.referenceTo === "index") {
         externalRessources.push(s);
       }
     });
@@ -296,7 +296,7 @@ export default function textTrackParser({ response,
 
     function loadExternalRessources(
       resp : { parsedTrackInfos : ISegmentParserResponse<ITextTrackSegmentData>;
-      externalRessources: ISidxReferences[]; }
+      externalRessources: ISidxReference[]; }
     ): Observable<ISegmentParserResponse<ITextTrackSegmentData>> {
       if (scheduleRequest == null) {
         throw new Error();
@@ -333,7 +333,7 @@ export default function textTrackParser({ response,
                 const references = getReferencesFromSidx(_data, initialOffset);
                 if (references !== null) {
                   references.forEach((ref) => {
-                    if (ref.type === 0) {
+                    if (ref.referenceTo === "segment") {
                       acc.newSegments.push(ref);
                     } else {
                       acc.newExternalRessources.push(ref);
@@ -343,8 +343,8 @@ export default function textTrackParser({ response,
                 }
               }
               return acc;
-            }, { newSegments: [] as ISidxReferences[],
-                 newExternalRessources: [] as ISidxReferences[],
+            }, { newSegments: [] as ISidxReference[],
+                 newExternalRessources: [] as ISidxReference[],
             });
 
           if (newSegments.length > 0) {

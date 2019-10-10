@@ -26,7 +26,7 @@ import {
 import {
   getMDHDTimescale,
   getReferencesFromSidx,
-  ISidxReferences,
+  ISidxReference,
   takePSSHOut,
 } from "../../parsers/containers/isobmff";
 import {
@@ -81,7 +81,7 @@ function parseSegmentInfos(content: IContent,
                            init?: IChunkTimingInfos
 ): { parserResponse : ISegmentParserResponse<Uint8Array |
                                              ArrayBuffer>;
-     externalRessources?: ISidxReferences[]; } {
+     externalRessources?: ISidxReference[]; } {
   const { period, representation, segment } = content;
   const { data, isChunked } = response;
   if (data == null) {
@@ -111,11 +111,11 @@ function parseSegmentInfos(content: IContent,
                                                                             undefined;
     const referencesFromSidx = getReferencesFromSidx(chunkData, initialOffset);
     if (referencesFromSidx !== null) {
-      const segments = referencesFromSidx.filter((ref) => ref.type === 0);
+      const segments = referencesFromSidx.filter((ref) => ref.referenceTo === "segment");
       if (segments.length > 0) {
         nextSegments = segments;
       }
-      const externalReferences = referencesFromSidx.filter((ref) => ref.type === 1);
+      const externalReferences = referencesFromSidx.filter((ref) => ref.referenceTo === "index");
       externalRessources.push(...externalReferences);
     }
   }
@@ -187,7 +187,7 @@ export default function parser({ content,
   function loadExternalRessources(
     resp : { parserResponse : ISegmentParserResponse<Uint8Array |
                                                      ArrayBuffer>;
-    externalRessources: ISidxReferences[]; }
+    externalRessources: ISidxReference[]; }
   ): Observable<ISegmentParserResponse<Uint8Array|ArrayBuffer>> {
     if (scheduleRequest == null) {
       throw new Error();
@@ -214,8 +214,8 @@ export default function parser({ content,
 
     return loadedRessource$.pipe(
       mergeMap((loadedRessource) => {
-        const newSegments: ISidxReferences[] = [];
-        const newExternalRessources: ISidxReferences[] = [];
+        const newSegments: ISidxReference[] = [];
+        const newExternalRessources: ISidxReference[] = [];
         const {
           response: { responseData },
           ranges,
@@ -230,7 +230,7 @@ export default function parser({ content,
             const references = getReferencesFromSidx(element, initialOffset);
             if (references !== null) {
               references.forEach((ref) => {
-                if (ref.type === 0) {
+                if (ref.referenceTo === "segment") {
                   newSegments.push(ref);
                 } else {
                   newExternalRessources.push(ref);

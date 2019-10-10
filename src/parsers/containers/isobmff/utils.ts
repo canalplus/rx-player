@@ -70,14 +70,14 @@ function findBox(buf : Uint8Array, wantedName : number) : number {
   return -1;
 }
 
-// Segment information returned from a parsed sidx
-export interface ISidxReferences {
+// Reference returned from a parsed sidx
+export interface ISidxReference {
   time : number;
   duration : number;
   count : 0;
   timescale : number;
   range : [number, number];
-  type : 0|1;
+  referenceTo : "index"|"segment";
 }
 
 /**
@@ -101,7 +101,7 @@ export interface ISidxReferences {
 function getReferencesFromSidx(
   buf : Uint8Array,
   initialOffset? : number
-) : ISidxReferences[]|null {
+) : ISidxReference[]|null {
   const index = findBox(buf, 0x73696478 /* "sidx" */);
   if (index === -1) {
     return null;
@@ -135,7 +135,7 @@ function getReferencesFromSidx(
     return null;
   }
 
-  const references : ISidxReferences[] = [];
+  const references : ISidxReference[] = [];
 
   /* reserved(16) */
   /* reference_count(16) */
@@ -166,12 +166,13 @@ function getReferencesFromSidx(
     // let sapType = (sapChunk & 0x70000000) >>> 28;
     // let sapDelta = sapChunk & 0x0FFFFFFF;
 
+    const referenceTo = refType === 1 ? "index" : "segment";
     references.push({ time,
                       duration,
                       count: 0,
                       timescale,
                       range: [offset, offset + refSize - 1],
-                      type: refType });
+                      referenceTo });
 
     time += duration;
     offset += refSize;
