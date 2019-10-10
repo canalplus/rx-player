@@ -98,8 +98,8 @@ export default function createSegmentFetcher<T>(
    * @returns {Function}
    */
   function scheduleRequest<U>(request : () => Observable<U>) : Observable<U> {
-    const backoffOptions = { baseDelay: config.INITIAL_BACKOFF_DELAY_BASE.REGULAR,
-                             maxDelay: config.MAX_BACKOFF_DELAY_BASE.REGULAR,
+    const backoffOptions = { baseDelay: options.initialBackoffDelay,
+                             maxDelay: options.maximumBackoffDelay,
                              maxRetryRegular: options.maxRetry,
                              maxRetryOffline: options.maxRetryOffline };
     return backoff(tryCatch(request, undefined), backoffOptions).pipe(
