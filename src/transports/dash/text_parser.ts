@@ -15,7 +15,6 @@
  */
 
 import {
-  combineLatest as observableCombineLatest,
   Observable,
   of as observableOf,
 } from "rxjs";
@@ -51,11 +50,12 @@ import {
 import byteRange from "../utils/byte_range";
 
 /**
- *
+ * Request array buffer resource.
  * @param {String} url
  * @param {Object} range
+ * @returns {Observable}
  */
-function requestResource(
+function requestArrayBufferResource(
   url : string,
   range? : [number, number]
 ) : Observable<ILoaderDataLoadedValue<ArrayBuffer>> {
@@ -82,7 +82,9 @@ function parseMP4EmbeddedTrack({ response,
                                  init } : ISegmentParserArguments< Uint8Array |
                                                                    ArrayBuffer |
                                                                    string>
-) : { parsedTrackInfos: ITextParserResponse; externalRessources: any[] } {
+) : { parsedTrackInfos: ITextParserResponse;
+      indexReferences: ISidxReference[];
+    } {
   const { period, representation, segment } = content;
   const { isInit, indexRange, timestampOffset = 0, range } = segment;
   const { language } = content.adaptation;
@@ -95,19 +97,19 @@ function parseMP4EmbeddedTrack({ response,
     chunkBytes = data instanceof Uint8Array ? data :
                                               new Uint8Array(data);
   }
-  const externalRessources: ISidxReference[] = [];
+  const indexReferences: ISidxReference[] = [];
   const initialOffset = Array.isArray(indexRange) ? indexRange[0] :
                                                     (range !== undefined) ? range[0] :
                                                                             undefined;
   const sidxReferences = getReferencesFromSidx(chunkBytes, initialOffset);
 
-  const sidxSegments = (sidxReferences !== null && sidxReferences.length > 0) ?
+  const nextSegments = (sidxReferences !== null && sidxReferences.length > 0) ?
     sidxReferences.filter((s) => s.referenceTo === "segment") : undefined;
 
   if (sidxReferences !== null && sidxReferences.length > 0) {
-    sidxReferences.forEach((s) => {
-      if (s.referenceTo === "index") {
-        externalRessources.push(s);
+    sidxReferences.forEach((r) => {
+      if (r.referenceTo === "index") {
+        indexReferences.push(r);
       }
     });
   }
@@ -118,8 +120,8 @@ function parseMP4EmbeddedTrack({ response,
                                              duration: 0,
                                              timescale: mdhdTimescale } :
                                            null;
-    if (Array.isArray(sidxSegments) && sidxSegments.length > 0) {
-      representation.index._addSegments(sidxSegments);
+    if (Array.isArray(nextSegments) && nextSegments.length > 0) {
+      representation.index._addSegments(nextSegments);
     }
     const appendWindow: [number|undefined, number|undefined] =
       [period.start, period.end];
@@ -128,7 +130,7 @@ function parseMP4EmbeddedTrack({ response,
                                chunkOffset: timestampOffset,
                                segmentProtections: [],
                                appendWindow };
-    return { parsedTrackInfos, externalRessources };
+    return { parsedTrackInfos, indexReferences };
   } else { // not init
     const chunkInfos = getISOBMFFTimingInfos(chunkBytes, isChunked, segment, init);
     let startTime : number | undefined;
@@ -184,7 +186,7 @@ function parseMP4EmbeddedTrack({ response,
                                chunkOffset: timestampOffset,
                                segmentProtections: [],
                                appendWindow };
-    return { parsedTrackInfos, externalRessources };
+    return { parsedTrackInfos, indexReferences };
   }
 }
 
@@ -294,83 +296,87 @@ export default function textTrackParser({ response,
     const parserResponse =
       parseMP4EmbeddedTrack({ response: { data, isChunked }, content, init });
 
-    function loadExternalRessources(
-      resp : { parsedTrackInfos : ISegmentParserResponse<ITextTrackSegmentData>;
-      externalRessources: ISidxReference[]; }
+    /**
+     * Load 'sidx' to get indexReferences.
+     * @param {Object} segmentParserResponse
+     * @param {Array.<Object>} indexesToLoad
+     */
+    function loadIndexes(
+      segmentParserResponse : ISegmentParserResponse<ITextTrackSegmentData>,
+      indexesToLoad: ISidxReference[]
     ): Observable<ISegmentParserResponse<ITextTrackSegmentData>> {
       if (scheduleRequest == null) {
         throw new Error();
       }
-      const loadedRessources$ = resp.externalRessources.map((ressource) => {
-        const range = ressource.range;
-        const url = content.segment.mediaURL;
-        if (url == null) {
-          throw new Error();
-        }
-        return scheduleRequest(() => {
-          return requestResource(url, range).pipe(
-            map((r) => {
-              return {
-                response: r,
-                requestRange: range,
-              };
-            })
-          );
-        });
+
+      const range: [number, number] =
+        [indexesToLoad[0].range[0],
+        indexesToLoad[indexesToLoad.length - 1].range[1]];
+
+      const url = content.segment.mediaURL;
+      if (url === null) {
+        throw new Error();
+      }
+      const loadedRessource$ = scheduleRequest(() => {
+        return requestArrayBufferResource(url, range).pipe(
+          map((r) => {
+            return {
+              response: r,
+              ranges: indexesToLoad.map(({ range: _r }) => _r),
+            };
+          })
+        );
       });
 
-      return observableCombineLatest(loadedRessources$).pipe(
-        mergeMap((loadedRessources) => {
-          const { newSegments, newExternalRessources } = loadedRessources
-            .reduce((acc, loadedRessource) => {
-              const {
-                response: { responseData },
-                requestRange,
-              } = loadedRessource;
-              if (responseData !== undefined) {
-                const _data = new Uint8Array(responseData);
-                const initialOffset = requestRange[0];
-                const references = getReferencesFromSidx(_data, initialOffset);
-                if (references !== null) {
-                  references.forEach((ref) => {
-                    if (ref.referenceTo === "segment") {
-                      acc.newSegments.push(ref);
-                    } else {
-                      acc.newExternalRessources.push(ref);
-                    }
-                    return acc;
-                  });
-                }
+      return loadedRessource$.pipe(
+        mergeMap((loadedRessource) => {
+          const newSegments: ISidxReference[] = [];
+          const newIndexes: ISidxReference[] = [];
+          const {
+            response: { responseData },
+            ranges,
+          } = loadedRessource;
+          if (responseData !== undefined) {
+            let totalLen = 0;
+            for (let i = 0; i < ranges.length; i++) {
+              const length = ranges[i][1] - ranges[i][0] + 1;
+              const sidxBox = new Uint8Array(responseData)
+                .subarray(totalLen, totalLen + length);
+              const initialOffset = ranges[i][0];
+              const references = getReferencesFromSidx(sidxBox, initialOffset);
+              if (references !== null) {
+                references.forEach((ref) => {
+                  if (ref.referenceTo === "segment") {
+                    newSegments.push(ref);
+                  } else {
+                    newIndexes.push(ref);
+                  }
+                });
               }
-              return acc;
-            }, { newSegments: [] as ISidxReference[],
-                 newExternalRessources: [] as ISidxReference[],
-            });
+              totalLen += length;
+            }
+          }
 
           if (newSegments.length > 0) {
             content.representation.index._addSegments(newSegments);
           }
-          if (newExternalRessources.length > 0) {
-            resp.externalRessources = newExternalRessources;
-            return loadExternalRessources(resp);
+          if (newIndexes.length > 0) {
+            return loadIndexes(segmentParserResponse, newIndexes);
           }
-          return observableOf(resp.parsedTrackInfos);
+          return observableOf(segmentParserResponse);
         })
       );
     }
 
-    const { externalRessources, parsedTrackInfos } = parserResponse;
+    const { indexReferences, parsedTrackInfos } = parserResponse;
 
-    if (externalRessources == null ||
-      externalRessources.length === 0) {
+    if (indexReferences == null ||
+        indexReferences.length === 0) {
       return observableOf(parserResponse.parsedTrackInfos);
     }
 
-    return loadExternalRessources({
-      parsedTrackInfos,
-      externalRessources,
-    });
-    // TOUT UN PROGRAMME
+    return loadIndexes(parsedTrackInfos,
+                       indexReferences);
   } else {
     return parsePlainTextTrack({ response: { data, isChunked }, content });
   }
