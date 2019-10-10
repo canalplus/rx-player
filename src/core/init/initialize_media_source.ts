@@ -19,17 +19,13 @@ import {
   asapScheduler,
   BehaviorSubject,
   combineLatest as observableCombineLatest,
-  EMPTY,
   merge as observableMerge,
   Observable,
-  ReplaySubject,
   Subject,
-  timer as observableTimer,
 } from "rxjs";
 import {
   filter,
   finalize,
-  ignoreElements,
   map,
   mergeMap,
   share,
@@ -43,7 +39,6 @@ import {
 import config from "../../config";
 import { ICustomError } from "../../errors";
 import log from "../../log";
-import Manifest from "../../manifest";
 import { ITransportPipelines } from "../../transports";
 import throttle from "../../utils/rx-throttle";
 import ABRManager, {
@@ -71,7 +66,7 @@ import isEMEReadyEvent from "./is_eme_ready";
 import createMediaSourceLoader, {
   IMediaSourceLoaderEvent,
 } from "./load_on_media_source";
-import refreshManifest from "./refresh_manifest";
+import manifestUpdateScheduler from "./manifest_update_scheduler";
 import throwOnMediaError from "./throw_on_media_error";
 import {
   IInitClockTick,
@@ -217,53 +212,18 @@ export default function InitializeOnMediaSource(
                                                         initialTime,
                                                         autoPlay);
 
-    // Emit each time the manifest is refreshed.
-    const manifestRefreshed$ = new ReplaySubject<{ manifest : Manifest;
-                                                   sendingTime? : number; }>(1);
-
     // Emit when we want to manually update the manifest.
     // The value allow to set a delay relatively to the last Manifest refresh
     // (to avoid asking for it too often).
     const scheduleManifestRefresh$ = new Subject<number>();
 
-    // Emit when the manifest should be refreshed. Either when:
-    //   - A buffer asks for it to be refreshed
-    //   - its lifetime expired.
-    // TODO if we go a little more clever, manifestRefreshed$ could be removed
-    const manifestRefresh$ = manifestRefreshed$.pipe(
-      startWith({ manifest, sendingTime }),
-      switchMap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
-        const manualRefresh$ = scheduleManifestRefresh$.pipe(
-          mergeMap((delay) => {
-            // schedule a Manifest refresh to avoid sending too much request.
-            const timeSinceLastRefresh = newSendingTime == null ?
-                                           0 :
-                                           performance.now() - newSendingTime;
-            return observableTimer(delay - timeSinceLastRefresh);
-          }));
+    const manifestUpdate$ = manifestUpdateScheduler({ manifest, sendingTime },
+                                                    scheduleManifestRefresh$,
+                                                    fetchManifest);
 
-        const autoRefresh$ = (() => {
-          if (newManifest.lifetime == null || newManifest.lifetime <= 0) {
-            return EMPTY;
-          }
-          const timeSinceRequest = newSendingTime == null ?
-                                     0 :
-                                     performance.now() - newSendingTime;
-          const updateTimeout = newManifest.lifetime * 1000 - timeSinceRequest;
-          return observableTimer(updateTimeout);
-        })();
-
-        return observableMerge(autoRefresh$, manualRefresh$)
-          .pipe(take(1),
-                mergeMap(() => refreshManifest(manifest, fetchManifest)),
-                tap(val => manifestRefreshed$.next(val)),
-                ignoreElements());
-      }));
-
-    return observableMerge(manifestRefresh$, recursiveLoad$).pipe(
+    return observableMerge(manifestUpdate$, recursiveLoad$).pipe(
       startWith(EVENTS.manifestReady(manifest)),
       finalize(() => {
-        manifestRefreshed$.complete();
         scheduleManifestRefresh$.complete();
       }));
 
