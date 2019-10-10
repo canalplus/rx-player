@@ -136,6 +136,7 @@ interface IPositionUpdateItem { position : number;
                                 duration : number;
                                 playbackRate : number;
                                 bufferGap : number;
+                                maximumBufferTime? : number;
                                 wallClockTime? : number;
                                 liveGap? : number; }
 
@@ -2352,23 +2353,27 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
 
+    const maximumPosition = manifest !== null ? manifest.getMaximumPosition() :
+                                                undefined;
     const positionData : IPositionUpdateItem = {
       position: clockTick.currentTime,
       duration: clockTick.duration,
       playbackRate: clockTick.playbackRate,
+      maximumBufferTime: maximumPosition,
 
       // TODO fix higher up?
       bufferGap: isFinite(clockTick.bufferGap) ? clockTick.bufferGap :
                                                  0,
     };
 
-    if (manifest != null &&
+    if (manifest !== null &&
+        maximumPosition != null &&
         manifest.isLive &&
         clockTick.currentTime > 0
     ) {
       positionData.wallClockTime = clockTick.currentTime +
                                    (manifest.availabilityStartTime || 0);
-      positionData.liveGap = manifest.getMaximumPosition() - clockTick.currentTime;
+      positionData.liveGap = maximumPosition - clockTick.currentTime;
     }
 
     this.trigger("positionUpdate", positionData);
