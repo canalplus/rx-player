@@ -29,6 +29,7 @@ import {
   ISegmentParserArguments,
   ISegmentParserObservable,
 } from "../types";
+import extractCompleteInitChunk from "./extract_complete_init_chunk";
 import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 
@@ -72,12 +73,19 @@ export default function parser({ content,
                           segmentProtections: [],
                           appendWindow: [period.start, period.end] });
   } else { // it is an initialization segment
+    const completeInitChunk = (segment.hypotheticalInitRange === true) ?
+      extractCompleteInitChunk(chunkData) : chunkData;
+
+    if (completeInitChunk === -1) {
+      throw new Error("Can't extract complete init chunk from loaded data.");
+    }
+
     if (nextSegments !== null && nextSegments.length > 0) {
       representation.index._addSegments(nextSegments);
     }
 
-    const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
-                               getMDHDTimescale(chunkData);
+    const timescale = isWEBM ? getTimeCodeScale(completeInitChunk, 0) :
+                               getMDHDTimescale(completeInitChunk);
 
     const chunkInfos = timescale != null && timescale > 0 ? { time: 0,
                                                               duration: 0,
@@ -94,7 +102,7 @@ export default function parser({ content,
     }
 
     const segmentProtections = representation.getProtectionsInitializationData();
-    return observableOf({ chunkData,
+    return observableOf({ chunkData: completeInitChunk,
                           chunkInfos,
                           chunkOffset: takeFirstSet<number>(segment.timestampOffset,
                                                             0),

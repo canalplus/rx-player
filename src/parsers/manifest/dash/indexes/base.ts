@@ -60,8 +60,8 @@ export interface IBaseIndex {
 // `index` Argument for a SegmentBase RepresentationIndex
 // Most of the properties here are already defined in IBaseIndex.
 export interface IBaseIndexIndexArgument {
-  timeline : IIndexSegment[];
-  timescale : number;
+  timeline? : IIndexSegment[];
+  timescale? : number;
   media? : string;
   indexRange?: [number, number];
   initialization?: { media?: string; range?: [number, number] };
@@ -137,6 +137,7 @@ function _addSegmentInfos(
  */
 export default class BaseRepresentationIndex implements IRepresentationIndex {
   private _index : IBaseIndex;
+  private _hypotheticalInitRange: boolean;
 
   // absolute end of the period, timescaled and converted to index time
   private _scaledPeriodEnd : number | undefined;
@@ -156,7 +157,8 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     const presentationTimeOffset = index.presentationTimeOffset != null ?
       index.presentationTimeOffset : 0;
 
-    const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
+    const realTimescale = (timescale != null ? timescale : 1);
+    const indexTimeOffset = presentationTimeOffset - periodStart * realTimescale;
 
     const mediaURL = createIndexURL(representationBaseURL,
                                     index.initialization !== undefined ?
@@ -165,16 +167,25 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
                                     representationId,
                                     representationBitrate);
 
-    // TODO If indexRange is either undefined or behind the initialization segment
+    // TODO If indexRange is behind the initialization segment
     // the following logic will not work.
-    // However taking the nth first bytes like `dash.js` does (where n = 1500) is
-    // not straightforward as we would need to clean-up the segment after that.
-    // The following logic corresponds to 100% of tested cases, so good enough for
-    // now.
-    const range : [number, number] | undefined =
-      index.initialization !== undefined ? index.initialization.range :
-      index.indexRange !== undefined ? [0, index.indexRange[0] - 1] :
-                                       undefined;
+    // If no range and index range are given by manifest, we take
+    // as init segment the nth first bytes (where n = 1500).
+    // Therefore, we need to filter on init boxes after the segment
+    // is loaded, to ensure that we push a complete and dry segment
+    // to buffers.
+    let range: [number, number] | undefined;
+    this._hypotheticalInitRange = true;
+    if (index.initialization == null && index.indexRange === null) {
+      range = [0, 1500];
+    } else {
+      if (index.initialization != null) {
+        range = index.initialization.range;
+        this._hypotheticalInitRange = false;
+      } else if (index.indexRange != null) {
+        range = [0, index.indexRange[0] - 1];
+      }
+    }
 
     this._index = { indexRange: index.indexRange,
                     indexTimeOffset,
@@ -184,8 +195,8 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
                                              representationId,
                                              representationBitrate),
                     startNumber: index.startNumber,
-                    timeline: index.timeline,
-                    timescale };
+                    timeline: index.timeline || [],
+                    timescale: realTimescale };
     this._scaledPeriodEnd = periodEnd == null ? undefined :
                                                 toIndexTime(periodEnd, this._index);
   }
@@ -195,7 +206,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @returns {Object}
    */
   getInitSegment() : ISegment {
-    return getInitSegment(this._index);
+    const initSegment = getInitSegment(this._index);
+    initSegment.hypotheticalInitRange = this._hypotheticalInitRange;
+    return initSegment;
   }
 
   /**
