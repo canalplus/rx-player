@@ -17,6 +17,7 @@
 import {
   concat as observableConcat,
   EMPTY,
+  merge as observableMerge,
   Observable,
   of as observableOf,
   Subject,
@@ -25,11 +26,12 @@ import {
   catchError,
   filter,
   finalize,
+  map,
   mergeMap,
   share,
   tap,
 } from "rxjs/operators";
-import { formatError } from "../../../errors";
+import { formatError, ICustomError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
   IChunkTimingInfos,
@@ -89,6 +91,7 @@ export default function createSegmentFetcher<T>(
 ) : ISegmentFetcher<T> {
   const segmentLoader = createSegmentLoader(transport[bufferType].loader, options);
   const segmentParser = transport[bufferType].parser as any; // deal with it
+  const warning$ = new Subject<ICustomError>();
 
   /**
    * Allow the parser to schedule a new request.
@@ -104,7 +107,7 @@ export default function createSegmentFetcher<T>(
     return backoff(tryCatch(request, undefined), backoffOptions).pipe(
       mergeMap(evt => {
         if (evt.type === "retry") {
-          // warning$.next(errorSelector(evt.value)); XXX TODO
+          warning$.next(errorSelector(evt.value));
           return EMPTY;
         }
         return observableOf(evt.value);
@@ -128,7 +131,7 @@ export default function createSegmentFetcher<T>(
   ) : Observable<ISegmentFetcherEvent<T>> {
     const id = generateRequestID();
     let requestBeginSent = false;
-    return segmentLoader(content).pipe(
+    const segmentLoader$ = segmentLoader(content).pipe(
       tap((arg) => {
         switch (arg.type) {
           case "metrics": {
@@ -227,5 +230,14 @@ export default function createSegmentFetcher<T>(
       }),
       share() // avoid multiple side effects if multiple subs
     );
+    const warningEvent$ = warning$.pipe(
+      map((error) => ({
+        type: "warning" as const,
+        value: error,
+      }))
+    );
+
+    return observableMerge(segmentLoader$,
+                           warningEvent$);
   };
 }
