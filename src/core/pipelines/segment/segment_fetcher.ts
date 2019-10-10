@@ -29,7 +29,6 @@ import {
   share,
   tap,
 } from "rxjs/operators";
-import config from "../../../config";
 import { formatError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
