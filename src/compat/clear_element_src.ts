@@ -19,13 +19,13 @@ import { isFirefox } from "./browser_detection";
 
 /**
  * Clear element's src attribute.
- *
- * On IE11, element.src = "" is not sufficient as it
- * does not clear properly the current MediaKey Session.
- * Microsoft recommended to use element.removeAttr("src").
  * @param {HTMLMediaElement} element
  */
 export default function clearElementSrc(element : HTMLMediaElement) : void {
+  // On Firefox, we also have to make sure the textTracks elements are both
+  // disabled and removed from the DOM.
+  // If we do not do that, we may be left with displayed text tracks on the
+  // screen
   if (isFirefox) {
     const { textTracks } = element;
     for (let i = 0; i < textTracks.length; i++) {
@@ -38,12 +38,16 @@ export default function clearElementSrc(element : HTMLMediaElement) : void {
           try {
             element.removeChild(childNodes[j]);
           } catch (err) {
-            log.warn("Could not remove text track child from element.");
+            log.warn("Compat: Could not remove text track child from element.");
           }
         }
       }
     }
   }
   element.src = "";
+
+  // On IE11, element.src = "" is not sufficient as it
+  // does not clear properly the current MediaKey Session.
+  // Microsoft recommended to use element.removeAttr("src").
   element.removeAttribute("src");
 }

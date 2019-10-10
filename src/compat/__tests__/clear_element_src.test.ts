@@ -152,7 +152,7 @@ describe("Compat - clearElementSrc", () => {
     expect(spyRemoveChild).toHaveBeenCalledTimes(2);
     expect(mockLogWarn).toHaveBeenCalledTimes(2);
     expect(mockLogWarn)
-      .toHaveBeenCalledWith("Could not remove text track child from element.");
+      .toHaveBeenCalledWith("Compat: Could not remove text track child from element.");
   });
 
   it("should not remove audio child node if on firefox and no text tracks", () => {

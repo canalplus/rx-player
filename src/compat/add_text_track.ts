@@ -23,6 +23,7 @@ import { isIEOrEdge } from "./browser_detection";
  *   - track {TextTrack}: the added text track
  *   - trackElement {HTMLElement|undefined}: the added <track> element.
  *     undefined if no trackElement was added.
+ *
  * @param {HTMLMediaElement} mediaElement
  * @param {Boolean} hidden
  * @returns {Object}
@@ -30,14 +31,14 @@ import { isIEOrEdge } from "./browser_detection";
 export default function addTextTrack(
   mediaElement : HTMLMediaElement,
   hidden : boolean
-) : {
-  track : ICompatTextTrack;
-  trackElement? : HTMLTrackElement;
-} {
+) : { track : ICompatTextTrack;
+      trackElement? : HTMLTrackElement; }
+{
   let track;
   let trackElement;
 
   const kind = "subtitles";
+
   if (isIEOrEdge) {
     const tracksLength = mediaElement.textTracks.length;
     track = tracksLength > 0 ? mediaElement.textTracks[tracksLength - 1] :
