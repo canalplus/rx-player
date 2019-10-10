@@ -154,6 +154,10 @@ feature.
 
 __[4]__: This feature will only be used if ``IMAGE_BUFFER`` is an added feature.
 
+__[5]__: Those type of contents are experimental. They should be imported
+from `rx-player/experimental/features`.
+
+
 ---
 
 
