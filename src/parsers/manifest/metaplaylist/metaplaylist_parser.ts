@@ -29,13 +29,11 @@ import {
 import MetaRepresentationIndex from "./representation_index";
 
 export type IParserResponse<T> =
-  {
-    type : "needs-manifest-loader";
+  { type : "needs-manifest-loader";
     value : {
       ressources : Array<{ url : string; transportType : string }>;
       continue : (loadedRessources : Manifest[]) => IParserResponse<T>;
-    };
-  } |
+    }; } |
   { type : "done"; value : T };
 
 export interface IMetaPlaylistTextTrack {
@@ -231,6 +229,7 @@ function createManifest(
               type: currentAdaptation.type,
               audioDescription: currentAdaptation.isAudioDescription,
               closedCaption: currentAdaptation.isClosedCaption,
+              isDub: currentAdaptation.isDub,
               language: currentAdaptation.language,
             });
             acc[type] = adaptationsForCurrentType;

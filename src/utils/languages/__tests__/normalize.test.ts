@@ -58,29 +58,21 @@ describe("utils - normalizeAudioTrack", () => {
   });
 
   it("should format a normalized audio track for an empty string", () => {
-    expect(normalizeAudioTrack("")).toEqual({
-      language: "",
-      audioDescription: false,
-      normalized: "",
-    });
+    expect(normalizeAudioTrack("")).toEqual({ language: "",
+                                              audioDescription: false,
+                                              normalized: "" });
   });
 
   it("should format a normalized audio track for a given language", () => {
-    expect(normalizeAudioTrack("fre")).toEqual({
-      language: "fre",
-      audioDescription: false,
-      normalized: "fra",
-    });
-    expect(normalizeAudioTrack("en")).toEqual({
-      language: "en",
-      audioDescription: false,
-      normalized: "eng",
-    });
-    expect(normalizeAudioTrack("pt-BR")).toEqual({
-      language: "pt-BR",
-      audioDescription: false,
-      normalized: "por",
-    });
+    expect(normalizeAudioTrack("fre")).toEqual({ language: "fre",
+                                                 audioDescription: false,
+                                                 normalized: "fra" });
+    expect(normalizeAudioTrack("en")).toEqual({ language: "en",
+                                                audioDescription: false,
+                                                normalized: "eng" });
+    expect(normalizeAudioTrack("pt-BR")).toEqual({ language: "pt-BR",
+                                                   audioDescription: false,
+                                                   normalized: "por" });
   });
 
   it("should accept an object indicating the language", () => {
@@ -152,6 +144,39 @@ describe("utils - normalizeAudioTrack", () => {
       language: "pt-BR",
       audioDescription: true,
       normalized: "por",
+    });
+  });
+
+  it("should be able to specify that is is a dub", () => {
+    expect(normalizeAudioTrack({
+      language: "fre",
+      audioDescription: true,
+      isDub: true,
+    })).toEqual({
+      language: "fre",
+      isDub: true,
+      audioDescription: true,
+      normalized: "fra",
+    });
+    expect(normalizeAudioTrack({
+      language: "en",
+      audioDescription: false,
+      isDub: true,
+    })).toEqual({
+      language: "en",
+      audioDescription: false,
+      normalized: "eng",
+      isDub: true,
+    });
+    expect(normalizeAudioTrack({
+      language: "pt-BR",
+      audioDescription: true,
+      isDub: true,
+    })).toEqual({
+      language: "pt-BR",
+      audioDescription: true,
+      normalized: "por",
+      isDub: true,
     });
   });
 });
