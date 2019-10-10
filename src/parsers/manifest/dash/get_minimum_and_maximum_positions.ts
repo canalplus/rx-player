@@ -19,15 +19,14 @@ import getMaximumPosition from "./get_maximum_position";
 import getMinimumPosition from "./get_minimum_position";
 
 /**
- * Get presentation live gap from manifest information.
  * @param {Object} manifest
- * @returns {number}
+ * @returns {Array.<number>}
  */
 export default function getMinimumAndMaximumPosition(
   manifest: IParsedManifest
 ) : [number|undefined, number|undefined] {
   if (manifest.periods.length === 0) {
-    throw new Error("DASH Parser: no period available for a live content");
+    throw new Error("DASH Parser: no period available for a dynamic content");
   }
 
   return [ getMinimumPosition(manifest),
