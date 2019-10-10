@@ -15,7 +15,6 @@
  */
 
 import {
-  combineLatest as observableCombineLatest,
   Observable,
   of as observableOf,
 } from "rxjs";
@@ -193,51 +192,54 @@ export default function parser({ content,
     if (scheduleRequest == null) {
       throw new Error();
     }
-    const loadedRessources$ = resp.externalRessources.map((ressource) => {
-      const range = ressource.range;
-      const url = content.segment.mediaURL;
-      if (url == null) {
-        throw new Error();
-      }
-      return scheduleRequest(() => {
-        return requestResource(url, range).pipe(
-          map((r) => {
-            return {
-              response: r,
-              requestRange: range,
-            };
-          })
-        );
-      });
+
+    const range: [number, number] =
+      [resp.externalRessources[0].range[0],
+       resp.externalRessources[resp.externalRessources.length - 1].range[1]];
+
+    const url = content.segment.mediaURL;
+    if (url === null) {
+      throw new Error();
+    }
+    const loadedRessource$ = scheduleRequest(() => {
+      return requestResource(url, range).pipe(
+        map((r) => {
+          return {
+            response: r,
+            ranges: resp.externalRessources.map(({ range: _r }) => _r),
+          };
+        })
+      );
     });
 
-    return observableCombineLatest(loadedRessources$).pipe(
-      mergeMap((loadedRessources) => {
-        const { newSegments, newExternalRessources } = loadedRessources
-          .reduce((acc, loadedRessource) => {
-            const {
-              response: { responseData },
-              requestRange,
-            } = loadedRessource;
-            if (responseData !== undefined) {
-              const data = new Uint8Array(responseData);
-              const initialOffset = requestRange[0];
-              const references = getReferencesFromSidx(data, initialOffset);
-              if (references !== null) {
-                references.forEach((ref) => {
-                  if (ref.type === 0) {
-                    acc.newSegments.push(ref);
-                  } else {
-                    acc.newExternalRessources.push(ref);
-                  }
-                  return acc;
-                });
-              }
+    return loadedRessource$.pipe(
+      mergeMap((loadedRessource) => {
+        const newSegments: ISidxReferences[] = [];
+        const newExternalRessources: ISidxReferences[] = [];
+        const {
+          response: { responseData },
+          ranges,
+        } = loadedRessource;
+        if (responseData !== undefined) {
+          const data = new Uint8Array(responseData);
+          let totalLen = 0;
+          for (let i = 0; i < ranges.length; i++) {
+            const length = ranges[i][1] - ranges[i][0] + 1;
+            const element = data.subarray(totalLen, totalLen + length);
+            const initialOffset = ranges[i][0];
+            const references = getReferencesFromSidx(element, initialOffset);
+            if (references !== null) {
+              references.forEach((ref) => {
+                if (ref.type === 0) {
+                  newSegments.push(ref);
+                } else {
+                  newExternalRessources.push(ref);
+                }
+              });
             }
-            return acc;
-          }, { newSegments: [] as ISidxReferences[],
-               newExternalRessources: [] as ISidxReferences[],
-          });
+            totalLen += length;
+          }
+        }
 
         if (newSegments.length > 0) {
           content.representation.index._addSegments(newSegments);
