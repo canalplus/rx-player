@@ -163,13 +163,13 @@ export default function launchTestsForContent(
     });
 
     describe("getManifest", () => {
-      it("should returns the manifest correctly parsed", async function () {
+      it("should return the manifest correctly parsed", async function () {
         xhrMock.lock();
         player.loadVideo({ url: manifestInfos.url, transport });
 
-        await sleep(1);
+        await sleep(10);
         await xhrMock.flush(); // only wait for the manifest request
-        await sleep(1);
+        await sleep(10);
 
         const manifest = player.getManifest();
         expect(manifest).not.to.equal(null);
@@ -780,7 +780,7 @@ export default function launchTestsForContent(
         await sleep(5);
         expect(player.getAvailableVideoBitrates()).to.eql([]);
         await xhrMock.flush();
-        await sleep(5);
+        await sleep(10);
 
         expect(player.getAvailableVideoBitrates()).to.eql(videoBitrates);
       });
@@ -797,10 +797,10 @@ export default function launchTestsForContent(
 
         expect(player.getAvailableAudioBitrates()).to.eql([]);
 
-        await sleep(1);
+        await sleep(5);
         expect(player.getAvailableAudioBitrates()).to.eql([]);
         await xhrMock.flush();
-        await sleep(1);
+        await sleep(10);
 
         expect(player.getAvailableAudioBitrates()).to.eql(audioBitrates);
       });
