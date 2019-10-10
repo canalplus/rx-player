@@ -226,6 +226,14 @@ export default function parseAdaptationSets(
         newID = videoMainAdaptation.id;
       } else {
         const { accessibility } = adaptationChildren;
+
+        let isDub : boolean|undefined;
+        if (roles !== undefined &&
+            roles.some((role) => role.value === "dub"))
+        {
+          isDub = true;
+        }
+
         const isClosedCaption = type === "text" &&
                                 accessibility != null &&
                                 isHardOfHearing(accessibility) ? true :
@@ -250,6 +258,9 @@ export default function parseAdaptationSets(
         }
         if (isAudioDescription != null) {
           parsedAdaptationSet.audioDescription = isAudioDescription;
+        }
+        if (isDub === true) {
+          parsedAdaptationSet.isDub = true;
         }
 
         const adaptationsOfTheSameType = parsedAdaptations[type];

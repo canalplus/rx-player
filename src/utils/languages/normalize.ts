@@ -20,6 +20,7 @@ import ISO_MAP_1_TO_3 from "./ISO_639-1_to_ISO_639-3";
 import ISO_MAP_2_TO_3 from "./ISO_639-2_to_ISO_639-3";
 
 interface IMinimalAudioTrackObject { language: string;
+                                     isDub? : boolean;
                                      audioDescription?: boolean; }
 
 interface IMinimalTextTrackObject { language: string;
@@ -27,6 +28,7 @@ interface IMinimalTextTrackObject { language: string;
 
 interface INormalizedAudioTrackObject
           extends IMinimalAudioTrackObject { normalized: string;
+                                             isDub? : boolean;
                                              audioDescription : boolean; }
 
 interface INormalizedTextTrackObject
@@ -108,35 +110,35 @@ function normalizeTextTrack(
 
 /**
  * Normalize audio track from a user given input into an object
- * with three properties:
+ * with the following properties:
  *   - language {string}: The language the user gave us
  *   - normalized {string}: An attempt to normalize the language into an
  *     ISO 639-3 code
  *   - audioDescription {Boolean}: Whether the track is a closed caption track
+ *   - isDub {Boolean|undefined}: if true, this is a dub.
  * @param {Object|string|null|undefined} _language
  * @returns {Object|null|undefined}
  */
 function normalizeAudioTrack(
   _language : string|IMinimalAudioTrackObject|null|undefined
 ) : INormalizedAudioTrackObject|null|undefined {
-  if (!isNullOrUndefined(_language)) {
-    let language;
-    let audioDescription = false;
-    if (typeof _language === "string") {
-      language = _language;
-    } else {
-      language = _language.language;
-      if (_language.audioDescription === true) {
-        audioDescription = true;
-      }
-    }
-
-    return { language,
-             audioDescription,
-             normalized: normalizeLanguage(language) };
+  if (isNullOrUndefined(_language)) {
+    return _language;
   }
-
-  return _language;
+  if (typeof _language === "string") {
+    return { language: _language,
+             audioDescription: false,
+             normalized: normalizeLanguage(_language) };
+  }
+  const normalized : INormalizedAudioTrackObject = {
+    language: _language.language,
+    audioDescription: _language.audioDescription === true,
+    normalized: normalizeLanguage(normalizeLanguage(_language.language)),
+  };
+  if (_language.isDub === true) {
+    normalized.isDub = true;
+  }
+  return normalized;
 }
 
 export default normalizeLanguage;
