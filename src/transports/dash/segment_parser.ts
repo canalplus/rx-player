@@ -48,11 +48,12 @@ import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 
 /**
- *
+ * Request 'sidx' box from segment.
  * @param {String} url
  * @param {Object} range
+ * @returns {Observable<Object>}
  */
-function requestResource(
+function requestArrayBufferResource(
   url : string,
   range? : [number, number]
 ) : Observable<ILoaderDataLoadedValue<ArrayBuffer>> {
@@ -70,10 +71,11 @@ function requestResource(
 }
 
 /**
- *
+ * Get segment informations from response.
  * @param {Object} content
  * @param {Object} response
  * @param {Object} init
+ * @returns {Object}
  */
 function parseSegmentInfos(content: IContent,
                            response: { data: ArrayBuffer|Uint8Array|null;
@@ -81,7 +83,7 @@ function parseSegmentInfos(content: IContent,
                            init?: IChunkTimingInfos
 ): { parserResponse : ISegmentParserResponse<Uint8Array |
                                              ArrayBuffer>;
-     externalRessources?: ISidxReference[]; } {
+     indexes?: ISidxReference[]; } {
   const { period, representation, segment } = content;
   const { data, isChunked } = response;
   if (data == null) {
@@ -101,7 +103,7 @@ function parseSegmentInfos(content: IContent,
   const isWEBM = isWEBMEmbeddedTrack(representation);
 
   let nextSegments;
-  const externalRessources = [];
+  let indexes;
 
   if (isWEBM) {
     nextSegments = getSegmentsFromCues(chunkData, 0);
@@ -115,8 +117,7 @@ function parseSegmentInfos(content: IContent,
       if (segments.length > 0) {
         nextSegments = segments;
       }
-      const externalReferences = referencesFromSidx.filter((ref) => ref.referenceTo === "index");
-      externalRessources.push(...externalReferences);
+      indexes = referencesFromSidx.filter((ref) => ref.referenceTo === "index");
     }
   }
 
@@ -171,7 +172,7 @@ function parseSegmentInfos(content: IContent,
 
   return {
     parserResponse,
-    externalRessources,
+    indexes,
   };
 }
 
@@ -184,29 +185,35 @@ export default function parser({ content,
 ) : ISegmentParserObservable< Uint8Array | ArrayBuffer > {
   const parsedSegmentsInfos = parseSegmentInfos(content, response, init);
 
-  function loadExternalRessources(
-    resp : { parserResponse : ISegmentParserResponse<Uint8Array |
-                                                     ArrayBuffer>;
-    externalRessources: ISidxReference[]; }
+  /**
+   * Load 'sidx' boxes from indexes references.
+   * @param {Object} segmentParserResponse
+   * @param {Array.<Object>} indexesToLoad
+   * @returns {Observable}
+   */
+  function loadIndexes(
+    segmentParserResponse : ISegmentParserResponse<Uint8Array |
+                                                   ArrayBuffer>,
+    indexesToLoad : ISidxReference[]
   ): Observable<ISegmentParserResponse<Uint8Array|ArrayBuffer>> {
     if (scheduleRequest == null) {
       throw new Error();
     }
 
     const range: [number, number] =
-      [resp.externalRessources[0].range[0],
-       resp.externalRessources[resp.externalRessources.length - 1].range[1]];
+      [indexesToLoad[0].range[0],
+      indexesToLoad[indexesToLoad.length - 1].range[1]];
 
     const url = content.segment.mediaURL;
     if (url === null) {
       throw new Error();
     }
     const loadedRessource$ = scheduleRequest(() => {
-      return requestResource(url, range).pipe(
+      return requestArrayBufferResource(url, range).pipe(
         map((r) => {
           return {
             response: r,
-            ranges: resp.externalRessources.map(({ range: _r }) => _r),
+            ranges: indexesToLoad.map(({ range: _r }) => _r),
           };
         })
       );
@@ -215,7 +222,7 @@ export default function parser({ content,
     return loadedRessource$.pipe(
       mergeMap((loadedRessource) => {
         const newSegments: ISidxReference[] = [];
-        const newExternalRessources: ISidxReference[] = [];
+        const newIndexes: ISidxReference[] = [];
         const {
           response: { responseData },
           ranges,
@@ -225,15 +232,15 @@ export default function parser({ content,
           let totalLen = 0;
           for (let i = 0; i < ranges.length; i++) {
             const length = ranges[i][1] - ranges[i][0] + 1;
-            const element = data.subarray(totalLen, totalLen + length);
+            const sidxBox = data.subarray(totalLen, totalLen + length);
             const initialOffset = ranges[i][0];
-            const references = getReferencesFromSidx(element, initialOffset);
+            const references = getReferencesFromSidx(sidxBox, initialOffset);
             if (references !== null) {
               references.forEach((ref) => {
                 if (ref.referenceTo === "segment") {
                   newSegments.push(ref);
                 } else {
-                  newExternalRessources.push(ref);
+                  newIndexes.push(ref);
                 }
               });
             }
@@ -244,23 +251,20 @@ export default function parser({ content,
         if (newSegments.length > 0) {
           content.representation.index._addSegments(newSegments);
         }
-        if (newExternalRessources.length > 0) {
-          resp.externalRessources = newExternalRessources;
-          return loadExternalRessources(resp);
+        if (newIndexes.length > 0) {
+          return loadIndexes(segmentParserResponse, newIndexes);
         }
-        return observableOf(resp.parserResponse);
+        return observableOf(segmentParserResponse);
       })
     );
   }
 
-  const { externalRessources, parserResponse } = parsedSegmentsInfos;
-  if (externalRessources == null ||
-      externalRessources.length === 0) {
+  const { indexes, parserResponse } = parsedSegmentsInfos;
+  if (indexes == null ||
+      indexes.length === 0) {
     return observableOf(parsedSegmentsInfos.parserResponse);
   }
 
-  return loadExternalRessources({
-    parserResponse,
-    externalRessources,
-  });
+  return loadIndexes(parserResponse,
+                     indexes);
 }
