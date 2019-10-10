@@ -85,7 +85,7 @@ export interface ISidxReferences {
  * Returns null if not found.
  *
  * @param {Uint8Array} buf
- * @param {Number} initialOffset
+ * @param {Number|undefined} initialOffset
  * @returns {Object|null} {Array.<Object>} - Information about each reference
  * (can be a subsegment or sidx). Contains those keys:
  *   - time {Number}: starting _presentation time_ for a subsegment,
@@ -106,7 +106,7 @@ function getReferencesFromSidx(
   if (index === -1) {
     return null;
   }
-  let offset = initialOffset != null ? initialOffset :
+  let offset = initialOffset != null ? (initialOffset + index) :
                                        index;
 
   const size = be4toi(buf, index);

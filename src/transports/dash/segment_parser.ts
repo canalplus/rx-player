@@ -98,7 +98,7 @@ function parseSegmentInfos(content: IContent,
   const chunkData = data instanceof Uint8Array ? data :
                                                  new Uint8Array(data);
 
-  const indexRange = segment.indexRange;
+  const { range, indexRange } = segment;
   const isWEBM = isWEBMEmbeddedTrack(representation);
 
   let nextSegments;
@@ -107,10 +107,10 @@ function parseSegmentInfos(content: IContent,
   if (isWEBM) {
     nextSegments = getSegmentsFromCues(chunkData, 0);
   } else {
-    const referencesFromSidx =
-      getReferencesFromSidx(chunkData,
-                            Array.isArray(indexRange) ? indexRange[0] :
-                                                        0);
+    const initialOffset = Array.isArray(indexRange) ? indexRange[0] :
+                                                      range !== undefined ? range[0] :
+                                                                            undefined;
+    const referencesFromSidx = getReferencesFromSidx(chunkData, initialOffset);
     if (referencesFromSidx !== null) {
       const segments = referencesFromSidx.filter((ref) => ref.type === 0);
       if (segments.length > 0) {
@@ -199,17 +199,30 @@ export default function parser({ content,
       if (url == null) {
         throw new Error();
       }
-      return scheduleRequest(() => requestResource(url, range)); // XXX TODO
+      return scheduleRequest(() => {
+        return requestResource(url, range).pipe(
+          map((r) => {
+            return {
+              response: r,
+              requestRange: range,
+            };
+          })
+        );
+      });
     });
 
     return observableCombineLatest(loadedRessources$).pipe(
       mergeMap((loadedRessources) => {
         const { newSegments, newExternalRessources } = loadedRessources
           .reduce((acc, loadedRessource) => {
-            const { responseData } = loadedRessource;
+            const {
+              response: { responseData },
+              requestRange,
+            } = loadedRessource;
             if (responseData !== undefined) {
               const data = new Uint8Array(responseData);
-              const references = getReferencesFromSidx(data);
+              const initialOffset = requestRange[0];
+              const references = getReferencesFromSidx(data, initialOffset);
               if (references !== null) {
                 references.forEach((ref) => {
                   if (ref.type === 0) {

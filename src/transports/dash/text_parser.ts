@@ -84,7 +84,7 @@ function parseMP4EmbeddedTrack({ response,
                                                                    string>
 ) : { parsedTrackInfos: ITextParserResponse; externalRessources: any[] } {
   const { period, representation, segment } = content;
-  const { isInit, indexRange, timestampOffset = 0 } = segment;
+  const { isInit, indexRange, timestampOffset = 0, range } = segment;
   const { language } = content.adaptation;
   const { data, isChunked } = response;
 
@@ -96,9 +96,10 @@ function parseMP4EmbeddedTrack({ response,
                                               new Uint8Array(data);
   }
   const externalRessources: ISidxReferences[] = [];
-  const sidxReferences =
-    getReferencesFromSidx(chunkBytes,
-                          Array.isArray(indexRange) ? indexRange[0] : 0);
+  const initialOffset = Array.isArray(indexRange) ? indexRange[0] :
+                                                    (range !== undefined) ? range[0] :
+                                                                            undefined;
+  const sidxReferences = getReferencesFromSidx(chunkBytes, initialOffset);
 
   const sidxSegments = (sidxReferences !== null && sidxReferences.length > 0) ?
     sidxReferences.filter((s) => s.type === 0) : undefined;
@@ -306,17 +307,30 @@ export default function textTrackParser({ response,
         if (url == null) {
           throw new Error();
         }
-        return scheduleRequest(() => requestResource(url, range)); // XXX TODO
+        return scheduleRequest(() => {
+          return requestResource(url, range).pipe(
+            map((r) => {
+              return {
+                response: r,
+                requestRange: range,
+              };
+            })
+          );
+        });
       });
 
       return observableCombineLatest(loadedRessources$).pipe(
         mergeMap((loadedRessources) => {
           const { newSegments, newExternalRessources } = loadedRessources
             .reduce((acc, loadedRessource) => {
-              const { responseData } = loadedRessource;
+              const {
+                response: { responseData },
+                requestRange,
+              } = loadedRessource;
               if (responseData !== undefined) {
                 const _data = new Uint8Array(responseData);
-                const references = getReferencesFromSidx(_data);
+                const initialOffset = requestRange[0];
+                const references = getReferencesFromSidx(_data, initialOffset);
                 if (references !== null) {
                   references.forEach((ref) => {
                     if (ref.type === 0) {
