@@ -89,13 +89,14 @@ export interface IInitializeOptions {
   keySystems : IKeySystemOption[];
   lowLatencyMode : boolean;
   mediaElement : HTMLMediaElement;
+  minimumManifestUpdateInterval : number;
   networkConfig: { manifestRetry? : number;
                    offlineRetry? : number;
                    segmentRetry? : number; };
+  pipelines : ITransportPipelines;
   speed$ : Observable<number>;
   startAt? : IInitialTimeOptions;
   textTrackOptions : ITextTrackSourceBufferOptions;
-  pipelines : ITransportPipelines;
   url? : string;
 }
 
@@ -130,11 +131,12 @@ export default function InitializeOnMediaSource(
     keySystems,
     lowLatencyMode,
     mediaElement,
+    minimumManifestUpdateInterval,
     networkConfig,
+    pipelines,
     speed$,
     startAt,
     textTrackOptions,
-    pipelines,
     url } : IInitializeOptions
 ) : Observable<IInitEvent> {
   const warning$ = new Subject<ICustomError>();
@@ -199,13 +201,13 @@ export default function InitializeOnMediaSource(
     log.debug("Init: Initial time calculated:", initialTime);
 
     const mediaSourceLoader = createMediaSourceLoader({
-      mediaElement,
-      manifest,
-      clock$,
-      speed$,
       abrManager,
-      segmentPipelinesManager,
       bufferOptions: objectAssign({ textTrackOptions }, bufferOptions),
+      clock$,
+      manifest,
+      mediaElement,
+      segmentPipelinesManager,
+      speed$,
     });
 
     const recursiveLoad$ = recursivelyLoadOnMediaSource(initialMediaSource,
@@ -219,7 +221,8 @@ export default function InitializeOnMediaSource(
 
     const manifestUpdate$ = manifestUpdateScheduler({ manifest, sendingTime },
                                                     scheduleManifestRefresh$,
-                                                    fetchManifest);
+                                                    fetchManifest,
+                                                    minimumManifestUpdateInterval);
 
     return observableMerge(manifestUpdate$, recursiveLoad$).pipe(
       startWith(EVENTS.manifestReady(manifest)),

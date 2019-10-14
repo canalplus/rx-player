@@ -50,7 +50,8 @@ export default function manifestUpdateScheduler(
   initialManifest : { manifest : Manifest;
                       sendingTime? : number; },
   scheduleRefresh$ : Observable<number>,
-  fetchManifest : IManifestFetcher
+  fetchManifest : IManifestFetcher,
+  minimumManifestUpdateInterval : number
 ) : Observable<never> {
   // Emit each time the manifest is refreshed.
   const manifestRefreshed$ = new ReplaySubject<{ manifest : Manifest;
@@ -62,13 +63,17 @@ export default function manifestUpdateScheduler(
   return manifestRefreshed$.pipe(
     startWith(initialManifest),
     switchMap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
+      // schedule a Manifest refresh to avoid sending too much request.
+      const timeSinceLastRefresh = newSendingTime == null ?
+                                     0 :
+                                     performance.now() - newSendingTime;
+      const minInterval = Math.max(minimumManifestUpdateInterval * 1000 -
+                                    timeSinceLastRefresh,
+                                   0);
       const manualRefresh$ = scheduleRefresh$.pipe(
         mergeMap((delay) => {
-          // schedule a Manifest refresh to avoid sending too much request.
-          const timeSinceLastRefresh = newSendingTime == null ?
-                                         0 :
-                                         performance.now() - newSendingTime;
-          return observableTimer(delay - timeSinceLastRefresh);
+          return observableTimer(Math.max(delay - timeSinceLastRefresh,
+                                          minInterval));
         }));
 
       const autoRefresh$ = (() => {
@@ -79,7 +84,7 @@ export default function manifestUpdateScheduler(
                                    0 :
                                    performance.now() - newSendingTime;
         const updateTimeout = newManifest.lifetime * 1000 - timeSinceRequest;
-        return observableTimer(updateTimeout);
+        return observableTimer(Math.max(updateTimeout, minInterval));
       })();
 
       return observableMerge(autoRefresh$, manualRefresh$)
