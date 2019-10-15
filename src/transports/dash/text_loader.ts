@@ -26,8 +26,8 @@ import {
 } from "../types";
 import byteRange from "../utils/byte_range";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
+import isMP4EmbeddedTextTrack from "../utils/is_mp4_embedded_text_track";
 import initSegmentLoader from "./init_segment_loader";
-import isMP4EmbeddedTextTrack from "./is_mp4_embedded_text_track";
 import lowLatencySegmentLoader from "./low_latency_segment_loader";
 
 /**

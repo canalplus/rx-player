@@ -22,13 +22,19 @@ describe("Features list - LOCAL_MANIFEST", () => {
   it("should add LOCAL_MANIFEST in the current features", () => {
     const feat = {};
     jest.mock("../../../transports/local", () => ({ __esModule: true,
-                                                           default: feat }));
+                                                    default: feat }));
+    /* tslint:disable no-unsafe-any */
     const addDASHFeature = require("../local").default;
+    /* tslint:enable no-unsafe-any */
 
     const featureObject : {
       transports : { [featureName : string] : unknown };
     } = { transports: {} };
+
+    /* tslint:disable no-unsafe-any */
     addDASHFeature(featureObject);
+    /* tslint:enable no-unsafe-any */
+
     expect(featureObject).toEqual({ transports: { local: {} } });
     expect(featureObject.transports.local).toBe(feat);
   });

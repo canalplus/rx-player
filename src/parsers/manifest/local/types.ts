@@ -15,8 +15,7 @@
  */
 
 export type ILocalManifestInitSegmentLoader = (
-  callbacks : { resolve : (args: { data : ArrayBuffer | Uint8Array | null;
-                                   size : number; }) => void;
+  callbacks : { resolve : (args: { data : ArrayBuffer | null }) => void;
 
                 reject : (err? : Error) => void; }
   // returns either the aborting callback or nothing
@@ -24,18 +23,20 @@ export type ILocalManifestInitSegmentLoader = (
 
 export type ILocalManifestSegmentLoader = (
   segment : ILocalIndexSegment, // Same than the segment from `segments`
-  callbacks : { resolve : (args: { data : ArrayBuffer | Uint8Array;
-                                   size : number;
-                                   duration : number; }) => void;
+  callbacks : { resolve : (args: { data : ArrayBuffer }) => void;
 
                 reject : (err? : Error) => void; }
   // returns either the aborting callback or nothing
 ) => (() => void) | void;
 
 export interface ILocalIndexSegment {
-  time : number;
-  timescale : number;
-  duration : number;
+  time : number; // Start time of the segment, timescaled
+  timescale : number; // Allow to convert `time` and `duration` into seconds:
+                      // `time / timescale == START_TIME_IN_SECONDS`
+  duration : number; // Duration of the segment, timescaled
+  timestampOffset? : number; // If set, the amount of time we have to add to the
+                             // segment to convert its media time to its
+                             // presentation time, timescaled
 }
 
 export interface ILocalIndex {

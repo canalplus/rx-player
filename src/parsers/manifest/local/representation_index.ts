@@ -80,6 +80,7 @@ export default function createRepresentationIndex(
             time: wantedSegment.time,
             duration: wantedSegment.duration,
             timescale: wantedSegment.timescale,
+            timestampOffset: wantedSegment.timestampOffset,
             mediaURL: null,
             privateInfos: {
               localManifestSegment: { load: index.loadSegment,

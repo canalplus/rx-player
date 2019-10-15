@@ -19,18 +19,22 @@ import {
   ILocalManifestInitSegmentLoader,
   ILocalManifestSegmentLoader,
 } from "../../parsers/manifest/local";
-import { ILoaderRegularDataEvent } from "../types";
+import {
+  ILoaderRegularDataEvent,
+  ISegmentLoaderArguments,
+  ISegmentLoaderObservable,
+} from "../types";
 
 /**
  * @param {Function} customSegmentLoader
  * @returns {Observable}
  */
-export function loadInitSegment(
+function loadInitSegment(
   customSegmentLoader : ILocalManifestInitSegmentLoader
-) : Observable< ILoaderRegularDataEvent<Uint8Array | ArrayBuffer | null >> {
-  return new Observable((obs : Observer< ILoaderRegularDataEvent< Uint8Array |
-                                                                  ArrayBuffer |
-                                                                  null > >) => {
+) : Observable< ILoaderRegularDataEvent<ArrayBuffer | null>> {
+  return new Observable((obs : Observer<
+    ILoaderRegularDataEvent< ArrayBuffer | null >
+  >) => {
     let hasFinished = false;
 
     /**
@@ -38,7 +42,7 @@ export function loadInitSegment(
      * @param {Object} args
      */
     const resolve = (_args : {
-      data : ArrayBuffer | Uint8Array | null;
+      data : ArrayBuffer | null;
       size? : number;
       duration? : number;
     }) => {
@@ -74,13 +78,13 @@ export function loadInitSegment(
  * @param {Function} customSegmentLoader
  * @returns {Observable}
  */
-export default function loadSegment(
+function loadSegment(
   segment : { time : number; duration : number; timescale : number },
   customSegmentLoader : ILocalManifestSegmentLoader
-) : Observable< ILoaderRegularDataEvent<Uint8Array | ArrayBuffer | null >> {
-  return new Observable((obs : Observer< ILoaderRegularDataEvent< Uint8Array |
-                                                                  ArrayBuffer |
-                                                                  null > >) => {
+) : Observable< ILoaderRegularDataEvent<ArrayBuffer | null>> {
+  return new Observable((obs : Observer<
+    ILoaderRegularDataEvent< ArrayBuffer | null >
+  >) => {
     let hasFinished = false;
 
     /**
@@ -88,7 +92,7 @@ export default function loadSegment(
      * @param {Object} args
      */
     const resolve = (_args : {
-      data : ArrayBuffer | Uint8Array | null;
+      data : ArrayBuffer | null;
       size? : number;
       duration? : number;
     }) => {
@@ -117,4 +121,26 @@ export default function loadSegment(
       }
     };
   });
+}
+
+/**
+ * Generic segment loader for the local Manifest.
+ * @param {Object} arg
+ * @returns {Observable}
+ */
+export default function segmentLoader(
+  { segment } : ISegmentLoaderArguments
+) : ISegmentLoaderObservable< ArrayBuffer | null > {
+  const privateInfos = segment.privateInfos;
+  if (segment.isInit) {
+    if (privateInfos === undefined || privateInfos.localManifestInitSegment == null) {
+      throw new Error("Segment is not a local Manifest segment");
+    }
+    return loadInitSegment(privateInfos.localManifestInitSegment.load);
+  }
+  if (privateInfos === undefined || privateInfos.localManifestSegment == null) {
+    throw new Error("Segment is not an local Manifest segment");
+  }
+  return loadSegment(privateInfos.localManifestSegment.segment,
+                     privateInfos.localManifestSegment.load);
 }

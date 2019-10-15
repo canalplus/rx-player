@@ -24,45 +24,18 @@ import Manifest from "../../manifest";
 import parseLocalManifest, {
   ILocalManifest,
 } from "../../parsers/manifest/local";
-import { imageParser } from "../dash/image_pipelines";
-import segmentParser from "../dash/segment_parser";
-import textTrackParser from "../dash/text_parser";
 import {
   IManifestLoaderArguments,
   IManifestLoaderObservable,
   IManifestParserArguments,
   IManifestParserObservable,
-  ISegmentLoaderArguments,
-  ISegmentLoaderObservable,
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
 import callCustomManifestLoader from "../utils/call_custom_manifest_loader";
-import loadSegment, {
-  loadInitSegment,
-} from "./load_segment";
-
-/**
- * Generic segment loader for the local Manifest.
- * @param {Object} arg
- * @returns {Observable}
- */
-function segmentLoader(
-  { segment } : ISegmentLoaderArguments
-) : ISegmentLoaderObservable< ArrayBuffer | Uint8Array | null > {
-  const privateInfos = segment.privateInfos;
-  if (segment.isInit) {
-    if (privateInfos === undefined || privateInfos.localManifestInitSegment == null) {
-      throw new Error("Segment is not a local Manifest segment");
-    }
-    return loadInitSegment(privateInfos.localManifestInitSegment.load);
-  }
-  if (privateInfos === undefined || privateInfos.localManifestSegment == null) {
-    throw new Error("Segment is not an local Manifest segment");
-  }
-  return loadSegment(privateInfos.localManifestSegment.segment,
-                     privateInfos.localManifestSegment.load);
-}
+import segmentLoader from "./segment_loader";
+import segmentParser from "./segment_parser";
+import textTrackParser from "./text_parser";
 
 /**
  * Returns pipelines used for local Manifest streaming.
@@ -77,8 +50,8 @@ export default function getLocalManifestPipelines(
   const manifestPipeline = {
     loader(args : IManifestLoaderArguments) : IManifestLoaderObservable {
       if (customManifestLoader == null) {
-        throw new Error("A local Manifest is not loadable through regular HTTP calls." +
-                        " You have to set a `manifestLoader` when calling " +
+        throw new Error("A local Manifest is not loadable through regular HTTP(S) " +
+                        " calls. You have to set a `manifestLoader` when calling " +
                         "`loadVideo`");
       }
       return callCustomManifestLoader(
@@ -102,26 +75,23 @@ export default function getLocalManifestPipelines(
     },
   };
 
-  const segmentPipeline = {
-    loader: segmentLoader,
-    parser: segmentParser,
-  };
-
-  const textTrackPipeline = {
-    loader: segmentLoader,
-    parser: textTrackParser,
-  };
+  const segmentPipeline = { loader: segmentLoader,
+                            parser: segmentParser };
+  const textTrackPipeline = { loader: segmentLoader,
+                              parser: textTrackParser };
 
   const imageTrackPipeline = {
-    loader: segmentLoader,
-    parser: imageParser,
+    loader:  () : never => {
+      throw new Error("Images track not supported in local transport.");
+    },
+    parser: () : never => {
+      throw new Error("Images track not supported in local transport.");
+    },
   };
 
-  return {
-    manifest: manifestPipeline,
-    audio: segmentPipeline,
-    video: segmentPipeline,
-    text: textTrackPipeline,
-    image: imageTrackPipeline,
-  };
+  return { manifest: manifestPipeline,
+           audio: segmentPipeline,
+           video: segmentPipeline,
+           text: textTrackPipeline,
+           image: imageTrackPipeline };
 }
