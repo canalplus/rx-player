@@ -291,6 +291,7 @@ export default function BufferOrchestrator(
         return observableConcat(
           ...rangesToClean.map(({ start, end }) =>
             queuedSourceBuffer.removeBuffer(start, end).pipe(ignoreElements())),
+          observableOf(EVENTS.needsNudgingSeek()),
           clock$.pipe(take(1), mergeMap((lastTick) => {
             const lastPosition = lastTick.currentTime + lastTick.wantedTimeOffset;
             const newInitialPeriod = manifest.getPeriodForTime(lastPosition);

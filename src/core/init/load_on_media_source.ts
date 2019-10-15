@@ -184,6 +184,14 @@ export default function createMediaSourceLoader({
               handleDiscontinuity(gap[1], mediaElement);
             }
             return EMPTY;
+          case "needs-nudging-seek":
+            const { currentTime } = mediaElement;
+            if (currentTime + 0.001 < mediaElement.duration) {
+              mediaElement.currentTime += 0.001;
+            } else {
+              mediaElement.currentTime -= currentTime - 0.001 < 0 ? 0 :
+                                                                    0.001;
+            }
           default:
             return observableOf(evt);
         }
