@@ -425,12 +425,16 @@ function excludeFromRanges(
       result.push(range);
     } else {
       let lastStart : number = range.start;
-      for (let j = 0; j < overlappingRanges.length; j++) {
-        if (overlappingRanges[j].start > lastStart) {
+      for (let j = 0; j < intersections.length; j++) {
+        if (intersections[j].start > lastStart) {
           result.push({ start: lastStart,
-                        end: overlappingRanges[j].start });
+                        end: intersections[j].start });
         }
-        lastStart = overlappingRanges[j].end;
+        lastStart = intersections[j].end;
+      }
+      if (lastStart < range.end) {
+        result.push({ start: lastStart,
+                      end: range.end });
       }
     }
   }
