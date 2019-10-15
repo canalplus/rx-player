@@ -24,6 +24,7 @@ import {
   excludeFromRanges,
   IRange,
   isTimeInRange,
+  isTimeInRanges,
   keepRangeIntersection,
 } from "../../../utils/ranges";
 import { QueuedSourceBuffer } from "../../source_buffers";
@@ -71,7 +72,8 @@ export default function getAdaptationSwitchStrategy(
   if (adaptation.type === "video" &&
       clockTick.readyState > 1 &&
       isTimeInRange({ start, end }, currentTime) &&
-      adaptationInBuffer.every((range) => !isTimeInRange(range, currentTime)))
+      (isTimeInRanges(bufferedRanges, currentTime) &&
+       !isTimeInRanges(adaptationInBuffer, currentTime)))
   {
     return { type: "needs-reload", value: undefined };
   }
