@@ -31,6 +31,7 @@ import {
   IBufferManifestMightBeOutOfSync,
   IBufferNeedsDiscontinuitySeek,
   IBufferNeedsManifestRefresh,
+  IBufferNeedsNudgingSeek,
   IBufferStateActive,
   IBufferStateFull,
   IBufferWarningEvent,
@@ -127,6 +128,11 @@ const EVENTS = {
   ) : INeedsMediaSourceReload {
     return { type: "needs-media-source-reload",
              value: { currentTime, isPaused } };
+  },
+
+  needsNudgingSeek() : IBufferNeedsNudgingSeek {
+    return { type: "needs-nudging-seek",
+             value: null };
   },
 
   periodBufferReady(

@@ -115,6 +115,7 @@ export interface IRepresentationChangeEvent {
 export type IAdaptationBufferEvent<T> = IRepresentationBufferEvent<T> |
                                         IBitrateEstimationChangeEvent |
                                         INeedsMediaSourceReload |
+                                        IBufferNeedsNudgingSeek |
                                         IRepresentationChangeEvent;
 
 // The currently-downloaded Adaptation changed.
@@ -157,6 +158,11 @@ export interface ICompletedBufferEvent { type: "complete-buffer";
 export interface INeedsMediaSourceReload { type: "needs-media-source-reload";
                                            value: { currentTime : number;
                                                     isPaused : boolean; }; }
+
+// Emitted when we might need to perform a very small seek to continue playback.
+// (e.g. to flush the current buffers)
+export interface IBufferNeedsNudgingSeek { type: "needs-nudging-seek";
+                                           value: null; }
 
 // Events coming from single PeriodBuffer
 export type IPeriodBufferEvent = IPeriodBufferReadyEvent |
