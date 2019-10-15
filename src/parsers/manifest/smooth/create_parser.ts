@@ -86,6 +86,10 @@ export interface IHSSParserConfiguration {
   referenceDateTime? : number;
   minRepresentationBitrate? : number;
   keySystems? : (hex? : Uint8Array) => IKeySystem[];
+  serverSyncInfos? : {
+    serverTimestamp: number;
+    clientTime: number;
+  };
 }
 
 interface ISmoothParsedQualityLevel {
@@ -125,6 +129,11 @@ function createSmoothStreamingParser(
     Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1000;
   const MIN_REPRESENTATION_BITRATE = parserOptions.minRepresentationBitrate ||
     0;
+
+  const { serverSyncInfos } = parserOptions;
+  const SERVER_TIME_OFFSET = serverSyncInfos ?
+    serverSyncInfos.serverTimestamp - serverSyncInfos.clientTime :
+    undefined;
 
   /**
    * @param {Element} q
@@ -578,6 +587,7 @@ function createSmoothStreamingParser(
     const manifest = {
       availabilityStartTime: availabilityStartTime || 0,
       duration,
+      clockOffset: SERVER_TIME_OFFSET,
       id: "gen-smooth-manifest-" + generateManifestID(),
       isLive,
       maximumTime,
