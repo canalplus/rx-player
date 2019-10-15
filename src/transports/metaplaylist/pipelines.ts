@@ -156,7 +156,18 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const url = response.url == null ? loaderURL :
                                          response.url;
       const { responseData } = response;
-      return handleParsedResult(parseMetaPlaylist(responseData, url));
+
+      const serverTimeOffset = options.serverSyncInfos ?
+        (options.serverSyncInfos.serverTimestamp - options.serverSyncInfos.clientTime) :
+        undefined;
+
+      const parserOptions = {
+        url,
+        clockOffset : externalClockOffset != null ? externalClockOffset :
+                                                    serverTimeOffset,
+      };
+
+      return handleParsedResult(parseMetaPlaylist(responseData, parserOptions));
 
       function handleParsedResult(
         parsedResult : IMPLParserResponse<IParsedManifest>

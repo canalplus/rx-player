@@ -73,7 +73,10 @@ const generateManifestID = idGenerator();
  */
 export default function parseMetaPlaylist(
   data : unknown,
-  url? : string
+  parserOptions : {
+    url?: string;
+    clockOffset?: number;
+  }
 ): IParserResponse<IParsedManifest> {
   let parsedData;
   if (typeof data === "object" && data != null) {
@@ -124,7 +127,9 @@ export default function parseMetaPlaylist(
     value : {
       ressources,
       continue : function parseWholeMPL(loadedRessources : Manifest[]) {
-        const parsedManifest = createManifest(metaPlaylist, loadedRessources, url);
+        const parsedManifest = createManifest(metaPlaylist,
+                                              loadedRessources,
+                                              parserOptions);
         return { type: "done", value: parsedManifest };
       },
     },
@@ -144,8 +149,12 @@ export default function parseMetaPlaylist(
 function createManifest(
   mplData : IMetaPlaylist,
   manifests : Manifest[],
-  url? : string
+  parserOptions:  {
+    url?: string;
+    clockOffset?: number;
+  }
 ): IParsedManifest {
+  const { url, clockOffset } = parserOptions;
   const generateAdaptationID = idGenerator();
   const generateRepresentationID = idGenerator();
   const { contents } = mplData;
@@ -286,6 +295,7 @@ function createManifest(
   const time = performance.now();
   const manifest = {
     availabilityStartTime: 0,
+    clockOffset,
     suggestedPresentationDelay: 10,
     duration: isLive ? undefined : duration,
     id: "gen-metaplaylist-man-" + generateManifestID(),
