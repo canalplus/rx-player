@@ -496,7 +496,7 @@ describe("utils - ranges", () => {
       expect(excludeFromRanges(timeRanges, timeRanges)).toEqual([]);
     });
 
-    it.only("should return no range if the second contains the first", () => {
+    it("should return no range if the second contains the first", () => {
       const timeRanges1 = [
         { start: 0, end: 10 },
         { start: 20, end: 30 },
