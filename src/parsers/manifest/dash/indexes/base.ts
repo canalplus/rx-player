@@ -182,7 +182,6 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     if (index.initialization === undefined &&
         index.indexRange === undefined &&
         this._isContentFragmented) {
-      range = [0, 1500];
       this._hypotheticalInitRange = true;
     } else {
       if (index.initialization != null) {
