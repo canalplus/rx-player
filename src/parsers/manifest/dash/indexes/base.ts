@@ -138,6 +138,7 @@ function _addSegmentInfos(
 export default class BaseRepresentationIndex implements IRepresentationIndex {
   private _index : IBaseIndex;
   private _hypotheticalInitRange: boolean;
+  private _isContentFragmented: boolean;
 
   // absolute end of the period, timescaled and converted to index time
   private _scaledPeriodEnd : number | undefined;
@@ -146,14 +147,16 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @param {Object} index
    * @param {Object} context
    */
-  constructor(index : IBaseIndexIndexArgument, context : IBaseIndexContextArgument) {
+  constructor(index : IBaseIndexIndexArgument,
+              context : IBaseIndexContextArgument,
+              isContentFragmented: boolean) {
     const { periodStart,
             periodEnd,
             representationBaseURL,
             representationId,
             representationBitrate } = context;
     const { timescale } = index;
-
+    this._isContentFragmented = isContentFragmented;
     const presentationTimeOffset = index.presentationTimeOffset != null ?
       index.presentationTimeOffset : 0;
 
@@ -175,13 +178,15 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     // is loaded, to ensure that we push a complete and dry segment
     // to buffers.
     let range: [number, number] | undefined;
-    this._hypotheticalInitRange = true;
-    if (index.initialization === undefined && index.indexRange === undefined) {
+    this._hypotheticalInitRange = false;
+    if (index.initialization === undefined &&
+        index.indexRange === undefined &&
+        this._isContentFragmented) {
       range = [0, 1500];
+      this._hypotheticalInitRange = true;
     } else {
       if (index.initialization != null) {
         range = index.initialization.range;
-        this._hypotheticalInitRange = false;
       } else if (index.indexRange != null) {
         range = [0, index.indexRange[0] - 1];
       }
@@ -205,7 +210,11 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * Construct init Segment.
    * @returns {Object}
    */
-  getInitSegment() : ISegment {
+  getInitSegment() : ISegment | null {
+    // As content is not fragmented, no init segment by default
+    if (!this._isContentFragmented) {
+      return null;
+    }
     const initSegment = getInitSegment(this._index);
     initSegment.hypotheticalInitRange = this._hypotheticalInitRange;
     return initSegment;
@@ -217,6 +226,16 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @returns {Array.<Object>}
    */
   getSegments(_up : number, _to : number) : ISegment[] {
+    if (!this._isContentFragmented) {
+      // Return whole segment
+      return [{ id: "0",
+                isInit: false,
+                number: 0,
+                time: 0,
+                duration: Number.MAX_VALUE,
+                timescale: 1,
+                mediaURL: this._index.mediaURL }];
+    }
     return getSegmentsFromTimeline(this._index, _up, _to, this._scaledPeriodEnd);
   }
 

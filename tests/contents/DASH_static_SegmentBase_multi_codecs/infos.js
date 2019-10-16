@@ -223,9 +223,6 @@ export default {
                 codec: undefined,
                 mimeType: "text/vtt",
                 index: {
-                  init: {
-                    mediaURL: BASE_URL + "s-el.webvtt",
-                  },
                   segments: [
                     {
                       mediaURL: BASE_URL + "s-el.webvtt",
@@ -248,9 +245,6 @@ export default {
                 codec: undefined,
                 mimeType: "text/vtt",
                 index: {
-                  init: {
-                    mediaURL: BASE_URL + "s-en.webvtt",
-                  },
                   segments: [
                     {
                       mediaURL: BASE_URL + "s-en.webvtt",
@@ -273,9 +267,6 @@ export default {
                 codec: undefined,
                 mimeType: "text/vtt",
                 index: {
-                  init: {
-                    mediaURL: BASE_URL + "s-fr.webvtt",
-                  },
                   segments: [
                     {
                       mediaURL: BASE_URL + "s-fr.webvtt",
@@ -298,9 +289,6 @@ export default {
                 codec: undefined,
                 mimeType: "text/vtt",
                 index: {
-                  init: {
-                    mediaURL: BASE_URL + "s-pt-BR.webvtt",
-                  },
                   segments: [
                     {
                       mediaURL: BASE_URL + "s-pt-BR.webvtt",
