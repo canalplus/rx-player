@@ -75,7 +75,10 @@ export default function parseMetaPlaylist(
   data : unknown,
   parserOptions : {
     url?: string;
-    clockOffset?: number;
+    serverSyncInfos?: {
+      serverTimestamp: number;
+      clientTime: number;
+    };
   }
 ): IParserResponse<IParsedManifest> {
   let parsedData;
@@ -151,10 +154,16 @@ function createManifest(
   manifests : Manifest[],
   parserOptions:  {
     url?: string;
-    clockOffset?: number;
+    serverSyncInfos?: {
+      serverTimestamp: number;
+      clientTime: number;
+    };
   }
 ): IParsedManifest {
-  const { url, clockOffset } = parserOptions;
+  const { url, serverSyncInfos } = parserOptions;
+  const clockOffset = serverSyncInfos ?
+    serverSyncInfos.serverTimestamp - serverSyncInfos.clientTime :
+    undefined;
   const generateAdaptationID = idGenerator();
   const generateRepresentationID = idGenerator();
   const { contents } = mplData;
