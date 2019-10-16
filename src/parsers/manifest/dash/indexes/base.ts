@@ -215,7 +215,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
       return null;
     }
     const initSegment = getInitSegment(this._index);
-    initSegment.hypotheticalInitRange = this._hypotheticalInitRange;
+    initSegment.privateInfos = {
+      hypotheticalInitRange : this._hypotheticalInitRange,
+    };
     return initSegment;
   }
 

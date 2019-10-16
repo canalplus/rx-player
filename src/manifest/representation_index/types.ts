@@ -48,6 +48,9 @@ export interface IMetaPlaylistPrivateInfos { transportType : string;
 export interface IPrivateInfos {
   smoothInit? : ISmoothInitSegmentPrivateInfos;
   metaplaylistInfos? : IMetaPlaylistPrivateInfos;
+  hypotheticalInitRange? : boolean; // `true` if init range was guessed
+                                    // because of the lack of init infos
+                                    // in the manifest
 }
 
 // ISegment Object.
@@ -73,9 +76,6 @@ export interface ISegment {
   timestampOffset? : number; // Estimated time, in seconds, at which the
                              // concerned segment will be offseted when
                              // decoded.
-  hypotheticalInitRange? : boolean; // `true` if init range was guessed
-                                    // because of the lack of init infos
-                                    // in the manifest
 }
 
 export interface IRepresentationIndexSegmentInfos { duration : number;

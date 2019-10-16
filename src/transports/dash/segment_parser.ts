@@ -73,7 +73,10 @@ export default function parser({ content,
                           segmentProtections: [],
                           appendWindow: [period.start, period.end] });
   } else { // it is an initialization segment
-    const completeInitChunk = (segment.hypotheticalInitRange === true) ?
+    const { privateInfos } = segment;
+    const shouldExtractCompleteInitChunk = privateInfos !== undefined &&
+                                           privateInfos.hypotheticalInitRange === true;
+    const completeInitChunk = shouldExtractCompleteInitChunk ?
       extractCompleteInitChunk(chunkData) : chunkData;
 
     if (completeInitChunk === -1) {
