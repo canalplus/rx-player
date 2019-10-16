@@ -189,8 +189,7 @@ export default function createMediaSourceLoader({
             if (currentTime + 0.001 < mediaElement.duration) {
               mediaElement.currentTime += 0.001;
             } else {
-              mediaElement.currentTime -= currentTime - 0.001 < 0 ? 0 :
-                                                                    0.001;
+              mediaElement.currentTime = currentTime;
             }
           default:
             return observableOf(evt);
