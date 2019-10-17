@@ -401,13 +401,13 @@ const onRemoveSourceBuffers$ = compatibleListener(["onremovesourcebuffer"]);
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
-const onEncrypted$ = compatibleListener<MediaEncryptedEvent>(["encrypted", "needkey"]);
+const onEncrypted$ = compatibleListener<MediaEncryptedEvent>(["encrypted", "needkey"], ['webkit']);
 
 /**
  * @param {MediaKeySession} mediaKeySession
  * @returns {Observable}
  */
-const onKeyMessage$ = compatibleListener<MediaKeyMessageEvent>(["keymessage", "message"]);
+const onKeyMessage$ = compatibleListener<MediaKeyMessageEvent>(["keymessage", "message"], ['webkit']);
 
 /**
  * @param {MediaKeySession} mediaKeySession
@@ -419,7 +419,7 @@ const onKeyAdded$ = compatibleListener(["keyadded", "ready"]);
  * @param {MediaKeySession} mediaKeySession
  * @returns {Observable}
  */
-const onKeyError$ = compatibleListener(["keyerror", "error"]);
+const onKeyError$ = compatibleListener(["keyerror", "error"], ['webkit']);
 
 /**
  * @param {MediaKeySession} mediaKeySession

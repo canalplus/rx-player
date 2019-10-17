@@ -129,6 +129,7 @@ export default function generateKeyRequest(
     } else {
       patchedInit = initData;
     }
+    console.warn('GENERATE REQUEST', session);
     return castToObservable(session.generateRequest(initDataType || "",
                                                     patchedInit));
   });

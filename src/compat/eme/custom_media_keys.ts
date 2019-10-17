@@ -54,6 +54,7 @@ function createMediaKeysSession(
   mediaKeys: MediaKeys | ICustomMediaKeys,
   sessionType: MediaKeySessionType
 ): MediaKeySession | ICustomMediaKeySession {
+  console.warn(mediaKeys, sessionType, "HELLOOO")
   return mediaKeys.createSession(sessionType);
 }
 
@@ -139,6 +140,12 @@ export interface ICustomMediaKeys {
   setServerCertificate(setServerCertificate : ArrayBuffer|TypedArray) : Promise<void>;
 }
 
+export interface ICustomWebKitMediaKeys {
+  _setVideo : (vid : HTMLMediaElement) => void;
+  createSession(mimeType: string, initData : Uint8Array) : ICustomMediaKeySession;
+  setServerCertificate(setServerCertificate : ArrayBuffer|TypedArray) : Promise<void>;
+}
+
 type IMockMediaKeysConstructor = new(ks : string) => ICustomMediaKeys;
 
 // Default CustomMediaKeys implementation
@@ -155,6 +162,59 @@ let CustomMediaKeys : IMockMediaKeysConstructor =
     }
   };
 
+// function arrayToString(array : any) {
+//   const uint16array = new Uint16Array(array.buffer);
+//   return String.fromCharCode.apply(null, uint16array as any);
+// }
+
+// function extractContentId(initData : any) {
+//   const initDataUri = arrayToString(initData);
+//   return initDataUri.split('skd://')[1];
+// }
+
+// function stringToArray(string : any) {
+//   const buffer = new ArrayBuffer(string.length * 2); // 2 bytes for each char
+//   const array = new Uint16Array(buffer);
+//   for (let i = 0, strLen = string.length; i < strLen; i += 1) {
+//     array[i] = string.charCodeAt(i);
+//   }
+
+//   return array;
+// }
+
+
+// function concatInitDataIdAndCertificate(initData : any, contentId : any, cert : any) {
+//   const id =
+//     typeof contentId === 'string' ? stringToArray(contentId) : contentId;
+
+//   // Layout is:
+//   // [initData][4 byte: idLength][idLength byte: id][4 byte:certLength][certLength byte: cert]
+//   let offset = 0;
+//   const buffer = new ArrayBuffer(
+//     initData.byteLength + 4 + id.byteLength + 4 + cert.byteLength,
+//   );
+//   const dataView = new DataView(buffer);
+
+//   const initDataArray = new Uint8Array(buffer, offset, initData.byteLength);
+//   initDataArray.set(initData);
+//   offset += initData.byteLength;
+
+//   dataView.setUint32(offset, id.byteLength, true);
+//   offset += 4;
+
+//   const idArray = new Uint16Array(buffer, offset, id.length);
+//   idArray.set(id);
+//   offset += idArray.byteLength;
+
+//   dataView.setUint32(offset, cert.byteLength, true);
+//   offset += 4;
+
+//   const certArray = new Uint8Array(buffer, offset, cert.byteLength);
+//   certArray.set(cert);
+
+//   return new Uint8Array(buffer, 0, buffer.byteLength);
+// }
+
 /**
  * Since Safari 12.1, EME APIs are available without webkit prefix.
  * However, it seems that since fairplay CDM implementation within the browser is not
@@ -167,12 +227,13 @@ let CustomMediaKeys : IMockMediaKeysConstructor =
 if (navigator.requestMediaKeySystemAccess &&
     !shouldUseWebKitMediaKeys()
 ) {
+  console.warn("requestMediaKeySystemAccess")
   requestMediaKeySystemAccess = (a : string, b : ICompatMediaKeySystemConfiguration[]) =>
     castToObservable(
       navigator.requestMediaKeySystemAccess(a, b) as Promise<ICompatMediaKeySystemAccess>
     );
 } else {
-
+  console.warn("WRAPUPDATE")
   type IWrappedUpdateFunction =
     (license : ArrayBuffer, sessionId? : string) => Promise<void>;
   type IUpdateFunction =
@@ -222,6 +283,7 @@ if (navigator.requestMediaKeySystemAccess &&
 
   // This is for Chrome with unprefixed EME api
   if (isOldWebkitMediaElement(HTMLVideoElement.prototype)) {
+    console.warn("isOldWebkitMediaElement")
     class WebkitMediaKeySession extends EventEmitter<IMediaKeySessionEvents>
                                 implements ICustomMediaKeySession
     {
@@ -397,7 +459,7 @@ if (navigator.requestMediaKeySystemAccess &&
              MediaKeys_.prototype &&
              typeof MediaKeys_.isTypeSupported === "function"
   ) {
-
+    console.warn("POLOOO MEDIA KEYS", MediaKeys_);
     requestMediaKeySystemAccess = function(
       keyType : string,
       keySystemConfigurations : ICompatMediaKeySystemConfiguration[]
@@ -406,6 +468,139 @@ if (navigator.requestMediaKeySystemAccess &&
       if (!(MediaKeys_ as any).isTypeSupported(keyType)) {
         return observableThrow(undefined);
       }
+
+      if (shouldUseWebKitMediaKeys()) {
+        console.warn("USE window.WebKitMediaKeys");
+        class WebkitMediaKeySessionNew extends EventEmitter<IMediaKeySessionEvents>
+                                implements ICustomMediaKeySession
+    {
+      public readonly update : (license : ArrayBuffer, sessionId? : string) =>
+                                 Promise<void>;
+      public readonly closed: Promise<void>;
+      public expiration: number;
+      public keyStatuses: ICustomMediaKeyStatusMap;
+      public sessionId : string;
+
+      private readonly _vid : HTMLMediaElement |
+                              IOldWebkitHTMLMediaElement;
+      // private readonly _mediaKeys : ICustomWebKitMediaKeys;
+      private readonly _closeSession$ : Subject<void>;
+
+      constructor(
+        mediaElement : HTMLMediaElement |
+                       IOldWebkitHTMLMediaElement,
+        // mediaKeys : ICustomWebKitMediaKeys,
+      ) {
+        super();
+        this._closeSession$ = new Subject();
+        this._vid = mediaElement;
+        // this._mediaKeys = mediaKeys;
+
+        this.sessionId = "";
+        this.closed = new PPromise((resolve) => {
+          this._closeSession$.subscribe(resolve);
+        });
+        this.keyStatuses = new Map();
+        this.expiration = NaN;
+
+        this.update = wrapUpdate((_, sessionId?) => {
+          if (isOldWebkitMediaElement(this._vid)) {
+            throw new Error("impossible to add a new key");
+          }
+          this.sessionId = sessionId;
+        });
+      }
+
+      listenEvent(sessions: any) {
+        observableMerge(events.onKeyMessage$(sessions),
+                        events.onKeyAdded$(sessions),
+                        events.onKeyError$(sessions))
+          .pipe(takeUntil(this._closeSession$))
+          .subscribe((evt : Event) => {
+            console.warn("EVENT WEBKIT", evt);
+            this.trigger(evt.type, evt)
+          });
+      }
+
+      generateRequest(_initDataType : string, initData : ArrayBuffer) : Promise<void> {
+        return new PPromise((resolve) => {
+          if (isOldWebkitMediaElement(this._vid)) {
+            throw new Error("impossible to generate a key request");
+          }
+          // const mediaKeys = new (window as any).WebKitMediaKeys(keyType);
+          // console.warn("GENERATE REQUEST", initData);
+          // fetch('https://secure-webtv-static.canal-plus.com/bourbon/cert/fps-mycanal-1-20161208.der')
+          // .then((res) => res.arrayBuffer())
+          // .then((serverCertificate) => {
+          //   const contentId = extractContentId(initData);
+          //   const initDataPatched = concatInitDataIdAndCertificate(
+          //     initData,
+          //     contentId,
+          //     serverCertificate,
+          //   );
+          // })
+          const keySessions = (this._vid as any).webkitKeys.createSession('video/mp4', initData);
+          if (!keySessions) {
+            throw new Error('Impossible to get the key sessions')
+          }
+          console.warn("KEY SESSIONS", keySessions);
+          this.listenEvent(keySessions);
+          // this._vid.webkitGenerateKeyRequest(this._key, initData);
+          resolve();
+        });
+      }
+
+      close() : Promise<void> {
+        return new PPromise((resolve) => {
+          this._closeSession$.next();
+          this._closeSession$.complete();
+          resolve();
+        });
+      }
+
+      load() : Promise<boolean> {
+        return PPromise.resolve(false);
+      }
+
+      remove() : Promise<void> {
+        return PPromise.resolve();
+      }
+    }
+    
+    CustomMediaKeys = class implements ICustomWebKitMediaKeys {
+      private _vid? : HTMLMediaElement;
+      private _mediaKeys? : MediaKeys;
+
+      _setVideo(vid : HTMLMediaElement) : void {
+        this._vid = vid;
+      }
+
+      _getWebKitMediaKeys() : void {
+        return new (window as any).WebKitMediaKeys('com.apple.fps.1_0');
+      }
+
+      _setWebKitMediaKeys(mediaKeys : MediaKeys) : void {
+        if (!this._vid) {
+          throw new Error("Video not attached to the MediaKeys");
+        }
+        console.warn(this._vid);
+        this._mediaKeys = mediaKeys;
+        (this._vid as any).webkitSetMediaKeys(mediaKeys);
+      }
+
+      createSession(/* sessionType */) : ICustomMediaKeySession {
+        if (!this._vid || !this._mediaKeys) {
+          throw new Error("Video not attached to the MediaKeys");
+        }
+        console.warn('CREATESSESIONS from WebkitMediaKeySessionNew')
+        return new WebkitMediaKeySessionNew(this._vid);
+      }
+
+      setServerCertificate() : Promise<void> {
+        throw new Error("Server certificate is not implemented in your browser");
+      }
+    };
+  }
 
       for (let i = 0; i < keySystemConfigurations.length; i++) {
         const keySystemConfiguration = keySystemConfigurations[i];
@@ -430,10 +625,12 @@ if (navigator.requestMediaKeySystemAccess &&
             sessionTypes: ["temporary", "persistent-license"],
           };
 
+          console.warn('POLOOO')
+
           return observableOf(
             new CustomMediaKeySystemAccess(
               keyType,
-              new (MediaKeys_ as any)(keyType),
+              new (CustomMediaKeys as any)(keyType),
               keySystemConfigurationResponse
             )
           );

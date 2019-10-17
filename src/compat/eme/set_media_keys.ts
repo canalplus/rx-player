@@ -33,8 +33,15 @@ function _setMediaKeys(
   elt : HTMLMediaElement,
   mediaKeys : MediaKeys|ICustomMediaKeys|null
 ) : any {
+  console.warn("MEDIA KEYS SET VIDEO", mediaKeys);
+  (mediaKeys as any)._setVideo(elt)
   if (mediaKeys instanceof CustomMediaKeys) {
     return mediaKeys._setVideo(elt);
+  }
+
+  if ((elt as any).webkitSetMediaKeys) {
+    const webKitNativeMediaKey = (mediaKeys as any)._getWebKitMediaKeys();
+    return (mediaKeys as any)._setWebKitMediaKeys(webKitNativeMediaKey);
   }
 
   if (elt.setMediaKeys) {
@@ -43,10 +50,6 @@ function _setMediaKeys(
 
   if (mediaKeys === null) {
     return;
-  }
-
-  if ((elt as any).WebkitSetMediaKeys) {
-    return (elt as any).WebkitSetMediaKeys(mediaKeys);
   }
 
   if ((elt as any).mozSetMediaKeys) {
