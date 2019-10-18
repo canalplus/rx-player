@@ -441,21 +441,13 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * performed.
    * @param {Array.<ArrayBuffer>} keyIDs
    */
-  public markUndecipherableProtectionData(type : string, data: Uint8Array) : void {
+  public markUndecipherableProtectionData(data: Uint8Array) : void {
     const updates = updateDeciperability(this, (representation) => {
-      if (representation.decipherable === false ||
-          representation.contentProtections == null)
-      {
+      if (representation.decipherable === false) {
         return true;
       }
-      const elements = representation.contentProtections.initData;
-      for (let i = 0; i < elements.length; i++) {
-        const elt = elements[i];
-        if (elt.type === type && areBytesEqual(elt.data, data)) {
-          return false;
-        }
-      }
-      return true;
+      const initData = representation.getProtectionInitializationData();
+      return initData === null || !areBytesEqual(initData, data);
     });
 
     if (updates.length > 0) {

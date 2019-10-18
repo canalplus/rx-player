@@ -84,14 +84,21 @@ export default function parser({ content,
                                                               duration: 0,
                                                               timescale } :
                                                             null;
-    let segmentProtection : ISegmentProtection | null = null;
     if (!isWEBM) {
-      const psshBoxes = takePSSHOut(chunkData);
-      if (psshBoxes.length > 0) {
-        representation._addProtectionData("cenc", psshBoxes);
-        segmentProtection = { type: "cenc",
-          value: psshBoxes };
+      const psshInfo = takePSSHOut(chunkData);
+      if (psshInfo.length > 0) {
+        for (let i = 0; i < psshInfo.length; i++) {
+          const { systemID, data: psshData } = psshInfo[i];
+          representation._addProtectionData(systemID, psshData);
+        }
       }
+    }
+
+    let segmentProtection : ISegmentProtection | null = null;
+    const protectionData = representation.getProtectionInitializationData();
+    if (protectionData !== null) {
+      segmentProtection = { type: "cenc",
+                            value: protectionData };
     }
     return observableOf({ chunkData,
                           chunkInfos,

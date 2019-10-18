@@ -16,14 +16,14 @@
 
 import { IRepresentationIndex } from "../../manifest";
 
-export interface IContentProtectionKIDs { keyId : Uint8Array;
-                                          systemId?: string; }
+export interface IContentProtectionKID { keyId : Uint8Array;
+                                         systemId?: string; }
 
-export interface IContentProtectionInitData { type : string;
-                                              data : Uint8Array; }
+export interface IContentProtectionPSSH { systemId : string;
+                                          data : Uint8Array; }
 
-export interface IContentProtections { keyIds : IContentProtectionKIDs[];
-                                       initData : IContentProtectionInitData[]; }
+export interface IContentProtections { keyIds : IContentProtectionKID[];
+                                       pssh : IContentProtectionPSSH[]; }
 
 // Representation of a "quality" available in any Adaptation
 export interface IParsedRepresentation {

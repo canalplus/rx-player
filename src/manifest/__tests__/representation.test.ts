@@ -113,7 +113,7 @@ describe("Manifest - Representation", () => {
       index: minimalIndex,
       contentProtections: {
         keyIds: [{ keyId: new Uint8Array([45]) }],
-        initData: [{ type: "pssh", data: new Uint8Array([78]) }],
+        pssh: [{ systemId: "EDEF", data: new Uint8Array([78]) }],
       },
     };
     const representation = new Representation(args);

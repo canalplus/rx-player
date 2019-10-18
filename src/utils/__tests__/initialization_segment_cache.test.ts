@@ -33,6 +33,7 @@ const representation1 = {
     _update() : never { throw new Error("Not implemented"); },
     _addSegments() : never { throw new Error("Not implemented"); },
   },
+  getProtectionInitializationData() : null { return null; },
   _addProtectionData() : never { throw new Error("Not implemented"); },
 };
 
@@ -53,6 +54,7 @@ const representation2 = {
     _update() : never { throw new Error("Not implemented"); },
     _addSegments() : never { throw new Error("Not implemented"); },
   },
+  getProtectionInitializationData() : null { return null; },
   _addProtectionData() : never { throw new Error("Not implemented"); },
 };
 
