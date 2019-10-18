@@ -20,23 +20,19 @@ import {
   merge as observableMerge,
   Observable,
   of as observableOf,
-  race as observableRace,
-  timer as observableTimer,
 } from "rxjs";
 import {
-  catchError,
   ignoreElements,
-  tap,
 } from "rxjs/operators";
 import {
   createSession,
   ICustomMediaKeys,
   ICustomMediaKeySession,
 } from "../../../compat";
+import closeSession$ from "../../../compat/eme/close_session";
 import { EncryptedMediaError } from "../../../errors";
 import log from "../../../log";
 import arrayFind from "../../../utils/array_find";
-import castToObservable from "../../../utils/cast_to_observable";
 import hashBuffer from "../../../utils/hash_buffer";
 
 // Cached data for a single MediaKeySession
@@ -148,17 +144,7 @@ export default class MediaKeySessionsStore {
     return observableDefer(() => {
       this._delete(session);
       log.debug("EME-MKSS: Close session", session);
-      const sessionClose$ = castToObservable(session.close());
-      // In some cases, using Widevine CDM on Chrome or Firefox,
-      // the close promise never resolves.
-      // Then, set a timeout of 1 second.
-      return observableRace(
-        sessionClose$,
-        observableTimer(1000).pipe(
-          tap(() => log.warn("EME-MKSS: reached 1 second timeout on " +
-                             "`session.close()` promise."))
-        )
-      ).pipe(catchError(() => observableOf(null)));
+      return closeSession$(session);
     });
   }
 
