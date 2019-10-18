@@ -20,10 +20,13 @@ import {
   merge as observableMerge,
   Observable,
   of as observableOf,
+  race as observableRace,
+  timer as observableTimer,
 } from "rxjs";
 import {
   catchError,
   ignoreElements,
+  tap,
 } from "rxjs/operators";
 import {
   createSession,
@@ -145,8 +148,17 @@ export default class MediaKeySessionsStore {
     return observableDefer(() => {
       this._delete(session);
       log.debug("EME-MKSS: Close session", session);
-      return castToObservable(session.close())
-        .pipe(catchError(() => observableOf(null)));
+      const sessionClose$ = castToObservable(session.close());
+      // In some cases, using Widevine CDM on Chrome or Firefox,
+      // the close promise never resolves.
+      // Then, set a timeout of 1 second.
+      return observableRace(
+        sessionClose$,
+        observableTimer(1000).pipe(
+          tap(() => log.warn("EME-MKSS: reached 1 second timeout on " +
+                             "`session.close()` promise."))
+        )
+      ).pipe(catchError(() => observableOf(null)));
     });
   }
 
