@@ -24,7 +24,7 @@ import resolveURL, {
 } from "../../../utils/resolve_url";
 import takeFirstSet from "../../../utils/take_first_set";
 import {
-  IContentProtectionKIDs,
+  IContentProtectionKID,
   IParsedAdaptation,
   IParsedAdaptations,
   IParsedManifest,
@@ -348,7 +348,7 @@ function createSmoothStreamingParser(
                                     "") +
                   String(qualityLevel.bitrate);
 
-      const keyIDs : IContentProtectionKIDs[] = [];
+      const keyIDs : IContentProtectionKID[] = [];
       let firstProtection : IContentProtectionSmooth|undefined;
       if (protections.length > 0) {
         firstProtection = protections[0];
@@ -388,7 +388,7 @@ function createSmoothStreamingParser(
                                                                     id });
       if (keyIDs.length > 0) {
         representation.contentProtections = { keyIds: keyIDs,
-                                              initData: [] };
+                                              pssh: [] };
       }
       return representation;
     });

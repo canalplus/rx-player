@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
+import log from "../log";
 import {
   IContentProtections,
   IParsedRepresentation,
 } from "../parsers/manifest";
-import { areBytesEqual } from "../utils/byte_parsing";
+import {
+  areBytesEqual,
+  concat,
+} from "../utils/byte_parsing";
 import IRepresentationIndex from "./representation_index";
 
 /**
@@ -111,27 +115,43 @@ class Representation {
   }
 
   /**
+   * Returns every protection initialization data concatenated.
+   * This data can then be used through the usual EME APIs.
+   * `null` if this Representation has no detected protection initialization
+   * data.
+   * @returns {Uint8Array|null}
+   */
+  getProtectionInitializationData() : Uint8Array | null {
+    if (this.contentProtections !== undefined &&
+        this.contentProtections.pssh.length > 0) {
+      return concat(...this.contentProtections.pssh.map(({ data }) => data));
+    }
+    return null;
+  }
+
+  /**
    * Add protection data to the Representation to be able to properly blacklist
    * it if that data is.
    * /!\ Mutates the current Representation
-   * @param {string} type
+   * @param {string} systemId
    * @param {Uint8Array} data
    */
-  _addProtectionData(type : string, data : Uint8Array) {
-    const newElement = { type, data };
+  _addProtectionData(systemId : string, data : Uint8Array) {
+    const newElement = { systemId, data };
     if (this.contentProtections == null) {
-      this.contentProtections = { keyIds: [], initData: [newElement] };
+      this.contentProtections = { keyIds: [], pssh: [newElement] };
       return;
     }
-    const initData = this.contentProtections.initData;
-    for (let i = initData.length - 1; i >= 0; i--) {
-      if (type === initData[i].type &&
-          areBytesEqual(initData[i].data, data))
-      {
-        return;
+    const { pssh } = this.contentProtections;
+    for (let i = pssh.length - 1; i >= 0; i--) {
+      if (pssh[i].systemId === systemId) {
+        if (areBytesEqual(pssh[i].data, data)) {
+          return;
+        }
+        log.warn("Manifest: Two PSSH for the same system ID");
       }
     }
-    this.contentProtections.initData.push(newElement);
+    this.contentProtections.pssh.push(newElement);
   }
 }
 

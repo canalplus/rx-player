@@ -190,13 +190,21 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                                    time: 0,
                                    duration: 0 };
 
-        const psshBoxes = takePSSHOut(responseBuffer);
-        let segmentProtection : ISegmentProtection | null = null;
-        if (psshBoxes.length > 0) {
-          representation._addProtectionData("cenc", psshBoxes);
-          segmentProtection = { type: "cenc",
-                                value: psshBoxes };
+        const psshInfo = takePSSHOut(responseBuffer);
+        if (psshInfo.length > 0) {
+          for (let i = 0; i < psshInfo.length; i++) {
+            const { systemID, data: psshData } = psshInfo[i];
+            representation._addProtectionData(systemID, psshData);
+          }
         }
+
+        let segmentProtection : ISegmentProtection | null = null;
+        const protectionData = representation.getProtectionInitializationData();
+        if (protectionData !== null) {
+          segmentProtection = { type: "cenc",
+                                value: protectionData };
+        }
+
         return observableOf({ chunkData: data,
                               chunkInfos: initSegmentInfos,
                               chunkOffset: 0,
