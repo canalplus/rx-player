@@ -102,15 +102,22 @@ export default function getNeededSegments({
     // check if the segment is already downloaded
     for (let i = 0; i < completeSegments.length; i++) {
       const completeSeg = completeSegments[i];
-      const segTime = completeSeg.infos.segment.time;
-      const segDuration = completeSeg.infos.segment.duration;
-      const segTimeScale = completeSeg.infos.segment.timescale;
-      const scaledSegTime = segTime / segTimeScale;
-      const scaledSegEnd = scaledSegTime + segDuration / segTimeScale;
-      if (scaledTime - scaledSegTime > -roundingError &&
-          scaledSegEnd - scaledEnd > -roundingError)
-      {
-        return false; // already downloaded
+      const areFromSamePeriod = completeSeg.infos.period.id === content.period.id;
+      // Check if content are from same period, as there can't be overlapping
+      // periods, we should consider a segment as already downloaded if
+      // it is from same period (but can be from different adaptation or
+      // representation)
+      if (areFromSamePeriod) {
+        const segTime = completeSeg.infos.segment.time;
+        const segDuration = completeSeg.infos.segment.duration;
+        const segTimeScale = completeSeg.infos.segment.timescale;
+        const scaledSegTime = segTime / segTimeScale;
+        const scaledSegEnd = scaledSegTime + segDuration / segTimeScale;
+        if (scaledTime - scaledSegTime > -roundingError &&
+            scaledSegEnd - scaledEnd > -roundingError)
+        {
+          return false; // already downloaded
+        }
       }
     }
 
