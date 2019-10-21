@@ -56,31 +56,31 @@ describe("manifest error management", function () {
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
     fakeServer.respond();
     clock.tick(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
     fakeServer.respond();
     clock.tick(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
     fakeServer.respond();
     clock.tick(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
     fakeServer.respond();
     clock.tick(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
     fakeServer.respond();
 
     clock.restore();
@@ -107,17 +107,17 @@ describe("manifest error management", function () {
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
     fakeServer.respond();
     fakeServer.restore();
     clock.tick(5000);
 
     expect(player.getError()).to.equal(null);
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
 
     clock.restore();
 
-    await sleep(10);
+    await sleep(50);
     expect(player.getManifest()).not.to.equal(null);
     expect(typeof player.getManifest()).to.equal("object");
     expect(player.getError()).to.equal(null);
@@ -136,19 +136,19 @@ describe("manifest error management", function () {
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
     fakeServer.respond();
     clock.tick(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
     fakeServer.respond();
     fakeServer.restore();
     clock.tick(5000);
 
     expect(player.getError()).to.equal(null);
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
 
     clock.restore();
 
@@ -171,25 +171,25 @@ describe("manifest error management", function () {
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
     fakeServer.respond();
     clock.tick(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
     fakeServer.respond();
     clock.tick(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
     fakeServer.respond();
     fakeServer.restore();
     clock.tick(5000);
 
     expect(player.getError()).to.equal(null);
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
 
     clock.restore();
 
@@ -212,29 +212,29 @@ describe("manifest error management", function () {
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
     fakeServer.respond();
     clock.tick(5000);
 
-    await sleepWithoutSinonStub(10);
-    fakeServer.respond();
-    clock.tick(5000);
-
-    expect(player.getError()).to.equal(null);
-
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
     fakeServer.respond();
     clock.tick(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
+    fakeServer.respond();
+    clock.tick(5000);
+
+    expect(player.getError()).to.equal(null);
+
+    await sleepWithoutSinonStub(50);
     fakeServer.respond();
     fakeServer.restore();
     clock.tick(5000);
 
     expect(player.getError()).to.equal(null);
-    await sleepWithoutSinonStub(10);
+    await sleepWithoutSinonStub(50);
 
     clock.restore();
 
