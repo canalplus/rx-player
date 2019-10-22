@@ -86,6 +86,10 @@ export interface IHSSParserConfiguration {
   referenceDateTime? : number;
   minRepresentationBitrate? : number;
   keySystems? : (hex? : Uint8Array) => IKeySystem[];
+  serverSyncInfos? : {
+    serverTimestamp: number;
+    clientTime: number;
+  };
 }
 
 interface ISmoothParsedQualityLevel {
@@ -118,13 +122,15 @@ function createSmoothStreamingParser(
   url? : string,
   manifestReceivedTime? : number
 ) => IParsedManifest {
-
-  const SUGGESTED_PERSENTATION_DELAY = parserOptions.suggestedPresentationDelay;
-
-  const REFERENCE_DATE_TIME = parserOptions.referenceDateTime ||
+  const referenceDateTime = parserOptions.referenceDateTime ||
     Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1000;
-  const MIN_REPRESENTATION_BITRATE = parserOptions.minRepresentationBitrate ||
+  const minRepresentationBitrate = parserOptions.minRepresentationBitrate ||
     0;
+
+  const { serverSyncInfos } = parserOptions;
+  const serverTimeOffset = serverSyncInfos ?
+    serverSyncInfos.serverTimestamp - serverSyncInfos.clientTime :
+    undefined;
 
   /**
    * @param {Element} q
@@ -278,7 +284,7 @@ function createSmoothStreamingParser(
 
           // filter out video qualityLevels with small bitrates
           if (adaptationType !== "video" ||
-              qualityLevel.bitrate > MIN_REPRESENTATION_BITRATE)
+              qualityLevel.bitrate > minRepresentationBitrate)
           {
             res.qualityLevels.push(qualityLevel);
           }
@@ -527,8 +533,8 @@ function createSmoothStreamingParser(
     let duration : number|undefined;
     if (isLive) {
       periodStart = 0;
-      suggestedPresentationDelay = SUGGESTED_PERSENTATION_DELAY;
-      availabilityStartTime = REFERENCE_DATE_TIME;
+      suggestedPresentationDelay = parserOptions.suggestedPresentationDelay;
+      availabilityStartTime = referenceDateTime;
 
       const time = performance.now();
       maximumTime = { isContinuous: true,
@@ -578,6 +584,7 @@ function createSmoothStreamingParser(
     const manifest = {
       availabilityStartTime: availabilityStartTime || 0,
       duration,
+      clockOffset: serverTimeOffset,
       id: "gen-smooth-manifest-" + generateManifestID(),
       isLive,
       maximumTime,

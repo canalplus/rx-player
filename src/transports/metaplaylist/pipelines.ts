@@ -156,7 +156,13 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const url = response.url == null ? loaderURL :
                                          response.url;
       const { responseData } = response;
-      return handleParsedResult(parseMetaPlaylist(responseData, url));
+
+      const parserOptions = {
+        url,
+        serverSyncInfos: options.serverSyncInfos,
+      };
+
+      return handleParsedResult(parseMetaPlaylist(responseData, parserOptions));
 
       function handleParsedResult(
         parsedResult : IMPLParserResponse<IParsedManifest>
