@@ -50,6 +50,16 @@ no use, as our implementation does the same thing and more):
  *     milliseconds.
  *   - size {Number|undefined} - size, in bytes, of the total downloaded
  *     response.
+ * @param {Function} callbacks.progress - Callback to call when progress
+ * information is available on the current request. This callback allows to
+ * improve our adaptive streaming logic by better predicting the bandwidth
+ * before the request is finished.
+ * This function should be called with the following properties:
+ *   - duration {Number} - the duration since the beginning of the request
+ *   - size {Number} - the current size, in bytes, downloaded
+ *   - totalSize {Number|undefined} - the whole size of the wanted data, in
+ *     bytes. Can be let to undefined when not known.
+ * our default implementation instead for this segment. No argument is needed.
  * @param {Function} callbacks.reject - Callback to call when an error is
  * encountered. If you relied on an XHR, it is recommended to include it as an
  * object property named "xhr" in the argument.
@@ -70,7 +80,7 @@ const customSegmentLoader = (infos, callbacks) => {
   const xhr = new XMLHttpRequest();
   const sendingTime = performance.now();
 
-  xhr.onload = (r) => {
+  xhr.onload = function onXHRLoaded(r) {
     if (200 <= xhr.status && xhr.status < 300) {
       const duration = performance.now() - sendingTime;
       const size = r.total;
@@ -83,7 +93,15 @@ const customSegmentLoader = (infos, callbacks) => {
     }
   };
 
-  xhr.onerror = () => {
+  xhr.onprogress = function onXHRProgress(event) {
+    const currentTime = performance.now();
+    callbacks.progress({ type: "progress",
+                         value: { duration: currentTime - sendingTime,
+                                  size: event.loaded,
+                                  totalSize: event.total } });
+  };
+
+  xhr.onerror = function onXHRError() {
     const err = new Error("didn't work");
     err.xhr = xhr;
     callbacks.reject(err);

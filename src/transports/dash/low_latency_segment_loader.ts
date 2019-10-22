@@ -79,7 +79,6 @@ export default function lowLatencySegmentLoader(
           emitted.push({ type: "progress",
                          value: { duration: value.duration,
                                   size: value.size,
-                                  url: value.url,
                                   totalSize: value.totalSize } });
         } else if (event != null && event.type === "data-complete") {
           const { value } = event;
