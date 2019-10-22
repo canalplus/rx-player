@@ -53,7 +53,7 @@ export default function extractTimingsInfos(
   let tfrfSegments : IISOBMFFBasicSegment[]|undefined;
   if (isLive) {
     const traf = getTRAF(data);
-    if (traf) {
+    if (traf !== null) {
       tfrfSegments = parseTfrf(traf);
       tfxdSegment = parseTfxd(traf);
     } else {
@@ -61,7 +61,7 @@ export default function extractTimingsInfos(
     }
   }
 
-  if (tfrfSegments) {
+  if (tfrfSegments !== undefined) {
     for (let i = 0; i < tfrfSegments.length; i++) {
       nextSegments.push({ time: tfrfSegments[i].time,
                           duration: tfrfSegments[i].duration,
@@ -69,7 +69,7 @@ export default function extractTimingsInfos(
     }
   }
 
-  if (tfxdSegment) {
+  if (tfxdSegment !== undefined) {
     chunkInfos = { time: tfxdSegment.time,
                    duration: tfxdSegment.duration,
                    timescale: segment.timescale };

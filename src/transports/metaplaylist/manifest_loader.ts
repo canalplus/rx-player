@@ -44,7 +44,7 @@ export default function generateManifestLoader(
   options: { customManifestLoader?: CustomManifestLoader }
 ) : (args : IManifestLoaderArguments) => IManifestLoaderObservable {
   const { customManifestLoader } = options;
-  if (!customManifestLoader) {
+  if (typeof customManifestLoader !== "function") {
     return regularManifestLoader;
   }
   return callCustomManifestLoader(customManifestLoader,

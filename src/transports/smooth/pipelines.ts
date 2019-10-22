@@ -108,7 +108,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                               responseType: "document" })
           .pipe(map(({ value }) : string => {
             const extractedURL = extractISML(value.responseData);
-            if (!extractedURL) {
+            if (extractedURL === null || extractedURL.length === 0) {
               throw new Error("Invalid ISML");
             }
             return extractedURL;
@@ -198,7 +198,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         throw new Error("Smooth Segment without time information");
       }
       const chunkData = patchSegment(responseBuffer, chunkInfos.time);
-      if (nextSegments) {
+      if (nextSegments.length > 0) {
         addNextSegments(adaptation, nextSegments, chunkInfos);
       }
       return observableOf({ chunkData,
@@ -315,7 +315,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
           chunkString = data;
         }
 
-        const segmentTime = segment.time || 0;
+        const segmentTime = segment.time;
 
         // vod is simple WebVTT or TTML text
         _sdStart = segmentTime;
@@ -335,7 +335,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
             break;
         }
 
-        if (!_sdType) {
+        if (_sdType === undefined) {
           const lcCodec = codec.toLowerCase();
           if (lcCodec === "srt") {
             _sdType = "srt";
@@ -347,7 +347,9 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         _sdData = chunkString;
       }
 
-      if (chunkInfos != null && nextSegments) {
+      if (chunkInfos != null &&
+          Array.isArray(nextSegments) && nextSegments.length > 0)
+      {
         addNextSegments(adaptation, nextSegments, chunkInfos);
       }
 
@@ -430,6 +432,6 @@ export default function(options : ITransportOptions) : ITransportPipelines {
  * @returns {Boolean}
  */
 function isMP4EmbeddedTrack(representation : Representation) : boolean {
-  return !!representation.mimeType &&
+  return typeof representation.mimeType === "string" &&
          representation.mimeType.indexOf("mp4") >= 0;
 }

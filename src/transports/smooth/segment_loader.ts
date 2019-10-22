@@ -50,7 +50,7 @@ function regularSegmentLoader(
 ) : ISegmentLoaderObservable<ArrayBuffer> {
   let headers;
   const range = segment.range;
-  if (range) {
+  if (Array.isArray(range)) {
     headers = { Range: byteRange(range) };
   }
 
@@ -74,39 +74,49 @@ const generateSegmentLoader = (
   manifest,
 } : ISegmentLoaderArguments) : ISegmentLoaderObservable<Uint8Array|ArrayBuffer|null> => {
   if (segment.isInit) {
-    if (!segment.privateInfos || segment.privateInfos.smoothInit == null) {
+    if (segment.privateInfos === undefined ||
+        segment.privateInfos.smoothInit == null)
+    {
       throw new Error("Smooth: Invalid segment format");
     }
     const smoothInitPrivateInfos = segment.privateInfos.smoothInit;
     let responseData : Uint8Array;
-    const protection = smoothInitPrivateInfos.protection;
+    const { codecPrivateData = "",
+            protection = { keyId: undefined,
+                           keySystems: undefined } } = smoothInitPrivateInfos;
 
-    const codecPrivateData = smoothInitPrivateInfos.codecPrivateData || "";
     switch (adaptation.type) {
-    case "video":
-      responseData = createVideoInitSegment(segment.timescale,
-                                            representation.width || 0,
-                                            representation.height || 0,
-                                            72, 72, 4, // vRes, hRes, nal
-                                            codecPrivateData,
-                                            protection && protection.keyId,
-                                            protection && protection.keySystems);
-      break;
-    case "audio":
-      responseData = createAudioInitSegment(segment.timescale,
-                                            smoothInitPrivateInfos.channels || 0,
-                                            smoothInitPrivateInfos.bitsPerSample || 0,
-                                            smoothInitPrivateInfos.packetSize || 0,
-                                            smoothInitPrivateInfos.samplingRate || 0,
-                                            codecPrivateData,
-                                            protection && protection.keyId,
-                                            protection && protection.keySystems);
-      break;
-    default:
-      if (__DEV__) {
-        assert(false, "responseData should have been set");
+      case "video": {
+        const { width = 0, height = 0 } = representation;
+        responseData = createVideoInitSegment(segment.timescale,
+                                              width,
+                                              height,
+                                              72, 72, 4, // vRes, hRes, nal
+                                              codecPrivateData,
+                                              protection.keyId,
+                                              protection.keySystems);
+        break;
       }
-      responseData = new Uint8Array(0);
+      case "audio": {
+        const { channels = 0,
+                bitsPerSample = 0,
+                packetSize = 0,
+                samplingRate = 0 } = smoothInitPrivateInfos;
+        responseData = createAudioInitSegment(segment.timescale,
+                                              channels,
+                                              bitsPerSample,
+                                              packetSize,
+                                              samplingRate,
+                                              codecPrivateData,
+                                              protection.keyId,
+                                              protection.keySystems);
+        break;
+      }
+      default:
+        if (__DEV__) {
+          assert(false, "responseData should have been set");
+        }
+        responseData = new Uint8Array(0);
     }
 
     return observableOf({ type: "data-created" as const,
@@ -126,7 +136,7 @@ const generateSegmentLoader = (
                    transport: "smooth",
                    url };
 
-    if (!customSegmentLoader) {
+    if (typeof customSegmentLoader !== "function") {
       return regularSegmentLoader(args);
     }
 

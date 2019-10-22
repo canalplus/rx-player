@@ -36,7 +36,13 @@ function extractISML(doc : Document) : string|null {
  */
 function extractToken(url : string) : string {
   const tokenMatch = url.match(TOKEN_REG);
-  return (tokenMatch && tokenMatch[1]) || "";
+  if (tokenMatch !== null) {
+    const match = tokenMatch[1];
+    if (match !== undefined) {
+      return match;
+    }
+  }
+  return "";
 }
 
 /**
@@ -46,7 +52,7 @@ function extractToken(url : string) : string {
  * @returns {string}
  */
 function replaceToken(url : string, token? : string) : string {
-  if (token) {
+  if (typeof token === "string" && token.length > 0) {
     return url.replace(TOKEN_REG, "?token=" + token);
   } else {
     return url.replace(TOKEN_REG, "");

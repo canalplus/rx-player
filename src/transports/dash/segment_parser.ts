@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  of as observableOf,
-} from "rxjs";
+import { of as observableOf } from "rxjs";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
@@ -25,6 +23,7 @@ import {
   getSegmentsFromCues,
   getTimeCodeScale,
 } from "../../parsers/containers/matroska";
+import takeFirstSet from "../../utils/take_first_set";
 import {
   ISegmentParserArguments,
   ISegmentParserObservable,
@@ -55,7 +54,8 @@ export default function parser({ content,
 
   const nextSegments = isWEBM ?
     getSegmentsFromCues(chunkData, 0) :
-    getSegmentsFromSidx(chunkData, indexRange ? indexRange[0] : 0);
+    getSegmentsFromSidx(chunkData, Array.isArray(indexRange) ? indexRange[0] :
+                                                               0);
 
   if (!segment.isInit) {
     const chunkInfos = isWEBM ? null : // TODO extract from webm
@@ -63,13 +63,13 @@ export default function parser({ content,
                                                       isChunked,
                                                       segment,
                                                       init);
-    const chunkOffset = segment.timestampOffset || 0;
     return observableOf({ chunkData,
                           chunkInfos,
-                          chunkOffset,
+                          chunkOffset: takeFirstSet<number>(segment.timestampOffset,
+                                                            0),
                           appendWindow: [period.start, period.end] });
   } else { // it is an initialization segment
-    if (nextSegments) {
+    if (nextSegments !== null && nextSegments.length > 0) {
       representation.index._addSegments(nextSegments);
     }
 
@@ -82,7 +82,8 @@ export default function parser({ content,
                                                             null;
     return observableOf({ chunkData,
                           chunkInfos,
-                          chunkOffset: segment.timestampOffset || 0,
+                          chunkOffset: takeFirstSet<number>(segment.timestampOffset,
+                                                            0),
                           appendWindow: [period.start, period.end] });
   }
 }

@@ -237,7 +237,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
                chunkOffset: 0,
                appendWindow: [undefined, undefined] };
     }
-    if (chunkInfos && chunkInfos.time > -1) {
+    if (chunkInfos !== null && chunkInfos.time > -1) {
       chunkInfos.time += scaledContentOffset;
     }
 
@@ -272,8 +272,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { init, content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
-      const scaledOffset = contentStart * (init ? init.timescale :
-                                                  segment.timescale);
+      const scaledOffset = contentStart * (init != null ? init.timescale :
+                                                          segment.timescale);
       const { audio } = getTransportPipelinesFromSegment(segment);
       return audio.parser(getParserArguments(args, segment, contentStart))
         .pipe(map(res => formatParserResponse(contentStart,
@@ -295,8 +295,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { init, content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
-      const scaledOffset = contentStart * (init ? init.timescale :
-                                                  segment.timescale);
+      const scaledOffset = contentStart * (init != null ? init.timescale :
+                                                          segment.timescale);
       const { video } = getTransportPipelinesFromSegment(segment);
       return video.parser(getParserArguments(args, segment, contentStart))
         .pipe(map(res => formatParserResponse(contentStart,
@@ -316,8 +316,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { init, content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
-      const scaledOffset = contentStart * (init ? init.timescale :
-                                                  segment.timescale);
+      const scaledOffset = contentStart * (init != null ? init.timescale :
+                                                          segment.timescale);
 
       const { text } = getTransportPipelinesFromSegment(segment);
       return text.parser(getParserArguments(args, segment, contentStart))
@@ -340,8 +340,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { init, content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
-      const scaledOffset = contentStart * (init ? init.timescale :
-                                                  segment.timescale);
+      const scaledOffset = contentStart * (init != null ? init.timescale :
+                                                          segment.timescale);
 
       const { image } = getTransportPipelinesFromSegment(segment);
       return image.parser(getParserArguments(args, segment, contentStart))
