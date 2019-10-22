@@ -278,7 +278,7 @@ export default function BufferOrchestrator(
       })
     );
 
-    const handleDecipherabilityUpdate$ = fromEvent(manifest, "decipherability-update")
+    const handleDecipherabilityUpdate$ = fromEvent(manifest, "decipherabilityUpdate")
       .pipe(mergeMap((updates) => {
         const queuedSourceBuffer = sourceBuffersStore.get(bufferType);
         const hasType = updates.some(update => update.adaptation.type === bufferType);

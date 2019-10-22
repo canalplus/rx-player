@@ -167,6 +167,10 @@ interface IPublicAPIEvent {
   availableAudioTracksChange : ITMAudioTrackListItem[];
   availableTextTracksChange : ITMTextTrackListItem[];
   availableVideoTracksChange : ITMVideoTrackListItem[];
+  decipherabilityUpdate : Array<{ manifest : Manifest;
+                                  period : Period;
+                                  adaptation : Adaptation;
+                                  representation : Representation; }>;
 }
 
 /**
@@ -1821,7 +1825,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   ) : void {
     const prev = this._priv_contentEventsMemory[eventName];
     if (!deepEqual(prev, value)) {
-      this._priv_contentEventsMemory[eventName] = value;
+      /* without an `as any` cast, TypeScript find the type "too complex to
+       * represent" */
+      this._priv_contentEventsMemory[eventName] = value as any;
       this.trigger(eventName, value);
     }
   }
@@ -1869,6 +1875,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         }
         this._priv_contentInfos.sourceBuffersStore = event.value.sourceBuffersStore;
         break;
+      case "decipherabilityUpdate":
+        this._priv_triggerContentEvent("decipherabilityUpdate", event.value);
+        break;
       case "added-segment":
         if (this._priv_contentInfos === null) {
           log.error("API: Added segment while no content is loaded");
@@ -1876,14 +1885,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         }
 
         // Manage image tracks
-        // TODO Better way? Perhaps linked to an ImageSourceBuffer
-        // implementation
+        // TODO Better way? Perhaps externalize Image track management in a tool
         const { content, segmentData } = event.value;
         if (content.adaptation.type === "image") {
           if (segmentData != null && (segmentData as { type : string }).type === "bif") {
             const imageData = (segmentData as { data : IBifThumbnail[] }).data;
-
-            // TODO merge multiple data from the same track together
             this._priv_contentInfos.thumbnails = imageData;
             this.trigger("imageTrackUpdate",
                          { data: this._priv_contentInfos.thumbnails });

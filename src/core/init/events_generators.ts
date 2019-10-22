@@ -16,7 +16,9 @@
 
 import { ICustomError } from "../../errors";
 import Manifest, {
+  Adaptation,
   Period,
+  Representation,
 } from "../../manifest";
 import { IRepresentationChangeEvent } from "../buffers";
 import SourceBuffersStore, {
@@ -24,8 +26,10 @@ import SourceBuffersStore, {
 } from "../source_buffers";
 import { IStallingItem } from "./get_stalled_events";
 import {
+  IDecipherabilityUpdateEvent,
   ILoadedEvent,
   IManifestReadyEvent,
+  IManifestUpdateEvent,
   IReloadingMediaSourceEvent,
   ISpeedChangedEvent,
   IStalledEvent,
@@ -50,6 +54,19 @@ function stalled(stalling : IStallingItem|null) : IStalledEvent {
 }
 
 /**
+ * @param {Array.<Object>} arg
+ * @returns {Object}
+ */
+function decipherabilityUpdate(
+  arg : Array<{ manifest : Manifest;
+                period : Period;
+                adaptation : Adaptation;
+                representation : Representation; }>
+) : IDecipherabilityUpdateEvent {
+  return { type: "decipherabilityUpdate", value: arg };
+}
+
+/**
  * Construct a "manifestReady" event.
  * @param {Object} abrManager
  * @param {Object} manifest
@@ -59,6 +76,14 @@ function manifestReady(
   manifest : Manifest
 ) : IManifestReadyEvent {
   return { type: "manifestReady", value: { manifest } };
+}
+
+/**
+ * Construct a "manifestReady" event.
+ * @returns {Object}
+ */
+function manifestUpdate() : IManifestUpdateEvent {
+  return { type: "manifestUpdate", value: null };
 }
 
 /**
@@ -100,7 +125,9 @@ function reloadingMediaSource() : IReloadingMediaSourceEvent {
 }
 
 const INIT_EVENTS = { loaded,
+                      decipherabilityUpdate,
                       manifestReady,
+                      manifestUpdate,
                       nullRepresentation,
                       reloadingMediaSource,
                       speedChanged,

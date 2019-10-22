@@ -15,7 +15,11 @@
  */
 
 import { ICustomError } from "../../errors";
-import Manifest from "../../manifest";
+import Manifest, {
+  Adaptation,
+  Period,
+  Representation,
+} from "../../manifest";
 import { IRepresentationChangeEvent } from "../buffers";
 import SourceBuffersStore from "../source_buffers";
 import { IStallingItem } from "./get_stalled_events";
@@ -42,6 +46,16 @@ export interface IInitClockTick { currentTime : number;
 // The manifest has been downloaded and parsed for the first time
 export interface IManifestReadyEvent { type : "manifestReady";
                                        value : { manifest : Manifest }; }
+
+export interface IManifestUpdateEvent { type: "manifestUpdate";
+                                        value: null; }
+
+export interface IDecipherabilityUpdateEvent {
+  type: "decipherabilityUpdate";
+  value: Array<{ manifest : Manifest;
+                 period : Period;
+                 adaptation : Adaptation;
+                 representation : Representation; }>; }
 
 // A minor error happened
 export interface IWarningEvent { type : "warning";

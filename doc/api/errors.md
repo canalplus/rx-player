@@ -212,7 +212,7 @@ A MediaError can have the following codes (``code`` property):
 
   - ``"NO_PLAYABLE_REPRESENTATION"``: The currently chosen Adaptation does not
     contain any playable Representation. This usually happen when every
-    Representation has been blacklisted due to encryption errors.
+    Representation has been blacklisted due to encryption limitations.
 
   - ``"MEDIA_TIME_NOT_FOUND"``: This error should never happen and is a RxPlayer
     bug if it does. It means that a time initially thought to be in the bounds
