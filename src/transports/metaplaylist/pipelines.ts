@@ -159,7 +159,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
       const parserOptions = {
         url,
-        serverTimeOffset: options.serverSyncInfos,
+        serverSyncInfos: options.serverSyncInfos,
       };
 
       return handleParsedResult(parseMetaPlaylist(responseData, parserOptions));
