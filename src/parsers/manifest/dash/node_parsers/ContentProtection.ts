@@ -40,12 +40,11 @@ function parseContentProtectionChildren(
   for (let i = 0; i < contentProtectionChildren.length; i++) {
     if (contentProtectionChildren[i].nodeType === Node.ELEMENT_NODE) {
       const currentElement = contentProtectionChildren[i] as Element;
-      switch (currentElement.nodeName) {
-        case "cenc:pssh":
-          const content = currentElement.textContent;
-          if (content !== null && content.length > 0) {
-            cencPssh.push(base64ToUint8Array(content));
-          }
+      if (currentElement.nodeName === "cenc:pssh") {
+        const content = currentElement.textContent;
+        if (content !== null && content.length > 0) {
+          cencPssh.push(base64ToUint8Array(content));
+        }
       }
     }
   }
