@@ -56,6 +56,9 @@ function getServerCertificate(url) {
         reject();
       }
     };
+    xhr.onerror = (err) => {
+      reject(err);
+    };
     xhr.send();
   });
 }
