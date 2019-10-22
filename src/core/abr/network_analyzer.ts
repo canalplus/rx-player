@@ -141,15 +141,15 @@ function estimateStarvationModeBitrate(
   }
 
   const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
-  if (
-    currentRepresentation == null ||
-    requestElapsedTime <= ((chunkDuration * 1.5 + 1) / clock.speed)
-  ) {
+  const reasonableElapsedTime = requestElapsedTime <=
+    ((chunkDuration * 1.5 + 1) / clock.speed);
+  if (currentRepresentation == null || reasonableElapsedTime) {
     return undefined;
   }
 
   // calculate a reduced bitrate from the current one
-  const reducedBitrate = currentRepresentation.bitrate * 0.7;
+  const factor = chunkDuration / requestElapsedTime;
+  const reducedBitrate = currentRepresentation.bitrate * Math.min(0.7, factor);
   if (lastEstimatedBitrate == null || reducedBitrate < lastEstimatedBitrate) {
     return reducedBitrate;
   }
