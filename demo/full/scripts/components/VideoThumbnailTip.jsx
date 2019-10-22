@@ -3,16 +3,14 @@ import React from "react";
 const { VideoThumbnailLoader } = window.RxPlayerTools;
 
 /**
- * React Component which Displays an Image tip centered and on top of the
- * position wanted.
+ * React Component which Displays a video thumbnail tip centered and on top
+ * of the position wanted.
  *
- * Takes 3 props:
- *   - {Blob|string} Image - The image blob to display
- *   - {string} [className=""] - An optional className for the image
- *   - {Number} xPosition - The position on the horizontal axis where you
- *     want the image to be centered to.
+ * Takes 2 props:
+ *   - {Object} Adaptation - The adaptation that carries the thumbnail track
+ *   - {number} Image time - The media time of the image to display
  *
- * @class ImageTip
+ * @class VideoThumbnailTip
  */
 class VideoThumbnailTip extends React.Component {
   constructor(...args) {
