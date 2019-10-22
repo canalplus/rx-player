@@ -26,7 +26,6 @@ import {
   mergeMap,
 } from "rxjs/operators";
 import castToObservable from "../../utils/cast_to_observable";
-import { isFirefox } from "../browser_detection";
 import { ICustomMediaKeySession } from "./custom_media_keys";
 
 /**
@@ -53,23 +52,21 @@ export default function closeSession$(
           map(() => { throw new Error("Compat: Couldn't know if session is " +
                                       "closed"); }),
           catchError((err) => {
-            if (isFirefox) {
-              // On Firefox, after that `update` has thrown,
-              // the `closed` Promise on session resolves.
-              const sessionIsClosed$ = castToObservable(session.closed);
-              return observableRace(
-                sessionIsClosed$,
-                observableTimer(1000).pipe(
-                  map(() => { throw new Error("Compat: Couldn't know if session is " +
-                                              "closed"); })
-                )
-              );
-            }
-            // The caught error can tell if session is closed.
+            // The caught error can tell if session is closed
+            // (Chrome may throw this error)
             if (err.message === "The session is already closed.") {
               return observableOf(null);
             }
-            throw new Error("Compat: Couldn't know if session is closed");
+            // The `closed` promise may resolve, even if `close()` result has not
+            // (it may happen on Firefox). Wait for it and timeout after 1 second.
+            const sessionIsClosed$ = castToObservable(session.closed);
+            return observableRace(
+              sessionIsClosed$,
+              observableTimer(1000).pipe(
+                map(() => { throw new Error("Compat: Couldn't know if session is " +
+                                            "closed"); })
+              )
+            );
           })
         );
       })
