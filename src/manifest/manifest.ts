@@ -59,6 +59,7 @@ interface IManifestParsingOptions {
 }
 
 export interface IDecipherabilityUpdateElement {
+  manifest : Manifest;
   period : Period;
   adaptation : Adaptation;
   representation : Representation;
@@ -66,7 +67,7 @@ export interface IDecipherabilityUpdateElement {
 
 export interface IManifestEvents {
   manifestUpdate : null;
-  ["decipherability-update"] : IDecipherabilityUpdateElement[];
+  decipherabilityUpdate : IDecipherabilityUpdateElement[];
 }
 
 /**
@@ -430,7 +431,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     });
 
     if (updates.length > 0) {
-      this.trigger("decipherability-update", updates);
+      this.trigger("decipherabilityUpdate", updates);
     }
   }
 
@@ -451,7 +452,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     });
 
     if (updates.length > 0) {
-      this.trigger("decipherability-update", updates);
+      this.trigger("decipherabilityUpdate", updates);
     }
   }
 
@@ -565,7 +566,7 @@ function updateDeciperability(
       for (let k = 0; k < representations.length; k++) {
         const representation = representations[k];
         if (!predicate(representation)) {
-          updates.push({ period, adaptation, representation });
+          updates.push({ manifest, period, adaptation, representation });
           representation.decipherable = false;
         }
       }
