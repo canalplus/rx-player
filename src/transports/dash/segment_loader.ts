@@ -134,11 +134,11 @@ export default function generateSegmentLoader(
        * Callback triggered when the custom segment loader has a response.
        * @param {Object} args
        */
-      const resolve = (_args : {
-        data : ArrayBuffer|Uint8Array;
-        size? : number;
-        duration? : number;
-      }) => {
+      const resolve = (
+        _args : { data : ArrayBuffer|Uint8Array;
+                  size? : number;
+                  duration? : number; }
+      ) => {
         if (!hasFallbacked) {
           hasFinished = true;
           obs.next({ type: "data-loaded" as const,
@@ -160,6 +160,18 @@ export default function generateSegmentLoader(
         }
       };
 
+      const progress = (
+        _args : { duration : number;
+                  size : number;
+                  totalSize? : number; }
+      ) => {
+        if (!hasFallbacked) {
+          obs.next({ type: "progress", value: { duration: _args.duration,
+                                                size: _args.size,
+                                                totalSize: _args.totalSize } });
+        }
+      };
+
       /**
        * Callback triggered when the custom segment loader wants to fallback to
        * the "regular" implementation
@@ -175,7 +187,7 @@ export default function generateSegmentLoader(
         /* tslint:enable deprecation */
       };
 
-      const callbacks = { reject, resolve, fallback };
+      const callbacks = { reject, resolve, progress, fallback };
       const abort = customSegmentLoader(args, callbacks);
 
       return () => {
