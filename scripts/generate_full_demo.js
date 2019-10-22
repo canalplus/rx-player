@@ -22,10 +22,13 @@ const displayWebpackErrors = require("./display_webpack_errors");
 const getHumanReadableHours = require("./get_human_readable_hours");
 
 // overwrite entries/output (ugly but just werks and did not find any better)
-webpackLibConfig.entry = path.join(__dirname, "../src/index.ts");
+webpackLibConfig.entry = {
+  RxPlayer: path.join(__dirname, "../src/index.ts"),
+  RxPlayerTools: path.join(__dirname, "../src/experimental/tools/index.ts"),
+};
 webpackLibConfig.output.path = __dirname;
-webpackLibConfig.output.filename = "../demo/full/lib.js";
-
+webpackLibConfig.output.library = "[name]";
+webpackLibConfig.output.filename = "../demo/full/lib.[name].js";
 
 if (require.main === module) {
   // called directly

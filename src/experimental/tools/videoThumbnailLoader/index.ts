@@ -15,5 +15,4 @@
  */
 
 import VideoThumbnailLoader from "./thumbnail_loader";
-(window as any).VideoThumbnailLoader = VideoThumbnailLoader;
 export default VideoThumbnailLoader;

@@ -1,5 +1,7 @@
 import React from "react";
 
+const { VideoThumbnailLoader } = window.RxPlayerTools;
+
 /**
  * React Component which Displays an Image tip centered and on top of the
  * position wanted.
@@ -76,7 +78,7 @@ class VideoThumbnailTip extends React.Component {
           this.adaptation.trickModeTrack.representations[0] : undefined;
         if (!this.imageLoader && track) {
 
-          this.imageLoader = new window.VideoThumbnailLoader(el, track);
+          this.imageLoader = VideoThumbnailLoader(el, track);
         }
         this.imageLoader.setTime(this.imageTime);
       }}
