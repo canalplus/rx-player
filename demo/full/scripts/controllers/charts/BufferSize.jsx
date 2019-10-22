@@ -96,7 +96,7 @@ export default class BufferSizeChart extends React.Component {
 
   componentWillUnmount() {
     if (this.subscription) {
-      this.subscription.unsubscribe;
+      this.subscription.unsubscribe();
     }
   }
 
