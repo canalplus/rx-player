@@ -107,10 +107,11 @@ if (shouldReportSize) {
 
 module.exports = {
   mode: isDevMode ? "development" : "production",
-  entry: "./src/exports.ts",
+  entry: "./src/index.ts",
   output: {
     library: "RxPlayer",
     libraryTarget: "umd",
+    libraryExport: "default",
     filename: shouldMinify ? "rx-player.min.js" : "rx-player.js",
   },
   optimization: {
