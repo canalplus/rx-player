@@ -40,7 +40,7 @@ function stringFromCharCode(args : Uint8Array) : string {
  * @export
  */
 export default function stringFromUTF8(data? : Uint8Array|null) : string {
-  if (!data) {
+  if (data == null) {
     return "";
   }
 

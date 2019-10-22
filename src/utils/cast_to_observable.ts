@@ -49,17 +49,16 @@ function castToObservable<T>(value? : any) : Observable<T> {
                                        (err : unknown) => { obs.error(err); },
                                        () => { obs.complete(); });
       return () => {
-        if (sub && sub.dispose) {
+        if (sub != null && typeof sub.dispose === "function") {
           sub.dispose();
-        }
-        else if (sub && sub.unsubscribe) {
+        } else if (sub != null && typeof sub.unsubscribe === "function") {
           sub.unsubscribe();
         }
       };
     });
   }
 
-  if (value && typeof value.then === "function") {
+  if (value != null && typeof value.then === "function") {
     return observableFrom(value as Promise<T>);
   }
 

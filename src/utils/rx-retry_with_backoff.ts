@@ -88,7 +88,7 @@ export default function retryObsWithBackoff<T>(
       throw error;
     }
 
-    if (onRetry) {
+    if (typeof onRetry === "function") {
       onRetry(error, retryCount);
     }
 

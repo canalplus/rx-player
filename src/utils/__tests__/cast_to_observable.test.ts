@@ -45,7 +45,7 @@ describe("utils - castToObservable", () => {
       done();
     });
 
-    if (!resolve) {
+    if (resolve == null) {
       throw new Error();
     }
     resolve(emitItem);
@@ -66,7 +66,7 @@ describe("utils - castToObservable", () => {
       expect(err).toBe(errorItem);
       done();
     });
-    if (!reject) {
+    if (reject == null) {
       throw new Error();
     }
     reject(errorItem);

@@ -54,7 +54,7 @@ export default class SimpleSet {
    * @returns {boolean}
    */
   public test(x : string|number) : boolean {
-    return !!this._hashes[x];
+    return this._hashes.hasOwnProperty(x);
   }
 
   /**
@@ -62,6 +62,6 @@ export default class SimpleSet {
    * @returns {boolean}
    */
   public isEmpty() : boolean {
-    return !Object.keys(this._hashes).length;
+    return Object.keys(this._hashes).length === 0;
   }
 }

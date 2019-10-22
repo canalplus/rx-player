@@ -235,8 +235,8 @@ function getSizeOfRange(
   currentTime : number
 ) : number {
   const range = getRange(timeRanges, currentTime);
-  return range ? range.end - range.start :
-                 0;
+  return range != null ? range.end - range.start :
+                         0;
 }
 
 /**
@@ -251,8 +251,8 @@ function getPlayedSizeOfRange(
   currentTime : number
 ) : number {
   const range = getRange(timeRanges, currentTime);
-  return range ? currentTime - range.start :
-                 0;
+  return range != null ? currentTime - range.start :
+                         0;
 }
 
 /**
@@ -267,8 +267,8 @@ function getLeftSizeOfRange(
   currentTime : number
 ) : number {
   const range = getRange(timeRanges, currentTime);
-  return range ? range.end - currentTime :
-                 Infinity;
+  return range != null ? range.end - currentTime :
+                         Infinity;
 }
 
 /**
@@ -365,7 +365,7 @@ function keepRangeIntersection(
   for (let i = 0; i < ranges1.length; i++) {
     const range = ranges1[i];
     const overlappingRanges = findOverlappingRanges(range, ranges2);
-    if (overlappingRanges.length) {
+    if (overlappingRanges.length > 0) {
       for (let j = 0; j < overlappingRanges.length; j++) {
         const overlappingRange = overlappingRanges[j];
         result.push({ start: Math.max(range.start, overlappingRange.start),
@@ -414,7 +414,7 @@ function excludeFromRanges(
     const range = baseRanges[i];
     const intersections : IRange[] = [];
     const overlappingRanges = findOverlappingRanges(range, rangesToExclude);
-    if (overlappingRanges.length) {
+    if (overlappingRanges.length > 0) {
       for (let j = 0; j < overlappingRanges.length; j++) {
         const overlappingRange = overlappingRanges[j];
         intersections.push({ start: Math.max(range.start, overlappingRange.start),

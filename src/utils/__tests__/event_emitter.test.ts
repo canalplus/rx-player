@@ -50,7 +50,7 @@ describe("utils - EventEmitter", () => {
       (payload : undefined|"a"|{ a: string }) => {
         if (payload === "a") {
           wasCalledWithString++;
-        } else if (payload && payload.a === "b") {
+        } else if (payload != null && payload.a === "b") {
           wasCalledWithObject++;
         }
       });
@@ -100,7 +100,7 @@ describe("utils - EventEmitter", () => {
     const callback = (payload : undefined|"a"|{ a: string }) => {
       if (payload === "a") {
         wasCalledWithString++;
-      } else if (payload && payload.a === "b") {
+      } else if (payload != null && payload.a === "b") {
         wasCalledWithObject++;
       }
     };
@@ -161,21 +161,21 @@ describe("utils - EventEmitter", () => {
     const callback1 = (payload : undefined|"a"|{ a: string }) => {
       if (payload === "a") {
         wasCalledWithString1++;
-      } else if (payload && payload.a === "b") {
+      } else if (payload != null && payload.a === "b") {
         wasCalledWithObject1++;
       }
     };
     const callback2 = (payload : undefined|"a"|{ a: string }) => {
       if (payload === "a") {
         wasCalledWithString2++;
-      } else if (payload && payload.a === "b") {
+      } else if (payload != null && payload.a === "b") {
         wasCalledWithObject2++;
       }
     };
     const callback3 = (payload : undefined|"a"|{ a: string }) => {
       if (payload === "a") {
         wasCalledWithString3++;
-      } else if (payload && payload.a === "b") {
+      } else if (payload != null && payload.a === "b") {
         wasCalledWithObject3++;
       }
     };
@@ -289,21 +289,21 @@ describe("utils - EventEmitter", () => {
     const callback1 = (payload : undefined|"a"|{ a: string }) => {
       if (payload === "a") {
         wasCalledWithString1++;
-      } else if (payload && payload.a === "b") {
+      } else if (payload != null && payload.a === "b") {
         wasCalledWithObject1++;
       }
     };
     const callback2 = (payload : undefined|"a"|{ a: string }) => {
       if (payload === "a") {
         wasCalledWithString2++;
-      } else if (payload && payload.a === "b") {
+      } else if (payload != null && payload.a === "b") {
         wasCalledWithObject2++;
       }
     };
     const callback3 = (payload : undefined|"a"|{ a: string }) => {
       if (payload === "a") {
         wasCalledWithString3++;
-      } else if (payload && payload.a === "b") {
+      } else if (payload != null && payload.a === "b") {
         wasCalledWithObject3++;
       }
     };
@@ -417,21 +417,21 @@ describe("utils - EventEmitter", () => {
     const callback1 = (payload : undefined|"a"|{ a: string }) => {
       if (payload === "a") {
         wasCalledWithString1++;
-      } else if (payload && payload.a === "b") {
+      } else if (payload != null && payload.a === "b") {
         wasCalledWithObject1++;
       }
     };
     const callback2 = (payload : undefined|"a"|{ a: string }) => {
       if (payload === "a") {
         wasCalledWithString2++;
-      } else if (payload && payload.a === "b") {
+      } else if (payload != null && payload.a === "b") {
         wasCalledWithObject2++;
       }
     };
     const callback3 = (payload : undefined|"a"|{ a: string }) => {
       if (payload === "a") {
         wasCalledWithString3++;
-      } else if (payload && payload.a === "b") {
+      } else if (payload != null && payload.a === "b") {
         wasCalledWithObject3++;
       }
     };

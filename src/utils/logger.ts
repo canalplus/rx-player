@@ -57,10 +57,10 @@ export default class Logger {
   public setLevel(levelStr : string) {
     let level : number;
     const foundLevel = this.LEVELS[levelStr as ILoggerLevel];
-    if (foundLevel) { // levelStr is a ILoggerLevel
+    if (typeof foundLevel === "number") {
       level = foundLevel;
       this.currentLevel = levelStr as ILoggerLevel;
-    } else { // either 0 or not found
+    } else { // not found
       level = 0;
       this.currentLevel = "NONE";
     }

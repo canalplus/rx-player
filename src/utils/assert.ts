@@ -24,7 +24,8 @@ import { AssertionError } from "../errors";
  */
 export default function assert(assertion : boolean, message? : string) {
   if (!assertion) {
-    throw new AssertionError(message || "invalid assertion");
+    throw new AssertionError(message === undefined ? "invalid assertion" :
+                                                     message);
   }
 }
 

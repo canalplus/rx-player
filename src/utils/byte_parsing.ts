@@ -97,7 +97,7 @@ function bytesToHex(bytes : Uint8Array, sep : string = "") : string {
   for (let i = 0; i < bytes.byteLength; i++) {
     hex += (bytes[i] >>> 4).toString(16);
     hex += (bytes[i] & 0xF).toString(16);
-    if (sep.length && i < bytes.byteLength - 1) {
+    if (sep.length > 0 && i < bytes.byteLength - 1) {
       hex += sep;
     }
   }

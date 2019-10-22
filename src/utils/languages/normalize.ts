@@ -46,7 +46,7 @@ function normalizeLanguage(_language : string) : string {
   const fields = ("" + _language).toLowerCase().split("-");
   const base = fields[0];
   const normalizedBase = normalizeBase(base);
-  if (normalizedBase) {
+  if (normalizedBase !== undefined && normalizedBase !== "") {
     return normalizedBase;
   }
   return _language;
@@ -86,13 +86,14 @@ function normalizeTextTrack(
 ) : INormalizedTextTrackObject|null|undefined {
   if (_language != null) {
     let language;
-    let closedCaption;
+    let closedCaption = false;
     if (typeof _language === "string") {
       language = _language;
-      closedCaption = false;
     } else {
       language = _language.language;
-      closedCaption = !!_language.closedCaption;
+      if (_language.closedCaption === true) {
+        closedCaption = true;
+      }
     }
 
     return { language,
@@ -118,13 +119,14 @@ function normalizeAudioTrack(
 ) : INormalizedAudioTrackObject|null|undefined {
   if (_language != null) {
     let language;
-    let audioDescription;
+    let audioDescription = false;
     if (typeof _language === "string") {
       language = _language;
-      audioDescription = false;
     } else {
       language = _language.language;
-      audioDescription = !!_language.audioDescription;
+      if (_language.audioDescription === true) {
+        audioDescription = true;
+      }
     }
 
     return { language,

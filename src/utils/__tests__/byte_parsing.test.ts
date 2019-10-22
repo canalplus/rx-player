@@ -81,7 +81,7 @@ describe("utils - byte parsing", () => {
 
       const skipOddLetters = someLetters
         .split("")
-        .filter((_, i) => !(i % 2))
+        .filter((_, i) => (i % 2) === 0)
         .join("");
 
       expect(byteUtils.bytesToUTF16Str(arr8)).toBe(

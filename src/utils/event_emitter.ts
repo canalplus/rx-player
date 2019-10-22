@@ -71,7 +71,7 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
     fn : IListener<T, TEventName>
   ) : void {
     const listeners = this._listeners[evt];
-    if (!listeners) {
+    if (!Array.isArray(listeners)) {
       this._listeners[evt] = [fn];
     } else {
       listeners.push(fn);
@@ -97,7 +97,7 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
     }
 
     const listeners = this._listeners[evt];
-    if (!listeners) {
+    if (!Array.isArray(listeners)) {
       return;
     }
     if (fn == null) {
@@ -106,11 +106,11 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
     }
 
     const index = listeners.indexOf(fn);
-    if (~index) {
+    if (index !== -1) {
       listeners.splice(index, 1);
     }
 
-    if (!listeners.length) {
+    if (listeners.length === 0) {
       delete this._listeners[evt];
     }
   }
@@ -126,7 +126,7 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
     arg : IArgs<T, TEventName>
   ) : void {
     const listeners = this._listeners[evt];
-    if (!listeners) {
+    if (!Array.isArray(listeners)) {
       return;
     }
 

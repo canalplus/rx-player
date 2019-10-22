@@ -226,7 +226,7 @@ function request<T>(
       xhr.overrideMimeType("text/xml");
     }
 
-    if (headers) {
+    if (headers != null) {
       const _headers = headers;
       for (const key in _headers) {
         if (_headers.hasOwnProperty(key)) {
@@ -267,7 +267,9 @@ function request<T>(
                                             event.total;
           const status = xhr.status;
           const loadedResponseType = xhr.responseType;
-          const _url = xhr.responseURL || url;
+          const _url = typeof xhr.responseURL === "string" &&
+                       xhr.responseURL !== "" ? xhr.responseURL :
+                                                url;
 
           let responseData : T;
           if (loadedResponseType === "json") {
@@ -302,7 +304,7 @@ function request<T>(
 
     xhr.send();
     return () => {
-      if (xhr && xhr.readyState !== 4) {
+      if (xhr != null && xhr.readyState !== 4) {
         xhr.abort();
       }
     };

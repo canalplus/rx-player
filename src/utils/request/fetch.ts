@@ -102,7 +102,7 @@ function fetchRequest(
      */
     function abortRequest(): void {
       if (!isDone) {
-        if (abortController) {
+        if (abortController != null) {
           return abortController.abort();
         }
         log.warn("Fetch: AbortController API not available.");
@@ -119,8 +119,8 @@ function fetchRequest(
     fetch(options.url,
           { headers,
             method: "GET",
-            signal: abortController ? abortController.signal :
-                                      undefined }
+            signal: abortController != null ? abortController.signal :
+                                              undefined }
     ).then((response) => {
       if (timeout != null) {
         clearTimeout(timeout);
@@ -211,9 +211,9 @@ function fetchRequest(
  * @return {boolean}
  */
 export function fetchIsSupported() : boolean {
-  return !!(window.fetch &&
-         _AbortController != null &&
-         _Headers != null);
+  return (typeof window.fetch === "function" &&
+          _AbortController != null &&
+          _Headers != null);
 }
 
 export default fetchRequest;
