@@ -121,33 +121,35 @@ function parseSegmentInfos(content: IContent,
     }
   }
 
-  let parserResponse;
   if (!segment.isInit) {
-    const chunkInfos = isWEBM ? null : // TODO extract from webm
-                                getISOBMFFTimingInfos(chunkData,
-                                                      isChunked,
-                                                      segment,
-                                                      init);
+    const initChunkInfos = isWEBM ? null : // TODO extract from webm
+                                    getISOBMFFTimingInfos(chunkData,
+                                                          isChunked,
+                                                          segment,
+                                                          init);
     const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-    const appendWindow: [number|undefined, number|undefined] =
-      [period.start, period.end];
-    parserResponse = { chunkData,
-                       chunkInfos,
-                       chunkOffset,
-                       segmentProtections: [],
-                       appendWindow };
-  } else { // it is an initialization segment
-    if (nextSegments != null && nextSegments.length > 0) {
-      representation.index._addSegments(nextSegments);
-    }
+    return { parserResponse: { chunkData,
+                               chunkInfos: initChunkInfos,
+                               chunkOffset,
+                               segmentProtections: [],
+                               appendWindow: [period.start, period.end] },
+             indexes };
+  }
 
-    const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
-                               getMDHDTimescale(chunkData);
+  // it is an initialization segment
+  if (nextSegments != null && nextSegments.length > 0) {
+    representation.index._addSegments(nextSegments);
+  }
 
-    const chunkInfos = timescale != null && timescale > 0 ? { time: 0,
-                                                              duration: 0,
-                                                              timescale } :
-                                                            null;
+  const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
+                             getMDHDTimescale(chunkData);
+
+  const chunkInfos = timescale != null && timescale > 0 ? { time: 0,
+                                                            duration: 0,
+                                                            timescale } :
+                                                          null;
+  const appendWindow: [number|undefined, number|undefined] =
+    [period.start, period.end];
 
     if (!isWEBM) {
       const psshInfo = takePSSHOut(chunkData);
@@ -159,21 +161,14 @@ function parseSegmentInfos(content: IContent,
       }
     }
 
-    const segmentProtections = representation.getProtectionsInitializationData();
-    const appendWindow: [number|undefined, number|undefined] =
-      [period.start, period.end];
-    parserResponse = { chunkData,
-                       chunkInfos,
-                       chunkOffset: takeFirstSet<number>(segment.timestampOffset,
-                        0),
-                       segmentProtections,
-                       appendWindow };
-  }
-
-  return {
-    parserResponse,
-    indexes,
-  };
+  const segmentProtections = representation.getProtectionsInitializationData();
+  return { parserResponse: { chunkData,
+                             chunkInfos,
+                             chunkOffset:
+                               takeFirstSet<number>(segment.timestampOffset, 0),
+                             segmentProtections,
+                             appendWindow },
+           indexes };
 }
 
 export default function parser({ content,
@@ -260,11 +255,9 @@ export default function parser({ content,
   }
 
   const { indexes, parserResponse } = parsedSegmentsInfos;
-  if (indexes == null ||
-      indexes.length === 0) {
+  if (indexes == null || indexes.length === 0) {
     return observableOf(parsedSegmentsInfos.parserResponse);
   }
 
-  return loadIndexes(parserResponse,
-                     indexes);
+  return loadIndexes(parserResponse, indexes);
 }
