@@ -113,11 +113,11 @@ function parseSegmentInfos(content: IContent,
                                                                             undefined;
     const referencesFromSidx = getReferencesFromSidx(chunkData, initialOffset);
     if (referencesFromSidx !== null) {
-      const segments = referencesFromSidx.filter((ref) => ref.referenceTo === "segment");
-      if (segments.length > 0) {
-        nextSegments = segments;
+      const [indexReferences, segmentReferences] = referencesFromSidx;
+      if (segmentReferences.length > 0) {
+        nextSegments = segmentReferences;
       }
-      indexes = referencesFromSidx.filter((ref) => ref.referenceTo === "index");
+      indexes = indexReferences;
     }
   }
 
@@ -234,14 +234,14 @@ export default function parser({ content,
             const length = ranges[i][1] - ranges[i][0] + 1;
             const sidxBox = data.subarray(totalLen, totalLen + length);
             const initialOffset = ranges[i][0];
-            const references = getReferencesFromSidx(sidxBox, initialOffset);
-            if (references !== null) {
-              references.forEach((ref) => {
-                if (ref.referenceTo === "segment") {
-                  newSegments.push(ref);
-                } else {
-                  newIndexes.push(ref);
-                }
+            const referencesFromSidx = getReferencesFromSidx(sidxBox, initialOffset);
+            if (referencesFromSidx !== null) {
+              const [indexReferences, segmentReferences] = referencesFromSidx;
+              segmentReferences.forEach((segment) => {
+                newSegments.push(segment);
+              });
+              indexReferences.forEach((index) => {
+                newIndexes.push(index);
               });
             }
             totalLen += length;

@@ -77,7 +77,6 @@ export interface ISidxReference {
   count : 0;
   timescale : number;
   range : [number, number];
-  referenceTo : "index"|"segment";
 }
 
 /**
@@ -86,8 +85,10 @@ export interface ISidxReference {
  *
  * @param {Uint8Array} buf
  * @param {Number|undefined} initialOffset
- * @returns {Object|null} {Array.<Object>} - Information about each reference
- * (can be a subsegment or sidx). Contains those keys:
+ * @returns {Array.<Object>|null}
+ *
+ * Returns a tuple of : index reference infos and segment reference infos,
+ * this informations containing this keys :
  *   - time {Number}: starting _presentation time_ for a subsegment,
  *     timescaled
  *   - duration {Number}: duration of a subsegment, or of every subsegments described
@@ -101,7 +102,7 @@ export interface ISidxReference {
 function getReferencesFromSidx(
   buf : Uint8Array,
   initialOffset? : number
-) : ISidxReference[]|null {
+) : [ISidxReference[], ISidxReference[]]|null {
   const index = findBox(buf, 0x73696478 /* "sidx" */);
   if (index === -1) {
     return null;
@@ -135,7 +136,8 @@ function getReferencesFromSidx(
     return null;
   }
 
-  const references : ISidxReference[] = [];
+  const referencesToIndex : ISidxReference[] = [];
+  const referencesToSegment : ISidxReference[] = [];
 
   /* reserved(16) */
   /* reference_count(16) */
@@ -166,19 +168,25 @@ function getReferencesFromSidx(
     // let sapType = (sapChunk & 0x70000000) >>> 28;
     // let sapDelta = sapChunk & 0x0FFFFFFF;
 
-    const referenceTo = refType === 1 ? "index" : "segment";
-    references.push({ time,
-                      duration,
-                      count: 0,
-                      timescale,
-                      range: [offset, offset + refSize - 1],
-                      referenceTo });
+    if (refType === 1) {
+      referencesToIndex.push({ time,
+                               duration,
+                               count: 0,
+                               timescale,
+                               range: [offset, offset + refSize - 1] });
+    } else {
+      referencesToSegment.push({ time,
+                                 duration,
+                                 count: 0,
+                                 timescale,
+                                 range: [offset, offset + refSize - 1] });
+    }
 
     time += duration;
     offset += refSize;
   }
 
-  return references;
+  return [referencesToIndex, referencesToSegment];
 }
 
 /**

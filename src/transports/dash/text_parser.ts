@@ -97,22 +97,15 @@ function parseMP4EmbeddedTrack({ response,
     chunkBytes = data instanceof Uint8Array ? data :
                                               new Uint8Array(data);
   }
-  const indexReferences: ISidxReference[] = [];
   const initialOffset = Array.isArray(indexRange) ? indexRange[0] :
                                                     (range !== undefined) ? range[0] :
                                                                             undefined;
   const sidxReferences = getReferencesFromSidx(chunkBytes, initialOffset);
 
-  const nextSegments = (sidxReferences !== null && sidxReferences.length > 0) ?
-    sidxReferences.filter((s) => s.referenceTo === "segment") : undefined;
-
-  if (sidxReferences !== null && sidxReferences.length > 0) {
-    sidxReferences.forEach((r) => {
-      if (r.referenceTo === "index") {
-        indexReferences.push(r);
-      }
-    });
-  }
+  const nextSegments = (sidxReferences !== null) ? sidxReferences[1] :
+                                                   undefined;
+  const indexReferences = (sidxReferences !== null) ? sidxReferences[0] :
+                                                      [];
 
   if (isInit) {
     const mdhdTimescale = getMDHDTimescale(chunkBytes);
@@ -345,12 +338,12 @@ export default function textTrackParser({ response,
               const initialOffset = ranges[i][0];
               const references = getReferencesFromSidx(sidxBox, initialOffset);
               if (references !== null) {
-                references.forEach((ref) => {
-                  if (ref.referenceTo === "segment") {
-                    newSegments.push(ref);
-                  } else {
-                    newIndexes.push(ref);
-                  }
+                const [newIndexReferences, newSegmentReferences] = references;
+                newSegmentReferences.forEach((segmentRef) => {
+                  newSegments.push(segmentRef);
+                });
+                newIndexReferences.forEach((index) => {
+                  newIndexes.push(index);
                 });
               }
               totalLen += length;
