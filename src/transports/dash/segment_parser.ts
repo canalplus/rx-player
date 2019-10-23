@@ -189,7 +189,7 @@ export default function parser({ content,
    */
   function loadIndexes(indexesToLoad : ISidxReference[]): Observable<never> {
     if (scheduleRequest == null) {
-      throw new Error();
+      throw new Error("Can't schedule request for loading indexes.");
     }
 
     const range: [number, number] =
@@ -198,7 +198,7 @@ export default function parser({ content,
 
     const url = content.segment.mediaURL;
     if (url === null) {
-      throw new Error();
+      throw new Error("No URL for loading indexes.");
     }
     const loadedRessource$ = scheduleRequest(() => {
       return requestArrayBufferResource(url, range).pipe(

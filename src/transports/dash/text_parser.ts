@@ -296,7 +296,7 @@ export default function textTrackParser({ response,
      */
     function loadIndexes(indexesToLoad: ISidxReference[]): Observable<never> {
       if (scheduleRequest == null) {
-        throw new Error();
+        throw new Error("Can't schedule request for loading indexes.");
       }
 
       const range: [number, number] =
@@ -305,7 +305,7 @@ export default function textTrackParser({ response,
 
       const url = content.segment.mediaURL;
       if (url === null) {
-        throw new Error();
+        throw new Error("No URL for loading indexes.");
       }
       const loadedRessource$ = scheduleRequest(() => {
         return requestArrayBufferResource(url, range).pipe(
