@@ -58,7 +58,7 @@ function requestArrayBufferResource(
   range? : [number, number]
 ) : Observable<ILoaderDataLoadedValue<ArrayBuffer>> {
   let headers = {};
-  if (range !== undefined) {
+  if (range !== undefined && range.length > 0) {
     headers = { Range: byteRange(range) };
   }
   return request({ url,
