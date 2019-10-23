@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "../../../utils/is_non_empty_string";
+
 /**
  * Returns first line after the WEBVTT header.
  * That is, the line after the first blank line after the first line!
@@ -117,9 +119,7 @@ function findEndOfCueBlock(
   // continue incrementing i until either:
   //   - empty line
   //   - end
-  while (linified[firstEmptyLineIndex] !== undefined &&
-         linified[firstEmptyLineIndex] !== "")
-  {
+  while (isNonEmptyString(linified[firstEmptyLineIndex])) {
     firstEmptyLineIndex++;
   }
   return firstEmptyLineIndex;

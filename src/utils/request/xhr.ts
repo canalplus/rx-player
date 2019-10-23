@@ -17,6 +17,7 @@
 import { Observable } from "rxjs";
 import config from "../../config";
 import { RequestError } from "../../errors";
+import isNonEmptyString from "../is_non_empty_string";
 
 const { DEFAULT_REQUEST_TIMEOUT } = config;
 
@@ -267,9 +268,8 @@ function request<T>(
                                             event.total;
           const status = xhr.status;
           const loadedResponseType = xhr.responseType;
-          const _url = typeof xhr.responseURL === "string" &&
-                       xhr.responseURL !== "" ? xhr.responseURL :
-                                                url;
+          const _url = isNonEmptyString(xhr.responseURL) ? xhr.responseURL :
+                                                           url;
 
           let responseData : T;
           if (loadedResponseType === "json") {

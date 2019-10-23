@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "../../utils/is_non_empty_string";
 import warnOnce from "../../utils/warn_once";
 
 const ISM_REG = /(\.isml?)(\?token=\S+)?$/;
@@ -52,7 +53,7 @@ function extractToken(url : string) : string {
  * @returns {string}
  */
 function replaceToken(url : string, token? : string) : string {
-  if (typeof token === "string" && token.length > 0) {
+  if (isNonEmptyString(token)) {
     return url.replace(TOKEN_REG, "?token=" + token);
   } else {
     return url.replace(TOKEN_REG, "");
