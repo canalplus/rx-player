@@ -137,7 +137,7 @@ function _addSegmentInfos(
  */
 export default class BaseRepresentationIndex implements IRepresentationIndex {
   private _index : IBaseIndex;
-  private _hypotheticalInitRange: boolean;
+  private _shouldGuessInitRange: boolean;
   private _isContentFragmented: boolean;
 
   // absolute end of the period, timescaled and converted to index time
@@ -178,11 +178,11 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     // is loaded, to ensure that we push a complete and dry segment
     // to buffers.
     let range: [number, number] | undefined;
-    this._hypotheticalInitRange = false;
+    this._shouldGuessInitRange = false;
     if (index.initialization === undefined &&
         index.indexRange === undefined &&
         this._isContentFragmented) {
-      this._hypotheticalInitRange = true;
+      this._shouldGuessInitRange = true;
     } else {
       if (index.initialization != null) {
         range = index.initialization.range;
@@ -216,7 +216,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     }
     const initSegment = getInitSegment(this._index);
     initSegment.privateInfos = {
-      hypotheticalInitRange : this._hypotheticalInitRange,
+      shouldGuessInitRange : this._shouldGuessInitRange,
     };
     return initSegment;
   }

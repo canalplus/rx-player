@@ -48,9 +48,9 @@ export interface IMetaPlaylistPrivateInfos { transportType : string;
 export interface IPrivateInfos {
   smoothInit? : ISmoothInitSegmentPrivateInfos;
   metaplaylistInfos? : IMetaPlaylistPrivateInfos;
-  hypotheticalInitRange? : boolean; // `true` if init range was guessed
-                                    // because of the lack of init infos
-                                    // in the manifest
+  shouldGuessInitRange? : boolean; // `true` if init range should be guessed
+                                   // because of the lack of init infos
+                                   // in the manifest
 }
 
 // ISegment Object.

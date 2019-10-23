@@ -35,7 +35,7 @@ export default function initSegmentLoader(
 ) : ISegmentLoaderObservable<ArrayBuffer> {
   if (segment.range == null) {
     if (segment.privateInfos &&
-        segment.privateInfos.hypotheticalInitRange) {
+        segment.privateInfos.shouldGuessInitRange) {
       return xhr({ url,
                    headers: { Range: byteRange([0, 1500]) },
                    responseType: "arraybuffer",
