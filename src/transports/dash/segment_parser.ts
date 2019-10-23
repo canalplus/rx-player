@@ -15,6 +15,8 @@
  */
 
 import {
+  EMPTY,
+  merge as observableMerge,
   Observable,
   of as observableOf,
 } from "rxjs";
@@ -182,15 +184,10 @@ export default function parser({ content,
 
   /**
    * Load 'sidx' boxes from indexes references.
-   * @param {Object} segmentParserResponse
    * @param {Array.<Object>} indexesToLoad
    * @returns {Observable}
    */
-  function loadIndexes(
-    segmentParserResponse : ISegmentParserResponse<Uint8Array |
-                                                   ArrayBuffer>,
-    indexesToLoad : ISidxReference[]
-  ): Observable<ISegmentParserResponse<Uint8Array|ArrayBuffer>> {
+  function loadIndexes(indexesToLoad : ISidxReference[]): Observable<never> {
     if (scheduleRequest == null) {
       throw new Error();
     }
@@ -247,17 +244,17 @@ export default function parser({ content,
           content.representation.index._addSegments(newSegments);
         }
         if (newIndexes.length > 0) {
-          return loadIndexes(segmentParserResponse, newIndexes);
+          return loadIndexes(newIndexes);
         }
-        return observableOf(segmentParserResponse);
+        return EMPTY;
       })
     );
   }
 
   const { indexes, parserResponse } = parsedSegmentsInfos;
   if (indexes == null || indexes.length === 0) {
-    return observableOf(parsedSegmentsInfos.parserResponse);
+    return observableOf(parserResponse);
   }
-
-  return loadIndexes(parserResponse, indexes);
+  return observableMerge(loadIndexes(indexes),
+                         observableOf(parserResponse));
 }

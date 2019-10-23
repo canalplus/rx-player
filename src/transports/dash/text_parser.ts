@@ -15,6 +15,8 @@
  */
 
 import {
+  EMPTY,
+  merge as obervableMerge,
   Observable,
   of as observableOf,
 } from "rxjs";
@@ -42,10 +44,8 @@ import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 import {
   ILoaderDataLoadedValue,
   ISegmentParserArguments,
-  ISegmentParserResponse,
   ITextParserObservable,
   ITextParserResponse,
-  ITextTrackSegmentData,
 } from "../types";
 import byteRange from "../utils/byte_range";
 
@@ -291,13 +291,10 @@ export default function textTrackParser({ response,
 
     /**
      * Load 'sidx' to get indexReferences.
-     * @param {Object} segmentParserResponse
      * @param {Array.<Object>} indexesToLoad
+     * @returns {Observable}
      */
-    function loadIndexes(
-      segmentParserResponse : ISegmentParserResponse<ITextTrackSegmentData>,
-      indexesToLoad: ISidxReference[]
-    ): Observable<ISegmentParserResponse<ITextTrackSegmentData>> {
+    function loadIndexes(indexesToLoad: ISidxReference[]): Observable<never> {
       if (scheduleRequest == null) {
         throw new Error();
       }
@@ -354,9 +351,9 @@ export default function textTrackParser({ response,
             content.representation.index._addSegments(newSegments);
           }
           if (newIndexes.length > 0) {
-            return loadIndexes(segmentParserResponse, newIndexes);
+            return loadIndexes(newIndexes);
           }
-          return observableOf(segmentParserResponse);
+          return EMPTY;
         })
       );
     }
@@ -365,11 +362,11 @@ export default function textTrackParser({ response,
 
     if (indexReferences == null ||
         indexReferences.length === 0) {
-      return observableOf(parserResponse.parsedTrackInfos);
+      return observableOf(parsedTrackInfos);
     }
 
-    return loadIndexes(parsedTrackInfos,
-                       indexReferences);
+    return obervableMerge(loadIndexes(indexReferences),
+                          observableOf(parsedTrackInfos));
   } else {
     return parsePlainTextTrack({ response: { data, isChunked }, content });
   }
