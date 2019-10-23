@@ -25,16 +25,14 @@ function parseSettings(
   settingsString : string
 ) : Partial<Record<string, string>> {
   const splittedSettings = settingsString.split(/ |\t/);
-  return splittedSettings.reduce<Partial<Record<string, string>>>((
-    acc,
-    setting : string
-  ) => {
-    const splittedSetting = setting.split(":");
-    if (splittedSetting.length === 2) {
-      acc[splittedSetting[0]] = splittedSetting[1];
-    }
-    return acc;
-  }, {});
+  return splittedSettings
+    .reduce<Partial<Record<string, string>>>((acc, setting : string) => {
+      const splittedSetting = setting.split(":");
+      if (splittedSetting.length === 2) {
+        acc[splittedSetting[0]] = splittedSetting[1];
+      }
+      return acc;
+    }, {});
 }
 
 /**
@@ -48,24 +46,20 @@ function parseSettings(
  */
 function parseTimeAndSettings(
   timeString : string
-) : {
-  start : number;
-  end : number;
-  settings : Partial<Record<string, string>>;
-}|null {
-  /**
-   * RegExp for the timestamps + settings line.
-   *
-   * Capture groups:
-   *   1 -> start timestamp
-   *   2 -> end timestamp
-   *   3 - settings
-   * @type {RegExp}
-   */
+) : { start : number;
+      end : number;
+      settings : Partial<Record<string, string>>; } |
+    null
+{
+  // RegExp for the timestamps + settings line.
+  // Capture groups:
+  //   1 -> start timestamp
+  //   2 -> end timestamp
+  //   3 - settings
   const lineRegex = /^([\d:.]+)[ |\t]+-->[ |\t]+([\d:.]+)[ |\t]*(.*)$/;
 
   const matches = timeString.match(lineRegex);
-  if (!matches) {
+  if (matches === null) {
     return null;
   }
 
@@ -77,20 +71,16 @@ function parseTimeAndSettings(
 
   const settings = parseSettings(matches[3]);
 
-  return {
-    start,
-    end,
-    settings,
-  };
+  return { start,
+           end,
+           settings };
 }
 
-export interface IVTTCueObject {
-  start : number;
-  end : number;
-  header? : string;
-  settings: Partial<Record<string, string>>;
-  payload : string[];
-}
+export interface IVTTCueObject { start : number;
+                                 end : number;
+                                 header? : string;
+                                 settings: Partial<Record<string, string>>;
+                                 payload : string[]; }
 
 /**
  * Parse cue block into a cue object which contains:
@@ -125,16 +115,14 @@ export default function parseCueBlock(
   }
 
   const timeAndSettings = parseTimeAndSettings(timeString);
-  if (!timeAndSettings) {
+  if (timeAndSettings === null) {
     return null;
   }
 
   const { start, end, settings } = timeAndSettings;
-  return {
-    start: start + timeOffset,
-    end: end + timeOffset,
-    settings,
-    payload,
-    header,
-  };
+  return { start: start + timeOffset,
+           end: end + timeOffset,
+           settings,
+           payload,
+           header };
 }

@@ -16,6 +16,7 @@
 
 import objectAssign from "object-assign";
 import arrayFind from "../../../../utils/array_find";
+import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import getParameters from "../get_parameters";
 import getParentElementsByTagName from "../get_parent_elements_by_tag_name";
 import {
@@ -87,10 +88,10 @@ export default function parseTTMLStringToDIV(
   const ret : ITTMLHTMLCue[] = [];
   const xml = new DOMParser().parseFromString(str, "text/xml");
 
-  if (xml) {
+  if (xml !== null && xml !== undefined) {
     const tts = xml.getElementsByTagName("tt");
     const tt = tts[0];
-    if (!tt) {
+    if (tt === undefined) {
       throw new Error("invalid XML");
     }
 
@@ -127,16 +128,14 @@ export default function parseTTMLStringToDIV(
             getStylingFromElement(regionNode);
 
           const associatedStyle = regionNode.getAttribute("style");
-          if (associatedStyle) {
+          if (isNonEmptyString(associatedStyle)) {
             const style = arrayFind(styles, (x) => x.id === associatedStyle);
-            if (style) {
+            if (style !== undefined) {
               regionStyle = objectAssign({}, style.style, regionStyle);
             }
           }
-          regions.push({
-            id: regionID,
-            style: regionStyle,
-          });
+          regions.push({ id: regionID,
+                         style: regionStyle });
         }
       }
     }
@@ -152,7 +151,8 @@ export default function parseTTMLStringToDIV(
       getStylingAttributes(STYLE_ATTRIBUTES, [body], styles, regions) :
       getStylingAttributes(STYLE_ATTRIBUTES, [], styles, regions);
 
-    const bodySpaceAttribute = body ? body.getAttribute("xml:space") : undefined;
+    const bodySpaceAttribute = body !== null ? body.getAttribute("xml:space") :
+                                               undefined;
     const shouldTrimWhiteSpaceOnBody =
       bodySpaceAttribute === "default" || params.spaceStyle === "default";
 
@@ -160,26 +160,28 @@ export default function parseTTMLStringToDIV(
       const paragraph = paragraphNodes[i];
       if (paragraph instanceof Element) {
         const divs = getParentElementsByTagName(paragraph , "div");
-        const paragraphStyle = objectAssign({}, bodyStyle,
-          getStylingAttributes(
-            STYLE_ATTRIBUTES, [paragraph, ...divs], styles, regions)
-        );
+        const paragraphStyle = objectAssign({},
+                                            bodyStyle,
+                                            getStylingAttributes(STYLE_ATTRIBUTES,
+                                                                 [paragraph, ...divs],
+                                                                 styles,
+                                                                 regions));
 
         const paragraphSpaceAttribute = paragraph.getAttribute("xml:space");
-        const shouldTrimWhiteSpaceOnParagraph = paragraphSpaceAttribute ?
-          paragraphSpaceAttribute === "default" : shouldTrimWhiteSpaceOnBody;
+        const shouldTrimWhiteSpaceOnParagraph =
+          isNonEmptyString(paragraphSpaceAttribute) ?
+            paragraphSpaceAttribute === "default" :
+            shouldTrimWhiteSpaceOnBody;
 
-        const cue = parseCue(
-          paragraph,
-          timeOffset,
-          styles,
-          regions,
-          body,
-          paragraphStyle,
-          params,
-          shouldTrimWhiteSpaceOnParagraph
-        );
-        if (cue) {
+        const cue = parseCue(paragraph,
+                             timeOffset,
+                             styles,
+                             regions,
+                             body,
+                             paragraphStyle,
+                             params,
+                             shouldTrimWhiteSpaceOnParagraph);
+        if (cue !== null) {
           ret.push(cue);
         }
       }

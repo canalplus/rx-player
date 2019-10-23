@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "../../../utils/is_non_empty_string";
 import { ITTParameters } from "./get_parameters";
 import parseTime from "./time_parsing";
 
@@ -31,15 +32,18 @@ export default function getTimeDelimiters(
   const durationAttr = element.getAttribute("dur");
   const endAttr = element.getAttribute("end");
 
-  const start = beginAttr ? parseTime(beginAttr, ttParams) : null;
-  const duration = durationAttr ? parseTime(durationAttr, ttParams) : null;
-  const parsedEnd = endAttr ? parseTime(endAttr, ttParams) : null;
+  const start = isNonEmptyString(beginAttr) ? parseTime(beginAttr, ttParams) :
+                                              null;
+  const duration = isNonEmptyString(durationAttr) ? parseTime(durationAttr, ttParams) :
+                                                    null;
+  const parsedEnd = isNonEmptyString(endAttr) ? parseTime(endAttr, ttParams) :
+                    null;
   if (start == null || (parsedEnd == null && duration == null)) {
     throw new Error("Invalid text cue");
   }
 
 // Huh? Is TypeScript that dumb here?
-  const end = parsedEnd == null ?
-    start + (duration as number) : parsedEnd;
+  const end = parsedEnd == null ? start + (duration as number) :
+                                  parsedEnd;
   return { start, end };
 }

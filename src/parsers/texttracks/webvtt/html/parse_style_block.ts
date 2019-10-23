@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import createDefaultStyleElements from "./create_default_style_elements";
 
-export interface IStyleElements {
-  [className : string]: string;
-}
+export interface IStyleElements { [className : string]: string; }
 
 /**
  * Parse style element from WebVTT.
  * @param {Array.<Array.<string>>} styleBlocks
  * @return {Object}
  */
-export default function parseStyleBlocks(styleBlocks : string[][]) : {
-  classes : IStyleElements;
-  global : string;
-} {
+export default function parseStyleBlocks(
+  styleBlocks : string[][]
+) : { classes : IStyleElements;
+      global : string; }
+{
   const classes : IStyleElements = createDefaultStyleElements();
   let global = "";
 
@@ -36,29 +36,33 @@ export default function parseStyleBlocks(styleBlocks : string[][]) : {
     if (styleBlock.length >= 2) {
       for (let index = 1; index < styleBlock.length; index++) {
         let line = styleBlock[index];
-        if (line.match(/::cue {/)) {
+        if (Array.isArray(line.match(/::cue {/))) {
           line = styleBlock[++index];
-          while (line && (!(line.match(/}/) || line.length === 0))) {
+          while (isNonEmptyString(line) && (!(Array.isArray(line.match(/}/)) ||
+                                              line.length === 0))) {
             global += line;
             line = styleBlock[++index];
           }
         } else {
           const classNames : string[] = [];
-          let cueClassLine;
-          while (line && (cueClassLine = line.match(/::cue\(\.?(.*?)\)(?:,| {)/))) {
+          let cueClassLine = line.match(/::cue\(\.?(.*?)\)(?:,| {)/);
+          while (isNonEmptyString(line) && Array.isArray(cueClassLine)) {
             classNames.push(cueClassLine[1]);
             line = styleBlock[++index];
+            cueClassLine = line.match(/::cue\(\.?(.*?)\)(?:,| {)/);
           }
 
           let styleContent = "";
-          while (line && (!(line.match(/}/) || line.length === 0))) {
+          while (isNonEmptyString(line) && (!(Array.isArray(line.match(/}/)) ||
+                                              line.length === 0)))
+          {
             styleContent += line;
             line = styleBlock[++index];
           }
 
           classNames.forEach((className) => {
             const styleElement = classes[className];
-            if (!styleElement) {
+            if (styleElement === undefined) {
               classes[className] = styleContent;
             } else {
               classes[className] += styleContent;

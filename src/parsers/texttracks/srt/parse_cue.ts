@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "../../../utils/is_non_empty_string";
 import parseTimestamp from "./parse_timestamp";
 
-export interface ISRTCueObject {
-  start : number;
-  end : number;
-  payload : string[];
-}
+export interface ISRTCueObject { start : number;
+                                 end : number;
+                                 payload : string[]; }
 
 /**
  * Parse cue block into a cue object which contains:
@@ -45,33 +44,33 @@ export default function parseCueBlock(
 
   // normally in srt, the timing is at second position.
   // We still authorize to put it in the first position for resilience
-  if (cueLines[1] && cueLines[1].indexOf("-->")) {
+  if (isNonEmptyString(cueLines[1]) && cueLines[1].indexOf("-->") !== -1) {
     [startTimeString, endTimeString] = cueLines[1].split("-->")
       .map(s => s.trim());
     payload = cueLines.slice(2, cueLines.length);
   }
 
-  if (!startTimeString || !endTimeString) {
+  if (!isNonEmptyString(startTimeString) ||
+      !isNonEmptyString(endTimeString))
+  {
     // Try to see if we find them in the first position
     [startTimeString, endTimeString] = cueLines[0].split("-->")
       .map(s => s.trim());
     payload = cueLines.slice(1, cueLines.length);
   }
 
-  if (!startTimeString || !endTimeString) {
+  if (!isNonEmptyString(startTimeString) || !isNonEmptyString(endTimeString)) {
     // if the time is still not found, exit
     return null;
   }
 
   const start = parseTimestamp(startTimeString);
   const end = parseTimestamp(endTimeString);
-  if (start == null || end == null) {
+  if (start === undefined || end === undefined) {
     return null;
   }
 
-  return {
-    start: start + timeOffset,
-    end : end + timeOffset,
-    payload,
-  };
+  return { start: start + timeOffset,
+           end : end + timeOffset,
+           payload };
 }

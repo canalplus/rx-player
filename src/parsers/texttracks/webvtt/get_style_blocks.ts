@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "../../../utils/is_non_empty_string";
 import { isStartOfStyleBlock } from "./utils";
 
 /**
@@ -37,16 +38,16 @@ export default function getStyleBlocks(
       // continue incrementing i until either:
       //   - empty line
       //   - end of file
-      while (linified[i]) {
+      while (isNonEmptyString(linified[i])) {
         i++;
       }
       const styleBlock = linified.slice(startOfStyleBlock, i);
       styleBlocks.push(styleBlock);
-    } else if (linified[i]) {
+    } else if (isNonEmptyString(linified[i])) {
       // continue incrementing i until either:
       //   - empty line
       //   - end
-      while (linified[i]) {
+      while (isNonEmptyString(linified[i])) {
         i++;
       }
     }

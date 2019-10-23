@@ -16,6 +16,7 @@
 
 import { ICompatVTTCue } from "../../../../compat/index";
 import arrayIncludes from "../../../../utils/array_includes";
+import isNonEmptyString from "../../../../utils/is_non_empty_string";
 
 /**
  * Add the corresponding settings on the given cue.
@@ -27,43 +28,36 @@ export default function setSettingsOnCue(
   settings : Partial<Record<string, string>>,
   cue : ICompatVTTCue
 ) : void {
-  if (
-    settings.vertical &&
-    (settings.vertical === "rl" || settings.vertical === "lr")
-  ) {
+  if (isNonEmptyString(settings.vertical) &&
+      (settings.vertical === "rl" || settings.vertical === "lr"))
+  {
     cue.vertical = settings.vertical;
   }
 
-  if (settings.line) {
+  if (isNonEmptyString(settings.line)) {
 
-    /**
-     * Capture groups:
-     *   1 -> percentage position
-     *   2 -> optional decimals from percentage position
-     *   3 -> optional follow-up of the string indicating alignment value
-     *   4 -> alignment value
-     * @type {RegExp}
-     */
+    // Capture groups:
+    //   1 -> percentage position
+    //   2 -> optional decimals from percentage position
+    //   3 -> optional follow-up of the string indicating alignment value
+    //   4 -> alignment value
     const percentagePosition = /^(\d+(\.\d+)?)%(,([a-z]+))?/;
     const percentageMatches = settings.line.match(percentagePosition);
-    if (percentageMatches) {
+    if (Array.isArray(percentageMatches)) {
       cue.line = Number(percentageMatches[1]);
       cue.snapToLines = false;
       if (arrayIncludes(["start", "center", "end"], percentageMatches[4])) {
         cue.lineAlign = percentageMatches[4];
       }
     } else {
-      /**
-       * Capture groups:
-       *   1 -> line number
-       *   2 -> optional follow-up of the string indicating alignment value
-       *   3 -> alignment value
-       * @type {RegExp}
-       */
+      // Capture groups:
+      //   1 -> line number
+      //   2 -> optional follow-up of the string indicating alignment value
+      //   3 -> alignment value
       const linePosition = /^(-?\d+)(,([a-z]+))?/;
       const lineMatches = settings.line.match(linePosition);
 
-      if (lineMatches) {
+      if (Array.isArray(lineMatches)) {
         cue.line = Number(lineMatches[1]);
         cue.snapToLines = true;
 
@@ -74,29 +68,28 @@ export default function setSettingsOnCue(
     }
   }
 
-  if (settings.position) {
+  if (isNonEmptyString(settings.position)) {
     const positionRegex = /^([\d\.]+)%(?:,(line-left|line-right|center))?$/;
     const positionArr = positionRegex.exec(settings.position);
-    if (positionArr && positionArr.length >= 2) {
+    if (Array.isArray(positionArr) && positionArr.length >= 2) {
       const position = parseInt(positionArr[1], 10);
       if (!isNaN(position)) {
         cue.position = position;
 
-        if (positionArr[2] != null) {
+        if (positionArr[2] !== undefined) {
           cue.positionAlign = positionArr[2];
         }
       }
     }
   }
 
-  if (settings.size) {
+  if (isNonEmptyString(settings.size)) {
     cue.size = settings.size;
   }
 
-  if (
-    settings.align &&
-    arrayIncludes(["start", "center", "end", "left"], settings.align)
-  ) {
+  if (typeof settings.align === "string" &&
+      arrayIncludes(["start", "center", "end", "left"], settings.align))
+  {
     cue.align  = settings.align;
   }
 }

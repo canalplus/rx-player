@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-export interface ITTParameters {
-  frameRate : number;
-  subFrameRate : number;
-  tickRate : number;
-  spaceStyle: "default"|"preserve";
-}
+import isNonEmptyString from "../../../utils/is_non_empty_string";
+
+export interface ITTParameters { frameRate : number;
+                                 subFrameRate : number;
+                                 tickRate : number;
+                                 spaceStyle: "default" | "preserve"; }
 
 /**
  * Returns global parameters from a TTML Document
@@ -34,31 +34,43 @@ export default function getParameters(tt : Element) : ITTParameters {
   const parsedFrameRateMultiplier = tt.getAttribute("ttp:frameRateMultiplier");
   const parsedSpaceStyle = tt.getAttribute("xml:space");
 
-  if (
-    parsedSpaceStyle && parsedSpaceStyle !== "default" &&
-    parsedSpaceStyle !== "preserve"
-  ) {
+  if (isNonEmptyString(parsedSpaceStyle) &&
+      parsedSpaceStyle !== "default" &&
+      parsedSpaceStyle !== "preserve")
+  {
     throw new Error("Invalid spacing style");
   }
 
-  const nbFrameRate = Number(parsedFrameRate) || 30;
-  const nbSubFrameRate = Number(parsedSubFrameRate) || 1;
-  const nbTickRate = Number(parsedTickRate) || 0;
+  let nbFrameRate = Number(parsedFrameRate);
+  if (isNaN(nbFrameRate)) {
+    nbFrameRate = 30;
+  }
+  let nbSubFrameRate = Number(parsedSubFrameRate);
+  if (isNaN(nbSubFrameRate)) {
+    nbSubFrameRate = 1;
+  }
+  let nbTickRate = Number(parsedTickRate);
+  if (isNaN(nbTickRate)) {
+    nbTickRate = 0;
+  }
 
   let tickRate = nbTickRate;
   let frameRate = nbFrameRate;
-  const subFrameRate = nbSubFrameRate != null ? nbSubFrameRate : 1;
+  const subFrameRate = nbSubFrameRate != null ? nbSubFrameRate :
+                                                1;
 
-  // TypeScript too dumdum here :/
-  const spaceStyle = (parsedSpaceStyle || "default") as "default"|"preserve";
+  const spaceStyle = parsedSpaceStyle !== null ? parsedSpaceStyle :
+                                                 "default";
 
   if (nbTickRate === 0) {
-    tickRate = parsedFrameRate ? nbFrameRate * nbSubFrameRate : 1;
+    tickRate = isNaN(nbFrameRate) || nbFrameRate === 0 ?
+      1 :
+      nbFrameRate * nbSubFrameRate;
   }
 
-  if (parsedFrameRateMultiplier) {
+  if (parsedFrameRateMultiplier  !== null) {
     const multiplierResults = /^(\d+) (\d+)$/g.exec(parsedFrameRateMultiplier);
-    if (multiplierResults) {
+    if (multiplierResults !== null) {
       const numerator = Number(multiplierResults[1]);
       const denominator = Number(multiplierResults[2]);
       const multiplierNum = numerator / denominator;
@@ -66,10 +78,8 @@ export default function getParameters(tt : Element) : ITTParameters {
     }
   }
 
-  return {
-    tickRate,
-    frameRate,
-    subFrameRate,
-    spaceStyle,
-  };
+  return { tickRate,
+           frameRate,
+           subFrameRate,
+           spaceStyle };
 }

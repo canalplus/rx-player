@@ -37,10 +37,11 @@ function getFirstLineAfterHeader(linified : string[]) : number {
  * @returns {Boolean}
  */
 function isStartOfStyleBlock(lines : string[], index : number) : boolean {
-  return !!lines[index] && /^STYLE( .*)?$/g.test(lines[index]) &&
-    // A cue identifer can also contain "STYLe". Check that we have no timings
-    // on the second line
-    (!lines[index + 1] || lines[index + 1].indexOf("-->") < 0);
+  return typeof lines[index] === "string" &&
+         /^STYLE( .*)?$/g.test(lines[index]) &&
+        // A cue identifer can also contain "STYLE". Check that we have no timings
+        // on the second line
+        (lines[index + 1] === undefined || lines[index + 1].indexOf("-->") < 0);
 }
 
 /**
@@ -49,10 +50,11 @@ function isStartOfStyleBlock(lines : string[], index : number) : boolean {
  * @returns {Boolean}
  */
 function isStartOfNoteBlock(lines : string[], index : number) : boolean {
-  return !!lines[index] && /^NOTE( .*)?$/g.test(lines[index]) &&
-    // A cue identifer can also contain "NOTE". Check that we have no timings
-    // on the second line
-    (!lines[index + 1] || lines[index + 1].indexOf("-->") < 0);
+  return typeof lines[index] === "string" &&
+         /^NOTE( .*)?$/g.test(lines[index]) &&
+        // A cue identifer can also contain "NOTE". Check that we have no timings
+        // on the second line
+        (lines[index + 1] === undefined || lines[index + 1].indexOf("-->") < 0);
 }
 
 /**
@@ -61,10 +63,11 @@ function isStartOfNoteBlock(lines : string[], index : number) : boolean {
  * @returns {Boolean}
  */
 function isStartOfRegionBlock(lines : string[], index : number) : boolean {
-  return !!lines[index] && /^REGION( .*)?$/g.test(lines[index]) &&
-    // A cue identifer can also contain "REGION". Check that we have no timings
-    // on the second line
-    (!lines[index + 1] || lines[index + 1].indexOf("-->") < 0);
+  return typeof lines[index] === "string" &&
+         /^REGION( .*)?$/g.test(lines[index]) &&
+        // A cue identifer can also contain "REGION". Check that we have no timings
+        // on the second line
+        (lines[index + 1] === undefined || lines[index + 1].indexOf("-->") < 0);
 }
 
 /**
@@ -82,12 +85,12 @@ function isStartOfCueBlock(lines : string[], index : number) : boolean {
   //   - start of a style
   // Anything else whose first or second line is a timestamp line is a cue.
   const firstLine = lines[index];
-  if (
-    !firstLine ||
-    isStartOfStyleBlock(lines, index) ||
-    isStartOfRegionBlock(lines, index) ||
-    isStartOfNoteBlock(lines, index)
-  ) {
+  if (firstLine === undefined ||
+      firstLine === "" ||
+      isStartOfStyleBlock(lines, index) ||
+      isStartOfRegionBlock(lines, index) ||
+      isStartOfNoteBlock(lines, index))
+  {
     return false;
   }
 
@@ -96,7 +99,7 @@ function isStartOfCueBlock(lines : string[], index : number) : boolean {
   }
 
   const secondLine = lines[index + 1];
-  return !!secondLine && secondLine.indexOf("-->") >= 0;
+  return secondLine !== undefined && secondLine.indexOf("-->") >= 0;
 }
 
 /**
@@ -114,7 +117,9 @@ function findEndOfCueBlock(
   // continue incrementing i until either:
   //   - empty line
   //   - end
-  while (linified[firstEmptyLineIndex]) {
+  while (linified[firstEmptyLineIndex] !== undefined &&
+         linified[firstEmptyLineIndex] !== "")
+  {
     firstEmptyLineIndex++;
   }
   return firstEmptyLineIndex;

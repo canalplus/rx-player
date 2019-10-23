@@ -30,6 +30,7 @@
  */
 
 import assert from "../../../utils/assert";
+import isNonEmptyString from "../../../utils/is_non_empty_string";
 import { IHTMLCue } from "../types";
 
 const HTML_ENTITIES = /&#([0-9]+);/g;
@@ -46,13 +47,14 @@ const START = /<sync[^>]+?start="?([0-9]*)"?[^0-9]/i;
 function getClassNameByLang(str : string) : Partial<Record<string, string>> {
   const ruleRe = /\.(\S+)\s*{([^}]*)}/gi;
   const langs : { [lang : string ] : string } = {};
-  let m;
-  while ((m = ruleRe.exec(str))) {
+  let m = ruleRe.exec(str);
+  while (m !== null) {
     const name = m[1];
     const lang = getCSSProperty(m[2], "lang");
     if (name != null && lang != null) {
       langs[lang] = name;
     }
+    m = ruleRe.exec(str);
   }
   return langs;
 }
@@ -66,7 +68,7 @@ function getClassNameByLang(str : string) : Partial<Record<string, string>> {
 function getPCSSRules(str : string) : string {
   const pRuleRegex = /p\s*{([^}]*)}/gi;
   const rule = pRuleRegex.exec(str);
-  if (!rule) {
+  if (rule === null) {
     return "";
   }
   return rule[1];
@@ -79,7 +81,8 @@ function getPCSSRules(str : string) : string {
  */
 function getCSSProperty(str : string, name : string) : string|null {
   const matches = str.match(new RegExp("\\s*" + name + ":\\s*(\\S+);", "i"));
-  return matches ? matches[1] : null;
+  return Array.isArray(matches) ? matches[1] :
+                                  null;
 }
 
 /**
@@ -109,7 +112,8 @@ function parseSami(smi : string, timeOffset : number, lang? : string) : IHTMLCue
   const subs : IHTMLCue[] = [];
 
   const styleMatches = smi.match(STYLE);
-  const css = styleMatches ? styleMatches[1] : "";
+  const css = Array.isArray(styleMatches) ? styleMatches[1] :
+                                            "";
   let up;
   let to;
 
@@ -119,23 +123,24 @@ function parseSami(smi : string, timeOffset : number, lang? : string) : IHTMLCue
 
   const langs = getClassNameByLang(css);
   const pCSS = getPCSSRules(css);
-  const klass = lang && langs[lang];
+  const klass = isNonEmptyString(lang) ? langs[lang] :
+                                         undefined;
 
-  assert(!!klass, `sami: could not find lang ${lang} in CSS`);
+  assert(isNonEmptyString(klass), `sami: could not find lang ${lang} in CSS`);
 
   while (true) {
     up = syncOpen.exec(smi);
     to = syncClose.exec(smi);
-    if (!up && !to) {
+    if (up === null && to === null) {
       break;
     }
-    if (!up || !to || up.index >= to.index) {
+    if (up === null || to === null || up.index >= to.index) {
       throw new Error("parse error");
     }
 
     const str = smi.slice(up.index, to.index);
     const tim = str.match(START);
-    if (!tim) {
+    if (!Array.isArray(tim)) {
       throw new Error("parse error (sync time attribute)");
     }
 
@@ -153,7 +158,7 @@ function parseSami(smi : string, timeOffset : number, lang? : string) : IHTMLCue
     let i = lines.length;
     while (--i >= 0) {
       const paragraphInfos = lines[i].match(PARAG);
-      if (!paragraphInfos) {
+      if (!Array.isArray(paragraphInfos)) {
         continue;
       }
 
@@ -176,19 +181,19 @@ function parseSami(smi : string, timeOffset : number, lang? : string) : IHTMLCue
         divEl.style.width = "100%";
         divEl.style.color = "#fff";
         divEl.style.textShadow = "-1px -1px 0 #000," +
-          "1px -1px 0 #000," +
-          "-1px 1px 0 #000," +
-          "1px 1px 0 #000";
+                                 "1px -1px 0 #000," +
+                                 "-1px 1px 0 #000," +
+                                 "1px 1px 0 #000";
 
         const pEl = document.createElement("div");
         pEl.className = "rxp-texttrack-p";
-        if (pCSS) {
+        if (isNonEmptyString(pCSS)) {
           pEl.style.cssText = pCSS;
         }
 
         const textEls = txt.split(BR);
         for (let j = 0; j < textEls.length; j++) {
-          if (j) {
+          if (j !== 0) {
             pEl.appendChild(document.createElement("BR"));
           }
           const spanEl = document.createElement("SPAN");
@@ -200,11 +205,9 @@ function parseSami(smi : string, timeOffset : number, lang? : string) : IHTMLCue
         divEl.appendChild(pEl);
         wrapperEl.appendChild(divEl);
 
-        subs.push({
-          element: wrapperEl,
-          start: start + timeOffset,
-          end: -1, // Will be updated on a following iteration
-        });
+        subs.push({ element: wrapperEl,
+                    start: start + timeOffset,
+                    end: -1, /* Will be updated on a following iteration */ });
       }
     }
   }

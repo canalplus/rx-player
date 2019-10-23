@@ -15,6 +15,7 @@
  */
 
 import arrayIncludes from "../../../../utils/array_includes";
+import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import { IStyleElements } from "./parse_style_block";
 
 /**
@@ -41,7 +42,7 @@ export default function createStyledElement(
 
       nodeWithStyle = document.createElement("span");
       for (let i = 0; i < linifiedText.length; i++) {
-        if (i) {
+        if (i > 0) {
           nodeWithStyle.appendChild(document.createElement("br"));
         }
         if (linifiedText[i].length > 0) {
@@ -53,7 +54,7 @@ export default function createStyledElement(
       const nodeClasses = baseNode.nodeName.toLowerCase().split(".");
       const styleContents : string[] = [];
       nodeClasses.forEach(nodeClass => {
-        if (styleElements[nodeClass]) {
+        if (isNonEmptyString(styleElements[nodeClass])) {
           styleContents.push(styleElements[nodeClass]);
         }
       });

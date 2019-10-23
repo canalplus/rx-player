@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "../../../utils/is_non_empty_string";
 import findEndOfCueBlock from "./find_end_of_cue_block";
 
 /**
@@ -25,7 +26,7 @@ import findEndOfCueBlock from "./find_end_of_cue_block";
 export default function getCueBlocks(linified : string[]) : string[][] {
   const cueBlocks : string[][] = [];
   for (let i = 0; i < linified.length; i++) {
-    if (linified[i]) {
+    if (isNonEmptyString(linified[i])) {
       const endOfCue = findEndOfCueBlock(linified, i);
       const cueBlockCandidate = linified.slice(i, endOfCue);
       if (cueBlockCandidate.length > 0) {
@@ -34,10 +35,9 @@ export default function getCueBlocks(linified : string[]) : string[][] {
             cueBlocks.push(cueBlockCandidate);
           }
         } else {
-          if (
-            cueBlockCandidate[1].indexOf("-->") >= 0 ||
-            cueBlockCandidate[0].indexOf("-->") >= 0
-          ) {
+          if (cueBlockCandidate[1].indexOf("-->") >= 0 ||
+              cueBlockCandidate[0].indexOf("-->") >= 0)
+          {
             cueBlocks.push(cueBlockCandidate);
           }
         }

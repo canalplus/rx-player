@@ -107,7 +107,10 @@ function parseColonTimeWithFrames(
   const minutes = Number(results[2]);
   let seconds = Number(results[3]);
   let frames = Number(results[4]);
-  const subframes = Number(results[5]) || 0;
+  let subframes = Number(results[5]);
+  if (isNaN(subframes)) {
+    subframes = 0;
+  }
 
   frames += subframes / ttParams.subFrameRate;
   seconds += frames / ttParams.frameRate;
@@ -130,12 +133,24 @@ function parseTimeFromRegExp(regex : RegExp, text : string) : number|null {
   }
   // This capture is optional, but will still be in the array as undefined,
   // default to 0.
-  const hours = Number(results[1]) || 0;
-  const minutes = Number(results[2]) || 0;
-  const seconds = Number(results[3]) || 0;
-  const miliseconds = Number(results[4]) || 0;
+  let hours = Number(results[1]);
+  if (isNaN(hours)) {
+    hours = 0;
+  }
+  let minutes = Number(results[2]);
+  if (isNaN(minutes)) {
+    minutes = 0;
+  }
+  let seconds = Number(results[3]);
+  if (isNaN(seconds)) {
+    seconds = 0;
+  }
+  let milliseconds = Number(results[4]);
+  if (isNaN(milliseconds)) {
+    milliseconds = 0;
+  }
 
-  return (miliseconds / 1000) + seconds + (minutes * 60) + (hours * 3600);
+  return (milliseconds / 1000) + seconds + (minutes * 60) + (hours * 3600);
 }
 
 export default parseTime;
