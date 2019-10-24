@@ -55,7 +55,9 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
     if (segment === null) {
       return null;
     }
-    segment.privateInfos = segment.privateInfos || {};
+    if (segment.privateInfos === undefined) {
+      segment.privateInfos = {};
+    }
     segment.privateInfos.metaplaylistInfos = { transportType: this._transport,
                                                baseContent: this._baseContentInfos,
                                                contentStart: this._timeOffset,
@@ -66,7 +68,9 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
   public getSegments(up : number, duration : number) : ISegment[] {
     return this._wrappedIndex.getSegments(up - this._timeOffset, duration)
       .map((segment) => {
-        segment.privateInfos = segment.privateInfos || {};
+        if (segment.privateInfos === undefined) {
+          segment.privateInfos = {};
+        }
         segment.privateInfos.metaplaylistInfos = { transportType: this._transport,
                                                    baseContent: this._baseContentInfos,
                                                    contentStart: this._timeOffset,
@@ -82,14 +86,16 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
 
   public getFirstPosition(): number|undefined {
     const wrappedFirstPosition = this._wrappedIndex.getFirstPosition();
-    return wrappedFirstPosition ? wrappedFirstPosition + this._timeOffset :
-                                  undefined;
+    return wrappedFirstPosition !== 0 &&
+           wrappedFirstPosition != null ? wrappedFirstPosition + this._timeOffset :
+                                          undefined;
   }
 
   public getLastPosition(): number|undefined {
     const wrappedLastPosition = this._wrappedIndex.getLastPosition();
-    return wrappedLastPosition ? wrappedLastPosition + this._timeOffset :
-                                 undefined;
+    return wrappedLastPosition !== 0 &&
+           wrappedLastPosition != null ? wrappedLastPosition + this._timeOffset :
+                                         undefined;
   }
 
   public isSegmentStillAvailable(segment : ISegment) : boolean | undefined {

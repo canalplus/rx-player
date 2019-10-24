@@ -44,7 +44,11 @@ export default function checkManifestIDs(
     const { adaptations } = period;
     const adaptationIDs : string[] = [];
     Object.keys(adaptations).forEach((type) => {
-      (adaptations[type] || []).forEach(adaptation => {
+      const adaptationsForType = adaptations[type];
+      if (adaptationsForType === undefined) {
+        return;
+      }
+      adaptationsForType.forEach(adaptation => {
         const adaptationID = adaptation.id;
         if (arrayIncludes(adaptationIDs, adaptationID)) {
           log.warn("Two adaptations with the same ID found. Updating.",

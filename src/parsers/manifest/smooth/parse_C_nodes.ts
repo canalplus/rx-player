@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-interface IHSSManifestSegment {
-  start : number;
-  duration : number;
-  repeatCount : number;
-}
+import isNonEmptyString from "../../../utils/is_non_empty_string";
+
+interface IHSSManifestSegment { start : number;
+                                duration : number;
+                                repeatCount : number; }
 
 /**
  * Parse C nodes to build index timeline.
@@ -32,12 +32,13 @@ export default function parseCNodes(
     const tAttr = node.getAttribute("t");
     const rAttr = node.getAttribute("r");
 
-    const repeatCount = rAttr ? +rAttr - 1 : 0;
-    let start = tAttr ? +tAttr : undefined;
-    let duration = dAttr ? +dAttr : undefined;
+    const repeatCount = rAttr !== null ? +rAttr - 1 : 0;
+    let start = tAttr !== null ? +tAttr : undefined;
+    let duration = dAttr !== null ? +dAttr : undefined;
 
     if (i === 0) { // first node
-      start = start || 0;
+      start = start === undefined || isNaN(start) ? 0 :
+                                                    start;
     } else { // from second node to the end
       const prev = timeline[i - 1];
       if (start == null || isNaN(start)) {
@@ -49,9 +50,10 @@ export default function parseCNodes(
     }
     if (duration == null || isNaN(duration)) {
       const nextNode = nodes[i + 1];
-      if (nextNode) {
+      if (nextNode !== undefined) {
         const nextTAttr = nextNode.getAttribute("t");
-        const nextStart = nextTAttr ? +nextTAttr : null;
+        const nextStart = isNonEmptyString(nextTAttr) ? +nextTAttr :
+                                                        null;
         if (nextStart === null) {
           throw new Error(
             "Can't build index timeline from Smooth Manifest.");

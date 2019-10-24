@@ -28,7 +28,7 @@ export default function reduceChildren<T>(
 ) : T {
   let node = root.firstElementChild;
   let accumulator = init;
-  while (node) {
+  while (node !== null) {
     accumulator = fn(accumulator, node.nodeName, node);
     node = node.nextElementSibling;
   }

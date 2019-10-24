@@ -108,8 +108,9 @@ function normalizeRange(
 ) : { up: number;
       to: number; }
 {
-  const timescale = index.timescale || 1;
-
+  const timescale = index.timescale === undefined ||
+                    index.timescale === 0 ? 1 :
+                                            index.timescale;
   return { up: start * timescale,
            to: (start + duration) * timescale };
 }
@@ -122,9 +123,9 @@ function normalizeRange(
  */
 function calculateRepeat(
   segment : IIndexSegment,
-  nextSegment : IIndexSegment
+  nextSegment? : IIndexSegment
 ) : number {
-  let repeatCount = segment.repeatCount || 0;
+  let repeatCount = segment.repeatCount;
 
   // A negative value of the @r attribute of the S element indicates
   // that the duration indicated in @d attribute repeats until the
@@ -132,7 +133,8 @@ function calculateRepeat(
   // next MPD update.
   // TODO Also for SMOOTH????
   if (segment.duration != null && repeatCount < 0) {
-    const repeatEnd = nextSegment ? nextSegment.start : Infinity;
+    const repeatEnd = nextSegment !== undefined ? nextSegment.start :
+                                                  Infinity;
     repeatCount = Math.ceil((repeatEnd - segment.start) / segment.duration) - 1;
   }
 
@@ -221,7 +223,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
     this._isAggressiveMode = aggressiveMode;
     this._isLive = isLive;
 
-    if (index.timeline.length) {
+    if (index.timeline.length !== 0) {
       const lastItem = index.timeline[index.timeline.length - 1];
       const scaledEnd = getIndexSegmentEnd(lastItem, null);
       this._initialScaledLastPosition = scaledEnd;
@@ -328,11 +330,11 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
     const { timeline, timescale } = this._index;
 
     const lastSegmentInCurrentTimeline = timeline[timeline.length - 1];
-    if (!lastSegmentInCurrentTimeline) {
+    if (lastSegmentInCurrentTimeline === undefined) {
       return false;
     }
 
-    const repeat = lastSegmentInCurrentTimeline.repeatCount || 0;
+    const repeat = lastSegmentInCurrentTimeline.repeatCount;
     const endOfLastSegmentInCurrentTimeline =
       lastSegmentInCurrentTimeline.start + (repeat + 1) *
         lastSegmentInCurrentTimeline.duration;
@@ -363,7 +365,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   getFirstPosition() : number|null {
     this._refreshTimeline();
     const index = this._index;
-    if (!index.timeline.length) {
+    if (index.timeline.length === 0) {
       return null;
     }
     return index.timeline[0].start / index.timescale;
@@ -483,7 +485,10 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
     this._indexValidityTime = newIndex._indexValidityTime;
     this._scaledLiveGap = newIndex._scaledLiveGap;
 
-    if (!oldTimeline.length || !newTimeline.length || oldTimescale !== newTimescale) {
+    if (oldTimeline.length === 0 ||
+        newTimeline.length === 0 ||
+        oldTimescale !== newTimescale)
+    {
       return; // don't take risk, if something is off, take the new one
     }
 

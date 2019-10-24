@@ -59,7 +59,7 @@ export default function _addSegmentInfos(
 
   let scaledCurrentTime;
 
-  if (currentSegment && currentSegment.timescale) {
+  if (currentSegment.timescale !== 0) {
     scaledCurrentTime = currentSegment.timescale === timescale ?
       currentSegment.time :
       (currentSegment.time / currentSegment.timescale) * timescale;

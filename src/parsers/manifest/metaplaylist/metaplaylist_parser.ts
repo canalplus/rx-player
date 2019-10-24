@@ -167,10 +167,10 @@ function createManifest(
   const generateAdaptationID = idGenerator();
   const generateRepresentationID = idGenerator();
   const { contents } = mplData;
-  const minimumTime = contents.length ? contents[0].startTime :
-                                        0;
-  const maximumTime = contents.length ? contents[contents.length - 1].endTime :
-                                        0;
+  const minimumTime = contents.length > 0 ? contents[0].startTime :
+                                            0;
+  const maximumTime = contents.length > 0 ? contents[contents.length - 1].endTime :
+                                            0;
   const isLive = mplData.dynamic === true;
   let duration : number|undefined = 0;
 
@@ -239,7 +239,9 @@ function createManifest(
         }, {});
 
       // TODO only first period?
-      const textTracks : IMetaPlaylistTextTrack[] = content.textTracks || [];
+      const textTracks : IMetaPlaylistTextTrack[] =
+        content.textTracks === undefined ? [] :
+                                           content.textTracks;
       const newTextAdaptations : IParsedAdaptation[] = textTracks.map((track) => {
         const adaptationID = "gen-text-ada-" + generateAdaptationID();
         const representationID = "gen-text-rep-" + generateRepresentationID();

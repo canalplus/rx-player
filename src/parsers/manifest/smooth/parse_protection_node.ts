@@ -21,27 +21,19 @@ import {
 } from "../../../utils/byte_parsing";
 import { getPlayReadyKIDFromPrivateData } from "../../containers/isobmff";
 
-export interface IKeySystem {
-  systemId : string;
-  privateData : Uint8Array;
-}
+export interface IKeySystem { systemId : string;
+                              privateData : Uint8Array; }
 
-export interface IContentProtectionSmooth {
-  keyId : Uint8Array;
-  keySystems: IKeySystem[];
-}
+export interface IContentProtectionSmooth { keyId : Uint8Array;
+                                            keySystems: IKeySystem[]; }
 
 /**
  * @param {Uint8Array} keyIdBytes
  * @returns {Array.<Object>}
  */
-function createWidevineKeySystem(
-  keyIdBytes : Uint8Array
-) : IKeySystem[] {
-  return [{
-    systemId: "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed", // Widevine
-    privateData: concat([0x08, 0x01, 0x12, 0x10], keyIdBytes),
-  }];
+function createWidevineKeySystem(keyIdBytes : Uint8Array) : IKeySystem[] {
+  return [{ systemId: "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed", // Widevine
+            privateData: concat([0x08, 0x01, 0x12, 0x10], keyIdBytes) }];
 }
 
 /**
@@ -53,28 +45,26 @@ export default function parseProtectionNode(
   protectionNode : Element,
   keySystemCreator : (keyIdBytes : Uint8Array) => IKeySystem[] = createWidevineKeySystem
 ) : IContentProtectionSmooth {
-  if (
-    !protectionNode.firstElementChild ||
-    protectionNode.firstElementChild.nodeName !== "ProtectionHeader"
-  ) {
+  if (protectionNode.firstElementChild === null ||
+      protectionNode.firstElementChild.nodeName !== "ProtectionHeader")
+  {
     throw new Error("Protection should have ProtectionHeader child");
   }
   const header = protectionNode.firstElementChild;
-  const privateData = strToBytes(atob(header.textContent || ""));
+  const privateData = strToBytes(atob(header.textContent === null ? "" :
+                                                                    header.textContent));
   const keyIdHex = getPlayReadyKIDFromPrivateData(privateData);
   const keyIdBytes = hexToBytes(keyIdHex);
 
   // remove possible braces
-  const systemId = (header.getAttribute("SystemID") || "").toLowerCase()
-    .replace(/\{|\}/g, "");
-  return {
-    keyId: keyIdBytes,
-    keySystems: [
-      {
-        systemId,
-        privateData,
-        // keyIds: [keyIdBytes],
-      },
-    ].concat(keySystemCreator(keyIdBytes)),
-  };
+  const systemIdAttr = header.getAttribute("SystemID");
+  const systemId = (systemIdAttr !== null ? systemIdAttr :
+                                            "")
+                     .toLowerCase()
+                     .replace(/\{|\}/g, "");
+  return { keyId: keyIdBytes,
+           keySystems: [ { systemId,
+                           privateData,
+                           /* keyIds: [keyIdBytes], */ }, ]
+            .concat(keySystemCreator(keyIdBytes)), };
 }
