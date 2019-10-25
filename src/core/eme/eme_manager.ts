@@ -116,6 +116,7 @@ export default function EMEManager(
 
   // Merge all encrypted events
   const encryptedEvents$ = observableMerge(externalEvents$, mediaEncryptedEvents$);
+
   const bindSession$ = encryptedEvents$.pipe(
     // Add attached MediaKeys info once available
     mergeMap((encryptedEvt) => attachedMediaKeys$.pipe(
