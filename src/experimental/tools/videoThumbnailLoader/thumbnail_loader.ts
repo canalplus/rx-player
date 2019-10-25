@@ -60,6 +60,7 @@ interface IThumbnailTrack {
  * Load needed segment data.
  * @param {Object} thumbnails
  * @param {HTMLMediaElement} mediaElement
+ * @returns {ArrayBuffer}
  */
 function getSegmentsData(
   thumbnails: IThumbnailInfo[],
@@ -114,11 +115,36 @@ export default class VideoThumbnailLoader {
     videoElement: HTMLVideoElement,
     trickModeTrack: Representation
   ) {
-    // readonly
     this._thumbnailVideoElement = videoElement;
 
-    // nullable
-    this._thumbnailTrack = this.updateThumbnailTrack(trickModeTrack);
+    const trackIndex = trickModeTrack.index;
+    const indexStart = trackIndex.getFirstPosition();
+    const indexEnd = trackIndex.getLastPosition();
+
+    if (indexStart != null && indexEnd != null) {
+      const segments = trackIndex.getSegments(indexStart, indexEnd - indexStart);
+
+      const thumbnailInfos = segments
+        .filter((s) => s.duration != null && s.mediaURL != null)
+        .map((s) => {
+          return {
+            duration: (s.duration || 0) / s.timescale,
+            start: s.time / s.timescale,
+            mediaURL: s.mediaURL || "",
+          };
+        });
+      const initSegment =
+        trickModeTrack.index.getInitSegment();
+      this._thumbnailTrack = {
+        thumbnailInfos,
+        codec: trickModeTrack.getMimeTypeString(),
+        initURL: initSegment ? (initSegment.mediaURL || "") : "",
+      };
+    } else {
+      throw new Error(
+        "VideoThumbnailLoaderError: Can't get segments from trick mode track.");
+    }
+
     this._setTime$ = new Subject();
 
     const videoSourceInfos$ = prepareSourceBuffer(
@@ -126,12 +152,11 @@ export default class VideoThumbnailLoader {
       this._thumbnailTrack.codec
     ).pipe(
       mergeMap((videoSourceBuffer) => {
-        const { initURL: init, codec } = this._thumbnailTrack;
-        return request({ url: init,
+        const { initURL, codec } = this._thumbnailTrack;
+        return request({ url: initURL,
                          responseType: "arraybuffer",
         }).pipe(
-          mergeMap((e) => {
-            const { value: { responseData }} = e;
+          mergeMap(({ value: { responseData }}) => {
             return videoSourceBuffer.appendSegment({ initSegment : responseData,
                                                      chunk: null,
                                                      codec });
@@ -259,41 +284,6 @@ export default class VideoThumbnailLoader {
     return new Promise((resolve, reject) => {
       this._setTime$.next({ time, resolve, reject });
     });
-  }
-
-  /**
-   * Update thumbnail track from adaptation
-   * @param {Object} adaptation
-   * @returns {Object}
-   */
-  public updateThumbnailTrack(trickModeTrack: Representation): IThumbnailTrack {
-    const trackIndex = trickModeTrack.index;
-    const indexStart = trackIndex.getFirstPosition();
-    const indexEnd = trackIndex.getLastPosition();
-
-    if (indexStart != null && indexEnd != null) {
-      const segments = trackIndex.getSegments(indexStart, indexEnd - indexStart);
-
-      const thumbnailInfos = segments
-        .filter((s) => s.duration != null && s.mediaURL != null)
-        .map((s) => {
-          return {
-            duration: (s.duration || 0) / s.timescale,
-            start: s.time / s.timescale,
-            mediaURL: s.mediaURL || "",
-          };
-        });
-      const initSegment =
-        trickModeTrack.index.getInitSegment();
-      return {
-        thumbnailInfos,
-        codec: trickModeTrack.getMimeTypeString(),
-        initURL: initSegment ? (initSegment.mediaURL || "") : "",
-      };
-    } else {
-      throw new Error(
-        "VideoThumbnailLoaderError: Can't get segments from trick mode track.");
-    }
   }
 
   /**
