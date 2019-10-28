@@ -409,7 +409,7 @@ describe("API - parseLoadVideoOptions", () => {
     hideNativeSubtitle: false,
     keySystems: [],
     lowLatencyMode: false,
-    manualBitrateSwitchingMode: false,
+    manualBitrateSwitchingMode: "seamless",
     networkConfig: {},
     startAt: undefined,
     supplementaryImageTracks: [],
