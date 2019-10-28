@@ -36,7 +36,7 @@ export default function parseTextTrackToCues(
   log.debug("NTSB: Finding parser for native text tracks:", type);
   const parser = features.nativeTextTracksParsers[type];
 
-  if (!parser) {
+  if (typeof parser !== "function") {
     throw new Error("no parser found for the given text track");
   }
 

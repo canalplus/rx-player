@@ -39,7 +39,7 @@ export default function parseTextTrackToElements(
   log.debug("HTSB: Finding parser for html text tracks:", type);
   const parser = features.htmlTextTracksParsers[type];
 
-  if (!parser) {
+  if (typeof parser !== "function") {
     throw new Error("no parser found for the given text track");
   }
   log.debug("HTSB: Parser found, parsing...");
