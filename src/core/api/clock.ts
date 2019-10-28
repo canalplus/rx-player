@@ -72,7 +72,7 @@ interface IMediaInfos {
   seeking : boolean; // Current `seeking` value on the mediaElement
   state : IMediaInfosState; } // see type
 
-type stalledStatus = { // set if the player is stalled
+type IStalledStatus = { // set if the player is stalled
                        reason : "seeking" | // Building buffer after seeking
                                 "not-ready" | // Building buffer after low readyState
                                 "buffering"; // Other cases
@@ -83,7 +83,7 @@ type stalledStatus = { // set if the player is stalled
 
 // Global information emitted on each clock tick
 export interface IClockTick extends IMediaInfos {
-  stalled : stalledStatus; // see type
+  stalled : IStalledStatus; // see type
 }
 
 const { SAMPLING_INTERVAL_MEDIASOURCE,
@@ -114,8 +114,8 @@ const SCANNED_MEDIA_ELEMENTS_EVENTS : IMediaInfosState[] = [ "canplay",
  * @param {Boolean} lowLatencyMode
  * @returns {Number}
  */
-function getResumeGap(stalled : stalledStatus, lowLatencyMode : boolean) : number {
-  if (!stalled) {
+function getResumeGap(stalled : IStalledStatus, lowLatencyMode : boolean) : number {
+  if (stalled === null) {
     return 0;
   }
   const suffix : "LOW_LATENCY" | "DEFAULT" = lowLatencyMode ? "LOW_LATENCY" :
@@ -197,7 +197,7 @@ function getStalledStatus(
   prevTimings : IClockTick,
   currentTimings : IMediaInfos,
   { withMediaSource, lowLatencyMode } : IClockOptions
-) : stalledStatus {
+) : IStalledStatus {
   const { state: currentState,
           currentTime,
           bufferGap,
@@ -215,11 +215,11 @@ function getStalledStatus(
 
   const canStall = (readyState >= 1 &&
                     currentState !== "loadedmetadata" &&
-                    !prevStalled &&
+                    prevStalled === null &&
                     !(fullyLoaded || ended));
 
-  let shouldStall;
-  let shouldUnstall;
+  let shouldStall : boolean | undefined;
+  let shouldUnstall : boolean | undefined;
 
   if (withMediaSource) {
     if (canStall &&
@@ -227,7 +227,7 @@ function getStalledStatus(
          bufferGap === Infinity || readyState === 1)
     ) {
       shouldStall = true;
-    } else if (prevStalled &&
+    } else if (prevStalled !== null &&
                readyState > 1 &&
                ((bufferGap < Infinity &&
                  bufferGap > getResumeGap(prevStalled, lowLatencyMode)) ||
@@ -247,7 +247,7 @@ function getStalledStatus(
          currentState === "seeking" && bufferGap === Infinity)
     ) {
       shouldStall = true;
-    } else if (prevStalled &&
+    } else if (prevStalled !== null &&
                (currentState !== "seeking" && currentTime !== prevTime ||
                 currentState === "canplay" ||
                 bufferGap < Infinity &&
@@ -258,9 +258,9 @@ function getStalledStatus(
     }
   }
 
-  if (shouldUnstall) {
+  if (shouldUnstall === true) {
     return null;
-  } else if (shouldStall || prevStalled !== null) {
+  } else if (shouldStall === true || prevStalled !== null) {
     let reason : "seeking" | "not-ready" | "buffering";
     if (currentState === "seeking" ||
         currentTimings.seeking ||

@@ -420,7 +420,10 @@ function parseLoadVideoOptions(
     }
   }
 
-  const transportOptions = options.transportOptions || {};
+  const transportOptions = typeof options.transportOptions === "object" &&
+                                  options.transportOptions !== null ?
+    options.transportOptions :
+    {};
 
   if (options.supplementaryTextTracks == null) {
     supplementaryTextTracks = [];
@@ -430,9 +433,6 @@ function parseLoadVideoOptions(
         options.supplementaryTextTracks : [options.supplementaryTextTracks];
 
     for (const supplementaryTextTrack of supplementaryTextTracks) {
-      if (typeof supplementaryTextTrack.closedCaption !== "boolean") {
-        supplementaryTextTrack.closedCaption = !!supplementaryTextTrack.closedCaption;
-      }
       if (typeof supplementaryTextTrack.language !== "string" ||
           typeof supplementaryTextTrack.mimeType !== "string" ||
           typeof supplementaryTextTrack.url !== "string"
@@ -487,7 +487,7 @@ function parseLoadVideoOptions(
     !DEFAULT_SHOW_NATIVE_SUBTITLE :
     !!options.hideNativeSubtitle;
   const manualBitrateSwitchingMode = options.manualBitrateSwitchingMode == null ?
-      !DEFAULT_MANUAL_BITRATE_SWITCHING_MODE :
+      DEFAULT_MANUAL_BITRATE_SWITCHING_MODE :
       options.manualBitrateSwitchingMode;
 
   if (textTrackMode === "html") {
