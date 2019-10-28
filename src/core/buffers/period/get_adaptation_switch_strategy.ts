@@ -56,7 +56,8 @@ export default function getAdaptationSwitchStrategy(
   }
   const bufferedRanges = convertToRanges(buffered);
   const start = period.start;
-  const end = period.end || Infinity;
+  const end = period.end == null ? Infinity :
+                                   period.end;
   const intersection = keepRangeIntersection(bufferedRanges, [{ start, end }]);
   if (intersection.length === 0) {
     return { type: "continue", value: undefined };
@@ -77,8 +78,14 @@ export default function getAdaptationSwitchStrategy(
 
   const unwantedData = excludeFromRanges(intersection, adaptationInBuffer);
   const bufferType = adaptation.type;
-  const paddingBefore = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].before || 0;
-  const paddingAfter = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].after || 0;
+  let paddingBefore = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].before;
+  if (paddingBefore == null) {
+    paddingBefore = 0;
+  }
+  let paddingAfter = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].after;
+  if (paddingAfter == null) {
+    paddingAfter = 0;
+  }
   const toRemove = excludeFromRanges(unwantedData, [{
     start: Math.max(currentTime - paddingBefore, start),
     end: Math.min(currentTime + paddingAfter, end),

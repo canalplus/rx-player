@@ -36,13 +36,17 @@ export default function getWantedRange(
   bufferGoal : number
 ) : { start : number; end : number } {
   const currentTime = tick.currentTime + tick.wantedTimeOffset;
-  const boundedLimits = { start: Math.max(hardLimits.start || 0, currentTime),
-                          end: hardLimits.end };
+  const startHardLimit = hardLimits.start == null ? 0 :
+                                                    hardLimits.start;
+  const endHardLimit = hardLimits.end == null ? Infinity :
+                                                hardLimits.end;
+  const boundedLimits = { start: Math.max(startHardLimit, currentTime),
+                          end: endHardLimit };
 
-  return { start: Math.min(boundedLimits.end || Infinity,
+  return { start: Math.min(boundedLimits.end,
                            Math.max(currentTime,
                                     boundedLimits.start)),
-           end: Math.min(boundedLimits.end || Infinity,
+           end: Math.min(boundedLimits.end,
                          Math.max(currentTime + bufferGoal,
                                   boundedLimits.start)),
   };

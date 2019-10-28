@@ -226,9 +226,9 @@ export default function RepresentationBuffer<T>({
       queuedSourceBuffer.synchronizeInventory();
       const neededRange = getWantedRange(period, timing, bufferGoal);
 
-      const discontinuity = timing.stalled ? representation.index
-                                               .checkDiscontinuity(timing.currentTime) :
-                                             -1;
+      const discontinuity = timing.stalled != null ?
+        representation.index.checkDiscontinuity(timing.currentTime) :
+        -1;
 
       const shouldRefreshManifest =
         representation.index.shouldRefresh(neededRange.start,
@@ -332,7 +332,7 @@ export default function RepresentationBuffer<T>({
       }
 
       if (mostNeededSegment == null) {
-        if (currentSegmentRequest) {
+        if (currentSegmentRequest != null) {
           log.debug("Buffer: interrupt segment request.", bufferType);
         }
         downloadQueue = [];
@@ -345,7 +345,7 @@ export default function RepresentationBuffer<T>({
         );
       }
 
-      if (!currentSegmentRequest) {
+      if (currentSegmentRequest == null) {
         log.debug("Buffer: start downloading queue.", bufferType);
         downloadQueue = neededSegments;
         startDownloadingQueue$.next(); // restart the queue
@@ -378,7 +378,7 @@ export default function RepresentationBuffer<T>({
   //   - download every segments queued sequentially
   //   - append them to the SourceBuffer
   const bufferQueue$ = startDownloadingQueue$.pipe(
-    switchMap(() => downloadQueue.length ? loadSegmentsFromQueue() : EMPTY),
+    switchMap(() => downloadQueue.length > 0 ? loadSegmentsFromQueue() : EMPTY),
     mergeMap(onLoaderEvent)
   );
 
@@ -424,9 +424,10 @@ export default function RepresentationBuffer<T>({
                                     value: { segment } });
             }
 
-            const initInfos = initSegmentObject &&
-                              initSegmentObject.chunkInfos ||
-                              undefined;
+            let initInfos;
+            if (initSegmentObject != null && initSegmentObject.chunkInfos != null) {
+              initInfos = initSegmentObject.chunkInfos;
+            }
             return evt.parse(initInfos).pipe(map(data => {
               return { type: "parsed-segment" as const,
                        value: { segment, data } };
@@ -507,8 +508,9 @@ export default function RepresentationBuffer<T>({
         return EMPTY;
       }
 
-      const data = { initSegment: initSegmentObject &&
-                                  initSegmentObject.chunkData,
+      const data = { initSegment: initSegmentObject != null ?
+                                    initSegmentObject.chunkData :
+                                    null,
                      chunk: segment.isInit ? null :
                                              chunkData,
                      timestampOffset: chunkOffset,
