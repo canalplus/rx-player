@@ -15,7 +15,6 @@
  */
 
 import {
-  combineLatest as observableCombineLatest,
   concat as observableConcat,
   EMPTY,
   merge as observableMerge,
