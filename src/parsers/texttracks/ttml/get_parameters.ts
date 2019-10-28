@@ -42,19 +42,18 @@ export default function getParameters(tt : Element) : ITTParameters {
   }
 
   let nbFrameRate = Number(parsedFrameRate);
-  if (isNaN(nbFrameRate)) {
+  if (isNaN(nbFrameRate) || nbFrameRate <= 0) {
     nbFrameRate = 30;
   }
   let nbSubFrameRate = Number(parsedSubFrameRate);
-  if (isNaN(nbSubFrameRate)) {
+  if (isNaN(nbSubFrameRate) || nbSubFrameRate <= 0) {
     nbSubFrameRate = 1;
   }
-  let nbTickRate = Number(parsedTickRate);
-  if (isNaN(nbTickRate)) {
-    nbTickRate = 0;
+  let nbTickRate : number | undefined = Number(parsedTickRate);
+  if (isNaN(nbTickRate) || nbTickRate <= 0) {
+    nbTickRate = undefined;
   }
 
-  let tickRate = nbTickRate;
   let frameRate = nbFrameRate;
   const subFrameRate = nbSubFrameRate != null ? nbSubFrameRate :
                                                 1;
@@ -62,11 +61,8 @@ export default function getParameters(tt : Element) : ITTParameters {
   const spaceStyle = parsedSpaceStyle !== null ? parsedSpaceStyle :
                                                  "default";
 
-  if (nbTickRate === 0) {
-    tickRate = isNaN(nbFrameRate) || nbFrameRate === 0 ?
-      1 :
-      nbFrameRate * nbSubFrameRate;
-  }
+  const tickRate = nbTickRate !== undefined ? nbTickRate :
+                                              nbFrameRate * nbSubFrameRate;
 
   if (parsedFrameRateMultiplier  !== null) {
     const multiplierResults = /^(\d+) (\d+)$/g.exec(parsedFrameRateMultiplier);
