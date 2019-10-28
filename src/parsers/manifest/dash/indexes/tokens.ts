@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import resolveURL from "../../../../utils/resolve_url";
 
 /**
@@ -35,7 +36,8 @@ function processFormatedToken(
   replacer : string|number
 ) : (x: string, y: number, widthStr: string) => string {
   return (_match, _format, widthStr : string) => {
-    const width = widthStr ? parseInt(widthStr, 10) : 1;
+    const width = isNonEmptyString(widthStr) ? parseInt(widthStr, 10) :
+                                               1;
     return padLeftWithZeros("" + replacer, width);
   };
 }
@@ -77,7 +79,9 @@ export function replaceRepresentationDASHTokens(
     return path
       .replace(/\$\$/g, "$")
       .replace(/\$RepresentationID\$/g, String(id))
-      .replace(/\$Bandwidth(|\%0(\d+)d)\$/g, processFormatedToken(bitrate || 0));
+      .replace(/\$Bandwidth(|\%0(\d+)d)\$/g,
+               processFormatedToken(bitrate === undefined ? 0 :
+                                                            bitrate));
   }
 }
 

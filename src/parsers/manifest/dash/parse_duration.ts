@@ -24,16 +24,14 @@ export default function parseDuration(
   if (rootAttributes.duration != null) {
     return rootAttributes.duration;
   }
-  if (rootAttributes.type === "dynamic") {
+  if (rootAttributes.type === "dynamic" || parsedPeriods.length === 0) {
     return undefined;
   }
-  if (parsedPeriods.length) {
-    const lastPeriod = parsedPeriods[parsedPeriods.length - 1];
-    if (lastPeriod.end != null) {
-      return lastPeriod.end;
-    } else if (lastPeriod.duration != null) {
-      return lastPeriod.start + lastPeriod.duration;
-    }
+  const lastPeriod = parsedPeriods[parsedPeriods.length - 1];
+  if (lastPeriod.end != null) {
+    return lastPeriod.end;
+  } else if (lastPeriod.duration != null) {
+    return lastPeriod.start + lastPeriod.duration;
   }
   return undefined;
 }

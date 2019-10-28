@@ -32,9 +32,10 @@ export function getPlayReadyKIDFromPrivateData(
   const xml = bytesToUTF16Str(data.subarray(10, xmlLength + 10));
   const doc = new DOMParser().parseFromString(xml, "application/xml");
   const kidElement = doc.querySelector("KID");
-  if (!kidElement) {
+  if (kidElement === null) {
     throw new Error("Cannot parse PlayReady private data: invalid XML");
   }
-  const kid = kidElement.textContent || "";
+  const kid = kidElement.textContent === null ? "" :
+                                                kidElement.textContent;
   return guidToUuid(atob(kid)).toLowerCase();
 }

@@ -134,12 +134,13 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
                     duration: index.duration,
                     indexTimeOffset,
                     indexRange: index.indexRange,
-                    initialization: index.initialization && {
-                      mediaURL: createIndexURL(representationBaseURL,
+                    initialization: index.initialization == null ?
+                      undefined :
+                      { mediaURL: createIndexURL(representationBaseURL,
                                                index.initialization.media,
                                                representationId,
                                                representationBitrate),
-                    range: index.initialization.range, }, };
+                        range: index.initialization.range, }, };
   }
 
   /**

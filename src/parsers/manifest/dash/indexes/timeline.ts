@@ -144,7 +144,7 @@ function fromParsedSToIndexSegment(
     }
   }
   if ((duration == null || isNaN(duration)) &&
-      nextItem && nextItem.start != null && !isNaN(nextItem.start) &&
+      nextItem != null && nextItem.start != null && !isNaN(nextItem.start) &&
       start != null && !isNaN(start)
   ) {
     duration = nextItem.start - start;
@@ -155,7 +155,8 @@ function fromParsedSToIndexSegment(
   ) {
     return { start,
              duration,
-             repeatCount: repeatCount || 0 };
+             repeatCount: repeatCount === undefined ? 0 :
+                                                      repeatCount };
   }
   log.warn("DASH: A \"S\" Element could not have been parsed.");
   return null;
@@ -229,7 +230,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const { timescale } = index;
 
     const presentationTimeOffset = index.presentationTimeOffset != null ?
-      index.presentationTimeOffset : 0;
+      index.presentationTimeOffset :
+      0;
 
     const scaledStart = periodStart * timescale;
     const indexTimeOffset = presentationTimeOffset - scaledStart;
@@ -238,13 +240,17 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const timeline : IIndexSegment[] = [];
     for (let i = 0; i < initialTimeline.length; i++) {
       const item = initialTimeline[i];
-      const nextItem = timeline[timeline.length - 1] || null;
-      const prevItem = initialTimeline[i + 1] || null;
+      const nextItem = timeline[timeline.length - 1] === undefined ?
+        null :
+        timeline[timeline.length - 1];
+      const prevItem = initialTimeline[i + 1] === undefined ?
+        null :
+        initialTimeline[i + 1];
       const timelineElement = fromParsedSToIndexSegment(item,
                                                         nextItem,
                                                         prevItem,
                                                         scaledStart);
-      if (timelineElement) {
+      if (timelineElement != null) {
         timeline.push(timelineElement);
       }
     }
@@ -258,13 +264,15 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._isDynamic = isDynamic;
     this._index = { indexRange: index.indexRange,
                     indexTimeOffset,
-                    initialization: index.initialization && {
-                      mediaURL: createIndexURL(representationBaseURL,
-                                               index.initialization.media,
-                                               representationId,
-                                               representationBitrate),
-                      range: index.initialization.range,
-                    },
+                    initialization: index.initialization == null ?
+                      undefined :
+                      {
+                        mediaURL: createIndexURL(representationBaseURL,
+                                                 index.initialization.media,
+                                                 representationId,
+                                                 representationBitrate),
+                        range: index.initialization.range,
+                      },
                     mediaURL: createIndexURL(representationBaseURL,
                                              index.media,
                                              representationId,

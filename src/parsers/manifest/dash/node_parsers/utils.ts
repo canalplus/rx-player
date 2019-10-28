@@ -19,10 +19,10 @@
 // <http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd>
 /* tslint:enable:max-line-length */
 
-export interface IScheme {
-  schemeIdUri? : string;
-  value? : string;
-}
+import isNonEmptyString from "../../../../utils/is_non_empty_string";
+
+export interface IScheme { schemeIdUri? : string;
+                           value? : string; }
 
 const iso8601Duration =
   /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
@@ -67,7 +67,7 @@ function parseDateTime(str : string) : number {
  * @returns {Number}
  */
 function parseDuration(date : string) : number {
-  if (!date) {
+  if (!isNonEmptyString(date)) {
     return 0;
   }
 
@@ -76,14 +76,18 @@ function parseDuration(date : string) : number {
     throw new Error(`${date} is not a valid ISO8601 duration`);
   }
 
-  return (
-    parseFloat(match[2]  || "0") * 365 * 24 * 60 * 60 +
-    parseFloat(match[4]  || "0") * 30 * 24 * 60 * 60 + // not precise +
-    parseFloat(match[6]  || "0") * 24 * 60 * 60 +
-    parseFloat(match[8]  || "0") * 60 * 60 +
-    parseFloat(match[10] || "0") * 60 +
-    parseFloat(match[12] || "0")
-  );
+  return (parseFloat(isNonEmptyString(match[2]) ? match[2] :
+                                                  "0") * 365 * 24 * 60 * 60 +
+          parseFloat(isNonEmptyString(match[4]) ? match[4] :
+                                                  "0") * 30 * 24 * 60 * 60 +
+          parseFloat(isNonEmptyString(match[6]) ? match[6] :
+                                                  "0") * 24 * 60 * 60 +
+          parseFloat(isNonEmptyString(match[8]) ? match[8] :
+                                                  "0") * 60 * 60 +
+          parseFloat(isNonEmptyString(match[10]) ? match[10] :
+                                                   "0") * 60 +
+          parseFloat(isNonEmptyString(match[12]) ? match[12] :
+                                                   "0"));
 }
 
 /**
@@ -94,7 +98,7 @@ function parseDuration(date : string) : number {
  */
 function parseByteRange(str : string) : [number, number]|null {
   const match = rangeRe.exec(str);
-  if (!match) {
+  if (match == null) {
     return null;
   } else {
     return [+match[1], +match[2]];
@@ -121,10 +125,8 @@ function parseScheme(root: Element) : IScheme {
     }
   }
 
-  return {
-    schemeIdUri,
-    value,
-  };
+  return { schemeIdUri,
+           value };
 }
 
 export {

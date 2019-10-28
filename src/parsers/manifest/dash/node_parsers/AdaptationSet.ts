@@ -114,7 +114,9 @@ function parseAdaptationSetChildren(
           break;
 
         case "BaseURL":
-          children.baseURL = currentElement.textContent || "";
+          children.baseURL = currentElement.textContent === null ?
+            "" :
+            currentElement.textContent;
           break;
 
         case "ContentComponent":
@@ -157,7 +159,7 @@ function parseAdaptationSetChildren(
 
         case "ContentProtection":
           const contentProtection = parseContentProtection(currentElement);
-          if (contentProtection) {
+          if (contentProtection !== undefined) {
             contentProtections.push(contentProtection);
           }
           break;
@@ -172,7 +174,7 @@ function parseAdaptationSetChildren(
       }
     }
   }
-  if (contentProtections.length) {
+  if (contentProtections.length > 0) {
     children.contentProtections = contentProtections;
   }
   return children;

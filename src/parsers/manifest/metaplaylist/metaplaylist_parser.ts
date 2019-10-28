@@ -152,16 +152,12 @@ export default function parseMetaPlaylist(
 function createManifest(
   mplData : IMetaPlaylist,
   manifests : Manifest[],
-  parserOptions:  {
-    url?: string;
-    serverSyncInfos?: {
-      serverTimestamp: number;
-      clientTime: number;
-    };
-  }
+  parserOptions:  { url?: string;
+                    serverSyncInfos?: { serverTimestamp: number;
+                                        clientTime: number; }; }
 ): IParsedManifest {
   const { url, serverSyncInfos } = parserOptions;
-  const clockOffset = serverSyncInfos ?
+  const clockOffset = serverSyncInfos !== undefined ?
     serverSyncInfos.serverTimestamp - serverSyncInfos.clientTime :
     undefined;
   const generateAdaptationID = idGenerator();

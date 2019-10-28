@@ -24,7 +24,7 @@ import { getBoxContent } from "./get_box";
  */
 function getTRAF(buffer : Uint8Array) : Uint8Array|null {
   const moof = getBoxContent(buffer, 0x6d6f6f66 /* moof */);
-  if (!moof) {
+  if (moof === null) {
     return null;
   }
   return getBoxContent(moof, 0x74726166 /* traf */);
@@ -48,12 +48,12 @@ function getMDAT(buf : Uint8Array) : Uint8Array|null {
  */
 function getMDIA(buf : Uint8Array) : Uint8Array|null {
   const moov = getBoxContent(buf, 0x6d6f6f76 /* moov */);
-  if (!moov) {
+  if (moov === null) {
     return null;
   }
 
   const trak = getBoxContent(moov, 0x7472616b /* "trak" */);
-  if (!trak) {
+  if (trak === null) {
     return null;
   }
 

@@ -128,7 +128,7 @@ function createSmoothStreamingParser(
       parserOptions.minRepresentationBitrate;
 
   const { serverSyncInfos } = parserOptions;
-  const serverTimeOffset = serverSyncInfos ?
+  const serverTimeOffset = serverSyncInfos !== undefined ?
     serverSyncInfos.serverTimestamp - serverSyncInfos.clientTime :
     undefined;
 
