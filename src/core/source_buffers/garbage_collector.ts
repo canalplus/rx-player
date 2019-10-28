@@ -112,7 +112,7 @@ function clearBuffer(
                                end: position - maxBufferBehind });
       }
     }
-    if (innerRange) {
+    if (innerRange != null) {
       if (position - maxBufferBehind > innerRange.start) {
         cleanedupRanges.push({ start: innerRange.start,
                                end: position - maxBufferBehind });
@@ -139,7 +139,7 @@ function clearBuffer(
                                end: outerRange.end });
       }
     }
-    if (innerRange) {
+    if (innerRange != null) {
       if (position + maxBufferAhead < innerRange.end) {
         cleanedupRanges.push({ start: position + maxBufferAhead,
                                end: innerRange.end });
