@@ -60,7 +60,10 @@ export default function patchSegment(
   const tfdtBox = createTfdtBox(decodeTime);
   const newTrunBox = addDataOffsetFlagInTrun(trunBox);
   const sencContent = getUuidContent(trafContent,
-    0xA2394F52, 0x5A9B4F14, 0xA2446C42, 0x7C648DF4);
+                                     0xA2394F52,
+                                     0x5A9B4F14,
+                                     0xA2446C42,
+                                     0x7C648DF4);
   const newTrafBox = createTrafBox(tfhdBox, tfdtBox, newTrunBox, mfhdBox, sencContent);
   const newMoof = createBoxWithChildren("moof", [mfhdBox, newTrafBox]);
   const trunOffsetInMoof = mfhdBox.length + tfhdBox.length + tfdtBox.length +
