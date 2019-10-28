@@ -86,15 +86,13 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
 
   public getFirstPosition(): number|undefined {
     const wrappedFirstPosition = this._wrappedIndex.getFirstPosition();
-    return wrappedFirstPosition !== 0 &&
-           wrappedFirstPosition != null ? wrappedFirstPosition + this._timeOffset :
+    return wrappedFirstPosition != null ? wrappedFirstPosition + this._timeOffset :
                                           undefined;
   }
 
   public getLastPosition(): number|undefined {
     const wrappedLastPosition = this._wrappedIndex.getLastPosition();
-    return wrappedLastPosition !== 0 &&
-           wrappedLastPosition != null ? wrappedLastPosition + this._timeOffset :
+    return wrappedLastPosition != null ? wrappedLastPosition + this._timeOffset :
                                          undefined;
   }
 

@@ -71,7 +71,7 @@ export default function getSegmentsFromTimeline(
 
   // TODO(pierre): use @maxSegmentDuration if possible
   let maxEncounteredDuration = timeline.length > 0 &&
-                               timeline[0].duration !== null ? timeline[0].duration :
+                               timeline[0].duration != null ? timeline[0].duration :
                                                                0;
 
   for (let i = 0; i < timelineLength; i++) {
