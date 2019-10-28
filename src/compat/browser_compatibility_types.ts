@@ -88,22 +88,24 @@ export interface ICompatPictureInPictureWindow
 
 const win = window as any;
 const HTMLElement_ : typeof HTMLElement = win.HTMLElement;
-const VTTCue_ : ICompatVTTCueConstructor|undefined = win.VTTCue ||
-                                                     win.TextTrackCue;
+const VTTCue_ : ICompatVTTCueConstructor|undefined =
+  win.VTTCue != null ? win.VTTCue :
+                       win.TextTrackCue;
 
-const MediaSource_ : typeof MediaSource|undefined = win.MediaSource ||
-                                                    win.MozMediaSource ||
-                                                    win.WebKitMediaSource ||
-                                                    win.MSMediaSource;
+const MediaSource_ : typeof MediaSource|undefined =
+  win.MediaSource != null ? win.MediaSource :
+  win.MozMediaSource != null ? win.MozMediaSource :
+  win.WebKitMediaSource != null ? win.WebKitMediaSource :
+                                  win.MSMediaSource;
 
 const MediaKeys_ : ICompatMediaKeysConstructor|undefined = (() => {
   if (shouldUseWebKitMediaKeys()) {
     return win.WebKitMediaKeys;
   }
-  return win.MediaKeys ||
-         win.MSMediaKeys ||
-         win.MozMediaKeys ||
-         win.WebKitMediaKeys ||
+  return win.MediaKeys != null ? win.MediaKeys :
+         win.MSMediaKeys != null ? win.MSMediaKeys :
+         win.MozMediaKeys != null ? win.MozMediaKeys :
+         win.WebKitMediaKeys != null ? win.WebKitMediaKeys :
          class {
            public readonly create : () => never;
            public readonly isTypeSupported : () => never;

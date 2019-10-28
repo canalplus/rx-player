@@ -164,7 +164,7 @@ let CustomMediaKeys : IMockMediaKeysConstructor =
  * Therefore, we prefer not to use requestMediaKeySystemAccess on Safari when webkit API
  * is available.
  */
-if (navigator.requestMediaKeySystemAccess &&
+if (navigator.requestMediaKeySystemAccess != null &&
     !shouldUseWebKitMediaKeys()
 ) {
   requestMediaKeySystemAccess = (a : string, b : ICompatMediaKeySystemConfiguration[]) =>
@@ -188,7 +188,8 @@ if (navigator.requestMediaKeySystemAccess &&
     ) : Promise<void> {
       return new PPromise((resolve, reject) => {
         try {
-          memUpdate.call(this, license, sessionId || "");
+          memUpdate.call(this, license, sessionId == null ? "" :
+                                                            sessionId);
           resolve();
         } catch (e) {
           reject(e);
@@ -319,7 +320,7 @@ if (navigator.requestMediaKeySystemAccess &&
       }
 
       createSession(/* sessionType */) : ICustomMediaKeySession {
-        if (!this._vid) {
+        if (this._vid == null) {
           throw new Error("Video not attached to the MediaKeys");
         }
         return new WebkitMediaKeySession(this._vid, this.ks_);
@@ -333,9 +334,13 @@ if (navigator.requestMediaKeySystemAccess &&
     const isTypeSupported = function(keyType : string) : boolean {
       // get any <video> element from the DOM or create one
       // and try the `canPlayType` method
-      const videoElement = document.querySelector("video") ||
-                           document.createElement("video");
-      if (videoElement && videoElement.canPlayType) {
+      let videoElement = document.querySelector("video");
+      if (videoElement == null) {
+        videoElement = document.createElement("video");
+      }
+      /* tslint:disable no-unbound-method */
+      if (videoElement != null && typeof videoElement.canPlayType === "function") {
+      /* tslint:enable no-unbound-method */
         return !!(videoElement as any).canPlayType("video/mp4", keyType);
       } else {
         return false;
@@ -361,15 +366,13 @@ if (navigator.requestMediaKeySystemAccess &&
 
         let supported = true;
         supported = supported &&
-                    (!initDataTypes ||
-                     !!initDataTypes
-                       .filter((initDataType) => initDataType === "cenc")[0]);
+                    (initDataTypes == null ||
+                     initDataTypes.some((initDataType) => initDataType === "cenc"));
 
         supported = supported &&
-                    (!sessionTypes ||
-                     sessionTypes
-                       .filter((sessionType) =>
-                         sessionType === "temporary").length === sessionTypes.length);
+                    (sessionTypes == null ||
+                     sessionTypes.filter((sessionType) => sessionType === "temporary")
+                       .length === sessionTypes.length);
         supported = supported && (distinctiveIdentifier !== "required");
         supported = supported && (persistentState !== "required");
 
@@ -393,8 +396,8 @@ if (navigator.requestMediaKeySystemAccess &&
 
       return observableThrow(undefined);
     };
-  } else if (MediaKeys_ &&
-             MediaKeys_.prototype &&
+  } else if (MediaKeys_ != null &&
+             MediaKeys_.prototype != null &&
              typeof MediaKeys_.isTypeSupported === "function"
   ) {
 
@@ -416,8 +419,8 @@ if (navigator.requestMediaKeySystemAccess &&
 
         let supported = true;
         supported = supported &&
-                    (!initDataTypes ||
-                     !!initDataTypes.filter((idt) => idt === "cenc")[0]);
+                    (initDataTypes == null ||
+                     initDataTypes.some((idt) => idt === "cenc"));
         supported = supported && (distinctiveIdentifier !== "required");
 
         if (supported) {
@@ -444,8 +447,8 @@ if (navigator.requestMediaKeySystemAccess &&
     };
 
     if (isIE11 &&
-        typeof MediaKeys_.prototype.createSession === "function"
-    ) {
+        typeof MediaKeys_.prototype.createSession === "function")
+    {
       class IE11MediaKeySession
       extends EventEmitter<IMediaKeySessionEvents>
       implements ICustomMediaKeySession {
@@ -469,7 +472,7 @@ if (navigator.requestMediaKeySystemAccess &&
             this._closeSession$.subscribe(resolve);
           });
           this.update = wrapUpdate((license, sessionId) => {
-            if (!this._ss) {
+            if (this._ss == null) {
               throw new Error("MediaKeySession not set");
             }
             (this._ss as any).update(license, sessionId);
@@ -490,7 +493,7 @@ if (navigator.requestMediaKeySystemAccess &&
         }
         close(): Promise<void> {
           return new PPromise((resolve) => {
-            if (this._ss) {
+            if (this._ss != null) {
               /* tslint:disable no-floating-promises */
               this._ss.close();
               /* tslint:enable no-floating-promises */

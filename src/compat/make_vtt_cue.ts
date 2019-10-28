@@ -34,7 +34,7 @@ export default function makeCue(
   endTime : number,
   payload : string
 ) : ICompatVTTCue|TextTrackCue|null {
-  if (!VTTCue_) {
+  if (VTTCue_ == null) {
     throw new Error("VTT cues not supported in your target");
   }
   if (startTime >= endTime) {

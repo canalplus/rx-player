@@ -37,7 +37,9 @@ function _setMediaKeys(
     return mediaKeys._setVideo(elt);
   }
 
-  if (elt.setMediaKeys) {
+  /* tslint:disable no-unbound-method */
+  if (typeof elt.setMediaKeys === "function") {
+  /* tslint:enable no-unbound-method */
     return elt.setMediaKeys(mediaKeys);
   }
 

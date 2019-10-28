@@ -41,6 +41,7 @@ import {
 import config from "../config";
 import log from "../log";
 import { IEventEmitter } from "../utils/event_emitter";
+import isNonEmptyString from "../utils/is_non_empty_string";
 import {
   HTMLElement_,
   ICompatDocument,
@@ -50,7 +51,9 @@ import {
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
 const INACTIVITY_DELAY = config.INACTIVITY_DELAY;
-const pixelRatio = window.devicePixelRatio || 1;
+const pixelRatio = window.devicePixelRatio == null ||
+                   window.devicePixelRatio === 0 ? 1 :
+                                                   window.devicePixelRatio;
 
 /**
  * Find the first supported event from the list given.
@@ -93,7 +96,8 @@ function findSupportedEvent(
  */
 function eventPrefixed(eventNames : string[], prefixes? : string[]) : string[] {
   return eventNames.reduce((parent : string[], name : string) =>
-    parent.concat((prefixes || BROWSER_PREFIXES)
+    parent.concat((prefixes == null ? BROWSER_PREFIXES :
+                                      prefixes)
           .map((p) => p + name)), []);
 }
 
@@ -125,7 +129,7 @@ function compatibleListener<T extends Event>(
         mem = findSupportedEvent(element, prefixedEvents);
       }
 
-      if (mem) {
+      if (isNonEmptyString(mem)) {
         return observableFromEvent(element, mem) as Observable<T>;
       } else {
         if (__DEV__) {
@@ -165,10 +169,10 @@ function visibilityChange() : Observable<boolean> {
     prefix = "webkit";
   }
 
-  const hidden = prefix ? prefix + "Hidden" :
-                          "hidden";
-  const visibilityChangeEvent = prefix ? prefix + "visibilitychange" :
-                                         "visibilitychange";
+  const hidden = isNonEmptyString(prefix) ? prefix + "Hidden" :
+                                            "hidden";
+  const visibilityChangeEvent = isNonEmptyString(prefix) ? prefix + "visibilitychange" :
+                                                           "visibilitychange";
   return observableDefer(() => {
     const isHidden = document[hidden as "hidden"];
     return observableFromEvent(document, visibilityChangeEvent)

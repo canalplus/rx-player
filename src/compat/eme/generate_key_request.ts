@@ -129,7 +129,8 @@ export default function generateKeyRequest(
     } else {
       patchedInit = initData;
     }
-    return castToObservable(session.generateRequest(initDataType || "",
+    return castToObservable(session.generateRequest(initDataType == null ? "" :
+                                                                           initDataType,
                                                     patchedInit));
   });
 }

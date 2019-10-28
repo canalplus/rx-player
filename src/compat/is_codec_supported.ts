@@ -22,7 +22,7 @@ import { MediaSource_ } from "./browser_compatibility_types";
  * @returns {Boolean}
  */
 export default function isCodecSupported(codec : string) : boolean {
-  if (!MediaSource_) {
+  if (MediaSource_ == null) {
     return false;
   }
 
