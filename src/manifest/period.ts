@@ -70,7 +70,7 @@ export default class Period {
     this.adaptations = (Object.keys(args.adaptations) as IAdaptationType[])
       .reduce<IManifestAdaptations>((acc, type) => {
         const adaptationsForType = args.adaptations[type];
-        if (!adaptationsForType) {
+        if (adaptationsForType == null) {
           return acc;
         }
         const filteredAdaptations = adaptationsForType
@@ -99,13 +99,15 @@ export default class Period {
                                "No supported " + type + " adaptations");
         }
 
-        if (filteredAdaptations.length) {
+        if (filteredAdaptations.length > 0) {
           acc[type] = filteredAdaptations;
         }
         return acc;
       }, {});
 
-    if (!this.adaptations.video && !this.adaptations.audio) {
+    if (!Array.isArray(this.adaptations.video) &&
+        !Array.isArray(this.adaptations.audio))
+    {
       throw new MediaError("MANIFEST_PARSE_ERROR",
                            "No supported audio and video tracks.");
     }
@@ -141,7 +143,9 @@ export default class Period {
    * @returns {Array.<Object>}
    */
   getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
-    return this.adaptations[adaptationType] || [];
+    const adaptationsForType = this.adaptations[adaptationType];
+    return adaptationsForType == null ? [] :
+                                        adaptationsForType;
   }
 
   /**
