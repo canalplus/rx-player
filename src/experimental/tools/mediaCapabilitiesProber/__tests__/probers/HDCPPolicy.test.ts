@@ -137,3 +137,5 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       });
   });
 });
+
+/* tslint:disable no-unsafe-any */

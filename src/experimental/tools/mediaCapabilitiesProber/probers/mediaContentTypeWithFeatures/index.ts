@@ -57,8 +57,17 @@ export default function probeTypeWithFeatures(
 ) : Promise<[ProberStatus]> {
   return isTypeSupportedWithFeaturesAPIAvailable().then(() => {
     const keySystem = config.keySystem;
-    const type = keySystem === undefined ? "org.w3.clearkey" :
-      (keySystem.type === undefined ? "org.w3.clearkey" : keySystem.type);
+
+    const type = (() => {
+      if (keySystem === undefined ||
+          keySystem.type === undefined ||
+          keySystem.type.length === 0
+         ) {
+        return "org.w3.clearkey";
+      }
+      return keySystem.type;
+    })();
+
     const features = formatConfig(config);
 
     const result: ISupportWithFeatures =

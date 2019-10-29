@@ -78,7 +78,7 @@ const mediaCapabilitiesProber = {
    * @returns {Promise}
    */
   getStatusForHDCP(hdcp: string) : Promise<string> {
-    if (hdcp === undefined) {
+    if (hdcp === undefined || hdcp.length === 0) {
       return PPromise.reject("MediaCapabilitiesProbers >>> Bad Arguments: " +
         "No HDCP Policy specified.");
     }

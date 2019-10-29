@@ -275,3 +275,5 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
       });
   });
 });
+
+/* tslint:enable no-unsafe-any */

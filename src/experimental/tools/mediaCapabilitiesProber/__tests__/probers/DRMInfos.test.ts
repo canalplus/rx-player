@@ -135,3 +135,5 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
       });
   });
 });
+
+/* tslint:enable no-unsafe-any */

@@ -120,3 +120,5 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
       "Cannot check audio codec support: No API available.");
   });
 });
+
+/* tslint:enable no-unsafe-any */
