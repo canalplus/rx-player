@@ -94,7 +94,7 @@ type IPendingTask<ArrayBuffer> = IPushTask<ArrayBuffer> |
  */
 export default class LightVideoQueuedSourceBuffer {
   // SourceBuffer implementation.
-  private readonly _sourceBuffer : ICustomSourceBuffer<ArrayBuffer>;
+  private _sourceBuffer : ICustomSourceBuffer<ArrayBuffer>;
   // Subject triggered when this LightVideoQueuedSourceBuffer is disposed.
   // Helps to clean-up Observables created at its creation.
   private _destroy$ : Subject<void>;
@@ -123,10 +123,10 @@ export default class LightVideoQueuedSourceBuffer {
    */
   constructor(
     codec : string,
-    sourceBuffer : ICustomSourceBuffer<ArrayBuffer>
+    mediaSource : MediaSource
   ) {
     this._destroy$ = new Subject<void>();
-    this._sourceBuffer = sourceBuffer;
+    this._sourceBuffer = mediaSource.addSourceBuffer(codec);
     this._queue = [];
     this._pendingTask = null;
     this._lastInitSegment = null;

@@ -25,9 +25,8 @@ export default function prepareSourceBuffer(
   return openMediaSource(elt).pipe(
     mergeMap((mediaSource) => {
       return new Observable<LightVideoQueuedSourceBuffer>((obs) => {
-        const sourceBuffer = mediaSource.addSourceBuffer(codec);
         const queuedSourceBuffer =
-          new LightVideoQueuedSourceBuffer(codec, sourceBuffer);
+          new LightVideoQueuedSourceBuffer(codec, mediaSource);
         obs.next(queuedSourceBuffer);
         return () => {
           queuedSourceBuffer.dispose();

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import {
+  combineLatest as observableCombineLatest,
   EMPTY,
-  merge as observableMerge,
   Observable,
   of as observableOf,
   Subject,
@@ -31,67 +31,22 @@ import {
   mergeMap,
   shareReplay,
   switchMap,
-  take,
   tap,
 } from "rxjs/operators";
 import { Representation } from "../../../manifest";
-import arrayFindIndex from "../../../utils/array_find_index";
-import {
-  areRangesOverlapping,
-  convertToRanges,
-} from "../../../utils/ranges";
-import request from "../../../utils/request";
+import LightVideoQueuedSourceBuffer from "./light_video_queued_source_buffer";
 import log from "./log";
 import prepareSourceBuffer from "./media_source";
-
-interface IThumbnailInfo {
-  start: number;
-  duration: number;
-  mediaURL: string;
-}
-
-interface IThumbnailTrack {
-  thumbnailInfos: IThumbnailInfo[];
-  initURL: string;
-  codec: string;
-}
-
-/**
- * Load needed segment data.
- * @param {Object} thumbnails
- * @param {HTMLMediaElement} mediaElement
- * @returns {ArrayBuffer}
- */
-function getSegmentsData(
-  thumbnails: IThumbnailInfo[],
-  mediaElement: HTMLMediaElement
-): Observable<ArrayBuffer> {
-
-  const thumbnailsToLoad = thumbnails.filter((t) => {
-    const tRange = { start: t.start, end: t.start + t.duration };
-    const mediaRanges = convertToRanges(mediaElement.buffered);
-    return arrayFindIndex(mediaRanges, (mr) => {
-      return tRange.start >= mr.start && tRange.end <= mr.end;
-    }) === -1;
-  });
-
-  if (!thumbnailsToLoad.length) {
-    return EMPTY;
-  }
-
-  const loadedData$ = thumbnailsToLoad.map(({ mediaURL }) => {
-    return request({
-      url: mediaURL,
-      responseType: "arraybuffer",
-    }).pipe(take(1));
-  });
-
-  return observableMerge(...loadedData$).pipe(
-    map(({ value: { responseData }}) => {
-      return responseData;
-    })
-  );
-}
+import {
+  getInitSegment,
+  getSegmentsData
+} from "./segment_utils";
+import {
+  getThumbnailTrack,
+  getWantedThumbnails,
+  IThumbnail,
+  IThumbnailTrack,
+} from "./thumbnail_track_utils";
 
 /**
  * This tool, as a supplement to the RxPlayer, intent to help creating thumbnails
@@ -105,64 +60,40 @@ export default class VideoThumbnailLoader {
   private readonly _thumbnailVideoElement: HTMLVideoElement;
 
   private _thumbnailTrack: IThumbnailTrack;
+  private _error: Error | null;
 
-  private _setTime$: Subject<{ time: number;
-                               resolve: () => void;
-                               reject: (err: Error) => void; }>;
-  private _setTimeSubscription$: Subscription;
+  private _startPipeline$: Subject<{
+    time: number;
+    thumbnailTrack: IThumbnailTrack;
+    resolve: () => void;
+    reject: (err: Error) => void;
+  }>;
+  private _subscription$: Subscription;
 
   constructor(
     videoElement: HTMLVideoElement,
-    trickModeTrack: Representation
+    initTrickModeTrack: Representation
   ) {
     this._thumbnailVideoElement = videoElement;
+    this._thumbnailTrack = getThumbnailTrack(initTrickModeTrack);
+    this._error = null;
 
-    const trackIndex = trickModeTrack.index;
-    const indexStart = trackIndex.getFirstPosition();
-    const indexEnd = trackIndex.getLastPosition();
-
-    if (indexStart != null && indexEnd != null) {
-      const segments = trackIndex.getSegments(indexStart, indexEnd - indexStart);
-
-      const thumbnailInfos = segments
-        .filter((s) => s.duration != null && s.mediaURL != null)
-        .map((s) => {
-          return {
-            duration: (s.duration || 0) / s.timescale,
-            start: s.time / s.timescale,
-            mediaURL: s.mediaURL || "",
-          };
-        });
-      const initSegment =
-        trickModeTrack.index.getInitSegment();
-      this._thumbnailTrack = {
-        thumbnailInfos,
-        codec: trickModeTrack.getMimeTypeString(),
-        initURL: initSegment ? (initSegment.mediaURL || "") : "",
-      };
-    } else {
-      throw new Error(
-        "VideoThumbnailLoaderError: Can't get segments from trick mode track.");
-    }
-
-    this._setTime$ = new Subject();
+    this._startPipeline$ = new Subject();
 
     const videoSourceInfos$ = prepareSourceBuffer(
       this._thumbnailVideoElement,
       this._thumbnailTrack.codec
     ).pipe(
       mergeMap((videoSourceBuffer) => {
-        const { initURL, codec } = this._thumbnailTrack;
-        return request({ url: initURL,
-                         responseType: "arraybuffer",
-        }).pipe(
-          mergeMap(({ value: { responseData }}) => {
-            return videoSourceBuffer.appendSegment({ initSegment : responseData,
-                                                     chunk: null,
-                                                     codec });
+        return getInitSegment(this._thumbnailTrack).pipe(
+          mergeMap(({ value: { responseData } }) => {
+            return videoSourceBuffer.appendSegment({
+              initSegment: responseData,
+              chunk: null,
+              codec: this._thumbnailTrack.codec,
+            });
           }),
-          mapTo(videoSourceBuffer)
-        );
+          mapTo(videoSourceBuffer));
       }),
       catchError(() => {
         throw new Error("VideoThumbnailLoaderError: Couldn't open media source.");
@@ -170,104 +101,74 @@ export default class VideoThumbnailLoader {
       shareReplay()
     );
 
-    this._setTimeSubscription$ = this._setTime$.pipe(
-      filter(({ time }, i) => {
-        return time !== this._thumbnailVideoElement.currentTime || i === 0;
-      }),
-      map((payload) => {
-        if (!this._thumbnailTrack) {
-          throw new Error(
-            "VideoThumbnailLoaderError: No thumbnail track given.");
+    this._subscription$ = this._startPipeline$.pipe(
+      filter(({ time }, i) => time !== this._thumbnailVideoElement.currentTime ||
+                              i === 0),
+      mergeMap((payload) => {
+        const thumbnails = getWantedThumbnails(payload.thumbnailTrack,
+                                               payload.time,
+                                               videoElement.buffered);
+        if (thumbnails === null) {
+          payload.reject(new Error("VideoThumbnailLoaderError" +
+                                   "Couldn't find thumbnail."));
+          return EMPTY;
         }
-
-        const thumbnails: IThumbnailInfo[] | undefined =
-          this._thumbnailTrack.thumbnailInfos
-            .filter((t) => {
-              const thumbnailDuration = t.duration;
-              const range = { start: payload.time - thumbnailDuration,
-                              end: payload.time + thumbnailDuration };
-              const tRange = { start: t.start, end: t.start + t.duration };
-              const rangesAreOverlapping = areRangesOverlapping(range, tRange);
-              let hasBuffered = false;
-              const { buffered } = videoElement;
-              for (let i = 0; i < buffered.length; i++) {
-                if (buffered.start(i) <= tRange.start &&
-                    buffered.end(i) >= tRange.end)
-                {
-                  hasBuffered = true;
-                }
-              }
-              return rangesAreOverlapping && !hasBuffered;
-            });
-
-      if (thumbnails.length === 0) {
-        throw new Error(
-          "VideoThumbnailLoaderError: Couldn't find thumbnail.");
-      }
-
-      log.debug("VTL: Found thumbnails for time", payload.time, thumbnails);
-
-      return { thumbnails, payload };
-    }),
-    distinctUntilChanged((a, b) => {
-      if (a.thumbnails.length !== b.thumbnails.length) {
-        return false;
-      }
-      for (let i = 0; i < a.thumbnails.length; i++) {
-        if (a.thumbnails[i].start !== b.thumbnails[i].start ||
-            a.thumbnails[i].duration !== b.thumbnails[i].duration ||
-            a.thumbnails[i].mediaURL !== b.thumbnails[i].mediaURL) {
+        if (thumbnails.length === 0) {
+          log.debug("VTL: Thumbnail already loaded.");
+          payload.resolve();
+          return EMPTY;
+        }
+        log.debug("VTL: Found thumbnails for time", payload.time, thumbnails);
+        return observableOf({ thumbnails, payload });
+      }),
+      distinctUntilChanged((a, b) => {
+        if (a.payload.thumbnailTrack.codec !== b.payload.thumbnailTrack.codec ||
+            a.thumbnails.length !== b.thumbnails.length) {
           return false;
         }
-      }
-      return true;
-    }),
-    switchMap(({ thumbnails, payload: { time, resolve, reject } }) => {
-      return videoSourceInfos$.pipe(
-        mergeMap((videoSourceBuffer) => {
-          return videoSourceBuffer.removeBuffer(time - 5, time + 5).pipe(
-            mergeMap(() => {
-              if (!this._thumbnailTrack) {
-                throw new Error(
-                  "VideoThumbnailLoaderError: No thumbnail track given.");
-              }
-
-              log.debug("VTL: Removed buffer before appending segments.", time);
-
-              return getSegmentsData(thumbnails, videoElement).pipe(
-                mergeMap((data) => {
-                  if (data) {
-                    const appendBuffer$ = videoSourceBuffer
-                      .appendSegment({
-                        chunk: data,
-                        initSegment: null,
-                        codec: this._thumbnailTrack.codec });
-                    return appendBuffer$.pipe(
-                      tap(() => {
-                        log.debug("VTL: Appended segment.", data, time);
-                        this._thumbnailVideoElement.currentTime = time;
-                      })
-                    );
-                  }
-                  return observableOf(null);
-                }),
-                finalize(() => {
-                  resolve();
-                })
-              );
-            }));
+        for (let i = 0; i < a.thumbnails.length; i++) {
+          if (a.thumbnails[i].start !== b.thumbnails[i].start ||
+              a.thumbnails[i].duration !== b.thumbnails[i].duration ||
+              a.thumbnails[i].mediaURL !== b.thumbnails[i].mediaURL) {
+            return false;
+          }
+        }
+        return true;
+      }),
+      switchMap(({ thumbnails, payload: { time, thumbnailTrack, resolve, reject } }) => {
+        return videoSourceInfos$.pipe(
+          mergeMap((videoSourceBuffer) => {
+            return this.loadInitThumbnail(thumbnailTrack, videoSourceBuffer).pipe(
+              mergeMap(() => {
+                const removeBuffers$ = observableCombineLatest([
+                  videoSourceBuffer.removeBuffer(0, time - 5),
+                  videoSourceBuffer.removeBuffer(time + 5, Infinity)]);
+                return removeBuffers$.pipe(
+                  mergeMap(() => {
+                    log.debug("VTL: Removed buffer before appending segments.", time);
+                    return this.loadThumbnails(thumbnails, videoSourceBuffer, time);
+                  }),
+                  finalize(() => {
+                    resolve();
+                  })
+                );
+              })
+            );
           }),
           catchError((err) => {
+            this.dispose();
             reject(err);
             return EMPTY;
           })
         );
-      }),
-      catchError((err) => {
-        this.dispose();
-        throw err;
       })
-    ).subscribe();
+    ).subscribe(
+      () => ({}),
+      (err) => {
+        this.dispose();
+        this._error = err;
+      }
+    );
   }
 
   /**
@@ -280,18 +181,88 @@ export default class VideoThumbnailLoader {
    * @param {number} time
    * @returns {Promise}
    */
-  setTime(time: number) {
+  setTime(time: number, trickModeTrack: Representation): Promise<unknown> {
+    const thumbnailTrack = getThumbnailTrack(trickModeTrack);
     return new Promise((resolve, reject) => {
-      this._setTime$.next({ time, resolve, reject });
+      this._startPipeline$.next({ time, thumbnailTrack, resolve, reject });
     });
   }
 
   /**
+   * Get thrown error
+   * @returns {Error|null}
+   */
+  getError(): Error | null {
+    return this._error;
+  }
+
+  /**
    * Dispose thumbnail loader.
-   * @returns {Observable}
+   * @returns {void}
    */
   dispose(): void {
-    this._setTimeSubscription$.unsubscribe();
+    this._subscription$.unsubscribe();
     return;
+  }
+
+  /**
+   * Fetch and append init segment of thumbnail track.
+   * @param {Array.<Object>} thumbnails
+   * @param {Object} videoSourceBuffer
+   * @param {number} time
+   */
+  private loadThumbnails(thumbnails: IThumbnail[],
+                         videoSourceBuffer: LightVideoQueuedSourceBuffer,
+                         time: number): Observable<unknown> {
+    return getSegmentsData(thumbnails, this._thumbnailVideoElement).pipe(
+      mergeMap((data) => {
+        if (data) {
+          const appendBuffer$ = videoSourceBuffer
+            .appendSegment({
+              chunk: data,
+              initSegment: null,
+              codec: this._thumbnailTrack.codec,
+            });
+          return appendBuffer$.pipe(
+            tap(() => {
+              log.debug("VTL: Appended segment.", data, time);
+              this._thumbnailVideoElement.currentTime = time;
+            })
+          );
+        }
+        return observableOf(null);
+      })
+    );
+  }
+
+  /**
+   * Fetch and append media segment associated thumbnail.
+   * @param {Array.<Object>} thumbnails
+   * @param {Object} videoSourceBuffer
+   * @param {number} time
+   * @returns {Observable}
+   */
+  private loadInitThumbnail(
+    thumbnailTrack: IThumbnailTrack,
+    videoSourceBuffer: LightVideoQueuedSourceBuffer
+  ): Observable<unknown> {
+    if (thumbnailTrack.codec === this._thumbnailTrack.codec &&
+        thumbnailTrack.initURL === this._thumbnailTrack.initURL) {
+      return observableOf(null);
+    }
+
+    return getInitSegment(thumbnailTrack).pipe(
+      mergeMap(({ value: { responseData } }) => {
+        return videoSourceBuffer.appendSegment({
+          initSegment: responseData,
+          chunk: null,
+          codec: thumbnailTrack.codec,
+        });
+      }),
+      map(() => {
+        this._thumbnailTrack = thumbnailTrack;
+        return null;
+      })
+    );
   }
 }
