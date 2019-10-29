@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
+import {
+  defer as observableDefer,
+  Observable,
+} from "rxjs";
 import { mergeMap } from "rxjs/operators";
 import openMediaSource from "../../../core/init/create_media_source";
 import LightVideoQueuedSourceBuffer from "./light_video_queued_source_buffer";
@@ -22,16 +25,18 @@ import LightVideoQueuedSourceBuffer from "./light_video_queued_source_buffer";
 export default function prepareSourceBuffer(
   elt: HTMLVideoElement, codec: string
 ): Observable<LightVideoQueuedSourceBuffer> {
-  return openMediaSource(elt).pipe(
-    mergeMap((mediaSource) => {
-      return new Observable<LightVideoQueuedSourceBuffer>((obs) => {
-        const queuedSourceBuffer =
-          new LightVideoQueuedSourceBuffer(codec, mediaSource);
-        obs.next(queuedSourceBuffer);
-        return () => {
-          queuedSourceBuffer.dispose();
-        };
-      });
-    })
-  );
+  return observableDefer(() => {
+    return openMediaSource(elt).pipe(
+      mergeMap((mediaSource) => {
+        return new Observable<LightVideoQueuedSourceBuffer>((obs) => {
+          const queuedSourceBuffer =
+            new LightVideoQueuedSourceBuffer(codec, mediaSource);
+          obs.next(queuedSourceBuffer);
+          return () => {
+            queuedSourceBuffer.dispose();
+          };
+        });
+      })
+    );
+  });
 }
