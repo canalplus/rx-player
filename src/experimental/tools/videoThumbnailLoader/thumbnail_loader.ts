@@ -108,7 +108,7 @@ export default class VideoThumbnailLoader {
                                                payload.time,
                                                videoElement.buffered);
         if (thumbnails === null) {
-          payload.reject(new Error("VideoThumbnailLoaderError" +
+          payload.reject(new Error("VideoThumbnailLoaderError: " +
                                    "Couldn't find thumbnail."));
           return EMPTY;
         }
