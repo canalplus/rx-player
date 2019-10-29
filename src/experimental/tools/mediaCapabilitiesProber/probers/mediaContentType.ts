@@ -40,10 +40,10 @@ export default function probeContentType(
         "isTypeSupported not available");
     }
     const contentTypes: string[] = [];
-    if (config.video && config.video.contentType) {
+    if (config.video !== undefined && config.video.contentType !== undefined) {
       contentTypes.push(config.video.contentType);
     }
-    if (config.audio && config.audio.contentType) {
+    if (config.audio !== undefined && config.audio.contentType !== undefined) {
       contentTypes.push(config.audio.contentType);
     }
     if (contentTypes.length === 0) {

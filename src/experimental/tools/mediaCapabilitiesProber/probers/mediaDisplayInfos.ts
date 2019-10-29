@@ -34,7 +34,7 @@ export default function probeMatchMedia(
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "matchMedia not available");
     }
-    if (config.display == null || !config.display.colorSpace) {
+    if (config.display == null || config.display.colorSpace === undefined) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "Not enough arguments for calling matchMedia.");
     }

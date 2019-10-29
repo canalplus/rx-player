@@ -18,6 +18,8 @@ import { of as observableOf } from "rxjs";
 import { map } from "rxjs/operators";
 import { ProberStatus } from "../../types";
 
+/* tslint:disable no-unsafe-any */
+
 describe("MediaCapabilitiesProber probers - DRMInfos", () => {
   beforeEach(() => {
     jest.resetModules();

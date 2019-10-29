@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+ /* tslint:disable no-unsafe-any */
+
 describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
   beforeEach(() => {
     jest.resetModules();
