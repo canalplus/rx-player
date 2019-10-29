@@ -52,7 +52,7 @@ import {
  * from a video source.
  *
  * From a given video adaptation, the tools will extract a "thumbnail track",
- * either from a trickMode track (whose light chunks are adapted from such use case)
+ * either from a video track (whose light chunks are adapted from such use case)
  * or direclty from the media content.
  */
 export default class VideoThumbnailLoader {
@@ -71,10 +71,10 @@ export default class VideoThumbnailLoader {
 
   constructor(
     videoElement: HTMLVideoElement,
-    initTrickModeTrack: Representation
+    initVideoTrack: Representation
   ) {
     this._thumbnailVideoElement = videoElement;
-    this._thumbnailTrack = getThumbnailTrack(initTrickModeTrack);
+    this._thumbnailTrack = getThumbnailTrack(initVideoTrack);
     this._error = null;
 
     this._startPipeline$ = new Subject();
@@ -178,8 +178,8 @@ export default class VideoThumbnailLoader {
    * @param {number} time
    * @returns {Promise}
    */
-  setTime(time: number, trickModeTrack: Representation): Promise<unknown> {
-    const thumbnailTrack = getThumbnailTrack(trickModeTrack);
+  setTime(time: number, videoTrack: Representation): Promise<unknown> {
+    const thumbnailTrack = getThumbnailTrack(videoTrack);
     return new Promise((resolve, reject) => {
       this._startPipeline$.next({ time, thumbnailTrack, resolve, reject });
     });
