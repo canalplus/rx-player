@@ -23,7 +23,7 @@ import { getBoxContent } from "./get_box";
  * @returns {Uint8Array|null}
  */
 function getTRAF(buffer : Uint8Array) : Uint8Array|null {
-  const moof = getBoxContent(buffer, 0x6d6f6f66 /* moof */);
+  const moof = getBoxContent(buffer, 0x6D6F6F66 /* moof */);
   if (moof === null) {
     return null;
   }
@@ -47,17 +47,17 @@ function getMDAT(buf : Uint8Array) : Uint8Array|null {
  * @returns {Uint8Array|null}
  */
 function getMDIA(buf : Uint8Array) : Uint8Array|null {
-  const moov = getBoxContent(buf, 0x6d6f6f76 /* moov */);
+  const moov = getBoxContent(buf, 0x6D6F6F76 /* moov */);
   if (moov === null) {
     return null;
   }
 
-  const trak = getBoxContent(moov, 0x7472616b /* "trak" */);
+  const trak = getBoxContent(moov, 0x7472616B /* "trak" */);
   if (trak === null) {
     return null;
   }
 
-  return getBoxContent(trak, 0x6d646961 /* "mdia" */);
+  return getBoxContent(trak, 0x6D646961 /* "mdia" */);
 }
 
 export {

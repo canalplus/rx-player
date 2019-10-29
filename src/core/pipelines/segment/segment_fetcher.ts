@@ -119,7 +119,7 @@ export default function createSegmentFetcher<T>(
             const { value } = arg;
 
             // format it for ABR Handling
-            const segment : ISegment|undefined = value && value.segment;
+            const segment : ISegment|undefined = value.segment;
             if (segment == null || segment.duration == null) {
               return;
             }

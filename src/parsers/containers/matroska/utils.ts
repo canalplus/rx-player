@@ -17,14 +17,14 @@
 import log from "../../../log";
 
 const SEGMENT_ID = 0x18538067;
-const INFO_ID = 0x1549a966;
+const INFO_ID = 0x1549A966;
 const TIMECODESCALE_ID = 0x2AD7B1;
 const DURATION_ID = 0x4489;
 const CUES_ID = 0x1C53BB6B;
-const CUE_POINT_ID = 0xbb;
-const CUE_TIME_ID = 0xb3;
-const CUE_TRACK_POSITIONS_ID = 0xb7;
-const CUE_CLUSTER_POSITIONS_ID = 0xf1;
+const CUE_POINT_ID = 0xBB;
+const CUE_TIME_ID = 0xB3;
+const CUE_TRACK_POSITIONS_ID = 0xB7;
+const CUE_CLUSTER_POSITIONS_ID = 0xF1;
 
 export interface ICuesSegment { time : number;
                                 duration : number;

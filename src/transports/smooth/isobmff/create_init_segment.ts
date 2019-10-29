@@ -83,7 +83,7 @@ export default function createInitSegment(
     stsd,
     createBox("stts", new Uint8Array(0x08)),
     createBox("stsc", new Uint8Array(0x08)),
-    createBox("stsz", new Uint8Array(0x0c)),
+    createBox("stsz", new Uint8Array(0x0C)),
     createBox("stco", new Uint8Array(0x08)),
   ]);
 

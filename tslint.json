@@ -110,7 +110,7 @@
     "no-var-requires": true,
     "no-var-keyword": true,
     "no-void-expression": false,
-    "number-literal-format": false,
+    "number-literal-format": true,
     "object-literal-key-quotes": [true, "as-needed"],
     "object-literal-shorthand": true,
     "object-literal-sort-keys": false,

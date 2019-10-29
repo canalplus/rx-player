@@ -97,7 +97,7 @@ function parseBif(buf : Uint8Array) : IBifObject {
       currentTs += timescale;
     }
 
-    if (currentImageIndex === 0xffffffff) {
+    if (currentImageIndex === 0xFFFFFFFF) {
       break;
     }
 

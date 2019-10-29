@@ -47,7 +47,7 @@ export default function stringFromUTF8(data? : Uint8Array|null) : string {
   let uint8 = new Uint8Array(data);
 
   // If present, strip off the UTF-8 BOM.
-  if (uint8[0] === 0xef && uint8[1] === 0xbb && uint8[2] === 0xbf) {
+  if (uint8[0] === 0xEF && uint8[1] === 0xBB && uint8[2] === 0xBF) {
     uint8 = uint8.subarray(3);
   }
 

@@ -146,7 +146,7 @@ function getSegmentsFromSidx(
     const refChunk = be4toi(buf, pos);
     pos += 4;
     const refType = (refChunk & 0x80000000) >>> 31;
-    const refSize = (refChunk & 0x7fffffff);
+    const refSize = (refChunk & 0x7FFFFFFF);
 
     // when set to 1 indicates that the reference is to a sidx, else to media
     if (refType === 1) {
@@ -253,7 +253,7 @@ function getDurationFromTrun(buffer : Uint8Array) : number {
     return -1;
   }
 
-  const index = findBox(traf, 0x7472756e /* trun */);
+  const index = findBox(traf, 0x7472756E /* trun */);
   if (index === -1) {
     return -1;
   }
@@ -327,7 +327,7 @@ function getMDHDTimescale(buffer : Uint8Array) : number {
     return -1;
   }
 
-  const index = findBox(mdia, 0x6d646864  /* "mdhd" */);
+  const index = findBox(mdia, 0x6D646864  /* "mdhd" */);
   if (index === -1) {
     return -1;
   }
@@ -383,7 +383,7 @@ function patchPssh(buf : Uint8Array, pssList : IISOBMFFKeySystem[]) : Uint8Array
     return buf;
   }
 
-  const pos = findBox(buf, 0x6d6f6f76 /* = "moov" */);
+  const pos = findBox(buf, 0x6D6F6F76 /* = "moov" */);
   if (pos === -1) {
     return buf;
   }
