@@ -86,7 +86,7 @@ export default function getSegmentsFromTimeline(
     while (segmentTime < scaledTo && segmentNumberInCurrentRange <= repeat) {
       const segmentNumber = currentNumber != null ?
         currentNumber + segmentNumberInCurrentRange : undefined;
-      const segment = { id: "" + segmentTime,
+      const segment = { id: String(segmentTime),
                         time: segmentTime - index.indexTimeOffset,
                         isInit: false,
                         range,

@@ -33,7 +33,7 @@ export function getAudioCodecs(
       (parseInt(codecPrivateData.substring(0, 2), 16) & 0xF8) >> 3 :
       2;
   }
-  return mpProfile !== 0 ? ("mp4a.40." + mpProfile) :
+  return mpProfile !== 0 ? (`mp4a.40.${mpProfile}`) :
                            "";
 }
 

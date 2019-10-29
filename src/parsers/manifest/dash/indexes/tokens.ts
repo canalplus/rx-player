@@ -33,12 +33,12 @@ function padLeftWithZeros(n : number|string, l : number) : string {
 }
 
 function processFormatedToken(
-  replacer : string|number
+  replacer : string | number
 ) : (x: string, y: number, widthStr: string) => string {
   return (_match, _format, widthStr : string) => {
     const width = isNonEmptyString(widthStr) ? parseInt(widthStr, 10) :
                                                1;
-    return padLeftWithZeros("" + replacer, width);
+    return padLeftWithZeros(String(replacer), width);
   };
 }
 

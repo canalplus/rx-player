@@ -169,7 +169,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     while (i <= length) {
       const range = list[i].mediaRange;
       const mediaURL = list[i].mediaURL;
-      const args = { id: "" + i,
+      const args = { id: String(i),
                      time: i * duration + scaledStart,
                      isInit: false,
                      range,

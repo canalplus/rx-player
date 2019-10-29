@@ -129,7 +129,7 @@
     "prefer-while": true,
     "prefer-template": false,
     "promise-function-async": false,
-    "restrict-plus-operands": false,
+    "restrict-plus-operands": true,
     "return-undefined": true,
     "strict-boolean-expressions": false,
     "strict-type-predicates": false,

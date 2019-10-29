@@ -53,9 +53,8 @@ export default function updatePeriodInPlace(oldPeriod : Period,
                     representation => representation.id === oldRepresentation.id);
 
         if (newRepresentation === undefined) {
-          log.warn("Manifest: Representation \"" +
-                   oldRepresentations[k].id +
-                   "\" not found when merging.");
+          log.warn(`Manifest: Representation "${oldRepresentations[k].id}" ` +
+                   "not found when merging.");
         } else {
           oldRepresentation.index._update(newRepresentation.index);
         }

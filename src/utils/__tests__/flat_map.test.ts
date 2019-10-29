@@ -32,7 +32,7 @@ describe("utils - starts-with", () => {
   it("should mirror Array.prototype.flatMap behavior", () => {
     expect(flatMap([1, 2, 3], x => [x, x + 1, x - 1]))
              .toEqual([ 1, 2, 0, 2, 3, 1, 3, 4, 2 ]);
-    expect(flatMap([1, 2, 3], x => x + "a"))
+    expect(flatMap([1, 2, 3], x => `${x}a`))
              .toEqual([ "1a", "2a", "3a" ]);
   });
 
@@ -41,7 +41,7 @@ describe("utils - starts-with", () => {
       (Array.prototype as any).flatMap = initialFlatMap;
       const flatMapSpy = jest.spyOn((Array.prototype as any), "flatMap");
       const func1 = (x : number) : number[] => [x, x + 1, x - 1];
-      const func2 = (x : number) : string => x + "a";
+      const func2 = (x : number) : string => String(x) + "a";
       expect(flatMap([1, 2, 3], func1))
                .toEqual([ 1, 2, 0, 2, 3, 1, 3, 4, 2 ]);
       expect(flatMap([1, 2, 3], func2))

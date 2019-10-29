@@ -226,7 +226,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       const realTime = timeFromPeriodStart + scaledStart;
       const manifestTime = timeFromPeriodStart + this._index.presentationTimeOffset;
       const realURL = replaceSegmentDASHTokens(mediaURL, manifestTime, realNumber);
-      const args = { id: "" + realNumber,
+      const args = { id: String(realNumber),
                      number: realNumber,
                      time: realTime,
                      isInit: false,

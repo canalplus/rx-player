@@ -288,7 +288,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
         const number = currentNumber != null ?
           currentNumber + segmentNumberInCurrentRange :
           undefined;
-        const segment = { id: "" + segmentTime,
+        const segment = { id: String(segmentTime),
                           time,
                           isInit: false,
                           duration,

@@ -340,10 +340,13 @@ function createSmoothStreamingParser(
         qualityLevel.codecs :
         DEFAULT_CODECS[adaptationType];
       const id =  adaptationID + "_" +
-                  adaptationType + "-" +
-                  mimeType + "-" +
-                  codecs + "-" +
-                  qualityLevel.bitrate;
+                  (adaptationType != null ? adaptationType + "-" :
+                                            "") +
+                  (mimeType != null ? mimeType + "-" :
+                                      "") +
+                  (codecs != null ? codecs + "-" :
+                                    "") +
+                  String(qualityLevel.bitrate);
 
       const contentProtections : IContentProtection[] = [];
       let firstProtection : IContentProtectionSmooth | undefined;
@@ -418,11 +421,11 @@ function createSmoothStreamingParser(
     if (root == null || root.nodeName !== "SmoothStreamingMedia") {
       throw new Error("document root should be SmoothStreamingMedia");
     }
-    if (!
-      /^[2]-[0-2]$/.test(
-        root.getAttribute("MajorVersion") + "-" + root.getAttribute("MinorVersion")
-      )
-    ) {
+    const majorVersionAttr = root.getAttribute("MajorVersion");
+    const minorVersionAttr = root.getAttribute("MinorVersion");
+    if (majorVersionAttr === null || minorVersionAttr === null ||
+        !/^[2]-[0-2]$/.test(majorVersionAttr + "-" + minorVersionAttr))
+    {
       throw new Error("Version should be 2.0, 2.1 or 2.2");
     }
 

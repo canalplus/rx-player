@@ -41,7 +41,7 @@ export default function makeCue(
 
     // IE/Edge will throw in this case.
     // See issue #501
-    log.warn("Compat: Invalid cue times: " + startTime + " - " + endTime);
+    log.warn(`Compat: Invalid cue times: ${startTime} - ${endTime}`);
     return null;
   }
 
