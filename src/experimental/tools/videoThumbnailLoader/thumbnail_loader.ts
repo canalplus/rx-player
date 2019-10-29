@@ -216,21 +216,18 @@ export default class VideoThumbnailLoader {
                          time: number): Observable<unknown> {
     return getSegmentsData(thumbnails, this._thumbnailVideoElement).pipe(
       mergeMap((data) => {
-        if (data) {
-          const appendBuffer$ = videoSourceBuffer
-            .appendSegment({
-              chunk: data,
-              initSegment: null,
-              codec: this._thumbnailTrack.codec,
-            });
-          return appendBuffer$.pipe(
-            tap(() => {
-              log.debug("VTL: Appended segment.", data, time);
-              this._thumbnailVideoElement.currentTime = time;
-            })
-          );
-        }
-        return observableOf(null);
+        const appendBuffer$ = videoSourceBuffer
+          .appendSegment({
+            chunk: data,
+            initSegment: null,
+            codec: this._thumbnailTrack.codec,
+          });
+        return appendBuffer$.pipe(
+          tap(() => {
+            log.debug("VTL: Appended segment.", data, time);
+            this._thumbnailVideoElement.currentTime = time;
+          })
+        );
       })
     );
   }
