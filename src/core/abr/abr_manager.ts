@@ -20,6 +20,7 @@ import {
 } from "rxjs";
 import log from "../../log";
 import { Representation } from "../../manifest";
+import takeFirstSet from "../../utils/take_first_set";
 import { IBufferType } from "../source_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
 import createFilters from "./create_filters";
@@ -75,10 +76,10 @@ export default class ABRManager {
    * @param {Object} options
    */
   constructor(options : IABRManagerArguments) {
-    this._manualBitrates = options.manualBitrates || {};
-    this._maxAutoBitrates = options.maxAutoBitrates || {};
-    this._initialBitrates = options.initialBitrates || {};
-    this._throttlers = options.throttlers || {};
+    this._manualBitrates = options.manualBitrates;
+    this._maxAutoBitrates = options.maxAutoBitrates;
+    this._initialBitrates = options.initialBitrates;
+    this._throttlers = options.throttlers;
     this._bandwidthEstimators = {};
     this._lowLatencyMode = options.lowLatencyMode;
   }
@@ -100,9 +101,12 @@ export default class ABRManager {
     bufferEvents$ : Observable<IABRBufferEvents>
   ) : Observable<IABREstimate> {
     const bandwidthEstimator = this._getBandwidthEstimator(type);
-    const manualBitrate$ = this._manualBitrates[type] || observableOf(-1);
-    const maxAutoBitrate$ = this._maxAutoBitrates[type] || observableOf(Infinity);
-    const initialBitrate = this._initialBitrates[type] || 0;
+    const manualBitrate$ =
+      takeFirstSet<Observable<number>>(this._manualBitrates[type], observableOf(-1));
+    const maxAutoBitrate$ =
+      takeFirstSet<Observable<number>>(this._maxAutoBitrates[type],
+                                       observableOf(Infinity));
+    const initialBitrate = takeFirstSet<number>(this._initialBitrates[type], 0);
     const filters$ = createFilters(this._throttlers.limitWidth[type],
                                    this._throttlers.throttleBitrate[type],
                                    this._throttlers.throttle[type]);

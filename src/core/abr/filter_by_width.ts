@@ -16,6 +16,7 @@
 
 import { Representation } from "../../manifest";
 import arrayFind from "../../utils/array_find";
+import takeFirstSet from "../../utils/take_first_set";
 
 /**
  * Filter representations based on their width:
@@ -31,15 +32,19 @@ export default function filterByWidth(
 ) : Representation[] {
   const sortedRepsByWidth = representations
     .slice() // clone
-    .sort((a, b) => (a.width || 0) - (b.width || 0));
+    .sort((a, b) => takeFirstSet<number>(a.width, 0) -
+                    takeFirstSet<number>(b.width, 0));
 
   const repWithMaxWidth = arrayFind(sortedRepsByWidth, (representation) =>
-    (representation.width || 0) >= width);
+    typeof representation.width === "number" &&
+    representation.width >= width);
 
-  if (repWithMaxWidth) {
-    const maxWidth = repWithMaxWidth.width || 0;
+  if (repWithMaxWidth !== undefined) {
+    const maxWidth = typeof repWithMaxWidth.width === "number" ? repWithMaxWidth.width :
+                                                                 0;
     return representations.filter(representation =>
-      (representation.width || 0) <= maxWidth);
+      typeof representation.width === "number" ? representation.width <= maxWidth :
+                                                 true);
   }
   return representations;
 }

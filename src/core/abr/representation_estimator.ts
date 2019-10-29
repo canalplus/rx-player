@@ -187,7 +187,9 @@ export default function RepresentationEstimator({
   representations,
 } : IRepresentationEstimatorArguments) : Observable<IABREstimate> {
   const scoreCalculator = new RepresentationScoreCalculator();
-  const networkAnalyzer = new NetworkAnalyzer(initialBitrate || 0, lowLatencyMode);
+  const networkAnalyzer = new NetworkAnalyzer(initialBitrate == null ? 0 :
+                                                                       initialBitrate,
+                                              lowLatencyMode);
   const requestsStore = new PendingRequestsStore();
 
   /**
@@ -239,7 +241,7 @@ export default function RepresentationEstimator({
     startWith(null));
 
   const estimate$ = observableDefer(() => {
-    if (!representations.length) {
+    if (representations.length === 0) {
       throw new Error("ABRManager: no representation choice given");
     }
 
@@ -254,9 +256,16 @@ export default function RepresentationEstimator({
     return manualBitrate$.pipe(switchMap(manualBitrate => {
       if (manualBitrate >= 0) {
         // -- MANUAL mode --
+        const manualRepresentation = (() => {
+          const fromBitrate = fromBitrateCeil(representations,
+                                              manualBitrate);
+          if (fromBitrate !== undefined) {
+            return fromBitrate;
+          }
+          return representations[0];
+        })();
         return observableOf({
-          representation: fromBitrateCeil(representations, manualBitrate) ||
-                          representations[0],
+          representation: manualRepresentation,
           bitrate: undefined, // Bitrate estimation is deactivated here
           knownStableBitrate: undefined,
           manual: true,
@@ -322,12 +331,18 @@ export default function RepresentationEstimator({
             forceBandwidthMode = false;
           }
 
-          const chosenRepFromBandwidth = fromBitrateCeil(_representations,
-                                                         Math.min(bitrateChosen,
-                                                                  maxAutoBitrate)) ||
-                                         _representations[0] ||
-                                         representations[0];
-
+          const chosenRepFromBandwidth = (() => {
+            const fromBitrate = fromBitrateCeil(_representations,
+                                                Math.min(bitrateChosen,
+                                                         maxAutoBitrate));
+            if (fromBitrate !== undefined) {
+              return fromBitrate;
+            }
+            if (_representations.length > 0) {
+              return  _representations[0];
+            }
+            return representations[0];
+          })();
           if (forceBandwidthMode) {
             log.debug("ABR: Choosing representation with bandwith estimation.",
                       chosenRepFromBandwidth);
@@ -355,10 +370,16 @@ export default function RepresentationEstimator({
                      knownStableBitrate, };
           }
           const limitedBitrate = Math.min(bufferBasedBitrate, maxAutoBitrate);
-          const chosenRepresentation = fromBitrateCeil(_representations,
-                                                       limitedBitrate) ||
-                                       _representations[0] ||
-                                       representations[0];
+          const chosenRepresentation = (() => {
+            const fromBitrate = fromBitrateCeil(_representations, limitedBitrate);
+            if (fromBitrate !== undefined) {
+              return fromBitrate;
+            }
+            if (_representations.length > 0) {
+              return  _representations[0];
+            }
+            return representations[0];
+          })();
           if (bufferBasedBitrate <= maxAutoBitrate) {
             log.debug("ABR: Choosing representation with buffer based bitrate ceiling.",
                       chosenRepresentation);
