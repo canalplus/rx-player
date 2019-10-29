@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("compat - browser compatibility types", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -205,3 +206,4 @@ describe("compat - browser compatibility types", () => {
     (window as any).MSMediaKeys = origMSMediaKeys;
   });
 });
+/* tslint:enable no-unsafe-any */

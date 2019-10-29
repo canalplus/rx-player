@@ -134,7 +134,8 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
       try {
         listener(arg);
       } catch (e) {
-        log.error(e, e.stack);
+        log.error(e, e instanceof Error ? e.stack :
+                                          null);
       }
     });
   }

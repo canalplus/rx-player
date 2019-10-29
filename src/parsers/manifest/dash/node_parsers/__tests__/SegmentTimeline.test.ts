@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("DASH Node parsers - SegmentTimeline", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -95,3 +96,4 @@ describe("DASH Node parsers - SegmentTimeline", () => {
     expect(parseS).toHaveBeenCalledWith(sElement2);
   });
 });
+/* tslint:enable no-unsafe-any */

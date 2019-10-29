@@ -91,7 +91,9 @@ function getCSSProperty(str : string, name : string) : string|null {
  */
 function decodeEntities(text : string) : string {
   return text
+    /* tslint:disable no-unsafe-any */
     .replace(HTML_ENTITIES, (_, $1) => String.fromCharCode($1));
+    /* tslint:enable no-unsafe-any */
 }
 
 /**

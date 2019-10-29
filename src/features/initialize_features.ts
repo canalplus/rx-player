@@ -22,6 +22,7 @@ import features from "./index";
  * @param {Object} features
  */
 export default function initializeFeaturesObject() : void {
+  /* tslint:disable no-unsafe-any */
   /* tslint:disable no-var-requires */
   if (__FEATURES__.EME) {
     features.emeManager = require(__RELATIVE_PATH__.EME_MANAGER).default;
@@ -116,4 +117,5 @@ export default function initializeFeaturesObject() : void {
     features.directfile = require(__RELATIVE_PATH__.DIRECTFILE).default;
   }
   /* tslint:enable no-var-requires */
+  /* tslint:enable no-unsafe-any */
 }

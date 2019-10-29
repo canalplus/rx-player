@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("compat - addTextTrack", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -166,3 +167,4 @@ describe("compat - addTextTrack", () => {
     spyOnCreateElement.mockReset();
   });
 });
+/* tslint:enable no-unsafe-any */

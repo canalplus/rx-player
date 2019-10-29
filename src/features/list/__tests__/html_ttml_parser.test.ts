@@ -17,6 +17,7 @@
 import ttmlParser from "../../../parsers/texttracks/ttml/html";
 import addHTMLttmlFeature from "../html_ttml_parser";
 
+/* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/texttracks/ttml/html", () => ({
   __esModule: true,
   default: jest.fn(),
@@ -32,3 +33,4 @@ describe("Features list - HTML ttml Parser", () => {
     expect(featureObject.htmlTextTracksParsers.ttml).toBe(ttmlParser);
   });
 });
+/* tslint:enable no-unsafe-any */

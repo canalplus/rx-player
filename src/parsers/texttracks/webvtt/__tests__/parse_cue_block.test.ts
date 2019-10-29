@@ -78,6 +78,7 @@ const notCueBlock7 = [
   "TATA",
 ];
 
+/* tslint:disable no-unsafe-any */
 describe("parsers - srt - parseCueBlocks", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -240,3 +241,4 @@ describe("parsers - srt - parseCueBlocks", () => {
     expect(parseTimestamp).toHaveBeenCalledTimes(2);
   });
 });
+/* tslint:enable no-unsafe-any */

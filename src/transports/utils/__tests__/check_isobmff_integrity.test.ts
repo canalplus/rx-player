@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("transports utils - checkISOBMFFIntegrity", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -131,3 +132,4 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
       .toEqual("OtherError (INTEGRITY_ERROR) Incomplete `mdat` box");
   });
 });
+/* tslint:enable no-unsafe-any */

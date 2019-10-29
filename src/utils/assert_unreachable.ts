@@ -17,5 +17,5 @@
 import { AssertionError } from "../errors";
 
 export default function assertUnreachable(_: never): never {
-    throw new AssertionError("Unreachable path taken");
+  throw new AssertionError("Unreachable path taken");
 }

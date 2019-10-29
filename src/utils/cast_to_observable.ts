@@ -42,7 +42,9 @@ function castToObservable<T>(value? : any) : Observable<T> {
     return value;
   }
 
-  if (value && typeof value.subscribe === "function") {
+  /* tslint:disable no-unsafe-any */
+  if (value != null && typeof value.subscribe === "function") {
+  /* tslint:enable no-unsafe-any */
     const valObsLike = value as IObservableLike<T>;
     return new Observable((obs) => {
       const sub = valObsLike.subscribe((val : T)   => { obs.next(val); },
@@ -58,7 +60,9 @@ function castToObservable<T>(value? : any) : Observable<T> {
     });
   }
 
+  /* tslint:disable no-unsafe-any */
   if (value != null && typeof value.then === "function") {
+  /* tslint:enable no-unsafe-any */
     return observableFrom(value as Promise<T>);
   }
 

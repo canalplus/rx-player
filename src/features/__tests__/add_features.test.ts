@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("Features - addFeatures", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -60,3 +61,4 @@ describe("Features - addFeatures", () => {
     expect(fakeFeat2).toHaveBeenCalledWith(feat);
   });
 });
+/* tslint:enable no-unsafe-any */

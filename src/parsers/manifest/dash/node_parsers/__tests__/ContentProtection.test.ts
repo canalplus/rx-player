@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 function testStringAttribute(attributeName : string, variableName? : string) : void {
   const _variableName = variableName == null ? attributeName : variableName;
 
@@ -101,3 +102,4 @@ describe("DASH Node Parsers - ContentProtection", () => {
       });
   });
 });
+/* tslint:enable no-unsafe-any */

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("Features list - METAPLAYLIST", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -33,3 +34,4 @@ describe("Features list - METAPLAYLIST", () => {
     expect(featureObject.transports.metaplaylist).toBe(feat);
   });
 });
+/* tslint:enable no-unsafe-any */

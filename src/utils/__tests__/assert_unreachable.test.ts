@@ -30,7 +30,9 @@ describe("utils - assert", () => {
     /* tslint:disable:no-unused-expression */
     expect(error).toBeDefined();
     /* tslint:enable:no-unused-expression */
+    /* tslint:disable no-unsafe-any */
     expect(error.message).toBe("Unreachable path taken");
     expect(error.name).toBe("AssertionError");
+    /* tslint:enable no-unsafe-any */
   });
 });

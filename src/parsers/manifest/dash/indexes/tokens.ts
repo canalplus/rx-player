@@ -34,7 +34,7 @@ function padLeftWithZeros(n : number|string, l : number) : string {
 
 function processFormatedToken(
   replacer : string | number
-) : (x: string, y: number, widthStr: string) => string {
+) : (x: unknown, y: unknown, widthStr: string) => string {
   return (_match, _format, widthStr : string) => {
     const width = isNonEmptyString(widthStr) ? parseInt(widthStr, 10) :
                                                1;
@@ -98,20 +98,20 @@ export function replaceRepresentationDASHTokens(
 export function replaceSegmentDASHTokens(
   path : string,
   time? : number,
-  number? : number
+  nb? : number
 ) : string {
   if (path.indexOf("$") === -1) {
     return path;
   } else {
     return path
       .replace(/\$\$/g, "$")
-      .replace(/\$Number(|\%0(\d+)d)\$/g, (_x, _y, widthStr) => {
-        if (number == null) {
+      .replace(/\$Number(|\%0(\d+)d)\$/g, (_x, _y, widthStr : string) => {
+        if (nb == null) {
           throw new Error("Segment number not defined in a $Number$ scheme");
         }
-        return processFormatedToken(number)(_x, _y, widthStr);
+        return processFormatedToken(nb)(_x, _y, widthStr);
       })
-      .replace(/\$Time(|\%0(\d+)d)\$/g, (_x, _y, widthStr) => {
+      .replace(/\$Time(|\%0(\d+)d)\$/g, (_x, _y, widthStr : string) => {
         if (time == null) {
           throw new Error("Segment time not defined in a $Time$ scheme");
         }

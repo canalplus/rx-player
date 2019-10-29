@@ -16,6 +16,7 @@
 
 import { MediaError } from "../../errors";
 
+/* tslint:disable no-unsafe-any */
 describe("Manifest - Period", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -474,3 +475,4 @@ describe("Manifest - Period", () => {
     }));
   });
 });
+/* tslint:enable no-unsafe-any */

@@ -18,6 +18,7 @@ import nextTick from "next-tick";
 import EventEmitter from "../../utils/event_emitter";
 import patchWebkitSourceBuffer from "../patch_webkit_source_buffer";
 
+/* tslint:disable no-unsafe-any */
 describe("compat - parseWebkitSourceBuffer", () => {
   it("should do nothing if no WebkitSourceBuffer", () => {
     const origWebKitSourceBuffer = (window as any).WebKitSourceBuffer;
@@ -153,3 +154,4 @@ describe("compat - parseWebkitSourceBuffer", () => {
     (nextTick as any) = origNextTick;
   });
 });
+/* tslint:enable no-unsafe-any */

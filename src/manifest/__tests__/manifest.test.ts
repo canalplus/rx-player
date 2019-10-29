@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("Manifest - Manifest", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -897,3 +898,4 @@ describe("Manifest - Manifest", () => {
     eeSpy.mockRestore();
   });
 });
+/* tslint:enable no-unsafe-any */

@@ -17,6 +17,7 @@
 import srtParser from "../../../parsers/texttracks/srt/html";
 import addHTMLsrtFeature from "../html_srt_parser";
 
+/* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/texttracks/srt/html", () => ({
   __esModule: true,
   default: jest.fn(),
@@ -32,3 +33,4 @@ describe("Features list - HTML srt Parser", () => {
     expect(featureObject.htmlTextTracksParsers.srt).toBe(srtParser);
   });
 });
+/* tslint:enable no-unsafe-any */

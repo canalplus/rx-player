@@ -95,7 +95,7 @@ export default function parseMetaPlaylist(
                     "or the MetaPlaylist data directly.");
   }
 
-  const { contents, version, type } = parsedData;
+  const { contents, version, type } = parsedData as IMetaPlaylist;
 
   if (type !== "MPL") {
     throw new Error("MPL Parser: Bad MetaPlaylist. " +
@@ -124,7 +124,7 @@ export default function parseMetaPlaylist(
     ressources.push({ url: content.url, transportType: content.transport });
   }
 
-  const metaPlaylist : IMetaPlaylist = parsedData;
+  const metaPlaylist : IMetaPlaylist = parsedData as IMetaPlaylist;
   return {
     type : "needs-manifest-loader",
     value : {

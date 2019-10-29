@@ -262,7 +262,9 @@ export function onPictureInPictureEvent$(
     return observableMerge(
       observableFromEvent(mediaElement, "enterpictureinpicture")
         .pipe(map((evt: any) => ({ isEnabled: true,
+                                   /* tslint:disable no-unsafe-any */
                                    pipWindow: evt.pictureInPictureWindow }))),
+                                   /* tslint:enable no-unsafe-any */
       observableFromEvent(mediaElement, "leavepictureinpicture")
         .pipe(mapTo({ isEnabled: false, pipWindow: null }))
     ).pipe(startWith(initialState));

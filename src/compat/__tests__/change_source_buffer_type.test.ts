@@ -17,6 +17,7 @@
 import log from "../../log";
 import tryToChangeSourceBufferType from "../change_source_buffer_type";
 
+/* tslint:disable no-unsafe-any */
 describe("Compat - tryToChangeSourceBufferType", () => {
   /* tslint:disable max-line-length */
   it("should just return false if the SourceBuffer provided does not have a changeType method", () => {
@@ -58,3 +59,4 @@ describe("Compat - tryToChangeSourceBufferType", () => {
     );
   });
 });
+/* tslint:enable no-unsafe-any */

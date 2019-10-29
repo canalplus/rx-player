@@ -157,7 +157,9 @@ function generateSpansFromSRTText(text : string) : HTMLElement {
       ) {
         // TODO loop through attributes to find color?
         const spanChild = _loop(currentNode);
+        /* tslint:disable no-unsafe-any */
         spanChild.style.color = (currentNode as any).color;
+        /* tslint:enable no-unsafe-any */
         span.appendChild(spanChild);
       } else {
         const spanChild = _loop(currentNode);

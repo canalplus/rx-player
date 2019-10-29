@@ -17,6 +17,7 @@
 import htmlTextTracksBuffer from "../../../custom_source_buffers/text/html";
 import addHTMLTextBuffer from "../html_text_buffer";
 
+/* tslint:disable no-unsafe-any */
 jest.mock("../../../custom_source_buffers/text/html", () => ({
   __esModule: true,
   default: jest.fn(),
@@ -30,3 +31,4 @@ describe("Features list - HTML Text Buffer", () => {
     expect(featureObject.htmlTextTracksBuffer).toBe(htmlTextTracksBuffer);
   });
 });
+/* tslint:enable no-unsafe-any */

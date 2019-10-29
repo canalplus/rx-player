@@ -24,6 +24,7 @@ import {
   tap,
 } from "rxjs/operators";
 
+/* tslint:disable no-unsafe-any */
 describe("compat - whenMediaSourceOpen$", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -102,3 +103,4 @@ describe("compat - whenMediaSourceOpen$", () => {
     });
   });
 });
+/* tslint:enable no-unsafe-any */

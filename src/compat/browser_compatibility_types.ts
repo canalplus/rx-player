@@ -87,18 +87,23 @@ export interface ICompatPictureInPictureWindow
                         height: number; }
 
 const win = window as any;
+/* tslint:disable no-unsafe-any */
 const HTMLElement_ : typeof HTMLElement = win.HTMLElement;
 const VTTCue_ : ICompatVTTCueConstructor|undefined =
   win.VTTCue != null ? win.VTTCue :
                        win.TextTrackCue;
+/* tslint:enable no-unsafe-any */
 
+/* tslint:disable no-unsafe-any */
 const MediaSource_ : typeof MediaSource|undefined =
   win.MediaSource != null ? win.MediaSource :
   win.MozMediaSource != null ? win.MozMediaSource :
   win.WebKitMediaSource != null ? win.WebKitMediaSource :
                                   win.MSMediaSource;
+/* tslint:enable no-unsafe-any */
 
 const MediaKeys_ : ICompatMediaKeysConstructor|undefined = (() => {
+  /* tslint:disable no-unsafe-any */
   if (shouldUseWebKitMediaKeys()) {
     return win.WebKitMediaKeys;
   }
@@ -123,6 +128,7 @@ const MediaKeys_ : ICompatMediaKeysConstructor|undefined = (() => {
              this.setServerCertificate = noMediaKeys;
            }
          };
+  /* tslint:enable no-unsafe-any */
 })();
 
 const READY_STATES = { HAVE_NOTHING: 0,

@@ -269,9 +269,11 @@ if (navigator.requestMediaKeySystemAccess != null &&
             const licenseTypedArray =
               license instanceof ArrayBuffer ? new Uint8Array(license) :
                                                license;
+            /* tslint:disable no-unsafe-any */
             const json = JSON.parse(bytesToStr(licenseTypedArray));
             const key = strToBytes(atob(json.keys[0].k));
             const kid = strToBytes(atob(json.keys[0].kid));
+            /* tslint:enable no-unsafe-any */
             this._vid.webkitAddKey(this._key, key, kid, sessionId);
           } else {
             this._vid.webkitAddKey(this._key, license, null, sessionId);
@@ -338,10 +340,12 @@ if (navigator.requestMediaKeySystemAccess != null &&
       if (videoElement == null) {
         videoElement = document.createElement("video");
       }
+      /* tslint:disable no-unsafe-any */
       /* tslint:disable no-unbound-method */
       if (videoElement != null && typeof videoElement.canPlayType === "function") {
       /* tslint:enable no-unbound-method */
         return !!(videoElement as any).canPlayType("video/mp4", keyType);
+      /* tslint:enable no-unsafe-any */
       } else {
         return false;
       }
@@ -398,7 +402,9 @@ if (navigator.requestMediaKeySystemAccess != null &&
     };
   } else if (MediaKeys_ != null &&
              MediaKeys_.prototype != null &&
+             /* tslint:disable no-unsafe-any */
              typeof MediaKeys_.isTypeSupported === "function"
+             /* tslint:enable no-unsafe-any */
   ) {
 
     requestMediaKeySystemAccess = function(
@@ -406,7 +412,9 @@ if (navigator.requestMediaKeySystemAccess != null &&
       keySystemConfigurations : ICompatMediaKeySystemConfiguration[]
     ) : Observable<ICompatMediaKeySystemAccess|CustomMediaKeySystemAccess> {
       // TODO Why TS Do not understand that isTypeSupported exists here?
+      /* tslint:disable no-unsafe-any */
       if (!(MediaKeys_ as any).isTypeSupported(keyType)) {
+      /* tslint:enable no-unsafe-any */
         return observableThrow(undefined);
       }
 
@@ -436,7 +444,9 @@ if (navigator.requestMediaKeySystemAccess != null &&
           return observableOf(
             new CustomMediaKeySystemAccess(
               keyType,
+              /* tslint:disable no-unsafe-any */
               new (MediaKeys_ as any)(keyType),
+              /* tslint:enable no-unsafe-any */
               keySystemConfigurationResponse
             )
           );
@@ -447,7 +457,9 @@ if (navigator.requestMediaKeySystemAccess != null &&
     };
 
     if (isIE11 &&
+        /* tslint:disable no-unsafe-any */
         typeof MediaKeys_.prototype.createSession === "function")
+        /* tslint:enable no-unsafe-any */
     {
       class IE11MediaKeySession
       extends EventEmitter<IMediaKeySessionEvents>
@@ -475,14 +487,18 @@ if (navigator.requestMediaKeySystemAccess != null &&
             if (this._ss == null) {
               throw new Error("MediaKeySession not set");
             }
+            /* tslint:disable no-unsafe-any */
             (this._ss as any).update(license, sessionId);
+            /* tslint:enable no-unsafe-any */
             this.sessionId = sessionId;
           });
         }
         generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
           return new PPromise((resolve) => {
+            /* tslint:disable no-unsafe-any */
             this._ss = (this._mk as any).createSession("video/mp4",
                                                        initData) as MediaKeySession;
+            /* tslint:enable no-unsafe-any */
             observableMerge(events.onKeyMessage$(this._ss),
                             events.onKeyAdded$(this._ss),
                             events.onKeyError$(this._ss)

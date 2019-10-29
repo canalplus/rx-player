@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("parsers - webvtt - parseStyleBlock", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -357,3 +358,4 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 });
+/* tslint:enable no-unsafe-any */

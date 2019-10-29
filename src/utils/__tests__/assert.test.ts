@@ -18,6 +18,7 @@ import assert, {
   assertInterface,
 } from "../assert";
 
+/* tslint:disable no-unsafe-any */
 describe("utils - assert", () => {
   it("should throw an error if the assertion is false", () => {
     let error;
@@ -215,3 +216,4 @@ describe("utils - assertInterface", () => {
     assertInterface(myObj, objIface, nameOfMyObj);
   });
 });
+/* tslint:enable no-unsafe-any */

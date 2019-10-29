@@ -79,7 +79,7 @@ export default class Period {
             let newAdaptation : Adaptation|null = null;
             try {
               newAdaptation = new Adaptation(adaptation, { representationFilter });
-            } catch (err : unknown) {
+            } catch (err) {
               if (isKnownError(err) &&
                   err.code === "MANIFEST_UNSUPPORTED_ADAPTATION_TYPE")
               {

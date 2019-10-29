@@ -274,10 +274,15 @@ function request<T>(
           let responseData : T;
           if (loadedResponseType === "json") {
             // IE bug where response is string with responseType json
-            responseData = xhr.response !== "string" ? xhr.response :
-                                                       toJSONForIE(xhr.responseText);
+            responseData = typeof xhr.response === "object" ?
+              /* tslint:disable no-unsafe-any */
+              xhr.response :
+              /* tslint:enable no-unsafe-any */
+              toJSONForIE(xhr.responseText);
           } else {
+            /* tslint:disable no-unsafe-any */
             responseData = xhr.response;
+            /* tslint:enable no-unsafe-any */
           }
 
           if (responseData == null) {

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("parsers - webvtt - parseWebVTT", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -172,3 +173,4 @@ describe("parsers - webvtt - parseWebVTT", () => {
     expect(spyToHTML).not.toHaveBeenCalled();
   });
 });
+/* tslint:enable no-unsafe-any */

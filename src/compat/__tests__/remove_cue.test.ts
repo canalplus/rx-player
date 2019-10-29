@@ -16,6 +16,7 @@
 
 import arrayFindIndex from "../../utils/array_find_index";
 
+/* tslint:disable no-unsafe-any */
 describe("compat - removeCue", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -220,3 +221,4 @@ describe("compat - removeCue", () => {
     expect(mockRemoveCue).toHaveBeenLastCalledWith({ id: "1" });
   });
 });
+/* tslint:enable no-unsafe-any */

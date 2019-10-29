@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-// import objectAssign from "object-assign";
 import config from "../../../config";
 import log from "../../../log";
 import {
@@ -27,6 +26,7 @@ import {
   parseLoadVideoOptions,
 } from "../option_parsers";
 
+/* tslint:disable no-unsafe-any */
 jest.mock("../../../log");
 jest.mock("../../../utils/languages");
 jest.mock("../../../utils/warn_once");
@@ -1151,3 +1151,4 @@ describe("API - parseLoadVideoOptions", () => {
       "without being in an \"html\" textTrackMode. It will be ignored.");
   });
 });
+/* tslint:enable no-unsafe-any */

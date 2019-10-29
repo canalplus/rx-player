@@ -48,15 +48,21 @@ function _setMediaKeys(
   }
 
   if ((elt as any).WebkitSetMediaKeys) {
+    /* tslint:disable no-unsafe-any */
     return (elt as any).WebkitSetMediaKeys(mediaKeys);
+    /* tslint:enable no-unsafe-any */
   }
 
   if ((elt as any).mozSetMediaKeys) {
+    /* tslint:disable no-unsafe-any */
     return (elt as any).mozSetMediaKeys(mediaKeys);
+    /* tslint:enable no-unsafe-any */
   }
 
   if ((elt as any).msSetMediaKeys) {
+    /* tslint:disable no-unsafe-any */
     return (elt as any).msSetMediaKeys(mediaKeys);
+    /* tslint:enable no-unsafe-any */
   }
 }
 

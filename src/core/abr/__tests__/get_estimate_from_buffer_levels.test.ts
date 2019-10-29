@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("getEstimateFromBufferLevels", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -326,3 +327,4 @@ describe("getEstimateFromBufferLevels", () => {
     }, [10, 20, 40], [0, 15, 20])).toEqual(20);
   });
 });
+/* tslint:enable no-unsafe-any */

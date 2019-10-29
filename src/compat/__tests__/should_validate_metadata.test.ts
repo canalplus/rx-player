@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("compat - shouldValidateMetadata", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -44,3 +45,4 @@ describe("compat - shouldValidateMetadata", () => {
     jest.resetModules();
   });
 });
+/* tslint:enable no-unsafe-any */

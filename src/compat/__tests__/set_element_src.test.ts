@@ -16,6 +16,7 @@
 
 import { map } from "rxjs/operators";
 
+/* tslint:disable no-unsafe-any */
 describe("compat - setElementSrc", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -62,3 +63,4 @@ describe("compat - setElementSrc", () => {
     }, 200);
   });
 });
+/* tslint:enable no-unsafe-any */

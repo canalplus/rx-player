@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("compat - isFullScreen", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -262,3 +263,4 @@ describe("compat - exitFullScreen", () => {
     (document as any).webkitExitFullscreen = origwebkitExitFullscreen;
   });
 });
+/* tslint:enable no-unsafe-any */

@@ -42,9 +42,11 @@ export default function checkKeyStatuses(
 ) : IEMEWarningEvent[] {
   const warnings : IEMEWarningEvent[] = [];
 
+  // Hack present because the order of the arguments has changed in spec
+  // and is not the same between some versions of Edge and Chrome.
+  /* tslint:disable no-unsafe-any */
   (session.keyStatuses as any).forEach((_arg1 : unknown, _arg2 : unknown) => {
-    // Hack present because the order of the arguments has changed in spec
-    // and is not the same between some versions of Edge and Chrome.
+  /* tslint:enable no-unsafe-any */
     const keyStatus = (() => {
       return (typeof _arg1  === "string" ? _arg1 :
                                            _arg2

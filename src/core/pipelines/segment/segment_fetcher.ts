@@ -181,7 +181,9 @@ export default function createSegmentFetcher<T>(
            */
           parse(init? : IChunkTimingInfos) : Observable<ISegmentParserResponse<T>> {
             const response = { data: evt.value.responseData, isChunked };
+            /* tslint:disable no-unsafe-any */
             return segmentParser({ response, init, content })
+            /* tslint:enable no-unsafe-any */
               .pipe(catchError((error: unknown) => {
                 throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
                                            defaultReason: "Unknown parsing error" });

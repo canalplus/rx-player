@@ -16,6 +16,7 @@
 
 const originalWebKitMediaKeys = (window as any).WebKitMediaKeys;
 
+/* tslint:disable no-unsafe-any */
 describe("compat - shouldUseWebKitMediaKeys", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -60,3 +61,4 @@ describe("compat - shouldUseWebKitMediaKeys", () => {
     expect(shouldUseWebKitMediaKeys.default()).toBe(true);
   });
 });
+/* tslint:enable no-unsafe-any */

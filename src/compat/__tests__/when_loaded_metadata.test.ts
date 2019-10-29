@@ -24,6 +24,7 @@ import {
   tap,
 } from "rxjs/operators";
 
+/* tslint:disable no-unsafe-any */
 describe("compat - whenLoadedMetadata$", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -101,3 +102,4 @@ describe("compat - whenLoadedMetadata$", () => {
     });
   });
 });
+/* tslint:enable no-unsafe-any */

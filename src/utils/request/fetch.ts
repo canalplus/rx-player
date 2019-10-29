@@ -180,7 +180,7 @@ function fetchRequest(
           obs.complete();
         }
       }
-    }).catch((err) => {
+    }).catch((err : unknown) => {
       if (hasAborted) {
         log.debug("Fetch: Request aborted.");
         return;
@@ -192,7 +192,9 @@ function fetchRequest(
                                    NetworkErrorTypes.TIMEOUT));
         return;
       }
-      log.warn("Fetch: Request Error", err && err.toString());
+      log.warn("Fetch: Request Error", err instanceof Error ?
+                                         err.toString() :
+                                         "");
       obs.error(new RequestError(options.url,
                                  0,
                                  NetworkErrorTypes.ERROR_EVENT));

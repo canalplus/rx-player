@@ -17,6 +17,7 @@
 import nativeTextTracksBuffer from "../../../custom_source_buffers/text/native";
 import addNativeTextBuffer from "../native_text_buffer";
 
+/* tslint:disable no-unsafe-any */
 jest.mock("../../../custom_source_buffers/text/native", () => ({
   __esModule: true,
   default: jest.fn(),
@@ -30,3 +31,4 @@ describe("Features list - native Text Buffer", () => {
     expect(featureObject.nativeTextTracksBuffer).toBe(nativeTextTracksBuffer);
   });
 });
+/* tslint:enable no-unsafe-any */
