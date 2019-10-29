@@ -71,7 +71,7 @@ function getDirectFileInitialTime(
   mediaElement : HTMLMediaElement,
   startAt? : IInitialTimeOptions
 ) : number {
-  if (!startAt) {
+  if (startAt == null) {
     return 0;
   }
 
@@ -84,13 +84,13 @@ function getDirectFileInitialTime(
   }
 
   const duration = mediaElement.duration;
-  if (!duration || !isFinite(duration)) {
+  if (duration == null || !isFinite(duration)) {
     log.warn("startAt.fromLastPosition set but no known duration, " +
              "beginning at 0.");
     return 0;
   }
 
-  if (startAt.fromLastPosition) {
+  if (typeof startAt.fromLastPosition === "number") {
     return Math.max(0, duration + startAt.fromLastPosition);
   } else if (startAt.percentage != null) {
     const { percentage } = startAt;

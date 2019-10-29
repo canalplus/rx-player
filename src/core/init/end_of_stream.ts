@@ -73,7 +73,7 @@ export default function triggerEndOfStream(
     const { sourceBuffers } = mediaSource;
     const updatingSourceBuffers = getUpdatingSourceBuffers(sourceBuffers);
 
-    if (!updatingSourceBuffers.length) {
+    if (updatingSourceBuffers.length === 0) {
       log.info("Init: Triggering end of stream");
       mediaSource.endOfStream();
       return observableOf(null);

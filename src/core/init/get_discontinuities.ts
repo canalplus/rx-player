@@ -40,15 +40,15 @@ export default function getDiscontinuities(
   manifest: Manifest
 ): Observable<[number, number]> {
   return clock$.pipe(
-    filter(({ stalled }) => !!stalled),
-    map((tick) => {
+    filter(({ stalled }) => stalled !== null),
+    map((tick) : [number, number] | undefined => {
       const { buffered, currentTime, currentRange, state, stalled } = tick;
       const nextBufferRangeGap = getNextRangeGap(buffered, currentTime);
       // 1: Is it a browser bug? -> force seek at the same current time
       if (isPlaybackStuck(currentTime,
                           currentRange,
                           state,
-                          !!stalled)
+                          stalled !== null)
       ) {
         log.warn("Init: After freeze seek", currentTime, currentRange);
         return [currentTime, currentTime];
@@ -67,7 +67,7 @@ export default function getDiscontinuities(
       // 3. Is it a discontinuity between periods ? -> Seek at the beginning of the
       //                                               next period
       const currentPeriod = manifest.getPeriodForTime(currentTime);
-      if (currentPeriod) {
+      if (currentPeriod != null) {
         const nextPeriod = manifest.getPeriodAfter(currentPeriod);
         if (currentPeriod != null &&
             currentPeriod.end != null &&
@@ -79,7 +79,7 @@ export default function getDiscontinuities(
         }
       }
     }),
-    filter((x): x is [number, number] => !!x),
+    filter((x): x is [number, number] => x !== undefined),
     distinctUntilChanged()
   );
 }
