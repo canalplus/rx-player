@@ -64,9 +64,9 @@ export type IFoundMediaKeySystemAccessEvent = IReuseMediaKeySystemAccessEvent |
 interface IMediaCapability { contentType?: string;
                              robustness?: string; }
 
-interface IKeySystemType { keyName: string;
-                           keyType: string;
-                           keySystemOptions: IKeySystemOption; }
+interface IKeySystemType { keyName : string | undefined;
+                           keyType : string;
+                           keySystemOptions : IKeySystemOption; }
 
 const { EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
         EME_KEY_SYSTEMS } = config;
@@ -86,8 +86,7 @@ function checkCachedMediaKeySystemAccess(
   keySystemAccess: ICompatMediaKeySystemAccess|ICustomMediaKeySystemAccess;
 } {
   const mksConfiguration = currentKeySystemAccess.getConfiguration();
-
-  if (shouldRenewMediaKeys() || !mksConfiguration) {
+  if (shouldRenewMediaKeys() || mksConfiguration == null) {
     return null;
   }
 
@@ -97,20 +96,22 @@ function checkCachedMediaKeySystemAccess(
       return false;
     }
 
-    if (ks.persistentLicense &&
-      mksConfiguration.persistentState !== "required") {
+    if (ks.persistentLicense === true &&
+        mksConfiguration.persistentState !== "required")
+    {
       return false;
     }
 
-    if (ks.distinctiveIdentifierRequired &&
-      mksConfiguration.distinctiveIdentifier !== "required") {
+    if (ks.distinctiveIdentifierRequired === true &&
+        mksConfiguration.distinctiveIdentifier !== "required")
+    {
       return false;
     }
 
     return true;
   })[0];
 
-  if (firstCompatibleOption) {
+  if (firstCompatibleOption != null) {
     return { keySystemOptions: firstCompatibleOption,
              keySystemAccess: currentKeySystemAccess };
   }
@@ -123,7 +124,7 @@ function checkCachedMediaKeySystemAccess(
  * @returns {string|undefined} - Either the canonical name, or undefined.
  */
 function findKeySystemCanonicalName(ksType: string)
-: string|undefined {
+: string | undefined {
   for (const ksName of Object.keys(EME_KEY_SYSTEMS)) {
     if (arrayIncludes(EME_KEY_SYSTEMS[ksName] as string[], ksType)) {
       return ksName;
@@ -142,23 +143,23 @@ function findKeySystemCanonicalName(ksType: string)
  * requestMediaKeySystemAccess API.
  */
 function buildKeySystemConfigurations(
-  ksName: string,
-  keySystem: IKeySystemOption
+  ksName : string | undefined,
+  keySystem : IKeySystemOption
 ) : ICompatMediaKeySystemConfiguration[] {
   const sessionTypes = ["temporary"];
   let persistentState: MediaKeysRequirement = "optional";
   let distinctiveIdentifier: MediaKeysRequirement = "optional";
 
-  if (keySystem.persistentLicense) {
+  if (keySystem.persistentLicense === true) {
     persistentState = "required";
     sessionTypes.push("persistent-license");
   }
 
-  if (keySystem.persistentStateRequired) {
+  if (keySystem.persistentStateRequired === true) {
     persistentState = "required";
   }
 
-  if (keySystem.distinctiveIdentifierRequired) {
+  if (keySystem.distinctiveIdentifierRequired === true) {
     distinctiveIdentifier = "required";
   }
 
@@ -167,16 +168,20 @@ function buildKeySystemConfigurations(
   //   2. a "widevine" key system is used, in that case set the default widevine
   //      robustnesses as defined in the config
   //   3. set an undefined robustness
-  const videoRobustnesses = keySystem.videoRobustnesses ||
-    (ksName === "widevine" ? EME_DEFAULT_WIDEVINE_ROBUSTNESSES : []);
-  const audioRobustnesses = keySystem.audioRobustnesses ||
-    (ksName === "widevine" ? EME_DEFAULT_WIDEVINE_ROBUSTNESSES : []);
+  const videoRobustnesses = keySystem.videoRobustnesses != null ?
+    keySystem.videoRobustnesses :
+    (ksName === "widevine" ? EME_DEFAULT_WIDEVINE_ROBUSTNESSES :
+                             []);
+  const audioRobustnesses = keySystem.audioRobustnesses != null ?
+    keySystem.audioRobustnesses :
+    (ksName === "widevine" ? EME_DEFAULT_WIDEVINE_ROBUSTNESSES :
+                             []);
 
-  if (!videoRobustnesses.length) {
+  if (videoRobustnesses.length === 0) {
     videoRobustnesses.push(undefined);
   }
 
-  if (!audioRobustnesses.length) {
+  if (audioRobustnesses.length === 0) {
     audioRobustnesses.push(undefined);
   }
 
@@ -254,14 +259,14 @@ export default function getMediaKeySystemAccess(
 ) : Observable<IFoundMediaKeySystemAccessEvent> {
   return observableDefer<Observable<IFoundMediaKeySystemAccessEvent>>(() => {
     const currentState = MediaKeysInfosStore.getState(mediaElement);
-    if (currentState) {
+    if (currentState != null) {
       // Fast way to find a compatible keySystem if the currently loaded
       // one as exactly the same compatibility options.
       const cachedKeySystemAccess =
         checkCachedMediaKeySystemAccess(keySystemsConfigs,
                                         currentState.mediaKeySystemAccess,
                                         currentState.keySystemOptions);
-      if (cachedKeySystemAccess) {
+      if (cachedKeySystemAccess !== null) {
         log.debug("EME: Found cached compatible keySystem", cachedKeySystemAccess);
         return observableOf({
           type: "reuse-media-key-system-access" as "reuse-media-key-system-access",
@@ -289,11 +294,10 @@ export default function getMediaKeySystemAccess(
           ksType = managedRDNs.map((keyType) => {
             const keyName = keySystemOptions.type;
             return { keyName, keyType, keySystemOptions };
-          }
-          );
+          });
         }
         else {
-          const keyName = findKeySystemCanonicalName(keySystemOptions.type) || "";
+          const keyName = findKeySystemCanonicalName(keySystemOptions.type);
           const keyType = keySystemOptions.type;
           ksType = [{ keyName, keyType, keySystemOptions }];
         }
@@ -327,8 +331,8 @@ export default function getMediaKeySystemAccess(
 
         const { keyName, keyType, keySystemOptions } = keySystemsType[index];
 
-        const keySystemConfigurations =
-        buildKeySystemConfigurations(keyName, keySystemOptions);
+        const keySystemConfigurations = buildKeySystemConfigurations(keyName,
+                                                                     keySystemOptions);
 
         log.debug(`EME: Request keysystem access ${keyType},` +
                   `${index + 1} of ${keySystemsType.length}`,
@@ -361,7 +365,7 @@ export default function getMediaKeySystemAccess(
 
       return () => {
         disposed = true;
-        if (sub) {
+        if (sub != null) {
           sub.unsubscribe();
         }
       };

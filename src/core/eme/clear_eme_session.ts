@@ -39,7 +39,9 @@ export default function clearEMESession(
     }
 
     const currentState = MediaKeysInfosStore.getState(mediaElement);
-    if (currentState && currentState.keySystemOptions.closeSessionsOnStop) {
+    if (currentState != null &&
+        currentState.keySystemOptions.closeSessionsOnStop === true)
+    {
       return currentState.sessionsStore.closeAllSessions()
         .pipe(ignoreElements());
     }

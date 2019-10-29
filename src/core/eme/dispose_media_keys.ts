@@ -33,7 +33,7 @@ export default function disposeMediaKeys(
 ) : Observable<unknown> {
   return observableDefer(() => {
     const currentState = MediaKeysInfosStore.getState(mediaElement);
-    if (!currentState) {
+    if (currentState === null) {
       return observableOf(null);
     }
 

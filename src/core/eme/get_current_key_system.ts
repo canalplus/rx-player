@@ -25,5 +25,6 @@ export default function getCurrentKeySystem(
   mediaElement : HTMLMediaElement
 ) : string|null {
   const currentState = MediaKeysInfosStore.getState(mediaElement);
-  return currentState && currentState.keySystemOptions.type;
+  return currentState == null ? null :
+                                currentState.keySystemOptions.type;
 }

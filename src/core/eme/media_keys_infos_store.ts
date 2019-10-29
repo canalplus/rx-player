@@ -57,7 +57,9 @@ export default {
    * @returns {Object}
    */
   getState(mediaElement : HTMLMediaElement) : IMediaElementMediaKeysInfos {
-    return currentMediaState.get(mediaElement) || null;
+    const currentState = currentMediaState.get(mediaElement);
+    return currentState == null ? null :
+                                  currentState;
   },
 
   /**

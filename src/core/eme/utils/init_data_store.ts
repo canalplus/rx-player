@@ -15,6 +15,7 @@
  */
 
 import hashBuffer from "../../../utils/hash_buffer";
+import isNonEmptyString from "../../../utils/is_non_empty_string";
 import SimpleSet from "../../../utils/simple_set";
 
 /**
@@ -40,10 +41,10 @@ export default class InitDataStore {
     initData : Uint8Array,
     initDataType : string|undefined
   ) : boolean {
-    if (!initDataType) {
+    if (!isNonEmptyString(initDataType)) {
       return this._unnamedTypeData.test(hashBuffer(initData));
     }
-    if (!this._namedTypeData[initDataType]) {
+    if (this._namedTypeData[initDataType] == null) {
       return false;
     }
     return this._namedTypeData[initDataType].test(hashBuffer(initData));
@@ -61,12 +62,12 @@ export default class InitDataStore {
     if (this.has(initData, initDataType)) {
       return;
     }
-    if (!initDataType) {
+    if (!isNonEmptyString(initDataType)) {
       this._unnamedTypeData.add(hashBuffer(initData));
       return;
     }
 
-    if (!this._namedTypeData[initDataType]) {
+    if (this._namedTypeData[initDataType] == null) {
       this._namedTypeData[initDataType] = new SimpleSet();
     }
     this._namedTypeData[initDataType].add(hashBuffer(initData));
@@ -83,7 +84,7 @@ export default class InitDataStore {
     initData : Uint8Array,
     initDataType : string|undefined
   ) : boolean {
-    if (!initDataType) {
+    if (!isNonEmptyString(initDataType)) {
       const hashed = hashBuffer(initData);
       if (this._unnamedTypeData.test(hashed)) {
         this._unnamedTypeData.remove(hashed);
@@ -91,7 +92,7 @@ export default class InitDataStore {
       }
       return false;
     } else {
-      if (!this._namedTypeData[initDataType]) {
+      if (this._namedTypeData[initDataType] == null) {
         return false;
       }
       const hashed = hashBuffer(initData);

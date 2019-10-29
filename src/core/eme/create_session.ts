@@ -93,27 +93,30 @@ export default function createSession(
 
     const mksConfig = mediaKeySystemAccess.getConfiguration();
     const sessionTypes = mksConfig.sessionTypes;
-    const hasPersistence = sessionTypes &&
+    const hasPersistence = sessionTypes != null &&
                            arrayIncludes(sessionTypes, "persistent-license");
 
-    const sessionType : MediaKeySessionType = hasPersistence &&
-                                              sessionStorage &&
-                                              keySystemOptions.persistentLicense ?
-                                                "persistent-license" :
-                                                "temporary";
+    const sessionType : MediaKeySessionType =
+      hasPersistence &&
+      sessionStorage != null &&
+      keySystemOptions.persistentLicense === true ? "persistent-license" :
+                                                    "temporary";
 
     log.debug(`EME: Create a new ${sessionType} session`);
 
     const session = sessionsStore.createSession(initData, initDataType, sessionType);
 
     // Re-check for Dumb typescript. Equivalent to `sessionType === "temporary"`.
-    if (!hasPersistence || !sessionStorage || !keySystemOptions.persistentLicense) {
+    if (!hasPersistence ||
+        sessionStorage == null ||
+        keySystemOptions.persistentLicense !== true)
+    {
       return observableOf({ type: "created-session" as "created-session",
                             value: { mediaKeySession: session, sessionType } });
     }
 
     const storedEntry = sessionStorage.get(initData, initDataType);
-    if (!storedEntry) {
+    if (storedEntry === null) {
       return observableOf({ type: "created-session" as "created-session",
                             value: { mediaKeySession: session, sessionType } });
     }

@@ -72,13 +72,13 @@ export default class PersistedSessionsStore {
   public get(
     initData : Uint8Array,
     initDataType : string|undefined
-  ) : IPersistedSessionData|null {
+  ) : IPersistedSessionData | null {
     const hash = hashBuffer(initData);
     const entry = arrayFind(this._entries, (e) =>
                     e.initData === hash &&
-                    e.initDataType === initDataType
-                  );
-    return entry || null;
+                    e.initDataType === initDataType);
+    return entry == null ? null :
+                           entry;
   }
 
   /**
@@ -92,15 +92,14 @@ export default class PersistedSessionsStore {
     initDataType : string|undefined,
     session : MediaKeySession|ICustomMediaKeySession
   ) : void {
-    const sessionId = session && session.sessionId;
-    if (!sessionId) {
+    if (session == null || session.sessionId == null) {
       return;
     }
-
+    const sessionId = session.sessionId;
     const currentEntry = this.get(initData, initDataType);
-    if (currentEntry && currentEntry.sessionId === sessionId) {
+    if (currentEntry != null && currentEntry.sessionId === sessionId) {
       return;
-    } else if (currentEntry) { // currentEntry has a different sessionId
+    } else if (currentEntry != null) { // currentEntry has a different sessionId
       this.delete(initData, initDataType);
     }
 
@@ -124,9 +123,8 @@ export default class PersistedSessionsStore {
 
     const entry = arrayFind(this._entries, (e) =>
                     e.initData === hash &&
-                    e.initDataType === initDataType
-                  );
-    if (entry) {
+                    e.initDataType === initDataType);
+    if (entry != null) {
       log.warn("EME-PSS: Delete session from store", entry);
 
       const idx = this._entries.indexOf(entry);

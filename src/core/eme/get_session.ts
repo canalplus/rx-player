@@ -100,12 +100,12 @@ export default function getSession(
                                        sessionType: entry.sessionType,
                                        initData,
                                        initDataType } });
-      } else if (mediaKeysInfos.sessionStorage) {
+      } else if (mediaKeysInfos.sessionStorage != null) {
         mediaKeysInfos.sessionStorage.delete(new Uint8Array(initData), initDataType);
       }
     }
 
-    return (previousLoadedSession ?
+    return (previousLoadedSession != null ?
       sessionsStore.deleteAndCloseSession(previousLoadedSession) :
       observableOf(null)
     ).pipe(mergeMap(() => {
