@@ -25,7 +25,6 @@ import {
   catchError,
   distinctUntilChanged,
   filter,
-  finalize,
   map,
   mapTo,
   mergeMap,
@@ -146,10 +145,8 @@ export default class VideoThumbnailLoader {
                 return removeBuffers$.pipe(
                   mergeMap(() => {
                     log.debug("VTL: Removed buffer before appending segments.", time);
-                    return this.loadThumbnails(thumbnails, videoSourceBuffer, time);
-                  }),
-                  finalize(() => {
-                    resolve();
+                    return this.loadThumbnails(thumbnails, videoSourceBuffer, time)
+                      .pipe(tap(resolve));
                   })
                 );
               })
