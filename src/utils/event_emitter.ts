@@ -19,6 +19,7 @@ import {
   Observer,
 } from "rxjs";
 import log from "../log";
+import isNullOrUndefined from "./is_null_or_undefined";
 
 export interface IEventEmitter<T> {
   addEventListener<TEventName extends keyof T>(evt : TEventName,
@@ -91,7 +92,7 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
     evt? : TEventName,
     fn? : IListener<T, TEventName>
   ) : void {
-    if (evt == null) {
+    if (isNullOrUndefined(evt)) {
       this._listeners = {};
       return;
     }
@@ -100,7 +101,7 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
     if (!Array.isArray(listeners)) {
       return;
     }
-    if (fn == null) {
+    if (isNullOrUndefined(fn)) {
       delete this._listeners[evt];
       return;
     }

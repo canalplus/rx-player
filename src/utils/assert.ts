@@ -15,6 +15,7 @@
  */
 
 import { AssertionError } from "../errors";
+import isNullOrUndefined from "./is_null_or_undefined";
 
 /**
  * Throw an AssertionError if the given assertion is false.
@@ -45,7 +46,7 @@ export function assertInterface<T>(
   iface: IObjectInterface<T>,
   name: string = "object"
 ) : void {
-  assert(o != null, `${name} should be an object`);
+  assert(!isNullOrUndefined(o), `${name} should be an object`);
   for (const k in iface) {
     if (iface.hasOwnProperty(k)) {
       /* tslint:disable:max-line-length */

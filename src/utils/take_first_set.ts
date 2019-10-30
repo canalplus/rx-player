@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "./is_null_or_undefined";
+
 /**
  * Returns the first argument given different from undefined or null.
  * @param {...*} args
@@ -34,7 +36,7 @@ export default function takeFirstSet<T>(
   const len = args.length;
   while (i < len) {
     const arg = args[i];
-    if (arg != null) {
+    if (!isNullOrUndefined(arg)) {
       return arg;
     }
     i++;

@@ -19,6 +19,7 @@ import {
   Observable,
   of as observableOf,
 } from "rxjs";
+import isNullOrUndefined from "./is_null_or_undefined";
 
 interface IObservableLike<T> { subscribe(next : (i: T) => void,
                                          error : (e: any) => void,
@@ -43,7 +44,7 @@ function castToObservable<T>(value? : any) : Observable<T> {
   }
 
   /* tslint:disable no-unsafe-any */
-  if (value != null && typeof value.subscribe === "function") {
+  if (!isNullOrUndefined(value) && typeof value.subscribe === "function") {
   /* tslint:enable no-unsafe-any */
     const valObsLike = value as IObservableLike<T>;
     return new Observable((obs) => {
@@ -51,9 +52,9 @@ function castToObservable<T>(value? : any) : Observable<T> {
                                        (err : unknown) => { obs.error(err); },
                                        () => { obs.complete(); });
       return () => {
-        if (sub != null && typeof sub.dispose === "function") {
+        if (!isNullOrUndefined(sub) && typeof sub.dispose === "function") {
           sub.dispose();
-        } else if (sub != null && typeof sub.unsubscribe === "function") {
+        } else if (!isNullOrUndefined(sub) && typeof sub.unsubscribe === "function") {
           sub.unsubscribe();
         }
       };
@@ -61,7 +62,7 @@ function castToObservable<T>(value? : any) : Observable<T> {
   }
 
   /* tslint:disable no-unsafe-any */
-  if (value != null && typeof value.then === "function") {
+  if (!isNullOrUndefined(value) && typeof value.then === "function") {
   /* tslint:enable no-unsafe-any */
     return observableFrom(value as Promise<T>);
   }

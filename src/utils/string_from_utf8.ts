@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "./is_null_or_undefined";
+
 /**
  * Creates a new string from the given array of char codes.
  *
@@ -40,7 +42,7 @@ function stringFromCharCode(args : Uint8Array) : string {
  * @export
  */
 export default function stringFromUTF8(data? : Uint8Array|null) : string {
-  if (data == null) {
+  if (isNullOrUndefined(data)) {
     return "";
   }
 
