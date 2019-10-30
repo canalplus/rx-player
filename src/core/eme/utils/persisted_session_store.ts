@@ -21,6 +21,7 @@ import {
   assertInterface,
 } from "../../../utils/assert";
 import hashBuffer from "../../../utils/hash_buffer";
+import isNonEmptyString from "../../../utils/is_non_empty_string";
 import {
   IPersistedSessionData,
   IPersistedSessionStorage,
@@ -92,7 +93,7 @@ export default class PersistedSessionsStore {
     initDataType : string|undefined,
     session : MediaKeySession|ICustomMediaKeySession
   ) : void {
-    if (session == null || session.sessionId == null) {
+    if (session == null || !isNonEmptyString(session.sessionId)) {
       return;
     }
     const sessionId = session.sessionId;
