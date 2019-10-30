@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import { MediaError } from "../../errors";
-
 /* tslint:disable no-unsafe-any */
 describe("Manifest - Period", () => {
   beforeEach(() => {
@@ -176,6 +174,8 @@ describe("Manifest - Period", () => {
   });
 
   it("should set a parsing error if an unsupported adaptation is given", () => {
+    const { MediaError } = require("../../errors");
+
     const adaptationSpy = jest.fn(arg => {
       if (arg.type === "bar") {
         throw new MediaError("MANIFEST_UNSUPPORTED_ADAPTATION_TYPE", "");
@@ -216,6 +216,7 @@ describe("Manifest - Period", () => {
   /* tslint:disable:max-line-length */
   it("should throw if the adaptation throws for another reason than an unsupported type", () => {
   /* tslint:enable:max-line-length */
+    const { MediaError } = require("../../errors");
     const adaptationSpy = jest.fn(arg => {
       if (arg.type === "bar") {
         throw new MediaError("MEDIA_ERR_UNKNOWN", "");
