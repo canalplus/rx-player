@@ -94,7 +94,7 @@ class Representation {
       this.mimeType = args.mimeType;
     }
 
-    if (Array.isArray(args.contentProtections)) {
+    if (args.contentProtections != null) {
       this.contentProtections = args.contentProtections;
     }
 
