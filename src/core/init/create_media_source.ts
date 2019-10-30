@@ -65,7 +65,7 @@ function resetMediaSource(
   mediaSource : MediaSource | null,
   mediaSourceURL : string | null
 ) : void {
-  if (mediaSource != null && mediaSource.readyState !== "closed") {
+  if (mediaSource !== null && mediaSource.readyState !== "closed") {
     const { readyState, sourceBuffers } = mediaSource;
     for (let i = sourceBuffers.length - 1; i >= 0; i--) {
       const sourceBuffer = sourceBuffers[i];
