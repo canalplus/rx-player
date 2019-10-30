@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("DASH Node Parsers - Initialization", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -189,3 +190,4 @@ describe("DASH Node Parsers - Initialization", () => {
     logSpy.mockRestore();
   });
 });
+/* tslint:enable no-unsafe-any */

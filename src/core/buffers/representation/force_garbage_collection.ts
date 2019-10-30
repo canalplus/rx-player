@@ -103,7 +103,7 @@ function selectGCedRanges(
   }
 
   // try to clean up some space in the current range
-  if (innerRange) {
+  if (innerRange != null) {
     log.debug("Buffer: GC removing part of inner range", cleanedupRanges);
     if (currentTime - gcGap > innerRange.start) {
       cleanedupRanges.push({ start: innerRange.start,

@@ -30,8 +30,8 @@ export interface IISOBMFFBasicSegment {
  * @returns {Array.<Object>}
  */
 export default function parseTfrf(traf : Uint8Array) : IISOBMFFBasicSegment[] {
-  const tfrf = getUuidContent(traf, 0xD4807EF2, 0XCA394695, 0X8E5426CB, 0X9E46A79F);
-  if (!tfrf) {
+  const tfrf = getUuidContent(traf, 0xD4807EF2, 0xCA394695, 0x8E5426CB, 0x9E46A79F);
+  if (tfrf === undefined) {
     return [];
   }
 

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("API - Public API", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -677,3 +678,4 @@ describe("API - Public API", () => {
     });
   });
 });
+/* tslint:enable no-unsafe-any */

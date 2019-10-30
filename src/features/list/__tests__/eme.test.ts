@@ -17,6 +17,7 @@
 import emeManager from "../../../core/eme";
 import addEMEFeature from "../eme";
 
+/* tslint:disable no-unsafe-any */
 jest.mock("../../../core/eme", () => ({
   __esModule: true,
   default: jest.fn(),
@@ -30,3 +31,4 @@ describe("Features list - EME", () => {
     expect(featureObject.emeManager).toBe(emeManager);
   });
 });
+/* tslint:enable no-unsafe-any */

@@ -21,6 +21,6 @@
 export default function idGenerator() : () => string {
   let lastID = 0;
   return function generateNewId() : string {
-    return "" + lastID++;
+    return String(lastID++);
   };
 }

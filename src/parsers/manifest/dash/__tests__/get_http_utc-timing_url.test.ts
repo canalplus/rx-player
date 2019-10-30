@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("DASH Parser - getHTTPUTCTimingURL", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -156,3 +157,4 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual("foobar2000");
   });
 });
+/* tslint:enable no-unsafe-any */

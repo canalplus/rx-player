@@ -630,7 +630,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // free resources linked to the loaded content
     this.stop();
 
-    if (this.videoElement) {
+    if (this.videoElement !== null) {
       // free resources used for EME management
       disposeEME(this.videoElement);
     }
@@ -681,7 +681,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             url } = options;
 
     // Perform multiple checks on the given options
-    if (!this.videoElement) {
+    if (this.videoElement === null) {
       throw new Error("the attached video element is disposed");
     }
 
@@ -721,7 +721,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     if (!isDirectFile) {
       const transportFn = features.transports[transport];
-      if (!transportFn) {
+      if (typeof transportFn !== "function") {
         throw new Error(`transport "${transport}" not supported`);
       }
 
@@ -873,7 +873,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_stopCurrentContent$
       .pipe(take(1))
       .subscribe(() => {
-        if (playbackSubscription) {
+        if (playbackSubscription !== undefined) {
           playbackSubscription.unsubscribe();
         }
       });
@@ -923,8 +923,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Manifest|null}
    */
   getManifest() : Manifest|null {
-    return this._priv_contentInfos &&
-           this._priv_contentInfos.manifest;
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+    return this._priv_contentInfos.manifest;
   }
 
   /**
@@ -934,14 +936,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getCurrentAdaptations(
   ) : Partial<Record<IBufferType, Adaptation|null>> | null {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       return null;
     }
     const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
-    if (!currentPeriod || !activeAdaptations) {
+    if (currentPeriod === null ||
+        activeAdaptations === null ||
+        activeAdaptations[currentPeriod.id] == null)
+    {
       return null;
     }
-    return activeAdaptations[currentPeriod.id] || null;
+    return activeAdaptations[currentPeriod.id];
   }
 
   /**
@@ -951,15 +956,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getCurrentRepresentations(
   ) : Partial<Record<IBufferType, Representation|null>> | null {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       return null;
     }
     const { currentPeriod, activeRepresentations } = this._priv_contentInfos;
-    if (!currentPeriod || !activeRepresentations) {
+    if (currentPeriod === null ||
+        activeRepresentations === null ||
+        activeRepresentations[currentPeriod.id] == null)
+    {
       return null;
     }
-    return activeRepresentations[currentPeriod.id] ||
-           null;
+    return activeRepresentations[currentPeriod.id];
   }
 
   /**
@@ -980,7 +987,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   getNativeTextTrack() : TextTrack|null {
     warnOnce("getNativeTextTrack is deprecated." +
              " Please open an issue if you used this API.");
-    if (!this.videoElement) {
+    if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
     const videoElement = this.videoElement;
@@ -1007,11 +1014,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Boolean}
    */
   isLive() : boolean {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       return false;
     }
     const { isDirectFile, manifest } = this._priv_contentInfos;
-    if (isDirectFile || manifest == null) {
+    if (isDirectFile || manifest === null) {
       return false;
     }
     return manifest.isLive;
@@ -1022,7 +1029,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {string|undefined}
    */
   getUrl() : string|undefined {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       return undefined;
     }
     const { isDirectFile, manifest, url } = this._priv_contentInfos;
@@ -1041,7 +1048,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getVideoDuration() : number {
-    if (!this.videoElement) {
+    if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
     return this.videoElement.duration;
@@ -1054,7 +1061,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getVideoBufferGap() : number {
-    if (!this.videoElement) {
+    if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
     const videoElement = this.videoElement;
@@ -1068,7 +1075,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getVideoLoadedTime() : number {
-    if (!this.videoElement) {
+    if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
     const videoElement = this.videoElement;
@@ -1082,7 +1089,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getVideoPlayedTime() : number {
-    if (!this.videoElement) {
+    if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
     const videoElement = this.videoElement;
@@ -1104,10 +1111,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getWallClockTime() : number {
-    if (!this.videoElement) {
+    if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       return this.videoElement.currentTime;
     }
 
@@ -1117,8 +1124,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     if (manifest != null) {
       const currentTime = this.videoElement.currentTime;
-      return this.isLive() ? (currentTime + (manifest.availabilityStartTime || 0)) :
-                             currentTime;
+      const ast = manifest.availabilityStartTime !== undefined ?
+        manifest.availabilityStartTime :
+        0;
+      return currentTime + ast;
     }
     return 0;
   }
@@ -1135,7 +1144,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getPosition() : number {
-    if (!this.videoElement) {
+    if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
     return this.videoElement.currentTime;
@@ -1162,20 +1171,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Array.<Number>}
    */
   getAvailableVideoBitrates() : number[] {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       return [];
     }
     const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
-    if (!currentPeriod || !activeAdaptations) {
+    if (currentPeriod === null || activeAdaptations === null) {
       return [];
     }
     const adaptations = activeAdaptations[currentPeriod.id];
-    const videoAdaptation = adaptations && adaptations.video;
-    if (!videoAdaptation) {
+    if (adaptations === undefined || adaptations.video == null) {
       return [];
     }
 
-    return videoAdaptation.getAvailableBitrates();
+    return adaptations.video.getAvailableBitrates();
   }
 
   /**
@@ -1183,20 +1191,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Array.<Number>}
    */
   getAvailableAudioBitrates() : number[] {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       return [];
     }
     const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
-    if (!currentPeriod || !activeAdaptations) {
+    if (currentPeriod === null || activeAdaptations === null) {
       return [];
     }
     const adaptations = activeAdaptations[currentPeriod.id];
-    const audioAdaptation = adaptations && adaptations.audio;
-    if (!audioAdaptation) {
+    if (adaptations === undefined || adaptations.audio == null) {
       return [];
     }
 
-    return audioAdaptation.getAvailableBitrates();
+    return adaptations.audio.getAvailableBitrates();
   }
 
   /**
@@ -1221,7 +1228,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getVideoBitrate() : number|undefined {
     const representations = this.getCurrentRepresentations();
-    if (!representations || !representations.video) {
+    if (representations === null || representations.video == null) {
       return undefined;
     }
     return representations.video.bitrate;
@@ -1233,7 +1240,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getAudioBitrate() : number|undefined {
     const representations = this.getCurrentRepresentations();
-    if (!representations || !representations.audio) {
+    if (representations === null || representations.audio == null) {
       return undefined;
     }
     return representations.audio.bitrate;
@@ -1260,7 +1267,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Promise}
    */
   play() : Promise<void> {
-    if (!this.videoElement) {
+    if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
 
@@ -1284,7 +1291,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Pause the current video.
    */
   pause() : void {
-    if (!this.videoElement) {
+    if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
     this.videoElement.pause();
@@ -1299,15 +1306,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     time : number | { relative : number } | { position : number } |
     { wallClockTime : number }
   ) : number {
-    if (!this.videoElement) {
+    if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       throw new Error("player: no content loaded");
     }
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
-    if (!isDirectFile && manifest == null) {
+    if (!isDirectFile && manifest === null) {
       throw new Error("player: the content did not load yet");
     }
 
@@ -1326,9 +1333,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       } else if (timeObj.position != null) {
         positionWanted = timeObj.position;
       } else if (timeObj.wallClockTime != null) {
-        positionWanted = (isDirectFile || manifest == null) ?
+        positionWanted = (isDirectFile || manifest === null) ?
           timeObj.wallClockTime :
-          timeObj.wallClockTime - (manifest.availabilityStartTime || 0);
+          timeObj.wallClockTime - (
+            manifest.availabilityStartTime !== undefined ?
+              manifest.availabilityStartTime :
+              0);
       } else {
         throw new Error("invalid time object. You must set one of the " +
                         "following properties: \"relative\", \"position\" or " +
@@ -1362,7 +1372,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   setFullscreen(goFull : boolean = true) : void {
     warnOnce("setFullscreen is deprecated." +
              " Fullscreen management should now be managed by the application");
-    if (!this.videoElement) {
+    if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
 
@@ -1389,7 +1399,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getVolume() : number {
-    if (!this.videoElement) {
+    if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
     return this.videoElement.volume;
@@ -1400,7 +1410,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Number} volume
    */
   setVolume(volume : number) : void {
-    if (!this.videoElement) {
+    if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
 
@@ -1416,7 +1426,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Boolean}
    */
   isMute() : boolean {
-    return !this.getVolume();
+    return this.getVolume() === 0;
   }
 
   /**
@@ -1434,7 +1444,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   unMute() : void {
     const vol = this.getVolume();
     if (vol === 0) {
-      this.setVolume(this._priv_mutedMemory || DEFAULT_UNMUTED_VOLUME);
+      this.setVolume(this._priv_mutedMemory === 0 ? DEFAULT_UNMUTED_VOLUME :
+                                                    this._priv_mutedMemory);
     }
   }
 
@@ -1529,7 +1540,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {string|null}
    */
   getCurrentKeySystem() : string|null {
-    if (!this.videoElement) {
+    if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
     return getCurrentKeySystem(this.videoElement);
@@ -1540,11 +1551,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Array.<Object>|null}
    */
   getAvailableAudioTracks() : ITMAudioTrackListItem[] {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       return [];
     }
     const { currentPeriod } = this._priv_contentInfos;
-    if (!this._priv_trackManager || !currentPeriod) {
+    if (this._priv_trackManager === null || currentPeriod === null) {
       return [];
     }
     return this._priv_trackManager.getAvailableAudioTracks(currentPeriod);
@@ -1555,11 +1566,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Array.<Object>|null}
    */
   getAvailableTextTracks() : ITMTextTrackListItem[] {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       return [];
     }
     const { currentPeriod } = this._priv_contentInfos;
-    if (!this._priv_trackManager || !currentPeriod) {
+    if (this._priv_trackManager === null || currentPeriod === null) {
       return [];
     }
     return this._priv_trackManager.getAvailableTextTracks(currentPeriod);
@@ -1570,11 +1581,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Array.<Object>|null}
    */
   getAvailableVideoTracks() : ITMVideoTrackListItem[] {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       return [];
     }
     const { currentPeriod } = this._priv_contentInfos;
-    if (!this._priv_trackManager || !currentPeriod) {
+    if (this._priv_trackManager === null || currentPeriod === null) {
       return [];
     }
     return this._priv_trackManager.getAvailableVideoTracks(currentPeriod);
@@ -1585,11 +1596,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {string}
    */
   getAudioTrack() : ITMAudioTrack|null|undefined {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       return undefined;
     }
     const { currentPeriod } = this._priv_contentInfos;
-    if (!this._priv_trackManager || !currentPeriod) {
+    if (this._priv_trackManager === null || currentPeriod === null) {
       return undefined;
     }
     return this._priv_trackManager.getChosenAudioTrack(currentPeriod);
@@ -1600,11 +1611,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {string}
    */
   getTextTrack() : ITMTextTrack|null|undefined {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       return undefined;
     }
     const { currentPeriod } = this._priv_contentInfos;
-    if (!this._priv_trackManager || !currentPeriod) {
+    if (this._priv_trackManager === null || currentPeriod === null) {
       return undefined;
     }
     return this._priv_trackManager.getChosenTextTrack(currentPeriod);
@@ -1615,11 +1626,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {string}
    */
   getVideoTrack() : ITMVideoTrack|null|undefined {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       return undefined;
     }
     const { currentPeriod } = this._priv_contentInfos;
-    if (!this._priv_trackManager || !currentPeriod) {
+    if (this._priv_trackManager === null || currentPeriod === null) {
       return undefined;
     }
     return this._priv_trackManager.getChosenVideoTrack(currentPeriod);
@@ -1632,11 +1643,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @throws Error - the given id is linked to no audio track.
    */
   setAudioTrack(audioId : string) : void {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
     }
     const { currentPeriod } = this._priv_contentInfos;
-    if (!this._priv_trackManager || !currentPeriod) {
+    if (this._priv_trackManager === null || currentPeriod === null) {
       throw new Error("No compatible content launched.");
     }
     try {
@@ -1654,11 +1665,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @throws Error - the given id is linked to no text track.
    */
   setTextTrack(textId : string) : void {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
     }
     const { currentPeriod } = this._priv_contentInfos;
-    if (!this._priv_trackManager || !currentPeriod) {
+    if (this._priv_trackManager === null || currentPeriod === null) {
       throw new Error("No compatible content launched.");
     }
     try {
@@ -1673,11 +1684,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Disable subtitles for the current content.
    */
   disableTextTrack() : void {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       return;
     }
     const { currentPeriod } = this._priv_contentInfos;
-    if (!this._priv_trackManager || !currentPeriod) {
+    if (this._priv_trackManager === null || currentPeriod === null) {
       return;
     }
     return this._priv_trackManager.disableTextTrack(currentPeriod);
@@ -1690,11 +1701,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @throws Error - the given id is linked to no video track.
    */
   setVideoTrack(videoId : string) : void {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
     }
     const { currentPeriod } = this._priv_contentInfos;
-    if (!this._priv_trackManager || !currentPeriod) {
+    if (this._priv_trackManager === null || currentPeriod === null) {
       throw new Error("No compatible content launched.");
     }
     try {
@@ -1749,7 +1760,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Array.<Object>|null}
    */
   getImageTrackData() : IBifThumbnail[] | null {
-    return this._priv_contentInfos && this._priv_contentInfos.thumbnails;
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+    return this._priv_contentInfos.thumbnails;
   }
 
   /**
@@ -1757,7 +1771,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {number}
    */
   getMinimumPosition() : number|null {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       return null;
     }
 
@@ -1777,14 +1791,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {number}
    */
   getMaximumPosition() : number|null {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       return null;
     }
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
 
     if (isDirectFile) {
-      if (!this.videoElement) {
+      if (this.videoElement === null) {
         throw new Error("Disposed player");
       }
       return this.videoElement.duration;
@@ -1814,7 +1828,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_contentLock$.next(false);
     };
 
-    if (this.videoElement) {
+    if (this.videoElement != null) {
       clearEMESession(this.videoElement)
         .pipe(catchError(() => EMPTY))
         .subscribe(noop, freeUpContentLock, freeUpContentLock);
@@ -1880,7 +1894,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         this._priv_onPlaybackWarning(event.value);
         break;
       case "added-segment":
-        if (!this._priv_contentInfos) {
+        if (this._priv_contentInfos === null) {
           log.error("API: Added segment while no content is loaded");
           return;
         }
@@ -1963,7 +1977,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @private
    */
   private _priv_onManifestReady({ manifest } : { manifest : Manifest }) : void {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       log.error("API: The manifest is loaded but no content is.");
       return;
     }
@@ -1983,7 +1997,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       .pipe(takeUntil(this._priv_stopCurrentContent$))
       .subscribe(() => {
         // Update the tracks chosen if it changed
-        if (this._priv_trackManager) {
+        if (this._priv_trackManager != null) {
           this._priv_trackManager.update();
         }
       });
@@ -1997,7 +2011,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @private
    */
   private _priv_onActivePeriodChanged({ period } : { period : Period }) : void {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       log.error("API: The active period changed but no content is loaded");
       return;
     }
@@ -2012,7 +2026,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                     this.getAvailableVideoTracks());
 
     // Emit intial events for the Period
-    if (this._priv_trackManager) {
+    if (this._priv_trackManager != null) {
       const audioTrack = this._priv_trackManager.getChosenAudioTrack(period);
       const textTrack = this._priv_trackManager.getChosenTextTrack(period);
       const videoTrack = this._priv_trackManager.getChosenVideoTrack(period);
@@ -2032,7 +2046,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                    this.getAvailableVideoBitrates());
 
     const activeAudioRepresentations = this.getCurrentRepresentations();
-    if (activeAudioRepresentations && activeAudioRepresentations.audio != null) {
+    if (activeAudioRepresentations != null &&
+        activeAudioRepresentations.audio != null)
+    {
       const bitrate = activeAudioRepresentations.audio.bitrate;
       this._priv_triggerContentEvent("audioBitrateChange",
                                      bitrate != null ? bitrate : -1);
@@ -2041,7 +2057,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     const activeVideoRepresentations = this.getCurrentRepresentations();
-    if (activeVideoRepresentations && activeVideoRepresentations.video != null) {
+    if (activeVideoRepresentations != null &&
+        activeVideoRepresentations.video != null)
+    {
       const bitrate = activeVideoRepresentations.video.bitrate;
       this._priv_triggerContentEvent("videoBitrateChange",
                                      bitrate != null ? bitrate : -1);
@@ -2066,7 +2084,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     switch (type) {
 
       case "video":
-        if (!this._priv_trackManager) {
+        if (this._priv_trackManager === null) {
           log.error("API: TrackManager not instanciated for a new video period");
           adaptation$.next(null);
         } else {
@@ -2076,7 +2094,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         break;
 
       case "audio":
-        if (!this._priv_trackManager) {
+        if (this._priv_trackManager === null) {
           log.error(`API: TrackManager not instanciated for a new ${type} period`);
           adaptation$.next(null);
         } else {
@@ -2086,7 +2104,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         break;
 
       case "text":
-        if (!this._priv_trackManager) {
+        if (this._priv_trackManager === null) {
           log.error(`API: TrackManager not instanciated for a new ${type} period`);
           adaptation$.next(null);
         } else {
@@ -2097,7 +2115,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       default:
         const adaptations = period.adaptations[type];
-        if (adaptations && adaptations.length) {
+        if (adaptations != null && adaptations.length > 0) {
           adaptation$.next(adaptations[0]);
         } else {
           adaptation$.next(null);
@@ -2122,29 +2140,29 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       case "audio":
       case "text":
       case "video":
-        if (this._priv_trackManager) {
+        if (this._priv_trackManager != null) {
           this._priv_trackManager.removePeriod(type, period);
         }
         break;
     }
 
     // Clean-up stored Representation and Adaptation information
-    if (this._priv_contentInfos == null) {
+    if (this._priv_contentInfos === null) {
       return ;
     }
     const { activeAdaptations, activeRepresentations } = this._priv_contentInfos;
-    if (activeAdaptations && activeAdaptations[period.id]) {
+    if (activeAdaptations != null && activeAdaptations[period.id] != null) {
       const activePeriodAdaptations = activeAdaptations[period.id];
       delete activePeriodAdaptations[type];
-      if (!Object.keys(activePeriodAdaptations).length) {
+      if (Object.keys(activePeriodAdaptations).length === 0) {
         delete activeAdaptations[period.id];
       }
     }
 
-    if (activeRepresentations && activeRepresentations[period.id]) {
+    if (activeRepresentations != null && activeRepresentations[period.id] != null) {
       const activePeriodRepresentations = activeRepresentations[period.id];
       delete activePeriodRepresentations[type];
-      if (!Object.keys(activePeriodRepresentations).length) {
+      if (Object.keys(activePeriodRepresentations).length === 0) {
         delete activeRepresentations[period.id];
       }
     }
@@ -2154,7 +2172,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Triggered each time the content is re-loaded on the MediaSource.
    */
   private _priv_onReloadingMediaSource() {
-    if (this._priv_trackManager) {
+    if (this._priv_trackManager != null) {
       this._priv_trackManager.resetPeriods();
     }
   }
@@ -2175,25 +2193,25 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     adaptation : Adaptation|null;
     period : Period;
   }) : void {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       log.error("API: The adaptations changed but no content is loaded");
       return;
     }
 
     // lazily create this._priv_contentInfos.activeAdaptations
-    if (!this._priv_contentInfos.activeAdaptations) {
+    if (this._priv_contentInfos.activeAdaptations === null) {
       this._priv_contentInfos.activeAdaptations = {};
     }
 
     const { activeAdaptations, currentPeriod } = this._priv_contentInfos;
     const activePeriodAdaptations = activeAdaptations[period.id];
-    if (!activePeriodAdaptations) {
+    if (activePeriodAdaptations == null) {
       activeAdaptations[period.id] = { [type]: adaptation };
     } else {
       activePeriodAdaptations[type] = adaptation;
     }
 
-    if (this._priv_trackManager &&
+    if (this._priv_trackManager != null &&
         currentPeriod != null && period != null &&
         period.id === currentPeriod.id
     ) {
@@ -2235,26 +2253,27 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     period : Period;
     representation : Representation|null;
   }) : void {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       log.error("API: The representations changed but no content is loaded");
       return;
     }
 
     // lazily create this._priv_contentInfos.activeRepresentations
-    if (!this._priv_contentInfos.activeRepresentations) {
+    if (this._priv_contentInfos.activeRepresentations === null) {
       this._priv_contentInfos.activeRepresentations = {};
     }
 
     const { activeRepresentations, currentPeriod } = this._priv_contentInfos;
 
     const activePeriodRepresentations = activeRepresentations[period.id];
-    if (!activePeriodRepresentations) {
+    if (activePeriodRepresentations == null) {
       activeRepresentations[period.id] = { [type]: representation };
     } else {
       activePeriodRepresentations[type] = representation;
     }
 
-    const bitrate = representation && representation.bitrate;
+    const bitrate = representation == null ? null :
+                                             representation.bitrate;
     if (period != null && currentPeriod != null && currentPeriod.id === period.id) {
       if (type === "video") {
         this._priv_triggerContentEvent("videoBitrateChange",
@@ -2295,7 +2314,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @private
    */
   private _priv_onPlayPauseNext(isPlaying : boolean) : void {
-    if (!this.videoElement) {
+    if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
 
@@ -2339,7 +2358,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @private
    */
   private _priv_triggerTimeChange(clockTick : IClockTick) : void {
-    if (!this._priv_contentInfos) {
+    if (this._priv_contentInfos === null) {
       log.warn("API: Cannot perform time update: no content loaded.");
       return;
     }
@@ -2349,7 +2368,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
-    if ((!isDirectFile && manifest == null) || !clockTick) {
+    if ((!isDirectFile && manifest === null) || clockTick == null) {
       return;
     }
 
@@ -2371,8 +2390,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         manifest.isLive &&
         clockTick.currentTime > 0
     ) {
-      positionData.wallClockTime = clockTick.currentTime +
-                                   (manifest.availabilityStartTime || 0);
+      const ast = manifest.availabilityStartTime == null ?
+        0 :
+        manifest.availabilityStartTime;
+      positionData.wallClockTime = clockTick.currentTime + ast;
       positionData.liveGap = maximumPosition - clockTick.currentTime;
     }
 

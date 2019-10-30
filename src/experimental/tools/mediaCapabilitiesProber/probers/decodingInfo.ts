@@ -36,7 +36,9 @@ function isMediaCapabilitiesAPIAvailable(): Promise<void> {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "MediaCapabilities API not available");
     }
+    /* tslint:disable no-unsafe-any */
     if (!("decodingInfo" in (navigator as any).mediaCapabilities)) {
+    /* tslint:enable no-unsafe-any */
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "Decoding Info not available");
     }
@@ -53,22 +55,22 @@ export default function probeDecodingInfos(
 ): Promise<[ProberStatus]> {
   return isMediaCapabilitiesAPIAvailable().then(() => {
     const hasVideoConfig = (
-      config.type &&
-      config.video &&
-      config.video.bitrate &&
-      config.video.contentType &&
-      config.video.framerate &&
-      config.video.height &&
-      config.video.width
+      config.type !== undefined && config.type.length > 0 &&
+      config.video !== undefined &&
+      config.video.bitrate !== undefined &&
+      config.video.contentType !== undefined && config.video.contentType.length > 0 &&
+      config.video.framerate !== undefined && config.video.framerate.length > 0 &&
+      config.video.height !== undefined &&
+      config.video.width !== undefined
     );
 
     const hasAudioConfig = (
-      config.type &&
-      config.audio &&
-      config.audio.bitrate &&
-      config.audio.channels &&
-      config.audio.contentType &&
-      config.audio.samplerate
+      config.type !== undefined && config.type.length > 0 &&
+      config.audio !== undefined &&
+      config.audio.bitrate !== undefined &&
+      config.audio.channels !== undefined && config.audio.channels.length > 0 &&
+      config.audio.contentType !== undefined && config.audio.contentType.length > 0 &&
+      config.audio.samplerate !== undefined
     );
 
     if (!hasVideoConfig && !hasAudioConfig) {
@@ -76,7 +78,9 @@ export default function probeDecodingInfos(
       "Not enough arguments for calling mediaCapabilites.");
     }
 
+    /* tslint:disable no-unsafe-any */
     return (navigator as any).mediaCapabilities.decodingInfo(config)
+    /* tslint:enable no-unsafe-any */
       .then((result: IDecodingInfos) => {
         return [
           result.supported ? ProberStatus.Supported : ProberStatus.NotSupported,

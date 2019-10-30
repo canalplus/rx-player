@@ -18,8 +18,8 @@
  * @param {Object|Array} o
  * @returns {Array.<*>}
  */
-function objectValues<T>(o : { [s: string] : T } | ArrayLike<T>) : T[] {
-  return Object.keys(o).map((k) => (o as any)[k]);
+function objectValues<T>(o : { [s: string] : T }) : T[] {
+  return Object.keys(o).map((k : string) => o[k]);
 }
 
 /* tslint:disable no-unbound-method */

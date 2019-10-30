@@ -17,6 +17,7 @@
 import vttParser from "../../../parsers/texttracks/webvtt/html";
 import addHTMLVTTFeature from "../html_vtt_parser";
 
+/* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/texttracks/webvtt/html", () => ({
   __esModule: true,
   default: jest.fn(),
@@ -32,3 +33,4 @@ describe("Features list - HTML VTT Parser", () => {
     expect(featureObject.htmlTextTracksParsers.vtt).toBe(vttParser);
   });
 });
+/* tslint:enable no-unsafe-any */

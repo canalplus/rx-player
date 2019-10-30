@@ -235,8 +235,8 @@ function getSizeOfRange(
   currentTime : number
 ) : number {
   const range = getRange(timeRanges, currentTime);
-  return range != null ? range.end - range.start :
-                         0;
+  return range !== null ? range.end - range.start :
+                          0;
 }
 
 /**
@@ -251,8 +251,8 @@ function getPlayedSizeOfRange(
   currentTime : number
 ) : number {
   const range = getRange(timeRanges, currentTime);
-  return range != null ? currentTime - range.start :
-                         0;
+  return range !== null ? currentTime - range.start :
+                          0;
 }
 
 /**
@@ -267,8 +267,8 @@ function getLeftSizeOfRange(
   currentTime : number
 ) : number {
   const range = getRange(timeRanges, currentTime);
-  return range != null ? range.end - currentTime :
-                         Infinity;
+  return range !== null ? range.end - currentTime :
+                          Infinity;
 }
 
 /**

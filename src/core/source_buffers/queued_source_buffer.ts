@@ -360,7 +360,7 @@ export default class QueuedSourceBuffer<T> {
       this._pendingTask = null;
     }
 
-    while (this._queue.length) {
+    while (this._queue.length > 0) {
       const nextElement = this._queue.shift();
       if (nextElement != null) {
         nextElement.subject.complete();

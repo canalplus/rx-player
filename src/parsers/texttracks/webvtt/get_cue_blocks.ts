@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "../../../utils/is_non_empty_string";
 import {
   findEndOfCueBlock,
   isStartOfCueBlock,
@@ -32,16 +33,16 @@ export default function getCueBlocks(
   headerOffset : number
 ) : string[][] {
   const cueBlocks : string[][] = [];
-  for (let i = headerOffset; i < linified.length; i++) { //
+  for (let i = headerOffset; i < linified.length; i++) {
     if (isStartOfCueBlock(linified, i)) {
       const endOfCue = findEndOfCueBlock(linified, i);
       cueBlocks.push(linified.slice(i, endOfCue));
       i = endOfCue;
-    } else if (linified[i]) {
+    } else if (isNonEmptyString(linified[i])) {
       // continue incrementing i until either:
       //   - empty line
       //   - end
-      while (linified[i]) {
+      while (isNonEmptyString(linified[i])) {
         i++;
       }
     }

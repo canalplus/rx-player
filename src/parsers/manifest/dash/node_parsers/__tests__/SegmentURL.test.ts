@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("DASH Node Parsers - SegmentURL", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -272,3 +273,4 @@ describe("DASH Node Parsers - SegmentURL", () => {
     logSpy.mockRestore();
   });
 });
+/* tslint:enable no-unsafe-any */

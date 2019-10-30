@@ -20,6 +20,7 @@ import {
 } from "rxjs";
 import { skip, take } from "rxjs/operators";
 
+/* tslint:disable no-unsafe-any */
 describe("core - eme - initMediaKeys", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -181,3 +182,4 @@ describe("core - eme - initMediaKeys", () => {
       });
  });
 });
+/* tslint:enable no-unsafe-any */

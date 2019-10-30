@@ -26,7 +26,7 @@ import { itobe4 } from "../../../utils/byte_parsing";
 export default function addDataOffsetFlagInTrun(trun : Uint8Array) : Uint8Array {
   const lastFlags = trun[11];
   const hasDataOffset = lastFlags & 0x01;
-  if (hasDataOffset) {
+  if (hasDataOffset !== 0) {
     return trun;
   }
 

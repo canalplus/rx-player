@@ -80,11 +80,11 @@ class Representation {
       this.mimeType = args.mimeType;
     }
 
-    if (args.contentProtections) {
+    if (Array.isArray(args.contentProtections)) {
       this.contentProtections = args.contentProtections;
     }
 
-    if (args.frameRate) {
+    if (args.frameRate != null) {
       this.frameRate = args.frameRate;
     }
 

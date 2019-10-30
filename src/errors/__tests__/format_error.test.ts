@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("errors - formatError", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -54,3 +55,4 @@ describe("errors - formatError", () => {
     expect(formattedError.code).toBe("toto");
   });
 });
+/* tslint:enable no-unsafe-any */

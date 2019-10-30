@@ -25,24 +25,21 @@ import {
   le4toi,
 } from "../../utils/byte_parsing";
 
-export interface IBifThumbnail {
-  index : number;
-  duration : number;
-  ts : number;
-  data : Uint8Array;
-}
+export interface IBifThumbnail { index : number;
+                                 duration : number;
+                                 ts : number;
+                                 data : Uint8Array; }
 
-export interface IBifObject {
-  fileFormat : string;
-  version : string;
-  imageCount : number;
-  timescale : number;
-  format : string;
-  width : number;
-  height : number;
-  aspectRatio : string;
-  isVod : boolean;
-  thumbs : IBifThumbnail[];
+export interface IBifObject { fileFormat : string;
+                              version : string;
+                              imageCount : number;
+                              timescale : number;
+                              format : string;
+                              width : number;
+                              height : number;
+                              aspectRatio : string;
+                              isVod : boolean;
+                              thumbs : IBifThumbnail[];
 }
 
 /**
@@ -81,7 +78,7 @@ function parseBif(buf : Uint8Array) : IBifObject {
   let currentImage;
   let currentTs = 0;
 
-  if (!imageCount) {
+  if (imageCount === 0) {
     throw new Error("bif: no images to parse");
   }
 
@@ -89,7 +86,7 @@ function parseBif(buf : Uint8Array) : IBifObject {
     const currentImageIndex = le4toi(buf, pos); pos += 4;
     const currentImageOffset = le4toi(buf, pos); pos += 4;
 
-    if (currentImage) {
+    if (currentImage != null) {
       const index = currentImage.index;
       const duration = timescale;
       const ts = currentTs;
@@ -100,14 +97,12 @@ function parseBif(buf : Uint8Array) : IBifObject {
       currentTs += timescale;
     }
 
-    if (currentImageIndex === 0xffffffff) {
+    if (currentImageIndex === 0xFFFFFFFF) {
       break;
     }
 
-    currentImage = {
-      index: currentImageIndex,
-      offset: currentImageOffset,
-    };
+    currentImage = { index: currentImageIndex,
+                     offset: currentImageOffset };
   }
 
   return {

@@ -254,11 +254,11 @@ function createNativeSourceBuffersForPeriod(
 ) : void {
   Object.keys(period.adaptations).forEach(bufferType => {
     if (SourceBuffersStore.isNative(bufferType)) {
-      const adaptations = period.adaptations[bufferType] || [];
+      const adaptations = period.adaptations[bufferType];
       const representations = adaptations != null &&
-                              adaptations.length ? adaptations[0].representations :
-                                                   [];
-      if (representations.length) {
+                              adaptations.length > 0 ? adaptations[0].representations :
+                                                       [];
+      if (representations.length > 0) {
         const codec = representations[0].getMimeTypeString();
         sourceBuffersStore.createSourceBuffer(bufferType, codec);
       }

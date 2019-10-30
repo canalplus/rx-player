@@ -403,8 +403,8 @@ export default {
    * @type {Object}
    */
   ABR_REGULAR_FACTOR: {
-    DEFAULT: 0.90,
-    LOW_LATENCY: 0.90,
+    DEFAULT: 0.9,
+    LOW_LATENCY: 0.9,
   },
 
   /**

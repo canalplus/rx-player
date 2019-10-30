@@ -46,12 +46,12 @@ import PersistedSessionsStore from "./utils/persisted_session_store";
 function createSessionStorage(
   keySystemOptions : IKeySystemOption
 ) : PersistedSessionsStore|null {
-  if (!keySystemOptions.persistentLicense) {
+  if (keySystemOptions.persistentLicense !== true) {
     return null;
   }
 
   const { licenseStorage } = keySystemOptions;
-  if (!licenseStorage) {
+  if (licenseStorage == null) {
     throw new EncryptedMediaError("INVALID_KEY_SYSTEM",
                                   "No license storage found for persistent license.");
   }

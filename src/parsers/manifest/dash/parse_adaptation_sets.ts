@@ -17,6 +17,7 @@
 import log from "../../../log";
 import arrayFind from "../../../utils/array_find";
 import arrayIncludes from "../../../utils/array_includes";
+import isNonEmptyString from "../../../utils/is_non_empty_string";
 import resolveURL from "../../../utils/resolve_url";
 import {
   IParsedAdaptation,
@@ -65,16 +66,14 @@ interface IAdaptationSwitchingInfos  {
  * @returns {Boolean}
  */
 function isVisuallyImpaired(
-  accessibility: { schemeIdUri? : string; value? : string }
+  accessibility? : { schemeIdUri? : string; value? : string }
 ) : boolean {
-  if (!accessibility) {
+  if (accessibility == null) {
     return false;
   }
 
-  return (
-    accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
-    accessibility.value === "1"
-  );
+  return (accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
+          accessibility.value === "1");
 }
 
 /**
@@ -85,16 +84,14 @@ function isVisuallyImpaired(
  * @returns {Boolean}
  */
 function isHardOfHearing(
-  accessibility: { schemeIdUri? : string; value? : string }
+  accessibility? : { schemeIdUri? : string; value? : string }
 ) : boolean {
-  if (!accessibility) {
+  if (accessibility == null) {
     return false;
   }
 
-  return (
-    accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
-    accessibility.value === "2"
-  );
+  return (accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
+          accessibility.value === "2");
 }
 
 /**
@@ -109,34 +106,34 @@ function getAdaptationID(
   representations : IParsedRepresentation[],
   infos : { isClosedCaption? : boolean; isAudioDescription? : boolean; type : string }
 ) : string {
-  if (adaptation.attributes.id) {
+  if (isNonEmptyString(adaptation.attributes.id)) {
     return adaptation.attributes.id;
   }
 
   let idString = infos.type;
-  if (adaptation.attributes.language) {
+  if (isNonEmptyString(adaptation.attributes.language)) {
     idString += `-${adaptation.attributes.language}`;
   }
-  if (infos.isClosedCaption) {
+  if (infos.isClosedCaption === true) {
     idString += "-cc";
   }
-  if (infos.isAudioDescription) {
+  if (infos.isAudioDescription === true) {
     idString += "-ad";
   }
-  if (adaptation.attributes.contentType) {
+  if (isNonEmptyString(adaptation.attributes.contentType)) {
     idString += `-${adaptation.attributes.contentType}`;
   }
-  if (adaptation.attributes.codecs) {
+  if (isNonEmptyString(adaptation.attributes.codecs)) {
     idString += `-${adaptation.attributes.codecs}`;
   }
-  if (adaptation.attributes.mimeType) {
+  if (isNonEmptyString(adaptation.attributes.mimeType)) {
     idString += `-${adaptation.attributes.mimeType}`;
   }
-  if (adaptation.attributes.frameRate) {
+  if (isNonEmptyString(adaptation.attributes.frameRate)) {
     idString += `-${adaptation.attributes.frameRate}`;
   }
   if (idString.length === infos.type.length) {
-    idString += representations.length ?
+    idString += representations.length > 0 ?
       ("-" + representations[0].id) : "-empty";
   }
   return "adaptation-" + idString;
@@ -199,9 +196,15 @@ export default function parseAdaptationSets(
       const adaptationMimeType = adaptation.attributes.mimeType;
       const adaptationCodecs = adaptation.attributes.codecs;
       const type = inferAdaptationType(representationsIR,
-                                       adaptationMimeType || null,
-                                       adaptationCodecs || null,
-                                       adaptationChildren.roles || null);
+                                       isNonEmptyString(adaptationMimeType) ?
+                                         adaptationMimeType :
+                                         null,
+                                       isNonEmptyString(adaptationCodecs) ?
+                                         adaptationCodecs :
+                                         null,
+                                       adaptationChildren.roles != null ?
+                                         adaptationChildren.roles :
+                                         null);
       const representations = parseRepresentations(representationsIR,
                                                    adaptation,
                                                    adaptationInfos);
@@ -212,9 +215,11 @@ export default function parseAdaptationSets(
 
       // TODO remove "main" video track management
       const { roles } = adaptationChildren;
-      const isMainAdaptation = !!roles &&
-        !!arrayFind(roles, (role) => role.value === "main") &&
-        !!arrayFind(roles, (role) => role.schemeIdUri === "urn:mpeg:dash:role:2011");
+      const isMainAdaptation = Array.isArray(roles) &&
+        arrayFind(roles, (role) =>
+          role.value === "main") !== undefined &&
+        arrayFind(roles, (role) =>
+          role.schemeIdUri === "urn:mpeg:dash:role:2011") !== undefined;
       const videoMainAdaptation = acc.videoMainAdaptation;
       if (type === "video" && videoMainAdaptation !== null && isMainAdaptation) {
         videoMainAdaptation.representations.push(...representations);
@@ -248,7 +253,7 @@ export default function parseAdaptationSets(
         }
 
         const adaptationsOfTheSameType = parsedAdaptations[type];
-        if (!adaptationsOfTheSameType) {
+        if (adaptationsOfTheSameType === undefined) {
           parsedAdaptations[type] = [parsedAdaptationSet];
           if (isMainAdaptation && type === "video") {
             acc.videoMainAdaptation = parsedAdaptationSet;

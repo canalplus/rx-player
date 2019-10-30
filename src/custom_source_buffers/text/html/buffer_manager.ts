@@ -201,10 +201,10 @@ export default class TextBufferManager {
           do {
             cuesBuffer.splice(i, 1);
             cuesInfos = cuesBuffer[i];
-          } while (cuesInfos && end > cuesInfos.end);
+          } while (cuesInfos !== undefined && end > cuesInfos.end);
 
           if (
-            !cuesInfos || // There is no cue here
+            cuesInfos === undefined || // There is no cue here
             areNearlyEqual(end, cuesInfos.end) // this cue has the same end
           ) {
             // put in place

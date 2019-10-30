@@ -31,16 +31,16 @@ export default function checkISOBMFFIntegrity(
     if (ftypIndex < 0) {
       throw new OtherError("INTEGRITY_ERROR", "Incomplete `ftyp` box");
     }
-    const moovIndex = findCompleteBox(buffer, 0x6d6f6f76 /* moov */);
+    const moovIndex = findCompleteBox(buffer, 0x6D6F6F76 /* moov */);
     if (moovIndex < 0) {
       throw new OtherError("INTEGRITY_ERROR", "Incomplete `moov` box");
     }
   } else {
-    const moofIndex = findCompleteBox(buffer, 0x6d6f6f66 /* moof */);
+    const moofIndex = findCompleteBox(buffer, 0x6D6F6F66 /* moof */);
     if (moofIndex < 0) {
       throw new OtherError("INTEGRITY_ERROR", "Incomplete `moof` box");
     }
-    const mdatIndex = findCompleteBox(buffer, 0x6d646174 /* mdat */);
+    const mdatIndex = findCompleteBox(buffer, 0x6D646174 /* mdat */);
     if (mdatIndex < 0) {
       throw new OtherError("INTEGRITY_ERROR", "Incomplete `mdat` box");
     }

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("Manifest - filterSupportedRepresentations", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -136,3 +137,4 @@ describe("Manifest - filterSupportedRepresentations", () => {
     expect(isCodecSupportedSpy).toHaveBeenCalledWith(";codecs=\"\"");
   });
 });
+/* tslint:enable no-unsafe-any */

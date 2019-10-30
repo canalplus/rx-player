@@ -21,6 +21,7 @@ import {
 import { tap } from "rxjs/operators";
 import log from "../../log";
 import Manifest from "../../manifest";
+import isNonEmptyString from "../../utils/is_non_empty_string";
 import {
   IFetchManifestResult,
 } from "../pipelines";
@@ -38,7 +39,7 @@ export default function refreshManifest(
   fetchManifest : IManifestFetcher
 ) : Observable<IFetchManifestResult> {
   const refreshURL = manifest.getUrl();
-  if (!refreshURL) {
+  if (!isNonEmptyString(refreshURL)) {
     log.warn("Init: Cannot refresh the manifest: no url");
     return EMPTY;
   }

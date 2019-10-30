@@ -122,8 +122,10 @@ export default function PeriodBuffer({
 
         if (previousQSourceBuffer != null) {
           log.info(`Buffer: Clearing previous ${bufferType} SourceBuffer`);
-          cleanBuffer$ = previousQSourceBuffer.removeBuffer(period.start,
-                                                            period.end || Infinity);
+          cleanBuffer$ = previousQSourceBuffer
+            .removeBuffer(period.start,
+                          period.end == null ? Infinity :
+                                               period.end);
         } else {
           cleanBuffer$ = observableOf(null);
         }
@@ -249,5 +251,8 @@ function createOrReuseQueuedSourceBuffer<T>(
  */
 function getFirstDeclaredMimeType(adaptation : Adaptation) : string {
   const { representations } = adaptation;
-  return (representations[0] && representations[0].getMimeTypeString()) || "";
+  if (representations[0] == null) {
+    return "";
+  }
+  return representations[0].getMimeTypeString();
 }

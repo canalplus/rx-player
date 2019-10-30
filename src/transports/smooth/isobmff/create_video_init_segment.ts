@@ -61,7 +61,8 @@ export default function createVideoInitSegment(
   keyId? : Uint8Array,
   pssList? : IPSSList
 ) : Uint8Array {
-  const _pssList = pssList || [];
+  const _pssList = pssList === undefined ? [] :
+                                           pssList;
   const [, spsHex, ppsHex] = codecPrivateData.split("00000001");
   const sps = hexToBytes(spsHex);
   const pps = hexToBytes(ppsHex);
@@ -69,11 +70,10 @@ export default function createVideoInitSegment(
   // TODO NAL length is forced to 4
   const avcc = createAVCCBox(sps, pps, nalLength);
   let stsd;
-  if (!_pssList.length || keyId == null) {
+  if (_pssList.length === 0 || keyId == null) {
     const avc1 = createAVC1Box(width, height, hRes, vRes, "AVC Coding", 24, avcc);
     stsd = createSTSDBox([avc1]);
-  }
-  else {
+  } else {
     const tenc = createTENCBox(1, 8, keyId);
     const schi = createBoxWithChildren("schi", [tenc]);
     const schm = createSCHMBox("cenc", 65536);

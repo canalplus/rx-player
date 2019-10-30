@@ -27,6 +27,7 @@ interface IWebKitSourceBuffer { append(data : ArrayBuffer) : void;
 export default function patchWebkitSourceBuffer() {
   // old WebKit SourceBuffer implementation,
   // where a synchronous append is used instead of appendBuffer
+  /* tslint:disable no-unsafe-any */
   if ((window as any).WebKitSourceBuffer &&
       !(window as any).WebKitSourceBuffer.prototype.addEventListener
   ) {
@@ -34,13 +35,17 @@ export default function patchWebkitSourceBuffer() {
     const sourceBufferWebkitRef : IWebKitSourceBufferConstructor =
       (window as any).WebKitSourceBuffer;
     const sourceBufferWebkitProto = sourceBufferWebkitRef.prototype;
+  /* tslint:enable no-unsafe-any */
 
     for (const fnName in EventEmitter.prototype) {
       if (EventEmitter.prototype.hasOwnProperty(fnName)) {
+        /* tslint:disable no-unsafe-any */
         sourceBufferWebkitProto[fnName] = (EventEmitter.prototype as any)[fnName];
+        /* tslint:enable no-unsafe-any */
       }
     }
 
+    /* tslint:disable no-unsafe-any */
     sourceBufferWebkitProto._listeners = [];
 
     sourceBufferWebkitProto.__emitUpdate =
@@ -71,5 +76,6 @@ export default function patchWebkitSourceBuffer() {
         this.__emitUpdate("update");
         /* tslint:enable no-invalid-this */
       };
+    /* tslint:enable no-unsafe-any */
   }
 }

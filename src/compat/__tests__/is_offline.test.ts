@@ -15,6 +15,7 @@
  */
 
 // FIXME We cannot mock navigator.onLine easily, sadly
+/* tslint:disable no-unsafe-any */
 xdescribe("Compat - isOffline", () => {
   it("should return true if navigator.onLine is `false`", () => {
     const oldNavigator = window.navigator;
@@ -48,3 +49,4 @@ xdescribe("Compat - isOffline", () => {
     (window as any).navigator = oldNavigator;
   });
 });
+/* tslint:enable no-unsafe-any */

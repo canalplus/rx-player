@@ -167,7 +167,7 @@ export default function BufferOrchestrator(
 
   // Emits the activePeriodChanged events every time the active Period changes.
   const activePeriodChanged$ = ActivePeriodEmitter(buffersArray).pipe(
-    filter((period) : period is Period => !!period),
+    filter((period) : period is Period => period != null),
     map(period => {
       log.info("Buffer: New active period", period);
       return EVENTS.activePeriodChanged(period);
@@ -240,7 +240,8 @@ export default function BufferOrchestrator(
         return true;
       }
       return head.start > time ||
-            (last.end || Infinity) < time;
+            (last.end == null ? Infinity :
+                                last.end) < time;
     }
 
     // Restart the current buffer when the wanted time is in another period
@@ -248,7 +249,7 @@ export default function BufferOrchestrator(
     const restartBuffersWhenOutOfBounds$ = clock$.pipe(
       filter(({ currentTime, wantedTimeOffset }) => {
         return hasLoadedABuffer &&
-               !!manifest.getPeriodForTime(wantedTimeOffset + currentTime) &&
+               manifest.getPeriodForTime(wantedTimeOffset + currentTime) != null &&
                isOutOfPeriodList(wantedTimeOffset + currentTime);
       }),
       tap(({ currentTime, wantedTimeOffset }) => {
@@ -318,7 +319,7 @@ export default function BufferOrchestrator(
     // Emits when the current position goes over the end of the current buffer.
     const endOfCurrentBuffer$ = clock$
       .pipe(filter(({ currentTime, wantedTimeOffset }) =>
-                     !!basePeriod.end &&
+                     basePeriod.end != null &&
                     (currentTime + wantedTimeOffset) >= basePeriod.end));
 
     // Create Period Buffer for the next Period.

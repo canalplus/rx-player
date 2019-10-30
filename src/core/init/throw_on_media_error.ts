@@ -33,7 +33,8 @@ export default function throwOnMediaError(
 ) : Observable<never> {
   return observableFromEvent(mediaElement, "error")
     .pipe(mergeMap(() => {
-      const errorCode = mediaElement.error && mediaElement.error.code;
+      const errorCode = mediaElement.error == null ? 0 :
+                                                    mediaElement.error.code;
       switch (errorCode) {
         case 1:
           throw new MediaError("MEDIA_ERR_ABORTED",

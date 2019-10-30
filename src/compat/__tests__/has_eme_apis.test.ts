@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("compat - hasEMEAPIs", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -47,3 +48,4 @@ describe("compat - hasEMEAPIs", () => {
     expect(hasEMEAPIs.default()).toBe(false);
   });
 });
+/* tslint:enable no-unsafe-any */

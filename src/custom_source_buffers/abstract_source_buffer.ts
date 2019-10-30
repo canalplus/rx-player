@@ -108,7 +108,7 @@ export default abstract class AbstractSourceBuffer<T>
                        this.trigger("update", undefined);
                        this.trigger("updateend", undefined);
                      }),
-                     (e) => nextTick(() => {
+                     (e : Event) => nextTick(() => {
                        this.updating = false;
                        this.trigger("error", e);
                        this.trigger("updateend", undefined);

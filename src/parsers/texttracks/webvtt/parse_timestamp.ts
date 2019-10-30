@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "../../../utils/is_non_empty_string";
+
 /**
  * Parse a single webvtt timestamp into seconds
  * @param {string} timestampString
@@ -24,8 +26,9 @@ export default function parseTimestamp(
 ) : number|undefined {
   const splittedTS = timestampString.split(":").reverse();
 
-  if (splittedTS[2] || splittedTS[1]) {
-    const hours = splittedTS[2] ? parseInt(splittedTS[2], 10) : 0;
+  if (isNonEmptyString(splittedTS[2]) || isNonEmptyString(splittedTS[1])) {
+    const hours = isNonEmptyString(splittedTS[2]) ? parseInt(splittedTS[2], 10) :
+                                                    0;
     const minutes = parseInt(splittedTS[1], 10);
     const seconds = parseFloat(splittedTS[0].replace(",", "."));
 

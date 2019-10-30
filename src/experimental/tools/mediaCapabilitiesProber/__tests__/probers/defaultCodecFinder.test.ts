@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+ /* tslint:disable no-unsafe-any */
+
 describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -118,3 +120,5 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
       "Cannot check audio codec support: No API available.");
   });
 });
+
+/* tslint:enable no-unsafe-any */

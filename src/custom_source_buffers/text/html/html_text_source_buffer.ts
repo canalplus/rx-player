@@ -76,7 +76,7 @@ function generateClock(videoElement : HTMLMediaElement) : Observable<boolean> {
  * @param {Element|null} [child]
  */
 function safelyRemoveChild(element : Element, child : Element|null) {
-  if (child) {
+  if (child != null) {
     try {
       element.removeChild(child);
     } catch (e) {
@@ -131,7 +131,7 @@ export default class HTMLTextSourceBuffer
                               MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL / 2000,
                               0);
         const cue = this._buffer.get(time);
-        if (!cue) {
+        if (cue === undefined) {
           safelyRemoveChild(textTrackElement, this._currentElement);
           this._currentElement = null;
           return;

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "../../../utils/is_non_empty_string";
+
 /**
  * Parse a single srt timestamp into seconds
  * @param {string} timestampString
@@ -23,7 +25,7 @@ export default function parseTimestamp(
   timestampString : string
 ) : number|undefined {
   const splittedTS = timestampString.split(":");
-  if (splittedTS[2]) {
+  if (isNonEmptyString(splittedTS[2])) {
     const hours = parseInt(splittedTS[0], 10);
     const minutes = parseInt(splittedTS[1], 10);
     const seconds = parseFloat(splittedTS[2].replace(",", "."));

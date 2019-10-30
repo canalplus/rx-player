@@ -17,22 +17,20 @@
 import log from "../../../log";
 
 const SEGMENT_ID = 0x18538067;
-const INFO_ID = 0x1549a966;
+const INFO_ID = 0x1549A966;
 const TIMECODESCALE_ID = 0x2AD7B1;
 const DURATION_ID = 0x4489;
 const CUES_ID = 0x1C53BB6B;
-const CUE_POINT_ID = 0xbb;
-const CUE_TIME_ID = 0xb3;
-const CUE_TRACK_POSITIONS_ID = 0xb7;
-const CUE_CLUSTER_POSITIONS_ID = 0xf1;
+const CUE_POINT_ID = 0xBB;
+const CUE_TIME_ID = 0xB3;
+const CUE_TRACK_POSITIONS_ID = 0xB7;
+const CUE_CLUSTER_POSITIONS_ID = 0xF1;
 
-export interface ICuesSegment {
-  time : number;
-  duration : number;
-  count : 0;
-  timescale : number;
-  range : [number, number];
-}
+export interface ICuesSegment { time : number;
+                                duration : number;
+                                count : 0;
+                                timescale : number;
+                                range : [number, number]; }
 
 /**
  * Find the offsets of the value linked to the given element ID.
@@ -69,7 +67,7 @@ function findNextElement(
     const valueEndOffset = valueOffset + valueLength;
     if (ebmlTagID === elementID) {
       return [valueOffset, valueEndOffset];
-    } else if (parents.length) {
+    } else if (parents.length > 0) {
       for (let i = 0; i < parents.length; i++) {
         if (ebmlTagID === parents[i]) {
           const newParents = parents.slice(i + 1, parents.length);
@@ -207,8 +205,8 @@ export function getSegmentsFromCues(
         time: currentSegment.time,
         count: 0,
         timescale,
-        duration: i === 0 ?
-          duration : duration - currentSegment.time,
+        duration: i === 0 ? duration :
+                            duration - currentSegment.time,
         range: [currentSegment.rangeStart, Infinity],
       });
     } else {
@@ -287,7 +285,7 @@ function getEBMLValue(
 function get_IEEE754_32Bits(
   buffer : Uint8Array,
   offset : number
-) {
+) : number {
   return new DataView(buffer.buffer).getFloat32(offset);
 }
 

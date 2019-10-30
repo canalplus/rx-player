@@ -143,13 +143,13 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                     timescale,
                     indexRange: index.indexRange,
                     indexTimeOffset,
-                    initialization: index.initialization && {
-                      mediaURL: createIndexURL(representationBaseURL,
-                                               index.initialization.media,
-                                               representationId,
-                                               representationBitrate),
-                      range: index.initialization.range,
-                    },
+                    initialization: index.initialization == null ?
+                      undefined :
+                      { mediaURL: createIndexURL(representationBaseURL,
+                                                 index.initialization.media,
+                                                 representationId,
+                                                 representationBitrate),
+                        range: index.initialization.range },
                     mediaURL: createIndexURL(representationBaseURL,
                                              index.media,
                                              representationId,
@@ -226,7 +226,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       const realTime = timeFromPeriodStart + scaledStart;
       const manifestTime = timeFromPeriodStart + this._index.presentationTimeOffset;
       const realURL = replaceSegmentDASHTokens(mediaURL, manifestTime, realNumber);
-      const args = { id: "" + realNumber,
+      const args = { id: String(realNumber),
                      number: realNumber,
                      time: realTime,
                      isInit: false,
@@ -382,7 +382,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     }
 
     // 1 - check that this index is already available
-    if (!this._relativePeriodEnd) {
+    if (this._relativePeriodEnd === 0 || this._relativePeriodEnd == null) {
       // /!\ The scaled max position augments continuously and might not
       // reflect exactly the real server-side value. As segments are
       // generated discretely.
@@ -444,7 +444,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                null :
                (numberOfSegmentsAvailable - 1) * duration;
     } else {
-      const maximumTime = (this._relativePeriodEnd || 0) * timescale;
+      const maximumTime = (this._relativePeriodEnd === undefined ?
+                             0 :
+                             this._relativePeriodEnd) * timescale;
       const numberIndexedToZero = Math.ceil(maximumTime / duration) - 1;
       const regularLastSegmentStart = numberIndexedToZero * duration;
 

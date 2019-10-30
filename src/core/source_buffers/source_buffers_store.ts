@@ -124,7 +124,9 @@ export default class SourceBuffersStore {
    * @returns {QueuedSourceBuffer|null}
    */
   public get(bufferType : IBufferType) : QueuedSourceBuffer<any>|null {
-    return this._initializedSourceBuffers[bufferType] || null;
+    const initializedBuffer = this._initializedSourceBuffers[bufferType];
+    return initializedBuffer != null ? initializedBuffer :
+                                       null;
   }
 
   /**
@@ -143,7 +145,7 @@ export default class SourceBuffersStore {
   ) : QueuedSourceBuffer<any> {
     const memorizedSourceBuffer = this._initializedSourceBuffers[bufferType];
     if (shouldHaveNativeSourceBuffer(bufferType)) {
-      if (memorizedSourceBuffer) {
+      if (memorizedSourceBuffer != null) {
         if (memorizedSourceBuffer.codec !== codec) {
           log.warn("SB: Reusing native SourceBuffer with codec",
                    memorizedSourceBuffer.codec, "for codec", codec);
@@ -160,7 +162,7 @@ export default class SourceBuffersStore {
       return nativeSourceBuffer;
     }
 
-    if (memorizedSourceBuffer) {
+    if (memorizedSourceBuffer != null) {
       log.info("SB: Reusing a previous custom SourceBuffer for the type", bufferType);
       return memorizedSourceBuffer;
     }
@@ -179,8 +181,9 @@ export default class SourceBuffersStore {
         if (features.nativeTextTracksBuffer == null) {
           throw new Error("Native Text track feature not activated");
         }
-        sourceBuffer = new features.nativeTextTracksBuffer(this._mediaElement,
-                                                           !!options.hideNativeSubtitle);
+        sourceBuffer = new features
+          .nativeTextTracksBuffer(this._mediaElement,
+                                  options.hideNativeSubtitle === true);
       }
 
       const queuedSourceBuffer = new QueuedSourceBuffer<unknown>("text",

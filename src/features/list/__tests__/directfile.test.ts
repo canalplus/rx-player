@@ -17,6 +17,7 @@
 import directfile from "../../../core/init/initialize_directfile";
 import addDirectfileFeature from "../directfile";
 
+/* tslint:disable no-unsafe-any */
 jest.mock("../../../core/init/initialize_directfile", () => ({
   __esModule: true,
   default: jest.fn(),
@@ -30,3 +31,4 @@ describe("Features list - Directfile", () => {
     expect(featureObject.directfile).toBe(directfile);
   });
 });
+/* tslint:enable no-unsafe-any */

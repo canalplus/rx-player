@@ -17,6 +17,7 @@
 import bifParser from "../../../parsers/images/bif";
 import addBIFParserFeature from "../bif_parser";
 
+/* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/images/bif", () => ({
   __esModule: true,
   default: jest.fn(),
@@ -30,3 +31,4 @@ describe("Features list - BIF Parser", () => {
     expect(featureObject.imageParser).toBe(bifParser);
   });
 });
+/* tslint:enable no-unsafe-any */

@@ -116,12 +116,16 @@ function _addSegmentInfos(
                                  * timescale,
                           duration: (segmentInfos.duration / segmentInfos.timescale)
                                     * timescale,
-                          repeatCount: segmentInfos.count || 0,
+                          repeatCount: segmentInfos.count === undefined ?
+                            0 :
+                            segmentInfos.count,
                           range: segmentInfos.range });
   } else {
     index.timeline.push({ start: segmentInfos.time,
                           duration: segmentInfos.duration,
-                          repeatCount: segmentInfos.count || 0,
+                          repeatCount: segmentInfos.count === undefined ?
+                            0 :
+                            segmentInfos.count,
                           range: segmentInfos.range });
   }
   return true;

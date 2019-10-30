@@ -17,6 +17,8 @@
 import { Observable } from "rxjs";
 import config from "../../config";
 import { RequestError } from "../../errors";
+import isNonEmptyString from "../is_non_empty_string";
+import isNullOrUndefined from "../is_null_or_undefined";
 
 const { DEFAULT_REQUEST_TIMEOUT } = config;
 
@@ -202,10 +204,10 @@ function request<T>(
   const requestOptions = {
     url: options.url,
     headers: options.headers,
-    responseType: options.responseType == null ? DEFAULT_RESPONSE_TYPE :
-                                                 options.responseType,
-    timeout: options.timeout == null ? DEFAULT_REQUEST_TIMEOUT :
-                                       options.timeout,
+    responseType: isNullOrUndefined(options.responseType) ? DEFAULT_RESPONSE_TYPE :
+                                                            options.responseType,
+    timeout: isNullOrUndefined(options.timeout) ? DEFAULT_REQUEST_TIMEOUT :
+                                                  options.timeout,
   };
 
   return new Observable((obs) => {
@@ -226,7 +228,7 @@ function request<T>(
       xhr.overrideMimeType("text/xml");
     }
 
-    if (headers != null) {
+    if (!isNullOrUndefined(headers)) {
       const _headers = headers;
       for (const key in _headers) {
         if (_headers.hasOwnProperty(key)) {
@@ -267,20 +269,24 @@ function request<T>(
                                             event.total;
           const status = xhr.status;
           const loadedResponseType = xhr.responseType;
-          const _url = typeof xhr.responseURL === "string" &&
-                       xhr.responseURL !== "" ? xhr.responseURL :
-                                                url;
+          const _url = isNonEmptyString(xhr.responseURL) ? xhr.responseURL :
+                                                           url;
 
           let responseData : T;
           if (loadedResponseType === "json") {
             // IE bug where response is string with responseType json
-            responseData = xhr.response !== "string" ? xhr.response :
-                                                       toJSONForIE(xhr.responseText);
+            responseData = typeof xhr.response === "object" ?
+              /* tslint:disable no-unsafe-any */
+              xhr.response :
+              /* tslint:enable no-unsafe-any */
+              toJSONForIE(xhr.responseText);
           } else {
+            /* tslint:disable no-unsafe-any */
             responseData = xhr.response;
+            /* tslint:enable no-unsafe-any */
           }
 
-          if (responseData == null) {
+          if (isNullOrUndefined(responseData)) {
             obs.error(new RequestError(url, xhr.status, "PARSE_ERROR", xhr));
             return;
           }
@@ -304,7 +310,7 @@ function request<T>(
 
     xhr.send();
     return () => {
-      if (xhr != null && xhr.readyState !== 4) {
+      if (!isNullOrUndefined(xhr) && xhr.readyState !== 4) {
         xhr.abort();
       }
     };

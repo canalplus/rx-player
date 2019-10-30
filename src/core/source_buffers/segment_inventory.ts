@@ -224,7 +224,7 @@ export default class SegmentInventory {
 
     // if we still have segments left, they are not affiliated to any range.
     // They might have been garbage collected, delete them from here.
-    if (thisSegment) {
+    if (thisSegment != null) {
       log.debug("SI: last segments have been GCed", inventoryIndex, inventory.length);
       inventory.splice(inventoryIndex, inventory.length - inventoryIndex);
     }
@@ -477,7 +477,7 @@ export default class SegmentInventory {
     // if we got here, we are the first segment
     // check bounds of the previous first segment
     const firstSegment = this.inventory[0];
-    if (!firstSegment) { // we do not have any segment yet
+    if (firstSegment == null) { // we do not have any segment yet
       log.debug("SI: Segment pushed comes after all previous ones");
       this.inventory.push(newSegment);
       return;

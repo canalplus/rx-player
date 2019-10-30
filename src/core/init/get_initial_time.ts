@@ -44,7 +44,7 @@ export default function getInitialTime(
   startAt? : IInitialTimeOptions
 ) : number {
   log.debug("Init: calculating initial time");
-  if (startAt) {
+  if (startAt != null) {
     const min = manifest.getMinimumPosition();
     const max = manifest.getMaximumPosition();
     if (startAt.position != null) {
@@ -53,10 +53,10 @@ export default function getInitialTime(
     }
     else if (startAt.wallClockTime != null) {
       log.debug("Init: using startAt.wallClockTime");
-      const position = manifest.isLive ?
-        startAt.wallClockTime - (manifest.availabilityStartTime || 0) :
-        startAt.wallClockTime;
-
+      const ast = manifest.availabilityStartTime == null ?
+        0 :
+        manifest.availabilityStartTime;
+      const position = startAt.wallClockTime - ast;
       return Math.max(Math.min(position, max), min);
     }
     else if (startAt.fromFirstPosition != null) {
@@ -97,7 +97,9 @@ export default function getInitialTime(
     } else {
       log.info("Init: clock offset found for a live content, " +
                "checking if we can start close to it");
-      const ast = manifest.availabilityStartTime || 0;
+      const ast = manifest.availabilityStartTime == null ?
+        0 :
+        manifest.availabilityStartTime;
       const clockRelativeLiveTime = (performance.now() + clockOffset) / 1000 - ast;
       liveTime = Math.min(maximumPosition,
                           clockRelativeLiveTime);

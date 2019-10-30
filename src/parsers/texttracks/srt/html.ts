@@ -88,7 +88,7 @@ function toHTML(cueObj : {
     "1px 1px 2px #000";
 
   for (let i = 0; i < payload.length; i++) {
-    if (i) {
+    if (i !== 0) {
       pEl.appendChild(document.createElement("br"));
     }
     const span = generateSpansFromSRTText(payload[i]);
@@ -131,7 +131,7 @@ function generateSpansFromSRTText(text : string) : HTMLElement {
           .split("\n");
 
         for (let line = 0; line < linifiedText.length; line++) {
-          if (line) {
+          if (line !== 0) {
             span.appendChild(document.createElement("br"));
           }
           if (linifiedText[line].length > 0) {
@@ -157,7 +157,9 @@ function generateSpansFromSRTText(text : string) : HTMLElement {
       ) {
         // TODO loop through attributes to find color?
         const spanChild = _loop(currentNode);
+        /* tslint:disable no-unsafe-any */
         spanChild.style.color = (currentNode as any).color;
+        /* tslint:enable no-unsafe-any */
         span.appendChild(spanChild);
       } else {
         const spanChild = _loop(currentNode);

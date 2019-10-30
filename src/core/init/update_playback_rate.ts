@@ -57,7 +57,7 @@ export default function updatePlaybackRate(
   } else {
     forcePause$ = clock$
       .pipe(
-        map((timing) => !!timing.stalled),
+        map((timing) => timing.stalled !== null),
         startWith(false),
         distinctUntilChanged()
       );

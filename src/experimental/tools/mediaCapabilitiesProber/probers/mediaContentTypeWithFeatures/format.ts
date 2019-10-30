@@ -25,54 +25,72 @@ export default function formatTypeSupportedWithFeaturesConfigForAPI(
   config : IMediaConfiguration
 ): string|null {
   const { video, audio, hdcp: outputHdcp, display } = config;
-  let str: string|null = null;
   const defaultVideoCodec = findDefaultVideoCodec();
-  const contentType = video ?
-    video.contentType || defaultVideoCodec :
-    defaultVideoCodec;
-  str = str || "" + contentType;
-  if (audio && audio.contentType) {
+
+  let str: string|null = (() => {
+    if (video === undefined ||
+        video.contentType === undefined ||
+        video.contentType.length === 0) {
+      return defaultVideoCodec;
+    }
+    return video.contentType;
+  })();
+
+  if (audio !== undefined &&
+      audio.contentType !== undefined &&
+      audio.contentType.length > 0) {
     const regex = /codecs="(.*?)"/;
     const match = audio.contentType.match(regex);
-    if (match) {
+    if (match != null) {
       const codec = match[1];
       str = str.substring(0, str.length - 2) + "," + codec;
     }
   }
   const feat = [];
 
-  if (video && video.width) {
-    feat.push("decode-res-x=" + video.width + "");
+  if (video !== undefined &&
+      video.width !== undefined &&
+      video.width > 0
+  ) {
+    feat.push("decode-res-x=" + video.width.toString() + "");
   }
-  if (video && video.height) {
-    feat.push("decode-res-y=" + video.height + "");
+  if (video !== undefined &&
+      video.height !== undefined &&
+      video.height > 0) {
+    feat.push("decode-res-y=" + video.height.toString() + "");
   }
-  if (video && video.bitsPerComponent) {
-    feat.push("decode-bpc=" + video.bitsPerComponent + "");
+  if (video !== undefined &&
+      video.bitsPerComponent !== undefined &&
+      video.bitsPerComponent > 0) {
+    feat.push("decode-bpc=" + video.bitsPerComponent.toString() + "");
   }
-  if (video && video.bitrate) {
-    feat.push("decode-bitrate=" + video.bitrate + "");
+  if (video !== undefined &&
+      video.bitrate !== undefined &&
+      video.bitrate > 0) {
+    feat.push("decode-bitrate=" + video.bitrate.toString() + "");
   }
-  if (video && video.framerate) {
+  if (video !== undefined &&
+      video.framerate !== undefined &&
+      video.framerate.length > 0) {
     feat.push("decode-fps=" + video.framerate + "");
   }
 
-  if (display) {
-    if (display.width) {
-      feat.push("display-res-x=" + display.width + "");
+  if (display !== undefined) {
+    if (display.width !== undefined && display.width > 0) {
+      feat.push("display-res-x=" + display.width.toString() + "");
     }
-    if (display.height) {
-      feat.push("display-res-y=" + display.height + "");
+    if (display.height !== undefined && display.height > 0) {
+      feat.push("display-res-y=" + display.height.toString() + "");
     }
-    if (display.bitsPerComponent) {
-      feat.push("display-bpc=" + display.bitsPerComponent + "");
+    if (display.bitsPerComponent !== undefined && display.bitsPerComponent > 0) {
+      feat.push("display-bpc=" + display.bitsPerComponent.toString() + "");
     }
   }
 
-  if (outputHdcp) {
+  if (outputHdcp !== undefined && outputHdcp.length > 0) {
     const specifiedHDCPinConfig = parseFloat(outputHdcp);
     const hdcp = specifiedHDCPinConfig >= 2.2 ? 2 : 1;
-    feat.push("hdcp=" + hdcp);
+    feat.push("hdcp=" + hdcp.toString());
   }
   if (feat.length > 0) {
     str +=  ";" + "features=";

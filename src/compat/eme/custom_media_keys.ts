@@ -164,7 +164,7 @@ let CustomMediaKeys : IMockMediaKeysConstructor =
  * Therefore, we prefer not to use requestMediaKeySystemAccess on Safari when webkit API
  * is available.
  */
-if (navigator.requestMediaKeySystemAccess &&
+if (navigator.requestMediaKeySystemAccess != null &&
     !shouldUseWebKitMediaKeys()
 ) {
   requestMediaKeySystemAccess = (a : string, b : ICompatMediaKeySystemConfiguration[]) =>
@@ -188,7 +188,8 @@ if (navigator.requestMediaKeySystemAccess &&
     ) : Promise<void> {
       return new PPromise((resolve, reject) => {
         try {
-          memUpdate.call(this, license, sessionId || "");
+          memUpdate.call(this, license, sessionId == null ? "" :
+                                                            sessionId);
           resolve();
         } catch (e) {
           reject(e);
@@ -268,9 +269,11 @@ if (navigator.requestMediaKeySystemAccess &&
             const licenseTypedArray =
               license instanceof ArrayBuffer ? new Uint8Array(license) :
                                                license;
+            /* tslint:disable no-unsafe-any */
             const json = JSON.parse(bytesToStr(licenseTypedArray));
             const key = strToBytes(atob(json.keys[0].k));
             const kid = strToBytes(atob(json.keys[0].kid));
+            /* tslint:enable no-unsafe-any */
             this._vid.webkitAddKey(this._key, key, kid, sessionId);
           } else {
             this._vid.webkitAddKey(this._key, license, null, sessionId);
@@ -319,7 +322,7 @@ if (navigator.requestMediaKeySystemAccess &&
       }
 
       createSession(/* sessionType */) : ICustomMediaKeySession {
-        if (!this._vid) {
+        if (this._vid == null) {
           throw new Error("Video not attached to the MediaKeys");
         }
         return new WebkitMediaKeySession(this._vid, this.ks_);
@@ -333,10 +336,16 @@ if (navigator.requestMediaKeySystemAccess &&
     const isTypeSupported = function(keyType : string) : boolean {
       // get any <video> element from the DOM or create one
       // and try the `canPlayType` method
-      const videoElement = document.querySelector("video") ||
-                           document.createElement("video");
-      if (videoElement && videoElement.canPlayType) {
+      let videoElement = document.querySelector("video");
+      if (videoElement == null) {
+        videoElement = document.createElement("video");
+      }
+      /* tslint:disable no-unsafe-any */
+      /* tslint:disable no-unbound-method */
+      if (videoElement != null && typeof videoElement.canPlayType === "function") {
+      /* tslint:enable no-unbound-method */
         return !!(videoElement as any).canPlayType("video/mp4", keyType);
+      /* tslint:enable no-unsafe-any */
       } else {
         return false;
       }
@@ -361,15 +370,13 @@ if (navigator.requestMediaKeySystemAccess &&
 
         let supported = true;
         supported = supported &&
-                    (!initDataTypes ||
-                     !!initDataTypes
-                       .filter((initDataType) => initDataType === "cenc")[0]);
+                    (initDataTypes == null ||
+                     initDataTypes.some((initDataType) => initDataType === "cenc"));
 
         supported = supported &&
-                    (!sessionTypes ||
-                     sessionTypes
-                       .filter((sessionType) =>
-                         sessionType === "temporary").length === sessionTypes.length);
+                    (sessionTypes == null ||
+                     sessionTypes.filter((sessionType) => sessionType === "temporary")
+                       .length === sessionTypes.length);
         supported = supported && (distinctiveIdentifier !== "required");
         supported = supported && (persistentState !== "required");
 
@@ -393,9 +400,11 @@ if (navigator.requestMediaKeySystemAccess &&
 
       return observableThrow(undefined);
     };
-  } else if (MediaKeys_ &&
-             MediaKeys_.prototype &&
+  } else if (MediaKeys_ != null &&
+             MediaKeys_.prototype != null &&
+             /* tslint:disable no-unsafe-any */
              typeof MediaKeys_.isTypeSupported === "function"
+             /* tslint:enable no-unsafe-any */
   ) {
 
     requestMediaKeySystemAccess = function(
@@ -403,7 +412,9 @@ if (navigator.requestMediaKeySystemAccess &&
       keySystemConfigurations : ICompatMediaKeySystemConfiguration[]
     ) : Observable<ICompatMediaKeySystemAccess|CustomMediaKeySystemAccess> {
       // TODO Why TS Do not understand that isTypeSupported exists here?
+      /* tslint:disable no-unsafe-any */
       if (!(MediaKeys_ as any).isTypeSupported(keyType)) {
+      /* tslint:enable no-unsafe-any */
         return observableThrow(undefined);
       }
 
@@ -416,8 +427,8 @@ if (navigator.requestMediaKeySystemAccess &&
 
         let supported = true;
         supported = supported &&
-                    (!initDataTypes ||
-                     !!initDataTypes.filter((idt) => idt === "cenc")[0]);
+                    (initDataTypes == null ||
+                     initDataTypes.some((idt) => idt === "cenc"));
         supported = supported && (distinctiveIdentifier !== "required");
 
         if (supported) {
@@ -433,7 +444,9 @@ if (navigator.requestMediaKeySystemAccess &&
           return observableOf(
             new CustomMediaKeySystemAccess(
               keyType,
+              /* tslint:disable no-unsafe-any */
               new (MediaKeys_ as any)(keyType),
+              /* tslint:enable no-unsafe-any */
               keySystemConfigurationResponse
             )
           );
@@ -444,8 +457,10 @@ if (navigator.requestMediaKeySystemAccess &&
     };
 
     if (isIE11 &&
-        typeof MediaKeys_.prototype.createSession === "function"
-    ) {
+        /* tslint:disable no-unsafe-any */
+        typeof MediaKeys_.prototype.createSession === "function")
+        /* tslint:enable no-unsafe-any */
+    {
       class IE11MediaKeySession
       extends EventEmitter<IMediaKeySessionEvents>
       implements ICustomMediaKeySession {
@@ -469,17 +484,21 @@ if (navigator.requestMediaKeySystemAccess &&
             this._closeSession$.subscribe(resolve);
           });
           this.update = wrapUpdate((license, sessionId) => {
-            if (!this._ss) {
+            if (this._ss == null) {
               throw new Error("MediaKeySession not set");
             }
+            /* tslint:disable no-unsafe-any */
             (this._ss as any).update(license, sessionId);
+            /* tslint:enable no-unsafe-any */
             this.sessionId = sessionId;
           });
         }
         generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
           return new PPromise((resolve) => {
+            /* tslint:disable no-unsafe-any */
             this._ss = (this._mk as any).createSession("video/mp4",
                                                        initData) as MediaKeySession;
+            /* tslint:enable no-unsafe-any */
             observableMerge(events.onKeyMessage$(this._ss),
                             events.onKeyAdded$(this._ss),
                             events.onKeyError$(this._ss)
@@ -490,7 +509,7 @@ if (navigator.requestMediaKeySystemAccess &&
         }
         close(): Promise<void> {
           return new PPromise((resolve) => {
-            if (this._ss) {
+            if (this._ss != null) {
               /* tslint:disable no-floating-promises */
               this._ss.close();
               /* tslint:enable no-floating-promises */

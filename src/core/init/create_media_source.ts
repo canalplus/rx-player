@@ -30,6 +30,7 @@ import {
 } from "../../compat";
 import { MediaError } from "../../errors";
 import log from "../../log";
+import isNonEmptyString from "../../utils/is_non_empty_string";
 
 const { onSourceOpen$ } = events;
 
@@ -56,15 +57,15 @@ export function setDurationToMediaSource(
  *   - Clear the mediaElement's src (stop the mediaElement)
  *   - Revoke MediaSource' URL
  * @param {HTMLMediaElement} mediaElement
- * @param {MediaSource|null|undefined} mediaSource
- * @param {string|null|undefined} mediaSourceURL
+ * @param {MediaSource|null} mediaSource
+ * @param {string|null} mediaSourceURL
  */
 function resetMediaSource(
   mediaElement : HTMLMediaElement,
-  mediaSource? : MediaSource|null,
-  mediaSourceURL? : string|null
+  mediaSource : MediaSource | null,
+  mediaSourceURL : string | null
 ) : void {
-  if (mediaSource && mediaSource.readyState !== "closed") {
+  if (mediaSource !== null && mediaSource.readyState !== "closed") {
     const { readyState, sourceBuffers } = mediaSource;
     for (let i = sourceBuffers.length - 1; i >= 0; i--) {
       const sourceBuffer = sourceBuffers[i];
@@ -79,14 +80,14 @@ function resetMediaSource(
         log.warn("Init: Error while disposing SourceBuffer", e);
       }
     }
-    if (sourceBuffers.length) {
+    if (sourceBuffers.length > 0) {
       log.warn("Init: Not all SourceBuffers could have been removed.");
     }
   }
 
   clearElementSrc(mediaElement);
 
-  if (mediaSourceURL) {
+  if (mediaSourceURL !== null) {
     try {
       log.debug("Init: Revoking previous URL");
       URL.revokeObjectURL(mediaSourceURL);
@@ -115,13 +116,15 @@ function createMediaSource(
   mediaElement : HTMLMediaElement
 ) : Observable<MediaSource> {
   return new Observable((observer : Observer<MediaSource>) => {
-    if (!MediaSource_) {
+    if (MediaSource_ == null) {
       throw new MediaError("MEDIA_SOURCE_NOT_SUPPORTED",
                            "No MediaSource Object was found in the current browser.");
     }
 
     // make sure the media has been correctly reset
-    resetMediaSource(mediaElement, null, mediaElement.src || null);
+    const oldSrc = isNonEmptyString(mediaElement.src) ? mediaElement.src :
+                                                        null;
+    resetMediaSource(mediaElement, null, oldSrc);
 
     log.info("Init: Creating MediaSource");
     const mediaSource = new MediaSource_();

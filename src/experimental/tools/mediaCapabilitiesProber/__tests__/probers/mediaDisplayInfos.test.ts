@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
+
 import { ProberStatus } from "../../types";
 
 describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
@@ -48,7 +50,7 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
         (window as any).matchMedia = origWindowMatchMedia;
         done();
       })
-      .catch(({ message }: any) => {
+      .catch(({ message }: { message: string }) => {
         expect(message).toBe("MediaCapabilitiesProber >>> API_CALL: " +
           "Not enough arguments for calling matchMedia.");
         (window as any).matchMedia = origWindowMatchMedia;
@@ -72,7 +74,7 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
         (window as any).matchMedia = origWindowMatchMedia;
         done();
       })
-      .catch(({ message }: any) => {
+      .catch(({ message }: { message: string }) => {
         expect(message).toBe("MediaCapabilitiesProber >>> API_CALL: " +
           "Not enough arguments for calling matchMedia.");
         (window as any).matchMedia = origWindowMatchMedia;
@@ -102,7 +104,7 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
         (window as any).matchMedia = origWindowMatchMedia;
         done();
       })
-      .catch(({ message }: any) => {
+      .catch(({ message }: { message: string }) => {
         expect(message).toBe("MediaCapabilitiesProber >>> API_CALL: " +
           "Bad arguments for calling matchMedia.");
         expect(mockMatchMedia).toHaveBeenCalledTimes(1);
@@ -171,3 +173,5 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
       });
   });
 });
+
+/* tslint:enable no-unsafe-any */

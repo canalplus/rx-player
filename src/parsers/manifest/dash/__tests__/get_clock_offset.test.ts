@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("DASH Parser - getClockOffset", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -56,3 +57,4 @@ describe("DASH Parser - getClockOffset", () => {
     warnSpy.mockReset();
   });
 });
+/* tslint:enable no-unsafe-any */

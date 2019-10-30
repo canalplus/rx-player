@@ -24,6 +24,7 @@ import {
 } from "rxjs/operators";
 import { ICustomError } from "../errors";
 import getFuzzedDelay from "./get_fuzzed_delay";
+import isNullOrUndefined from "./is_null_or_undefined";
 
 interface IBackoffOptions {
   baseDelay : number;
@@ -82,7 +83,7 @@ export default function retryObsWithBackoff<T>(
   let retryCount = 0;
 
   return obs$.pipe(catchError((error : unknown, source : Observable<T>) => {
-    if ((shouldRetry != null && !shouldRetry(error)) ||
+    if ((!isNullOrUndefined(shouldRetry) && !shouldRetry(error)) ||
          retryCount++ >= totalRetry)
     {
       throw error;

@@ -32,7 +32,7 @@ export default function parseFromDocument(
   args : IMPDParserArguments
 ) : IMPDParserResponse {
   const root = document.documentElement;
-  if (!root || root.nodeName !== "MPD") {
+  if (root == null || root.nodeName !== "MPD") {
     throw new Error("DASH Parser: document root should be MPD");
   }
   return parseMPD(root, args);

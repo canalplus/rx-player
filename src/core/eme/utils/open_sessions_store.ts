@@ -89,10 +89,9 @@ export default class MediaKeySessionsStore {
     const initDataHash = hashBuffer(initData);
     const foundEntry = arrayFind(this._entries, (entry) => (
       entry.initData === initDataHash &&
-      entry.initDataType === initDataType
-    ));
+      entry.initDataType === initDataType));
 
-    if (foundEntry) {
+    if (foundEntry != null) {
       const { session, sessionType } = foundEntry;
       return { session, sessionType };
     }
@@ -111,7 +110,7 @@ export default class MediaKeySessionsStore {
     initDataType : string|undefined,
     sessionType : MediaKeySessionType
   ) : MediaKeySession|ICustomMediaKeySession {
-    if (this.get(initData, initDataType)) {
+    if (this.get(initData, initDataType) != null) {
       throw new EncryptedMediaError("MULTIPLE_SESSIONS_SAME_INIT_DATA",
                                     "This initialization data was already stored.");
     }
@@ -179,7 +178,7 @@ export default class MediaKeySessionsStore {
     session : MediaKeySession|ICustomMediaKeySession
   ) : number {
     const entry = arrayFind(this._entries, (e) => e.session === session);
-    if (!entry) {
+    if (entry == null) {
       return -1;
     }
 

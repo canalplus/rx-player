@@ -31,7 +31,7 @@ const origDecodingInfo = (navigator as any).mediaCapabilities;
  */
 function stubDecodingInfo(isSupported: boolean, mustReject?: boolean) {
   const decodingInfoStub = jest.fn(() => {
-    if (mustReject) {
+    if (mustReject === true) {
       return PPromise.reject();
     } else {
       return PPromise.resolve({
@@ -72,7 +72,7 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
       resetDecodingInfos();
       done();
     })
-    .catch(({ message }) => {
+    .catch(({ message }: { message: string }) => {
       expect(message).toEqual("MediaCapabilitiesProber >>> API_CALL: " +
         "Not enough arguments for calling mediaCapabilites.");
       expect(decodingInfoStub).not.toHaveBeenCalled();
@@ -96,7 +96,7 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
         resetDecodingInfos();
         done();
       })
-      .catch(({ message }) => {
+      .catch(({ message }: { message: string }) => {
         expect(message).toEqual("MediaCapabilitiesProber >>> API_CALL: " +
           "Not enough arguments for calling mediaCapabilites.");
         expect(decodingInfoStub).not.toHaveBeenCalled();
@@ -120,7 +120,7 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
         resetDecodingInfos();
         done();
       })
-      .catch(({ message }) => {
+      .catch(({ message }: { message: string }) => {
         expect(message).toEqual("MediaCapabilitiesProber >>> API_CALL: " +
           "Not enough arguments for calling mediaCapabilites.");
         expect(decodingInfoStub).not.toHaveBeenCalled();
@@ -142,7 +142,7 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
         resetDecodingInfos();
         done();
       })
-      .catch(({ message }) => {
+      .catch(({ message }: { message: string }) => {
         expect(message).toEqual("MediaCapabilitiesProber >>> API_CALL: " +
           "Not enough arguments for calling mediaCapabilites.");
         expect(decodingInfoStub).not.toHaveBeenCalled();
@@ -161,7 +161,7 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
         resetDecodingInfos();
         done();
       })
-      .catch(({ message }) => {
+      .catch(({ message }: { message: string }) => {
         expect(message).toEqual("MediaCapabilitiesProber >>> API_CALL: " +
           "Not enough arguments for calling mediaCapabilites.");
         expect(decodingInfoStub).not.toHaveBeenCalled();
@@ -183,7 +183,9 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
 
   it("should throw if API decodingInfo not available", () => {
     if ((navigator as any).mediaCapabilities) {
+      /* tslint:disable no-unsafe-any */
       delete (navigator as any).mediaCapabilities.decodingInfo;
+      /* tslint:enable no-unsafe-any */
     } else {
       (navigator as any).mediaCapabilities = {};
     }
@@ -193,7 +195,9 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     );
     /* tslint:enable no-floating-promises */
     if ((navigator as any).mediaCapabilities) {
+      /* tslint:disable no-unsafe-any */
       (navigator as any).mediaCapabilities.decodingInfo = origDecodingInfo;
+      /* tslint:enable no-unsafe-any */
     } else {
       (navigator as any).mediaCapabilities = undefined;
     }

@@ -57,7 +57,7 @@ export default function createEMEManager(
       observableOf({ type: "eme-disabled" as "eme-disabled" }));
   }
 
-  if (!keySystems || !keySystems.length) {
+  if (keySystems.length === 0) {
     return observableMerge(
       onEncrypted$(mediaElement).pipe(map(() => {
         log.error("Init: Ciphered media and no keySystem passed");

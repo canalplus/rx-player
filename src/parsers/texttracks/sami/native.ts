@@ -24,6 +24,7 @@ import {
   makeVTTCue,
 } from "../../../compat";
 import assert from "../../../utils/assert";
+import isNonEmptyString from "../../../utils/is_non_empty_string";
 
 const HTML_ENTITIES = /&#([0-9]+);/g;
 const BR = /<br>/gi;
@@ -31,11 +32,9 @@ const STYLE = /<style[^>]*>([\s\S]*?)<\/style[^>]*>/i;
 const PARAG = /\s*<p class=([^>]+)>(.*)/i;
 const START = /<sync[^>]+?start="?([0-9]*)"?[^0-9]/i;
 
-interface ISubs {
-  start : number;
-  end? : number;
-  text : string;
-}
+interface ISubs { start : number;
+                  end? : number;
+                  text : string; }
 
 /**
  * Creates an array of VTTCue/TextTrackCue from a given array of cue objects.
@@ -47,7 +46,7 @@ function createCuesFromArray(cuesArray : ISubs[]) : Array<TextTrackCue|ICompatVT
   const nativeCues : Array<TextTrackCue|ICompatVTTCue> = [];
   for (let i = 0; i < cuesArray.length; i++) {
     const { start, end, text } = cuesArray[i];
-    if (text && end != null) {
+    if (isNonEmptyString(text) && end != null) {
       const cue = makeVTTCue(start, end, text);
       if (cue != null) {
         nativeCues.push(cue);
@@ -65,13 +64,14 @@ function createCuesFromArray(cuesArray : ISubs[]) : Array<TextTrackCue|ICompatVT
 function getClassNameByLang(str : string) : Partial<Record<string, string>> {
   const ruleRe = /\.(\S+)\s*{([^}]*)}/gi;
   const langs : { [lang : string] : string } = {};
-  let m : RegExpExecArray|null;
-  while ((m = ruleRe.exec(str))) {
+  let m = ruleRe.exec(str);
+  while (Array.isArray(m)) {
     const name = m[1];
     const lang = getCSSProperty(m[2], "lang");
     if (name != null && lang != null) {
       langs[lang] = name;
     }
+    m = ruleRe.exec(str);
   }
   return langs;
 }
@@ -83,7 +83,8 @@ function getClassNameByLang(str : string) : Partial<Record<string, string>> {
  */
 function getCSSProperty(str : string, name : string) : string|null {
   const matches = str.match(new RegExp("\\s*" + name + ":\\s*(\\S+);", "i"));
-  return matches ? matches[1] : null;
+  return Array.isArray(matches) ? matches[1] :
+                                  null;
 }
 
 /**
@@ -94,7 +95,9 @@ function getCSSProperty(str : string, name : string) : string|null {
 function decodeEntities(text : string) : string {
   return text
     .replace(BR, "\n")
+    /* tslint:disable no-unsafe-any */
     .replace(HTML_ENTITIES, (_, $1) => String.fromCharCode($1));
+    /* tslint:enable no-unsafe-any */
 }
 
 /**
@@ -120,7 +123,8 @@ function parseSami(
   const subs : ISubs[] = [];
 
   const styleMatches = smi.match(STYLE);
-  const css = styleMatches ? styleMatches[1] : "";
+  const css = styleMatches !== null ? styleMatches[1] :
+                                      "";
   let up;
   let to;
 
@@ -129,23 +133,24 @@ function parseSami(
   syncClose.exec(smi);
 
   const langs = getClassNameByLang(css);
-  const klass = lang && langs[lang];
+  const klass = isNonEmptyString(lang) ? langs[lang] :
+                                         undefined;
 
-  assert(!!klass, `sami: could not find lang ${lang} in CSS`);
+  assert(isNonEmptyString(klass), `sami: could not find lang ${lang} in CSS`);
 
   while (true) {
     up = syncOpen.exec(smi);
     to = syncClose.exec(smi);
-    if (!up && !to) {
+    if (up === null && to === null) {
       break;
     }
-    if (!up || !to || up.index >= to.index) {
+    if (up === null || to === null || up.index >= to.index) {
       throw new Error("parse error");
     }
 
     const str = smi.slice(up.index, to.index);
     const tim = str.match(START);
-    if (!tim) {
+    if (tim === null) {
       throw new Error("parse error (sync time attribute)");
     }
 
@@ -164,7 +169,7 @@ function parseSami(
     let m;
     while (--i >= 0) {
       m = lines[i].match(PARAG);
-      if (!m) {
+      if (m === null) {
         continue;
       }
 
@@ -177,10 +182,8 @@ function parseSami(
       if (txt === "&nbsp;") {
         subs[subs.length - 1].end = start;
       } else {
-        subs.push({
-          text: decodeEntities(txt),
-          start: start + timeOffset,
-        });
+        subs.push({ text: decodeEntities(txt),
+                    start: start + timeOffset });
       }
     }
   }

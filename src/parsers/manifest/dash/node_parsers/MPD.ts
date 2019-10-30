@@ -25,10 +25,8 @@ import {
   parseScheme,
 } from "./utils";
 
-export interface IMPDIntermediateRepresentation {
-  children : IMPDChildren;
-  attributes : IMPDAttributes;
-}
+export interface IMPDIntermediateRepresentation { children : IMPDChildren;
+                                                  attributes : IMPDAttributes; }
 
 // intermediate representation for the root's children
 export interface IMPDChildren {
@@ -74,11 +72,15 @@ function parseMPDChildren(mpdChildren : NodeList) : IMPDChildren {
       switch (currentNode.nodeName) {
 
         case "BaseURL":
-          baseURL = currentNode.textContent || "";
+          baseURL = currentNode.textContent === null ?
+            "" :
+            currentNode.textContent;
           break;
 
         case "Location":
-          locations.push(currentNode.textContent || "");
+          locations.push(currentNode.textContent === null ?
+                           "" :
+                           currentNode.textContent);
           break;
 
         case "Period":
@@ -118,13 +120,13 @@ function parseMPDAttributes(root : Element) : IMPDAttributes {
         res.type = attribute.value;
         break;
       case "availabilityStartTime":
-        res.availabilityStartTime = +parseDateTime(attribute.value);
+        res.availabilityStartTime = parseDateTime(attribute.value);
         break;
       case "availabilityEndTime":
-        res.availabilityEndTime = +parseDateTime(attribute.value);
+        res.availabilityEndTime = parseDateTime(attribute.value);
         break;
       case "publishTime":
-        res.publishTime = +parseDateTime(attribute.value);
+        res.publishTime = parseDateTime(attribute.value);
         break;
       case "mediaPresentationDuration":
         res.duration = parseDuration(attribute.value);
@@ -155,8 +157,6 @@ function parseMPDAttributes(root : Element) : IMPDAttributes {
 export function createMPDIntermediateRepresentation(
   root : Element
 ) : IMPDIntermediateRepresentation {
-  return {
-    children: parseMPDChildren(root.childNodes),
-    attributes: parseMPDAttributes(root),
-  };
+  return { children: parseMPDChildren(root.childNodes),
+           attributes: parseMPDAttributes(root) };
 }

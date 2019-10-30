@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("parsers - webvtt - convertPayloadToHTML", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -94,3 +95,4 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
     (window as any).DOMParser = origDOMParser;
   });
 });
+/* tslint:enable no-unsafe-any */

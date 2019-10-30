@@ -31,12 +31,10 @@ export default function createTrafBox(
   senc?: Uint8Array
 ) : Uint8Array {
   const trafs = [tfhd, tfdt, trun];
-  if (senc) {
-    trafs.push(
-      createBox("senc", senc),
-      createSAIZBox(senc),
-      createSAIOBox(mfhd, tfhd, tfdt, trun)
-    );
+  if (senc !== undefined) {
+    trafs.push(createBox("senc", senc),
+               createSAIZBox(senc),
+               createSAIOBox(mfhd, tfhd, tfdt, trun));
   }
   return createBoxWithChildren("traf", trafs);
 }

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("Compat - isCodecSupported", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -69,3 +70,4 @@ describe("Compat - isCodecSupported", () => {
     expect(isCodecSupported("")).toEqual(false);
   });
 });
+/* tslint:enable no-unsafe-any */

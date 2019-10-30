@@ -89,8 +89,9 @@ export default function generateTextTrackLoader(
                                           "text";
     return request<ArrayBuffer|string>({ url: mediaURL,
                                          responseType,
-                                         headers: range ? { Range: byteRange(range) } :
-                                                          null,
+                                         headers: Array.isArray(range) ?
+                                           { Range: byteRange(range) } :
+                                           null,
                                          sendProgressEvents: true });
   }
 }

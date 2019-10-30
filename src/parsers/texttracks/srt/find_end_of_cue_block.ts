@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "../../../utils/is_non_empty_string";
+
 /**
  * Returns the first line that is not apart of the given cue block.
  * The index given can be anywhere in a known cue block.
@@ -36,7 +38,7 @@ export default function findEndOfCueBlock(
   // continue incrementing i until either:
   //   - an empty line
   //   - the end
-  while (linified[firstEmptyLineIndex]) {
+  while (isNonEmptyString(linified[firstEmptyLineIndex])) {
     firstEmptyLineIndex++;
   }
 

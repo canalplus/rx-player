@@ -33,6 +33,7 @@ const minimalRepresentationIndex = {
   _addSegments() { /* noop */ },
 };
 
+/* tslint:disable no-unsafe-any */
 describe("Manifest - Adaptation", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -530,3 +531,4 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation.getRepresentation("rep5")).toBe(undefined);
   });
 });
+/* tslint:enable no-unsafe-any */

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "./is_null_or_undefined";
+
 /**
  * Creates a new string from the given array of char codes.
  *
@@ -27,7 +29,7 @@ function stringFromCharCode(args : Uint8Array) : string {
     const subArray = args.subarray(i, i + max);
 
     // NOTE: ugly I know, but TS is problematic here (you can try)
-    ret += (String.fromCharCode as any).apply(null, subArray);
+    ret += String.fromCharCode.apply(null, subArray as unknown as number[]);
   }
   return ret;
 }
@@ -40,14 +42,14 @@ function stringFromCharCode(args : Uint8Array) : string {
  * @export
  */
 export default function stringFromUTF8(data? : Uint8Array|null) : string {
-  if (data == null) {
+  if (isNullOrUndefined(data)) {
     return "";
   }
 
   let uint8 = new Uint8Array(data);
 
   // If present, strip off the UTF-8 BOM.
-  if (uint8[0] === 0xef && uint8[1] === 0xbb && uint8[2] === 0xbf) {
+  if (uint8[0] === 0xEF && uint8[1] === 0xBB && uint8[2] === 0xBF) {
     uint8 = uint8.subarray(3);
   }
 

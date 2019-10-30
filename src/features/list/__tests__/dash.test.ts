@@ -17,6 +17,7 @@
 import DASHFeature from "../../../transports/dash";
 import addDASHFeature from "../dash";
 
+/* tslint:disable no-unsafe-any */
 jest.mock("../../../transports/dash", () => ({
   __esModule: true,
   default: jest.fn(),
@@ -30,3 +31,4 @@ describe("Features list - DASH", () => {
     expect(featureObject.transports.dash).toBe(DASHFeature);
   });
 });
+/* tslint:enable no-unsafe-any */

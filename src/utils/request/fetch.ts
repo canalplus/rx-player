@@ -23,6 +23,7 @@ import {
   RequestError,
 } from "../../errors";
 import log from "../../log";
+import isNullOrUndefined from "../is_null_or_undefined";
 
 export interface IDataChunk {
   type : "data-chunk";
@@ -73,8 +74,8 @@ function fetchRequest(
   options : IFetchOptions
 ) : Observable< IDataChunk | IDataComplete > {
   let headers : Headers | { [key : string ] : string } | undefined;
-  if (options.headers != null) {
-    if (_Headers == null) {
+  if (!isNullOrUndefined(options.headers)) {
+    if (isNullOrUndefined(_Headers)) {
       headers = options.headers;
     } else {
       headers = new _Headers();
@@ -93,8 +94,8 @@ function fetchRequest(
     let isDone = false;
     const sendingTime = performance.now();
     const abortController: AbortController | null =
-      _AbortController != null ? new _AbortController() :
-      null;
+      !isNullOrUndefined(_AbortController) ? new _AbortController() :
+                                             null;
 
     /**
      * Abort current fetchRequest by triggering AbortController signal.
@@ -102,15 +103,16 @@ function fetchRequest(
      */
     function abortRequest(): void {
       if (!isDone) {
-        if (abortController != null) {
+        if (!isNullOrUndefined(abortController)) {
           return abortController.abort();
         }
         log.warn("Fetch: AbortController API not available.");
       }
     }
 
-    const requestTimeout = options.timeout == null ? DEFAULT_REQUEST_TIMEOUT :
-                                                     options.timeout;
+    const requestTimeout = isNullOrUndefined(options.timeout) ?
+      DEFAULT_REQUEST_TIMEOUT :
+      options.timeout;
     const timeout = window.setTimeout(() => {
       timeouted = true;
       abortRequest();
@@ -119,10 +121,10 @@ function fetchRequest(
     fetch(options.url,
           { headers,
             method: "GET",
-            signal: abortController != null ? abortController.signal :
-                                              undefined }
+            signal: !isNullOrUndefined(abortController) ? abortController.signal :
+                                                          undefined }
     ).then((response) => {
-      if (timeout != null) {
+      if (!isNullOrUndefined(timeout)) {
         clearTimeout(timeout);
       }
       if (response.status >= 300) {
@@ -133,7 +135,7 @@ function fetchRequest(
         return undefined;
       }
 
-      if (response.body == null) {
+      if (isNullOrUndefined(response.body)) {
         obs.error(new RequestError(response.url,
                                    response.status,
                                    NetworkErrorTypes.PARSE_ERROR));
@@ -141,7 +143,7 @@ function fetchRequest(
       }
 
       const contentLengthHeader = response.headers.get("Content-Length");
-      const contentLength = contentLengthHeader != null &&
+      const contentLength = !isNullOrUndefined(contentLengthHeader) &&
                             !isNaN(+contentLengthHeader) ? +contentLengthHeader :
                                                            undefined;
       const reader = response.body.getReader();
@@ -152,7 +154,7 @@ function fetchRequest(
       async function readBufferAndSendEvents() : Promise<undefined> {
         const data = await reader.read();
 
-        if (!data.done && data.value != null) {
+        if (!data.done && !isNullOrUndefined(data.value)) {
           size += data.value.byteLength;
           const currentTime = performance.now();
           const dataChunk = { type: "data-chunk" as const,
@@ -180,7 +182,7 @@ function fetchRequest(
           obs.complete();
         }
       }
-    }).catch((err) => {
+    }).catch((err : unknown) => {
       if (hasAborted) {
         log.debug("Fetch: Request aborted.");
         return;
@@ -192,7 +194,9 @@ function fetchRequest(
                                    NetworkErrorTypes.TIMEOUT));
         return;
       }
-      log.warn("Fetch: Request Error", err && err.toString());
+      log.warn("Fetch: Request Error", err instanceof Error ?
+                                         err.toString() :
+                                         "");
       obs.error(new RequestError(options.url,
                                  0,
                                  NetworkErrorTypes.ERROR_EVENT));
@@ -212,8 +216,8 @@ function fetchRequest(
  */
 export function fetchIsSupported() : boolean {
   return (typeof window.fetch === "function" &&
-          _AbortController != null &&
-          _Headers != null);
+          !isNullOrUndefined(_AbortController) &&
+          !isNullOrUndefined(_Headers));
 }
 
 export default fetchRequest;

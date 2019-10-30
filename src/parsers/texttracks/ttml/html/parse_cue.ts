@@ -22,11 +22,9 @@ import {
 import getTimeDelimiters from "../get_time_delimiters";
 import createElement from "./create_element";
 
-export interface ITTMLHTMLCue {
-  start : number;
-  end: number;
-  element : HTMLElement;
-}
+export interface ITTMLHTMLCue { start : number;
+                                end: number;
+                                element : HTMLElement; }
 
 /**
  * @param {Element} paragraph
@@ -54,23 +52,19 @@ export default function parseCue(
   // If paragraph has neither time attributes, nor
   // non-whitespace text, don't try to make a cue out of it.
   if (!paragraph.hasAttribute("begin") && !paragraph.hasAttribute("end") &&
-    /^\s*$/.test(paragraph.textContent || "")
-  ) {
+      /^\s*$/.test(paragraph.textContent === null ? "" : paragraph.textContent))
+  {
     return null;
   }
 
   const { start, end } = getTimeDelimiters(paragraph, ttParams);
-  const element = createElement(
-    paragraph,
-    body,
-    regions,
-    styles,
-    styleBase,
-    shouldTrimWhiteSpace
-  );
-  return {
-    start: start + offset,
-    end: end + offset,
-    element,
-  };
+  const element = createElement(paragraph,
+                                body,
+                                regions,
+                                styles,
+                                styleBase,
+                                shouldTrimWhiteSpace);
+  return { start: start + offset,
+           end: end + offset,
+           element };
 }

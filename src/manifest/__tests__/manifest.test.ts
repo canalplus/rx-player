@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("Manifest - Manifest", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -66,22 +67,18 @@ describe("Manifest - Manifest", () => {
 
     const period1 = { id: "0", start: 4, adaptations: {} };
     const period2 = { id: "1", start: 12, adaptations: {} };
-    const simpleFakeManifest = {
-      id: "man",
-      isLive: false,
-      duration: 5,
-      periods: [period1, period2],
-      transportType: "foobar",
-    };
+    const simpleFakeManifest = { id: "man",
+                                 isLive: false,
+                                 duration: 5,
+                                 periods: [period1, period2],
+                                 transportType: "foobar" };
 
     const fakePeriod = jest.fn((period) => {
-      return { id: "foo" + period.id, parsingErrors: [] };
+      return { id: `foo${period.id}`, parsingErrors: [] };
     });
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    jest.mock("../period", () =>  ({
-      __esModule: true,
-      default: fakePeriod,
-    }));
+    jest.mock("../period", () =>  ({ __esModule: true,
+                                     default: fakePeriod }));
 
     const Manifest = require("../manifest").default;
     const manifest = new Manifest(simpleFakeManifest, {});
@@ -89,10 +86,8 @@ describe("Manifest - Manifest", () => {
     expect(fakePeriod).toHaveBeenCalledWith(period1, undefined);
     expect(fakePeriod).toHaveBeenCalledWith(period2, undefined);
 
-    expect(manifest.periods).toEqual([
-      { id: "foo0", parsingErrors: [] },
-      { id: "foo1", parsingErrors: [] },
-    ]);
+    expect(manifest.periods).toEqual([ { id: "foo0", parsingErrors: [] },
+                                       { id: "foo1", parsingErrors: [] } ]);
     expect(manifest.adaptations).toEqual({});
 
     expect(logSpy).not.toHaveBeenCalled();
@@ -119,7 +114,7 @@ describe("Manifest - Manifest", () => {
     const representationFilter = function() { return false; };
 
     const fakePeriod = jest.fn((period) => {
-      return { id: "foo" + period.id, parsingErrors: [] };
+      return { id: `foo${period.id}`, parsingErrors: [] };
     });
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
     jest.mock("../period", () =>  ({
@@ -159,7 +154,7 @@ describe("Manifest - Manifest", () => {
     };
 
     const fakePeriod = jest.fn((period) => {
-      return { ...period, id: "foo" + period.id, parsingErrors: [] };
+      return { ...period, id: `foo${period.id}`, parsingErrors: [] };
     });
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
     jest.mock("../period", () =>  ({
@@ -202,8 +197,9 @@ describe("Manifest - Manifest", () => {
 
     const fakePeriod = jest.fn((period) => {
       return {
-        id: "foo" + period.id,
-        parsingErrors: [new Error("a" + period.id), new Error(period.id)],
+        id: `foo${period.id}`,
+        parsingErrors: [ new Error(`a${period.id}`),
+                         new Error(period.id) ],
       };
     });
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
@@ -243,8 +239,8 @@ describe("Manifest - Manifest", () => {
 
     const fakePeriod = jest.fn((period) => {
       return {
-        id: "foo" + period.id,
-        parsingErrors: [new Error("a" + period.id), new Error(period.id)],
+        id: `foo${period.id}`,
+        parsingErrors: [new Error(`a${period.id}`), new Error(period.id)],
       };
     });
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
@@ -282,8 +278,8 @@ describe("Manifest - Manifest", () => {
 
     const fakePeriod = jest.fn((period) => {
       return {
-        id: "foo" + period.id,
-        parsingErrors: [new Error("a" + period.id), new Error(period.id)],
+        id: `foo${period.id}`,
+        parsingErrors: [new Error(`a${period.id}`), new Error(period.id)],
       };
     });
     const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
@@ -331,7 +327,7 @@ describe("Manifest - Manifest", () => {
     const fakePeriod = jest.fn((period) => {
       return {
         ...period,
-        id: "foo" + period.id,
+        id: `foo${period.id}`,
         parsingErrors: [new Error(period.id)],
       };
     });
@@ -374,7 +370,7 @@ describe("Manifest - Manifest", () => {
     const fakePeriod = jest.fn((period) => {
       return {
         ...period,
-        id: "foo" + period.id,
+        id: `foo${period.id}`,
         parsingErrors: [new Error(period.id)],
       };
     });
@@ -438,7 +434,7 @@ describe("Manifest - Manifest", () => {
     const fakePeriod = jest.fn((period) => {
       return {
         ...period,
-        id: "foo" + period.id,
+        id: `foo${period.id}`,
         parsingErrors: [new Error(period.id)],
       };
     });
@@ -562,7 +558,7 @@ describe("Manifest - Manifest", () => {
     const fakePeriod = jest.fn((period) => {
       return {
         ...period,
-        id: "foo" + period.id,
+        id: `foo${period.id}`,
         parsingErrors: [new Error(period.id)],
       };
     });
@@ -667,7 +663,7 @@ describe("Manifest - Manifest", () => {
     const fakePeriod = jest.fn((period) => {
       return {
         ...period,
-        id: "foo" + period.id,
+        id: `foo${period.id}`,
         parsingErrors: [new Error(period.id)],
       };
     });
@@ -752,7 +748,7 @@ describe("Manifest - Manifest", () => {
     const fakePeriod = jest.fn((period) => {
       return {
         ...period,
-        id: "foo" + period.id,
+        id: `foo${period.id}`,
         parsingErrors: [new Error(period.id)],
       };
     });
@@ -835,7 +831,7 @@ describe("Manifest - Manifest", () => {
     const fakePeriod = jest.fn((period) => {
       return {
         ...period,
-        id: "foo" + period.id,
+        id: `foo${period.id}`,
         parsingErrors: [new Error(period.id)],
       };
     });
@@ -902,3 +898,4 @@ describe("Manifest - Manifest", () => {
     eeSpy.mockRestore();
   });
 });
+/* tslint:enable no-unsafe-any */

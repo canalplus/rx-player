@@ -23,8 +23,10 @@ describe("MediaCapabilitiesProber - getProbedConfiguration", () => {
       extend: mockExtend,
       filterConfigurationWithCapabilities: mockFilterConfigurationWithCapabilities,
     }));
+     /* tslint:disable no-unsafe-any */
     const getProbedConfiguration = require("../capabilities").default;
     expect(getProbedConfiguration({}, ["Athos", "Portos", "Aramis"]))
       .toEqual(expectedResult);
+     /* tslint:enable no-unsafe-any */
   });
 });

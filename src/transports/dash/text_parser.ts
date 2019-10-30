@@ -46,7 +46,7 @@ function parseMP4EmbeddedTrack({ response,
                                                                    string>
 ) : ITextParserObservable {
   const { period, representation, segment } = content;
-  const { isInit, indexRange } = segment;
+  const { isInit, indexRange, timestampOffset = 0 } = segment;
   const { language } = content.adaptation;
   const { data, isChunked } = response;
 
@@ -59,7 +59,8 @@ function parseMP4EmbeddedTrack({ response,
   }
 
   const sidxSegments = getSegmentsFromSidx(chunkBytes,
-                                           indexRange ? indexRange[0] : 0);
+                                           Array.isArray(indexRange) ? indexRange[0] :
+                                                                       0);
 
   if (isInit) {
     const mdhdTimescale = getMDHDTimescale(chunkBytes);
@@ -67,12 +68,12 @@ function parseMP4EmbeddedTrack({ response,
                                              duration: 0,
                                              timescale: mdhdTimescale } :
                                            null;
-    if (sidxSegments) {
+    if (Array.isArray(sidxSegments) && sidxSegments.length > 0) {
       representation.index._addSegments(sidxSegments);
     }
     return observableOf({ chunkData: null,
                           chunkInfos,
-                          chunkOffset: segment.timestampOffset || 0,
+                          chunkOffset: timestampOffset,
                           appendWindow: [period.start, period.end] });
   } else { // not init
     const chunkInfos = getISOBMFFTimingInfos(chunkBytes, isChunked, segment, init);
@@ -110,7 +111,7 @@ function parseMP4EmbeddedTrack({ response,
         type = "vtt";
     }
 
-    if (!type) {
+    if (type === undefined) {
       throw new Error("The codec used for the subtitles " +
                       `"${codec}" is not managed yet.`);
     }
@@ -124,7 +125,7 @@ function parseMP4EmbeddedTrack({ response,
                         timescale } ;
     return observableOf({ chunkData,
                           chunkInfos,
-                          chunkOffset: segment.timestampOffset || 0,
+                          chunkOffset: timestampOffset,
                           appendWindow: [period.start, period.end] });
   }
 }
@@ -136,10 +137,11 @@ function parsePlainTextTrack({ response,
 ) : ITextParserObservable {
   const { adaptation, period, representation, segment } = content;
   const { language } = adaptation;
+  const { timestampOffset = 0 } = segment;
   if (segment.isInit) {
     return observableOf({ chunkData: null,
                           chunkInfos: null,
-                          chunkOffset: segment.timestampOffset || 0,
+                          chunkOffset: timestampOffset,
                           appendWindow: [period.start, period.end] });
   }
 
@@ -179,7 +181,7 @@ function parsePlainTextTrack({ response,
       type = "vtt";
   }
 
-  if (!type) {
+  if (type === undefined) {
     const { codec = "" } = representation;
     const codeLC = codec.toLowerCase();
     if (codeLC === "srt") {
@@ -198,7 +200,7 @@ function parsePlainTextTrack({ response,
                       timescale };
   return observableOf({ chunkData,
                         chunkInfos: null,
-                        chunkOffset: segment.timestampOffset || 0,
+                        chunkOffset: timestampOffset,
                         appendWindow: [period.start, period.end] });
 }
 
@@ -215,11 +217,12 @@ export default function textTrackParser({ response,
                                                              null >
 ) : ITextParserObservable {
   const { period, representation, segment } = content;
+  const { timestampOffset = 0 } = segment;
   const { data, isChunked } = response;
   if (data == null) { // No data, just return empty infos
     return observableOf({ chunkData: null,
                           chunkInfos: null,
-                          chunkOffset: segment.timestampOffset || 0,
+                          chunkOffset: timestampOffset,
                           appendWindow: [period.start, period.end] });
   }
 

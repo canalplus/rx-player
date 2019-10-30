@@ -62,7 +62,9 @@ function parsePeriodChildren(periodChildren : NodeList) : IPeriodChildren {
       switch (currentElement.nodeName) {
 
         case "BaseURL":
-          baseURL = currentElement.textContent || "";
+          baseURL = currentElement.textContent === null ?
+            "" :
+            currentElement.textContent;
           break;
 
         case "AdaptationSet":

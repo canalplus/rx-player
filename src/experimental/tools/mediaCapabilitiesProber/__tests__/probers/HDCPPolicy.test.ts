@@ -18,6 +18,8 @@ import { of as observableOf } from "rxjs";
 import PPromise from "../../../../../utils/promise";
 import { ProberStatus } from "../../types";
 
+/* tslint:disable no-unsafe-any */
+
 describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -135,3 +137,5 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       });
   });
 });
+
+/* tslint:disable no-unsafe-any */

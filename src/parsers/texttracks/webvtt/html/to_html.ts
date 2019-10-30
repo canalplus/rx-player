@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import convertPayloadToHTML from "./convert_payload_to_html";
 import { IStyleElements } from "./parse_style_block";
 
-export interface IVTTHTMLCue {
-  start : number;
-  end: number;
-  element : HTMLElement;
-}
+export interface IVTTHTMLCue { start : number;
+                               end: number;
+                               element : HTMLElement; }
 
 /**
  * Parse cue block into an object with the following properties:
@@ -36,13 +35,12 @@ export interface IVTTHTMLCue {
  * @returns {Object|undefined}
  */
 export default function toHTML(
-  cueObj : {
-    start : number;
-    end : number;
-    header? : string;
-    payload : string[];
-  },
-  styling : { classes : IStyleElements; global? : string }
+  cueObj : { start : number;
+             end : number;
+             header? : string;
+             payload : string[]; },
+  styling : { classes : IStyleElements;
+              global? : string; }
 ) : IVTTHTMLCue {
   const { start, end, header, payload } = cueObj;
 
@@ -74,9 +72,10 @@ export default function toHTML(
   spanElement.setAttributeNode(attr);
 
   const { global, classes } = styling;
-  const localStyle = header ? classes[header] : undefined;
+  const localStyle = isNonEmptyString(header) ? classes[header] :
+                                                undefined;
   const styles = [global, localStyle]
-    .filter((s) => !!s)
+    .filter((s) => s !== undefined)
     .join("");
 
   attr.value += styles;
@@ -90,9 +89,7 @@ export default function toHTML(
   region.appendChild(pElement) ;
   pElement.appendChild(spanElement);
 
-  return {
-    start,
-    end,
-    element: region,
-  };
+  return { start,
+           end,
+           element: region };
 }

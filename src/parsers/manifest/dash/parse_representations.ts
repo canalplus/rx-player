@@ -156,18 +156,18 @@ export default function parseRepresentations(
     // 4-2-3. Set ID
     const representationID = representation.attributes.id != null ?
       representation.attributes.id :
-      (representation.attributes.bitrate +
+      (String(representation.attributes.bitrate) +
          (representation.attributes.height != null ?
-            ("-" + representation.attributes.height) :
+            (`-${representation.attributes.height}`) :
             "") +
          (representation.attributes.width != null ?
-            ("-" + representation.attributes.width) :
+            (`-${representation.attributes.width}`) :
             "") +
          (representation.attributes.mimeType != null ?
-            ("-" + representation.attributes.mimeType) :
+            (`-${representation.attributes.mimeType}`) :
             "") +
          (representation.attributes.codecs != null ?
-            ("-" + representation.attributes.codecs) :
+            (`-${representation.attributes.codecs}`) :
             ""));
     // 4-2-4. Construct Representation Base
     const parsedRepresentation : IParsedRepresentation =

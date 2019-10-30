@@ -16,6 +16,7 @@
 
 import PPromise from "../../utils/promise";
 
+/* tslint:disable no-unsafe-any */
 describe("compat - play", () => {
   it("should call play and returns an Observable if play returns a Promise", (done) => {
     const mockPlay = jest.fn(() => PPromise.resolve());
@@ -66,3 +67,4 @@ describe("compat - play", () => {
     });
   });
 });
+/* tslint:enable no-unsafe-any */

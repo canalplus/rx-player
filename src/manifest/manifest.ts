@@ -172,12 +172,15 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
      * v3.x.x manages adaptations at the Manifest level
      */
     /* tslint:disable:deprecation */
-    this.adaptations = (this.periods[0] && this.periods[0].adaptations) || {};
+    this.adaptations = this.periods[0] == null ? {} :
+                       this.periods[0].adaptations == null ? {} :
+                       this.periods[0].adaptations;
     /* tslint:enable:deprecation */
 
     this.minimumTime = args.minimumTime;
     this.isLive = args.isLive;
-    this.uris = args.uris || [];
+    this.uris = args.uris === undefined ? [] :
+                                          args.uris;
 
     this.lifetime = args.lifetime;
     this.suggestedPresentationDelay = args.suggestedPresentationDelay;
@@ -190,10 +193,10 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     }
     this._duration = args.duration;
 
-    if (supplementaryImageTracks.length) {
+    if (supplementaryImageTracks.length > 0) {
       this.addSupplementaryImageAdaptations(supplementaryImageTracks);
     }
-    if (supplementaryTextTracks.length) {
+    if (supplementaryTextTracks.length > 0) {
       this.addSupplementaryTextAdaptations(supplementaryTextTracks);
     }
   }
@@ -217,14 +220,16 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @param {Period} period
    * @returns {Period|null}
    */
-  getPeriodAfter(period : Period) : Period|null {
+  getPeriodAfter(period : Period) : Period | null {
     const endOfPeriod = period.end;
     if (endOfPeriod == null) {
       return null;
     }
-    return arrayFind(this.periods, (_period) => {
+    const nextPeriod = arrayFind(this.periods, (_period) => {
       return _period.end == null || endOfPeriod < _period.end;
-    }) || null;
+    });
+    return nextPeriod === undefined ? null :
+                                      nextPeriod;
   }
 
   /**
@@ -251,7 +256,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     warnOnce("manifest.getAdaptations() is deprecated." +
              " Please use manifest.period[].getAdaptations() instead");
     const firstPeriod = this.periods[0];
-    if (!firstPeriod) {
+    if (firstPeriod == null) {
       return [];
     }
     const adaptationsByType = firstPeriod.adaptations;
@@ -274,10 +279,12 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     warnOnce("manifest.getAdaptationsForType(type) is deprecated." +
              " Please use manifest.period[].getAdaptationsForType(type) instead");
     const firstPeriod = this.periods[0];
-    if (!firstPeriod) {
+    if (firstPeriod == null) {
       return [];
     }
-    return firstPeriod.adaptations[adaptationType] || [];
+    const adaptationsForType = firstPeriod.adaptations[adaptationType];
+    return adaptationsForType == null ? [] :
+                                        adaptationsForType;
   }
 
   /**
@@ -347,7 +354,9 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     }
     const { maximumTime } = this;
     if (maximumTime == null) {
-      const ast = this.availabilityStartTime || 0;
+      const ast = this.availabilityStartTime !== undefined ?
+        this.availabilityStartTime :
+        0;
       if (this._clockOffset == null) {
         // server's time not known, rely on user's clock
         return (Date.now() / 1000) - ast;
@@ -396,11 +405,11 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       return newAdaptation;
     });
 
-    if (newImageTracks.length && this.periods.length) {
+    if (newImageTracks.length > 0 && this.periods.length > 0) {
       const { adaptations } = this.periods[0];
       adaptations.image =
-        adaptations.image ? adaptations.image.concat(newImageTracks) :
-                            newImageTracks;
+        adaptations.image != null ? adaptations.image.concat(newImageTracks) :
+                                    newImageTracks;
     }
   }
 
@@ -421,8 +430,9 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       languages,
       closedCaption,
     }) => {
-      const langsToMapOn : string[] = language ? [language] :
-                                                 languages || [];
+      const langsToMapOn : string[] = language != null ? [language] :
+                                      languages != null ? languages :
+                                                          [];
 
       return allSubs.concat(langsToMapOn.map((_language) => {
         const adaptationID = "gen-text-ada-" + generateNewId();
@@ -445,11 +455,11 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       }));
     }, []);
 
-    if (newTextAdaptations.length && this.periods.length) {
+    if (newTextAdaptations.length > 0 && this.periods.length > 0) {
       const { adaptations } = this.periods[0];
       adaptations.text =
-        adaptations.text ? adaptations.text.concat(newTextAdaptations) :
-                           newTextAdaptations;
+        adaptations.text != null ? adaptations.text.concat(newTextAdaptations) :
+                                   newTextAdaptations;
     }
   }
 }

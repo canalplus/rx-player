@@ -45,6 +45,7 @@ import {
 } from "../../errors";
 import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
+import isNonEmptyString from "../../utils/is_non_empty_string";
 import retryObsWithBackoff from "../../utils/rx-retry_with_backoff";
 import tryCatch from "../../utils/rx-try_catch";
 import checkKeyStatuses from "./check_key_statuses";
@@ -72,7 +73,9 @@ function formatGetLicenseError(error: unknown) : ICustomError {
 
   const err = new EncryptedMediaError("KEY_LOAD_ERROR",
                                       "An error occured when calling `getLicense`.");
-  if  (error != null && (error as { message : string }).message) {
+  if (error != null &&
+      isNonEmptyString((error as { message : string }).message))
+  {
     err.message = (error as { message : string }).message;
   }
   return err;
@@ -125,7 +128,7 @@ export default function SessionEventsListener(
 
         const keyStatusesEvents$ = getKeyStatusesEvents();
         const handledKeyStatusesChange$ = tryCatch(() => {
-          return keySystem && keySystem.onKeyStatusesChange ?
+          return typeof keySystem.onKeyStatusesChange === "function" ?
                    castToObservable(
                      keySystem.onKeyStatusesChange(keyStatusesEvent, session)
                    ) as Observable<TypedArray|ArrayBuffer|null> :
@@ -136,7 +139,9 @@ export default function SessionEventsListener(
           catchError((error: unknown) => {
             const err = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
                                                 "Unknown `onKeyStatusesChange` error");
-            if  (error != null && (error as { message : string }).message) {
+            if  (error != null &&
+                 isNonEmptyString((error as { message : string }).message))
+            {
               err.message = (error as { message : string }).message;
             }
             throw err;
@@ -148,8 +153,9 @@ export default function SessionEventsListener(
   const keyMessages$ : Observable<IEMEWarningEvent | IMediaKeySessionHandledEvents> =
     onKeyMessage$(session).pipe(mergeMap((messageEvent: MediaKeyMessageEvent) => {
       const message = new Uint8Array(messageEvent.message);
-      const messageType = messageEvent.messageType ||
-                          "license-request";
+      const messageType = isNonEmptyString(messageEvent.messageType) ?
+        messageEvent.messageType :
+        "license-request";
 
       log.debug(`EME: Event message type ${messageType}`, session, messageEvent);
 
@@ -214,7 +220,7 @@ export default function SessionEventsListener(
                     keyErrors,
                     sessionWarningSubject$);
 
-  return session.closed ?
+  return session.closed != null ?
            sessionEvents.pipe(takeUntil(castToObservable(session.closed))) :
            sessionEvents;
 }

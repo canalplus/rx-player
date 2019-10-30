@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("compat - canPatchISOBMFFSegment", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -41,3 +42,4 @@ describe("compat - canPatchISOBMFFSegment", () => {
     expect(canPatchISOBMFFSegment.default()).toBe(false);
   });
 });
+/* tslint:enable no-unsafe-any */

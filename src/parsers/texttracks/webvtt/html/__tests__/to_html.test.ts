@@ -16,6 +16,7 @@
 
 import { IStyleElements } from "../parse_style_block";
 
+/* tslint:disable no-unsafe-any */
 describe("parsers - webvtt - toHTML", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -225,3 +226,4 @@ describe("parsers - webvtt - toHTML", () => {
       "</div>");
   });
 });
+/* tslint:enable no-unsafe-any */

@@ -26,7 +26,7 @@ export default function getAttributeInElements(
 ) : string|undefined {
   for (let i = 0; i <= elements.length - 1; i++) {
     const element = elements[i];
-    if (element) {
+    if (element !== undefined) {
       const directAttrValue = element.getAttribute(attribute);
       if (directAttrValue != null) {
         return directAttrValue;

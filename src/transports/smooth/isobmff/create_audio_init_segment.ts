@@ -28,11 +28,9 @@ import {
 import createInitSegment from "./create_init_segment";
 import getAacesHeader from "./get_aaces_header";
 
-type IPSSList = Array<{
-  systemId : string;
-  privateData? : Uint8Array;
-  keyIds? : Uint8Array;
-}>;
+type IPSSList = Array<{ systemId : string;
+                        privateData? : Uint8Array;
+                        keyIds? : Uint8Array; }>;
 
 /**
  * Return full audio initialization segment as Uint8Array.
@@ -57,14 +55,19 @@ export default function createAudioInitSegment(
   keyId? : Uint8Array,
   pssList : IPSSList = []
 ) : Uint8Array {
-  const _codecPrivateData = codecPrivateData ||
-    getAacesHeader(2, sampleRate, channelsCount);
+  const _codecPrivateData = codecPrivateData.length === 0 ?
+    getAacesHeader(2, sampleRate, channelsCount) :
+    codecPrivateData;
 
   const esds = createESDSBox(1, _codecPrivateData);
   const stsd : Uint8Array = (() => {
-    if (!pssList.length || keyId == null) {
-      const mp4a =
-        createMP4ABox(1, channelsCount, sampleSize, packetSize, sampleRate, esds);
+    if (pssList.length === 0 || keyId == null) {
+      const mp4a = createMP4ABox(1,
+                                 channelsCount,
+                                 sampleSize,
+                                 packetSize,
+                                 sampleRate,
+                                 esds);
       return createSTSDBox([mp4a]);
     }
     const tenc = createTENCBox(1, 8, keyId);
@@ -72,8 +75,13 @@ export default function createAudioInitSegment(
     const schm = createSCHMBox("cenc", 65536);
     const frma = createFRMABox("mp4a");
     const sinf = createBoxWithChildren("sinf", [frma, schm, schi]);
-    const enca =
-      createENCABox(1, channelsCount, sampleSize, packetSize, sampleRate, esds, sinf);
+    const enca = createENCABox(1,
+                               channelsCount,
+                               sampleSize,
+                               packetSize,
+                               sampleRate,
+                               esds,
+                               sinf);
     return createSTSDBox([enca]);
   })();
 

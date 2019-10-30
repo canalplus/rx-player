@@ -38,7 +38,7 @@ export default function updatePeriodInPlace(oldPeriod : Period,
     const oldAdaptation = oldAdaptations[j];
     const newAdaptation = arrayFind(newAdaptations,
                                     a => a.id === oldAdaptation.id);
-    if (!newAdaptation) {
+    if (newAdaptation === undefined) {
       log.warn("Manifest: Adaptation \"" +
                oldAdaptations[j].id +
                "\" not found when merging.");
@@ -52,10 +52,9 @@ export default function updatePeriodInPlace(oldPeriod : Period,
           arrayFind(newRepresentations,
                     representation => representation.id === oldRepresentation.id);
 
-        if (!newRepresentation) {
-          log.warn("Manifest: Representation \"" +
-                   oldRepresentations[k].id +
-                   "\" not found when merging.");
+        if (newRepresentation === undefined) {
+          log.warn(`Manifest: Representation "${oldRepresentations[k].id}" ` +
+                   "not found when merging.");
         } else {
           oldRepresentation.index._update(newRepresentation.index);
         }

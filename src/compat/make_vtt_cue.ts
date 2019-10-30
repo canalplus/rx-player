@@ -34,14 +34,14 @@ export default function makeCue(
   endTime : number,
   payload : string
 ) : ICompatVTTCue|TextTrackCue|null {
-  if (!VTTCue_) {
+  if (VTTCue_ == null) {
     throw new Error("VTT cues not supported in your target");
   }
   if (startTime >= endTime) {
 
     // IE/Edge will throw in this case.
     // See issue #501
-    log.warn("Compat: Invalid cue times: " + startTime + " - " + endTime);
+    log.warn(`Compat: Invalid cue times: ${startTime} - ${endTime}`);
     return null;
   }
 

@@ -37,6 +37,6 @@ export default function isPlaybackStuck(
   return (isFirefox &&
           isStalled &&
           state === "timeupdate" &&
-          !!currentRange &&
+          currentRange != null &&
           currentRange.end - time > FREEZE_THRESHOLD);
 }

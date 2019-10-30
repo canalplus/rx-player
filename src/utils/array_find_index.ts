@@ -27,9 +27,11 @@ export default function arrayFindIndex<T>(
     thisArg? : any
 ) : number {
   if (typeof (Array.prototype as any).findIndex === "function") {
+    /* tslint:disable no-unsafe-any */
     /* tslint:disable ban */
     return (arr as any).findIndex(predicate, thisArg);
     /* tslint:enable ban */
+    /* tslint:enable no-unsafe-any */
   }
 
   const len = arr.length >>> 0;

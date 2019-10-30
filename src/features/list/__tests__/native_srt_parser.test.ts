@@ -17,6 +17,7 @@
 import srtParser from "../../../parsers/texttracks/srt/native";
 import addNativesrtFeature from "../native_srt_parser";
 
+/* tslint:disable no-unsafe-any */
 jest.mock("../../../parsers/texttracks/srt/native", () => ({
   __esModule: true,
   default: jest.fn(),
@@ -32,3 +33,4 @@ describe("Features list - native srt Parser", () => {
     expect(featureObject.nativeTextTracksParsers.srt).toBe(srtParser);
   });
 });
+/* tslint:enable no-unsafe-any */

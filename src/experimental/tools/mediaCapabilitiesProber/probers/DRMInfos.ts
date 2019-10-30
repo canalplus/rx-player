@@ -43,7 +43,8 @@ export default function probeDRMInfos(
     }
 
     const type = keySystem.type;
-    const configuration = keySystem.configuration || {};
+    const configuration = keySystem.configuration === undefined ? {} :
+                                                                  keySystem.configuration;
     const result: ICompatibleKeySystem = { type, configuration };
 
     if (requestMediaKeySystemAccess == null) {

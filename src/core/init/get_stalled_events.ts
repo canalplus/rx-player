@@ -22,10 +22,10 @@ import {
 } from "rxjs/operators";
 import { IInitClockTick } from "./types";
 
-export interface IStallingItem {
-  reason : "seeking" | "not-ready" | "buffering";
-  timestamp : number;
-}
+export interface IStallingItem { reason : "seeking" |
+                                          "not-ready" |
+                                          "buffering";
+                                 timestamp : number; }
 
 /**
  * Receive "stalling" events from the clock, try to get out of it, and re-emit
@@ -41,10 +41,8 @@ export default function getStalledEvents(
     share(),
     map(tick => tick.stalled),
     distinctUntilChanged((wasStalled, isStalled) => {
-      return !wasStalled &&
-             !isStalled ||
-             (!!wasStalled &&
-              !!isStalled &&
+      return wasStalled === null && isStalled === null ||
+             (wasStalled !== null && isStalled !== null &&
               wasStalled.reason === isStalled.reason);
     })
   );

@@ -52,7 +52,7 @@ function strToBytes(str : string) : Uint8Array {
  */
 function bytesToStr(bytes : TypedArray) : string {
   // NOTE: ugly I know, but TS is problematic here (you can try)
-  return (String.fromCharCode as any).apply(null, bytes);
+  return String.fromCharCode.apply(null, bytes as unknown as number[]);
 }
 
 /**

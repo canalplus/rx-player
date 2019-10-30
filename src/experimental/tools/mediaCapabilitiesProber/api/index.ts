@@ -78,7 +78,7 @@ const mediaCapabilitiesProber = {
    * @returns {Promise}
    */
   getStatusForHDCP(hdcp: string) : Promise<string> {
-    if (!hdcp) {
+    if (hdcp === undefined || hdcp.length === 0) {
       return PPromise.reject("MediaCapabilitiesProbers >>> Bad Arguments: " +
         "No HDCP Policy specified.");
     }
@@ -141,8 +141,8 @@ const mediaCapabilitiesProber = {
             // As only one API is called, global status is
             // requestMediaKeySystemAccess status.
             globalStatus,
-            result: requestMediaKeySystemAccessResults ?
-              requestMediaKeySystemAccessResults.result : undefined,
+            result: requestMediaKeySystemAccessResults === undefined ? undefined :
+              requestMediaKeySystemAccessResults.result,
           };
         })
         .catch(() => { // API couln't be called.
@@ -152,7 +152,8 @@ const mediaCapabilitiesProber = {
     });
     return PPromise.all(promises)
       .then((supportedConfigs) => {
-        return supportedConfigs.map(({ result }) => result);
+        return supportedConfigs
+          .map(({ result }: { result: ICompatibleKeySystem }) => result);
       });
   },
 

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("Smooth - ISOBMFF - boxes creation", () => {
    beforeEach(() => {
     jest.resetModules();
@@ -224,3 +225,4 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
     });
   });
 });
+/* tslint:enable no-unsafe-any */

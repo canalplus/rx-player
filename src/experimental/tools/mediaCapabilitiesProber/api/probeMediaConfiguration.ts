@@ -32,7 +32,7 @@ export type IBrowserAPIS =
   "requestMediaKeySystemAccess" |
   "getStatusForPolicy";
 
-interface IProbedMediaConfiguration {
+export interface IProbedMediaConfiguration {
   globalStatus: ProberStatus;
   resultsFromAPIS: Array<{
     APIName: ICapabilitiesTypes;
@@ -68,7 +68,7 @@ function probeMediaConfiguration(
   const promises = [];
   for (const browserAPI of browserAPIS) {
     const probeWithBrowser = probers[browserAPI];
-    if (probeWithBrowser) {
+    if (probeWithBrowser !== undefined) {
       promises.push(probeWithBrowser(config).then(([currentStatus, result]) => {
         resultsFromAPIS.push({ APIName: browserAPI, result });
 
@@ -94,7 +94,8 @@ function probeMediaConfiguration(
               break;
           }
         }
-      }).catch((error: Error) => log.debug(error.message || error)));
+      }).catch((error: Error) =>
+        log.debug(error.message === undefined ? error : error.message)));
     }
   }
 

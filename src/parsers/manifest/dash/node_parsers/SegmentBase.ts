@@ -24,24 +24,20 @@ import {
   parseByteRange,
 } from "./utils";
 
-export interface ISegmentBaseAttributes {
-  availabilityTimeComplete?: boolean;
-  availabilityTimeOffset?: number;
-  duration? : number;
-  indexRange?: [number, number];
-  indexRangeExact?: boolean;
-  initialization?: IParsedInitialization;
-  presentationTimeOffset?: number;
-  startNumber? : number;
-  timescale?: number;
-}
+export interface ISegmentBaseAttributes { availabilityTimeComplete?: boolean;
+                                          availabilityTimeOffset?: number;
+                                          duration? : number;
+                                          indexRange?: [number, number];
+                                          indexRangeExact?: boolean;
+                                          initialization?: IParsedInitialization;
+                                          presentationTimeOffset?: number;
+                                          startNumber? : number;
+                                          timescale?: number; }
 
-interface ISegmentBaseSegment {
-  start: number; // start timestamp
-  duration: number; // duration
-  repeatCount: number; // repeat counter
-  range?: [number, number];
-}
+interface ISegmentBaseSegment { start: number; // start timestamp
+                                duration: number;
+                                repeatCount: number; // repeat counter
+                                range?: [number, number]; }
 
 export interface IParsedSegmentBase extends ISegmentBaseAttributes {
   availabilityTimeComplete : boolean;
@@ -90,7 +86,12 @@ export default function parseSegmentBase(root: Element) : IParsedSegmentBase {
       }
         break;
       case "indexRange":
-        attributes.indexRange = parseByteRange(attribute.value) || undefined;
+        const indexRange = parseByteRange(attribute.value);
+        if (!Array.isArray(indexRange)) {
+          log.warn(`DASH: invalid indexRange ("${attribute.value}")`);
+        } else {
+          attributes.indexRange = indexRange;
+        }
         break;
       case "indexRangeExact":
         attributes.indexRangeExact = parseBoolean(attribute.value);
@@ -128,18 +129,16 @@ export default function parseSegmentBase(root: Element) : IParsedSegmentBase {
     }
   }
 
-  const timescale = attributes.timescale == null ? 1 : attributes.timescale;
-  const indexRangeExact = !!attributes.indexRangeExact;
+  const timescale = attributes.timescale == null ? 1 :
+                                                   attributes.timescale;
+  const indexRangeExact = attributes.indexRangeExact === true;
   const availabilityTimeComplete = attributes.availabilityTimeComplete == null ?
-    true : attributes.availabilityTimeComplete;
+    true :
+    attributes.availabilityTimeComplete;
 
-  return objectAssign(
-    attributes,
-    {
-      availabilityTimeComplete,
-      indexRangeExact,
-      timeline: [],
-      timescale,
-    }
-  );
+  return objectAssign(attributes,
+                      { availabilityTimeComplete,
+                        indexRangeExact,
+                        timeline: [],
+                        timescale, });
 }

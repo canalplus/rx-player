@@ -16,6 +16,7 @@
 
 import arrayFindIndex from "../../utils/array_find_index";
 
+/* tslint:disable no-unsafe-any */
 describe("Compat - clearElementSrc", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -217,3 +218,4 @@ describe("Compat - clearElementSrc", () => {
     expect(spyRemoveChild).not.toHaveBeenCalled();
   });
 });
+/* tslint:enable no-unsafe-any */

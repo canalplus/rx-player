@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "../is_non_empty_string";
+import isNullOrUndefined from "../is_null_or_undefined";
 import ISO_MAP_1_TO_3 from "./ISO_639-1_to_ISO_639-3";
 import ISO_MAP_2_TO_3 from "./ISO_639-2_to_ISO_639-3";
 
@@ -40,13 +42,13 @@ interface INormalizedTextTrackObject
  * @returns {string}
  */
 function normalizeLanguage(_language : string) : string {
-  if (_language == null || _language === "") {
+  if (isNullOrUndefined(_language) || _language === "") {
     return "";
   }
   const fields = ("" + _language).toLowerCase().split("-");
   const base = fields[0];
   const normalizedBase = normalizeBase(base);
-  if (normalizedBase !== undefined && normalizedBase !== "") {
+  if (isNonEmptyString(normalizedBase)) {
     return normalizedBase;
   }
   return _language;
@@ -84,7 +86,7 @@ function normalizeBase(base : string) : string|undefined {
 function normalizeTextTrack(
   _language : string|IMinimalTextTrackObject|null|undefined
 ) : INormalizedTextTrackObject|null|undefined {
-  if (_language != null) {
+  if (!isNullOrUndefined(_language)) {
     let language;
     let closedCaption = false;
     if (typeof _language === "string") {
@@ -117,7 +119,7 @@ function normalizeTextTrack(
 function normalizeAudioTrack(
   _language : string|IMinimalAudioTrackObject|null|undefined
 ) : INormalizedAudioTrackObject|null|undefined {
-  if (_language != null) {
+  if (!isNullOrUndefined(_language)) {
     let language;
     let audioDescription = false;
     if (typeof _language === "string") {

@@ -77,7 +77,9 @@ function parseRepresentationChildren(
 
       switch (currentElement.nodeName) {
         case "BaseURL":
-          children.baseURL = currentElement.textContent || "";
+          children.baseURL = currentElement.textContent === null ?
+            "" :
+            currentElement.textContent;
           break;
         case "SegmentBase":
           children.segmentBase = parseSegmentBase(currentElement);

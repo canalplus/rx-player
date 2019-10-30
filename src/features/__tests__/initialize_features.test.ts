@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("Features - initializeFeaturesObject", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -359,3 +360,4 @@ describe("Features - initializeFeaturesObject", () => {
     delete (window as any).__RELATIVE_PATH__;
   });
 });
+/* tslint:enable no-unsafe-any */

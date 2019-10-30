@@ -44,8 +44,8 @@ function getISOBMFFTimingInfos(
   let startTime;
   let duration;
   const trunDuration = getDurationFromTrun(buffer);
-  const timescale = initInfos && initInfos.timescale ? initInfos.timescale :
-                                                       segment.timescale;
+  const timescale = initInfos !== undefined ? initInfos.timescale :
+                                              segment.timescale;
 
   const baseDecodeTime = getTrackFragmentDecodeTime(buffer);
   if (isChunked) { // when chunked, no mean to know the duration for now

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("Compat - isVTTCue", () => {
   class MockVTTCue {
     public startTime : number;
@@ -58,3 +59,4 @@ describe("Compat - isVTTCue", () => {
     (window as any).VTTCue = originalVTTCue;
   });
 });
+/* tslint:enable no-unsafe-any */

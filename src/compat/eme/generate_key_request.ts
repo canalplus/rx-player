@@ -65,20 +65,20 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
     // yep
     if (initData[offset + 12] === 0x10 &&
         initData[offset + 13] === 0x77 &&
-        initData[offset + 14] === 0xef &&
-        initData[offset + 15] === 0xec &&
-        initData[offset + 16] === 0xc0 &&
-        initData[offset + 17] === 0xb2 &&
-        initData[offset + 18] === 0x4d &&
+        initData[offset + 14] === 0xEF &&
+        initData[offset + 15] === 0xEC &&
+        initData[offset + 16] === 0xC0 &&
+        initData[offset + 17] === 0xB2 &&
+        initData[offset + 18] === 0x4D &&
         initData[offset + 19] === 0x02 &&
-        initData[offset + 20] === 0xac &&
-        initData[offset + 21] === 0xe3 &&
-        initData[offset + 22] === 0x3c &&
-        initData[offset + 23] === 0x1e &&
+        initData[offset + 20] === 0xAC &&
+        initData[offset + 21] === 0xE3 &&
+        initData[offset + 22] === 0x3C &&
+        initData[offset + 23] === 0x1E &&
         initData[offset + 24] === 0x52 &&
-        initData[offset + 25] === 0xe2 &&
-        initData[offset + 26] === 0xfb &&
-        initData[offset + 27] === 0x4b
+        initData[offset + 25] === 0xE2 &&
+        initData[offset + 26] === 0xFB &&
+        initData[offset + 27] === 0x4B
     ) {
       log.info("Compat: CENC PSSH found.");
       cencs = concat(cencs, currentPSSH);
@@ -129,7 +129,8 @@ export default function generateKeyRequest(
     } else {
       patchedInit = initData;
     }
-    return castToObservable(session.generateRequest(initDataType || "",
+    return castToObservable(session.generateRequest(initDataType == null ? "" :
+                                                                           initDataType,
                                                     patchedInit));
   });
 }

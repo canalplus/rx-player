@@ -199,7 +199,7 @@ export default class NativeTextSourceBuffer
     const { _trackElement,
             _videoElement } = this;
 
-    if (_trackElement && _videoElement &&
+    if (_trackElement !== undefined && _videoElement != null &&
         _videoElement.hasChildNodes()
     ) {
       try {
@@ -209,11 +209,11 @@ export default class NativeTextSourceBuffer
       }
     }
 
-    if (this._track) {
+    if (this._track != null) {
       this._track.mode = "disabled";
     }
 
-    if (this._trackElement) {
+    if (this._trackElement != null) {
       this._trackElement.innerHTML = "";
     }
   }

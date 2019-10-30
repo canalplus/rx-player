@@ -17,6 +17,7 @@
 import { of as observableOf } from "rxjs";
 import features from "../../features";
 import request from "../../utils/request";
+import takeFirstSet from "../../utils/take_first_set";
 import {
   IImageParserObservable,
   ISegmentLoaderArguments,
@@ -64,7 +65,8 @@ export function imageParser(
                               time: segment.isInit ? -1 : segment.time,
                               timescale: segment.timescale } :
                             null,
-                          chunkOffset: segment.timestampOffset || 0,
+                          chunkOffset: takeFirstSet<number>(segment.timestampOffset,
+                                                            0),
                           appendWindow: [period.start, period.end] });
   }
 
@@ -78,6 +80,7 @@ export function imageParser(
                         chunkInfos: { time: 0,
                                         duration: Number.MAX_VALUE,
                                         timescale: bifObject.timescale },
-                        chunkOffset: segment.timestampOffset || 0,
+                        chunkOffset: takeFirstSet<number>(segment.timestampOffset,
+                                                          0),
                         appendWindow: [period.start, period.end] });
 }

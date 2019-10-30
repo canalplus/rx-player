@@ -39,7 +39,7 @@ const boxNamesMem : { [boxName: string]: Uint8Array } = {};
  * @returns {Uint8Array}
  */
 function boxName(str : string) : Uint8Array {
-  if (boxNamesMem[str]) {
+  if (boxNamesMem[str] != null) {
     return boxNamesMem[str];
   }
 

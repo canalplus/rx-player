@@ -17,12 +17,10 @@
 import log from "../../../../log";
 import { parseByteRange } from "./utils";
 
-export interface IParsedSegmentURL {
-  media?: string;
-  mediaRange?: [number, number];
-  index?: string;
-  indexRange?: [number, number];
-}
+export interface IParsedSegmentURL { media?: string;
+                                     mediaRange?: [number, number];
+                                     index?: string;
+                                     indexRange?: [number, number]; }
 
 /**
  * @param {Element} root
@@ -37,8 +35,8 @@ export default function parseSegmentURL(root : Element) : IParsedSegmentURL {
         parsedSegmentURL.media = attribute.value;
         break;
       case "indexRange": {
-        const indexRange = parseByteRange(attribute.value) || undefined;
-        if (!indexRange) {
+        const indexRange = parseByteRange(attribute.value);
+        if (!Array.isArray(indexRange)) {
           log.warn(`DASH: invalid indexRange ("${attribute.value}")`);
         } else {
           parsedSegmentURL.indexRange = indexRange;
@@ -49,8 +47,8 @@ export default function parseSegmentURL(root : Element) : IParsedSegmentURL {
         parsedSegmentURL.index = attribute.value;
         break;
       case "mediaRange": {
-        const mediaRange = parseByteRange(attribute.value) || undefined;
-        if (!mediaRange) {
+        const mediaRange = parseByteRange(attribute.value);
+        if (!Array.isArray(mediaRange)) {
           log.warn(`DASH: invalid mediaRange ("${attribute.value}")`);
         } else {
           parsedSegmentURL.mediaRange = mediaRange;

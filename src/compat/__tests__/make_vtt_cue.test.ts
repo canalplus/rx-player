@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* tslint:disable no-unsafe-any */
 describe("Compat - makeVTTCue", () => {
   class MockVTTCue {
     public startTime : number;
@@ -87,3 +88,4 @@ describe("Compat - makeVTTCue", () => {
     expect(logSpy.warn).not.toHaveBeenCalled();
   });
 });
+/* tslint:enable no-unsafe-any */

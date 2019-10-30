@@ -53,7 +53,7 @@ export default function attachMediaKeys(
                                    mediaKeys,
                                    sessionsStore });
 
-    return (previousState &&
+    return (previousState != null &&
             previousState.sessionsStore !== sessionsStore ?
               previousState.sessionsStore.closeAllSessions() :
               observableOf(null)

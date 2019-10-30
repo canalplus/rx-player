@@ -36,20 +36,20 @@ export default function patchSegment(
   segment : Uint8Array,
   decodeTime : number
 ) : Uint8Array {
-  const moofOffsets = getBoxOffsets(segment, 0x6d6f6f66 /* moof */);
+  const moofOffsets = getBoxOffsets(segment, 0x6D6F6F66 /* moof */);
   if (moofOffsets == null) {
     throw new Error("Smooth: Invalid ISOBMFF given");
   }
   const moofContent = segment.subarray(moofOffsets[0] + 8, moofOffsets[1]);
 
-  const mfhdBox = getBox(moofContent, 0x6d666864 /* mfhd */);
+  const mfhdBox = getBox(moofContent, 0x6D666864 /* mfhd */);
   const trafContent = getBoxContent(moofContent, 0x74726166 /* traf */);
   if (trafContent == null || mfhdBox == null) {
     throw new Error("Smooth: Invalid ISOBMFF given");
   }
 
   const tfhdBox = getBox(trafContent, 0x74666864 /* tfhd */);
-  const trunBox = getBox(trafContent, 0x7472756e /* trun */);
+  const trunBox = getBox(trafContent, 0x7472756E /* trun */);
   if (tfhdBox == null || trunBox == null) {
     throw new Error("Smooth: Invalid ISOBMFF given");
   }
@@ -60,7 +60,10 @@ export default function patchSegment(
   const tfdtBox = createTfdtBox(decodeTime);
   const newTrunBox = addDataOffsetFlagInTrun(trunBox);
   const sencContent = getUuidContent(trafContent,
-    0xA2394F52, 0x5A9B4F14, 0xA2446C42, 0x7C648DF4);
+                                     0xA2394F52,
+                                     0x5A9B4F14,
+                                     0xA2446C42,
+                                     0x7C648DF4);
   const newTrafBox = createTrafBox(tfhdBox, tfdtBox, newTrunBox, mfhdBox, sencContent);
   const newMoof = createBoxWithChildren("moof", [mfhdBox, newTrafBox]);
   const trunOffsetInMoof = mfhdBox.length + tfhdBox.length + tfdtBox.length +

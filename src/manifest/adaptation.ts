@@ -111,7 +111,7 @@ export default class Adaptation {
     }
     this.type = parsedAdaptation.type;
 
-    const hadRepresentations = !!parsedAdaptation.representations.length;
+    const hadRepresentations = parsedAdaptation.representations.length !== 0;
     const argsRepresentations =
       filterSupportedRepresentations(parsedAdaptation.type,
                                      parsedAdaptation.representations);
@@ -151,7 +151,7 @@ export default class Adaptation {
       });
 
     // for manuallyAdded adaptations (not in the manifest)
-    this.manuallyAdded = !!isManuallyAdded;
+    this.manuallyAdded = isManuallyAdded === true;
   }
 
   /**

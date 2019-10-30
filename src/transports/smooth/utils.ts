@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "../../utils/is_non_empty_string";
 import warnOnce from "../../utils/warn_once";
 
 const ISM_REG = /(\.isml?)(\?token=\S+)?$/;
@@ -36,7 +37,13 @@ function extractISML(doc : Document) : string|null {
  */
 function extractToken(url : string) : string {
   const tokenMatch = url.match(TOKEN_REG);
-  return (tokenMatch && tokenMatch[1]) || "";
+  if (tokenMatch !== null) {
+    const match = tokenMatch[1];
+    if (match !== undefined) {
+      return match;
+    }
+  }
+  return "";
 }
 
 /**
@@ -46,7 +53,7 @@ function extractToken(url : string) : string {
  * @returns {string}
  */
 function replaceToken(url : string, token? : string) : string {
-  if (token) {
+  if (isNonEmptyString(token)) {
     return url.replace(TOKEN_REG, "?token=" + token);
   } else {
     return url.replace(TOKEN_REG, "");

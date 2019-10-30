@@ -27,15 +27,17 @@ import {
 function requestFullscreen(element : HTMLMediaElement) : void {
   if (!isFullscreen()) {
     const elt = element as ICompatHTMLMediaElement;
-    if (elt.requestFullscreen) {
+    /* tslint:disable no-unbound-method */
+    if (typeof elt.requestFullscreen === "function") {
+    /* tslint:enable no-unbound-method */
       /* tslint:disable no-floating-promises */
       elt.requestFullscreen();
       /* tslint:enable no-floating-promises */
-    } else if (elt.msRequestFullscreen) {
+    } else if (typeof elt.msRequestFullscreen === "function") {
       elt.msRequestFullscreen();
-    } else if (elt.mozRequestFullScreen) {
+    } else if (typeof elt.mozRequestFullScreen === "function") {
       elt.mozRequestFullScreen();
-    } else if (elt.webkitRequestFullscreen) {
+    } else if (typeof elt.webkitRequestFullscreen === "function") {
       (
         elt.webkitRequestFullscreen as any
       )((Element as any).ALLOW_KEYBOARD_INPUT);
@@ -49,15 +51,17 @@ function requestFullscreen(element : HTMLMediaElement) : void {
 function exitFullscreen() : void {
   if (isFullscreen()) {
     const doc = document as ICompatDocument;
-    if (doc.exitFullscreen) {
+    /* tslint:disable no-unbound-method */
+    if (typeof doc.exitFullscreen === "function") {
+    /* tslint:enable no-unbound-method */
       /* tslint:disable no-floating-promises */
       doc.exitFullscreen();
       /* tslint:enable no-floating-promises */
-    } else if (doc.msExitFullscreen) {
+    } else if (typeof doc.msExitFullscreen === "function") {
       doc.msExitFullscreen();
-    } else if (doc.mozCancelFullScreen) {
+    } else if (typeof doc.mozCancelFullScreen === "function") {
       doc.mozCancelFullScreen();
-    } else if (doc.webkitExitFullscreen) {
+    } else if (typeof doc.webkitExitFullscreen === "function") {
       doc.webkitExitFullscreen();
     }
   }
@@ -71,10 +75,10 @@ function exitFullscreen() : void {
  */
 function isFullscreen() : boolean {
   const doc = document as ICompatDocument;
-  return !!(doc.fullscreenElement ||
-            doc.mozFullScreenElement ||
-            doc.webkitFullscreenElement ||
-            doc.msFullscreenElement);
+  return (doc.fullscreenElement != null ||
+          doc.mozFullScreenElement != null ||
+          doc.webkitFullscreenElement != null ||
+          doc.msFullscreenElement != null);
 }
 
 export {

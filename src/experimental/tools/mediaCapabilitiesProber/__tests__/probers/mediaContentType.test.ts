@@ -16,6 +16,8 @@
 
 import { ProberStatus } from "../../types";
 
+/* tslint:disable no-unsafe-any */
+
 describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -66,7 +68,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
       .then(() => {
         done();
       })
-      .catch(({ message }: any) => {
+      .catch(({ message }: { message: string }) => {
         expect(message).toBe("MediaCapabilitiesProber >>> API_CALL: " +
           "Not enough arguments for calling isTypeSupported.");
         done();
@@ -273,3 +275,5 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
       });
   });
 });
+
+/* tslint:enable no-unsafe-any */

@@ -57,7 +57,7 @@ class InitializationSegmentCache<T> {
   ) : T|null {
     if (segment.isInit) {
       const value = this._cache.get(representation);
-      if (value != null) {
+      if (value !== undefined) {
         return value;
       }
     }
