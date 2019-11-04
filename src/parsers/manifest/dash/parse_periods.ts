@@ -43,7 +43,8 @@ export type IXLinkInfos = WeakMap<IPeriodIntermediateRepresentation, {
 
 export interface IManifestInfos {
   aggressiveMode : boolean; // Whether we should request new segments even if
-                            // they are not yet finished
+  availabilityTimeOffset: number; // availability time offset of the concerned
+                                  // manifest they are not yet finished
   availabilityStartTime : number; // Time from which the content starts
   baseURL? : string;
   clockOffset? : number;
@@ -73,7 +74,8 @@ export default function parsePeriods(
   }
 
   // We might to communicate the depth of the Buffer while parsing
-  const { isDynamic, timeShiftBufferDepth } = manifestInfos;
+  const { isDynamic,
+          timeShiftBufferDepth } = manifestInfos;
   const manifestBoundsCalculator = new ManifestBoundsCalculator({ isDynamic,
                                                                   timeShiftBufferDepth });
 
@@ -86,7 +88,9 @@ export default function parsePeriods(
   for (let i = periodsIR.length - 1; i >= 0; i--) {
     const periodIR = periodsIR[i];
     const xlinkInfos = manifestInfos.xlinkInfos.get(periodIR);
-    const periodBaseURL = resolveURL(manifestInfos.baseURL, periodIR.children.baseURL);
+    const periodBaseURL = resolveURL(manifestInfos.baseURL,
+                                     periodIR.children.baseURL !== undefined ?
+                                       periodIR.children.baseURL.value : "");
 
     const { periodStart,
             periodDuration,
@@ -102,7 +106,13 @@ export default function parsePeriods(
 
     const receivedTime = xlinkInfos !== undefined ? xlinkInfos.receivedTime :
                                                     manifestInfos.receivedTime;
+
+    const availabilityTimeOffset =
+      (periodIR.children.baseURL?.attributes.availabilityTimeOffset ?? 0) +
+      manifestInfos.availabilityTimeOffset;
+
     const periodInfos = { aggressiveMode: manifestInfos.aggressiveMode,
+                          availabilityTimeOffset,
                           baseURL: periodBaseURL,
                           manifestBoundsCalculator,
                           end: periodEnd,

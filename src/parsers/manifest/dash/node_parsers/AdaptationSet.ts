@@ -15,6 +15,9 @@
  */
 
 import log from "../../../../log";
+import parseBaseURL, {
+  IBaseURL
+} from "./BaseURL";
 import parseContentComponent, {
   IParsedContentComponent
 } from "./ContentComponent";
@@ -49,11 +52,11 @@ export interface IAdaptationSetIntermediateRepresentation {
 
 export interface IAdaptationSetChildren {
   // required
-  baseURL : string; // BaseURL for the contents. Empty string if not defined
   representations : IRepresentationIntermediateRepresentation[];
 
   // optional
   accessibility? : IScheme;
+  baseURL? : IBaseURL; // BaseURL for the contents.
   contentComponent? : IParsedContentComponent;
   contentProtections? : IParsedContentProtection[];
   roles? : IScheme[];
@@ -99,7 +102,7 @@ function parseAdaptationSetChildren(
   adaptationSetChildren : NodeList
 ) : IAdaptationSetChildren {
   const children : IAdaptationSetChildren = {
-    baseURL: "",
+    baseURL: undefined,
     representations: [],
   };
   const contentProtections = [];
@@ -114,9 +117,7 @@ function parseAdaptationSetChildren(
           break;
 
         case "BaseURL":
-          children.baseURL = currentElement.textContent === null ?
-            "" :
-            currentElement.textContent;
+          children.baseURL = parseBaseURL(currentElement);
           break;
 
         case "ContentComponent":
