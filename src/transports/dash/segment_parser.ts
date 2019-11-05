@@ -15,16 +15,9 @@
  */
 
 import {
-  EMPTY,
   merge as observableMerge,
-  Observable,
   of as observableOf,
 } from "rxjs";
-import {
-  filter,
-  map,
-  mergeMap,
-} from "rxjs/operators";
 import {
   getMDHDTimescale,
   getReferencesFromSidx,
@@ -35,42 +28,17 @@ import {
   getSegmentsFromCues,
   getTimeCodeScale,
 } from "../../parsers/containers/matroska";
-import request from "../../utils/request/xhr";
 import takeFirstSet from "../../utils/take_first_set";
 import {
   IChunkTimingInfos,
   IContent,
-  ILoaderDataLoadedValue,
   ISegmentParserArguments,
   ISegmentParserObservable,
   ISegmentParserResponse,
 } from "../types";
-import byteRange from "../utils/byte_range";
 import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
-
-/**
- * Request 'sidx' box from segment.
- * @param {String} url
- * @param {Object} range
- * @returns {Observable<Object>}
- */
-function requestArrayBufferResource(
-  url : string,
-  range? : [number, number]
-) : Observable<ILoaderDataLoadedValue<ArrayBuffer>> {
-  let headers = {};
-  if (range !== undefined && range.length > 0) {
-    headers = { Range: byteRange(range) };
-  }
-  return request({ url,
-                   responseType: "arraybuffer",
-                   headers })
-  .pipe(
-    filter((e) => e.type === "data-loaded"),
-    map((e) => e.value)
-  );
-}
+import loadIndexes from "./load_indexes";
 
 /**
  * Get segment informations from response.
@@ -182,79 +150,10 @@ export default function parser({ content,
 ) : ISegmentParserObservable< Uint8Array | ArrayBuffer > {
   const parsedSegmentsInfos = parseSegmentInfos(content, response, init);
 
-  /**
-   * Load 'sidx' boxes from indexes references.
-   * @param {Array.<Object>} indexesToLoad
-   * @returns {Observable}
-   */
-  function loadIndexes(indexesToLoad : ISidxReference[]): Observable<never> {
-    if (scheduleRequest == null) {
-      throw new Error("Can't schedule request for loading indexes.");
-    }
-
-    const range: [number, number] =
-      [indexesToLoad[0].range[0],
-      indexesToLoad[indexesToLoad.length - 1].range[1]];
-
-    const url = content.segment.mediaURL;
-    if (url === null) {
-      throw new Error("No URL for loading indexes.");
-    }
-    const loadedRessource$ = scheduleRequest(() => {
-      return requestArrayBufferResource(url, range).pipe(
-        map((r) => {
-          return {
-            response: r,
-            ranges: indexesToLoad.map(({ range: _r }) => _r),
-          };
-        })
-      );
-    });
-
-    return loadedRessource$.pipe(
-      mergeMap((loadedRessource) => {
-        const newSegments: ISidxReference[] = [];
-        const newIndexes: ISidxReference[] = [];
-        const {
-          response: { responseData },
-          ranges,
-        } = loadedRessource;
-        if (responseData !== undefined) {
-          const data = new Uint8Array(responseData);
-          let totalLen = 0;
-          for (let i = 0; i < ranges.length; i++) {
-            const length = ranges[i][1] - ranges[i][0] + 1;
-            const sidxBox = data.subarray(totalLen, totalLen + length);
-            const initialOffset = ranges[i][0];
-            const referencesFromSidx = getReferencesFromSidx(sidxBox, initialOffset);
-            if (referencesFromSidx !== null) {
-              const [indexReferences, segmentReferences] = referencesFromSidx;
-              segmentReferences.forEach((segment) => {
-                newSegments.push(segment);
-              });
-              indexReferences.forEach((index) => {
-                newIndexes.push(index);
-              });
-            }
-            totalLen += length;
-          }
-        }
-
-        if (newSegments.length > 0) {
-          content.representation.index._addSegments(newSegments);
-        }
-        if (newIndexes.length > 0) {
-          return loadIndexes(newIndexes);
-        }
-        return EMPTY;
-      })
-    );
-  }
-
   const { indexes, parserResponse } = parsedSegmentsInfos;
   if (indexes == null || indexes.length === 0) {
     return observableOf(parserResponse);
   }
-  return observableMerge(loadIndexes(indexes),
+  return observableMerge(loadIndexes(indexes, content, scheduleRequest),
                          observableOf(parserResponse));
 }
