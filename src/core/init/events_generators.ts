@@ -19,7 +19,9 @@ import Manifest, {
   Period,
 } from "../../manifest";
 import { IRepresentationChangeEvent } from "../buffers";
-import { IBufferType } from "../source_buffers";
+import SourceBuffersStore, {
+  IBufferType,
+} from "../source_buffers";
 import { IStallingItem } from "./get_stalled_events";
 import {
   ILoadedEvent,
@@ -34,8 +36,8 @@ import {
  * Construct a "loaded" event.
  * @returns {Object}
  */
-function loaded() : ILoadedEvent {
-  return { type: "loaded", value: true };
+function loaded(sourceBuffersStore : SourceBuffersStore | null) : ILoadedEvent {
+  return { type: "loaded", value: { sourceBuffersStore } };
 }
 
 /**

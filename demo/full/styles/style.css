@@ -844,13 +844,6 @@ body {
   margin-top: 30px;
 }
 
-.player-box {
-  background-color: white;
-  border-radius: 5px;
-  padding: 10px;
-  margin: 10px 0px;
-}
-
 .custom-checkbox {
   display: flex;
   align-items: center;
@@ -864,6 +857,10 @@ body {
 
 .chart-checkboxes {
   font-size: 0.8em;
+  background-color: white;
+  border-radius: 5px;
+  padding: 5px;
+  margin: 10px 0px;
 }
 
 .chart-checkbox {
@@ -991,7 +988,7 @@ input:checked + .slider:before {
   white-space: nowrap;
 }
 
-.time-indicator-wrapper {
+.tooltip-wrapper {
   position: absolute;
   display: block;
   left: 0px;
@@ -1004,8 +1001,13 @@ input:checked + .slider:before {
   color: white;
 }
 
-.time-indicator {
-  height: 100%;
+.tooltip {
+  display: inline;
+  font-family: "CanalDemiRomain", "Open Sans", sans-serif;
+}
+
+.buffer-content-tip {
+  font-family: "monospace", "mono", sans-serif;
 }
 
 .nav-header {
@@ -1120,4 +1122,36 @@ input:checked + .slider:before {
   .title-logo {
     display: none;
   }
+}
+
+.container-buffer-graph {
+  border: 1px dotted #999;
+  margin: 15px 5px;
+  padding: 5px;
+}
+.canvas-buffer-graph-container {
+  position: relative;
+  margin: 0px 5px 5px 5px;
+  border: 1px solid black;
+  height: 15px;
+}
+
+.canvas-buffer-graph {
+  position: relative;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.buffer-graph-title {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 5px;
+}
+
+.buffer-content-no-content {
+  text-align: center;
+  padding: 10px;
 }

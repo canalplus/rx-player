@@ -5,9 +5,9 @@ import React from "react";
  *   - className {string}
  *   - timeText {number}
  *   - xPosition {number}
- * @class TimeIndicator
+ * @class ToolTip
  */
-class TimeIndicator extends React.Component {
+class ToolTip extends React.Component {
   constructor(...args) {
     super(...args);
 
@@ -25,7 +25,7 @@ class TimeIndicator extends React.Component {
     if (this.positionIsCorrected) {
       return;
     }
-    const { xPosition } = this.props;
+    const { xPosition, offset } = this.props;
 
     if (isNaN(+xPosition) || !this.element) {
       return null;
@@ -33,9 +33,11 @@ class TimeIndicator extends React.Component {
 
     const rect = this.element.getBoundingClientRect();
     const width = rect.width;
-
+    const height = rect.height;
+    const toSlideY = -height - 11;
+    const toSlideX = xPosition - offset - width / 2;
     const style = {
-      transform: `translate(${xPosition - width/2}px, -35px)`,
+      transform: `translate(${toSlideX}px, ${toSlideY}px)`,
     };
 
     this.positionIsCorrected = true;
@@ -55,16 +57,16 @@ class TimeIndicator extends React.Component {
     const { style } = this.state;
     return (
       <div
-        className="time-indicator-wrapper"
+        className="tooltip-wrapper"
         style={style}
         ref={el => this.element = el}
       >
-        <span
-          className={"time-indicator " + className}
-        >{timeText}</span>
+        <pre
+          className={"tooltip " + className}
+        >{timeText}</pre>
       </div>
     );
   }
 }
 
-export default TimeIndicator;
+export default ToolTip;
