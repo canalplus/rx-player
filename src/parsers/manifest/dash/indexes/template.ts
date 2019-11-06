@@ -426,8 +426,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       if (this._relativePeriodEnd != null &&
           this._relativePeriodEnd < (lastPos + agressiveModeOffset - this._periodStart)) {
         const scaledRelativePeriodEnd = this._relativePeriodEnd * timescale;
-        return scaledRelativePeriodEnd <= 0 ? null :
-                                              scaledRelativePeriodEnd - duration;
+        if (scaledRelativePeriodEnd <= duration) {
+          return null;
+        }
+        return (Math.floor(scaledRelativePeriodEnd / duration) - 1)  * duration;
       }
       // /!\ The scaled last position augments continuously and might not
       // reflect exactly the real server-side value. As segments are
