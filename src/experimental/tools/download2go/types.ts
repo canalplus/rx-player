@@ -14,77 +14,104 @@
  * limitations under the License.
  */
 
-import { IDBPDatabase } from "idb";
-import { Subject } from "rxjs";
-
-import {
-  IEmitterLoaderBuilder,
-  ILocalManifestOnline,
-  IProgressBarBuilder,
-  IVideoSettings,
-} from "./apis/dash/types";
+import { IKeySystemOption, TypedArray } from "../../../core/eme";
+import Manifest from "../../../manifest";
+import { IContextRicher } from "./apis/downloader/types";
+import { ILocalManifest } from "../../../parsers/manifest/local";
+import { IContentProtection } from "./apis/drm/types";
 
 export type IVideoSettingsQualityInputType = "HIGH" | "MEDIUM" | "LOW";
-export interface ISettingsDownloader {
+
+export interface IGlobalSettings {
+  nameDB?: string;
+}
+
+export interface IInitSettings {
   url: string;
-  type: "start";
-  dbSettings: {
-    contentID: string;
-    metaData?: {
-      [prop: string]: any;
-    };
-  };
-  videoSettings: IVideoSettings;
-}
-
-export interface IProgressBarBuilderAbstract {
-  progress: number;
-  size: number;
-  progressBarBuilder: IProgressBarBuilder;
-  status: "counting" | "processing";
-}
-
-export interface IStoredManifest {
+  transport: "smooth" | "dash";
   contentID: string;
   metaData?: {
     [prop: string]: any;
   };
-  progress: number;
-  progressBarBuilder: IProgressBarBuilder;
-  rxpManifest: ILocalManifestOnline;
+  adv?: IAdvancedSettings;
+  keySystems?: IKeySystemOption;
+}
+
+export interface IResumeSettings extends IStoredManifest {
+  type: "resume";
+}
+
+export interface IStoredManifest {
+  contentID: string;
+  transport: "smooth" | "dash";
+  manifest: Manifest | null;
+  builder: {
+    video: IContextRicher[];
+    audio: IContextRicher[];
+    text: IContextRicher[];
+  };
+  progress: IProgressBuilder;
+  size: number;
+  metaData?: {
+    [prop: string]: any;
+  };
+  duration: number;
+}
+
+export interface IProgressBuilder {
+  percentage: number;
+  current: number;
+  overall: number;
+}
+
+export interface IStoredSegmentDB {
+  contentID: string;
+  representationID: string;
+  data: TypedArray | ArrayBuffer;
+  time: number;
+  timescale: number;
+  duration: number;
+  isInitData: boolean;
+  segmentKey: string;
   size: number;
 }
 
-export type IStoreManifestEveryFn = (progress: number) => boolean;
+export interface IContentLoader {
+  progress: IProgressBuilder;
+  size: number;
+  transport: "dash" | "smooth";
+  contentID: string;
+  metaData?: {
+    [prop: string]: any;
+  };
+  contentProtection?: IContentProtection;
+  offlineManifest: ILocalManifest;
+}
+
+export interface ISegmentsSortedByRepresentationID {
+  [id: string]: Array<IStoredSegmentDB>;
+}
+
+export interface IAdvancedSettings {
+  quality?: IVideoSettingsQualityInputType;
+}
+
+/***
+ *
+ * Event Emitter type:
+ *
+ */
 
 type IArgs<
-TEventRecord,
-TEventName extends keyof TEventRecord
+  TEventRecord,
+  TEventName extends keyof TEventRecord
 > = TEventRecord[TEventName];
 
 export interface IEmitterTrigger<T> {
   trigger<TEventName extends keyof T>(
     evt: TEventName,
-    arg: IArgs<T, TEventName>
+    arg: IArgs<T, TEventName>,
   ): void;
-}
-
-export interface IUtils {
-  emitter: IEmitterTrigger<IDownload2GoEvents>;
-  db: IDBPDatabase;
-  storeManifestEvery?: IStoreManifestEveryFn;
-  progressBarBuilder$?: Subject<IEmitterLoaderBuilder>;
-}
-
-export interface IOptionsStarter {
-  nameDB?: string;
-  storeManifestEvery?: IStoreManifestEveryFn;
-}
-
-export interface IRequestArgs {
-  method: "POST" | "GET";
-  headers?: { [prop: string]: string };
-  responseType?: XMLHttpRequestResponseType;
 }
 
 export interface IDownload2GoEvents {

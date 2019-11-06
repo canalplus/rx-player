@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { combineLatest, Observable, of } from "rxjs";
+import { combineLatest, of } from "rxjs";
 import { filter, finalize, mergeMap, take, tap } from "rxjs/operators";
 
 import EMEManager from "../../../../../core/eme/eme_manager";
@@ -23,7 +23,7 @@ import {
   IPersistedSessionData,
 } from "../../../../../core/eme/types";
 import createMediaSource from "../../../../../core/init/create_media_source";
-import { IUtils } from "../../types";
+import { IDBPDatabase } from "idb";
 
 export type ITypedArray =
   | Int8Array
@@ -48,35 +48,31 @@ export type ITypedArray =
  * @returns The licence under a buffer form
  *
  */
-function getLicense(
-  settingsKeySystem: IKeySystemOption,
-  externalSettings: {
-  initSegment: ITypedArray | ArrayBuffer;
-  codec: string;
-  storageUtils: IUtils;
-  contentID: string;
-  }
-): Observable<any> {
+function EMETransaction(
+  KeySystemsOption: IKeySystemOption,
+  contentID: string,
+  initSegment: ITypedArray | ArrayBuffer,
+  codec: string,
+  db: IDBPDatabase<unknown>,
+) {
   const video = document.createElement("video");
   const keySystems = [
     {
-      ...settingsKeySystem,
+      ...KeySystemsOption,
       licenseStorage: {
         save(sessionsIDS: IPersistedSessionData[]) {
-          externalSettings.storageUtils.db
-            .add("drm", {
-              contentID: externalSettings.contentID,
-              appMetadata: {
-                downloaded: Date.now(),
-              },
-              keySystems: {
-                sessionsIDS,
-                type: settingsKeySystem.type,
-              },
-            })
-            .catch(err => {
-              throw new Error(err);
-            });
+          db.add("drm", {
+            contentID,
+            appMetadata: {
+              downloaded: Date.now(),
+            },
+            keySystems: {
+              sessionsIDS,
+              type: KeySystemsOption.type,
+            },
+          }).catch(err => {
+            throw new Error(err);
+          });
         },
         load() {
           return [];
@@ -90,18 +86,18 @@ function getLicense(
     mergeMap(mediaSource => {
       const emeManager$ = EMEManager(video, keySystems);
       const sessionsUpdate$ = emeManager$.pipe(
-        filter(evt => evt.type === "session-updated")
+        filter(evt => evt.type === "session-updated"),
       );
-      const sourceBuffer = mediaSource.addSourceBuffer(externalSettings.codec);
-      const appendedSegment$ = of(externalSettings.initSegment).pipe(
-        tap(segmentData => sourceBuffer.appendBuffer(segmentData))
+      const sourceBuffer = mediaSource.addSourceBuffer(codec);
+      const appendedSegment$ = of(initSegment).pipe(
+        tap(segmentData => sourceBuffer.appendBuffer(segmentData)),
       );
       return combineLatest([sessionsUpdate$, appendedSegment$]).pipe(
-        finalize(() => video.remove())
+        finalize(() => video.remove()),
       );
     }),
-    take(1)
+    take(1),
   );
 }
 
-export default getLicense;
+export default EMETransaction;

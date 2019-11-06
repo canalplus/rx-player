@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
-import { ITypedArray } from "../drm/keySystems";
+import { Subscription, AsyncSubject } from "rxjs";
 
-export interface ISegmentInitStored {
-  contentID: string;
-  data: ITypedArray | ArrayBuffer;
-  duration: number;
-  segmentKey: string;
-  size: number;
+export enum Quality {
+  HIGH = "HIGH",
+  MEDIUM = "MEDIUM",
+  LOW = "LOW",
 }
 
-export interface ISegmentStored {
-  contentID: string;
-  data: ITypedArray | ArrayBuffer;
-  segmentKey: string;
-  size: number;
-  duration: number;
+export enum ContentType {
+  VIDEO = "video",
+  AUDIO = "audio",
+  TEXT = "text",
+}
+
+export interface IActiveDownload {
+  [contentID: string]: Subscription;
+}
+
+export interface IActivePauses {
+  [contentID: string]: AsyncSubject<void>;
 }

@@ -14,31 +14,38 @@
  * limitations under the License.
  */
 
+import "@babel/polyfill";
 import { IDBPDatabase } from "idb";
-import { AsyncSubject, ReplaySubject } from "rxjs";
+import { AsyncSubject } from "rxjs";
 
-import { downloader } from "./apis/publicApi/download";
-import { constructOfflineManifest } from "./apis/publicApi/offlineDownload";
+import DownloadManager from "./apis/downloader/downloadManager";
+import {
+  offlineManifestLoader,
+  getBuilderFormatted,
+} from "./apis/downloader/manifest";
 import { setUpDb } from "./apis/transactionDB/dbSetUp";
 import {
   checkForPauseAMovie,
   checkForResumeAPausedMovie,
-  checkForSettingsAddMovie,
   IndexDBError,
+  checkInitDownloaderOptions,
+  ValidationArgsError,
+  SegmentConstuctionError,
 } from "./utils";
 
 import EventEmitter from "../../../utils/event_emitter";
 import PPromise from "../../../utils/promise";
-import { IActiveSubs, IPauseSubject } from "./apis/dash/types";
+import { IActivePauses, IActiveDownload } from "./apis/transports/types";
 import {
   IDownload2GoEvents,
   IEmitterTrigger,
-  IOptionsStarter,
-  IProgressBarBuilderAbstract,
-  ISettingsDownloader,
   IStoredManifest,
-  IStoreManifestEveryFn,
+  IGlobalSettings,
+  IInitSettings,
+  ISegmentsSortedByRepresentationID,
+  IContentLoader,
 } from "./types";
+import { IContentProtection } from "./apis/drm/types";
 
 /**
  * Instanciate a D2G downloader.
@@ -46,50 +53,39 @@ import {
  * @return {IPublicAPI} IPublicAPI
  */
 class D2G extends EventEmitter<IDownload2GoEvents> {
-  /**
-   * An init function that you MUST use to instanciate the D2G.
-   * https://stackoverflow.com/a/43433773/6826962
-   *
-   * @param  {Object<{nameDB, storeManifestEvery}>} IOptionsStarter
-   * @returns {Promise.<D2G>}
-   */
-  static init(options: IOptionsStarter = {}): Promise<D2G> {
-    return (async function() {
-      const d2g = new D2G(options);
-      await d2g.setUp(options.nameDB || "d2g");
-      return d2g;
-    })();
-  }
-
   public readonly nameDB: string;
-  public readonly storeManifestEvery?: IStoreManifestEveryFn;
-  private db?: IDBPDatabase;
+  private db: IDBPDatabase | null;
   private emitter: IEmitterTrigger<IDownload2GoEvents>;
-  private activeSubsDownloader: IActiveSubs;
-  private activePauseSubject: IPauseSubject;
+  private activeDownloads: IActiveDownload;
+  private activePauses: IActivePauses;
 
-  constructor(options: IOptionsStarter = {}) {
+  constructor(options: IGlobalSettings = {}) {
     super();
-    this.nameDB = options.nameDB || "d2g";
-    this.storeManifestEvery = options.storeManifestEvery;
-    this.activeSubsDownloader = {};
-    this.activePauseSubject = {};
+    this.nameDB = options.nameDB || "d2g-canalplus";
+    this.activeDownloads = {};
+    this.activePauses = {};
+    this.db = null;
     this.emitter = {
       trigger: (eventName, payload) => this.trigger(eventName, payload),
     };
   }
 
   /**
-   * Setup async stuff.
-   * @param {nameDB} string
-   * @returns {Promise.<void>}
+   * Initialize an IndexDB instance.
+   * @returns {Promise<void>}
    */
-  async setUp(nameDB: string) {
-    const db = await setUpDb(nameDB);
-    if (!db) {
-      throw new IndexDBError("A problem occured during the set up of IndexDB");
-    }
-    this.db = db;
+  async initDB(): Promise<IDBPDatabase> {
+    return new Promise((resolve, reject) => {
+      setUpDb(this.nameDB)
+        .then(db => {
+          this.db = db;
+          resolve(db);
+        })
+        .catch(error => {
+          this.trigger("error", { action: "initDB", error });
+          reject(error);
+        });
+    });
   }
 
   /**
@@ -97,46 +93,51 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
    * @param {Object<ISettingsDownloader>} settings
    * @returns {Promise.<void>}
    */
-  async download(settings: ISettingsDownloader): Promise<void> {
+  async download(options: IInitSettings): Promise<void> {
     try {
-      const { activeSubsDownloader, storeManifestEvery, db } = this;
-      if (!db) {
-        throw new Error("The database doesnt exist!");
+      const db = this.db;
+      if (db === null) {
+        throw new Error("The IndexDB database has not been created!");
       }
-      await checkForSettingsAddMovie(settings, db, activeSubsDownloader);
-      const size = 0;
-      const progressBarBuilder = {
-        progress: 0,
-        overall: 0,
-        downloadedID: [],
-      };
-      const progress$ = new ReplaySubject<IProgressBarBuilderAbstract>(1);
+      await checkInitDownloaderOptions(options, db, this.activeDownloads);
+      const { metaData, contentID, transport } = options;
       const pause$ = new AsyncSubject<void>();
-      const { contentID } = settings.dbSettings;
-      this.activePauseSubject[contentID] = pause$;
-      const subcriptionDownloader = downloader(
-        { ...settings, type: "start" },
-        {
-          activeSubsDownloader,
-          pause$,
-          progress$,
-          progressBarBuilder,
-          size,
-        },
-        { db, emitter: this.emitter, storeManifestEvery }
-      );
-      activeSubsDownloader[contentID] = subcriptionDownloader;
-      this.trigger("progress", {
-        contentID,
-        progress: 0,
-        size,
-        status: "processing",
+      this.activePauses[contentID] = pause$;
+      const downloadManager = new DownloadManager({
+        emitter: this.emitter,
+        db,
       });
-    } catch (e) {
+      const initDownloadSub = downloadManager
+        .initDownload(options, pause$)
+        .subscribe(
+          ([download]) => {
+            if (download === null) {
+              return;
+            }
+            const { progress, manifest, audio, video, text, size } = download;
+            if (manifest === null) {
+              return;
+            }
+            db.put("manifests", {
+              contentID,
+              transport,
+              manifest,
+              builder: { video, audio, text },
+              progress,
+              size,
+              duration: manifest.getDuration(),
+              ...(metaData && { metaData }),
+            });
+          },
+          error => this.trigger("error", { action: "init-downloader", error }),
+          () => console.warn(`DOWNLOAD INIT COMPLETE: ${options.contentID}`),
+        );
+      this.activeDownloads[contentID] = initDownloadSub;
+    } catch (error) {
       this.trigger("error", {
-        action: "download",
-        contentID: settings.dbSettings.contentID,
-        error: e || new Error("A Unexpected error happened"),
+        action: "init-downloader",
+        error,
+        contentID: options.contentID,
       });
     }
   }
@@ -148,45 +149,53 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
    */
   async resume(contentID: string): Promise<void> {
     try {
-      const {
-        activeSubsDownloader,
-        activePauseSubject,
-        db,
-        storeManifestEvery,
-      } = this;
-      if (!db) {
-        throw new Error("The database doesnt exist!");
+      const db = this.db;
+      if (db === null) {
+        throw new Error("The IndexDB database has not been created!");
       }
-      const manifest: IStoredManifest = await db.get("manifests", contentID);
-      checkForResumeAPausedMovie(manifest, activeSubsDownloader);
-      const size = manifest.size;
-      const progressBarBuilder = manifest.progressBarBuilder;
-      const progress$ = new ReplaySubject<IProgressBarBuilderAbstract>(1);
-      const pause$ = new AsyncSubject<void>();
-      const settings = {
+      if (!contentID) {
+        throw new Error("You must specify a valid contentID for resuming.");
+      }
+      const storedManifest: IStoredManifest = await db.get(
+        "manifests",
         contentID,
-        metaData: manifest.metaData,
-        rxpManifest: manifest.rxpManifest,
-      };
-      activePauseSubject[contentID] = pause$;
-      const subcriptionDownloader = downloader(
-        { ...settings, type: "resume" },
-        {
-          activeSubsDownloader,
-          pause$,
-          progress$,
-          progressBarBuilder,
-          size,
-        },
-        { db, emitter: this.emitter, storeManifestEvery }
       );
-      activeSubsDownloader[contentID] = subcriptionDownloader;
-    } catch (e) {
-      this.trigger("error", {
-        action: "resume",
-        contentID,
-        error: e || new Error("A Unexpected error happened"),
+      checkForResumeAPausedMovie(storedManifest, this.activeDownloads);
+      const pause$ = new AsyncSubject<void>();
+      this.activePauses[contentID] = pause$;
+      const downloadManager = new DownloadManager({
+        emitter: this.emitter,
+        db,
       });
+      const { metaData, transport } = storedManifest;
+      const resumeDownloadSub = downloadManager
+        .resumeDownload(storedManifest, pause$)
+        .subscribe(
+          ([download]) => {
+            if (download === null) {
+              return;
+            }
+            const { progress, manifest, audio, video, text, size } = download;
+            if (manifest === null) {
+              return;
+            }
+            db.put("manifests", {
+              contentID,
+              transport,
+              builder: { video, audio, text },
+              progress,
+              size,
+              duration: storedManifest.duration,
+              ...(metaData && { metaData }),
+            });
+          },
+          error =>
+            this.trigger("error", { action: "resume-downloader", error }),
+          () => console.warn(`DOWNLOAD INIT COMPLETE: ${contentID}`),
+        );
+      this.activeDownloads[contentID] = resumeDownloadSub;
+    } catch (error) {
+      this.trigger("error", { action: "resume-downloader", error, contentID });
     }
   }
 
@@ -198,18 +207,19 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
   pause(contentID: string): void {
     try {
       checkForPauseAMovie(contentID);
-      const { activePauseSubject, activeSubsDownloader } = this;
-      if (activeSubsDownloader[contentID] && activePauseSubject[contentID]) {
-        activePauseSubject[contentID].next();
-        activePauseSubject[contentID].complete();
-        activeSubsDownloader[contentID].unsubscribe();
-        delete activeSubsDownloader[contentID];
-        activePauseSubject[contentID].unsubscribe();
-        delete activePauseSubject[contentID];
+      const activeDownloads = this.activeDownloads;
+      const activePauses = this.activePauses;
+      if (!activeDownloads[contentID] && !activePauses[contentID]) {
+        throw new ValidationArgsError(`Invalid contentID given: ${contentID}`);
       }
+      activePauses[contentID].next();
+      activePauses[contentID].complete();
+      activeDownloads[contentID].unsubscribe();
+      delete activeDownloads[contentID];
+      delete activePauses[contentID];
     } catch (e) {
       this.trigger("error", {
-        action: "resume",
+        action: "pause",
         contentID,
         error: e || new Error("A Unexpected error happened"),
       });
@@ -218,20 +228,19 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
 
   /**
    * Get all the downloaded entry (manifest) partially or fully downloaded.
-   * @returns {Promise.<T[]|void>}
+   * @returns {Promise.<IStoredManifest[]|void>}
    */
-  async getAllDownloadedMovies<T>(): Promise<T[] | void> {
+  getAllDownloadedMovies(): Promise<IStoredManifest[] | undefined> | void {
     try {
       if (!this.db) {
-        throw new Error("The database doesnt exist!");
+        throw new Error("The IndexDB database has not been created!");
       }
-      return await this.db.getAll("manifests");
+      return this.db.getAll("manifests");
     } catch (e) {
       this.trigger("error", {
         action: "getAllDownloadedMovies",
         error: new IndexDBError(e.message),
       });
-      return undefined;
     }
   }
 
@@ -239,26 +248,78 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
    * Get a singleMovie ready to be played by the rx-player,
    * could be fully or partially downloaded.
    * @param {string} contentID
-   * @returns {Promise.<T|void>}
+   * @returns {Promise.<IContentLoader|void>}
    */
-  async getSingleMovie<T>(contentID: string): Promise<T | void> {
+  async getSingleContent(contentID: string): Promise<IContentLoader | void> {
     try {
       if (!this.db) {
-        throw new Error("The database doesnt exist!");
+        throw new Error("The IndexDB database has not been created!");
       }
-      const [movie, encryption] = await PPromise.all([
+      const [contentManifest, contentProtection]: [
+        IStoredManifest?,
+        IContentProtection?,
+      ] = await PPromise.all([
         this.db.get("manifests", contentID),
         this.db.get("drm", contentID),
       ]);
-      if (!movie) {
-        throw new Error(
-          "A content doesnt exist with the given contentID: " + contentID
+      if (contentManifest == undefined) {
+        throw new SegmentConstuctionError(
+          `No Manifest found for current content ${contentID}`,
         );
       }
+      const segmentsSortedByRepresentationID: ISegmentsSortedByRepresentationID = {};
+      const indexTx = this.db
+        .transaction("segments", "readonly")
+        .objectStore("segments")
+        .index("contentID");
+      let cursor = await indexTx.openCursor(IDBKeyRange.only(contentID));
+      while (cursor) {
+        const currSegmentRepresenationID = cursor.value.representationID;
+        if (
+          !segmentsSortedByRepresentationID[currSegmentRepresenationID] &&
+          cursor !== null
+        ) {
+          segmentsSortedByRepresentationID[currSegmentRepresenationID] = [];
+          segmentsSortedByRepresentationID[currSegmentRepresenationID].push({
+            ...cursor.value,
+          });
+          cursor = await cursor.continue();
+        }
+        if (cursor !== null) {
+          segmentsSortedByRepresentationID[currSegmentRepresenationID].push({
+            ...cursor.value,
+          });
+          cursor = await cursor.continue();
+        }
+      }
+      if (Object.keys(segmentsSortedByRepresentationID).length === 0) {
+        throw new SegmentConstuctionError(
+          `No Segments found for current content ${contentID}`,
+        );
+      }
+      const {
+        progress,
+        transport,
+        size,
+        metaData,
+        manifest,
+        duration,
+      } = contentManifest;
+
       return {
-        ...movie,
-        ...encryption,
-        rxpManifest: constructOfflineManifest(movie.rxpManifest, this.db),
+        progress,
+        size,
+        transport,
+        contentID,
+        contentProtection,
+        ...(metaData && { metaData }),
+        offlineManifest: offlineManifestLoader(
+          manifest,
+          segmentsSortedByRepresentationID,
+          getBuilderFormatted(contentManifest),
+          duration,
+          progress.percentage === 100,
+        ),
       };
     } catch (e) {
       this.trigger("error", {
@@ -269,17 +330,18 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
     }
   }
 
-  async getAvailableSpace() {
-    if (navigator.storage && navigator.storage.estimate) {
-      const { quota, usage } = await navigator.storage.estimate();
-      if (quota && usage) {
-        return {
-          total: quota / 1e6,
-          used: usage / 1e6,
-        };
-      }
+  async getAvailableSpaceOnDevice() {
+    if (!navigator.storage || !navigator.storage.estimate) {
+      return null;
     }
-    return {};
+    const { quota, usage } = await navigator.storage.estimate();
+    if (!quota || !usage) {
+      return null;
+    }
+    return {
+      total: quota / 1e6,
+      used: usage / 1e6,
+    };
   }
 
   /**
@@ -290,20 +352,18 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
    */
   async deleteDownloadedMovie(contentID: string): Promise<void> {
     try {
-      const { activePauseSubject, activeSubsDownloader, db } = this;
+      const activeDownloads = this.activeDownloads;
+      const activePauses = this.activePauses;
+      const db = this.db;
       if (!db) {
-        throw new Error("The database doesnt exist!");
+        throw new Error("The IndexDB database has not been created!");
       }
-      if (activeSubsDownloader[contentID] && activePauseSubject[contentID]) {
-        activePauseSubject[contentID].next();
-        activePauseSubject[contentID].complete();
-        activePauseSubject[contentID].unsubscribe();
-        // Add an additional check when pause complete.
-        if (activeSubsDownloader[contentID]) {
-          activeSubsDownloader[contentID].unsubscribe();
-          delete activeSubsDownloader[contentID];
-        }
-        delete activePauseSubject[contentID];
+      if (activeDownloads[contentID] && activePauses[contentID]) {
+        activePauses[contentID].next();
+        activePauses[contentID].complete();
+        activeDownloads[contentID].unsubscribe();
+        delete activeDownloads[contentID];
+        delete activePauses[contentID];
       }
       const indexTx = db
         .transaction("segments", "readwrite")
@@ -320,12 +380,16 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
       ]);
     } catch (e) {
       this.trigger("error", {
-        action: "deleteDownloadedMovie",
+        action: "delete-download",
         contentID,
         error: e || new Error("A Unexpected error happened"),
       });
     }
   }
 }
+
+window.__DEV__ = true;
+window.d2g = D2G;
+window.__LOGGER_LEVEL__ = true;
 
 export default D2G;

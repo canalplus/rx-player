@@ -31,7 +31,7 @@ export const isIndexDBSupported = (): boolean => "indexedDB" in window;
  * @returns The IndexDB object
  *
  */
-export function setUpDb(nameDB: string): Promise<IDBPDatabase | void> {
+export function setUpDb(nameDB: string): Promise<IDBPDatabase> {
   if (!isIndexDBSupported()) {
     throw new IndexDBError("IndexDB is not supported in your browser");
   }
