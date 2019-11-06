@@ -513,7 +513,7 @@ export default function launchTestsForContent(
     describe("getVideoBufferGap", () => {
       // TODO handle live contents
       it("should return the buffer gap of the current range", async function() {
-        this.timeout(10000);
+        this.timeout(15000);
 
         player.setVideoBitrate(Infinity);
         player.setWantedBufferAhead(10);
@@ -524,7 +524,7 @@ export default function launchTestsForContent(
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        await sleep(900);
+        await sleep(1500);
 
         let bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(9.5);
@@ -532,20 +532,20 @@ export default function launchTestsForContent(
 
         player.setWantedBufferAhead(20);
         expect(player.getWantedBufferAhead()).to.equal(20);
-        await sleep(900);
+        await sleep(1500);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(19.5);
         expect(bufferGap).to.be.at.most(20 + 10);
 
         player.seekTo(minimumPosition + 10);
-        await sleep(900);
+        await sleep(1500);
         expect(player.getWantedBufferAhead()).to.equal(20);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(19.5);
         expect(bufferGap).to.be.at.most(20 + 10);
 
         player.seekTo(minimumPosition + 10 + 30);
-        await sleep(900);
+        await sleep(1500);
         expect(player.getWantedBufferAhead()).to.equal(20);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(19.5);
