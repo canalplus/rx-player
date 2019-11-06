@@ -22,7 +22,7 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
-  ignoreElements,
+  ignoreElements, catchError,
 } from "rxjs/operators";
 import {
   createSession,
@@ -144,7 +144,12 @@ export default class MediaKeySessionsStore {
     return observableDefer(() => {
       this._delete(session);
       log.debug("EME-MKSS: Close session", session);
-      return closeSession$(session);
+      return closeSession$(session).pipe(
+        catchError((err) => {
+          log.error(err);
+          return observableOf(null);
+        })
+      );
     });
   }
 
