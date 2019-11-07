@@ -68,8 +68,8 @@ class ChartsManager extends React.Component {
       this.setState({ displayBufferSizeChart: value });
     };
     return (
-      <div className="player-charts player-box">
-        <div className="chart-checkboxes">
+      <div className="player-charts">
+        <div className="player-box">
           <div className="chart-checkbox" >
             Buffer content chart
             <label class="switch">
@@ -87,7 +87,7 @@ class ChartsManager extends React.Component {
               player={player}
             /> : null }
         </div>
-        <div className="chart-checkboxes">
+        <div className="player-box">
           <div className="chart-checkbox" >
             Buffer size chart
             <label class="switch">

@@ -844,7 +844,7 @@ body {
   margin-top: 30px;
 }
 
-.player-box-load {
+.player-box {
   background-color: white;
   border-radius: 5px;
   padding: 10px;
@@ -860,14 +860,6 @@ body {
 
 .encryption-checkbox.disabled {
   color: #888;
-}
-
-.chart-checkboxes {
-  font-size: 0.8em;
-  background-color: white;
-  border-radius: 5px;
-  padding: 5px;
-  margin: 10px 0px;
 }
 
 .chart-checkbox {
