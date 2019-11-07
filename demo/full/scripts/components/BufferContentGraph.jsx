@@ -33,8 +33,37 @@ const COLOR_CURRENT_POSITION = "#FF2323";
  * @param {number} width
  * @param {number} height
  */
-function clearCanvas(canvasContext, width, height) {
-  canvasContext.clearRect(0, 0, width, height);
+function clearCanvas(canvasContext) {
+  canvasContext.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+}
+
+/**
+ * Represent the current position in the canvas.
+ * @param {number|undefined} position - The current position
+ * @param {number} minimumPosition - minimum possible position represented in
+ * the canvas.
+ * @param {number} maximumPosition - maximum possible position represented in
+ * the canvas.
+ * @param {Object} canvasCtx - The canvas' 2D context
+ */
+function paintCurrentPosition(
+  position,
+  minimumPosition,
+  maximumPosition,
+  canvasCtx
+) {
+  if (typeof position === "number" &&
+      position >= minimumPosition &&
+      position < maximumPosition)
+  {
+    const lengthCanvas = maximumPosition - minimumPosition;
+    canvasCtx.fillStyle = COLOR_CURRENT_POSITION;
+    canvasCtx.fillRect(Math.ceil((position - minimumPosition) /
+                                    lengthCanvas * CANVAS_WIDTH) - 1,
+                       0,
+                       2,
+                       CANVAS_HEIGHT);
+  }
 }
 
 /**
@@ -92,6 +121,32 @@ export default function BufferContentGraph({
   const representationsEncountered = useRef([]);
   const duration = Math.max(maximumPosition - minimumPosition, 0);
 
+  /**
+   * Paint a given segment in the canvas
+   * @param {Object} scaledSegment - Buffered segment information with added
+   * "scaling" information to know where it fits in the canvas.
+   * @param {Object} canvasCtx - The canvas' 2D context
+   */
+  function paintSegment(scaledSegment, canvasCtx) {
+    const representation = scaledSegment.bufferedInfos.infos.representation;
+    let indexOfRepr = representationsEncountered
+      .current
+      .indexOf(representation);
+    if (indexOfRepr < 0) {
+      representationsEncountered.current.push(representation);
+      indexOfRepr = representationsEncountered.current.length - 1;
+    }
+    const colorIndex = indexOfRepr % COLORS.length;
+    const color = randomColors[colorIndex];
+    const startX = scaledSegment.scaledStart * CANVAS_WIDTH;
+    const endX = scaledSegment.scaledEnd * CANVAS_WIDTH;
+    canvasCtx.fillStyle = color;
+    canvasCtx.fillRect(Math.ceil(startX),
+                       0,
+                       Math.ceil(endX - startX),
+                       CANVAS_HEIGHT);
+  }
+
   const currentSegmentsScaled = useMemo(() => {
     return scaleSegments(data, minimumPosition, maximumPosition);
   }, [data, minimumPosition, maximumPosition]);
@@ -106,7 +161,7 @@ export default function BufferContentGraph({
     }
     canvasEl.current.width = CANVAS_WIDTH;
     canvasEl.current.height = CANVAS_HEIGHT;
-    clearCanvas(ctx, CANVAS_WIDTH, CANVAS_HEIGHT);
+    clearCanvas(ctx);
 
     if (minimumPosition === undefined ||
         maximumPosition === undefined ||
@@ -115,37 +170,9 @@ export default function BufferContentGraph({
       return;
     }
     for (let i = 0; i < currentSegmentsScaled.length; i++) {
-      const segment = currentSegmentsScaled[i];
-      const representation = segment.bufferedInfos.infos.representation;
-      let indexOfRepr = representationsEncountered
-        .current
-        .indexOf(representation);
-      if (indexOfRepr < 0) {
-        representationsEncountered.current.push(representation);
-        indexOfRepr = representationsEncountered.current.length - 1;
-      }
-      const colorIndex = indexOfRepr % COLORS.length;
-      const color = randomColors[colorIndex];
-      const startX = segment.scaledStart * CANVAS_WIDTH;
-      const endX = segment.scaledEnd * CANVAS_WIDTH;
-      ctx.fillStyle = color;
-      ctx.fillRect(Math.ceil(startX),
-                   0,
-                   Math.ceil(endX - startX),
-                   CANVAS_HEIGHT);
+      paintSegment(currentSegmentsScaled[i], ctx);
     }
-    if (typeof currentTime === "number" &&
-        currentTime >= minimumPosition &&
-        currentTime < maximumPosition)
-    {
-      const lengthCanvas = maximumPosition - minimumPosition;
-      ctx.fillStyle = COLOR_CURRENT_POSITION;
-      ctx.fillRect(Math.ceil((currentTime - minimumPosition) /
-                               lengthCanvas * CANVAS_WIDTH) - 1,
-                   0,
-                   2,
-                   CANVAS_HEIGHT);
-    }
+    paintCurrentPosition(currentTime, minimumPosition, maximumPosition, ctx);
   }, [minimumPosition, maximumPosition, data]);
 
   const getMousePositionInPercentage = (event) => {
