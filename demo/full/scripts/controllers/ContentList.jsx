@@ -667,7 +667,7 @@ class ContentList extends React.Component {
                     (IS_HTTPS ? " (HTTPS only if mixed contents disabled)" : "")
                   }
                 />
-                <div className="player-box">
+                <div className="player-box player-box-load">
                   <span className={
                     "encryption-checkbox custom-checkbox" +
                     (DISABLE_ENCRYPTED_CONTENT ? " disabled" : "")}
@@ -709,7 +709,7 @@ class ContentList extends React.Component {
                   }
                 </div>
                 { transportType === "DASH" ?
-                  <div class="player-box button-low-latency">
+                  <div class="player-box player-box-load button-low-latency">
                     <span className={"low-latency-checkbox custom-checkbox"}>
                       Low-Latency content
                       <label class="input switch">
