@@ -88,7 +88,6 @@ export default function BufferContentGraph({
   const [ tipVisible, setTipVisible ] = useState(false);
   const [ tipPosition, setTipPosition ] = useState(0);
   const [ tipText, setTipText ] = useState("");
-  const containerEl = useRef(null);
   const canvasEl = useRef(null);
   const representationsEncountered = useRef([]);
   const duration = Math.max(maximumPosition - minimumPosition, 0);
@@ -150,10 +149,10 @@ export default function BufferContentGraph({
   }, [minimumPosition, maximumPosition, data]);
 
   const getMousePositionInPercentage = (event) => {
-    if (containerEl === null || containerEl === undefined) {
+    if (canvasEl === null || canvasEl === undefined) {
       return;
     }
-    const rect = containerEl.current.getBoundingClientRect();
+    const rect = canvasEl.current.getBoundingClientRect();
     const point0 = rect.left;
     const clickPosPx = Math.max(event.clientX - point0, 0);
     const endPointPx = Math.max(rect.right - point0, 0);
@@ -170,8 +169,8 @@ export default function BufferContentGraph({
       mousePercent * duration + minimumPosition;
   };
 
-  const toolTipOffset = containerEl !== null && containerEl.current !== null ?
-    containerEl.current.getBoundingClientRect().left :
+  const toolTipOffset = canvasEl !== null && canvasEl.current !== null ?
+    canvasEl.current.getBoundingClientRect().left :
     0;
 
   const onMouseMove = (event) => {
@@ -229,7 +228,6 @@ export default function BufferContentGraph({
         className="canvas-buffer-graph-container"
         onMouseOut={hideTip}
         onMouseMove={onMouseMove}
-        ref={containerEl}
       >
         { tipVisible ?
           <ToolTip
