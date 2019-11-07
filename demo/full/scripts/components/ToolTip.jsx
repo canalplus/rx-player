@@ -1,4 +1,7 @@
-import React from "react";
+import React, {
+  useEffect,
+  useRef,
+} from "react";
 
 /**
  * Props:
@@ -7,66 +10,30 @@ import React from "react";
  *   - xPosition {number}
  * @class ToolTip
  */
-class ToolTip extends React.Component {
-  constructor(...args) {
-    super(...args);
-
-    this.positionIsCorrected = false;
-    this.state = {
-      style: {},
-    };
-  }
-
-  componentWillReceiveProps() {
-    this.positionIsCorrected = false;
-  }
-
-  correctPosition() {
-    if (this.positionIsCorrected) {
-      return;
-    }
-    const { xPosition, offset } = this.props;
-
-    if (isNaN(+xPosition) || !this.element) {
+export default function ToolTip({
+  className,
+  offset,
+  text,
+  xPosition,
+}) {
+  const wrapperEl = useRef(null);
+  useEffect(() => {
+    if (isNaN(+xPosition) || !wrapperEl.current) {
       return null;
     }
 
-    const rect = this.element.getBoundingClientRect();
+    const rect = wrapperEl.current.getBoundingClientRect();
     const width = rect.width;
     const height = rect.height;
     const toSlideY = -height - 11;
     const toSlideX = xPosition - offset - width / 2;
-    const style = {
-      transform: `translate(${toSlideX}px, ${toSlideY}px)`,
-    };
-
-    this.positionIsCorrected = true;
-    this.setState({ style });
-  }
-
-  componentDidMount() {
-    this.correctPosition();
-  }
-
-  componentDidUpdate() {
-    this.correctPosition();
-  }
-
-  render() {
-    const { className = "", timeText } = this.props;
-    const { style } = this.state;
-    return (
-      <div
-        className="tooltip-wrapper"
-        style={style}
-        ref={el => this.element = el}
-      >
-        <pre
-          className={"tooltip " + className}
-        >{timeText}</pre>
-      </div>
-    );
-  }
+    wrapperEl.current.style.transform = `translate(${toSlideX}px, ${toSlideY}px)`;
+  });
+  return (
+    <div className="tooltip-wrapper" ref={wrapperEl} >
+      <pre className={"tooltip " + className} >
+        {text}
+      </pre>
+    </div>
+  );
 }
-
-export default ToolTip;

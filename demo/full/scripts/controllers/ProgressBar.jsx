@@ -130,7 +130,7 @@ class Progressbar extends React.Component {
           timeIndicatorVisible ?
             <ToolTip
               className="progress-tip"
-              timeText={timeIndicatorText}
+              text={timeIndicatorText}
               xPosition={timeIndicatorPosition}
               offset={toolTipOffset}
             /> : null

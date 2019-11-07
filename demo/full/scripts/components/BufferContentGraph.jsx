@@ -232,7 +232,7 @@ export default function BufferContentGraph({
         { tipVisible ?
           <ToolTip
             className="buffer-content-tip"
-            timeText={tipText}
+            text={tipText}
             xPosition={tipPosition}
             offset={toolTipOffset}
           /> :
