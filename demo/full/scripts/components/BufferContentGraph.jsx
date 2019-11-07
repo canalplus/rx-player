@@ -210,7 +210,7 @@ export default function BufferContentGraph({
         return;
       }
     }
-    hideTip(); // else
+    hideTip(); // if none found
   };
 
   const hideTip = () => {
@@ -226,7 +226,7 @@ export default function BufferContentGraph({
       </div>
       <div
         className="canvas-buffer-graph-container"
-        onMouseOut={hideTip}
+        onMouseLeave={hideTip}
         onMouseMove={onMouseMove}
       >
         { tipVisible ?

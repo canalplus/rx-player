@@ -1007,6 +1007,7 @@ input:checked + .slider:before {
 
 .buffer-content-tip {
   font-family: "monospace", "mono", sans-serif;
+  pointer-events: none;
 }
 
 .nav-header {
