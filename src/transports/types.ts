@@ -98,7 +98,6 @@ export interface ILoaderDataCreated<T> { type : "data-created";
 export interface ILoaderProgress { type : "progress";
                                    value : { duration : number;
                                              size : number;
-                                             url : string;
                                              totalSize? : number; }; }
 
 // Event emitted by loaders when a chunk of the response is available
@@ -379,6 +378,10 @@ export type CustomSegmentLoader = (
                                     duration? : number; })
                           => void;
 
+                progress : (args : { duration : number;
+                                     size : number;
+                                     totalSize? : number; })
+                           => void;
                 reject : (err? : Error) => void;
                 fallback? : () => void; }
 ) =>
