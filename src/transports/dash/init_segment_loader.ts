@@ -33,15 +33,11 @@ export default function initSegmentLoader(
   url : string,
   { segment } : ISegmentLoaderArguments
 ) : ISegmentLoaderObservable<ArrayBuffer> {
-  if (segment.range == null) {
-    if (segment.privateInfos &&
-        segment.privateInfos.shouldGuessInitRange) {
-      return xhr({ url,
-                   headers: { Range: byteRange([0, 1500]) },
-                   responseType: "arraybuffer",
-                   sendProgressEvents: true });
-    }
-    return xhr({ url, responseType: "arraybuffer", sendProgressEvents: true });
+  if (segment.range === undefined) {
+    return xhr({ url,
+                 headers: { Range: byteRange([0, 1500]) },
+                 responseType: "arraybuffer",
+                 sendProgressEvents: true });
   }
 
   if (segment.indexRange == null) {
