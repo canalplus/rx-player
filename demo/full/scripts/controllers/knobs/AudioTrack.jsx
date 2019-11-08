@@ -43,6 +43,7 @@ const AudioTrackKnobBase = ({
   return (
     <Knob
       name="Audio Language"
+      ariaLabel="Update the audio track"
       className={className}
       disabled={availableLanguages.length < 2}
       onChange={onLanguageChange}

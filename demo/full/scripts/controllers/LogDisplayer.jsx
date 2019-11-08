@@ -230,8 +230,7 @@ class LogDisplayer extends React.Component {
       <LogElement
         text={text}
         date={date}
-      />
-    );
+      />);
 
     const clearLogs = () => this.resetLogs();
     return (
@@ -244,6 +243,7 @@ class LogDisplayer extends React.Component {
           ref={el => this.element = el}
         >
           <Button
+            ariaLabel="Clear all logs"
             className="player-logs-wrapper-trash"
             onClick={clearLogs}
             value={String.fromCharCode(0xf05e)}

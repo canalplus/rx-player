@@ -131,6 +131,7 @@ class FullscreenButton extends React.Component {
     } = this.props;
     return (
       <Button
+        ariaLabel="Go/Quit fullscreen"
         className={"fullscreen-button " + className}
         onClick={this.state.isFullscreen ?
           () => { this.exitFullscreen(); } :

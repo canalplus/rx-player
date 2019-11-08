@@ -7,6 +7,7 @@ import React from "react";
  * @returns {Object}
  */
 export default ({
+  ariaLabel,
   className = "",
   onChange,
   value = "",
@@ -14,6 +15,7 @@ export default ({
 }) => {
   return (
     <input
+      aria-label={ariaLabel}
       className={"input " + className}
       type="text"
       placeholder={placeholder}

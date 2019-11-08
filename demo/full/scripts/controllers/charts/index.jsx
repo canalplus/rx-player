@@ -44,16 +44,6 @@ class ChartsManager extends React.Component {
             displayBufferContentChart } = this.state;
     const { player } = this.props;
 
-    // const onBandwidthCheckBoxChange = (e) => {
-    //   const target = e.target;
-    //   const value = target.type === "checkbox" ?
-    //     target.checked : target.value;
-
-    //   this.setState({
-    //     displayBandwidthChart: value,
-    //   });
-    // };
-
     const onBufferContentCheckBoxChange = (e) => {
       const target = e.target;
       const value = target.type === "checkbox" ?
@@ -76,6 +66,7 @@ class ChartsManager extends React.Component {
               <input
                 name="displayBufferContentChart"
                 type="checkbox"
+                aria-label="Display/Hide chart about the buffer's content"
                 checked={this.state.displayBufferContentChart}
                 onChange={onBufferContentCheckBoxChange}
               />
@@ -92,6 +83,7 @@ class ChartsManager extends React.Component {
             Buffer size chart
             <label class="switch">
               <input
+                aria-label="Display/Hide chart about the buffer's size"
                 name="displayBufferSizeChart"
                 type="checkbox"
                 checked={this.state.displayBufferSizeChart}

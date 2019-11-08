@@ -8,6 +8,7 @@ import React, {
  * Call `onChange` when updated.
  */
 export default function FocusedInput({
+  ariaLabel,
   className = "",
   onChange,
   value = "",
@@ -23,6 +24,7 @@ export default function FocusedInput({
     <input
       ref={inputEl}
       className={"input " + className}
+      aria-label={ariaLabel}
       type="text"
       placeholder={placeholder}
       onChange={onChange}

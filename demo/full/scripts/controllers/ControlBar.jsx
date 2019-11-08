@@ -69,6 +69,7 @@ function ControlBar ({
         />
         <Button
           className={"control-button"}
+          ariaLabel="Stop playback"
           onClick={stopVideo}
           value={String.fromCharCode(0xf04d)}
           disabled={isStopped}
@@ -85,6 +86,7 @@ function ControlBar ({
         {positionElement}
         {isLive && isContentLoaded ?
           <Button
+            ariaLabel={ isAtLiveEdge ? undefined : "Go back to live"}
             className={"dot" + (isAtLiveEdge ? " live" : "")}
             onClick={() => {
               if (!isAtLiveEdge) {
@@ -99,6 +101,7 @@ function ControlBar ({
             </div> : null
           }
           <Button
+            ariaLabel="Display/Hide controls"
             disabled={!isContentLoaded}
             className='control-button'
             onClick={toggleSettings}

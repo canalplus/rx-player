@@ -36,6 +36,7 @@ const VideoTrackKnobBase = ({
   return (
     <Knob
       name="Video Track"
+      ariaLabel="Update the video track"
       className={className}
       disabled={availableVideoTracks.length < 2}
       onChange={onTrackChange}

@@ -38,6 +38,7 @@ const PlayPauseButton = ({
 
   return (
     <Button
+      ariaLabel="Pause/Resume the content"
       className={completeClassName}
       disabled={disabled}
       onClick={displayPause ? pause : play}

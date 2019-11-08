@@ -15,9 +15,25 @@ export default () => (
         </h1>
       </section>
       <div className="header-links-buttons">
-        <a href="https://www.mycanal.fr"><img className="title-logo" alt="CANAL+" src="./assets/canalp.svg"/></a>
-        <span className="button-gh"><a className="github-button" href="https://github.com/canalplus/rx-player" data-size="large" data-icon="octicon-star" data-show-count="true" aria-label="Star canalplus/rx-player on GitHub">Star</a></span>
-        <span className="button-gh"><a className="github-button" href="https://github.com/canalplus/rx-player/fork" data-size="large" aria-label="Fork canalplus/rx-player on GitHub">Fork</a></span>
+        <a aria-label="Go to Canal+ website" href="https://canalplus.com">
+          <img className="title-logo" alt="CANAL+" src="./assets/canalp.svg"/>
+        </a>
+        <span className="button-gh"><a
+          className="github-button"
+          href="https://github.com/canalplus/rx-player"
+          data-size="large"
+          data-icon="octicon-star"
+          data-show-count="true"
+          aria-label="Star the RxPlayer on GitHub">
+          Star
+        </a></span>
+        <span className="button-gh"><a
+          className="github-button"
+          href="https://github.com/canalplus/rx-player/fork"
+          data-size="large"
+          aria-label="Fork the RxPlayer on GitHub">
+          Fork
+        </a></span>
       </div>
     </div>
     <Player />
