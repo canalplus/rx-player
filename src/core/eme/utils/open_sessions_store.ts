@@ -22,7 +22,8 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
-  ignoreElements, catchError,
+  catchError,
+  ignoreElements,
 } from "rxjs/operators";
 import {
   createSession,
