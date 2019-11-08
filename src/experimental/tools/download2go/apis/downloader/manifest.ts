@@ -24,21 +24,20 @@ import { createManifestPipeline } from "../../../../../core/pipelines";
 import Manifest, { Representation } from "../../../../../manifest";
 import { ITransportPipelines } from "../../../../../transports";
 import { ILocalManifest } from "../../../../../parsers/manifest/local";
-import {
-  ISegmentsSortedByRepresentationID,
-  IStoredManifest,
-} from "../../types";
+import { IStoredManifest } from "../../types";
 import { IParsedPeriod } from "../../../../../parsers/manifest";
 import {
   ILocalAdaptation,
   ILocalRepresentation,
+  ILocalIndexSegment,
 } from "../../../../../parsers/manifest/local/types";
-import { SegmentConstuctionError } from "../../utils";
 import {
   IAdaptationForPeriodBuilder,
   IAdaptationStored,
   ContentVideoType,
+  ISegmentStored,
 } from "./types";
+import { IDBPDatabase } from "idb";
 
 /**
  * Get the TransportPipeline for current transport.
@@ -141,10 +140,11 @@ export function getBuilderFormatted({
  */
 export function offlineManifestLoader(
   manifest: any,
-  segmentsSortedByRepresentationID: ISegmentsSortedByRepresentationID,
+  segments: ISegmentStored[],
   adaptationsBuilder: IAdaptationForPeriodBuilder,
   duration: number,
   isFinished: boolean,
+  db: IDBPDatabase<unknown>,
 ): ILocalManifest {
   return {
     type: "local",
@@ -173,71 +173,49 @@ export function offlineManifestLoader(
                 height: representation.height,
                 index: {
                   loadInitSegment: ({ resolve, reject }) => {
-                    if (
-                      segmentsSortedByRepresentationID[representation.id] ==
-                      null
-                    ) {
-                      reject(
-                        new SegmentConstuctionError(
-                          `Segments are missings for ${representation.id}`,
-                        ),
-                      );
-                      return;
-                    }
-                    const initSegmentForCurrentRepresentation = segmentsSortedByRepresentationID[
-                      representation.id
-                    ].find(
-                      segment =>
-                        segment.isInitData &&
-                        segment.representationID === representation.id,
-                    );
-                    if (initSegmentForCurrentRepresentation === undefined) {
-                      resolve({ data: null });
-                      return;
-                    }
-                    resolve({
-                      data: initSegmentForCurrentRepresentation.data,
-                    });
-                    return;
+                    db.get(
+                      "segments",
+                      `0--${representation.id}--init--${adaptation.type}`,
+                    )
+                      .then((segment: any) => {
+                        resolve({
+                          data: segment.data,
+                        });
+                      })
+                      .catch((err: Error) => reject(err));
                   },
                   loadSegment: (
-                    { time: neededSegmentTime },
+                    { time: reqSegmentTime },
                     { resolve, reject },
                   ) => {
-                    if (
-                      segmentsSortedByRepresentationID[representation.id] ==
-                      null
-                    ) {
-                      reject(
-                        new SegmentConstuctionError(
-                          `Segments are missings for ${representation.id}`,
-                        ),
-                      );
-                      return;
-                    }
-                    const segmentForCurrentTime = segmentsSortedByRepresentationID[
-                      representation.id
-                    ].find(segment => segment.time === neededSegmentTime);
-                    if (segmentForCurrentTime === undefined) {
-                      reject(
-                        new SegmentConstuctionError(
-                          `Segment not found for current representation ${representation.id}`,
-                        ),
-                      );
-                      return;
-                    }
-                    resolve({ data: segmentForCurrentTime.data });
-                    return;
+                    db.get(
+                      "segments",
+                      `${reqSegmentTime}--${representation.id}`,
+                    )
+                      .then((segment: any) => {
+                        resolve({
+                          data: segment.data,
+                        });
+                      })
+                      .catch((err: Error) => reject(err));
                   },
-                  segments: segmentsSortedByRepresentationID[representation.id]
-                    ? segmentsSortedByRepresentationID[representation.id]
-                        .map(segment => ({
-                          time: segment.time,
-                          timescale: segment.timescale,
-                          duration: segment.duration,
-                        }))
-                        .sort((a, b) => a.time - b.time)
-                    : [],
+                  segments: segments
+                    .reduce<ILocalIndexSegment[]>((acc, currSegment) => {
+                      if (
+                        !currSegment.isInitData &&
+                        currSegment.representationID === representation.id
+                      ) {
+                        const { time, timescale, duration } = currSegment;
+                        acc.push({
+                          time,
+                          timescale,
+                          duration,
+                        });
+                        return acc;
+                      }
+                      return acc;
+                    }, [])
+                    .sort((a, b) => a.time - b.time),
                 },
               }),
             ),

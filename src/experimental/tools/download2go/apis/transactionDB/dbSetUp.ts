@@ -43,7 +43,7 @@ export function setUpDb(nameDB: string): Promise<IDBPDatabase> {
           keyPath: "contentID",
         });
         const segmentObjectStore = db.createObjectStore("segments", {
-          keyPath: "segmentKey",
+          keyPath: "segmentKey", // concat 'time--representationID'
         });
         db.createObjectStore("drm", {
           keyPath: "contentID",

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { merge, Observable, Subject, from, EMPTY } from "rxjs";
+import { merge, Observable, Subject, EMPTY, of } from "rxjs";
 import { mergeMap, tap, map, reduce, scan, takeUntil } from "rxjs/operators";
 import { concat, strToBytes } from "../../../../../utils/byte_parsing";
 import {
@@ -52,10 +52,13 @@ export function handleSegmentPipelineFromContexts<
     contentType,
     new Subject(),
   );
-  return from(ctxs.filter(res => res)).pipe(
+  return of(...ctxs).pipe(
     mergeMap(
-      (ctx, index) =>
-        segmentFetcherForCurrentContentType.createRequest(ctx).pipe(
+      (ctx, index) => {
+        if (typeof ctx.segment === "number") {
+          return EMPTY;
+        }
+        return segmentFetcherForCurrentContentType.createRequest(ctx).pipe(
           mergeMap(evt => {
             switch (evt.type) {
               case "chunk":
@@ -83,7 +86,7 @@ export function handleSegmentPipelineFromContexts<
           }, new Uint8Array(0)),
           map(chunkData => {
             if (nextSegments && !isInitData) {
-              delete nextSegments[index];
+              (nextSegments[index] as any) = ctx.segment.time;
             }
             return {
               chunkData,
@@ -97,7 +100,8 @@ export function handleSegmentPipelineFromContexts<
               representationID: ctx.representation.id as string,
             };
           }),
-        ),
+        );
+      },
       3, // TODO: See If we limit the number of concurrent request at the same time.
     ),
   );
@@ -118,7 +122,7 @@ function handleAbstractSegmentPipelineContextFor(
     manifest: Manifest;
   },
 ) {
-  return from(contextsRicher).pipe(
+  return of(...contextsRicher).pipe(
     mergeMap<IContextRicher, Observable<ICustomSegment>>(contextRicher => {
       const { nextSegments, ...ctx } = contextRicher;
       return handleSegmentPipelineFromContexts(
@@ -138,7 +142,7 @@ function handleAbstractSegmentPipelineContextFor(
 
 export function segmentPipelineDownloader$(
   builderObs$: Observable<IInitGroupedSegments>,
-  builderInit: Omit<IInitGroupedSegments, "segmentPipelinesManager" | "type">,
+  builderInit: IManifestDBState,
   { contentID, emitter, pause$, db }: IUtils,
 ): Observable<IManifestDBState> {
   return builderObs$.pipe(
@@ -177,17 +181,18 @@ export function segmentPipelineDownloader$(
         );
       },
     ),
-    tap(({ chunkData, index, representationID, ctx }) => {
+    tap(({ chunkData, representationID, ctx, contentType }) => {
       const { time, timescale, duration } = ctx.segment;
       db.put("segments", {
         contentID,
+        contentType,
         representationID,
-        data: chunkData,
+        segmentKey: `${time}--${representationID}`,
         time,
         timescale,
         duration,
         isInitData: false,
-        segmentKey: `${representationID}--${contentID}--${index}`,
+        data: chunkData,
         size: chunkData.byteLength,
       });
     }),
@@ -207,8 +212,11 @@ export function segmentPipelineDownloader$(
           acc.progress.overall = progress.overall;
         }
         acc.progress.current += 1;
+        const percentage = (acc.progress.current / acc.progress.overall) * 100;
         acc.progress.percentage =
-          (acc.progress.current / acc.progress.overall) * 100;
+          percentage > 98 && percentage < 100
+            ? percentage
+            : Math.round(percentage);
         acc.size += chunkData.byteLength;
         if (!nextSegments) {
           return acc;
@@ -235,7 +243,7 @@ export function segmentPipelineDownloader$(
         };
         return { ...acc, manifest: ctx.manifest };
       },
-      { ...builderInit, size: 0 },
+      builderInit,
     ),
     tap(({ size, progress }) => {
       emitter.trigger("progress", {

@@ -88,10 +88,6 @@ export interface IContentLoader {
   offlineManifest: ILocalManifest;
 }
 
-export interface ISegmentsSortedByRepresentationID {
-  [id: string]: Array<IStoredSegmentDB>;
-}
-
 export interface IAdvancedSettings {
   quality?: IVideoSettingsQualityInputType;
 }

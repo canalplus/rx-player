@@ -42,10 +42,10 @@ import {
   IStoredManifest,
   IGlobalSettings,
   IInitSettings,
-  ISegmentsSortedByRepresentationID,
   IContentLoader,
 } from "./types";
 import { IContentProtection } from "./apis/drm/types";
+import { ISegmentStored } from "./apis/downloader/types";
 
 /**
  * Instanciate a D2G downloader.
@@ -127,10 +127,15 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
               size,
               duration: manifest.getDuration(),
               ...(metaData && { metaData }),
-            });
+            }).then(() =>
+              this.trigger("insertDB", {
+                action: "store",
+                contentID,
+                progress: progress.percentage,
+              }),
+            );
           },
           error => this.trigger("error", { action: "init-downloader", error }),
-          () => console.warn(`DOWNLOAD INIT COMPLETE: ${options.contentID}`),
         );
       this.activeDownloads[contentID] = initDownloadSub;
     } catch (error) {
@@ -167,7 +172,6 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
         emitter: this.emitter,
         db,
       });
-      const { metaData, transport } = storedManifest;
       const resumeDownloadSub = downloadManager
         .resumeDownload(storedManifest, pause$)
         .subscribe(
@@ -179,19 +183,30 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
             if (manifest === null) {
               return;
             }
+            const { metaData, transport, duration } = storedManifest;
             db.put("manifests", {
               contentID,
               transport,
+              manifest,
               builder: { video, audio, text },
               progress,
               size,
-              duration: storedManifest.duration,
+              duration,
               ...(metaData && { metaData }),
-            });
+            }).then(() =>
+              this.trigger("insertDB", {
+                action: "store",
+                contentID,
+                progress: progress.percentage,
+              }),
+            );
           },
           error =>
-            this.trigger("error", { action: "resume-downloader", error }),
-          () => console.warn(`DOWNLOAD INIT COMPLETE: ${contentID}`),
+            this.trigger("error", {
+              action: "resume-downloader",
+              error,
+              contentID,
+            }),
         );
       this.activeDownloads[contentID] = resumeDownloadSub;
     } catch (error) {
@@ -230,12 +245,14 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
    * Get all the downloaded entry (manifest) partially or fully downloaded.
    * @returns {Promise.<IStoredManifest[]|void>}
    */
-  getAllDownloadedMovies(): Promise<IStoredManifest[] | undefined> | void {
+  getAllOfflineContent(
+    limit?: number,
+  ): Promise<IStoredManifest[] | undefined> | void {
     try {
       if (!this.db) {
         throw new Error("The IndexDB database has not been created!");
       }
-      return this.db.getAll("manifests");
+      return this.db.getAll("manifests", undefined, limit); // TODO: return formatted content ?
     } catch (e) {
       this.trigger("error", {
         action: "getAllDownloadedMovies",
@@ -255,44 +272,25 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
       if (!this.db) {
         throw new Error("The IndexDB database has not been created!");
       }
-      const [contentManifest, contentProtection]: [
+      const [contentManifest, contentProtection, segments]: [
         IStoredManifest?,
         IContentProtection?,
+        ISegmentStored[]?,
       ] = await PPromise.all([
         this.db.get("manifests", contentID),
         this.db.get("drm", contentID),
+        this.db
+          .transaction("segments", "readonly")
+          .objectStore("segments")
+          .index("contentID")
+          .getAll(IDBKeyRange.only(contentID)),
       ]);
       if (contentManifest == undefined) {
         throw new SegmentConstuctionError(
           `No Manifest found for current content ${contentID}`,
         );
       }
-      const segmentsSortedByRepresentationID: ISegmentsSortedByRepresentationID = {};
-      const indexTx = this.db
-        .transaction("segments", "readonly")
-        .objectStore("segments")
-        .index("contentID");
-      let cursor = await indexTx.openCursor(IDBKeyRange.only(contentID));
-      while (cursor) {
-        const currSegmentRepresenationID = cursor.value.representationID;
-        if (
-          !segmentsSortedByRepresentationID[currSegmentRepresenationID] &&
-          cursor !== null
-        ) {
-          segmentsSortedByRepresentationID[currSegmentRepresenationID] = [];
-          segmentsSortedByRepresentationID[currSegmentRepresenationID].push({
-            ...cursor.value,
-          });
-          cursor = await cursor.continue();
-        }
-        if (cursor !== null) {
-          segmentsSortedByRepresentationID[currSegmentRepresenationID].push({
-            ...cursor.value,
-          });
-          cursor = await cursor.continue();
-        }
-      }
-      if (Object.keys(segmentsSortedByRepresentationID).length === 0) {
+      if (segments && segments.length === 0) {
         throw new SegmentConstuctionError(
           `No Segments found for current content ${contentID}`,
         );
@@ -311,14 +309,15 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
         size,
         transport,
         contentID,
-        contentProtection,
         ...(metaData && { metaData }),
+        ...(contentProtection && { contentProtection }),
         offlineManifest: offlineManifestLoader(
           manifest,
-          segmentsSortedByRepresentationID,
+          segments,
           getBuilderFormatted(contentManifest),
           duration,
           progress.percentage === 100,
+          this.db,
         ),
       };
     } catch (e) {

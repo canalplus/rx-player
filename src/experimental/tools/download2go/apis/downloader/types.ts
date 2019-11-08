@@ -29,6 +29,7 @@ import {
   IDownload2GoEvents,
   IProgressBuilder,
 } from "../../types";
+import { TypedArray } from "../../../../../core/eme";
 
 export type ContentVideoType = "video" | "audio" | "text";
 export type DownloadType = "start" | "resume";
@@ -40,7 +41,6 @@ export interface IContext {
   representation: Representation;
   segment: ISegment;
 }
-
 export interface IContextUniq {
   representation: Representation;
   adaptation: Adaptation;
@@ -94,6 +94,19 @@ export interface IInitGroupedSegments {
   segmentPipelinesManager: SegmentPipelinesManager<any> | null;
   manifest: Manifest | null;
   type: DownloadType;
+}
+
+export interface ISegmentStored {
+  contentID: string;
+  contentType: ContentVideoType;
+  representationID: string;
+  segmentKey: string;
+  time: number;
+  timescale: number;
+  duration: number;
+  isInitData: boolean;
+  data: TypedArray | ArrayBuffer;
+  size: number;
 }
 
 export interface IUtilsNotification {

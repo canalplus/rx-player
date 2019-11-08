@@ -61,23 +61,23 @@ export function initDownloader$(
               type: "start",
             }).pipe(
               tap(values => {
-                const { id } = values.ctx.representation;
+                const { id: representationID } = values.ctx.representation;
                 const { time, timescale, duration } = values.ctx.segment;
                 db.put("segments", {
                   contentID,
-                  representationID: id,
+                  contentType: ContentType.VIDEO,
+                  representationID,
+                  segmentKey: `${time}--${representationID}--init--${ContentType.VIDEO}`,
                   time,
                   timescale,
                   duration,
                   isInitData: true,
                   data: values.chunkData,
-                  segmentKey: `${id}--${contentID}--init`,
                   size: values.chunkData.byteLength,
                 });
               }),
               map(({ ctx }) => {
                 const durationForCurrentPeriod = ctx.period.duration;
-                console.warn(durationForCurrentPeriod);
                 if (durationForCurrentPeriod === undefined) {
                   throw new Error("Impossible to get future video segments");
                 }
@@ -99,17 +99,18 @@ export function initDownloader$(
               type: "start",
             }).pipe(
               tap(values => {
-                const { id } = values.ctx.representation;
+                const { id: representationID } = values.ctx.representation;
                 const { time, timescale, duration } = values.ctx.segment;
                 db.put("segments", {
                   contentID,
-                  representationID: id,
+                  contentType: ContentType.AUDIO,
+                  representationID,
+                  segmentKey: `${time}--${representationID}--init--${ContentType.AUDIO}`,
                   time,
                   timescale,
                   duration,
                   isInitData: true,
                   data: values.chunkData,
-                  segmentKey: `${id}--${contentID}--init`,
                   size: values.chunkData.byteLength,
                 });
               }),
@@ -136,17 +137,18 @@ export function initDownloader$(
               type: "start",
             }).pipe(
               tap(values => {
-                const { id } = values.ctx.representation;
+                const { id: representationID } = values.ctx.representation;
                 const { time, timescale, duration } = values.ctx.segment;
                 db.put("segments", {
                   contentID,
-                  representationID: id,
+                  contentType: ContentType.TEXT,
+                  representationID,
+                  segmentKey: `${time}--${representationID}--init--${ContentType.TEXT}`,
                   time,
                   timescale,
                   duration,
                   isInitData: true,
                   data: values.chunkData,
-                  segmentKey: `${id}--${contentID}--init`,
                   size: values.chunkData.byteLength,
                 });
               }),
