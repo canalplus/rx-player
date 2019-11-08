@@ -174,6 +174,18 @@ const generateSegmentLoader = (
         }
       };
 
+      const progress = (
+        _args : { duration : number;
+                  size : number;
+                  totalSize? : number; }
+      ) => {
+        if (!hasFallbacked) {
+          obs.next({ type: "progress", value: { duration: _args.duration,
+                                                size: _args.size,
+                                                totalSize: _args.totalSize } });
+        }
+      };
+
       const fallback = () => {
         hasFallbacked = true;
 
@@ -184,7 +196,7 @@ const generateSegmentLoader = (
         /* tslint:enable deprecation */
       };
 
-      const callbacks = { reject, resolve, fallback };
+      const callbacks = { reject, resolve, fallback, progress };
       const abort = customSegmentLoader(args, callbacks);
 
       return () => {
