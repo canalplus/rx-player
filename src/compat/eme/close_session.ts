@@ -51,10 +51,12 @@ export default function closeSession$(
           // Update has resolved, so we can't know if session is closed
           map(() => { throw new Error("Compat: Couldn't know if session is " +
                                       "closed"); }),
-          catchError((err) => {
+          catchError((err : unknown) => {
             // The caught error can tell if session is closed
             // (Chrome may throw this error)
-            if (err.message === "The session is already closed.") {
+            if (err instanceof Error &&
+                err.message === "The session is already closed."
+            ) {
               return observableOf(null);
             }
             // The `closed` promise may resolve, even if `close()` result has not
