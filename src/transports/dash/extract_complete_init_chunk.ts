@@ -26,7 +26,7 @@ import findCompleteBox from "../utils/find_complete_box";
 export default function extractCompleteInitChunk(buf: Uint8Array): Uint8Array|null {
   const ftypBoxIndex = findCompleteBox(buf, 0x66747970 /* ftyp */);
   if (ftypBoxIndex < 0) {
-    log.error("Incomplete `ftyp` box");
+    log.error("DASH: Incomplete `ftyp` box");
     return null;
   }
   const ftypBoxSize = be4toi(buf, ftypBoxIndex); // size of the "ftyp" box
@@ -34,7 +34,7 @@ export default function extractCompleteInitChunk(buf: Uint8Array): Uint8Array|nu
 
   const moovBoxIndex = findCompleteBox(buf, 0x6D6F6F76 /* moov */);
   if (ftypBoxIndex < 0) {
-    log.error("Incomplete `moov` box");
+    log.error("DASH: Incomplete `moov` box");
     return null;
   }
   const moovBoxSize = be4toi(buf, moovBoxIndex); // size of the "moov" box
