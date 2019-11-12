@@ -98,8 +98,9 @@ function findAdaptationIndex(
       new TemplateRepresentationIndex(segmentTemplate, context);
   } else {
     const { mimeType } = adaptation.attributes;
-    const isContentFragmented = mimeType != null ? /.*?\/mp4$/g.test(mimeType) :
-                                                   false;
+    const isContentFragmented =
+      (mimeType !== undefined && mimeType.length > 0) ? /.*?\/mp4$/g.test(mimeType) :
+                                                        false;
     adaptationIndex = new BaseRepresentationIndex({}, context, isContentFragmented);
   }
   return adaptationIndex;
