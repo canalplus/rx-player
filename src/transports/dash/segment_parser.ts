@@ -77,7 +77,7 @@ export default function parser({ content,
     const completeInitChunk = shouldExtractCompleteInitChunk ?
       extractCompleteInitChunk(chunkData) : chunkData;
 
-    if (completeInitChunk === -1) {
+    if (completeInitChunk === null) {
       throw new Error("Can't extract complete init chunk from loaded data.");
     }
 
