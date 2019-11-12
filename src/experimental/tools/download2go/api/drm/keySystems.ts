@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { IDBPDatabase } from "idb";
 import { combineLatest, of } from "rxjs";
 import { filter, finalize, mergeMap, take, tap } from "rxjs/operators";
 
@@ -23,7 +24,6 @@ import {
   IPersistedSessionData,
 } from "../../../../../core/eme/types";
 import createMediaSource from "../../../../../core/init/create_media_source";
-import { IDBPDatabase } from "idb";
 
 export type ITypedArray =
   | Int8Array
@@ -53,7 +53,7 @@ function EMETransaction(
   contentID: string,
   initSegment: ITypedArray | ArrayBuffer,
   codec: string,
-  db: IDBPDatabase<unknown>,
+  db: IDBPDatabase
 ) {
   const video = document.createElement("video");
   const keySystems = [
@@ -86,17 +86,17 @@ function EMETransaction(
     mergeMap(mediaSource => {
       const emeManager$ = EMEManager(video, keySystems);
       const sessionsUpdate$ = emeManager$.pipe(
-        filter(evt => evt.type === "session-updated"),
+        filter(evt => evt.type === "session-updated")
       );
       const sourceBuffer = mediaSource.addSourceBuffer(codec);
       const appendedSegment$ = of(initSegment).pipe(
-        tap(segmentData => sourceBuffer.appendBuffer(segmentData)),
+        tap(segmentData => sourceBuffer.appendBuffer(segmentData))
       );
       return combineLatest([sessionsUpdate$, appendedSegment$]).pipe(
-        finalize(() => video.remove()),
+        finalize(() => video.remove())
       );
     }),
-    take(1),
+    take(1)
   );
 }
 

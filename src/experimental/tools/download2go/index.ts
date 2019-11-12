@@ -14,38 +14,37 @@
  * limitations under the License.
  */
 
-import "@babel/polyfill";
 import { IDBPDatabase } from "idb";
 import { AsyncSubject } from "rxjs";
 
-import DownloadManager from "./apis/downloader/downloadManager";
+import EventEmitter from "../../../utils/event_emitter";
+import PPromise from "../../../utils/promise";
+
+import { IActiveDownload, IActivePauses } from "./api/context/types";
+import { setUpDb } from "./api/db/dbSetUp";
+import DownloadManager from "./api/downloader/downloadManager";
 import {
-  offlineManifestLoader,
   getBuilderFormatted,
-} from "./apis/downloader/manifest";
-import { setUpDb } from "./apis/transactionDB/dbSetUp";
+  offlineManifestLoader,
+} from "./api/downloader/manifest";
+import { ISegmentStored } from "./api/downloader/types";
+import { IContentProtection } from "./api/drm/types";
+import {
+  IContentLoader,
+  IDownload2GoEvents,
+  IEmitterTrigger,
+  IGlobalSettings,
+  IInitSettings,
+  IStoredManifest,
+} from "./types";
 import {
   checkForPauseAMovie,
   checkForResumeAPausedMovie,
-  IndexDBError,
   checkInitDownloaderOptions,
-  ValidationArgsError,
+  IndexDBError,
   SegmentConstuctionError,
+  ValidationArgsError,
 } from "./utils";
-
-import EventEmitter from "../../../utils/event_emitter";
-import PPromise from "../../../utils/promise";
-import { IActivePauses, IActiveDownload } from "./apis/transports/types";
-import {
-  IDownload2GoEvents,
-  IEmitterTrigger,
-  IStoredManifest,
-  IGlobalSettings,
-  IInitSettings,
-  IContentLoader,
-} from "./types";
-import { IContentProtection } from "./apis/drm/types";
-import { ISegmentStored } from "./apis/downloader/types";
 
 /**
  * Instanciate a D2G downloader.
@@ -132,10 +131,16 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
                 action: "store",
                 contentID,
                 progress: progress.percentage,
-              }),
-            );
+              })
+            ).catch((err) => {
+              this.trigger("error", {
+                action: "resume-downloader",
+                error: err,
+                contentID,
+              });
+            });
           },
-          error => this.trigger("error", { action: "init-downloader", error }),
+          error => this.trigger("error", { action: "init-downloader", error })
         );
       this.activeDownloads[contentID] = initDownloadSub;
     } catch (error) {
@@ -163,7 +168,7 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
       }
       const storedManifest: IStoredManifest = await db.get(
         "manifests",
-        contentID,
+        contentID
       );
       checkForResumeAPausedMovie(storedManifest, this.activeDownloads);
       const pause$ = new AsyncSubject<void>();
@@ -198,15 +203,21 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
                 action: "store",
                 contentID,
                 progress: progress.percentage,
-              }),
-            );
+              })
+            ).catch((err) => {
+              this.trigger("error", {
+                action: "resume-downloader",
+                error: err,
+                contentID,
+              });
+            });
           },
           error =>
             this.trigger("error", {
               action: "resume-downloader",
               error,
               contentID,
-            }),
+            })
         );
       this.activeDownloads[contentID] = resumeDownloadSub;
     } catch (error) {
@@ -246,13 +257,14 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
    * @returns {Promise.<IStoredManifest[]|void>}
    */
   getAllOfflineContent(
-    limit?: number,
+    limit?: number
   ): Promise<IStoredManifest[] | undefined> | void {
     try {
       if (!this.db) {
         throw new Error("The IndexDB database has not been created!");
       }
-      return this.db.getAll("manifests", undefined, limit); // TODO: return formatted content ?
+      // TODO: return formatted content ?
+      return this.db.getAll("manifests", undefined, limit);
     } catch (e) {
       this.trigger("error", {
         action: "getAllDownloadedMovies",
@@ -285,14 +297,14 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
           .index("contentID")
           .getAll(IDBKeyRange.only(contentID)),
       ]);
-      if (contentManifest == undefined) {
+      if (contentManifest === undefined) {
         throw new SegmentConstuctionError(
-          `No Manifest found for current content ${contentID}`,
+          `No Manifest found for current content ${contentID}`
         );
       }
       if (segments && segments.length === 0) {
         throw new SegmentConstuctionError(
-          `No Segments found for current content ${contentID}`,
+          `No Segments found for current content ${contentID}`
         );
       }
       const {
@@ -317,7 +329,7 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
           getBuilderFormatted(contentManifest),
           duration,
           progress.percentage === 100,
-          this.db,
+          this.db
         ),
       };
     } catch (e) {
@@ -386,9 +398,5 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
     }
   }
 }
-
-window.__DEV__ = true;
-window.d2g = D2G;
-window.__LOGGER_LEVEL__ = true;
 
 export default D2G;

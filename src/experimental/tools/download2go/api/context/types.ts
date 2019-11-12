@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Subscription, AsyncSubject } from "rxjs";
+import { AsyncSubject, Subscription } from "rxjs";
 
 export enum Quality {
   HIGH = "HIGH",

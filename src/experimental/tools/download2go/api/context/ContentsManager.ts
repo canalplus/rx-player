@@ -15,13 +15,13 @@
  */
 
 import Manifest, { Adaptation, Representation } from "../../../../../manifest";
-import {
-  IGlobalContext,
-  IContextUniq,
-  IContext,
-  ContentVideoType,
-} from "../downloader/types";
 import { IVideoSettingsQualityInputType } from "../../types";
+import {
+  ContentVideoType,
+  IContext,
+  IContextUniq,
+  IGlobalContext,
+} from "../downloader/types";
 import { ContentType } from "./types";
 
 class ContentManager {
@@ -30,7 +30,7 @@ class ContentManager {
 
   constructor(
     manifest: Manifest,
-    quality: IVideoSettingsQualityInputType = "MEDIUM",
+    quality: IVideoSettingsQualityInputType = "MEDIUM"
   ) {
     this.manifest = manifest;
     this.quality = quality;
@@ -41,27 +41,27 @@ class ContentManager {
       (acc: IGlobalContext, period) => {
         const videoContexts = this.decideUniqContext(
           period.getAdaptationsForType(ContentType.VIDEO),
-          ContentType.VIDEO,
+          ContentType.VIDEO
         );
         acc.video.push({ period, contexts: videoContexts });
         const audioContexts = this.decideUniqContext(
           period.getAdaptationsForType(ContentType.AUDIO),
-          ContentType.AUDIO,
+          ContentType.AUDIO
         );
         acc.audio.push({ period, contexts: audioContexts });
         const textContexts = this.decideUniqContext(
           period.getAdaptationsForType(ContentType.TEXT),
-          ContentType.TEXT,
+          ContentType.TEXT
         );
         acc.text.push({ period, contexts: textContexts });
         return acc;
       },
-      { video: [], audio: [], text: [], manifest: this.manifest },
+      { video: [], audio: [], text: [], manifest: this.manifest }
     );
   }
 
   getContextsFormatted(
-    globalCtx: IGlobalContext,
+    globalCtx: IGlobalContext
   ): { video: IContext[]; audio: IContext[]; text: IContext[] } {
     const video = globalCtx.video.reduce(
       (_: IContext[], currVideo): IContext[] => {
@@ -70,10 +70,10 @@ class ContentManager {
             manifest: globalCtx.manifest,
             period: currVideo.period,
             ...videoContext,
-          }),
+          })
         );
       },
-      [],
+      []
     );
     const audio = globalCtx.audio.reduce(
       (_: IContext[], currAudio): IContext[] => {
@@ -82,10 +82,10 @@ class ContentManager {
             manifest: globalCtx.manifest,
             period: currAudio.period,
             ...audioContext,
-          }),
+          })
         );
       },
-      [],
+      []
     );
     const text = globalCtx.text.reduce(
       (_: IContext[], currText): IContext[] => {
@@ -94,10 +94,10 @@ class ContentManager {
             manifest: globalCtx.manifest,
             period: currText.period,
             ...textContext,
-          }),
+          })
         );
       },
-      [],
+      []
     );
     return { video, audio, text };
   }
@@ -127,10 +127,10 @@ class ContentManager {
 
   private decideRepresentation(
     representations: Representation[],
-    contentType: ContentVideoType,
+    contentType: ContentVideoType
   ): Representation {
     switch (contentType) {
-      // If we want to take a represenation by bufferType
+      // If we want to take a representation by bufferType
       // case ContentType.VIDEO: {
       //   return this.getRepresentationByQualityBitrate(representations);
       // }
@@ -147,12 +147,12 @@ class ContentManager {
 
   private decideUniqContext(
     adaptations: Adaptation[],
-    contentType: ContentVideoType,
+    contentType: ContentVideoType
   ): IContextUniq[] {
     return adaptations.reduce((acc: IContextUniq[], adaptation) => {
       const representation = this.decideRepresentation(
         adaptation.representations,
-        contentType,
+        contentType
       );
       const segment = representation.index.getInitSegment();
       if (!segment) {

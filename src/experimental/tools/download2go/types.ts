@@ -16,9 +16,9 @@
 
 import { IKeySystemOption, TypedArray } from "../../../core/eme";
 import Manifest from "../../../manifest";
-import { IContextRicher } from "./apis/downloader/types";
 import { ILocalManifest } from "../../../parsers/manifest/local";
-import { IContentProtection } from "./apis/drm/types";
+import { IContextRicher } from "./api/downloader/types";
+import { IContentProtection } from "./api/drm/types";
 
 export type IVideoSettingsQualityInputType = "HIGH" | "MEDIUM" | "LOW";
 
@@ -106,7 +106,7 @@ type IArgs<
 export interface IEmitterTrigger<T> {
   trigger<TEventName extends keyof T>(
     evt: TEventName,
-    arg: IArgs<T, TEventName>,
+    arg: IArgs<T, TEventName>
   ): void;
 }
 

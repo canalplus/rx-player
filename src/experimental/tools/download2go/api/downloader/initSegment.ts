@@ -14,28 +14,32 @@
  * limitations under the License.
  */
 
-import { of, merge } from "rxjs";
-import { map, mergeMap, tap, reduce } from "rxjs/operators";
+import { IDBPDatabase } from "idb";
+import { merge, of } from "rxjs";
+import { map, mergeMap, reduce, tap } from "rxjs/operators";
+
+import { SegmentPipelinesManager } from "../../../../../core/pipelines";
 import { IInitSettings } from "../../types";
+import { IndexDBError, SegmentConstuctionError } from "../../utils";
+import ContentManager from "../context/ContentsManager";
+import { ContentType } from "../context/types";
 import { manifestLoader } from "./manifest";
 import { handleSegmentPipelineFromContexts } from "./segment";
-import { SegmentPipelinesManager } from "../../../../../core/pipelines";
-import ContentManager from "../transports/ContentsManager";
-import { IInitSegment, IInitGroupedSegments } from "./types";
-import { IDBPDatabase } from "idb";
-import { ContentType } from "../transports/types";
+import { IInitGroupedSegments, IInitSegment } from "./types";
 
 /**
- * A subscription manager that take care to choose between a start and a resume download
+ * This function take care of downloading the init segment for VIDEO/AUDIO/TEXT
+ * buffer type.
+ * Then, he also find out the nextSegments we have to download.
  *
- * @param IDownloaderManagerAbstract - Download manager need
- * @param IUtils- Some variables we need to emit and insert in DB
- * @returns The Subscription
+ * @param IInitSettings - Argument we need to start the download.
+ * @param IDBPDatabase - An instance of the IndexDB to store the init segment in base
+ * @returns An observable
  *
  */
 export function initDownloader$(
   { contentID, url, adv, transport }: IInitSettings,
-  db: IDBPDatabase<unknown>,
+  db: IDBPDatabase
 ) {
   return manifestLoader(url, transport).pipe(
     mergeMap(({ manifest, transportPipelines }) => {
@@ -43,16 +47,16 @@ export function initDownloader$(
         transportPipelines,
         {
           lowLatencyMode: false,
-        },
+        }
       );
       const contentManager = new ContentManager(
         manifest,
-        adv ? adv.quality : undefined,
+        adv ? adv.quality : undefined
       );
       return of(contentManager.getContextsForCurrentSession()).pipe(
         mergeMap(globalCtx => {
           const { video, audio, text } = contentManager.getContextsFormatted(
-            globalCtx,
+            globalCtx
           );
           return merge(
             handleSegmentPipelineFromContexts(video, ContentType.VIDEO, {
@@ -74,16 +78,24 @@ export function initDownloader$(
                   isInitData: true,
                   data: values.chunkData,
                   size: values.chunkData.byteLength,
+                }).catch((err) => {
+                  throw new IndexDBError(`
+                    ${contentID}: Impossible to store the current INIT
+                    segment (${ContentType.VIDEO}) at ${time}: ${err.message}
+                  `);
                 });
               }),
               map(({ ctx }) => {
                 const durationForCurrentPeriod = ctx.period.duration;
                 if (durationForCurrentPeriod === undefined) {
-                  throw new Error("Impossible to get future video segments");
+                  throw new SegmentConstuctionError(`
+                  Impossible to get future video segments for ${ContentType.VIDEO} buffer,
+                  the duration should be an valid integer but: ${durationForCurrentPeriod}
+                `);
                 }
                 const nextSegments = ctx.representation.index.getSegments(
                   0,
-                  durationForCurrentPeriod,
+                  durationForCurrentPeriod
                 );
                 return {
                   nextSegments,
@@ -91,7 +103,7 @@ export function initDownloader$(
                   segmentPipelinesManager,
                   contentType: ContentType.VIDEO,
                 };
-              }),
+              })
             ),
             handleSegmentPipelineFromContexts(audio, ContentType.AUDIO, {
               segmentPipelinesManager,
@@ -112,16 +124,24 @@ export function initDownloader$(
                   isInitData: true,
                   data: values.chunkData,
                   size: values.chunkData.byteLength,
+                }).catch((err) => {
+                  throw new IndexDBError(`
+                    ${contentID}: Impossible to store the current INIT
+                    segment (${ContentType.AUDIO}) at ${time}: ${err.message}
+                  `);
                 });
               }),
               map(({ ctx }) => {
                 const durationForCurrentPeriod = ctx.period.duration;
                 if (durationForCurrentPeriod === undefined) {
-                  throw new Error("Impossible to get future video segments");
+                  throw new SegmentConstuctionError(`
+                  Impossible to get future video segments for ${ContentType.AUDIO} buffer,
+                  the duration should be an valid integer but: ${durationForCurrentPeriod}
+                `);
                 }
                 const nextSegments = ctx.representation.index.getSegments(
                   0,
-                  durationForCurrentPeriod,
+                  durationForCurrentPeriod
                 );
                 return {
                   nextSegments,
@@ -129,7 +149,7 @@ export function initDownloader$(
                   segmentPipelinesManager,
                   contentType: ContentType.AUDIO,
                 };
-              }),
+              })
             ),
             handleSegmentPipelineFromContexts(text, ContentType.TEXT, {
               segmentPipelinesManager,
@@ -150,16 +170,24 @@ export function initDownloader$(
                   isInitData: true,
                   data: values.chunkData,
                   size: values.chunkData.byteLength,
+                }).catch((err) => {
+                  throw new IndexDBError(`
+                    ${contentID}: Impossible to store the current INIT
+                    segment (${ContentType.TEXT}) at ${time}: ${err.message}
+                  `);
                 });
               }),
               map(({ ctx }) => {
                 const durationForCurrentPeriod = ctx.period.duration;
                 if (durationForCurrentPeriod === undefined) {
-                  throw new Error("Impossible to get future video segments");
+                  throw new SegmentConstuctionError(`
+                    Impossible to get future video segments for ${ContentType.TEXT} buffer,
+                    the duration should be an valid integer but: ${durationForCurrentPeriod}
+                  `);
                 }
                 const nextSegments = ctx.representation.index.getSegments(
                   0,
-                  durationForCurrentPeriod,
+                  durationForCurrentPeriod
                 );
                 return {
                   nextSegments,
@@ -167,10 +195,10 @@ export function initDownloader$(
                   segmentPipelinesManager,
                   contentType: ContentType.TEXT,
                 };
-              }),
-            ),
+              })
+            )
           );
-        }),
+        })
       );
     }),
     reduce<IInitSegment, IInitGroupedSegments>(
@@ -181,7 +209,7 @@ export function initDownloader$(
           ctx: { period, adaptation, representation, manifest },
           contentType,
           segmentPipelinesManager,
-        },
+        }
       ) => {
         acc.progress.overall += nextSegments.length;
         acc[contentType].push({
@@ -201,7 +229,7 @@ export function initDownloader$(
         segmentPipelinesManager: null,
         manifest: null,
         type: "start",
-      },
-    ),
+      }
+    )
   );
 }

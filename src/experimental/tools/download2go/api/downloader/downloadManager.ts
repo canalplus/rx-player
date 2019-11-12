@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import { combineLatest, AsyncSubject, of } from "rxjs";
-
-import { initDownloader$ } from "./initSegment";
-import { IInitSettings, IStoredManifest } from "../../types";
-import { IUtilsNotification } from "./types";
+import { AsyncSubject, combineLatest, of } from "rxjs";
 import { filter, startWith } from "rxjs/operators";
-import { segmentPipelineDownloader$ } from "./segment";
+
 import { SegmentPipelinesManager } from "../../../../../core/pipelines";
+import { IInitSettings, IStoredManifest } from "../../types";
+import { initDownloader$ } from "./initSegment";
 import { getTransportPipelineByTransport } from "./manifest";
+import { segmentPipelineDownloader$ } from "./segment";
+import { IUtilsNotification } from "./types";
 
 class DownloadManager {
   readonly utils: IUtilsNotification;
@@ -44,12 +44,13 @@ class DownloadManager {
     const pipelineSegmentDownloader$ = segmentPipelineDownloader$(
       initDownloader$(initSettings, this.utils.db),
       builderInit,
-      { contentID, db: this.utils.db, pause$, emitter: this.utils.emitter },
+      { contentID, db: this.utils.db, pause$, emitter: this.utils.emitter }
     );
     return combineLatest([
       pipelineSegmentDownloader$.pipe(
-        filter(({ progress: { percentage } }) => percentage % 10 === 0), // TODO: See what we can do here
-        startWith(null),
+        // TODO: See what we can do here with, this define the frequency of save
+        filter(({ progress: { percentage } }) => percentage % 10 === 0),
+        startWith(null)
       ),
       pause$.pipe(startWith(null)),
     ]);
@@ -68,7 +69,7 @@ class DownloadManager {
       getTransportPipelineByTransport(transport),
       {
         lowLatencyMode: false,
-      },
+      }
     );
     const builderInit = {
       progress,
@@ -89,12 +90,13 @@ class DownloadManager {
         type: "resume",
       }),
       builderInit,
-      { contentID, db: this.utils.db, pause$, emitter: this.utils.emitter },
+      { contentID, db: this.utils.db, pause$, emitter: this.utils.emitter }
     );
     return combineLatest([
       pipelineSegmentDownloader$.pipe(
-        filter(({ progress: { percentage } }) => percentage % 10 === 0), // TODO: See what we can do here
-        startWith(null),
+        // TODO: See what we can do here with, this define the frequency of save
+        filter(({ progress: { percentage } }) => percentage % 10 === 0),
+        startWith(null)
       ),
       pause$.pipe(startWith(null)),
     ]);

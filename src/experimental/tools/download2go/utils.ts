@@ -15,8 +15,10 @@
  */
 
 import { IDBPDatabase } from "idb";
-import { IStoredManifest, IInitSettings } from "./types";
-import { IActiveDownload } from "./apis/transports/types";
+
+import arrayIncludes from "../../../utils/array_includes";
+import { IActiveDownload } from "./api/context/types";
+import { IInitSettings, IStoredManifest } from "./types";
 
 /* tslint:disable */
 
@@ -66,7 +68,7 @@ export class IndexDBError extends Error {
 export async function checkInitDownloaderOptions(
   options: Omit<IInitSettings, "type">,
   db: IDBPDatabase,
-  activeDownloads: IActiveDownload,
+  activeDownloads: IActiveDownload
 ): Promise<void> {
   if (
     !options ||
@@ -74,7 +76,7 @@ export async function checkInitDownloaderOptions(
     Object.keys(options).length < 0
   ) {
     throw new ValidationArgsError(
-      "You must at least specify these arguments: { url, contentID, transport }",
+      "You must at least specify these arguments: { url, contentID, transport }"
     );
   }
 
@@ -85,40 +87,40 @@ export async function checkInitDownloaderOptions(
 
   if (!contentID) {
     throw new ValidationArgsError(
-      "You must specify a contentID of the content you want to download",
+      "You must specify a contentID of the content you want to download"
     );
   }
 
-  if (!transport || !["smooth", "dash"].includes(transport)) {
+  if (!transport || !arrayIncludes(["smooth", "dash"], transport)) {
     throw new ValidationArgsError(
-      "You must specify a transport protocol, value possible: smooth - dash",
+      "You must specify a transport protocol, value possible: smooth - dash"
     );
   }
 
   if (activeDownloads[contentID]) {
     throw new ValidationArgsError(
-      "The content must be resume instead of starting a new download",
+      "The content must be resume instead of starting a new download"
     );
   }
 
   const contentMovie: IStoredManifest | null | undefined = await db.get(
     "manifests",
-    contentID,
+    contentID
   );
   if (contentMovie) {
     throw new ValidationArgsError(
-      "An entry with the same contentID is already present, contentID must be unique",
+      "An entry with the same contentID is already present, contentID must be unique"
     );
   }
 }
 
 export function checkForResumeAPausedMovie(
   manifest: IStoredManifest,
-  activeDownloads: IActiveDownload,
+  activeDownloads: IActiveDownload
 ) {
   if (!manifest) {
     throw new ValidationArgsError(
-      "No content has been found with the given contentID",
+      "No content has been found with the given contentID"
     );
   }
 
@@ -128,7 +130,7 @@ export function checkForResumeAPausedMovie(
 
   if (manifest.progress.percentage === 100) {
     throw new ValidationArgsError(
-      "You can't resume a content that is already fully downloaded",
+      "You can't resume a content that is already fully downloaded"
     );
   }
 }
@@ -136,7 +138,7 @@ export function checkForResumeAPausedMovie(
 export function checkForPauseAMovie(contentID: string) {
   if (!contentID) {
     throw new ValidationArgsError(
-      "A valid contentID is mandatory when pausing",
+      "A valid contentID is mandatory when pausing"
     );
   }
 }

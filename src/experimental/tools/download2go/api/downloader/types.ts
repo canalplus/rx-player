@@ -17,19 +17,19 @@
 import { IDBPDatabase } from "idb";
 import { AsyncSubject } from "rxjs";
 
+import { TypedArray } from "../../../../../core/eme";
+import { SegmentPipelinesManager } from "../../../../../core/pipelines";
 import Manifest, {
+  Adaptation,
   ISegment,
   Period,
-  Adaptation,
   Representation,
 } from "../../../../../manifest";
-import { SegmentPipelinesManager } from "../../../../../core/pipelines";
 import {
-  IEmitterTrigger,
   IDownload2GoEvents,
+  IEmitterTrigger,
   IProgressBuilder,
 } from "../../types";
-import { TypedArray } from "../../../../../core/eme";
 
 export type ContentVideoType = "video" | "audio" | "text";
 export type DownloadType = "start" | "resume";
@@ -148,4 +148,11 @@ export interface ISegmentPipelineContext {
   isInitData: boolean;
   segmentPipelinesManager: SegmentPipelinesManager<any>;
   nextSegments?: ISegment[];
+}
+
+export interface IAbstractContextCreation {
+  type: DownloadType;
+  progress: IProgressBuilder;
+  segmentPipelinesManager: SegmentPipelinesManager<any>;
+  manifest: Manifest;
 }

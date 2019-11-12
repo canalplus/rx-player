@@ -14,36 +14,36 @@
  * limitations under the License.
  */
 
+import { IDBPDatabase } from "idb";
 import { Observable, Subject } from "rxjs";
-import { mergeMap, map } from "rxjs/operators";
+import { map, mergeMap } from "rxjs/operators";
 
 import DASHFeature from "../../../../../transports/dash";
 import SMOOTHFeature from "../../../../../transports/smooth";
 
 import { createManifestPipeline } from "../../../../../core/pipelines";
 import Manifest, { Representation } from "../../../../../manifest";
-import { ITransportPipelines } from "../../../../../transports";
-import { ILocalManifest } from "../../../../../parsers/manifest/local";
-import { IStoredManifest } from "../../types";
 import { IParsedPeriod } from "../../../../../parsers/manifest";
+import { ILocalManifest } from "../../../../../parsers/manifest/local";
 import {
   ILocalAdaptation,
-  ILocalRepresentation,
   ILocalIndexSegment,
+  ILocalRepresentation,
 } from "../../../../../parsers/manifest/local/types";
+import { ITransportPipelines } from "../../../../../transports";
+import { IStoredManifest } from "../../types";
 import {
+  ContentVideoType,
   IAdaptationForPeriodBuilder,
   IAdaptationStored,
-  ContentVideoType,
   ISegmentStored,
 } from "./types";
-import { IDBPDatabase } from "idb";
 
 /**
  * Get the TransportPipeline for current transport.
  *
  * @param transport - Transport option for current manifest.
- * @returns A instance of TransportPipelines for the current url.
+ * @returns A instance of TransportPipelines for the current url manifest.
  *
  */
 export function getTransportPipelineByTransport(transport: "smooth" | "dash") {
@@ -61,12 +61,13 @@ export function getTransportPipelineByTransport(transport: "smooth" | "dash") {
  *
  * @param manifestURL - Manifest url on the web.
  * @param transport - Transport that need to be use.
- * @returns A instance of Manifest for the current url and the transportPipeline associated to it.
+ * @returns A instance of Manifest for the current url and the
+ * transportPipeline associated to it.
  *
  */
 export function manifestLoader(
   manifestURL: string,
-  transport: "smooth" | "dash" = "dash",
+  transport: "smooth" | "dash" = "dash"
 ): Observable<{ manifest: Manifest; transportPipelines: ITransportPipelines }> {
   const transportPipelines = getTransportPipelineByTransport(transport);
   const manifestPipeline = createManifestPipeline(
@@ -76,7 +77,7 @@ export function manifestLoader(
       manifestRetry: 5,
       offlineRetry: 5,
     },
-    new Subject(),
+    new Subject()
   );
   return manifestPipeline
     .fetch(manifestURL)
@@ -84,16 +85,23 @@ export function manifestLoader(
       mergeMap(response =>
         manifestPipeline
           .parse(response.value, manifestURL)
-          .pipe(map(({ manifest }) => ({ manifest, transportPipelines }))),
-      ),
+          .pipe(map(({ manifest }) => ({ manifest, transportPipelines })))
+      )
     );
 }
 
+/**
+ * Get the adaptations for the current period.
+ *
+ * @param IStoredManifest - The global builder we insert in IndexDB
+ * @returns An Object of period associated with an array of adaptations.
+ *
+ */
 export function getBuilderFormatted({
   builder,
 }: Pick<IStoredManifest, "builder">) {
-  return Object.keys(builder).reduce(
-    (acc, curr): IAdaptationForPeriodBuilder => {
+  return Object.keys(builder).reduce<IAdaptationForPeriodBuilder>(
+    (acc, curr) => {
       const ctxs = builder[curr as ContentVideoType];
       if (ctxs == null || ctxs.length === 0) {
         return acc;
@@ -123,19 +131,25 @@ export function getBuilderFormatted({
       }
       return acc;
     },
-    {} as IAdaptationForPeriodBuilder,
+    {}
   );
 }
 
 /**
- * Returns the structure of the manifest needed by the rxPlayer transport local.
+ * Returns the structure of the manifest needed by the RxPlayer transport local.
  *
  * @remarks
- * It's mandatory to construct again the rxpManifest
- * when the user want it because we can't insert function type in IndexDB
+ * It's mandatory to rebuild again the local manifest
+ * when we want to play an offline content because we lose every reference
+ * when storing in IndexDB.
  *
- * @param ILocalManifestOnline - The rxpManifest we downloaded when online
- * @returns The manifest that the rxPlayer expect
+ * @param Manifest - The Manifest we downloaded when online
+ * @param ISegmentStored[] - The segments we downloaded online for the current content
+ * @param IAdaptationForPeriodBuilder - The Adaptations by period
+ * @param number - The global duration of the content
+ * @param boolean - Tell if the content is 100% complete
+ * @param IDBPDatabase - An Instance of IndexDB to be able to retrieve content in base
+ * @returns A ILocalManifest to the RxPlayer transport local understand
  *
  */
 export function offlineManifestLoader(
@@ -144,7 +158,7 @@ export function offlineManifestLoader(
   adaptationsBuilder: IAdaptationForPeriodBuilder,
   duration: number,
   isFinished: boolean,
-  db: IDBPDatabase<unknown>,
+  db: IDBPDatabase
 ): ILocalManifest {
   return {
     type: "local",
@@ -156,7 +170,7 @@ export function offlineManifestLoader(
         duration: period.duration,
         adaptations: adaptationsBuilder[period.id].map(
           (adaptation: IAdaptationStored): ILocalAdaptation => ({
-            type: adaptation.type as ContentVideoType,
+            type: adaptation.type,
             ...(adaptation.audioDescription && {
               audioDescription: adaptation.audioDescription,
             }),
@@ -168,36 +182,36 @@ export function offlineManifestLoader(
               (representation: Representation): ILocalRepresentation => ({
                 bitrate: representation.bitrate,
                 mimeType: representation.mimeType || "",
-                codecs: (representation as Representation).codec || "",
+                codecs: representation.codec || "",
                 width: representation.width,
                 height: representation.height,
                 index: {
                   loadInitSegment: ({ resolve, reject }) => {
                     db.get(
                       "segments",
-                      `0--${representation.id}--init--${adaptation.type}`,
+                      `0--${representation.id}--init--${adaptation.type}`
                     )
                       .then((segment: any) => {
                         resolve({
                           data: segment.data,
                         });
                       })
-                      .catch((err: Error) => reject(err));
+                      .catch(reject);
                   },
                   loadSegment: (
                     { time: reqSegmentTime },
-                    { resolve, reject },
+                    { resolve, reject }
                   ) => {
                     db.get(
                       "segments",
-                      `${reqSegmentTime}--${representation.id}`,
+                      `${reqSegmentTime}--${representation.id}`
                     )
                       .then((segment: any) => {
                         resolve({
                           data: segment.data,
                         });
                       })
-                      .catch((err: Error) => reject(err));
+                      .catch(reject);
                   },
                   segments: segments
                     .reduce<ILocalIndexSegment[]>((acc, currSegment) => {
@@ -205,11 +219,10 @@ export function offlineManifestLoader(
                         !currSegment.isInitData &&
                         currSegment.representationID === representation.id
                       ) {
-                        const { time, timescale, duration } = currSegment;
                         acc.push({
-                          time,
-                          timescale,
-                          duration,
+                          time: currSegment.time,
+                          timescale: currSegment.timescale,
+                          duration: currSegment.duration,
                         });
                         return acc;
                       }
@@ -217,9 +230,9 @@ export function offlineManifestLoader(
                     }, [])
                     .sort((a, b) => a.time - b.time),
                 },
-              }),
+              })
             ),
-          }),
+          })
         ),
       };
     }),
