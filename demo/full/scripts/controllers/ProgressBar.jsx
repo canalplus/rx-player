@@ -97,7 +97,7 @@ class Progressbar extends React.Component {
       });
 
       if (this.videoThumbnailLoader) {
-        const manifest = window.player.getManifest();
+        const { manifest } = this.props;
         if (manifest) {
           const period = manifest.getPeriodForTime(timestampToMs);
           if (period &&
@@ -227,6 +227,7 @@ class Progressbar extends React.Component {
 
 export default withModulesState({
   player: {
+    manifest: "manifest",
     bufferGap: "bufferGap",
     currentTime: "currentTime",
     images: "images",
