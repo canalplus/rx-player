@@ -361,7 +361,7 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
    * @param {string} contentID
    * @returns {Promise.<void>}
    */
-  async deleteDownloadedMovie(contentID: string): Promise<void> {
+  async deleteContent(contentID: string): Promise<void> {
     try {
       const activeDownloads = this.activeDownloads;
       const activePauses = this.activePauses;

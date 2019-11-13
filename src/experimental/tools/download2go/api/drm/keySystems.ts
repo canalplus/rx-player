@@ -24,17 +24,7 @@ import {
   IPersistedSessionData,
 } from "../../../../../core/eme/types";
 import createMediaSource from "../../../../../core/init/create_media_source";
-
-export type ITypedArray =
-  | Int8Array
-  | Int16Array
-  | Int32Array
-  | Uint8Array
-  | Uint16Array
-  | Uint32Array
-  | Uint8ClampedArray
-  | Float32Array
-  | Float64Array;
+import { IUtilsKeySystemsTransaction } from "./types";
 
 /**
  * Get the licence when keysSystems are specified
@@ -50,12 +40,11 @@ export type ITypedArray =
  */
 function EMETransaction(
   KeySystemsOption: IKeySystemOption,
-  contentID: string,
-  initSegment: ITypedArray | ArrayBuffer,
-  codec: string,
+  keySystemsUtils: IUtilsKeySystemsTransaction,
   db: IDBPDatabase
 ) {
   const video = document.createElement("video");
+  const { contentID, contentType, codec, initSegment } = keySystemsUtils;
   const keySystems = [
     {
       ...KeySystemsOption,
@@ -63,6 +52,7 @@ function EMETransaction(
         save(sessionsIDS: IPersistedSessionData[]) {
           db.add("drm", {
             contentID,
+            contentType,
             appMetadata: {
               downloaded: Date.now(),
             },

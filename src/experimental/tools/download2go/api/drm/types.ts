@@ -15,9 +15,22 @@
  */
 
 import { IPersistedSessionData } from "../../../../../core/eme";
+import { ContentVideoType } from "../downloader/types";
+
+export type ITypedArray =
+  | Int8Array
+  | Int16Array
+  | Int32Array
+  | Uint8Array
+  | Uint16Array
+  | Uint32Array
+  | Uint8ClampedArray
+  | Float32Array
+  | Float64Array;
 
 export interface IContentProtection {
   contentID: string;
+  contentType: ContentVideoType;
   appMetadata: {
     downloaded: Date;
   };
@@ -25,4 +38,11 @@ export interface IContentProtection {
     sessionsIDS: IPersistedSessionData[];
     type: string;
   };
+}
+
+export interface IUtilsKeySystemsTransaction {
+  contentID: string;
+  contentType: ContentVideoType;
+  codec: string;
+  initSegment: ITypedArray | ArrayBuffer;
 }

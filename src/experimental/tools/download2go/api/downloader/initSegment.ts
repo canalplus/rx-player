@@ -16,13 +16,14 @@
 
 import { IDBPDatabase } from "idb";
 import { merge, of } from "rxjs";
-import { map, mergeMap, reduce, tap } from "rxjs/operators";
+import { map, mapTo, mergeMap, reduce, tap } from "rxjs/operators";
 
 import { SegmentPipelinesManager } from "../../../../../core/pipelines";
 import { IInitSettings } from "../../types";
 import { IndexDBError, SegmentConstuctionError } from "../../utils";
 import ContentManager from "../context/ContentsManager";
 import { ContentType } from "../context/types";
+import EMETransaction from "../drm/keySystems";
 import { manifestLoader } from "./manifest";
 import { handleSegmentPipelineFromContexts } from "./segment";
 import { IInitGroupedSegments, IInitSegment } from "./types";
@@ -38,7 +39,7 @@ import { IInitGroupedSegments, IInitSegment } from "./types";
  *
  */
 export function initDownloader$(
-  { contentID, url, adv, transport }: IInitSettings,
+  { contentID, url, adv, transport, keySystems }: IInitSettings,
   db: IDBPDatabase
 ) {
   return manifestLoader(url, transport).pipe(
@@ -64,6 +65,21 @@ export function initDownloader$(
               isInitData: true,
               type: "start",
             }).pipe(
+              mergeMap(values => {
+                if (keySystems && Object.keys(keySystems).length > 0) {
+                  return EMETransaction(
+                    keySystems,
+                    {
+                      contentID,
+                      contentType: ContentType.VIDEO,
+                      initSegment: values.chunkData,
+                      codec: `${values.ctx.representation.mimeType};codecs="${values.ctx.representation.codec}"`,
+                    },
+                    db
+                  ).pipe(mapTo(values));
+                }
+                return of(values);
+              }),
               tap(values => {
                 const { id: representationID } = values.ctx.representation;
                 const { time, timescale, duration } = values.ctx.segment;
@@ -78,7 +94,7 @@ export function initDownloader$(
                   isInitData: true,
                   data: values.chunkData,
                   size: values.chunkData.byteLength,
-                }).catch((err) => {
+                }).catch(err => {
                   throw new IndexDBError(`
                     ${contentID}: Impossible to store the current INIT
                     segment (${ContentType.VIDEO}) at ${time}: ${err.message}
@@ -110,6 +126,23 @@ export function initDownloader$(
               isInitData: true,
               type: "start",
             }).pipe(
+              // Lets see when we will have a flux where the audio is encrypted
+              // mergeMap(values => {
+              //   if (keySystems && Object.keys(keySystems).length > 0) {
+              //     return EMETransaction(
+              //       keySystems,
+              //       {
+              //         contentID,
+              //         contentType: ContentType.AUDIO,
+              //         initSegment: values.chunkData,
+              //         codec: `${values.ctx.representation.mimeType};
+              //          codecs="${values.ctx.representation.codec}"`,
+              //       },
+              //       db
+              //     ).pipe(mapTo(values));
+              //   }
+              //   return of(values);
+              // }),
               tap(values => {
                 const { id: representationID } = values.ctx.representation;
                 const { time, timescale, duration } = values.ctx.segment;
@@ -124,7 +157,7 @@ export function initDownloader$(
                   isInitData: true,
                   data: values.chunkData,
                   size: values.chunkData.byteLength,
-                }).catch((err) => {
+                }).catch(err => {
                   throw new IndexDBError(`
                     ${contentID}: Impossible to store the current INIT
                     segment (${ContentType.AUDIO}) at ${time}: ${err.message}
@@ -170,7 +203,7 @@ export function initDownloader$(
                   isInitData: true,
                   data: values.chunkData,
                   size: values.chunkData.byteLength,
-                }).catch((err) => {
+                }).catch(err => {
                   throw new IndexDBError(`
                     ${contentID}: Impossible to store the current INIT
                     segment (${ContentType.TEXT}) at ${time}: ${err.message}
