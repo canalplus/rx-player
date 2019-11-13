@@ -3,6 +3,13 @@ import ProgressbarComponent from "../components/ProgressBar.jsx";
 import ToolTip from "../components/ToolTip.jsx";
 import withModulesState from "../lib/withModulesState.jsx";
 import Tip from "../components/Tip.jsx";
+import {
+  tap,
+  distinctUntilChanged,
+  filter,
+  map,
+} from "rxjs/operators";
+import { Subject, combineLatest } from "rxjs";
 
 const { VideoThumbnailLoader } = window.RxPlayerTools;
 
@@ -11,8 +18,7 @@ class Progressbar extends React.Component {
     super(...args);
 
     this.thumbnailsElement = [];
-    this.videoElement = null;
-
+    this.subscription = null;
     this.state = {
       timeIndicatorVisible: false,
       timeIndicatorPosition: 0,
@@ -23,37 +29,33 @@ class Progressbar extends React.Component {
       image: null,
       imageTime: null,
     };
-  }
 
-  setVideoThumbnailLoader(videoElement) {
-    if (videoElement === null ||
-        videoElement === this.videoElement) {
-      return;
-    }
+    this.videoElement$ = new Subject();
 
-    this.videoElement = videoElement;
-    const adaptations = window.player.getCurrentAdaptations();
-    if (adaptations && adaptations.video) {
-      const adaptation = adaptations.video;
-      const firstTrack = adaptation.representations[0];
-      if (this.videoThumbnailLoader) {
-        this.videoThumbnailLoader.dispose();
-      }
-      this.state.tipIsVideo = true;
-      this.videoThumbnailLoader =
-        new VideoThumbnailLoader(this.videoElement, firstTrack);
-    }
+    const videoElementChange$ = this.videoElement$.pipe(
+      filter((videoElement) => videoElement != null),
+      distinctUntilChanged()
+    );
 
-    window.player.addEventListener("videoTrackChange", () => {
-      const adaptation = window.player.getCurrentAdaptations().video;
-      const firstTrack = adaptation.representations[0];
-      if (this.videoThumbnailLoader) {
-        this.videoThumbnailLoader.dispose();
-      }
-      this.state.tipIsVideo = true;
-      this.videoThumbnailLoader =
-        new VideoThumbnailLoader(this.videoElement, firstTrack);
-    });
+    const videoAdaptationChange$ = this.props.player.$get("currentAdaptations").pipe(
+      filter((adaptations) => adaptations && adaptations.video),
+      map(({ video }) => video)
+    );
+
+    this.vtlSubscription = combineLatest(
+      videoElementChange$,
+      videoAdaptationChange$
+    ).pipe(
+      tap(([videoElement, adaptation]) => {
+        const firstTrack = adaptation.representations[0];
+        this.state.tipIsVideo = true;
+        if (this.videoThumbnailLoader) {
+          this.videoThumbnailLoader.dispose();
+        }
+        this.videoThumbnailLoader =
+          new VideoThumbnailLoader(videoElement, firstTrack);
+      })
+    ).subscribe();
   }
 
   showTimeIndicator(wallClockTime, clientX, isLive) {
@@ -138,6 +140,12 @@ class Progressbar extends React.Component {
     });
   }
 
+  componentWillUnmount() {
+    if (this.vtlSubscription) {
+      this.vtlSubscription.unsubscribe();
+    }
+  }
+
   render() {
     const {
       tipVisible,
@@ -200,7 +208,7 @@ class Progressbar extends React.Component {
             tipsOffset={toolTipOffset}
             image={image}
             tipPosition={tipPosition}
-            setVideoThumbnailLoader={(el) => this.setVideoThumbnailLoader(el)}
+            setVideoElement={(el) => this.videoElement$.next(el)}
           /> : null
         }
         <ProgressbarComponent
@@ -226,5 +234,6 @@ export default withModulesState({
     isLive: "isLive",
     minimumPosition: "minimumPosition",
     maximumPosition: "maximumPosition",
+    currentAdaptations: "currentAdaptations",
   },
 })(Progressbar);

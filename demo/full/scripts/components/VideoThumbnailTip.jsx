@@ -14,7 +14,7 @@ class VideoThumbnailTip extends React.Component {
   constructor(...args) {
     super(...args);
 
-    this.setVideoThumbnailLoader = this.props.setVideoThumbnailLoader;
+    this.setVideoElement = this.props.setVideoElement;
     this.positionIsCorrected = false;
     this.state = {
       style: {},
@@ -59,7 +59,7 @@ class VideoThumbnailTip extends React.Component {
       style={style}
       ref={el => this.element = el}
     >
-      <video ref={ el => this.setVideoThumbnailLoader(el) }></video>
+      <video ref={ el => this.setVideoElement(el) }></video>
     </div>;
 
     return (

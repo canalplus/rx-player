@@ -11,14 +11,14 @@ export default ({
   tipPosition,
   tipIsVideo,
   image,
-  setVideoThumbnailLoader,
+  setVideoElement,
 }) => {
   const xPosition = tipPosition - tipsOffset;
   return (
     tipIsVideo ?
       <VideoThumbnailTip
         className="progress-tip"
-        setVideoThumbnailLoader={setVideoThumbnailLoader}
+        setVideoElement={setVideoElement}
         xPosition={xPosition}
       /> :
       <ImageTip
