@@ -17,6 +17,7 @@
 import {
   Observable,
   of as observableOf,
+  timer,
 } from "rxjs";
 import {
   catchError,
@@ -28,7 +29,6 @@ import {
 } from "../../errors";
 import log from "../../log";
 import castToObservable from "../../utils/cast_to_observable";
-import tryCatch from "../../utils/rx-try_catch";
 import getMediaKeySystemAccess from "./find_key_system";
 import MediaKeysInfosStore from "./media_keys_infos_store";
 import {
@@ -86,18 +86,45 @@ export default function getMediaKeysInfos(
       }
 
       log.debug("EME: Calling createMediaKeys on the MediaKeySystemAccess");
-      return tryCatch(() => castToObservable(mediaKeySystemAccess.createMediaKeys()),
-                      undefined).pipe(
-        catchError((error : unknown) : never => {
-          const message = error instanceof Error ?
-            error.message :
-            "Unknown error when creating MediaKeys.";
-          throw new EncryptedMediaError("CREATE_MEDIA_KEYS_ERROR", message);
-        }),
-        map((mediaKeys) => ({ mediaKeys,
-                              sessionsStore: new SessionsStore(mediaKeys),
-                              mediaKeySystemAccess,
-                              keySystemOptions: options,
-                              sessionStorage })));
+
+      /**
+       * Create MediaKeys and handle errors.
+       * @param {Object} retryOptions
+       * @returns {Observable} - IMediaKeysInfos
+       */
+      function createMediaKeys$(retryOptions: { remainingRetries: number;
+                                                retryDelay: number; }
+      ): Observable<IMediaKeysInfos> {
+        return castToObservable(mediaKeySystemAccess.createMediaKeys())
+          .pipe(
+            map((mediaKeys) => ({ mediaKeys,
+                                  sessionsStore: new SessionsStore(mediaKeys),
+                                  mediaKeySystemAccess,
+                                  keySystemOptions: options,
+                                  sessionStorage })),
+            catchError((error : unknown): Observable<IMediaKeysInfos> => {
+              const message =
+                error instanceof Error ? error.message :
+                                         "Unknown error when creating MediaKeys.";
+              const { remainingRetries, retryDelay } = retryOptions;
+              if (remainingRetries > 0) {
+                log.error("EME: Error when creating MediaKeys: " + message,
+                          "Retrying.");
+                return timer(retryDelay).pipe(
+                  mergeMap(() => {
+                    return createMediaKeys$({ remainingRetries: remainingRetries - 1,
+                                              retryDelay });
+                  })
+                );
+              }
+              throw new EncryptedMediaError("CREATE_MEDIA_KEYS_ERROR", message);
+            })
+          );
+      }
+
+      return createMediaKeys$({
+        remainingRetries: 2,
+        retryDelay: 100,
+      });
     }));
 }
