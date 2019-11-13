@@ -1,20 +1,59 @@
 import React from "react";
 import ProgressbarComponent from "../components/ProgressBar.jsx";
-import ImageTip from "../components/ImageTip.jsx";
 import ToolTip from "../components/ToolTip.jsx";
 import withModulesState from "../lib/withModulesState.jsx";
+import Tip from "../components/Tip.jsx";
+
+const { VideoThumbnailLoader } = window.RxPlayerTools;
 
 class Progressbar extends React.Component {
   constructor(...args) {
     super(...args);
+
+    this.thumbnailsElement = [];
+    this.videoElement = null;
+
     this.state = {
       timeIndicatorVisible: false,
       timeIndicatorPosition: 0,
       timeIndicatorText: "",
-      imageTipVisible: false,
-      imageTipPosition: 0,
+      tipVisible: false,
+      tipPosition: 0,
+      tipIsVideo: true,
       image: null,
+      imageTime: null,
     };
+  }
+
+  setVideoThumbnailLoader(videoElement) {
+    if (videoElement === null ||
+        videoElement === this.videoElement) {
+      return;
+    }
+
+    this.videoElement = videoElement;
+    const adaptations = window.player.getCurrentAdaptations();
+    if (adaptations && adaptations.video) {
+      const adaptation = adaptations.video;
+      const firstTrack = adaptation.representations[0];
+      if (this.videoThumbnailLoader) {
+        this.videoThumbnailLoader.dispose();
+      }
+      this.state.tipIsVideo = true;
+      this.videoThumbnailLoader =
+        new VideoThumbnailLoader(this.videoElement, firstTrack);
+    }
+
+    window.player.addEventListener("videoTrackChange", () => {
+      const adaptation = window.player.getCurrentAdaptations().video;
+      const firstTrack = adaptation.representations[0];
+      if (this.videoThumbnailLoader) {
+        this.videoThumbnailLoader.dispose();
+      }
+      this.state.tipIsVideo = true;
+      this.videoThumbnailLoader =
+        new VideoThumbnailLoader(this.videoElement, firstTrack);
+    });
   }
 
   showTimeIndicator(wallClockTime, clientX, isLive) {
@@ -46,44 +85,68 @@ class Progressbar extends React.Component {
                     timeIndicatorText: "" });
   }
 
-  showImageTip(ts, clientX) {
-    const { images } = this.props;
-    if (!images || !images.length) {
-      return;
+  showTip(ts, clientX) {
+    if (this.state.tipIsVideo) {
+      const timestampToMs = ts;
+      this.setState({
+        tipVisible: true,
+        tipPosition: clientX,
+        imageTime: timestampToMs,
+      });
+
+      if (this.videoThumbnailLoader) {
+        const manifest = window.player.getManifest();
+        if (manifest) {
+          const period = manifest.getPeriodForTime(timestampToMs);
+          if (period &&
+              period.adaptations.video &&
+              period.adaptations.video.length) {
+            const track = period.adaptations.video[0].representations[1];
+            this.videoThumbnailLoader.setTime(Math.floor(timestampToMs), track);
+          }
+        }
+      }
+    } else {
+      const { images } = this.props;
+      if (!images || !images.length) {
+        return;
+      }
+      const timestampToMs = ts * 1000;
+      const imageIndex = images.findIndex(i =>
+        i && i.ts > timestampToMs
+      );
+      const image = imageIndex === -1 ?
+        images[images.length - 1] :
+        images[imageIndex - 1];
+      if (!image) {
+        return;
+      }
+      this.setState({
+        tipVisible: true,
+        tipPosition: clientX,
+        image: image.data,
+      });
     }
-    const timestampToMs = ts * 1000;
-    const imageIndex = images.findIndex(i =>
-      i && i.ts > timestampToMs
-    );
-    const image = imageIndex === -1 ?
-      images[images.length - 1] :
-      images[imageIndex - 1];
-    if (!image) {
-      return;
-    }
-    this.setState({
-      imageTipVisible: true,
-      imageTipPosition: clientX,
-      image: image.data,
-    });
   }
 
-  hideImageTip() {
+  hideTip() {
     this.setState({
-      imageTipVisible: false,
-      imageTipPosition: 0,
+      tipVisible: false,
+      tipPosition: 0,
+      imageTime: null,
       image: null,
     });
   }
 
   render() {
     const {
-      imageTipVisible,
-      imageTipPosition,
+      tipVisible,
+      tipPosition,
       image,
       timeIndicatorVisible,
       timeIndicatorPosition,
       timeIndicatorText,
+      tipIsVideo,
     } = this.state;
     const {
       currentTime,
@@ -93,21 +156,17 @@ class Progressbar extends React.Component {
       isLive,
       bufferGap,
       player,
-      onSeek,
     } = this.props;
-    const seek = position => {
-      onSeek();
-      player.dispatch("SEEK", position);
-    };
+    const seek = position => player.dispatch("SEEK", position);
     const hideToolTips = () => {
       this.hideTimeIndicator();
-      this.hideImageTip();
+      this.hideTip();
     };
     const onMouseMove = (position, event) => {
       const wallClockDiff = player.get("wallClockDiff");
       const wallClockTime = position + wallClockDiff;
       this.showTimeIndicator(wallClockTime, event.clientX, isLive);
-      this.showImageTip(position, event.clientX);
+      this.showTip(position, event.clientX);
     };
 
     const toolTipOffset = this.wrapperElement ?
@@ -136,12 +195,13 @@ class Progressbar extends React.Component {
             /> : null
         }
         {
-          imageTipVisible ?
-            <ImageTip
-              className="progress-tip"
-              image={image}
-              xPosition={imageTipPosition - toolTipOffset}
-            /> : null
+          tipVisible ? <Tip
+            tipIsVideo={tipIsVideo}
+            tipsOffset={toolTipOffset}
+            image={image}
+            tipPosition={tipPosition}
+            setVideoThumbnailLoader={(el) => this.setVideoThumbnailLoader(el)}
+          /> : null
         }
         <ProgressbarComponent
           seek={seek}

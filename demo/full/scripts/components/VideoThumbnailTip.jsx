@@ -1,7 +1,5 @@
 import React from "react";
 
-const { VideoThumbnailLoader } = window.RxPlayerTools;
-
 /**
  * React Component which Displays a video thumbnail tip centered and on top
  * of the position wanted.
@@ -16,9 +14,7 @@ class VideoThumbnailTip extends React.Component {
   constructor(...args) {
     super(...args);
 
-    this.adaptation = this.props.adaptation;
-    this.imageTime = Math.floor(this.props.imageTime);
-    this.imageLoader = null;
+    this.setVideoThumbnailLoader = this.props.setVideoThumbnailLoader;
     this.positionIsCorrected = false;
     this.state = {
       style: {},
@@ -43,24 +39,12 @@ class VideoThumbnailTip extends React.Component {
     this.setState({ style });
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps() {
     this.positionIsCorrected = false;
-    const { imageTime } = nextProps;
-    const flooredImageTime = Math.round(imageTime);
-    if (this.imageLoader) {
-      this.imageLoader.setTime(flooredImageTime);
-      this.imageTime = flooredImageTime;
-    }
   }
 
   componentDidMount() {
     this.correctImagePosition();
-  }
-
-  componentWillUnmount() {
-    if (this.imageLoader) {
-      this.imageLoader.dispose();
-    }
   }
 
   componentDidUpdate() {
@@ -70,25 +54,13 @@ class VideoThumbnailTip extends React.Component {
   render() {
     const { style } = this.state;
 
-    const videoElement = <video
-      ref={el => {
-        const track = this.adaptation.trickModeTrack && this.adaptation.trickModeTrack.representations ?
-          this.adaptation.trickModeTrack.representations[0] : undefined;
-        if (!this.imageLoader && track) {
-
-          this.imageLoader = VideoThumbnailLoader(el, track);
-        }
-        this.imageLoader.setTime(this.imageTime);
-      }}
-    ></video>
-
     const divToDisplay = <div
-        className="image-tip-wrapper"
-        style={style}
-        ref={el => this.element = el}
-      >
-        { videoElement }
-      </div>;
+      className="image-tip-wrapper"
+      style={style}
+      ref={el => this.element = el}
+    >
+      <video ref={ el => this.setVideoThumbnailLoader(el) }></video>
+    </div>;
 
     return (
       divToDisplay
