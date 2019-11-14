@@ -421,11 +421,15 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       if (lastPos === undefined) {
         return undefined;
       }
+      const agressiveModeOffset = this._aggressiveMode ? (duration / timescale) :
+                                                         0;
       if (this._relativePeriodEnd != null &&
-          this._relativePeriodEnd < (lastPos - this._periodStart)) {
+          this._relativePeriodEnd < (lastPos + agressiveModeOffset - this._periodStart)) {
         const scaledRelativePeriodEnd = this._relativePeriodEnd * timescale;
-        return scaledRelativePeriodEnd <= 0 ? null :
-                                              scaledRelativePeriodEnd - duration;
+        if (scaledRelativePeriodEnd < duration) {
+          return null;
+        }
+        return (Math.floor(scaledRelativePeriodEnd / duration) - 1)  * duration;
       }
       // /!\ The scaled last position augments continuously and might not
       // reflect exactly the real server-side value. As segments are
@@ -437,12 +441,11 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       if (scaledLastPosition < 0) {
         return null;
       }
-      const numberOfSegmentsAvailable = this._aggressiveMode ?
-        Math.ceil(scaledLastPosition / duration) :
-        Math.floor(scaledLastPosition / duration);
-      return numberOfSegmentsAvailable <= 0 ?
-               null :
-               (numberOfSegmentsAvailable - 1) * duration;
+      const numberOfSegmentsAvailable =
+        Math.floor((scaledLastPosition + (agressiveModeOffset * timescale)) / duration);
+
+      return numberOfSegmentsAvailable <= 0 ? null :
+                                              (numberOfSegmentsAvailable - 1) * duration;
     } else {
       const maximumTime = (this._relativePeriodEnd === undefined ?
                              0 :
