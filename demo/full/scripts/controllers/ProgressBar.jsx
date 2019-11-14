@@ -62,24 +62,24 @@ class Progressbar extends React.Component {
                     timeIndicatorText: "" });
   }
 
-  showThumbnail(ts, clientX) {
-    if (this.state.thumbnailIsVideo) {
-      const timestampToMs = ts;
-      this.setState({
-        thumbnailIsVisible: true,
-        tipPosition: clientX,
-        imageTime: timestampToMs,
-      });
+  showVideoTumbnail(ts, clientX) {
+    const timestampToMs = ts;
+    this.setState({
+      thumbnailIsVisible: true,
+      tipPosition: clientX,
+      imageTime: timestampToMs,
+    });
 
-      if (this.videoThumbnailLoader) {
-        const { manifest } = this.props;
-        if (manifest) {
-          const period = manifest.getPeriodForTime(timestampToMs);
-          if (period &&
-              period.adaptations.video &&
-              period.adaptations.video.length) {
-            const track = period.adaptations.video[0].representations[1];
-            this.videoThumbnailLoader.setTime(Math.floor(timestampToMs), track).catch(() => {
+    if (this.videoThumbnailLoader) {
+      const { manifest } = this.props;
+      if (manifest) {
+        const period = manifest.getPeriodForTime(timestampToMs);
+        if (period &&
+            period.adaptations.video &&
+            period.adaptations.video.length) {
+          const track = period.adaptations.video[0].representations[1];
+          this.videoThumbnailLoader.setTime(Math.floor(timestampToMs), track)
+            .catch(() => {
               if (this.vtlSubscription) {
                 this.vtlSubscription.unsubscribe();
               }
@@ -88,63 +88,81 @@ class Progressbar extends React.Component {
               });
               return;
             });
-          }
         }
       }
+    }
+  }
+
+  enableVideoThumbnailMode() {
+    const videoElementChange$ = this.videoElement$.pipe(
+      filter((videoElement) => videoElement != null),
+      distinctUntilChanged()
+    );
+
+    const videoAdaptationChange$ = this.props.player.$get("currentAdaptations").pipe(
+      filter((adaptations) => adaptations != null && adaptations.video),
+      map(({ video }) => video)
+    );
+
+    this.vtlSubscription = combineLatest(
+      videoElementChange$,
+      videoAdaptationChange$
+    ).pipe(
+      tap(([videoElement, adaptation]) => {
+        const firstTrack = adaptation.representations[0];
+        this.state.thumbnailIsVideo = true;
+        if (this.videoThumbnailLoader) {
+          this.videoThumbnailLoader.dispose();
+        }
+        this.videoThumbnailLoader =
+          new VideoThumbnailLoader(videoElement, firstTrack);
+      })
+    ).subscribe();
+
+    this.setState({
+      thumbnailIsVideo: true,
+    });
+  }
+
+  disableVideoThumbnailMode() {
+    if (this.vtlSubscription) {
+      this.vtlSubscription.unsubscribe();
+    }
+    this.setState({
+      thumbnailIsVideo: false,
+    });
+  }
+
+  showImageThumbnail(ts, clientX) {
+    const { images } = this.props;
+    if (!images || !images.length) {
+      this.enableVideoThumbnailMode();
+      return;
+    }
+
+    this.disableVideoThumbnailMode();
+    const timestampToMs = ts * 1000;
+    const imageIndex = images.findIndex(i =>
+      i && i.ts > timestampToMs
+    );
+    const image = imageIndex === -1 ?
+      images[images.length - 1] :
+      images[imageIndex - 1];
+    if (!image) {
+      return;
+    }
+    this.setState({
+      thumbnailIsVisible: true,
+      tipPosition: clientX,
+      image: image.data,
+    });
+  }
+
+  showThumbnail(ts, clientX) {
+    if (this.state.thumbnailIsVideo) {
+      this.showVideoTumbnail(ts, clientX);
     } else {
-      const { images } = this.props;
-      if (!images || !images.length) {
-        const videoElementChange$ = this.videoElement$.pipe(
-          filter((videoElement) => videoElement != null),
-          distinctUntilChanged()
-        );
-
-        const videoAdaptationChange$ = this.props.player.$get("currentAdaptations").pipe(
-          filter((adaptations) => adaptations != null && adaptations.video),
-          map(({ video }) => video)
-        );
-
-        this.vtlSubscription = combineLatest(
-          videoElementChange$,
-          videoAdaptationChange$
-        ).pipe(
-          tap(([videoElement, adaptation]) => {
-            const firstTrack = adaptation.representations[0];
-            this.state.thumbnailIsVideo = true;
-            if (this.videoThumbnailLoader) {
-              this.videoThumbnailLoader.dispose();
-            }
-            this.videoThumbnailLoader =
-              new VideoThumbnailLoader(videoElement, firstTrack);
-          })
-        ).subscribe();
-
-        this.setState({
-          thumbnailIsVideo: true,
-        });
-        return;
-      }
-      if (this.vtlSubscription) {
-        this.vtlSubscription.unsubscribe();
-      }
-      this.setState({
-        thumbnailIsVideo: false,
-      });
-      const timestampToMs = ts * 1000;
-      const imageIndex = images.findIndex(i =>
-        i && i.ts > timestampToMs
-      );
-      const image = imageIndex === -1 ?
-        images[images.length - 1] :
-        images[imageIndex - 1];
-      if (!image) {
-        return;
-      }
-      this.setState({
-        thumbnailIsVisible: true,
-        tipPosition: clientX,
-        image: image.data,
-      });
+      this.showImageThumbnail(ts, clientX);
     }
   }
 
