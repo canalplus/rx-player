@@ -81,10 +81,6 @@ export interface IDefaultTextTrackOption { language : string;
                                            normalized : string;
                                            closedCaption : boolean; }
 
-export type ITextTrackPreference = null |
-                                   { language : string;
-                                     closedCaption : boolean; };
-
 export interface INetworkConfigOption { manifestRetry? : number;
                                         offlineRetry? : number;
                                         segmentRetry? : number; }

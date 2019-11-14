@@ -23,10 +23,6 @@ import toHTML, {
   IVTTHTMLCue
 } from "./to_html";
 
-export interface IVTTHTMLCue { start : number;
-                               end: number;
-                               element : HTMLElement; }
-
 /**
  * Parse WebVTT from text. Returns an array with:
  * - start : start of current cue, in seconds

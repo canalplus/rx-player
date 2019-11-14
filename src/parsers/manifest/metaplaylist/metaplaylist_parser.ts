@@ -28,8 +28,6 @@ import {
 } from "../types";
 import MetaRepresentationIndex from "./representation_index";
 
-export type IAdaptationType = "video"|"audio"|"text"|"image";
-
 export type IParserResponse<T> =
   {
     type : "needs-manifest-loader";

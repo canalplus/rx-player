@@ -15,7 +15,6 @@
  */
 
 import parseMetaPlaylist, {
-  IAdaptationType,
   IMetaPlaylist,
   IMetaPlaylistTextTrack,
   IParserResponse,
@@ -23,7 +22,6 @@ import parseMetaPlaylist, {
 
 export default parseMetaPlaylist;
 export {
-  IAdaptationType,
   IMetaPlaylist,
   IMetaPlaylistTextTrack,
   IParserResponse,
