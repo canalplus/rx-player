@@ -20,7 +20,7 @@ const getHumanReadableHours = require("./get_human_readable_hours");
 const webpackConfig = require("../webpack.config.js");
 
 // overwrite entries/output (ugly but just werks and did not find any better)
-webpackConfig.entry = path.join(__dirname, "../src/exports.ts");
+webpackConfig.entry = path.join(__dirname, "../src/index.ts");
 webpackConfig.output.path = __dirname;
 webpackConfig.output.filename = "../demo/standalone/lib.js";
 

@@ -22,7 +22,7 @@ const displayWebpackErrors = require("./display_webpack_errors");
 const getHumanReadableHours = require("./get_human_readable_hours");
 
 // overwrite entries/output (ugly but just werks and did not find any better)
-webpackLibConfig.entry = path.join(__dirname, "../src/exports.ts");
+webpackLibConfig.entry = path.join(__dirname, "../src/index.ts");
 webpackLibConfig.output.path = __dirname;
 webpackLibConfig.output.filename = "../demo/full/lib.js";
 
