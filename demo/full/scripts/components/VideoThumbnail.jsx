@@ -1,7 +1,7 @@
 import React from "react";
 
 /**
- * React Component which Displays a video thumbnail tip centered and on top
+ * React Component which Displays a video thumbnail centered and on top
  * of the position wanted.
  *
  * Takes 2 props:
@@ -10,7 +10,7 @@ import React from "react";
  *
  * @class VideoThumbnailTip
  */
-class VideoThumbnailTip extends React.Component {
+class VideoThumbnail extends React.Component {
   constructor(...args) {
     super(...args);
 
@@ -55,7 +55,7 @@ class VideoThumbnailTip extends React.Component {
     const { style } = this.state;
 
     const divToDisplay = <div
-      className="image-tip-wrapper"
+      className="thumbnail-wrapper"
       style={style}
       ref={el => this.element = el}
     >
@@ -68,4 +68,4 @@ class VideoThumbnailTip extends React.Component {
   }
 }
 
-export default VideoThumbnailTip;
+export default VideoThumbnail;

@@ -286,7 +286,7 @@ body {
   text-align: center;
 }
 
-.image-tip-wrapper {
+.thumbnail-wrapper {
   position: absolute;
   display: block;
   left: 0px;
@@ -298,7 +298,7 @@ body {
   animation: fadein 0.6s;
 }
 
-.image-tip {
+.thumbnail {
   height: 100%;
 }
 

@@ -5,7 +5,7 @@ import React, {
 } from "react";
 
 /**
- * React Component which Displays an Image tip centered and on top of the
+ * React Component which Displays an Image thumbnail centered and on top of the
  * position wanted.
  *
  * Takes 3 props:
@@ -14,12 +14,11 @@ import React, {
  *   - {Number} xPosition - The position on the horizontal axis where you
  *     want the image to be centered to.
  *
- * @class ImageTip
+ * @class ImageThumbnail
  */
-export default function ImageTip({
+export default function ImageThumbnail({
   image,
   xPosition,
-  className,
 }) {
   const wrapperEl = useRef(null);
   const [ imageUrl, setImageUrl ] = useState("");
@@ -39,11 +38,11 @@ export default function ImageTip({
   }, [xPosition]);
   return (
     <div
-      className="image-tip-wrapper"
+      className="thumbnail-wrapper"
       ref={wrapperEl}
     >
       <img
-        className={"image-tip " + className}
+        className={"thumbnail"}
         src={imageUrl}
       />
     </div>
