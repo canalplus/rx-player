@@ -18,7 +18,6 @@ echo "cleaning previous builds..."
 
 echo "bundling raw modular version..."
 npm run prepare:modular
-rm dist/_esm5.raw/exports.js
 
 echo "processing raw modular build..."
 cp -r dist/_esm5.raw/ dist/_esm5.processed
