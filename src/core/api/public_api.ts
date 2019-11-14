@@ -96,7 +96,10 @@ import initializeMediaSourcePlayback, {
   IReloadingMediaSourceEvent,
   IStalledEvent,
 } from "../init";
-import { IBufferType } from "../source_buffers";
+import SourceBuffersStore, {
+  IBufferedChunk,
+  IBufferType,
+} from "../source_buffers";
 import createClock, {
   IClockTick
 } from "./clock";
@@ -174,55 +177,44 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * Current version of the RxPlayer.
-   * @type {string}
    */
   public static version : string;
 
   /**
    * Current version of the RxPlayer.
-   * @type {string}
    */
   public readonly version : string;
 
   /**
    * Media element attached to the RxPlayer.
-   * @type {HTMLMediaElement|null}
    */
   public videoElement : HTMLMediaElement|null; // null on dispose
 
   /**
    * Logger the RxPlayer uses.
-   * @type {Object}
    */
   public readonly log : Logger;
 
   /**
    * Current state of the RxPlayer.
    * Please use `getPlayerState()` instead.
-   * @type {string}
    */
   public state : string;
 
   /**
    * Emit when the player is disposed to perform clean-up.
    * The player will be unusable after that.
-   * @private
-   * @type {Subject}
    */
   private readonly _priv_destroy$ : Subject<void>;
 
   /**
    * Emit to stop the current content and clean-up all related ressources.
-   * @private
-   * @type {Subject}
    */
   private readonly _priv_stopCurrentContent$ : Subject<void>;
 
   /**
    * Emit true when the previous content is cleaning-up, false when it's done.
    * A new content cannot be launched until it emits false.
-   * @private
-   * @type {BehaviorSubject}
    */
   private readonly _priv_contentLock$ : BehaviorSubject<boolean>;
 
@@ -230,56 +222,43 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Changes on "play" and "pause" events from the media elements.
    * Switches to ``true`` whent the "play" event was the last received.
    * Switches to ``false`` whent the "pause" event was the last received.
-   *
    * ``false`` if no such event was received for the current loaded content.
-   * @private
-   * @type {ReplaySubject}
    */
   private readonly _priv_playing$ : ReplaySubject<boolean>;
 
   /**
    * Last speed set by the user.
    * Used instead of videoElement.playbackRate to allow more flexibility.
-   * @private
-   * @type {BehaviorSubject>}
    */
   private readonly _priv_speed$ : BehaviorSubject<number>;
 
   /**
    * Store buffer-related options used needed when initializing a content.
-   * @private
-   * @type {Object}
    */
   private readonly _priv_bufferOptions : {
     /**
      * Emit the last wanted buffer goal.
-     * @type {BehaviorSubject}
      */
     wantedBufferAhead$ : BehaviorSubject<number>;
 
     /**
      * Maximum kept buffer ahead in the current position, in seconds.
-     * @type {BehaviorSubject}
      */
     maxBufferAhead$ : BehaviorSubject<number>;
 
     /**
      * Maximum kept buffer behind in the current position, in seconds.
-     * @type {BehaviorSubject}
      */
     maxBufferBehind$ : BehaviorSubject<number>;
   };
 
   /**
    * Information on the current bitrate settings.
-   * @private
-   * @type {Object}
    */
   private readonly _priv_bitrateInfos : {
     /**
      * Store last bitrates for each type for ABRManager instanciation.
      * Store the initial wanted bitrates at first.
-     * @type {Object}
      */
     lastBitrates : { audio? : number;
                      video? : number;
@@ -288,14 +267,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     /**
      * Store last wanted maxAutoBitrates for the next ABRManager instanciation.
-     * @type {Object}
      */
     maxAutoBitrates : { audio : BehaviorSubject<number>;
                         video : BehaviorSubject<number>; };
 
     /**
      * Store last wanted manual bitrates for the next ABRManager instanciation.
-     * @type {Object}
      */
     manualBitrates : { audio : BehaviorSubject<number>;
                        video : BehaviorSubject<number>; };
@@ -303,27 +280,22 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * Current fatal error which STOPPED the player.
-   * @type {Error|null}
    */
   private _priv_currentError : Error|null;
 
   /**
    * Information about the current content being played.
    * null when no content is launched.
-   * @private
-   * @type {Object|null}
    */
   private _priv_contentInfos : null | {
     /**
      * URL of the content currently being played.
-     * @type {string}
      */
     url? : string;
 
     /**
      * true if the current content is in DirectFile mode.
      * false is the current content has a transport protocol (Smooth/DASH...).
-     * @type {Boolean}
      */
     isDirectFile : boolean;
 
@@ -333,7 +305,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * null if the current content has no image playlist linked to it.
      *
      * TODO Need complete refactoring for live or multi-periods contents
-     * @type {Object|null}
      */
     thumbnails : IBifThumbnail[]|null;
 
@@ -341,14 +312,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * Manifest linked to the current content.
      * Null if the current content loaded has no manifest or if the content is
      * not yet loaded.
-     * @type {Object|null}
      */
     manifest : Manifest|null;
 
     /**
      * Current Period being played.
      * null if no Period is being played.
-     * @type {Object}
      */
     currentPeriod : Period|null;
 
@@ -356,7 +325,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * Store currently considered adaptations, per active period.
      *
      * null if no Adaptation is active
-     * @type {Object}
      */
     activeAdaptations : {
       [periodId : string] : Partial<Record<IBufferType, Adaptation|null>>;
@@ -366,7 +334,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * Store currently considered representations, per active period.
      *
      * null if no Representation is active
-     * @type {Object}
      */
     activeRepresentations : {
       [periodId : string] : Partial<Record<IBufferType, Representation|null>>;
@@ -374,26 +341,27 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     /**
      * Store starting audio track if one.
-     * @type {undefined|null|Object}
      */
     initialAudioTrack : undefined|IAudioTrackPreference;
 
     /**
      * Store starting text track if one.
-     * @type {undefined|null|Object}
      */
     initialTextTrack : undefined|ITextTrackPreference;
+
+    /**
+     * Keep information on the SourceBuffers
+     */
+    sourceBuffersStore : SourceBuffersStore | null;
   };
 
   /**
    * List of favorite audio tracks, in preference order.
-   * @type {Array.<Object>}
    */
   private _priv_preferredAudioTracks : BehaviorSubject<IAudioTrackPreference[]>;
 
   /**
    * List of favorite text tracks, in preference order.
-   * @type {Array.<Object>}
    */
   private _priv_preferredTextTracks : BehaviorSubject<ITextTrackPreference[]>;
 
@@ -401,43 +369,31 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * TrackManager instance linked to the current content.
    * Null if no content has been loaded or if the current content loaded
    * has no TrackManager.
-   * @private
-   * @type {Object|null}
    */
   private _priv_trackManager : TrackManager|null;
 
   /**
    * Emit last picture in picture event.
-   * @private
-   * @type {BehaviorSubject}
    */
   private _priv_pictureInPictureEvent$ : ReplaySubject<events.IPictureInPictureEvent>;
 
   /**
    * Store wanted configuration for the limitVideoWidth option.
-   * @private
-   * @type {boolean}
    */
   private readonly _priv_limitVideoWidth : boolean;
 
   /**
    * Store wanted configuration for the throttleWhenHidden option.
-   * @private
-   * @type {boolean}
    */
   private readonly _priv_throttleWhenHidden : boolean;
 
   /**
    * Store wanted configuration for the throttleVideoBitrateWhenHidden option.
-   * @private
-   * @type {boolean}
    */
   private readonly _priv_throttleVideoBitrateWhenHidden : boolean;
 
   /**
    * Store volume when mute is called, to restore it on unmute.
-   * @private
-   * @type {Number}
    */
   private _priv_mutedMemory : number;
 
@@ -448,8 +404,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * All those events are linked to the content being played and can be cleaned
    * on stop.
    *
-   * @private
-   * @type {Object}
    */
   private _priv_contentEventsMemory : {
     [P in keyof IPublicAPIEvent]? : IPublicAPIEvent[P];
@@ -457,13 +411,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * Determines whether or not player should stop at the end of video playback.
-   * @private
    */
   private readonly _priv_stopAtEnd : boolean;
 
   /**
    * All possible Error types emitted by the RxPlayer.
-   * @type {Object}
    */
   static get ErrorTypes() : Record<IErrorType, IErrorType> {
     return ErrorTypes;
@@ -471,7 +423,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * All possible Error codes emitted by the RxPlayer.
-   * @type {Object}
    */
   static get ErrorCodes() : Record<IErrorCode, IErrorCode> {
     return ErrorCodes;
@@ -487,7 +438,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    *   - "INFO"
    *   - "DEBUG"
    * Any other value will be translated to "NONE".
-   * @type {string}
    */
   static get LogLevel() : string {
     return log.getLevel();
@@ -660,7 +610,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Load a new video.
    * @param {Object} opts
-   * @returns {Observable}
    */
   loadVideo(opts : ILoadVideoOptions) : void {
     const options = parseLoadVideoOptions(opts);
@@ -693,6 +642,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_currentError = null;
     this._priv_contentInfos = { url,
                                 isDirectFile,
+                                sourceBuffersStore: null,
                                 thumbnails: null,
                                 manifest: null,
                                 currentPeriod: null,
@@ -911,7 +861,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Returns fatal error if one for the current content.
    * null otherwise.
-   * @returns {Object|null}
+   * @returns {Object|null} - The current Error (`null` when no error).
    */
   getError() : Error|null {
     return this._priv_currentError;
@@ -920,7 +870,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Returns manifest/playlist object.
    * null if the player is STOPPED.
-   * @returns {Manifest|null}
+   * @returns {Manifest|null} - The current Manifest (`null` when not known).
    */
   getManifest() : Manifest|null {
     if (this._priv_contentInfos === null) {
@@ -930,9 +880,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Returns adaptations (tracks) for every currently playing type
+   * Returns Adaptations (tracks) for every currently playing type
    * (audio/video/text...).
-   * @returns {Object|null}
+   * @returns {Object|null} - The current Adaptation objects, per type (`null`
+   * when none is known for now.
    */
   getCurrentAdaptations(
   ) : Partial<Record<IBufferType, Adaptation|null>> | null {
@@ -952,7 +903,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Returns representations (qualities) for every currently playing type
    * (audio/video/text...).
-   * @returns {Object|null}
+   * @returns {Object|null} - The current Representation objects, per type
+   * (`null` when none is known for now.
    */
   getCurrentRepresentations(
   ) : Partial<Record<IBufferType, Representation|null>> | null {
@@ -973,7 +925,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Returns the media DOM element used by the player.
    * You should not its HTML5 API directly and use the player's method instead,
    * to ensure a well-behaved player.
-   * @returns {HTMLMediaElement|null}
+   * @returns {HTMLMediaElement|null} - The HTMLMediaElement used (`null` when
+   * disposed)
    */
   getVideoElement() : HTMLMediaElement|null {
     return this.videoElement;
@@ -982,7 +935,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * If one returns the first native text-track element attached to the media element.
    * @deprecated
-   * @returns {TextTrack}
+   * @returns {TextTrack} - The native TextTrack attached (`null` when none)
    */
   getNativeTextTrack() : TextTrack|null {
     warnOnce("getNativeTextTrack is deprecated." +
@@ -1001,9 +954,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * Returns the player's current state.
-   * @returns {string}
+   * @returns {string} - The current Player's state
    */
-  getPlayerState() : string|undefined {
+  getPlayerState() : string {
     return this.state;
   }
 
@@ -1011,7 +964,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Returns true if both:
    *   - a content is loaded
    *   - the content loaded is a live content
-   * @returns {Boolean}
+   * @returns {Boolean} - `true` if we're playing a live content, `false` otherwise.
    */
   isLive() : boolean {
     if (this._priv_contentInfos === null) {
@@ -1026,7 +979,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * Returns the url of the content's manifest
-   * @returns {string|undefined}
+   * @returns {string|undefined} - Current URL. `undefined` if not known or no
+   * URL yet.
    */
   getUrl() : string|undefined {
     if (this._priv_contentInfos === null) {
@@ -1811,8 +1765,27 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * /!\ For demo use only! Do not touch!
+   *
+   * Returns every chunk buffered for a given buffer type.
+   * Returns `null` if no SourceBuffer was created for this type of buffer.
+   * @param {string} bufferType
+   * @returns {Array.<Object>|null}
+   */
+  __priv_getSourceBufferContent(bufferType : IBufferType) : IBufferedChunk[] | null {
+    if (this._priv_contentInfos === null ||
+        this._priv_contentInfos.sourceBuffersStore === null)
+    {
+      return null;
+    }
+    const queuedSourceBuffer = this._priv_contentInfos
+                                 .sourceBuffersStore.get(bufferType);
+    return queuedSourceBuffer === null ? null :
+                                         queuedSourceBuffer.getInventory();
+  }
+
+  /**
    * Reset all state properties relative to a playing content.
-   * @private
    */
   private _priv_cleanUpCurrentContentState() : void {
     // lock playback of new contents while cleaning up is pending
@@ -1843,7 +1816,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * state.
    * @param {string} eventName
    * @param {*} value - its new value
-   * @private
    */
   private _priv_triggerContentEvent<TEventName extends keyof IPublicAPIEvent>(
     eventName : TEventName,
@@ -1862,7 +1834,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * React to various events.
    *
    * @param {Object} event - payload emitted
-   * @private
    */
   private _priv_onPlaybackEvent(event : IInitEvent) : void {
     switch (event.type) {
@@ -1893,6 +1864,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       case "warning":
         this._priv_onPlaybackWarning(event.value);
         break;
+      case "loaded":
+        if (this._priv_contentInfos === null) {
+          log.error("API: Loaded event while no content is loaded");
+          return;
+        }
+        this._priv_contentInfos.sourceBuffersStore = event.value.sourceBuffersStore;
+        break;
       case "added-segment":
         if (this._priv_contentInfos === null) {
           log.error("API: Added segment while no content is loaded");
@@ -1920,7 +1898,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Triggered when we received a fatal error.
    * Clean-up ressources and signal that the content has stopped on error.
    * @param {Error} error
-   * @private
    */
   private _priv_onPlaybackError(error : unknown) : void {
     const formattedError = formatError(error, {
@@ -1947,7 +1924,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Triggered when the playback Observable completes.
    * Clean-up ressources and signal that the content has ended.
-   * @private
    */
   private _priv_onPlaybackFinished() : void {
     this._priv_stopCurrentContent$.next();
@@ -1959,7 +1935,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Triggered when we received a warning event during playback.
    * Trigger the right API event.
    * @param {Error} error
-   * @private
    */
   private _priv_onPlaybackWarning(error : ICustomError) : void {
     const formattedError = formatError(error, {
@@ -1974,7 +1949,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Triggered when the Manifest has been loaded for the current content.
    * Initialize various private properties and emit initial event.
    * @param {Object} value
-   * @private
    */
   private _priv_onManifestReady({ manifest } : { manifest : Manifest }) : void {
     if (this._priv_contentInfos === null) {
@@ -2008,7 +1982,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Store and emit initial state for the Period.
    *
    * @param {Object} value
-   * @private
    */
   private _priv_onActivePeriodChanged({ period } : { period : Period }) : void {
     if (this._priv_contentInfos === null) {
@@ -2072,7 +2045,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Triggered each times a new "PeriodBuffer" is ready.
    * Choose the right Adaptation for the Period and emit it.
    * @param {Object} value
-   * @private
    */
   private _priv_onPeriodBufferReady(value : {
     type : IBufferType;
@@ -2127,7 +2099,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Triggered each times the we "remove" a PeriodBuffer.
    * @param {Object} value
-   * @private
    */
   private _priv_onPeriodBufferCleared(value : {
     type : IBufferType;
@@ -2172,7 +2143,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Triggered each time the content is re-loaded on the MediaSource.
    */
   private _priv_onReloadingMediaSource() {
-    if (this._priv_trackManager != null) {
+    if (this._priv_contentInfos !== null) {
+      this._priv_contentInfos.sourceBuffersStore = null;
+    }
+    if (this._priv_trackManager !== null) {
       this._priv_trackManager.resetPeriods();
     }
   }
@@ -2182,7 +2156,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * content.
    * Store given Adaptation and emit it if from the current Period.
    * @param {Object} value
-   * @private
    */
   private _priv_onAdaptationChange({
     type,
@@ -2242,7 +2215,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Store given Representation and emit it if from the current Period.
    *
    * @param {Object} obj
-   * @private
    */
   private _priv_onRepresentationChange({
     type,
@@ -2291,7 +2263,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Emit it.
    *
    * @param {Object} value
-   * @private
    */
   private _priv_onBitrateEstimationChange({
     type,
@@ -2311,7 +2282,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Emit the info through the right Subject.
    *
    * @param {Boolean} isPlaying
-   * @private
    */
   private _priv_onPlayPauseNext(isPlaying : boolean) : void {
     if (this.videoElement === null) {
@@ -2327,7 +2297,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Trigger the right Player Event.
    *
    * @param {Array.<TextTrackElement>} tracks
-   * @private
    */
   private _priv_onNativeTextTracksNext(tracks : TextTrack[]) : void {
     this.trigger("nativeTextTracksChange", tracks);
@@ -2339,7 +2308,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Trigger the right Player Event.
    *
    * @param {string} newState
-   * @private
    */
   private _priv_setPlayerState(newState : string) : void {
     if (this.state !== newState) {
@@ -2355,7 +2323,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Trigger the right Player Event
    *
    * @param {Object} clockTick
-   * @private
    */
   private _priv_triggerTimeChange(clockTick : IClockTick) : void {
     if (this._priv_contentInfos === null) {

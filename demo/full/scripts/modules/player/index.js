@@ -26,24 +26,25 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
 
   // initial state. Written here to easily showcase it exhaustively
   state.set({
-    audioBitrateAuto: true,
     audioBitrate: undefined,
+    audioBitrateAuto: true,
     availableAudioBitrates: [],
     availableLanguages: [],
+    availableSubtitles: [],
     availableVideoBitrates: [],
     availableVideoTracks: [],
-    availableSubtitles: [],
     bufferGap: undefined,
+    bufferedData: null,
     cannotLoadMetadata: false,
     currentTime: undefined,
     duration: undefined,
     error: null,
-    hasEnded: false,
     hasCurrentContent: false,
-    isCatchingUp: false,
-    isCatchUpEnabled: false,
+    hasEnded: false,
     images: [],
     isBuffering: false,
+    isCatchUpEnabled: false,
+    isCatchingUp: false,
     isContentLoaded: false,
     isLive: false,
     isLoading: false,
@@ -52,18 +53,18 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
     isSeeking: false,
     isStopped: true,
     language: undefined,
-    lowLatencyMode: false,
-    videoTrackId: undefined,
+    liveGap: undefined,
     loadedVideo: null,
-    minimumPosition: undefined,
+    lowLatencyMode: false,
     maximumPosition: undefined,
+    minimumPosition: undefined,
     playbackRate: player.getPlaybackRate(),
     subtitle: undefined,
-    videoBitrateAuto: true,
     videoBitrate: undefined,
+    videoBitrateAuto: true,
+    videoTrackId: undefined,
     volume: player.getVolume(),
     wallClockDiff: undefined,
-    liveGap: undefined,
   });
 
   linkPlayerEventsToState(player, state, $destroy);
@@ -168,7 +169,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
 
     DISABLE_LIVE_CATCH_UP() {
       $switchCatchUpMode.next(false);
-    },
+    }
   };
 };
 

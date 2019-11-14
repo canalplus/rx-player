@@ -17,6 +17,7 @@
 import { ICustomError } from "../../errors";
 import Manifest from "../../manifest";
 import { IRepresentationChangeEvent } from "../buffers";
+import SourceBuffersStore from "../source_buffers";
 import { IStallingItem } from "./get_stalled_events";
 
 // Object emitted when the clock ticks
@@ -61,6 +62,8 @@ export interface IStalledEvent { type : "stalled";
 
 // The content loaded
 export interface ILoadedEvent { type : "loaded";
-                                value : true; }
+                                value : {
+                                  sourceBuffersStore: SourceBuffersStore | null;
+                                }; }
 
 export { IRepresentationChangeEvent };

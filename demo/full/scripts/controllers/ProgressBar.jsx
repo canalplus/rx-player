@@ -1,7 +1,7 @@
 import React from "react";
 import ProgressbarComponent from "../components/ProgressBar.jsx";
 import ImageTip from "../components/ImageTip.jsx";
-import TimeIndicator from "../components/TimeIndicator.jsx";
+import ToolTip from "../components/ToolTip.jsx";
 import withModulesState from "../lib/withModulesState.jsx";
 
 class Progressbar extends React.Component {
@@ -35,19 +35,15 @@ class Progressbar extends React.Component {
       minutes.toString().padStart(2, "0") + ":" +
       seconds.toString().padStart(2, "0");
 
-    this.setState({
-      timeIndicatorVisible: true,
-      timeIndicatorPosition: clientX,
-      timeIndicatorText: currentReadableTime,
-    });
+    this.setState({ timeIndicatorVisible: true,
+                    timeIndicatorPosition: clientX,
+                    timeIndicatorText: currentReadableTime });
   }
 
   hideTimeIndicator() {
-    this.setState({
-      timeIndicatorVisible: false,
-      timeIndicatorPosition: 0,
-      timeIndicatorText: "",
-    });
+    this.setState({ timeIndicatorVisible: false,
+                    timeIndicatorPosition: 0,
+                    timeIndicatorText: "" });
   }
 
   showImageTip(ts, clientX) {
@@ -103,7 +99,7 @@ class Progressbar extends React.Component {
       onSeek();
       player.dispatch("SEEK", position);
     };
-    const onMouseOut = () => {
+    const hideToolTips = () => {
       this.hideTimeIndicator();
       this.hideImageTip();
     };
@@ -114,7 +110,7 @@ class Progressbar extends React.Component {
       this.showImageTip(position, event.clientX);
     };
 
-    const tipsOffset = this.wrapperElement ?
+    const toolTipOffset = this.wrapperElement ?
       this.wrapperElement.getBoundingClientRect().left : 0;
 
     if (!isContentLoaded) {
@@ -132,10 +128,11 @@ class Progressbar extends React.Component {
       >
         {
           timeIndicatorVisible ?
-            <TimeIndicator
+            <ToolTip
               className="progress-tip"
-              timeText={timeIndicatorText}
-              xPosition={timeIndicatorPosition - tipsOffset}
+              text={timeIndicatorText}
+              xPosition={timeIndicatorPosition}
+              offset={toolTipOffset}
             /> : null
         }
         {
@@ -143,12 +140,12 @@ class Progressbar extends React.Component {
             <ImageTip
               className="progress-tip"
               image={image}
-              xPosition={imageTipPosition - tipsOffset}
+              xPosition={imageTipPosition - toolTipOffset}
             /> : null
         }
         <ProgressbarComponent
           seek={seek}
-          onMouseOut={onMouseOut}
+          onMouseOut={hideToolTips}
           onMouseMove={onMouseMove}
           position={currentTime}
           minimumPosition={minimumPosition}

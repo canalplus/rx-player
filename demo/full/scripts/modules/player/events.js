@@ -1,14 +1,19 @@
 import {
+  EMPTY,
   interval as intervalObservable,
 } from "rxjs";
 import {
-  takeUntil,
   distinctUntilChanged,
   map,
+  startWith,
+  switchMap,
+  takeUntil,
+  tap,
 } from "rxjs/operators";
 import fromPlayerEvent from "./fromPlayerEvent";
 
 const POSITION_UPDATES_INTERVAL = 100;
+const BUFFERED_DATA_UPDATES_INTERVAL = 100;
 
 /**
  * Add event listeners to the RxPlayer to update the module's state at the right
@@ -104,6 +109,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
       stateUpdates.currentTime = undefined;
       stateUpdates.wallClockDiff = undefined;
       stateUpdates.bufferGap = undefined;
+      stateUpdates.bufferedData = null;
       stateUpdates.duration = undefined;
       stateUpdates.minimumPosition = undefined;
       stateUpdates.maximumPosition = undefined;
@@ -116,6 +122,39 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
 
     state.set(stateUpdates);
   });
+
+  // update bufferedData
+  fromPlayerEvent(player, "playerStateChange").pipe(
+    map((state) => state === "STOPPED"),
+    distinctUntilChanged(),
+    takeUntil($destroy),
+    switchMap((isStopped) => {
+      if (isStopped) {
+        state.set({ bufferedData: null });
+        return EMPTY;
+      }
+      return intervalObservable(BUFFERED_DATA_UPDATES_INTERVAL).pipe(
+        startWith(0),
+        tap(() => {
+          let audioContent = player.__priv_getSourceBufferContent("audio");
+          if (Array.isArray(audioContent)) {
+            audioContent = audioContent.slice();
+          }
+          let textContent = player.__priv_getSourceBufferContent("text");
+          if (Array.isArray(textContent)) {
+            textContent = textContent.slice();
+          }
+          let videoContent = player.__priv_getSourceBufferContent("video");
+          if (Array.isArray(videoContent)) {
+            videoContent = videoContent.slice();
+          }
+          state.set({ bufferedData: { audio: audioContent,
+                                      video: videoContent,
+                                      text: textContent } });
+        }));
+
+    })
+  ).subscribe();
 
   fromPlayerEvent(player, "warning").pipe(
     takeUntil($destroy)

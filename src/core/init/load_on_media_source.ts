@@ -215,7 +215,8 @@ export default function createMediaSourceLoader({
           const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY",
                                        "Cannot trigger auto-play automatically: " +
                                        "your browser does not allow it.");
-          return observableOf(EVENTS.warning(error), EVENTS.loaded());
+          return observableOf(EVENTS.warning(error),
+                              EVENTS.loaded(sourceBuffersStore));
         } else if (evt === "not-loaded-metadata") {
           const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
                                        "Cannot load automatically: your browser " +
@@ -223,7 +224,7 @@ export default function createMediaSourceLoader({
           return observableOf(EVENTS.warning(error));
         }
         log.debug("Init: The current content is loaded.");
-        return observableOf(EVENTS.loaded());
+        return observableOf(EVENTS.loaded(sourceBuffersStore));
       }));
 
     return observableMerge(handledDiscontinuities$,
