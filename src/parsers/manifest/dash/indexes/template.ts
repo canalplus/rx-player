@@ -426,7 +426,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       if (this._relativePeriodEnd != null &&
           this._relativePeriodEnd < (lastPos + agressiveModeOffset - this._periodStart)) {
         const scaledRelativePeriodEnd = this._relativePeriodEnd * timescale;
-        if (scaledRelativePeriodEnd <= duration) {
+        if (scaledRelativePeriodEnd < duration) {
           return null;
         }
         return (Math.floor(scaledRelativePeriodEnd / duration) - 1)  * duration;
