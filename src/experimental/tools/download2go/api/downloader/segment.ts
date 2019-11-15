@@ -24,7 +24,7 @@ import { createBox } from "../../../../../parsers/containers/isobmff";
 import { IndexDBError } from "../../utils";
 import { ContentType } from "../context/types";
 import {
-  ContentVideoType,
+  ContentBufferType,
   IAbstractContextCreation,
   IContext,
   IContextRicher,
@@ -69,7 +69,7 @@ export function handleSegmentPipelineFromContexts<
   return of(...ctxs).pipe(
     mergeMap(
       (ctx, index) => {
-        if (typeof ctx.segment === "number") {
+        if (Array.isArray(ctx.segment)) {
           return EMPTY;
         }
         return segmentFetcherForCurrentContentType.createRequest(ctx).pipe(
@@ -100,7 +100,11 @@ export function handleSegmentPipelineFromContexts<
           }, new Uint8Array(0)),
           map(chunkData => {
             if (nextSegments && !isInitData) {
-              (nextSegments[index] as any) = ctx.segment.time;
+              (nextSegments[index] as any) = [
+                ctx.segment.time,
+                ctx.segment.timescale,
+                ctx.segment.duration,
+              ];
             }
             return {
               chunkData,
@@ -134,7 +138,7 @@ export function handleSegmentPipelineFromContexts<
  */
 function handleAbstractSegmentPipelineContextFor(
   contextsRicher: IContextRicher[],
-  contentType: ContentVideoType,
+  contentType: ContentBufferType,
   {
     type,
     progress,
@@ -143,7 +147,7 @@ function handleAbstractSegmentPipelineContextFor(
   }: IAbstractContextCreation
 ) {
   return of(...contextsRicher).pipe(
-    mergeMap<IContextRicher, Observable<ICustomSegment>>(contextRicher => {
+    mergeMap(contextRicher => {
       const { nextSegments, ...ctx } = contextRicher;
       return handleSegmentPipelineFromContexts(
         nextSegments.map(segment => ({ ...ctx, segment, manifest })),
@@ -209,7 +213,7 @@ export function segmentPipelineDownloader$(
             segmentPipelinesManager,
             manifest,
           }),
-          handleAbstractSegmentPipelineContextFor(text, ContentType.AUDIO, {
+          handleAbstractSegmentPipelineContextFor(text, ContentType.TEXT, {
             type,
             progress,
             segmentPipelinesManager,
@@ -218,17 +222,10 @@ export function segmentPipelineDownloader$(
         );
       }
     ),
-    tap(({ chunkData, representationID, ctx, contentType }) => {
-      const { time, timescale, duration } = ctx.segment;
+    tap(({ chunkData, representationID, ctx: { segment: { time } }, contentType }) => {
       db.put("segments", {
         contentID,
-        contentType,
-        representationID,
-        segmentKey: `${time}--${representationID}`,
-        time,
-        timescale,
-        duration,
-        isInitData: false,
+        segmentKey: `${time}--${representationID}--${contentID}`,
         data: chunkData,
         size: chunkData.byteLength,
       }).catch((err) => {

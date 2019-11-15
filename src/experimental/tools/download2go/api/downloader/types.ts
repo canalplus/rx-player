@@ -25,13 +25,14 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../../../manifest";
+import { ILocalIndexSegment } from "../../../../../parsers/manifest/local/types";
 import {
   IDownload2GoEvents,
   IEmitterTrigger,
   IProgressBuilder,
 } from "../../types";
 
-export type ContentVideoType = "video" | "audio" | "text";
+export type ContentBufferType = "video" | "audio" | "text";
 export type DownloadType = "start" | "resume";
 
 export interface IContext {
@@ -68,7 +69,7 @@ export interface IContextRicher {
 }
 
 export interface IAdaptationStored {
-  type: ContentVideoType;
+  type: ContentBufferType;
   audioDescription?: boolean;
   closedCaption?: boolean;
   language?: string;
@@ -79,10 +80,14 @@ export interface IAdaptationForPeriodBuilder {
   [id: string]: IAdaptationStored[];
 }
 
+export interface ISegmentForRepresentationBuilder {
+  [id: string]: ILocalIndexSegment[];
+}
+
 export interface IInitSegment {
   nextSegments: ISegment[];
   ctx: IContext;
-  contentType: ContentVideoType;
+  contentType: ContentBufferType;
   segmentPipelinesManager: SegmentPipelinesManager<any>;
 }
 
@@ -98,13 +103,7 @@ export interface IInitGroupedSegments {
 
 export interface ISegmentStored {
   contentID: string;
-  contentType: ContentVideoType;
-  representationID: string;
   segmentKey: string;
-  time: number;
-  timescale: number;
-  duration: number;
-  isInitData: boolean;
   data: TypedArray | ArrayBuffer;
   size: number;
 }
@@ -134,7 +133,7 @@ export interface ICustomSegment {
   chunkData: Uint8Array;
   ctx: IContext;
   index: number;
-  contentType: ContentVideoType;
+  contentType: ContentBufferType;
   representationID: string;
   isInitData: boolean;
   nextSegments?: ISegment[];
@@ -155,4 +154,11 @@ export interface IAbstractContextCreation {
   progress: IProgressBuilder;
   segmentPipelinesManager: SegmentPipelinesManager<any>;
   manifest: Manifest;
+}
+
+export interface IUtilsOfflineLoader {
+  contentID: string;
+  duration: number;
+  isFinished: boolean;
+  db: IDBPDatabase;
 }

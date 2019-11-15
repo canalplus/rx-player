@@ -19,6 +19,7 @@ import { merge, of } from "rxjs";
 import { map, mapTo, mergeMap, reduce, tap } from "rxjs/operators";
 
 import { SegmentPipelinesManager } from "../../../../../core/pipelines";
+import arrayIncludes from "../../../../../utils/array_includes";
 import { IInitSettings } from "../../types";
 import { IndexDBError, SegmentConstuctionError } from "../../utils";
 import ContentManager from "../context/ContentsManager";
@@ -64,173 +65,76 @@ export function initDownloader$(
               segmentPipelinesManager,
               isInitData: true,
               type: "start",
-            }).pipe(
-              mergeMap(values => {
-                if (keySystems && Object.keys(keySystems).length > 0) {
-                  return EMETransaction(
-                    keySystems,
-                    {
-                      contentID,
-                      contentType: ContentType.VIDEO,
-                      initSegment: values.chunkData,
-                      codec: `${values.ctx.representation.mimeType};codecs="${values.ctx.representation.codec}"`,
-                    },
-                    db
-                  ).pipe(mapTo(values));
-                }
-                return of(values);
-              }),
-              tap(values => {
-                const { id: representationID } = values.ctx.representation;
-                const { time, timescale, duration } = values.ctx.segment;
-                db.put("segments", {
-                  contentID,
-                  contentType: ContentType.VIDEO,
-                  representationID,
-                  segmentKey: `${time}--${representationID}--init--${ContentType.VIDEO}`,
-                  time,
-                  timescale,
-                  duration,
-                  isInitData: true,
-                  data: values.chunkData,
-                  size: values.chunkData.byteLength,
-                }).catch(err => {
-                  throw new IndexDBError(`
-                    ${contentID}: Impossible to store the current INIT
-                    segment (${ContentType.VIDEO}) at ${time}: ${err.message}
-                  `);
-                });
-              }),
-              map(({ ctx }) => {
-                const durationForCurrentPeriod = ctx.period.duration;
-                if (durationForCurrentPeriod === undefined) {
-                  throw new SegmentConstuctionError(`
-                  Impossible to get future video segments for ${ContentType.VIDEO} buffer,
-                  the duration should be an valid integer but: ${durationForCurrentPeriod}
-                `);
-                }
-                const nextSegments = ctx.representation.index.getSegments(
-                  0,
-                  durationForCurrentPeriod
-                );
-                return {
-                  nextSegments,
-                  ctx,
-                  segmentPipelinesManager,
-                  contentType: ContentType.VIDEO,
-                };
-              })
-            ),
+            }),
             handleSegmentPipelineFromContexts(audio, ContentType.AUDIO, {
               segmentPipelinesManager,
               isInitData: true,
               type: "start",
-            }).pipe(
-              // Lets see when we will have a flux where the audio is encrypted
-              // mergeMap(values => {
-              //   if (keySystems && Object.keys(keySystems).length > 0) {
-              //     return EMETransaction(
-              //       keySystems,
-              //       {
-              //         contentID,
-              //         contentType: ContentType.AUDIO,
-              //         initSegment: values.chunkData,
-              //         codec: `${values.ctx.representation.mimeType};
-              //          codecs="${values.ctx.representation.codec}"`,
-              //       },
-              //       db
-              //     ).pipe(mapTo(values));
-              //   }
-              //   return of(values);
-              // }),
-              tap(values => {
-                const { id: representationID } = values.ctx.representation;
-                const { time, timescale, duration } = values.ctx.segment;
-                db.put("segments", {
-                  contentID,
-                  contentType: ContentType.AUDIO,
-                  representationID,
-                  segmentKey: `${time}--${representationID}--init--${ContentType.AUDIO}`,
-                  time,
-                  timescale,
-                  duration,
-                  isInitData: true,
-                  data: values.chunkData,
-                  size: values.chunkData.byteLength,
-                }).catch(err => {
-                  throw new IndexDBError(`
-                    ${contentID}: Impossible to store the current INIT
-                    segment (${ContentType.AUDIO}) at ${time}: ${err.message}
-                  `);
-                });
-              }),
-              map(({ ctx }) => {
-                const durationForCurrentPeriod = ctx.period.duration;
-                if (durationForCurrentPeriod === undefined) {
-                  throw new SegmentConstuctionError(`
-                  Impossible to get future video segments for ${ContentType.AUDIO} buffer,
-                  the duration should be an valid integer but: ${durationForCurrentPeriod}
-                `);
-                }
-                const nextSegments = ctx.representation.index.getSegments(
-                  0,
-                  durationForCurrentPeriod
-                );
-                return {
-                  nextSegments,
-                  ctx,
-                  segmentPipelinesManager,
-                  contentType: ContentType.AUDIO,
-                };
-              })
-            ),
+            }),
             handleSegmentPipelineFromContexts(text, ContentType.TEXT, {
               segmentPipelinesManager,
               isInitData: true,
               type: "start",
-            }).pipe(
-              tap(values => {
-                const { id: representationID } = values.ctx.representation;
-                const { time, timescale, duration } = values.ctx.segment;
-                db.put("segments", {
-                  contentID,
-                  contentType: ContentType.TEXT,
-                  representationID,
-                  segmentKey: `${time}--${representationID}--init--${ContentType.TEXT}`,
-                  time,
-                  timescale,
-                  duration,
-                  isInitData: true,
-                  data: values.chunkData,
-                  size: values.chunkData.byteLength,
-                }).catch(err => {
-                  throw new IndexDBError(`
-                    ${contentID}: Impossible to store the current INIT
-                    segment (${ContentType.TEXT}) at ${time}: ${err.message}
-                  `);
-                });
-              }),
-              map(({ ctx }) => {
-                const durationForCurrentPeriod = ctx.period.duration;
-                if (durationForCurrentPeriod === undefined) {
-                  throw new SegmentConstuctionError(`
-                    Impossible to get future video segments for ${ContentType.TEXT} buffer,
-                    the duration should be an valid integer but: ${durationForCurrentPeriod}
-                  `);
-                }
-                const nextSegments = ctx.representation.index.getSegments(
-                  0,
-                  durationForCurrentPeriod
-                );
-                return {
-                  nextSegments,
-                  ctx,
-                  segmentPipelinesManager,
-                  contentType: ContentType.TEXT,
-                };
-              })
-            )
+            })
           );
+        }),
+        mergeMap(values => {
+          if (
+            arrayIncludes([ContentType.VIDEO, ContentType.AUDIO], values.contentType) &&
+            keySystems &&
+            Object.keys(keySystems).length > 0
+          ) {
+            const {
+              ctx: { representation: { mimeType, codec } },
+              contentType,
+              chunkData,
+            } = values;
+            return EMETransaction(
+              keySystems,
+              {
+                contentID,
+                contentType,
+                initSegment: chunkData,
+                codec: `${mimeType};codecs="${codec}"`,
+              },
+              db
+            ).pipe(mapTo(values));
+          }
+          return of(values);
+        }),
+        tap(({ ctx, chunkData, contentType }) => {
+          const { id: representationID } = ctx.representation;
+          const { time } = ctx.segment;
+          db.put("segments", {
+            contentID,
+            segmentKey: `init--${representationID}--${contentID}`,
+            data: chunkData,
+            size: chunkData.byteLength,
+          }).catch(err => {
+            throw new IndexDBError(`
+              ${contentID}: Impossible to store the current INIT
+              segment (${contentType}) at ${time}: ${err.message}
+            `);
+          });
+        }),
+        map(({ ctx, contentType }) => {
+          const durationForCurrentPeriod = ctx.period.duration;
+          if (durationForCurrentPeriod === undefined) {
+            throw new SegmentConstuctionError(`
+              Impossible to get future video segments for ${contentType} buffer,
+              the duration should be an valid integer but: ${durationForCurrentPeriod}
+            `);
+          }
+          const nextSegments = ctx.representation.index.getSegments(
+            0,
+            durationForCurrentPeriod
+          );
+          return {
+            nextSegments,
+            ctx,
+            segmentPipelinesManager,
+            contentType,
+          };
         })
       );
     }),

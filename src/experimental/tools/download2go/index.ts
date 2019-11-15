@@ -24,10 +24,10 @@ import { IActiveDownload, IActivePauses } from "./api/context/types";
 import { setUpDb } from "./api/db/dbSetUp";
 import DownloadManager from "./api/downloader/downloadManager";
 import {
-  getBuilderFormatted,
+  getBuilderFormattedForAdaptations,
+  getBuilderFormattedForSegments,
   offlineManifestLoader,
 } from "./api/downloader/manifest";
-import { ISegmentStored } from "./api/downloader/types";
 import { IContentProtection } from "./api/drm/types";
 import {
   IContentLoader,
@@ -284,27 +284,16 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
       if (!this.db) {
         throw new Error("The IndexDB database has not been created!");
       }
-      const [contentManifest, contentProtection, segments]: [
+      const [contentManifest, contentProtection]: [
         IStoredManifest?,
         IContentProtection?,
-        ISegmentStored[]?,
       ] = await PPromise.all([
         this.db.get("manifests", contentID),
         this.db.get("drm", contentID),
-        this.db
-          .transaction("segments", "readonly")
-          .objectStore("segments")
-          .index("contentID")
-          .getAll(IDBKeyRange.only(contentID)),
       ]);
       if (contentManifest === undefined) {
         throw new SegmentConstuctionError(
           `No Manifest found for current content ${contentID}`
-        );
-      }
-      if (segments && segments.length === 0) {
-        throw new SegmentConstuctionError(
-          `No Segments found for current content ${contentID}`
         );
       }
       const {
@@ -325,11 +314,9 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
         ...(contentProtection && { contentProtection }),
         offlineManifest: offlineManifestLoader(
           manifest,
-          segments,
-          getBuilderFormatted(contentManifest),
-          duration,
-          progress.percentage === 100,
-          this.db
+          getBuilderFormattedForAdaptations(contentManifest),
+          getBuilderFormattedForSegments(contentManifest),
+          { contentID, duration, isFinished: progress.percentage === 100, db: this.db }
         ),
       };
     } catch (e) {

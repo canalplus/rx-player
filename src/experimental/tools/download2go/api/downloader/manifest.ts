@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { IDBPDatabase } from "idb";
 import { Observable, Subject } from "rxjs";
 import { map, mergeMap } from "rxjs/operators";
 
@@ -27,16 +26,16 @@ import { IParsedPeriod } from "../../../../../parsers/manifest";
 import { ILocalManifest } from "../../../../../parsers/manifest/local";
 import {
   ILocalAdaptation,
-  ILocalIndexSegment,
   ILocalRepresentation,
 } from "../../../../../parsers/manifest/local/types";
 import { ITransportPipelines } from "../../../../../transports";
 import { IStoredManifest } from "../../types";
 import {
-  ContentVideoType,
+  ContentBufferType,
   IAdaptationForPeriodBuilder,
   IAdaptationStored,
-  ISegmentStored,
+  ISegmentForRepresentationBuilder,
+  IUtilsOfflineLoader,
 } from "./types";
 
 /**
@@ -97,12 +96,12 @@ export function manifestLoader(
  * @returns An Object of period associated with an array of adaptations.
  *
  */
-export function getBuilderFormatted({
+export function getBuilderFormattedForAdaptations({
   builder,
 }: Pick<IStoredManifest, "builder">) {
   return Object.keys(builder).reduce<IAdaptationForPeriodBuilder>(
     (acc, curr) => {
-      const ctxs = builder[curr as ContentVideoType];
+      const ctxs = builder[curr as ContentBufferType];
       if (ctxs == null || ctxs.length === 0) {
         return acc;
       }
@@ -112,7 +111,7 @@ export function getBuilderFormatted({
         if (acc[periodId] === undefined) {
           acc[periodId] = [];
           acc[periodId].push({
-            type: ctx.adaptation.type as ContentVideoType,
+            type: ctx.adaptation.type as ContentBufferType,
             audioDescription: ctx.adaptation.isAudioDescription,
             closedCaption: ctx.adaptation.isClosedCaption,
             language: ctx.adaptation.language,
@@ -121,12 +120,43 @@ export function getBuilderFormatted({
           return acc;
         }
         acc[periodId].push({
-          type: ctx.adaptation.type as ContentVideoType,
+          type: ctx.adaptation.type as ContentBufferType,
           audioDescription: ctx.adaptation.isAudioDescription,
           closedCaption: ctx.adaptation.isClosedCaption,
           language: ctx.adaptation.language,
           representations: [ctx.representation],
         });
+        return acc;
+      }
+      return acc;
+    },
+    {}
+  );
+}
+
+/**
+ * Get the segment for the current representation.
+ *
+ * @param IStoredManifest - The global builder we insert in IndexDB
+ * @returns An Object of representation associated with an array of segments.
+ *
+ */
+export function getBuilderFormattedForSegments({
+  builder,
+}: Pick<IStoredManifest, "builder">) {
+  return Object.keys(builder).reduce<ISegmentForRepresentationBuilder>(
+    (acc, curr) => {
+      const ctxs = builder[curr as ContentBufferType];
+      if (ctxs == null || ctxs.length === 0) {
+        return acc;
+      }
+      for (let i = 0; i <= ctxs.length; i++) {
+        const ctx = ctxs[i];
+        const repreId = ctx.representation.id as string;
+        acc[repreId] = (ctx.nextSegments as any).map(
+          ([time, timescale, duration] : [number, number, number]) =>
+            ({ time, timescale, duration })
+          );
         return acc;
       }
       return acc;
@@ -154,11 +184,9 @@ export function getBuilderFormatted({
  */
 export function offlineManifestLoader(
   manifest: any,
-  segments: ISegmentStored[],
   adaptationsBuilder: IAdaptationForPeriodBuilder,
-  duration: number,
-  isFinished: boolean,
-  db: IDBPDatabase
+  representationsBuilder: ISegmentForRepresentationBuilder,
+  { contentID, duration, isFinished, db }: IUtilsOfflineLoader
 ): ILocalManifest {
   return {
     type: "local",
@@ -189,7 +217,7 @@ export function offlineManifestLoader(
                   loadInitSegment: ({ resolve, reject }) => {
                     db.get(
                       "segments",
-                      `0--${representation.id}--init--${adaptation.type}`
+                      `init--${representation.id}--${contentID}`
                     )
                       .then((segment: any) => {
                         resolve({
@@ -204,7 +232,7 @@ export function offlineManifestLoader(
                   ) => {
                     db.get(
                       "segments",
-                      `${reqSegmentTime}--${representation.id}`
+                      `${reqSegmentTime}--${representation.id}--${contentID}`
                     )
                       .then((segment: any) => {
                         resolve({
@@ -213,22 +241,7 @@ export function offlineManifestLoader(
                       })
                       .catch(reject);
                   },
-                  segments: segments
-                    .reduce<ILocalIndexSegment[]>((acc, currSegment) => {
-                      if (
-                        !currSegment.isInitData &&
-                        currSegment.representationID === representation.id
-                      ) {
-                        acc.push({
-                          time: currSegment.time,
-                          timescale: currSegment.timescale,
-                          duration: currSegment.duration,
-                        });
-                        return acc;
-                      }
-                      return acc;
-                    }, [])
-                    .sort((a, b) => a.time - b.time),
+                  segments: representationsBuilder[representation.id],
                 },
               })
             ),

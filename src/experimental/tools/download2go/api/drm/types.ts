@@ -15,7 +15,7 @@
  */
 
 import { IPersistedSessionData } from "../../../../../core/eme";
-import { ContentVideoType } from "../downloader/types";
+import { ContentBufferType } from "../downloader/types";
 
 export type ITypedArray =
   | Int8Array
@@ -30,7 +30,7 @@ export type ITypedArray =
 
 export interface IContentProtection {
   contentID: string;
-  contentType: ContentVideoType;
+  contentType: ContentBufferType;
   appMetadata: {
     downloaded: Date;
   };
@@ -42,7 +42,7 @@ export interface IContentProtection {
 
 export interface IUtilsKeySystemsTransaction {
   contentID: string;
-  contentType: ContentVideoType;
+  contentType: ContentBufferType;
   codec: string;
   initSegment: ITypedArray | ArrayBuffer;
 }

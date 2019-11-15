@@ -17,7 +17,7 @@
 import Manifest, { Adaptation, Representation } from "../../../../../manifest";
 import { IVideoSettingsQualityInputType } from "../../types";
 import {
-  ContentVideoType,
+  ContentBufferType,
   IContext,
   IContextUniq,
   IGlobalContext,
@@ -127,7 +127,7 @@ class ContentManager {
 
   private decideRepresentation(
     representations: Representation[],
-    contentType: ContentVideoType
+    contentType: ContentBufferType
   ): Representation {
     switch (contentType) {
       // If we want to take a representation by bufferType
@@ -147,7 +147,7 @@ class ContentManager {
 
   private decideUniqContext(
     adaptations: Adaptation[],
-    contentType: ContentVideoType
+    contentType: ContentBufferType
   ): IContextUniq[] {
     return adaptations.reduce((acc: IContextUniq[], adaptation) => {
       const representation = this.decideRepresentation(
