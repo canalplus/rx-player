@@ -25,9 +25,10 @@ import { IndexDBError, SegmentConstuctionError } from "../../utils";
 import ContentManager from "../context/ContentsManager";
 import { ContentType } from "../context/types";
 import EMETransaction from "../drm/keySystems";
+import { IEMEOptions } from "../drm/types";
 import { manifestLoader } from "./manifest";
 import { handleSegmentPipelineFromContexts } from "./segment";
-import { IInitGroupedSegments, IInitSegment } from "./types";
+import { ICustomSegment, IInitGroupedSegments, IInitSegment } from "./types";
 
 /**
  * This function take care of downloading the init segment for VIDEO/AUDIO/TEXT
@@ -78,29 +79,38 @@ export function initDownloader$(
             })
           );
         }),
-        mergeMap(values => {
+        mergeMap(customInitSegment => {
           if (
-            arrayIncludes([ContentType.VIDEO, ContentType.AUDIO], values.contentType) &&
             keySystems &&
-            Object.keys(keySystems).length > 0
+            Object.keys(keySystems).length > 0 &&
+            arrayIncludes([ContentType.VIDEO, ContentType.AUDIO],
+                customInitSegment.contentType)
           ) {
-            const {
-              ctx: { representation: { mimeType, codec } },
-              contentType,
-              chunkData,
-            } = values;
-            return EMETransaction(
-              keySystems,
-              {
-                contentID,
-                contentType,
-                initSegment: chunkData,
-                codec: `${mimeType};codecs="${codec}"`,
-              },
-              db
-            ).pipe(mapTo(values));
+            return of(customInitSegment).pipe(
+              reduce<ICustomSegment, IEMEOptions[]>((acc, curr) => {
+                const {
+                  ctx: { representation: { mimeType, codec } },
+                  contentType,
+                  chunkData,
+                } = curr;
+                acc.push({
+                  contentType,
+                  initSegment: chunkData,
+                  codec: `${mimeType};codecs="${codec}"`,
+                });
+                return acc;
+              }, []),
+              mergeMap((emeOptions) => {
+                return EMETransaction(
+                  keySystems,
+                  { contentID, emeOptions },
+                  db
+                );
+              }),
+              mapTo(customInitSegment)
+            );
           }
-          return of(values);
+          return of(customInitSegment);
         }),
         tap(({ ctx, chunkData, contentType }) => {
           const { id: representationID } = ctx.representation;

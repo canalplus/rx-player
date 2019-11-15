@@ -44,18 +44,15 @@ function EMETransaction(
   db: IDBPDatabase
 ) {
   const video = document.createElement("video");
-  const { contentID, contentType, codec, initSegment } = keySystemsUtils;
+  const { contentID, emeOptions } = keySystemsUtils;
   const keySystems = [
     {
       ...KeySystemsOption,
       licenseStorage: {
         save(sessionsIDS: IPersistedSessionData[]) {
-          db.add("drm", {
+          db.add("contentsProtection", {
             contentID,
-            contentType,
-            appMetadata: {
-              downloaded: Date.now(),
-            },
+            drmKey: `${contentID}--${Date.now()}`,
             keySystems: {
               sessionsIDS,
               type: KeySystemsOption.type,
@@ -78,15 +75,18 @@ function EMETransaction(
       const sessionsUpdate$ = emeManager$.pipe(
         filter(evt => evt.type === "session-updated")
       );
-      const sourceBuffer = mediaSource.addSourceBuffer(codec);
-      const appendedSegment$ = of(initSegment).pipe(
-        tap(segmentData => sourceBuffer.appendBuffer(segmentData))
-      );
-      return combineLatest([sessionsUpdate$, appendedSegment$]).pipe(
-        finalize(() => video.remove())
+      return of(...emeOptions).pipe(
+        mergeMap((emeOption) => {
+          const sourceBuffer = mediaSource.addSourceBuffer(emeOption.codec);
+          const appendedSegment$ = of(emeOption.initSegment).pipe(
+            tap(segmentData => sourceBuffer.appendBuffer(segmentData))
+          );
+          return combineLatest([sessionsUpdate$, appendedSegment$]);
+        })
       );
     }),
-    take(1)
+    take(1),
+    finalize(() => video.remove())
   );
 }
 

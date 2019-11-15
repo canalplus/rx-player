@@ -30,10 +30,7 @@ export type ITypedArray =
 
 export interface IContentProtection {
   contentID: string;
-  contentType: ContentBufferType;
-  appMetadata: {
-    downloaded: Date;
-  };
+  drmKey: string;
   keySystems: {
     sessionsIDS: IPersistedSessionData[];
     type: string;
@@ -42,6 +39,10 @@ export interface IContentProtection {
 
 export interface IUtilsKeySystemsTransaction {
   contentID: string;
+  emeOptions: IEMEOptions[];
+}
+
+export interface IEMEOptions {
   contentType: ContentBufferType;
   codec: string;
   initSegment: ITypedArray | ArrayBuffer;

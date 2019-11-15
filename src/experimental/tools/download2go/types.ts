@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-import { IKeySystemOption, TypedArray } from "../../../core/eme";
+import { IKeySystemOption, IPersistedSessionData, TypedArray } from "../../../core/eme";
 import Manifest from "../../../manifest";
 import { ILocalManifest } from "../../../parsers/manifest/local";
 import { IContextRicher } from "./api/downloader/types";
-import { IContentProtection } from "./api/drm/types";
 
 export type IVideoSettingsQualityInputType = "HIGH" | "MEDIUM" | "LOW";
 
@@ -84,7 +83,10 @@ export interface IContentLoader {
   metaData?: {
     [prop: string]: any;
   };
-  contentProtection?: IContentProtection;
+  contentProtection?: {
+    sessionsIDS: IPersistedSessionData[];
+    type: string;
+  };
   offlineManifest: ILocalManifest;
 }
 

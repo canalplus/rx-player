@@ -20,6 +20,7 @@ import { map, mergeMap } from "rxjs/operators";
 import DASHFeature from "../../../../../transports/dash";
 import SMOOTHFeature from "../../../../../transports/smooth";
 
+import { IPersistedSessionData } from "../../../../../core/eme";
 import { createManifestPipeline } from "../../../../../core/pipelines";
 import Manifest, { Representation } from "../../../../../manifest";
 import { IParsedPeriod } from "../../../../../parsers/manifest";
@@ -30,6 +31,7 @@ import {
 } from "../../../../../parsers/manifest/local/types";
 import { ITransportPipelines } from "../../../../../transports";
 import { IStoredManifest } from "../../types";
+import { IContentProtection } from "../drm/types";
 import {
   ContentBufferType,
   IAdaptationForPeriodBuilder,
@@ -163,6 +165,29 @@ export function getBuilderFormattedForSegments({
     },
     {}
   );
+}
+
+export function getKeySystemsSessionsOffline(
+  contentsProtection : IContentProtection[] | undefined
+) {
+  if (contentsProtection === undefined) {
+    return undefined;
+  }
+  const flattenedSessionsIDS = contentsProtection
+    .reduce<{ sessionsIDS: IPersistedSessionData[]; type: string}>((acc, curr) => {
+    acc.type = curr.keySystems.type;
+    for (let i = 0; i < curr.keySystems.sessionsIDS.length; ++i) {
+      acc.sessionsIDS.push(...curr.keySystems.sessionsIDS);
+    }
+    return acc;
+  }, { type: "", sessionsIDS: [] });
+  return {
+    ...flattenedSessionsIDS,
+    sessionsIDS: flattenedSessionsIDS.sessionsIDS
+      .filter((sessionID, index) =>
+        flattenedSessionsIDS.sessionsIDS
+          .map(session => session.initData).indexOf(sessionID.initData) === index),
+  };
 }
 
 /**

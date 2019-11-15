@@ -26,6 +26,7 @@ import DownloadManager from "./api/downloader/downloadManager";
 import {
   getBuilderFormattedForAdaptations,
   getBuilderFormattedForSegments,
+  getKeySystemsSessionsOffline,
   offlineManifestLoader,
 } from "./api/downloader/manifest";
 import { IContentProtection } from "./api/drm/types";
@@ -284,12 +285,16 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
       if (!this.db) {
         throw new Error("The IndexDB database has not been created!");
       }
-      const [contentManifest, contentProtection]: [
+      const [contentManifest, contentsProtection]: [
         IStoredManifest?,
-        IContentProtection?,
+        IContentProtection[]?,
       ] = await PPromise.all([
         this.db.get("manifests", contentID),
-        this.db.get("drm", contentID),
+        this.db
+          .transaction("contentsProtection", "readonly")
+          .objectStore("contentsProtection")
+          .index("contentID")
+          .getAll(IDBKeyRange.only(contentID)),
       ]);
       if (contentManifest === undefined) {
         throw new SegmentConstuctionError(
@@ -304,6 +309,7 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
         manifest,
         duration,
       } = contentManifest;
+      const contentProtection = getKeySystemsSessionsOffline(contentsProtection);
 
       return {
         progress,
@@ -363,19 +369,25 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
         delete activeDownloads[contentID];
         delete activePauses[contentID];
       }
-      const indexTx = db
+      const indexTxSEG = db
         .transaction("segments", "readwrite")
         .objectStore("segments")
         .index("contentID");
-      let cursor = await indexTx.openCursor(IDBKeyRange.only(contentID));
+      let cursor = await indexTxSEG.openCursor(IDBKeyRange.only(contentID));
       while (cursor) {
         await cursor.delete();
         cursor = await cursor.continue();
       }
-      await PPromise.all([
-        db.delete("drm", contentID),
-        db.delete("manifests", contentID),
-      ]);
+      const indexTxDRM = db
+        .transaction("contentsProtection", "readwrite")
+        .objectStore("contentsProtection")
+        .index("contentID");
+      let cursorDRM = await indexTxDRM.openCursor(IDBKeyRange.only(contentID));
+      while (cursorDRM) {
+        await cursorDRM.delete();
+        cursorDRM = await cursorDRM.continue();
+      }
+      await db.delete("manifests", contentID);
     } catch (e) {
       this.trigger("error", {
         action: "delete-download",

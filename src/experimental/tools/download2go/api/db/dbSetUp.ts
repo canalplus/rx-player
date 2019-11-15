@@ -42,13 +42,16 @@ export function setUpDb(nameDB: string): Promise<IDBPDatabase> {
         db.createObjectStore("manifests", {
           keyPath: "contentID",
         });
-        const segmentObjectStore = db.createObjectStore("segments", {
+        const segmentObjStore = db.createObjectStore("segments", {
           keyPath: "segmentKey", // concat 'time--representationID'
         });
-        db.createObjectStore("drm", {
-          keyPath: "contentID",
+        const contentsProtectionObjStore = db.createObjectStore("contentsProtection", {
+          keyPath: "drmKey",
         });
-        segmentObjectStore.createIndex("contentID", "contentID", {
+        contentsProtectionObjStore.createIndex("contentID", "contentID", {
+          unique: false,
+        });
+        segmentObjStore.createIndex("contentID", "contentID", {
           unique: false,
         });
       },
