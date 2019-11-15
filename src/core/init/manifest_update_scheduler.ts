@@ -117,6 +117,6 @@ function refreshManifest(
   const externalClockOffset = manifest.getClockOffset();
   return fetchManifest(refreshURL, externalClockOffset)
     .pipe(tap(({ manifest: newManifest }) => {
-            manifest.update(newManifest);
-          }));
+      manifest.update(newManifest);
+    }));
 }
