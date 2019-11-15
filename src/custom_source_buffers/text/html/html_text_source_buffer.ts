@@ -83,7 +83,7 @@ function generateClock(videoElement : HTMLMediaElement) : Observable<boolean> {
 function safelyRemoveChild(element : Element, child : Element) {
   try {
     element.removeChild(child);
-  } catch (e) {
+  } catch (_error) {
     log.warn("HTSB: Can't remove text track: not in the element.");
   }
 }
