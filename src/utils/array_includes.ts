@@ -30,11 +30,11 @@
  * // => false
  *
  * const obj = { a: 4 };
- * arrayIncludes([obj, { b: 7 }, { a: 3 }, obj);
+ * arrayIncludes([obj, { b: 7 }, { a: 3 }], obj);
  * // => true
  *
  * // does not perform deep equality
- * arrayIncludes([{ a: 4 }, { b: 7 }, { a: 3 }, { a: 4 });
+ * arrayIncludes([{ a: 4 }, { b: 7 }, { a: 3 }], { a: 4 });
  * // => false
  *
  * // the third argument state the starting index. 0 if not set.
