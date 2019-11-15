@@ -51,7 +51,7 @@ class LogDisplayer extends React.Component {
 
     player.$get("videoBitrateAuto").pipe(
       skip(1), // skip initial value
-      takeUntil(this.destructionSubject)
+      takeUntil(this.destructionSubject),
     ).subscribe(vbAuto => {
       const text = "Video Bitrate selection changed to " +
         (vbAuto ? "automatic" : "manual");
@@ -60,7 +60,7 @@ class LogDisplayer extends React.Component {
 
     player.$get("audioBitrateAuto").pipe(
       skip(1), // skip initial value
-      takeUntil(this.destructionSubject)
+      takeUntil(this.destructionSubject),
     ).subscribe(abAuto => {
       const text = "Audio Bitrate selection changed to " +
         (abAuto ? "automatic" : "manual");
@@ -69,7 +69,7 @@ class LogDisplayer extends React.Component {
 
     player.$get("videoBitrate").pipe(
       skip(1), // skip initial value
-      takeUntil(this.destructionSubject)
+      takeUntil(this.destructionSubject),
     ).subscribe(vb => {
       const text = "Video Bitrate changed to " + vb;
       this.addLog(text);
@@ -77,7 +77,7 @@ class LogDisplayer extends React.Component {
 
     player.$get("audioBitrate").pipe(
       takeUntil(this.destructionSubject),
-      skip(1) // skip initial value
+      skip(1), // skip initial value
     ).subscribe(ab => {
       const text = "Audio Bitrate changed to " + ab;
       this.addLog(text);
@@ -86,7 +86,7 @@ class LogDisplayer extends React.Component {
     player.$get("error").pipe(
       skip(1), // skip initial value
       takeUntil(this.destructionSubject),
-      filter(x => x)
+      filter(x => x),
     ).subscribe(error => {
       const message = error.message ? error.message : error;
       const text = "The player encountered a fatal Error: " + message;
@@ -105,7 +105,7 @@ class LogDisplayer extends React.Component {
     player.$get("hasCurrentContent").pipe(
       skip(1), // skip initial value
       takeUntil(this.destructionSubject),
-      filter(x => x)
+      filter(x => x),
     ).subscribe(() => {
       const text = "The new content has been loaded.";
       this.addLog(text);
@@ -114,7 +114,7 @@ class LogDisplayer extends React.Component {
     player.$get("isStopped").pipe(
       skip(1), // skip initial value
       takeUntil(this.destructionSubject),
-      filter(x => x)
+      filter(x => x),
     ).subscribe(() => {
       const text = "The current content is stopped";
       this.addLog(text);
@@ -123,7 +123,7 @@ class LogDisplayer extends React.Component {
     player.$get("hasEnded").pipe(
       skip(1), // skip initial value
       takeUntil(this.destructionSubject),
-      filter(x => x)
+      filter(x => x),
     ).subscribe(() => {
       const text = "The current content has ended";
       this.addLog(text);
@@ -131,7 +131,7 @@ class LogDisplayer extends React.Component {
 
     player.$get("isBuffering").pipe(
       skip(1), // skip initial value
-      takeUntil(this.destructionSubject)
+      takeUntil(this.destructionSubject),
     ).subscribe((ib) => {
       const text = ib ?
         "The current content is buffering" :
@@ -141,7 +141,7 @@ class LogDisplayer extends React.Component {
 
     player.$get("isSeeking").pipe(
       skip(1), // skip initial value
-      takeUntil(this.destructionSubject)
+      takeUntil(this.destructionSubject),
     ).subscribe((ib) => {
       const text = ib ?
         "The current content is seeking" :
@@ -151,7 +151,7 @@ class LogDisplayer extends React.Component {
 
     player.$get("availableLanguages").pipe(
       skip(1), // skip initial value
-      takeUntil(this.destructionSubject)
+      takeUntil(this.destructionSubject),
     ).subscribe(() => {
       const text = "The audio track list has changed";
       this.addLog(text);
@@ -159,7 +159,7 @@ class LogDisplayer extends React.Component {
 
     player.$get("availableSubtitles").pipe(
       skip(1), // skip initial value
-      takeUntil(this.destructionSubject)
+      takeUntil(this.destructionSubject),
     ).subscribe(() => {
       const text = "The text track list has changed";
       this.addLog(text);
@@ -167,7 +167,7 @@ class LogDisplayer extends React.Component {
 
     player.$get("availableVideoTracks").pipe(
       skip(1), // skip initial value
-      takeUntil(this.destructionSubject)
+      takeUntil(this.destructionSubject),
     ).subscribe(() => {
       const text = "The video track list has changed";
       this.addLog(text);
@@ -175,7 +175,7 @@ class LogDisplayer extends React.Component {
 
     player.$get("availableAudioBitrates").pipe(
       skip(1), // skip initial value
-      takeUntil(this.destructionSubject)
+      takeUntil(this.destructionSubject),
     ).subscribe(() => {
       const text = "The audio bitrate list has changed";
       this.addLog(text);
@@ -183,7 +183,7 @@ class LogDisplayer extends React.Component {
 
     player.$get("availableVideoBitrates").pipe(
       skip(1), // skip initial value
-      takeUntil(this.destructionSubject)
+      takeUntil(this.destructionSubject),
     ).subscribe(() => {
       const text = "The video bitrate list has changed";
       this.addLog(text);
@@ -204,8 +204,7 @@ class LogDisplayer extends React.Component {
 
     this.element.addEventListener("scroll", onScroll, { passive: true });
     this.destructionSubject.subscribe(() =>
-      this.element.removeEventListener("scroll", onScroll)
-    );
+      this.element.removeEventListener("scroll", onScroll));
   }
 
   scrollToBottom() {
