@@ -46,9 +46,9 @@ export function getThumbnailTrack(trickModeTrack: Representation): IThumbnailTra
       .filter((s) => s.duration != null && s.mediaURL != null)
       .map((s) => {
         return {
-          duration: (s.duration || 0) / s.timescale,
+          duration: s.duration / s.timescale,
           start: s.time / s.timescale,
-          mediaURL: s.mediaURL || "",
+          mediaURL: s.mediaURL != null ? s.mediaURL : "",
         };
       });
   }
@@ -58,7 +58,9 @@ export function getThumbnailTrack(trickModeTrack: Representation): IThumbnailTra
   return {
     getThumbnails,
     codec: trickModeTrack.getMimeTypeString(),
-    initURL: initSegment ? (initSegment.mediaURL || "") : "",
+    initURL: initSegment !== null ? (initSegment.mediaURL !== null ?
+                                       initSegment.mediaURL :  "") :
+                                    "",
   };
 }
 

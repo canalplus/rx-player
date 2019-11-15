@@ -50,7 +50,7 @@ export function getSegmentsData(
     }) === -1;
   });
 
-  if (!thumbnailsToLoad.length) {
+  if (thumbnailsToLoad.length === 0) {
     return EMPTY;
   }
 

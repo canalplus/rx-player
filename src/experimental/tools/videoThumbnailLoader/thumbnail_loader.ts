@@ -65,7 +65,7 @@ export default class VideoThumbnailLoader {
     time: number;
     thumbnailTrack: IThumbnailTrack;
     resolve: () => void;
-    reject: (err: Error) => void;
+    reject: (err: unknown) => void;
   }>;
   private _subscription$: Subscription;
 
@@ -152,7 +152,7 @@ export default class VideoThumbnailLoader {
               })
             );
           }),
-          catchError((err) => {
+          catchError((err: unknown) => {
             this.dispose();
             reject(err);
             return EMPTY;
@@ -161,9 +161,16 @@ export default class VideoThumbnailLoader {
       })
     ).subscribe(
       () => ({}),
-      (err) => {
+      (pipelineError: Error | { message?: string }) => {
         this.dispose();
-        this._error = err;
+        if (pipelineError instanceof Error) {
+          this._error = pipelineError;
+        } else {
+          if (pipelineError.hasOwnProperty("message") &&
+            pipelineError.message !== undefined) {
+            this._error = new Error(pipelineError.message);
+          }
+        }
       }
     );
   }
