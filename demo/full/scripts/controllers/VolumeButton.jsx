@@ -33,6 +33,7 @@ const VolumeButton = ({
   }
   return (
     <Button
+      ariaLabel="Mute/Unmute audio"
       className={
         `volume-button ${className} ${volumeLevelClass}`
       }

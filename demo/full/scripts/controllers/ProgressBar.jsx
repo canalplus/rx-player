@@ -53,8 +53,7 @@ class Progressbar extends React.Component {
     }
     const timestampToMs = ts * 1000;
     const imageIndex = images.findIndex(i =>
-      i && i.ts > timestampToMs
-    );
+      i && i.ts > timestampToMs);
     const image = imageIndex === -1 ?
       images[images.length - 1] :
       images[imageIndex - 1];

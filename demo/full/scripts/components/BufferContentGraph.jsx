@@ -50,7 +50,7 @@ function paintCurrentPosition(
   position,
   minimumPosition,
   maximumPosition,
-  canvasCtx
+  canvasCtx,
 ) {
   if (typeof position === "number" &&
       position >= minimumPosition &&

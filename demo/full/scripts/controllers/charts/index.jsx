@@ -6,26 +6,16 @@ import BufferSizeChart from "./BufferSize.jsx";
 
 const BUFFER_GAP_REFRESH_TIME = 500;
 const MAX_BUFFER_SIZE_LENGTH = 2000;
-const MAX_BANDWIDTH_LENGTH = 200;
 
 class ChartsManager extends React.Component {
   constructor(...args) {
     super(...args);
     this.state = { displayBufferContentChart: false,
-                   displayBufferSizeChart: false,
-                   displayBandwidthChart: false };
+                   displayBufferSizeChart: false };
     const { player } = this.props;
 
     this.bufferSizeChart = createModule(ChartDataModule,
                                         { maxSize: MAX_BUFFER_SIZE_LENGTH });
-
-    this.bandwidthChart = createModule(ChartDataModule,
-                                       { maxSize: MAX_BANDWIDTH_LENGTH });
-
-    this.bandwidthSubscription = player.$get("bandwidth")
-      .subscribe(bandwidth => {
-        this.bandwidthChart.dispatch("ADD_DATA", bandwidth / 0.008);
-      });
 
     this.bufferSizeChart.dispatch("ADD_DATA", player.get("bufferGap"));
     this.bufferGapInterval = setInterval(() => {
@@ -36,23 +26,12 @@ class ChartsManager extends React.Component {
   componentWillUnmount() {
     clearInterval(this.bufferGapInterval);
     this.bufferSizeChart.destroy();
-    this.bandwidthSubscription.unsubscribe();
   }
 
   render() {
     const { displayBufferSizeChart,
             displayBufferContentChart } = this.state;
     const { player } = this.props;
-
-    // const onBandwidthCheckBoxChange = (e) => {
-    //   const target = e.target;
-    //   const value = target.type === "checkbox" ?
-    //     target.checked : target.value;
-
-    //   this.setState({
-    //     displayBandwidthChart: value,
-    //   });
-    // };
 
     const onBufferContentCheckBoxChange = (e) => {
       const target = e.target;
@@ -76,6 +55,7 @@ class ChartsManager extends React.Component {
               <input
                 name="displayBufferContentChart"
                 type="checkbox"
+                aria-label="Display/Hide chart about the buffer's content"
                 checked={this.state.displayBufferContentChart}
                 onChange={onBufferContentCheckBoxChange}
               />
@@ -92,6 +72,7 @@ class ChartsManager extends React.Component {
             Buffer size chart
             <label class="switch">
               <input
+                aria-label="Display/Hide chart about the buffer's size"
                 name="displayBufferSizeChart"
                 type="checkbox"
                 checked={this.state.displayBufferSizeChart}

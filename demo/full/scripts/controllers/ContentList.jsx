@@ -573,12 +573,14 @@ class ContentList extends React.Component {
           <div className="content-inputs-selects">
             <Select
               className="choice-input transport-type-choice white-select"
+              ariaLabel="Select a transport"
               onChange={onTransportChange}
               options={TRANSPORT_TYPES}
               selected={TRANSPORT_TYPES.indexOf(transportType)}
             />
             <Select
               className="choice-input content-choice white-select"
+              ariaLabel="Select a content"
               onChange={onContentChoiceChange}
               options={selectValues}
               selected={contentChoiceIndex}
@@ -591,6 +593,7 @@ class ContentList extends React.Component {
                   <Button
                     className={"choice-input-button content-button enter-name-button" +
                       (!hasURL ? " disabled" : "")}
+                    ariaLabel="Save or update custom content"
                     onClick={onClickSaveOrUpdate}
                     disabled={!hasURL || isSavingOrUpdating}
                     value={isLocalContent ?
@@ -607,6 +610,7 @@ class ContentList extends React.Component {
               isLocalContent ?
                 (<Button
                   className="choice-input-button erase-button"
+                  ariaLabel="Remove custom content from saved contents"
                   onClick={onClickErase}
                   value={String.fromCharCode(0xf1f8)}
                 />) :
@@ -617,12 +621,18 @@ class ContentList extends React.Component {
             <div class="auto-play">
               AutoPlay
               <label class="input switch">
-                <input type="checkbox" checked={autoPlay} onChange={onAutoPlayClick} />
+                <input
+                  type="checkbox"
+                  aria-label="Enable/Disable AutoPlay"
+                  checked={autoPlay}
+                  onChange={onAutoPlayClick}
+                />
                 <span class="slider round"></span>
               </label>
             </div>
             <Button
               className="choice-input-button load-button"
+              ariaLabel="Load the selected content now"
               onClick={onClickLoad}
               value={String.fromCharCode(0xf144)}
             />
@@ -637,6 +647,7 @@ class ContentList extends React.Component {
                     (<div className="update-control">
                       <FocusedTextInput
                         className={"text-input need-to-fill"}
+                        ariaLabel="Name of the custom content to save"
                         onChange={onNameInput}
                         value={contentNameField}
                         placeholder={"Content name"}
@@ -644,11 +655,13 @@ class ContentList extends React.Component {
                       <div className="update-control-buttons">
                         <Button
                           className={"choice-input-button content-button save-button"}
+                          ariaLabel="Save/Update custom content"
                           onClick={saveCurrentContent}
                           disabled={!contentNameField || !currentManifestURL}
                           value={isLocalContent ? "Update" : "Save"}
                         />
                         <Button
+                          ariaLabel="Cancel current modifications for the custom content"
                           className={"choice-input-button content-button cancel-button"}
                           onClick={onCancel}
                           value={"Cancel"}
@@ -658,6 +671,7 @@ class ContentList extends React.Component {
                     : null
                 }
                 <TextInput
+                  ariaLabel="Enter here the Manifest's URL"
                   className="text-input"
                   onChange={onManifestInput}
                   value={currentManifestURL}
@@ -675,6 +689,7 @@ class ContentList extends React.Component {
                     {(DISABLE_ENCRYPTED_CONTENT ? "[HTTPS only] " : "") + "Encrypted content"}
                     <label class="switch">
                       <input
+                        aria-label="Enable for an encrypted content"
                         disabled={DISABLE_ENCRYPTED_CONTENT}
                         name="displayDRMSettingsTextInput"
                         type="checkbox"
@@ -692,6 +707,7 @@ class ContentList extends React.Component {
                         </div>
                         <div>
                           <TextInput
+                            ariaLabel="URL for the license server"
                             className="choice-input text-input"
                             onChange={onLicenseServerInput}
                             value={licenseServerUrl}
@@ -699,6 +715,7 @@ class ContentList extends React.Component {
                           />
                         </div>
                         <TextInput
+                          ariaLabel="URL for the server certificate (optional)"
                           className="choice-input text-input"
                           onChange={onServerCertificateInput}
                           value={serverCertificateUrl}
@@ -713,7 +730,12 @@ class ContentList extends React.Component {
                     <span className={"low-latency-checkbox custom-checkbox"}>
                       Low-Latency content
                       <label class="input switch">
-                        <input type="checkbox" checked={lowLatencyChecked} onChange={onLowLatencyClick} />
+                        <input
+                          aria-label="Enable for a low-latency content"
+                          type="checkbox"
+                          checked={lowLatencyChecked}
+                          onChange={onLowLatencyClick}
+                        />
                         <span class="slider round"></span>
                       </label>
                     </span>

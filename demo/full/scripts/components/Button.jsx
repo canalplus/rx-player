@@ -6,6 +6,7 @@ import React from "react";
  * @returns {Object}
  */
 export default ({
+  ariaLabel,
   className = "",
   onClick,
   value,
@@ -14,6 +15,7 @@ export default ({
   if (disabled) {
     return (
       <button
+        aria-label={ariaLabel}
         disabled
         className={className + " disabled"}
       >
@@ -24,6 +26,7 @@ export default ({
 
   return (
     <button
+      aria-label={ariaLabel}
       className={className}
       onClick={onClick}
     >

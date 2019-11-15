@@ -40,6 +40,7 @@ const VideoBitrateKnobBase = ({
   return (
     <Knob
       name="Video Bitrate"
+      ariaLabel="Update the video bitrate"
       className={className}
       disabled={availableVideoBitrates.length < 2}
       onChange={onVideoBitrateChange}

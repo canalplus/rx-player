@@ -7,6 +7,7 @@ import React from "react";
  * @returns {Object}
  */
 export default ({
+  ariaLabel,
   className = "",
   onChange,
   selected,
@@ -27,22 +28,28 @@ export default ({
         value={index}
       >
         {val}
-      </option>
-  );
+      </option>);
 
   const selectEl = disabled ? (
-    <select value={selected} disabled="disabled" onChange={onChange}>
+    <select
+      aria-label={ariaLabel}
+      value={selected}
+      disabled="disabled"
+      onChange={onChange}
+    >
       {optionsEl}
     </select>
   ) : (
-    <select value={selected} onChange={onChange}>
+    <select
+      aria-label={ariaLabel}
+      value={selected}
+      onChange={onChange}
+    >
       {optionsEl}
-    </select>
-  );
+    </select>);
 
   return (
     <section className={"select " + className}>
       {selectEl}
-    </section>
-  );
+    </section>);
 };
