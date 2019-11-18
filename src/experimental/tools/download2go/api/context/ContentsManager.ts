@@ -155,7 +155,7 @@ class ContentManager {
         contentType
       );
       const segment = representation.index.getInitSegment();
-      if (!segment) {
+      if (segment === null) {
         throw new Error("Error while constructing the init segment");
       }
       acc.push({

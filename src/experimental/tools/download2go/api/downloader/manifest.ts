@@ -22,21 +22,23 @@ import SMOOTHFeature from "../../../../../transports/smooth";
 
 import { IPersistedSessionData } from "../../../../../core/eme";
 import { createManifestPipeline } from "../../../../../core/pipelines";
-import Manifest, { Representation } from "../../../../../manifest";
-import { IParsedPeriod } from "../../../../../parsers/manifest";
+import Manifest, { ISegment } from "../../../../../manifest";
 import { ILocalManifest } from "../../../../../parsers/manifest/local";
 import {
   ILocalAdaptation,
+  ILocalIndexSegment,
+  ILocalPeriod,
   ILocalRepresentation,
 } from "../../../../../parsers/manifest/local/types";
 import { ITransportPipelines } from "../../../../../transports";
 import { IStoredManifest } from "../../types";
+import { SegmentConstuctionError } from "../../utils";
 import { IContentProtection } from "../drm/types";
 import {
   ContentBufferType,
   IAdaptationForPeriodBuilder,
-  IAdaptationStored,
   ISegmentForRepresentationBuilder,
+  ISegmentStored,
   IUtilsOfflineLoader,
 } from "./types";
 
@@ -155,10 +157,16 @@ export function getBuilderFormattedForSegments({
       for (let i = 0; i <= ctxs.length; i++) {
         const ctx = ctxs[i];
         const repreId = ctx.representation.id as string;
-        acc[repreId] = (ctx.nextSegments as any).map(
-          ([time, timescale, duration] : [number, number, number]) =>
-            ({ time, timescale, duration })
-          );
+        acc[repreId] = (ctx.nextSegments as Array<ISegment | [number, number, number]>)
+          .reduce<ILocalIndexSegment[]>(
+            (accSegts, currSegment) => {
+              if (Array.isArray(currSegment)) {
+                const [time, timescale, duration] = currSegment;
+                accSegts.push({ time, timescale, duration });
+                return accSegts;
+              }
+            return accSegts;
+          }, []);
         return acc;
       }
       return acc;
@@ -208,7 +216,7 @@ export function getKeySystemsSessionsOffline(
  *
  */
 export function offlineManifestLoader(
-  manifest: any,
+  manifest: Manifest,
   adaptationsBuilder: IAdaptationForPeriodBuilder,
   representationsBuilder: ISegmentForRepresentationBuilder,
   { contentID, duration, isFinished, db }: IUtilsOfflineLoader
@@ -217,35 +225,39 @@ export function offlineManifestLoader(
     type: "local",
     version: "0.1",
     duration,
-    periods: manifest.periods.map((period: IParsedPeriod) => {
+    periods: manifest.periods.map<ILocalPeriod>((period): ILocalPeriod => {
       return {
         start: period.start,
-        duration: period.duration,
+        duration: period.duration !== undefined ? period.duration : 0,
         adaptations: adaptationsBuilder[period.id].map(
-          (adaptation: IAdaptationStored): ILocalAdaptation => ({
+          (adaptation): ILocalAdaptation => ({
             type: adaptation.type,
-            ...(adaptation.audioDescription && {
-              audioDescription: adaptation.audioDescription,
-            }),
-            ...(adaptation.closedCaption && {
-              closedCaption: adaptation.closedCaption,
-            }),
-            ...(adaptation.language && { language: adaptation.language }),
+            audioDescription: adaptation.audioDescription,
+            closedCaption: adaptation.closedCaption,
+            language: adaptation.language,
             representations: adaptation.representations.map(
-              (representation: Representation): ILocalRepresentation => ({
+              ({ mimeType, codec, id, ...representation }): ILocalRepresentation => ({
                 bitrate: representation.bitrate,
-                mimeType: representation.mimeType || "",
-                codecs: representation.codec || "",
+                mimeType: mimeType !== undefined ? mimeType : "",
+                codecs: codec !== undefined ? codec : "",
                 width: representation.width,
                 height: representation.height,
                 index: {
                   loadInitSegment: ({ resolve, reject }) => {
                     db.get(
                       "segments",
-                      `init--${representation.id}--${contentID}`
+                      `init--${id}--${contentID}`
                     )
-                      .then((segment: any) => {
-                        resolve({
+                      .then((segment: ISegmentStored | undefined) => {
+                        if (segment === undefined) {
+                          return reject(
+                            new SegmentConstuctionError(`${contentID}:
+                              Impossible to retrieve INIT segment in IndexDB for
+                              representation: ${id}, got: undefined`
+                            )
+                          );
+                        }
+                        return resolve({
                           data: segment.data,
                         });
                       })
@@ -257,16 +269,21 @@ export function offlineManifestLoader(
                   ) => {
                     db.get(
                       "segments",
-                      `${reqSegmentTime}--${representation.id}--${contentID}`
+                      `${reqSegmentTime}--${id}--${contentID}`
                     )
-                      .then((segment: any) => {
-                        resolve({
+                      .then((segment: ISegmentStored | undefined) => {
+                        if (segment === undefined) {
+                          return resolve({
+                            data: new Uint8Array(0),
+                          });
+                        }
+                        return resolve({
                           data: segment.data,
                         });
                       })
                       .catch(reject);
                   },
-                  segments: representationsBuilder[representation.id],
+                  segments: representationsBuilder[id],
                 },
               })
             ),

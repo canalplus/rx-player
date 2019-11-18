@@ -24,6 +24,7 @@ import {
   IPersistedSessionData,
 } from "../../../../../core/eme/types";
 import createMediaSource from "../../../../../core/init/create_media_source";
+import { IndexDBError } from "../../utils";
 import { IUtilsKeySystemsTransaction } from "./types";
 
 /**
@@ -57,8 +58,10 @@ function EMETransaction(
               sessionsIDS,
               type: KeySystemsOption.type,
             },
-          }).catch(err => {
-            throw new Error(err);
+          }).catch((err: Error) => {
+            throw new IndexDBError(`${contentID}:
+              Impossible to store contentProtection in IndexDB: ${err.message}
+            `);
           });
         },
         load() {
@@ -81,14 +84,16 @@ function EMETransaction(
             ctx: { representation: { mimeType, codec } },
             chunkData: initSegment,
           } = emeOption;
-          const sourceBuffer = mediaSource.addSourceBuffer(`${mimeType};codecs="${codec}"`);
+          const sourceBuffer = mediaSource.addSourceBuffer(
+            `${mimeType};codecs="${codec}"`
+          );
           const appendedSegment$ = of(initSegment).pipe(
             tap(segmentData => sourceBuffer.appendBuffer(segmentData))
           );
           return combineLatest([sessionsUpdate$, appendedSegment$]);
         })
       );
-    }),
+    })
   );
 }
 

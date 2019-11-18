@@ -57,6 +57,7 @@ export function setUpDb(nameDB: string): Promise<IDBPDatabase> {
       },
     });
   } catch (e) {
-    throw new IndexDBError(e.message);
+    const error = e as Error;
+    throw new IndexDBError(error.message);
   }
 }

@@ -53,7 +53,7 @@ export function initDownloader$(
       );
       const contentManager = new ContentManager(
         manifest,
-        adv ? adv.quality : undefined
+        adv !== undefined ? adv.quality : undefined
       );
       return of(contentManager.getContextsForCurrentSession()).pipe(
         mergeMap(globalCtx => {
@@ -80,15 +80,15 @@ export function initDownloader$(
         }),
         reduce<ICustomSegment, ICustomSegment[]>((acc, curr) => ([ ...acc, curr ]) , []),
         mergeMap((initSegments) => {
-          if (keySystems && Object.keys(keySystems).length > 0) {
+          if (keySystems !== undefined && Object.keys(keySystems).length > 0) {
             EMETransaction(
               keySystems,
               {
                 contentID,
-                initSegments: initSegments.filter(({ contentType }) => contentType !== "text")
+                initSegments: initSegments.filter(({ contentType }) => contentType !== "text"),
               },
               db
-            ).subscribe(noop)
+            ).subscribe(noop);
           }
           return of(...initSegments);
         }),
@@ -100,7 +100,7 @@ export function initDownloader$(
             segmentKey: `init--${representationID}--${contentID}`,
             data: chunkData,
             size: chunkData.byteLength,
-          }).catch(err => {
+          }).catch((err: Error) => {
             throw new IndexDBError(`
               ${contentID}: Impossible to store the current INIT
               segment (${contentType}) at ${time}: ${err.message}

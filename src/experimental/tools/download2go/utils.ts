@@ -66,12 +66,11 @@ export class IndexDBError extends Error {
  *
  */
 export async function checkInitDownloaderOptions(
-  options: Omit<IInitSettings, "type">,
+  options: IInitSettings,
   db: IDBPDatabase,
   activeDownloads: IActiveDownload
 ): Promise<void> {
   if (
-    !options ||
     typeof options !== "object" ||
     Object.keys(options).length < 0
   ) {
@@ -81,33 +80,33 @@ export async function checkInitDownloaderOptions(
   }
 
   const { url, contentID, transport } = options;
-  if (!url) {
+  if (url == null || url === "") {
     throw new ValidationArgsError("You must specify the url of the manifest");
   }
 
-  if (!contentID) {
+  if (contentID == null || contentID === "") {
     throw new ValidationArgsError(
       "You must specify a contentID of the content you want to download"
     );
   }
 
-  if (!transport || !arrayIncludes(["smooth", "dash"], transport)) {
+  if (!arrayIncludes(["smooth", "dash"], transport)) {
     throw new ValidationArgsError(
       "You must specify a transport protocol, value possible: smooth - dash"
     );
   }
 
-  if (activeDownloads[contentID]) {
+  if (activeDownloads[contentID] != null) {
     throw new ValidationArgsError(
       "The content must be resume instead of starting a new download"
     );
   }
 
-  const contentMovie: IStoredManifest | null | undefined = await db.get(
+  const contentMovie = await db.get(
     "manifests",
     contentID
-  );
-  if (contentMovie) {
+  ) as IStoredManifest | null | undefined;
+  if (contentMovie != null) {
     throw new ValidationArgsError(
       "An entry with the same contentID is already present, contentID must be unique"
     );
@@ -118,13 +117,13 @@ export function checkForResumeAPausedMovie(
   manifest: IStoredManifest,
   activeDownloads: IActiveDownload
 ) {
-  if (!manifest) {
+  if (manifest == null) {
     throw new ValidationArgsError(
       "No content has been found with the given contentID"
     );
   }
 
-  if (activeDownloads[manifest.contentID]) {
+  if (activeDownloads[manifest.contentID] != null) {
     throw new ValidationArgsError("The content is already downloading");
   }
 
@@ -136,7 +135,7 @@ export function checkForResumeAPausedMovie(
 }
 
 export function checkForPauseAMovie(contentID: string) {
-  if (!contentID) {
+  if (contentID == null || contentID === "") {
     throw new ValidationArgsError(
       "A valid contentID is mandatory when pausing"
     );

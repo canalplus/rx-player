@@ -17,6 +17,7 @@
 import { EMPTY, merge, Observable, of, Subject } from "rxjs";
 import { map, mergeMap, reduce, scan, takeUntil, tap } from "rxjs/operators";
 
+import { ISegmentParserResponse } from "../../../../../transports";
 import findIndex from "../../../../../utils/array_find_index";
 import { concat, strToBytes } from "../../../../../utils/byte_parsing";
 
@@ -81,25 +82,27 @@ export function handleSegmentPipelineFromContexts<
                 return EMPTY;
             }
           }),
-          reduce((acc, { chunkData }) => {
-            if (chunkData === null) {
-              return acc;
-            }
-            if (
-              contentType === ContentType.TEXT &&
-              ctx.representation.mimeType &&
-              ctx.representation.mimeType === "application/mp4"
-            ) {
-              return concat(
-                acc,
-                createBox("moof", new Uint8Array(0)),
-                createBox("mdat", strToBytes(chunkData.data))
-              );
-            }
-            return concat(acc, chunkData);
+          reduce<ISegmentParserResponse<Uint8Array | string>, Uint8Array>(
+            (acc, { chunkData }) => {
+              if (chunkData === null) {
+                return acc;
+              }
+              if (
+                contentType === ContentType.TEXT &&
+                ctx.representation.mimeType !== undefined &&
+                ctx.representation.mimeType === "application/mp4"
+              ) {
+                return concat(
+                  acc,
+                  createBox("moof", new Uint8Array(0)),
+                  // May be chunkData.data for subtitles...
+                  createBox("mdat", strToBytes(chunkData as string))
+                );
+              }
+              return concat(acc, chunkData as Uint8Array);
           }, new Uint8Array(0)),
           map(chunkData => {
-            if (nextSegments && !isInitData) {
+            if (nextSegments !== undefined && !isInitData) {
               (nextSegments[index] as any) = [
                 ctx.segment.time,
                 ctx.segment.timescale,
@@ -228,7 +231,7 @@ export function segmentPipelineDownloader$(
         segmentKey: `${time}--${representationID}--${contentID}`,
         data: chunkData,
         size: chunkData.byteLength,
-      }).catch((err) => {
+      }).catch((err : Error) => {
         throw new IndexDBError(`
           ${contentID}: Impossible
           to store the current segment (${contentType}) at ${time}: ${err.message}
@@ -247,7 +250,7 @@ export function segmentPipelineDownloader$(
           chunkData,
         }
       ) => {
-        if (progress) {
+        if (progress !== undefined) {
           acc.progress.overall = progress.overall;
         }
         acc.progress.current += 1;
@@ -257,7 +260,7 @@ export function segmentPipelineDownloader$(
             ? percentage
             : Math.round(percentage);
         acc.size += chunkData.byteLength;
-        if (!nextSegments) {
+        if (nextSegments === undefined) {
           return acc;
         }
         const indexRepresentation = findIndex(
