@@ -30,10 +30,10 @@ import {
   ICustomMediaKeys,
   ICustomMediaKeySession,
 } from "../../../compat";
+import closeSession$ from "../../../compat/eme/close_session";
 import { EncryptedMediaError } from "../../../errors";
 import log from "../../../log";
 import arrayFind from "../../../utils/array_find";
-import castToObservable from "../../../utils/cast_to_observable";
 import hashBuffer from "../../../utils/hash_buffer";
 
 // Cached data for a single MediaKeySession
@@ -145,8 +145,12 @@ export default class MediaKeySessionsStore {
     return observableDefer(() => {
       this._delete(session);
       log.debug("EME-MKSS: Close session", session);
-      return castToObservable(session.close())
-        .pipe(catchError(() => observableOf(null)));
+      return closeSession$(session).pipe(
+        catchError((err) => {
+          log.error(err);
+          return observableOf(null);
+        })
+      );
     });
   }
 

@@ -104,7 +104,7 @@ export default function createMediaSourceLoader({
   segmentPipelinesManager,
 } : IMediaSourceLoaderArguments) : (
   mediaSource : MediaSource,
-  position : number,
+  initialTime : number,
   autoPlay : boolean
 ) => Observable<IMediaSourceLoaderEvent> {
   /**
