@@ -15,7 +15,7 @@
  */
 
 import { IPersistedSessionData } from "../../../../../core/eme";
-import { ContentBufferType } from "../downloader/types";
+import { ContentBufferType, ICustomSegment } from "../downloader/types";
 
 export type ITypedArray =
   | Int8Array
@@ -39,7 +39,7 @@ export interface IContentProtection {
 
 export interface IUtilsKeySystemsTransaction {
   contentID: string;
-  emeOptions: IEMEOptions[];
+  initSegments: ICustomSegment[];
 }
 
 export interface IEMEOptions {

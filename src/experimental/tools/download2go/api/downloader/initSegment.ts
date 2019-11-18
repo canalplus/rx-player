@@ -16,16 +16,15 @@
 
 import { IDBPDatabase } from "idb";
 import { merge, of } from "rxjs";
-import { map, mapTo, mergeMap, reduce, tap } from "rxjs/operators";
+import { map, mergeMap, reduce, tap } from "rxjs/operators";
 
 import { SegmentPipelinesManager } from "../../../../../core/pipelines";
-import arrayIncludes from "../../../../../utils/array_includes";
+import noop from "../../../../../utils/noop";
 import { IInitSettings } from "../../types";
 import { IndexDBError, SegmentConstuctionError } from "../../utils";
 import ContentManager from "../context/ContentsManager";
 import { ContentType } from "../context/types";
 import EMETransaction from "../drm/keySystems";
-import { IEMEOptions } from "../drm/types";
 import { manifestLoader } from "./manifest";
 import { handleSegmentPipelineFromContexts } from "./segment";
 import { ICustomSegment, IInitGroupedSegments, IInitSegment } from "./types";
@@ -79,38 +78,19 @@ export function initDownloader$(
             })
           );
         }),
-        mergeMap(customInitSegment => {
-          if (
-            keySystems &&
-            Object.keys(keySystems).length > 0 &&
-            arrayIncludes([ContentType.VIDEO, ContentType.AUDIO],
-                customInitSegment.contentType)
-          ) {
-            return of(customInitSegment).pipe(
-              reduce<ICustomSegment, IEMEOptions[]>((acc, curr) => {
-                const {
-                  ctx: { representation: { mimeType, codec } },
-                  contentType,
-                  chunkData,
-                } = curr;
-                acc.push({
-                  contentType,
-                  initSegment: chunkData,
-                  codec: `${mimeType};codecs="${codec}"`,
-                });
-                return acc;
-              }, []),
-              mergeMap((emeOptions) => {
-                return EMETransaction(
-                  keySystems,
-                  { contentID, emeOptions },
-                  db
-                );
-              }),
-              mapTo(customInitSegment)
-            );
+        reduce<ICustomSegment, ICustomSegment[]>((acc, curr) => ([ ...acc, curr ]) , []),
+        mergeMap((initSegments) => {
+          if (keySystems && Object.keys(keySystems).length > 0) {
+            EMETransaction(
+              keySystems,
+              {
+                contentID,
+                initSegments: initSegments.filter(({ contentType }) => contentType !== "text")
+              },
+              db
+            ).subscribe(noop)
           }
-          return of(customInitSegment);
+          return of(...initSegments);
         }),
         tap(({ ctx, chunkData, contentType }) => {
           const { id: representationID } = ctx.representation;

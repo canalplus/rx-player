@@ -170,7 +170,7 @@ export function getBuilderFormattedForSegments({
 export function getKeySystemsSessionsOffline(
   contentsProtection : IContentProtection[] | undefined
 ) {
-  if (contentsProtection === undefined) {
+  if (contentsProtection === undefined || contentsProtection.length === 0) {
     return undefined;
   }
   const flattenedSessionsIDS = contentsProtection

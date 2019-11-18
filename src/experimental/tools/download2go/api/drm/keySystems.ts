@@ -16,7 +16,7 @@
 
 import { IDBPDatabase } from "idb";
 import { combineLatest, of } from "rxjs";
-import { filter, finalize, mergeMap, take, tap } from "rxjs/operators";
+import { filter, mergeMap, tap } from "rxjs/operators";
 
 import EMEManager from "../../../../../core/eme/eme_manager";
 import {
@@ -44,7 +44,7 @@ function EMETransaction(
   db: IDBPDatabase
 ) {
   const video = document.createElement("video");
-  const { contentID, emeOptions } = keySystemsUtils;
+  const { contentID, initSegments } = keySystemsUtils;
   const keySystems = [
     {
       ...KeySystemsOption,
@@ -75,18 +75,20 @@ function EMETransaction(
       const sessionsUpdate$ = emeManager$.pipe(
         filter(evt => evt.type === "session-updated")
       );
-      return of(...emeOptions).pipe(
+      return of(...initSegments).pipe(
         mergeMap((emeOption) => {
-          const sourceBuffer = mediaSource.addSourceBuffer(emeOption.codec);
-          const appendedSegment$ = of(emeOption.initSegment).pipe(
+          const {
+            ctx: { representation: { mimeType, codec } },
+            chunkData: initSegment,
+          } = emeOption;
+          const sourceBuffer = mediaSource.addSourceBuffer(`${mimeType};codecs="${codec}"`);
+          const appendedSegment$ = of(initSegment).pipe(
             tap(segmentData => sourceBuffer.appendBuffer(segmentData))
           );
           return combineLatest([sessionsUpdate$, appendedSegment$]);
         })
       );
     }),
-    take(1),
-    finalize(() => video.remove())
   );
 }
 
