@@ -24,6 +24,7 @@ import {
   getSegmentsFromCues,
   getTimeCodeScale,
 } from "../../parsers/containers/matroska";
+import BaseRepresentationIndex from "../../parsers/manifest/dash/indexes/base";
 import takeFirstSet from "../../utils/take_first_set";
 import {
   ISegmentParserArguments,
@@ -77,16 +78,30 @@ export default function parser({ content,
     const completeInitChunk = shouldExtractCompleteInitChunk ?
       extractCompleteInitChunk(chunkData) : chunkData;
 
-    if (completeInitChunk === null) {
-      throw new Error("Can't extract complete init chunk from loaded data.");
+    if (completeInitChunk === null &&
+        (
+          nextSegments === null ||
+          nextSegments.length === 0
+        )
+    ) {
+      if (!(representation.index instanceof BaseRepresentationIndex)) {
+        throw new Error("Can't extract complete init chunk and segment" +
+                        "references from loaded data.");
+      }
+      representation.index._addSegments([{ time: 0,
+                                           duration: Number.MAX_VALUE,
+                                           timescale: 1 }]);
     }
 
     if (nextSegments !== null && nextSegments.length > 0) {
       representation.index._addSegments(nextSegments);
     }
 
-    const timescale = isWEBM ? getTimeCodeScale(completeInitChunk, 0) :
-                               getMDHDTimescale(completeInitChunk);
+    let timescale = null;
+    if (completeInitChunk !== null) {
+      timescale = isWEBM ? getTimeCodeScale(completeInitChunk, 0) :
+                           getMDHDTimescale(completeInitChunk);
+    }
 
     const chunkInfos = timescale != null && timescale > 0 ? { time: 0,
                                                               duration: 0,

@@ -87,7 +87,7 @@ function findAdaptationIndex(
   let adaptationIndex : IRepresentationIndex;
   if (adaptationChildren.segmentBase != null) {
     const { segmentBase } = adaptationChildren;
-    adaptationIndex = new BaseRepresentationIndex(segmentBase, context, true);
+    adaptationIndex = new BaseRepresentationIndex(segmentBase, context);
   } else if (adaptationChildren.segmentList != null) {
     const { segmentList } = adaptationChildren;
     adaptationIndex = new ListRepresentationIndex(segmentList, context);
@@ -97,11 +97,7 @@ function findAdaptationIndex(
       new TimelineRepresentationIndex(segmentTemplate, context) :
       new TemplateRepresentationIndex(segmentTemplate, context);
   } else {
-    const { mimeType } = adaptation.attributes;
-    const isContentFragmented =
-      (mimeType !== undefined && mimeType.length > 0) ? /.*?\/mp4$/g.test(mimeType) :
-                                                        false;
-    adaptationIndex = new BaseRepresentationIndex({}, context, isContentFragmented);
+    adaptationIndex = new BaseRepresentationIndex({}, context);
   }
   return adaptationIndex;
 }
@@ -141,7 +137,7 @@ export default function parseRepresentations(
         getRepAvailabilityTimeOffset(adaptationInfos.availabilityTimeOffset,
                                      representation.children.baseURL,
                                      segmentBase.availabilityTimeOffset);
-      representationIndex = new BaseRepresentationIndex(segmentBase, context, true);
+      representationIndex = new BaseRepresentationIndex(segmentBase, context);
     } else if (representation.children.segmentList != null) {
       const { segmentList } = representation.children;
       representationIndex = new ListRepresentationIndex(segmentList, context);
