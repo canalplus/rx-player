@@ -228,7 +228,8 @@ export default function createSegmentFetcher<T>(
         return observableConcat(observableOf(data),
                                 observableOf({ type: "chunk-complete" as const }));
       }),
-      share() // avoid multiple side effects if multiple subs
+      share(), // avoid multiple side effects if multiple subs
+      finalize(() => warning$.complete())
     );
     const warningEvent$ = warning$.pipe(
       map((error) => ({
