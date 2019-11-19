@@ -84,7 +84,7 @@ export interface ISidxReference {
  * Returns null if not found.
  *
  * @param {Uint8Array} buf
- * @param {Number|undefined} initialOffset
+ * @param {Number} initialOffset
  * @returns {Array.<Object>|null}
  *
  * Returns a tuple of : index reference infos and segment reference infos,
@@ -101,14 +101,13 @@ export interface ISidxReference {
  */
 function getReferencesFromSidx(
   buf : Uint8Array,
-  initialOffset? : number
+  initialOffset : number
 ) : [ISidxReference[], ISidxReference[]]|null {
   const index = findBox(buf, 0x73696478 /* "sidx" */);
   if (index === -1) {
     return null;
   }
-  let offset = initialOffset != null ? (initialOffset + index) :
-                                       index;
+  let offset = initialOffset + index;
 
   const size = be4toi(buf, index);
   let pos = index + /* size */4 + /* name */4;

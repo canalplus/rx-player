@@ -54,7 +54,7 @@ function parseMP4EmbeddedTrack({ response,
       indexReferences: ISidxReference[];
     } {
   const { period, representation, segment } = content;
-  const { isInit, indexRange, timestampOffset = 0, range } = segment;
+  const { isInit, timestampOffset = 0, range } = segment;
   const { language } = content.adaptation;
   const { data, isChunked } = response;
 
@@ -65,9 +65,8 @@ function parseMP4EmbeddedTrack({ response,
     chunkBytes = data instanceof Uint8Array ? data :
                                               new Uint8Array(data);
   }
-  const initialOffset = Array.isArray(indexRange) ? indexRange[0] :
-                                                    (range !== undefined) ? range[0] :
-                                                                            undefined;
+  const initialOffset = Array.isArray(range) ? range[0] :
+                                               0;
   const sidxReferences = getReferencesFromSidx(chunkBytes, initialOffset);
 
   const nextSegments = (sidxReferences !== null) ? sidxReferences[1] :

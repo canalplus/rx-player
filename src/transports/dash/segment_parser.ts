@@ -69,7 +69,7 @@ function parseSegmentInfos(content: IContent,
   const chunkData = data instanceof Uint8Array ? data :
                                                  new Uint8Array(data);
 
-  const { range, indexRange } = segment;
+  const { range } = segment;
   const isWEBM = isWEBMEmbeddedTrack(representation);
 
   let nextSegments;
@@ -78,9 +78,8 @@ function parseSegmentInfos(content: IContent,
   if (isWEBM) {
     nextSegments = getSegmentsFromCues(chunkData, 0);
   } else {
-    const initialOffset = Array.isArray(indexRange) ? indexRange[0] :
-                                                      range !== undefined ? range[0] :
-                                                                            undefined;
+    const initialOffset = Array.isArray(range) ? range[0] :
+                                                 0;
     const referencesFromSidx = getReferencesFromSidx(chunkData, initialOffset);
     if (referencesFromSidx !== null) {
       const [indexReferences, segmentReferences] = referencesFromSidx;
