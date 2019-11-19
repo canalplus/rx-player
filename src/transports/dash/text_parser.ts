@@ -51,7 +51,7 @@ function parseMP4EmbeddedTrack({ response,
                                                                    ArrayBuffer |
                                                                    string>
 ) : { parsedTrackInfos: ITextParserResponse;
-      indexReferences: ISidxReference[];
+      indexReferences?: ISidxReference[];
     } {
   const { period, representation, segment } = content;
   const { isInit, timestampOffset = 0, range } = segment;
@@ -72,7 +72,7 @@ function parseMP4EmbeddedTrack({ response,
   const nextSegments = (sidxReferences !== null) ? sidxReferences[1] :
                                                    undefined;
   const indexReferences = (sidxReferences !== null) ? sidxReferences[0] :
-                                                      [];
+                                                      undefined;
 
   if (isInit) {
     const mdhdTimescale = getMDHDTimescale(chunkBytes);
@@ -259,8 +259,8 @@ export default function textTrackParser({ response,
 
     const { indexReferences, parsedTrackInfos } = parserResponse;
 
-    if (indexReferences == null ||
-      indexReferences.length === 0) {
+    if (indexReferences === undefined ||
+        indexReferences.length === 0) {
     return observableOf(parsedTrackInfos);
   }
   return observableMerge(loadIndexes(indexReferences, content, scheduleRequest),

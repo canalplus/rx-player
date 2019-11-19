@@ -150,7 +150,7 @@ export default function parser({ content,
   const parsedSegmentsInfos = parseSegmentInfos(content, response, init);
 
   const { indexes, parserResponse } = parsedSegmentsInfos;
-  if (indexes == null || indexes.length === 0) {
+  if (indexes === undefined || indexes.length === 0) {
     return observableOf(parserResponse);
   }
   return observableMerge(loadIndexes(indexes, content, scheduleRequest),
