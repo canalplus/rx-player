@@ -119,6 +119,9 @@ beginning of the content, when period changes...).
 
 The array emitted contains object describing each available audio track:
 
+  - ``active`` (``Boolean``): Whether the track is the one currently active or
+    not.
+
   - ``id`` (``string``): The id used to identify the track. Use it for
     setting the track via ``setAudioTrack``.
 
@@ -134,8 +137,11 @@ The array emitted contains object describing each available audio track:
   - ``audioDescription`` (``Boolean``): Whether the track is an audio
     description (for the visually impaired or not).
 
-  - ``active`` (``Boolean``): Whether the track is the one currently active or
-    not.
+  - ``dub`` (``Boolean|undefined``): If set to `true`, this audio track is a
+    "dub", meaning it was recored in another language than the original.
+    If set to `false`, we know that this audio track is in an original language.
+    This property is `undefined` if we do not known whether it is in an original
+    language.
 
 
 
@@ -240,6 +246,11 @@ properties:
   - ``language`` (``string``): The language the audio track is in.
   - ``audioDescription`` (``Boolean``): Whether the track is an audio
     description (for the visually impaired or not).
+  - ``dub`` (``Boolean|undefined``): If set to `true`, this audio track is a
+    "dub", meaning it was recored in another language than the original.
+    If set to `false`, we know that this audio track is in an original language.
+    This property is `undefined` if we do not known whether it is in an original
+    language.
 
 
 <a name="events-textTrackChange"></a>
