@@ -43,6 +43,7 @@ import {
   checkForResumeAPausedMovie,
   checkInitDownloaderOptions,
   IndexDBError,
+  isSupported,
   SegmentConstuctionError,
   ValidationArgsError,
 } from "./utils";
@@ -53,6 +54,10 @@ import {
  * @return {IPublicAPI} IPublicAPI
  */
 class D2G extends EventEmitter<IDownload2GoEvents> {
+  static isD2GSupportedForEncryption(): Promise<boolean> {
+    return isSupported();
+  }
+
   public readonly nameDB: string;
   private db: IDBPDatabase | null;
   private emitter: IEmitterTrigger<IDownload2GoEvents>;

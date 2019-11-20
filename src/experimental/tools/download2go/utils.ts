@@ -17,6 +17,8 @@
 import { IDBPDatabase } from "idb";
 
 import arrayIncludes from "../../../utils/array_includes";
+import MediaCapabilitiesProber from "../mediaCapabilitiesProber/";
+import { IMediaKeySystemConfiguration } from "../mediaCapabilitiesProber/types";
 import { IActiveDownload } from "./api/context/types";
 import { IInitSettings, IStoredManifest } from "./types";
 
@@ -70,10 +72,7 @@ export async function checkInitDownloaderOptions(
   db: IDBPDatabase,
   activeDownloads: IActiveDownload
 ): Promise<void> {
-  if (
-    typeof options !== "object" ||
-    Object.keys(options).length < 0
-  ) {
+  if (typeof options !== "object" || Object.keys(options).length < 0) {
     throw new ValidationArgsError(
       "You must at least specify these arguments: { url, contentID, transport }"
     );
@@ -102,10 +101,10 @@ export async function checkInitDownloaderOptions(
     );
   }
 
-  const contentMovie = await db.get(
-    "manifests",
-    contentID
-  ) as IStoredManifest | null | undefined;
+  const contentMovie = (await db.get("manifests", contentID)) as
+    | IStoredManifest
+    | null
+    | undefined;
   if (contentMovie != null) {
     throw new ValidationArgsError(
       "An entry with the same contentID is already present, contentID must be unique"
@@ -140,4 +139,117 @@ export function checkForPauseAMovie(contentID: string) {
       "A valid contentID is mandatory when pausing"
     );
   }
+}
+
+// DRM Capabilities:
+
+// Key Systems
+const CENC_KEY_SYSTEMS = [
+  "com.widevine.alpha",
+  "com.microsoft.playready.software",
+  "com.apple.fps.1_0",
+  "com.chromecast.playready",
+  "com.youtube.playready",
+];
+
+// Robustness ONLY FOR WIDEVINE
+const WIDEVINE_ROBUSTNESSES = [
+  "HW_SECURE_ALL",
+  "HW_SECURE_DECODE",
+  "HW_SECURE_CRYPTO",
+  "SW_SECURE_DECODE",
+  "SW_SECURE_CRYPTO",
+];
+
+/**
+ * Construct the necessary configuration for getCompatibleDRMConfigurations() Prober tool
+ *
+ * @returns {Array.<{type: String, configuration: Object<MediaKeySystemConfiguration>}>}
+ */
+export function constructConfig(): Array<{
+  type: string;
+  configuration: IMediaKeySystemConfiguration;
+}> {
+  return CENC_KEY_SYSTEMS.map(keySystem => ({
+    type: keySystem,
+    configuration: getKeySystemConfigurations(keySystem),
+  }));
+}
+
+/**
+ * @param {string} keySystem
+ * @returns {MediaKeySystemConfiguration[]}
+ */
+export function getKeySystemConfigurations(
+  keySystem: string
+): IMediaKeySystemConfiguration {
+  const videoCapabilities: MediaKeySystemMediaCapability[] = [];
+  const audioCapabilities: MediaKeySystemMediaCapability[] = [];
+  const robustnesses =
+    keySystem === "com.widevine.alpha"
+      ? WIDEVINE_ROBUSTNESSES
+      : [undefined, undefined, undefined, undefined];
+
+  robustnesses.forEach((robustness: string | undefined) => {
+    videoCapabilities.push({
+      contentType: "video/mp4;codecs='avc1.4d401e'", // standard mp4 codec
+      robustness,
+    });
+    videoCapabilities.push({
+      contentType: "video/mp4;codecs='avc1.42e01e'",
+      robustness,
+    });
+    videoCapabilities.push({
+      contentType: "video/webm;codecs='vp8'",
+      robustness,
+    });
+    audioCapabilities.push({
+      contentType: "audio/mp4;codecs='mp4a.40.2'", // standard mp4 codec
+      robustness,
+    });
+  });
+
+  return {
+    initDataTypes: ["cenc"],
+    videoCapabilities,
+    audioCapabilities,
+    persistentState: "required",
+    sessionTypes: ["persistent-license"],
+  };
+}
+
+function isFairplayDrmSupported(): boolean {
+  const MK = (window as any).WebKitMediaKeys as {
+    isTypeSupported: (drm: string, applicationType: string) => boolean;
+  };
+  const drm = "com.apple.fps.1_0";
+  return (
+    MK !== undefined &&
+    MK.isTypeSupported !== undefined &&
+    MK.isTypeSupported(drm, "video/mp4")
+  );
+}
+
+function isSafari() {
+  return (
+    navigator.vendor !== undefined &&
+    navigator.vendor.indexOf("Apple") > -1 &&
+    navigator.userAgent !== undefined &&
+    navigator.userAgent.indexOf("CriOS") === -1 &&
+    navigator.userAgent.indexOf("FxiOS") === -1
+  );
+}
+
+export async function isSupported(): Promise<boolean> {
+  if (isSafari() && isFairplayDrmSupported()) {
+    // We dont support (HLS/Fairplay) streaming right now :(
+    return false;
+  }
+
+  const drmConfigs = await MediaCapabilitiesProber.getCompatibleDRMConfigurations(
+    constructConfig()
+  );
+  return drmConfigs.some(
+    drmConfig => drmConfig.compatibleConfiguration !== undefined
+  );
 }
