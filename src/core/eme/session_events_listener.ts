@@ -31,6 +31,7 @@ import {
   map,
   mapTo,
   mergeMap,
+  startWith,
   takeUntil,
   timeout,
 } from "rxjs/operators";
@@ -54,6 +55,8 @@ import {
   IKeyMessageHandledEvent,
   IKeyStatusChangeHandledEvent,
   IKeySystemOption,
+  INoUpdateEvent,
+  ISessionMessageEvent,
   ISessionUpdatedEvent,
   TypedArray,
 } from "./types";
@@ -124,12 +127,18 @@ function getKeyStatusesEvents(
  * depending on the configuration given.
  * @param {MediaKeySession} session - The MediaKeySession concerned.
  * @param {Object} keySystem - The key system configuration.
+ * @param {Object} initDataInfo - The initialization data linked to that
+ * session.
  * @returns {Observable}
  */
 export default function SessionEventsListener(
   session: MediaKeySession | ICustomMediaKeySession,
-  keySystem: IKeySystemOption
-) : Observable<ISessionUpdatedEvent |
+  keySystem: IKeySystemOption,
+  { initData, initDataType } : { initData : Uint8Array; initDataType? : string }
+) : Observable<IEMEWarningEvent |
+               ISessionMessageEvent |
+               INoUpdateEvent |
+               ISessionUpdatedEvent |
                IBlacklistKeysEvent |
                IEMEWarningEvent> {
   log.debug("EME: Binding session events", session);
@@ -185,7 +194,9 @@ export default function SessionEventsListener(
         return observableConcat(keyStatusesEvents$, handledKeyStatusesChange$);
       }));
 
-  const keyMessages$ : Observable<IEMEWarningEvent | IKeyMessageHandledEvent > =
+  const keyMessages$ : Observable<IEMEWarningEvent |
+                                  ISessionMessageEvent |
+                                  IKeyMessageHandledEvent > =
     onKeyMessage$(session).pipe(mergeMap((messageEvent: MediaKeyMessageEvent) => {
       const message = new Uint8Array(messageEvent.message);
       const messageType = isNonEmptyString(messageEvent.messageType) ?
@@ -223,7 +234,9 @@ export default function SessionEventsListener(
               }
             }
             throw formattedError;
-          })
+          }),
+          startWith({ type: "session-message" as const,
+                      value: { messageType, initData, initDataType } })
         );
     }));
 
@@ -231,18 +244,27 @@ export default function SessionEventsListener(
     .pipe(
       concatMap((
         evt : IEMEWarningEvent |
+              ISessionMessageEvent |
               IKeyMessageHandledEvent |
               IKeyStatusChangeHandledEvent |
               IBlacklistKeysEvent
-      ) : Observable< ISessionUpdatedEvent | IBlacklistKeysEvent | IEMEWarningEvent > => {
-        if (evt.type === "warning" || evt.type === "blacklist-keys") {
-          return observableOf(evt);
+      ) : Observable< IEMEWarningEvent |
+                      ISessionMessageEvent |
+                      INoUpdateEvent |
+                      ISessionUpdatedEvent |
+                      IBlacklistKeysEvent > => {
+        switch (evt.type) {
+          case "warning":
+          case "blacklist-keys":
+          case "session-message":
+            return observableOf(evt);
         }
 
         const license = evt.value.license;
         if (license == null) {
           log.info("EME: No license given, skipping session.update");
-          return EMPTY;
+          return observableOf({ type: "no-update" as const,
+                                value: { initData, initDataType }});
         }
 
         log.debug("EME: Update session", evt);
@@ -253,13 +275,15 @@ export default function SessionEventsListener(
             throw new EncryptedMediaError("KEY_UPDATE_ERROR", reason);
           }),
           mapTo({ type: "session-updated" as const,
-                  value: { session, license } })
+                  value: { session, license, initData, initDataType } })
         );
       }));
 
-  const sessionEvents : Observable<ISessionUpdatedEvent |
-                                   IBlacklistKeysEvent |
-                                   IEMEWarningEvent> =
+  const sessionEvents : Observable< IEMEWarningEvent |
+                                    ISessionMessageEvent |
+                                    INoUpdateEvent |
+                                    ISessionUpdatedEvent |
+                                    IBlacklistKeysEvent > =
     observableMerge(getKeyStatusesEvents(session, keySystem),
                     sessionUpdates,
                     keyErrors,
