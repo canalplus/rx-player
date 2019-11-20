@@ -43,6 +43,12 @@ export default function parser({ content,
   const { period, representation, segment } = content;
   const { data, isChunked } = response;
   if (data == null) {
+    const isStaticContent = segment.isInit && segment.range === undefined;
+    if (isStaticContent) {
+      representation.index._addSegments([{ time: 0,
+                                           duration: Number.MAX_VALUE,
+                                           timescale: 1 }]);
+    }
     return observableOf({ chunkData: null,
                           chunkInfos: null,
                           chunkOffset: 0,
