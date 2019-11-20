@@ -48,6 +48,7 @@ export interface IMetaPlaylistPrivateInfos { transportType : string;
 export interface IPrivateInfos {
   smoothInit? : ISmoothInitSegmentPrivateInfos;
   metaplaylistInfos? : IMetaPlaylistPrivateInfos;
+  shouldGuessInitRange? : boolean;
 }
 
 // ISegment Object.

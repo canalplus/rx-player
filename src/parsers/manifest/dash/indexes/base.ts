@@ -167,11 +167,6 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
     // TODO If indexRange is behind the initialization segment
     // the following logic will not work.
-    // If no range and index range are given by manifest, we take
-    // as init segment the nth first bytes (where n = 1500).
-    // Therefore, we need to filter on init boxes after the segment
-    // is loaded, to ensure that we push a complete and dry segment
-    // to buffers.
     let range: [number, number] | undefined;
     if (index.initialization != null) {
       range = index.initialization.range;
@@ -198,8 +193,16 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @returns {Object}
    */
   getInitSegment() : ISegment | null {
-    // As content is not fragmented, no init segment by default
     const initSegment = getInitSegment(this._index);
+    if (initSegment.range === undefined) {
+      if (initSegment.privateInfos === undefined) {
+        initSegment.privateInfos = {
+          shouldGuessInitRange: true,
+        };
+      } else {
+        initSegment.privateInfos.shouldGuessInitRange = true;
+      }
+    }
     return initSegment;
   }
 
