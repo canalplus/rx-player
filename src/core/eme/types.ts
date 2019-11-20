@@ -24,7 +24,7 @@ import { ICustomError } from "../../errors";
 import SessionsStore from "./utils/open_sessions_store";
 import PersistedSessionsStore from "./utils/persisted_session_store";
 
-// A minor error happened
+// Emitted when a minor error happened.
 export interface IEMEWarningEvent { type : "warning";
                                     value : ICustomError; }
 
@@ -38,8 +38,8 @@ export interface IEncryptedEvent { type: "encrypted-event-received";
 
 // Sent when a MediaKeys has been created (or is already created) for the
 // current content.
-// This is necessary before creating MediaKeySession which will allow encryption
-// keys to be communicated.
+// This is necessary before creating a MediaKeySession which will allow
+// encryption keys to be communicated.
 export interface ICreatedMediaKeysEvent { type: "created-media-keys";
                                           value: IMediaKeysInfos; }
 
@@ -57,18 +57,45 @@ export interface IAttachedMediaKeysEvent { type: "attached-media-keys";
 // through the usual license-fetching logic.
 // This is usually because the MediaKeySession for this encryption key has
 // already been created.
-export interface IAlreadyHandledInitDataEvent { type: "init-data-already-handled";
-                                                value: { type? : string;
-                                                         data : ArrayBuffer |
-                                                                Uint8Array; }; }
+export interface IInitDataIgnoredEvent { type: "init-data-ignored";
+                                         value : { type? : string;
+                                                   data : ArrayBuffer |
+                                                          Uint8Array; }; }
 
-// Emitted after a MediaKeySession has been "updated".
-// This include for example when a license is pushed, but can also be sent for
-// any kind of App->CDM communication.
+// Emitted when a "message" event is sent.
+// Those events generally allows the CDM to ask for data such as the license or
+// a server certificate.
+// As such, we will call the corresponding `getLicense` callback immediately
+// after this event is sent.
+//
+// Depending on the return of the getLicense call, we will then either emit a
+// "warning" event and retry the call (for when it failed but will be retried),
+// throw (when it failed with no retry left and no fallback policy is set), emit
+// a "blacklist-protection-data-event" (for when it failed with no retry left
+// but a fallback policy is set), emit a "session-updated" event (for when the
+// call resolved with some data) or emit a "no-update" event (for when the call
+// resolved with `null`).
+export interface ISessionMessageEvent { type: "session-message";
+                                        value : { messageType : string;
+                                                  initData : Uint8Array;
+                                                  initDataType? : string; }; }
+
+// Emitted when a `getLicense` call resolves with null.
+// In that case, we do not call `MediaKeySession.prototype.update` and no
+// `session-updated` event will be sent.
+export interface INoUpdateEvent { type : "no-update";
+                                  value : { initData : Uint8Array;
+                                            initDataType? : string; }; }
+
+// Emitted after the `MediaKeySession.prototype.update` function resolves.
+// This function is called when the `getLicense` callback resolves with a data
+// different than `null`.
 export interface ISessionUpdatedEvent { type: "session-updated";
                                         value: { session: MediaKeySession |
                                                           ICustomMediaKeySession;
-                                                 license: ILicense|null; }; }
+                                                 license: ILicense|null;
+                                                 initData : Uint8Array;
+                                                 initDataType? : string; }; }
 
 // Emitted when individual keys are considered undecipherable and are thus
 // blacklisted.
@@ -76,7 +103,7 @@ export interface ISessionUpdatedEvent { type: "session-updated";
 export interface IBlacklistKeysEvent { type : "blacklist-keys";
                                        value: ArrayBuffer[]; }
 
-// Emitted when specific "protection data" cannot be deciphered and are thus
+// Emitted when specific "protection data" cannot be deciphered and is thus
 // blacklisted.
 // The `data` and `type` value correspond respectively to the `initData` (which
 // can be, for example, a concatenation of PSSH boxes when pusing ISOBMFF
@@ -87,14 +114,16 @@ export interface IBlacklistProtectionDataEvent { type: "blacklist-protection-dat
                                                           data : Uint8Array; }; }
 
 // Every event sent by the EMEManager
-export type IEMEManagerEvent = IEMEWarningEvent |
-                               IEncryptedEvent |
+export type IEMEManagerEvent = IEMEWarningEvent | // minor error
+                               IEncryptedEvent | // browser's "encrypted" event
                                ICreatedMediaKeysEvent |
                                IAttachedMediaKeysEvent |
-                               IAlreadyHandledInitDataEvent |
-                               ISessionUpdatedEvent |
-                               IBlacklistKeysEvent |
-                               IBlacklistProtectionDataEvent;
+                               IInitDataIgnoredEvent | // initData already handled
+                               ISessionMessageEvent | // MediaKeySession event
+                               INoUpdateEvent | // `getLicense` returned `null`
+                               ISessionUpdatedEvent | // `update` call resolved
+                               IBlacklistKeysEvent | // keyIDs undecipherable
+                               IBlacklistProtectionDataEvent; // initData undecipherable
 
 export type ILicense = TypedArray |
                        ArrayBuffer;

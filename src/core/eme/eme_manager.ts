@@ -149,7 +149,7 @@ export default function EMEManager(
 
       if (handledInitData.get(initDataType, initData) === true) {
         log.debug("EME: Init data already received. Skipping it.");
-        return observableOf({ type: "init-data-already-handled" as const,
+        return observableOf({ type: "init-data-ignored" as const,
                               value: { type: initDataType, data: initData } });
       }
       handledInitData.set(initDataType, initData, true);
@@ -182,7 +182,7 @@ export default function EMEManager(
       switch (sessionInfosEvt.type) {
         case "warning":
         case "blacklist-protection-data":
-        case "init-data-already-handled":
+        case "init-data-ignored":
           return observableOf(sessionInfosEvt);
       }
       const { initData,
@@ -207,7 +207,9 @@ export default function EMEManager(
             }),
             ignoreElements());
 
-      return observableMerge(SessionEventsListener(mediaKeySession, keySystemOptions),
+      return observableMerge(SessionEventsListener(mediaKeySession,
+                                                   keySystemOptions,
+                                                   { initData, initDataType }),
                              generateRequest$)
         .pipe(catchError(err => {
           if (!(err instanceof BlacklistedSessionError)) {
