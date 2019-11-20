@@ -97,7 +97,10 @@ function findAdaptationIndex(
       new TimelineRepresentationIndex(segmentTemplate, context) :
       new TemplateRepresentationIndex(segmentTemplate, context);
   } else {
-    adaptationIndex = new BaseRepresentationIndex({}, context);
+    adaptationIndex = new BaseRepresentationIndex({
+      timeline: [],
+      timescale: 1, // set to 1 if no one was provided in the manifest
+    }, context);
   }
   return adaptationIndex;
 }
