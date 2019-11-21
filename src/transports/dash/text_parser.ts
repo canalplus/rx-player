@@ -21,20 +21,19 @@ import {
   getMDHDTimescale,
   getSegmentsFromSidx,
 } from "../../parsers/containers/isobmff";
+import BaseRepresentationIndex from "../../parsers/manifest/dash/indexes/base";
 import {
   bytesToStr,
   strToBytes,
 } from "../../utils/byte_parsing";
 import stringFromUTF8 from "../../utils/string_from_utf8";
-import isMP4EmbeddedTextTrack from "./is_mp4_embedded_text_track";
-import getISOBMFFTimingInfos from "./isobmff_timing_infos";
-
 import {
   ISegmentParserArguments,
   ITextParserObservable,
 } from "../types";
 import extractCompleteInitChunk from "./extract_complete_init_chunk";
-import BaseRepresentationIndex from "../../parsers/manifest/dash/indexes/base";
+import isMP4EmbeddedTextTrack from "./is_mp4_embedded_text_track";
+import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 
 /**
  * Parse TextTrack data.
