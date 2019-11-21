@@ -21,7 +21,6 @@ import {
   getMDHDTimescale,
   getSegmentsFromSidx,
 } from "../../parsers/containers/isobmff";
-import BaseRepresentationIndex from "../../parsers/manifest/dash/indexes/base";
 import {
   bytesToStr,
   strToBytes,
@@ -77,7 +76,7 @@ function parseMP4EmbeddedTrack({ response,
           sidxSegments.length === 0
         )
     ) {
-      if (!(representation.index instanceof BaseRepresentationIndex)) {
+      if (!shouldExtractCompleteInitChunk) {
         throw new Error("Can't extract complete init chunk and segment" +
                         "references from loaded data.");
       }
