@@ -58,6 +58,7 @@ interface IServerSyncInfos { serverTimestamp : number;
                              clientTime : number; }
 
 export interface ITransportOptions { aggressiveMode? : boolean;
+                                     checkMediaSegmentIntegrity? : boolean;
                                      manifestLoader? : CustomManifestLoader;
                                      segmentLoader? : CustomSegmentLoader;
                                      representationFilter? : IRepresentationFilter;

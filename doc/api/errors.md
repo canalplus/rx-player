@@ -287,4 +287,9 @@ An OtherError can have the following codes (``code`` property):
     or segment parsing logic failed. This is most likely due to a malformed
     Manifest or segment.
 
+  - ``"INTEGRITY_ERROR"``: An integrity-checking mechanism in the RxPlayer
+    detected that there was an error with some loaded data. Such mechanism can
+    be triggered for example when the `checkMediaSegmentIntegrity`
+    `transportOptions` is set to `loadVideo`.
+
   - ``"NONE"``: The error cannot be characterized.
