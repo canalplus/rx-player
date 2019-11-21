@@ -39,7 +39,7 @@ export default function initSegmentLoader(
   const mimeType = representation.getMimeTypeString();
   if (segment.privateInfos !== undefined &&
       segment.privateInfos.shouldGuessInitRange === true) {
-    if (/\/(mp4|webm)(\ ?);codecs=/.exec(mimeType) === null) {
+    if (/\/mp4(\ ?);codecs=/.exec(mimeType) === null) {
       return observableOf({
         type: "data-created" as const,
         value: {
