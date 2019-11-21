@@ -33,6 +33,8 @@ import {
   ISegmentParserArguments,
   ITextParserObservable,
 } from "../types";
+import extractCompleteInitChunk from "./extract_complete_init_chunk";
+import BaseRepresentationIndex from "../../parsers/manifest/dash/indexes/base";
 
 /**
  * Parse TextTrack data.
@@ -63,11 +65,38 @@ function parseMP4EmbeddedTrack({ response,
                                                                        0);
 
   if (isInit) {
-    const mdhdTimescale = getMDHDTimescale(chunkBytes);
-    const chunkInfos = mdhdTimescale > 0 ? { time: 0,
-                                             duration: 0,
-                                             timescale: mdhdTimescale } :
-                                           null;
+    const { privateInfos } = segment;
+    const shouldExtractCompleteInitChunk = privateInfos !== undefined &&
+                                           privateInfos.shouldGuessInitRange === true;
+
+    const completeInitChunk = shouldExtractCompleteInitChunk ?
+      extractCompleteInitChunk(chunkBytes) : chunkBytes;
+
+    if (completeInitChunk === null &&
+        (
+          sidxSegments === null ||
+          sidxSegments.length === 0
+        )
+    ) {
+      if (!(representation.index instanceof BaseRepresentationIndex)) {
+        throw new Error("Can't extract complete init chunk and segment" +
+                        "references from loaded data.");
+      }
+      representation.index._addSegments([{ time: 0,
+                                           duration: Number.MAX_VALUE,
+                                           timescale: 1 }]);
+    }
+
+    let mdhdTimescale = null;
+    if (completeInitChunk !== null) {
+      mdhdTimescale = getMDHDTimescale(completeInitChunk);
+    }
+
+    const chunkInfos = mdhdTimescale !== null &&
+      mdhdTimescale > 0 ? { time: 0,
+                            duration: 0,
+                            timescale: mdhdTimescale } :
+                          null;
     if (Array.isArray(sidxSegments) && sidxSegments.length > 0) {
       representation.index._addSegments(sidxSegments);
     }
@@ -224,6 +253,12 @@ export default function textTrackParser({ response,
   const { timestampOffset = 0 } = segment;
   const { data, isChunked } = response;
   if (data == null) { // No data, just return empty infos
+    const isStaticContent = segment.isInit && segment.range === undefined;
+    if (isStaticContent) {
+      representation.index._addSegments([{ time: 0,
+                                           duration: Number.MAX_VALUE,
+                                           timescale: 1 }]);
+    }
     return observableOf({ chunkData: null,
                           chunkInfos: null,
                           chunkOffset: timestampOffset,
