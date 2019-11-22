@@ -21,25 +21,36 @@ import {
 } from "../../parsers/containers/isobmff";
 import { getTimeCodeScale } from "../../parsers/containers/matroska";
 import takeFirstSet from "../../utils/take_first_set";
-import { ISegmentParserArguments } from "../types";
+import {
+  IAudioVideoParserObservable,
+  ISegmentParserArguments,
+} from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
 
 export default function segmentParser({
   content,
   response,
-  init,
-} : ISegmentParserArguments<ArrayBuffer | null>) {
+  initTimescale,
+} : ISegmentParserArguments<ArrayBuffer | null>
+) : IAudioVideoParserObservable {
   const { period, segment, representation } = content;
   const { data } = response;
-  const appendWindow : [ number | undefined,
-                         number | undefined ] = [period.start, period.end ];
-  if (data == null) {
-    return observableOf({ chunkData: null,
-                          chunkInfos: null,
-                          chunkOffset: 0,
-                          segmentProtections: [],
-                          appendWindow });
+  const appendWindow : [ number, number | undefined ] = [ period.start, period.end ];
+
+  if (data === null) {
+    if (segment.isInit) {
+      const _segmentProtections = representation.getProtectionsInitializationData();
+      return observableOf({ type: "parsed-init-segment",
+                            value: { initializationData: null,
+                                     segmentProtections: _segmentProtections,
+                                     initTimescale: undefined } });
+    }
+    return observableOf({ type: "parsed-segment",
+                          value: { chunkData: null,
+                                   chunkInfos: null,
+                                   chunkOffset: 0,
+                                   appendWindow } });
   }
 
   const chunkData = new Uint8Array(data);
@@ -55,33 +66,27 @@ export default function segmentParser({
     }
   }
 
-  const segmentProtections = representation.getProtectionsInitializationData();
-
   if (segment.isInit) {
     const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
                                getMDHDTimescale(chunkData);
-
-    const initChunkInfos = timescale != null && timescale > 0 ? { time: 0,
-                                                                  duration: 0,
-                                                                  timescale } :
-                                                                null;
-    return observableOf({ chunkData,
-                          chunkInfos: initChunkInfos,
-                          chunkOffset: takeFirstSet<number>(segment.timestampOffset,
-                                                            0),
-                          segmentProtections,
-                          appendWindow });
+    const segmentProtections = representation.getProtectionsInitializationData();
+    return observableOf({ type: "parsed-init-segment",
+                          value: { initializationData: chunkData,
+                                   initTimescale: timescale !== null && timescale > 0 ?
+                                     timescale :
+                                     undefined,
+                                   segmentProtections } });
   }
 
   const chunkInfos = isWEBM ? null : // TODO extract from webm
                               getISOBMFFTimingInfos(chunkData,
                                                     false,
                                                     segment,
-                                                    init);
+                                                    initTimescale);
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-  return observableOf({ chunkData,
-                        chunkInfos,
-                        chunkOffset,
-                        segmentProtections,
-                        appendWindow });
+  return observableOf({ type: "parsed-segment",
+                        value: { chunkData,
+                                 chunkInfos,
+                                 chunkOffset,
+                                 appendWindow } });
 }

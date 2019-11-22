@@ -40,9 +40,9 @@ import {
 function parseISOBMFFEmbeddedTextTrack(
   { response,
     content,
-    init } : ISegmentParserArguments< Uint8Array |
-                                      ArrayBuffer |
-                                      string >
+    initTimescale } : ISegmentParserArguments< Uint8Array |
+                                               ArrayBuffer |
+                                               string >
 ) : ITextParserObservable {
   const { period, segment } = content;
   const { data, isChunked } = response;
@@ -52,26 +52,26 @@ function parseISOBMFFEmbeddedTextTrack(
                                                   new Uint8Array(data);
   if (segment.isInit) {
     const mdhdTimescale = getMDHDTimescale(chunkBytes);
-    const initChunkInfos = mdhdTimescale > 0 ? { time: 0,
-                                                 duration: 0,
-                                                 timescale: mdhdTimescale } :
-                                               null;
-    return observableOf({ chunkData: null,
-                          chunkInfos: initChunkInfos,
-                          chunkOffset: takeFirstSet<number>(segment.timestampOffset, 0),
-                          segmentProtections: [],
-                          appendWindow: [period.start, period.end] });
+    return observableOf({ type: "parsed-init-segment",
+                          value: { initializationData: null,
+                                   initTimescale: mdhdTimescale > 0 ? mdhdTimescale :
+                                                                      undefined,
+                                   segmentProtections: [] } });
   }
-  const chunkInfos = getISOBMFFTimingInfos(chunkBytes, isChunked, segment, init);
+  const chunkInfos = getISOBMFFTimingInfos(chunkBytes,
+                                           isChunked,
+                                           segment,
+                                           initTimescale);
   const chunkData = getISOBMFFEmbeddedTextTrackData(content,
                                                     chunkBytes,
                                                     chunkInfos,
                                                     isChunked);
-  return observableOf({ chunkData,
-                        chunkInfos,
-                        chunkOffset: takeFirstSet<number>(segment.timestampOffset, 0),
-                        segmentProtections: [],
-                        appendWindow: [period.start, period.end] });
+  const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
+  return observableOf({ type: "parsed-segment",
+                        value: { chunkData,
+                                 chunkInfos,
+                                 chunkOffset,
+                                 appendWindow: [period.start, period.end] } });
 }
 
 /**
@@ -87,11 +87,10 @@ function parsePlainTextTrack(
 ) : ITextParserObservable {
   const { period, segment } = content;
   if (segment.isInit) {
-    return observableOf({ chunkData: null,
-                          chunkInfos: null,
-                          chunkOffset: takeFirstSet<number>(segment.timestampOffset, 0),
-                          segmentProtections: [],
-                          appendWindow: [period.start, period.end] });
+    return observableOf({ type: "parsed-init-segment",
+                          value: { initializationData: null,
+                                   initTimescale: undefined,
+                                   segmentProtections: [] } });
   }
 
   const { data, isChunked } = response;
@@ -104,11 +103,12 @@ function parsePlainTextTrack(
     textTrackData = data;
   }
   const chunkData = getPlainTextTrackData(content, textTrackData, isChunked);
-  return observableOf({ chunkData,
-                        chunkInfos: null,
-                        chunkOffset: takeFirstSet<number>(segment.timestampOffset, 0),
-                        segmentProtections: [],
-                        appendWindow: [period.start, period.end] });
+  const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
+  return observableOf({ type: "parsed-segment",
+                        value: { chunkData,
+                                 chunkInfos: null,
+                                 chunkOffset,
+                                 appendWindow: [period.start, period.end] } });
 }
 
 /**
@@ -119,26 +119,33 @@ function parsePlainTextTrack(
 export default function textTrackParser(
   { response,
     content,
-    init } : ISegmentParserArguments< Uint8Array |
+    initTimescale } : ISegmentParserArguments< Uint8Array |
                                       ArrayBuffer |
                                       string |
                                       null >
 ) : ITextParserObservable {
   const { period, representation, segment } = content;
   const { data, isChunked } = response;
-  if (data == null) { // No data, just return empty infos
-    return observableOf({ chunkData: null,
-                          chunkInfos: null,
-                          chunkOffset: takeFirstSet<number>(segment.timestampOffset, 0),
-                          segmentProtections: [],
-                          appendWindow: [period.start, period.end] });
+  if (data === null) { // No data, just return empty infos
+    if (segment.isInit) {
+      return observableOf({ type: "parsed-init-segment",
+                            value: { initializationData: null,
+                                     segmentProtections: [],
+                                     initTimescale: undefined } });
+    }
+    const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
+    return observableOf({ type: "parsed-segment",
+                          value: { chunkData: null,
+                                   chunkInfos: null,
+                                   chunkOffset,
+                                   appendWindow: [period.start, period.end] } });
   }
 
   const isMP4 = isMP4EmbeddedTextTrack(representation);
   if (isMP4) {
     return parseISOBMFFEmbeddedTextTrack({ response: { data, isChunked },
                                            content,
-                                           init });
+                                           initTimescale });
   } else {
     return parsePlainTextTrack({ response: { data, isChunked }, content });
   }
