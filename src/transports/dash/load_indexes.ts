@@ -17,12 +17,15 @@
 import {
   EMPTY,
   Observable,
+  of as observableOf
 } from "rxjs";
 import {
   filter,
   map,
   mergeMap,
 } from "rxjs/operators";
+import { IWarningEvent } from "../../core/init";
+import { IScheduleRequestResponse } from "../../core/pipelines/segment/segment_fetcher";
 import {
   getReferencesFromSidx,
   ISidxReference,
@@ -64,8 +67,9 @@ function requestArrayBufferResource(
  */
 export default function loadIndexes(indexesToLoad: ISidxReference[],
   content: IContent,
-  scheduleRequest?: <U>(request : () => Observable<U>) => Observable<U>
-  ): Observable<never> {
+  scheduleRequest?: <U>(request : () => Observable<U>) =>
+    Observable<IScheduleRequestResponse<U> | IWarningEvent>
+  ): Observable<IWarningEvent> {
   if (scheduleRequest == null) {
     throw new Error("Can't schedule request for loading indexes.");
   }
@@ -90,7 +94,11 @@ export default function loadIndexes(indexesToLoad: ISidxReference[],
   });
 
   return loadedRessource$.pipe(
-    mergeMap((loadedRessource) => {
+    mergeMap((evt) => {
+      if (evt.type === "warning") {
+        return observableOf(evt);
+      }
+      const loadedRessource = evt.value;
       const newSegments: ISidxReference[] = [];
       const newIndexes: ISidxReference[] = [];
       const {

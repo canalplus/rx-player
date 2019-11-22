@@ -16,8 +16,10 @@
 
 import {
   merge as observableMerge,
+  Observable,
   of as observableOf,
 } from "rxjs";
+import { IWarningEvent } from "../../core/init";
 import {
   getMDHDTimescale,
   getReferencesFromSidx,
@@ -33,7 +35,6 @@ import {
   IChunkTimingInfos,
   IContent,
   ISegmentParserArguments,
-  ISegmentParserObservable,
   ISegmentParserResponse,
 } from "../types";
 import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
@@ -146,7 +147,7 @@ export default function parser({ content,
                                  scheduleRequest } : ISegmentParserArguments<Uint8Array |
                                                                              ArrayBuffer |
                                                                              null >
-) : ISegmentParserObservable< Uint8Array | ArrayBuffer > {
+) : Observable<ISegmentParserResponse<Uint8Array | ArrayBuffer> | IWarningEvent> {
   const parsedSegmentsInfos = parseSegmentInfos(content, response, init);
 
   const { indexes, parserResponse } = parsedSegmentsInfos;

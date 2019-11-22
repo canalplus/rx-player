@@ -16,8 +16,6 @@
 
 import {
   concat as observableConcat,
-  EMPTY,
-  merge as observableMerge,
   Observable,
   of as observableOf,
   Subject,
@@ -26,12 +24,11 @@ import {
   catchError,
   filter,
   finalize,
-  map,
   mergeMap,
   share,
   tap,
 } from "rxjs/operators";
-import { formatError, ICustomError } from "../../../errors";
+import { formatError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
   IChunkTimingInfos,
@@ -45,6 +42,7 @@ import {
   IABRMetric,
   IABRRequest,
 } from "../../abr";
+import { IWarningEvent } from "../../init";
 import { IBufferType } from "../../source_buffers";
 import backoff from "../utils/backoff";
 import errorSelector from "../utils/error_selector";
@@ -60,7 +58,8 @@ export type ISegmentFetcherWarning = IPipelineLoaderWarning;
 
 export interface ISegmentFetcherChunkEvent<T> {
   type : "chunk";
-  parse : (init? : IChunkTimingInfos) => Observable<ISegmentParserResponse<T>>;
+  parse : (init? : IChunkTimingInfos) =>
+    Observable<ISegmentParserResponse<T> | IWarningEvent>;
 }
 
 export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete"; }
@@ -71,6 +70,11 @@ export type ISegmentFetcherEvent<T> = ISegmentFetcherChunkCompleteEvent |
 
 export type ISegmentFetcher<T> = (content : ISegmentLoaderArguments) =>
                                    Observable<ISegmentFetcherEvent<T>>;
+
+export interface IScheduleRequestResponse<U> {
+  type: "schedule-request-response";
+  value: U;
+}
 
 const generateRequestID = idGenerator();
 
@@ -91,7 +95,6 @@ export default function createSegmentFetcher<T>(
 ) : ISegmentFetcher<T> {
   const segmentLoader = createSegmentLoader(transport[bufferType].loader, options);
   const segmentParser = transport[bufferType].parser as any; // deal with it
-  const warning$ = new Subject<ICustomError>();
 
   /**
    * Allow the parser to schedule a new request.
@@ -99,7 +102,9 @@ export default function createSegmentFetcher<T>(
    * @param {Object} options
    * @returns {Function}
    */
-  function scheduleRequest<U>(request : () => Observable<U>) : Observable<U> {
+  function scheduleRequest<U>(
+    request : () => Observable<U>
+  ) : Observable<IScheduleRequestResponse<U> | IWarningEvent> {
     const backoffOptions = { baseDelay: options.initialBackoffDelay,
                              maxDelay: options.maximumBackoffDelay,
                              maxRetryRegular: options.maxRetry,
@@ -107,10 +112,16 @@ export default function createSegmentFetcher<T>(
     return backoff(tryCatch(request, undefined), backoffOptions).pipe(
       mergeMap(evt => {
         if (evt.type === "retry") {
-          warning$.next(errorSelector(evt.value));
-          return EMPTY;
+          const error = errorSelector(evt.value);
+          return observableOf({
+            type: "warning" as const,
+            value: error,
+          });
         }
-        return observableOf(evt.value);
+        return observableOf({
+          type: "schedule-request-response" as const,
+          value: evt.value,
+        });
       }),
       catchError((error : unknown) : Observable<never> => {
         throw errorSelector(error);
@@ -210,15 +221,16 @@ export default function createSegmentFetcher<T>(
            * @param {Object} [init]
            * @returns {Observable}
            */
-          parse(init? : IChunkTimingInfos) : Observable<ISegmentParserResponse<T>> {
+          parse(init? : IChunkTimingInfos) :
+            Observable<ISegmentParserResponse<T> | IWarningEvent> {
             const response = { data: evt.value.responseData, isChunked };
             /* tslint:disable no-unsafe-any */
             return segmentParser({ response, init, content, scheduleRequest })
             /* tslint:enable no-unsafe-any */
               .pipe(catchError((error: unknown) => {
-                throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
-                                           defaultReason: "Unknown parsing error" });
-              }));
+                  throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
+                                             defaultReason: "Unknown parsing error" });
+                  }));
           },
         };
 
@@ -228,17 +240,9 @@ export default function createSegmentFetcher<T>(
         return observableConcat(observableOf(data),
                                 observableOf({ type: "chunk-complete" as const }));
       }),
-      share(), // avoid multiple side effects if multiple subs
-      finalize(() => warning$.complete())
-    );
-    const warningEvent$ = warning$.pipe(
-      map((error) => ({
-        type: "warning" as const,
-        value: error,
-      }))
+      share() // avoid multiple side effects if multiple subs
     );
 
-    return observableMerge(segmentLoader$,
-                           warningEvent$);
+    return segmentLoader$;
   };
 }

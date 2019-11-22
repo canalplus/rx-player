@@ -25,6 +25,7 @@ import {
   map,
   mergeMap,
 } from "rxjs/operators";
+import { IWarningEvent } from "../../core/init";
 import features from "../../features";
 import Manifest, {
   IMetaPlaylistPrivateInfos,
@@ -263,6 +264,16 @@ export default function(options : ITransportOptions): ITransportPipelines {
              appendWindow: [offsetedWindowStart, offsetedWindowEnd] };
   }
 
+  /**
+   * Return true if e is warning event.
+   * @param {Error|Object} e
+   * @returns {void}
+   */
+  function isWarningEvent(e: unknown): e is IWarningEvent {
+    return (e as { type: "warning" }).type !== undefined &&
+           (e as { type: "warning" }).type === "warning" as const;
+  }
+
   const audioPipeline = {
     loader({ segment, period } : ISegmentLoaderArguments) {
       const { audio } = getTransportPipelinesFromSegment(segment);
@@ -279,10 +290,17 @@ export default function(options : ITransportOptions): ITransportPipelines {
                                                           segment.timescale);
       const { audio } = getTransportPipelinesFromSegment(segment);
       return audio.parser(getParserArguments(args, segment, contentStart))
-        .pipe(map(res => formatParserResponse(contentStart,
-                                              scaledOffset,
-                                              contentEnd,
-                                              res)));
+        .pipe(
+          map((evt) => {
+            if (isWarningEvent(evt)) {
+              return evt;
+            }
+            return formatParserResponse(contentStart,
+                                        scaledOffset,
+                                        contentEnd,
+                                        evt);
+          })
+        );
     },
   };
 
@@ -302,10 +320,17 @@ export default function(options : ITransportOptions): ITransportPipelines {
                                                           segment.timescale);
       const { video } = getTransportPipelinesFromSegment(segment);
       return video.parser(getParserArguments(args, segment, contentStart))
-        .pipe(map(res => formatParserResponse(contentStart,
-                                              scaledOffset,
-                                              contentEnd,
-                                              res)));
+      .pipe(
+        map((evt) => {
+          if (isWarningEvent(evt)) {
+            return evt;
+          }
+          return formatParserResponse(contentStart,
+                                      scaledOffset,
+                                      contentEnd,
+                                      evt);
+        })
+      );
     },
   };
 
@@ -324,10 +349,17 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
       const { text } = getTransportPipelinesFromSegment(segment);
       return text.parser(getParserArguments(args, segment, contentStart))
-        .pipe(map(res => formatParserResponse(contentStart,
-                                              scaledOffset,
-                                              contentEnd,
-                                              res)));
+      .pipe(
+        map((evt) => {
+          if (isWarningEvent(evt)) {
+            return evt;
+          }
+          return formatParserResponse(contentStart,
+                                      scaledOffset,
+                                      contentEnd,
+                                      evt);
+        })
+      );
     },
   };
 

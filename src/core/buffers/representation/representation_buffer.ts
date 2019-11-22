@@ -58,6 +58,7 @@ import Manifest, {
   Representation,
 } from "../../../manifest";
 import SimpleSet from "../../../utils/simple_set";
+import { IWarningEvent } from "../../init";
 import {
   IPrioritizedSegmentFetcher,
   ISegmentFetcherEvent,
@@ -87,6 +88,11 @@ export interface IRepresentationBufferClockTick {
   stalled : object|null; // if set, the player is currently stalled
   wantedTimeOffset : number; // offset in s to add to currentTime to obtain the
                              // position we actually want to download from
+}
+
+function isParsingWarningEvent(e: unknown): e is IWarningEvent {
+  return (e as { type: "warning" }).type !== undefined &&
+         (e as { type: "warning" }).type === "warning" as const;
 }
 
 // Arguments to give to the RepresentationBuffer
@@ -406,9 +412,9 @@ export default function RepresentationBuffer<T>({
    * error).
    * @returns {Observable}
    */
-  function loadSegmentsFromQueue() : Observable<ISegmentLoadingEvent<T>> {
+  function loadSegmentsFromQueue() : Observable<ISegmentLoadingEvent<T>|IWarningEvent> {
     const requestNextSegment$ =
-      observableDefer(() : Observable<ISegmentLoadingEvent<T>> => {
+      observableDefer(() : Observable<ISegmentLoadingEvent<T>|IWarningEvent> => {
         const currentNeededSegment = downloadQueue.shift();
         if (currentNeededSegment == null) {
           nextTick(() => { reCheckNeededSegments$.next(); });
@@ -421,7 +427,7 @@ export default function RepresentationBuffer<T>({
 
         currentSegmentRequest = { segment, priority, request$ };
         const response$ = request$
-          .pipe(mergeMap((evt) : Observable<ISegmentLoadingEvent<T>> => {
+          .pipe(mergeMap((evt) : Observable<ISegmentLoadingEvent<T>|IWarningEvent> => {
             if (evt.type === "warning") {
               return observableOf({ type: "retry" as const,
                                     value: { segment,
@@ -436,10 +442,15 @@ export default function RepresentationBuffer<T>({
             if (initSegmentObject != null && initSegmentObject.chunkInfos != null) {
               initInfos = initSegmentObject.chunkInfos;
             }
-            return evt.parse(initInfos).pipe(map(data => {
-              return { type: "parsed-segment" as const,
-                       value: { segment, data } };
-            }));
+            return evt.parse(initInfos).pipe(
+              map(data => {
+                if (isParsingWarningEvent(data)) {
+                  return data;
+                }
+                return { type: "parsed-segment" as const,
+                         value: { segment, data } };
+              })
+            );
           }));
 
         return observableConcat(response$, requestNextSegment$);
@@ -455,13 +466,15 @@ export default function RepresentationBuffer<T>({
    * @returns {Observable}
    */
   function onLoaderEvent(
-    evt : ISegmentLoadingEvent<T>
+    evt : ISegmentLoadingEvent<T>|IWarningEvent
   ) : Observable<IBufferEventAddedSegment<T> |
                  ISegmentFetcherWarning |
                  IProtectedSegmentEvent |
                  IBufferManifestMightBeOutOfSync>
   {
     switch (evt.type) {
+      case "warning":
+        return observableOf(evt);
       case "retry":
         return observableConcat(
           observableOf({ type: "warning" as const, value: evt.value.error }),

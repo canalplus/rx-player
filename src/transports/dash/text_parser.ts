@@ -16,8 +16,10 @@
 
 import {
   merge as observableMerge,
+  Observable,
   of as observableOf,
 } from "rxjs";
+import { IWarningEvent } from "../../core/init";
 import log from "../../log";
 import {
   getMDAT,
@@ -239,7 +241,7 @@ export default function textTrackParser({ response,
                                                                      ArrayBuffer |
                                                                      string |
                                                                      null >
-) : ITextParserObservable {
+) : Observable<ITextParserResponse|IWarningEvent> {
   const { period, representation, segment } = content;
   const { timestampOffset = 0 } = segment;
   const { data, isChunked } = response;

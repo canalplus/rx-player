@@ -18,6 +18,8 @@ import {
   Observable,
   Observer,
 } from "rxjs";
+import { IWarningEvent } from "../core/init";
+import { IScheduleRequestResponse } from "../core/pipelines/segment/segment_fetcher";
 import Manifest, {
   Adaptation,
   IRepresentationFilter,
@@ -175,7 +177,8 @@ export interface ISegmentParserArguments<T> {
   init? : IChunkTimingInfos; // Infos about the initialization segment of the
                              // corresponding Representation
   content : IContent;
-  scheduleRequest?: <U>(request : () => Observable<U>) => Observable<U>;
+  scheduleRequest?: <U>(request : () => Observable<U>) =>
+    Observable<IScheduleRequestResponse<U> | IWarningEvent>;
 }
 
 // -- response
@@ -247,10 +250,11 @@ export interface IImageTrackSegmentData {
 export type IImageParserResponse =
   ISegmentParserResponse< IImageTrackSegmentData >;
 
-export type ISegmentParserObservable<T> = Observable<ISegmentParserResponse<T>>;
-export type IVideoParserObservable = Observable<IVideoParserResponse>;
-export type IAudioParserObservable = Observable<IAudioParserResponse>;
-export type ITextParserObservable = Observable<ITextParserResponse>;
+export type ISegmentParserObservable<T> =
+  Observable<ISegmentParserResponse<T> | IWarningEvent>;
+export type IVideoParserObservable = Observable<IVideoParserResponse | IWarningEvent>;
+export type IAudioParserObservable = Observable<IAudioParserResponse | IWarningEvent>;
+export type ITextParserObservable = Observable<ITextParserResponse | IWarningEvent>;
 export type IImageParserObservable = Observable<IImageParserResponse>;
 
 // TODO Remove resolver
