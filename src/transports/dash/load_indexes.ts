@@ -21,7 +21,6 @@ import {
   of as observableOf,
 } from "rxjs";
 import {
-  filter,
   map,
   mergeMap,
 } from "rxjs/operators";
@@ -49,16 +48,13 @@ function requestArrayBufferResource(
   range? : [number, number]
 ) : Observable<ILoaderDataLoadedValue<ArrayBuffer>> {
   let headers = {};
-  if (range !== undefined && range.length > 0) {
+  if (range !== undefined) {
     headers = { Range: byteRange(range) };
   }
   return request({ url,
                    responseType: "arraybuffer",
                    headers })
-  .pipe(
-    filter((e) => e.type === "data-loaded"),
-    map((e) => e.value)
-  );
+  .pipe(map((e) => e.value));
 }
 
 /**
