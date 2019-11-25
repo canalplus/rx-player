@@ -150,7 +150,7 @@ function getReferencesFromSidx(
     /* sap..(32) */
     const refChunk = be4toi(buf, pos);
     pos += 4;
-    const refType: number = (refChunk & 0x80000000) >>> 31;
+    const refType = (refChunk & 0x80000000) >>> 31;
     const refSize = (refChunk & 0x7FFFFFFF);
     if (refType !== 1 && refType !== 0) {
       throw new Error("Sidx with wrong reference_type.");

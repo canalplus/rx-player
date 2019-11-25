@@ -228,9 +228,9 @@ export default function createSegmentFetcher<T>(
             return segmentParser({ response, init, content, scheduleRequest })
             /* tslint:enable no-unsafe-any */
               .pipe(catchError((error: unknown) => {
-                  throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
-                                             defaultReason: "Unknown parsing error" });
-                  }));
+                throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
+                                           defaultReason: "Unknown parsing error" });
+              }));
           },
         };
 
