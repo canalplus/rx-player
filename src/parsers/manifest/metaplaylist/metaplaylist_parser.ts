@@ -168,9 +168,16 @@ function createManifest(
   const isLive = mplData.dynamic === true;
   let duration : number|undefined = 0;
 
+  let firstStart: number|null = null;
+  let lastEnd: number|null = null;
+
   const periods : IParsedPeriod[] = [];
   for (let iMan = 0; iMan < contents.length; iMan++) {
     const content = contents[iMan];
+    firstStart = firstStart !== null ? Math.min(firstStart, content.startTime) :
+                                       content.startTime;
+    lastEnd = lastEnd !== null ? Math.max(lastEnd, content.endTime) :
+                                 content.endTime;
     const currentManifest = manifests[iMan];
     if (currentManifest.periods.length <= 0) {
       continue;
@@ -288,12 +295,10 @@ function createManifest(
     periods.push(...manifestPeriods);
 
     if (!isLive && duration != null) {
-      const currentDuration = currentManifest.getDuration();
-      if (currentDuration == null) {
-        duration = undefined;
-      } else {
-        duration += currentDuration;
+      if (lastEnd === null || firstStart === null) {
+        throw new Error("MPL Parser: can't define duration of manifest.");
       }
+      duration = lastEnd - firstStart;
     }
   }
 
