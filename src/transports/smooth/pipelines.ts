@@ -172,11 +172,12 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       const { segment, representation, adaptation, manifest } = content;
       const { data, isChunked } = response;
       if (data == null) {
-        return observableOf({ chunkData: null,
-                              chunkInfos: null,
-                              chunkOffset: 0,
-                              segmentProtections: [],
-                              appendWindow: [undefined, undefined] });
+        return observableOf({ type: "parser-response",
+                              value: { chunkData: null,
+                                       chunkInfos: null,
+                                       chunkOffset: 0,
+                                       segmentProtections: [],
+                                       appendWindow: [undefined, undefined] } });
       }
 
       const responseBuffer = data instanceof Uint8Array ? data :
@@ -188,7 +189,6 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         const initSegmentInfos = { timescale: segment.timescale,
                                    time: 0,
                                    duration: 0 };
-
         const psshInfo = takePSSHOut(responseBuffer);
         if (psshInfo.length > 0) {
           for (let i = 0; i < psshInfo.length; i++) {
@@ -198,11 +198,12 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         }
 
         const segmentProtections = representation.getProtectionsInitializationData();
-        return observableOf({ chunkData: data,
-                              chunkInfos: initSegmentInfos,
-                              chunkOffset: 0,
-                              segmentProtections,
-                              appendWindow: [undefined, undefined] });
+        return observableOf({ type: "parser-response",
+                              value: { chunkData: data,
+                                       chunkInfos: initSegmentInfos,
+                                       chunkOffset: 0,
+                                       segmentProtections,
+                                       appendWindow: [undefined, undefined] } });
       }
 
       const { nextSegments, chunkInfos } = extractTimingsInfos(responseBuffer,
@@ -216,11 +217,12 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       if (nextSegments.length > 0) {
         addNextSegments(adaptation, nextSegments, chunkInfos);
       }
-      return observableOf({ chunkData,
-                            chunkInfos,
-                            chunkOffset: 0,
-                            segmentProtections: [],
-                            appendWindow: [undefined, undefined] });
+      return observableOf({ type: "parser-response",
+                            value: { chunkData,
+                                     chunkInfos,
+                                     chunkOffset: 0,
+                                     segmentProtections: [],
+                                     appendWindow: [undefined, undefined] } });
     },
   };
 
@@ -261,11 +263,12 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       const { mimeType = "", codec = "" } = representation;
       const { data, isChunked } = response;
       if (segment.isInit || data == null) {
-        return observableOf({ chunkData: null,
-                              chunkInfos: null,
-                              chunkOffset: 0,
-                              segmentProtections: [],
-                              appendWindow: [undefined, undefined] });
+        return observableOf({ type: "parser-response",
+                              value: { chunkData: null,
+                                       chunkInfos: null,
+                                       chunkOffset: 0,
+                                       segmentProtections: [],
+                                       appendWindow: [undefined, undefined] } });
       }
 
       let nextSegments;
@@ -370,17 +373,19 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         addNextSegments(adaptation, nextSegments, chunkInfos);
       }
 
-      return observableOf({ chunkData: { type: _sdType,
-                                         data: _sdData,
-                                         language,
-                                         timescale: _sdTimescale,
-                                         start: _sdStart,
-                                         end: _sdEnd },
-                            chunkInfos,
-                            chunkOffset: _sdStart == null ? 0 :
-                                                            _sdStart / _sdTimescale,
-                            segmentProtections: [],
-                            appendWindow: [undefined, undefined] });
+      return observableOf({ type: "parser-response",
+                            value: { chunkData: { type: _sdType,
+                                                  data: _sdData,
+                                                  language,
+                                                  timescale: _sdTimescale,
+                                                  start: _sdStart,
+                                                  end: _sdEnd },
+                                     chunkInfos,
+                                     chunkOffset:
+                                      _sdStart == null ? 0 :
+                                                         _sdStart / _sdTimescale,
+                                     segmentProtections: [],
+                                     appendWindow: [undefined, undefined] } });
     },
   };
 
@@ -410,26 +415,28 @@ export default function(options : ITransportOptions) : ITransportPipelines {
 
       // TODO image Parsing should be more on the sourceBuffer side, no?
       if (data === null || features.imageParser == null) {
-        return observableOf({ chunkData: null,
-                              chunkInfos: null,
-                              chunkOffset: 0,
-                              segmentProtections: [],
-                              appendWindow: [undefined, undefined] });
+        return observableOf({ type: "parser-response",
+                              value: { chunkData: null,
+                                       chunkInfos: null,
+                                       chunkOffset: 0,
+                                       segmentProtections: [],
+                                       appendWindow: [undefined, undefined] } });
       }
 
       const bifObject = features.imageParser(new Uint8Array(data));
       const thumbsData = bifObject.thumbs;
-      return observableOf({ chunkData: { data: thumbsData,
-                                           start: 0,
-                                           end: Number.MAX_VALUE,
-                                           timescale: 1,
-                                           type: "bif" },
+      return observableOf({ type: "parser-response",
+                            value: { chunkData: { data: thumbsData,
+                                                  start: 0,
+                                                  end: Number.MAX_VALUE,
+                                                  timescale: 1,
+                                                  type: "bif" },
                             chunkInfos: { time: 0,
                                             duration: Number.MAX_VALUE,
                                             timescale: bifObject.timescale },
                             chunkOffset: 0,
                             segmentProtections: [],
-                            appendWindow: [undefined, undefined] });
+                            appendWindow: [undefined, undefined] } });
     },
   };
 

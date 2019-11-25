@@ -90,11 +90,6 @@ export interface IRepresentationBufferClockTick {
                              // position we actually want to download from
 }
 
-function isParsingWarningEvent(e: unknown): e is IWarningEvent {
-  return (e as { type: "warning" }).type !== undefined &&
-         (e as { type: "warning" }).type === "warning" as const;
-}
-
 // Arguments to give to the RepresentationBuffer
 // @see RepresentationBuffer for documentation
 export interface IRepresentationBufferArguments<T> {
@@ -443,12 +438,12 @@ export default function RepresentationBuffer<T>({
               initInfos = initSegmentObject.chunkInfos;
             }
             return evt.parse(initInfos).pipe(
-              map(data => {
-                if (isParsingWarningEvent(data)) {
-                  return data;
+              map(event => {
+                if (event.type === "warning") {
+                  return event;
                 }
                 return { type: "parsed-segment" as const,
-                         value: { segment, data } };
+                         value: { segment, data: event.value } };
               })
             );
           }));

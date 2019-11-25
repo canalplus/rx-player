@@ -33,7 +33,7 @@ import { ISegment } from "../../../manifest";
 import {
   IChunkTimingInfos,
   ISegmentLoaderArguments,
-  ISegmentParserResponse,
+  ISegmentParserResponseEvent,
   ITransportPipelines,
 } from "../../../transports";
 import idGenerator from "../../../utils/id_generator";
@@ -59,7 +59,7 @@ export type ISegmentFetcherWarning = IPipelineLoaderWarning;
 export interface ISegmentFetcherChunkEvent<T> {
   type : "chunk";
   parse : (init? : IChunkTimingInfos) =>
-    Observable<ISegmentParserResponse<T> | IWarningEvent>;
+    Observable<ISegmentParserResponseEvent<T> | IWarningEvent>;
 }
 
 export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete"; }
@@ -222,7 +222,7 @@ export default function createSegmentFetcher<T>(
            * @returns {Observable}
            */
           parse(init? : IChunkTimingInfos) :
-            Observable<ISegmentParserResponse<T> | IWarningEvent> {
+            Observable<ISegmentParserResponseEvent<T> | IWarningEvent> {
             const response = { data: evt.value.responseData, isChunked };
             /* tslint:disable no-unsafe-any */
             return segmentParser({ response, init, content, scheduleRequest })

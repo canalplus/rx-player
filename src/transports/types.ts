@@ -217,13 +217,18 @@ export interface ISegmentParserResponse<T> {
                                          // will be ignored)
 }
 
+export interface ISegmentParserResponseEvent<T> {
+  type: "parser-response";
+  value: ISegmentParserResponse<T>;
+}
+
 // Response object returned by the video's segment parser
 export type IVideoParserResponse =
-  ISegmentParserResponse< Uint8Array | ArrayBuffer >;
+  ISegmentParserResponseEvent< Uint8Array | ArrayBuffer >;
 
 // Response object returned by the audio's segment parser
 export type IAudioParserResponse =
-  ISegmentParserResponse< Uint8Array | ArrayBuffer >;
+  ISegmentParserResponseEvent< Uint8Array | ArrayBuffer >;
 
 export interface ITextTrackSegmentData {
   data : string; // text track data
@@ -236,7 +241,7 @@ export interface ITextTrackSegmentData {
 
 // Response object returned by the text's segment parser
 export type ITextParserResponse =
-  ISegmentParserResponse< ITextTrackSegmentData >;
+  ISegmentParserResponseEvent< ITextTrackSegmentData >;
 
 export interface IImageTrackSegmentData {
   data : IBifThumbnail[]; // image track data, in the given type
@@ -248,10 +253,10 @@ export interface IImageTrackSegmentData {
 
 // Response object returned by the image's segment parser
 export type IImageParserResponse =
-  ISegmentParserResponse< IImageTrackSegmentData >;
+  ISegmentParserResponseEvent< IImageTrackSegmentData >;
 
 export type ISegmentParserObservable<T> =
-  Observable<ISegmentParserResponse<T> | IWarningEvent>;
+  Observable<ISegmentParserResponseEvent<T> | IWarningEvent>;
 export type IVideoParserObservable = Observable<IVideoParserResponse | IWarningEvent>;
 export type IAudioParserObservable = Observable<IAudioParserResponse | IWarningEvent>;
 export type ITextParserObservable = Observable<ITextParserResponse | IWarningEvent>;

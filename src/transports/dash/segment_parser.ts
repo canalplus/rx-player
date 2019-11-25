@@ -35,7 +35,7 @@ import {
   IChunkTimingInfos,
   IContent,
   ISegmentParserArguments,
-  ISegmentParserResponse,
+  ISegmentParserResponseEvent,
 } from "../types";
 import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
@@ -52,18 +52,19 @@ function parseSegmentInfos(content: IContent,
                            response: { data: ArrayBuffer|Uint8Array|null;
                                        isChunked : boolean; },
                            init?: IChunkTimingInfos
-): { parserResponse : ISegmentParserResponse<Uint8Array |
-                                             ArrayBuffer>;
+): { parserResponse : ISegmentParserResponseEvent<Uint8Array |
+                                                  ArrayBuffer>;
      indexes?: ISidxReference[]; } {
   const { period, representation, segment } = content;
   const { data, isChunked } = response;
   if (data == null) {
     return {
-      parserResponse: { chunkData: null,
-        chunkInfos: null,
-        chunkOffset: 0,
-        segmentProtections: [],
-        appendWindow: [period.start, period.end] },
+      parserResponse: { type: "parser-response" as const,
+                        value: { chunkData: null,
+                                 chunkInfos: null,
+                                 chunkOffset: 0,
+                                 segmentProtections: [],
+                                 appendWindow: [period.start, period.end] } },
     };
   }
 
@@ -98,11 +99,12 @@ function parseSegmentInfos(content: IContent,
                                                           segment,
                                                           init);
     const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-    return { parserResponse: { chunkData,
-                               chunkInfos: initChunkInfos,
-                               chunkOffset,
-                               segmentProtections: [],
-                               appendWindow: [period.start, period.end] },
+    return { parserResponse: { type: "parser-response" as const,
+                               value: { chunkData,
+                                        chunkInfos: initChunkInfos,
+                                        chunkOffset,
+                                        segmentProtections: [],
+                                        appendWindow: [period.start, period.end] } },
              indexes };
   }
 
@@ -132,12 +134,13 @@ function parseSegmentInfos(content: IContent,
     }
 
   const segmentProtections = representation.getProtectionsInitializationData();
-  return { parserResponse: { chunkData,
-                             chunkInfos,
-                             chunkOffset:
-                               takeFirstSet<number>(segment.timestampOffset, 0),
-                             segmentProtections,
-                             appendWindow },
+  return { parserResponse: { type: "parser-response" as const,
+                              value: { chunkData,
+                                       chunkInfos,
+                                       chunkOffset:
+                                         takeFirstSet<number>(segment.timestampOffset, 0),
+                                       segmentProtections,
+                                       appendWindow } },
            indexes };
 }
 
@@ -147,7 +150,7 @@ export default function parser({ content,
                                  scheduleRequest } : ISegmentParserArguments<Uint8Array |
                                                                              ArrayBuffer |
                                                                              null >
-) : Observable<ISegmentParserResponse<Uint8Array | ArrayBuffer> | IWarningEvent> {
+) : Observable<ISegmentParserResponseEvent<Uint8Array | ArrayBuffer> | IWarningEvent> {
   const parsedSegmentsInfos = parseSegmentInfos(content, response, init);
 
   const { indexes, parserResponse } = parsedSegmentsInfos;

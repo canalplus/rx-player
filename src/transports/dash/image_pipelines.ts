@@ -59,30 +59,35 @@ export function imageParser(
 
   // TODO image Parsing should be more on the sourceBuffer side, no?
   if (data === null || features.imageParser == null) {
-    return observableOf({ chunkData: null,
-                          chunkInfos: segment.timescale > 0 ?
-                            { duration: segment.isInit ? 0 : segment.duration,
-                              time: segment.isInit ? -1 : segment.time,
-                              timescale: segment.timescale } :
-                            null,
-                          chunkOffset: takeFirstSet<number>(segment.timestampOffset,
-                                                            0),
-                          segmentProtections: [],
-                          appendWindow: [period.start, period.end] });
+    return observableOf({ type: "parser-response",
+                          value: { chunkData: null,
+                                   chunkInfos: segment.timescale > 0 ?
+                                     { duration: segment.isInit ? 0 : segment.duration,
+                                       time: segment.isInit ? -1 : segment.time,
+                                       timescale: segment.timescale } :
+                                     null,
+                                   chunkOffset:
+                                    takeFirstSet<number>(segment.timestampOffset,
+                                                         0),
+                                   segmentProtections: [],
+
+                                   appendWindow: [period.start, period.end] } });
   }
 
   const bifObject = features.imageParser(new Uint8Array(data));
   const thumbsData = bifObject.thumbs;
-  return observableOf({ chunkData: { data: thumbsData,
-                                       start: 0,
-                                       end: Number.MAX_VALUE,
-                                       timescale: 1,
-                                       type: "bif" },
-                        chunkInfos: { time: 0,
-                                        duration: Number.MAX_VALUE,
-                                        timescale: bifObject.timescale },
-                        chunkOffset: takeFirstSet<number>(segment.timestampOffset,
-                                                          0),
-                        segmentProtections: [],
-                        appendWindow: [period.start, period.end] });
+  return observableOf({ type: "parser-response",
+                        value: { chunkData: { data: thumbsData,
+                                   start: 0,
+                                   end: Number.MAX_VALUE,
+                                   timescale: 1,
+                                   type: "bif" },
+                                 chunkInfos: { time: 0,
+                                                 duration: Number.MAX_VALUE,
+                                                 timescale: bifObject.timescale },
+                                 chunkOffset:
+                                  takeFirstSet<number>(segment.timestampOffset,
+                                                       0),
+                                 segmentProtections: [],
+                                 appendWindow: [period.start, period.end] } });
 }

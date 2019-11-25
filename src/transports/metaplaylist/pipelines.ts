@@ -25,7 +25,6 @@ import {
   map,
   mergeMap,
 } from "rxjs/operators";
-import { IWarningEvent } from "../../core/init";
 import features from "../../features";
 import Manifest, {
   IMetaPlaylistPrivateInfos,
@@ -37,6 +36,7 @@ import parseMetaPlaylist, {
 import { IParsedManifest } from "../../parsers/manifest/types";
 import {
   IImageParserObservable,
+  IImageParserResponse,
   ILoaderDataLoaded,
   ILoaderDataLoadedValue,
   IManifestParserArguments,
@@ -264,16 +264,6 @@ export default function(options : ITransportOptions): ITransportPipelines {
              appendWindow: [offsetedWindowStart, offsetedWindowEnd] };
   }
 
-  /**
-   * Return true if e is warning event.
-   * @param {Error|Object} e
-   * @returns {void}
-   */
-  function isWarningEvent(e: unknown): e is IWarningEvent {
-    return (e as { type: "warning" }).type !== undefined &&
-           (e as { type: "warning" }).type === "warning" as const;
-  }
-
   const audioPipeline = {
     loader({ segment, period } : ISegmentLoaderArguments) {
       const { audio } = getTransportPipelinesFromSegment(segment);
@@ -292,13 +282,15 @@ export default function(options : ITransportOptions): ITransportPipelines {
       return audio.parser(getParserArguments(args, segment, contentStart))
         .pipe(
           map((evt) => {
-            if (isWarningEvent(evt)) {
+            if (evt.type === "warning") {
               return evt;
             }
-            return formatParserResponse(contentStart,
-                                        scaledOffset,
-                                        contentEnd,
-                                        evt);
+            const formattedResponse = formatParserResponse(contentStart,
+                                                           scaledOffset,
+                                                           contentEnd,
+                                                           evt.value);
+            return { type: "parser-response" as const,
+                     value: formattedResponse };
           })
         );
     },
@@ -322,13 +314,15 @@ export default function(options : ITransportOptions): ITransportPipelines {
       return video.parser(getParserArguments(args, segment, contentStart))
       .pipe(
         map((evt) => {
-          if (isWarningEvent(evt)) {
+          if (evt.type === "warning") {
             return evt;
           }
-          return formatParserResponse(contentStart,
-                                      scaledOffset,
-                                      contentEnd,
-                                      evt);
+          const formattedResponse = formatParserResponse(contentStart,
+                                                         scaledOffset,
+                                                         contentEnd,
+                                                         evt.value);
+          return { type: "parser-response" as const,
+                   value: formattedResponse };
         })
       );
     },
@@ -351,13 +345,15 @@ export default function(options : ITransportOptions): ITransportPipelines {
       return text.parser(getParserArguments(args, segment, contentStart))
       .pipe(
         map((evt) => {
-          if (isWarningEvent(evt)) {
+          if (evt.type === "warning") {
             return evt;
           }
-          return formatParserResponse(contentStart,
-                                      scaledOffset,
-                                      contentEnd,
-                                      evt);
+          const formattedResponse = formatParserResponse(contentStart,
+                                                         scaledOffset,
+                                                         contentEnd,
+                                                         evt.value);
+          return { type: "parser-response" as const,
+                   value: formattedResponse };
         })
       );
     },
@@ -380,10 +376,16 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
       const { image } = getTransportPipelinesFromSegment(segment);
       return image.parser(getParserArguments(args, segment, contentStart))
-        .pipe(map(res => formatParserResponse(contentStart,
-                                              scaledOffset,
-                                              contentEnd,
-                                              res)));
+        .pipe(
+          filter((res): res is IImageParserResponse => res.type === "parser-response"),
+          map((res: IImageParserResponse) => {
+            const formattedResponse = formatParserResponse(contentStart,
+                                                           scaledOffset,
+                                                           contentEnd,
+                                                           res.value);
+            return { type: "parser-response" as const,
+                     value: formattedResponse };
+          }));
     },
   };
 
