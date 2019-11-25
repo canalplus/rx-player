@@ -16,8 +16,9 @@
 
 import {
   EMPTY,
+  merge as observableMerge,
   Observable,
-  of as observableOf
+  of as observableOf,
 } from "rxjs";
 import {
   filter,
@@ -74,26 +75,24 @@ export default function loadIndexes(indexesToLoad: ISidxReference[],
     throw new Error("Can't schedule request for loading indexes.");
   }
 
-  const range: [number, number] =
-    [indexesToLoad[0].range[0],
-    indexesToLoad[indexesToLoad.length - 1].range[1]];
-
   const url = content.segment.mediaURL;
   if (url === null) {
     throw new Error("No URL for loading indexes.");
   }
-  const loadedRessource$ = scheduleRequest(() => {
-    return requestArrayBufferResource(url, range).pipe(
-      map((r) => {
-        return {
-          response: r,
-          ranges: indexesToLoad.map(({ range: _r }) => _r),
-        };
-      })
-    );
+  const loadedRessources$ = indexesToLoad.map(({ range }) => {
+    return scheduleRequest(() => {
+      return requestArrayBufferResource(url, range).pipe(
+        map((r) => {
+          return {
+            response: r,
+            range,
+          };
+        })
+      );
+    });
   });
 
-  return loadedRessource$.pipe(
+  return observableMerge(...loadedRessources$).pipe(
     mergeMap((evt) => {
       if (evt.type === "warning") {
         return observableOf(evt);
@@ -103,26 +102,20 @@ export default function loadIndexes(indexesToLoad: ISidxReference[],
       const newIndexes: ISidxReference[] = [];
       const {
         response: { responseData },
-        ranges,
+        range,
       } = loadedRessource;
       if (responseData !== undefined) {
-        const data = new Uint8Array(responseData);
-        let totalLen = 0;
-        for (let i = 0; i < ranges.length; i++) {
-          const length = ranges[i][1] - ranges[i][0] + 1;
-          const sidxBox = data.subarray(totalLen, totalLen + length);
-          const initialOffset = ranges[i][0];
-          const referencesFromSidx = getReferencesFromSidx(sidxBox, initialOffset);
-          if (referencesFromSidx !== null) {
-            const [indexReferences, segmentReferences] = referencesFromSidx;
-            segmentReferences.forEach((segment) => {
-              newSegments.push(segment);
-            });
-            indexReferences.forEach((index) => {
-              newIndexes.push(index);
-            });
-          }
-          totalLen += length;
+        const sidxBox = new Uint8Array(responseData);
+        const initialOffset = range[0];
+        const referencesFromSidx = getReferencesFromSidx(sidxBox, initialOffset);
+        if (referencesFromSidx !== null) {
+          const [indexReferences, segmentReferences] = referencesFromSidx;
+          segmentReferences.forEach((segment) => {
+            newSegments.push(segment);
+          });
+          indexReferences.forEach((index) => {
+            newIndexes.push(index);
+          });
         }
       }
 
