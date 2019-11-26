@@ -88,7 +88,7 @@ export interface ISidxReference {
  * @returns {Array.<Object>|null}
  *
  * Returns a tuple of : index reference infos and segment reference infos,
- * this informations containing this keys :
+ * this information containing this keys :
  *   - time {Number}: starting _presentation time_ for a subsegment,
  *     timescaled
  *   - duration {Number}: duration of a subsegment, or of every subsegments described
