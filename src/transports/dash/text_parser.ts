@@ -19,12 +19,12 @@ import {
   Observable,
   of as observableOf,
 } from "rxjs";
+import { IScheduleRequestResponse } from "../../core/pipelines/segment/segment_fetcher";
 import log from "../../log";
 import {
   getMDAT,
   getMDHDTimescale,
   getReferencesFromSidx,
-  ISidxReference,
 } from "../../parsers/containers/isobmff";
 import {
   bytesToStr,
@@ -45,16 +45,18 @@ import loadIndexes from "./load_indexes";
 /**
  * Parse TextTrack data.
  * @param {Object} infos
+ * @param {function|undefined} scheduleRequest
  * @returns {Observable.<Object>}
  */
 function parseMP4EmbeddedTrack({ response,
                                  content,
                                  init } : ISegmentParserArguments< Uint8Array |
                                                                    ArrayBuffer |
-                                                                   string>
-) : { parsedTrackInfos: ITextParserResponse;
-      indexReferences?: ISidxReference[];
-    } {
+                                                                   string>,
+                               scheduleRequest?: <U>(request : () => Observable<U>) =>
+                                Observable<IScheduleRequestResponse<U> |
+                                           ITransportWarningEvent>
+) : Observable<ITextParserResponse | ITransportWarningEvent> {
   const { period, representation, segment } = content;
   const { isInit, timestampOffset = 0, range } = segment;
   const { language } = content.adaptation;
@@ -87,13 +89,15 @@ function parseMP4EmbeddedTrack({ response,
     }
     const appendWindow: [number|undefined, number|undefined] =
       [period.start, period.end];
-    const parsedTrackInfos = { type: "parser-response" as const,
-                               value: { chunkData: null,
-                                        chunkInfos,
-                                        chunkOffset: timestampOffset,
-                                        segmentProtections: [],
-                                        appendWindow } };
-    return { parsedTrackInfos, indexReferences };
+    const parsedTrackInfos = observableOf({ type: "parser-response" as const,
+                                            value: { chunkData: null,
+                                                     chunkInfos,
+                                                     chunkOffset: timestampOffset,
+                                                     segmentProtections: [],
+                                                     appendWindow } });
+    return (indexReferences !== undefined && indexReferences.length > 0) ?
+      observableMerge(loadIndexes(indexReferences, content, scheduleRequest),
+                      parsedTrackInfos) : parsedTrackInfos;
   } else { // not init
     const chunkInfos = getISOBMFFTimingInfos(chunkBytes, isChunked, segment, init);
     let startTime : number | undefined;
@@ -144,13 +148,15 @@ function parseMP4EmbeddedTrack({ response,
                         timescale } ;
     const appendWindow: [number|undefined, number|undefined] =
       [period.start, period.end];
-      const parsedTrackInfos = { type: "parser-response" as const,
-                                 value: { chunkData,
-                                          chunkInfos,
-                                          chunkOffset: timestampOffset,
-                                          segmentProtections: [],
-                                          appendWindow } };
-    return { parsedTrackInfos, indexReferences };
+      const parsedTrackInfos = observableOf({ type: "parser-response" as const,
+                                              value: { chunkData,
+                                                       chunkInfos,
+                                                       chunkOffset: timestampOffset,
+                                                       segmentProtections: [],
+                                                       appendWindow } });
+    return (indexReferences !== undefined && indexReferences.length > 0) ?
+      observableMerge(loadIndexes(indexReferences, content, scheduleRequest),
+                      parsedTrackInfos) : parsedTrackInfos;
   }
 }
 
@@ -260,18 +266,8 @@ export default function textTrackParser({ response,
 
   const isMP4 = isMP4EmbeddedTextTrack(representation);
   if (isMP4) {
-
-    const parserResponse =
-      parseMP4EmbeddedTrack({ response: { data, isChunked }, content, init });
-
-    const { indexReferences, parsedTrackInfos } = parserResponse;
-
-    if (indexReferences === undefined ||
-        indexReferences.length === 0) {
-    return observableOf(parsedTrackInfos);
-  }
-  return observableMerge(loadIndexes(indexReferences, content, scheduleRequest),
-                         observableOf(parsedTrackInfos));
+    return parseMP4EmbeddedTrack({ response: { data, isChunked }, content, init },
+                                 scheduleRequest);
   } else {
     return parsePlainTextTrack({ response: { data, isChunked }, content });
   }
