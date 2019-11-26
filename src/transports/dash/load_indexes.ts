@@ -102,8 +102,8 @@ export default function loadIndexes(indexesToLoad: ISidxReference[],
       } = loadedRessource;
       if (responseData !== undefined) {
         const sidxBox = new Uint8Array(responseData);
-        const initialOffset = range[0];
-        const referencesFromSidx = getReferencesFromSidx(sidxBox, initialOffset);
+        const indexOffset = range[0];
+        const referencesFromSidx = getReferencesFromSidx(sidxBox, indexOffset);
         if (referencesFromSidx !== null) {
           const [indexReferences, segmentReferences] = referencesFromSidx;
           segmentReferences.forEach((segment) => {

@@ -80,9 +80,9 @@ function parseSegmentInfos(content: IContent,
   if (isWEBM) {
     nextSegments = getSegmentsFromCues(chunkData, 0);
   } else {
-    const initialOffset = Array.isArray(range) ? range[0] :
-                                                 0;
-    const referencesFromSidx = getReferencesFromSidx(chunkData, initialOffset);
+    const indexOffset = Array.isArray(range) ? range[0] :
+                                               0;
+    const referencesFromSidx = getReferencesFromSidx(chunkData, indexOffset);
     if (referencesFromSidx !== null) {
       const [indexReferences, segmentReferences] = referencesFromSidx;
       if (segmentReferences.length > 0) {
