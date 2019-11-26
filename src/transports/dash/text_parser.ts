@@ -95,9 +95,15 @@ function parseMP4EmbeddedTrack({ response,
                                                      chunkOffset: timestampOffset,
                                                      segmentProtections: [],
                                                      appendWindow } });
-    return (indexReferences !== undefined && indexReferences.length > 0) ?
-      observableMerge(loadIndexes(indexReferences, content, scheduleRequest),
-                      parsedTrackInfos) : parsedTrackInfos;
+
+    if (indexReferences !== undefined && indexReferences.length > 0) {
+      if (scheduleRequest == null) {
+        throw new Error("Can't schedule request for loading indexes.");
+      }
+      return observableMerge(loadIndexes(indexReferences, content, scheduleRequest),
+      parsedTrackInfos);
+    }
+    return parsedTrackInfos;
   } else { // not init
     const chunkInfos = getISOBMFFTimingInfos(chunkBytes, isChunked, segment, init);
     let startTime : number | undefined;
@@ -154,9 +160,14 @@ function parseMP4EmbeddedTrack({ response,
                                                        chunkOffset: timestampOffset,
                                                        segmentProtections: [],
                                                        appendWindow } });
-    return (indexReferences !== undefined && indexReferences.length > 0) ?
-      observableMerge(loadIndexes(indexReferences, content, scheduleRequest),
-                      parsedTrackInfos) : parsedTrackInfos;
+    if (indexReferences !== undefined && indexReferences.length > 0) {
+      if (scheduleRequest == null) {
+        throw new Error("Can't schedule request for loading indexes.");
+      }
+      return observableMerge(loadIndexes(indexReferences, content, scheduleRequest),
+      parsedTrackInfos);
+    }
+    return parsedTrackInfos;
   }
 }
 

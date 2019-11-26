@@ -109,9 +109,15 @@ function parseSegmentInfos(content: IContent,
                               chunkOffset: initChunkOffset,
                               segmentProtections: [],
                               appendWindow: aWindow } });
-    return indexes !== undefined && indexes.length > 0 ?
-      observableMerge(loadIndexes(indexes, content, scheduleRequest),
-                      parserInitResponse) : parserInitResponse;
+
+    if (indexes !== undefined && indexes.length > 0) {
+      if (scheduleRequest == null) {
+        throw new Error("Can't schedule request for loading indexes.");
+      }
+      return observableMerge(loadIndexes(indexes, content, scheduleRequest),
+                             parserInitResponse);
+    }
+    return parserInitResponse;
   }
 
   // it is an initialization segment
@@ -148,9 +154,14 @@ function parseSegmentInfos(content: IContent,
                             chunkOffset,
                             segmentProtections,
                             appendWindow } });
-  return indexes !== undefined && indexes.length > 0 ?
-    observableMerge(loadIndexes(indexes, content, scheduleRequest),
-                    parserResponse) : parserResponse;
+  if (indexes !== undefined && indexes.length > 0) {
+    if (scheduleRequest == null) {
+      throw new Error("Can't schedule request for loading indexes.");
+    }
+    return observableMerge(loadIndexes(indexes, content, scheduleRequest),
+                           parserResponse);
+  }
+  return parserResponse;
 }
 
 export default function parser({ content,

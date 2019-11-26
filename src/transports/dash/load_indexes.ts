@@ -64,13 +64,9 @@ function requestArrayBufferResource(
  */
 export default function loadIndexes(indexesToLoad: ISidxReference[],
   content: IContent,
-  scheduleRequest?: <U>(request : () => Observable<U>) =>
+  scheduleRequest: <U>(request : () => Observable<U>) =>
     Observable<IScheduleRequestResponse<U> | ITransportWarningEvent>
   ): Observable<ITransportWarningEvent> {
-  if (scheduleRequest == null) {
-    throw new Error("Can't schedule request for loading indexes.");
-  }
-
   const url = content.segment.mediaURL;
   if (url === null) {
     throw new Error("No URL for loading indexes.");
