@@ -22,7 +22,6 @@ import {
 import {
   getMDHDTimescale,
   getReferencesFromSidx,
-  ISidxReference,
   takePSSHOut,
 } from "../../parsers/containers/isobmff";
 import {
@@ -33,6 +32,7 @@ import takeFirstSet from "../../utils/take_first_set";
 import {
   IChunkTimingInfos,
   IContent,
+  IScheduleRequestResponse,
   ISegmentParserArguments,
   ISegmentParserResponseEvent,
   ITransportWarningEvent,
@@ -51,21 +51,22 @@ import loadIndexes from "./load_indexes";
 function parseSegmentInfos(content: IContent,
                            response: { data: ArrayBuffer|Uint8Array|null;
                                        isChunked : boolean; },
-                           init?: IChunkTimingInfos
-): { parserResponse : ISegmentParserResponseEvent<Uint8Array |
-                                                  ArrayBuffer>;
-     indexes?: ISidxReference[]; } {
+                           init?: IChunkTimingInfos,
+                           scheduleRequest?: <U>(request : () => Observable<U>) =>
+                            Observable<IScheduleRequestResponse<U> |
+                                       ITransportWarningEvent>
+): Observable<ISegmentParserResponseEvent<Uint8Array |
+                                          ArrayBuffer> |
+              ITransportWarningEvent> {
   const { period, representation, segment } = content;
   const { data, isChunked } = response;
   if (data == null) {
-    return {
-      parserResponse: { type: "parser-response" as const,
-                        value: { chunkData: null,
-                                 chunkInfos: null,
-                                 chunkOffset: 0,
-                                 segmentProtections: [],
-                                 appendWindow: [period.start, period.end] } },
-    };
+    return observableOf({ type: "parser-response" as const,
+                          value: { chunkData: null,
+                                   chunkInfos: null,
+                                   chunkOffset: 0,
+                                   segmentProtections: [],
+                                   appendWindow: [period.start, period.end] } });
   }
 
   const chunkData = data instanceof Uint8Array ? data :
@@ -98,14 +99,19 @@ function parseSegmentInfos(content: IContent,
                                                           isChunked,
                                                           segment,
                                                           init);
-    const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-    return { parserResponse: { type: "parser-response" as const,
-                               value: { chunkData,
-                                        chunkInfos: initChunkInfos,
-                                        chunkOffset,
-                                        segmentProtections: [],
-                                        appendWindow: [period.start, period.end] } },
-             indexes };
+    const initChunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
+    const aWindow: [number | undefined, number | undefined] =
+      [period.start, period.end];
+    const parserInitResponse =
+      observableOf({ type: "parser-response" as const,
+                     value: { chunkData,
+                              chunkInfos: initChunkInfos,
+                              chunkOffset: initChunkOffset,
+                              segmentProtections: [],
+                              appendWindow: aWindow } });
+    return indexes !== undefined && indexes.length > 0 ?
+      observableMerge(loadIndexes(indexes, content, scheduleRequest),
+                      parserInitResponse) : parserInitResponse;
   }
 
   // it is an initialization segment
@@ -123,25 +129,28 @@ function parseSegmentInfos(content: IContent,
   const appendWindow: [number|undefined, number|undefined] =
     [period.start, period.end];
 
-    if (!isWEBM) {
-      const psshInfo = takePSSHOut(chunkData);
-      if (psshInfo.length > 0) {
-        for (let i = 0; i < psshInfo.length; i++) {
-          const { systemID, data: psshData } = psshInfo[i];
-          representation._addProtectionData("cenc", systemID, psshData);
-        }
+  const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
+  if (!isWEBM) {
+    const psshInfo = takePSSHOut(chunkData);
+    if (psshInfo.length > 0) {
+      for (let i = 0; i < psshInfo.length; i++) {
+        const { systemID, data: psshData } = psshInfo[i];
+        representation._addProtectionData("cenc", systemID, psshData);
       }
     }
+  }
 
   const segmentProtections = representation.getProtectionsInitializationData();
-  return { parserResponse: { type: "parser-response" as const,
-                              value: { chunkData,
-                                       chunkInfos,
-                                       chunkOffset:
-                                         takeFirstSet<number>(segment.timestampOffset, 0),
-                                       segmentProtections,
-                                       appendWindow } },
-           indexes };
+  const parserResponse =
+    observableOf({ type: "parser-response" as const,
+                   value: { chunkData,
+                            chunkInfos,
+                            chunkOffset,
+                            segmentProtections,
+                            appendWindow } });
+  return indexes !== undefined && indexes.length > 0 ?
+    observableMerge(loadIndexes(indexes, content, scheduleRequest),
+                    parserResponse) : parserResponse;
 }
 
 export default function parser({ content,
@@ -150,13 +159,8 @@ export default function parser({ content,
                                  scheduleRequest } : ISegmentParserArguments<Uint8Array |
                                                                              ArrayBuffer |
                                                                              null >
-) : Observable<ISegmentParserResponseEvent<Uint8Array|ArrayBuffer> | ITransportWarningEvent> {
-  const parsedSegmentsInfos = parseSegmentInfos(content, response, init);
+) : Observable<ISegmentParserResponseEvent<Uint8Array|ArrayBuffer> |
+               ITransportWarningEvent> {
+  return parseSegmentInfos(content, response, init, scheduleRequest);
 
-  const { indexes, parserResponse } = parsedSegmentsInfos;
-  if (indexes === undefined || indexes.length === 0) {
-    return observableOf(parserResponse);
-  }
-  return observableMerge(loadIndexes(indexes, content, scheduleRequest),
-                         observableOf(parserResponse));
 }
