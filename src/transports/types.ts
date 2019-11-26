@@ -18,7 +18,6 @@ import {
   Observable,
   Observer,
 } from "rxjs";
-import { IScheduleRequestResponse } from "../core/pipelines/segment/segment_fetcher";
 import { ICustomError } from "../errors";
 import Manifest, {
   Adaptation,
@@ -35,6 +34,11 @@ import { IMetaPlaylist } from "../parsers/manifest/metaplaylist";
 export interface ITransportWarningEvent {
   type: "warning";
   value: ICustomError;
+}
+
+export interface IScheduleRequestResponse<U> {
+  type: "schedule-request-response";
+  value: U;
 }
 
 // Contains timings information on a single segment.

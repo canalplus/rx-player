@@ -24,7 +24,6 @@ import {
   map,
   mergeMap,
 } from "rxjs/operators";
-import { IScheduleRequestResponse } from "../../core/pipelines/segment/segment_fetcher";
 import {
   getReferencesFromSidx,
   ISidxReference,
@@ -33,6 +32,7 @@ import request from "../../utils/request/xhr";
 import {
   IContent,
   ILoaderDataLoadedValue,
+  IScheduleRequestResponse,
   ITransportWarningEvent,
 } from "../types";
 import byteRange from "../utils/byte_range";

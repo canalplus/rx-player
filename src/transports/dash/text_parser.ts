@@ -19,7 +19,6 @@ import {
   Observable,
   of as observableOf,
 } from "rxjs";
-import { IScheduleRequestResponse } from "../../core/pipelines/segment/segment_fetcher";
 import log from "../../log";
 import {
   getMDAT,
@@ -35,6 +34,7 @@ import isMP4EmbeddedTextTrack from "./is_mp4_embedded_text_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 
 import {
+  IScheduleRequestResponse,
   ISegmentParserArguments,
   ITextParserObservable,
   ITextParserResponse,

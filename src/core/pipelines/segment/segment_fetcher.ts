@@ -32,6 +32,7 @@ import { formatError, ICustomError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
   IChunkTimingInfos,
+  IScheduleRequestResponse,
   ISegmentLoaderArguments,
   ISegmentParserResponseEvent,
   ITransportPipelines,
@@ -74,11 +75,6 @@ export type ISegmentFetcherEvent<T> = ISegmentFetcherChunkCompleteEvent |
 
 export type ISegmentFetcher<T> = (content : ISegmentLoaderArguments) =>
                                    Observable<ISegmentFetcherEvent<T>>;
-
-export interface IScheduleRequestResponse<U> {
-  type: "schedule-request-response";
-  value: U;
-}
 
 const generateRequestID = idGenerator();
 
