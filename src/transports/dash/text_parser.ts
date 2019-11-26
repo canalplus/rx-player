@@ -19,7 +19,6 @@ import {
   Observable,
   of as observableOf,
 } from "rxjs";
-import { IWarningEvent } from "../../core/init";
 import log from "../../log";
 import {
   getMDAT,
@@ -39,6 +38,7 @@ import {
   ISegmentParserArguments,
   ITextParserObservable,
   ITextParserResponse,
+  ITransportWarningEvent,
 } from "../types";
 import loadIndexes from "./load_indexes";
 
@@ -245,7 +245,7 @@ export default function textTrackParser({ response,
                                                                      ArrayBuffer |
                                                                      string |
                                                                      null >
-) : Observable<ITextParserResponse|IWarningEvent> {
+) : Observable<ITextParserResponse|ITransportWarningEvent> {
   const { period, representation, segment } = content;
   const { timestampOffset = 0 } = segment;
   const { data, isChunked } = response;

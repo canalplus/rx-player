@@ -19,7 +19,6 @@ import {
   Observable,
   of as observableOf,
 } from "rxjs";
-import { IWarningEvent } from "../../core/init";
 import {
   getMDHDTimescale,
   getReferencesFromSidx,
@@ -36,6 +35,7 @@ import {
   IContent,
   ISegmentParserArguments,
   ISegmentParserResponseEvent,
+  ITransportWarningEvent,
 } from "../types";
 import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
@@ -150,7 +150,7 @@ export default function parser({ content,
                                  scheduleRequest } : ISegmentParserArguments<Uint8Array |
                                                                              ArrayBuffer |
                                                                              null >
-) : Observable<ISegmentParserResponseEvent<Uint8Array | ArrayBuffer> | IWarningEvent> {
+) : Observable<ISegmentParserResponseEvent<Uint8Array|ArrayBuffer> | ITransportWarningEvent> {
   const parsedSegmentsInfos = parseSegmentInfos(content, response, init);
 
   const { indexes, parserResponse } = parsedSegmentsInfos;

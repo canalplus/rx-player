@@ -28,7 +28,7 @@ import {
   share,
   tap,
 } from "rxjs/operators";
-import { formatError } from "../../../errors";
+import { formatError, ICustomError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
   IChunkTimingInfos,
@@ -42,7 +42,6 @@ import {
   IABRMetric,
   IABRRequest,
 } from "../../abr";
-import { IWarningEvent } from "../../init";
 import { IBufferType } from "../../source_buffers";
 import backoff from "../utils/backoff";
 import errorSelector from "../utils/error_selector";
@@ -56,10 +55,15 @@ import createSegmentLoader, {
 
 export type ISegmentFetcherWarning = IPipelineLoaderWarning;
 
+interface IPipelineWarningEvent {
+  type: "warning";
+  value: ICustomError;
+}
+
 export interface ISegmentFetcherChunkEvent<T> {
   type : "chunk";
   parse : (init? : IChunkTimingInfos) =>
-    Observable<ISegmentParserResponseEvent<T> | IWarningEvent>;
+    Observable<ISegmentParserResponseEvent<T> | IPipelineWarningEvent>;
 }
 
 export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete"; }
@@ -104,7 +108,7 @@ export default function createSegmentFetcher<T>(
    */
   function scheduleRequest<U>(
     request : () => Observable<U>
-  ) : Observable<IScheduleRequestResponse<U> | IWarningEvent> {
+  ) : Observable<IScheduleRequestResponse<U> | IPipelineWarningEvent> {
     const backoffOptions = { baseDelay: options.initialBackoffDelay,
                              maxDelay: options.maximumBackoffDelay,
                              maxRetryRegular: options.maxRetry,
@@ -222,7 +226,7 @@ export default function createSegmentFetcher<T>(
            * @returns {Observable}
            */
           parse(init? : IChunkTimingInfos) :
-            Observable<ISegmentParserResponseEvent<T> | IWarningEvent> {
+            Observable<ISegmentParserResponseEvent<T> | IPipelineWarningEvent> {
             const response = { data: evt.value.responseData, isChunked };
             /* tslint:disable no-unsafe-any */
             return segmentParser({ response, init, content, scheduleRequest })

@@ -18,8 +18,8 @@ import {
   Observable,
   Observer,
 } from "rxjs";
-import { IWarningEvent } from "../core/init";
 import { IScheduleRequestResponse } from "../core/pipelines/segment/segment_fetcher";
+import { ICustomError } from "../errors";
 import Manifest, {
   Adaptation,
   IRepresentationFilter,
@@ -31,6 +31,11 @@ import Manifest, {
 } from "../manifest";
 import { IBifThumbnail } from "../parsers/images/bif";
 import { IMetaPlaylist } from "../parsers/manifest/metaplaylist";
+
+export interface ITransportWarningEvent {
+  type: "warning";
+  value: ICustomError;
+}
 
 // Contains timings information on a single segment.
 // Those variables expose the best guess we have on the effective duration and
@@ -178,7 +183,7 @@ export interface ISegmentParserArguments<T> {
                              // corresponding Representation
   content : IContent;
   scheduleRequest?: <U>(request : () => Observable<U>) =>
-    Observable<IScheduleRequestResponse<U> | IWarningEvent>;
+    Observable<IScheduleRequestResponse<U> | ITransportWarningEvent>;
 }
 
 // -- response
@@ -256,10 +261,13 @@ export type IImageParserResponse =
   ISegmentParserResponseEvent< IImageTrackSegmentData >;
 
 export type ISegmentParserObservable<T> =
-  Observable<ISegmentParserResponseEvent<T> | IWarningEvent>;
-export type IVideoParserObservable = Observable<IVideoParserResponse | IWarningEvent>;
-export type IAudioParserObservable = Observable<IAudioParserResponse | IWarningEvent>;
-export type ITextParserObservable = Observable<ITextParserResponse | IWarningEvent>;
+  Observable<ISegmentParserResponseEvent<T> | ITransportWarningEvent>;
+export type IVideoParserObservable = Observable<IVideoParserResponse |
+                                                ITransportWarningEvent>;
+export type IAudioParserObservable = Observable<IAudioParserResponse |
+                                                ITransportWarningEvent>;
+export type ITextParserObservable = Observable<ITextParserResponse |
+                                               ITransportWarningEvent>;
 export type IImageParserObservable = Observable<IImageParserResponse>;
 
 // TODO Remove resolver

@@ -24,7 +24,6 @@ import {
   map,
   mergeMap,
 } from "rxjs/operators";
-import { IWarningEvent } from "../../core/init";
 import { IScheduleRequestResponse } from "../../core/pipelines/segment/segment_fetcher";
 import {
   getReferencesFromSidx,
@@ -34,6 +33,7 @@ import request from "../../utils/request/xhr";
 import {
   IContent,
   ILoaderDataLoadedValue,
+  ITransportWarningEvent,
 } from "../types";
 import byteRange from "../utils/byte_range";
 
@@ -65,8 +65,8 @@ function requestArrayBufferResource(
 export default function loadIndexes(indexesToLoad: ISidxReference[],
   content: IContent,
   scheduleRequest?: <U>(request : () => Observable<U>) =>
-    Observable<IScheduleRequestResponse<U> | IWarningEvent>
-  ): Observable<IWarningEvent> {
+    Observable<IScheduleRequestResponse<U> | ITransportWarningEvent>
+  ): Observable<ITransportWarningEvent> {
   if (scheduleRequest == null) {
     throw new Error("Can't schedule request for loading indexes.");
   }
