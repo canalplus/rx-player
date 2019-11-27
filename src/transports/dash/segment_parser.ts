@@ -30,9 +30,6 @@ import {
 } from "../../parsers/containers/matroska";
 import takeFirstSet from "../../utils/take_first_set";
 import {
-  IChunkTimingInfos,
-  IContent,
-  IScheduleRequestResponse,
   ISegmentParserArguments,
   ISegmentParserResponseEvent,
   ITransportWarningEvent,
@@ -41,23 +38,14 @@ import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 import loadIndexes from "./load_indexes";
 
-/**
- * Get segment informations from response.
- * @param {Object} content
- * @param {Object} response
- * @param {Object} init
- * @returns {Object}
- */
-function parseSegmentInfos(content: IContent,
-                           response: { data: ArrayBuffer|Uint8Array|null;
-                                       isChunked : boolean; },
-                           init?: IChunkTimingInfos,
-                           scheduleRequest?: <U>(request : () => Observable<U>) =>
-                            Observable<IScheduleRequestResponse<U> |
-                                       ITransportWarningEvent>
-): Observable<ISegmentParserResponseEvent<Uint8Array |
-                                          ArrayBuffer> |
-              ITransportWarningEvent> {
+export default function parser({ content,
+                                 response,
+                                 init,
+                                 scheduleRequest } : ISegmentParserArguments<Uint8Array |
+                                                                             ArrayBuffer |
+                                                                             null >
+) : Observable<ISegmentParserResponseEvent<Uint8Array|ArrayBuffer> |
+               ITransportWarningEvent> {
   const { period, representation, segment } = content;
   const { data, isChunked } = response;
   if (data == null) {
@@ -68,7 +56,6 @@ function parseSegmentInfos(content: IContent,
                                    segmentProtections: [],
                                    appendWindow: [period.start, period.end] } });
   }
-
   const chunkData = data instanceof Uint8Array ? data :
                                                  new Uint8Array(data);
 
@@ -162,16 +149,4 @@ function parseSegmentInfos(content: IContent,
                            parserResponse);
   }
   return parserResponse;
-}
-
-export default function parser({ content,
-                                 response,
-                                 init,
-                                 scheduleRequest } : ISegmentParserArguments<Uint8Array |
-                                                                             ArrayBuffer |
-                                                                             null >
-) : Observable<ISegmentParserResponseEvent<Uint8Array|ArrayBuffer> |
-               ITransportWarningEvent> {
-  return parseSegmentInfos(content, response, init, scheduleRequest);
-
 }

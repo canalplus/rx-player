@@ -28,7 +28,10 @@ import {
   share,
   tap,
 } from "rxjs/operators";
-import { formatError, ICustomError } from "../../../errors";
+import {
+  formatError,
+  ICustomError,
+} from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
   IChunkTimingInfos,
