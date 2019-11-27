@@ -222,12 +222,12 @@ changed (all were synonyms in ISO 639-2):</p>
 <span class="hljs-keyword">const</span> oldVersionResult = [
   {
     <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fre&quot;</span>, <span class="hljs-comment">// translated from &quot;fr&quot;</span>
-    audioDescription: <span class="hljs-literal">false</span>,
+    <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
     <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;audio_1&quot;</span>
   },
   {
     <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;eng&quot;</span>, <span class="hljs-comment">// translated from &quot;en&quot;</span>
-    audioDescription: <span class="hljs-literal">false</span>,
+    <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
     <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;audio_2&quot;</span>
   }
 ];
@@ -236,15 +236,15 @@ changed (all were synonyms in ISO 639-2):</p>
 <span class="hljs-keyword">const</span> result = [
   {
     <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fr&quot;</span>, <span class="hljs-comment">// stays the same than in the manifest</span>
-    normalized: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// translated from &quot;fr&quot;</span>
+    <span class="hljs-attr">normalized</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// translated from &quot;fr&quot;</span>
                        <span class="hljs-comment">// (notice that it&apos;s not &quot;fre&quot; like before)</span>
-    audioDescription: <span class="hljs-literal">false</span>,
+    <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
     <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;audio_1&quot;</span>
   },
   {
     <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en&quot;</span>, <span class="hljs-comment">// stays the same than in the manifest</span>
-    normalized: <span class="hljs-string">&quot;eng&quot;</span>, <span class="hljs-comment">// translated from &quot;en&quot;</span>
-    audioDescription: <span class="hljs-literal">false</span>,
+    <span class="hljs-attr">normalized</span>: <span class="hljs-string">&quot;eng&quot;</span>, <span class="hljs-comment">// translated from &quot;en&quot;</span>
+    <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
     <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;audio_2&quot;</span>
   }
 ];
@@ -549,18 +549,18 @@ player.loadVideo({
   <span class="hljs-attr">manifests</span>: [
     {
       <span class="hljs-attr">url</span>: someURL1
-      keySystem: keySystem1
+      <span class="hljs-attr">keySystem</span>: keySystem1
     },
     {
       <span class="hljs-attr">url</span>: someURL2
     },
     {
       <span class="hljs-attr">url</span>: someURL3
-      keySystem: keySystem3
+      <span class="hljs-attr">keySystem</span>: keySystem3
     },
     {
       <span class="hljs-attr">url</span>: someURL4
-      keySystem: keySystem4
+      <span class="hljs-attr">keySystem</span>: keySystem4
     }
   ],
 });

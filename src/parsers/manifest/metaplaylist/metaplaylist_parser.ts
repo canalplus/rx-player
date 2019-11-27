@@ -29,13 +29,11 @@ import {
 import MetaRepresentationIndex from "./representation_index";
 
 export type IParserResponse<T> =
-  {
-    type : "needs-manifest-loader";
+  { type : "needs-manifest-loader";
     value : {
       ressources : Array<{ url : string; transportType : string }>;
       continue : (loadedRessources : Manifest[]) => IParserResponse<T>;
-    };
-  } |
+    }; } |
   { type : "done"; value : T };
 
 export interface IMetaPlaylistTextTrack {
@@ -166,11 +164,17 @@ function createManifest(
   const maximumTime = contents.length > 0 ? contents[contents.length - 1].endTime :
                                             0;
   const isLive = mplData.dynamic === true;
-  let duration : number|undefined = 0;
+
+  let firstStart: number|null = null;
+  let lastEnd: number|null = null;
 
   const periods : IParsedPeriod[] = [];
   for (let iMan = 0; iMan < contents.length; iMan++) {
     const content = contents[iMan];
+    firstStart = firstStart !== null ? Math.min(firstStart, content.startTime) :
+                                       content.startTime;
+    lastEnd = lastEnd !== null ? Math.max(lastEnd, content.endTime) :
+                                 content.endTime;
     const currentManifest = manifests[iMan];
     if (currentManifest.periods.length <= 0) {
       continue;
@@ -225,6 +229,7 @@ function createManifest(
               type: currentAdaptation.type,
               audioDescription: currentAdaptation.isAudioDescription,
               closedCaption: currentAdaptation.isClosedCaption,
+              isDub: currentAdaptation.isDub,
               language: currentAdaptation.language,
             });
             acc[type] = adaptationsForCurrentType;
@@ -286,15 +291,14 @@ function createManifest(
       }
     }
     periods.push(...manifestPeriods);
+  }
 
-    if (!isLive && duration != null) {
-      const currentDuration = currentManifest.getDuration();
-      if (currentDuration == null) {
-        duration = undefined;
-      } else {
-        duration += currentDuration;
-      }
+  let duration : number|undefined;
+  if (!isLive) {
+    if (lastEnd === null || firstStart === null) {
+      throw new Error("MPL Parser: can't define duration of manifest.");
     }
+    duration = lastEnd - firstStart;
   }
 
   const time = performance.now();
@@ -302,7 +306,7 @@ function createManifest(
     availabilityStartTime: 0,
     clockOffset,
     suggestedPresentationDelay: 10,
-    duration: isLive ? undefined : duration,
+    duration,
     id: "gen-metaplaylist-man-" + generateManifestID(),
     periods,
     transportType: "metaplaylist",

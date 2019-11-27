@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import parseBaseURL, {
+  IBaseURL
+} from "./BaseURL";
 import {
   createPeriodIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
@@ -30,8 +33,10 @@ export interface IMPDIntermediateRepresentation { children : IMPDChildren;
 
 // intermediate representation for the root's children
 export interface IMPDChildren {
+  // optional
+  baseURL? : IBaseURL; // BaseURL for the contents. Empty string if not defined
+
   // required
-  baseURL : string; // BaseURL for the contents. Empty string if not defined
   locations : string[]; // Location(s) at which the Manifest can be refreshed
   periods : IPeriodIntermediateRepresentation[];
   utcTimings : IScheme[];
@@ -61,7 +66,7 @@ export interface IMPDAttributes {
  * @returns {Object}
  */
 function parseMPDChildren(mpdChildren : NodeList) : IMPDChildren {
-  let baseURL = "";
+  let baseURL: IBaseURL|undefined;
   const locations : string[] = [];
   const periods : IPeriodIntermediateRepresentation[] = [];
   const utcTimings : IScheme[] = [];
@@ -72,9 +77,7 @@ function parseMPDChildren(mpdChildren : NodeList) : IMPDChildren {
       switch (currentNode.nodeName) {
 
         case "BaseURL":
-          baseURL = currentNode.textContent === null ?
-            "" :
-            currentNode.textContent;
+          baseURL = parseBaseURL(currentNode);
           break;
 
         case "Location":

@@ -53,6 +53,8 @@ export interface IParsedAdaptation {
                                // the visually impaired
   closedCaption? : boolean; // Whether this Adaptation are closed caption for
                             // the hard of hearing
+  isDub? : boolean; // If true this Adaptation is in a dub: it was recorded in
+                    // another language than the original(s) one(s)
   language?: string; // Language the `Adaptation` is in, if it can be applied
 }
 
@@ -88,8 +90,6 @@ export interface IParsedManifest {
   baseURL? : string; // Base URL for relative URLs given in that Manifest.
   clockOffset?: number; // Offset, in milliseconds, the client's clock (in terms
                         // of `performance.now`) has relatively to the server's
-  duration? : number; // Last time available in the content.
-                      // `undefined` for live contents.
   lifetime?: number; // Duration of the validity of this Manifest, after which it
                      // should be refreshed.
   maximumTime? : { // Information on the maximum seekable position.

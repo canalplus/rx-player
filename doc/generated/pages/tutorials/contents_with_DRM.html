@@ -1,0 +1,479 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Tutorial: Playing contents with DRMs - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Tutorial:%20Playing%20contents%20with%20DRMs">Tutorial: Playing contents with DRMs</a></p>
+<ul>
+<li><a href="#chapter-Playing%20a%20simple%20encrypted%20content">Playing a simple encrypted content</a>
+<ul>
+<li><a href="#subchapter-The%20key%20system">The key system</a></li>
+<li><a href="#subchapter-The%20license-fetching%20logic">The license-fetching logic</a></li>
+<li><a href="#subchapter-Example%20with%20both%20properties">Example with both properties</a></li>
+</ul>
+</li>
+<li><a href="#chapter-More%20control%20over%20the%20license-fetching%20logic">More control over the license-fetching logic</a>
+<ul>
+<li><a href="#subchapter-getLicenseConfig">getLicenseConfig</a></li>
+<li><a href="#subchapter-getLicense%20error%20configuration">getLicense error configuration</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Server%20certificate">Server certificate</a></li>
+<li><a href="#chapter-Persistent%20licenses">Persistent licenses</a>
+<ul>
+<li><a href="#subchapter-licenseStorage%20property">licenseStorage property</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Playback%20issues%20on%20exotic/embedded%20devices">Playback issues on exotic/embedded devices</a>
+<ul>
+<li><a href="#subchapter-The%20Player%20do%20not%20download%20any%20segment%20when%20playing%20encrypted%20contents">The Player do not download any segment when playing encrypted contents</a></li>
+<li><a href="#subchapter-After%20two%20or%20several%20loadVideo%20calls%20the%20RxPlayer%20refuses%20to%20play">After two or several loadVideo calls the RxPlayer refuses to play</a></li>
+</ul>
+</li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Tutorial:%20Playing%20contents%20with%20DRMs"></a></p>
+<h1>Tutorial: Playing contents with DRMs</h1>
+<p>Because different applications and different devices can work completely
+differently when it comes to DRM, and because it is a complex feature, we have
+a large API allowing to manage it.</p>
+<p>This tutorial page is specifically there to help you navigate through this API.</p>
+<p>We will begin from the simplest of use cases to dive into the more complex ones.</p>
+<p>We recommend you to read the <a href="quick_start.html">quick start tutorial</a> first if
+you haven&#x2019;t, to have a general grasp on how to basically run a content.</p>
+<p><a name="chapter-Playing%20a%20simple%20encrypted%20content"></a></p>
+<h2>Playing a simple encrypted content</h2>
+<p>To be able to play a simple encrypted content, we will need at least two
+parameters:</p>
+<ol>
+<li><code>type</code>: the name of the &#x201C;key system&#x201D; you want to use.</li>
+<li><code>getLicense</code>: the license-fetching logic</li>
+</ol>
+<p>This chapter will explain both and provide examples on how to load a video with
+both of these properties.</p>
+<p><a name="subchapter-The%20key%20system"></a></p>
+<h3>The key system</h3>
+<p>The key system, also known as &#x201C;DRM name&#x201D;, will designate which Content
+Decryption Module (or CDM) to use. You might have heard of &#x201C;Widevine&#x201D;,
+&#x201C;PlayReady&#x201D; or &#x201C;FairPlay&#x201D;, that&#x2019;s the name what we want to know: which system
+you want to use.</p>
+<p>Which of them you want to use depend on several factors, among which:</p>
+<ul>
+<li>what the content allows</li>
+<li>what the content right holder wants</li>
+<li>what you/your company wants</li>
+<li>what the browser can do</li>
+</ul>
+<p>In the RxPlayer&#x2019;s API, we more especially expect the whole &#x201C;reverse domain name&#x201D;
+for that key systems (e.g. <code>com.widevine.alpha</code> or <code>com.microsoft.playready</code>).</p>
+<p>We also have shortcuts for Widevine or PlayReady, where you can just tell us
+respectively <code>widevine</code> or <code>playready</code> as the key system and we will try
+several corresponding reverse domain names.</p>
+<p>In any case, you can ask for several key systems, even including ones that are
+not available in the current browser. Those will be detected and automatically
+filtered out.</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-comment">// ...</span>
+  <span class="hljs-attr">keySystems</span>: [
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;com.widevine.alpha&quot;</span>
+      <span class="hljs-comment">// ...</span>
+    },
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;com.microsoft.playready&quot;</span>
+      <span class="hljs-comment">// ...</span>
+    },
+  ]
+})
+</code></pre>
+<p><a name="subchapter-The%20license-fetching%20logic"></a></p>
+<h3>The license-fetching logic</h3>
+<p>The second needed argument is a callback allowing to fetch the content license.</p>
+<p>An encrypted content will need one or several keys to be able to decrypt a
+content. Those keys are contained in one or several license files.</p>
+<p>Those files usually need to be downloaded from a license server.</p>
+<p>As that logic sometimes depends on your application (i.e. you might want to
+add authentification to that request to know which user made that request), the
+RxPlayer team made the choice to let you write your logic entirely.</p>
+<p>This logic takes the form of a callback named <code>getLicense</code>.</p>
+<p>This function is in fact triggered everytime a message is sent by the Content
+Decryption Module (what is sometimes known as &#x201C;Widevine&#x201D; or &#x201C;PlayReady&#x201D;), which
+is usually a request to fetch or renew the license.</p>
+<p>It gets two arguments when called:</p>
+<ol>
+<li>message (<code>Uint8Array</code>): The &#x201C;message&#x201D;</li>
+<li>messageType (<code>string</code>): String describing the type of message received.
+There is only 4 possible message types, all defined in <a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeymessagetype">the w3c
+specification</a>.</li>
+</ol>
+<p>In most cases, this function is triggered for license requests.
+You&#x2019;re encouraged to read what the <code>messageType</code> can be, but don&#x2019;t be scared by
+it, you&#x2019;ll most likely never need to check it.</p>
+<p>What you will most likely need to do, is simply sending the first argument,
+<code>message</code>, to the license server to fetch the license. That message generally
+contains information about the license you want to fetch.</p>
+<p>You will then need to return a Promise, which resolves with the license in an
+ArrayBuffer or Uint8Array form.
+If you don&#x2019;t want to communicate a license based on this message, you can just
+return <code>null</code> or a Promise resolving with <code>null</code>.</p>
+<p>Here is an example of a valid and simple getLicense implementation:</p>
+<pre><code class="language-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getLicense</span>(<span class="hljs-params">challenge</span>) </span>{
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Promise</span>(<span class="hljs-function">(<span class="hljs-params">resolve, reject</span>) =&gt;</span> {
+    <span class="hljs-keyword">const</span> xhr = <span class="hljs-keyword">new</span> XMLHttpRequest();
+    xhr.open(<span class="hljs-string">&quot;POST&quot;</span>, LICENSE_SERVER_URL, <span class="hljs-literal">true</span>);
+    xhr.onerror = <span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
+      reject(err);
+    };
+    xhr.onload = <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+      <span class="hljs-keyword">if</span> (xhr.status &gt;= <span class="hljs-number">200</span> &amp;&amp; xhr.status &lt; <span class="hljs-number">300</span>) {
+        <span class="hljs-keyword">const</span> license = evt.target.response;
+        resolve(license);
+      } <span class="hljs-keyword">else</span> {
+        <span class="hljs-keyword">const</span> error = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">&quot;getLicense&apos;s request finished with a &quot;</span> +
+                                <span class="hljs-string">`<span class="hljs-subst">${xhr.status}</span> HTTP error`</span>);
+        reject(error);
+      }
+    };
+    xhr.responseType = <span class="hljs-string">&quot;arraybuffer&quot;</span>;
+    xhr.send(challenge);
+  });
+}
+</code></pre>
+<p><a name="subchapter-Example%20with%20both%20properties"></a></p>
+<h3>Example with both properties</h3>
+<p>Now that all that has been explained here&#x2019;s an example to play a simple
+encrypted DASH content with either PlayReady or Widevine.</p>
+<pre><code class="language-js"><span class="hljs-comment">// We will use the same logic for both PlayReady and Widevine</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getLicense</span>(<span class="hljs-params">challenge</span>) </span>{
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Promise</span>(<span class="hljs-function">(<span class="hljs-params">resolve, reject</span>) =&gt;</span> {
+    <span class="hljs-keyword">const</span> xhr = <span class="hljs-keyword">new</span> XMLHttpRequest();
+    xhr.open(<span class="hljs-string">&quot;POST&quot;</span>, LICENSE_SERVER_URL, <span class="hljs-literal">true</span>);
+    xhr.onerror = <span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
+      reject(err);
+    };
+    xhr.onload = <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+      <span class="hljs-keyword">if</span> (xhr.status &gt;= <span class="hljs-number">200</span> &amp;&amp; xhr.status &lt; <span class="hljs-number">300</span>) {
+        <span class="hljs-keyword">const</span> license = evt.target.response;
+        resolve(license);
+      } <span class="hljs-keyword">else</span> {
+        <span class="hljs-keyword">const</span> error = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">&quot;getLicense&apos;s request finished with a &quot;</span> +
+                                <span class="hljs-string">`<span class="hljs-subst">${xhr.status}</span> HTTP error`</span>);
+        reject(error);
+      }
+    };
+    xhr.responseType = <span class="hljs-string">&quot;arraybuffer&quot;</span>;
+    xhr.send(challenge);
+  });
+}
+
+rxPlayer.loadVideo({
+  <span class="hljs-attr">url</span>: MANIFEST_URL,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">keySystems</span>: [
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;widevine&quot;</span>,
+      getLicense,
+    },
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;playready&quot;</span>,
+      getLicense,
+    }
+  ]
+});
+</code></pre>
+<p>This code is sufficient for a majority of encrypted contents.</p>
+<p><a name="chapter-More%20control%20over%20the%20license-fetching%20logic"></a></p>
+<h2>More control over the license-fetching logic</h2>
+<p>There&#x2019;s a lot of things that can go wrong during the license request:</p>
+<ul>
+<li>The user could be temporarly disconnected</li>
+<li>The license server might be down</li>
+<li>The license server might refuse to deliver a license based on your rights</li>
+<li>And like any request a lot of other errors can happen</li>
+</ul>
+<p>From this, you could want to have a different behavior based on what happened:</p>
+<ul>
+<li>When a user is temporarly disconnected, you could chose to retry
+indefinitely (the RxPlayer retry after a delay to not overload the client or
+the server).</li>
+<li>When the license server is down, you might want to fail directly.</li>
+<li>When the license server refuse to deliver a license based on your rights,
+you might want to throw an explicit error message that you will be able to
+display.</li>
+</ul>
+<p>All of this is possible with more advanced APIs that we will see in this
+chapter.</p>
+<p><a name="subchapter-getLicenseConfig"></a></p>
+<h3>getLicenseConfig</h3>
+<p><code>getLicenseConfig</code> is an object allowing to configure two parameters:</p>
+<ul>
+<li>
+<p><code>retry</code>, which will set the maximum number of retry.
+When setting <code>1</code>, for example, we will try two times the request: A first
+original time and one retry.</p>
+<p>You can decide to by default retry indefinitely by setting it to <code>Infinity</code>
+(yes, that&#x2019;s a valid number <a href="https://en.wikipedia.org/wiki/IEEE_754">in JS and some other
+languages</a>). Don&#x2019;t worry, you will
+still be able to retry less time on some other events (explained in
+the <code>getLicense error configuration</code> chapter).</p>
+</li>
+<li>
+<p><code>timeout</code>, which is the maximum time in milliseconds the RxPlayer will wait
+until it considers a <code>getLicense</code> call to have failed.
+By default it is set to <code>10000</code> (10 seconds). You can set it to <code>-1</code> to
+disable any timeout.</p>
+</li>
+</ul>
+<p>For example, for infinite retry and no timeout, you can set:</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-attr">url</span>: MANIFEST_URL,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">keySystems</span>: [
+      type: <span class="hljs-string">&quot;widevine&quot;</span>,
+      getLicense,
+      <span class="hljs-attr">getLicenseConfig</span>: {
+        <span class="hljs-attr">retry</span>: <span class="hljs-literal">Infinity</span>,
+        <span class="hljs-attr">timeout</span>: <span class="hljs-number">-1</span>,
+      },
+    },
+    <span class="hljs-comment">// ...</span>
+  ]
+});
+</code></pre>
+<p><a name="subchapter-getLicense%20error%20configuration"></a></p>
+<h3>getLicense error configuration</h3>
+<p><code>getLicenseConfig</code> handle general configurations about every <code>getLicense</code> calls,
+but you can also have more specific configuration when a specific license
+request fails.</p>
+<p>This is done thanks to the rejected Promise returned by <code>getLicense</code>.
+You can reject an error (or just an object), with the following properties:</p>
+<ul>
+<li>
+<p><code>noRetry</code>: when set to <code>true</code>, the <code>getLicense</code> call will not be retried.</p>
+</li>
+<li>
+<p><code>message</code>: a custom message string we will communicate through a warning or
+error event (depending if we will retry or not the call)</p>
+</li>
+</ul>
+<p>Here is an example showcasing all of those properties:</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-attr">url</span>: MANIFEST_URL,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">keySystems</span>: [
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;widevine&quot;</span>,
+      getLicense(challenge) {
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Promise</span>(<span class="hljs-function">(<span class="hljs-params">resolve, reject</span>) =&gt;</span> {
+          <span class="hljs-keyword">const</span> xhr = <span class="hljs-keyword">new</span> XMLHttpRequest();
+          xhr.open(<span class="hljs-string">&quot;POST&quot;</span>, LICENSE_SERVER_URL, <span class="hljs-literal">true</span>);
+          xhr.onerror = <span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
+            <span class="hljs-comment">// Keep retrying on XHR errors.</span>
+            <span class="hljs-comment">// Instanciating an Error like that automatically set the</span>
+            <span class="hljs-comment">// message attribute to this Error&apos;s message. That way, the</span>
+            <span class="hljs-comment">// linked &quot;error&quot; or &quot;warning&quot; event sent by the RxPlayer</span>
+            <span class="hljs-comment">// will have the same message.</span>
+            <span class="hljs-keyword">const</span> error = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">&quot;Request error: &quot;</span> + err.toString())
+            reject(err);
+          };
+          xhr.onload = <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+            <span class="hljs-keyword">if</span> (xhr.status &gt;= <span class="hljs-number">200</span> &amp;&amp; xhr.status &lt; <span class="hljs-number">300</span>) {
+              <span class="hljs-keyword">const</span> license = evt.target.response;
+              resolve(license);
+            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (xhr.status &gt;= <span class="hljs-number">500</span> &amp;&amp; xhr.status &lt; <span class="hljs-number">600</span>) {
+              <span class="hljs-comment">// Directly fails on a server error</span>
+              <span class="hljs-keyword">const</span> error = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">&quot;The license server had a problem and&quot;</span> +
+                                      <span class="hljs-string">` responded with <span class="hljs-subst">${xhr.status}</span> HTTP `</span> +
+                                      <span class="hljs-string">&quot;error.&quot;</span>);
+              error.noRetry = <span class="hljs-literal">true</span>;
+            } <span class="hljs-keyword">else</span> {
+              <span class="hljs-comment">// else continue to retry</span>
+              <span class="hljs-keyword">const</span> error = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">&quot;getLicense&apos;s request finished with a &quot;</span> +
+                                      <span class="hljs-string">`<span class="hljs-subst">${xhr.status}</span> HTTP error`</span>);
+              reject(error);
+            }
+          };
+          xhr.responseType = <span class="hljs-string">&quot;arraybuffer&quot;</span>;
+          xhr.send(challenge);
+        });
+      },
+      <span class="hljs-attr">getLicenseConfig</span>: {
+        <span class="hljs-attr">retry</span>: <span class="hljs-literal">Infinity</span>,
+        <span class="hljs-attr">timeout</span>: <span class="hljs-number">-1</span>,
+      },
+    },
+    <span class="hljs-comment">// ...</span>
+  ]
+});
+</code></pre>
+<p><a name="chapter-Server%20certificate"></a></p>
+<h2>Server certificate</h2>
+<p>The &#x201C;server Certificate&#x201D; is a certificate allowing to encrypt messages coming
+from the Content Decryption module to the license server. They can be required
+by some key system as a supplementary security mechanism.</p>
+<p>Thankfully, an application is not obligated to set one, even if one is needed.
+If not set, the Content Decryption Module will download it itself by using the
+same route than a license request (the <code>getLicense</code> callback will be called).</p>
+<p>This means however, that we have to perform two round-trips to the license
+server instead of one:</p>
+<ol>
+<li>one to fetch the &#x201C;server certificate&#x201D;.</li>
+<li>the other to fetch the license.</li>
+</ol>
+<p>To avoid the first round-trip, it is possible for an application to directly
+indicate what the <code>serverCertificate</code> is when calling loadVideo.</p>
+<p>This is done through the <code>serverCertificate</code> property, in <code>keySystems</code>:</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-attr">url</span>: MANIFEST_URL,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">keySystems</span>: [
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;widevine&quot;</span>,
+      getLicense,
+      serverCertificate,
+    },
+  ]
+});
+</code></pre>
+<p>The <code>serverCertificate</code> has to either be in an <code>ArrayBuffer</code> form or a
+<code>TypedArray</code> (i.e. <code>Uint8Array</code>, <code>Uint16Array</code> etc.)</p>
+<p><a name="chapter-Persistent%20licenses"></a></p>
+<h2>Persistent licenses</h2>
+<p>A persistent license allows to store a license for it to be available even when
+a user quits the current page or restarts its computer. It can be used even if
+the user is offline.</p>
+<p>After loading a persistent license, it is automatically stored on the browser&#x2019;s
+side, but the RxPlayer still has to store an ID to be able to retrieve the right
+session when reloading the same content later.
+Because of that, persistent-license management comes in two part in the RxPlayer
+API (as usual here, those should be set in <code>keySystems</code>):</p>
+<ol>
+<li>
+<p>You&#x2019;ll have to set the <code>persistentLicense</code> boolean to <code>true</code></p>
+</li>
+<li>
+<p>You&#x2019;ll have to provide a license storage mechanism and set it as the
+<code>licenseStorage</code> property.</p>
+</li>
+</ol>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-attr">url</span>: MANIFEST_URL,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">keySystems</span>: [
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;widevine&quot;</span>,
+      getLicense,
+      <span class="hljs-attr">persistentLicense</span>: <span class="hljs-literal">true</span>,
+      licenseStorage,
+    },
+  ]
+});
+</code></pre>
+<p><a name="subchapter-licenseStorage%20property"></a></p>
+<h3>licenseStorage property</h3>
+<p>The <code>licenseStorage</code> property is an object allowing the RxPlayer to load and
+saved stored IDs.</p>
+<p>It needs to contain two functions:</p>
+<ul>
+<li><code>save</code>: Which sould store the argument given. The argument will be an array
+of Objects.</li>
+<li><code>load</code>: Called without any argument, it has to return what was given to the
+last <code>save</code> call. Any return value which is not an Array will be ignored
+(example: when <code>save</code> has never been called).</li>
+</ul>
+<p>This API can very simply be implemented with the
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage">localStorage</a>
+browser API:</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-attr">url</span>: MANIFEST_URL,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">keySystems</span>: [
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;widevine&quot;</span>,
+      getLicense,
+      <span class="hljs-attr">persistentLicense</span>: <span class="hljs-literal">true</span>,
+      <span class="hljs-attr">licenseStorage</span>: {
+        save(data) {
+          localStorage.setItem(<span class="hljs-string">&quot;RxPlayer-licenseStorage&quot;</span>, data);
+        },
+        load() {
+          <span class="hljs-keyword">return</span> localStorage.getItem(<span class="hljs-string">&quot;RxPlayer-licenseStorage&quot;</span>, data);
+        }
+      },
+    },
+  ]
+});
+</code></pre>
+<p>Do not be scared about security implications, the data saved is not secret and
+does not help to identify a user.</p>
+<p>You can also use every storage API at your disposition (some embedded devices
+might have their own).</p>
+<p>As a nice bonus, you can note that the data given is perfectly &#x201C;serializable&#x201D;
+through the JSON.stringify browser API. This means that:</p>
+<pre><code class="language-js"><span class="hljs-built_in">console</span>.log(data === <span class="hljs-built_in">JSON</span>.parse(<span class="hljs-built_in">JSON</span>.stringify(data))); <span class="hljs-comment">// displays &quot;true&quot;</span>
+</code></pre>
+<p>This is very useful for storage APIs which cannot store JavaScript objects.</p>
+<p><a name="chapter-Playback%20issues%20on%20exotic/embedded%20devices"></a></p>
+<h2>Playback issues on exotic/embedded devices</h2>
+<p>The configuration example which finishes the last chapter should work in most
+cases, but you might encounter very specific issues on some devices.</p>
+<p><a name="subchapter-The%20Player%20do%20not%20download%20any%20segment%20when%20playing%20encrypted%20contents"></a></p>
+<h3>The Player do not download any segment when playing encrypted contents</h3>
+<p>This is probably due to an issue we encountered several time on embedded
+devices.</p>
+<p>Basically, this behavior is due to a deadlock, where the RxPlayer is waiting for
+the CDM logic to be initialized to download segments but the CDM logic wait for
+the opposite: it will only initialize itself once segments have been downloaded.</p>
+<p>The RxPlayer is waiting for the CDM initialization for a very specific usage:
+playing a mix of unencrypted and encrypted data. We detected that on some Chrome
+versions we could not play encrypted data if we first played unencrypted data
+without the CDM logic in place.</p>
+<p>Fortunately, this usage is for very specific cases and you most likely won&#x2019;t
+need it (or even if you will, you most likely will not encounter that problem).</p>
+<p>You can completely remove that deadlock with a property called
+<code>disableMediaKeysAttachmentLock</code>. Like other properties introduced here, you
+should put it in the <code>keySystems</code> object of <code>loadVideo</code>, like such:</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-attr">url</span>: MANIFEST_URL,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">keySystems</span>: [
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;widevine&quot;</span>,
+      getLicense,
+      <span class="hljs-attr">disableMediaKeysAttachmentLock</span>: <span class="hljs-literal">true</span>,
+    },
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;playready&quot;</span>,
+      getLicense,
+      <span class="hljs-attr">disableMediaKeysAttachmentLock</span>: <span class="hljs-literal">true</span>,
+    }
+  ]
+});
+</code></pre>
+<p><a name="subchapter-After%20two%20or%20several%20loadVideo%20calls%20the%20RxPlayer%20refuses%20to%20play"></a></p>
+<h3>After two or several loadVideo calls the RxPlayer refuses to play</h3>
+<p>There&#x2019;s a chance that you&#x2019;re encountering another issue we found on embedded
+devices.</p>
+<p>By default, the RxPlayer maintains a cache containing the last loaded licenses.
+This allows to quickly switch to already-played contents, an important
+improvement when playing live contents for example.
+Rest assured, our cache size is not infinite, and as such it should work on most
+devices.</p>
+<p>However, we found that on some devices, this logic can be problematic, and it
+will just refuse to add a license at a given point.</p>
+<p>You can add a property which will flush that cache anytime the content changes,
+called <code>closeSessionsOnStop</code>.</p>
+<p>Like other properties introduced here, you should put it in the <code>keySystems</code>
+object of <code>loadVideo</code>, like such:</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-attr">url</span>: MANIFEST_URL,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">keySystems</span>: [
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;widevine&quot;</span>,
+      getLicense,
+      <span class="hljs-attr">closeSessionsOnStop</span>: <span class="hljs-literal">true</span>,
+    },
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;playready&quot;</span>,
+      getLicense,
+      <span class="hljs-attr">closeSessionsOnStop</span>: <span class="hljs-literal">true</span>,
+    }
+  ]
+});
+</code></pre>
+</body></html></div></div></div></body>

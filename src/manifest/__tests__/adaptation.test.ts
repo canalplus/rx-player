@@ -305,6 +305,41 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation.parsingErrors).toEqual([]);
   });
 
+  it("should set an isDub value if one", () => {
+    const representationSpy = jest.fn(arg => arg);
+    const filterSpy = jest.fn((_type, arg) => arg);
+    const normalizeSpy = jest.fn((lang : string) => lang + "foo");
+
+    jest.mock("../representation", () => ({ __esModule: true,
+                                            default: representationSpy }));
+    jest.mock("../filter_supported_representations", () => ({ __esModule: true,
+                                                              default: filterSpy }));
+    jest.mock("../../utils/languages", () => ({ __esModule: true,
+                                                default: normalizeSpy }));
+
+    const Adaptation = require("../adaptation").default;
+
+    const args1 = { id: "12",
+                    representations: [],
+                    isDub: false,
+                    type: "video" };
+    const adaptation1 = new Adaptation(args1);
+    expect(adaptation1.language).toBe(undefined);
+    expect(adaptation1.normalizedLanguage).toBe(undefined);
+    expect(adaptation1.isDub).toEqual(false);
+    expect(normalizeSpy).not.toHaveBeenCalled();
+
+    const args2 = { id: "12",
+                    representations: [],
+                    isDub: true,
+                    type: "video" };
+    const adaptation2 = new Adaptation(args2);
+    expect(adaptation2.language).toBe(undefined);
+    expect(adaptation2.normalizedLanguage).toBe(undefined);
+    expect(adaptation2.isDub).toEqual(true);
+    expect(normalizeSpy).not.toHaveBeenCalled();
+  });
+
   it("should set an isClosedCaption value if one", () => {
     const representationSpy = jest.fn(arg => arg);
     const filterSpy = jest.fn((_type, arg) => arg);

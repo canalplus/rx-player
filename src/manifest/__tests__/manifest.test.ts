@@ -42,7 +42,6 @@ describe("Manifest - Manifest", () => {
     expect(manifest.adaptations).toEqual({});
     expect(manifest.availabilityStartTime).toEqual(undefined);
     expect(manifest.baseURL).toEqual(undefined);
-    expect(manifest.getDuration()).toEqual(5);
     expect(manifest.id).toEqual("man");
     expect(manifest.isLive).toEqual(false);
     expect(manifest.lifetime).toEqual(undefined);
@@ -220,83 +219,6 @@ describe("Manifest - Manifest", () => {
     logSpy.mockRestore();
   });
 
-  // TODO inspect why it doesn't pass. It makes no sense to me for now
-  it("should warn if no duration is given for non-live contents", () => {
-    const log = { warn: () => undefined };
-    jest.mock("../../log", () =>  ({
-      __esModule: true,
-      default: log,
-    }));
-
-    const period1 = { id: "0", start: 4, adaptations: {} };
-    const period2 = { id: "1", start: 12, adaptations: {} };
-    const simpleFakeManifest = {
-      id: "man",
-      isLive: false,
-      periods: [period1, period2],
-      transportType: "foobar",
-    };
-
-    const fakePeriod = jest.fn((period) => {
-      return {
-        id: `foo${period.id}`,
-        parsingErrors: [new Error(`a${period.id}`), new Error(period.id)],
-      };
-    });
-    const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    jest.mock("../period", () =>  ({
-      __esModule: true,
-      default: fakePeriod,
-    }));
-    const Manifest = require("../manifest").default;
-
-    const manifest = new Manifest(simpleFakeManifest, {});
-    expect(manifest.isLive).toEqual(false);
-    expect(manifest.getDuration()).toEqual(undefined);
-
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledWith(
-      "Manifest: non live content and duration is null.");
-    logSpy.mockRestore();
-  });
-
-  it("should not warn if no duration is given for live contents", () => {
-    const log = { warn: () => undefined };
-    jest.mock("../../log", () =>  ({
-      __esModule: true,
-      default: log,
-    }));
-
-    const period1 = { id: "0", start: 4, adaptations: {} };
-    const period2 = { id: "1", start: 12, adaptations: {} };
-    const simpleFakeManifest = {
-      id: "man",
-      isLive: true,
-      periods: [period1, period2],
-      transportType: "foobar",
-    };
-
-    const fakePeriod = jest.fn((period) => {
-      return {
-        id: `foo${period.id}`,
-        parsingErrors: [new Error(`a${period.id}`), new Error(period.id)],
-      };
-    });
-    const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    jest.mock("../period", () =>  ({
-      __esModule: true,
-      default: fakePeriod,
-    }));
-
-    const Manifest = require("../manifest").default;
-    const manifest = new Manifest(simpleFakeManifest, {});
-    expect(manifest.isLive).toEqual(true);
-    expect(manifest.getDuration()).toEqual(undefined);
-
-    expect(logSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
-  });
-
   it("should correctly parse every manifest information given", () => {
     const log = { warn: () => undefined };
     jest.mock("../../log", () =>  ({
@@ -341,7 +263,6 @@ describe("Manifest - Manifest", () => {
     expect(manifest.adaptations).toEqual({});
     expect(manifest.availabilityStartTime).toEqual(5);
     expect(manifest.baseURL).toEqual("test");
-    expect(manifest.getDuration()).toEqual(12);
     expect(manifest.id).toEqual("man");
     expect(manifest.isLive).toEqual(false);
     expect(manifest.lifetime).toEqual(13);
@@ -502,14 +423,12 @@ describe("Manifest - Manifest", () => {
       periods: [newPeriod1, newPeriod2],
       transport: "foob",
       uris: ["url3", "url4"],
-      getDuration() { return 13; },
     };
 
     manifest.update(newManifest);
     expect(manifest.adaptations).toEqual(newAdaptations);
     expect(manifest.availabilityStartTime).toEqual(6);
     expect(manifest.baseURL).toEqual("test2");
-    expect(manifest.getDuration()).toEqual(13);
     expect(manifest.id).toEqual("man2");
     expect(manifest.isLive).toEqual(true);
     expect(manifest.lifetime).toEqual(14);
@@ -608,7 +527,6 @@ describe("Manifest - Manifest", () => {
       adaptations: {},
       availabilityStartTime: 6,
       baseURL: "test2",
-      getDuration() { return 13; },
       id: "man2",
       isLive: true,
       lifetime: 14,
@@ -695,7 +613,6 @@ describe("Manifest - Manifest", () => {
       adaptations: {},
       availabilityStartTime: 6,
       baseURL: "test2",
-      getDuration() { return 13; },
       id: "man2",
       isLive: true,
       lifetime: 14,
@@ -779,7 +696,6 @@ describe("Manifest - Manifest", () => {
       adaptations: {},
       availabilityStartTime: 6,
       baseURL: "test2",
-      getDuration() { return 13; },
       id: "man2",
       isLive: true,
       lifetime: 14,
@@ -866,7 +782,6 @@ describe("Manifest - Manifest", () => {
       adaptations: {},
       availabilityStartTime: 6,
       baseURL: "test2",
-      getDuration() { return 13; },
       id: "man2",
       isLive: true,
       lifetime: 14,

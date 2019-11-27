@@ -9,7 +9,7 @@ const manifestInfos = {
   url: BASE_URL + "Manifest_Not_Starting_at_0.xml",
   transport: "smooth",
   isLive: false,
-  duration: 75,
+  duration: 75 - 6.016,
   minimumPosition: 6.016,
   maximumPosition: 75,
   availabilityStartTime: 0,

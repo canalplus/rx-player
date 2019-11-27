@@ -94,8 +94,11 @@ called instead any time we want to load the Manifest.
 _type_: ``Array.<Object>|undefined``
 
 This property is mandatory if the content uses DRM.
+
 It is here that is defined every options relative to the encryption of your
-content.
+content. There's a lot of configuration possible here. In the case you find
+this documentation hard to grasp, we've written a [tutorial on DRM configuration
+here](../tutorials/contents_with_DRM.md).
 
 This property is an array of objects with the following properties (only
 ``type`` and ``getLicense`` are mandatory here):
@@ -494,6 +497,26 @@ considered stable:
     This will only be taken into account for live contents, and if the
     Manifest / MPD does not already contain an offset (example: an
     availabilityStartTime in a DASH MPD).
+
+  - `minimumManifestUpdateInterval` (`Number`): Set the minimum time, in
+    seconds, we have to wait between Manifest updates.
+
+    A Manifest may need to be updated in regular intervals (e.g. many DASH
+    dynamic contents depend on that behavior).
+
+    The frequency at which we normally update a Manifest depends on multiple
+    factors: the information taken from the Manifest, the transport chosen or
+    the current playback conditions. You might want to use
+    `minimumManifestUpdateInterval` to limit that frequency to a minimum.
+
+    This option is principally useful on some embedded devices where resources
+    are scarce. The request and data decompression done at each Manifest update
+    might be too heavy for some and reducing the interval at which they are done
+    might help.
+
+    Please note however than reducing that frequency can raise the chance of
+    rebuffering, as we might be aware of newly generated segments later than
+    we would be without that option.
 
   - ``serverSyncInfos`` (``Object``): Mainly useful for live DASH contents
     based on a SegmentTemplate scheme without SegmentTimeline elements.

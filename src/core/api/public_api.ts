@@ -621,10 +621,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             keySystems,
             lowLatencyMode,
             manualBitrateSwitchingMode,
+            minimumManifestUpdateInterval,
             networkConfig,
             startAt,
-            supplementaryImageTracks,
-            supplementaryTextTracks,
             transport,
             transportOptions,
             url } = options;
@@ -675,10 +674,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         throw new Error(`transport "${transport}" not supported`);
       }
 
-      const pipelines = transportFn(objectAssign({ lowLatencyMode,
-                                                   supplementaryTextTracks,
-                                                   supplementaryImageTracks },
-                                                 transportOptions));
+      const pipelines = transportFn(transportOptions);
+
       // Options used by the ABR Manager.
       const adaptiveOptions = {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
@@ -727,6 +724,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                     keySystems,
                                                     lowLatencyMode,
                                                     mediaElement: videoElement,
+                                                    minimumManifestUpdateInterval,
                                                     networkConfig,
                                                     pipelines,
                                                     speed$: this._priv_speed$,

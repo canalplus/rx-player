@@ -35,6 +35,7 @@ import parseRepresentations from "./parse_representations";
 export interface IPeriodInfos {
   aggressiveMode : boolean; // Whether we should request new segments even if
                             // they are not yet finished
+  availabilityTimeOffset: number; // availability time offset of the concerned period
   baseURL? : string; // Eventual URL from which every relative URL will be based
                      // on
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
@@ -182,10 +183,34 @@ export default function parseAdaptationSets(
     ((acc, adaptation) => {
       const adaptationChildren = adaptation.children;
       const parsedAdaptations = acc.adaptations;
+
+      const { essentialProperties,
+              roles } = adaptationChildren;
+
+      const isExclusivelyTrickModeTrack = (Array.isArray(essentialProperties) &&
+        essentialProperties.some((ep) =>
+          ep.schemeIdUri === "http://dashif.org/guidelines/trickmode"));
+
+      if (isExclusivelyTrickModeTrack) {
+        // We do not for the moment parse trickmode tracks
+        return acc;
+      }
+
+      const isMainAdaptation = Array.isArray(roles) &&
+        roles.some((role) => role.value === "main") &&
+        roles.some((role) => role.schemeIdUri === "urn:mpeg:dash:role:2011");
+
       const representationsIR = adaptation.children.representations;
+      const availabilityTimeOffset =
+        (adaptation.children.baseURL?.attributes.availabilityTimeOffset ?? 0) +
+        periodInfos.availabilityTimeOffset;
+
       const adaptationInfos = {
         aggressiveMode: periodInfos.aggressiveMode,
-        baseURL: resolveURL(periodInfos.baseURL, adaptationChildren.baseURL),
+        availabilityTimeOffset,
+        baseURL: resolveURL(periodInfos.baseURL,
+                            adaptationChildren.baseURL !== undefined ?
+                              adaptationChildren.baseURL.value : ""),
         manifestBoundsCalculator: periodInfos.manifestBoundsCalculator,
         end: periodInfos.end,
         isDynamic: periodInfos.isDynamic,
@@ -212,20 +237,20 @@ export default function parseAdaptationSets(
       const originalID = adaptation.attributes.id;
       let newID : string;
       const adaptationSetSwitchingIDs = getAdaptationSetSwitchingIDs(adaptation);
-
-      // TODO remove "main" video track management
-      const { roles } = adaptationChildren;
-      const isMainAdaptation = Array.isArray(roles) &&
-        arrayFind(roles, (role) =>
-          role.value === "main") !== undefined &&
-        arrayFind(roles, (role) =>
-          role.schemeIdUri === "urn:mpeg:dash:role:2011") !== undefined;
       const videoMainAdaptation = acc.videoMainAdaptation;
       if (type === "video" && videoMainAdaptation !== null && isMainAdaptation) {
         videoMainAdaptation.representations.push(...representations);
         newID = videoMainAdaptation.id;
       } else {
         const { accessibility } = adaptationChildren;
+
+        let isDub : boolean|undefined;
+        if (roles !== undefined &&
+            roles.some((role) => role.value === "dub"))
+        {
+          isDub = true;
+        }
+
         const isClosedCaption = type === "text" &&
                                 accessibility != null &&
                                 isHardOfHearing(accessibility) ? true :
@@ -250,6 +275,9 @@ export default function parseAdaptationSets(
         }
         if (isAudioDescription != null) {
           parsedAdaptationSet.audioDescription = isAudioDescription;
+        }
+        if (isDub === true) {
+          parsedAdaptationSet.isDub = true;
         }
 
         const adaptationsOfTheSameType = parsedAdaptations[type];

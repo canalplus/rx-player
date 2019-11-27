@@ -33,7 +33,6 @@ import {
   IPeriodIntermediateRepresentation,
 } from "./node_parsers/Period";
 import parseAvailabilityStartTime from "./parse_availability_start_time";
-import parseDuration from "./parse_duration";
 import parsePeriods, {
   IXLinkInfos,
 } from "./parse_periods";
@@ -202,14 +201,20 @@ function parseCompleteIntermediateRepresentation(
   const isDynamic : boolean = rootAttributes.type === "dynamic";
   const baseURL = resolveURL(normalizeBaseURL(args.url == null ? "" :
                                                                  args.url),
-                             rootChildren.baseURL);
+                             rootChildren.baseURL !== undefined ?
+                               rootChildren.baseURL.value :
+                               "");
   const availabilityStartTime = parseAvailabilityStartTime(rootAttributes,
                                                            args.referenceDateTime);
   const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
   const clockOffset = args.externalClockOffset;
 
+  const availabilityTimeOffset =
+    rootChildren.baseURL?.attributes.availabilityTimeOffset ?? 0;
+
   const manifestInfos = { aggressiveMode: args.aggressiveMode,
                           availabilityStartTime,
+                          availabilityTimeOffset,
                           baseURL,
                           clockOffset,
                           duration: rootAttributes.duration,
@@ -218,12 +223,11 @@ function parseCompleteIntermediateRepresentation(
                           timeShiftBufferDepth,
                           xlinkInfos };
   const parsedPeriods = parsePeriods(rootChildren.periods, manifestInfos);
-  const duration = parseDuration(rootAttributes, parsedPeriods);
+  const mediaPresentationDuration = rootAttributes.duration;
   const parsedMPD : IParsedManifest = {
     availabilityStartTime,
     baseURL,
     clockOffset: args.externalClockOffset,
-    duration,
     id: rootAttributes.id != null ? rootAttributes.id :
                                     "gen-dash-manifest-" + generateManifestID(),
     isLive: isDynamic,
@@ -245,19 +249,34 @@ function parseCompleteIntermediateRepresentation(
   const [minTime, maxTime] = getMinimumAndMaximumPosition(parsedMPD);
   const now = performance.now();
   if (!isDynamic) {
-    if (minTime != null) {
+    if (minTime !== undefined) {
       parsedMPD.minimumTime = { isContinuous: false,
                                 value: minTime,
                                 time: now };
-    }
-    if (duration != null) {
-      parsedMPD.maximumTime = { isContinuous: false,
-                                value: duration,
+    } else if (parsedPeriods[0]?.start !== undefined) {
+      parsedMPD.minimumTime = { isContinuous: false,
+                                value: parsedPeriods[0].start,
                                 time: now };
-    } else if (maxTime != null) {
+    }
+    if (maxTime !== undefined) {
       parsedMPD.maximumTime = { isContinuous: false,
                                 value: maxTime,
                                 time: now };
+    } else if (mediaPresentationDuration !== undefined) {
+      parsedMPD.maximumTime = { isContinuous: false,
+                                value: mediaPresentationDuration,
+                                time: now };
+    } else if (parsedPeriods[parsedPeriods.length - 1] !== undefined) {
+      const lastPeriod = parsedPeriods[parsedPeriods.length - 1];
+      const end = lastPeriod.end ??
+                  (lastPeriod.duration !== undefined ?
+                    lastPeriod.start + lastPeriod.duration :
+                    undefined);
+      if (end !== undefined) {
+        parsedMPD.maximumTime = { isContinuous: false,
+                                  value: end,
+                                  time: now };
+      }
     }
   } else {
     if (minTime != null) {

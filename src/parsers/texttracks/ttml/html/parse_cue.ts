@@ -28,22 +28,22 @@ export interface ITTMLHTMLCue { start : number;
 
 /**
  * @param {Element} paragraph
- * @param {Number} offset
- * @param {Array.<Object>} styles
- * @param {Array.<Object>} regions
+ * @param {Number} timeOffset
+ * @param {Array.<Object>} idStyles
+ * @param {Array.<Object>} regionStyles
  * @param {Element} body
- * @param {Object} styleBase
+ * @param {Object} paragraphStyle
  * @param {Object} ttParams
  * @param {Boolean} shouldTrimWhiteSpaceOnParagraph
  * @returns {Object|null}
  */
 export default function parseCue(
   paragraph : Element,
-  offset : number,
-  styles : IStyleObject[],
-  regions : IStyleObject[],
+  timeOffset : number,
+  idStyles : IStyleObject[],
+  regionStyles : IStyleObject[],
   body : Element|null,
-  styleBase : IStyleList,
+  paragraphStyle : IStyleList,
   ttParams : ITTParameters,
   shouldTrimWhiteSpace : boolean
 ) : ITTMLHTMLCue|null {
@@ -51,20 +51,22 @@ export default function parseCue(
   // TTML allows for empty elements like <div></div>.
   // If paragraph has neither time attributes, nor
   // non-whitespace text, don't try to make a cue out of it.
-  if (!paragraph.hasAttribute("begin") && !paragraph.hasAttribute("end") &&
+  if (!paragraph.hasAttribute("begin") &&
+      !paragraph.hasAttribute("end") &&
       /^\s*$/.test(paragraph.textContent === null ? "" : paragraph.textContent))
   {
     return null;
   }
 
+  const { cellResolution } = ttParams;
   const { start, end } = getTimeDelimiters(paragraph, ttParams);
   const element = createElement(paragraph,
                                 body,
-                                regions,
-                                styles,
-                                styleBase,
-                                shouldTrimWhiteSpace);
-  return { start: start + offset,
-           end: end + offset,
+                                regionStyles,
+                                idStyles,
+                                paragraphStyle,
+                                { cellResolution, shouldTrimWhiteSpace });
+  return { start: start + timeOffset,
+           end: end + timeOffset,
            element };
 }

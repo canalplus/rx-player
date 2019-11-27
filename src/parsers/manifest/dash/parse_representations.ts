@@ -18,6 +18,7 @@ import log from "../../../log";
 import IRepresentationIndex from "../../../manifest/representation_index";
 import resolveURL from "../../../utils/resolve_url";
 import { IParsedRepresentation } from "../types";
+import getRepAvailabilityTimeOffset from "./get_rep_availability_time_offset";
 import BaseRepresentationIndex from "./indexes/base";
 import ListRepresentationIndex from "./indexes/list";
 import TemplateRepresentationIndex from "./indexes/template";
@@ -27,13 +28,14 @@ import {
   IAdaptationSetIntermediateRepresentation
 } from "./node_parsers/AdaptationSet";
 import {
-  IRepresentationIntermediateRepresentation,
+  IRepresentationIntermediateRepresentation
 } from "./node_parsers/Representation";
 
 // Supplementary context about the current AdaptationSet
 export interface IAdaptationInfos {
   aggressiveMode : boolean; // Whether we should request new segments even if
                             // they are not yet finished
+  availabilityTimeOffset: number; // availability time offset of the concerned adaptation
   baseURL? : string; // Eventual URL from which every relative URL will be based
                      // on
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
@@ -52,6 +54,7 @@ export interface IAdaptationInfos {
 interface IIndexContext {
   aggressiveMode : boolean; // Whether we should request new segments even if
                             // they are not yet finished
+  availabilityTimeOffset: number;
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
                                                        // available position of a live
                                                        // content
@@ -114,11 +117,13 @@ export default function parseRepresentations(
   adaptationInfos : IAdaptationInfos
 ): IParsedRepresentation[] {
   return representationsIR.map((representation) => {
-    const baseURL = representation.children.baseURL;
+    const baseURL = representation.children.baseURL !== undefined ?
+      representation.children.baseURL.value : "";
     const representationBaseURL = resolveURL(adaptationInfos.baseURL, baseURL);
 
     // 4-2-1. Find Index
     const context = { aggressiveMode: adaptationInfos.aggressiveMode,
+                      availabilityTimeOffset: adaptationInfos.availabilityTimeOffset,
                       manifestBoundsCalculator: adaptationInfos.manifestBoundsCalculator,
                       isDynamic: adaptationInfos.isDynamic,
                       periodEnd: adaptationInfos.end,
@@ -131,15 +136,25 @@ export default function parseRepresentations(
     let representationIndex : IRepresentationIndex;
     if (representation.children.segmentBase != null) {
       const { segmentBase } = representation.children;
+      context.availabilityTimeOffset =
+        getRepAvailabilityTimeOffset(adaptationInfos.availabilityTimeOffset,
+                                     representation.children.baseURL,
+                                     segmentBase.availabilityTimeOffset);
       representationIndex = new BaseRepresentationIndex(segmentBase, context);
     } else if (representation.children.segmentList != null) {
       const { segmentList } = representation.children;
       representationIndex = new ListRepresentationIndex(segmentList, context);
     } else if (representation.children.segmentTemplate != null) {
       const { segmentTemplate } = representation.children;
-      representationIndex = segmentTemplate.indexType === "timeline" ?
-        new TimelineRepresentationIndex(segmentTemplate, context) :
-        new TemplateRepresentationIndex(segmentTemplate, context);
+      if (segmentTemplate.indexType === "timeline") {
+        representationIndex = new TimelineRepresentationIndex(segmentTemplate, context);
+      } else {
+        context.availabilityTimeOffset =
+          getRepAvailabilityTimeOffset(adaptationInfos.availabilityTimeOffset,
+                                       representation.children.baseURL,
+                                       segmentTemplate.availabilityTimeOffset);
+        representationIndex = new TemplateRepresentationIndex(segmentTemplate, context);
+      }
     } else {
       representationIndex = findAdaptationIndex(adaptation, context);
     }

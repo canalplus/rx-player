@@ -82,7 +82,7 @@ export interface IMediaKeysInfos {
 // Data stored in a persistent MediaKeySession storage
 export interface IPersistedSessionData { sessionId : string;
                                          initData : number;
-                                         initDataType : string|undefined; }
+                                         initDataType? : string|undefined; }
 
 // MediaKeySession storage interface
 export interface IPersistedSessionStorage { load() : IPersistedSessionData[];
