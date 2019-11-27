@@ -167,12 +167,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
     // TODO If indexRange is behind the initialization segment
     // the following logic will not work.
-    let range: [number, number] | undefined;
-    if (index.initialization !== undefined) {
-      range = index.initialization.range;
-    } else if (index.indexRange !== undefined) {
-      range = [0, index.indexRange[0] - 1];
-    }
+    const range = index.initialization?.range ??
+                  (index.indexRange !== undefined ? [0, index.indexRange[0] - 1] :
+                                                    undefined);
 
     this._index = { indexRange: index.indexRange,
                     indexTimeOffset,
