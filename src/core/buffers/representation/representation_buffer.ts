@@ -58,7 +58,6 @@ import Manifest, {
   Representation,
 } from "../../../manifest";
 import SimpleSet from "../../../utils/simple_set";
-import { IWarningEvent } from "../../init";
 import {
   IPrioritizedSegmentFetcher,
   ISegmentFetcherEvent,
@@ -79,6 +78,11 @@ import getNeededSegments from "./get_needed_segments";
 import getSegmentPriority from "./get_segment_priority";
 import getWantedRange from "./get_wanted_range";
 import pushDataToSourceBufferWithRetries from "./push_data";
+
+interface IPipelineWarningEvent {
+  type: "warning";
+  value: ICustomError;
+}
 
 // Item emitted by the Buffer's clock$
 export interface IRepresentationBufferClockTick {
@@ -407,9 +411,10 @@ export default function RepresentationBuffer<T>({
    * error).
    * @returns {Observable}
    */
-  function loadSegmentsFromQueue() : Observable<ISegmentLoadingEvent<T>|IWarningEvent> {
+  function loadSegmentsFromQueue() : Observable<ISegmentLoadingEvent<T>|
+                                                IPipelineWarningEvent> {
     const requestNextSegment$ =
-      observableDefer(() : Observable<ISegmentLoadingEvent<T>|IWarningEvent> => {
+      observableDefer(() : Observable<ISegmentLoadingEvent<T>|IPipelineWarningEvent> => {
         const currentNeededSegment = downloadQueue.shift();
         if (currentNeededSegment == null) {
           nextTick(() => { reCheckNeededSegments$.next(); });
@@ -422,7 +427,8 @@ export default function RepresentationBuffer<T>({
 
         currentSegmentRequest = { segment, priority, request$ };
         const response$ = request$
-          .pipe(mergeMap((evt) : Observable<ISegmentLoadingEvent<T>|IWarningEvent> => {
+          .pipe(mergeMap((evt) : Observable<ISegmentLoadingEvent<T>|
+                                            IPipelineWarningEvent> => {
             if (evt.type === "warning") {
               return observableOf({ type: "retry" as const,
                                     value: { segment,
@@ -461,7 +467,7 @@ export default function RepresentationBuffer<T>({
    * @returns {Observable}
    */
   function onLoaderEvent(
-    evt : ISegmentLoadingEvent<T>|IWarningEvent
+    evt : ISegmentLoadingEvent<T>|IPipelineWarningEvent
   ) : Observable<IBufferEventAddedSegment<T> |
                  ISegmentFetcherWarning |
                  IProtectedSegmentEvent |
