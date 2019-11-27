@@ -41,7 +41,7 @@ export default function parser({ content,
 ) : ISegmentParserObservable< Uint8Array | ArrayBuffer > {
   const { period, representation, segment } = content;
   const { data, isChunked } = response;
-  if (data == null) {
+  if (data === null) {
     const isStaticContent = segment.isInit && segment.range === undefined;
     if (isStaticContent) {
       representation.index._addSegments([{ time: 0,
@@ -111,7 +111,7 @@ export default function parser({ content,
                            getMDHDTimescale(completeInitChunk);
     }
 
-    const chunkInfos = timescale != null && timescale > 0 ? { time: 0,
+    const chunkInfos = timescale !== null && timescale > 0 ? { time: 0,
                                                               duration: 0,
                                                               timescale } :
                                                             null;

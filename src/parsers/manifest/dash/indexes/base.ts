@@ -168,9 +168,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     // TODO If indexRange is behind the initialization segment
     // the following logic will not work.
     let range: [number, number] | undefined;
-    if (index.initialization != null) {
+    if (index.initialization !== undefined) {
       range = index.initialization.range;
-    } else if (index.indexRange != null) {
+    } else if (index.indexRange !== undefined) {
       range = [0, index.indexRange[0] - 1];
     }
 
