@@ -26,19 +26,24 @@ const player = new RxPlayer({ videoElement });
 
 ``videoElement`` is an RxPlayer option and will be the HTMLElement the RxPlayer
 will load your media on.
+
+Despite its name, you can also give it an `<audio>` element. It will still be
+able to play an audio content without issue.
+
 When you are ready to make use of more advanced features, you can look at the
 other possible options in the [Player Options page](../api/player_options.md).
 
 
 
-## Loading a video #############################################################
+## Loading a content ###########################################################
 
-The next logical step is to load a video.
+The next logical step is to load a content (audio, video or both).
 
-Loading a new video is done through the ``loadVideo`` method.
-``loadVideo`` takes an object as arguments, which corresponds to its options.
-There is here also [a lot of possible options](../api/loadVideo_options.md),
-but to simplify we will start with just three:
+Loading a new content is done through the ``loadVideo`` method.
+
+``loadVideo`` takes an object as arguments. There is here also [a lot of
+possible options](../api/loadVideo_options.md), but to simplify we will start
+with just three:
 
   - ``transport``: String describing the transport protocol (can be ``"dash"``,
     ``"smooth"`` or ``"directfile"`` for now).
@@ -46,9 +51,9 @@ but to simplify we will start with just three:
   - ``url``: URL to the content (to the Manifest for Smooth contents, to the MPD
     for DASH contents or to the whole file for DirectFile contents).
 
-  - ``autoPlay``: Boolean indicating if you want the video to automatically play
-    when loaded. ``false`` by default (which means, the player will not play on
-    its own).
+  - ``autoPlay``: Boolean indicating if you want the content to automatically
+    begin to play once loaded. ``false`` by default (which means, the player
+    will not begin to play on its own).
 
 Here is a quick example which will load and play a DASH content:
 ```js
@@ -63,10 +68,10 @@ player.loadVideo({
 
 ## Reacting to basic events ####################################################
 
-Now that we are loading a video, we might want to know:
+Now that we are loading a content, we might want to know:
   - if it succeed
   - if it failed
-  - when we are able to interact with the video
+  - when we are able to interact with the content
 
 To do all three of those things, you will need to listen to player events.
 This is done through the [addEventListener
@@ -150,3 +155,12 @@ player.loadVideo({
   autoPlay: true,
 });
 ```
+
+
+## And now?
+
+Now that you know the basic RxPlayer APIs, you might want to dive deep into [the
+whole API documentation](./api/index.md).
+
+You can also read our next tutorial, on how to play contents with DRM,
+[here](./contents_with_DRM.md).

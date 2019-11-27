@@ -1,9 +1,10 @@
 <head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Tutorial: Quick Start - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Tutorial:%20Quick%20Start">Tutorial: Quick Start</a></p>
 <ul>
 <li><a href="#chapter-Instanciating%20a%20Player">Instanciating a Player</a></li>
-<li><a href="#chapter-Loading%20a%20video">Loading a video</a></li>
+<li><a href="#chapter-Loading%20a%20content">Loading a content</a></li>
 <li><a href="#chapter-Reacting%20to%20basic%20events">Reacting to basic events</a></li>
 <li><a href="#chapter-Interacting%20with%20the%20player">Interacting with the player</a></li>
+<li><a href="#chapter-And%20now?">And now?</a></li>
 </ul>
 </div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-Tutorial:%20Quick%20Start"></a></p>
 <h1>Tutorial: Quick Start</h1>
@@ -24,16 +25,18 @@ the lines of:</p>
 <span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> RxPlayer({ videoElement });
 </code></pre>
 <p><code>videoElement</code> is an RxPlayer option and will be the HTMLElement the RxPlayer
-will load your media on.
-When you are ready to make use of more advanced features, you can look at the
+will load your media on.</p>
+<p>Despite its name, you can also give it an <code>&lt;audio&gt;</code> element. It will still be
+able to play an audio content without issue.</p>
+<p>When you are ready to make use of more advanced features, you can look at the
 other possible options in the <a href="../api/player_options.html">Player Options page</a>.</p>
-<p><a name="chapter-Loading%20a%20video"></a></p>
-<h2>Loading a video</h2>
-<p>The next logical step is to load a video.</p>
-<p>Loading a new video is done through the <code>loadVideo</code> method.
-<code>loadVideo</code> takes an object as arguments, which corresponds to its options.
-There is here also <a href="../api/loadVideo_options.html">a lot of possible options</a>,
-but to simplify we will start with just three:</p>
+<p><a name="chapter-Loading%20a%20content"></a></p>
+<h2>Loading a content</h2>
+<p>The next logical step is to load a content (audio, video or both).</p>
+<p>Loading a new content is done through the <code>loadVideo</code> method.</p>
+<p><code>loadVideo</code> takes an object as arguments. There is here also <a href="../api/loadVideo_options.html">a lot of
+possible options</a>, but to simplify we will start
+with just three:</p>
 <ul>
 <li>
 <p><code>transport</code>: String describing the transport protocol (can be <code>&quot;dash&quot;</code>,
@@ -44,9 +47,9 @@ but to simplify we will start with just three:</p>
 for DASH contents or to the whole file for DirectFile contents).</p>
 </li>
 <li>
-<p><code>autoPlay</code>: Boolean indicating if you want the video to automatically play
-when loaded. <code>false</code> by default (which means, the player will not play on
-its own).</p>
+<p><code>autoPlay</code>: Boolean indicating if you want the content to automatically
+begin to play once loaded. <code>false</code> by default (which means, the player
+will not begin to play on its own).</p>
 </li>
 </ul>
 <p>Here is a quick example which will load and play a DASH content:</p>
@@ -58,11 +61,11 @@ its own).</p>
 </code></pre>
 <p><a name="chapter-Reacting%20to%20basic%20events"></a></p>
 <h2>Reacting to basic events</h2>
-<p>Now that we are loading a video, we might want to know:</p>
+<p>Now that we are loading a content, we might want to know:</p>
 <ul>
 <li>if it succeed</li>
 <li>if it failed</li>
-<li>when we are able to interact with the video</li>
+<li>when we are able to interact with the content</li>
 </ul>
 <p>To do all three of those things, you will need to listen to player events.
 This is done through the <a href="../api/index.html#meth-addEventListener">addEventListener
@@ -134,4 +137,10 @@ player.loadVideo({
   <span class="hljs-attr">autoPlay</span>: <span class="hljs-literal">true</span>,
 });
 </code></pre>
+<p><a name="chapter-And%20now?"></a></p>
+<h2>And now?</h2>
+<p>Now that you know the basic RxPlayer APIs, you might want to dive deep into <a href="./api/index.md">the
+whole API documentation</a>.</p>
+<p>You can also read our next tutorial, on how to play contents with DRM,
+<a href="contents_with_DRM.html">here</a>.</p>
 </body></html></div></div></div></body>

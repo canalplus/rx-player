@@ -615,6 +615,24 @@ export default {
   MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL: 50,
 
   /**
+   * On browsers with no ResizeObserver API, this will be the interval in
+   * milliseconds at which we should check if the text track element has
+   * changed its size, and updates proportional text-track data accordingly
+   * (like a proportional font-size).
+   *
+   * This is only used:
+   *   - in an "html" textTrackMode
+   *   - when some styling is proportional in the text track data
+   *
+   * Putting a value too low will render faster but might use to much proc time.
+   * Putting a value too high might provoke a re-render too late after the user
+   * changed the element's size (e.g. when going to fullscreen mode).
+   *
+   * @type {Number}
+   */
+  TEXT_TRACK_SIZE_CHECKS_INTERVAL: 250,
+
+  /**
    * The Buffer padding is a time offset from the current time that affects
    * the buffer.
    *

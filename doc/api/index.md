@@ -1019,6 +1019,9 @@ Returns the list of available audio tracks for the current content.
 
 Each of the objects in the returned array have the following properties:
 
+  - ``active`` (``Boolean``): Whether the track is the one currently active or
+    not.
+
   - ``id`` (``string``): The id used to identify the track. Use it for
     setting the track via ``setAudioTrack``.
 
@@ -1034,8 +1037,11 @@ Each of the objects in the returned array have the following properties:
   - ``audioDescription`` (``Boolean``): Whether the track is an audio
     description (for the visually impaired or not).
 
-  - ``active`` (``Boolean``): Whether the track is the one currently active or
-    not.
+  - ``dub`` (``Boolean|undefined``): If set to `true`, this audio track is a
+    "dub", meaning it was recored in another language than the original.
+    If set to `false`, we know that this audio track is in an original language.
+    This property is `undefined` if we do not known whether it is in an original
+    language.
 
 
 In _DirectFile_ mode (see [loadVideo
@@ -1136,6 +1142,12 @@ The track is an object with the following properties:
 
   - ``audioDescription`` (``Boolean``): Whether the track is an audio
     description (for the visually impaired or not).
+
+  - ``dub`` (``Boolean|undefined``): If set to `true`, this audio track is a
+    "dub", meaning it was recored in another language than the original.
+    If set to `false`, we know that this audio track is in an original language.
+    This property is `undefined` if we do not known whether it is in an original
+    language.
 
 
 ``undefined`` if no content has been loaded yet.

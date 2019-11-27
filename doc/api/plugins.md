@@ -276,6 +276,13 @@ The representationFilter will be called each time we load a
         ``Representation`` links to an audio track with added commentary for
         the visually impaired.
 
+      - isDub ``{Boolean|undefined}``): If set to `true`, this audio track is a
+        "dub", meaning it was recored in another language than the original.
+        If set to `false`, we know that this audio track is in an original
+        language.
+        This property is `undefined` if we do not known whether it is in an
+        original language.
+
 
 This function should then returns ``true`` if the ``Representation`` should be
 kept or ``false`` if it should be removed.
