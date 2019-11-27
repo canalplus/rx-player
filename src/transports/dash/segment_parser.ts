@@ -90,12 +90,14 @@ export default function parser({ content,
         (
           nextSegments === null ||
           nextSegments.length === 0
-        )
+        ) &&
+        shouldExtractCompleteInitChunk &&
+        segment.indexRange === undefined
     ) {
-      if (!shouldExtractCompleteInitChunk) {
-        throw new Error("Can't extract complete init chunk and segment" +
-                        "references from loaded data.");
-      }
+      // here, it means that we probably are loading a static content as :
+      // - (Init + index) had to be guessed
+      // - No init segment was found
+      // - No next segments are present or parsed
       representation.index._addSegments([{ time: 0,
                                            duration: Number.MAX_VALUE,
                                            timescale: 1 }]);
