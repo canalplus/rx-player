@@ -336,24 +336,18 @@ export interface ITransportPipelines { manifest : ITransportManifestPipeline;
                                        text : ITransportTextSegmentPipeline;
                                        image : ITransportImageSegmentPipeline; }
 
-interface IParsedKeySystem { systemId : string;
-                             privateData : Uint8Array; }
-
 interface IServerSyncInfos { serverTimestamp : number;
                              clientTime : number; }
 
 export interface ITransportOptions {
   aggressiveMode? : boolean;
   checkMediaSegmentIntegrity? : boolean;
-  keySystems? : (hex? : Uint8Array) => IParsedKeySystem[]; // TODO deprecate
   lowLatencyMode : boolean;
   manifestLoader?: CustomManifestLoader;
-  minRepresentationBitrate? : number; // TODO deprecate
   referenceDateTime? : number;
   representationFilter? : IRepresentationFilter;
   segmentLoader? : CustomSegmentLoader;
   serverSyncInfos? : IServerSyncInfos;
-  suggestedPresentationDelay? : number;
   supplementaryImageTracks? : ISupplementaryImageTrack[];
   supplementaryTextTracks? : ISupplementaryTextTrack[];
 }
