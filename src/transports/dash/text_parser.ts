@@ -253,8 +253,13 @@ export default function textTrackParser({ response,
   const { timestampOffset = 0 } = segment;
   const { data, isChunked } = response;
   if (data == null) { // No data, just return empty infos
-    const isStaticContent = segment.isInit && segment.range === undefined;
-    if (isStaticContent) {
+    // here, it means that we probably are loading a static content as :
+    // - (Init + index) had to be guessed
+    // - No init segment was found
+    // - No next segments are present or parsed
+    if (segment.isInit &&
+        segment.range === undefined &&
+        segment.indexRange === undefined) {
       representation.index._addSegments([{ time: 0,
                                            duration: Number.MAX_VALUE,
                                            timescale: 1 }]);
