@@ -15,7 +15,6 @@
  */
 
 import {
-  combineLatest as observableCombineLatest,
   concat as observableConcat,
   EMPTY,
   merge as observableMerge,
@@ -29,6 +28,7 @@ import {
   map,
   mergeMap,
   shareReplay,
+  take,
   tap,
 } from "rxjs/operators";
 import {
@@ -45,6 +45,7 @@ import initMediaKeys from "./init_media_keys";
 import SessionEventsListener from "./session_events_listener";
 import setServerCertificate from "./set_server_certificate";
 import {
+  IAttachedMediaKeysEvent,
   IEMEManagerEvent,
   IKeySystemOption,
 } from "./types";
@@ -77,9 +78,11 @@ export default function EMEManager(
   const mediaKeysInfos$ = initMediaKeys(mediaElement, keySystemsConfigs)
     .pipe(shareReplay()); // cache success
 
-  const attachedMediaKeys$ = mediaKeysInfos$.pipe(filter(evt => {
-    return evt.type === "attached-media-keys";
-  }));
+  const attachedMediaKeys$ = mediaKeysInfos$.pipe(
+    filter((evt) : evt is IAttachedMediaKeysEvent => {
+      return evt.type === "attached-media-keys";
+    }),
+    take(1));
 
   const encryptedEvents$ = onEncrypted$(mediaElement).pipe(
     tap((evt) => {
@@ -90,9 +93,12 @@ export default function EMEManager(
       return { type: initDataType, data: initData };
     }));
 
-  const bindSession$ = observableCombineLatest([encryptedEvents$,
-                                                attachedMediaKeys$]
-  ).pipe(
+  const bindSession$ = encryptedEvents$.pipe(
+    // Add attached MediaKeys info once available
+    mergeMap((encryptedEvt) => attachedMediaKeys$.pipe(
+      map((mediaKeysEvt) : [IEncryptedEvent, IAttachedMediaKeysEvent] =>
+        [ encryptedEvt, mediaKeysEvt ])
+      )),
     /* Attach server certificate and create/reuse MediaKeySession */
     mergeMap(([encryptedEvent, mediaKeysEvent], i) => {
       const mediaKeysInfos = mediaKeysEvent.value;
