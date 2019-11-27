@@ -99,7 +99,7 @@ function findAdaptationIndex(
   } else {
     adaptationIndex = new BaseRepresentationIndex({
       timeline: [],
-      timescale: 1, // set to 1 if no one was provided in the manifest
+      timescale: 1, // set to 1 if no timescale was provided in the manifest
     }, context);
   }
   return adaptationIndex;
