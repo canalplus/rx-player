@@ -33,6 +33,7 @@ import {
   IContent,
   ILoaderDataLoadedValue,
   IScheduleRequestResponse,
+  ITransportRetryEvent,
   ITransportWarningEvent,
 } from "../types";
 import byteRange from "../utils/byte_range";
@@ -66,7 +67,7 @@ export default function loadIndexes(indexesToLoad: ISidxReference[],
   content: IContent,
   scheduleRequest: <U>(request : () => Observable<U>) =>
     Observable<IScheduleRequestResponse<U> | ITransportWarningEvent>
-  ): Observable<ITransportWarningEvent> {
+  ): Observable<ITransportRetryEvent> {
   const url = content.segment.mediaURL;
   if (url === null) {
     throw new Error("No URL for loading indexes.");
@@ -87,7 +88,13 @@ export default function loadIndexes(indexesToLoad: ISidxReference[],
   return observableMerge(...loadedRessources$).pipe(
     mergeMap((evt) => {
       if (evt.type === "warning") {
-        return observableOf(evt);
+        return observableOf({
+          type: "retry" as const,
+          value: {
+            error: evt.value,
+            segment: content.segment,
+          },
+        });
       }
       const loadedRessource = evt.value;
       const newSegments: ISidxReference[] = [];

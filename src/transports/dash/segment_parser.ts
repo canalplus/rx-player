@@ -32,7 +32,7 @@ import takeFirstSet from "../../utils/take_first_set";
 import {
   ISegmentParserArguments,
   ISegmentParserResponseEvent,
-  ITransportWarningEvent,
+  ITransportRetryEvent,
 } from "../types";
 import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
@@ -45,7 +45,7 @@ export default function parser({ content,
                                                                              ArrayBuffer |
                                                                              null >
 ) : Observable<ISegmentParserResponseEvent<Uint8Array|ArrayBuffer> |
-               ITransportWarningEvent> {
+               ITransportRetryEvent> {
   const { period, representation, segment } = content;
   const { data, isChunked } = response;
   if (data == null) {

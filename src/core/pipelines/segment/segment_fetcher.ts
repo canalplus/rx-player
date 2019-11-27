@@ -59,15 +59,18 @@ import createSegmentLoader, {
 
 export type ISegmentFetcherWarning = IPipelineLoaderWarning;
 
-interface IPipelineWarningEvent {
-  type: "warning";
-  value: ICustomError;
+interface IPipelineRetryEvent {
+  type: "retry";
+  value: {
+    error: ICustomError;
+    segment: ISegment;
+  };
 }
 
 export interface ISegmentFetcherChunkEvent<T> {
   type : "chunk";
   parse : (init? : IChunkTimingInfos) =>
-    Observable<ISegmentParserResponseEvent<T> | IPipelineWarningEvent>;
+    Observable<ISegmentParserResponseEvent<T> | IPipelineRetryEvent>;
 }
 
 export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete"; }
@@ -107,7 +110,7 @@ export default function createSegmentFetcher<T>(
    */
   function scheduleRequest<U>(
     request : () => Observable<U>
-  ) : Observable<IScheduleRequestResponse<U> | IPipelineWarningEvent> {
+  ) : Observable<IScheduleRequestResponse<U> | ISegmentFetcherWarning> {
     const backoffOptions = { baseDelay: options.initialBackoffDelay,
                              maxDelay: options.maximumBackoffDelay,
                              maxRetryRegular: options.maxRetry,
@@ -225,7 +228,7 @@ export default function createSegmentFetcher<T>(
            * @returns {Observable}
            */
           parse(init? : IChunkTimingInfos) :
-            Observable<ISegmentParserResponseEvent<T> | IPipelineWarningEvent> {
+            Observable<ISegmentParserResponseEvent<T> | IPipelineRetryEvent> {
             const response = { data: evt.value.responseData, isChunked };
             /* tslint:disable no-unsafe-any */
             return segmentParser({ response, init, content, scheduleRequest })

@@ -79,11 +79,6 @@ import getSegmentPriority from "./get_segment_priority";
 import getWantedRange from "./get_wanted_range";
 import pushDataToSourceBufferWithRetries from "./push_data";
 
-interface IPipelineWarningEvent {
-  type: "warning";
-  value: ICustomError;
-}
-
 // Item emitted by the Buffer's clock$
 export interface IRepresentationBufferClockTick {
   currentTime : number; // the current position we are in the video in s
@@ -411,10 +406,9 @@ export default function RepresentationBuffer<T>({
    * error).
    * @returns {Observable}
    */
-  function loadSegmentsFromQueue() : Observable<ISegmentLoadingEvent<T>|
-                                                IPipelineWarningEvent> {
+  function loadSegmentsFromQueue() : Observable<ISegmentLoadingEvent<T>> {
     const requestNextSegment$ =
-      observableDefer(() : Observable<ISegmentLoadingEvent<T>|IPipelineWarningEvent> => {
+      observableDefer(() : Observable<ISegmentLoadingEvent<T>> => {
         const currentNeededSegment = downloadQueue.shift();
         if (currentNeededSegment == null) {
           nextTick(() => { reCheckNeededSegments$.next(); });
@@ -427,8 +421,7 @@ export default function RepresentationBuffer<T>({
 
         currentSegmentRequest = { segment, priority, request$ };
         const response$ = request$
-          .pipe(mergeMap((evt) : Observable<ISegmentLoadingEvent<T>|
-                                            IPipelineWarningEvent> => {
+          .pipe(mergeMap((evt) : Observable<ISegmentLoadingEvent<T>> => {
             if (evt.type === "warning") {
               return observableOf({ type: "retry" as const,
                                     value: { segment,
@@ -445,7 +438,7 @@ export default function RepresentationBuffer<T>({
             }
             return evt.parse(initInfos).pipe(
               map(event => {
-                if (event.type === "warning") {
+                if (event.type === "retry") {
                   return event;
                 }
                 return { type: "parsed-segment" as const,
@@ -467,15 +460,13 @@ export default function RepresentationBuffer<T>({
    * @returns {Observable}
    */
   function onLoaderEvent(
-    evt : ISegmentLoadingEvent<T>|IPipelineWarningEvent
+    evt : ISegmentLoadingEvent<T>
   ) : Observable<IBufferEventAddedSegment<T> |
                  ISegmentFetcherWarning |
                  IProtectedSegmentEvent |
                  IBufferManifestMightBeOutOfSync>
   {
     switch (evt.type) {
-      case "warning":
-        return observableOf(evt);
       case "retry":
         return observableConcat(
           observableOf({ type: "warning" as const, value: evt.value.error }),

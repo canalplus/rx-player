@@ -36,6 +36,14 @@ export interface ITransportWarningEvent {
   value: ICustomError;
 }
 
+export interface ITransportRetryEvent {
+  type: "retry";
+  value: {
+    error: ICustomError;
+    segment: ISegment;
+  };
+}
+
 export interface IScheduleRequestResponse<U> {
   type: "schedule-request-response";
   value: U;
@@ -265,13 +273,13 @@ export type IImageParserResponse =
   ISegmentParserResponseEvent< IImageTrackSegmentData >;
 
 export type ISegmentParserObservable<T> =
-  Observable<ISegmentParserResponseEvent<T> | ITransportWarningEvent>;
+  Observable<ISegmentParserResponseEvent<T> | ITransportRetryEvent>;
 export type IVideoParserObservable = Observable<IVideoParserResponse |
-                                                ITransportWarningEvent>;
+                                                ITransportRetryEvent>;
 export type IAudioParserObservable = Observable<IAudioParserResponse |
-                                                ITransportWarningEvent>;
+                                                ITransportRetryEvent>;
 export type ITextParserObservable = Observable<ITextParserResponse |
-                                               ITransportWarningEvent>;
+                                               ITransportRetryEvent>;
 export type IImageParserObservable = Observable<IImageParserResponse>;
 
 // TODO Remove resolver

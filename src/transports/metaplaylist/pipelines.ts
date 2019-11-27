@@ -282,7 +282,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
       return audio.parser(getParserArguments(args, segment, contentStart))
         .pipe(
           map((evt) => {
-            if (evt.type === "warning") {
+            if (evt.type === "retry") {
               return evt;
             }
             const formattedResponse = formatParserResponse(contentStart,
@@ -314,7 +314,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
       return video.parser(getParserArguments(args, segment, contentStart))
       .pipe(
         map((evt) => {
-          if (evt.type === "warning") {
+          if (evt.type === "retry") {
             return evt;
           }
           const formattedResponse = formatParserResponse(contentStart,
@@ -345,7 +345,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
       return text.parser(getParserArguments(args, segment, contentStart))
       .pipe(
         map((evt) => {
-          if (evt.type === "warning") {
+          if (evt.type === "retry") {
             return evt;
           }
           const formattedResponse = formatParserResponse(contentStart,

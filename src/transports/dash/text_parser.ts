@@ -38,6 +38,7 @@ import {
   ISegmentParserArguments,
   ITextParserObservable,
   ITextParserResponse,
+  ITransportRetryEvent,
   ITransportWarningEvent,
 } from "../types";
 import loadIndexes from "./load_indexes";
@@ -56,7 +57,7 @@ function parseMP4EmbeddedTrack({ response,
                                scheduleRequest?: <U>(request : () => Observable<U>) =>
                                 Observable<IScheduleRequestResponse<U> |
                                            ITransportWarningEvent>
-) : Observable<ITextParserResponse | ITransportWarningEvent> {
+) : Observable<ITextParserResponse | ITransportRetryEvent> {
   const { period, representation, segment } = content;
   const { isInit, timestampOffset = 0, range } = segment;
   const { language } = content.adaptation;
@@ -262,7 +263,7 @@ export default function textTrackParser({ response,
                                                                      ArrayBuffer |
                                                                      string |
                                                                      null >
-) : Observable<ITextParserResponse|ITransportWarningEvent> {
+) : Observable<ITextParserResponse|ITransportRetryEvent> {
   const { period, representation, segment } = content;
   const { timestampOffset = 0 } = segment;
   const { data, isChunked } = response;
