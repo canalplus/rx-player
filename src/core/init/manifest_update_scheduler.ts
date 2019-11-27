@@ -15,18 +15,15 @@
  */
 
 import {
+  defer as observableDefer,
   EMPTY,
   merge as observableMerge,
   Observable,
-  ReplaySubject,
   timer as observableTimer,
 } from "rxjs";
 import {
-  finalize,
   ignoreElements,
   mergeMap,
-  startWith,
-  switchMap,
   take,
   tap,
 } from "rxjs/operators";
@@ -53,51 +50,46 @@ export default function manifestUpdateScheduler(
   fetchManifest : IManifestFetcher,
   minimumManifestUpdateInterval : number
 ) : Observable<never> {
-  // Emit each time the manifest is refreshed.
-  const manifestRefreshed$ = new ReplaySubject<{ manifest : Manifest;
-                                                 sendingTime? : number; }>(1);
-
-  // Emit when the manifest should be refreshed. Either when:
-  //   - A buffer asks for it to be refreshed
-  //   - its lifetime expired.
-  return manifestRefreshed$.pipe(
-    startWith(initialManifest),
-    switchMap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
-      // schedule a Manifest refresh to avoid sending too much request.
-      const timeSinceLastRefresh = newSendingTime == null ?
-                                     0 :
-                                     performance.now() - newSendingTime;
-      const minInterval = Math.max(minimumManifestUpdateInterval * 1000 -
-                                    timeSinceLastRefresh,
-                                   0);
-      const manualRefresh$ = scheduleRefresh$.pipe(
-        mergeMap((delay) => {
-          return observableTimer(Math.max(delay - timeSinceLastRefresh,
-                                          minInterval));
-        }));
-
-      const autoRefresh$ = (() => {
-        if (newManifest.lifetime == null || newManifest.lifetime <= 0) {
-          return EMPTY;
-        }
-        const timeSinceRequest = newSendingTime == null ?
+  function handleManifestRefresh$(
+    manifestInfos: { manifest: Manifest;
+                     sendingTime?: number; }): Observable<never> {
+    const { manifest, sendingTime } = manifestInfos;
+    // schedule a Manifest refresh to avoid sending too much request.
+    const timeSinceLastRefresh = sendingTime == null ?
                                    0 :
-                                   performance.now() - newSendingTime;
-        const updateTimeout = newManifest.lifetime * 1000 - timeSinceRequest;
-        return observableTimer(Math.max(updateTimeout, minInterval));
-      })();
+                                   performance.now() - sendingTime;
+    const minInterval = Math.max(minimumManifestUpdateInterval * 1000 -
+                                  timeSinceLastRefresh,
+                                 0);
+    const manualRefresh$ = scheduleRefresh$.pipe(
+      mergeMap((delay) => {
+        return observableTimer(Math.max(delay - timeSinceLastRefresh,
+                                        minInterval));
+      }));
 
-      return observableMerge(autoRefresh$, manualRefresh$)
-        .pipe(take(1),
-              mergeMap(() => refreshManifest(initialManifest.manifest,
-                                             fetchManifest)),
-              tap(val => manifestRefreshed$.next(val)),
-              ignoreElements());
-    }),
-    finalize(() => {
-      manifestRefreshed$.complete();
-    })
-  );
+    const autoRefresh$ = (() => {
+      if (manifest.lifetime == null || manifest.lifetime <= 0) {
+        return EMPTY;
+      }
+      const timeSinceRequest = sendingTime == null ?
+                                 0 :
+                                 performance.now() - sendingTime;
+      const updateTimeout = manifest.lifetime * 1000 - timeSinceRequest;
+      return observableTimer(Math.max(updateTimeout, minInterval));
+    })();
+
+    // Emit when the manifest should be refreshed. Either when:
+    //   - A buffer asks for it to be refreshed
+    //   - its lifetime expired.
+    return observableMerge(autoRefresh$, manualRefresh$)
+      .pipe(take(1),
+            mergeMap(() => refreshManifest(initialManifest.manifest,
+                                           fetchManifest)),
+            mergeMap(handleManifestRefresh$),
+            ignoreElements());
+  }
+
+  return observableDefer(() => handleManifestRefresh$(initialManifest));
 }
 
 /**
