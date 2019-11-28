@@ -64,8 +64,7 @@ function parseMP4EmbeddedTrack({ response,
 
   if (isInit) {
     const { privateInfos } = segment;
-    const shouldExtractCompleteInitChunk = privateInfos !== undefined &&
-                                           privateInfos.shouldGuessInitRange === true;
+    const shouldExtractCompleteInitChunk = privateInfos?.shouldGuessInitRange === true;
 
     const completeInitChunk = shouldExtractCompleteInitChunk ?
       extractCompleteInitChunk(chunkBytes) : chunkBytes;
@@ -75,7 +74,7 @@ function parseMP4EmbeddedTrack({ response,
         sidxSegments === null ||
         sidxSegments.length === 0
       ) &&
-      shouldExtractCompleteInitChunk &&
+      privateInfos?.shouldGuessInitRange === true &&
       segment.indexRange === undefined
     ) {
       // here, it means that we probably are loading a static content as :
@@ -253,18 +252,6 @@ export default function textTrackParser({ response,
   const { timestampOffset = 0 } = segment;
   const { data, isChunked } = response;
   if (data == null) { // No data, just return empty infos
-    // here, it means that we probably are loading a static content as :
-    // - (Init + index) had to be guessed
-    // - No init segment was found
-    // - No next segments are present or parsed
-    if (segment.isInit &&
-        segment.range === undefined &&
-        segment.indexRange === undefined &&
-        segment.privateInfos?.shouldGuessInitRange === true) {
-      representation.index._addSegments([{ time: 0,
-                                           duration: Number.MAX_VALUE,
-                                           timescale: 1 }]);
-    }
     return observableOf({ chunkData: null,
                           chunkInfos: null,
                           chunkOffset: timestampOffset,

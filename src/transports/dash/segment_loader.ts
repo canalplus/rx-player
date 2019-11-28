@@ -48,7 +48,7 @@ function regularSegmentLoader(
   url : string,
   args : ISegmentLoaderArguments,
   lowLatencyMode : boolean
-) : ISegmentLoaderObservable<ArrayBuffer|null> {
+) : ISegmentLoaderObservable<ArrayBuffer> {
 
   if (args.segment.isInit) {
     return initSegmentLoader(url, args);

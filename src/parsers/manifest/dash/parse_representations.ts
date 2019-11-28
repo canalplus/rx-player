@@ -120,7 +120,6 @@ export default function parseRepresentations(
     const baseURL = representation.children.baseURL !== undefined ?
       representation.children.baseURL.value : "";
     const representationBaseURL = resolveURL(adaptationInfos.baseURL, baseURL);
-
     // 4-2-1. Find Index
     const context = { aggressiveMode: adaptationInfos.aggressiveMode,
                       availabilityTimeOffset: adaptationInfos.availabilityTimeOffset,
@@ -132,7 +131,9 @@ export default function parseRepresentations(
                       representationBaseURL,
                       representationBitrate: representation.attributes.bitrate,
                       representationId: representation.attributes.id,
-                      timeShiftBufferDepth: adaptationInfos.timeShiftBufferDepth };
+                      timeShiftBufferDepth: adaptationInfos.timeShiftBufferDepth,
+                      mimeType: representation.attributes.mimeType ??
+                                adaptation.attributes.mimeType };
     let representationIndex : IRepresentationIndex;
     if (representation.children.segmentBase != null) {
       const { segmentBase } = representation.children;

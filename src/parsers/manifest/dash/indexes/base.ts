@@ -92,6 +92,7 @@ export interface IBaseIndexContextArgument {
   representationBaseURL : string; // Base URL for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
+  mimeType? : string; // The adaptation mimeType
 }
 
 /**
@@ -140,6 +141,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
   // absolute end of the period, timescaled and converted to index time
   private _scaledPeriodEnd : number | undefined;
+  private _mimeType? : string;
 
   /**
    * @param {Object} index
@@ -151,8 +153,10 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
             periodEnd,
             representationBaseURL,
             representationId,
-            representationBitrate } = context;
+            representationBitrate,
+            mimeType } = context;
     const { timescale } = index;
+    this._mimeType = mimeType;
     const presentationTimeOffset = index.presentationTimeOffset != null ?
       index.presentationTimeOffset : 0;
 
@@ -192,6 +196,10 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   getInitSegment() : ISegment | null {
     const initSegment = getInitSegment(this._index);
     if (initSegment.range === undefined) {
+      if (this._mimeType !== undefined &&
+          /\/mp4$/.exec(this._mimeType) === null) {
+        return null;
+      }
       if (initSegment.privateInfos === undefined) {
         initSegment.privateInfos = {
           shouldGuessInitRange: true,
@@ -209,6 +217,15 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @returns {Array.<Object>}
    */
   getSegments(_up : number, _to : number) : ISegment[] {
+    if (this._mimeType !== undefined &&
+        /\/mp4$/.exec(this._mimeType) === null) {
+      return [{ isInit: false,
+                id: "",
+                mediaURL: this._index.mediaURL,
+                time: 0,
+                duration: Number.MAX_VALUE,
+                timescale: 1 }];
+    }
     return getSegmentsFromTimeline(this._index, _up, _to, this._scaledPeriodEnd);
   }
 

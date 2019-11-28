@@ -16,7 +16,6 @@
 
 import {
   combineLatest as observableCombineLatest,
-  of as observableOf,
 } from "rxjs";
 import { map } from "rxjs/operators";
 import { concat } from "../../utils/byte_parsing";
@@ -34,19 +33,10 @@ import byteRange from "../utils/byte_range";
  */
 export default function initSegmentLoader(
   url : string,
-  { segment, representation } : ISegmentLoaderArguments
-) : ISegmentLoaderObservable<ArrayBuffer|null> {
-  const mimeType = representation.getMimeTypeString();
+  { segment } : ISegmentLoaderArguments
+) : ISegmentLoaderObservable<ArrayBuffer> {
   if (segment.privateInfos !== undefined &&
       segment.privateInfos.shouldGuessInitRange === true) {
-    if (/\/mp4(\ ?);codecs=/.exec(mimeType) === null) {
-      return observableOf({
-        type: "data-created" as const,
-        value: {
-          responseData: null,
-        },
-      });
-    }
     // If no range and index range are given by manifest, we take
     // as init segment the nth first bytes (where n = 1500).
     // Therefore, we need to filter on init boxes after the segment

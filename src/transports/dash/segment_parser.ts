@@ -42,18 +42,6 @@ export default function parser({ content,
   const { period, representation, segment } = content;
   const { data, isChunked } = response;
   if (data === null) {
-    // here, it means that we probably are loading a static content as :
-    // - (Init + index) had to be guessed
-    // - No init segment was found
-    // - No next segments are present or parsed
-    if (segment.isInit &&
-        segment.range === undefined &&
-        segment.indexRange === undefined &&
-        segment.privateInfos?.shouldGuessInitRange === true) {
-      representation.index._addSegments([{ time: 0,
-                                           duration: Number.MAX_VALUE,
-                                           timescale: 1 }]);
-    }
     return observableOf({ chunkData: null,
                           chunkInfos: null,
                           chunkOffset: 0,
@@ -86,19 +74,17 @@ export default function parser({ content,
                           appendWindow: [period.start, period.end] });
   } else { // it is an initialization segment
     const { privateInfos } = segment;
-    const shouldExtractCompleteInitChunk = privateInfos !== undefined &&
-                                           privateInfos.shouldGuessInitRange === true;
 
-    const completeInitChunk = shouldExtractCompleteInitChunk ?
+    const completeInitChunk = privateInfos?.shouldGuessInitRange === true ?
       extractCompleteInitChunk(chunkData) : chunkData;
 
     if (completeInitChunk === null &&
-        (
-          nextSegments === null ||
-          nextSegments.length === 0
-        ) &&
-        shouldExtractCompleteInitChunk &&
-        segment.indexRange === undefined
+      (
+        nextSegments === null ||
+        nextSegments.length === 0
+      ) &&
+      privateInfos?.shouldGuessInitRange === true &&
+      segment.indexRange === undefined
     ) {
       // here, it means that we probably are loading a static content as :
       // - (Init + index) had to be guessed
@@ -108,7 +94,6 @@ export default function parser({ content,
                                            duration: Number.MAX_VALUE,
                                            timescale: 1 }]);
     }
-
     if (nextSegments !== null && nextSegments.length > 0) {
       representation.index._addSegments(nextSegments);
     }
