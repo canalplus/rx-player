@@ -391,7 +391,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * performed.
    * @param {Array.<ArrayBuffer>} keyIDs
    */
-  public markUndecipherableKIDs(keyIDs : ArrayBuffer[]) : void {
+  public addUndecipherableKIDs(keyIDs : ArrayBuffer[]) : void {
     const updates = updateDeciperability(this, (representation) => {
       if (representation.decipherable === false ||
           representation.contentProtections == null)
@@ -422,7 +422,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * performed.
    * @param {Array.<ArrayBuffer>} keyIDs
    */
-  public markUndecipherableProtectionData(data: Uint8Array) : void {
+  public addUndecipherableProtectionData(data: Uint8Array) : void {
     const updates = updateDeciperability(this, (representation) => {
       if (representation.decipherable === false) {
         return true;

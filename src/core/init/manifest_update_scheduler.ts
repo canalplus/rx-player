@@ -41,6 +41,7 @@ export type IManifestFetcher =
  * @param {Object} initialManifest
  * @param {Observable} scheduleRefresh$
  * @param {Function} fetchManifest
+ * @param {number} minimumManifestUpdateInterval
  * @returns {Observable}
  */
 export default function manifestUpdateScheduler(

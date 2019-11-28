@@ -30,7 +30,6 @@ export interface IStallingItem { reason : "seeking" |
 /**
  * Receive "stalling" events from the clock, try to get out of it, and re-emit
  * them for the player if the stalling status changed.
- * @param {HTMLMediaElement} mediaElement
  * @param {Observable} clock$
  * @returns {Observable}
  */

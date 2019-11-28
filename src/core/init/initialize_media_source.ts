@@ -82,27 +82,30 @@ import {
 
 const { OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config;
 
-// Arguments to give to the `initialize` function
+// Arguments to give to the `InitializeOnMediaSource` function
 export interface IInitializeOptions {
-  adaptiveOptions: IABRManagerArguments;
-  autoPlay : boolean;
-  bufferOptions : { wantedBufferAhead$ : BehaviorSubject<number>;
-                    maxBufferAhead$ : Observable<number>;
-                    maxBufferBehind$ : Observable<number>;
+  adaptiveOptions: IABRManagerArguments; // options concerning the adaptative logic
+  autoPlay : boolean; // `true` if we should play when loaded
+  bufferOptions : { wantedBufferAhead$ : BehaviorSubject<number>;  // buffer "goal"
+                    maxBufferAhead$ : Observable<number>; // To GC after the position
+                    maxBufferBehind$ : Observable<number>; // To GC before the position
+
+                    // strategy when switching the current bitrate manually
                     manualBitrateSwitchingMode : "seamless" | "direct"; };
-  clock$ : Observable<IInitClockTick>;
-  keySystems : IKeySystemOption[];
-  lowLatencyMode : boolean;
-  mediaElement : HTMLMediaElement;
-  minimumManifestUpdateInterval : number;
-  networkConfig: { manifestRetry? : number;
-                   offlineRetry? : number;
-                   segmentRetry? : number; };
-  pipelines : ITransportPipelines;
-  speed$ : Observable<number>;
-  startAt? : IInitialTimeOptions;
-  textTrackOptions : ITextTrackSourceBufferOptions;
-  url? : string;
+  clock$ : Observable<IInitClockTick>; // Emit current playback conditions
+  keySystems : IKeySystemOption[]; // DRM configuration
+  lowLatencyMode : boolean; // `true` to play low-latency contents optimally
+  mediaElement : HTMLMediaElement; // The HTMLMediaElement on which we will play
+  minimumManifestUpdateInterval : number; // throttle manifest update
+  networkConfig: { manifestRetry? : number; // Maximum number of Manifest retry
+                   offlineRetry? : number; // Maximum number of offline segment retry
+                   segmentRetry? : number; }; // Maximum number of non-offline segment
+                                              // retry
+  pipelines : ITransportPipelines; // Transport (e.g. DASH, Smooth...) pipelines
+  speed$ : Observable<number>; // Emit the wanted playback rate
+  startAt? : IInitialTimeOptions; // The wanted starting position
+  textTrackOptions : ITextTrackSourceBufferOptions; // TextTrack configuration
+  url? : string; // URL of the Manifest
 }
 
 // Every events emitted by Init.
@@ -116,8 +119,6 @@ export type IInitEvent = IManifestReadyEvent |
                          IWarningEvent;
 
 /**
- * Central part of the player.
- *
  * Play a content described by the given Manifest.
  *
  * On subscription:
@@ -149,7 +150,7 @@ export default function InitializeOnMediaSource(
   const { offlineRetry, segmentRetry, manifestRetry } = networkConfig;
 
   const warning$ = new Subject<ICustomError>();
-  const manifestPipelines = createManifestPipeline(pipelines,
+  const manifestPipeline = createManifestPipeline(pipelines,
                                                    { lowLatencyMode,
                                                      manifestRetry,
                                                      offlineRetry },
@@ -157,13 +158,13 @@ export default function InitializeOnMediaSource(
 
   // Fetch and parse the manifest from the URL given.
   // Throttled to avoid doing multiple simultaneous requests.
-  const fetchManifest = throttle(
+  const fetchManifest$ = throttle(
     (manifestURL : string | undefined,
      externalClockOffset : number | undefined)
     : Observable<IFetchManifestResult> => {
-      return manifestPipelines.fetch(manifestURL).pipe(
+      return manifestPipeline.fetch(manifestURL).pipe(
         mergeMap((response) =>
-          manifestPipelines.parse(response.value, manifestURL, externalClockOffset)
+          manifestPipeline.parse(response.value, manifestURL, externalClockOffset)
         ),
         share());
     }
@@ -180,15 +181,15 @@ export default function InitializeOnMediaSource(
   const abrManager = new ABRManager(adaptiveOptions);
 
   // Create and open a new MediaSource object on the given media element.
+  // The MediaSource will be closed on unsubscription
   const openMediaSource$ = openMediaSource(mediaElement).pipe(
     subscribeOn(asapScheduler), // to launch subscriptions only when all
     share());                   // Observables here are linked
 
-  // Send content protection data to EMEManager
+  // Send content protection data to the `EMEManager`
   const protectedSegments$ = new Subject<IContentProtection>();
 
-  // Create EME Manager, an observable which will manage every EME-related
-  // issue.
+  // Create `EMEManager`, an observable which will handle content DRM
   const emeManager$ = openMediaSource$.pipe(
     mergeMap(() => createEMEManager(mediaElement, keySystems, protectedSegments$)),
     subscribeOn(asapScheduler), // to launch subscriptions only when all
@@ -200,19 +201,9 @@ export default function InitializeOnMediaSource(
 
   const loadContent$ = observableCombineLatest([
     openMediaSource$,
-    fetchManifest(url, undefined),
+    fetchManifest$(url, undefined),
     emeManager$.pipe(filter(isEMEReadyEvent), take(1)),
   ]).pipe(mergeMap(([ initialMediaSource, { manifest, sendingTime } ]) => {
-
-    const blacklistUpdates$ = emeManager$.pipe(tap((evt) => {
-      if (evt.type === "blacklist-keys") {
-        log.info("Init: blacklisting based on keyIDs");
-        manifest.markUndecipherableKIDs(evt.value);
-      } else if (evt.type === "blacklist-protection-data") {
-        log.info("Init: blacklisting based on protection data.");
-        manifest.markUndecipherableProtectionData(evt.value.data);
-      }
-    }));
 
     log.debug("Init: Calculating initial time");
     const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
@@ -228,33 +219,43 @@ export default function InitializeOnMediaSource(
       speed$,
     });
 
+    // handle initial load and reloads
     const recursiveLoad$ = recursivelyLoadOnMediaSource(initialMediaSource,
                                                         initialTime,
                                                         autoPlay);
 
     // Emit when we want to manually update the manifest.
-    // The value allow to set a delay relatively to the last Manifest refresh
+    // The value allows to set a delay relatively to the last Manifest refresh
     // (to avoid asking for it too often).
-    const scheduleManifestRefresh$ = new Subject<number>();
+    const manualManifestRefresh$ = new Subject<number>();
 
     const manifestUpdate$ = manifestUpdateScheduler({ manifest, sendingTime },
-                                                    scheduleManifestRefresh$,
-                                                    fetchManifest,
+                                                    manualManifestRefresh$,
+                                                    fetchManifest$,
                                                     minimumManifestUpdateInterval);
 
     const manifestEvents$ = observableMerge(
-      fromEvent(manifest, "manifestUpdate").pipe(mapTo(EVENTS.manifestUpdate())),
+      fromEvent(manifest, "manifestUpdate")
+        .pipe(mapTo(EVENTS.manifestUpdate())),
       fromEvent(manifest, "decipherabilityUpdate")
         .pipe(map(EVENTS.decipherabilityUpdate)));
 
-    return observableMerge(blacklistUpdates$,
+    const setUndecipherableRepresentations$ = emeManager$.pipe(tap((evt) => {
+      if (evt.type === "blacklist-keys") {
+        log.info("Init: blacklisting Representations based on keyIDs");
+        manifest.addUndecipherableKIDs(evt.value);
+      } else if (evt.type === "blacklist-protection-data") {
+        log.info("Init: blacklisting Representations based on protection data.");
+        manifest.addUndecipherableProtectionData(evt.value.data);
+      }
+    }));
+
+    return observableMerge(manifestEvents$,
                            manifestUpdate$,
-                           manifestEvents$,
+                           setUndecipherableRepresentations$,
                            recursiveLoad$)
-              .pipe(startWith(EVENTS.manifestReady(manifest)),
-                    finalize(() => {
-                      scheduleManifestRefresh$.complete();
-                    }));
+      .pipe(startWith(EVENTS.manifestReady(manifest)),
+            finalize(() => { manualManifestRefresh$.complete(); }));
 
     /**
      * Load the content defined by the Manifest in the mediaSource given at the
@@ -277,10 +278,11 @@ export default function InitializeOnMediaSource(
         .pipe(tap(evt => {
                 switch (evt.type) {
                   case "needs-manifest-refresh":
-                    scheduleManifestRefresh$.next(0);
+                    manualManifestRefresh$.next(0); // refresh now
                     break;
                   case "manifest-might-be-out-of-sync":
-                    scheduleManifestRefresh$.next(OUT_OF_SYNC_MANIFEST_REFRESH_DELAY);
+                    // schedule a refresh respecting a delay with the last one
+                    manualManifestRefresh$.next(OUT_OF_SYNC_MANIFEST_REFRESH_DELAY);
                     break;
                   case "needs-media-source-reload":
                     reloadMediaSource$.next(evt.value);

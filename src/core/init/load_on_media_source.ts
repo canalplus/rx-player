@@ -61,24 +61,26 @@ import {
 } from "./types";
 import updatePlaybackRate from "./update_playback_rate";
 
-// Arguments needed by createMediaSourceLoader
+// Arguments needed by `createMediaSourceLoader`
 export interface IMediaSourceLoaderArguments {
-  mediaElement : HTMLMediaElement; // Media Element on which the content will be
-                                   // played
-  manifest : Manifest; // Manifest of the content we want to
-                                         // play
-  clock$ : Observable<IInitClockTick>; // Emit position information
-  speed$ : Observable<number>; // Emit the speed.
-                               // /!\ Should replay the last value on subscription.
-  abrManager : ABRManager;
-  segmentPipelinesManager : SegmentPipelinesManager<any>;
+  abrManager : ABRManager; // Helps to choose the right Representation
   bufferOptions : { // Buffers-related options
-    wantedBufferAhead$ : BehaviorSubject<number>;
-    maxBufferAhead$ : Observable<number>;
-    maxBufferBehind$ : Observable<number>;
-    textTrackOptions : ITextTrackSourceBufferOptions;
+    wantedBufferAhead$ : BehaviorSubject<number>; // buffer "goal"
+    maxBufferAhead$ : Observable<number>; // To GC after the current position
+    maxBufferBehind$ : Observable<number>; // to GC before the current position
+    textTrackOptions : ITextTrackSourceBufferOptions; // TextTrack configuration
+
+    // strategy when switching the current bitrate manually
     manualBitrateSwitchingMode : "seamless"|"direct";
   };
+  clock$ : Observable<IInitClockTick>; // Emit position information
+  manifest : Manifest; // Manifest of the content we want to play
+  mediaElement : HTMLMediaElement; // Media Element on which the content will be
+                                   // played
+  segmentPipelinesManager : SegmentPipelinesManager<any>; // Interface to download
+                                                          // segments
+  speed$ : Observable<number>; // Emit the speed.
+                               // /!\ Should replay the last value on subscription.
 }
 
 // Events emitted when loading content in the MediaSource
