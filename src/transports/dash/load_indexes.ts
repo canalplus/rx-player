@@ -15,14 +15,18 @@
  */
 
 import {
-  EMPTY,
+  combineLatest,
   merge as observableMerge,
   Observable,
   of as observableOf,
+  Subject,
 } from "rxjs";
 import {
+  filter,
   map,
   mergeMap,
+  takeUntil,
+  tap,
 } from "rxjs/operators";
 import {
   getReferencesFromSidx,
@@ -37,6 +41,11 @@ import {
   ITransportWarningEvent,
 } from "../types";
 import byteRange from "../utils/byte_range";
+
+interface ILoadIndexDataEvent {
+  type: "done";
+  value: undefined;
+}
 
 /**
  * Request 'sidx' box from segment.
@@ -67,11 +76,14 @@ export default function loadIndexes(indexesToLoad: ISidxReference[],
   content: IContent,
   scheduleRequest: <U>(request : () => Observable<U>) =>
     Observable<IScheduleRequestResponse<U> | ITransportWarningEvent>
-  ): Observable<ITransportRetryEvent> {
+  ): Observable<ITransportRetryEvent|ILoadIndexDataEvent> {
   const url = content.segment.mediaURL;
   if (url === null) {
     throw new Error("No URL for loading indexes.");
   }
+
+  const retry$: Subject<ITransportRetryEvent> = new Subject();
+
   const loadedRessources$ = indexesToLoad.map(({ range }) => {
     return scheduleRequest(() => {
       return requestArrayBufferResource(url, range).pipe(
@@ -82,49 +94,62 @@ export default function loadIndexes(indexesToLoad: ISidxReference[],
           };
         })
       );
-    });
+    }).pipe(
+      tap((evt) => {
+        if (evt.type === "warning") {
+          retry$.next({
+                type: "retry" as const,
+                value: {
+                  error: evt.value,
+                  segment: content.segment,
+                },
+              });
+        }
+      }),
+      filter((evt): evt is IScheduleRequestResponse<{
+        range: [number, number];
+        response: ILoaderDataLoadedValue<ArrayBuffer|Uint8Array>;
+      }> => evt.type !== "warning")
+    );
   });
 
-  return observableMerge(...loadedRessources$).pipe(
-    mergeMap((evt) => {
-      if (evt.type === "warning") {
-        return observableOf({
-          type: "retry" as const,
-          value: {
-            error: evt.value,
-            segment: content.segment,
-          },
-        });
-      }
-      const loadedRessource = evt.value;
-      const newSegments: ISidxReference[] = [];
+  const ressourceLoaded$ = combineLatest(loadedRessources$).pipe(
+    mergeMap((evts) => {
       const newIndexes: ISidxReference[] = [];
-      const {
-        response: { responseData },
-        range,
-      } = loadedRessource;
-      if (responseData !== undefined) {
-        const sidxBox = new Uint8Array(responseData);
-        const indexOffset = range[0];
-        const referencesFromSidx = getReferencesFromSidx(sidxBox, indexOffset);
-        if (referencesFromSidx !== null) {
-          const [indexReferences, segmentReferences] = referencesFromSidx;
-          segmentReferences.forEach((segment) => {
-            newSegments.push(segment);
-          });
-          indexReferences.forEach((index) => {
-            newIndexes.push(index);
-          });
+      for (let i = 0; i < evts.length; i++) {
+        const evt = evts[i];
+        const loadedRessource = evt.value;
+        const newSegments: ISidxReference[] = [];
+        const {
+          response: { responseData },
+          range,
+        } = loadedRessource;
+        if (responseData !== undefined) {
+          const sidxBox = new Uint8Array(responseData);
+          const indexOffset = range[0];
+          const referencesFromSidx = getReferencesFromSidx(sidxBox, indexOffset);
+          if (referencesFromSidx !== null) {
+            const [indexReferences, segmentReferences] = referencesFromSidx;
+            segmentReferences.forEach((segment) => {
+              newSegments.push(segment);
+            });
+            indexReferences.forEach((index) => {
+              newIndexes.push(index);
+            });
+          }
         }
-      }
 
-      if (newSegments.length > 0) {
-        content.representation.index._addSegments(newSegments);
+        if (newSegments.length > 0) {
+          content.representation.index._addSegments(newSegments);
+        }
       }
       if (newIndexes.length > 0) {
         return loadIndexes(newIndexes, content, scheduleRequest);
       }
-      return EMPTY;
+      return observableOf({ type: "done" as const, value: undefined });
     })
   );
+
+  return observableMerge(ressourceLoaded$,
+                         retry$.pipe(takeUntil(ressourceLoaded$)));
 }

@@ -15,10 +15,10 @@
  */
 
 import {
-  merge as observableMerge,
   Observable,
   of as observableOf,
 } from "rxjs";
+import { mergeMap } from "rxjs/operators";
 import log from "../../log";
 import {
   getMDAT,
@@ -101,8 +101,14 @@ function parseMP4EmbeddedTrack({ response,
       if (scheduleRequest == null) {
         throw new Error("Can't schedule request for loading indexes.");
       }
-      return observableMerge(loadIndexes(indexReferences, content, scheduleRequest),
-      parsedTrackInfos);
+      return loadIndexes(indexReferences, content, scheduleRequest).pipe(
+        mergeMap((evt) => {
+          if (evt.type === "retry") {
+            return observableOf(evt);
+          }
+          return parsedTrackInfos;
+        })
+      );
     }
     return parsedTrackInfos;
   } else { // not init
@@ -165,8 +171,14 @@ function parseMP4EmbeddedTrack({ response,
       if (scheduleRequest == null) {
         throw new Error("Can't schedule request for loading indexes.");
       }
-      return observableMerge(loadIndexes(indexReferences, content, scheduleRequest),
-      parsedTrackInfos);
+      return loadIndexes(indexReferences, content, scheduleRequest).pipe(
+        mergeMap((evt) => {
+          if (evt.type === "retry") {
+            return observableOf(evt);
+          }
+          return parsedTrackInfos;
+        })
+      );
     }
     return parsedTrackInfos;
   }

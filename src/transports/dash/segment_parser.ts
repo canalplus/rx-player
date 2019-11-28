@@ -15,10 +15,12 @@
  */
 
 import {
-  merge as observableMerge,
   Observable,
   of as observableOf,
 } from "rxjs";
+import {
+  mergeMap,
+} from "rxjs/operators";
 import {
   getMDHDTimescale,
   getReferencesFromSidx,
@@ -101,8 +103,14 @@ export default function parser({ content,
       if (scheduleRequest == null) {
         throw new Error("Can't schedule request for loading indexes.");
       }
-      return observableMerge(loadIndexes(indexes, content, scheduleRequest),
-                             parserInitResponse);
+      return loadIndexes(indexes, content, scheduleRequest).pipe(
+        mergeMap((evt) => {
+          if (evt.type === "retry") {
+            return observableOf(evt);
+          }
+          return parserResponse;
+        })
+      );
     }
     return parserInitResponse;
   }
@@ -145,8 +153,15 @@ export default function parser({ content,
     if (scheduleRequest == null) {
       throw new Error("Can't schedule request for loading indexes.");
     }
-    return observableMerge(loadIndexes(indexes, content, scheduleRequest),
-                           parserResponse);
+
+    return loadIndexes(indexes, content, scheduleRequest).pipe(
+      mergeMap((evt) => {
+        if (evt.type === "retry") {
+          return observableOf(evt);
+        }
+        return parserResponse;
+      })
+    );
   }
   return parserResponse;
 }
