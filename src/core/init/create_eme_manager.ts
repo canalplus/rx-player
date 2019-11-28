@@ -42,6 +42,7 @@ export interface IEMEDisabledEvent { type: "eme-disabled"; }
  * Else, return an Observable throwing at the next encrypted event encountered.
  * @param {HTMLMediaElement} mediaElement
  * @param {Array.<Object>} keySystems
+ * @param {Observable<Object>} contentProtections$
  * @returns {Observable}
  */
 export default function createEMEManager(

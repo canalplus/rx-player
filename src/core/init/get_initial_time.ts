@@ -35,6 +35,7 @@ export interface IInitialTimeOptions { position? : number;
  *      it
  *   3. else returns the minimum time announced in the manifest
  * @param {Manifest} manifest
+ * @param {boolean} lowLatencyMode
  * @param {Object} startAt
  * @returns {Number}
  */

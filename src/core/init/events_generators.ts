@@ -54,6 +54,7 @@ function stalled(stalling : IStallingItem|null) : IStalledEvent {
 }
 
 /**
+ * Construct a "decipherabilityUpdate" event.
  * @param {Array.<Object>} arg
  * @returns {Object}
  */
@@ -68,7 +69,6 @@ function decipherabilityUpdate(
 
 /**
  * Construct a "manifestReady" event.
- * @param {Object} abrManager
  * @param {Object} manifest
  * @returns {Object}
  */
@@ -79,7 +79,7 @@ function manifestReady(
 }
 
 /**
- * Construct a "manifestReady" event.
+ * Construct a "manifestUpdate" event.
  * @returns {Object}
  */
 function manifestUpdate() : IManifestUpdateEvent {
@@ -112,14 +112,18 @@ function nullRepresentation(
 }
 
 /**
- * Construct a "warning" event.
- * @param {Error} value
- * @returns {Object}
+ * construct a "warning" event.
+ * @param {error} value
+ * @returns {object}
  */
 function warning(value : ICustomError) : IWarningEvent {
   return { type: "warning", value };
 }
 
+/**
+ * construct a "reloading-media-source" event.
+ * @returns {object}
+ */
 function reloadingMediaSource() : IReloadingMediaSourceEvent {
   return { type: "reloading-media-source", value: undefined };
 }

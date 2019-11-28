@@ -36,7 +36,7 @@ import {
 import log from "../../log";
 import { IInitClockTick } from "./types";
 
-type ILoadEvents =
+export type ILoadEvents =
   "not-loaded-metadata" | // metadata are not loaded. Manual action required
   "autoplay-blocked" | // loaded but autoplay is blocked by the browser
   "autoplay" | // loaded and autoplayed succesfully

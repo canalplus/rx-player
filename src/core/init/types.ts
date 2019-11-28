@@ -43,13 +43,18 @@ export interface IInitClockTick { currentTime : number;
                                             null;
                                   seeking : boolean; }
 
-// The manifest has been downloaded and parsed for the first time
+// The Manifest has been downloaded and parsed for the first time
 export interface IManifestReadyEvent { type : "manifestReady";
                                        value : { manifest : Manifest }; }
 
+// The Manifest has been refreshed
 export interface IManifestUpdateEvent { type: "manifestUpdate";
                                         value: null; }
 
+// The decipherability status of at least one Manifest's Representation has been
+// updated.
+// This generally means that some Representation were detected to be
+// undecipherable on the current device.
 export interface IDecipherabilityUpdateEvent {
   type: "decipherabilityUpdate";
   value: Array<{ manifest : Manifest;
@@ -61,6 +66,7 @@ export interface IDecipherabilityUpdateEvent {
 export interface IWarningEvent { type : "warning";
                                  value : ICustomError; }
 
+// The MediaSource needs to reload (and is reloading) due to a media event
 export interface IReloadingMediaSourceEvent { type: "reloading-media-source";
                                               value: undefined; }
 
@@ -74,7 +80,7 @@ export interface ISpeedChangedEvent { type : "speedChanged";
 export interface IStalledEvent { type : "stalled";
                                  value : IStallingItem|null; }
 
-// The content loaded
+// The content loaded and can now be played
 export interface ILoadedEvent { type : "loaded";
                                 value : {
                                   sourceBuffersStore: SourceBuffersStore | null;
