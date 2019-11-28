@@ -144,14 +144,13 @@ export default function SessionEventsListener(
   log.debug("EME: Binding session events", session);
   const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
   const { getLicenseConfig = {} } = keySystem;
-  const getLicenseRetryOptions = { totalRetry: getLicenseConfig.retry != null ?
-                                                 getLicenseConfig.retry :
-                                                 2,
+  const getLicenseRetryOptions = {
+    totalRetry: getLicenseConfig.retry ?? 2,
     baseDelay: 200,
     maxDelay: 3000,
     shouldRetry: (error : unknown) =>
       error instanceof TimeoutError ||
-      error == null ||
+      error === undefined || error === null ||
       (error as { noRetry? : boolean }).noRetry !== true,
     onRetry: (error : unknown) =>
       sessionWarningSubject$.next({ type: "warning",

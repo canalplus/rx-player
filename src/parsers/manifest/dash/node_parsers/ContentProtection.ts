@@ -33,6 +33,10 @@ export interface IContentProtectionAttributes {
   keyId? : Uint8Array;
 }
 
+/**
+ * @param {NodeList} contentProtectionChildren
+ * @Returns {Object}
+ */
 function parseContentProtectionChildren(
   contentProtectionChildren : NodeList
 ) : IContentProtectionChildren {
@@ -80,6 +84,10 @@ function parseContentProtectionAttributes(
   return { schemeIdUri, value, keyId };
 }
 
+/**
+ * @param {Element} contentProtectionElement
+ * @returns {Object}
+ */
 export default function parseContentProtection(
   contentProtectionElement : Element
 ) : IParsedContentProtection {
