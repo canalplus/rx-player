@@ -58,7 +58,14 @@ export default function getBlacklistedRanges(
         }
         return [{ start: buffered.start(0), end: buffered.end(len - 1) }];
       }
-      accumulator.push({ start: bufferedStart, end: bufferedEnd });
+
+      const previousLastElement = accumulator[accumulator.length - 1];
+      if (previousLastElement !== undefined &&
+          previousLastElement.end === bufferedStart) {
+        previousLastElement.end = bufferedEnd;
+      } else {
+        accumulator.push({ start: bufferedStart, end: bufferedEnd });
+      }
     }
   }
   return accumulator;
