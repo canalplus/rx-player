@@ -183,6 +183,8 @@ There's a lot of things that can go wrong during the license request:
   - The user could be temporarly disconnected
   - The license server might be down
   - The license server might refuse to deliver a license based on your rights
+  - The license server might refuse to deliver a license based on your CDM
+    capabilities
   - And like any request a lot of other errors can happen
 
 
@@ -194,6 +196,8 @@ From this, you could want to have a different behavior based on what happened:
   - When the license server refuse to deliver a license based on your rights,
     you might want to throw an explicit error message that you will be able to
     display.
+  - If there's a problem with your CDM capabilities, you might want to just
+    fallback to another media quality with a different license.
 
 All of this is possible with more advanced APIs that we will see in this
 chapter.
@@ -224,6 +228,7 @@ rxPlayer.loadVideo({
   url: MANIFEST_URL,
   transport: "dash",
   keySystems: [
+    {
       type: "widevine",
       getLicense,
       getLicenseConfig: {
@@ -251,6 +256,16 @@ You can reject an error (or just an object), with the following properties:
   - `message`: a custom message string we will communicate through a warning or
     error event (depending if we will retry or not the call)
 
+  - `fallbackOnLastTry`: When set to `true` and if we are doing or last
+    try or retry (to be sure you can set `noRetry` to true), we will try to
+    fallback to another quality, which might have a different license.
+
+    This is only useful for contents which have a different license depending on
+    the quality (for example having different rights for 4k video content than
+    for 480p video content). It is also only useful if the license server can
+    refuse to deliver a license for a particular quality but accept for another
+    quality.
+
 Here is an example showcasing all of those properties:
 ```js
 rxPlayer.loadVideo({
@@ -277,11 +292,14 @@ rxPlayer.loadVideo({
               const license = evt.target.response;
               resolve(license);
             } else if (xhr.status >= 500 && xhr.status < 600) {
-              // Directly fails on a server error
+              // Directly fails + fallbacks on a server error
               const error = new Error("The license server had a problem and" +
                                       ` responded with ${xhr.status} HTTP ` +
-                                      "error.");
+                                      "error. We will now fallback to another" +
+                                      "quality.");
               error.noRetry = true;
+              error.fallbackOnLastTry = true;
+              reject(error);
             } else {
               // else continue to retry
               const error = new Error("getLicense's request finished with a " +
@@ -302,6 +320,160 @@ rxPlayer.loadVideo({
   ]
 });
 ```
+
+
+
+## Contents with multiple keys #################################################
+
+### Why and how ################################################################
+
+One of the issues arising with DRM is that not all devices, Operating systems or
+web browsers can provide a high level of guarantee that a content will be
+protected against unauthorized usages (such as illegal copy).
+In other words, some devices, OS or browsers might provide more guarantees than
+other.
+
+That's the main reason why there's sometime a compromise to have between
+accessibility of a content (the number of the people able to view it) and this
+guarantee.
+
+To be able to provide the best of both worlds, a content right holder might ask
+for a higher protection guarantee for higher video qualities.
+
+For example, it might ask that a 4k video content of a given film should be much
+harder to "pirate" than the 240p version of the same film.
+In return, the 240p version can be watched by a lot more people on a lot of
+different devices.
+
+To achieve that, one of the solution on the content-side is to have different
+decryption keys depending on the quality chosen.
+There's then two main strategies:
+
+  1. Every keys are in the same license. A player will thus do only one
+     license request for the whole content and the keys inside will be
+     individually refused or accepted.
+
+  2. There is one or several keys per licenses, in several licenses. That way,
+     a player might ask a different license when switching the current
+     quality.
+
+There's pros and cons to both, but let's not go too far into that!
+
+Let's start from the principle that our content is under one of those two cases
+here and let's find out what we have to do to handle it.
+
+
+### The strategy adopted by the RxPlayer #######################################
+
+When playing a content, the RxPlayer by default stops and throws an error as
+soon as either a key is refused or as the license fetching logic (the
+`getLicense` function) fails (after enough retries).
+
+When playing a content with multiple keys, you might instead not care that much
+if a key is refused or if the license-fetching logic fails.
+What you can just do is to remove the quality for which we could not obtain a
+key and to instead fallback on another, decipherable, quality.
+
+That's exactly what the RxPlayer does, when the right options are set:
+
+  1. when it detects a quality to be un-decipherable, it first emit a
+     `decipherabilityUpdate` event through its API, to signal to an application
+     which qualities have been blacklisted.
+
+  2. it automatically removes from the current media buffer the data linked to
+     the un-decipherable quality and put it in a black list: we will not load
+     this quality for the current content anymore.
+
+  3. it switches to another, hopefully decipherable, quality.
+
+Let's now talk about the API.
+
+
+### fallbackOnLastTry ##########################################################
+
+This option was already explained in a previous chapter. Basically, it is a
+boolean you can set to `true` when rejecting an error from the `getLicense`
+callback. When set and if it was the last `getLicense` try or retry, the
+RxPlayer will stop to play every quality sharing the same "protection
+initialization data".
+What that last part really means is a little complex, but it generally means
+that every qualities sharing the same license file will be considered as
+un-decipherable.
+
+For more information and an example on how to use it, you can go back on the
+concerned previous part of this tutorial.
+
+Please note that this option does not concern every errors linked to a refused
+key. It only concerns issues when the license server refuse to deliver a
+license.
+On most cases you will also need the API documented in the next part,
+`fallbackOn`.
+
+
+### fallbackOn #################################################################
+
+Where `fallbackOnLastTry` really is about the failure of a license request, the
+`fallbackOn` is about the refused keys themselves.
+
+As an example, the Content Decryption Module in the browser might decide that
+your current device cannot provide a high enough guarantee that the content
+cannot be copied. It might thus refuse to use one of the decryption key found in
+a license, especially the one needed for the higher content qualities.
+
+The `fallbackOn` object allows to fallback when this happens.
+There is two possible sub-properties in it:
+  - `keyInternalError`: fallback when the corresponding key has the
+    [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
+    `"internal-error"`. We found that most widevine implementation use
+    this error when a key is refused.
+  - `keyOutputRestricted`: fallback when the corresponding key has the
+    [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
+    `"output-restricted"`. This is the proper status for a key refused due
+    to output restrictions.
+
+Both are booleans, and for the moment we recommend to set both to true in most
+cases.
+
+For people on embedded devices with specific key systems, you can look a little
+more into what [MediaKeyStatus](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
+is set when a key is refused, and just set one of both.
+
+Here is an example:
+```js
+rxPlayer.loadVideo({
+  url: MANIFEST_URL,
+  transport: "dash",
+  keySystems: [
+    {
+      type: "widevine",
+      getLicense,
+      fallbackOn: {
+        keyInternalError: true,
+        keyOutputRestricted: true,
+      }
+    },
+  ]
+});
+```
+
+
+### decipherabilityUpdate event ################################################
+
+When the RxPlayer detects a quality to be un-decipherable (which can only
+happens when one of the properties explained here is set), it sends a
+`decipherabilityUpdate` event.
+
+This event allows an application to know that some key or license could not be
+used by the RxPlayer.
+
+The application could then infer that other contents from the same right holders
+will have the same issues.
+In that case, an optimization is possible by using the `representationFilter`
+API which is part of the `transportOptions` `loadVideo` option, [documented
+here](../api/loadVideo_options.md#prop-transportOptions). By using this API,
+we can filter out un-decipherable quality to avoid downloading them in the
+first place.
+
 
 
 ## Server certificate ##########################################################
