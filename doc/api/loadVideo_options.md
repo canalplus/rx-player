@@ -94,8 +94,11 @@ called instead any time we want to load the Manifest.
 _type_: ``Array.<Object>|undefined``
 
 This property is mandatory if the content uses DRM.
+
 It is here that is defined every options relative to the encryption of your
-content.
+content. There's a lot of configuration possible here. In the case you find
+this documentation hard to grasp, we've written a [tutorial on DRM configuration
+here](../tutorials/contents_with_DRM.md).
 
 This property is an array of objects with the following properties (only
 ``type`` and ``getLicense`` are mandatory here):
