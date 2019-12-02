@@ -83,13 +83,16 @@ export default function parser({ content,
         nextSegments === null ||
         nextSegments.length === 0
       ) &&
-      privateInfos?.shouldGuessInitRange === true &&
-      segment.indexRange === undefined
+      privateInfos?.mightBeStaticContent === true
     ) {
-      // here, it means that we probably are loading a static content as :
-      // - (Init + index) had to be guessed
-      // - No init segment was found
-      // - No next segments are present or parsed
+      // The manifest tells that it may be a static content, instead of a
+      // fragmented one, and we do not found :
+      // - An init segment, which could have told us that the content is fragmented
+      // - Next segments from a sidx, which explictely would have told that the
+      //   content is fragmented
+      // Thus, there are very high chances that it is a static content.
+      // We just add a huge segment, without indicating an URL (which means it will take
+      // the default one)
       representation.index._addSegments([{ time: 0,
                                            duration: Number.MAX_VALUE,
                                            timescale: 1 }]);
