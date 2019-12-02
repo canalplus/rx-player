@@ -124,6 +124,8 @@ export default function parseRepresentations(
     const context = { aggressiveMode: adaptationInfos.aggressiveMode,
                       availabilityTimeOffset: adaptationInfos.availabilityTimeOffset,
                       manifestBoundsCalculator: adaptationInfos.manifestBoundsCalculator,
+                      mimeType: representation.attributes.mimeType ??
+                                adaptation.attributes.mimeType,
                       isDynamic: adaptationInfos.isDynamic,
                       periodEnd: adaptationInfos.end,
                       periodStart: adaptationInfos.start,
@@ -131,9 +133,7 @@ export default function parseRepresentations(
                       representationBaseURL,
                       representationBitrate: representation.attributes.bitrate,
                       representationId: representation.attributes.id,
-                      timeShiftBufferDepth: adaptationInfos.timeShiftBufferDepth,
-                      mimeType: representation.attributes.mimeType ??
-                                adaptation.attributes.mimeType };
+                      timeShiftBufferDepth: adaptationInfos.timeShiftBufferDepth };
     let representationIndex : IRepresentationIndex;
     if (representation.children.segmentBase != null) {
       const { segmentBase } = representation.children;
