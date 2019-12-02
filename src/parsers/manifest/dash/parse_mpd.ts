@@ -202,14 +202,20 @@ function parseCompleteIntermediateRepresentation(
   const isDynamic : boolean = rootAttributes.type === "dynamic";
   const baseURL = resolveURL(normalizeBaseURL(args.url == null ? "" :
                                                                  args.url),
-                             rootChildren.baseURL);
+                             rootChildren.baseURL !== undefined ?
+                               rootChildren.baseURL.value :
+                               "");
   const availabilityStartTime = parseAvailabilityStartTime(rootAttributes,
                                                            args.referenceDateTime);
   const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
   const clockOffset = args.externalClockOffset;
 
+  const availabilityTimeOffset =
+    rootChildren.baseURL?.attributes.availabilityTimeOffset ?? 0;
+
   const manifestInfos = { aggressiveMode: args.aggressiveMode,
                           availabilityStartTime,
+                          availabilityTimeOffset,
                           baseURL,
                           clockOffset,
                           duration: rootAttributes.duration,

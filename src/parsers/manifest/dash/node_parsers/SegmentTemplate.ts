@@ -84,6 +84,7 @@ export default function parseSegmentTemplate(
   let ret : IParsedSegmentTemplate|IParsedSegmentTimeline;
 
   let index : string|undefined;
+  let availabilityTimeOffset : string|undefined;
   let media : string|undefined;
   let bitstreamSwitching : boolean|undefined;
   let timeline : IParsedTimeline|undefined;
@@ -110,6 +111,10 @@ export default function parseSegmentTemplate(
 
       case "index":
         index = attribute.value;
+        break;
+
+      case "availabilityTimeOffset":
+        availabilityTimeOffset = attribute.value;
         break;
 
       case "media":
@@ -149,6 +154,12 @@ export default function parseSegmentTemplate(
 
   if (bitstreamSwitching != null) {
     ret.bitstreamSwitching = bitstreamSwitching;
+  }
+
+  if (availabilityTimeOffset != null) {
+    ret.availabilityTimeOffset =
+      availabilityTimeOffset === "INF" ? Infinity :
+                                         parseInt(availabilityTimeOffset, 10);
   }
 
   return ret;

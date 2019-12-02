@@ -35,6 +35,7 @@ import parseRepresentations from "./parse_representations";
 export interface IPeriodInfos {
   aggressiveMode : boolean; // Whether we should request new segments even if
                             // they are not yet finished
+  availabilityTimeOffset: number; // availability time offset of the concerned period
   baseURL? : string; // Eventual URL from which every relative URL will be based
                      // on
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
@@ -183,9 +184,16 @@ export default function parseAdaptationSets(
       const adaptationChildren = adaptation.children;
       const parsedAdaptations = acc.adaptations;
       const representationsIR = adaptation.children.representations;
+      const availabilityTimeOffset =
+        (adaptation.children.baseURL?.attributes.availabilityTimeOffset ?? 0) +
+        periodInfos.availabilityTimeOffset;
+
       const adaptationInfos = {
         aggressiveMode: periodInfos.aggressiveMode,
-        baseURL: resolveURL(periodInfos.baseURL, adaptationChildren.baseURL),
+        availabilityTimeOffset,
+        baseURL: resolveURL(periodInfos.baseURL,
+                            adaptationChildren.baseURL !== undefined ?
+                              adaptationChildren.baseURL.value : ""),
         manifestBoundsCalculator: periodInfos.manifestBoundsCalculator,
         end: periodInfos.end,
         isDynamic: periodInfos.isDynamic,

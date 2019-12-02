@@ -83,6 +83,8 @@ export interface ITemplateIndexIndexArgument {
 export interface ITemplateIndexContextArgument {
   aggressiveMode : boolean; // If `true`, this index will return segments which
                             // which had time to be started but not finished.
+  availabilityTimeOffset : number; // availability time offset of the
+                                   // concerned Representation
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the
                                                        // minimum and maximum
                                                        // of a content
@@ -108,6 +110,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   private _manifestBoundsCalculator : ManifestBoundsCalculator;
   private _periodStart : number;
   private _relativePeriodEnd? : number;
+  private _availabilityTimeOffset? : number;
 
   // Whether this RepresentationIndex can change over time.
   private _isDynamic : boolean;
@@ -122,6 +125,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   ) {
     const { timescale } = index;
     const { aggressiveMode,
+            availabilityTimeOffset,
             manifestBoundsCalculator,
             isDynamic,
             periodEnd,
@@ -129,6 +133,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             representationBaseURL,
             representationId,
             representationBitrate } = context;
+
+    this._availabilityTimeOffset = availabilityTimeOffset;
 
     this._manifestBoundsCalculator = manifestBoundsCalculator;
     this._aggressiveMode = aggressiveMode;
@@ -441,11 +447,17 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       if (scaledLastPosition < 0) {
         return null;
       }
-      const numberOfSegmentsAvailable =
-        Math.floor((scaledLastPosition + (agressiveModeOffset * timescale)) / duration);
 
-      return numberOfSegmentsAvailable <= 0 ? null :
-                                              (numberOfSegmentsAvailable - 1) * duration;
+      const availabilityTimeOffset =
+        ((this._availabilityTimeOffset !== undefined ? this._availabilityTimeOffset : 0) +
+          agressiveModeOffset) * timescale;
+
+      const numberOfSegmentsAvailable =
+        Math.floor((scaledLastPosition + availabilityTimeOffset) / duration);
+
+      return numberOfSegmentsAvailable <= 0 ?
+               null :
+               (numberOfSegmentsAvailable - 1) * duration;
     } else {
       const maximumTime = (this._relativePeriodEnd === undefined ?
                              0 :
