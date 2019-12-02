@@ -33,7 +33,6 @@ import {
   IPeriodIntermediateRepresentation,
 } from "./node_parsers/Period";
 import parseAvailabilityStartTime from "./parse_availability_start_time";
-import parseDuration from "./parse_duration";
 import parsePeriods, {
   IXLinkInfos,
 } from "./parse_periods";
@@ -276,11 +275,33 @@ function parseCompleteIntermediateRepresentation(
     }
   }
 
+  let duration: number|undefined;
+
   const { minimumTime, maximumTime } = parsedMPD;
-  const duration = (maximumTime?.isContinuous === false &&
-                    minimumTime?.isContinuous === false) ?
-    (maximumTime.value - minimumTime.value) :
-    parseDuration(rootAttributes, parsedPeriods);
+  if (maximumTime?.isContinuous === false &&
+      minimumTime?.isContinuous === false) {
+    duration = (maximumTime.value - minimumTime.value);
+  } else {
+    if (rootAttributes.duration !== undefined) {
+      const firstPosition = parsedPeriods.reduce((acc: number|undefined, { start }) => {
+        return acc !== undefined ? Math.min(acc, start) : start;
+      }, undefined);
+      duration = rootAttributes.duration - (firstPosition ?? 0);
+    }
+    if (rootAttributes.type !== "dynamic" && parsedPeriods.length > 0) {
+      const lastPeriod = parsedPeriods[parsedPeriods.length - 1];
+      const lastPeriodEnd = lastPeriod.end ??
+        (lastPeriod.duration !== undefined ? lastPeriod.duration + lastPeriod.start :
+                                                                   undefined);
+      if (lastPeriodEnd !== undefined) {
+        const firstPosition = parsedPeriods.reduce((acc: number|undefined, { start }) => {
+          return acc !== undefined ? Math.min(acc, start) : start;
+        }, undefined);
+        duration = lastPeriodEnd - (firstPosition ?? 0);
+      }
+    }
+  }
+
   parsedMPD.duration = duration;
 
   return { type: "done", value: parsedMPD };
