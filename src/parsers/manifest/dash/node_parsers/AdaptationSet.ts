@@ -56,6 +56,7 @@ export interface IAdaptationSetChildren {
   accessibility? : IScheme;
   contentComponent? : IParsedContentComponent;
   contentProtections? : IParsedContentProtection[];
+  essentialProperties? : IScheme[];
   roles? : IScheme[];
   supplementalProperties? : IScheme[];
 
@@ -121,6 +122,14 @@ function parseAdaptationSetChildren(
 
         case "ContentComponent":
           children.contentComponent = parseContentComponent(currentElement);
+          break;
+
+        case "EssentialProperty":
+          if (children.essentialProperties == null) {
+            children.essentialProperties = [parseScheme(currentElement)];
+          } else {
+            children.essentialProperties.push(parseScheme(currentElement));
+          }
           break;
 
         case "Representation":

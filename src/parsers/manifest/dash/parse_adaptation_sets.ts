@@ -182,6 +182,23 @@ export default function parseAdaptationSets(
     ((acc, adaptation) => {
       const adaptationChildren = adaptation.children;
       const parsedAdaptations = acc.adaptations;
+
+      const { essentialProperties,
+              roles } = adaptationChildren;
+
+      const isExclusivelyTrickModeTrack = (Array.isArray(essentialProperties) &&
+        essentialProperties.some((ep) =>
+          ep.schemeIdUri === "http://dashif.org/guidelines/trickmode"));
+
+      if (isExclusivelyTrickModeTrack) {
+        // We do not for the moment parse trickmode tracks
+        return acc;
+      }
+
+      const isMainAdaptation = Array.isArray(roles) &&
+        roles.some((role) => role.value === "main") &&
+        roles.some((role) => role.schemeIdUri === "urn:mpeg:dash:role:2011");
+
       const representationsIR = adaptation.children.representations;
       const adaptationInfos = {
         aggressiveMode: periodInfos.aggressiveMode,
@@ -212,14 +229,6 @@ export default function parseAdaptationSets(
       const originalID = adaptation.attributes.id;
       let newID : string;
       const adaptationSetSwitchingIDs = getAdaptationSetSwitchingIDs(adaptation);
-
-      // TODO remove "main" video track management
-      const { roles } = adaptationChildren;
-      const isMainAdaptation = Array.isArray(roles) &&
-        arrayFind(roles, (role) =>
-          role.value === "main") !== undefined &&
-        arrayFind(roles, (role) =>
-          role.schemeIdUri === "urn:mpeg:dash:role:2011") !== undefined;
       const videoMainAdaptation = acc.videoMainAdaptation;
       if (type === "video" && videoMainAdaptation !== null && isMainAdaptation) {
         videoMainAdaptation.representations.push(...representations);
