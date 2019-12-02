@@ -220,7 +220,8 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @returns {Array.<Object>}
    */
   getSegments(_up : number, _to : number) : ISegment[] {
-    if (this._mimeType !== undefined &&
+    if (this._index.initialization?.range === undefined &&
+        this._mimeType !== undefined &&
         /\/mp4$/.exec(this._mimeType) === null) {
       return [{ isInit: false,
                 id: "",
