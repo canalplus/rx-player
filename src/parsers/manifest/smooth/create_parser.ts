@@ -557,7 +557,10 @@ function createSmoothStreamingParser(
     }
 
     let periodStart : number;
-    let duration : number|undefined;
+    const manifestDuration = root.getAttribute("Duration");
+    const mediaPresentationTime = (manifestDuration != null && +manifestDuration !== 0) ?
+      (+manifestDuration / timescale) : undefined;
+
     if (isLive) {
       periodStart = 0;
       suggestedPresentationDelay = parserOptions.suggestedPresentationDelay;
@@ -581,10 +584,6 @@ function createSmoothStreamingParser(
                                         maximumTime.value),
                         time };
       }
-      const manifestDuration = root.getAttribute("Duration");
-      duration = (manifestDuration != null && +manifestDuration !== 0) ?
-        (+manifestDuration / timescale) : undefined;
-
     } else {
       periodStart = firstTimeReference != null ? firstTimeReference :
                                                  0;
@@ -592,24 +591,23 @@ function createSmoothStreamingParser(
                       value: firstTimeReference != null ? firstTimeReference :
                                                           0,
                       time: performance.now() };
-
-      // if non-live and first time reference different than 0. Add first time reference
-      // to duration
-      const manifestDuration = root.getAttribute("Duration");
-
-      if (manifestDuration != null && +manifestDuration !== 0) {
-        duration = lastTimeReference == null ?
-          (+manifestDuration / timescale) +
-          (firstTimeReference === undefined ? 0 :
-                                              firstTimeReference) :
-          lastTimeReference;
-      } else {
-        duration = undefined;
+      if (lastTimeReference !== undefined) {
+        maximumTime = { isContinuous: false,
+                        value: lastTimeReference,
+                        time: performance.now() };
+      } else if (mediaPresentationTime !== undefined) {
+        maximumTime = { isContinuous: false,
+                        value: mediaPresentationTime,
+                        time: performance.now() };
       }
     }
 
-    const periodDuration = duration != null ? duration - periodStart :
-                                              undefined;
+    const duration = (minimumTime !== undefined &&
+                      !minimumTime.isContinuous &&
+                      maximumTime !== undefined &&
+                      !maximumTime.isContinuous) ?
+      (maximumTime.value - minimumTime.value) : undefined;
+
     const manifest = {
       availabilityStartTime: availabilityStartTime === undefined ?
         0 :
@@ -621,9 +619,9 @@ function createSmoothStreamingParser(
       maximumTime,
       minimumTime,
       periods: [{ adaptations,
-                  duration: periodDuration,
-                  end: periodDuration == null ? undefined :
-                                                periodStart + periodDuration,
+                  duration,
+                  end: duration === undefined ? undefined :
+                                                periodStart + duration,
                   id: "gen-smooth-period-0",
                   start: periodStart }],
       suggestedPresentationDelay,
