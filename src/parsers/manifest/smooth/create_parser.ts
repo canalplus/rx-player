@@ -558,7 +558,7 @@ function createSmoothStreamingParser(
 
     let periodStart : number;
     const manifestDuration = root.getAttribute("Duration");
-    const mediaPresentationTime = (manifestDuration != null && +manifestDuration !== 0) ?
+    let duration = (manifestDuration != null && +manifestDuration !== 0) ?
       (+manifestDuration / timescale) : undefined;
 
     if (isLive) {
@@ -595,16 +595,27 @@ function createSmoothStreamingParser(
         maximumTime = { isContinuous: false,
                         value: lastTimeReference,
                         time: performance.now() };
-      } else if (mediaPresentationTime !== undefined) {
+      } else if (duration !== undefined) {
         maximumTime = { isContinuous: false,
-                        value: mediaPresentationTime,
+                        value: minimumTime.value + duration,
                         time: performance.now() };
       }
     }
 
-    const duration = (!minimumTime?.isContinuous &&
-                      maximumTime?.isContinuous === false) ?
+    const computedDuration = (!minimumTime.isContinuous &&
+                              maximumTime?.isContinuous === false) ?
       (maximumTime.value - minimumTime.value) : undefined;
+
+    if (computedDuration !== duration &&
+        computedDuration !== undefined) {
+      if (duration !== undefined) {
+        log.warn("Smooth Parser: computed duration is different from manifest duration.",
+                 computedDuration,
+                 duration);
+      }
+      // Trust our calculations better than what the HSS manifest announce.
+      duration = computedDuration;
+    }
 
     const manifest = {
       availabilityStartTime: availabilityStartTime === undefined ?
