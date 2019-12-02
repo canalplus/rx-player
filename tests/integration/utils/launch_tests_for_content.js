@@ -505,7 +505,7 @@ export default function launchTestsForContent(
             autoPlay: false,
           });
           await waitForLoadedStateAfterLoadVideo(player);
-          expect(player.getVideoDuration()).to.be.closeTo(duration, 0.1);
+          expect(player.getVideoDuration()).to.be.closeTo(maximumPosition, 0.1);
         });
       }
     });

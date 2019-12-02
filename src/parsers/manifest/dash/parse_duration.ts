@@ -21,17 +21,24 @@ export default function parseDuration(
   rootAttributes : IMPDAttributes,
   parsedPeriods : IParsedPeriod[]
 ) : number|undefined {
-  if (rootAttributes.duration != null) {
-    return rootAttributes.duration;
+  if (rootAttributes.duration !== undefined) {
+    const firstPosition = parsedPeriods.reduce((acc: number|undefined, { start }) => {
+      return acc !== undefined ? Math.min(acc, start) : start;
+    }, undefined);
+    return rootAttributes.duration - (firstPosition ?? 0);
   }
   if (rootAttributes.type === "dynamic" || parsedPeriods.length === 0) {
     return undefined;
   }
   const lastPeriod = parsedPeriods[parsedPeriods.length - 1];
-  if (lastPeriod.end != null) {
-    return lastPeriod.end;
-  } else if (lastPeriod.duration != null) {
-    return lastPeriod.start + lastPeriod.duration;
+  const lastPeriodEnd = lastPeriod.end ??
+    (lastPeriod.duration !== undefined ? lastPeriod.duration + lastPeriod.start :
+                                                               undefined);
+  if (lastPeriodEnd !== undefined) {
+    const firstPosition = parsedPeriods.reduce((acc: number|undefined, { start }) => {
+      return acc !== undefined ? Math.min(acc, start) : start;
+    }, undefined);
+    return lastPeriodEnd - (firstPosition ?? 0);
   }
   return undefined;
 }

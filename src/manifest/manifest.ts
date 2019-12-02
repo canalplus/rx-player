@@ -348,21 +348,21 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @returns {number}
    */
   public getMaximumPosition() : number {
-    if (!this.isLive) {
-      const duration = this.getDuration();
-      return duration == null ? Infinity : duration;
-    }
     const { maximumTime } = this;
-    if (maximumTime == null) {
-      const ast = this.availabilityStartTime !== undefined ?
-        this.availabilityStartTime :
-        0;
-      if (this._clockOffset == null) {
-        // server's time not known, rely on user's clock
-        return (Date.now() / 1000) - ast;
-     }
-      const serverTime = performance.now() + this._clockOffset;
-      return (serverTime / 1000) - ast;
+    if (maximumTime === undefined) {
+      if (this.isLive) {
+        const ast = this.availabilityStartTime !== undefined ?
+          this.availabilityStartTime :
+          0;
+        if (this._clockOffset == null) {
+          // server's time not known, rely on user's clock
+          return (Date.now() / 1000) - ast;
+       }
+        const serverTime = performance.now() + this._clockOffset;
+        return (serverTime / 1000) - ast;
+      }
+      const duration = this.getDuration();
+      return this.getMinimumPosition() + (duration ?? Infinity);
     }
     if (!maximumTime.isContinuous) {
       return maximumTime.value;

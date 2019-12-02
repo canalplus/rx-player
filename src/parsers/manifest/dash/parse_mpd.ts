@@ -218,12 +218,11 @@ function parseCompleteIntermediateRepresentation(
                           timeShiftBufferDepth,
                           xlinkInfos };
   const parsedPeriods = parsePeriods(rootChildren.periods, manifestInfos);
-  const duration = parseDuration(rootAttributes, parsedPeriods);
+  const mediaPresentationDuration = rootAttributes.duration;
   const parsedMPD : IParsedManifest = {
     availabilityStartTime,
     baseURL,
     clockOffset: args.externalClockOffset,
-    duration,
     id: rootAttributes.id != null ? rootAttributes.id :
                                     "gen-dash-manifest-" + generateManifestID(),
     isLive: isDynamic,
@@ -245,18 +244,18 @@ function parseCompleteIntermediateRepresentation(
   const [minTime, maxTime] = getMinimumAndMaximumPosition(parsedMPD);
   const now = performance.now();
   if (!isDynamic) {
-    if (minTime != null) {
+    if (minTime !== undefined) {
       parsedMPD.minimumTime = { isContinuous: false,
                                 value: minTime,
                                 time: now };
     }
-    if (duration != null) {
-      parsedMPD.maximumTime = { isContinuous: false,
-                                value: duration,
-                                time: now };
-    } else if (maxTime != null) {
+    if (maxTime !== undefined) {
       parsedMPD.maximumTime = { isContinuous: false,
                                 value: maxTime,
+                                time: now };
+    } else if (mediaPresentationDuration !== undefined) {
+      parsedMPD.maximumTime = { isContinuous: false,
+                                value: mediaPresentationDuration,
                                 time: now };
     }
   } else {
@@ -276,6 +275,15 @@ function parseCompleteIntermediateRepresentation(
       }
     }
   }
+
+  const { minimumTime, maximumTime } = parsedMPD;
+  const duration = (maximumTime !== undefined &&
+                    !maximumTime.isContinuous &&
+                    minimumTime !== undefined &&
+                    !minimumTime.isContinuous) ?
+    (maximumTime.value - minimumTime.value) :
+    parseDuration(rootAttributes, parsedPeriods);
+  parsedMPD.duration = duration;
 
   return { type: "done", value: parsedMPD };
 }

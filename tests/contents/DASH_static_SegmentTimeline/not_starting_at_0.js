@@ -8,9 +8,9 @@ export default {
   url: BASE_URL + "not_starting_at_0.mpd",
   transport: "dash",
   isLive: false,
-  duration: 101.568367,
   minimumPosition: 12.032222222222222,
-  maximumPosition: 101.568367,
+  maximumPosition: 101.476,
+  duration: 101.476 - 12.032222222222222,
   availabilityStartTime: 0,
   periods: [
     {
