@@ -277,10 +277,8 @@ function parseCompleteIntermediateRepresentation(
   }
 
   const { minimumTime, maximumTime } = parsedMPD;
-  const duration = (maximumTime !== undefined &&
-                    !maximumTime.isContinuous &&
-                    minimumTime !== undefined &&
-                    !minimumTime.isContinuous) ?
+  const duration = (maximumTime?.isContinuous === false &&
+                    minimumTime?.isContinuous === false) ?
     (maximumTime.value - minimumTime.value) :
     parseDuration(rootAttributes, parsedPeriods);
   parsedMPD.duration = duration;

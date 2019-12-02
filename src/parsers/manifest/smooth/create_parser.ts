@@ -602,10 +602,8 @@ function createSmoothStreamingParser(
       }
     }
 
-    const duration = (minimumTime !== undefined &&
-                      !minimumTime.isContinuous &&
-                      maximumTime !== undefined &&
-                      !maximumTime.isContinuous) ?
+    const duration = (!minimumTime?.isContinuous &&
+                      maximumTime?.isContinuous === false) ?
       (maximumTime.value - minimumTime.value) : undefined;
 
     const manifest = {
