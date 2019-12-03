@@ -78,16 +78,16 @@ export function imageParser(
   const thumbsData = bifObject.thumbs;
   return observableOf({ type: "parser-response",
                         value: { chunkData: { data: thumbsData,
-                                   start: 0,
-                                   end: Number.MAX_VALUE,
-                                   timescale: 1,
-                                   type: "bif" },
+                                              start: 0,
+                                              end: Number.MAX_VALUE,
+                                              timescale: 1,
+                                              type: "bif" },
                                  chunkInfos: { time: 0,
-                                                 duration: Number.MAX_VALUE,
-                                                 timescale: bifObject.timescale },
+                                               duration: Number.MAX_VALUE,
+                                               timescale: bifObject.timescale },
                                  chunkOffset:
-                                  takeFirstSet<number>(segment.timestampOffset,
-                                                       0),
+                                   takeFirstSet<number>(segment.timestampOffset,
+                                                        0),
                                  segmentProtections: [],
                                  appendWindow: [period.start, period.end] } });
 }
