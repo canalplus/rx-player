@@ -244,7 +244,7 @@ export default function InitializeOnMediaSource(
       if (evt.type === "blacklist-keys") {
         log.info("Init: blacklisting Representations based on keyIDs");
         manifest.addUndecipherableKIDs(evt.value);
-      } else if (evt.type === "blacklist-protection-data") {
+      } else if (evt.type === "blacklist-protection-data" && evt.value.type === "cenc") {
         log.info("Init: blacklisting Representations based on protection data.");
         manifest.addUndecipherableProtectionData(evt.value.data);
       }
