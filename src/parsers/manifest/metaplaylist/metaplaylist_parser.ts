@@ -166,7 +166,6 @@ function createManifest(
   const maximumTime = contents.length > 0 ? contents[contents.length - 1].endTime :
                                             0;
   const isLive = mplData.dynamic === true;
-  let duration : number|undefined = 0;
 
   let firstStart: number|null = null;
   let lastEnd: number|null = null;
@@ -293,13 +292,14 @@ function createManifest(
       }
     }
     periods.push(...manifestPeriods);
+  }
 
-    if (!isLive && duration != null) {
-      if (lastEnd === null || firstStart === null) {
-        throw new Error("MPL Parser: can't define duration of manifest.");
-      }
-      duration = lastEnd - firstStart;
+  let duration : number|undefined;
+  if (!isLive) {
+    if (lastEnd === null || firstStart === null) {
+      throw new Error("MPL Parser: can't define duration of manifest.");
     }
+    duration = lastEnd - firstStart;
   }
 
   const time = performance.now();
@@ -307,7 +307,7 @@ function createManifest(
     availabilityStartTime: 0,
     clockOffset,
     suggestedPresentationDelay: 10,
-    duration: isLive ? undefined : duration,
+    duration,
     id: "gen-metaplaylist-man-" + generateManifestID(),
     periods,
     transportType: "metaplaylist",
