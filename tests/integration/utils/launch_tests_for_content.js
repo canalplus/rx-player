@@ -53,7 +53,6 @@ export default function launchTestsForContent(
 
   const {
     availabilityStartTime,
-    duration,
     isLive,
     maximumPosition,
     minimumPosition,
