@@ -65,7 +65,7 @@ export default function parser({ content,
   const isWEBM = isWEBMEmbeddedTrack(representation);
 
   let nextSegments;
-  let indexes;
+  let indexReferences;
 
   if (isWEBM) {
     nextSegments = getSegmentsFromCues(chunkData, 0);
@@ -74,36 +74,35 @@ export default function parser({ content,
                                                0;
     const referencesFromSidx = getReferencesFromSidx(chunkData, indexOffset);
     if (referencesFromSidx !== null) {
-      const [indexReferences, segmentReferences] = referencesFromSidx;
-      if (segmentReferences.length > 0) {
-        nextSegments = segmentReferences;
+      if (referencesFromSidx[1].length > 0) {
+        nextSegments = referencesFromSidx[1];
       }
-      indexes = indexReferences;
+      indexReferences = referencesFromSidx[0];
     }
   }
 
   if (!segment.isInit) {
-    const initChunkInfos = isWEBM ? null : // TODO extract from webm
-                                    getISOBMFFTimingInfos(chunkData,
-                                                          isChunked,
-                                                          segment,
-                                                          init);
-    const initChunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
-    const aWindow: [number | undefined, number | undefined] =
+    const chunkInfos = isWEBM ? null : // TODO extract from webm
+                                getISOBMFFTimingInfos(chunkData,
+                                                      isChunked,
+                                                      segment,
+                                                      init);
+    const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
+    const appendWindow: [number | undefined, number | undefined] =
       [period.start, period.end];
-    const parserInitResponse =
+    const parserResponse =
       observableOf({ type: "parser-response" as const,
                      value: { chunkData,
-                              chunkInfos: initChunkInfos,
-                              chunkOffset: initChunkOffset,
+                              chunkInfos,
+                              chunkOffset,
                               segmentProtections: [],
-                              appendWindow: aWindow } });
+                              appendWindow } });
 
-    if (indexes !== undefined && indexes.length > 0) {
+    if (indexReferences !== undefined && indexReferences.length > 0) {
       if (scheduleRequest == null) {
         throw new Error("Can't schedule request for loading indexes.");
       }
-      return loadIndexes(indexes, content, scheduleRequest).pipe(
+      return loadIndexes(indexReferences, content, scheduleRequest).pipe(
         mergeMap((evt) => {
           if (evt.type === "retry") {
             return observableOf(evt);
@@ -112,7 +111,7 @@ export default function parser({ content,
         })
       );
     }
-    return parserInitResponse;
+    return parserResponse;
   }
 
   // it is an initialization segment
@@ -123,14 +122,14 @@ export default function parser({ content,
   const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
                              getMDHDTimescale(chunkData);
 
-  const chunkInfos = timescale != null && timescale > 0 ? { time: 0,
+  const initChunkInfos = timescale != null && timescale > 0 ? { time: 0,
                                                             duration: 0,
                                                             timescale } :
                                                           null;
-  const appendWindow: [number|undefined, number|undefined] =
+  const initAppendWindow: [number|undefined, number|undefined] =
     [period.start, period.end];
 
-  const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
+  const initChunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
   if (!isWEBM) {
     const psshInfo = takePSSHOut(chunkData);
     if (psshInfo.length > 0) {
@@ -142,26 +141,26 @@ export default function parser({ content,
   }
 
   const segmentProtections = representation.getProtectionsInitializationData();
-  const parserResponse =
+  const initParserResponse =
     observableOf({ type: "parser-response" as const,
                    value: { chunkData,
-                            chunkInfos,
-                            chunkOffset,
+                            chunkInfos: initChunkInfos,
+                            chunkOffset: initChunkOffset,
                             segmentProtections,
-                            appendWindow } });
-  if (indexes !== undefined && indexes.length > 0) {
+                            appendWindow: initAppendWindow } });
+  if (indexReferences !== undefined && indexReferences.length > 0) {
     if (scheduleRequest == null) {
       throw new Error("Can't schedule request for loading indexes.");
     }
 
-    return loadIndexes(indexes, content, scheduleRequest).pipe(
+    return loadIndexes(indexReferences, content, scheduleRequest).pipe(
       mergeMap((evt) => {
         if (evt.type === "retry") {
           return observableOf(evt);
         }
-        return parserResponse;
+        return initParserResponse;
       })
     );
   }
-  return parserResponse;
+  return initParserResponse;
 }
