@@ -174,8 +174,6 @@ export default function launchTestsForContent(
         const manifest = player.getManifest();
         expect(manifest).not.to.equal(null);
         expect(typeof manifest).to.equal("object");
-        expect(manifest.getDuration()).to
-          .equal(isLive ? Math.MAX_NUMBER : duration);
         expect(manifest.transport).to.equal(transport);
         expect(typeof manifest.id).to.equal("string");
         expect(manifest.isLive).to.equal(isLive);

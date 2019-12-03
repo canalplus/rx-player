@@ -88,8 +88,6 @@ export interface IParsedManifest {
   baseURL? : string; // Base URL for relative URLs given in that Manifest.
   clockOffset?: number; // Offset, in milliseconds, the client's clock (in terms
                         // of `performance.now`) has relatively to the server's
-  duration? : number; // Last time available in the content.
-                      // `undefined` for live contents.
   lifetime?: number; // Duration of the validity of this Manifest, after which it
                      // should be refreshed.
   maximumTime? : { // Information on the maximum seekable position.

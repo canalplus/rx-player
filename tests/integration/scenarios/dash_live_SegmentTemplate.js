@@ -37,7 +37,6 @@ describe("DASH live content (SegmentTemplate)", function() {
     const manifest = player.getManifest();
     expect(manifest).not.to.equal(null);
     expect(typeof manifest).to.equal("object");
-    expect(manifest.getDuration()).to.equal(undefined);
     expect(manifest.transport)
       .to.equal(manifestInfos.transport);
     expect(typeof manifest.id).to.equal("string");
@@ -366,7 +365,6 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
     const manifest = player.getManifest();
     expect(manifest).not.to.equal(null);
     expect(typeof manifest).to.equal("object");
-    expect(manifest.getDuration()).to.equal(undefined);
     expect(manifest.transport)
       .to.equal(noTimeShiftBufferDepthManifestInfos.transport);
     expect(typeof manifest.id).to.equal("string");

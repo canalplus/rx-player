@@ -247,6 +247,10 @@ function parseCompleteIntermediateRepresentation(
       parsedMPD.minimumTime = { isContinuous: false,
                                 value: minTime,
                                 time: now };
+    } else if (parsedPeriods[0]?.start !== undefined) {
+      parsedMPD.minimumTime = { isContinuous: false,
+                                value: parsedPeriods[0].start,
+                                time: now };
     }
     if (maxTime !== undefined) {
       parsedMPD.maximumTime = { isContinuous: false,
@@ -256,6 +260,17 @@ function parseCompleteIntermediateRepresentation(
       parsedMPD.maximumTime = { isContinuous: false,
                                 value: mediaPresentationDuration,
                                 time: now };
+    } else if (parsedPeriods[parsedPeriods.length - 1] !== undefined) {
+      const lastPeriod = parsedPeriods[parsedPeriods.length - 1];
+      const end = lastPeriod.end ??
+                  (lastPeriod.duration !== undefined ?
+                    lastPeriod.start + lastPeriod.duration :
+                    undefined);
+      if (end !== undefined) {
+        parsedMPD.maximumTime = { isContinuous: false,
+                                  value: end,
+                                  time: now };
+      }
     }
   } else {
     if (minTime != null) {
@@ -274,35 +289,6 @@ function parseCompleteIntermediateRepresentation(
       }
     }
   }
-
-  let duration: number|undefined;
-
-  const { minimumTime, maximumTime } = parsedMPD;
-  if (maximumTime?.isContinuous === false &&
-      minimumTime?.isContinuous === false) {
-    duration = (maximumTime.value - minimumTime.value);
-  } else {
-    if (rootAttributes.duration !== undefined) {
-      const firstPosition = parsedPeriods.reduce((acc: number|undefined, { start }) => {
-        return acc !== undefined ? Math.min(acc, start) : start;
-      }, undefined);
-      duration = rootAttributes.duration - (firstPosition ?? 0);
-    }
-    if (rootAttributes.type !== "dynamic" && parsedPeriods.length > 0) {
-      const lastPeriod = parsedPeriods[parsedPeriods.length - 1];
-      const lastPeriodEnd = lastPeriod.end ??
-        (lastPeriod.duration !== undefined ? lastPeriod.duration + lastPeriod.start :
-                                                                   undefined);
-      if (lastPeriodEnd !== undefined) {
-        const firstPosition = parsedPeriods.reduce((acc: number|undefined, { start }) => {
-          return acc !== undefined ? Math.min(acc, start) : start;
-        }, undefined);
-        duration = lastPeriodEnd - (firstPosition ?? 0);
-      }
-    }
-  }
-
-  parsedMPD.duration = duration;
 
   return { type: "done", value: parsedMPD };
 }

@@ -556,13 +556,11 @@ function createSmoothStreamingParser(
       }
     }
 
-    let periodStart : number;
     const manifestDuration = root.getAttribute("Duration");
-    let duration = (manifestDuration != null && +manifestDuration !== 0) ?
+    const duration = (manifestDuration != null && +manifestDuration !== 0) ?
       (+manifestDuration / timescale) : undefined;
 
     if (isLive) {
-      periodStart = 0;
       suggestedPresentationDelay = parserOptions.suggestedPresentationDelay;
       availabilityStartTime = referenceDateTime;
 
@@ -585,8 +583,6 @@ function createSmoothStreamingParser(
                         time };
       }
     } else {
-      periodStart = firstTimeReference != null ? firstTimeReference :
-                                                 0;
       minimumTime = { isContinuous: false,
                       value: firstTimeReference != null ? firstTimeReference :
                                                           0,
@@ -602,35 +598,23 @@ function createSmoothStreamingParser(
       }
     }
 
-    const computedDuration = (!minimumTime.isContinuous &&
-                              maximumTime?.isContinuous === false) ?
-      (maximumTime.value - minimumTime.value) : undefined;
-
-    if (computedDuration !== duration &&
-        computedDuration !== undefined) {
-      if (duration !== undefined) {
-        log.warn("Smooth Parser: computed duration is different from manifest duration.",
-                 computedDuration,
-                 duration);
-      }
-      // Trust our calculations better than what the HSS manifest announce.
-      duration = computedDuration;
-    }
-
+    const periodStart = isLive ? 0 :
+                                 minimumTime.value;
+    const periodEnd = isLive ? undefined :
+                               maximumTime?.value;
     const manifest = {
       availabilityStartTime: availabilityStartTime === undefined ?
         0 :
         availabilityStartTime,
-      duration,
       clockOffset: serverTimeOffset,
       id: "gen-smooth-manifest-" + generateManifestID(),
       isLive,
       maximumTime,
       minimumTime,
       periods: [{ adaptations,
-                  duration,
-                  end: duration === undefined ? undefined :
-                                                periodStart + duration,
+                  duration: periodEnd !== undefined ?
+                    periodEnd - periodStart : duration,
+                  end: periodEnd,
                   id: "gen-smooth-period-0",
                   start: periodStart }],
       suggestedPresentationDelay,
