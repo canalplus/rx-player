@@ -15,7 +15,6 @@
  */
 
 import { ICustomError } from "../errors";
-import log from "../log";
 import { IParsedManifest } from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
 import EventEmitter from "../utils/event_emitter";
@@ -139,9 +138,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   // created, in the order they have happened.
   public parsingErrors : ICustomError[];
 
-  // Whole duration anounced in the Manifest.
-  private _duration : number|undefined;
-
   // Difference between the server's clock in ms and the return of the JS
   // function `performance.now`.
   // This property allows to calculate the server time at any moment.
@@ -188,11 +184,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.maximumTime = args.maximumTime;
     this.baseURL = args.baseURL;
 
-    if (!args.isLive && args.duration == null) {
-      log.warn("Manifest: non live content and duration is null.");
-    }
-    this._duration = args.duration;
-
     if (supplementaryImageTracks.length > 0) {
       this.addSupplementaryImageAdaptations(supplementaryImageTracks);
     }
@@ -230,14 +221,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     });
     return nextPeriod === undefined ? null :
                                       nextPeriod;
-  }
-
-  /**
-   * Returns the duration of the whole content described by that Manifest.
-   * @returns {Number}
-   */
-  getDuration() : number|undefined {
-    return this._duration;
   }
 
   /**
@@ -304,8 +287,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @param {Object} Manifest
    */
   update(newManifest : Manifest) : void {
-    this._duration = newManifest.getDuration();
-
     /* tslint:disable:deprecation */
     this.adaptations = newManifest.adaptations;
     /* tslint:enable:deprecation */
@@ -348,21 +329,20 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @returns {number}
    */
   public getMaximumPosition() : number {
-    if (!this.isLive) {
-      const duration = this.getDuration();
-      return duration == null ? Infinity : duration;
-    }
     const { maximumTime } = this;
-    if (maximumTime == null) {
-      const ast = this.availabilityStartTime !== undefined ?
-        this.availabilityStartTime :
-        0;
-      if (this._clockOffset == null) {
-        // server's time not known, rely on user's clock
-        return (Date.now() / 1000) - ast;
-     }
-      const serverTime = performance.now() + this._clockOffset;
-      return (serverTime / 1000) - ast;
+    if (maximumTime === undefined) {
+      if (this.isLive) {
+        const ast = this.availabilityStartTime !== undefined ?
+          this.availabilityStartTime :
+          0;
+        if (this._clockOffset == null) {
+          // server's time not known, rely on user's clock
+          return (Date.now() / 1000) - ast;
+       }
+        const serverTime = performance.now() + this._clockOffset;
+        return (serverTime / 1000) - ast;
+      }
+      return Infinity;
     }
     if (!maximumTime.isContinuous) {
       return maximumTime.value;

@@ -8,9 +8,9 @@ export default {
   url: BASE_URL + "ateam.mpd",
   transport: "dash",
   isLive: false,
-  duration: 101.568367,
+  duration: 101.476,
   minimumPosition: 0,
-  maximumPosition: 101.568367,
+  maximumPosition: 101.476,
   availabilityStartTime: 0,
   periods: [
     {

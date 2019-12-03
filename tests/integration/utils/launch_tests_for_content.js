@@ -53,7 +53,6 @@ export default function launchTestsForContent(
 
   const {
     availabilityStartTime,
-    duration,
     isLive,
     maximumPosition,
     minimumPosition,
@@ -174,8 +173,6 @@ export default function launchTestsForContent(
         const manifest = player.getManifest();
         expect(manifest).not.to.equal(null);
         expect(typeof manifest).to.equal("object");
-        expect(manifest.getDuration()).to
-          .equal(isLive ? Math.MAX_NUMBER : duration);
         expect(manifest.transport).to.equal(transport);
         expect(typeof manifest.id).to.equal("string");
         expect(manifest.isLive).to.equal(isLive);
@@ -505,7 +502,7 @@ export default function launchTestsForContent(
             autoPlay: false,
           });
           await waitForLoadedStateAfterLoadVideo(player);
-          expect(player.getVideoDuration()).to.be.closeTo(duration, 0.1);
+          expect(player.getVideoDuration()).to.be.closeTo(maximumPosition, 0.1);
         });
       }
     });
