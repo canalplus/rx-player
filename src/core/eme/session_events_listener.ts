@@ -76,6 +76,8 @@ export class BlacklistedSessionError extends Error {
   public sessionError : ICustomError;
   constructor(sessionError : ICustomError) {
     super();
+    // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
+    Object.setPrototypeOf(this, BlacklistedSessionError.prototype);
     this.sessionError = sessionError;
   }
 }
