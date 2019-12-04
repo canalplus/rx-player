@@ -52,7 +52,8 @@ export type IMediaErrorCode = "BUFFER_APPEND_ERROR" |
                               "MEDIA_STARTING_TIME_NOT_FOUND" |
                               "MEDIA_TIME_BEFORE_MANIFEST" |
                               "MEDIA_TIME_AFTER_MANIFEST" |
-                              "MEDIA_TIME_NOT_FOUND";
+                              "MEDIA_TIME_NOT_FOUND" |
+                              "NO_PLAYABLE_REPRESENTATION";
 
 export type INetworkErrorCode = "PIPELINE_LOAD_ERROR";
 
@@ -98,6 +99,8 @@ const ErrorCodes : Record<IErrorCode, IErrorCode>  = {
   MEDIA_TIME_BEFORE_MANIFEST: "MEDIA_TIME_BEFORE_MANIFEST",
   MEDIA_TIME_AFTER_MANIFEST: "MEDIA_TIME_AFTER_MANIFEST",
   MEDIA_TIME_NOT_FOUND: "MEDIA_TIME_NOT_FOUND",
+
+  NO_PLAYABLE_REPRESENTATION: "NO_PLAYABLE_REPRESENTATION",
 
   MEDIA_IS_ENCRYPTED_ERROR: "MEDIA_IS_ENCRYPTED_ERROR",
 

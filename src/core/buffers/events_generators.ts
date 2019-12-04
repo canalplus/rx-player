@@ -31,6 +31,7 @@ import {
   IBufferManifestMightBeOutOfSync,
   IBufferNeedsDiscontinuitySeek,
   IBufferNeedsManifestRefresh,
+  IBufferNeedsNudgingSeek,
   IBufferStateActive,
   IBufferStateFull,
   IBufferWarningEvent,
@@ -39,6 +40,7 @@ import {
   INeedsMediaSourceReload,
   IPeriodBufferClearedEvent,
   IPeriodBufferReadyEvent,
+  IProtectedSegmentEvent,
   IRepresentationChangeEvent,
   IResumeStreamEvent,
 } from "./types";
@@ -128,6 +130,11 @@ const EVENTS = {
              value: { currentTime, isPaused } };
   },
 
+  needsNudgingSeek() : IBufferNeedsNudgingSeek {
+    return { type: "needs-nudging-seek",
+             value: null };
+  },
+
   periodBufferReady(
     type : IBufferType,
     period : Period,
@@ -143,6 +150,13 @@ const EVENTS = {
   ) : IPeriodBufferClearedEvent {
     return { type: "periodBufferCleared",
              value: { type, period } };
+  },
+
+  protectedSegment(initDataInfo : { type : string;
+                                    data : Uint8Array; }
+  ) : IProtectedSegmentEvent {
+    return { type: "protected-segment",
+             value: initDataInfo };
   },
 
   representationChange(

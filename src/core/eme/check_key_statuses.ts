@@ -27,30 +27,32 @@ const KEY_STATUSES = { EXPIRED: "expired",
 
 /**
  * Look at the current key statuses in the sessions and construct the
- * appropriate warnings
+ * appropriate warnings and blacklisted key ids.
  *
  * Throws if one of the keyID is on an error.
  * @param {MediaKeySession} session - The MediaKeySession from which the keys
  * will be checked.
  * @param {Object} keySystem - Configuration. Used to known on which situations
  * we can fallback.
- * @returns {Array} - Warnings to send.
+ * @returns {Array} - Warnings to send and blacklisted key ids.
  */
 export default function checkKeyStatuses(
   session : MediaKeySession | ICustomMediaKeySession,
   keySystem: IKeySystemOption
-) : IEMEWarningEvent[] {
+) : [IEMEWarningEvent[], ArrayBuffer[]] {
   const warnings : IEMEWarningEvent[] = [];
+  const blacklistedKeyIDs : ArrayBuffer[] = [];
+  const { fallbackOn = {} } = keySystem;
 
-  // Hack present because the order of the arguments has changed in spec
-  // and is not the same between some versions of Edge and Chrome.
   /* tslint:disable no-unsafe-any */
   (session.keyStatuses as any).forEach((_arg1 : unknown, _arg2 : unknown) => {
-  /* tslint:enable no-unsafe-any */
-    const keyStatus = (() => {
-      return (typeof _arg1  === "string" ? _arg1 :
-                                           _arg2
-             ) as MediaKeyStatus;
+    /* tslint:enable no-unsafe-any */
+    // Hack present because the order of the arguments has changed in spec
+    // and is not the same between some versions of Edge and Chrome.
+    const [keyStatus, keyId] = (() => {
+      return (typeof _arg1  === "string" ? [_arg1, _arg2] :
+                                           [_arg2, _arg1]
+             ) as [MediaKeyStatus, ArrayBuffer];
     })();
 
     switch (keyStatus) {
@@ -65,12 +67,28 @@ export default function checkKeyStatuses(
         break;
       }
 
-      case KEY_STATUSES.OUTPUT_RESTRICTED:
-      case KEY_STATUSES.INTERNAL_ERROR:
-        throw new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                      "An invalid key status has been " +
-                                      "encountered: " + keyStatus);
+      case KEY_STATUSES.INTERNAL_ERROR: {
+        const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
+                                              "An invalid key status has been " +
+                                              "encountered: " + keyStatus);
+        if (fallbackOn.keyInternalError !== true) {
+          throw error;
+        }
+        warnings.push({ type: "warning", value: error });
+        blacklistedKeyIDs.push(keyId);
+      }
+
+      case KEY_STATUSES.OUTPUT_RESTRICTED: {
+        const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
+                                              "An invalid key status has been " +
+                                              "encountered: " + keyStatus);
+        if (fallbackOn.keyOutputRestricted !== true) {
+          throw error;
+        }
+        warnings.push({ type: "warning", value: error });
+        blacklistedKeyIDs.push(keyId);
+      }
     }
   });
-  return warnings;
+  return [warnings, blacklistedKeyIDs];
 }

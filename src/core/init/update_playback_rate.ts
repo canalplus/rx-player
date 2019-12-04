@@ -38,7 +38,7 @@ export interface IPlaybackRateOptions { pauseWhenStalled? : boolean; }
  *
  * @param {HTMLMediaElement} mediaElement
  * @param {Observable} speed$ - emit speed set by the user
- * @param {Observable} clock$
+ * @param {Observable} clock$ - Current playback conditions
  * @param {Object} options - Contains the following properties:
  *   - pauseWhenStalled {Boolean|undefined} - true if the player
  *     stalling should lead to a pause until it un-stalls. True by default.

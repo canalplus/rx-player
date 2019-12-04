@@ -33,8 +33,12 @@ import { ITransportFunction } from "../transports";
 export type IDirectFileInit = (args : IDirectFileOptions) =>
                                 Observable<IDirectfileEvent>;
 
+interface IContentProtection { type : string;
+                               data : Uint8Array; }
+
 export type IEMEManager = (mediaElement : HTMLMediaElement,
-                           keySystems: IKeySystemOption[]) =>
+                           keySystems: IKeySystemOption[],
+                           contentProtections$ : Observable<IContentProtection>) =>
                              Observable<IEMEManagerEvent>;
 
 export type INativeTextTracksBuffer =

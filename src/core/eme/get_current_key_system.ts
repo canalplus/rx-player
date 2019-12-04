@@ -19,11 +19,11 @@ import MediaKeysInfosStore from "./media_keys_infos_store";
 /**
  * Returns the name of the current key system used.
  * @param {HTMLMediaElement} mediaElement
- * @returns {string}
+ * @returns {string|null}
  */
 export default function getCurrentKeySystem(
   mediaElement : HTMLMediaElement
-) : string|null {
+) : string | null {
   const currentState = MediaKeysInfosStore.getState(mediaElement);
   return currentState == null ? null :
                                 currentState.keySystemOptions.type;

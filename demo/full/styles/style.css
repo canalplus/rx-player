@@ -395,6 +395,7 @@ body {
 .choice-input-button-wrapper {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   flex-direction: row;
   margin-right: -5px;
   margin-left: auto;
@@ -854,8 +855,13 @@ body {
 .custom-checkbox {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   margin: 0px 5px;
+}
+
+.checkbox-indication {
+  font-style: italic;
+  font-size: 0.8em;
 }
 
 .encryption-checkbox.disabled {
@@ -875,7 +881,6 @@ body {
   margin: 10px;
 }
 
-/* The switch - the box around the slider */
 .switch {
   position: relative;
   display: inline-block;
@@ -891,7 +896,6 @@ body {
   height: 0;
 }
 
-/* The slider */
 .slider {
   position: absolute;
   cursor: pointer;
@@ -931,7 +935,6 @@ input:checked + .slider:before {
   transform: translateX(13px);
 }
 
-/* Rounded sliders */
 .slider.round {
   border-radius: 34px;
 }
@@ -947,6 +950,14 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.fallback-checkbox {
+  margin-right: 1px;
+}
+
+.fallback-switch {
+  margin-right: 0px;
 }
 
 .checkbox > input {

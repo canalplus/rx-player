@@ -27,6 +27,7 @@ import MediaKeysInfosStore from "./media_keys_infos_store";
 /**
  * Clear EME ressources that should be cleared when the current content stops
  * its playback.
+ * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
 export default function clearEMESession(

@@ -115,6 +115,22 @@ function isBefore(range1 : IRange, range2 : IRange) : boolean {
 }
 
 /**
+ * Returns true if the time given can be considered as part of any of the given
+ * ranges.
+ * @param {Array.<Object>} ranges
+ * @param {number} time
+ * @returns {boolean}
+ */
+function isTimeInRanges(ranges : IRange[], time : number) : boolean {
+  for (let i = 0; i < ranges.length; i++) {
+    if (isTimeInRange(ranges[i], time)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Returns true if the time given can be considered as part of the given range.
  * @param {Object} range1
  * @param {Number} Time
@@ -455,6 +471,7 @@ export {
   isAfter,
   isBefore,
   isTimeInRange,
+  isTimeInRanges,
   keepRangeIntersection,
   mergeContiguousRanges,
   removeEmptyRanges,

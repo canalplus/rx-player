@@ -22,8 +22,9 @@
     - [bitrateEstimationChange](#events-bitrateEstimationChange)
     - [warning](#events-warning)
     - [error](#events-error)
-    - [nativeTextTracksChange](#events-nativeTextTracksChange)
     - [periodChange](#events-periodChange)
+    - [decipherabilityUpdate](#events-decipherabilityUpdate)
+    - [nativeTextTracksChange (deprecated)](#events-nativeTextTracksChange)
 
 
 
@@ -485,32 +486,6 @@ The payload is the corresponding error. See [the Player Error
 documentation](./errors.md) for more information.
 
 
-<a name="events-nativeTextTracksChange"></a>
-### nativeTextTracksChange #####################################################
-
----
-
-:warning: This event is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
----
-
-_payload type_: ``Array<TextTrackElement>``
-
----
-
-:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
----
-
-Triggered each times a new ``<track>`` element is removed or added to the video
-element.
-
-The payload is the array of ``TextTrack`` elements. The RxPlayer will only set
-a single ``<track>`` when a text track is set.
-
-
 <a name="events-periodChange"></a>
 ### periodChange ###############################################################
 
@@ -527,3 +502,75 @@ Triggered when the current [Period](../terms.md#period) being seen changes.
 
 The payload is the corresponding Period. See [the Manifest
 documentation](./manifest.md#period) for more information.
+
+
+<a name="events-decipherabilityUpdate"></a>
+### decipherabilityUpdate ######################################################
+
+_payload type_: ``Array.<Object>``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Triggered when a or multiple Representation's decipherability status were
+updated. Which means either:
+  - A Representation is found to be undecipherable (e.g. the key or license
+    request is refused)
+  - A Representation is found to be decipherable
+  - A Representation's decipherability becomes undefined
+
+At this time, this event is only triggered if:
+  - the current content is an encrypted content
+  - Either the `fallbackOnLastTry` property was set to `true` on a rejected
+    `getLicense` call or one of the `fallbackOn` properties was set to true in
+    the `keySystems` loadVideo option.
+
+Following this event, the RxPlayer might remove from the current buffers any
+data linked to undecipherable Representation(s) (the video might twitch a little
+or reload) and update the list of available bitrates.
+
+The payload of this event is an Array of objects, each representating a
+Representation whose decipherability's status has been updated.
+
+Each of those objects have the following properties:
+  - `representation`: The Representation concerned (more information on its
+    structure [in the Manifest documentation](./manifest.md#representation)).
+  - `adaptation`: The Adaptation linked to that Representation (more information
+    on its structure [in the Manifest documentation](./manifest.md#adaptation)).
+  - `period`: The Period linked to that Representation (more information on its
+    structure [in the Manifest documentation](./manifest.md#period)).
+  - `manifest`: The current Manifest (more information on its structure [in the
+    Manifest documentation](./manifest.md#manifest)).
+
+You can then know if any of those Representations are becoming decipherable or
+not through their `decipherable` property.
+
+
+<a name="events-nativeTextTracksChange"></a>
+### nativeTextTracksChange #####################################################
+
+---
+
+:warning: This event is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
+_payload type_: ``Array.<TextTrackElement>``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Triggered each times a new ``<track>`` element is removed or added to the video
+element.
+
+The payload is the array of ``TextTrack`` elements. The RxPlayer will only set
+a single ``<track>`` when a text track is set.

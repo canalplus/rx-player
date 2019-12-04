@@ -46,6 +46,9 @@ export interface IChunkTimingInfos {
                       //   durationInSeconds = duration / timescale
 }
 
+export interface ISegmentProtection { type : string;
+                                      data : Uint8Array; }
+
 // Contains timing information on new segments indicated in the metadata of
 // a previous segment
 export interface INextSegmentsInfos {
@@ -198,6 +201,8 @@ export interface ISegmentParserResponse<T> {
                         // Note that `chunkInfos` needs not to be offseted as
                         // it should already contain the correct time
                         // information.
+  segmentProtections : ISegmentProtection[]; // InitializationData for the
+                                             // segment. Empty if not encrypted.
   appendWindow : [ number | undefined, // start window for the segment
                                        // (part of the segment before that time
                                        // will be ignored)

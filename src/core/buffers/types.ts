@@ -73,10 +73,15 @@ export interface IBufferStateActive {
 // State emitted when the buffer has been filled to the end
 export interface IBufferStateFull {
   type : "full-buffer";
-  value : {
-    bufferType : IBufferType; // The type of the Representation
-  };
+
+  // The type of the Representation
+  value : { bufferType : IBufferType };
 }
+
+export interface IProtectedSegmentEvent {
+  type : "protected-segment";
+  value : { type : string;
+            data : Uint8Array; }; }
 
 // State emitted when the buffer waits
 export type IRepresentationBufferStateEvent = IBufferNeededActions |
@@ -86,6 +91,7 @@ export type IRepresentationBufferStateEvent = IBufferNeededActions |
 
 // Events emitted by the Buffer
 export type IRepresentationBufferEvent<T> = IBufferEventAddedSegment<T> |
+                                            IProtectedSegmentEvent |
                                             IRepresentationBufferStateEvent |
                                             IBufferWarningEvent;
 
@@ -109,6 +115,7 @@ export interface IRepresentationChangeEvent {
 export type IAdaptationBufferEvent<T> = IRepresentationBufferEvent<T> |
                                         IBitrateEstimationChangeEvent |
                                         INeedsMediaSourceReload |
+                                        IBufferNeedsNudgingSeek |
                                         IRepresentationChangeEvent;
 
 // The currently-downloaded Adaptation changed.
@@ -151,6 +158,11 @@ export interface ICompletedBufferEvent { type: "complete-buffer";
 export interface INeedsMediaSourceReload { type: "needs-media-source-reload";
                                            value: { currentTime : number;
                                                     isPaused : boolean; }; }
+
+// Emitted when we might need to perform a very small seek to continue playback.
+// (e.g. to flush the current buffers)
+export interface IBufferNeedsNudgingSeek { type: "needs-nudging-seek";
+                                           value: null; }
 
 // Events coming from single PeriodBuffer
 export type IPeriodBufferEvent = IPeriodBufferReadyEvent |

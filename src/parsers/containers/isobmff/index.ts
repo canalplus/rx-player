@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import takePSSHOut from "./take_pssh_out";
+
 export {
   createBox,
   createBoxWithChildren,
@@ -38,3 +40,4 @@ export {
   ISidxSegment,
   patchPssh,
 } from "./utils";
+export { takePSSHOut };

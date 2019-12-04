@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import {
   be4toi,
@@ -86,13 +85,13 @@ function cleanEncryptedEvent(initData : Uint8Array) : Uint8Array {
 export default function getInitData(
   encryptedEvent : MediaEncryptedEvent
 ) : {
-  initData : Uint8Array;
+  initData : Uint8Array|null;
   initDataType : string|undefined;
 } {
-  const initData = encryptedEvent.initData;
+  const { initData, initDataType } = encryptedEvent;
   if (initData == null) {
-    throw new EncryptedMediaError("INVALID_ENCRYPTED_EVENT",
-                                  "Compat: No init data found on media encrypted event.");
+    log.warn("Compat: No init data found on media encrypted event.");
+    return { initData, initDataType };
   }
 
   const initDataBytes = new Uint8Array(initData);

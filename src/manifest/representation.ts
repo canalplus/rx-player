@@ -14,11 +14,21 @@
  * limitations under the License.
  */
 
-import { IParsedRepresentation } from "../parsers/manifest";
+import log from "../log";
+import {
+  IContentProtections,
+  IParsedRepresentation,
+} from "../parsers/manifest";
+import {
+  areBytesEqual,
+  concat,
+} from "../utils/byte_parsing";
 import IRepresentationIndex from "./representation_index";
 
-interface IContentProtection { keyId? : Uint8Array;
-                               systemId? : string; }
+export interface IContentProtectionsInitDataObject {
+  type : string;
+  data : Uint8Array;
+}
 
 /**
  * Normalized Representation structure.
@@ -58,7 +68,16 @@ class Representation {
   public height? : number;
 
   // DRM Information for this Representation.
-  public contentProtections? : IContentProtection[];
+  public contentProtections? : IContentProtections;
+
+  // Whether we are able to decrypt this Representation / unable to decrypt it or
+  // if we don't know yet:
+  //   - if `true`, it means that we know we were able to decrypt this
+  //     Representation in the current content.
+  //   - if `false`, it means that we know we were unable to decrypt this
+  //     Representation
+  //   - if `undefined` there is no certainty on this matter
+  public decipherable? : boolean;
 
   /**
    * @param {Object} args
@@ -80,7 +99,7 @@ class Representation {
       this.mimeType = args.mimeType;
     }
 
-    if (Array.isArray(args.contentProtections)) {
+    if (args.contentProtections !== undefined) {
       this.contentProtections = args.contentProtections;
     }
 
@@ -98,6 +117,65 @@ class Representation {
    */
   getMimeTypeString() : string {
     return `${this.mimeType};codecs="${this.codec}"`;
+  }
+
+  /**
+   * Returns every protection initialization data concatenated.
+   * This data can then be used through the usual EME APIs.
+   * `null` if this Representation has no detected protection initialization
+   * data.
+   * @returns {Array.<Object>|null}
+   */
+  getProtectionsInitializationData() : IContentProtectionsInitDataObject[] {
+    const contentProtections = this.contentProtections;
+    if (contentProtections === undefined) {
+      return [];
+    }
+    return Object.keys(contentProtections.initData)
+      .reduce<IContentProtectionsInitDataObject[]>((acc, initDataType) => {
+        const initDataArr = contentProtections.initData[initDataType];
+        if (initDataArr === undefined || initDataArr.length === 0) {
+          return acc;
+        }
+        const initData = concat(...initDataArr.map(({ data }) => data));
+        acc.push({ type: initDataType,
+                   data: initData });
+        return acc;
+      }, []);
+  }
+
+  /**
+   * Add protection data to the Representation to be able to properly blacklist
+   * it if that data is.
+   * /!\ Mutates the current Representation
+   * @param {string} initDataArr
+   * @param {string} systemId
+   * @param {Uint8Array} data
+   */
+  _addProtectionData(initDataType : string, systemId : string, data : Uint8Array) {
+    const newElement = { systemId, data };
+    if (this.contentProtections === undefined) {
+      this.contentProtections = { keyIds: [],
+                                  initData: { [initDataType] : [newElement] } };
+      return;
+    }
+
+    const initDataArr = this.contentProtections.initData[initDataType];
+
+    if (initDataArr === undefined) {
+      this.contentProtections.initData[initDataType] = [newElement];
+      return;
+    }
+
+    for (let i = initDataArr.length - 1; i >= 0; i--) {
+      if (initDataArr[i].systemId === systemId) {
+        if (areBytesEqual(initDataArr[i].data, data)) {
+          return;
+        }
+        log.warn("Manifest: Two PSSH for the same system ID");
+      }
+    }
+    initDataArr.push(newElement);
   }
 }
 

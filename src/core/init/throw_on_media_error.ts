@@ -24,7 +24,6 @@ import { MediaError } from "../../errors";
 /**
  * Returns an observable which throws the right MediaError as soon an "error"
  * event is received through the media element.
- * @see MediaError
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
