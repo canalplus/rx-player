@@ -152,12 +152,11 @@ const EVENTS = {
              value: { type, period } };
   },
 
-  protectedSegment(
-    type : string,
-    data : Uint8Array
+  protectedSegment(initDataInfo : { type : string;
+                                    data : Uint8Array; }
   ) : IProtectedSegmentEvent {
     return { type: "protected-segment",
-             value: { type, data }};
+             value: initDataInfo };
   },
 
   representationChange(

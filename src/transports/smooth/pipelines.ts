@@ -51,7 +51,6 @@ import {
   ISegmentLoaderObservable,
   ISegmentParserArguments,
   ISegmentParserObservable,
-  ISegmentProtection,
   ITextParserObservable,
   ITransportOptions,
   ITransportPipelines,
@@ -176,7 +175,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         return observableOf({ chunkData: null,
                               chunkInfos: null,
                               chunkOffset: 0,
-                              segmentProtection: null,
+                              segmentProtections: [],
                               appendWindow: [undefined, undefined] });
       }
 
@@ -194,21 +193,15 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         if (psshInfo.length > 0) {
           for (let i = 0; i < psshInfo.length; i++) {
             const { systemID, data: psshData } = psshInfo[i];
-            representation._addProtectionData(systemID, psshData);
+            representation._addProtectionData("cenc", systemID, psshData);
           }
         }
 
-        let segmentProtection : ISegmentProtection | null = null;
-        const protectionData = representation.getProtectionInitializationData();
-        if (protectionData !== null) {
-          segmentProtection = { type: "cenc",
-                                value: protectionData };
-        }
-
+        const segmentProtections = representation.getProtectionsInitializationData();
         return observableOf({ chunkData: data,
                               chunkInfos: initSegmentInfos,
                               chunkOffset: 0,
-                              segmentProtection,
+                              segmentProtections,
                               appendWindow: [undefined, undefined] });
       }
 
@@ -226,7 +219,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       return observableOf({ chunkData,
                             chunkInfos,
                             chunkOffset: 0,
-                            segmentProtection: null,
+                            segmentProtections: [],
                             appendWindow: [undefined, undefined] });
     },
   };
@@ -271,7 +264,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         return observableOf({ chunkData: null,
                               chunkInfos: null,
                               chunkOffset: 0,
-                              segmentProtection: null,
+                              segmentProtections: [],
                               appendWindow: [undefined, undefined] });
       }
 
@@ -386,7 +379,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                             chunkInfos,
                             chunkOffset: _sdStart == null ? 0 :
                                                             _sdStart / _sdTimescale,
-                            segmentProtection: null,
+                            segmentProtections: [],
                             appendWindow: [undefined, undefined] });
     },
   };
@@ -420,7 +413,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         return observableOf({ chunkData: null,
                               chunkInfos: null,
                               chunkOffset: 0,
-                              segmentProtection: null,
+                              segmentProtections: [],
                               appendWindow: [undefined, undefined] });
       }
 
@@ -435,7 +428,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                                             duration: Number.MAX_VALUE,
                                             timescale: bifObject.timescale },
                             chunkOffset: 0,
-                            segmentProtection: null,
+                            segmentProtections: [],
                             appendWindow: [undefined, undefined] });
     },
   };

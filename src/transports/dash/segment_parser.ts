@@ -28,7 +28,6 @@ import takeFirstSet from "../../utils/take_first_set";
 import {
   ISegmentParserArguments,
   ISegmentParserObservable,
-  ISegmentProtection,
 } from "../types";
 import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
@@ -45,7 +44,7 @@ export default function parser({ content,
     return observableOf({ chunkData: null,
                           chunkInfos: null,
                           chunkOffset: 0,
-                          segmentProtection: null,
+                          segmentProtections: [],
                           appendWindow: [period.start, period.end] });
   }
 
@@ -70,7 +69,7 @@ export default function parser({ content,
                           chunkInfos,
                           chunkOffset: takeFirstSet<number>(segment.timestampOffset,
                                                             0),
-                          segmentProtection: null,
+                          segmentProtections: [],
                           appendWindow: [period.start, period.end] });
   } else { // it is an initialization segment
     if (nextSegments !== null && nextSegments.length > 0) {
@@ -89,22 +88,17 @@ export default function parser({ content,
       if (psshInfo.length > 0) {
         for (let i = 0; i < psshInfo.length; i++) {
           const { systemID, data: psshData } = psshInfo[i];
-          representation._addProtectionData(systemID, psshData);
+          representation._addProtectionData("cenc", systemID, psshData);
         }
       }
     }
 
-    let segmentProtection : ISegmentProtection | null = null;
-    const protectionData = representation.getProtectionInitializationData();
-    if (protectionData !== null) {
-      segmentProtection = { type: "cenc",
-                            value: protectionData };
-    }
+    const segmentProtections = representation.getProtectionsInitializationData();
     return observableOf({ chunkData,
                           chunkInfos,
                           chunkOffset: takeFirstSet<number>(segment.timestampOffset,
                                                             0),
-                          segmentProtection,
+                          segmentProtections,
                           appendWindow: [period.start, period.end] });
   }
 }

@@ -229,7 +229,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
     { chunkData,
       chunkInfos,
       chunkOffset,
-      segmentProtection,
+      segmentProtections,
       appendWindow } : ISegmentParserResponse<T>
   ) : ISegmentParserResponse<T> {
     const offsetedSegmentOffset = chunkOffset + contentOffset;
@@ -237,7 +237,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
       return { chunkData: null,
                chunkInfos,
                chunkOffset: offsetedSegmentOffset,
-               segmentProtection,
+               segmentProtections,
                appendWindow: [undefined, undefined] };
     }
     if (chunkInfos !== null && chunkInfos.time > -1) {
@@ -259,7 +259,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
     return { chunkData,
              chunkInfos,
              chunkOffset: offsetedSegmentOffset,
-             segmentProtection,
+             segmentProtections,
              appendWindow: [offsetedWindowStart, offsetedWindowEnd] };
   }
 

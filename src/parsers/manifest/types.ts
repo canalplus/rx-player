@@ -19,11 +19,13 @@ import { IRepresentationIndex } from "../../manifest";
 export interface IContentProtectionKID { keyId : Uint8Array;
                                          systemId?: string; }
 
-export interface IContentProtectionPSSH { systemId : string;
-                                          data : Uint8Array; }
+export interface IContentProtectionInitData { systemId : string;
+                                              data : Uint8Array; }
 
-export interface IContentProtections { keyIds : IContentProtectionKID[];
-                                       pssh : IContentProtectionPSSH[]; }
+export interface IContentProtections {
+  keyIds : IContentProtectionKID[];
+  initData : Partial<Record<string, IContentProtectionInitData[]>>;
+}
 
 // Representation of a "quality" available in any Adaptation
 export interface IParsedRepresentation {
