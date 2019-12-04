@@ -250,12 +250,15 @@ export default function parseRepresentations(
             const { cencPssh } = cp.children;
             for (let i = 0; i < cencPssh.length; i++) {
               const data = cencPssh[i];
-              acc.pssh.push({ systemId, data });
+              if (acc.initData.cenc === undefined) {
+                acc.initData.cenc = [];
+              }
+              acc.initData.cenc.push({ systemId, data });
             }
           }
           return acc;
-        }, { keyIds: [], pssh: [] });
-      if (contentProtections.pssh.length > 0 ||
+        }, { keyIds: [], initData: {} });
+      if (Object.keys(contentProtections.initData).length > 0 ||
           contentProtections.keyIds.length > 0)
       {
         parsedRepresentation.contentProtections = contentProtections;

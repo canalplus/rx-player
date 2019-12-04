@@ -67,7 +67,7 @@ export function imageParser(
                             null,
                           chunkOffset: takeFirstSet<number>(segment.timestampOffset,
                                                             0),
-                          segmentProtection: null,
+                          segmentProtections: [],
                           appendWindow: [period.start, period.end] });
   }
 
@@ -83,6 +83,6 @@ export function imageParser(
                                         timescale: bifObject.timescale },
                         chunkOffset: takeFirstSet<number>(segment.timestampOffset,
                                                           0),
-                        segmentProtection: null,
+                        segmentProtections: [],
                         appendWindow: [period.start, period.end] });
 }

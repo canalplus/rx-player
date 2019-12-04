@@ -119,7 +119,7 @@ interface ISegmentInfos {
 
 export interface ISegmentProtection { // Describes DRM information
   type : string;
-  value : Uint8Array;
+  data : Uint8Array;
 }
 
 // Parsed Segment information
@@ -128,7 +128,7 @@ interface ISegmentObject<T> {
   chunkInfos : ISegmentInfos|null; // information about the segment's start
                                    // and duration
   chunkOffset : number; // Offset to add to the segment at decode time
-  segmentProtection : ISegmentProtection | null; // DRM information
+  segmentProtections : ISegmentProtection[]; // DRM information
   appendWindow : [ number | undefined, number | undefined ];
 }
 
@@ -192,7 +192,7 @@ export default function RepresentationBuffer<T>({
     initSegment == null ? { chunkData: null,
                             chunkInfos: null,
                             chunkOffset: 0,
-                            segmentProtection: null,
+                            segmentProtections: [],
                             appendWindow: [undefined, undefined] } :
                           null;
 
@@ -508,18 +508,17 @@ export default function RepresentationBuffer<T>({
     { chunkInfos,
       chunkData,
       chunkOffset,
-      segmentProtection,
+      segmentProtections,
       appendWindow } : ISegmentObject<T>
   ) : Observable< IBufferEventAddedSegment<T> | IProtectedSegmentEvent > {
     return observableDefer(() => {
-      const protectedEvent$ = segmentProtection == null ?
-        EMPTY :
-        observableOf(EVENTS.protectedSegment(segmentProtection.type,
-                                             segmentProtection.value));
+      const protectedEvents$ = observableOf(...segmentProtections.map(segmentProt => {
+        return EVENTS.protectedSegment(segmentProt);
+      }));
       if (chunkData == null) {
         // no segmentData to add here (for example, a text init segment)
         // just complete directly without appending anything
-        return protectedEvent$;
+        return protectedEvents$;
       }
 
       const data = { initSegment: initSegmentObject != null ?
@@ -550,7 +549,7 @@ export default function RepresentationBuffer<T>({
           return EVENTS.addedSegment(content, segment, buffered, chunkData);
         }));
       return observableMerge(append$,
-                             protectedEvent$);
+                             protectedEvents$);
     });
   }
 }

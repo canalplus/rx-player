@@ -388,7 +388,7 @@ function createSmoothStreamingParser(
                                                                     id });
       if (keyIDs.length > 0) {
         representation.contentProtections = { keyIds: keyIDs,
-                                              pssh: [] };
+                                              initData: {} };
       }
       return representation;
     });
