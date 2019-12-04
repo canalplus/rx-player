@@ -118,24 +118,50 @@ either:
 - reject if an error was encountered.</p>
 <p>In any case, the license provided by this function should be of a
 <code>BufferSource</code> type (example: an <code>Uint8Array</code> or an <code>ArrayBuffer</code>).</p>
-<p>Even in case of an error, you can (this is not mandatory) set two
-properties on the rejected value which will be interpreted by the
-RxPlayer:
-- <code>noRetry</code> (<code>Boolean</code>): If set to <code>true</code>, we will throw directly a
-<code>KEY_LOAD_ERROR</code> to call <code>getLicense</code>. If not set or set to <code>false</code>,
-the current retry parameters will be applied (see <code>getLicenseConfig</code>)
-- <code>message</code> (<code>string</code>): If the <code>message</code> property is set as a &#x201C;string&#x201D;,
-this message will be set as the <code>message</code> property of the
-corresponding <code>EncryptedMediaError</code> (either communicated through an
-<code>&quot;error&quot;</code> event if we&#x2019;re not retrying or through a <code>&quot;warning&quot;</code> event
-if we&#x2019;re retrying).
-As every other <code>getLicense</code>-related errors, this error will have the
-<code>KEY_LOAD_ERROR</code> <code>code</code> property.</p>
-<p>Note: We set a 10 seconds timeout by default on this request (configurable
-through the <code>getLicenseConfig</code> object).
-If the returned Promise do not resolve or reject under this limit, the
-player will stop with an error. If this limit is problematic for you,
-please open an issue.</p>
+<p>Even in case of an error, you can (this is not mandatory) set any of the
+following properties on the rejected value which will be interpreted by
+the RxPlayer:</p>
+<pre><code>- `noRetry` (`Boolean`): If set to `true`, we will throw directly a
+  `KEY_LOAD_ERROR` to call `getLicense`. If not set or set to `false`,
+  the current retry parameters will be applied (see `getLicenseConfig`)
+
+- `message` (`string`): If the `message` property is set as a &quot;string&quot;,
+  this message will be set as the `message` property of the
+  corresponding `EncryptedMediaError` (either communicated through an
+  `&quot;error&quot;` event if we&apos;re not retrying or through a `&quot;warning&quot;` event
+  if we&apos;re retrying).
+  As every other `getLicense`-related errors, this error will have the
+  `KEY_LOAD_ERROR` `code` property.
+
+- `fallbackOnLastTry`: If this getLicense is the last retry (if the
+  `noRetry` property is set to `true`, this is always true), we will not
+  throw immediately but rather try to fallback on other Representations
+  (e.g. qualities) which might have a different decryption key. If no
+  Representation is left, we will throw a MediaError with a
+  `NO_PLAYABLE_REPRESENTATION` code, as documented [in the errors
+  documentation](./errors.md#types-media_error).
+
+  You will receive a `decipherabilityUpdate` event when we fallback from
+  a given Representation. You can find documentation on this event [in
+  the corresponding chapter of the events
+  documentation](./player_events.md#events-decipherabilityUpdate).
+
+  This option is thus only useful for contents depending on multiple
+  licenses.
+
+  when fallbacking, we might need to reload the current mediasource,
+  leading to a black screen during a brief instant. when reloading, the
+  RxPlayer will have the `&quot;reloading&quot;` [player state](./states.md).
+  on most situations, we will however not reload the media source but
+  only perform a very little seek (of some milliseconds). you might see
+  the stream stutter for a very brief instant at that point.
+
+  Note: We set a 10 seconds timeout by default on this request (configurable
+  through the `getLicenseConfig` object).
+  If the returned Promise do not resolve or reject under this limit, the
+  player will stop with an error. If this limit is problematic for you,
+  please open an issue.
+</code></pre>
 </li>
 <li>
 <p><code>getLicenseConfig</code> (<code>Object|undefined</code>): Optional configuration for the
@@ -212,7 +238,38 @@ In that case, content may continue to play once the license has been
 updated.</p>
 </li>
 <li>
-<p><code>onKeyStatusesChange</code>: (<code>Function|undefined</code>): Not needed for most
+<p><code>fallbackOn</code> (<code>Object</code>): This advanced option allows to fallback on other
+Representations (e.g. qualities) when one of them has its decription key
+refused.</p>
+<p>This option is thus only useful for contents depending on multiple
+keys.</p>
+<p>This object can have two properties:
+- <code>keyInternalError</code>: fallback when the corresponding key has the
+<a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus">status</a>
+<code>&quot;internal-error&quot;</code>. We found that most widevine implementation use
+this error when a key is refused.
+- <code>keyOutputRestricted</code>: fallback when the corresponding key has the
+<a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus">status</a>
+<code>&quot;output-restricted&quot;</code>. This is the proper status for a key refused due
+to output restrictions.</p>
+<p>For most cases where you want to fallback in case of a refused key, we
+recommend setting both properties to <code>true</code>.</p>
+<p>You will receive a <code>decipherabilityUpdate</code> event when we fallback from
+a given Representation. You can find documentation on this event
+<a href="player_events.html#events-decipherabilityUpdate">in the corresponding chapter of the events
+documentation</a>.</p>
+<p>when fallbacking, we might need to reload the current mediasource, leading
+to a black screen during a brief instant. when reloading, the RxPlayer
+will have the <code>&quot;reloading&quot;</code> <a href="states.html">player state</a>.
+on most situations, we will however not reload the media source but only
+perform a very little seek (of some milliseconds). you might see the
+stream twitch for a very brief instant at that point.</p>
+<p>If we have no Representation to fallback to anymore, we will throw a
+MediaError with a <code>NO_PLAYABLE_REPRESENTATION</code> code, as documented <a href="errors.html#types-media_error">in
+the errors documentation</a>.</p>
+</li>
+<li>
+<p><code>onKeyStatusesChange</code> (<code>Function|undefined</code>): Not needed for most
 usecases.</p>
 <p>Triggered each time the key statuses of the current session
 changes, except for the following statuses (which throws immediately):</p>
@@ -448,6 +505,15 @@ them.
 More infos on it can be found <a href="plugins.html#representationFilter">here</a>.</p>
 </li>
 <li>
+<p><code>checkMediaSegmentIntegrity</code> (<code>Boolean</code>): If set to true, the RxPlayer
+will retry a media segment request - with the same retry rules than other
+retry-able HTTP errors (like an HTTP 404) - if that segment seems corrupted.</p>
+<p>If not set or set to false, the RxPlayer might interrupt playback in the
+same situation.</p>
+<p>You can set this option if you suspect the CDN providing your contents to
+sometimes send you incomplete/corrupted segments.</p>
+</li>
+<li>
 <p><code>aggressiveMode</code> (<code>Boolean</code>): If set to true, we will download segments
 much sooner, even if we are not sure they had time to be completely
 generated.</p>
@@ -471,6 +537,23 @@ you the &#x201C;live time&#x201D;, for example through the <code>getWallClockTim
 <p>This will only be taken into account for live contents, and if the
 Manifest / MPD does not already contain an offset (example: an
 availabilityStartTime in a DASH MPD).</p>
+</li>
+<li>
+<p><code>minimumManifestUpdateInterval</code> (<code>Number</code>): Set the minimum time, in
+seconds, we have to wait between Manifest updates.</p>
+<p>A Manifest may need to be updated in regular intervals (e.g. many DASH
+dynamic contents depend on that behavior).</p>
+<p>The frequency at which we normally update a Manifest depends on multiple
+factors: the information taken from the Manifest, the transport chosen or
+the current playback conditions. You might want to use
+<code>minimumManifestUpdateInterval</code> to limit that frequency to a minimum.</p>
+<p>This option is principally useful on some embedded devices where resources
+are scarce. The request and data decompression done at each Manifest update
+might be too heavy for some and reducing the interval at which they are done
+might help.</p>
+<p>Please note however than reducing that frequency can raise the chance of
+rebuffering, as we might be aware of newly generated segments later than
+we would be without that option.</p>
 </li>
 <li>
 <p><code>serverSyncInfos</code> (<code>Object</code>): Mainly useful for live DASH contents

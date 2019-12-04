@@ -13,6 +13,15 @@
 <li><a href="#subchapter-getLicense%20error%20configuration">getLicense error configuration</a></li>
 </ul>
 </li>
+<li><a href="#chapter-Contents%20with%20multiple%20keys">Contents with multiple keys</a>
+<ul>
+<li><a href="#subchapter-Why%20and%20how">Why and how</a></li>
+<li><a href="#subchapter-The%20strategy%20adopted%20by%20the%20RxPlayer">The strategy adopted by the RxPlayer</a></li>
+<li><a href="#subchapter-fallbackOnLastTry">fallbackOnLastTry</a></li>
+<li><a href="#subchapter-fallbackOn">fallbackOn</a></li>
+<li><a href="#subchapter-decipherabilityUpdate%20event">decipherabilityUpdate event</a></li>
+</ul>
+</li>
 <li><a href="#chapter-Server%20certificate">Server certificate</a></li>
 <li><a href="#chapter-Persistent%20licenses">Persistent licenses</a>
 <ul>
@@ -183,6 +192,8 @@ rxPlayer.loadVideo({
 <li>The user could be temporarly disconnected</li>
 <li>The license server might be down</li>
 <li>The license server might refuse to deliver a license based on your rights</li>
+<li>The license server might refuse to deliver a license based on your CDM
+capabilities</li>
 <li>And like any request a lot of other errors can happen</li>
 </ul>
 <p>From this, you could want to have a different behavior based on what happened:</p>
@@ -194,6 +205,8 @@ the server).</li>
 <li>When the license server refuse to deliver a license based on your rights,
 you might want to throw an explicit error message that you will be able to
 display.</li>
+<li>If there&#x2019;s a problem with your CDM capabilities, you might want to just
+fallback to another media quality with a different license.</li>
 </ul>
 <p>All of this is possible with more advanced APIs that we will see in this
 chapter.</p>
@@ -223,7 +236,8 @@ disable any timeout.</p>
   <span class="hljs-attr">url</span>: MANIFEST_URL,
   <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
   <span class="hljs-attr">keySystems</span>: [
-      type: <span class="hljs-string">&quot;widevine&quot;</span>,
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;widevine&quot;</span>,
       getLicense,
       <span class="hljs-attr">getLicenseConfig</span>: {
         <span class="hljs-attr">retry</span>: <span class="hljs-literal">Infinity</span>,
@@ -248,6 +262,16 @@ You can reject an error (or just an object), with the following properties:</p>
 <li>
 <p><code>message</code>: a custom message string we will communicate through a warning or
 error event (depending if we will retry or not the call)</p>
+</li>
+<li>
+<p><code>fallbackOnLastTry</code>: When set to <code>true</code> and if we are doing or last
+try or retry (to be sure you can set <code>noRetry</code> to true), we will try to
+fallback to another quality, which might have a different license.</p>
+<p>This is only useful for contents which have a different license depending on
+the quality (for example having different rights for 4k video content than
+for 480p video content). It is also only useful if the license server can
+refuse to deliver a license for a particular quality but accept for another
+quality.</p>
 </li>
 </ul>
 <p>Here is an example showcasing all of those properties:</p>
@@ -275,11 +299,14 @@ error event (depending if we will retry or not the call)</p>
               <span class="hljs-keyword">const</span> license = evt.target.response;
               resolve(license);
             } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (xhr.status &gt;= <span class="hljs-number">500</span> &amp;&amp; xhr.status &lt; <span class="hljs-number">600</span>) {
-              <span class="hljs-comment">// Directly fails on a server error</span>
+              <span class="hljs-comment">// Directly fails + fallbacks on a server error</span>
               <span class="hljs-keyword">const</span> error = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">&quot;The license server had a problem and&quot;</span> +
                                       <span class="hljs-string">` responded with <span class="hljs-subst">${xhr.status}</span> HTTP `</span> +
-                                      <span class="hljs-string">&quot;error.&quot;</span>);
+                                      <span class="hljs-string">&quot;error. We will now fallback to another&quot;</span> +
+                                      <span class="hljs-string">&quot;quality.&quot;</span>);
               error.noRetry = <span class="hljs-literal">true</span>;
+              error.fallbackOnLastTry = <span class="hljs-literal">true</span>;
+              reject(error);
             } <span class="hljs-keyword">else</span> {
               <span class="hljs-comment">// else continue to retry</span>
               <span class="hljs-keyword">const</span> error = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">&quot;getLicense&apos;s request finished with a &quot;</span> +
@@ -300,6 +327,140 @@ error event (depending if we will retry or not the call)</p>
   ]
 });
 </code></pre>
+<p><a name="chapter-Contents%20with%20multiple%20keys"></a></p>
+<h2>Contents with multiple keys</h2>
+<p><a name="subchapter-Why%20and%20how"></a></p>
+<h3>Why and how</h3>
+<p>One of the issues arising with DRM is that not all devices, Operating systems or
+web browsers can provide a high level of guarantee that a content will be
+protected against unauthorized usages (such as illegal copy).
+In other words, some devices, OS or browsers might provide more guarantees than
+other.</p>
+<p>That&#x2019;s the main reason why there&#x2019;s sometime a compromise to have between
+accessibility of a content (the number of the people able to view it) and this
+guarantee.</p>
+<p>To be able to provide the best of both worlds, a content right holder might ask
+for a higher protection guarantee for higher video qualities.</p>
+<p>For example, it might ask that a 4k video content of a given film should be much
+harder to &#x201C;pirate&#x201D; than the 240p version of the same film.
+In return, the 240p version can be watched by a lot more people on a lot of
+different devices.</p>
+<p>To achieve that, one of the solution on the content-side is to have different
+decryption keys depending on the quality chosen.
+There&#x2019;s then two main strategies:</p>
+<ol>
+<li>
+<p>Every keys are in the same license. A player will thus do only one
+license request for the whole content and the keys inside will be
+individually refused or accepted.</p>
+</li>
+<li>
+<p>There is one or several keys per licenses, in several licenses. That way,
+a player might ask a different license when switching the current
+quality.</p>
+</li>
+</ol>
+<p>There&#x2019;s pros and cons to both, but let&#x2019;s not go too far into that!</p>
+<p>Let&#x2019;s start from the principle that our content is under one of those two cases
+here and let&#x2019;s find out what we have to do to handle it.</p>
+<p><a name="subchapter-The%20strategy%20adopted%20by%20the%20RxPlayer"></a></p>
+<h3>The strategy adopted by the RxPlayer</h3>
+<p>When playing a content, the RxPlayer by default stops and throws an error as
+soon as either a key is refused or as the license fetching logic (the
+<code>getLicense</code> function) fails (after enough retries).</p>
+<p>When playing a content with multiple keys, you might instead not care that much
+if a key is refused or if the license-fetching logic fails.
+What you can just do is to remove the quality for which we could not obtain a
+key and to instead fallback on another, decipherable, quality.</p>
+<p>That&#x2019;s exactly what the RxPlayer does, when the right options are set:</p>
+<ol>
+<li>
+<p>when it detects a quality to be un-decipherable, it first emit a
+<code>decipherabilityUpdate</code> event through its API, to signal to an application
+which qualities have been blacklisted.</p>
+</li>
+<li>
+<p>it automatically removes from the current media buffer the data linked to
+the un-decipherable quality and put it in a black list: we will not load
+this quality for the current content anymore.</p>
+</li>
+<li>
+<p>it switches to another, hopefully decipherable, quality.</p>
+</li>
+</ol>
+<p>Let&#x2019;s now talk about the API.</p>
+<p><a name="subchapter-fallbackOnLastTry"></a></p>
+<h3>fallbackOnLastTry</h3>
+<p>This option was already explained in a previous chapter. Basically, it is a
+boolean you can set to <code>true</code> when rejecting an error from the <code>getLicense</code>
+callback. When set and if it was the last <code>getLicense</code> try or retry, the
+RxPlayer will stop to play every quality sharing the same &#x201C;protection
+initialization data&#x201D;.
+What that last part really means is a little complex, but it generally means
+that every qualities sharing the same license file will be considered as
+un-decipherable.</p>
+<p>For more information and an example on how to use it, you can go back on the
+concerned previous part of this tutorial.</p>
+<p>Please note that this option does not concern every errors linked to a refused
+key. It only concerns issues when the license server refuse to deliver a
+license.
+On most cases you will also need the API documented in the next part,
+<code>fallbackOn</code>.</p>
+<p><a name="subchapter-fallbackOn"></a></p>
+<h3>fallbackOn</h3>
+<p>Where <code>fallbackOnLastTry</code> really is about the failure of a license request, the
+<code>fallbackOn</code> is about the refused keys themselves.</p>
+<p>As an example, the Content Decryption Module in the browser might decide that
+your current device cannot provide a high enough guarantee that the content
+cannot be copied. It might thus refuse to use one of the decryption key found in
+a license, especially the one needed for the higher content qualities.</p>
+<p>The <code>fallbackOn</code> object allows to fallback when this happens.
+There is two possible sub-properties in it:</p>
+<ul>
+<li><code>keyInternalError</code>: fallback when the corresponding key has the
+<a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus">status</a>
+<code>&quot;internal-error&quot;</code>. We found that most widevine implementation use
+this error when a key is refused.</li>
+<li><code>keyOutputRestricted</code>: fallback when the corresponding key has the
+<a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus">status</a>
+<code>&quot;output-restricted&quot;</code>. This is the proper status for a key refused due
+to output restrictions.</li>
+</ul>
+<p>Both are booleans, and for the moment we recommend to set both to true in most
+cases.</p>
+<p>For people on embedded devices with specific key systems, you can look a little
+more into what <a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus">MediaKeyStatus</a>
+is set when a key is refused, and just set one of both.</p>
+<p>Here is an example:</p>
+<pre><code class="language-js">rxPlayer.loadVideo({
+  <span class="hljs-attr">url</span>: MANIFEST_URL,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+  <span class="hljs-attr">keySystems</span>: [
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;widevine&quot;</span>,
+      getLicense,
+      <span class="hljs-attr">fallbackOn</span>: {
+        <span class="hljs-attr">keyInternalError</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">keyOutputRestricted</span>: <span class="hljs-literal">true</span>,
+      }
+    },
+  ]
+});
+</code></pre>
+<p><a name="subchapter-decipherabilityUpdate%20event"></a></p>
+<h3>decipherabilityUpdate event</h3>
+<p>When the RxPlayer detects a quality to be un-decipherable (which can only
+happens when one of the properties explained here is set), it sends a
+<code>decipherabilityUpdate</code> event.</p>
+<p>This event allows an application to know that some key or license could not be
+used by the RxPlayer.</p>
+<p>The application could then infer that other contents from the same right holders
+will have the same issues.
+In that case, an optimization is possible by using the <code>representationFilter</code>
+API which is part of the <code>transportOptions</code> <code>loadVideo</code> option, <a href="../api/loadVideo_options.html#prop-transportOptions">documented
+here</a>. By using this API,
+we can filter out un-decipherable quality to avoid downloading them in the
+first place.</p>
 <p><a name="chapter-Server%20certificate"></a></p>
 <h2>Server certificate</h2>
 <p>The &#x201C;server Certificate&#x201D; is a certificate allowing to encrypt messages coming

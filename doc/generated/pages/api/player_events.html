@@ -20,8 +20,9 @@
 <li><a href="#subchapter-bitrateEstimationChange">bitrateEstimationChange</a></li>
 <li><a href="#subchapter-warning">warning</a></li>
 <li><a href="#subchapter-error">error</a></li>
-<li><a href="#subchapter-nativeTextTracksChange">nativeTextTracksChange</a></li>
 <li><a href="#subchapter-periodChange">periodChange</a></li>
+<li><a href="#subchapter-decipherabilityUpdate">decipherabilityUpdate</a></li>
+<li><a href="#subchapter-nativeTextTracksChange">nativeTextTracksChange</a></li>
 </ul>
 </li>
 </ul>
@@ -110,6 +111,10 @@ beginning of the content, when period changes&#x2026;).</p>
 <p>The array emitted contains object describing each available audio track:</p>
 <ul>
 <li>
+<p><code>active</code> (<code>Boolean</code>): Whether the track is the one currently active or
+not.</p>
+</li>
+<li>
 <p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
 setting the track via <code>setAudioTrack</code>.</p>
 </li>
@@ -129,8 +134,11 @@ value of <code>language</code></p>
 description (for the visually impaired or not).</p>
 </li>
 <li>
-<p><code>active</code> (<code>Boolean</code>): Whether the track is the one currently active or
-not.</p>
+<p><code>dub</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, this audio track is a
+&#x201C;dub&#x201D;, meaning it was recored in another language than the original.
+If set to <code>false</code>, we know that this audio track is in an original language.
+This property is <code>undefined</code> if we do not known whether it is in an original
+language.</p>
 </li>
 </ul>
 <p><a name="events-availableVideoTracksChange"></a>
@@ -234,6 +242,11 @@ properties:</p>
 <li><code>language</code> (<code>string</code>): The language the audio track is in.</li>
 <li><code>audioDescription</code> (<code>Boolean</code>): Whether the track is an audio
 description (for the visually impaired or not).</li>
+<li><code>dub</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, this audio track is a
+&#x201C;dub&#x201D;, meaning it was recored in another language than the original.
+If set to <code>false</code>, we know that this audio track is in an original language.
+This property is <code>undefined</code> if we do not known whether it is in an original
+language.</li>
 </ul>
 <p><a name="events-textTrackChange"></a>
 <a name="subchapter-textTrackChange"></a></p>
@@ -409,22 +422,6 @@ documentation</a> for more information.</p>
 <p>Triggered each time a fatal (for content playback) error happened.</p>
 <p>The payload is the corresponding error. See <a href="errors.html">the Player Error
 documentation</a> for more information.</p>
-<p><a name="events-nativeTextTracksChange"></a>
-<a name="subchapter-nativeTextTracksChange"></a></p>
-<h3>nativeTextTracksChange</h3>
-<hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is deprecated, it will disappear in the next major
-release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
-<hr>
-<p><em>payload type</em>: <code>Array&lt;TextTrackElement&gt;</code></p>
-<hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
-options</a>).</p>
-<hr>
-<p>Triggered each times a new <code>&lt;track&gt;</code> element is removed or added to the video
-element.</p>
-<p>The payload is the array of <code>TextTrack</code> elements. The RxPlayer will only set
-a single <code>&lt;track&gt;</code> when a text track is set.</p>
 <p><a name="events-periodChange"></a>
 <a name="subchapter-periodChange"></a></p>
 <h3>periodChange</h3>
@@ -436,4 +433,61 @@ options</a>).</p>
 <p>Triggered when the current <a href="../terms.html#period">Period</a> being seen changes.</p>
 <p>The payload is the corresponding Period. See <a href="manifest.html#period">the Manifest
 documentation</a> for more information.</p>
+<p><a name="events-decipherabilityUpdate"></a>
+<a name="subchapter-decipherabilityUpdate"></a></p>
+<h3>decipherabilityUpdate</h3>
+<p><em>payload type</em>: <code>Array.&lt;Object&gt;</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Triggered when a or multiple Representation&#x2019;s decipherability status were
+updated. Which means either:</p>
+<ul>
+<li>A Representation is found to be undecipherable (e.g. the key or license
+request is refused)</li>
+<li>A Representation is found to be decipherable</li>
+<li>A Representation&#x2019;s decipherability becomes undefined</li>
+</ul>
+<p>At this time, this event is only triggered if:</p>
+<ul>
+<li>the current content is an encrypted content</li>
+<li>Either the <code>fallbackOnLastTry</code> property was set to <code>true</code> on a rejected
+<code>getLicense</code> call or one of the <code>fallbackOn</code> properties was set to true in
+the <code>keySystems</code> loadVideo option.</li>
+</ul>
+<p>Following this event, the RxPlayer might remove from the current buffers any
+data linked to undecipherable Representation(s) (the video might twitch a little
+or reload) and update the list of available bitrates.</p>
+<p>The payload of this event is an Array of objects, each representating a
+Representation whose decipherability&#x2019;s status has been updated.</p>
+<p>Each of those objects have the following properties:</p>
+<ul>
+<li><code>representation</code>: The Representation concerned (more information on its
+structure <a href="manifest.html#representation">in the Manifest documentation</a>).</li>
+<li><code>adaptation</code>: The Adaptation linked to that Representation (more information
+on its structure <a href="manifest.html#adaptation">in the Manifest documentation</a>).</li>
+<li><code>period</code>: The Period linked to that Representation (more information on its
+structure <a href="manifest.html#period">in the Manifest documentation</a>).</li>
+<li><code>manifest</code>: The current Manifest (more information on its structure <a href="manifest.html#manifest">in the
+Manifest documentation</a>).</li>
+</ul>
+<p>You can then know if any of those Representations are becoming decipherable or
+not through their <code>decipherable</code> property.</p>
+<p><a name="events-nativeTextTracksChange"></a>
+<a name="subchapter-nativeTextTracksChange"></a></p>
+<h3>nativeTextTracksChange</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
+<p><em>payload type</em>: <code>Array.&lt;TextTrackElement&gt;</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This event is not sent in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
+<hr>
+<p>Triggered each times a new <code>&lt;track&gt;</code> element is removed or added to the video
+element.</p>
+<p>The payload is the array of <code>TextTrack</code> elements. The RxPlayer will only set
+a single <code>&lt;track&gt;</code> when a text track is set.</p>
 </body></html></div></div></div></body>
