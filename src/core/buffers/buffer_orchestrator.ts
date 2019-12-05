@@ -18,6 +18,7 @@ import {
   asapScheduler,
   BehaviorSubject,
   concat as observableConcat,
+  defer as observableDefer,
   EMPTY,
   merge as observableMerge,
   Observable,
@@ -291,15 +292,18 @@ export default function BufferOrchestrator(
         return observableConcat(
           ...rangesToClean.map(({ start, end }) =>
             queuedSourceBuffer.removeBuffer(start, end).pipe(ignoreElements())),
-          observableOf(EVENTS.needsNudgingSeek()),
           clock$.pipe(take(1), mergeMap((lastTick) => {
-            const lastPosition = lastTick.currentTime + lastTick.wantedTimeOffset;
-            const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
-            if (newInitialPeriod == null) {
-              throw new MediaError("MEDIA_TIME_NOT_FOUND",
-                                   "The wanted position is not found in the Manifest.");
-            }
-            return launchConsecutiveBuffersForPeriod(newInitialPeriod);
+            return observableConcat(
+              observableOf(EVENTS.needsDecipherabilityFlush(lastTick)),
+              observableDefer(() => {
+                const lastPosition = lastTick.currentTime + lastTick.wantedTimeOffset;
+                const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
+                if (newInitialPeriod == null) {
+                  throw new MediaError("MEDIA_TIME_NOT_FOUND",
+                    "The wanted position is not found in the Manifest.");
+                }
+                return launchConsecutiveBuffersForPeriod(newInitialPeriod);
+              }));
           })));
       }));
 
