@@ -15,7 +15,7 @@
  */
 
 import Manifest, { Adaptation, Representation } from "../../../../../manifest";
-import { IVideoSettingsQualityInputType } from "../../types";
+import { IQualityInputType, VideoQualityPickerType } from "../../types";
 import {
   ContentBufferType,
   IContext,
@@ -26,14 +26,17 @@ import { ContentType } from "./types";
 
 class ContentManager {
   readonly manifest: Manifest;
-  readonly quality: IVideoSettingsQualityInputType;
+  readonly quality: IQualityInputType;
+  readonly videoQualityPicker?: VideoQualityPickerType;
 
   constructor(
     manifest: Manifest,
-    quality: IVideoSettingsQualityInputType = "MEDIUM"
+    quality: IQualityInputType = "MEDIUM",
+    videoQualityPicker?: VideoQualityPickerType
   ) {
     this.manifest = manifest;
     this.quality = quality;
+    this.videoQualityPicker = videoQualityPicker;
   }
 
   getContextsForCurrentSession(): IGlobalContext {
@@ -125,15 +128,37 @@ class ContentManager {
     }
   }
 
+  private getVideoRepresentationByManualPicker(
+    representations: Representation[]
+  ): Representation | undefined {
+    if (
+      this.videoQualityPicker === undefined ||
+      typeof this.videoQualityPicker !== "function"
+    ) {
+      return undefined;
+    }
+   const videoRepresentationPicked = this.videoQualityPicker(representations);
+   if (videoRepresentationPicked instanceof Representation) {
+    return videoRepresentationPicked;
+   }
+    return undefined;
+  }
+
   private decideRepresentation(
     representations: Representation[],
     contentType: ContentBufferType
   ): Representation {
     switch (contentType) {
       // If we want to take a representation by bufferType
-      // case ContentType.VIDEO: {
-      //   return this.getRepresentationByQualityBitrate(representations);
-      // }
+      case ContentType.VIDEO: {
+        const representationManualPicker = this.getVideoRepresentationByManualPicker(
+          representations
+        );
+        if (representationManualPicker === undefined) {
+          return this.getRepresentationByQualityBitrate(representations);
+        }
+        return representationManualPicker;
+      }
       // case ContentType.AUDIO: {
       //   return this.getRepresentationByQualityBitrate(representations);
       // }

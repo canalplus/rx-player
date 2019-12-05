@@ -65,7 +65,8 @@ export function initDownloader$(
       const contentProtection$ = new Subject<IContentProtection>();
       const contentManager = new ContentManager(
         manifest,
-        adv !== undefined ? adv.quality : undefined
+        adv?.quality,
+        adv?.videoQualityPicker
       );
       return of(contentManager.getContextsForCurrentSession()).pipe(
         mergeMap(globalCtx => {

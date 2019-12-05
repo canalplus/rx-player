@@ -15,11 +15,11 @@
  */
 
 import { IKeySystemOption, IPersistedSessionData, TypedArray } from "../../../core/eme";
-import Manifest from "../../../manifest";
+import Manifest, { Representation } from "../../../manifest";
 import { ILocalManifest } from "../../../parsers/manifest/local";
 import { IContextRicher } from "./api/downloader/types";
 
-export type IVideoSettingsQualityInputType = "HIGH" | "MEDIUM" | "LOW";
+export type IQualityInputType = "HIGH" | "MEDIUM" | "LOW";
 
 export interface IGlobalSettings {
   nameDB?: string;
@@ -90,8 +90,12 @@ export interface IContentLoader {
   offlineManifest: ILocalManifest;
 }
 
+// Should return a valid representation
+export type VideoQualityPickerType = (videoRepresentation: Representation[]) => unknown;
+
 export interface IAdvancedSettings {
-  quality?: IVideoSettingsQualityInputType;
+  quality?: IQualityInputType;
+  videoQualityPicker?: VideoQualityPickerType;
 }
 
 /***
