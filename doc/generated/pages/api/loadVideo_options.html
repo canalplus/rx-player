@@ -691,12 +691,6 @@ BlackBerry browser), we might be more prone to rebuffering in that mode the
 first few seconds. If you want to have a better experience on those browsers,
 you might want to begin to play further from the live edge in those cases
 through the <code>startAt</code> option.</p>
-<p>Note: Some DASH low-latency contents do not use a Chunk-transfer optimization
-which let us download segments before they have been completely generated. On
-those, you might see multiple 404/415 HTTP errors for segment requests. If
-that&#x2019;s the case, you can disable the <code>aggressiveMode</code> <code>transportOptions</code>,
-defined <a href="#prop-transportOptions">in the <code>transportOptions</code> documentation</a>, this
-will disable that optimization.</p>
 <p>More information on playing low-latency DASH contents can be found in the
 <a href="low_latency.html">corresponding documentation page</a>.</p>
 <p><a name="prop-supplementaryTextTracks"></a>

@@ -743,13 +743,6 @@ first few seconds. If you want to have a better experience on those browsers,
 you might want to begin to play further from the live edge in those cases
 through the `startAt` option.
 
-Note: Some DASH low-latency contents do not use a Chunk-transfer optimization
-which let us download segments before they have been completely generated. On
-those, you might see multiple 404/415 HTTP errors for segment requests. If
-that's the case, you can disable the `aggressiveMode` `transportOptions`,
-defined [in the `transportOptions` documentation](#prop-transportOptions), this
-will disable that optimization.
-
 More information on playing low-latency DASH contents can be found in the
 [corresponding documentation page](./low_latency.md).
 
