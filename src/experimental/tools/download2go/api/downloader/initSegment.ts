@@ -15,11 +15,22 @@
  */
 
 import { IDBPDatabase } from "idb";
-import { merge, of } from "rxjs";
-import { map, mergeMap, reduce, tap } from "rxjs/operators";
+import { EMPTY, merge, of, Subject } from "rxjs";
+import {
+ bufferCount,
+ catchError,
+ distinctUntilKeyChanged,
+ filter,
+ map,
+ mapTo,
+ mergeMap,
+ reduce,
+ tap,
+ timeout,
+} from "rxjs/operators";
 
+import { IContentProtection } from "../../../../../core/eme";
 import { SegmentPipelinesManager } from "../../../../../core/pipelines";
-import noop from "../../../../../utils/noop";
 import { IInitSettings } from "../../types";
 import { IndexDBError, SegmentConstuctionError } from "../../utils";
 import ContentManager from "../context/ContentsManager";
@@ -51,6 +62,7 @@ export function initDownloader$(
           lowLatencyMode: false,
         }
       );
+      const contentProtection$ = new Subject<IContentProtection>();
       const contentManager = new ContentManager(
         manifest,
         adv !== undefined ? adv.quality : undefined
@@ -61,6 +73,25 @@ export function initDownloader$(
             globalCtx
           );
           return merge(
+            keySystems !== undefined && Object.keys(keySystems).length > 0
+            ? EMETransaction(
+              keySystems,
+              {
+                contentID,
+                contentProtection$,
+              },
+              db
+            ).pipe(
+              filter(({ emeEvtType }) =>
+                emeEvtType === "session-message" ||
+                emeEvtType === "session-updated"
+              ),
+              distinctUntilKeyChanged("emeEvtType"),
+              bufferCount(2),
+              timeout(2000),
+              catchError(() => of("handShakesEMEDone")),
+              mapTo({ type: "eme" }))
+            : EMPTY,
             handleSegmentPipelineFromContexts(video, ContentType.VIDEO, {
               segmentPipelinesManager,
               isInitData: true,
@@ -78,19 +109,18 @@ export function initDownloader$(
             })
           );
         }),
-        reduce<ICustomSegment, ICustomSegment[]>((acc, curr) => ([ ...acc, curr ]) , []),
-        mergeMap((initSegments) => {
-          if (keySystems !== undefined && Object.keys(keySystems).length > 0) {
-            EMETransaction(
-              keySystems,
-              {
-                contentID,
-                initSegments: initSegments.filter(({ contentType }) => contentType !== "text"),
-              },
-              db
-            ).subscribe(noop);
+        mergeMap((initSegment) => {
+          if (initSegment.type === "eme") {
+            return EMPTY;
           }
-          return of(...initSegments);
+          const initSegmentCustomSegment = initSegment as ICustomSegment;
+          if (initSegmentCustomSegment.chunkData.contentProtection !== undefined) {
+            contentProtection$.next({
+              type: "cenc",
+              data: initSegmentCustomSegment.chunkData.contentProtection,
+            });
+          }
+          return of(initSegmentCustomSegment);
         }),
         tap(({ ctx, chunkData, contentType }) => {
           const { id: representationID } = ctx.representation;
@@ -98,8 +128,9 @@ export function initDownloader$(
           db.put("segments", {
             contentID,
             segmentKey: `init--${representationID}--${contentID}`,
-            data: chunkData,
-            size: chunkData.byteLength,
+            data: chunkData.data,
+            size: chunkData.data.byteLength,
+            contentProtection: chunkData.contentProtection,
           }).catch((err: Error) => {
             throw new IndexDBError(`
               ${contentID}: Impossible to store the current INIT

@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { IPersistedSessionData } from "../../../../../core/eme";
-import { ContentBufferType, ICustomSegment } from "../downloader/types";
+import { Subject } from "rxjs";
+
+import { IContentProtection as IContentProtectionPSSH, IPersistedSessionData } from "../../../../../core/eme";
+import { ContentBufferType } from "../downloader/types";
 
 export type ITypedArray =
   | Int8Array
@@ -39,7 +41,7 @@ export interface IContentProtection {
 
 export interface IUtilsKeySystemsTransaction {
   contentID: string;
-  initSegments: ICustomSegment[];
+  contentProtection$: Subject<IContentProtectionPSSH>;
 }
 
 export interface IEMEOptions {

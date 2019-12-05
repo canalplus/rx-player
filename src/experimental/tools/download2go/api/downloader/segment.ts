@@ -33,6 +33,7 @@ import {
   IGlobalContext,
   IInitGroupedSegments,
   IManifestDBState,
+  ISegmentData,
   ISegmentPipelineContext,
   IUtils,
 } from "./types";
@@ -82,8 +83,32 @@ export function handleSegmentPipelineFromContexts<
                 return EMPTY;
             }
           }),
-          reduce<ISegmentParserResponse<Uint8Array | string>, Uint8Array>(
-            (acc, { chunkData }) => {
+          reduce<ISegmentParserResponse<Uint8Array | string>, ISegmentData>(
+            (acc, currSegparserResp) => {
+              // For init segment...
+              if (currSegparserResp.type === "parsed-init-segment") {
+                const { initializationData, segmentProtection } = currSegparserResp.value;
+                if (
+                  acc.contentProtection === undefined &&
+                  currSegparserResp.value.segmentProtection !== null
+                ) {
+                  acc.contentProtection = new Uint8Array(0);
+                }
+                if (currSegparserResp.value.initializationData === null) {
+                  return acc;
+                }
+               return {
+                 data: concat(acc.data, initializationData as Uint8Array),
+                 contentProtection: acc.contentProtection !== undefined ? concat(
+                   acc.contentProtection,
+                   segmentProtection !== null
+                    ? segmentProtection.value
+                    : new Uint8Array(0)
+                ) : undefined,
+               };
+              }
+              // For simple segment
+              const { chunkData } = currSegparserResp.value;
               if (chunkData === null) {
                 return acc;
               }
@@ -92,15 +117,19 @@ export function handleSegmentPipelineFromContexts<
                 ctx.representation.mimeType !== undefined &&
                 ctx.representation.mimeType === "application/mp4"
               ) {
-                return concat(
-                  acc,
-                  createBox("moof", new Uint8Array(0)),
-                  // May be chunkData.data for subtitles...
-                  createBox("mdat", strToBytes(chunkData as string))
-                );
+                return {
+                  data: concat(
+                    acc.data,
+                    createBox("moof", new Uint8Array(0)),
+                    // May be chunkData.data for subtitles...
+                    createBox("mdat", strToBytes(chunkData as string))
+                  ),
+                };
               }
-              return concat(acc, chunkData as Uint8Array);
-          }, new Uint8Array(0)),
+              return {
+                data: concat(acc.data, chunkData as Uint8Array),
+              };
+          }, { data: new Uint8Array(0) }),
           map(chunkData => {
             if (nextSegments !== undefined && !isInitData) {
               (nextSegments[index] as any) = [
@@ -229,8 +258,8 @@ export function segmentPipelineDownloader$(
       db.put("segments", {
         contentID,
         segmentKey: `${time}--${representationID}--${contentID}`,
-        data: chunkData,
-        size: chunkData.byteLength,
+        data: chunkData.data,
+        size: chunkData.data.byteLength,
       }).catch((err : Error) => {
         throw new IndexDBError(`
           ${contentID}: Impossible
@@ -259,7 +288,7 @@ export function segmentPipelineDownloader$(
           percentage > 98 && percentage < 100
             ? percentage
             : Math.round(percentage);
-        acc.size += chunkData.byteLength;
+        acc.size += chunkData.data.byteLength;
         if (nextSegments === undefined) {
           return acc;
         }

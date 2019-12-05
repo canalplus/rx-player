@@ -129,8 +129,13 @@ export interface IManifestDBState {
   size: number;
 }
 
+export interface ISegmentData {
+  data: Uint8Array;
+  contentProtection?: Uint8Array;
+}
+
 export interface ICustomSegment {
-  chunkData: Uint8Array;
+  chunkData: ISegmentData;
   ctx: IContext;
   index: number;
   contentType: ContentBufferType;

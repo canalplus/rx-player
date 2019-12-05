@@ -15,15 +15,13 @@
  */
 
 import { IDBPDatabase } from "idb";
-import { combineLatest, of } from "rxjs";
-import { filter, mergeMap, tap } from "rxjs/operators";
+import { map } from "rxjs/operators";
 
 import EMEManager from "../../../../../core/eme/eme_manager";
 import {
   IKeySystemOption,
   IPersistedSessionData,
 } from "../../../../../core/eme/types";
-import createMediaSource from "../../../../../core/init/create_media_source";
 import { IndexDBError } from "../../utils";
 import { IUtilsKeySystemsTransaction } from "./types";
 
@@ -45,7 +43,7 @@ function EMETransaction(
   db: IDBPDatabase
 ) {
   const video = document.createElement("video");
-  const { contentID, initSegments } = keySystemsUtils;
+  const { contentID, contentProtection$ } = keySystemsUtils;
   const keySystems = [
     {
       ...KeySystemsOption,
@@ -72,28 +70,8 @@ function EMETransaction(
       persistentStateRequired: true,
     },
   ];
-  return createMediaSource(video).pipe(
-    mergeMap(mediaSource => {
-      const emeManager$ = EMEManager(video, keySystems);
-      const sessionsUpdate$ = emeManager$.pipe(
-        filter(evt => evt.type === "session-updated")
-      );
-      return of(...initSegments).pipe(
-        mergeMap((emeOption) => {
-          const {
-            ctx: { representation: { mimeType, codec } },
-            chunkData: initSegment,
-          } = emeOption;
-          const sourceBuffer = mediaSource.addSourceBuffer(
-            `${mimeType};codecs="${codec}"`
-          );
-          const appendedSegment$ = of(initSegment).pipe(
-            tap(segmentData => sourceBuffer.appendBuffer(segmentData))
-          );
-          return combineLatest([sessionsUpdate$, appendedSegment$]);
-        })
-      );
-    })
+  return EMEManager(video, keySystems, contentProtection$).pipe(
+    map((emeEvt) => ({ emeEvtType: emeEvt.type }))
   );
 }
 
