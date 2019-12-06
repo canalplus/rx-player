@@ -599,10 +599,24 @@ This is very useful for storage APIs which cannot store JavaScript objects.
 
 
 
-## Playback issues on exotic/embedded devices ##################################
+## Playback issues related to DRMs #############################################
 
 The configuration example which finishes the last chapter should work in most
 cases, but you might encounter very specific issues on some devices.
+
+
+### Issues with fallbacking with the Edge browser and PlayReady ################
+
+We sometimes encountered a bug which makes the player loads indefinitely when
+fallbacking from an undecipherable quality, if done through the
+`fallbackOnLastTry` option. This was only constated on the Edge browser and
+appears to be a browser or CDM bug.
+
+Sadly, no work-around has been found for now for this issue. We're currently
+trying to create a reproducible scenario and document that issue so it can
+hopefully be fixed in the future. In the meantime, you're encouraged either to
+use Widevine (only on Chromium-based Edge) or to not make use of the
+`fallBackOnLastTry` option on that browser.
 
 
 ### The Player do not download any segment when playing encrypted contents #####

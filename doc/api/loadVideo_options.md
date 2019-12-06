@@ -128,6 +128,11 @@ This property is an array of objects with the following properties (only
           `message` event
         - reject if an error was encountered.
 
+      Note: We set a 10 seconds timeout by default on this request (configurable
+      through the `getLicenseConfig` object).
+      If the returned Promise do not resolve or reject under this limit, the
+      player will stop with an error.
+
       In any case, the license provided by this function should be of a
       ``BufferSource`` type (example: an ``Uint8Array`` or an ``ArrayBuffer``).
 
@@ -170,11 +175,14 @@ This property is an array of objects with the following properties (only
           only perform a very little seek (of some milliseconds). you might see
           the stream stutter for a very brief instant at that point.
 
-          Note: We set a 10 seconds timeout by default on this request (configurable
-          through the `getLicenseConfig` object).
-          If the returned Promise do not resolve or reject under this limit, the
-          player will stop with an error. If this limit is problematic for you,
-          please open an issue.
+          On the Edge browser, we found an issue that can arise when this option
+          is set if PlayReady is used. This issue can make the player loads the
+          content indefinitely.
+          Sadly, no work-around has been found for now for this issue. We're
+          currently trying to create a reproducible scenario and document that
+          issue so it can hopefully be fixed in the future. In the meantime,
+          you're encouraged either to use Widevine (only on Chromium-based Edge)
+          or to not make use of the `fallBackOnLastTry` option on that browser.
 
   - `getLicenseConfig` (`Object|undefined`): Optional configuration for the
     `getLicense` callback. Can contain the following properties:
