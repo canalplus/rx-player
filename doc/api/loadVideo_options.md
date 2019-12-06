@@ -163,8 +163,8 @@ This property is an array of objects with the following properties (only
           This option is thus only useful for contents depending on multiple
           licenses.
 
-          when fallbacking, we might need to reload the current mediasource,
-          leading to a black screen during a brief instant. when reloading, the
+          When fallbacking, we might need to reload the current MediaSource,
+          leading to a black screen during a brief instant. When reloading, the
           RxPlayer will have the `"reloading"` [player state](./states.md).
           on most situations, we will however not reload the media source but
           only perform a very little seek (of some milliseconds). you might see
@@ -264,8 +264,8 @@ This property is an array of objects with the following properties (only
       [in the corresponding chapter of the events
       documentation](./player_events.md#events-decipherabilityUpdate).
 
-      when fallbacking, we might need to reload the current mediasource, leading
-      to a black screen during a brief instant. when reloading, the RxPlayer
+      When fallbacking, we might need to reload the current MediaSource, leading
+      to a black screen during a brief instant. When reloading, the RxPlayer
       will have the `"reloading"` [player state](./states.md).
       on most situations, we will however not reload the media source but only
       perform a very little seek (of some milliseconds). you might see the
