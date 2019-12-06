@@ -30,7 +30,7 @@
 ### Other improvements
 
  - abr: better estimate a lower bitrate after a sudden fall in bandwidth
- - dash/low-latency: properly use @availabilityTimeOffset and @availabilityTimeComplete when playing a low-latency DASH content
+ - dash/low-latency: properly use @availabilityTimeOffset when playing a low-latency DASH content
  - code: use only strict boolean expressions in the code (do not rely on falsy or truthy values anymore).
  - demo: add buffer content graphs to the demo page to vizualize exactly what have been buffered
  - demo: improve accessibility of the demo page for the english-speaking visually impaired
