@@ -48,6 +48,16 @@ no use, as our implementation does the same thing and more):</p>
  *     milliseconds.
  *   - size {Number|undefined} - size, in bytes, of the total downloaded
  *     response.
+ * @param {Function} callbacks.progress - Callback to call when progress
+ * information is available on the current request. This callback allows to
+ * improve our adaptive streaming logic by better predicting the bandwidth
+ * before the request is finished.
+ * This function should be called with the following properties:
+ *   - duration {Number} - the duration since the beginning of the request
+ *   - size {Number} - the current size, in bytes, downloaded
+ *   - totalSize {Number|undefined} - the whole size of the wanted data, in
+ *     bytes. Can be let to undefined when not known.
+ * our default implementation instead for this segment. No argument is needed.
  * @param {Function} callbacks.reject - Callback to call when an error is
  * encountered. If you relied on an XHR, it is recommended to include it as an
  * object property named &quot;xhr&quot; in the argument.
@@ -68,7 +78,7 @@ no use, as our implementation does the same thing and more):</p>
   <span class="hljs-keyword">const</span> xhr = <span class="hljs-keyword">new</span> XMLHttpRequest();
   <span class="hljs-keyword">const</span> sendingTime = performance.now();
 
-  xhr.onload = <span class="hljs-function">(<span class="hljs-params">r</span>) =&gt;</span> {
+  xhr.onload = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">onXHRLoaded</span>(<span class="hljs-params">r</span>) </span>{
     <span class="hljs-keyword">if</span> (<span class="hljs-number">200</span> &lt;= xhr.status &amp;&amp; xhr.status &lt; <span class="hljs-number">300</span>) {
       <span class="hljs-keyword">const</span> duration = performance.now() - sendingTime;
       <span class="hljs-keyword">const</span> size = r.total;
@@ -81,7 +91,15 @@ no use, as our implementation does the same thing and more):</p>
     }
   };
 
-  xhr.onerror = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+  xhr.onprogress = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">onXHRProgress</span>(<span class="hljs-params">event</span>) </span>{
+    <span class="hljs-keyword">const</span> currentTime = performance.now();
+    callbacks.progress({ <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;progress&quot;</span>,
+                         <span class="hljs-attr">value</span>: { <span class="hljs-attr">duration</span>: currentTime - sendingTime,
+                                  <span class="hljs-attr">size</span>: event.loaded,
+                                  <span class="hljs-attr">totalSize</span>: event.total } });
+  };
+
+  xhr.onerror = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">onXHRError</span>(<span class="hljs-params"></span>) </span>{
     <span class="hljs-keyword">const</span> err = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">&quot;didn&apos;t work&quot;</span>);
     err.xhr = xhr;
     callbacks.reject(err);
@@ -247,6 +265,14 @@ links to subtitles with added hints for the hard of hearing.</p>
 <p>isAudioDescription <code>{Boolean|undefined}</code>: If true, the
 <code>Representation</code> links to an audio track with added commentary for
 the visually impaired.</p>
+</li>
+<li>
+<p>isDub <code>{Boolean|undefined}</code>): If set to <code>true</code>, this audio track is a
+&#x201C;dub&#x201D;, meaning it was recored in another language than the original.
+If set to <code>false</code>, we know that this audio track is in an original
+language.
+This property is <code>undefined</code> if we do not known whether it is in an
+original language.</p>
 </li>
 </ul>
 </li>

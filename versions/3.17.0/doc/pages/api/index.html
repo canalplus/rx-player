@@ -817,6 +817,10 @@ call.</p>
 <p>Each of the objects in the returned array have the following properties:</p>
 <ul>
 <li>
+<p><code>active</code> (<code>Boolean</code>): Whether the track is the one currently active or
+not.</p>
+</li>
+<li>
 <p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
 setting the track via <code>setAudioTrack</code>.</p>
 </li>
@@ -836,8 +840,11 @@ value of <code>language</code></p>
 description (for the visually impaired or not).</p>
 </li>
 <li>
-<p><code>active</code> (<code>Boolean</code>): Whether the track is the one currently active or
-not.</p>
+<p><code>dub</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, this audio track is a
+&#x201C;dub&#x201D;, meaning it was recored in another language than the original.
+If set to <code>false</code>, we know that this audio track is in an original language.
+This property is <code>undefined</code> if we do not known whether it is in an original
+language.</p>
 </li>
 </ul>
 <p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
@@ -946,6 +953,13 @@ value of <code>language</code></p>
 <li>
 <p><code>audioDescription</code> (<code>Boolean</code>): Whether the track is an audio
 description (for the visually impaired or not).</p>
+</li>
+<li>
+<p><code>dub</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, this audio track is a
+&#x201C;dub&#x201D;, meaning it was recored in another language than the original.
+If set to <code>false</code>, we know that this audio track is in an original language.
+This property is <code>undefined</code> if we do not known whether it is in an original
+language.</p>
 </li>
 </ul>
 <p><code>undefined</code> if no content has been loaded yet.</p>
@@ -1093,7 +1107,7 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 <pre><code class="language-js">{
   <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
                    <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
-  audioDescription: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the audio track should be an</span>
+  <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the audio track should be an</span>
                           <span class="hljs-comment">// audio description for the visually impaired</span>
 }
 </code></pre>
@@ -1144,7 +1158,7 @@ if it was called:</p>
 <pre><code class="language-js">{
   <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
                    <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
-  audioDescription: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the audio track should be an</span>
+  <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the audio track should be an</span>
                           <span class="hljs-comment">// audio description for the visually impaired</span>
 }
 </code></pre>
@@ -1157,7 +1171,7 @@ if it was called:</p>
 <pre><code class="language-js">{
   <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
                    <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
-  closedCaption: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
+  <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
                        <span class="hljs-comment">// caption for the hard of hearing</span>
 }
 </code></pre>
@@ -1209,7 +1223,7 @@ it was called:</p>
 <pre><code class="language-js">{
   <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
                    <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
-  closedCaption: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
+  <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
                        <span class="hljs-comment">// caption for the hard of hearing</span>
 }
 </code></pre>

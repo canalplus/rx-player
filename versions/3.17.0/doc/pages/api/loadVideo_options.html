@@ -82,9 +82,11 @@ called instead any time we want to load the Manifest.</p>
 <a name="subchapter-keySystems"></a></p>
 <h3>keySystems</h3>
 <p><em>type</em>: <code>Array.&lt;Object&gt;|undefined</code></p>
-<p>This property is mandatory if the content uses DRM.
-It is here that is defined every options relative to the encryption of your
-content.</p>
+<p>This property is mandatory if the content uses DRM.</p>
+<p>It is here that is defined every options relative to the encryption of your
+content. There&#x2019;s a lot of configuration possible here. In the case you find
+this documentation hard to grasp, we&#x2019;ve written a <a href="../tutorials/contents_with_DRM.html">tutorial on DRM configuration
+here</a>.</p>
 <p>This property is an array of objects with the following properties (only
 <code>type</code> and <code>getLicense</code> are mandatory here):</p>
 <ul>
@@ -114,26 +116,59 @@ either:
 - resolve with <code>null</code> if you do not want to set a license for this
 <code>message</code> event
 - reject if an error was encountered.</p>
-<p>In any case, the license provided by this function should be of a
-<code>BufferSource</code> type (example: an <code>Uint8Array</code> or an <code>ArrayBuffer</code>).</p>
-<p>Even in case of an error, you can (this is not mandatory) set two
-properties on the rejected value which will be interpreted by the
-RxPlayer:
-- <code>noRetry</code> (<code>Boolean</code>): If set to <code>true</code>, we will throw directly a
-<code>KEY_LOAD_ERROR</code> to call <code>getLicense</code>. If not set or set to <code>false</code>,
-the current retry parameters will be applied (see <code>getLicenseConfig</code>)
-- <code>message</code> (<code>string</code>): If the <code>message</code> property is set as a &#x201C;string&#x201D;,
-this message will be set as the <code>message</code> property of the
-corresponding <code>EncryptedMediaError</code> (either communicated through an
-<code>&quot;error&quot;</code> event if we&#x2019;re not retrying or through a <code>&quot;warning&quot;</code> event
-if we&#x2019;re retrying).
-As every other <code>getLicense</code>-related errors, this error will have the
-<code>KEY_LOAD_ERROR</code> <code>code</code> property.</p>
 <p>Note: We set a 10 seconds timeout by default on this request (configurable
 through the <code>getLicenseConfig</code> object).
 If the returned Promise do not resolve or reject under this limit, the
-player will stop with an error. If this limit is problematic for you,
-please open an issue.</p>
+player will stop with an error.</p>
+<p>In any case, the license provided by this function should be of a
+<code>BufferSource</code> type (example: an <code>Uint8Array</code> or an <code>ArrayBuffer</code>).</p>
+<p>Even in case of an error, you can (this is not mandatory) set any of the
+following properties on the rejected value which will be interpreted by
+the RxPlayer:</p>
+<pre><code>- `noRetry` (`Boolean`): If set to `true`, we will throw directly a
+  `KEY_LOAD_ERROR` to call `getLicense`. If not set or set to `false`,
+  the current retry parameters will be applied (see `getLicenseConfig`)
+
+- `message` (`string`): If the `message` property is set as a &quot;string&quot;,
+  this message will be set as the `message` property of the
+  corresponding `EncryptedMediaError` (either communicated through an
+  `&quot;error&quot;` event if we&apos;re not retrying or through a `&quot;warning&quot;` event
+  if we&apos;re retrying).
+  As every other `getLicense`-related errors, this error will have the
+  `KEY_LOAD_ERROR` `code` property.
+
+- `fallbackOnLastTry`: If this getLicense is the last retry (if the
+  `noRetry` property is set to `true`, this is always true), we will not
+  throw immediately but rather try to fallback on other Representations
+  (e.g. qualities) which might have a different decryption key. If no
+  Representation is left, we will throw a MediaError with a
+  `NO_PLAYABLE_REPRESENTATION` code, as documented [in the errors
+  documentation](./errors.md#types-media_error).
+
+  You will receive a `decipherabilityUpdate` event when we fallback from
+  a given Representation. You can find documentation on this event [in
+  the corresponding chapter of the events
+  documentation](./player_events.md#events-decipherabilityUpdate).
+
+  This option is thus only useful for contents depending on multiple
+  licenses.
+
+  When fallbacking, we might need to reload the current MediaSource,
+  leading to a black screen during a brief instant. When reloading, the
+  RxPlayer will have the `&quot;reloading&quot;` [player state](./states.md).
+  on most situations, we will however not reload the media source but
+  only perform a very little seek (of some milliseconds). you might see
+  the stream stutter for a very brief instant at that point.
+
+  On the Edge browser, we found an issue that can arise when this option
+  is set if PlayReady is used. This issue can make the player loads the
+  content indefinitely.
+  Sadly, no work-around has been found for now for this issue. We&apos;re
+  currently trying to create a reproducible scenario and document that
+  issue so it can hopefully be fixed in the future. In the meantime,
+  you&apos;re encouraged either to use Widevine (only on Chromium-based Edge)
+  or to not make use of the `fallBackOnLastTry` option on that browser.
+</code></pre>
 </li>
 <li>
 <p><code>getLicenseConfig</code> (<code>Object|undefined</code>): Optional configuration for the
@@ -210,7 +245,38 @@ In that case, content may continue to play once the license has been
 updated.</p>
 </li>
 <li>
-<p><code>onKeyStatusesChange</code>: (<code>Function|undefined</code>): Not needed for most
+<p><code>fallbackOn</code> (<code>Object</code>): This advanced option allows to fallback on other
+Representations (e.g. qualities) when one of them has its decription key
+refused.</p>
+<p>This option is thus only useful for contents depending on multiple
+keys.</p>
+<p>This object can have two properties:
+- <code>keyInternalError</code>: fallback when the corresponding key has the
+<a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus">status</a>
+<code>&quot;internal-error&quot;</code>. We found that most widevine implementation use
+this error when a key is refused.
+- <code>keyOutputRestricted</code>: fallback when the corresponding key has the
+<a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus">status</a>
+<code>&quot;output-restricted&quot;</code>. This is the proper status for a key refused due
+to output restrictions.</p>
+<p>For most cases where you want to fallback in case of a refused key, we
+recommend setting both properties to <code>true</code>.</p>
+<p>You will receive a <code>decipherabilityUpdate</code> event when we fallback from
+a given Representation. You can find documentation on this event
+<a href="player_events.html#events-decipherabilityUpdate">in the corresponding chapter of the events
+documentation</a>.</p>
+<p>When fallbacking, we might need to reload the current MediaSource, leading
+to a black screen during a brief instant. When reloading, the RxPlayer
+will have the <code>&quot;reloading&quot;</code> <a href="states.html">player state</a>.
+on most situations, we will however not reload the media source but only
+perform a very little seek (of some milliseconds). you might see the
+stream twitch for a very brief instant at that point.</p>
+<p>If we have no Representation to fallback to anymore, we will throw a
+MediaError with a <code>NO_PLAYABLE_REPRESENTATION</code> code, as documented <a href="errors.html#types-media_error">in
+the errors documentation</a>.</p>
+</li>
+<li>
+<p><code>onKeyStatusesChange</code> (<code>Function|undefined</code>): Not needed for most
 usecases.</p>
 <p>Triggered each time the key statuses of the current session
 changes, except for the following statuses (which throws immediately):</p>
@@ -382,7 +448,7 @@ the real live edge.</p>
 <pre><code class="language-js"><span class="hljs-comment">// using position</span>
 player.loadVideo({
   <span class="hljs-comment">// ...</span>
-  startAt: {
+  <span class="hljs-attr">startAt</span>: {
     <span class="hljs-attr">position</span>: <span class="hljs-number">10</span> <span class="hljs-comment">// start at position == 10 (in seconds)</span>
   }
 });
@@ -390,7 +456,7 @@ player.loadVideo({
 <span class="hljs-comment">// using wall-clock time</span>
 player.loadVideo({
   <span class="hljs-comment">// ...</span>
-  startAt: {
+  <span class="hljs-attr">startAt</span>: {
     <span class="hljs-attr">wallClockTime</span>: <span class="hljs-built_in">Date</span>.now() / <span class="hljs-number">1000</span> - <span class="hljs-number">60</span> <span class="hljs-comment">// 1 minute before what&apos;s broadcasted</span>
                                           <span class="hljs-comment">// now</span>
   }
@@ -399,7 +465,7 @@ player.loadVideo({
 <span class="hljs-comment">// using fromFirstPosition</span>
 player.loadVideo({
   <span class="hljs-comment">// ...</span>
-  startAt: {
+  <span class="hljs-attr">startAt</span>: {
     <span class="hljs-attr">fromFirstPosition</span>: <span class="hljs-number">30</span> <span class="hljs-comment">// 30 seconds after the beginning of the buffer</span>
   }
 })
@@ -407,7 +473,7 @@ player.loadVideo({
 <span class="hljs-comment">// using fromLastPosition</span>
 player.loadVideo({
   <span class="hljs-comment">// ...</span>
-  startAt: {
+  <span class="hljs-attr">startAt</span>: {
     <span class="hljs-attr">fromLastPosition</span>: <span class="hljs-number">-60</span> <span class="hljs-comment">// 1 minute before the end (before the live edge</span>
                           <span class="hljs-comment">// for live contents)</span>
   }
@@ -446,6 +512,15 @@ them.
 More infos on it can be found <a href="plugins.html#representationFilter">here</a>.</p>
 </li>
 <li>
+<p><code>checkMediaSegmentIntegrity</code> (<code>Boolean</code>): If set to true, the RxPlayer
+will retry a media segment request - with the same retry rules than other
+retry-able HTTP errors (like an HTTP 404) - if that segment seems corrupted.</p>
+<p>If not set or set to false, the RxPlayer might interrupt playback in the
+same situation.</p>
+<p>You can set this option if you suspect the CDN providing your contents to
+sometimes send you incomplete/corrupted segments.</p>
+</li>
+<li>
 <p><code>aggressiveMode</code> (<code>Boolean</code>): If set to true, we will download segments
 much sooner, even if we are not sure they had time to be completely
 generated.</p>
@@ -471,6 +546,23 @@ Manifest / MPD does not already contain an offset (example: an
 availabilityStartTime in a DASH MPD).</p>
 </li>
 <li>
+<p><code>minimumManifestUpdateInterval</code> (<code>Number</code>): Set the minimum time, in
+milliseconds, we have to wait between Manifest updates.</p>
+<p>A Manifest may need to be updated in regular intervals (e.g. many DASH
+dynamic contents depend on that behavior).</p>
+<p>The frequency at which we normally update a Manifest depends on multiple
+factors: the information taken from the Manifest, the transport chosen or
+the current playback conditions. You might want to use
+<code>minimumManifestUpdateInterval</code> to limit that frequency to a minimum.</p>
+<p>This option is principally useful on some embedded devices where resources
+are scarce. The request and data decompression done at each Manifest update
+might be too heavy for some and reducing the interval at which they are done
+might help.</p>
+<p>Please note however than reducing that frequency can raise the chance of
+rebuffering, as we might be aware of newly generated segments later than
+we would be without that option.</p>
+</li>
+<li>
 <p><code>serverSyncInfos</code> (<code>Object</code>): Mainly useful for live DASH contents
 based on a SegmentTemplate scheme without SegmentTimeline elements.</p>
 <p>Allows to provide a time synchronization mechanism between the client and
@@ -493,7 +585,7 @@ obtain a monotically increasing clock on the client-side.</p>
 <span class="hljs-keyword">const</span> serverSyncInfos = { serverTimestamp, clientTime };
 rxPlayer.loadVideo({
   <span class="hljs-comment">// ...</span>
-  transportOptions: { serverSyncInfos }
+  <span class="hljs-attr">transportOptions</span>: { serverSyncInfos }
 })
 </code></pre>
 <p>If indicated, we will ignore any time indication on the MPD and only
@@ -606,12 +698,6 @@ BlackBerry browser), we might be more prone to rebuffering in that mode the
 first few seconds. If you want to have a better experience on those browsers,
 you might want to begin to play further from the live edge in those cases
 through the <code>startAt</code> option.</p>
-<p>Note: Some DASH low-latency contents do not use a Chunk-transfer optimization
-which let us download segments before they have been completely generated. On
-those, you might see multiple 404/415 HTTP errors for segment requests. If
-that&#x2019;s the case, you can disable the <code>aggressiveMode</code> <code>transportOptions</code>,
-defined <a href="#prop-transportOptions">in the <code>transportOptions</code> documentation</a>, this
-will disable that optimization.</p>
 <p>More information on playing low-latency DASH contents can be found in the
 <a href="low_latency.html">corresponding documentation page</a>.</p>
 <p><a name="prop-supplementaryTextTracks"></a>
@@ -644,7 +730,7 @@ given to infer it.</p>
   <span class="hljs-attr">url</span>: textTrackURL, <span class="hljs-comment">// {string} The url on which the complete text track can be</span>
                      <span class="hljs-comment">// obtained</span>
 
-  language: <span class="hljs-string">&quot;eng&quot;</span>, <span class="hljs-comment">// {string} The language the text track is in</span>
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;eng&quot;</span>, <span class="hljs-comment">// {string} The language the text track is in</span>
                    <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
 
                    <span class="hljs-comment">// Note for SAMI subtitles:</span>
@@ -655,15 +741,15 @@ given to infer it.</p>
                    <span class="hljs-comment">// If we cannot find the provided language in the downloaded</span>
                    <span class="hljs-comment">// SAMI text track, it won&apos;t be displayed.</span>
 
-  closedCaption: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track is a closed caption</span>
+  <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track is a closed caption</span>
                        <span class="hljs-comment">// for the hard of hearing</span>
 
-  mimeType: <span class="hljs-string">&quot;application/mp4&quot;</span>, <span class="hljs-comment">// {string} A mimeType used to describe</span>
+  <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&quot;application/mp4&quot;</span>, <span class="hljs-comment">// {string} A mimeType used to describe</span>
                                <span class="hljs-comment">// the text format. Can be &quot;application/mp4&quot; when</span>
                                <span class="hljs-comment">// encapsulated in an mp4 file. In that case, the</span>
                                <span class="hljs-comment">// &quot;codecs&quot; argument will be needed.</span>
 
-  codecs: <span class="hljs-string">&quot;stpp&quot;</span>               <span class="hljs-comment">// {string|undefined} Depending on the mimeType,</span>
+  <span class="hljs-attr">codecs</span>: <span class="hljs-string">&quot;stpp&quot;</span>               <span class="hljs-comment">// {string|undefined} Depending on the mimeType,</span>
                                <span class="hljs-comment">// you might need to add codec information.</span>
                                <span class="hljs-comment">// Here the mimeType is too generic, the codec</span>
                                <span class="hljs-comment">// helps us understand this is ttml in an mp4</span>
@@ -702,7 +788,7 @@ given to infer it.</p>
   <span class="hljs-attr">url</span>: ImageTrackURL, <span class="hljs-comment">// {string} The url on which the complete image track can</span>
                       <span class="hljs-comment">// be obtained</span>
 
-  mimeType: <span class="hljs-string">&quot;application/bif&quot;</span>, <span class="hljs-comment">// {string} A mimeType used to describe</span>
+  <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&quot;application/bif&quot;</span>, <span class="hljs-comment">// {string} A mimeType used to describe</span>
                                <span class="hljs-comment">// the image format.</span>
 }];
 </code></pre>
@@ -802,7 +888,7 @@ instead.</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> defaultAudioTrack = {
   <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
                    <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
-  audioDescription: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the audio track should be an</span>
+  <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the audio track should be an</span>
                           <span class="hljs-comment">// audio description for the visually impaired</span>
 };
 </code></pre>
@@ -834,7 +920,7 @@ instead.</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> defaultTextTrack = {
   <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-comment">// {string} The wanted language</span>
                    <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
-  closedCaption: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
+  <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
                        <span class="hljs-comment">// caption for the hard of hearing</span>
 };
 </code></pre>

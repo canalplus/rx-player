@@ -215,6 +215,17 @@ stated before, open an issue if you would like to access other properties).</p>
 <h4>codec</h4>
 <p><em>type</em>: <code>string|undefined</code></p>
 <p>The codec of the Representation.</p>
+<h4>decipherable</h4>
+<p><em>type</em>: <code>boolean|undefined</code></p>
+<p>Whether we are able to decrypt this Representation / unable to decrypt it or
+if we don&#x2019;t know yet:</p>
+<ul>
+<li>if <code>true</code>, it means that we know we were able to decrypt this
+Representation in the current content.</li>
+<li>if <code>false</code>, it means that we know we were unable to decrypt this
+Representation</li>
+<li>if <code>undefined</code> there is no certainty on this matter</li>
+</ul>
 <h4>height</h4>
 <p><em>type</em>: <code>Number|undefined</code></p>
 <p>This property makes the most sense for video Representations.

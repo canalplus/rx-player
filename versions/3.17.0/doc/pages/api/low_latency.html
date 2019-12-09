@@ -48,12 +48,8 @@ low-latency contents. For live contents:</p>
 <p>it will begin to play faster and seek in non-buffered parts faster</p>
 </li>
 <li>
-<p>it will request segments which did not have time to be completely encoded on
-the server-side (as long as the beginning should be available)</p>
-</li>
-<li>
-<p>it will be safer when choosing the right video / audio quality (to avoid the
-higher chances of rebuffering)</p>
+<p>it will do safer choices when choosing the right video / audio quality (to
+avoid the higher chances of rebuffering)</p>
 </li>
 <li>
 <p>the delay we use when retrying a failed segment or manifest request will be
@@ -63,20 +59,6 @@ lower</p>
 <p>and multiple other minor optimizations</p>
 </li>
 </ul>
-<p>Some low-latency contents miss an optimization which allows us to request
-segments before they have been completely generated. With that sort of contents,
-you might see multiple 404 or 415 HTTP errors for new segments requests. If that
-is the case, you can disable that optimization by setting the <code>aggressiveMode</code>
-<code>transportOptions</code> to false:</p>
-<pre><code class="language-js">rxPlayer.loadVideo({
-  <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;https://www.example.com/content.mpd&quot;</span>,
-  <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
-  <span class="hljs-attr">lowLatencyMode</span>: <span class="hljs-literal">true</span>,
-  <span class="hljs-attr">transportOptions</span>: { <span class="hljs-attr">aggressiveMode</span>: <span class="hljs-literal">false</span> },
-})
-</code></pre>
-<p>That option (is documented <a href="loadVideo_options.html#prop-transportOptions">in the <code>transportOptions</code>
-documentation</a>):</p>
 <p>Note that you can also set the <code>lowLatencyMode</code> mode for VoD (non-live)
 contents.
 In that case, the main advantage would be to be able to play and seek faster as
@@ -163,7 +145,7 @@ the same worker than the one in which loadVideo is called.</li>
 <span class="hljs-keyword">const</span> serverSyncInfos = { serverTimestamp, clientTime };
 rxPlayer.loadVideo({
   <span class="hljs-comment">// ...</span>
-  transportOptions: { serverSyncInfos }
+  <span class="hljs-attr">transportOptions</span>: { serverSyncInfos }
 })
 </code></pre>
 <p><a name="subchapter-Note%20about%20rebuffering%20and%20other%20delay-creating%20situations"></a></p>
