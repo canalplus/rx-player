@@ -122,9 +122,9 @@
     "rxjs": "6.5.3"
   },
   "devDependencies": {
-    "@babel/core": "7.7.4",
+    "@babel/core": "7.7.5",
     "@babel/polyfill": "7.7.0",
-    "@babel/preset-env": "7.7.4",
+    "@babel/preset-env": "7.7.6",
     "@babel/preset-react": "7.7.4",
     "@types/chai": "4.2.6",
     "@types/deep-equal": "1.0.1",
