@@ -28969,7 +28969,7 @@ function manifestUpdateScheduler(initialManifest, scheduleRefresh$, fetchManifes
         sendingTime = manifestInfos.sendingTime; // schedule a Manifest refresh to avoid sending too much request.
 
     var timeSinceLastRefresh = sendingTime == null ? 0 : performance.now() - sendingTime;
-    var minInterval = Math.max(minimumManifestUpdateInterval * 1000 - timeSinceLastRefresh, 0);
+    var minInterval = Math.max(minimumManifestUpdateInterval - timeSinceLastRefresh, 0);
     var manualRefresh$ = scheduleRefresh$.pipe(Object(mergeMap["a" /* mergeMap */])(function (delay) {
       return Object(timer["a" /* timer */])(Math.max(delay - timeSinceLastRefresh, minInterval));
     }));
