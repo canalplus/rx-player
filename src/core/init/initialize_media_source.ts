@@ -37,6 +37,7 @@ import {
   takeUntil,
   tap,
 } from "rxjs/operators";
+import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import config from "../../config";
 import { ICustomError } from "../../errors";
 import log from "../../log";
@@ -47,6 +48,7 @@ import ABRManager, {
   IABRManagerArguments,
 } from "../abr";
 import {
+  getCurrentKeySystem,
   IContentProtection,
   IEMEManagerEvent,
   IKeySystemOption,
@@ -286,6 +288,21 @@ export default function InitializeOnMediaSource(
                     break;
                   case "needs-media-source-reload":
                     reloadMediaSource$.next(evt.value);
+                    break;
+                  case "needs-decipherability-flush":
+                    const keySystem = getCurrentKeySystem(mediaElement);
+                    if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem)) {
+                      reloadMediaSource$.next(evt.value);
+                      return;
+                    }
+
+                    // simple seek close to the current position to flush the buffers
+                    const { currentTime } = evt.value;
+                    if (currentTime + 0.001 < evt.value.duration) {
+                      mediaElement.currentTime += 0.001;
+                    } else {
+                      mediaElement.currentTime = currentTime;
+                    }
                     break;
                   case "protected-segment":
                     protectedSegments$.next(evt.value);

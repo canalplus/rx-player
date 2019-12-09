@@ -115,7 +115,7 @@ export interface IRepresentationChangeEvent {
 export type IAdaptationBufferEvent<T> = IRepresentationBufferEvent<T> |
                                         IBitrateEstimationChangeEvent |
                                         INeedsMediaSourceReload |
-                                        IBufferNeedsNudgingSeek |
+                                        INeedsDecipherabilityFlush |
                                         IRepresentationChangeEvent;
 
 // The currently-downloaded Adaptation changed.
@@ -159,10 +159,14 @@ export interface INeedsMediaSourceReload { type: "needs-media-source-reload";
                                            value: { currentTime : number;
                                                     isPaused : boolean; }; }
 
-// Emitted when we might need to perform a very small seek to continue playback.
-// (e.g. to flush the current buffers)
-export interface IBufferNeedsNudgingSeek { type: "needs-nudging-seek";
-                                           value: null; }
+// Emitted after the buffers have been cleaned due to an update of the
+// decipherability status of some segment.
+// It now needs the current buffer to be "flushed" to be sure it can
+// continue.
+export interface INeedsDecipherabilityFlush { type: "needs-decipherability-flush";
+                                              value: { currentTime : number;
+                                                       isPaused : boolean;
+                                                       duration : number; }; }
 
 // Events coming from single PeriodBuffer
 export type IPeriodBufferEvent = IPeriodBufferReadyEvent |

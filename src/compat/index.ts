@@ -56,6 +56,7 @@ import onHeightWidthChange from "./on_height_width_change";
 import patchWebkitSourceBuffer from "./patch_webkit_source_buffer";
 import play$ from "./play";
 import setElementSrc$ from "./set_element_src";
+import shouldReloadMediaSourceOnDecipherabilityUpdate from "./should_reload_media_source_on_decipherability_update";
 import shouldRenewMediaKeys from "./should_renew_media_keys";
 import shouldUnsetMediaKeys from "./should_unset_media_keys";
 import shouldValidateMetadata from "./should_validate_metadata";
@@ -98,6 +99,7 @@ export {
   requestMediaKeySystemAccess,
   setElementSrc$,
   setMediaKeys,
+  shouldReloadMediaSourceOnDecipherabilityUpdate,
   shouldRenewMediaKeys,
   shouldUnsetMediaKeys,
   shouldValidateMetadata,

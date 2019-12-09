@@ -31,12 +31,12 @@ import {
   IBufferManifestMightBeOutOfSync,
   IBufferNeedsDiscontinuitySeek,
   IBufferNeedsManifestRefresh,
-  IBufferNeedsNudgingSeek,
   IBufferStateActive,
   IBufferStateFull,
   IBufferWarningEvent,
   ICompletedBufferEvent,
   IEndOfStreamEvent,
+  INeedsDecipherabilityFlush,
   INeedsMediaSourceReload,
   IPeriodBufferClearedEvent,
   IPeriodBufferReadyEvent,
@@ -130,9 +130,15 @@ const EVENTS = {
              value: { currentTime, isPaused } };
   },
 
-  needsNudgingSeek() : IBufferNeedsNudgingSeek {
-    return { type: "needs-nudging-seek",
-             value: null };
+  needsDecipherabilityFlush(
+    { currentTime,
+      isPaused,
+      duration } : { currentTime : number;
+                     isPaused : boolean;
+                     duration : number; }
+  ) : INeedsDecipherabilityFlush {
+    return { type: "needs-decipherability-flush",
+             value: { currentTime, isPaused, duration } };
   },
 
   periodBufferReady(
