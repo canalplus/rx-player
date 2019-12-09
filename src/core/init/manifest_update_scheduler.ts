@@ -59,8 +59,7 @@ export default function manifestUpdateScheduler(
     const timeSinceLastRefresh = sendingTime == null ?
                                    0 :
                                    performance.now() - sendingTime;
-    const minInterval = Math.max(minimumManifestUpdateInterval * 1000 -
-                                  timeSinceLastRefresh,
+    const minInterval = Math.max(minimumManifestUpdateInterval - timeSinceLastRefresh,
                                  0);
     const manualRefresh$ = scheduleRefresh$.pipe(
       mergeMap((delay) => {

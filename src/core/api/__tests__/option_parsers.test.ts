@@ -716,11 +716,11 @@ describe("API - parseLoadVideoOptions", () => {
       url: "foo",
       transport: "bar",
       transportOptions: {
-        minimumManifestUpdateInterval: 54,
+        minimumManifestUpdateInterval: 5400,
       },
     })).toEqual({
       ...defaultLoadVideoOptions,
-      minimumManifestUpdateInterval: 54,
+      minimumManifestUpdateInterval: 5400,
       url: "foo",
       transport: "bar",
       transportOptions: {

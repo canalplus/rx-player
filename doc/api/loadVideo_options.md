@@ -568,7 +568,7 @@ considered stable:
     availabilityStartTime in a DASH MPD).
 
   - `minimumManifestUpdateInterval` (`Number`): Set the minimum time, in
-    seconds, we have to wait between Manifest updates.
+    milliseconds, we have to wait between Manifest updates.
 
     A Manifest may need to be updated in regular intervals (e.g. many DASH
     dynamic contents depend on that behavior).
