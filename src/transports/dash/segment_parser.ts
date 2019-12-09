@@ -18,6 +18,7 @@ import { of as observableOf } from "rxjs";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
+  takePSSHOut,
 } from "../../parsers/containers/isobmff";
 import {
   getSegmentsFromCues,
@@ -43,6 +44,7 @@ export default function parser({ content,
     return observableOf({ chunkData: null,
                           chunkInfos: null,
                           chunkOffset: 0,
+                          segmentProtections: [],
                           appendWindow: [period.start, period.end] });
   }
 
@@ -67,6 +69,7 @@ export default function parser({ content,
                           chunkInfos,
                           chunkOffset: takeFirstSet<number>(segment.timestampOffset,
                                                             0),
+                          segmentProtections: [],
                           appendWindow: [period.start, period.end] });
   } else { // it is an initialization segment
     if (nextSegments !== null && nextSegments.length > 0) {
@@ -80,10 +83,22 @@ export default function parser({ content,
                                                               duration: 0,
                                                               timescale } :
                                                             null;
+    if (!isWEBM) {
+      const psshInfo = takePSSHOut(chunkData);
+      if (psshInfo.length > 0) {
+        for (let i = 0; i < psshInfo.length; i++) {
+          const { systemID, data: psshData } = psshInfo[i];
+          representation._addProtectionData("cenc", systemID, psshData);
+        }
+      }
+    }
+
+    const segmentProtections = representation.getProtectionsInitializationData();
     return observableOf({ chunkData,
                           chunkInfos,
                           chunkOffset: takeFirstSet<number>(segment.timestampOffset,
                                                             0),
+                          segmentProtections,
                           appendWindow: [period.start, period.end] });
   }
 }

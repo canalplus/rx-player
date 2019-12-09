@@ -123,9 +123,11 @@ export function parseHashInURL(hashStr) {
 export function generateLinkForCustomContent({
   autoPlay, // true if autoPlay should be on
   drmType, // enabled DRM
-  manifestURL,
+  fallbackKeyError,
+  fallbackLicenseRequest,
   licenseServerUrl,
   lowLatency,
+  manifestURL,
   serverCertificateUrl,
   transport,
 }) {
@@ -172,6 +174,8 @@ export function generateLinkForCustomContent({
          "#" +
          (!autoPlay ? "\\noAutoplay" : "") +
          (lowLatency ? "\\lowLatency" : "") +
+         (fallbackKeyError ? "\\fallbackKeyError" : "") +
+         (fallbackLicenseRequest ? "\\fallbackLicenseRequest" : "") +
          transportString +
          urlString +
          drmTypeString +

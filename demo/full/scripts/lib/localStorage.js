@@ -69,13 +69,15 @@ export function storeContent(content) {
     index = -1;
   }
 
-  const localContent = { name: content.name,
-                         url: content.url,
-                         transport: content.transport,
-                         drmInfos: content.drmInfos,
+  const localContent = { drmInfos: content.drmInfos,
+                         fallbackKeyError: content.fallbackKeyError,
+                         fallbackLicenseRequest: content.fallbackLicenseRequest,
                          id,
                          localContent: true,
-                         lowLatency: content.lowLatency };
+                         lowLatency: content.lowLatency,
+                         name: content.name,
+                         transport: content.transport,
+                         url: content.url };
 
 
   if (index > -1) {

@@ -210,6 +210,10 @@ A MediaError can have the following codes (``code`` property):
     This can lead to stalling indefinitely as the player won't be able to
     download new segments arround the current time.
 
+  - ``"NO_PLAYABLE_REPRESENTATION"``: The currently chosen Adaptation does not
+    contain any playable Representation. This usually happen when every
+    Representation has been blacklisted due to encryption limitations.
+
   - ``"MEDIA_TIME_NOT_FOUND"``: This error should never happen and is a RxPlayer
     bug if it does. It means that a time initially thought to be in the bounds
     of the manifest does not link to any "Period" of the Manifest.
@@ -286,5 +290,10 @@ An OtherError can have the following codes (``code`` property):
   - ``"PIPELINE_PARSE_ERROR"``: The RxPlayer's [Manifest](../terms.md#manifest)
     or segment parsing logic failed. This is most likely due to a malformed
     Manifest or segment.
+
+  - ``"INTEGRITY_ERROR"``: An integrity-checking mechanism in the RxPlayer
+    detected that there was an error with some loaded data. Such mechanism can
+    be triggered for example when the `checkMediaSegmentIntegrity`
+    `transportOptions` is set to `loadVideo`.
 
   - ``"NONE"``: The error cannot be characterized.

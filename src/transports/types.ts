@@ -46,6 +46,9 @@ export interface IChunkTimingInfos {
                       //   durationInSeconds = duration / timescale
 }
 
+export interface ISegmentProtection { type : string;
+                                      data : Uint8Array; }
+
 // Contains timing information on new segments indicated in the metadata of
 // a previous segment
 export interface INextSegmentsInfos {
@@ -98,7 +101,6 @@ export interface ILoaderDataCreated<T> { type : "data-created";
 export interface ILoaderProgress { type : "progress";
                                    value : { duration : number;
                                              size : number;
-                                             url : string;
                                              totalSize? : number; }; }
 
 // Event emitted by loaders when a chunk of the response is available
@@ -199,6 +201,8 @@ export interface ISegmentParserResponse<T> {
                         // Note that `chunkInfos` needs not to be offseted as
                         // it should already contain the correct time
                         // information.
+  segmentProtections : ISegmentProtection[]; // InitializationData for the
+                                             // segment. Empty if not encrypted.
   appendWindow : [ number | undefined, // start window for the segment
                                        // (part of the segment before that time
                                        // will be ignored)
@@ -337,24 +341,18 @@ export interface ITransportPipelines { manifest : ITransportManifestPipeline;
                                        text : ITransportTextSegmentPipeline;
                                        image : ITransportImageSegmentPipeline; }
 
-interface IParsedKeySystem { systemId : string;
-                             privateData : Uint8Array; }
-
 interface IServerSyncInfos { serverTimestamp : number;
                              clientTime : number; }
 
 export interface ITransportOptions {
   aggressiveMode? : boolean;
   checkMediaSegmentIntegrity? : boolean;
-  keySystems? : (hex? : Uint8Array) => IParsedKeySystem[]; // TODO deprecate
   lowLatencyMode : boolean;
   manifestLoader?: CustomManifestLoader;
-  minRepresentationBitrate? : number; // TODO deprecate
   referenceDateTime? : number;
   representationFilter? : IRepresentationFilter;
   segmentLoader? : CustomSegmentLoader;
   serverSyncInfos? : IServerSyncInfos;
-  suggestedPresentationDelay? : number;
   supplementaryImageTracks? : ISupplementaryImageTrack[];
   supplementaryTextTracks? : ISupplementaryTextTrack[];
 }
@@ -379,6 +377,10 @@ export type CustomSegmentLoader = (
                                     duration? : number; })
                           => void;
 
+                progress : (args : { duration : number;
+                                     size : number;
+                                     totalSize? : number; })
+                           => void;
                 reject : (err? : Error) => void;
                 fallback? : () => void; }
 ) =>

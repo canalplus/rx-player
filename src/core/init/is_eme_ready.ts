@@ -24,7 +24,7 @@ import { IEMEDisabledEvent } from "./create_eme_manager";
  * @returns {Boolean}
  */
 export default function isEMEReadyEvent(
-  emeEvent : IEMEManagerEvent|IEMEDisabledEvent
+  emeEvent : IEMEManagerEvent | IEMEDisabledEvent
 ) : boolean {
   return emeEvent.type === "eme-disabled" ||
          emeEvent.type === "attached-media-keys" ||

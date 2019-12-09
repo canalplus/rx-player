@@ -43,32 +43,13 @@ low-latency contents. For live contents:
 
   - it will begin to play faster and seek in non-buffered parts faster
 
-  - it will request segments which did not have time to be completely encoded on
-    the server-side (as long as the beginning should be available)
-
-  - it will be safer when choosing the right video / audio quality (to avoid the
-    higher chances of rebuffering)
+  - it will do safer choices when choosing the right video / audio quality (to
+    avoid the higher chances of rebuffering)
 
   - the delay we use when retrying a failed segment or manifest request will be
     lower
 
   - and multiple other minor optimizations
-
-Some low-latency contents miss an optimization which allows us to request
-segments before they have been completely generated. With that sort of contents,
-you might see multiple 404 or 415 HTTP errors for new segments requests. If that
-is the case, you can disable that optimization by setting the `aggressiveMode`
-`transportOptions` to false:
-```js
-rxPlayer.loadVideo({
-  url: "https://www.example.com/content.mpd",
-  transport: "dash",
-  lowLatencyMode: true,
-  transportOptions: { aggressiveMode: false },
-})
-```
-That option (is documented [in the `transportOptions`
-documentation](./loadVideo_options.md#prop-transportOptions)):
 
 Note that you can also set the `lowLatencyMode` mode for VoD (non-live)
 contents.

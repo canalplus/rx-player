@@ -17,7 +17,10 @@
 import log from "../../../log";
 import IRepresentationIndex from "../../../manifest/representation_index";
 import resolveURL from "../../../utils/resolve_url";
-import { IParsedRepresentation } from "../types";
+import {
+  IContentProtections,
+  IParsedRepresentation,
+} from "../types";
 import getRepAvailabilityTimeOffset from "./get_rep_availability_time_offset";
 import BaseRepresentationIndex from "./indexes/base";
 import ListRepresentationIndex from "./indexes/list";
@@ -231,13 +234,33 @@ export default function parseRepresentations(
 
     if (adaptation.children.contentProtections != null) {
       const contentProtections = adaptation.children.contentProtections
-        .reduce<Array<{ keyId : Uint8Array }>>((acc, cp) => {
-          if (cp.keyId != null) {
-            acc.push({ keyId: cp.keyId });
+        .reduce<IContentProtections>((acc, cp) => {
+          let systemId : string|undefined;
+          if (cp.attributes.schemeIdUri !== undefined &&
+              cp.attributes.schemeIdUri.substring(0, 9) === "urn:uuid:")
+          {
+            systemId = cp.attributes.schemeIdUri.substring(9)
+                         .replace(/-/g, "")
+                         .toLowerCase();
+          }
+          if (cp.attributes.keyId !== undefined && cp.attributes.keyId.length > 0) {
+            acc.keyIds.push({ keyId: cp.attributes.keyId, systemId });
+          }
+          if (systemId !== undefined) {
+            const { cencPssh } = cp.children;
+            for (let i = 0; i < cencPssh.length; i++) {
+              const data = cencPssh[i];
+              if (acc.initData.cenc === undefined) {
+                acc.initData.cenc = [];
+              }
+              acc.initData.cenc.push({ systemId, data });
+            }
           }
           return acc;
-        }, []);
-      if (contentProtections.length > 0) {
+        }, { keyIds: [], initData: {} });
+      if (Object.keys(contentProtections.initData).length > 0 ||
+          contentProtections.keyIds.length > 0)
+      {
         parsedRepresentation.contentProtections = contentProtections;
       }
     }

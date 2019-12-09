@@ -14,12 +14,45 @@
  * limitations under the License.
  */
 
+import base64ToUint8Array from "../../../../utils/base64_to_uint8array";
 import { hexToBytes } from "../../../../utils/byte_parsing";
 
 export interface IParsedContentProtection {
+  children : IContentProtectionChildren;
+  attributes : IContentProtectionAttributes;
+}
+
+export interface IContentProtectionChildren {
+  cencPssh : Uint8Array[];
+}
+
+export interface IContentProtectionAttributes {
+  // optional
   schemeIdUri? : string;
   value? : string;
   keyId? : Uint8Array;
+}
+
+/**
+ * @param {NodeList} contentProtectionChildren
+ * @Returns {Object}
+ */
+function parseContentProtectionChildren(
+  contentProtectionChildren : NodeList
+) : IContentProtectionChildren {
+  const cencPssh : Uint8Array[] = [];
+  for (let i = 0; i < contentProtectionChildren.length; i++) {
+    if (contentProtectionChildren[i].nodeType === Node.ELEMENT_NODE) {
+      const currentElement = contentProtectionChildren[i] as Element;
+      if (currentElement.nodeName === "cenc:pssh") {
+        const content = currentElement.textContent;
+        if (content !== null && content.length > 0) {
+          cencPssh.push(base64ToUint8Array(content));
+        }
+      }
+    }
+  }
+  return { cencPssh };
 }
 
 /**
@@ -27,12 +60,12 @@ export interface IParsedContentProtection {
  * @param {Element} root
  * @returns {Object}
  */
-export default function parseContentProtection(
+function parseContentProtectionAttributes(
   root: Element
-) : IParsedContentProtection|undefined {
-  let schemeIdUri : string|undefined;
-  let value : string|undefined;
-  let keyId : Uint8Array|undefined;
+) : IContentProtectionAttributes {
+  let schemeIdUri : string | undefined;
+  let value : string | undefined;
+  let keyId : Uint8Array | undefined;
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
 
@@ -49,4 +82,17 @@ export default function parseContentProtection(
   }
 
   return { schemeIdUri, value, keyId };
+}
+
+/**
+ * @param {Element} contentProtectionElement
+ * @returns {Object}
+ */
+export default function parseContentProtection(
+  contentProtectionElement : Element
+) : IParsedContentProtection {
+  return {
+    children: parseContentProtectionChildren(contentProtectionElement.childNodes),
+    attributes: parseContentProtectionAttributes(contentProtectionElement),
+  };
 }

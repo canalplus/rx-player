@@ -36,9 +36,11 @@ import {
   IBufferWarningEvent,
   ICompletedBufferEvent,
   IEndOfStreamEvent,
+  INeedsDecipherabilityFlush,
   INeedsMediaSourceReload,
   IPeriodBufferClearedEvent,
   IPeriodBufferReadyEvent,
+  IProtectedSegmentEvent,
   IRepresentationChangeEvent,
   IResumeStreamEvent,
 } from "./types";
@@ -128,6 +130,17 @@ const EVENTS = {
              value: { currentTime, isPaused } };
   },
 
+  needsDecipherabilityFlush(
+    { currentTime,
+      isPaused,
+      duration } : { currentTime : number;
+                     isPaused : boolean;
+                     duration : number; }
+  ) : INeedsDecipherabilityFlush {
+    return { type: "needs-decipherability-flush",
+             value: { currentTime, isPaused, duration } };
+  },
+
   periodBufferReady(
     type : IBufferType,
     period : Period,
@@ -143,6 +156,13 @@ const EVENTS = {
   ) : IPeriodBufferClearedEvent {
     return { type: "periodBufferCleared",
              value: { type, period } };
+  },
+
+  protectedSegment(initDataInfo : { type : string;
+                                    data : Uint8Array; }
+  ) : IProtectedSegmentEvent {
+    return { type: "protected-segment",
+             value: initDataInfo };
   },
 
   representationChange(

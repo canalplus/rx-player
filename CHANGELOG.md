@@ -1,5 +1,43 @@
 # Changelog
 
+## v3.17.0 (2019/12/09)
+
+### Features
+
+ - eme/api: add keySystems.fallbackOn property to `loadVideo` to allow fallbacking to other qualities when encountering various key errors
+ - eme/api: allow to set `fallbackOnLastTry` on a `getLicense` Error to be able to fallback on other qualities when a license request is on error
+ - eme/api: add `NO_PLAYABLE_REPRESENTATION` `MediaError` for when every video or audio quality cannot be played
+ - manifest/api: add `decipherable` property to a Representation object
+ - api: add `decipherabilityUpdate` event triggered when a Representation's decipherability status is updated
+ - languages/api: add `dub` boolean to audio tracks (through `getAudioTrack` and `getAvailableAudioTracks`) to tell if this is a dubbed track
+ - languages/ttml: with TTML subtitles, support length relative to the Computed Cell Size for `tts:fontSize`, `tts:padding`, `tts:extent`, `tts:origin` and `tts:lineHeight`
+ - transports/api: add `checkMediaSegmentIntegrity` `transportOptions` to automatically retry media segments which appear corrupted
+ - transports/api: add `minimumManifestUpdateInterval` `transportOptions` to limit the Manifest update frequency
+ - transports/api: add "progress" callback to a custom segmentLoader to improve adaptive streaming when an external segment loader is used
+
+### Bug fixes
+
+ - dash/metaplaylist: download the first segment of a new Period when the last downloaded segment from the previous Period ends after that segment ends
+ - smooth/metaplaylist: consider `serverSyncInfos` `transportOptions` for Smooth and MetaPlaylist contents
+ - buffers: completely clean a previous audio/text track from the SourceBuffer when switching to a different audio/text track
+ - dash: avoid requesting an inexistant segment when downloading a multi-Period DASH content with a number-based SegmentTemplate with the `agressiveMode` option set to `true`
+ - eme: do not wait for a previous invalid MediaKeySession to be closed before re-creating a valid one for the same content, to work around a widevine issue
+ - eme: avoid race condition issue arising when multiple init data are received before the MediaKeys have been attached to the media element
+ - dash: do not consider "trickmodes" AdaptationSet as directly playable video tracks
+ - directfile: begin directly at the end (instead of the beginning) when setting a `startAt` loadVideo option with a `fromLastPosition` property set to `0` on directfile contents
+ - metaplaylist: fix playback for non-live MetaPlaylist contents not starting at a `0` time
+
+### Other improvements
+
+ - abr: better estimate a lower bitrate after a sudden fall in bandwidth
+ - dash/low-latency: properly use @availabilityTimeOffset when playing a low-latency DASH content
+ - code: use only strict boolean expressions in the code (do not rely on falsy or truthy values anymore).
+ - demo: add buffer content graphs to the demo page to vizualize exactly what have been buffered
+ - demo: improve accessibility of the demo page for the english-speaking visually impaired
+ - misc: replace uglifyJS by terser for minification purposes
+
+
+
 ## v3.16.1 (2019/10/03)
 
 ### Bug fixes

@@ -30,7 +30,7 @@ import { IInitClockTick } from "./types";
 const { BUFFER_DISCONTINUITY_THRESHOLD } = config;
 
 /**
- * Perform various checks about discontinuity during playback.
+ * Perform various checks about discontinuities during playback.
  * @param {Observable} clock$
  * @param {Object} manifest
  * @returns {Observable}
@@ -38,7 +38,7 @@ const { BUFFER_DISCONTINUITY_THRESHOLD } = config;
 export default function getDiscontinuities(
   clock$: Observable<IInitClockTick>,
   manifest: Manifest
-): Observable<[number, number]> {
+) : Observable< [ number, number ] > {
   return clock$.pipe(
     filter(({ stalled }) => stalled !== null),
     map((tick) : [number, number] | undefined => {
@@ -52,6 +52,7 @@ export default function getDiscontinuities(
       ) {
         log.warn("Init: After freeze seek", currentTime, currentRange);
         return [currentTime, currentTime];
+
       // 2. Is it a short discontinuity in buffer ? -> Seek at the beginning of the
       //                                               next range
       //

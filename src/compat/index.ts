@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import addClassName from "./add_class_name";
 import addTextTrack from "./add_text_track";
 import {
   ICompatMediaKeySystemAccess,
@@ -51,9 +52,11 @@ import isOffline from "./is_offline";
 import isPlaybackStuck from "./is_playback_stuck";
 import isVTTCue from "./is_vtt_cue";
 import makeVTTCue from "./make_vtt_cue";
+import onHeightWidthChange from "./on_height_width_change";
 import patchWebkitSourceBuffer from "./patch_webkit_source_buffer";
 import play$ from "./play";
 import setElementSrc$ from "./set_element_src";
+import shouldReloadMediaSourceOnDecipherabilityUpdate from "./should_reload_media_source_on_decipherability_update";
 import shouldRenewMediaKeys from "./should_renew_media_keys";
 import shouldUnsetMediaKeys from "./should_unset_media_keys";
 import shouldValidateMetadata from "./should_validate_metadata";
@@ -64,6 +67,7 @@ import whenMediaSourceOpen$ from "./when_media_source_open";
 patchWebkitSourceBuffer();
 
 export {
+  addClassName,
   addTextTrack,
   canPatchISOBMFFSegment,
   clearElementSrc,
@@ -89,11 +93,13 @@ export {
   isVTTCue,
   makeVTTCue,
   MediaSource_,
+  onHeightWidthChange,
   play$,
   requestFullscreen,
   requestMediaKeySystemAccess,
   setElementSrc$,
   setMediaKeys,
+  shouldReloadMediaSourceOnDecipherabilityUpdate,
   shouldRenewMediaKeys,
   shouldUnsetMediaKeys,
   shouldValidateMetadata,

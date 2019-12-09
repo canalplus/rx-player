@@ -26,6 +26,7 @@ import { IRepresentationFilter } from "../../manifest";
 import {
   CustomManifestLoader,
   CustomSegmentLoader,
+  ITransportOptions as IParsedTransportOptions,
 } from "../../transports";
 import {
   normalizeAudioTrack,
@@ -58,7 +59,9 @@ interface IServerSyncInfos { serverTimestamp : number;
                              clientTime : number; }
 
 export interface ITransportOptions { aggressiveMode? : boolean;
+                                     checkMediaSegmentIntegrity? : boolean;
                                      manifestLoader? : CustomManifestLoader;
+                                     minimumManifestUpdateInterval? : number;
                                      segmentLoader? : CustomSegmentLoader;
                                      representationFilter? : IRepresentationFilter;
                                      referenceDateTime? : number;
@@ -161,10 +164,9 @@ interface IParsedLoadVideoOptionsBase {
   autoPlay : boolean;
   keySystems : IKeySystemOption[];
   lowLatencyMode : boolean;
+  minimumManifestUpdateInterval : number;
   networkConfig: INetworkConfigOption;
-  transportOptions : ITransportOptions;
-  supplementaryTextTracks : ISupplementaryTextTrackOption[];
-  supplementaryImageTracks : ISupplementaryImageTrackOption[];
+  transportOptions : IParsedTransportOptions;
   defaultAudioTrack : IAudioTrackPreference|null|undefined;
   defaultTextTrack : ITextTrackPreference|null|undefined;
   startAt : IParsedStartAtOption|undefined;
@@ -373,8 +375,6 @@ function parseLoadVideoOptions(
   let url : string|undefined;
   let transport : string;
   let keySystems : IKeySystemOption[];
-  let supplementaryTextTracks : ISupplementaryTextTrackOption[];
-  let supplementaryImageTracks : ISupplementaryImageTrackOption[];
   let textTrackMode : "native"|"html";
   let textTrackElement : HTMLElement|undefined;
   let startAt : IParsedStartAtOption|undefined;
@@ -416,15 +416,28 @@ function parseLoadVideoOptions(
     }
   }
 
-  const transportOptions = typeof options.transportOptions === "object" &&
+  const lowLatencyMode = options.lowLatencyMode === undefined ?
+    false :
+    !!options.lowLatencyMode;
+  const transportOptsArg = typeof options.transportOptions === "object" &&
                                   options.transportOptions !== null ?
     options.transportOptions :
     {};
 
-  if (options.supplementaryTextTracks == null) {
-    supplementaryTextTracks = [];
-  } else {
-    supplementaryTextTracks =
+  const transportOptions : IParsedTransportOptions = {
+    aggressiveMode: transportOptsArg.aggressiveMode,
+    checkMediaSegmentIntegrity: transportOptsArg.checkMediaSegmentIntegrity,
+    lowLatencyMode,
+    manifestLoader: transportOptsArg.manifestLoader,
+    referenceDateTime: transportOptsArg.referenceDateTime,
+    representationFilter: transportOptsArg.representationFilter,
+    segmentLoader: transportOptsArg.segmentLoader,
+    serverSyncInfos: transportOptsArg.serverSyncInfos,
+    supplementaryImageTracks: [],
+    supplementaryTextTracks: [],
+  };
+  if (options.supplementaryTextTracks !== undefined) {
+    const supplementaryTextTracks =
       Array.isArray(options.supplementaryTextTracks) ?
         options.supplementaryTextTracks : [options.supplementaryTextTracks];
 
@@ -437,12 +450,10 @@ function parseLoadVideoOptions(
                         "Missing either language, mimetype or url");
       }
     }
+    transportOptions.supplementaryTextTracks = supplementaryTextTracks;
   }
-
-  if (options.supplementaryImageTracks == null) {
-    supplementaryImageTracks = [];
-  } else {
-    supplementaryImageTracks =
+  if (options.supplementaryImageTracks !== undefined) {
+    const supplementaryImageTracks =
       Array.isArray(options.supplementaryImageTracks) ?
         options.supplementaryImageTracks : [options.supplementaryImageTracks];
     for (const supplementaryImageTrack of supplementaryImageTracks) {
@@ -453,6 +464,7 @@ function parseLoadVideoOptions(
                         "Missing either mimetype or url");
       }
     }
+    transportOptions.supplementaryImageTracks = supplementaryImageTracks;
   }
 
   if (options.textTrackMode == null) {
@@ -477,8 +489,6 @@ function parseLoadVideoOptions(
              "`setPreferredTextTracks` method instead");
   }
   const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
-  const lowLatencyMode = options.lowLatencyMode == null ? false :
-                                                          !!options.lowLatencyMode;
   const hideNativeSubtitle = options.hideNativeSubtitle == null ?
     !DEFAULT_SHOW_NATIVE_SUBTITLE :
     !!options.hideNativeSubtitle;
@@ -516,6 +526,12 @@ function parseLoadVideoOptions(
     }
   }
 
+  const minimumManifestUpdateInterval =
+    options.transportOptions !== undefined &&
+    options.transportOptions.minimumManifestUpdateInterval !== undefined ?
+      options.transportOptions.minimumManifestUpdateInterval :
+      0;
+
   const networkConfig = options.networkConfig == null ?
     {} :
     { manifestRetry: options.networkConfig.manifestRetry,
@@ -531,10 +547,9 @@ function parseLoadVideoOptions(
            keySystems,
            lowLatencyMode,
            manualBitrateSwitchingMode,
+           minimumManifestUpdateInterval,
            networkConfig,
            startAt,
-           supplementaryImageTracks,
-           supplementaryTextTracks,
            textTrackElement,
            textTrackMode,
            transport,

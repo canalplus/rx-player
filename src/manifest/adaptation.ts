@@ -44,6 +44,7 @@ export interface IRepresentationInfos { bufferType: IAdaptationType;
                                         language?: string;
                                         isAudioDescription? : boolean;
                                         isClosedCaption? : boolean;
+                                        isDub? : boolean;
                                         normalizedLanguage? : string; }
 
 export type IRepresentationFilter = (representation: Representation,
@@ -76,6 +77,10 @@ export default class Adaptation {
   // Whether this Adaptation contains closed captions for the hard-of-hearing.
   public isClosedCaption? : boolean;
 
+  // If `true`, this Adaptation is a "dub", meaning it was recorded in another
+  // language than the original
+  public isDub? : boolean;
+
   // Language this Adaptation is in, as announced in the original Manifest.
   public language? : string;
 
@@ -84,7 +89,7 @@ export default class Adaptation {
 
   // `true` if this Adaptation was not present in the original Manifest, but was
   // manually added after through the corresponding APIs.
-  public manuallyAdded : boolean;
+  public manuallyAdded? : boolean;
 
   // Array containing every errors that happened when the Adaptation has been
   // created, in the order they have happened.
@@ -123,16 +128,19 @@ export default class Adaptation {
       this.parsingErrors.push(error);
     }
 
-    if (parsedAdaptation.language != null) {
+    if (parsedAdaptation.language !== undefined) {
       this.language = parsedAdaptation.language;
       this.normalizedLanguage = normalizeLanguage(parsedAdaptation.language);
     }
 
-    if (parsedAdaptation.closedCaption != null) {
+    if (parsedAdaptation.closedCaption !== undefined) {
       this.isClosedCaption = parsedAdaptation.closedCaption;
     }
-    if (parsedAdaptation.audioDescription != null) {
+    if (parsedAdaptation.audioDescription !== undefined) {
       this.isAudioDescription = parsedAdaptation.audioDescription;
+    }
+    if (parsedAdaptation.isDub !== undefined) {
+      this.isDub = parsedAdaptation.isDub;
     }
 
     this.representations = argsRepresentations
@@ -147,6 +155,7 @@ export default class Adaptation {
                                       language: this.language,
                                       normalizedLanguage: this.normalizedLanguage,
                                       isClosedCaption: this.isClosedCaption,
+                                      isDub: this.isDub,
                                       isAudioDescription: this.isAudioDescription });
       });
 
@@ -159,7 +168,13 @@ export default class Adaptation {
    * @returns {Array.<Number>}
    */
   getAvailableBitrates() : number[] {
-    const bitrates = this.representations.map(r => r.bitrate);
+    const bitrates : number[] = [];
+    for (let i = 0; i < this.representations.length; i ++) {
+      const representation = this.representations[i];
+      if (representation.decipherable !== false) {
+        bitrates.push(representation.bitrate);
+      }
+    }
     return uniq(bitrates);
   }
 

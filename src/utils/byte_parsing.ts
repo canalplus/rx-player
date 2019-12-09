@@ -333,7 +333,46 @@ function guidToUuid(uuid : string) : string {
   return bytesToHex(ord);
 }
 
+/**
+ * Check if an ArrayBuffer is equal to the bytes given.
+ * @param {ArrayBuffer} buffer
+ * @param {Uint8Array} bytes
+ * @returns {Boolean}
+ */
+function isABEqualBytes(buffer : ArrayBuffer, bytes : Uint8Array) : boolean {
+  const view = new DataView(buffer);
+  const len = view.byteLength;
+  if (len !== bytes.length) {
+    return false;
+  }
+  for (let i = 0; i < len; i++) {
+    if (view.getUint8(i) !== bytes[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Check if two Uint8Array are equal.
+ * @param {ArrayBuffer} buffer
+ * @param {Uint8Array} bytes
+ * @returns {Boolean}
+ */
+function areBytesEqual(arr1 : Uint8Array, arr2 : Uint8Array) : boolean {
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+  for (let i = arr1.length - 1; i >= 0; i--) {
+    if (arr1[i] !== arr2[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export {
+  areBytesEqual,
   strToBytes,
   bytesToStr, bytesToUTF16Str,
   hexToBytes,
@@ -344,4 +383,5 @@ export {
   itobe2, itobe4, itobe8,
   itole2, itole4,
   guidToUuid,
+  isABEqualBytes,
 };

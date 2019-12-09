@@ -223,6 +223,11 @@ This can lead to stalling indefinitely as the player won&#x2019;t be able to
 download new segments arround the current time.</p>
 </li>
 <li>
+<p><code>&quot;NO_PLAYABLE_REPRESENTATION&quot;</code>: The currently chosen Adaptation does not
+contain any playable Representation. This usually happen when every
+Representation has been blacklisted due to encryption limitations.</p>
+</li>
+<li>
 <p><code>&quot;MEDIA_TIME_NOT_FOUND&quot;</code>: This error should never happen and is a RxPlayer
 bug if it does. It means that a time initially thought to be in the bounds
 of the manifest does not link to any &#x201C;Period&#x201D; of the Manifest.</p>
@@ -305,6 +310,12 @@ not the RxPlayer&#x2019;s XMLHttpRequest implementation).</p>
 <p><code>&quot;PIPELINE_PARSE_ERROR&quot;</code>: The RxPlayer&#x2019;s <a href="../terms.html#manifest">Manifest</a>
 or segment parsing logic failed. This is most likely due to a malformed
 Manifest or segment.</p>
+</li>
+<li>
+<p><code>&quot;INTEGRITY_ERROR&quot;</code>: An integrity-checking mechanism in the RxPlayer
+detected that there was an error with some loaded data. Such mechanism can
+be triggered for example when the <code>checkMediaSegmentIntegrity</code>
+<code>transportOptions</code> is set to <code>loadVideo</code>.</p>
 </li>
 <li>
 <p><code>&quot;NONE&quot;</code>: The error cannot be characterized.</p>

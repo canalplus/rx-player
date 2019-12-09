@@ -18,6 +18,7 @@ import {
   asapScheduler,
   BehaviorSubject,
   concat as observableConcat,
+  defer as observableDefer,
   EMPTY,
   merge as observableMerge,
   Observable,
@@ -42,6 +43,7 @@ import log from "../../log";
 import Manifest, {
   Period,
 } from "../../manifest";
+import { fromEvent } from "../../utils/event_emitter";
 import SortedList from "../../utils/sorted_list";
 import WeakMapMemory from "../../utils/weak_map_memory";
 import ABRManager from "../abr";
@@ -56,6 +58,7 @@ import SourceBuffersStore, {
 import ActivePeriodEmitter from "./active_period_emitter";
 import areBuffersComplete from "./are_buffers_complete";
 import EVENTS from "./events_generators";
+import getBlacklistedRanges from "./get_blacklisted_ranges";
 import PeriodBuffer, {
   IPeriodBufferClockTick,
 } from "./period";
@@ -186,10 +189,10 @@ export default function BufferOrchestrator(
                          outOfManifest$);
 
   /**
-   * Manage creation and removal of Buffers for every Periods.
+   * Manage creation and removal of Buffers for every Periods for a given type.
    *
    * Works by creating consecutive buffers through the
-   * manageConsecutivePeriodBuffers function, and restarting it when the clock
+   * `manageConsecutivePeriodBuffers` function, and restarting it when the clock
    * goes out of the bounds of these buffers.
    * @param {string} bufferType - e.g. "audio" or "video"
    * @param {Period} basePeriod - Initial Period downloaded.
@@ -202,7 +205,13 @@ export default function BufferOrchestrator(
     // Each Period for which there is currently a Buffer, chronologically
     const periodList = new SortedList<Period>((a, b) => a.start - b.start);
     const destroyBuffers$ = new Subject<void>();
-    let hasLoadedABuffer = false; // true after the first PeriodBuffer is ready
+
+    // When set to `true`, all the currently active PeriodBuffer will be destroyed
+    // and re-created from the new current position if we detect it to be out of
+    // their bounds.
+    // This is set to false when we're in the process of creating the first
+    // PeriodBuffer, to avoid interferences while no PeriodBuffer is available.
+    let enableOutOfBoundsCheck = false;
 
     /**
      * @param {Object} period
@@ -214,9 +223,7 @@ export default function BufferOrchestrator(
       return manageConsecutivePeriodBuffers(bufferType, period, destroyBuffers$).pipe(
         tap((message) => {
           if (message.type === "periodBufferReady") {
-            if (!hasLoadedABuffer) {
-              hasLoadedABuffer = true;
-            }
+            enableOutOfBoundsCheck = true;
             periodList.add(message.value.period);
           } else if (message.type === "periodBufferCleared") {
             periodList.removeElement(message.value.period);
@@ -248,16 +255,17 @@ export default function BufferOrchestrator(
     // than the ones already considered
     const restartBuffersWhenOutOfBounds$ = clock$.pipe(
       filter(({ currentTime, wantedTimeOffset }) => {
-        return hasLoadedABuffer &&
-               manifest.getPeriodForTime(wantedTimeOffset + currentTime) != null &&
+        return enableOutOfBoundsCheck &&
+               manifest.getPeriodForTime(wantedTimeOffset +
+                                           currentTime) !== undefined &&
                isOutOfPeriodList(wantedTimeOffset + currentTime);
       }),
       tap(({ currentTime, wantedTimeOffset }) => {
-        log.info("Buffer: Current position out of the bounds of the active periods," +
+        log.info("BO: Current position out of the bounds of the active periods," +
                  "re-creating buffers.",
                  bufferType,
                  currentTime + wantedTimeOffset);
-        hasLoadedABuffer = false;
+        enableOutOfBoundsCheck = false;
         destroyBuffers$.next();
       }),
       mergeMap(({ currentTime, wantedTimeOffset }) => {
@@ -271,8 +279,37 @@ export default function BufferOrchestrator(
       })
     );
 
-    return observableMerge(launchConsecutiveBuffersForPeriod(basePeriod),
-                           restartBuffersWhenOutOfBounds$);
+    const handleDecipherabilityUpdate$ = fromEvent(manifest, "decipherabilityUpdate")
+      .pipe(mergeMap((updates) => {
+        const queuedSourceBuffer = sourceBuffersStore.get(bufferType);
+        const hasType = updates.some(update => update.adaptation.type === bufferType);
+        if (!hasType || queuedSourceBuffer == null) {
+          return EMPTY; // no need to stop the current buffers
+        }
+        const rangesToClean = getBlacklistedRanges(queuedSourceBuffer, updates);
+        enableOutOfBoundsCheck = false;
+        destroyBuffers$.next();
+        return observableConcat(
+          ...rangesToClean.map(({ start, end }) =>
+            queuedSourceBuffer.removeBuffer(start, end).pipe(ignoreElements())),
+          clock$.pipe(take(1), mergeMap((lastTick) => {
+            return observableConcat(
+              observableOf(EVENTS.needsDecipherabilityFlush(lastTick)),
+              observableDefer(() => {
+                const lastPosition = lastTick.currentTime + lastTick.wantedTimeOffset;
+                const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
+                if (newInitialPeriod == null) {
+                  throw new MediaError("MEDIA_TIME_NOT_FOUND",
+                    "The wanted position is not found in the Manifest.");
+                }
+                return launchConsecutiveBuffersForPeriod(newInitialPeriod);
+              }));
+          })));
+      }));
+
+    return observableMerge(restartBuffersWhenOutOfBounds$,
+                           handleDecipherabilityUpdate$,
+                           launchConsecutiveBuffersForPeriod(basePeriod));
   }
 
   /**
@@ -307,7 +344,7 @@ export default function BufferOrchestrator(
     basePeriod : Period,
     destroy$ : Observable<void>
   ) : Observable<IMultiplePeriodBuffersEvent> {
-    log.info("Buffer: Creating new Buffer for", bufferType, basePeriod);
+    log.info("BO: Creating new Buffer for", bufferType, basePeriod);
 
     // Emits the Period of the next Period Buffer when it can be created.
     const createNextPeriodBuffer$ = new Subject<Period>();
@@ -383,7 +420,7 @@ export default function BufferOrchestrator(
         periodBuffer$.pipe(takeUntil(killCurrentBuffer$)),
         observableOf(EVENTS.periodBufferCleared(bufferType, basePeriod))
           .pipe(tap(() => {
-            log.info("Buffer: Destroying buffer for", bufferType, basePeriod);
+            log.info("BO: Destroying buffer for", bufferType, basePeriod);
           }))
         );
 

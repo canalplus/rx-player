@@ -34,6 +34,7 @@ import {
   of as observableOf,
   ReplaySubject,
   Subject,
+  throwError,
 } from "rxjs";
 import {
   catchError,
@@ -49,7 +50,10 @@ import {
   takeUntil,
   tap,
 } from "rxjs/operators";
-import { formatError } from "../../../errors";
+import {
+  formatError,
+  MediaError,
+} from "../../../errors";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
@@ -122,7 +126,6 @@ export default function AdaptationBuffer<T>({
 } : IAdaptationBufferArguments<T>) : Observable<IAdaptationBufferEvent<T>> {
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
-  const { representations } = adaptation;
 
   // The buffer goal ratio limits the wanted buffer ahead to determine the
   // buffer goal.
@@ -144,8 +147,20 @@ export default function AdaptationBuffer<T>({
   const requestsEvents$ = new Subject<IABRMetric | IABRRequest>();
   const abrEvents$ = observableMerge(bufferEvents$, requestsEvents$);
 
-  const abr$ : Observable<IABREstimate> =
-    abrManager.get$(adaptation.type, representations, clock$, abrEvents$)
+  const decipherableRepresentations = adaptation.representations
+    .filter((representation) => representation.decipherable !== false);
+
+  if (decipherableRepresentations.length <= 0) {
+    const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
+                                    "No Representation in the chosen " +
+                                    "Adaptation can be played");
+    return throwError(noRepErr);
+  }
+
+  const abr$ : Observable<IABREstimate> = abrManager.get$(adaptation.type,
+                                                          decipherableRepresentations,
+                                                          clock$,
+                                                          abrEvents$)
       .pipe(subscribeOn(asapScheduler), share());
 
   const segmentFetcher = segmentPipelinesManager.createPipeline(adaptation.type,

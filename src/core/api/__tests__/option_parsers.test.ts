@@ -410,13 +410,16 @@ describe("API - parseLoadVideoOptions", () => {
     keySystems: [],
     lowLatencyMode: false,
     manualBitrateSwitchingMode: "seamless",
+    minimumManifestUpdateInterval: 0,
     networkConfig: {},
     startAt: undefined,
-    supplementaryImageTracks: [],
-    supplementaryTextTracks: [],
     textTrackElement: undefined,
     textTrackMode: "native",
-    transportOptions: {},
+    transportOptions: {
+      lowLatencyMode: false,
+      supplementaryTextTracks: [],
+      supplementaryImageTracks: [],
+    },
   };
 
   it("should throw if no option is given", () => {
@@ -491,7 +494,10 @@ describe("API - parseLoadVideoOptions", () => {
     })).toEqual({
       ...defaultLoadVideoOptions,
       transport: "bar",
-      transportOptions: { manifestLoader },
+      transportOptions: { lowLatencyMode: false,
+                          manifestLoader,
+                          supplementaryImageTracks: [],
+                          supplementaryTextTracks: [] },
     });
   });
 
@@ -696,9 +702,32 @@ describe("API - parseLoadVideoOptions", () => {
       transport: "bar",
     })).toEqual({
       ...defaultLoadVideoOptions,
+      lowLatencyMode: true,
+      transport: "bar",
+      url: "foo",
+      transportOptions: { lowLatencyMode: true,
+                          supplementaryImageTracks: [],
+                          supplementaryTextTracks: [] },
+    });
+  });
+
+  it("should authorize setting a minimumManifestUpdateInterval option", () => {
+    expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      lowLatencyMode: true,
+      transportOptions: {
+        minimumManifestUpdateInterval: 5400,
+      },
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      minimumManifestUpdateInterval: 5400,
+      url: "foo",
+      transport: "bar",
+      transportOptions: {
+        lowLatencyMode: false,
+        supplementaryImageTracks: [],
+        supplementaryTextTracks: [],
+      },
     });
   });
 
@@ -848,7 +877,11 @@ describe("API - parseLoadVideoOptions", () => {
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      supplementaryImageTracks: [supplementaryImageTracks1],
+      transportOptions: {
+        lowLatencyMode: false,
+        supplementaryImageTracks: [supplementaryImageTracks1],
+        supplementaryTextTracks: [],
+      },
     });
     expect(parseLoadVideoOptions({
       supplementaryImageTracks: [supplementaryImageTracks1, supplementaryImageTracks2],
@@ -858,7 +891,12 @@ describe("API - parseLoadVideoOptions", () => {
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      supplementaryImageTracks: [supplementaryImageTracks1, supplementaryImageTracks2],
+      transportOptions: {
+        lowLatencyMode: false,
+        supplementaryImageTracks: [ supplementaryImageTracks1,
+                                    supplementaryImageTracks2 ],
+        supplementaryTextTracks: [],
+      },
     });
   });
 
@@ -935,7 +973,11 @@ describe("API - parseLoadVideoOptions", () => {
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      supplementaryTextTracks: [supplementaryTextTracks1],
+      transportOptions: {
+        lowLatencyMode: false,
+        supplementaryImageTracks: [],
+        supplementaryTextTracks: [supplementaryTextTracks1],
+      },
     });
     expect(parseLoadVideoOptions({
       supplementaryTextTracks: [
@@ -948,7 +990,11 @@ describe("API - parseLoadVideoOptions", () => {
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      supplementaryTextTracks: [supplementaryTextTracks1, supplementaryTextTracks2],
+      transportOptions: {
+        lowLatencyMode: false,
+        supplementaryImageTracks: [],
+        supplementaryTextTracks: [supplementaryTextTracks1, supplementaryTextTracks2],
+      },
     });
   });
 
@@ -1037,7 +1083,10 @@ describe("API - parseLoadVideoOptions", () => {
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      transportOptions: { segmentLoader: func },
+      transportOptions: { lowLatencyMode: false,
+                          supplementaryImageTracks: [],
+                          supplementaryTextTracks: [],
+                          segmentLoader: func },
     });
   });
 
