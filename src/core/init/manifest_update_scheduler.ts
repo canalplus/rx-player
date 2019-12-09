@@ -56,13 +56,14 @@ export default function manifestUpdateScheduler(
                      sendingTime?: number; }): Observable<never> {
     const { manifest, sendingTime } = manifestInfos;
     // schedule a Manifest refresh to avoid sending too much request.
-    const timeSinceLastRefresh = sendingTime == null ?
-                                   0 :
-                                   performance.now() - sendingTime;
-    const minInterval = Math.max(minimumManifestUpdateInterval - timeSinceLastRefresh,
-                                 0);
     const manualRefresh$ = scheduleRefresh$.pipe(
       mergeMap((delay) => {
+        const timeSinceLastRefresh = sendingTime == null ?
+                                       0 :
+                                       performance.now() - sendingTime;
+        const minInterval = Math.max(minimumManifestUpdateInterval
+                                       - timeSinceLastRefresh,
+                                     0);
         return observableTimer(Math.max(delay - timeSinceLastRefresh,
                                         minInterval));
       }));
@@ -74,6 +75,9 @@ export default function manifestUpdateScheduler(
       const timeSinceRequest = sendingTime == null ?
                                  0 :
                                  performance.now() - sendingTime;
+      const minInterval = Math.max(minimumManifestUpdateInterval
+                                     - timeSinceRequest,
+                                   0);
       const updateTimeout = manifest.lifetime * 1000 - timeSinceRequest;
       return observableTimer(Math.max(updateTimeout, minInterval));
     })();
