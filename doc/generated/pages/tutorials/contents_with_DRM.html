@@ -28,8 +28,9 @@
 <li><a href="#subchapter-licenseStorage%20property">licenseStorage property</a></li>
 </ul>
 </li>
-<li><a href="#chapter-Playback%20issues%20on%20exotic/embedded%20devices">Playback issues on exotic/embedded devices</a>
+<li><a href="#chapter-Playback%20issues%20related%20to%20DRMs">Playback issues related to DRMs</a>
 <ul>
+<li><a href="#subchapter-Issues%20with%20fallbacking%20with%20the%20Edge%20browser%20and%20PlayReady">Issues with fallbacking with the Edge browser and PlayReady</a></li>
 <li><a href="#subchapter-The%20Player%20do%20not%20download%20any%20segment%20when%20playing%20encrypted%20contents">The Player do not download any segment when playing encrypted contents</a></li>
 <li><a href="#subchapter-After%20two%20or%20several%20loadVideo%20calls%20the%20RxPlayer%20refuses%20to%20play">After two or several loadVideo calls the RxPlayer refuses to play</a></li>
 </ul>
@@ -568,10 +569,21 @@ through the JSON.stringify browser API. This means that:</p>
 <pre><code class="language-js"><span class="hljs-built_in">console</span>.log(data === <span class="hljs-built_in">JSON</span>.parse(<span class="hljs-built_in">JSON</span>.stringify(data))); <span class="hljs-comment">// displays &quot;true&quot;</span>
 </code></pre>
 <p>This is very useful for storage APIs which cannot store JavaScript objects.</p>
-<p><a name="chapter-Playback%20issues%20on%20exotic/embedded%20devices"></a></p>
-<h2>Playback issues on exotic/embedded devices</h2>
+<p><a name="chapter-Playback%20issues%20related%20to%20DRMs"></a></p>
+<h2>Playback issues related to DRMs</h2>
 <p>The configuration example which finishes the last chapter should work in most
 cases, but you might encounter very specific issues on some devices.</p>
+<p><a name="subchapter-Issues%20with%20fallbacking%20with%20the%20Edge%20browser%20and%20PlayReady"></a></p>
+<h3>Issues with fallbacking with the Edge browser and PlayReady</h3>
+<p>We sometimes encountered a bug which makes the player loads indefinitely when
+fallbacking from an undecipherable quality, if done through the
+<code>fallbackOnLastTry</code> option. This was only constated on the Edge browser and
+appears to be a browser or CDM bug.</p>
+<p>Sadly, no work-around has been found for now for this issue. We&#x2019;re currently
+trying to create a reproducible scenario and document that issue so it can
+hopefully be fixed in the future. In the meantime, you&#x2019;re encouraged either to
+use Widevine (only on Chromium-based Edge) or to not make use of the
+<code>fallBackOnLastTry</code> option on that browser.</p>
 <p><a name="subchapter-The%20Player%20do%20not%20download%20any%20segment%20when%20playing%20encrypted%20contents"></a></p>
 <h3>The Player do not download any segment when playing encrypted contents</h3>
 <p>This is probably due to an issue we encountered several time on embedded

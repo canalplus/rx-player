@@ -116,6 +116,10 @@ either:
 - resolve with <code>null</code> if you do not want to set a license for this
 <code>message</code> event
 - reject if an error was encountered.</p>
+<p>Note: We set a 10 seconds timeout by default on this request (configurable
+through the <code>getLicenseConfig</code> object).
+If the returned Promise do not resolve or reject under this limit, the
+player will stop with an error.</p>
 <p>In any case, the license provided by this function should be of a
 <code>BufferSource</code> type (example: an <code>Uint8Array</code> or an <code>ArrayBuffer</code>).</p>
 <p>Even in case of an error, you can (this is not mandatory) set any of the
@@ -156,11 +160,14 @@ the RxPlayer:</p>
   only perform a very little seek (of some milliseconds). you might see
   the stream stutter for a very brief instant at that point.
 
-  Note: We set a 10 seconds timeout by default on this request (configurable
-  through the `getLicenseConfig` object).
-  If the returned Promise do not resolve or reject under this limit, the
-  player will stop with an error. If this limit is problematic for you,
-  please open an issue.
+  On the Edge browser, we found an issue that can arise when this option
+  is set if PlayReady is used. This issue can make the player loads the
+  content indefinitely.
+  Sadly, no work-around has been found for now for this issue. We&apos;re
+  currently trying to create a reproducible scenario and document that
+  issue so it can hopefully be fixed in the future. In the meantime,
+  you&apos;re encouraged either to use Widevine (only on Chromium-based Edge)
+  or to not make use of the `fallBackOnLastTry` option on that browser.
 </code></pre>
 </li>
 <li>
@@ -540,7 +547,7 @@ availabilityStartTime in a DASH MPD).</p>
 </li>
 <li>
 <p><code>minimumManifestUpdateInterval</code> (<code>Number</code>): Set the minimum time, in
-seconds, we have to wait between Manifest updates.</p>
+milliseconds, we have to wait between Manifest updates.</p>
 <p>A Manifest may need to be updated in regular intervals (e.g. many DASH
 dynamic contents depend on that behavior).</p>
 <p>The frequency at which we normally update a Manifest depends on multiple
