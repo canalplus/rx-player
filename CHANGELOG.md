@@ -34,6 +34,7 @@
  - code: use only strict boolean expressions in the code (do not rely on falsy or truthy values anymore).
  - demo: add buffer content graphs to the demo page to vizualize exactly what have been buffered
  - demo: improve accessibility of the demo page for the english-speaking visually impaired
+ - misc: replace uglifyJS by terser for minification purposes
 
 
 
