@@ -28968,9 +28968,9 @@ function manifestUpdateScheduler(initialManifest, scheduleRefresh$, fetchManifes
     var manifest = manifestInfos.manifest,
         sendingTime = manifestInfos.sendingTime; // schedule a Manifest refresh to avoid sending too much request.
 
-    var timeSinceLastRefresh = sendingTime == null ? 0 : performance.now() - sendingTime;
-    var minInterval = Math.max(minimumManifestUpdateInterval - timeSinceLastRefresh, 0);
     var manualRefresh$ = scheduleRefresh$.pipe(Object(mergeMap["a" /* mergeMap */])(function (delay) {
+      var timeSinceLastRefresh = sendingTime == null ? 0 : performance.now() - sendingTime;
+      var minInterval = Math.max(minimumManifestUpdateInterval - timeSinceLastRefresh, 0);
       return Object(timer["a" /* timer */])(Math.max(delay - timeSinceLastRefresh, minInterval));
     }));
 
@@ -28980,6 +28980,7 @@ function manifestUpdateScheduler(initialManifest, scheduleRefresh$, fetchManifes
       }
 
       var timeSinceRequest = sendingTime == null ? 0 : performance.now() - sendingTime;
+      var minInterval = Math.max(minimumManifestUpdateInterval - timeSinceRequest, 0);
       var updateTimeout = manifest.lifetime * 1000 - timeSinceRequest;
       return Object(timer["a" /* timer */])(Math.max(updateTimeout, minInterval));
     }(); // Emit when the manifest should be refreshed. Either when:
