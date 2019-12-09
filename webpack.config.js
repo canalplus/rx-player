@@ -1,7 +1,7 @@
 /* eslint-env node */
 
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
-const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 const webpack = require("webpack");
 
 const RXP_ENV = process.env.RXP_ENV || "production";
@@ -115,30 +115,12 @@ module.exports = {
     filename: shouldMinify ? "rx-player.min.js" : "rx-player.js",
   },
   optimization: {
-    minimizer: shouldMinify ? [new UglifyJsPlugin()] : [
-      new UglifyJsPlugin({
-        uglifyOptions: {
-          compress: {
-            keep_infinity: true,
-            inline: false,
-            reduce_funcs: false, // does not work well on commentated funcs.
-                                 // TODO open issue on uglify
-          },
-          keep_fnames: true,
-          keep_classnames: true,
-          keep_fargs: true,
-          mangle: false,
-          output: {
-            beautify: true,
-            comments: true,
-          },
-        },
-      }),
-    ],
+    minimize: shouldMinify,
+    minimizer: shouldMinify ? [new TerserPlugin()] : [],
   },
   performance: {
-    maxEntrypointSize: shouldMinify ? 400000 : 1700000,
-    maxAssetSize: shouldMinify ? 400000 : 1700000,
+    maxEntrypointSize: shouldMinify ? 450000 : 1700000,
+    maxAssetSize: shouldMinify ? 450000 : 1700000,
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
