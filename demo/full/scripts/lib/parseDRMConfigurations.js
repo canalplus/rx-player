@@ -4,14 +4,13 @@ import {
   bytesToUTF16Str,
 } from "./bytes.js";
 
-export default function parseDRMConfigurations(
-  drmConfigurations,
-  { fallbackKeyError, fallbackLicenseRequest }
-) {
+export default function parseDRMConfigurations(drmConfigurations) {
   return Promise.all(drmConfigurations.map(drmConfig => {
-    const { licenseServerUrl,
-            serverCertificateUrl,
-            drm } = drmConfig;
+    const { drm,
+            fallbackKeyError,
+            fallbackLicenseRequest,
+            licenseServerUrl,
+            serverCertificateUrl } = drmConfig;
 
     if (!licenseServerUrl) {
       return ;
