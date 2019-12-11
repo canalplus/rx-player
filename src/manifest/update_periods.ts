@@ -66,7 +66,10 @@ export default function updatePeriods(
     if (oldPeriod != null) {
       updatePeriodInPlace(oldPeriod, newPeriod);
       const periodsToInclude = newPeriods.slice(firstUnhandledPeriodIdx, i);
-      oldPeriods.splice(j, 0, ...periodsToInclude);
+      const nbrOfPeriodsToRemove = j - firstUnhandledPeriodIdx;
+      oldPeriods.splice(firstUnhandledPeriodIdx,
+                        nbrOfPeriodsToRemove,
+                        ...periodsToInclude);
       firstUnhandledPeriodIdx = i + 1;
     }
   }
