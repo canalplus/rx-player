@@ -91,46 +91,43 @@ export default class TextBufferManager {
 
     const to = Math.max(from, _to);
     const cuesBuffer = this._cuesBuffer;
-    const len = cuesBuffer.length;
-    for (let i = 0; i < len; i++) {
+    for (let i = 0; i < cuesBuffer.length; i++) {
       if (cuesBuffer[i].end > from) {
+        // this cuesInfos is concerned by the remove
         const startCuesInfos = cuesBuffer[i];
-
         if (startCuesInfos.start >= to) {
-          // our cue is strictly after this interval, we have nothing to do
+          // our cuesInfos is strictly after this interval, we have nothing to do
           return;
         }
-
-        // ``to`` is within this segment
         if (startCuesInfos.end >= to) {
-          const [ cuesInfos1,
-                  cuesInfos2 ] = removeCuesInfosBetween(startCuesInfos, from, to);
-          this._cuesBuffer[i] = cuesInfos1;
-          cuesBuffer.splice(i + 1, 0, cuesInfos2);
+          // our cuesInfos ends after `to`, we have to keep the end of it
+          if (from <= startCuesInfos.start) {
+            // from -> to only remove the start of startCuesInfos
+            startCuesInfos.cues = getCuesAfter(startCuesInfos.cues, to);
+            startCuesInfos.start = to;
+          } else {
+            // from -> to is in the middle part of startCuesInfos
+            const [ cuesInfos1,
+                    cuesInfos2 ] = removeCuesInfosBetween(startCuesInfos,
+                                                          from,
+                                                          to);
+            this._cuesBuffer[i] = cuesInfos1;
+            cuesBuffer.splice(i + 1, 0, cuesInfos2);
+          }
+          // No cuesInfos can be concerned after this one, we can quit
           return;
         }
 
-        // Else remove the part of the segment after ``from``, and the concerned
-        // segments after that
-        startCuesInfos.cues = getCuesBefore(startCuesInfos.cues, from);
-        startCuesInfos.end = Math.max(from, startCuesInfos.start);
-
-        for (let j = i + 1; j < len; j++) {
-          const endCuesInfos = cuesBuffer[i];
-          if (to <= endCuesInfos.end) {
-            // remove all cues from the start to this one non-included
-            cuesBuffer.splice(i + 1, j - (i + 1));
-
-            // if ``to`` is in the middle of the last segment
-            if (to > endCuesInfos.start) {
-              endCuesInfos.cues = getCuesAfter(endCuesInfos.cues, to);
-              endCuesInfos.start = to;
-            }
-            return;
-          }
+        // Else remove all part after `from`
+        if (startCuesInfos.start >= from) {
+          // all the segment is concerned
+          cuesBuffer.splice(i, 1);
+          i--; // one less element, we have to decrement the loop
+        } else {
+          // only the end is concerned
+          startCuesInfos.cues = getCuesBefore(startCuesInfos.cues, from);
+          startCuesInfos.end = Math.max(from, startCuesInfos.start);
         }
-        cuesBuffer.splice(i + 1, cuesBuffer.length - (i + 1));
-        return;
       }
     }
   }
@@ -192,9 +189,10 @@ export default class TextBufferManager {
             cuesBuffer.splice(i, 0, cuesInfosToInsert);
             return;
           }
+
           // our cue goes beyond the current one:
           //   ours:            |AAAAAAA|
-          //   the current one: |BBBB|
+          //   the current one: |BBBB|...
           //   Result:          |AAAAAAA|
           // Here we have to delete any cuesInfos which end before ours end,
           // and see about the following one.
@@ -211,14 +209,33 @@ export default class TextBufferManager {
             cuesBuffer[i] = cuesInfosToInsert;
             return;
           }
-          // else -> end < cuesInfos.end (overlapping case)
-          //   ours:            |AAAAA|
-          //   the current one: |BBBBBBBB|
-          //   Result:          |AAAAABBB|
-          cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
-          cuesInfos.start = end;
-          cuesBuffer.splice(i, 0, cuesInfosToInsert);
-          return;
+
+          if (cuesInfos.start >= end) {
+            // Either
+            //   ours:            |AAAAA|
+            //   the current one:         |BBBBBB|
+            //   Result:          |AAAAA| |BBBBBB|
+            // Or:
+            //   ours:            |AAAAA|
+            //   the current one:       |BBBBBB|
+            //   Result:          |AAAAA|BBBBBB|
+            // Add ours before
+            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            return;
+          } else {
+            // Either
+            //   ours:            |AAAAA|
+            //   the current one: |BBBBBBBB|
+            //   Result:          |AAAAABBB|
+            // Or:
+            //   ours:            |AAAAA|
+            //   the current one:    |BBBBB|
+            //   Result:          |AAAAABBB|
+            cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
+            cuesInfos.start = end;
+            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            return;
+          }
         } else if (start < cuesInfos.start) {
           if (end < cuesInfos.start) {
             // our cue goes strictly before the current one:
@@ -240,53 +257,136 @@ export default class TextBufferManager {
             cuesInfos.start = end;
             cuesBuffer.splice(i, 0, cuesInfosToInsert);
             return;
+          } else if (areNearlyEqual(end, cuesInfos.end)) {
+            //   ours:            |AAAAAAA|
+            //   the current one:    |BBBB|
+            //   Result:          |AAAAAAA|
+            // Replace
+            cuesBuffer.splice(i, 1, cuesInfosToInsert);
+            return;
+          } else if (end < cuesInfos.end) {
+            //   ours:            |AAAAAAA|
+            //   the current one:     |BBBBB|
+            //   Result:          |AAAAAAABB|
+            cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
+            cuesInfos.start = end;
+            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            return;
           }
-          // our cue overlaps the current one:
+
           //   ours:            |AAAAAAA|
-          //   the current one:     |BBBBB|
-          //   Result:          |AAAAAAABB|
-          // Which means:
-          //   1. remove some cues at the start of the current one
-          //   2. update start of current one
-          //   3. add ours before the current one
-          cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
-          cuesInfos.start = end;
-          cuesBuffer.splice(i, 0, cuesInfosToInsert);
-          return;
+          //   the current one:   |BBB|...
+          //   Result:          |AAAAAAA|...
+          do {
+            cuesBuffer.splice(i, 1);
+            cuesInfos = cuesBuffer[i];
+          } while (cuesInfos !== undefined && end > cuesInfos.end);
+
+          if (
+            cuesInfos === undefined || // There is no cue here
+            areNearlyEqual(end, cuesInfos.end) // this cue has the same end
+          ) {
+            // put in place
+            cuesBuffer[i] = cuesInfosToInsert;
+            return;
+          }
+
+          if (cuesInfos.start >= end) {
+            // Either
+            //   ours:            |AAAAA|
+            //   the current one:         |BBBBBB|
+            //   Result:          |AAAAA| |BBBBBB|
+            // Or:
+            //   ours:            |AAAAA|
+            //   the current one:       |BBBBBB|
+            //   Result:          |AAAAA|BBBBBB|
+            // Add ours before
+            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            return;
+          } else {
+            // Either
+            //   ours:            |AAAAA|
+            //   the current one: |BBBBBBBB|
+            //   Result:          |AAAAABBB|
+            // Or:
+            //   ours:            |AAAAA|
+            //   the current one:    |BBBBB|
+            //   Result:          |AAAAABBB|
+            cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
+            cuesInfos.start = end;
+            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            return;
+          }
         }
         // else -> start > cuesInfos.start
-        if (end > cuesInfos.end || areNearlyEqual(end, cuesInfos.end)) {
-          // our cue overlaps the current one:
+
+        if (areNearlyEqual(cuesInfos.end, end)) {
           //   ours:              |AAAAAA|
-          //   the current one: |BBBBB|
+          //   the current one: |BBBBBBBB|
           //   Result:          |BBAAAAAA|
-          //   - or -
-          //   ours:              |AAAA|
-          //   the current one: |BBBBBB|
-          //   Result:          |BBAAAA|
-          // Which means:
-          //   1. remove some cues at the end of the current one
-          //   2. update end of current one
-          //   3. add ours after current one
           cuesInfos.cues = getCuesBefore(cuesInfos.cues, start);
           cuesInfos.end = start;
           cuesBuffer.splice(i + 1, 0, cuesInfosToInsert);
           return;
+        } else if (cuesInfos.end > end) {
+          //   ours:              |AAAAAA|
+          //   the current one: |BBBBBBBBBBB|
+          //   Result:          |BBAAAAAABBB|
+          const [ cuesInfos1,
+                  cuesInfos2 ] = removeCuesInfosBetween(cuesInfos, start, end);
+          this._cuesBuffer[i] = cuesInfos1;
+          cuesBuffer.splice(i + 1, 0, cuesInfosToInsert);
+          cuesBuffer.splice(i + 2, 0, cuesInfos2);
+          return;
+        } else {
+          //   ours:              |AAAAAA|
+          //   the current one: |BBBBB|...
+          //   Result:          |BBAAAAAA|...
+          cuesInfos.cues = getCuesBefore(cuesInfos.cues, start);
+          cuesInfos.end = start;
+
+          cuesInfos = cuesBuffer[i + 1];
+          while (cuesInfos !== undefined && end > cuesInfos.end) {
+            cuesBuffer.splice(i, 1);
+            cuesInfos = cuesBuffer[i];
+          }
+          if (
+            cuesInfos === undefined || // There is no cue here
+            areNearlyEqual(end, cuesInfos.end) // this cue has the same end
+          ) {
+            // put in place
+            cuesBuffer[i] = cuesInfosToInsert;
+            return;
+          }
+
+          if (cuesInfos.start >= end) {
+            // Either
+            //   ours:            |AAAAA|
+            //   the current one:         |BBBBBB|
+            //   Result:          |AAAAA| |BBBBBB|
+            // Or:
+            //   ours:            |AAAAA|
+            //   the current one:       |BBBBBB|
+            //   Result:          |AAAAA|BBBBBB|
+            // Add ours before
+            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            return;
+          } else {
+            // Either
+            //   ours:            |AAAAA|
+            //   the current one: |BBBBBBBB|
+            //   Result:          |AAAAABBB|
+            // Or:
+            //   ours:            |AAAAA|
+            //   the current one:    |BBBBB|
+            //   Result:          |AAAAABBB|
+            cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
+            cuesInfos.start = end;
+            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            return;
+          }
+
         }
-        // else -> end < cuesInfos.end
-        // our cue is in the current one:
-        //   ours:              |AAA|
-        //   the current one: |BBBBBBB|
-        //   Result:          |BBAAABB|
-        // Which means:
-        //   1. split current one in two parts based on our cue.
-        //   2. insert our cue into it.
-        const [ cuesInfos1,
-                cuesInfos2 ] = removeCuesInfosBetween(cuesInfos, start, end);
-        this._cuesBuffer[i] = cuesInfos1;
-        cuesBuffer.splice(i + 1, 0, cuesInfosToInsert);
-        cuesBuffer.splice(i + 2, 0, cuesInfos2);
-        return;
       }
     }
     // no cues group has the end after our current start.

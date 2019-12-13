@@ -65,23 +65,23 @@ export function areNearlyEqual(a : number, b : number) : boolean {
 }
 
 /**
- * Get all cues strictly before the given time.
+ * Get all cues which have data before the given time.
  * @param {Object} cues
  * @param {Number} time
  * @returns {Array.<Object>}
  */
 export function getCuesBefore(cues : IHTMLCue[], time : number) : IHTMLCue[] {
-  for (let i = 0; i < cues.length; i++) {
+  for (let i = cues.length - 1; i >= 0; i--) {
     const cue = cues[i];
-    if (time < cue.end) {
-      return cues.slice(0, i);
+    if (cue.start < time) {
+      return cues.slice(0, i + 1);
     }
   }
-  return cues.slice();
+  return [];
 }
 
 /**
- * Get all cues strictly after the given time.
+ * Get all cues which have data after the given time.
  * @param {Object} cues
  * @param {Number} time
  * @returns {Array.<Object>}
@@ -89,7 +89,7 @@ export function getCuesBefore(cues : IHTMLCue[], time : number) : IHTMLCue[] {
 export function getCuesAfter(cues : IHTMLCue[], time : number) : IHTMLCue[] {
   for (let i = 0; i < cues.length; i++) {
     const cue = cues[i];
-    if (cue.start > time) {
+    if (cue.end > time) {
       return cues.slice(i, cues.length);
     }
   }
@@ -107,15 +107,15 @@ export function removeCuesInfosBetween(
   start : number,
   end : number
 ) : [ICuesGroup, ICuesGroup] {
-  const end1 = Math.max(cuesInfos.start, start);
+  const endCuesInfos1 = Math.max(cuesInfos.start, start);
   const cues1 = getCuesBefore(cuesInfos.cues, start);
   const cuesInfos1 = { start: cuesInfos.start,
-                       end: end1,
+                       end: endCuesInfos1,
                        cues: cues1 };
 
-  const start2 = Math.min(end, cuesInfos.end);
+  const startCuesInfos2 = Math.min(end, cuesInfos.end);
   const cues2 = getCuesAfter(cuesInfos.cues, end);
-  const cuesInfos2 = { start: start2,
+  const cuesInfos2 = { start: startCuesInfos2,
                        end: cuesInfos.end,
                        cues: cues2 };
   return [cuesInfos1, cuesInfos2];

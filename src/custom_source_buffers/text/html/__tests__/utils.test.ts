@@ -46,6 +46,7 @@ describe("HTML Buffer Manager utils - getCuesBefore", () => {
 
     expect(getCuesBefore(cues, 1.5)).toEqual([
       { start: 0, end: 1, element },
+      { start: 1, end: 2, element },
     ]);
   });
 
@@ -145,6 +146,7 @@ describe("HTML Buffer Manager utils - getCuesAfter", () => {
     ];
 
     expect(getCuesAfter(cues, 2.5)).toEqual([
+      { start: 2, end: 3, element },
       { start: 3, end: 4, element },
     ]);
   });
@@ -158,6 +160,7 @@ describe("HTML Buffer Manager utils - getCuesAfter", () => {
     ];
 
     expect(getCuesAfter(cues, 2)).toEqual([
+      { start: 2, end: 3, element },
       { start: 3, end: 4, element },
     ]);
   });
@@ -170,7 +173,9 @@ describe("HTML Buffer Manager utils - getCuesAfter", () => {
       { start: 3, end: 4, element },
     ];
 
-    expect(getCuesAfter(cues, 3)).toEqual([]);
+    expect(getCuesAfter(cues, 3)).toEqual([
+      { start: 3, end: 4, element },
+    ]);
   });
 
   it("should get the right cues when time is before the start of all cues", () => {
@@ -197,12 +202,13 @@ describe("HTML Buffer Manager utils - getCuesAfter", () => {
     ];
 
     expect(getCuesAfter(cues, 1)).toEqual([
+      { start: 1, end: 2, element },
       { start: 2, end: 3, element },
       { start: 3, end: 4, element },
     ]);
   });
 
-  it("should return an empty arraywhen time is the end of all cues", () => {
+  it("should return an empty array when time is the end of all cues", () => {
     const element = document.createElement("div");
     const cues = [
       { start: 1, end: 2, element },
@@ -213,7 +219,7 @@ describe("HTML Buffer Manager utils - getCuesAfter", () => {
     expect(getCuesAfter(cues, 4)).toEqual([]);
   });
 
-  it("should return an empty arraywhen time is after the end of all cues", () => {
+  it("should return an empty array when time is after the end of all cues", () => {
     const element = document.createElement("div");
     const cues = [
       { start: 1, end: 2, element },
@@ -260,23 +266,19 @@ describe("HTML Buffer Manager utils - areNearlyEqual", () => {
 describe("HTML Buffer Manager utils - removeCuesInfosBetween", () => {
   it("should remove cues infos between end of a cue and start of another cue", () => {
     const element = document.createElement("div");
-    const cues = [
-      { start: 1, end: 2, element },
-      { start: 2, end: 3, element },
-      { start: 3, end: 4, element },
-      { start: 4, end: 5, element },
-      { start: 5, end: 6, element },
-    ];
+    const cues = [ { start: 1, end: 2, element },
+                   { start: 2, end: 3, element },
+                   { start: 3, end: 4, element },
+                   { start: 4, end: 5, element },
+                   { start: 5, end: 6, element } ];
 
-    const cueInfo = {
-      start: 1,
-      end: 6,
-      cues,
-    };
+    const cueInfo = { start: 1,
+                      end: 6,
+                      cues };
 
     expect(removeCuesInfosBetween(cueInfo, 2, 5)).toEqual([
       { cues: [{ start: 1, end: 2, element }], start: 1, end: 2 },
-      { cues: [], start: 5, end: 6 },
+      { cues: [{ start: 5, end: 6, element }], start: 5, end: 6 },
     ]);
   });
 
@@ -290,15 +292,19 @@ describe("HTML Buffer Manager utils - removeCuesInfosBetween", () => {
       { start: 5, end: 6, element },
     ];
 
-    const cueInfo = {
-      start: 1,
-      end: 6,
-      cues,
-    };
+    const cueInfo = { start: 1,
+                      end: 6,
+                      cues };
 
     expect(removeCuesInfosBetween(cueInfo, 2.5, 4.5)).toEqual([
-      { cues: [{ start: 1, end: 2, element }], start: 1, end: 2.5 },
-      { cues: [{ start: 5, end: 6, element }], start: 4.5, end: 6 },
+      { cues: [ { start: 1, end: 2, element },
+                { start: 2, end: 3, element } ],
+              start: 1,
+              end: 2.5 },
+      { cues: [ { start: 4, end: 5, element },
+                { start: 5, end: 6, element } ],
+              start: 4.5,
+              end: 6 },
     ]);
   });
 
@@ -310,11 +316,9 @@ describe("HTML Buffer Manager utils - removeCuesInfosBetween", () => {
       { start: 5, end: 6, element },
     ];
 
-    const cueInfo = {
-      start: 1,
-      end: 6,
-      cues,
-    };
+    const cueInfo = { start: 1,
+                      end: 6,
+                      cues };
 
     expect(removeCuesInfosBetween(cueInfo, 2.5, 4.5)).toEqual([
       { cues: [{ start: 1, end: 2, element }], start: 1, end: 2.5 },
