@@ -73,11 +73,11 @@ function parseMP4EmbeddedTrack({ response,
         sidxSegments === null ||
         sidxSegments.length === 0
         ) &&
-        segment.indexRange === undefined
+        segment.privateInfos?.mightBeStaticContent === true
     ) {
       // There are very high chances that it is a static content, because :
       // - We've already loaded the init segment and found no sidx segments in it.
-      // - No index range was provided.
+      // - The segment indicates that content might be static
       // We just add a huge segment, without indicating an URL (which means it will take
       // the default one)
       representation.index._addSegments([{ time: 0,
