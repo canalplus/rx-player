@@ -69,19 +69,15 @@ function parseMP4EmbeddedTrack({ response,
     const completeInitChunk = shouldExtractCompleteInitChunk ?
       extractCompleteInitChunk(chunkBytes) : chunkBytes;
 
-    if (completeInitChunk === null &&
-      (
+    if ((
         sidxSegments === null ||
         sidxSegments.length === 0
-      ) &&
-      privateInfos?.mightBeStaticContent === true
+        ) &&
+        segment.indexRange === undefined
     ) {
-      // The manifest tells that it may be a static content, instead of a
-      // fragmented one, and we do not found :
-      // - An init segment, which could have told us that the content is fragmented
-      // - Next segments from a sidx, which explictely would have told that the
-      //   content is fragmented
-      // Thus, there are very high chances that it is a static content.
+      // There are very high chances that it is a static content, because :
+      // - We've already loaded the init segment and found no sidx segments in it.
+      // - No index range was provided.
       // We just add a huge segment, without indicating an URL (which means it will take
       // the default one)
       representation.index._addSegments([{ time: 0,

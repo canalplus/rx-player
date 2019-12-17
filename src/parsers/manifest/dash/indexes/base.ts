@@ -203,12 +203,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
       if (initSegment.privateInfos === undefined) {
         initSegment.privateInfos = {
           shouldGuessInitRange: true,
-          mightBeStaticContent: this._index.indexRange === undefined,
         };
       } else {
         initSegment.privateInfos.shouldGuessInitRange = true;
-        initSegment.privateInfos.mightBeStaticContent =
-          this._index.indexRange === undefined;
       }
     }
     return initSegment;

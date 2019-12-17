@@ -49,7 +49,6 @@ export interface IPrivateInfos {
   smoothInit? : ISmoothInitSegmentPrivateInfos;
   metaplaylistInfos? : IMetaPlaylistPrivateInfos;
   shouldGuessInitRange? : boolean;
-  mightBeStaticContent? : boolean;
 }
 
 // ISegment Object.
