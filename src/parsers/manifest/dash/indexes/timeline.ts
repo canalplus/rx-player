@@ -53,10 +53,10 @@ export interface ITimelineIndex {
                             // actually will look for a segment in the index
                             // beginning at:
                             // ``` T * timescale + indexTimeOffset ```
-  initialization? : { // information on the initialization segment
+  initialization : { // information on the initialization segment
     mediaURL: string; // URL to access the initialization segment
     range?: [number, number]; // possible byte range to request it
-  };
+  } | null;
   mediaURL : string; // base URL to access any segment. Can contain token to
                      // replace to convert it to a real URL
   startNumber? : number; // number from which the first segments in this index
@@ -264,8 +264,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._isDynamic = isDynamic;
     this._index = { indexRange: index.indexRange,
                     indexTimeOffset,
-                    initialization: index.initialization == null ?
-                      undefined :
+                    initialization: index.initialization === undefined ?
+                      null :
                       {
                         mediaURL: createIndexURL(representationBaseURL,
                                                  index.initialization.media,
@@ -289,7 +289,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * Construct init Segment.
    * @returns {Object}
    */
-  getInitSegment() : ISegment {
+  getInitSegment() : ISegment | null {
     return getInitSegment(this._index);
   }
 

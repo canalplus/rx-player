@@ -39,10 +39,10 @@ export interface ITemplateIndex {
 
   indexRange?: [number, number]; // byte range for a possible index of segments
                                  // in the server
-  initialization?: { // information on the initialization segment
+  initialization: { // information on the initialization segment
     mediaURL: string; // URL to access the initialization segment
     range?: [number, number]; // possible byte range to request it
-  };
+  } | null;
   mediaURL : string; // base URL to access any segment. Can contain token to
                      // replace to convert it to a real URL
   indexTimeOffset : number; // Temporal offset, in the current timescale (see
@@ -149,8 +149,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                     timescale,
                     indexRange: index.indexRange,
                     indexTimeOffset,
-                    initialization: index.initialization == null ?
-                      undefined :
+                    initialization: index.initialization === undefined ?
+                      null :
                       { mediaURL: createIndexURL(representationBaseURL,
                                                  index.initialization.media,
                                                  representationId,
@@ -172,7 +172,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * Construct init Segment.
    * @returns {Object}
    */
-  getInitSegment() : ISegment {
+  getInitSegment() : ISegment | null {
     return getInitSegment(this._index);
   }
 
