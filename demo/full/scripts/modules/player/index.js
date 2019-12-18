@@ -28,6 +28,7 @@ const PLAYER = ({ $destroy, state }, { videoElement, textTrackElement }) => {
   state.set({
     audioBitrate: undefined,
     audioBitrateAuto: true,
+    autoPlayBlocked: false,
     availableAudioBitrates: [],
     availableLanguages: [],
     availableSubtitles: [],
