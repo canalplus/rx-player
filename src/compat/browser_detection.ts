@@ -31,10 +31,14 @@ const isSamsungBrowser : boolean = /SamsungBrowser/.test(navigator.userAgent);
 
 const isSafari : boolean = /Safari/i.test(navigator.userAgent);
 
+const isSafariMobile : boolean = typeof navigator.platform === "string" &&
+                                 /iPad|iPhone|iPod/.test(navigator.platform);
+
 export {
   isIE11,
   isIEOrEdge,
   isFirefox,
   isSafari,
+  isSafariMobile,
   isSamsungBrowser,
 };

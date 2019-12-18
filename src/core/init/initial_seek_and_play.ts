@@ -31,6 +31,7 @@ import {
 import {
   play$,
   shouldValidateMetadata,
+  shouldWaitForDataBeforeLoaded,
   whenLoadedMetadata$,
 } from "../../compat";
 import log from "../../log";
@@ -58,13 +59,17 @@ function canPlay(
   const isLoaded$ = clock$.pipe(
     filter((tick) => {
       const { seeking, stalled, readyState, currentRange } = tick;
-      return !seeking &&
-             stalled == null &&
-             (readyState === 4 ||
-              readyState === 3 &&
-              currentRange != null) &&
-             (!shouldValidateMetadata() ||
-              mediaElement.duration > 0);
+      if (seeking || stalled !== null) {
+        return false;
+      }
+      if (!shouldWaitForDataBeforeLoaded()) {
+        return readyState >= 1 && mediaElement.duration > 0;
+      }
+      if (readyState >= 4 || (readyState === 3 && currentRange !== null)) {
+        return shouldValidateMetadata() ? mediaElement.duration > 0 :
+                                          true;
+      }
+      return false;
     }),
     take(1),
     mapTo("can-play" as "can-play")
