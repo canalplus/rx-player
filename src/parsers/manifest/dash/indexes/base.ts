@@ -104,30 +104,30 @@ export interface IBaseIndexContextArgument {
  * @returns {Boolean} - true if the segment has been added
  */
 function _addSegmentInfos(
-  index : IBaseIndex,
+  timeline: IIndexSegment[],
+  timescale: number,
   segmentInfos : { time : number;
                    duration : number;
                    timescale : number;
                    count?: number;
                    range?: [number, number]; }
 ) : boolean {
-  if (segmentInfos.timescale !== index.timescale) {
-    const { timescale } = index;
-    index.timeline.push({ start: (segmentInfos.time / segmentInfos.timescale)
-                                 * timescale,
-                          duration: (segmentInfos.duration / segmentInfos.timescale)
-                                    * timescale,
-                          repeatCount: segmentInfos.count === undefined ?
-                            0 :
-                            segmentInfos.count,
-                          range: segmentInfos.range });
+  if (segmentInfos.timescale !== timescale) {
+    timeline.push({ start: (segmentInfos.time / segmentInfos.timescale)
+                           * timescale,
+                    duration: (segmentInfos.duration / segmentInfos.timescale)
+                              * timescale,
+                    repeatCount: segmentInfos.count === undefined ?
+                      0 :
+                      segmentInfos.count,
+                    range: segmentInfos.range });
   } else {
-    index.timeline.push({ start: segmentInfos.time,
-                          duration: segmentInfos.duration,
-                          repeatCount: segmentInfos.count === undefined ?
-                            0 :
-                            segmentInfos.count,
-                          range: segmentInfos.range });
+    timeline.push({ start: segmentInfos.time,
+                    duration: segmentInfos.duration,
+                    repeatCount: segmentInfos.count === undefined ?
+                      0 :
+                      segmentInfos.count,
+                    range: segmentInfos.range });
   }
   return true;
 }
@@ -175,9 +175,11 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
       )) {
         if (index.timeline.length === 0 &&
             index.indexRange === undefined) {
-          this._addSegments([{ time: 0,
-                               duration: Number.MAX_VALUE,
-                               timescale: 1 }]);
+          _addSegmentInfos(index.timeline,
+                           index.timescale,
+                           { time: 0,
+                             duration: Number.MAX_VALUE,
+                             timescale: 1 });
         }
         initialization = null;
     } else {
@@ -293,7 +295,8 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
                                       range? : [number, number]; }>
   ) : void {
     for (let i = 0; i < nextSegments.length; i++) {
-      _addSegmentInfos(this._index, nextSegments[i]);
+      const { timeline, timescale } = this._index;
+      _addSegmentInfos(timeline, timescale, nextSegments[i]);
     }
   }
 
