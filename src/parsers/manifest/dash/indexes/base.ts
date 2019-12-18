@@ -167,24 +167,27 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
                                     representationId,
                                     representationBitrate);
 
-    // TODO If indexRange is behind the initialization segment
-    // the following logic will not work.
-
-    const initialization = (() => {
-      if (index.initialization === undefined &&
-          (
-            mimeType === undefined ||
-            /\/mp4$/.exec(mimeType) === null
-          )
-        ) {
-        return null; // no init segment in content
-      }
-
+    let initialization;
+    if (index.initialization === undefined &&
+      (
+        mimeType === undefined ||
+        /\/mp4$/.exec(mimeType) === null
+      )) {
+        if (index.timeline.length === 0 &&
+            index.indexRange === undefined) {
+          this._addSegments([{ time: 0,
+                               duration: Number.MAX_VALUE,
+                               timescale: 1 }]);
+        }
+        initialization = null;
+    } else {
+      // TODO If indexRange is behind the initialization segment
+      // the following logic will not work.
       const range = index.initialization?.range ??
         (index.indexRange !== undefined ? [0, index.indexRange[0] - 1] :
                                           undefined);
-      return { mediaURL, range }; // there may be an init segment
-    })();
+      initialization = { mediaURL, range }; // there may be an init segment
+    }
 
     this._index = { indexRange: index.indexRange,
                     indexTimeOffset,
@@ -197,13 +200,6 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
                     timeline: index.timeline,
                     timescale };
 
-    if (initialization === null &&
-        index.timeline.length === 0 &&
-        index.indexRange === undefined) {
-      this._addSegments([{ time: 0,
-                           duration: Number.MAX_VALUE,
-                           timescale: 1 }]);
-    }
     this._scaledPeriodEnd = periodEnd == null ? undefined :
                                                 toIndexTime(periodEnd, this._index);
   }
