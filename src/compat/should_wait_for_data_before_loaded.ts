@@ -21,8 +21,11 @@ import { isSafariMobile } from "./browser_detection";
  * blocked. On these cases, for now, we just advertise the content as "loaded".
  * We might go into BUFFERING just after that state, but that's a small price to
  * pay.
+ * @param {Boolean} isDirectfile
  * @returns {Boolean}
  */
-export default function shouldWaitForDataBeforeLoaded() : boolean {
-  return !isSafariMobile;
+export default function shouldWaitForDataBeforeLoaded(
+  isDirectfile : boolean
+) : boolean {
+  return !isDirectfile || !isSafariMobile;
 }

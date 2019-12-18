@@ -147,8 +147,11 @@ export default function createMediaSourceLoader({
     //    does not support adding more tracks during playback.
     createNativeSourceBuffersForPeriod(sourceBuffersStore, initialPeriod);
 
-    const { seek$, load$ } =
-      seekAndLoadOnMediaEvents(clock$, mediaElement, initialTime, autoPlay);
+    const { seek$, load$ } = seekAndLoadOnMediaEvents({ clock$,
+                                                        mediaElement,
+                                                        startTime: initialTime,
+                                                        mustAutoPlay: autoPlay,
+                                                        isDirectfile: false });
 
     const initialPlay$ = load$.pipe(filter((evt) => evt !== "not-loaded-metadata"));
     const bufferClock$ = createBufferClock(clock$, { autoPlay,

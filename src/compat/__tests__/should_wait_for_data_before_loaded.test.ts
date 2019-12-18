@@ -20,7 +20,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     jest.resetModules();
   });
 
-  it("should return true if we are not on Safari browser", () => {
+  it("should return true if we are not on Safari browser nor in directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
         __esModule: true,
@@ -29,10 +29,24 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     });
     const shouldWaitForDataBeforeLoaded =
       require("../should_wait_for_data_before_loaded");
-    expect(shouldWaitForDataBeforeLoaded.default()).toBe(true);
+    expect(shouldWaitForDataBeforeLoaded.default(false)).toBe(true);
   });
 
-  it("should return false if we are on the Safari browser", () => {
+  it("should return true if we are not on Safari browser but in directfile mode", () => {
+    jest.mock("../browser_detection", () => {
+      return {
+        __esModule: true,
+        isSafariMobile: false,
+      };
+    });
+    const shouldWaitForDataBeforeLoaded =
+      require("../should_wait_for_data_before_loaded");
+    expect(shouldWaitForDataBeforeLoaded.default(true)).toBe(true);
+  });
+
+  /* tslint:disable max-line-length */
+  it("should return true if we are on the Safari browser but not in directfile mode", () => {
+  /* tslint:enable max-line-length */
     jest.mock("../browser_detection", () => {
       return {
         __esModule: true,
@@ -41,7 +55,19 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     });
     const shouldWaitForDataBeforeLoaded =
       require("../should_wait_for_data_before_loaded");
-    expect(shouldWaitForDataBeforeLoaded.default()).toBe(false);
+    expect(shouldWaitForDataBeforeLoaded.default(false)).toBe(true);
+  });
+
+  it("should return false if we are on the Safari browser and in directfile mode", () => {
+    jest.mock("../browser_detection", () => {
+      return {
+        __esModule: true,
+        isSafariMobile: true,
+      };
+    });
+    const shouldWaitForDataBeforeLoaded =
+      require("../should_wait_for_data_before_loaded");
+    expect(shouldWaitForDataBeforeLoaded.default(true)).toBe(false);
   });
   beforeEach(() => {
     jest.resetModules();

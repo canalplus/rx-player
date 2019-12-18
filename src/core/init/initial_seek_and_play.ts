@@ -54,7 +54,8 @@ export type ILoadEvents =
  */
 function canPlay(
   clock$ : Observable<IInitClockTick>,
-  mediaElement : HTMLMediaElement
+  mediaElement : HTMLMediaElement,
+  isDirectfile : boolean
 ) : Observable<"can-play"|"not-loaded-metadata"> {
   const isLoaded$ = clock$.pipe(
     filter((tick) => {
@@ -62,7 +63,7 @@ function canPlay(
       if (seeking || stalled !== null) {
         return false;
       }
-      if (!shouldWaitForDataBeforeLoaded()) {
+      if (!shouldWaitForDataBeforeLoaded(isDirectfile)) {
         return readyState >= 1 && mediaElement.duration > 0;
       }
       if (readyState >= 4 || (readyState === 3 && currentRange !== null)) {
@@ -119,17 +120,19 @@ function autoPlay$(
  *     When this observable emits, it also means that the content is `loaded`
  *     and can begin to play the current content.
  *
- * @param {HTMLMediaElement} mediaElement
- * @param {number|Function} startTime - Initial starting position. As seconds
- * or as a function returning seconds.
- * @param {boolean} autoPlay - Whether the player should auto-play
- * @returns {object}
+ * @param {Object} args
+ * @returns {Object}
  */
 export default function seekAndLoadOnMediaEvents(
-  clock$ : Observable<IInitClockTick>,
-  mediaElement : HTMLMediaElement,
-  startTime : number|(() => number),
-  mustAutoPlay : boolean
+  { clock$,
+    mediaElement,
+    startTime,
+    mustAutoPlay,
+    isDirectfile } : { clock$ : Observable<IInitClockTick>;
+                       isDirectfile : boolean;
+                       mediaElement : HTMLMediaElement;
+                       mustAutoPlay : boolean;
+                       startTime : number|(() => number); }
 ) : { seek$ : Observable<unknown>; load$ : Observable<ILoadEvents> } {
   const seek$ = whenLoadedMetadata$(mediaElement).pipe(
     take(1),
@@ -143,7 +146,7 @@ export default function seekAndLoadOnMediaEvents(
 
   const load$ : Observable<ILoadEvents> = seek$.pipe(
     mergeMap(() => {
-      return canPlay(clock$, mediaElement).pipe(
+      return canPlay(clock$, mediaElement, isDirectfile).pipe(
         tap(() => log.info("Init: Can begin to play content")),
         mergeMap((evt) => {
           if (evt === "can-play") {
