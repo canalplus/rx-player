@@ -170,11 +170,13 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     // TODO If indexRange is behind the initialization segment
     // the following logic will not work.
 
-    const isMP4 = mimeType !== undefined &&
-                  /\/mp4$/.exec(mimeType) !== null;
-
     const initialization = (() => {
-      if (index.initialization === undefined && !isMP4) {
+      if (index.initialization === undefined &&
+          (
+            mimeType === undefined ||
+            /\/mp4$/.exec(mimeType) === null
+          )
+        ) {
         return null; // no init segment in content
       }
 
@@ -215,14 +217,10 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     if (initSegment !== null && initSegment.range === undefined) {
       const mightBeStaticContent = initSegment.indexRange === undefined;
       if (initSegment.privateInfos === undefined) {
-        initSegment.privateInfos = {
-          shouldGuessInitRange: true,
-          mightBeStaticContent,
-        };
-      } else {
-        initSegment.privateInfos.shouldGuessInitRange = true;
-        initSegment.privateInfos.mightBeStaticContent = mightBeStaticContent;
+        initSegment.privateInfos = {};
       }
+      initSegment.privateInfos.shouldGuessInitRange = true;
+      initSegment.privateInfos.mightBeStaticContent = mightBeStaticContent;
     }
     return initSegment;
   }
