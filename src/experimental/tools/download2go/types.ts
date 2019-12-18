@@ -32,7 +32,7 @@ export interface IInitSettings {
   metaData?: {
     [prop: string]: any;
   };
-  adv?: IAdvancedSettings;
+  advanced?: IAdvancedSettings;
   keySystems?: IKeySystemOption;
 }
 

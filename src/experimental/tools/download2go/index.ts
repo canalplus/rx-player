@@ -54,7 +54,7 @@ import {
  * @return {IPublicAPI} IPublicAPI
  */
 class D2G extends EventEmitter<IDownload2GoEvents> {
-  static isD2GSupportedForEncryption(): Promise<boolean> {
+  static isPeristantLicenseSupported(): Promise<boolean> {
     return isSupported();
   }
 
