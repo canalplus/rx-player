@@ -54,7 +54,7 @@ import {
  * @return {IPublicAPI} IPublicAPI
  */
 class D2G extends EventEmitter<IDownload2GoEvents> {
-  static isPeristantLicenseSupported(): Promise<boolean> {
+  static isPersistentLicenseSupported(): Promise<boolean> {
     return isSupported();
   }
 
@@ -82,7 +82,7 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
    * Initialize an IndexDB instance.
    * @returns {Promise<void>}
    */
-  async initDB(): Promise<IDBPDatabase> {
+  initDB(): Promise<IDBPDatabase> {
     return new Promise((resolve, reject) => {
       setUpDb(this.nameDB)
         .then(db => {
