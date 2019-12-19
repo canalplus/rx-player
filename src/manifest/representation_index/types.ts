@@ -48,8 +48,8 @@ export interface IMetaPlaylistPrivateInfos { transportType : string;
 export interface IPrivateInfos {
   smoothInit? : ISmoothInitSegmentPrivateInfos;
   metaplaylistInfos? : IMetaPlaylistPrivateInfos;
-  // There may be an init range on a probable init
-  // segment, but we don't it. It should be guessed.
+  // There may be an init range but we don't know it.
+  // It should be guessed when fetching.
   shouldGuessInitRange? : boolean;
   // If nothing seems to indicate us that content is
   // fragmented, it might be a static content.
