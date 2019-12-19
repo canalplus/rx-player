@@ -212,6 +212,13 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    */
   getInitSegment() : ISegment | null {
     const initSegment = getInitSegment(this._index);
+    // /!\ This logic is considered good if and only if the init segment
+    // has the same media URL than the rest of the content.
+    // However, in a segment base configuration, we consider that there may
+    // be a unique URL for both because :
+    // - The segment base concept is to rely on a unique segment, with a unique URL,
+    //   for init and index (there may not exist), and content.
+    // - We have never encountered any kind of this special configuration
     if (initSegment !== null) {
       const shouldGuessInitRange = initSegment.range === undefined;
       const mightBeStaticContent = initSegment.indexRange === undefined;
