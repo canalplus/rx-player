@@ -78,15 +78,12 @@ export default function parser({ content,
     const completeInitChunk = privateInfos?.shouldGuessInitRange === true ?
       extractCompleteInitChunk(chunkData) : chunkData;
 
-    if ((
-          nextSegments === null ||
-          nextSegments.length === 0
-        ) &&
+    if ((nextSegments === null || nextSegments.length === 0) &&
         segment.privateInfos?.mightBeStaticContent === true
     ) {
       // There are very high chances that it is a static content, because :
-      // - We've already loaded the init segment and found no sidx segments in it.
       // - The segment indicates that content might be static
+      // - We've already loaded the init segment and found no sidx segments in it.
       // We just add a huge segment, without indicating an URL (which means it will take
       // the default one)
       representation.index._addSegments([{ time: 0,
