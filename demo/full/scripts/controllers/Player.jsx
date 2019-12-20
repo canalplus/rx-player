@@ -18,6 +18,7 @@ class Player extends React.Component {
     super(...args);
     this.state = {
       player: null,
+      autoPlayBlocked: false,
       displaySpinner: false,
       displaySettings: false,
       isStopped: true,
@@ -34,16 +35,22 @@ class Player extends React.Component {
     this._$destroySubject.subscribe(() => player.destroy());
 
     // update isStopped and displaySpinner
-    player.$get("isSeeking", "isBuffering", "isLoading", "isReloading", "isStopped")
+    player.$get("autoPlayBlocked" ,
+                "isSeeking",
+                "isBuffering",
+                "isLoading",
+                "isReloading",
+                "isStopped")
       .pipe(takeUntil(this._$destroySubject))
       .subscribe(([
+        autoPlayBlocked,
         isSeeking,
         isBuffering,
         isLoading,
         isReloading,
         isStopped,
       ]) => {
-        this.setState({ isStopped });
+        this.setState({ autoPlayBlocked, isStopped });
         if (isLoading || isReloading) {
           this.setState({ displaySpinner: true });
         } else if (isSeeking || isBuffering) {
@@ -98,7 +105,10 @@ class Player extends React.Component {
   }
 
   render() {
-    const { player, displaySpinner, isStopped } = this.state;
+    const { player,
+            autoPlayBlocked,
+            displaySpinner,
+            isStopped } = this.state;
 
     const loadVideo = (video) => {
       if (video.lowLatencyMode) {
@@ -136,7 +146,17 @@ class Player extends React.Component {
               >
                 <ErrorDisplayer player={player} />
                 {
-                  displaySpinner ?
+                  autoPlayBlocked ?
+                    <div className="video-player-manual-play-container" >
+                      <img
+                        className="video-player-manual-play"
+                        alt="Play"
+                        src="./assets/play.svg"/>
+                    </div> :
+                    null
+                }
+                {
+                  !autoPlayBlocked && displaySpinner ?
                     <img
                       src="./assets/spinner.gif"
                       className="video-player-spinner"
