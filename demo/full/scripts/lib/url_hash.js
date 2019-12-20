@@ -122,20 +122,22 @@ export function parseHashInURL(hashStr) {
  */
 export function generateLinkForCustomContent({
   autoPlay, // true if autoPlay should be on
-  drmType, // enabled DRM
-  fallbackKeyError,
-  fallbackLicenseRequest,
+  chosenDRMType, // DRM Choice
+  customKeySystem, // key system of a custom DRM if one
+  fallbackKeyError, // `true` if the corresponding switch is enabled
+  fallbackLicenseRequest, // `true` if the corresponding switch is enabled
   licenseServerUrl,
-  lowLatency,
+  lowLatency, // True if the low-latency switch is enabled
   manifestURL,
   serverCertificateUrl,
-  transport,
+  transport, // Choice for the transport protocol
 }) {
   let urlString = "";
   let transportString = "";
   let licenseServerUrlString = "";
   let serverCertificateUrlString = "";
   let drmTypeString = "";
+  let customKeySystemString = "";
   if (manifestURL) {
     urlString = "\\manifest_" +
                 manifestURL.length.toString(36) +
@@ -146,10 +148,15 @@ export function generateLinkForCustomContent({
                       transport.length.toString(36) +
                       "=" + transport;
   }
-  if (drmType) {
+  if (chosenDRMType) {
     drmTypeString = "\\drm_" +
-                    drmType.length.toString(36) +
-                    "=" + drmType;
+                    chosenDRMType.length.toString(36) +
+                    "=" + chosenDRMType;
+  }
+  if (customKeySystem) {
+    customKeySystemString = "\\customKeySystem_" +
+                            customKeySystem.length.toString(36) +
+                            "=" + customKeySystem;
   }
   if (licenseServerUrl) {
     licenseServerUrlString = "\\licenseServ_" +
@@ -179,6 +186,7 @@ export function generateLinkForCustomContent({
          transportString +
          urlString +
          drmTypeString +
+         customKeySystemString +
          licenseServerUrlString +
          serverCertificateUrlString;
 }

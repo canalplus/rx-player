@@ -15,6 +15,7 @@ import FocusedTextInput from "../components/FocusedInput.jsx";
 import TextInput from "../components/Input.jsx";
 import Select from "../components/Select.jsx";
 import contentsDatabase from "../contents.js";
+import GeneratedLinkURL from "../components/GenerateLinkURL.jsx"
 import GenerateLinkButton from "../components/GenerateLinkButton.jsx";
 
 const MediaKeys_ = window.MediaKeys ||
@@ -35,8 +36,10 @@ const HAS_EME_APIs = (
 
 const IS_HTTPS = window.location.protocol.startsWith("https");
 
+const CUSTOM_DRM_NAME = "Other";
+
 const TRANSPORT_TYPES = ["DASH", "Smooth", "DirectFile", "MetaPlaylist"];
-const DRM_TYPES = ["Widevine", "Playready", "Clearkey"];
+const DRM_TYPES = ["Widevine", "Playready", "Clearkey", CUSTOM_DRM_NAME];
 
 const DISABLE_ENCRYPTED_CONTENT = !HAS_EME_APIs && !IS_HTTPS;
 
@@ -59,10 +62,7 @@ function formatContent(content) {
       displayName = "[HTTP only] " + displayName;
       isDisabled = true;
     }
-  } else if (!HAS_EME_APIs &&
-             content.drmInfos &&
-               content.drmInfos.length)
-  {
+  } else if (!HAS_EME_APIs && content.drmInfos && content.drmInfos.length) {
     displayName = "[HTTPS only] " + displayName;
     isDisabled = true;
   }
@@ -146,7 +146,12 @@ function generateLinkForContent(
     content.drmInfos[0].serverCertificateUrl;
   return generateLinkForCustomContent({
     autoPlay,
-    drmType: content.drmInfos && content.drmInfos[0] && content.drmInfos[0].drm,
+    chosenDRMType: content.drmInfos &&
+      content.drmInfos[0] &&
+      content.drmInfos[0].drm,
+    customKeySystem: content.drmInfos &&
+      content.drmInfos[0] &&
+      content.drmInfos[0].customKeySystem,
     fallbackKeyError,
     fallbackLicenseRequest,
     manifestURL: content.url,
@@ -187,6 +192,31 @@ function getIndexOfFirstEnabledContent(contentList) {
   return contentChoiceIndex;
 }
 
+/**
+ * @param {Array.<Object>} drmInfos
+ * @param {Object} fallbacks
+ * @returns {Promise.<Array.<Object>>}
+ */
+function getKeySystemsOption(
+  drmInfos,
+  { fallbackKeyError,
+    fallbackLicenseRequest },
+) {
+  const wantedDRMs = drmInfos
+    .map(drmInfo => ({
+      drm: drmInfo.drm === CUSTOM_DRM_NAME ?
+        drmInfo.customKeySystem :
+        drmInfo.drm,
+      licenseServerUrl: drmInfo.licenseServerUrl,
+      serverCertificateUrl: drmInfo.serverCertificateUrl,
+      fallbackKeyError,
+      fallbackLicenseRequest,
+    }))
+    .filter(drmInfo => drmInfo.drm !== undefined);
+
+  return parseDRMConfigurations(wantedDRMs);
+}
+
 class ContentList extends React.Component {
   constructor(...args) {
     super(...args);
@@ -198,7 +228,8 @@ class ContentList extends React.Component {
                    contentChoiceIndex: 0,
                    contentNameField: "",
                    contentsPerType,
-                   currentDRMType: DRM_TYPES[0],
+                   chosenDRMType: DRM_TYPES[0],
+                   customKeySystem: "",
                    currentManifestURL: "",
                    displayGeneratedLink: false,
                    displayDRMSettings: false,
@@ -229,11 +260,13 @@ class ContentList extends React.Component {
                            lowLatencyChecked: tech === "DASH" && !!lowLatency,
                            transportType: tech };
 
-        const drmType = DRM_TYPES.includes(parsedHash.drm) ?
-          parsedHash.drm : undefined;
-        if (drmType !== undefined) {
+        const chosenDRMType = DRM_TYPES.includes(parsedHash.drm) ?
+          parsedHash.drm :
+          undefined;
+        if (chosenDRMType !== undefined) {
           newState.displayDRMSettings = true;
-          newState.currentDRMType = drmType;
+          newState.chosenDRMType = chosenDRMType;
+          newState.customKeySystem = parsedHash.customKeySystem || "";
           newState.licenseServerUrl = parsedHash.licenseServ || "";
           newState.serverCertificateUrl = parsedHash.certServ || "";
         }
@@ -270,8 +303,8 @@ class ContentList extends React.Component {
             isLowLatency,
             drmInfos = [] } = content;
 
-    parseDRMConfigurations(drmInfos,
-                           { fallbackLicenseRequest, fallbackKeyError })
+    getKeySystemsOption(drmInfos, { fallbackKeyError,
+                                    fallbackLicenseRequest })
       .then((keySystems) => {
         loadVideo({ url,
                     transport,
@@ -296,16 +329,12 @@ class ContentList extends React.Component {
             fallbackKeyError,
             fallbackLicenseRequest } = this.state;
 
-    parseDRMConfigurations(drmInfos,
-                           { fallbackLicenseRequest, fallbackKeyError })
+    getKeySystemsOption(drmInfos, { fallbackKeyError,
+                                    fallbackLicenseRequest })
       .then((keySystems) => {
         loadVideo({ url,
                     transport: this.state.transportType.toLowerCase(),
                     autoPlay,
-
-                    // native browser subtitles engine (VTTCue) doesn"t render
-                    // stylized subs.  We force HTML textTrackMode to vizualise
-                    // styles.
                     textTrackMode: "html",
                     keySystems,
                     lowLatencyMode: lowLatencyChecked });
@@ -319,7 +348,8 @@ class ContentList extends React.Component {
   changeTransportType(transportType) {
     this.setState({ contentChoiceIndex: 0,
                     contentNameField: "",
-                    currentDRMType: DRM_TYPES[0],
+                    chosenDRMType: DRM_TYPES[0],
+                    customKeySystem: "",
                     currentManifestURL: "",
                     displayDRMSettings: false,
                     displayGeneratedLink: false,
@@ -340,6 +370,7 @@ class ContentList extends React.Component {
   changeSelectedContent(index, content) {
     let currentManifestURL = "";
     let contentNameField = "";
+    let customKeySystem  = "";
     let licenseServerUrl = "";
     let serverCertificateUrl = "";
     const hasDRMSettings = content.drmInfos != null &&
@@ -352,12 +383,14 @@ class ContentList extends React.Component {
     const isLowLatency = !!content.isLowLatency;
     if (hasDRMSettings) {
       drm = content.drmInfos[0].drm;
+      customKeySystem = content.drmInfos[0].customKeySystem || "";
       licenseServerUrl = content.drmInfos[0].licenseServerUrl;
       serverCertificateUrl = content.drmInfos[0].serverCertificateUrl;
     }
     this.setState({ contentChoiceIndex: index,
                     contentNameField,
-                    currentDRMType: drm != null ? drm : DRM_TYPES[0],
+                    chosenDRMType: drm != null ? drm : DRM_TYPES[0],
+                    customKeySystem,
                     currentManifestURL,
                     displayDRMSettings: hasDRMSettings,
                     displayGeneratedLink: false,
@@ -374,7 +407,8 @@ class ContentList extends React.Component {
             contentChoiceIndex,
             contentNameField,
             contentsPerType,
-            currentDRMType,
+            chosenDRMType,
+            customKeySystem,
             currentManifestURL,
             displayGeneratedLink,
             displayDRMSettings,
@@ -387,6 +421,7 @@ class ContentList extends React.Component {
             transportType } = this.state;
 
     const isCustomContent = contentChoiceIndex === 0;
+    const isCustomDRM = chosenDRMType === CUSTOM_DRM_NAME;
 
     const contentsToSelect = contentsPerType[transportType];
     const chosenContent = contentsToSelect[contentChoiceIndex];
@@ -396,8 +431,11 @@ class ContentList extends React.Component {
       generatedLink = contentChoiceIndex === 0 || isSavingOrUpdating ?
         generateLinkForCustomContent({
           autoPlay,
-          drmType: displayDRMSettings ?
-            currentDRMType :
+          chosenDRMType: displayDRMSettings ?
+            chosenDRMType :
+            undefined,
+          customKeySystem: displayDRMSettings ?
+            customKeySystem :
             undefined,
           fallbackKeyError,
           fallbackLicenseRequest,
@@ -442,7 +480,8 @@ class ContentList extends React.Component {
       if (contentChoiceIndex === 0) {
         const drmInfos = [{ licenseServerUrl,
                             serverCertificateUrl,
-                            drm: currentDRMType }];
+                            drm: chosenDRMType,
+                            customKeySystem }];
         this.loadUrl(currentManifestURL, drmInfos, autoPlay);
       } else {
         this.loadContent(contentsToSelect[contentChoiceIndex]);
@@ -457,7 +496,8 @@ class ContentList extends React.Component {
                               lowLatency: lowLatencyChecked,
                               transport: transportType.toLowerCase(),
                               drmInfos: displayDRMSettings ?
-                                [ { drm: currentDRMType,
+                                [ { drm: chosenDRMType,
+                                    customKeySystem,
                                     licenseServerUrl,
                                     serverCertificateUrl } ] :
                                 undefined,
@@ -514,6 +554,9 @@ class ContentList extends React.Component {
     const onManifestInput = (evt) =>
       this.setState({ currentManifestURL: evt.target.value });
 
+    const onCustomKeySystemInput = (evt) =>
+      this.setState({ customKeySystem: evt.target.value });
+
     const onLicenseServerInput = (evt) =>
       this.setState({ licenseServerUrl: evt.target.value });
 
@@ -539,7 +582,11 @@ class ContentList extends React.Component {
     };
 
     const onDRMTypeClick = (type) => {
-      this.setState({ currentDRMType: type });
+      if (chosenDRMType === type) {
+        return;
+      }
+      this.setState({ chosenDRMType: type,
+                      customKeySystem: "" });
     };
 
     const onCancel = () => {
@@ -553,7 +600,7 @@ class ContentList extends React.Component {
       return DRM_TYPES.map(type =>
         <Button
           className={"choice-input-button drm-button" +
-            (currentDRMType === type ? " selected" : "")}
+            (chosenDRMType === type ? " selected" : "")}
           onClick={() => onDRMTypeClick(type)}
           value={type}
         />);
@@ -580,17 +627,8 @@ class ContentList extends React.Component {
       <div className="choice-inputs-wrapper">
         <span className={"generated-url" + (displayGeneratedLink ? " enabled" : "")}>
           { displayGeneratedLink ?
-            [
-              "URL : ",
-              generatedLink ?
-                <a className="generated-url-link" href={generatedLink}>
-                  {generatedLink}
-                </a> :
-                <a className="generated-url-link none">
-                  Not a valid content!
-                </a>,
-            ] : ""
-          }
+            <GeneratedLinkURL url={generatedLink} /> :
+            null }
         </span>
         <div className="content-inputs">
           <div className="content-inputs-selects">
@@ -728,6 +766,17 @@ class ContentList extends React.Component {
                         <div className="drm-choice">
                           {generateDRMButtons()}
                         </div>
+                        { isCustomDRM ?
+                          <div>
+                            <TextInput
+                              ariaLabel={"Key system reverse domain name (e.g. \"org.w3.clearkey\")"}
+                              className="choice-input text-input"
+                              onChange={onCustomKeySystemInput}
+                              value={customKeySystem}
+                              placeholder={"Key system (reverse domain name)"}
+                            />
+                          </div> :
+                          null }
                         <div>
                           <TextInput
                             ariaLabel="URL for the license server"
