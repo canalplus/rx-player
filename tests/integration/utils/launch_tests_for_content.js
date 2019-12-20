@@ -573,7 +573,7 @@ export default function launchTestsForContent(
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        await sleep(200);
+        await sleep(500);
 
         const initialBufferGap = player.getVideoBufferGap();
         expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.1);
@@ -582,7 +582,7 @@ export default function launchTestsForContent(
 
         xhrMock.lock();
         player.seekTo(minimumPosition + 5);
-        await sleep(200);
+        await sleep(300);
         expect(player.getVideoLoadedTime()).to.be
           .closeTo(initialBufferGap, 0.1);
 
