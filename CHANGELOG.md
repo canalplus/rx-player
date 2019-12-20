@@ -1,5 +1,19 @@
 # Changelog
 
+## v3.17.1 (2019/12/20)
+
+### Bug fixes
+
+  - dash/metaplaylist: fix infinite rebuffering issue when refreshing multi-Period contents under specific conditions
+  - buffer: be less aggressive when garbage collecting subtitles (if the maxBufferAhead/maxBufferBehind options are set) to avoid useful subtitles being removed
+  - directfile/compat: for directfile contents, trigger directly the LOADED state on iOS/iPad/iPod browsers as those are not preloaded there
+
+### Other improvements
+
+  - demo: display clickable "play" button on the video element when autoplay is blocked due to browser policies - to help users unlock the situation
+  - demo: add "Other" key system to allow specifying a custom key system in the demo page
+
+
 ## v3.17.0 (2019/12/09)
 
 ### Features
