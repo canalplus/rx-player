@@ -162,6 +162,50 @@ export default class TextBufferManager {
   insert(cues : IHTMLCue[], start : number, end : number) : void {
     const cuesBuffer = this._cuesBuffer;
     const cuesInfosToInsert = { start, end, cues };
+
+    /**
+     * Called when we found the index of the next cue relative to the cue we
+     * want to insert (that is a cue starting after its start or at the same
+     * time but ending strictly after its end).
+     * Will insert the cue at the right place and update the next cue
+     * accordingly.
+     * @param {number} indexOfNextCue
+     */
+    function onIndexOfNextCueFound(indexOfNextCue : number) : void {
+      const nextCue = cuesBuffer[indexOfNextCue];
+      if (nextCue === undefined || // no cue
+          areNearlyEqual(cuesInfosToInsert.end, nextCue.end)) // samey end
+      {
+        //   ours:            |AAAAA|
+        //   the current one: |BBBBB|
+        //   Result:          |AAAAA|
+        cuesBuffer[indexOfNextCue] = cuesInfosToInsert;
+      } else if (nextCue.start >= cuesInfosToInsert.end) {
+        // Either
+        //   ours:            |AAAAA|
+        //   the current one:         |BBBBBB|
+        //   Result:          |AAAAA| |BBBBBB|
+        // Or:
+        //   ours:            |AAAAA|
+        //   the current one:       |BBBBBB|
+        //   Result:          |AAAAA|BBBBBB|
+        // Add ours before
+        cuesBuffer.splice(indexOfNextCue, 0, cuesInfosToInsert);
+      } else {
+        // Either
+        //   ours:            |AAAAA|
+        //   the current one: |BBBBBBBB|
+        //   Result:          |AAAAABBB|
+        // Or:
+        //   ours:            |AAAAA|
+        //   the current one:    |BBBBB|
+        //   Result:          |AAAAABBB|
+        nextCue.cues = getCuesAfter(nextCue.cues, cuesInfosToInsert.end);
+        nextCue.start = cuesInfosToInsert.end;
+        cuesBuffer.splice(indexOfNextCue, 0, cuesInfosToInsert);
+      }
+    }
+
     for (let i = 0; i < cuesBuffer.length; i++) {
       let cuesInfos = cuesBuffer[i];
       if (start < cuesInfos.end) {
@@ -200,42 +244,8 @@ export default class TextBufferManager {
             cuesBuffer.splice(i, 1);
             cuesInfos = cuesBuffer[i];
           } while (cuesInfos !== undefined && end > cuesInfos.end);
-
-          if (
-            cuesInfos === undefined || // There is no cue here
-            areNearlyEqual(end, cuesInfos.end) // this cue has the same end
-          ) {
-            // put in place
-            cuesBuffer[i] = cuesInfosToInsert;
-            return;
-          }
-
-          if (cuesInfos.start >= end) {
-            // Either
-            //   ours:            |AAAAA|
-            //   the current one:         |BBBBBB|
-            //   Result:          |AAAAA| |BBBBBB|
-            // Or:
-            //   ours:            |AAAAA|
-            //   the current one:       |BBBBBB|
-            //   Result:          |AAAAA|BBBBBB|
-            // Add ours before
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
-            return;
-          } else {
-            // Either
-            //   ours:            |AAAAA|
-            //   the current one: |BBBBBBBB|
-            //   Result:          |AAAAABBB|
-            // Or:
-            //   ours:            |AAAAA|
-            //   the current one:    |BBBBB|
-            //   Result:          |AAAAABBB|
-            cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
-            cuesInfos.start = end;
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
-            return;
-          }
+          onIndexOfNextCueFound(i);
+          return;
         } else if (start < cuesInfos.start) {
           if (end < cuesInfos.start) {
             // our cue goes strictly before the current one:
@@ -281,42 +291,8 @@ export default class TextBufferManager {
             cuesBuffer.splice(i, 1);
             cuesInfos = cuesBuffer[i];
           } while (cuesInfos !== undefined && end > cuesInfos.end);
-
-          if (
-            cuesInfos === undefined || // There is no cue here
-            areNearlyEqual(end, cuesInfos.end) // this cue has the same end
-          ) {
-            // put in place
-            cuesBuffer[i] = cuesInfosToInsert;
-            return;
-          }
-
-          if (cuesInfos.start >= end) {
-            // Either
-            //   ours:            |AAAAA|
-            //   the current one:         |BBBBBB|
-            //   Result:          |AAAAA| |BBBBBB|
-            // Or:
-            //   ours:            |AAAAA|
-            //   the current one:       |BBBBBB|
-            //   Result:          |AAAAA|BBBBBB|
-            // Add ours before
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
-            return;
-          } else {
-            // Either
-            //   ours:            |AAAAA|
-            //   the current one: |BBBBBBBB|
-            //   Result:          |AAAAABBB|
-            // Or:
-            //   ours:            |AAAAA|
-            //   the current one:    |BBBBB|
-            //   Result:          |AAAAABBB|
-            cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
-            cuesInfos.start = end;
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
-            return;
-          }
+          onIndexOfNextCueFound(i);
+          return;
         }
         // else -> start > cuesInfos.start
 
@@ -350,42 +326,8 @@ export default class TextBufferManager {
             cuesBuffer.splice(i, 1);
             cuesInfos = cuesBuffer[i];
           }
-          if (
-            cuesInfos === undefined || // There is no cue here
-            areNearlyEqual(end, cuesInfos.end) // this cue has the same end
-          ) {
-            // put in place
-            cuesBuffer[i] = cuesInfosToInsert;
-            return;
-          }
-
-          if (cuesInfos.start >= end) {
-            // Either
-            //   ours:            |AAAAA|
-            //   the current one:         |BBBBBB|
-            //   Result:          |AAAAA| |BBBBBB|
-            // Or:
-            //   ours:            |AAAAA|
-            //   the current one:       |BBBBBB|
-            //   Result:          |AAAAA|BBBBBB|
-            // Add ours before
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
-            return;
-          } else {
-            // Either
-            //   ours:            |AAAAA|
-            //   the current one: |BBBBBBBB|
-            //   Result:          |AAAAABBB|
-            // Or:
-            //   ours:            |AAAAA|
-            //   the current one:    |BBBBB|
-            //   Result:          |AAAAABBB|
-            cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
-            cuesInfos.start = end;
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
-            return;
-          }
-
+          onIndexOfNextCueFound(i);
+          return;
         }
       }
     }
