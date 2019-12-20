@@ -60,6 +60,7 @@ import shouldReloadMediaSourceOnDecipherabilityUpdate from "./should_reload_medi
 import shouldRenewMediaKeys from "./should_renew_media_keys";
 import shouldUnsetMediaKeys from "./should_unset_media_keys";
 import shouldValidateMetadata from "./should_validate_metadata";
+import shouldWaitForDataBeforeLoaded from "./should_wait_for_data_before_loaded";
 import whenLoadedMetadata$ from "./when_loaded_metadata";
 import whenMediaSourceOpen$ from "./when_media_source_open";
 
@@ -103,6 +104,7 @@ export {
   shouldRenewMediaKeys,
   shouldUnsetMediaKeys,
   shouldValidateMetadata,
+  shouldWaitForDataBeforeLoaded,
   tryToChangeSourceBufferType,
   VTTCue_,
   whenLoadedMetadata$,

@@ -154,8 +154,11 @@ export default function initializeDirectfileContent({
   const initialTime = () => getDirectFileInitialTime(mediaElement, startAt);
   log.debug("Init: Initial time calculated:", initialTime);
 
-  const { seek$, load$ } =
-    seekAndLoadOnMediaEvents(clock$, mediaElement, initialTime, autoPlay);
+  const { seek$, load$ } = seekAndLoadOnMediaEvents({ clock$,
+                                                      mediaElement,
+                                                      startTime: initialTime,
+                                                      mustAutoPlay: autoPlay,
+                                                      isDirectfile: true });
 
   // Create EME Manager, an observable which will manage every EME-related
   // issue.
