@@ -610,6 +610,7 @@ function createSmoothStreamingParser(
       clockOffset: serverTimeOffset,
       id: "gen-smooth-manifest-" + generateManifestID(),
       isLive,
+      isDynamic: isLive,
       maximumTime,
       minimumTime,
       periods: [{ adaptations,

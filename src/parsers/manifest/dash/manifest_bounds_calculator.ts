@@ -18,7 +18,7 @@
  * This class allows to easily calculate the first and last available positions
  * in a content at any time.
  *
- * That task can be an hard for live DASH contents: it depends on a
+ * That task can be an hard for dynamic DASH contents: it depends on a
  * `timeShiftBufferDepth` defined in the MPD and on the maximum possible
  * position.
  *
@@ -94,7 +94,7 @@ export default class ManifestBoundsCalculator {
 
   /**
    * Returns `true` if the last position and the position time
-   * (for live content only) have been comunicated.
+   * (for dynamic content only) have been comunicated.
    * `false` otherwise.
    * @returns {boolean}
    */
