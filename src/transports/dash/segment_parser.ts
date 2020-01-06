@@ -26,79 +26,85 @@ import {
 } from "../../parsers/containers/matroska";
 import takeFirstSet from "../../utils/take_first_set";
 import {
+  IAudioParserObservable,
   ISegmentParserArguments,
-  ISegmentParserObservable,
+  IVideoParserObservable,
 } from "../types";
 import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 
-export default function parser({ content,
-                                 response,
-                                 init } : ISegmentParserArguments< Uint8Array |
-                                                                   ArrayBuffer |
-                                                                   null >
-) : ISegmentParserObservable< Uint8Array | ArrayBuffer > {
+export default function parser(
+  { content,
+    response,
+    initTimescale } : ISegmentParserArguments< Uint8Array |
+                                      ArrayBuffer |
+                                      null >
+) : IAudioParserObservable | IVideoParserObservable {
   const { period, representation, segment } = content;
   const { data, isChunked } = response;
-  if (data == null) {
-    return observableOf({ chunkData: null,
-                          chunkInfos: null,
-                          chunkOffset: 0,
-                          segmentProtections: [],
-                          appendWindow: [period.start, period.end] });
+  const appendWindow : [number, number | undefined] = [ period.start, period.end ];
+
+  if (data === null) {
+    if (segment.isInit) {
+      const _segmentProtections = representation.getProtectionsInitializationData();
+      return observableOf({ type: "parsed-init-segment" as const,
+                            value: { initializationData: null,
+                                     segmentProtections: _segmentProtections,
+                                     initTimescale: undefined } });
+    }
+    return observableOf({ type: "parsed-segment" as const,
+                          value: { chunkData: null,
+                                   chunkInfos: null,
+                                   chunkOffset: 0,
+                                   appendWindow } });
   }
 
   const chunkData = data instanceof Uint8Array ? data :
                                                  new Uint8Array(data);
-
-  const indexRange = segment.indexRange;
   const isWEBM = isWEBMEmbeddedTrack(representation);
 
-  const nextSegments = isWEBM ?
-    getSegmentsFromCues(chunkData, 0) :
-    getSegmentsFromSidx(chunkData, Array.isArray(indexRange) ? indexRange[0] :
-                                                               0);
-
   if (!segment.isInit) {
-    const chunkInfos = isWEBM ? null : // TODO extract from webm
+    const chunkInfos = isWEBM ? null : // TODO extract time info from webm
                                 getISOBMFFTimingInfos(chunkData,
                                                       isChunked,
                                                       segment,
-                                                      init);
-    return observableOf({ chunkData,
-                          chunkInfos,
-                          chunkOffset: takeFirstSet<number>(segment.timestampOffset,
-                                                            0),
-                          segmentProtections: [],
-                          appendWindow: [period.start, period.end] });
-  } else { // it is an initialization segment
-    if (nextSegments !== null && nextSegments.length > 0) {
-      representation.index._addSegments(nextSegments);
-    }
-
-    const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
-                               getMDHDTimescale(chunkData);
-
-    const chunkInfos = timescale != null && timescale > 0 ? { time: 0,
-                                                              duration: 0,
-                                                              timescale } :
-                                                            null;
-    if (!isWEBM) {
-      const psshInfo = takePSSHOut(chunkData);
-      if (psshInfo.length > 0) {
-        for (let i = 0; i < psshInfo.length; i++) {
-          const { systemID, data: psshData } = psshInfo[i];
-          representation._addProtectionData("cenc", systemID, psshData);
-        }
-      }
-    }
-
-    const segmentProtections = representation.getProtectionsInitializationData();
-    return observableOf({ chunkData,
-                          chunkInfos,
-                          chunkOffset: takeFirstSet<number>(segment.timestampOffset,
-                                                            0),
-                          segmentProtections,
-                          appendWindow: [period.start, period.end] });
+                                                      initTimescale);
+    const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
+    return observableOf({ type: "parsed-segment",
+                          value: { chunkData,
+                                   chunkInfos,
+                                   chunkOffset,
+                                   appendWindow } });
   }
+
+  // we're handling an initialization segment
+
+  const { indexRange } = segment;
+  const nextSegments = isWEBM ? getSegmentsFromCues(chunkData, 0) :
+                                getSegmentsFromSidx(chunkData,
+                                                    Array.isArray(indexRange) ?
+                                                      indexRange[0] :
+                                                      0);
+
+  if (nextSegments !== null && nextSegments.length > 0) {
+    representation.index._addSegments(nextSegments);
+  }
+
+  const timescale = isWEBM ? getTimeCodeScale(chunkData, 0) :
+                             getMDHDTimescale(chunkData);
+  const parsedTimescale = timescale !== null && timescale > 0 ? timescale :
+                                                                undefined;
+  if (!isWEBM) { // TODO extract webm protection information
+    const psshInfo = takePSSHOut(chunkData);
+    for (let i = 0; i < psshInfo.length; i++) {
+      const { systemID, data: psshData } = psshInfo[i];
+      representation._addProtectionData("cenc", systemID, psshData);
+    }
+  }
+
+  const segmentProtections = representation.getProtectionsInitializationData();
+  return observableOf({ type: "parsed-init-segment",
+                        value: { initializationData: chunkData,
+                                 segmentProtections,
+                                 initTimescale: parsedTimescale } });
 }

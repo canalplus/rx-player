@@ -94,7 +94,8 @@ export default function generateSegmentLoader(
   }
   return (content) => segmentLoader(content).pipe(tap(res => {
     if ((res.type === "data-loaded" || res.type === "data-chunk") &&
-        res.value.responseData !== null)
+        res.value.responseData !== null &&
+        !isWEBMEmbeddedTrack(content.representation))
     {
       checkISOBMFFIntegrity(new Uint8Array(res.value.responseData),
                             content.segment.isInit);

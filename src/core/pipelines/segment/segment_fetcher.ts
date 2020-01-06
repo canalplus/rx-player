@@ -31,7 +31,6 @@ import {
 import { formatError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
-  IChunkTimingInfos,
   ISegmentLoaderArguments,
   ISegmentParserResponse,
   ITransportPipelines,
@@ -54,7 +53,7 @@ export type ISegmentFetcherWarning = IPipelineLoaderWarning;
 
 export interface ISegmentFetcherChunkEvent<T> {
   type : "chunk";
-  parse : (init? : IChunkTimingInfos) => Observable<ISegmentParserResponse<T>>;
+  parse : (initTimescale? : number) => Observable<ISegmentParserResponse<T>>;
 }
 
 export interface ISegmentFetcherChunkCompleteEvent { type: "chunk-complete"; }
@@ -176,13 +175,13 @@ export default function createSegmentFetcher<T>(
           type: "chunk" as const,
           /**
            * Parse the loaded data.
-           * @param {Object} [init]
+           * @param {Object} [initTimescale]
            * @returns {Observable}
            */
-          parse(init? : IChunkTimingInfos) : Observable<ISegmentParserResponse<T>> {
+          parse(initTimescale? : number) : Observable<ISegmentParserResponse<T>> {
             const response = { data: evt.value.responseData, isChunked };
             /* tslint:disable no-unsafe-any */
-            return segmentParser({ response, init, content })
+            return segmentParser({ response, initTimescale, content })
             /* tslint:enable no-unsafe-any */
               .pipe(catchError((error: unknown) => {
                 throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",

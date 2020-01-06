@@ -26,6 +26,7 @@ import {
   strToBytes,
 } from "../../utils/byte_parsing";
 import stringFromUTF8 from "../../utils/string_from_utf8";
+import takeFirstSet from "../../utils/take_first_set";
 import isMP4EmbeddedTextTrack from "./is_mp4_embedded_text_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
 
@@ -39,14 +40,15 @@ import {
  * @param {Object} infos
  * @returns {Observable.<Object>}
  */
-function parseMP4EmbeddedTrack({ response,
-                                 content,
-                                 init } : ISegmentParserArguments< Uint8Array |
-                                                                   ArrayBuffer |
-                                                                   string>
+function parseISOBMFFEmbeddedTextTrack(
+  { response,
+    content,
+    initTimescale } : ISegmentParserArguments< Uint8Array |
+                                      ArrayBuffer |
+                                      string >
 ) : ITextParserObservable {
   const { period, representation, segment } = content;
-  const { isInit, indexRange, timestampOffset = 0 } = segment;
+  const { isInit, indexRange } = segment;
   const { language } = content.adaptation;
   const { data, isChunked } = response;
 
@@ -64,20 +66,19 @@ function parseMP4EmbeddedTrack({ response,
 
   if (isInit) {
     const mdhdTimescale = getMDHDTimescale(chunkBytes);
-    const chunkInfos = mdhdTimescale > 0 ? { time: 0,
-                                             duration: 0,
-                                             timescale: mdhdTimescale } :
-                                           null;
-    if (Array.isArray(sidxSegments) && sidxSegments.length > 0) {
+    if (sidxSegments !== null && sidxSegments.length > 0) {
       representation.index._addSegments(sidxSegments);
     }
-    return observableOf({ chunkData: null,
-                          chunkInfos,
-                          chunkOffset: timestampOffset,
-                          segmentProtections: [],
-                          appendWindow: [period.start, period.end] });
+    return observableOf({ type: "parsed-init-segment",
+                          value: { initializationData: null,
+                                   segmentProtections: [],
+                                   inintTimescale: mdhdTimescale > 0 ? mdhdTimescale :
+                                                                       undefined } });
   } else { // not init
-    const chunkInfos = getISOBMFFTimingInfos(chunkBytes, isChunked, segment, init);
+    const chunkInfos = getISOBMFFTimingInfos(chunkBytes,
+                                             isChunked,
+                                             segment,
+                                             initTimescale);
     let startTime : number | undefined;
     let endTime : number | undefined;
     let timescale : number = 1;
@@ -124,11 +125,12 @@ function parseMP4EmbeddedTrack({ response,
                         start: startTime,
                         end: endTime,
                         timescale } ;
-    return observableOf({ chunkData,
-                          chunkInfos,
-                          chunkOffset: timestampOffset,
-                          segmentProtections: [],
-                          appendWindow: [period.start, period.end] });
+    const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
+    return observableOf({ type: "parsed-segment",
+                          value: { chunkData,
+                                   chunkInfos,
+                                   chunkOffset,
+                                   appendWindow: [period.start, period.end] } });
   }
 }
 
@@ -141,11 +143,10 @@ function parsePlainTextTrack({ response,
   const { language } = adaptation;
   const { timestampOffset = 0 } = segment;
   if (segment.isInit) {
-    return observableOf({ chunkData: null,
-                          chunkInfos: null,
-                          chunkOffset: timestampOffset,
-                          segmentProtections: [],
-                          appendWindow: [period.start, period.end] });
+    return observableOf({ type: "parsed-init-segment",
+                          value: { initializationData: null,
+                                   segmentProtections: [],
+                                   initTimescale: undefined } });
   }
 
   const { data, isChunked } = response;
@@ -201,11 +202,11 @@ function parsePlainTextTrack({ response,
                       start,
                       end,
                       timescale };
-  return observableOf({ chunkData,
-                        chunkInfos: null,
-                        chunkOffset: timestampOffset,
-                        segmentProtections: [],
-                        appendWindow: [period.start, period.end] });
+  return observableOf({ type: "parsed-segment",
+                        value: { chunkData,
+                                 chunkInfos: null,
+                                 chunkOffset: timestampOffset,
+                                 appendWindow: [period.start, period.end] } });
 }
 
 /**
@@ -213,27 +214,36 @@ function parsePlainTextTrack({ response,
  * @param {Object} infos
  * @returns {Observable.<Object>}
  */
-export default function textTrackParser({ response,
-                           content,
-                           init } : ISegmentParserArguments< Uint8Array |
-                                                             ArrayBuffer |
-                                                             string |
-                                                             null >
+export default function textTrackParser(
+  { response,
+    content,
+    initTimescale } : ISegmentParserArguments< Uint8Array |
+                                               ArrayBuffer |
+                                               string |
+                                               null >
 ) : ITextParserObservable {
   const { period, representation, segment } = content;
   const { timestampOffset = 0 } = segment;
   const { data, isChunked } = response;
   if (data == null) { // No data, just return empty infos
-    return observableOf({ chunkData: null,
-                          chunkInfos: null,
-                          chunkOffset: timestampOffset,
-                          segmentProtections: [],
-                          appendWindow: [period.start, period.end] });
+    if (segment.isInit) {
+      return observableOf({ type: "parsed-init-segment",
+                            value: { initializationData: null,
+                                     segmentProtections: [],
+                                     initTimescale: undefined } });
+    }
+    return observableOf({ type: "parsed-segment",
+                          value: { chunkData: null,
+                                   chunkInfos: null,
+                                   chunkOffset: timestampOffset,
+                                   appendWindow: [period.start, period.end] } });
   }
 
   const isMP4 = isMP4EmbeddedTextTrack(representation);
   if (isMP4) {
-    return parseMP4EmbeddedTrack({ response: { data, isChunked }, content, init });
+    return parseISOBMFFEmbeddedTextTrack({ response: { data, isChunked },
+                                           content,
+                                           initTimescale });
   } else {
     return parsePlainTextTrack({ response: { data, isChunked }, content });
   }

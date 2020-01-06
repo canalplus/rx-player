@@ -57,13 +57,22 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import {
+  ISegmentParserInitSegment,
+  ISegmentParserParsedInitSegment,
+  ISegmentParserParsedSegment,
+  ISegmentParserSegment,
+} from "../../../transports";
 import SimpleSet from "../../../utils/simple_set";
 import {
   IPrioritizedSegmentFetcher,
   ISegmentFetcherEvent,
   ISegmentFetcherWarning,
 } from "../../pipelines";
-import { QueuedSourceBuffer } from "../../source_buffers";
+import {
+  IPushedChunkData,
+  QueuedSourceBuffer,
+} from "../../source_buffers";
 import EVENTS from "../events_generators";
 import {
   IBufferEventAddedSegment,
@@ -110,36 +119,16 @@ interface IQueuedSegment {
   segment : ISegment; // Segment wanted
 }
 
-// temporal information of a Segment
-interface ISegmentInfos {
-  duration? : number; // timescaled duration of the Segment
-  time : number; // timescaled start time of the Segment
-  timescale : number;
-}
-
 export interface ISegmentProtection { // Describes DRM information
   type : string;
   data : Uint8Array;
 }
 
-// Parsed Segment information
-interface ISegmentObject<T> {
-  chunkData : T|null; // What will be pushed to the SourceBuffer
-  chunkInfos : ISegmentInfos|null; // information about the segment's start
-                                   // and duration
-  chunkOffset : number; // Offset to add to the segment at decode time
-  segmentProtections : ISegmentProtection[]; // DRM information
-  appendWindow : [ number | undefined, number | undefined ];
-}
+type IParsedInitSegmentEvent<T> = ISegmentParserInitSegment<T> &
+                                  { segment : ISegment };
 
-// Information about a loaded and parsed Segment
-interface IParsedSegmentEventValue<T> {
-  segment : ISegment; // Concerned Segment
-  data : ISegmentObject<T>; // parsed Data
-}
-
-interface IParsedSegmentEvent<T> { type : "parsed-segment";
-                                   value : IParsedSegmentEventValue<T>; }
+type IParsedSegmentEvent<T> = ISegmentParserSegment<T> &
+                              { segment : ISegment };
 
 interface IEndOfSegmentEvent { type : "end-of-segment";
                                value: { segment : ISegment }; }
@@ -150,6 +139,7 @@ interface ILoaderRetryEvent { type : "retry";
 }
 
 type ISegmentLoadingEvent<T> = IParsedSegmentEvent<T> |
+                               IParsedInitSegmentEvent<T> |
                                IEndOfSegmentEvent |
                                ILoaderRetryEvent;
 
@@ -188,12 +178,10 @@ export default function RepresentationBuffer<T>({
   const initSegment = representation.index.getInitSegment();
 
   // Saved initSegment state for this representation.
-  let initSegmentObject : ISegmentObject<T>|null =
-    initSegment == null ? { chunkData: null,
-                            chunkInfos: null,
-                            chunkOffset: 0,
+  let initSegmentObject : ISegmentParserParsedInitSegment<T>|null =
+    initSegment == null ? { initializationData: null,
                             segmentProtections: [],
-                            appendWindow: [undefined, undefined] } :
+                            initTimescale: undefined } :
                           null;
 
   // Segments queued for download in the BufferQueue.
@@ -251,7 +239,7 @@ export default function RepresentationBuffer<T>({
         .map((segment) => ({ priority: getSegmentPriority(segment, timing),
                              segment }));
 
-      if (initSegment != null && initSegmentObject == null) {
+      if (initSegment !== null && initSegmentObject === null) {
         // prepend initialization segment
         const initSegmentPriority = getSegmentPriority(initSegment, timing);
         neededSegments = [ { segment: initSegment,
@@ -432,13 +420,9 @@ export default function RepresentationBuffer<T>({
                                     value: { segment } });
             }
 
-            let initInfos;
-            if (initSegmentObject != null && initSegmentObject.chunkInfos != null) {
-              initInfos = initSegmentObject.chunkInfos;
-            }
-            return evt.parse(initInfos).pipe(map(data => {
-              return { type: "parsed-segment" as const,
-                       value: { segment, data } };
+            const initTimescale = initSegmentObject?.initTimescale;
+            return evt.parse(initTimescale).pipe(map(parserResponse => {
+              return objectAssign({ segment }, parserResponse);
             }));
           }));
 
@@ -476,13 +460,12 @@ export default function RepresentationBuffer<T>({
             return EMPTY;
           }));
 
-      case "parsed-segment": {
-        const { segment } = evt.value;
-        if (segment.isInit) {
-          initSegmentObject = evt.value.data;
-        }
-        return pushSegment(segment, evt.value.data);
-      }
+      case "parsed-init-segment":
+        initSegmentObject = evt.value;
+        return pushInitSegment(evt.segment, evt.value);
+
+      case "parsed-segment":
+        return pushSegment(evt.segment, evt.value);
 
       case "end-of-segment": {
         const { segment } = evt.value;
@@ -498,37 +481,64 @@ export default function RepresentationBuffer<T>({
   }
 
   /**
+   * Push the initialization segment to the QueuedSourceBuffer
+   * @param {Object} segment
+   * @param {Object} segmentData
+   * @returns {Observable}
+   */
+  function pushInitSegment(
+    segment : ISegment,
+    segmentData : ISegmentParserParsedInitSegment<T>
+  ) : Observable< IBufferEventAddedSegment<T> | IProtectedSegmentEvent > {
+    return observableDefer(() => {
+      const { segmentProtections, initializationData } = segmentData;
+      const protectedEvents$ = observableOf(...segmentProtections.map(segmentProt => {
+        return EVENTS.protectedSegment(segmentProt);
+      }));
+      if (initializationData === null) {
+        return protectedEvents$;
+      }
+      const data : IPushedChunkData<T> = { initSegment: initializationData,
+                                           chunk: null,
+                                           timestampOffset: 0,
+                                           appendWindow: [ undefined, undefined ],
+                                           codec };
+      const inventoryInfos = objectAssign({ segment }, content);
+      const append$ = pushDataToSourceBufferWithRetries(clock$,
+                                                        queuedSourceBuffer,
+                                                        { data, inventoryInfos })
+        .pipe(map(() => {
+          const buffered = queuedSourceBuffer.getBufferedRanges();
+          return EVENTS.addedSegment(content, segment, buffered, initializationData);
+        }));
+      return observableMerge(append$, protectedEvents$);
+    });
+  }
+
+  /**
    * Push a given segment to a QueuedSourceBuffer.
    * @param {Object} segment
-   * @param {Object} segmentObject
+   * @param {Object} segmentData
    * @returns {Observable}
    */
   function pushSegment(
     segment : ISegment,
-    { chunkInfos,
-      chunkData,
-      chunkOffset,
-      segmentProtections,
-      appendWindow } : ISegmentObject<T>
-  ) : Observable< IBufferEventAddedSegment<T> | IProtectedSegmentEvent > {
+    segmentData : ISegmentParserParsedSegment<T>
+  ) : Observable< IBufferEventAddedSegment<T> > {
     return observableDefer(() => {
-      const protectedEvents$ = observableOf(...segmentProtections.map(segmentProt => {
-        return EVENTS.protectedSegment(segmentProt);
-      }));
-      if (chunkData == null) {
-        // no segmentData to add here (for example, a text init segment)
-        // just complete directly without appending anything
-        return protectedEvents$;
+      if (segmentData.chunkData === null) {
+        return EMPTY;
       }
-
-      const data = { initSegment: initSegmentObject != null ?
-                                    initSegmentObject.chunkData :
-                                    null,
-                     chunk: segment.isInit ? null :
-                                             chunkData,
+      const { chunkData,
+              chunkInfos,
+              chunkOffset,
+              appendWindow } = segmentData;
+      const data = { initSegment: initSegmentObject?.initializationData ?? null,
+                     chunk: chunkData,
                      timestampOffset: chunkOffset,
                      appendWindow,
                      codec };
+
       let estimatedStart : number|undefined;
       let estimatedDuration : number|undefined;
       if (chunkInfos !== null) {
@@ -541,15 +551,13 @@ export default function RepresentationBuffer<T>({
                                             estimatedStart,
                                             estimatedDuration },
                                           content);
-      const append$ = pushDataToSourceBufferWithRetries(clock$,
-                                                        queuedSourceBuffer,
-                                                        { data, inventoryInfos })
+      return pushDataToSourceBufferWithRetries(clock$,
+                                               queuedSourceBuffer,
+                                               { data, inventoryInfos })
         .pipe(map(() => {
           const buffered = queuedSourceBuffer.getBufferedRanges();
           return EVENTS.addedSegment(content, segment, buffered, chunkData);
         }));
-      return observableMerge(append$,
-                             protectedEvents$);
     });
   }
 }
