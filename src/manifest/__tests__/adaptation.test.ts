@@ -21,6 +21,7 @@ import Representation from "../representation";
 
 const minimalRepresentationIndex = {
   getInitSegment() { return null; },
+  getIndexSegment() { return null; },
   getSegments() { return []; },
   shouldRefresh() { return false; },
   getFirstPosition() : undefined { return ; },

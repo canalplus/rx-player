@@ -177,6 +177,14 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   }
 
   /**
+   * Returns no index segment
+   * @returns {null}
+   */
+  getIndexSegment() : null {
+    return null;
+  }
+
+  /**
    * @param {Number} fromTime
    * @param {Number} dur
    * @returns {Array.<Object>}

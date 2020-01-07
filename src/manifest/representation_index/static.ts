@@ -46,6 +46,15 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * Static contents do not have any index segments.
+   * Just return null.
+   * @returns {null}
+   */
+  getIndexSegment() : null {
+    return null;
+  }
+
+  /**
    * Returns the only Segment available here.
    * @returns {Array.<Object>}
    */

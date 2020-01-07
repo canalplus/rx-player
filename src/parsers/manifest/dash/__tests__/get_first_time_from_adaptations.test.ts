@@ -22,6 +22,7 @@ function generateRepresentationIndex(
 ) : IRepresentationIndex {
   return {
     getInitSegment() { return null; },
+    getIndexSegment() { return null; },
     getSegments() { return []; },
     shouldRefresh() { return false; },
     getFirstPosition() : number|undefined|null { return firstPosition; },

@@ -19,6 +19,9 @@ import log from "../../../../log";
 import parseInitialization, {
   IParsedInitialization,
 } from "./Initialization";
+import parseIndex, {
+  IParsedIndex
+} from "./parse_index";
 import {
   parseBoolean,
   parseByteRange,
@@ -30,6 +33,7 @@ export interface ISegmentBaseAttributes { availabilityTimeComplete?: boolean;
                                           indexRange?: [number, number];
                                           indexRangeExact?: boolean;
                                           initialization?: IParsedInitialization;
+                                          representationIndex?: IParsedIndex;
                                           presentationTimeOffset?: number;
                                           startNumber? : number;
                                           timescale?: number; }
@@ -58,8 +62,15 @@ export default function parseSegmentBase(root: Element) : IParsedSegmentBase {
   for (let i = 0; i < segmentBaseChildren.length; i++) {
     if (segmentBaseChildren[i].nodeType === Node.ELEMENT_NODE) {
       const currentNode = segmentBaseChildren[i] as Element;
-      if (currentNode.nodeName === "Initialization") {
-        attributes.initialization = parseInitialization(currentNode);
+      switch (currentNode.nodeName) {
+        case "Initialization":
+          attributes.initialization = parseInitialization(currentNode);
+          break;
+        case "RepresentationIndex":
+          attributes.representationIndex = parseIndex(currentNode);
+          break;
+        default:
+          break;
       }
     }
   }

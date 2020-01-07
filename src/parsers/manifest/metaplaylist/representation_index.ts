@@ -65,6 +65,21 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
     return segment;
   }
 
+  public getIndexSegment() {
+    const segment = this._wrappedIndex.getIndexSegment();
+    if (segment === null) {
+      return null;
+    }
+    if (segment.privateInfos === undefined) {
+      segment.privateInfos = {};
+    }
+    segment.privateInfos.metaplaylistInfos = { transportType: this._transport,
+                                               baseContent: this._baseContentInfos,
+                                               contentStart: this._timeOffset,
+                                               contentEnd: this._contentEnd };
+    return segment;
+  }
+
   public getSegments(up : number, duration : number) : ISegment[] {
     return this._wrappedIndex.getSegments(up - this._timeOffset, duration)
       .map((segment) => {

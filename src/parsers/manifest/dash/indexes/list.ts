@@ -152,6 +152,14 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * Returns no index segment
+   * @returns {null}
+   */
+  getIndexSegment() : null {
+    return null;
+  }
+
+  /**
    * @param {Number} fromTime
    * @param {Number} duration
    * @returns {Array.<Object>}

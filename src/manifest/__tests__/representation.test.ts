@@ -18,6 +18,7 @@ import Representation from "../representation";
 
 const minimalIndex = {
   getInitSegment() { return null; },
+  getIndexSegment() { return null; },
   getSegments() { return []; },
   shouldRefresh() { return false; },
   getFirstPosition() : undefined { return ; },

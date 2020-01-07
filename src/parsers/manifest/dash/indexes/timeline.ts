@@ -294,6 +294,14 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   }
 
   /**
+   * Returns no index segment
+   * @returns {null}
+   */
+  getIndexSegment() : null {
+    return null;
+  }
+
+  /**
    * Asks for segments to download for a given time range.
    * @param {Number} from - Beginning of the time wanted, in seconds
    * @param {Number} duration - duration wanted, in seconds

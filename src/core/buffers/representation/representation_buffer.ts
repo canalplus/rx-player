@@ -172,6 +172,7 @@ export default function RepresentationBuffer<T>({
   const { manifest, period, adaptation, representation } = content;
   const bufferType = adaptation.type;
   const initSegment = representation.index.getInitSegment();
+  const indexSegment = representation.index.getIndexSegment();
 
   // Saved initSegment state for this representation.
   let initSegmentObject : ISegmentParserParsedInitSegment<T>|null =
@@ -240,6 +241,14 @@ export default function RepresentationBuffer<T>({
         const initSegmentPriority = getSegmentPriority(initSegment, timing);
         neededSegments = [ { segment: initSegment,
                              priority: initSegmentPriority },
+                           ...neededSegments ];
+      }
+
+      if (indexSegment !== null) {
+        // prepend index segment
+        const indexSegmentPriority = getSegmentPriority(indexSegment, timing);
+        neededSegments = [ { segment: indexSegment,
+                             priority: indexSegmentPriority },
                            ...neededSegments ];
       }
 

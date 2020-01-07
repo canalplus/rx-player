@@ -75,13 +75,26 @@ export default function parser(
                                    chunkOffset,
                                    appendWindow } });
   }
-  // we're handling an initialization segment
   const { indexRange } = segment;
   const nextSegments = isWEBM ? getSegmentsFromCues(chunkData, 0) :
                                 getSegmentsFromSidx(chunkData,
                                                     Array.isArray(indexRange) ?
                                                       indexRange[0] :
                                                       0);
+
+  if (segment.privateInfos?.indexOnly === true) {
+    if (nextSegments !== null &&
+        nextSegments.length > 0) {
+      representation.index._addSegments(nextSegments);
+    }
+    return observableOf({ type: "parsed-segment",
+                          value: { chunkData: null,
+                                   chunkInfos: null,
+                                   chunkOffset: 0,
+                                   appendWindow } });
+  }
+
+  // we're handling an initialization segment
 
   if (nextSegments !== null && nextSegments.length > 0) {
     representation.index._addSegments(nextSegments);

@@ -22,6 +22,7 @@ const representation1 = {
   getMimeTypeString() : string { return ""; },
   index: {
     getInitSegment() : null { return null; },
+    getIndexSegment() : null { return null; },
     getSegments() : never { throw new Error("Not implemented"); },
     shouldRefresh() : boolean { return false; },
     getFirstPosition() : undefined { return ; },
@@ -43,6 +44,7 @@ const representation2 = {
   getMimeTypeString() : string { return ""; },
   index: {
     getInitSegment() : null { return null; },
+    getIndexSegment() : null { return null; },
     getSegments() : never { throw new Error("Not implemented"); },
     shouldRefresh() : boolean { return false; },
     getFirstPosition() : undefined { return ; },

@@ -18,12 +18,14 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../manifest";
+import resolveURL from "../../../../utils/resolve_url";
 import {
   fromIndexTime,
   getIndexSegmentEnd,
   IIndexSegment,
   toIndexTime,
 } from "../../utils/index_helpers";
+import getIndexSegment from "./get_index_segment";
 import getInitSegment from "./get_init_segment";
 import getSegmentsFromTimeline from "./get_segments_from_timeline";
 import { createIndexURL } from "./tokens";
@@ -47,6 +49,9 @@ export interface IBaseIndex {
     mediaURL: string; // URL to access the initialization segment
     range?: [number, number]; // possible byte range to request it
   };
+  representationIndex: { media: string;
+                         range?: [number, number]; } |
+                       null;
   mediaURL : string; // base URL to access any segment. Can contain token to
                      // replace to convert it to a real URL
   startNumber? : number; // number from which the first segments in this index
@@ -63,6 +68,7 @@ export interface IBaseIndexIndexArgument {
   timeline : IIndexSegment[];
   timescale : number;
   media? : string;
+  representationIndex? : { media?: string; range?: [number, number] };
   indexRange?: [number, number];
   initialization?: { media?: string; range?: [number, number] };
   startNumber? : number;
@@ -158,12 +164,17 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
     const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
 
-    const mediaURL = createIndexURL(representationBaseURL,
-                                    index.initialization !== undefined ?
-                                      index.initialization.media :
-                                      undefined,
-                                    representationId,
-                                    representationBitrate);
+    const initMediaURL = createIndexURL(representationBaseURL,
+                                        index.initialization !== undefined ?
+                                          index.initialization.media :
+                                          undefined,
+                                        representationId,
+                                        representationBitrate);
+
+    const representationIndex = index.representationIndex?.media !== undefined ?
+      { media: resolveURL(representationBaseURL, index.representationIndex?.media),
+        range: index.representationIndex?.range } :
+      null;
 
     // TODO If indexRange is either undefined or behind the initialization segment
     // the following logic will not work.
@@ -171,18 +182,20 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     // not straightforward as we would need to clean-up the segment after that.
     // The following logic corresponds to 100% of tested cases, so good enough for
     // now.
-    const range : [number, number] | undefined =
+    const initRange : [number, number] | undefined =
       index.initialization !== undefined ? index.initialization.range :
       index.indexRange !== undefined ? [0, index.indexRange[0] - 1] :
                                        undefined;
 
     this._index = { indexRange: index.indexRange,
                     indexTimeOffset,
-                    initialization: { mediaURL, range },
+                    initialization: { mediaURL: initMediaURL,
+                                      range: initRange },
                     mediaURL: createIndexURL(representationBaseURL,
                                              index.media,
                                              representationId,
                                              representationBitrate),
+                    representationIndex,
                     startNumber: index.startNumber,
                     timeline: index.timeline,
                     timescale };
@@ -196,6 +209,14 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    */
   getInitSegment() : ISegment {
     return getInitSegment(this._index);
+  }
+
+  /**
+   * Construct index Segment.
+   * @returns {Object}
+   */
+  getIndexSegment() : ISegment|null {
+    return getIndexSegment(this._index);
   }
 
   /**
