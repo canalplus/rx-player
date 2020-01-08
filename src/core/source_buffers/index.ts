@@ -19,6 +19,7 @@ import QueuedSourceBuffer, {
   IBufferedChunk,
   IBufferType,
   IPushChunkInfos,
+  IPushedChunkData,
 } from "./queued_source_buffer";
 import SourceBuffersStore, {
   getBufferTypes,
@@ -29,9 +30,10 @@ import SourceBuffersStore, {
 export default SourceBuffersStore;
 export {
   BufferGarbageCollector,
-  IBufferedChunk,
   IBufferType,
+  IBufferedChunk,
   IPushChunkInfos,
+  IPushedChunkData,
   ISourceBufferOptions,
   ITextTrackSourceBufferOptions,
   QueuedSourceBuffer,

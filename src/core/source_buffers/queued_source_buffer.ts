@@ -59,7 +59,7 @@ enum SourceBufferAction { Push,
 
 // Content of the `data` property when pushing a new chunk
 // This will be the real data used with the underlying SourceBuffer.
-interface IPushedChunkData<T> {
+export interface IPushedChunkData<T> {
   initSegment: T|null;  // initialization segment related to the
                         // chunk. `null` if none.
   chunk : T | null; // Chunk you want to push. `null` if you just
@@ -78,7 +78,7 @@ interface IPushedChunkData<T> {
 // Content of the `inventoryInfos` property when pushing a new chunk
 // This is what will be registered in the QueuedSourceBuffer's inventory.
 // corresponding to this chunk.
-interface IPushedChunkInventoryInfos {
+export interface IPushedChunkInventoryInfos {
   adaptation : Adaptation;
   period : Period;
   representation : Representation;

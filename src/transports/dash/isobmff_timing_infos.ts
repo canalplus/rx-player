@@ -32,24 +32,23 @@ import { IChunkTimingInfos } from "../types";
  * @param {Array.<Object>|undefined} sidxSegments - Segments from sidx. Here
  * pre-parsed for performance reasons as it is usually available when
  * this function is called.
- * @param {Object|undefined} initInfos
+ * @param {number|undefined} initTimescale
  * @returns {Object}
  */
 function getISOBMFFTimingInfos(
   buffer : Uint8Array,
   isChunked : boolean,
   segment : ISegment,
-  initInfos? : IChunkTimingInfos
+  initTimescale? : number
 ) : IChunkTimingInfos | null {
   let startTime;
   let duration;
   const trunDuration = getDurationFromTrun(buffer);
-  const timescale = initInfos !== undefined ? initInfos.timescale :
-                                              segment.timescale;
+  const timescale = initTimescale ?? segment.timescale;
 
   const baseDecodeTime = getTrackFragmentDecodeTime(buffer);
   if (isChunked) { // when chunked, no mean to know the duration for now
-    if (initInfos == null) {
+    if (initTimescale === undefined) {
       return null;
     }
     if (baseDecodeTime < 0) {
@@ -58,7 +57,7 @@ function getISOBMFFTimingInfos(
     return { time: baseDecodeTime,
              duration: trunDuration >= 0 ? trunDuration :
                                            undefined,
-             timescale: initInfos.timescale };
+             timescale: initTimescale };
   }
 
   // we could always make a mistake when reading a container.

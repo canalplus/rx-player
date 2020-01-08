@@ -43,7 +43,7 @@ import forceGarbageCollection from "./force_garbage_collection";
  * @param {Object} dataInfos
  * @returns {Observable}
  */
-export default function pushDataToSourceBufferWithRetries<T>(
+export default function appendSegmentToSourceBuffer<T>(
   clock$ : Observable<{ currentTime : number }>,
   queuedSourceBuffer : QueuedSourceBuffer<T>,
   dataInfos : IPushChunkInfos<T>

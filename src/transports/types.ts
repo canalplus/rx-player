@@ -162,10 +162,8 @@ export interface ISegmentParserArguments<T> {
                                        // to a chunk of the whole data.
                                        // If false, the response is the whole
                                        // segment.
-
-  // TODO just timescale?
-  init? : IChunkTimingInfos; // Infos about the initialization segment of the
-                             // corresponding Representation
+  initTimescale? : number; // timescale taken from the init segment which might
+                           // be useful for the following regular segments.
   content : {
     manifest : Manifest; // Manifest related to this segment
     period : Period; // Period related to this segment
@@ -185,9 +183,22 @@ export interface IManifestParserResponse {
 
 export type IManifestParserObservable = Observable<IManifestParserResponse>;
 
-export interface ISegmentParserResponse<T> {
+// Format of a parsed initialization segment
+export interface ISegmentParserParsedInitSegment<T> {
+  initializationData : T | null; // Data to push to initialize the decoder
+  initTimescale? : number; // timescale taken from the init segment which might
+                           // be useful for the following regular segments.
+  segmentProtections : ISegmentProtection[]; // Information about the
+                                             // protection put in place
+                                            // for the segments in this
+                                            // Representation
+                                            // Empty if not encrypted.
+}
+
+// Format of a parsed regular (non-initialization) segment
+export interface ISegmentParserParsedSegment<T> {
   chunkData : T | null; // Data to decode
-  chunkInfos : IChunkTimingInfos|null; // Timing infos about the segment
+  chunkInfos : IChunkTimingInfos | null; // Timing infos about the segment
   chunkOffset : number; // time offset, in seconds, to add to the absolute
                         // timed data defined in `chunkData` to obtain the
                         // "real" wanted effective time.
@@ -201,8 +212,6 @@ export interface ISegmentParserResponse<T> {
                         // Note that `chunkInfos` needs not to be offseted as
                         // it should already contain the correct time
                         // information.
-  segmentProtections : ISegmentProtection[]; // InitializationData for the
-                                             // segment. Empty if not encrypted.
   appendWindow : [ number | undefined, // start window for the segment
                                        // (part of the segment before that time
                                        // will be ignored)
@@ -211,14 +220,28 @@ export interface ISegmentParserResponse<T> {
                                          // will be ignored)
 }
 
-// Response object returned by the video's segment parser
-export type IVideoParserResponse =
-  ISegmentParserResponse< Uint8Array | ArrayBuffer >;
+// What a segment parser returns when parsing an init segment
+export interface ISegmentParserInitSegment<T> {
+  type : "parsed-init-segment";
+  value : ISegmentParserParsedInitSegment<T>;
+}
 
-// Response object returned by the audio's segment parser
-export type IAudioParserResponse =
-  ISegmentParserResponse< Uint8Array | ArrayBuffer >;
+// What a segment parser returns when parsing a regular (non-init) segment
+export interface ISegmentParserSegment<T> {
+  type : "parsed-segment";
+  value : ISegmentParserParsedSegment<T>;
+}
 
+// generic segment parser response
+export type ISegmentParserResponse<T> =
+  ISegmentParserInitSegment<T> |
+  ISegmentParserSegment<T>;
+
+// format under which audio / video data / initialization data is decodable
+export type IAudioVideoTrackSegmentData = Uint8Array |
+                                          ArrayBuffer;
+
+// format under which text data is decodable
 export interface ITextTrackSegmentData {
   data : string; // text track data
   type : string; // the type of `data` (examples: "ttml", "srt" or "vtt")
@@ -228,10 +251,7 @@ export interface ITextTrackSegmentData {
   timescale : number; // timescale to convert `start` and `end` into seconds
 }
 
-// Response object returned by the text's segment parser
-export type ITextParserResponse =
-  ISegmentParserResponse< ITextTrackSegmentData >;
-
+// format under which image data is decodable
 export interface IImageTrackSegmentData {
   data : IBifThumbnail[]; // image track data, in the given type
   end : number; // end time time until which the segment apply
@@ -240,13 +260,41 @@ export interface IImageTrackSegmentData {
   type : string; // the type of the data (example: "bif")
 }
 
-// Response object returned by the image's segment parser
-export type IImageParserResponse =
-  ISegmentParserResponse< IImageTrackSegmentData >;
+// Response from an audio / video segment parser when parsing an init segment
+export type IAudioVideoParserInitSegmentResponse =
+  ISegmentParserInitSegment< IAudioVideoTrackSegmentData >;
 
-export type ISegmentParserObservable<T> = Observable<ISegmentParserResponse<T>>;
-export type IVideoParserObservable = Observable<IVideoParserResponse>;
-export type IAudioParserObservable = Observable<IAudioParserResponse>;
+// Response from an audio / video segment parser when parsing a regular segment
+export type IAudioVideoParserSegmentResponse =
+  ISegmentParserSegment< IAudioVideoTrackSegmentData >;
+
+// Response object returned by the audio's / video's segment parser
+export type IAudioVideoParserResponse = IAudioVideoParserInitSegmentResponse |
+                                        IAudioVideoParserSegmentResponse;
+
+// Response from a text segment parser when parsing an init segment
+export type ITextParserInitSegmentResponse = ISegmentParserInitSegment< null >;
+
+// Response from a text segment parser when parsing a regular segment
+export type ITextParserSegmentResponse =
+  ISegmentParserSegment< ITextTrackSegmentData >;
+
+// Response object returned by the text's segment parser
+export type ITextParserResponse = ITextParserInitSegmentResponse |
+                                  ITextParserSegmentResponse;
+
+// Response from a image segment parser when parsing an init segment
+export type IImageParserInitSegmentResponse = ISegmentParserInitSegment< null >;
+
+// Response from a image segment parser when parsing a regular segment
+export type IImageParserSegmentResponse =
+  ISegmentParserSegment< IImageTrackSegmentData >;
+
+// Response object returned by the image's segment parser
+export type IImageParserResponse = IImageParserInitSegmentResponse |
+                                   IImageParserSegmentResponse;
+
+export type IAudioVideoParserObservable = Observable<IAudioVideoParserResponse>;
 export type ITextParserObservable = Observable<ITextParserResponse>;
 export type IImageParserObservable = Observable<IImageParserResponse>;
 
@@ -265,32 +313,18 @@ export interface ITransportManifestPipeline { resolver? : IManifestResolverFunct
                                               loader : IManifestLoaderFunction;
                                               parser : IManifestParserFunction; }
 
-export type ITransportVideoSegmentLoader =
+export type ITransportAudioVideoSegmentLoader =
   (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
                                                              ArrayBuffer |
                                                              null >;
-export type ITransportVideoSegmentParser =
+export type ITransportAudioVideoSegmentParser =
   (x : ISegmentParserArguments< Uint8Array |
                                 ArrayBuffer |
-                                null >) => IVideoParserObservable;
+                                null >) => IAudioVideoParserObservable;
 
-export interface ITransportVideoSegmentPipeline {
-  loader : ITransportVideoSegmentLoader;
-  parser : ITransportVideoSegmentParser;
-}
-
-export type ITransportAudioSegmentLoader =
-  (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
-                                                             ArrayBuffer |
-                                                             null >;
-export type ITransportAudioSegmentParser =
-  (x : ISegmentParserArguments< Uint8Array |
-                                ArrayBuffer |
-                                null >) => IAudioParserObservable;
-
-export interface ITransportAudioSegmentPipeline {
-  loader : ITransportAudioSegmentLoader;
-  parser : ITransportAudioSegmentParser;
+export interface ITransportAudioVideoSegmentPipeline {
+  loader : ITransportAudioVideoSegmentLoader;
+  parser : ITransportAudioVideoSegmentParser;
 }
 
 // Note: The segment's data can be null for init segments
@@ -327,8 +361,7 @@ export interface ITransportImageSegmentPipeline {
   parser : ITransportImageSegmentParser;
 }
 
-export type ITransportSegmentPipeline = ITransportAudioSegmentPipeline |
-                                        ITransportVideoSegmentPipeline |
+export type ITransportSegmentPipeline = ITransportAudioVideoSegmentPipeline |
                                         ITransportTextSegmentPipeline |
                                         ITransportImageSegmentPipeline;
 
@@ -336,8 +369,8 @@ export type ITransportPipeline = ITransportManifestPipeline |
                                  ITransportSegmentPipeline;
 
 export interface ITransportPipelines { manifest : ITransportManifestPipeline;
-                                       audio : ITransportAudioSegmentPipeline;
-                                       video : ITransportVideoSegmentPipeline;
+                                       audio : ITransportAudioVideoSegmentPipeline;
+                                       video : ITransportAudioVideoSegmentPipeline;
                                        text : ITransportTextSegmentPipeline;
                                        image : ITransportImageSegmentPipeline; }
 

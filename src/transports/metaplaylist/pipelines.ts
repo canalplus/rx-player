@@ -35,6 +35,8 @@ import parseMetaPlaylist, {
 } from "../../parsers/manifest/metaplaylist";
 import { IParsedManifest } from "../../parsers/manifest/types";
 import {
+  IAudioVideoParserObservable,
+  IChunkTimingInfos,
   IImageParserObservable,
   ILoaderDataLoaded,
   ILoaderDataLoadedValue,
@@ -42,8 +44,8 @@ import {
   IManifestParserObservable,
   ISegmentLoaderArguments,
   ISegmentParserArguments,
-  ISegmentParserObservable,
-  ISegmentParserResponse,
+  ISegmentParserParsedSegment,
+  ITextParserObservable,
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
@@ -84,11 +86,11 @@ function getLoaderArguments(
  * @returns {Object}
  */
 function getParserArguments<T>(
-  { init, response } : ISegmentParserArguments<T>,
+  { initTimescale, response } : ISegmentParserArguments<T>,
   segment : ISegment,
   offset : number
 ) : ISegmentParserArguments<T> {
-  return { init,
+  return { initTimescale,
            response,
            content: getLoaderArguments(segment, offset) };
 }
@@ -220,28 +222,30 @@ export default function(options : ITransportOptions): ITransportPipelines {
    * @param {number} contentOffset
    * @param {number} scaledContentOffset
    * @param {number|undefined} contentEnd
-   * @param {Object} parserResponse
+   * @param {Object} segmentResponse
+   * @returns {Object}
    */
-  function formatParserResponse<T>(
+  function offsetTimeInfos(
     contentOffset : number,
     scaledContentOffset : number,
     contentEnd : number | undefined,
-    { chunkData,
-      chunkInfos,
-      chunkOffset,
-      segmentProtections,
-      appendWindow } : ISegmentParserResponse<T>
-  ) : ISegmentParserResponse<T> {
-    const offsetedSegmentOffset = chunkOffset + contentOffset;
-    if (chunkData == null) {
-      return { chunkData: null,
-               chunkInfos,
+    segmentResponse : ISegmentParserParsedSegment<unknown>
+  ) : { chunkInfos : IChunkTimingInfos | null;
+        chunkOffset : number;
+        appendWindow : [ number | undefined, number | undefined ]; } {
+    const offsetedSegmentOffset = segmentResponse.chunkOffset + contentOffset;
+    if (segmentResponse.chunkData == null) {
+      return { chunkInfos: segmentResponse.chunkInfos,
                chunkOffset: offsetedSegmentOffset,
-               segmentProtections,
                appendWindow: [undefined, undefined] };
     }
-    if (chunkInfos !== null && chunkInfos.time > -1) {
-      chunkInfos.time += scaledContentOffset;
+
+    // clone chunkInfos
+    const { chunkInfos, appendWindow } = segmentResponse;
+    const offsetedChunkInfos = chunkInfos === null ? null :
+                                                     objectAssign({}, chunkInfos);
+    if (offsetedChunkInfos !== null && offsetedChunkInfos.time > -1) {
+      offsetedChunkInfos.time += scaledContentOffset;
     }
 
     const offsetedWindowStart = appendWindow[0] != null ?
@@ -252,15 +256,13 @@ export default function(options : ITransportOptions): ITransportPipelines {
     if (appendWindow[1] != null) {
       offsetedWindowEnd = contentEnd != null ? Math.min(appendWindow[1] + contentOffset,
                                                         contentEnd) :
-                                        appendWindow[1] + contentOffset;
+                                               appendWindow[1] + contentOffset;
     } else if (contentEnd != null) {
       offsetedWindowEnd = contentEnd;
     }
-    return { chunkData,
-             chunkInfos,
+    return { chunkInfos: offsetedChunkInfos,
              chunkOffset: offsetedSegmentOffset,
-             segmentProtections,
-             appendWindow: [offsetedWindowStart, offsetedWindowEnd] };
+             appendWindow: [ offsetedWindowStart, offsetedWindowEnd ] };
   }
 
   const audioPipeline = {
@@ -271,18 +273,24 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : ISegmentParserObservable< Uint8Array | ArrayBuffer > {
-      const { init, content } = args;
+    ) : IAudioVideoParserObservable {
+      const { initTimescale, content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
-      const scaledOffset = contentStart * (init != null ? init.timescale :
-                                                          segment.timescale);
+      const scaledOffset = contentStart * (initTimescale ?? segment.timescale);
       const { audio } = getTransportPipelinesFromSegment(segment);
       return audio.parser(getParserArguments(args, segment, contentStart))
-        .pipe(map(res => formatParserResponse(contentStart,
-                                              scaledOffset,
-                                              contentEnd,
-                                              res)));
+        .pipe(map(res => {
+          if (res.type === "parsed-init-segment") {
+            return res;
+          }
+          const timeInfos = offsetTimeInfos(contentStart,
+                                            scaledOffset,
+                                            contentEnd,
+                                            res.value);
+         return objectAssign({ type: "parsed-segment",
+                               value: objectAssign({}, res.value, timeInfos) });
+        }));
     },
   };
 
@@ -294,18 +302,24 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : ISegmentParserObservable< Uint8Array | ArrayBuffer > {
-      const { init, content } = args;
+    ) : IAudioVideoParserObservable {
+      const { initTimescale, content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
-      const scaledOffset = contentStart * (init != null ? init.timescale :
-                                                          segment.timescale);
+      const scaledOffset = contentStart * (initTimescale ?? segment.timescale);
       const { video } = getTransportPipelinesFromSegment(segment);
       return video.parser(getParserArguments(args, segment, contentStart))
-        .pipe(map(res => formatParserResponse(contentStart,
-                                              scaledOffset,
-                                              contentEnd,
-                                              res)));
+        .pipe(map(res => {
+          if (res.type === "parsed-init-segment") {
+            return res;
+          }
+          const timeInfos = offsetTimeInfos(contentStart,
+                                            scaledOffset,
+                                            contentEnd,
+                                            res.value);
+         return objectAssign({ type: "parsed-segment",
+                               value: objectAssign({}, res.value, timeInfos) });
+        }));
     },
   };
 
@@ -315,19 +329,26 @@ export default function(options : ITransportOptions): ITransportPipelines {
       return text.loader(getLoaderArguments(segment, period.start));
     },
 
-    parser: (args: ISegmentParserArguments<ArrayBuffer|string|Uint8Array|null>) => {
-      const { init, content } = args;
+    parser: (
+      args: ISegmentParserArguments<ArrayBuffer|string|Uint8Array|null>
+    ) : ITextParserObservable => {
+      const { initTimescale, content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
-      const scaledOffset = contentStart * (init != null ? init.timescale :
-                                                          segment.timescale);
-
+      const scaledOffset = contentStart * (initTimescale ?? segment.timescale);
       const { text } = getTransportPipelinesFromSegment(segment);
       return text.parser(getParserArguments(args, segment, contentStart))
-        .pipe(map(res => formatParserResponse(contentStart,
-                                              scaledOffset,
-                                              contentEnd,
-                                              res)));
+        .pipe(map(res => {
+          if (res.type === "parsed-init-segment") {
+            return res;
+          }
+          const timeInfos = offsetTimeInfos(contentStart,
+                                            scaledOffset,
+                                            contentEnd,
+                                            res.value);
+         return objectAssign({ type: "parsed-segment",
+                               value: objectAssign({}, res.value, timeInfos) });
+        }));
     },
   };
 
@@ -340,18 +361,23 @@ export default function(options : ITransportOptions): ITransportPipelines {
     parser(
       args : ISegmentParserArguments<ArrayBuffer|Uint8Array|null>
     ) : IImageParserObservable {
-      const { init, content } = args;
+      const { initTimescale, content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
-      const scaledOffset = contentStart * (init != null ? init.timescale :
-                                                          segment.timescale);
-
+      const scaledOffset = contentStart * (initTimescale ?? segment.timescale);
       const { image } = getTransportPipelinesFromSegment(segment);
       return image.parser(getParserArguments(args, segment, contentStart))
-        .pipe(map(res => formatParserResponse(contentStart,
-                                              scaledOffset,
-                                              contentEnd,
-                                              res)));
+        .pipe(map(res => {
+          if (res.type === "parsed-init-segment") {
+            return res;
+          }
+          const timeInfos = offsetTimeInfos(contentStart,
+                                            scaledOffset,
+                                            contentEnd,
+                                            res.value);
+         return objectAssign({ type: "parsed-segment",
+                               value: objectAssign({}, res.value, timeInfos) });
+        }));
     },
   };
 
