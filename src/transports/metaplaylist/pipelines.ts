@@ -35,7 +35,7 @@ import parseMetaPlaylist, {
 } from "../../parsers/manifest/metaplaylist";
 import { IParsedManifest } from "../../parsers/manifest/types";
 import {
-  IAudioParserObservable,
+  IAudioVideoParserObservable,
   IChunkTimingInfos,
   IImageParserObservable,
   ILoaderDataLoaded,
@@ -48,7 +48,6 @@ import {
   ITextParserObservable,
   ITransportOptions,
   ITransportPipelines,
-  IVideoParserObservable,
 } from "../types";
 import generateManifestLoader from "./manifest_loader";
 
@@ -274,7 +273,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : IAudioParserObservable {
+    ) : IAudioVideoParserObservable {
       const { initTimescale, content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
@@ -303,7 +302,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
     parser(
       args : ISegmentParserArguments<Uint8Array|ArrayBuffer|null>
-    ) : IVideoParserObservable {
+    ) : IAudioVideoParserObservable {
       const { initTimescale, content } = args;
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);

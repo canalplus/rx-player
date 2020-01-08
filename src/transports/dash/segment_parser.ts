@@ -26,9 +26,8 @@ import {
 } from "../../parsers/containers/matroska";
 import takeFirstSet from "../../utils/take_first_set";
 import {
-  IAudioParserObservable,
+  IAudioVideoParserObservable,
   ISegmentParserArguments,
-  IVideoParserObservable,
 } from "../types";
 import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
@@ -39,7 +38,7 @@ export default function parser(
     initTimescale } : ISegmentParserArguments< Uint8Array |
                                                ArrayBuffer |
                                                null >
-) : IAudioParserObservable | IVideoParserObservable {
+) : IAudioVideoParserObservable {
   const { period, representation, segment } = content;
   const { data, isChunked } = response;
   const appendWindow : [number, number | undefined] = [ period.start, period.end ];

@@ -41,7 +41,7 @@ import request from "../../utils/request";
 import stringFromUTF8 from "../../utils/string_from_utf8";
 import warnOnce from "../../utils/warn_once";
 import {
-  IAudioParserObservable,
+  IAudioVideoParserObservable,
   IChunkTimingInfos,
   IImageParserObservable,
   IManifestLoaderArguments,
@@ -54,7 +54,6 @@ import {
   ITextParserObservable,
   ITransportOptions,
   ITransportPipelines,
-  IVideoParserObservable,
 } from "../types";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
 import generateManifestLoader from "../utils/document_manifest_loader";
@@ -169,7 +168,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       content,
       response,
     } : ISegmentParserArguments< ArrayBuffer | Uint8Array | null >
-    ) : IAudioParserObservable | IVideoParserObservable {
+    ) : IAudioVideoParserObservable {
       const { segment, representation, adaptation, manifest } = content;
       const { data, isChunked } = response;
       if (data == null) {
