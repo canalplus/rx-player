@@ -237,13 +237,9 @@ export type ISegmentParserResponse<T> =
   ISegmentParserInitSegment<T> |
   ISegmentParserSegment<T>;
 
-// format under which video data / initialization data is decodable
-export type IVideoTrackSegmentData = Uint8Array |
-                                     ArrayBuffer;
-
-// format under which audio data / initialization data is decodable
-export type IAudioTrackSegmentData = Uint8Array |
-                                     ArrayBuffer;
+// format under which audio / video data / initialization data is decodable
+export type IAudioVideoTrackSegmentData = Uint8Array |
+                                          ArrayBuffer;
 
 // format under which text data is decodable
 export interface ITextTrackSegmentData {
@@ -264,29 +260,17 @@ export interface IImageTrackSegmentData {
   type : string; // the type of the data (example: "bif")
 }
 
-// Response from a video segment parser when parsing an init segment
-export type IVideoParserInitSegmentResponse =
-  ISegmentParserInitSegment< IVideoTrackSegmentData >;
+// Response from an audio / video segment parser when parsing an init segment
+export type IAudioVideoParserInitSegmentResponse =
+  ISegmentParserInitSegment< IAudioVideoTrackSegmentData >;
 
-// Response from a video segment parser when parsing a regular segment
-export type IVideoParserSegmentResponse =
-  ISegmentParserSegment< IVideoTrackSegmentData >;
+// Response from an audio / video segment parser when parsing a regular segment
+export type IAudioVideoParserSegmentResponse =
+  ISegmentParserSegment< IAudioVideoTrackSegmentData >;
 
-// Response object returned by the video's segment parser
-export type IVideoParserResponse = IVideoParserInitSegmentResponse |
-                                   IVideoParserSegmentResponse;
-
-// Response from a audio segment parser when parsing an init segment
-export type IAudioParserInitSegmentResponse =
-  ISegmentParserInitSegment< IAudioTrackSegmentData >;
-
-// Response from a audio segment parser when parsing a regular segment
-export type IAudioParserSegmentResponse =
-  ISegmentParserSegment< IAudioTrackSegmentData >;
-
-// Response object returned by the audio's segment parser
-export type IAudioParserResponse = IAudioParserInitSegmentResponse |
-                                   IAudioParserSegmentResponse;
+// Response object returned by the audio's / video's segment parser
+export type IAudioVideoParserResponse = IAudioVideoParserInitSegmentResponse |
+                                        IAudioVideoParserSegmentResponse;
 
 // Response from a text segment parser when parsing an init segment
 export type ITextParserInitSegmentResponse = ISegmentParserInitSegment< null >;
@@ -310,8 +294,7 @@ export type IImageParserSegmentResponse =
 export type IImageParserResponse = IImageParserInitSegmentResponse |
                                    IImageParserSegmentResponse;
 
-export type IVideoParserObservable = Observable<IVideoParserResponse>;
-export type IAudioParserObservable = Observable<IAudioParserResponse>;
+export type IAudioVideoParserObservable = Observable<IAudioVideoParserResponse>;
 export type ITextParserObservable = Observable<ITextParserResponse>;
 export type IImageParserObservable = Observable<IImageParserResponse>;
 
@@ -330,32 +313,18 @@ export interface ITransportManifestPipeline { resolver? : IManifestResolverFunct
                                               loader : IManifestLoaderFunction;
                                               parser : IManifestParserFunction; }
 
-export type ITransportVideoSegmentLoader =
+export type ITransportAudioVideoSegmentLoader =
   (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
                                                              ArrayBuffer |
                                                              null >;
-export type ITransportVideoSegmentParser =
+export type ITransportAudioVideoSegmentParser =
   (x : ISegmentParserArguments< Uint8Array |
                                 ArrayBuffer |
-                                null >) => IVideoParserObservable;
+                                null >) => IAudioVideoParserObservable;
 
-export interface ITransportVideoSegmentPipeline {
-  loader : ITransportVideoSegmentLoader;
-  parser : ITransportVideoSegmentParser;
-}
-
-export type ITransportAudioSegmentLoader =
-  (x : ISegmentLoaderArguments) => ISegmentLoaderObservable< Uint8Array |
-                                                             ArrayBuffer |
-                                                             null >;
-export type ITransportAudioSegmentParser =
-  (x : ISegmentParserArguments< Uint8Array |
-                                ArrayBuffer |
-                                null >) => IAudioParserObservable;
-
-export interface ITransportAudioSegmentPipeline {
-  loader : ITransportAudioSegmentLoader;
-  parser : ITransportAudioSegmentParser;
+export interface ITransportAudioVideoSegmentPipeline {
+  loader : ITransportAudioVideoSegmentLoader;
+  parser : ITransportAudioVideoSegmentParser;
 }
 
 // Note: The segment's data can be null for init segments
@@ -392,8 +361,7 @@ export interface ITransportImageSegmentPipeline {
   parser : ITransportImageSegmentParser;
 }
 
-export type ITransportSegmentPipeline = ITransportAudioSegmentPipeline |
-                                        ITransportVideoSegmentPipeline |
+export type ITransportSegmentPipeline = ITransportAudioVideoSegmentPipeline |
                                         ITransportTextSegmentPipeline |
                                         ITransportImageSegmentPipeline;
 
@@ -401,8 +369,8 @@ export type ITransportPipeline = ITransportManifestPipeline |
                                  ITransportSegmentPipeline;
 
 export interface ITransportPipelines { manifest : ITransportManifestPipeline;
-                                       audio : ITransportAudioSegmentPipeline;
-                                       video : ITransportVideoSegmentPipeline;
+                                       audio : ITransportAudioVideoSegmentPipeline;
+                                       video : ITransportAudioVideoSegmentPipeline;
                                        text : ITransportTextSegmentPipeline;
                                        image : ITransportImageSegmentPipeline; }
 
