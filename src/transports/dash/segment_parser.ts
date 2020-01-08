@@ -37,8 +37,8 @@ export default function parser(
   { content,
     response,
     initTimescale } : ISegmentParserArguments< Uint8Array |
-                                      ArrayBuffer |
-                                      null >
+                                               ArrayBuffer |
+                                               null >
 ) : IAudioParserObservable | IVideoParserObservable {
   const { period, representation, segment } = content;
   const { data, isChunked } = response;

@@ -44,8 +44,8 @@ function parseISOBMFFEmbeddedTextTrack(
   { response,
     content,
     initTimescale } : ISegmentParserArguments< Uint8Array |
-                                      ArrayBuffer |
-                                      string >
+                                               ArrayBuffer |
+                                               string >
 ) : ITextParserObservable {
   const { period, representation, segment } = content;
   const { isInit, indexRange } = segment;
