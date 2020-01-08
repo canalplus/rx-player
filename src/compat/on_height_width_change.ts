@@ -26,6 +26,7 @@ import {
   startWith,
 } from "rxjs/operators";
 import log from "../log";
+import isNode from "./is_node";
 
 export interface IResolution { width : number;
                                height : number; }
@@ -57,7 +58,8 @@ interface IDOMRectReadOnly { readonly x: number;
 
 const _ResizeObserver : IResizeObserverConstructor |
                         /* tslint:disable no-unsafe-any */
-                        undefined = (window as any).ResizeObserver;
+                        undefined = isNode ? undefined :
+                                            (window as any).ResizeObserver;
                         /* tslint:enable no-unsafe-any */
 
 /**

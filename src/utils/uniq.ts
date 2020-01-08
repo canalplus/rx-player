@@ -38,8 +38,9 @@ function uniqFromSet<T>(arr: T[]) : T[] {
  * @param {Array.<*>} arr
  * @returns {Array.<*>}
  */
-export default typeof (window as any).Set === "function" ? uniqFromSet :
-                                                           uniqFromFilter;
+export default  typeof window !== "undefined" &&
+                typeof (window as any).Set === "function" ? uniqFromSet :
+                                                            uniqFromFilter;
 export {
   uniqFromFilter,
   uniqFromSet,

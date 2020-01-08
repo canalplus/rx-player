@@ -40,6 +40,7 @@ import {
 } from "../browser_compatibility_types";
 import { isIE11 } from "../browser_detection";
 import * as events from "../event_listeners";
+import isNode from "../is_node";
 import shouldUseWebKitMediaKeys from "../should_use_webkit_media_keys";
 import CustomMediaKeySystemAccess from "./custom_key_system_access";
 
@@ -164,8 +165,8 @@ let CustomMediaKeys : IMockMediaKeysConstructor =
  * Therefore, we prefer not to use requestMediaKeySystemAccess on Safari when webkit API
  * is available.
  */
-if (navigator.requestMediaKeySystemAccess != null &&
-    !shouldUseWebKitMediaKeys()
+if (isNode ||
+    (navigator.requestMediaKeySystemAccess != null && !shouldUseWebKitMediaKeys())
 ) {
   requestMediaKeySystemAccess = (a : string, b : ICompatMediaKeySystemConfiguration[]) =>
     castToObservable(
