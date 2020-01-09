@@ -47,11 +47,13 @@ import {
   ICompatDocument,
   ICompatPictureInPictureWindow,
 } from "./browser_compatibility_types";
+import isNode from "./is_node";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
 const INACTIVITY_DELAY = config.INACTIVITY_DELAY;
-const pixelRatio = window.devicePixelRatio == null ||
+const pixelRatio = isNode ||
+                   window.devicePixelRatio == null ||
                    window.devicePixelRatio === 0 ? 1 :
                                                    window.devicePixelRatio;
 

@@ -15,6 +15,7 @@
  */
 
 import { MediaError } from "../errors";
+import isNode from "./is_node";
 import shouldUseWebKitMediaKeys from "./should_use_webkit_media_keys";
 
 // regular MediaKeys type + optional functions present in IE11
@@ -86,7 +87,8 @@ export interface ICompatPictureInPictureWindow
   extends EventTarget { width: number;
                         height: number; }
 
-const win = window as any;
+const win = isNode ? {} :
+                     window as any;
 /* tslint:disable no-unsafe-any */
 const HTMLElement_ : typeof HTMLElement = win.HTMLElement;
 const VTTCue_ : ICompatVTTCueConstructor|undefined =

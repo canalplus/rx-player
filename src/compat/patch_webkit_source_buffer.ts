@@ -16,6 +16,7 @@
 
 import nextTick from "next-tick";
 import EventEmitter from "../utils/event_emitter";
+import isNode from "./is_node";
 
 type IWebKitSourceBufferConstructor = new() => IWebKitSourceBuffer;
 
@@ -28,7 +29,7 @@ export default function patchWebkitSourceBuffer() {
   // old WebKit SourceBuffer implementation,
   // where a synchronous append is used instead of appendBuffer
   /* tslint:disable no-unsafe-any */
-  if ((window as any).WebKitSourceBuffer &&
+  if (!isNode && (window as any).WebKitSourceBuffer != null &&
       !(window as any).WebKitSourceBuffer.prototype.addEventListener
   ) {
 
