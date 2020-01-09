@@ -238,17 +238,15 @@ export default function RepresentationBuffer<T>({
 
       if (initSegment !== null && initSegmentObject === null) {
         // prepend initialization segment
-        const initSegmentPriority = getSegmentPriority(initSegment, timing);
         neededSegments = [ { segment: initSegment,
-                             priority: initSegmentPriority },
+                             priority: 0 },
                            ...neededSegments ];
       }
 
       if (indexSegment !== null) {
         // prepend index segment
-        const indexSegmentPriority = getSegmentPriority(indexSegment, timing);
         neededSegments = [ { segment: indexSegment,
-                             priority: indexSegmentPriority },
+                             priority: 0 },
                            ...neededSegments ];
       }
 
