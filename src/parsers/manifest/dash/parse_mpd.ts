@@ -230,6 +230,7 @@ function parseCompleteIntermediateRepresentation(
     clockOffset: args.externalClockOffset,
     id: rootAttributes.id != null ? rootAttributes.id :
                                     "gen-dash-manifest-" + generateManifestID(),
+    isDynamic,
     isLive: isDynamic,
     periods: parsedPeriods,
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay,

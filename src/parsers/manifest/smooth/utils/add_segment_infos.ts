@@ -20,14 +20,8 @@ export interface IIndexSegment { start : number;
                                  duration : number;
                                  repeatCount: number; }
 
-export interface ITimelineIndex { presentationTimeOffset? : number;
-                                  timescale : number;
-                                  media : string;
-                                  timeline : IIndexSegment[];
-                                  startNumber? : number;
-                                  isLive : boolean;
-                                  timeShiftBufferDepth? : number;
-                                  manifestReceivedTime? : number; }
+export interface ITimelineIndex { timescale : number;
+                                  timeline : IIndexSegment[]; }
 
 /**
  * Add a new segment to the index.

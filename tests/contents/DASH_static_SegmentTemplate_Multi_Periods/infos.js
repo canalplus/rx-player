@@ -8,6 +8,7 @@ const BASE_URL = "http://" +
 export default {
   url: BASE_URL + "mp4-live-periods-mpd.mpd",
   transport: "dash",
+  isDynamic: false,
   isLive: false,
   duration: 240,
   minimumPosition: 0,

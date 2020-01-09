@@ -45,15 +45,15 @@ export interface IMetaPlaylistTextTrack {
 }
 
 export interface IMetaPlaylist {
-  type : "MPL";
-  version : string;
-  dynamic? : boolean;
-  pollInterval? : number;
-  contents: Array<{
-    url: string;
-    startTime: number;
-    endTime: number;
-    transport: string;
+  type : "MPL"; // Obligatory token
+  version : string; // MAJOR.MINOR
+  dynamic? : boolean; // The MetaPlaylist could need to be updated
+  pollInterval? : number; // Refresh interval in seconds
+  contents: Array<{ // Sub-Manifests
+    url: string; // URL of the Manifest
+    startTime: number; // start timestamp in seconds
+    endTime: number; // end timestamp in seconds
+    transport: string; // "dash" | "smooth" | "metaplaylist"
     textTracks?: IMetaPlaylistTextTrack[];
   }>;
 }
@@ -136,8 +136,7 @@ export default function parseMetaPlaylist(
 }
 
 /**
- * From several parsed manifests, generate a single manifest
- * which fakes live content playback.
+ * From several parsed manifests, generate a single bigger manifest.
  * Each content presents a start and end time, so that periods
  * boudaries could be adapted.
  * @param {Object} mplData
@@ -163,7 +162,7 @@ function createManifest(
                                             0;
   const maximumTime = contents.length > 0 ? contents[contents.length - 1].endTime :
                                             0;
-  const isLive = mplData.dynamic === true;
+  const isDynamic = mplData.dynamic === true;
 
   let firstStart: number|null = null;
   let lastEnd: number|null = null;
@@ -293,30 +292,24 @@ function createManifest(
     periods.push(...manifestPeriods);
   }
 
-  let duration : number|undefined;
-  if (!isLive) {
-    if (lastEnd === null || firstStart === null) {
-      throw new Error("MPL Parser: can't define duration of manifest.");
-    }
-    duration = lastEnd - firstStart;
-  }
-
   const time = performance.now();
-  const manifest = {
-    availabilityStartTime: 0,
-    clockOffset,
-    suggestedPresentationDelay: 10,
-    duration,
-    id: "gen-metaplaylist-man-" + generateManifestID(),
-    periods,
-    transportType: "metaplaylist",
-    isLive,
-    uris: url == null ? [] :
-                        [url],
-    maximumTime: { isContinuous: false, value: maximumTime, time },
-    minimumTime: { isContinuous: false, value: minimumTime, time },
-    lifetime: mplData.pollInterval,
-  };
+  const manifest = { availabilityStartTime: 0,
+                     clockOffset,
+                     suggestedPresentationDelay: 10,
+                     id: "gen-metaplaylist-man-" + generateManifestID(),
+                     periods,
+                     transportType: "metaplaylist",
+                     isLive: isDynamic,
+                     isDynamic,
+                     uris: url == null ? [] :
+                                         [url],
+                     maximumTime: { isContinuous: false,
+                                    value: maximumTime,
+                                    time },
+                     minimumTime: { isContinuous: false,
+                                    value: minimumTime,
+                                    time },
+                     lifetime: mplData.pollInterval };
 
   return manifest;
 }
