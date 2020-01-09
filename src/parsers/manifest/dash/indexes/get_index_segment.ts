@@ -36,7 +36,7 @@ export default function getIndexSegment(
   }
   return { id: "representationIndex",
            isInit: false,
-           privateInfos: { indexOnly: true },
+           noMediaData: true,
            time: 0,
            duration: 0,
            range: representationIndex.range,

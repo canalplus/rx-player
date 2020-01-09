@@ -52,6 +52,13 @@ export default function createRepresentationIndex(
     },
 
     /**
+     * @returns {null}
+     */
+    getIndexSegment() : null {
+      return null;
+    },
+
+    /**
      * @param {Number} up
      * @param {Number} duration
      * @returns {Array.<Object>}

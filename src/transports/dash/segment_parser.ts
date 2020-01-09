@@ -82,7 +82,7 @@ export default function parser(
                                                       indexRange[0] :
                                                       0);
 
-  if (segment.privateInfos?.indexOnly === true) {
+  if (segment.noMediaData === true) {
     if (nextSegments !== null &&
         nextSegments.length > 0) {
       representation.index._addSegments(nextSegments);
