@@ -27,7 +27,19 @@ import ManualTimeRanges from "./time_ranges";
 interface IAbstractSourceBufferEvent { updatestart : undefined;
                                        update : undefined;
                                        updateend : undefined;
-                                       error : Event; }
+
+                                       // FIXME
+                                       // The W3C specification indicates that
+                                       // an "Event" object should be sent with
+                                       // the error event. This is the only
+                                       // difference with our custom
+                                       // implementation where an `Error` will
+                                       // generally be sent instead. Waiting for
+                                       // a better solution, we for now put an
+                                       // `any` type here and will treat any
+                                       // error as an `unknown` type at the
+                                       // other side.
+                                       error : any; }
 
 /**
  * Abstract class for a custom SourceBuffer implementation.
@@ -60,7 +72,7 @@ export default abstract class AbstractSourceBuffer<T>
    * buffer.
    * @param {*} data
    */
-  appendBuffer(data : T) : void {
+  public appendBuffer(data : T) : void {
     this._lock(() => this._append(data));
   }
 
@@ -69,14 +81,31 @@ export default abstract class AbstractSourceBuffer<T>
    * @param {Number} from
    * @param {Number} to
    */
-  remove(from : number, to : number) : void {
+  public remove(from : number, to : number) : void {
     this._lock(() => this._remove(from, to));
+  }
+
+  /**
+   * Call `appendBuffer` synchronously (do not wait for nextTick).
+   * @param {*} data
+   */
+  public appendBufferSync(data : T) : void {
+    this._lockSync(() => this._append(data));
+  }
+
+  /**
+   * Call `remove` synchronously (do not wait for nextTick).
+   * @param {Number} from
+   * @param {Number} to
+   */
+  public removeSync(from : number, to : number) : void {
+    this._lockSync(() => this._remove(from, to));
   }
 
   /**
    * Mimic the SourceBuffer _abort_ method.
    */
-  abort() : void {
+  public abort() : void {
     this.updating = false;
     this.readyState = "closed";
     this._abort();
@@ -108,10 +137,37 @@ export default abstract class AbstractSourceBuffer<T>
                        this.trigger("update", undefined);
                        this.trigger("updateend", undefined);
                      }),
-                     (e : Event) => nextTick(() => {
+                     (e : unknown) => nextTick(() => {
                        this.updating = false;
                        this.trigger("error", e);
                        this.trigger("updateend", undefined);
                      }));
+  }
+
+  /**
+   * Call SourceBuffer function but throw errors and emit events synchronously.
+   * Throws if another function is already active.
+   * Also triggers the right events on start, error and end
+   * @param {Function} func
+   * @param {*} data
+   */
+  private _lockSync(func : () => void) : void {
+    if (this.updating) {
+      throw new Error("SourceBuffer: SourceBuffer already updating.");
+    }
+    this.updating = true;
+    this.trigger("updatestart", undefined);
+
+    try {
+      func();
+    } catch (e) {
+      this.updating = false;
+      this.trigger("error", e);
+      this.trigger("updateend", undefined);
+      throw e;
+    }
+    this.updating = false;
+    this.trigger("update", undefined);
+    this.trigger("updateend", undefined);
   }
 }

@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import mediaCapabilitiesProber from "./mediaCapabilitiesProber";
-import TextTrackDisplayer from "./TextTrackDisplayer";
+import TextTrackDisplayer, {
+  ISetTextTrackArguments,
+} from "./text_track_displayer";
 
-export {
-  mediaCapabilitiesProber,
-  TextTrackDisplayer,
-};
+export default TextTrackDisplayer;
+export { ISetTextTrackArguments };
