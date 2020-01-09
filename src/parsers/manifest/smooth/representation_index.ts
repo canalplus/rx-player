@@ -147,6 +147,7 @@ export interface ISmoothRIOptions {
   segmentPrivateInfos : ISmoothInitSegmentPrivateInfos;
 }
 
+// Information allowing to generate an init segment
 interface ISmoothInitSegmentPrivateInfos {
   bitsPerSample? : number;
   channels? : number;

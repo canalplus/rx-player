@@ -72,7 +72,6 @@ export default function createBufferClock(
           duration: tick.duration,
           isPaused: initialPlayPerformed ? tick.paused :
                                            !autoPlay,
-          isLive,
           liveGap: isLive ? manifest.getMaximumPosition() - tick.currentTime :
                             Infinity,
           readyState: tick.readyState,

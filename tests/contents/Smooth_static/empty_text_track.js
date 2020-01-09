@@ -8,6 +8,7 @@ const BASE_URL = "http://" +
 const manifestInfos = {
   url: BASE_URL + "Manifest_Empty_Text_Track.xml",
   transport: "smooth",
+  isDynamic: false,
   isLive: false,
   duration: 75,
   minimumPosition: 0,

@@ -18,7 +18,7 @@ import { IParsedAdaptation } from "../types";
 
 /**
  * Returns "last time of reference" from the adaptation given, considering a
- * live content.
+ * dynamic content.
  * Undefined if a time could not be found.
  * Null if the Adaptation has no segments (it could be that it didn't started or
  * that it already finished for example).
