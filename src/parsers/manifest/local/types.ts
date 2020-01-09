@@ -29,6 +29,17 @@ export type ILocalManifestSegmentLoader = (
   // returns either the aborting callback or nothing
 ) => (() => void) | void;
 
+export interface IContentProtectionKID { keyId : Uint8Array;
+                                         systemId?: string; }
+
+export interface IContentProtectionInitData { systemId : string;
+                                              data : Uint8Array; }
+
+export interface IContentProtections {
+  keyIds : IContentProtectionKID[];
+  initData : Partial<Record<string, IContentProtectionInitData[]>>;
+}
+
 export interface ILocalIndexSegment {
   time : number; // Start time of the segment, timescaled
   timescale : number; // Allow to convert `time` and `duration` into seconds:
@@ -47,6 +58,7 @@ export interface ILocalIndex {
 
 export interface ILocalRepresentation {
   bitrate : number; // bitrate of the content in bps
+  contentProtections? : IContentProtections;
   mimeType : string; // same than in the DASH MPD
   codecs : string; // same than in the DASH MPD
   width? : number;

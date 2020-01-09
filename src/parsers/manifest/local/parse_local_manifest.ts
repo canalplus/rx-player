@@ -128,5 +128,6 @@ function parseRepresentation(
     codecs: representation.codecs,
     mimeType: representation.mimeType,
     index: createRepresentationIndex(representation.index, id, isFinished),
+    contentProtections: representation.contentProtections,
   };
 }
