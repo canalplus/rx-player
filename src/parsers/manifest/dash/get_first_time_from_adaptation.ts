@@ -18,7 +18,7 @@ import { IParsedAdaptation } from "../types";
 
 /**
  * Returns "first time of reference" from the adaptation given, considering a
- * live content.
+ * dynamic content.
  * Undefined if a time could not be found.
  *
  * We consider the latest first time from every representations in the given
