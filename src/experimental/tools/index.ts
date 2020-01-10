@@ -15,9 +15,9 @@
  */
 
 import mediaCapabilitiesProber from "./mediaCapabilitiesProber";
-import TextTrackDisplayer from "./TextTrackDisplayer";
+import TextTrackRenderer from "./TextTrackRenderer";
 
 export {
   mediaCapabilitiesProber,
-  TextTrackDisplayer,
+  TextTrackRenderer,
 };

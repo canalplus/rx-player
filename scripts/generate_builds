@@ -276,9 +276,9 @@ echo "/**
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import TextTrackDisplayer from \"../../dist/_esm5.processed/experimental/tools/TextTrackDisplayer/index.js\";
-export * from \"../../dist/_esm5.processed/experimental/tools/TextTrackDisplayer/index.js\";
-export default TextTrackDisplayer;" > experimental/tools/TextTrackDisplayer.js
+import TextTrackRenderer from \"../../dist/_esm5.processed/experimental/tools/TextTrackRenderer/index.js\";
+export * from \"../../dist/_esm5.processed/experimental/tools/TextTrackRenderer/index.js\";
+export default TextTrackRenderer;" > experimental/tools/TextTrackRenderer.js
 echo "/**
  * Copyright 2015 CANAL+ Group
  *
@@ -294,9 +294,9 @@ echo "/**
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import TextTrackDisplayer from \"../../dist/_esm5.processed/experimental/tools/TextTrackDisplayer/index\";
-export * from \"../../dist/_esm5.processed/experimental/tools/TextTrackDisplayer/index\";
-export default TextTrackDisplayer;" > experimental/tools/TextTrackDisplayer.d.ts
+import TextTrackRenderer from \"../../dist/_esm5.processed/experimental/tools/TextTrackRenderer/index\";
+export * from \"../../dist/_esm5.processed/experimental/tools/TextTrackRenderer/index\";
+export default TextTrackRenderer;" > experimental/tools/TextTrackRenderer.d.ts
 
 mkdir -p experimental/features
 echo "/**

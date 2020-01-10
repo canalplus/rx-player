@@ -31,9 +31,9 @@ export interface ISetTextTrackArguments {
 /**
  * Display custom text tracks in the given `textTrackElement`, synchronized
  * with the given `videoElement`.
- * @class TextTrackDisplayer
+ * @class TextTrackRenderer
  */
-export default class TextTrackDisplayer {
+export default class TextTrackRenderer {
   /**
    * Add a given parser from the list of features.
    * @param {Array.<Function>} parsersList
@@ -83,8 +83,8 @@ export default class TextTrackDisplayer {
   }
 
   /**
-   * Dispose of most ressources taken by the TextTrackDisplayer.
-   * /!\ The TextTrackDisplayer will be unusable after this method has been
+   * Dispose of most ressources taken by the TextTrackRenderer.
+   * /!\ The TextTrackRenderer will be unusable after this method has been
    * called.
    */
   public dispose() {
