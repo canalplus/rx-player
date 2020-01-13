@@ -80,7 +80,7 @@ export interface ISegment {
   duration : number; // Estimated duration of the segment, in timescale
   id : string; // ID of the Segment. Should be unique for this Representation
   isInit : boolean; // If true, this Segment contains initialization data
-  noMediaData? : boolean; // If true, this Segment doesn't carry media data
+  isIndex? : boolean; // If true, this is an index segment only
   mediaURL : string|null; // URL of the segment
   time : number; // Estimated time of beginning for the segment, in timescale
   timescale : number; // Timescale to convert time and duration into seconds
