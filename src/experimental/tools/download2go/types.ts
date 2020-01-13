@@ -25,15 +25,18 @@ export interface IGlobalSettings {
   nameDB?: string;
 }
 
-export interface IInitSettings {
+export interface IApiLoader {
   url: string;
   transport: "smooth" | "dash";
-  contentID: string;
   metaData?: {
     [prop: string]: any;
   };
   advanced?: IAdvancedSettings;
   keySystems?: IKeySystemOption;
+}
+
+export interface IInitSettings extends IApiLoader {
+  contentID: string;
 }
 
 export interface IResumeSettings extends IStoredManifest {

@@ -31,11 +31,11 @@ import {
 } from "./api/downloader/manifest";
 import { IContentProtection } from "./api/drm/types";
 import {
+  IApiLoader,
   IContentLoader,
   IDownload2GoEvents,
   IEmitterTrigger,
   IGlobalSettings,
-  IInitSettings,
   IStoredManifest,
 } from "./types";
 import {
@@ -99,16 +99,17 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
   /**
    * Start a download from scratch.
    * @param {Object<ISettingsDownloader>} settings
-   * @returns {Promise.<void>}
+   * @returns {Promise.<string|void>} contentID -
+   * return the id generated of the content or void if an error happened
    */
-  async download(options: IInitSettings): Promise<void> {
+  async download(options: IApiLoader): Promise<string | void> {
     try {
       const db = this.db;
       if (db === null) {
         throw new Error("The IndexDB database has not been created!");
       }
-      await checkInitDownloaderOptions(options, db, this.activeDownloads);
-      const { metaData, contentID, transport } = options;
+      const contentID = await checkInitDownloaderOptions(options, db);
+      const { metaData, transport } = options;
       const pause$ = new AsyncSubject<void>();
       this.activePauses[contentID] = pause$;
       const downloadManager = new DownloadManager({
@@ -116,7 +117,7 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
         db,
       });
       const initDownloadSub = downloadManager
-        .initDownload(options, pause$)
+        .initDownload({ ...options, contentID }, pause$)
         .subscribe(
           ([download]) => {
             if (download === null) {
@@ -152,12 +153,12 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
           (error: Error) => this.trigger("error", { action: "init-downloader", error })
         );
       this.activeDownloads[contentID] = initDownloadSub;
+      return contentID;
     } catch (error) {
       const err = error as Error;
       this.trigger("error", {
         action: "init-downloader",
         error: err,
-        contentID: options.contentID,
       });
     }
   }

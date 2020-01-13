@@ -20,7 +20,7 @@ import arrayIncludes from "../../../utils/array_includes";
 import MediaCapabilitiesProber from "../mediaCapabilitiesProber/";
 import { IMediaKeySystemConfiguration } from "../mediaCapabilitiesProber/types";
 import { IActiveDownload } from "./api/context/types";
-import { IInitSettings, IStoredManifest } from "./types";
+import { IApiLoader, IStoredManifest } from "./types";
 
 /* tslint:disable */
 
@@ -64,29 +64,22 @@ export class IndexDBError extends Error {
  * Check the presence and validity of ISettingsDownloader arguments
  *
  * @param ISettingsDownloader - The arguments that the user of the lib provided
- * @returns void
+ * @returns ID - Return the ID that the download will use to store as a primary key
  *
  */
 export async function checkInitDownloaderOptions(
-  options: IInitSettings,
-  db: IDBPDatabase,
-  activeDownloads: IActiveDownload
-): Promise<void> {
+  options: IApiLoader,
+  db: IDBPDatabase
+): Promise<string> {
   if (typeof options !== "object" || Object.keys(options).length < 0) {
     throw new ValidationArgsError(
       "You must at least specify these arguments: { url, contentID, transport }"
     );
   }
 
-  const { url, contentID, transport } = options;
+  const { url, transport } = options;
   if (url == null || url === "") {
     throw new ValidationArgsError("You must specify the url of the manifest");
-  }
-
-  if (contentID == null || contentID === "") {
-    throw new ValidationArgsError(
-      "You must specify a contentID of the content you want to download"
-    );
   }
 
   if (!arrayIncludes(["smooth", "dash"], transport)) {
@@ -95,21 +88,8 @@ export async function checkInitDownloaderOptions(
     );
   }
 
-  if (activeDownloads[contentID] != null) {
-    throw new ValidationArgsError(
-      "The content must be resume instead of starting a new download"
-    );
-  }
-
-  const contentMovie = (await db.get("manifests", contentID)) as
-    | IStoredManifest
-    | null
-    | undefined;
-  if (contentMovie != null) {
-    throw new ValidationArgsError(
-      "An entry with the same contentID is already present, contentID must be unique"
-    );
-  }
+  const nbDownload = await db.count("manifests");
+  return String(nbDownload + 1);
 }
 
 export function checkForResumeAPausedMovie(
