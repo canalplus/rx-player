@@ -37,7 +37,7 @@ import { IKeySystemOption } from "../eme";
 import {
   IAudioTrackPreference,
   ITextTrackPreference,
-} from "./track_manager";
+} from "./track_choice_manager";
 
 const { DEFAULT_AUTO_PLAY,
         DEFAULT_INITIAL_BITRATES,

@@ -32,5 +32,5 @@ export {
 export {
   IAudioTrackPreference,
   ITextTrackPreference,
-} from "./track_manager";
+} from "./track_choice_manager";
 export default Player;
