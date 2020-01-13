@@ -20,7 +20,7 @@ Instead, it should be imported by adding the RxPlayer through a dependency (e.g.
 `"rx-player/experimental/tools"`:
 
 ```js
-import { Download2Go as D2G } from "rx-player/experimental/tools";
+import { contentDownloader as D2G } from "rx-player/experimental/tools";
 
 this.D2G = new D2G();
 await this.D2G.initDB(); // is Mandatory to initialize IndexedDB
@@ -83,32 +83,28 @@ We are be able to:
 
 #### Usage
 
-`download(IInitSettings): Promise<void>`
+`download(IInitSettings): Promise<string>`
 
 - _url_ (`string`): The url of the manifest (**DASH**/**SMOOTH**). [MANDATORY]
 
 - _transport_ (`smooth|dash`):` Tell to the loader what type of streaming transport protocol we will use. [MANDATORY]
 
-- _contentID_ (`string`): Uniquely identify a downloaded content. [MANDATORY]
+- _metaData_ (`any`): You can put whatever value you want here to get it in offline mode. The values you enter here, must be JSON-inified in order to insert them in IndexedDB.
 
-- _metaData_ (`any`): You can put whatever value you want here to get it in offline mode. Valid javascript type: `object|array|string|number`.
+- _quality_ `(string)`: Specify the quality of the movie you want, could be HIGHEST, MEDIUM, LOWEST.
 
-- _advanced_ `(object)`:
+  - `HIGHEST`: Will take the **HIGHEST** quality possible.
+  - `MEDIUM`: Will take the **MIDDLE** quality (Based on lower quality pick).
+  - `LOWEST`: Will take the **LOWEST** quality possible.
 
-  - _quality_ `(string)`: Specify the quality of the movie you want, could be HIGH, MEDIUM, LOW.
+  > This parameter is useful if you want to set up a quick download.
 
-    - `HIGH`: Will take the **HIGHEST** quality possible.
-    - `MEDIUM`: Will take the **MIDDLE** quality (Based on lower quality pick).
-    - `LOW`: Will take the **LOWEST** quality possible.
+- _videoQualityPicker_ `(function)`: This parameter is much more **advanced** than the one above, it allows you to choose a specific quality depending a representation given in the manifest. The function take an array of representation for the given adaptation and must return the representation that we will use.
 
-    > This parameter is useful if you want to set up a quick download.
+  - Type: `([Representation, Representation, Representation]) => Representation`
+  - A **Representation** in a manifest is defined [here](https://github.com/canalplus/rx-player/blob/master/src/manifest/representation.ts).
 
-  - _videoQualityPicker_ `(function)`: This parameter is much more **advanced** than the one above, it allows you to choose a specific quality depending a representation given in the manifest. The function take an array of representation for the given adaptation and must return the representation that we will use.
-
-    - Type: `([Representation, Representation, Representation]) => Representation`
-    - A **Representation** in a manifest is defined [here](https://github.com/canalplus/rx-player/blob/master/src/manifest/representation.ts).
-
-    > You can choose a very specific Representation, depending your need, you have a full control!
+  > You can choose a very specific Representation, depending your need, you have a full control!
 
 - _keySystems_ `(object)`:
 
@@ -145,13 +141,10 @@ It is here that is defined every options relative to the encryption of your cont
 ```js
 this.D2G.download({
   url: "http://dash-vod-aka-test.canal-bis.com/multicodec/index.mpd",
-  contentID: "aQSDJT5612",
   metaData: { title: "Dream Bigger" }
-  advanced: {
-    quality: "LOW"
-  }
-}).then(() => {
-  console.warn("Download Started!");
+  quality: "LOW"
+}).then((contentID) => {
+  console.warn("Download Started!", contentID);
 });
 ```
 
