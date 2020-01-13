@@ -17,7 +17,7 @@
 import { IDBPDatabase } from "idb";
 
 import arrayIncludes from "../../../utils/array_includes";
-import MediaCapabilitiesProber from "../mediaCapabilitiesProber/";
+import MediaCapabilitiesProber from "../mediaCapabilitiesProber";
 import { IMediaKeySystemConfiguration } from "../mediaCapabilitiesProber/types";
 import { IActiveDownload } from "./api/context/types";
 import { IApiLoader, IStoredManifest } from "./types";

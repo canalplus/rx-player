@@ -27,7 +27,7 @@ import Manifest, {
 } from "../../../../../manifest";
 import { ILocalIndexSegment } from "../../../../../parsers/manifest/local/types";
 import {
-  IDownload2GoEvents,
+  IContentDownloaderEvents,
   IEmitterTrigger,
   IProgressBuilder,
 } from "../../types";
@@ -109,12 +109,12 @@ export interface ISegmentStored {
 }
 
 export interface IUtilsNotification {
-  emitter: IEmitterTrigger<IDownload2GoEvents>;
+  emitter: IEmitterTrigger<IContentDownloaderEvents>;
   db: IDBPDatabase;
 }
 
 export interface IUtils {
-  emitter: IEmitterTrigger<IDownload2GoEvents>;
+  emitter: IEmitterTrigger<IContentDownloaderEvents>;
   db: IDBPDatabase;
   pause$: AsyncSubject<void>;
   contentID: string;

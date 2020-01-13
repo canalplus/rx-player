@@ -115,7 +115,7 @@ export interface IEmitterTrigger<T> {
   ): void;
 }
 
-export interface IDownload2GoEvents {
+export interface IContentDownloaderEvents {
   progress: {
     contentID: string;
     progress: number;

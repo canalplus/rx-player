@@ -32,8 +32,8 @@ import {
 import { IContentProtection } from "./api/drm/types";
 import {
   IApiLoader,
+  IContentDownloaderEvents,
   IContentLoader,
-  IDownload2GoEvents,
   IEmitterTrigger,
   IGlobalSettings,
   IStoredManifest,
@@ -53,14 +53,14 @@ import {
  * @param {Object<{nameDB, storeManifestEvery}>} IOptionsStarter
  * @return {IPublicAPI} IPublicAPI
  */
-class D2G extends EventEmitter<IDownload2GoEvents> {
+class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
   static isPersistentLicenseSupported(): Promise<boolean> {
     return isSupported();
   }
 
   public readonly nameDB: string;
   private db: IDBPDatabase | null;
-  private emitter: IEmitterTrigger<IDownload2GoEvents>;
+  private emitter: IEmitterTrigger<IContentDownloaderEvents>;
   private activeDownloads: IActiveDownload;
   private activePauses: IActivePauses;
 
@@ -413,4 +413,4 @@ class D2G extends EventEmitter<IDownload2GoEvents> {
   }
 }
 
-export default D2G;
+export default ContentDownloader;
