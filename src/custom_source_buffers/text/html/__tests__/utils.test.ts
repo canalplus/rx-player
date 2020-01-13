@@ -22,7 +22,7 @@ import {
   removeCuesInfosBetween,
 } from "../utils";
 
-describe("HTML Buffer Manager utils - getCuesBefore", () => {
+describe("HTML Text buffer utils - getCuesBefore", () => {
   it("should get the right cues when time is the start of a cue", () => {
     const element = document.createElement("div");
     const cues = [
@@ -136,7 +136,7 @@ describe("HTML Buffer Manager utils - getCuesBefore", () => {
   });
 });
 
-describe("HTML Buffer Manager utils - getCuesAfter", () => {
+describe("HTML Text buffer utils - getCuesAfter", () => {
   it("should get the right cues when time is between start and end of a cue", () => {
     const element = document.createElement("div");
     const cues = [
@@ -249,7 +249,7 @@ describe("HTML Buffer Manager utils - getCuesAfter", () => {
   });
 });
 
-describe("HTML Buffer Manager utils - areNearlyEqual", () => {
+describe("HTML Text buffer utils - areNearlyEqual", () => {
   it("should return false if input number are not nearly equals", () => {
     expect(areNearlyEqual(5, 6)).toBe(false);
   });
@@ -263,7 +263,7 @@ describe("HTML Buffer Manager utils - areNearlyEqual", () => {
   });
 });
 
-describe("HTML Buffer Manager utils - removeCuesInfosBetween", () => {
+describe("HTML Text buffer utils - removeCuesInfosBetween", () => {
   it("should remove cues infos between end of a cue and start of another cue", () => {
     const element = document.createElement("div");
     const cues = [ { start: 1, end: 2, element },
