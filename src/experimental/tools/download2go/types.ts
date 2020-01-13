@@ -19,7 +19,10 @@ import Manifest, { Representation } from "../../../manifest";
 import { ILocalManifest } from "../../../parsers/manifest/local";
 import { IContextRicher } from "./api/downloader/types";
 
-export type IQualityInputType = "HIGH" | "MEDIUM" | "LOW";
+export type IQualityInputType = "HIGHEST" | "MEDIUM" | "LOWEST";
+
+// Should return a valid representation
+export type VideoQualityPickerType = (videoRepresentation: Representation[]) => unknown;
 
 export interface IGlobalSettings {
   nameDB?: string;
@@ -31,7 +34,8 @@ export interface IApiLoader {
   metaData?: {
     [prop: string]: any;
   };
-  advanced?: IAdvancedSettings;
+  quality?: IQualityInputType;
+  videoQualityPicker?: VideoQualityPickerType;
   keySystems?: IKeySystemOption;
 }
 
@@ -91,14 +95,6 @@ export interface IContentLoader {
     type: string;
   };
   offlineManifest: ILocalManifest;
-}
-
-// Should return a valid representation
-export type VideoQualityPickerType = (videoRepresentation: Representation[]) => unknown;
-
-export interface IAdvancedSettings {
-  quality?: IQualityInputType;
-  videoQualityPicker?: VideoQualityPickerType;
 }
 
 /***

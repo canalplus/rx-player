@@ -107,7 +107,7 @@ class ContentManager {
 
   private getRepresentationByQualityBitrate(representations: Representation[]) {
     switch (this.quality) {
-      case "HIGH":
+      case "HIGHEST":
         return representations.reduce((acc, curr) => {
           if (curr.bitrate > acc.bitrate) {
             return curr;
@@ -116,7 +116,7 @@ class ContentManager {
         });
       case "MEDIUM":
         return representations[Math.floor(representations.length / 2)];
-      case "LOW":
+      case "LOWEST":
         return representations.reduce((acc, curr) => {
           if (curr.bitrate < acc.bitrate) {
             return curr;

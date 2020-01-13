@@ -51,7 +51,7 @@ import { ICustomSegment, IInitGroupedSegments, IInitSegment } from "./types";
  *
  */
 export function initDownloader$(
-  { contentID, url, advanced, transport, keySystems }: IInitSettings,
+  { contentID, url, quality, videoQualityPicker, transport, keySystems }: IInitSettings,
   db: IDBPDatabase
 ) {
   return manifestLoader(url, transport).pipe(
@@ -65,8 +65,8 @@ export function initDownloader$(
       const contentProtection$ = new Subject<IContentProtection>();
       const contentManager = new ContentManager(
         manifest,
-        advanced?.quality,
-        advanced?.videoQualityPicker
+        quality,
+        videoQualityPicker
       );
       return of(contentManager.getContextsForCurrentSession()).pipe(
         mergeMap(globalCtx => {
