@@ -40,7 +40,7 @@ import ABRManager from "../abr";
 import BufferOrchestrator, {
   IBufferOrchestratorEvent,
 } from "../buffers";
-import { SegmentPipelinesManager } from "../pipelines";
+import { SegmentPipelineCreator } from "../pipelines";
 import SourceBuffersStore, {
   ITextTrackSourceBufferOptions,
 } from "../source_buffers";
@@ -77,8 +77,8 @@ export interface IMediaSourceLoaderArguments {
   manifest : Manifest; // Manifest of the content we want to play
   mediaElement : HTMLMediaElement; // Media Element on which the content will be
                                    // played
-  segmentPipelinesManager : SegmentPipelinesManager<any>; // Interface to download
-                                                          // segments
+  segmentPipelineCreator : SegmentPipelineCreator<any>; // Interface to download
+                                                        // segments
   speed$ : Observable<number>; // Emit the speed.
                                // /!\ Should replay the last value on subscription.
 }
@@ -103,7 +103,7 @@ export default function createMediaSourceLoader({
   speed$,
   bufferOptions,
   abrManager,
-  segmentPipelinesManager,
+  segmentPipelineCreator,
 } : IMediaSourceLoaderArguments) : (
   mediaSource : MediaSource,
   initialTime : number,
@@ -169,7 +169,7 @@ export default function createMediaSourceLoader({
                                         bufferClock$,
                                         abrManager,
                                         sourceBuffersStore,
-                                        segmentPipelinesManager,
+                                        segmentPipelineCreator,
                                         bufferOptions
     ).pipe(
       mergeMap((evt) : Observable<IMediaSourceLoaderEvent> => {

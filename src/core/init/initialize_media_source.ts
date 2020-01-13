@@ -56,7 +56,7 @@ import {
 import {
   createManifestPipeline,
   IFetchManifestResult,
-  SegmentPipelinesManager,
+  SegmentPipelineCreator,
 } from "../pipelines";
 import { ITextTrackSourceBufferOptions } from "../source_buffers";
 import createEMEManager, {
@@ -173,10 +173,10 @@ export default function InitializeOnMediaSource(
   );
 
   // Creates pipelines for downloading segments.
-  const segmentPipelinesManager =
-    new SegmentPipelinesManager<any>(pipelines, { lowLatencyMode,
-                                                  offlineRetry,
-                                                  segmentRetry });
+  const segmentPipelineCreator =
+    new SegmentPipelineCreator<any>(pipelines, { lowLatencyMode,
+                                                 offlineRetry,
+                                                 segmentRetry });
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".
@@ -217,7 +217,7 @@ export default function InitializeOnMediaSource(
       clock$,
       manifest,
       mediaElement,
-      segmentPipelinesManager,
+      segmentPipelineCreator,
       speed$,
     });
 

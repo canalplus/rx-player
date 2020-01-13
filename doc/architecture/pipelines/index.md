@@ -12,7 +12,7 @@ Each of those task is performed by a discrete component of the Pipeline:
 
   - The __Manifest Pipeline__ is used to download and parse the manifest file.
 
-  - The __SegmentPipelinesManager__ is used to create Segment pipelines,
+  - The __SegmentPipelineCreator__ is used to create Segment pipelines,
     allowing to download and parse media segments.
 
 
@@ -27,20 +27,20 @@ request and parsing of the Manifest file.
 
 
 
-## The SegmentPipelinesManager #################################################
+## The SegmentPipelineCreator ##################################################
 
-The SegmentPipelineManager allows to easily perform Segment downloads for the
+The SegmentPipelineCreator allows to easily perform Segment downloads for the
 rest of the code.
 This is the part of the code that interacts with the transport protocols -
 defined in `transports` - to load and parse media segments.
 
-To do so, the SegmentPipelineManager creates Pipelines of different types
+To do so, the SegmentPipelineCreator creates "Pipelines" of different types
 (example: a video or audio Pipeline) when you ask for it.
 Through those Pipelines, you can then schedule various segment requests with a
 given priority.
 
 The priority of this request is then corroborated with the priority of all
-requests currently pending in the SegmentPipelineManager (and not only with
+requests currently pending in the SegmentPipelineCreator (and not only with
 those on the current pipeline) to know when the request should effectively be
 done.
 
@@ -61,7 +61,7 @@ If the request has no priorization number, the lowest priorization number
 (the highest priority) will be set on it: ``0``
 
 Basically, any new request will have their priorization number compared to the
-one of the current request(s) done by the SegmentPipelineManager:
+one of the current request(s) done by the SegmentPipelineCreator:
 
   - if no request is already pending, we perform the request immediately
 

@@ -17,25 +17,25 @@
 import createManifestPipeline, {
   IFetchManifestResult,
 } from "./manifest";
-import SegmentPipelinesManager, {
+import SegmentPipelineCreator, {
   IPrioritizedSegmentFetcher,
   ISegmentFetcherChunkCompleteEvent,
   ISegmentFetcherChunkEvent,
   ISegmentFetcherEvent,
   ISegmentFetcherWarning,
-  ISegmentPipelineManagerOptions,
+  ISegmentPipelineCreatorOptions,
 } from "./segment";
 
 export {
   createManifestPipeline,
-  SegmentPipelinesManager,
+  SegmentPipelineCreator,
 
   IFetchManifestResult,
 
   IPrioritizedSegmentFetcher,
   ISegmentFetcherEvent,
 
-  ISegmentPipelineManagerOptions,
+  ISegmentPipelineCreatorOptions,
 
   ISegmentFetcherChunkEvent,
   ISegmentFetcherChunkCompleteEvent,

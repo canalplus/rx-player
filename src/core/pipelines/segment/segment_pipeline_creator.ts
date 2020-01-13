@@ -31,7 +31,7 @@ import createSegmentFetcher, {
   ISegmentFetcherEvent,
 } from "./segment_fetcher";
 
-export interface ISegmentPipelineManagerOptions {
+export interface ISegmentPipelineCreatorOptions {
   lowLatencyMode : boolean; // Whether the content is a low-latency content
                             // This has an impact on default backoff delays
   offlineRetry? : number; // Configuration for the maximum number of retries
@@ -45,43 +45,40 @@ export interface ISegmentPipelineManagerOptions {
  * Interact with the networking pipelines to download segments with the right
  * priority.
  *
- * @class SegmentPipelinesManager
+ * @class SegmentPipelineCreator
  *
  * @example
  * ```js
- * // 1 - create the manager
- * const segmentPipelinesManager = new SegmentPipelinesManager(transport);
+ * const creator = new SegmentPipelineCreator(transport);
  *
  * // 2 - create a new pipeline with its own options
- * const pipeline = segmentPipelinesManager.createPipeline("audio", {
+ * const pipeline = creator.createPipeline("audio", {
  *   maxRetry: Infinity,
  *   maxRetryOffline: Infinity,
  * });
  *
  * // 3 - load a segment with a given priority
  * pipeline.createRequest(myContent, 1)
- *
  *   // 4 - parse it
  *   .pipe(
  *     filter(evt => evt.type === "response"),
  *     mergeMap(response => response.parse());
  *   )
- *
  *   // 5 - use it
  *   .subscribe((res) => console.log("audio segment downloaded:", res));
  * ```
  */
-export default class SegmentPipelinesManager<T> {
+export default class SegmentPipelineCreator<T> {
   private readonly _transport : ITransportPipelines;
   private readonly _prioritizer : ObservablePrioritizer<ISegmentFetcherEvent<T>>;
-  private readonly _pipelineOptions : ISegmentPipelineManagerOptions;
+  private readonly _pipelineOptions : ISegmentPipelineCreatorOptions;
 
   /**
    * @param {Object} transport
    */
   constructor(
     transport : ITransportPipelines,
-    options : ISegmentPipelineManagerOptions
+    options : ISegmentPipelineCreatorOptions
   ) {
     this._transport = transport;
     this._prioritizer = new ObservablePrioritizer();
