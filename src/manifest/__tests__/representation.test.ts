@@ -27,6 +27,7 @@ const minimalIndex = {
   isSegmentStillAvailable() : undefined { return ; },
   canBeOutOfSyncError() : true { return true; },
   isFinished() : true { return true; },
+  validateIndexSegment() : void { return ; },
   _update() { /* noop */ },
   _addSegments() { /* noop */ },
 };

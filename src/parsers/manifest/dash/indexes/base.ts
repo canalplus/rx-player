@@ -143,6 +143,7 @@ function _addSegmentInfos(
  */
 export default class BaseRepresentationIndex implements IRepresentationIndex {
   private _index : IBaseIndex;
+  private _hasValidatedIndexSegment : boolean;
 
   // absolute end of the period, timescaled and converted to index time
   private _scaledPeriodEnd : number | undefined;
@@ -152,6 +153,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @param {Object} context
    */
   constructor(index : IBaseIndexIndexArgument, context : IBaseIndexContextArgument) {
+    this._hasValidatedIndexSegment = true;
     const { periodStart,
             periodEnd,
             representationBaseURL,
@@ -216,6 +218,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @returns {Object}
    */
   getIndexSegment() : ISegment|null {
+    if (this._hasValidatedIndexSegment) {
+      return null;
+    }
     return getIndexSegment(this._index);
   }
 
@@ -308,6 +313,10 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    */
   isFinished() : true {
     return true;
+  }
+
+  validateIndexSegment() : void {
+    this._hasValidatedIndexSegment = true;
   }
 
   /**

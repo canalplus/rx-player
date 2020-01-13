@@ -478,6 +478,13 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * No index segment to validate
+   */
+  validateIndexSegment() : void {
+    return ;
+  }
+
+  /**
    * Update this RepresentationIndex by a newly downloaded one.
    * Check if the old index had more information about new segments and re-add
    * them if that's the case.

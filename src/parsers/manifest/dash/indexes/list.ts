@@ -268,6 +268,13 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * No index segment to validate
+   */
+  validateIndexSegment() : void {
+    return ;
+  }
+
+  /**
    * @param {Object} newIndex
    */
   _update(newIndex : ListRepresentationIndex) : void {

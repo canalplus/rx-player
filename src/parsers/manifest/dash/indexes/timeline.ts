@@ -459,6 +459,13 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   }
 
   /**
+   * No index segment to validate
+   */
+  validateIndexSegment() : void {
+    return ;
+  }
+
+  /**
    * @param {Object} newIndex
    */
   _update(newIndex : TimelineRepresentationIndex) : void {

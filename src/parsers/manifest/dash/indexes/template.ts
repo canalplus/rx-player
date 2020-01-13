@@ -374,6 +374,13 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   }
 
   /**
+   * No index segment to validate
+   */
+  validateIndexSegment() : void {
+    return ;
+  }
+
+  /**
    * @param {Object} newIndex
    */
   _update(newIndex : TemplateRepresentationIndex) : void {

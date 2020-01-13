@@ -191,6 +191,11 @@ export default interface IRepresentationIndex {
   isFinished() : boolean;
 
   /**
+   * Once the index segment has been loaded and parsed, validate it.
+   */
+  validateIndexSegment() : void;
+
+  /**
    * Update the index with another one, such as after a Manifest update.
    * TODO Both this and _addSegments mutate the index. They should not be
    * accessible like that.

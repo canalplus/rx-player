@@ -31,6 +31,7 @@ function generateRepresentationIndex(
     isSegmentStillAvailable() : undefined { return ; },
     isFinished() { return false; },
     canBeOutOfSyncError() : true { return true; },
+    validateIndexSegment() : void { return ; },
     _update() { /* noop */ },
     _addSegments() { /* noop */ },
   };

@@ -122,6 +122,13 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
     return true;
   }
 
+  /**
+   * No index segment to validate
+   */
+  validateIndexSegment() : void {
+    return ;
+  }
+
   _addSegments() : void {
     log.warn("Tried add Segments to a static RepresentationIndex");
   }
