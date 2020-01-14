@@ -6,7 +6,11 @@
 - [Overview](#overview)
 - [Events](#events)
     - [playerStateChange](#events-playerStateChange)
+    - [error](#events-error)
+    - [warning](#events-warning)
     - [positionUpdate](#events-positionUpdate)
+    - [seeking](#events-seeking)
+    - [seeked](#events-seeked)
     - [availableAudioTracksChange](#events-availableAudioTracksChange)
     - [availableTextTracksChange](#events-availableTextTracksChange)
     - [availableVideoTracksChange](#events-availableVideoTracksChange)
@@ -18,8 +22,6 @@
     - [audioBitrateChange](#events-audioBitrateChange)
     - [videoBitrateChange](#events-videoBitrateChange)
     - [bitrateEstimationChange](#events-bitrateEstimationChange)
-    - [warning](#events-warning)
-    - [error](#events-error)
     - [periodChange](#events-periodChange)
     - [decipherabilityUpdate](#events-decipherabilityUpdate)
     - [imageTrackUpdate (deprecated)](#events-imageTrackUpdate)
@@ -66,6 +68,28 @@ As it is a central part of our API and can be difficult concept to understand,
 we have a special [page of documentation on player states](./states.md).
 
 
+<a name="events-error"></a>
+### error ######################################################################
+
+_payload type_: ``Error``
+
+Triggered each time a fatal (for content playback) error happened.
+
+The payload is the corresponding error. See [the Player Error
+documentation](./errors.md) for more information.
+
+
+<a name="events-warning"></a>
+### warning ####################################################################
+
+_payload type_: ``Error``
+
+Triggered each time a non-fatal (for content playback) error happened.
+
+The payload is the corresponding error. See [the Player Error
+documentation](./errors.md) for more information.
+
+
 <a name="events-positionUpdate"></a>
 ### positionUpdate #############################################################
 
@@ -102,6 +126,20 @@ The object emitted as the following properties:
     That is the real live position (and not the position as announced by the
     video element).
 
+
+
+<a name="events-seeking"></a>
+### seeking #################################################
+
+Emitted when a "seek" operation (to "move"/"skip" to another position) begins
+on the currently loaded content.
+
+
+<a name="events-seeked"></a>
+### seeked #################################################
+
+Emitted when a "seek" operation (to "move"/"skip" to another position) on the
+currently loaded content has finished
 
 
 <a name="events-availableAudioTracksChange"></a>
@@ -424,28 +462,6 @@ The payload is an object with the following properties:
     This bitrate is smoothed by doing a (complex) mean on an extended period of
     time, so it often does not link directly to the current calculated bitrate.
 
-
-
-<a name="events-warning"></a>
-### warning ####################################################################
-
-_payload type_: ``Error``
-
-Triggered each time a non-fatal (for content playback) error happened.
-
-The payload is the corresponding error. See [the Player Error
-documentation](./errors.md) for more information.
-
-
-<a name="events-error"></a>
-### error ######################################################################
-
-_payload type_: ``Error``
-
-Triggered each time a fatal (for content playback) error happened.
-
-The payload is the corresponding error. See [the Player Error
-documentation](./errors.md) for more information.
 
 
 <a name="events-periodChange"></a>
