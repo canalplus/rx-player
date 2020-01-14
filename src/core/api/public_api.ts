@@ -103,6 +103,7 @@ import SourceBuffersStore, {
 import createClock, {
   IClockTick
 } from "./clock";
+import emitSeekEvents from "./emit_seek_events";
 import getPlayerState, {
   PLAYER_STATES,
 } from "./get_player_state";
@@ -171,6 +172,8 @@ interface IPublicAPIEvent {
                                   period : Period;
                                   adaptation : Adaptation;
                                   representation : Representation; }>;
+  seeking : null;
+  seeked : null;
 }
 
 /**
@@ -836,7 +839,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     clock$
       .pipe(takeUntil(this._priv_stopCurrentContent$))
-      .subscribe(x => this._priv_triggerTimeChange(x), noop);
+      .subscribe(x => this._priv_triggerPositionUpdate(x), noop);
+
+    loaded$.pipe(
+      switchMapTo(emitSeekEvents(this.videoElement, clock$)),
+      takeUntil(this._priv_stopCurrentContent$)
+    ).subscribe((evt : "seeking" | "seeked") => {
+      log.info(`API: Triggering "${evt}" event`);
+      this.trigger(evt, null);
+    });
 
     playerState$
       .pipe(takeUntil(this._priv_stopCurrentContent$))
@@ -2305,7 +2316,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    *
    * @param {Object} clockTick
    */
-  private _priv_triggerTimeChange(clockTick : IClockTick) : void {
+  private _priv_triggerPositionUpdate(clockTick : IClockTick) : void {
     if (this._priv_contentInfos === null) {
       log.warn("API: Cannot perform time update: no content loaded.");
       return;
