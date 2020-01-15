@@ -206,7 +206,7 @@ This new option allows to handle much more complex use cases and can even be
 updated at any time through [the `setPreferredAudioTracks`
 method](./index.md#meth-setPreferredAudioTracks).
 
-#### How to replace that function
+#### How to replace that option
 
 It is very easy to replace `defaultAudioTrack` by `preferredAudioTracks`.
 
@@ -242,7 +242,7 @@ player.setPreferredAudioTracks([{ language: "fra", audioDescription: false }]);
 option](./loadVideo_options.md#prop-preferredTextTracks) for the same reason
 than `defaultAudioTrack`.
 
-#### How to replace that function
+#### How to replace that option
 
 It is very easy to replace `defaultTextTrack` by `preferredTextTracks`.
 
@@ -272,6 +272,56 @@ player.setPreferredTextTracks([{ language: "fra", closedCaption: false }]);
 ```
 
 
+### supplementaryTextTracks ####################################################
+
+The `supplementaryTextTracks` has been deprecated for multiple reasons:
+
+  1. The main reason is that the behavior of this API is not defined for
+     multi-Period DASH contents (nor for MetaPlaylist contents): Should we only
+     add the subtitles for the first Period or should it be for every Period?
+     How to define a different subtitles track for the first and for the second
+     Period?
+
+     Adding an external tool much less coupled to the RxPlayer move those
+     questions entirely to the application, which should know more than us what
+     to do in those different cases.
+
+  2. Its API was a little arcane because we had to make it compatible with every
+     possible type of contents (i.e. DASH, Smooth, MetaPlaylist etc.) out there.
+
+  3. It did not work for Directfile contents yet. Although we could have made it
+     compatible with them, we thought that this was the occasion to define a
+     better API to replace it.
+
+  4. Its behavior was more complex that you would initially think of. For
+     example, we could have to re-download multiple times the same subtitles
+     file if manual garbage collecting was enabled.
+
+  5. All usages of that API that we know of were for Smooth or DASH VoD contents
+     which sadly just omitted those subtitles tracks in their Manifest. The true
+     "clean" way to fix the problem in that case is to do it at the source: the
+     content.
+     In this case, fixing it on the player-side should only be a temporary
+     work-around (don't be scared, we still have an API replacement).
+
+
+The new `TextTrackRenderer` tool which replace it is much more straightforward.
+As an external tool which just reads and renders already-downloaded text
+subtitles, its API and the extent of what it does should be much more simple.
+
+It's also compatible with any type of contents, even when playing through an
+other player.
+
+#### How to replace that option
+
+Every `supplementaryTextTracks` feature can be replaced by the
+`TextTrackRenderer` tool.
+Please bear in mind however that they are two completely different APIs, doing
+the transition might take some time.
+
+The `TextTrackRenderer` tool is documented [here](./TextTrackRenderer.md).
+
+
 ### hideNativeSubtitle #########################################################
 
 The `hideNativeSubtitle` option is deprecated and won't be replaced.
@@ -285,7 +335,7 @@ it.
 
 
 
-## RxPlayer options
+## RxPlayer constructor options ################################################
 
 The following RxPlayer constructor options are deprecated.
 
