@@ -564,10 +564,15 @@ player.loadVideo({
 
 #### What changed
 
-``subtitles`` is renamed as ``supplementaryTextTracks`` for clarity.
+You have two possibilities. Either:
+  1. Use the exernal `TextTrackRenderer` tool, documented
+     [here](./api/TextTrackRenderer.md). This is the preferred way.
+  2. Replace ``subtitles`` by ``supplementaryTextTracks``. Please note
+     however that `supplementaryTextTracks` is a deprecated feature.
 
 #### Replacement example
 
+If you go under the `supplementaryTextTracks` route:
 ```js
 // In the previous version
 player.loadVideo({
@@ -587,6 +592,10 @@ player.loadVideo({
   },
 });
 ```
+
+If you prefer to use the `TextTrackRenderer` instead, I invite you to directly
+read, [its documentation](./api/TextTrackRenderer.md), as the API is completely
+different there.
 
 
 <a name="load-timeFragment"></a>

@@ -437,6 +437,8 @@ function parseLoadVideoOptions(
     supplementaryTextTracks: [],
   };
   if (options.supplementaryTextTracks !== undefined) {
+    warnOnce("The `supplementaryTextTracks` loadVideo option is deprecated.\n" +
+             "Please use the `TextTrackRenderer` tool instead.");
     const supplementaryTextTracks =
       Array.isArray(options.supplementaryTextTracks) ?
         options.supplementaryTextTracks : [options.supplementaryTextTracks];
