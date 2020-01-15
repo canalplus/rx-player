@@ -15,10 +15,10 @@
     - [textTrackElement](#prop-textTrackElement)
     - [manualBitrateSwitchingMode](#prop-manualBitrateSwitchingMode)
     - [lowLatencyMode](#prop-lowLatencyMode)
-    - [supplementaryTextTracks](#prop-supplementaryTextTracks)
     - [supplementaryImageTracks](#prop-supplementaryImageTracks)
     - [hideNativeSubtitle](#prop-hideNativeSubtitle)
     - [networkConfig](#prop-networkConfig)
+    - [supplementaryTextTracks (deprecated)](#prop-supplementaryTextTracks)
     - [defaultAudioTrack (deprecated)](#prop-defaultAudioTrack)
     - [defaultTextTrack (deprecated)](#prop-defaultTextTrack)
 
@@ -757,70 +757,6 @@ More information on playing low-latency DASH contents can be found in the
 [corresponding documentation page](./low_latency.md).
 
 
-
-<a name="prop-supplementaryTextTracks"></a>
-### supplementaryTextTracks ####################################################
-
-_type_: ``Array.<Object>|Object|undefined``
-_defaults_: ``[]``
-
----
-
-:warning: This option is not available in _DirectFile_ mode (see [transport
-option](#prop-transport)).
-
----
-
-This option allows to specify information about supplementary text tracks you
-might want to add to those already declared in the
-[Manifest](../terms.md#manifest).
-
-This only work under the following conditions:
-
-  - the text track is not fragmented
-
-  - the text track can be retrieved by fetching a single URL
-
-  - the text track is in an understood format and enough information has been
-    given to infer it.
-
-Each of those can have the following properties:
-```js
-const supplementaryTextTracks = [{
-  url: textTrackURL, // {string} The url on which the complete text track can be
-                     // obtained
-
-  language: "eng", // {string} The language the text track is in
-                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
-
-                   // Note for SAMI subtitles:
-                   // For SAMI subtitles, you have to provide the same language
-                   // string than the one indicated in the CSS and p elements.
-                   // It usually follows the ISO639-ISO3166 naming conventions
-                   // (e.g. en-US or fr-FR).
-                   // If we cannot find the provided language in the downloaded
-                   // SAMI text track, it won't be displayed.
-
-  closedCaption: false // {Boolean} Whether the text track is a closed caption
-                       // for the hard of hearing
-
-  mimeType: "application/mp4", // {string} A mimeType used to describe
-                               // the text format. Can be "application/mp4" when
-                               // encapsulated in an mp4 file. In that case, the
-                               // "codecs" argument will be needed.
-
-  codecs: "stpp"               // {string|undefined} Depending on the mimeType,
-                               // you might need to add codec information.
-                               // Here the mimeType is too generic, the codec
-                               // helps us understand this is ttml in an mp4
-                               // container
-}];
-```
-
-To know which type of formats are supported and how to add them, you can read
-the [text track documentation](./text_tracks.md).
-
-
 <a name="prop-supplementaryImageTracks"></a>
 ### supplementaryImageTracks ###################################################
 
@@ -951,6 +887,81 @@ This object can take the following properties (all are optional):
 
   - the request failed because of an unknown XHR error (might be a
     parsing/interface error)
+
+
+
+<a name="prop-supplementaryTextTracks"></a>
+### supplementaryTextTracks ####################################################
+
+---
+
+:warning: This option is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+If you want to use supplementary text tracks not defined in the content itself,
+you can use the `TextTrackRenderer`(./TextTrackRenderer.md) tool, which will
+also work for Directfile contents.
+
+---
+
+_type_: ``Array.<Object>|Object|undefined``
+_defaults_: ``[]``
+
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+This option allows to specify information about supplementary text tracks you
+might want to add to those already declared in the
+[Manifest](../terms.md#manifest).
+
+This only work under the following conditions:
+
+  - the text track is not fragmented
+
+  - the text track can be retrieved by fetching a single URL
+
+  - the text track is in an understood format and enough information has been
+    given to infer it.
+
+Each of those can have the following properties:
+```js
+const supplementaryTextTracks = [{
+  url: textTrackURL, // {string} The url on which the complete text track can be
+                     // obtained
+
+  language: "eng", // {string} The language the text track is in
+                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
+
+                   // Note for SAMI subtitles:
+                   // For SAMI subtitles, you have to provide the same language
+                   // string than the one indicated in the CSS and p elements.
+                   // It usually follows the ISO639-ISO3166 naming conventions
+                   // (e.g. en-US or fr-FR).
+                   // If we cannot find the provided language in the downloaded
+                   // SAMI text track, it won't be displayed.
+
+  closedCaption: false // {Boolean} Whether the text track is a closed caption
+                       // for the hard of hearing
+
+  mimeType: "application/mp4", // {string} A mimeType used to describe
+                               // the text format. Can be "application/mp4" when
+                               // encapsulated in an mp4 file. In that case, the
+                               // "codecs" argument will be needed.
+
+  codecs: "stpp"               // {string|undefined} Depending on the mimeType,
+                               // you might need to add codec information.
+                               // Here the mimeType is too generic, the codec
+                               // helps us understand this is ttml in an mp4
+                               // container
+}];
+```
+
+To know which type of formats are supported and how to add them, you can read
+the [text track documentation](./text_tracks.md).
 
 
 <a name="prop-defaultAudioTrack"></a>
