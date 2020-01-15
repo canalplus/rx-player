@@ -113,9 +113,9 @@ To better understand the player's architecture, you can find below a
      +-------------------------------------------+     |  ~~~> Send events |   |
      |                    API                    |     +-------------------+   |
      +-------------------------------------------+                             |
- +--------------+    |            | ^                                          |
- | TrackManager | <--+            | ~                                          |
- +--------------+                 | ~                                          |
+ +--------------------+    |      | ^                                          |
+ | TrackChoiceManager | <--+      | ~                                          |
+ +--------------------+           | ~                                          |
  Facilitate track                 | ~                                          |
  switching for                    V ~                                          |
  the API                  +---------------+                                    |

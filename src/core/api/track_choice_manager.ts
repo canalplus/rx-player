@@ -45,14 +45,14 @@ export type ITextTrackPreference = null |
                                    { language : string;
                                      closedCaption : boolean; };
 
-// audio track returned by the TrackManager
+// audio track returned by the TrackChoiceManager
 export interface ITMAudioTrack { language : string;
                                  normalized : string;
                                  audioDescription : boolean;
                                  dub? : boolean;
                                  id : number|string; }
 
-// text track returned by the TrackManager
+// text track returned by the TrackChoiceManager
 export interface ITMTextTrack { language : string;
                                 normalized : string;
                                 closedCaption : boolean;
@@ -65,19 +65,19 @@ interface ITMVideoRepresentation { id : string|number;
                                    codec? : string;
                                    frameRate? : string; }
 
-// video track returned by the TrackManager
+// video track returned by the TrackChoiceManager
 export interface ITMVideoTrack { id : number|string;
                                  representations: ITMVideoRepresentation[]; }
 
-// audio track from a list of audio tracks returned by the TrackManager
+// audio track from a list of audio tracks returned by the TrackChoiceManager
 export interface ITMAudioTrackListItem
   extends ITMAudioTrack { active : boolean; }
 
-// text track from a list of text tracks returned by the TrackManager
+// text track from a list of text tracks returned by the TrackChoiceManager
 export interface ITMTextTrackListItem
   extends ITMTextTrack { active : boolean; }
 
-// video track from a list of video tracks returned by the TrackManager
+// video track from a list of video tracks returned by the TrackChoiceManager
 export interface ITMVideoTrackListItem
   extends ITMVideoTrack { active : boolean; }
 
@@ -128,10 +128,10 @@ function normalizeTextTracks(
 /**
  * Manage audio and text tracks for all active periods.
  * Chose the audio and text tracks for each period and record this choice.
- * @class TrackManager
+ * @class TrackChoiceManager
  */
-export default class TrackManager {
-  // Current Periods considered by the TrackManager.
+export default class TrackChoiceManager {
+  // Current Periods considered by the TrackChoiceManager.
   // Sorted by start time ascending
   private _periods : SortedList<ITMPeriodInfos>;
 
@@ -192,7 +192,7 @@ export default class TrackManager {
     }
     if (periodItem != null) {
       if (periodItem[bufferType] != null) {
-        log.warn(`TrackManager: ${bufferType} already added for period`, period);
+        log.warn(`TrackChoiceManager: ${bufferType} already added for period`, period);
         return;
       } else {
         periodItem[bufferType] = { adaptations, adaptation$ };
@@ -215,13 +215,13 @@ export default class TrackManager {
   ) : void {
     const periodIndex = findPeriodIndex(this._periods, period);
     if (periodIndex == null) {
-      log.warn(`TrackManager: ${bufferType} not found for period`, period);
+      log.warn(`TrackChoiceManager: ${bufferType} not found for period`, period);
       return;
     }
 
     const periodItem = this._periods.get(periodIndex);
     if (periodItem[bufferType] == null) {
-      log.warn(`TrackManager: ${bufferType} already removed for period`, period);
+      log.warn(`TrackChoiceManager: ${bufferType} already removed for period`, period);
       return;
     }
     delete periodItem[bufferType];
@@ -261,7 +261,7 @@ export default class TrackManager {
     const audioInfos = periodItem != null ? periodItem.audio :
                                             null;
     if (audioInfos == null || periodItem == null) {
-      throw new Error("TrackManager: Given Period not found.");
+      throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
     const preferredAudioTracks = this._preferredAudioTracks.getValue();
@@ -299,7 +299,7 @@ export default class TrackManager {
     const textInfos = periodItem != null ? periodItem.text :
                                            null;
     if (textInfos == null || periodItem == null) {
-      throw new Error("TrackManager: Given Period not found.");
+      throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
     const preferredTextTracks = this._preferredTextTracks.getValue();
@@ -335,7 +335,7 @@ export default class TrackManager {
     const videoInfos = periodItem != null ? periodItem.video :
                                             null;
     if (videoInfos == null || periodItem == null) {
-      throw new Error("TrackManager: Given Period not found.");
+      throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
     const videoAdaptations = period.adaptations.video === undefined ?
@@ -367,7 +367,7 @@ export default class TrackManager {
     const audioInfos = periodItem != null ? periodItem.audio :
                                             null;
     if (audioInfos == null) {
-      throw new Error("TrackManager: Given Period not found.");
+      throw new Error("TrackChoiceManager: Given Period not found.");
     }
 
     const wantedAdaptation = arrayFind(audioInfos.adaptations,
@@ -395,7 +395,7 @@ export default class TrackManager {
     const textInfos = periodItem != null ? periodItem.text :
                                            null;
     if (textInfos == null) {
-      throw new Error("TrackManager: Given Period not found.");
+      throw new Error("TrackChoiceManager: Given Period not found.");
     }
     const wantedAdaptation = arrayFind(textInfos.adaptations,
                                        ({ id }) => id === wantedId);
@@ -456,7 +456,7 @@ export default class TrackManager {
     const textInfos = periodItem != null ? periodItem.text :
                                            null;
     if (textInfos == null) {
-      throw new Error("TrackManager: Given Period not found.");
+      throw new Error("TrackChoiceManager: Given Period not found.");
     }
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
     if (chosenTextAdaptation === null) {

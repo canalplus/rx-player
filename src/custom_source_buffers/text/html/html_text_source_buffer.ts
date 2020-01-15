@@ -35,8 +35,8 @@ import {
 import config from "../../../config";
 import log from "../../../log";
 import AbstractSourceBuffer from "../../abstract_source_buffer";
-import TextBufferManager from "./buffer_manager";
 import parseTextTrackToElements from "./parsers";
+import TextTrackCuesStore from "./text_track_cues_store";
 import updateProportionalElements from "./update_proportional_elements";
 
 const { onEnded$,
@@ -128,7 +128,7 @@ export default class HTMLTextSourceBuffer
   private readonly _textTrackElement : HTMLElement;
 
   // Buffer containing the data
-  private readonly _buffer : TextBufferManager;
+  private readonly _buffer : TextTrackCuesStore;
 
   // We could need us to automatically update styling depending on
   // `_textTrackElement`'s size. This Subject allows to stop that
@@ -156,7 +156,7 @@ export default class HTMLTextSourceBuffer
     this._textTrackElement = textTrackElement;
     this._clearSizeUpdates$ = new Subject();
     this._destroy$ = new Subject();
-    this._buffer = new TextBufferManager();
+    this._buffer = new TextTrackCuesStore();
     this._currentCue = null;
 
     // update text tracks

@@ -29,9 +29,9 @@ import {
 /**
  * Manage the buffer of the HTML text Sourcebuffer.
  * Allows to add, remove and recuperate cues at given times.
- * @class TextBufferManager
+ * @class TextTrackCuesStore
  */
-export default class TextBufferManager {
+export default class TextTrackCuesStore {
   private _cuesBuffer : ICuesGroup[];
 
   constructor() {

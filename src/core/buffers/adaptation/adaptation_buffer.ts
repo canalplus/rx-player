@@ -66,7 +66,7 @@ import ABRManager, {
   IABRMetric,
   IABRRequest,
 } from "../../abr";
-import { SegmentPipelinesManager } from "../../pipelines";
+import { SegmentPipelineCreator } from "../../pipelines";
 import { QueuedSourceBuffer } from "../../source_buffers";
 import EVENTS from "../events_generators";
 import RepresentationBuffer, {
@@ -99,7 +99,7 @@ export interface IAdaptationBufferArguments<T> {
               adaptation : Adaptation; }; // content to download
   options: { manualBitrateSwitchingMode : "seamless" | "direct" }; // Switch strategy
   queuedSourceBuffer : QueuedSourceBuffer<T>; // Interact with the SourceBuffer
-  segmentPipelinesManager : SegmentPipelinesManager<any>; // Load and parse segments
+  segmentPipelineCreator : SegmentPipelineCreator<any>; // Load and parse segments
   wantedBufferAhead$ : BehaviorSubject<number>; // Buffer goal wanted by the user
 }
 
@@ -121,7 +121,7 @@ export default function AdaptationBuffer<T>({
   content,
   options,
   queuedSourceBuffer,
-  segmentPipelinesManager,
+  segmentPipelineCreator,
   wantedBufferAhead$,
 } : IAdaptationBufferArguments<T>) : Observable<IAdaptationBufferEvent<T>> {
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
@@ -163,7 +163,7 @@ export default function AdaptationBuffer<T>({
                                                           abrEvents$)
       .pipe(subscribeOn(asapScheduler), share());
 
-  const segmentFetcher = segmentPipelinesManager.createPipeline(adaptation.type,
+  const segmentFetcher = segmentPipelineCreator.createPipeline(adaptation.type,
                                                                 requestsEvents$);
 
   // Bitrate higher or equal to this value should not be replaced by segments of

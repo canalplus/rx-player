@@ -68,7 +68,7 @@ To facilitate those actions, the API relies on multiple building blocks:
     the Player. Many RxPlayer modules rely on that clock.
 
 
-  - __the TrackManager__
+  - __the TrackChoiceManager__
 
     Ease up text/audio/video track switching to provide a simple-to-use API.
 
