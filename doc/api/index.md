@@ -10,8 +10,6 @@
     - [ErrorTypes](#static-ErrorTypes)
     - [ErrorCodes](#static-ErrorCodes)
     - [LogLevel](#static-LogLevel)
-- [Tools](#tools)
-    - [Experimental - MediaCapabilitiesProber](#tools-mediaCapabilitiesProber)
 - [Methods](#meth)
     - [loadVideo](#meth-loadVideo)
     - [getVideoElement](#meth-getVideoElement)
@@ -81,6 +79,8 @@
     - [exitFullscreen (deprecated)](#meth-exitFullscreen)
     - [isFullscreen (deprecated)](#meth-isFullscreen)
     - [getNativeTextTrack (deprecated)](#meth-getNativeTextTrack)
+- [Tools](#tools)
+    - [Experimental - MediaCapabilitiesProber](#tools-mediaCapabilitiesProber)
 
 
 
@@ -188,24 +188,6 @@ automatically set to ``"NONE"``.
 import RxPlayer from "rx-player";
 RxPlayer.LogLevel = "WARNING";
 ```
-
-
-
-<a name="tools"></a>
-## Tools #######################################################################
-
-<a name="tools-mediaCapabilitiesProber"></a>
-### MediaCapabilitiesProber ####################################################
-
-_type_: ``Object``
-
-An experimental tool to probe browser media capabilities:
-  - Decoding capabilities
-  - DRM support
-  - HDCP support
-  - Display capabilities
-
-You can find its documentation [here](./mediaCapabilitiesProber.md).
 
 
 
@@ -1721,3 +1703,32 @@ This is equivalent to:
 const el = player.getVideoElement();
 const textTrack = el.textTracks.length ? el.textTracks[0] : null;
 ```
+
+
+
+<a name="tools"></a>
+## Tools #######################################################################
+
+
+<a name="tools-mediaCapabilitiesProber"></a>
+### MediaCapabilitiesProber ####################################################
+
+An experimental tool to probe browser media capabilities:
+  - Decoding capabilities
+  - DRM support
+  - HDCP support
+  - Display capabilities
+
+You can find its documentation [here](./mediaCapabilitiesProber.md).
+
+
+<a name="tools-textTrackRenderer"></a>
+### TextTrackRenderer ##########################################################
+
+The TextTrackRenderer allows to easily render subtitles synchronized to a video
+element.
+
+It allows easily to dynamically add subtitles (as long as it is in one of the
+following format: srt, ttml, webVTT or SAMI) to a played video.
+
+This tool is documented [here](./TextTrackRenderer.md).
