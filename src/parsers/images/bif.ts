@@ -51,6 +51,9 @@ function parseBif(buf : Uint8Array) : IBifObject {
 
   const length = buf.length;
   const fileFormat = bytesToStr(buf.subarray(pos, pos + 8));   pos += 8;
+  if (fileFormat !== "\u0089BIF\r\n\u001a\n") {
+    throw new Error("Invalid BIF file");
+  }
 
   const minorVersion = buf[pos]; pos += 1;
   const majorVersion = buf[pos]; pos += 1;
@@ -59,8 +62,12 @@ function parseBif(buf : Uint8Array) : IBifObject {
 
   const version = [minorVersion, majorVersion, patchVersion, increVersion].join(".");
 
-  const imageCount = buf[pos] + le4toi(buf, pos + 1); pos += 4;
-  const timescale = le4toi(buf, pos); pos += 4;
+  if (majorVersion > 0) {
+    throw new Error(`Unhandled version: ${majorVersion}`);
+  }
+
+  const imageCount = le4toi(buf, pos); pos += 4;
+  const framewiseSeparation = le4toi(buf, pos); pos += 4;
 
   const format = bytesToStr(buf.subarray(pos, pos + 4)); pos += 4;
 
@@ -75,48 +82,46 @@ function parseBif(buf : Uint8Array) : IBifObject {
   pos = 0x40;
 
   const thumbs : IBifThumbnail[] = [];
-  let currentImage;
-  let currentTs = 0;
 
   if (imageCount === 0) {
     throw new Error("bif: no images to parse");
   }
 
+  let index = 0;
+  let previousImageInfo = null;
   while (pos < length) {
-    const currentImageIndex = le4toi(buf, pos); pos += 4;
+    const currentImageTimestamp = le4toi(buf, pos); pos += 4;
     const currentImageOffset = le4toi(buf, pos); pos += 4;
 
-    if (currentImage != null) {
-      const index = currentImage.index;
-      const duration = timescale;
-      const ts = currentTs;
-      const data = buf.subarray(currentImage.offset, currentImageOffset);
+    if (previousImageInfo !== null) {
+      // calculate for index-1
+      const ts = previousImageInfo.timestamp * framewiseSeparation;
+      const duration = framewiseSeparation;
+      const data = buf.subarray(previousImageInfo.offset, currentImageOffset);
 
       thumbs.push({ index, duration, ts, data });
 
-      currentTs += timescale;
+      index++;
     }
 
-    if (currentImageIndex === 0xFFFFFFFF) {
+    if (currentImageTimestamp === 0xFFFFFFFF) {
       break;
     }
 
-    currentImage = { index: currentImageIndex,
-                     offset: currentImageOffset };
+    previousImageInfo = { timestamp: currentImageTimestamp,
+                          offset: currentImageOffset };
   }
 
-  return {
-    fileFormat,
-    version,
-    imageCount,
-    timescale,
-    format,
-    width,
-    height,
-    aspectRatio,
-    isVod,
-    thumbs,
-  };
+  return { fileFormat: "BIF",
+           version,
+           imageCount,
+           timescale: 1000,
+           format,
+           width,
+           height,
+           aspectRatio,
+           isVod,
+           thumbs };
 }
 
 export default parseBif;
