@@ -489,9 +489,12 @@ function parseLoadVideoOptions(
              "`setPreferredTextTracks` method instead");
   }
   const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
-  const hideNativeSubtitle = options.hideNativeSubtitle == null ?
-    !DEFAULT_SHOW_NATIVE_SUBTITLE :
-    !!options.hideNativeSubtitle;
+
+  let hideNativeSubtitle = !DEFAULT_SHOW_NATIVE_SUBTITLE;
+  if (options.hideNativeSubtitle != null) {
+    warnOnce("The `hideNativeSubtitle` loadVideo option is deprecated");
+    hideNativeSubtitle = !!options.hideNativeSubtitle;
+  }
   const manualBitrateSwitchingMode = options.manualBitrateSwitchingMode == null ?
       DEFAULT_MANUAL_BITRATE_SWITCHING_MODE :
       options.manualBitrateSwitchingMode;
