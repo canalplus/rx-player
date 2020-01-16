@@ -863,6 +863,13 @@ const supplementaryImageTracks = [{
 <a name="prop-hideNativeSubtitle"></a>
 ### hideNativeSubtitle #########################################################
 
+---
+
+:warning: This option is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
 _type_: ``Boolean``
 
 _defaults_: ``false``
