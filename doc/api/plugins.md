@@ -277,7 +277,7 @@ The representationFilter will be called each time we load a
         the visually impaired.
 
       - isDub ``{Boolean|undefined}``): If set to `true`, this audio track is a
-        "dub", meaning it was recored in another language than the original.
+        "dub", meaning it was recorded in another language than the original.
         If set to `false`, we know that this audio track is in an original
         language.
         This property is `undefined` if we do not known whether it is in an

@@ -1038,7 +1038,7 @@ Each of the objects in the returned array have the following properties:
     description (for the visually impaired or not).
 
   - ``dub`` (``Boolean|undefined``): If set to `true`, this audio track is a
-    "dub", meaning it was recored in another language than the original.
+    "dub", meaning it was recorded in another language than the original.
     If set to `false`, we know that this audio track is in an original language.
     This property is `undefined` if we do not known whether it is in an original
     language.
@@ -1144,7 +1144,7 @@ The track is an object with the following properties:
     description (for the visually impaired or not).
 
   - ``dub`` (``Boolean|undefined``): If set to `true`, this audio track is a
-    "dub", meaning it was recored in another language than the original.
+    "dub", meaning it was recorded in another language than the original.
     If set to `false`, we know that this audio track is in an original language.
     This property is `undefined` if we do not known whether it is in an original
     language.
