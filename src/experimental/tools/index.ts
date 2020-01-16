@@ -15,9 +15,11 @@
  */
 
 import mediaCapabilitiesProber from "./mediaCapabilitiesProber";
+import parseBifThumbnails from "./parseBIFThumbnails";
 import TextTrackRenderer from "./TextTrackRenderer";
 
 export {
   mediaCapabilitiesProber,
+  parseBifThumbnails,
   TextTrackRenderer,
 };
