@@ -17,13 +17,13 @@
     - [availableVideoBitratesChange](#events-availableVideoBitratesChange)
     - [audioBitrateChange](#events-audioBitrateChange)
     - [videoBitrateChange](#events-videoBitrateChange)
-    - [imageTrackUpdate](#events-imageTrackUpdate)
-    - [fullscreenChange](#events-fullscreenChange)
     - [bitrateEstimationChange](#events-bitrateEstimationChange)
     - [warning](#events-warning)
     - [error](#events-error)
     - [periodChange](#events-periodChange)
     - [decipherabilityUpdate](#events-decipherabilityUpdate)
+    - [imageTrackUpdate (deprecated)](#events-imageTrackUpdate)
+    - [fullscreenChange (deprecated)](#events-fullscreenChange)
     - [nativeTextTracksChange (deprecated)](#events-nativeTextTracksChange)
 
 
@@ -396,45 +396,6 @@ time it changes (based on the last received segment).
 `-1` when the bitrate is not known.
 
 
-<a name="events-imageTrackUpdate"></a>
-### imageTrackUpdate ###########################################################
-
-_payload type_: ``Object``
-
----
-
-:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
----
-
-Triggered each time the current image playlist changes (has new images).
-
-Has the following property in its payload:
-  _data_ (``Array.<Object>``): Every image data.
-
-  Each image has a structure as defined in the [Images structure
-  page](./images.md#api-structure).
-
-
-<a name="events-fullscreenChange"></a>
-### fullscreenChange ###########################################################
-
----
-
-:warning: This event is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
----
-
-_payload type_: ``Boolean``
-
-Triggered each time the video player goes/exits fullscreen mode.
-
-The payload is ``true`` if the player entered fullscreen, ``false`` if it exited
-it.
-
-
 <a name="events-bitrateEstimationChange"></a>
 ### bitrateEstimationChange ####################################################
 
@@ -549,6 +510,52 @@ Each of those objects have the following properties:
 
 You can then know if any of those Representations are becoming decipherable or
 not through their `decipherable` property.
+
+
+<a name="events-imageTrackUpdate"></a>
+### imageTrackUpdate ###########################################################
+
+---
+
+:warning: This event is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
+_payload type_: ``Object``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Triggered each time the current image playlist changes (has new images).
+
+Has the following property in its payload:
+  _data_ (``Array.<Object>``): Every image data.
+
+  Each image has a structure as defined in the [Images structure
+  page](./images.md#api-structure).
+
+
+<a name="events-fullscreenChange"></a>
+### fullscreenChange ###########################################################
+
+---
+
+:warning: This event is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
+_payload type_: ``Boolean``
+
+Triggered each time the video player goes/exits fullscreen mode.
+
+The payload is ``true`` if the player entered fullscreen, ``false`` if it exited
+it.
 
 
 <a name="events-nativeTextTracksChange"></a>
