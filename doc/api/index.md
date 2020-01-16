@@ -72,9 +72,9 @@
     - [getPlaybackRate](#meth-getPlaybackRate)
     - [setPlaybackRate](#meth-setPlaybackRate)
     - [getCurrentKeySystem](#meth-getCurrentKeySystem)
-    - [getImageTrackData](#meth-getImageTrackData)
     - [getMinimumPosition](#meth-getMinimumPosition)
     - [getMaximumPosition](#meth-getMaximumPosition)
+    - [getImageTrackData (deprecated)](#meth-getImageTrackData)
     - [setFullscreen (deprecated)](#meth-setFullscreen)
     - [exitFullscreen (deprecated)](#meth-exitFullscreen)
     - [isFullscreen (deprecated)](#meth-isFullscreen)
@@ -1572,21 +1572,6 @@ _return value_: ``string|undefined``
 Returns the type of keySystem used for DRM-protected contents.
 
 
-<a name="meth-getImageTrackData"></a>
-### getImageTrackData ##########################################################
-
-_return value_: ``Array.<Object>|null``
-
-The current image track's data, null if no content is loaded / no image track
-data is available.
-
-The returned array follows the usual image playlist structure, defined
-[here](./images.md#api-structure).
-
-``null`` in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
-
 <a name="meth-getMinimumPosition"></a>
 ### getMinimumPosition #########################################################
 
@@ -1624,6 +1609,28 @@ player.seekTo({
   position: player.getMaximumPosition()
 });
 ```
+
+
+<a name="meth-getImageTrackData"></a>
+### getImageTrackData ##########################################################
+
+---
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
+_return value_: ``Array.<Object>|null``
+
+The current image track's data, null if no content is loaded / no image track
+data is available.
+
+The returned array follows the usual image playlist structure, defined
+[here](./images.md#api-structure).
+
+``null`` in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
 
 
 <a name="meth-setFullscreen"></a>
