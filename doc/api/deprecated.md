@@ -272,6 +272,19 @@ player.setPreferredTextTracks([{ language: "fra", closedCaption: false }]);
 ```
 
 
+### hideNativeSubtitle #########################################################
+
+The `hideNativeSubtitle` option is deprecated and won't be replaced.
+
+This is because it was added at a time when our text track API was much less
+advanced. Some applications wanted to handle subtitles themselves and thus hid
+the true "native" subtitles to display them themselves in a better way.
+
+However, this API seems to not be used anymore. Please open an issue if you need
+it.
+
+
+
 ## RxPlayer options
 
 The following RxPlayer constructor options are deprecated.
