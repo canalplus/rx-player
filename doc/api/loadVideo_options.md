@@ -52,6 +52,7 @@ player.loadVideo(options);
 _type_: ``string|undefined``
 
 The transport protocol used for this content.
+This property is mandatory.
 
 Can be either:
 
@@ -61,15 +62,18 @@ Can be either:
 
   - ``"directfile"`` - for loading a video in _DirectFile_ mode, which allows to
     directly play media files (example: ``.mp4`` or ``.webm`` files) without
-    using a transport protocol.
+    using a transport protocol. With that option, you can even play HLS
+    contents on multiple browsers (mainly safari and iOS browsers).
 
     :warning: In that mode, multiple APIs won't have any effect.
     This is documented in the documentation of each concerned method, option or
     event in the API.
 
-  - ``"metaplaylist"`` for [MetaPlaylist](./metaplaylist.md) streams
+  - ``"metaplaylist"`` for [MetaPlaylist](./metaplaylist.md) streams, which are
+    a concatenation of multiple smooth and DASH contents
 
-This property is mandatory.
+  - `"local"` for [local manifests](./local_manifest.md), which allows to play
+    downloaded DASH, Smooth or MetaPlaylist contents (when offline for example).
 
 
 <a name="prop-url"></a>
