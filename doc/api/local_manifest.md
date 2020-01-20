@@ -17,21 +17,25 @@ API is under way.
 
 ## Overview ####################################################################
 
-To play contents stored locally, the RxPlayer uses its own Manifest format,
-close to a DASH MPD.
+To play contents stored locally, the RxPlayer uses its own Manifest format - the
+"local manifest" which is close in semantics to DASH's own Manifest file, the
+MPD.
 
-This new Manifest will be the only element you will need to generate on your
-side and as such, this what most of this documentation page is about.
+This new Manifest format will be the only element you will need to generate on
+your side to play stored contents. As such, this what most of this documentation
+page is about.
 
-To be able to play those content, you will be able to call the exact same
-RxPlayer APIs that for any other format.
+Note that the wanted content does not need to be completely downloaded before
+creating this local manifest. Playback can even begin while the content is
+still downloading.
 
 You will just need to:
   1. indicate that this is a "local" content by setting the `transport` option
      in `loadVideo` to `"local"`
-  2. As the Manifest object most likely won't be available through an URL but
-     directly as an object, you will need to communicate it through the
-     `manifestLoader` property in the `transportOptions` `loadVideo` option.
+  2. As the generated Manifest object most likely won't be available through an
+     URL but directly as a JavaScript object, you will need to communicate it
+     through the `manifestLoader` property in the `transportOptions` `loadVideo`
+     option.
 
 Here is an example:
 ```js
@@ -99,9 +103,9 @@ documentation](./minimal_player.md).
 As explained in the overview, offline playback by the RxPlayer mainly rely on a
 specific sort of manifest, called the "local manifest".
 
-It is not the task of the RxPlayer to download and store the content here (even
-if a tool is on its way), this page only explains how to play a stored content
-once it has been stored.
+It is not the task of the RxPlayer to download and store the content here (a
+tool to do just that is on its way), this page only explains how to play a
+stored content once it has been stored.
 
 The local manifest looks like a DASH MPD in its structure and as such is very
 hierarchical.
@@ -119,17 +123,16 @@ manifest Object
 ```
 
 We will go progressively from the elements higher in the hierarchy (the manifest
-object) to the lower ones (the representation Object) before showcasing some
-examples.
+object) to the lower ones (the representation Object).
 
 
 
 ## The manifest Object #########################################################
 
-The manifest object describes information about the whole content:
+The manifest object describes information about the whole local content:
   - its duration
   - whether it is still downloading or if its completely available
-  - and of course, information about the whole content.
+  - the different "parts" (or "periods") the content is divided in
 
 First, let's go into an example, before describing what each property is for:
 ```js
@@ -138,7 +141,7 @@ First, let's go into an example, before describing what each property is for:
   version: "0.1", // version number, in a MAJOR.MINOR form
   duration: 60000, // duration of the whole content, in ms
   isFinished: true, // if `false`, the content is still downloading
-  periods: [ // see below
+  periods: [ // different "periods" in the content - see below
     // ...
   ],
 }
@@ -177,7 +180,7 @@ object:
 
 As seen in the previous chapter, the local manifest contains a `periods`
 property. The concept of period comes from DASH and allow to separate a content
-into multiple sub-contents with their own configurations.
+into multiple sub-parts, each with their own configurations.
 
 For example, you could have in the same content a TV Show in german followed by
 an american film, each with its own language choices and qualities.
@@ -196,8 +199,8 @@ Here's an example of a period object:
 }
 ```
 
-In the context of a local manifest with multiple periods, here is how it looks
-like:
+In the context of a local manifest with multiple periods, here is how it can
+look like:
 ```js
 {
   type: "local",
@@ -240,7 +243,7 @@ The following properties are found in a period object:
 
 ## the adaptation object #######################################################
 
-An adaptation is roughly a `track` of the content. It can for the moment be one
+An adaptation is roughly a "track" of the content. It can for the moment be one
 of those three types:
   - "audio"
   - "video"
