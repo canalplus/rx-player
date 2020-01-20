@@ -79,7 +79,7 @@ function loadInitSegment(
  * @returns {Observable}
  */
 function loadSegment(
-  segment : { time : number; duration : number; timescale : number },
+  segment : { time : number; duration : number; timestampOffset? : number },
   customSegmentLoader : ILocalManifestSegmentLoader
 ) : Observable< ILoaderRegularDataEvent<ArrayBuffer | null>> {
   return new Observable((obs : Observer<

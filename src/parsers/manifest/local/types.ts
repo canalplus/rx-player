@@ -42,12 +42,10 @@ export interface IContentProtections {
 
 export interface ILocalIndexSegment {
   time : number; // Start time of the segment, timescaled
-  timescale : number; // Allow to convert `time` and `duration` into seconds:
-                      // `time / timescale == START_TIME_IN_SECONDS`
   duration : number; // Duration of the segment, timescaled
   timestampOffset? : number; // If set, the amount of time we have to add to the
                              // segment to convert its media time to its
-                             // presentation time, timescaled
+                             // presentation time, in seconds
 }
 
 export interface ILocalIndex {

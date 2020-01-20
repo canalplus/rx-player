@@ -62,11 +62,11 @@ export default function createRepresentationIndex(
       const wantedSegments : ILocalIndexSegment[] = [];
       for (let i = 0; i < index.segments.length; i++) {
         const segment = index.segments[i];
-        const segmentStart = segment.time / segment.timescale;
+        const segmentStart = segment.time / 1000;
         if (endTime <= segmentStart) {
           break;
         }
-        const segmentEnd = (segment.time + segment.duration) / segment.timescale;
+        const segmentEnd = (segment.time + segment.duration) / 1000;
         if (segmentEnd > startTime) {
           wantedSegments.push(segment);
         }
@@ -79,7 +79,7 @@ export default function createRepresentationIndex(
             isInit: false,
             time: wantedSegment.time,
             duration: wantedSegment.duration,
-            timescale: wantedSegment.timescale,
+            timescale: 1000,
             timestampOffset: wantedSegment.timestampOffset,
             mediaURL: null,
             privateInfos: {

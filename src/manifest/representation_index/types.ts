@@ -57,7 +57,7 @@ export interface ILocalManifestInitSegmentPrivateInfos {
 // privateInfos specific to local Manifests
 export interface ILocalManifestSegmentPrivateInfos {
   load : ILocalManifestSegmentLoader;
-  segment : { time : number; duration : number; timescale : number };
+  segment : { time : number; duration : number; timestampOffset? : number };
 }
 
 export interface IPrivateInfos {
