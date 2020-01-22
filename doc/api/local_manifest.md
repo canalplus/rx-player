@@ -174,6 +174,19 @@ object:
   - periods (`Array.<Object>`): The different "periods" available in the
     content. We will explain what a "period" is in the following chapter.
 
+  - expired (`Promise.<undefined>|undefined`): Optional Promise which should
+    resolve when a newer local manifest is available.
+
+    This is for example useful when playing a content which is still
+    downloading. Here `expired` could resolve once a new segment is available,
+    the RxPlayer would then request the new local manifest (through the same API
+    than for the initial request, e.g.  through the `manifestLoader` property
+    indicated in `loadVideo`) and would obtain a new local manifest with this
+    new segment included and a new `expired` property set.
+    This can go on until the content is completely downloaded at which time
+    `expired` can be set to `undefined` or just omitted from the last local
+    manifest.
+
 
 
 ## The period object ###########################################################
@@ -457,6 +470,8 @@ it contains itself three properties:
 
   - segments (`Array.<Object>`): the list of every available media segments for
     that representation. Does not include the initialization segment.
+
+    Do not include in this Array the segments that are not downloaded yet.
 
   - loadInitSegment (`function`): Returns the initialization segment or `null`
     if this notion is not relevant, like for subtitles.

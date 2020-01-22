@@ -84,6 +84,8 @@ export interface ILocalManifest {
                     // MAJOR = previous parser should not parse it
                     // MINOR = retro-compatible
   duration : number; // total duration of the content in ms
+  expired? : Promise<void>; // When this Promise resolves, it means that the
+                            // Local Manifest needs to be updated.
   periods : ILocalPeriod[];
   isFinished : boolean; // whether the local-manifest generation is finished
 }

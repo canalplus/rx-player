@@ -50,6 +50,7 @@ export default function parseLocalManifest(
   const manifest = {
     availabilityStartTime: 0,
     duration: localManifest.duration,
+    expired: localManifest.expired,
     id: "local-manifest_" + generateManifestID(),
     transportType: "local",
     isDynamic: !localManifest.isFinished,
