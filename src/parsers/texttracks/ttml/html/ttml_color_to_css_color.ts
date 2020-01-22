@@ -17,6 +17,8 @@
 import {
   REGXP_4_HEX_COLOR,
   REGXP_8_HEX_COLOR,
+  REGXP_RGB_COLOR,
+  REGXP_RGBA_COLOR,
 } from "../regexps";
 
 /**
@@ -27,6 +29,7 @@ import {
 export default function ttmlColorToCSSColor(color : string) : string {
   // TODO check all possible color fomats
   let regRes;
+
   regRes = REGXP_8_HEX_COLOR.exec(color);
   if (regRes != null) {
     return "rgba(" +
@@ -35,14 +38,31 @@ export default function ttmlColorToCSSColor(color : string) : string {
       String(parseInt(regRes[3], 16)) + "," +
       String(parseInt(regRes[4], 16) / 255) + ")";
   }
-  regRes = REGXP_4_HEX_COLOR.exec(color);
 
+  regRes = REGXP_4_HEX_COLOR.exec(color);
   if (regRes != null) {
     return "rgba(" +
       String(parseInt(regRes[1] + regRes[1], 16)) + "," +
       String(parseInt(regRes[2] + regRes[2], 16)) + "," +
       String(parseInt(regRes[3] + regRes[3], 16)) + "," +
       String(parseInt(regRes[4] + regRes[4], 16) / 255) + ")";
+  }
+
+  regRes = REGXP_RGB_COLOR.exec(color);
+  if (regRes != null) {
+    return "rgb(" +
+      String(+regRes[1]) + "," +
+      String(+regRes[2]) + "," +
+      String(+regRes[3]) + ")";
+  }
+
+  regRes = REGXP_RGBA_COLOR.exec(color);
+  if (regRes != null) {
+    return "rgba(" +
+      String(+regRes[1]) + "," +
+      String(+regRes[2]) + "," +
+      String(+regRes[3]) + "," +
+      String(+regRes[4] / 255) + ")";
   }
   return color;
 }

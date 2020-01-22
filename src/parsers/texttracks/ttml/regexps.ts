@@ -43,9 +43,17 @@ const REGXP_8_HEX_COLOR =
   /^#([0-9A-f]{2})([0-9A-f]{2})([0-9A-f]{2})([0-9A-f]{2})$/;
 const REGXP_4_HEX_COLOR = /^#([0-9A-f])([0-9A-f])([0-9A-f])([0-9A-f])$/;
 
+const REGXP_RGB_COLOR =
+  /^rgb\( *(\d+) *, *(\d+) *, *(\d+) *\)/;
+
+const REGXP_RGBA_COLOR =
+  /^rgba\( *(\d+) *, *(\d+) *, *(\d+) *, *(\d+) *\)/;
+
 export {
   REGXP_4_HEX_COLOR,
   REGXP_8_HEX_COLOR,
+  REGXP_RGB_COLOR,
+  REGXP_RGBA_COLOR,
   REGXP_LENGTH,
   REGXP_PERCENT_VALUES,
   REGXP_TIME_COLON,
