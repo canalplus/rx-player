@@ -30,6 +30,7 @@ import {
   getStyleNodes,
   getTextNodes,
 } from "../nodes";
+import resolveStylesInheritance from "../resolve_styles_inheritance";
 import parseCue, {
   ITTMLHTMLCue,
 } from "./parse_cue";
@@ -107,12 +108,17 @@ export default function parseTTMLStringToDIV(
       if (styleNode instanceof Element) {
         const styleID = styleNode.getAttribute("xml:id");
         if (styleID !== null) {
-          // TODO styles referencing other styles
+          const subStyles = styleNode.getAttribute("style");
+          const extendsStyles = subStyles === null ? [] :
+                                                     subStyles.split(" ");
           idStyles.push({ id: styleID,
-                          style: getStylingFromElement(styleNode) });
+                          style: getStylingFromElement(styleNode),
+                          extendsStyles });
         }
       }
     }
+
+    resolveStylesInheritance(idStyles);
 
     // construct regionStyles array based on the xml as an optimization
     const regionStyles : IStyleObject[] = [];
@@ -122,15 +128,18 @@ export default function parseTTMLStringToDIV(
         const regionID = regionNode.getAttribute("xml:id");
         if (regionID !== null) {
           let regionStyle = getStylingFromElement(regionNode);
-          const associatedStyle = regionNode.getAttribute("style");
-          if (isNonEmptyString(associatedStyle)) {
-            const style = arrayFind(idStyles, (x) => x.id === associatedStyle);
+          const associatedStyleID = regionNode.getAttribute("style");
+          if (isNonEmptyString(associatedStyleID)) {
+            const style = arrayFind(idStyles, (x) => x.id === associatedStyleID);
             if (style !== undefined) {
               regionStyle = objectAssign({}, style.style, regionStyle);
             }
           }
           regionStyles.push({ id: regionID,
-                              style: regionStyle });
+                              style: regionStyle,
+
+                              // already handled
+                              extendsStyles: [] });
         }
       }
     }
