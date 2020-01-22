@@ -455,6 +455,8 @@ function parseLoadVideoOptions(
     transportOptions.supplementaryTextTracks = supplementaryTextTracks;
   }
   if (options.supplementaryImageTracks !== undefined) {
+    warnOnce("The `supplementaryImageTracks` loadVideo option is deprecated.\n" +
+             "Please use the `parseBifThumbnails` tool instead.");
     const supplementaryImageTracks =
       Array.isArray(options.supplementaryImageTracks) ?
         options.supplementaryImageTracks : [options.supplementaryImageTracks];

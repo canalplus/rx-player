@@ -308,7 +308,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      *
      * null if the current content has no image playlist linked to it.
      *
-     * TODO Need complete refactoring for live or multi-periods contents
+     * @deprecated
      */
     thumbnails : IBifThumbnail[]|null;
 
@@ -1714,12 +1714,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * @returns {Array.<Object>|null}
+   * @deprecated
    */
   getImageTrackData() : IBifThumbnail[] | null {
+    warnOnce("`getImageTrackData` is deprecated." +
+             "Please use the `parseBifThumbnails` tool instead.");
     if (this._priv_contentInfos === null) {
       return null;
     }
+    /* tslint:disable deprecation */
     return this._priv_contentInfos.thumbnails;
+    /* tslint:enable deprecation */
   }
 
   /**
@@ -1885,14 +1890,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         }
 
         // Manage image tracks
-        // TODO Better way? Perhaps externalize Image track management in a tool
+        // @deprecated
         const { content, segmentData } = event.value;
         if (content.adaptation.type === "image") {
           if (segmentData != null && (segmentData as { type : string }).type === "bif") {
             const imageData = (segmentData as { data : IBifThumbnail[] }).data;
+            /* tslint:disable deprecation */
             this._priv_contentInfos.thumbnails = imageData;
             this.trigger("imageTrackUpdate",
                          { data: this._priv_contentInfos.thumbnails });
+            /* tslint:enable deprecation */
           }
         }
     }
