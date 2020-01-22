@@ -40,6 +40,7 @@ import {
   getTextNodes,
 } from "../nodes";
 import { REGXP_PERCENT_VALUES, } from "../regexps";
+import resolveStylesInheritance from "../resolve_styles_inheritance";
 
 /**
  * Style attributes currently used.
@@ -101,13 +102,17 @@ function parseTTMLStringToVTT(
       if (styleNode instanceof Element) {
         const styleID = styleNode.getAttribute("xml:id");
         if (styleID != null) {
-          styles.push({
-            id: styleID,
-            style: getStylingFromElement(styleNode),
-          });
+          const subStyles = styleNode.getAttribute("style");
+          const extendsStyles = subStyles === null ? [] :
+                                                     subStyles.split(" ");
+          styles.push({ id: styleID,
+                        style: getStylingFromElement(styleNode),
+                        extendsStyles });
         }
       }
     }
+
+    resolveStylesInheritance(styles);
 
     // construct regions array based on the xml as an optimization
     const regions : IStyleObject[] = [];
@@ -125,10 +130,11 @@ function parseTTMLStringToVTT(
               regionStyle = objectAssign({}, style.style, regionStyle);
             }
           }
-          regions.push({
-            id: regionID,
-            style: regionStyle,
-          });
+          regions.push({ id: regionID,
+                         style: regionStyle,
+
+                         // already handled
+                         extendsStyles: [] });
         }
       }
     }
