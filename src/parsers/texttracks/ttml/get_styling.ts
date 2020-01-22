@@ -22,8 +22,12 @@ import startsWith from "../../../utils/starts_with";
 export type IStyleList =
   Partial<Record<string, string>>;
 
-export interface IStyleObject { id: string;
-                                style: IStyleList; }
+// Object defining a single element's (region/style...) style parameters
+export interface IStyleObject {
+  id : string; // The ID of the current element
+  style : IStyleList; // All set style preference
+  extendsStyles : string[]; // ID of the "style" elements this element extends
+}
 
 /**
  * Retrieve the attributes given in arguments in the given nodes and their
