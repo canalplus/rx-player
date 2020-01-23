@@ -137,13 +137,43 @@ describe("resolve_styles_inheritance", () => {
 
   it("should avoid infinite inheritance loops", () => {
     logWarnMock.mockReturnValue(undefined);
-    const initialStyle = [
+
+    // 1. simple case
+    const initialStyle1 = [
+      { id: "1", style: { titi: "toto", tata: "tuto"}, extendsStyles: ["3"] },
+      { id: "2", style: { titi: "tito", teta: "tutu"}, extendsStyles: [] },
+      { id: "3", style: { tata: "toto", tota: "tutu"}, extendsStyles: ["1"] },
+    ];
+    resolveStylesInheritance(initialStyle1);
+    expect(initialStyle1).toEqual([
+      { id: "1",
+        style: { titi: "toto",
+                 tata: "tuto",
+                 tota: "tutu" },
+        extendsStyles: [] },
+      { id: "2",
+        style: { titi: "tito",
+                 teta: "tutu" },
+        extendsStyles: [] },
+      { id: "3",
+        style: { tata: "toto",
+                 tota: "tutu",
+                 titi: "toto" }, extendsStyles: [] },
+    ]);
+
+    expect(logWarnMock)
+      .toHaveBeenNthCalledWith(1, "TTML Parser: infinite style inheritance loop avoided");
+    expect(logWarnMock).toHaveBeenCalledTimes(1);
+    logWarnMock.mockReset();
+
+    // 2. More complex case
+    const initialStyle2 = [
       { id: "1", style: { titi: "toto", tata: "tuto"}, extendsStyles: ["2", "3"] },
       { id: "2", style: { titi: "tito", teta: "tutu"}, extendsStyles: ["3"] },
       { id: "3", style: { tata: "toto", tota: "tutu"}, extendsStyles: ["2"] },
     ];
-    resolveStylesInheritance(initialStyle);
-    expect(initialStyle).toEqual([
+    resolveStylesInheritance(initialStyle2);
+    expect(initialStyle2).toEqual([
       { id: "1",
         style: { titi: "toto",
                  tata: "tuto",
