@@ -24,8 +24,8 @@ import { IStyleObject } from "./get_styling";
  * Transform all styles inheriting from other styles to the same styles but with
  * the inheritance removed (by resolving those inheritance here).
  *
- * Note that the original style object is directly muted with every inheritance
- * they had resolved and removed.
+ * Note that the original style object is directly mutated with every
+ * inheritance they had resolved and removed.
  *
  * To make a pseudo-code analogy this would be equivalent to transform those
  * two classes:
