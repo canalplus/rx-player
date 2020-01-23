@@ -1453,7 +1453,7 @@ export default function launchTestsForContent(manifestInfos) {
         await sleep(1);
         expect(player.getAvailableAudioTracks()).to.eql([]);
         await xhrMock.flush();
-        await sleep(1);
+        await sleep(50);
 
         const audioTracks = player.getAvailableAudioTracks();
 
@@ -1501,7 +1501,7 @@ export default function launchTestsForContent(manifestInfos) {
         await sleep(1);
         expect(player.getAvailableTextTracks()).to.eql([]);
         await xhrMock.flush();
-        await sleep(1);
+        await sleep(50);
 
         const textTracks = player.getAvailableTextTracks();
 
@@ -1549,7 +1549,7 @@ export default function launchTestsForContent(manifestInfos) {
         await sleep(1);
         expect(player.getAvailableVideoTracks()).to.eql([]);
         await xhrMock.flush();
-        await sleep(1);
+        await sleep(50);
 
         const videoTracks = player.getAvailableVideoTracks();
 
