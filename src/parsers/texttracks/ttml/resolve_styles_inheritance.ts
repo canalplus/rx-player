@@ -56,9 +56,9 @@ export default function resolveStylesInheritance(
   styles : IStyleObject[]
 ) : void {
   // keep track of all the indexes parsed to avoid infinite loops
-  const indexesAlreadyResolving : number[] = [];
+  const recursivelyBrowsedIndexes : number[] = [];
   function resolveStyleInheritance(styleElt : IStyleObject, index : number) {
-    indexesAlreadyResolving.push(index);
+    recursivelyBrowsedIndexes.push(index);
     for (let j = 0; j < styleElt.extendsStyles.length; j++) {
       const extendedStyleID = styleElt.extendsStyles[j];
       const extendedStyleIndex = arrayFindIndex(styles,
@@ -67,7 +67,7 @@ export default function resolveStylesInheritance(
         log.warn("TTML Parser: unknown style inheritance: " + extendedStyleID);
       } else {
         const extendedStyle = styles[extendedStyleIndex];
-        if (arrayIncludes(indexesAlreadyResolving, extendedStyleIndex)) {
+        if (arrayIncludes(recursivelyBrowsedIndexes, extendedStyleIndex)) {
           log.warn("TTML Parser: infinite style inheritance loop avoided");
         } else {
           resolveStyleInheritance(extendedStyle, extendedStyleIndex);
@@ -79,5 +79,6 @@ export default function resolveStylesInheritance(
   }
   for (let i = 0; i < styles.length; i++) {
     resolveStyleInheritance(styles[i], i);
+    recursivelyBrowsedIndexes.length = 0; // reset
   }
 }
