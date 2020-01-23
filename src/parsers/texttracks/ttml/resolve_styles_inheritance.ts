@@ -51,7 +51,6 @@ import { IStyleObject } from "./get_styling";
  *
  * Doing this here allows to simplify further treatment of those styles.
  * @param {Array.<Object>} styles
- * @returns {Array.<Object>}
  */
 export default function resolveStylesInheritance(
   styles : IStyleObject[]
