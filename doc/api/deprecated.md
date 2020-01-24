@@ -314,7 +314,7 @@ replace:
 const manifest = player.getManifest();
 
 if (manifest && manifest.periods.length) {
-  console.log(manifest.adaptations === manifest.periods[0]); // true
+  console.log(manifest.adaptations === manifest.periods[0].adaptations); // true
 }
 ```
 
