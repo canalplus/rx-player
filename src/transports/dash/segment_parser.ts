@@ -29,8 +29,8 @@ import {
   IAudioVideoParserObservable,
   ISegmentParserArguments,
 } from "../types";
-import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
+import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
 
 export default function parser(
   { content,

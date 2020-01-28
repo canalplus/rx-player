@@ -27,8 +27,8 @@ import {
 } from "../../utils/byte_parsing";
 import stringFromUTF8 from "../../utils/string_from_utf8";
 import takeFirstSet from "../../utils/take_first_set";
-import isMP4EmbeddedTextTrack from "./is_mp4_embedded_text_track";
 import getISOBMFFTimingInfos from "./isobmff_timing_infos";
+import isMP4EmbeddedTextTrack from "./is_mp4_embedded_text_track";
 
 import {
   ISegmentParserArguments,

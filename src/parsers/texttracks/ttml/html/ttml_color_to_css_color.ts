@@ -17,8 +17,8 @@
 import {
   REGXP_4_HEX_COLOR,
   REGXP_8_HEX_COLOR,
-  REGXP_RGB_COLOR,
   REGXP_RGBA_COLOR,
+  REGXP_RGB_COLOR,
 } from "../regexps";
 
 /**

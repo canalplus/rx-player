@@ -362,7 +362,7 @@ describe("DASH Node Parsers - AdaptationSet", () => {
 
     const element2 = new DOMParser()
       .parseFromString(
-        "<AdaptationSet><BaseURL availabilityTimeOffset=\"4\">foo bar</ BaseURL></AdaptationSet>",
+        "<AdaptationSet><BaseURL availabilityTimeOffset=\"4\">foo bar</BaseURL></AdaptationSet>",
         "text/xml"
       ).childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element2))
