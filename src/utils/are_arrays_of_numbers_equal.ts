@@ -14,12 +14,22 @@
  * limitations under the License.
  */
 
-declare module "deep-equal" {
-  function deepEqual(
-    actual : any,
-    expected : any,
-    opts? : any
-  ) : boolean;
-
-  export default deepEqual;
+/**
+ * Check if two two arrays containing only numbers are equal.
+ * @param {Array.<number>|TypedArray} arr1
+ * @param {Array.<number>|TypedArray} arr2
+ * @returns {Boolean}
+ */
+export default function areArraysOfNumbersEqual(
+  arr1 : Uint8Array|number[], arr2 : Uint8Array|number[]
+) : boolean {
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+  for (let i = arr1.length - 1; i >= 0; i--) {
+    if (arr1[i] !== arr2[i]) {
+      return false;
+    }
+  }
+  return true;
 }

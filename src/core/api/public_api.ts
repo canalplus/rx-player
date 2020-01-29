@@ -19,7 +19,6 @@
  * It also starts the different sub-parts of the player on various API calls.
  */
 
-import deepEqual from "deep-equal";
 import objectAssign from "object-assign";
 import {
   BehaviorSubject,
@@ -50,6 +49,7 @@ import {
 } from "rxjs/operators";
 import config from "../../config";
 import log from "../../log";
+import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import EventEmitter, {
   fromEvent,
 } from "../../utils/event_emitter";
@@ -1813,26 +1813,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Store and emit new player state (e.g. text track, videoBitrate...).
-   * We check for deep equality to avoid emitting 2 consecutive times the same
-   * state.
-   * @param {string} eventName
-   * @param {*} value - its new value
-   */
-  private _priv_triggerEventIfChanged<TEventName extends keyof IPublicAPIEvent>(
-    eventName : TEventName,
-    value : IPublicAPIEvent[TEventName]
-  ) : void {
-    const prev = this._priv_contentEventsMemory[eventName];
-    if (!deepEqual(prev, value)) {
-      /* without an `as any` cast, TypeScript find the type "too complex to
-       * represent" */
-      this._priv_contentEventsMemory[eventName] = value as any;
-      this.trigger(eventName, value);
-    }
-  }
-
-  /**
    * Triggered each time the playback Observable emits.
    *
    * React to various events.
@@ -1876,7 +1856,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         this._priv_contentInfos.sourceBuffersStore = event.value.sourceBuffersStore;
         break;
       case "decipherabilityUpdate":
-        this._priv_triggerEventIfChanged("decipherabilityUpdate", event.value);
+        this.trigger("decipherabilityUpdate", event.value);
         break;
       case "added-segment":
         if (this._priv_contentInfos === null) {
@@ -1994,13 +1974,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     this._priv_contentInfos.currentPeriod = period;
 
-    this._priv_triggerEventIfChanged("periodChange", period);
-    this._priv_triggerEventIfChanged("availableAudioTracksChange",
-                                     this.getAvailableAudioTracks());
-    this._priv_triggerEventIfChanged("availableTextTracksChange",
-                                     this.getAvailableTextTracks());
-    this._priv_triggerEventIfChanged("availableVideoTracksChange",
-                                     this.getAvailableVideoTracks());
+    if (this._priv_contentEventsMemory.periodChange !== period) {
+      this._priv_contentEventsMemory.periodChange = period;
+      this.trigger("periodChange", period);
+    }
+
+    this.trigger("availableAudioTracksChange", this.getAvailableAudioTracks());
+    this.trigger("availableTextTracksChange", this.getAvailableTextTracks());
+    this.trigger("availableVideoTracksChange", this.getAvailableVideoTracks());
 
     // Emit intial events for the Period
     if (this._priv_trackChoiceManager != null) {
@@ -2008,41 +1989,25 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       const textTrack = this._priv_trackChoiceManager.getChosenTextTrack(period);
       const videoTrack = this._priv_trackChoiceManager.getChosenVideoTrack(period);
 
-      this._priv_triggerEventIfChanged("audioTrackChange", audioTrack);
-      this._priv_triggerEventIfChanged("textTrackChange", textTrack);
-      this._priv_triggerEventIfChanged("videoTrackChange", videoTrack);
+      this.trigger("audioTrackChange", audioTrack);
+      this.trigger("textTrackChange", textTrack);
+      this.trigger("videoTrackChange", videoTrack);
     } else {
-      this._priv_triggerEventIfChanged("audioTrackChange", null);
-      this._priv_triggerEventIfChanged("textTrackChange", null);
-      this._priv_triggerEventIfChanged("videoTrackChange", null);
+      this.trigger("audioTrackChange", null);
+      this.trigger("textTrackChange", null);
+      this.trigger("videoTrackChange", null);
     }
 
-    this._priv_triggerEventIfChanged("availableAudioBitratesChange",
-                                     this.getAvailableAudioBitrates());
-    this._priv_triggerEventIfChanged("availableVideoBitratesChange",
-                                     this.getAvailableVideoBitrates());
+    this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange",
+                                                   this.getAvailableAudioBitrates());
+    this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",
+                                                   this.getAvailableVideoBitrates());
 
-    const activeAudioRepresentations = this.getCurrentRepresentations();
-    if (activeAudioRepresentations != null &&
-        activeAudioRepresentations.audio != null)
-    {
-      const bitrate = activeAudioRepresentations.audio.bitrate;
-      this._priv_triggerEventIfChanged("audioBitrateChange",
-                                       bitrate != null ? bitrate : -1);
-    } else {
-      this._priv_triggerEventIfChanged("audioBitrateChange", -1);
-    }
+    const audioBitrate = this.getCurrentRepresentations()?.audio?.bitrate ?? -1;
+    this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange", audioBitrate);
 
-    const activeVideoRepresentations = this.getCurrentRepresentations();
-    if (activeVideoRepresentations != null &&
-        activeVideoRepresentations.video != null)
-    {
-      const bitrate = activeVideoRepresentations.video.bitrate;
-      this._priv_triggerEventIfChanged("videoBitrateChange",
-                                       bitrate != null ? bitrate : -1);
-    } else {
-      this._priv_triggerEventIfChanged("videoBitrateChange", -1);
-    }
+    const videoBitrate = this.getCurrentRepresentations()?.video?.bitrate ?? -1;
+    this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange", videoBitrate);
   }
 
   /**
@@ -2196,21 +2161,26 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         case "audio":
           const audioTrack = this._priv_trackChoiceManager
             .getChosenAudioTrack(currentPeriod);
-          this._priv_triggerEventIfChanged("audioTrackChange", audioTrack);
-          this._priv_triggerEventIfChanged("availableAudioBitratesChange",
-                                           this.getAvailableVideoBitrates());
+          this.trigger("audioTrackChange", audioTrack);
+
+          const availableAudioBitrates = this.getAvailableAudioBitrates();
+          this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange",
+                                                         availableAudioBitrates);
           break;
         case "text":
           const textTrack = this._priv_trackChoiceManager
             .getChosenTextTrack(currentPeriod);
-          this._priv_triggerEventIfChanged("textTrackChange", textTrack);
+          this.trigger("textTrackChange", textTrack);
           break;
         case "video":
           const videoTrack = this._priv_trackChoiceManager
             .getChosenVideoTrack(currentPeriod);
-          this._priv_triggerEventIfChanged("videoTrackChange", videoTrack);
-          this._priv_triggerEventIfChanged("availableVideoBitratesChange",
-                                           this.getAvailableVideoBitrates());
+          this.trigger("videoTrackChange", videoTrack);
+
+
+          const availableVideoBitrates = this.getAvailableVideoBitrates();
+          this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",
+                                                         availableVideoBitrates);
           break;
       }
     }
@@ -2251,15 +2221,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       activePeriodRepresentations[type] = representation;
     }
 
-    const bitrate = representation == null ? null :
-                                             representation.bitrate;
+    const bitrate = representation?.bitrate ?? -1;
     if (period != null && currentPeriod != null && currentPeriod.id === period.id) {
       if (type === "video") {
-        this._priv_triggerEventIfChanged("videoBitrateChange",
-                                         bitrate != null ? bitrate : -1);
+        this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange", bitrate);
       } else if (type === "audio") {
-        this._priv_triggerEventIfChanged("audioBitrateChange",
-                                         bitrate != null ? bitrate : -1);
+        this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange", bitrate);
       }
     }
   }
@@ -2280,7 +2247,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (bitrate != null) {
       this._priv_bitrateInfos.lastBitrates[type] = bitrate;
     }
-    this._priv_triggerEventIfChanged("bitrateEstimationChange", { type, bitrate });
+    this.trigger("bitrateEstimationChange", { type, bitrate });
   }
 
   /**
@@ -2372,6 +2339,39 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     this.trigger("positionUpdate", positionData);
+  }
+
+  /**
+   * Trigger one of the "availableBitratesChange" event only if it changed from
+   * the previously stored value.
+   * @param {string} event
+   * @param {Array.<number>} newVal
+   */
+  private _priv_triggerAvailableBitratesChangeEvent(
+    event : "availableAudioBitratesChange" | "availableVideoBitratesChange",
+    newVal : number[]
+  ) : void {
+    const prevVal = this._priv_contentEventsMemory[event];
+    if (prevVal === undefined || areArraysOfNumbersEqual(newVal, prevVal)) {
+      this._priv_contentEventsMemory[event] = newVal;
+      this.trigger(event, newVal);
+    }
+  }
+
+  /**
+   * Trigger one of the "bitrateChange" event only if it changed from the
+   * previously stored value.
+   * @param {string} event
+   * @param {number} newVal
+   */
+  private _priv_triggerCurrentBitrateChangeEvent(
+    event : "audioBitrateChange" | "videoBitrateChange",
+    newVal : number
+  ) : void {
+    if (newVal !== this._priv_contentEventsMemory[event]) {
+      this._priv_contentEventsMemory[event] = newVal;
+      this.trigger(event, newVal);
+    }
   }
 }
 Player.version = /*PLAYER_VERSION*/"3.17.1";

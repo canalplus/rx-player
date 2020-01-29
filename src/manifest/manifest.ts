@@ -16,11 +16,9 @@
 
 import { ICustomError } from "../errors";
 import { IParsedManifest } from "../parsers/manifest";
+import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import arrayFind from "../utils/array_find";
-import {
-  areBytesEqual,
-  isABEqualBytes,
-} from "../utils/byte_parsing";
+import { isABEqualBytes } from "../utils/byte_parsing";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
 import warnOnce from "../utils/warn_once";
@@ -433,7 +431,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       const segmentProtections = representation.getProtectionsInitializationData();
       for (let i = 0; i < segmentProtections.length; i++) {
         if (segmentProtections[i].type === initDataType) {
-          if (areBytesEqual(initData, segmentProtections[i].data)) {
+          if (areArraysOfNumbersEqual(initData, segmentProtections[i].data)) {
             return false;
           }
         }

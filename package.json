@@ -117,7 +117,6 @@
     "url": "git://github.com/canalplus/rx-player.git"
   },
   "dependencies": {
-    "deep-equal": "1.1.1",
     "next-tick": "1.0.0",
     "object-assign": "4.1.1",
     "pinkie": "2.0.4",
@@ -129,7 +128,6 @@
     "@babel/preset-env": "7.8.3",
     "@babel/preset-react": "7.8.3",
     "@types/chai": "4.2.7",
-    "@types/deep-equal": "1.0.1",
     "@types/jest": "25.1.0",
     "@types/mocha": "5.2.7",
     "@types/node": "13.5.0",

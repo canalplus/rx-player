@@ -19,10 +19,8 @@ import {
   IContentProtections,
   IParsedRepresentation,
 } from "../parsers/manifest";
-import {
-  areBytesEqual,
-  concat,
-} from "../utils/byte_parsing";
+import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
+import { concat } from "../utils/byte_parsing";
 import IRepresentationIndex from "./representation_index";
 
 export interface IContentProtectionsInitDataObject {
@@ -169,7 +167,7 @@ class Representation {
 
     for (let i = initDataArr.length - 1; i >= 0; i--) {
       if (initDataArr[i].systemId === systemId) {
-        if (areBytesEqual(initDataArr[i].data, data)) {
+        if (areArraysOfNumbersEqual(initDataArr[i].data, data)) {
           return;
         }
         log.warn("Manifest: Two PSSH for the same system ID");
