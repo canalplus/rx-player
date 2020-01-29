@@ -519,8 +519,9 @@ Let's see a simple example with four segments of 2 seconds:
 The `loadInitSegment` callback allows the RxPlayer to request the initialization
 segment of this representation.
 
-Most audio and video representation have a segment which allows to obtain
-information about the representation's data without containing data in itself.
+Most audio and video representation have an initialization segment which allows
+to obtain information about the representation's data without containing data in
+itself.
 For text representations, where it is most likely not needed, this callback can
 emit `null` instead of the segment.
 
@@ -564,7 +565,12 @@ async function loadInitSegment(callbacks) {
 The `loadSegment` callback is the callback called by the RxPlayer when it wants
 any segment in the content.
 
-It is very similar to `loadInitSegment` with two differences:
+Note that the segment data returned by `loadSegment` should contain all the data
+and metadata necessary to play them on the browser. Downloaded DASH segments -
+for example - are generally sufficient but segments linked to Smooth contents
+should be updated before being returned by `loadSegment`.
+
+This callback is very similar to `loadInitSegment` with two differences:
 
   - it receives two arguments:
       1. The first being the segment object (from the `segments` array) of the
