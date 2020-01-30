@@ -486,7 +486,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.17.1";
+    this.version = /*PLAYER_VERSION*/"3.18.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -2505,6 +2505,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
   }
 }
-Player.version = /*PLAYER_VERSION*/"3.17.1";
+Player.version = /*PLAYER_VERSION*/"3.18.0";
 
 export default Player;
