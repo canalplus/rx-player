@@ -156,7 +156,7 @@ class Progressbar extends React.Component {
   }
 }
 
-export default withModulesState({
+export default React.memo(withModulesState({
   player: {
     bufferGap: "bufferGap",
     currentTime: "currentTime",
@@ -166,4 +166,4 @@ export default withModulesState({
     minimumPosition: "minimumPosition",
     maximumPosition: "maximumPosition",
   },
-})(Progressbar);
+})(Progressbar));

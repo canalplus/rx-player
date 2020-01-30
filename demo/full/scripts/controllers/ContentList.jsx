@@ -15,7 +15,7 @@ import FocusedTextInput from "../components/FocusedInput.jsx";
 import TextInput from "../components/Input.jsx";
 import Select from "../components/Select.jsx";
 import contentsDatabase from "../contents.js";
-import GeneratedLinkURL from "../components/GenerateLinkURL.jsx"
+import GeneratedLinkURL from "../components/GenerateLinkURL.jsx";
 import GenerateLinkButton from "../components/GenerateLinkButton.jsx";
 
 const MediaKeys_ = window.MediaKeys ||

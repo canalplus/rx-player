@@ -50,10 +50,10 @@ const AudioBitrateKnobBase = ({
   );
 };
 
-export default withModulesState({
+export default React.memo(withModulesState({
   player: {
     audioBitrateAuto: "audioBitrateAuto",
     audioBitrate: "audioBitrate",
     availableAudioBitrates: "availableAudioBitrates",
   },
-})(AudioBitrateKnobBase);
+})(AudioBitrateKnobBase));

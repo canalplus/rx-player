@@ -16,7 +16,7 @@ import React, {
  *
  * @class ImageTip
  */
-export default function ImageTip({
+function ImageTip({
   image,
   xPosition,
   className,
@@ -49,3 +49,5 @@ export default function ImageTip({
     </div>
   );
 }
+
+export default React.memo(ImageTip);

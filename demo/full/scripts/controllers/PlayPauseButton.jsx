@@ -14,14 +14,14 @@ import withModulesState from "../lib/withModulesState.jsx";
  * @param {Object} props
  * @returns {Object}
  */
-const PlayPauseButton = ({
+function PlayPauseButton({
   cannotLoadMetadata,
   className = "",
   player,
   isPaused,
   isContentLoaded,
   hasEnded,
-}) => {
+}) {
   const disabled = !isContentLoaded && !cannotLoadMetadata;
   const displayPause = !isPaused && isContentLoaded &&
     !hasEnded;
@@ -45,9 +45,9 @@ const PlayPauseButton = ({
       value={String.fromCharCode(displayPause ? 0xf04c : 0xf04b)}
     />
   );
-};
+}
 
-export default withModulesState({
+export default React.memo(withModulesState({
   player: {
     cannotLoadMetadata: "cannotLoadMetadata",
     isPaused: "isPaused",
@@ -55,4 +55,4 @@ export default withModulesState({
     hasEnded: "hasEnded",
     stopAtEnd: "stopAtEnd",
   },
-})(PlayPauseButton);
+})(PlayPauseButton));

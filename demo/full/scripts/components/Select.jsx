@@ -6,14 +6,14 @@ import React from "react";
  * @param {Object} props
  * @returns {Object}
  */
-export default ({
+function Select({
   ariaLabel,
   className = "",
   onChange,
   selected,
   options = [],
   disabled,
-}) => {
+}) {
   const optionsEl = options.map((val, index) =>
     typeof val === "object" ?
       <option
@@ -52,4 +52,6 @@ export default ({
     <section className={"select " + className}>
       {selectEl}
     </section>);
-};
+}
+
+export default React.memo(Select);

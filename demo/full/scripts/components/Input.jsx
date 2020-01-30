@@ -6,13 +6,13 @@ import React from "react";
  * @param {Object} props
  * @returns {Object}
  */
-export default ({
+function Input({
   ariaLabel,
   className = "",
   onChange,
   value = "",
   placeholder = "",
-}) => {
+}) {
   return (
     <input
       aria-label={ariaLabel}
@@ -23,5 +23,6 @@ export default ({
       value={value}
     />
   );
-};
+}
 
+export default React.memo(Input);

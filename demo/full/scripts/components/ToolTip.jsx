@@ -10,7 +10,7 @@ import React, {
  *   - xPosition {number}
  * @class ToolTip
  */
-export default function ToolTip({
+function ToolTip({
   className,
   offset,
   text,
@@ -37,3 +37,5 @@ export default function ToolTip({
     </div>
   );
 }
+
+export default React.memo(ToolTip);

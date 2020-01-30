@@ -54,11 +54,12 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
   intervalObservable(POSITION_UPDATES_INTERVAL).pipe(
     map(() => {
       const position = player.getPosition();
+      const duration = player.getVideoDuration();
       return {
         currentTime: player.getPosition(),
         wallClockDiff: player.getWallClockTime() - position,
         bufferGap: player.getVideoLoadedTime() - player.getVideoPlayedTime(),
-        duration: player.getVideoDuration(),
+        duration: Number.isNaN(duration) ? undefined : duration,
         minimumPosition: player.getMinimumPosition(),
         maximumPosition: player.getMaximumPosition(),
         liveGap: player.getMaximumPosition() - player.getPosition(),

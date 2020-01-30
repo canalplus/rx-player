@@ -4,7 +4,7 @@ import React from "react";
  * @param {Object} props
  * @returns {Object}
  */
-export default function GeneratedLinkURL({
+function GeneratedLinkURL({
   url,
 }) {
 
@@ -25,3 +25,5 @@ export default function GeneratedLinkURL({
       </a>
     </span>);
 }
+
+export default React.memo(GeneratedLinkURL);

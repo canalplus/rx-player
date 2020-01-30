@@ -53,9 +53,9 @@ const AudioTrackKnobBase = ({
   );
 };
 
-export default withModulesState({
+export default React.memo(withModulesState({
   player: {
     language: "currentLanguage",
     availableLanguages: "availableLanguages",
   },
-})(AudioTrackKnobBase);
+})(AudioTrackKnobBase));

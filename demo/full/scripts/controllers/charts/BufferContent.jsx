@@ -40,9 +40,9 @@ function BufferContentChart({
   );
 }
 
-export default withModulesState({
+export default React.memo(withModulesState({
   player: { bufferedData: "bufferedData",
             currentTime: "currentTime",
             minimumPosition: "minimumPosition",
             maximumPosition: "maximumPosition" },
-})(BufferContentChart);
+})(BufferContentChart));

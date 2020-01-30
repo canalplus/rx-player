@@ -1,7 +1,7 @@
 import React from "react";
 import Select from "./Select.jsx";
 
-export default ({
+function Knob({
   ariaLabel,
   className = "",
   name = "",
@@ -9,18 +9,22 @@ export default ({
   options = [],
   selected,
   disabled,
-}) => (
-  <div className={`knob ${className}`}>
-    <span className="knob-name" >
-      {name}
-    </span>
-    <Select
-      ariaLabel={ariaLabel}
-      className="knob-value"
-      onChange={onChange}
-      options={options}
-      selected={selected}
-      disabled={disabled}
-    />
-  </div>
-);
+}) {
+  return (
+    <div className={`knob ${className}`}>
+      <span className="knob-name" >
+        {name}
+      </span>
+      <Select
+        ariaLabel={ariaLabel}
+        className="knob-value"
+        onChange={onChange}
+        options={options}
+        selected={selected}
+        disabled={disabled}
+      />
+    </div>
+  );
+}
+
+export default React.memo(Knob);

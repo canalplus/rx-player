@@ -52,9 +52,9 @@ const SubtitlesKnobBase = ({
   );
 };
 
-export default withModulesState({
+export default React.memo(withModulesState({
   player: {
     subtitle: "currentSubtitle",
     availableSubtitles: "availableSubtitles",
   },
-})(SubtitlesKnobBase);
+})(SubtitlesKnobBase));

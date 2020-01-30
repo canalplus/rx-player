@@ -16,7 +16,7 @@ import React from "react";
  * @param {Object} props
  * @returns {Object}
  */
-export default ({
+function ProgressBar({
   seek, // seek callback, will be called with the position clicked
   position,
   bufferGap,
@@ -25,7 +25,7 @@ export default ({
   onMouseOut, // callback called when the mouse stops hovering
   onMouseMove, // callback called when the mouse starts hovering, with the
                // position and the event in arguments
-}) => {
+}) {
   let element;
 
   const duration = Math.max(maximumPosition - minimumPosition, 0);
@@ -73,5 +73,6 @@ export default ({
       />
     </div>
   );
+}
 
-};
+export default React.memo(ProgressBar);

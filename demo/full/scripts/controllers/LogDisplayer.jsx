@@ -254,4 +254,4 @@ class LogDisplayer extends React.Component {
   }
 }
 
-export default LogDisplayer;
+export default React.memo(LogDisplayer);
