@@ -120,7 +120,7 @@
     "next-tick": "1.0.0",
     "object-assign": "4.1.1",
     "pinkie": "2.0.4",
-    "rxjs": "6.5.4"
+    "rxjs": "6.5.3"
   },
   "devDependencies": {
     "@babel/core": "7.8.3",
