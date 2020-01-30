@@ -181,6 +181,10 @@ are all objects declared in upper-case.</p>
 <td>Parse BIF image tracks for the image buffer</td>
 </tr>
 <tr>
+<td><code>LOCAL_MANIFEST</code> [5]</td>
+<td>Enable playback of &#x201C;local&#x201D; contents</td>
+</tr>
+<tr>
 <td><code>METAPLAYLIST</code> [5]</td>
 <td>Enable playback of &#x201C;metaplaylist&#x201D; contents</td>
 </tr>
@@ -270,6 +274,11 @@ ignored during a build.</p>
 <h4>RXP_DIRECTFILE</h4>
 <p>True by default. If set to &#x201C;false&#x201D;, all code relative to directfile streaming
 will be ignored during a build.</p>
+<p><a name="env-local"></a></p>
+<h4>RXP_LOCAL_MANIFEST</h4>
+<p>False by default. If set to &#x201C;true&#x201D;, all code relative to the &#x201C;local&#x201D; transport
+(to be able to play content offline for example) will be included during a
+build.</p>
 <p><a name="env-metaplaylist"></a></p>
 <h4>RXP_METAPLAYLIST</h4>
 <p>False by default. If set to &#x201C;true&#x201D;, all code relative to metaplaylist streaming

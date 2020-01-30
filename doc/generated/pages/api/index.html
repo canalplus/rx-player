@@ -10,11 +10,6 @@
 <li><a href="#subchapter-LogLevel">LogLevel</a></li>
 </ul>
 </li>
-<li><a href="#chapter-Tools">Tools</a>
-<ul>
-<li><a href="#subchapter-MediaCapabilitiesProber">MediaCapabilitiesProber</a></li>
-</ul>
-</li>
 <li><a href="#chapter-Methods">Methods</a>
 <ul>
 <li><a href="#subchapter-loadVideo">loadVideo</a></li>
@@ -79,13 +74,20 @@
 <li><a href="#subchapter-getPlaybackRate">getPlaybackRate</a></li>
 <li><a href="#subchapter-setPlaybackRate">setPlaybackRate</a></li>
 <li><a href="#subchapter-getCurrentKeySystem">getCurrentKeySystem</a></li>
-<li><a href="#subchapter-getImageTrackData">getImageTrackData</a></li>
 <li><a href="#subchapter-getMinimumPosition">getMinimumPosition</a></li>
 <li><a href="#subchapter-getMaximumPosition">getMaximumPosition</a></li>
+<li><a href="#subchapter-getImageTrackData">getImageTrackData</a></li>
 <li><a href="#subchapter-setFullscreen">setFullscreen</a></li>
 <li><a href="#subchapter-exitFullscreen">exitFullscreen</a></li>
 <li><a href="#subchapter-isFullscreen">isFullscreen</a></li>
 <li><a href="#subchapter-getNativeTextTrack">getNativeTextTrack</a></li>
+</ul>
+</li>
+<li><a href="#chapter-Tools">Tools</a>
+<ul>
+<li><a href="#subchapter-MediaCapabilitiesProber">MediaCapabilitiesProber</a></li>
+<li><a href="#subchapter-TextTrackRenderer">TextTrackRenderer</a></li>
+<li><a href="#subchapter-parseBifThumbnails">parseBifThumbnails</a></li>
 </ul>
 </li>
 </ul>
@@ -174,21 +176,6 @@ automatically set to <code>&quot;NONE&quot;</code>.</p>
 <pre><code class="language-js"><span class="hljs-keyword">import</span> RxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player&quot;</span>;
 RxPlayer.LogLevel = <span class="hljs-string">&quot;WARNING&quot;</span>;
 </code></pre>
-<p><a name="tools"></a>
-<a name="chapter-Tools"></a></p>
-<h2>Tools</h2>
-<p><a name="tools-mediaCapabilitiesProber"></a>
-<a name="subchapter-MediaCapabilitiesProber"></a></p>
-<h3>MediaCapabilitiesProber</h3>
-<p><em>type</em>: <code>Object</code></p>
-<p>An experimental tool to probe browser media capabilities:</p>
-<ul>
-<li>Decoding capabilities</li>
-<li>DRM support</li>
-<li>HDCP support</li>
-<li>Display capabilities</li>
-</ul>
-<p>You can find its documentation <a href="mediaCapabilitiesProber.html">here</a>.</p>
 <p><a name="meth"></a>
 <a name="chapter-Methods"></a></p>
 <h2>Methods</h2>
@@ -847,8 +834,10 @@ This property is <code>undefined</code> if we do not known whether it is in an o
 language.</p>
 </li>
 </ul>
-<p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
-options</a>), returns an empty Array.</p>
+<p>In <em>DirectFile</em> mode
+(see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>), if there are
+no supported tracks in the file or no track management API : returns an empty
+Array.</p>
 <p><a name="meth-getAvailableTextTracks"></a>
 <a name="subchapter-getAvailableTextTracks"></a></p>
 <h3>getAvailableTextTracks</h3>
@@ -880,8 +869,10 @@ the hard of hearing or not.</p>
 not.</p>
 </li>
 </ul>
-<p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
-options</a>), returns an empty Array.</p>
+<p>In <em>DirectFile</em> mode
+(see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>), if there are
+no supported tracks in the file or no track management API : returns an empty
+Array.</p>
 <p><a name="meth-getAvailableVideoTracks"></a>
 <a name="subchapter-getAvailableVideoTracks"></a></p>
 <h3>getAvailableVideoTracks</h3>
@@ -925,8 +916,10 @@ format.</p>
 </ul>
 </li>
 </ul>
-<p>In <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
-options</a>), returns an empty Array.</p>
+<p>In <em>DirectFile</em> mode
+(see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>), if there are
+no supported tracks in the file or no track management API : returns an empty
+Array.</p>
 <p><a name="meth-getAudioTrack"></a>
 <a name="subchapter-getAudioTrack"></a></p>
 <h3>getAudioTrack</h3>
@@ -963,8 +956,9 @@ language.</p>
 </li>
 </ul>
 <p><code>undefined</code> if no content has been loaded yet.</p>
-<p><code>undefined</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
-options</a>).</p>
+<p>In <em>DirectFile</em> mode
+(see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>), if there is
+no audio tracks API in the browser, return <code>undefined</code>.</p>
 <p><a name="meth-getTextTrack"></a>
 <a name="subchapter-getTextTrack"></a></p>
 <h3>getTextTrack</h3>
@@ -994,8 +988,9 @@ the hard of hearing or not.</p>
 </li>
 </ul>
 <p><code>undefined</code> if no content has been loaded yet.</p>
-<p><code>undefined</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
-options</a>).</p>
+<p>In <em>DirectFile</em> mode
+(see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>), if there is
+no text tracks API in the browser, return <code>undefined</code>.</p>
 <p><a name="meth-getVideoTrack"></a>
 <a name="subchapter-getVideoTrack"></a></p>
 <h3>getVideoTrack</h3>
@@ -1037,16 +1032,27 @@ format.</p>
 </li>
 </ul>
 <p><code>undefined</code> if no content has been loaded yet.</p>
-<p><code>undefined</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
-options</a>).</p>
+<p>In <em>DirectFile</em> mode
+(see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>), if there is
+no video tracks API in the browser, return <code>undefined</code>.</p>
 <p><a name="meth-setAudioTrack"></a>
 <a name="subchapter-setAudioTrack"></a></p>
 <h3>setAudioTrack</h3>
 <p><em>arguments</em>: <code>string|Number</code></p>
 <p>Set a new audio track from its id, recuperated from <code>getAvailableAudioTracks</code>.</p>
 <hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
-mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> If used on Safari, in <em>DirectFile</em> mode, the track change may change
+the track on other track type (e.g. changing video track may change subtitle
+track too).
+This has two potential reasons :</p>
+<ul>
+<li>The HLS defines variants, groups of tracks that may be read together</li>
+<li>Safari may decide to enable a track for accessibility or user language
+convenience (e.g. Safari may switch subtitle to your OS language if you pick
+another audio language)
+The user may know through the [videoTrackChange]
+(./player_events.md#events-videoTrackChange) event that the track has changed.</li>
+</ul>
 <hr>
 <p><a name="meth-setTextTrack"></a>
 <a name="subchapter-setTextTrack"></a></p>
@@ -1054,17 +1060,23 @@ mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>)
 <p><em>arguments</em>: <code>string</code></p>
 <p>Set a new text track from its id, recuperated from <code>getAvailableTextTracks</code>.</p>
 <hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
-mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> If used on Safari, in <em>DirectFile</em> mode, the track change may change
+the track on other track type (e.g. changing video track may change subtitle
+track too).
+This has two potential reasons :</p>
+<ul>
+<li>The HLS defines variants, groups of tracks that may be read together</li>
+<li>Safari may decide to enable a track for accessibility or user language
+convenience (e.g. Safari may switch subtitle to your OS language if you pick
+another audio language)
+The user may know through the [audioTrackChange]
+(./player_events.md#events-audioTrackChange) event that the track has changed.</li>
+</ul>
 <hr>
 <p><a name="meth-disableTextTrack"></a>
 <a name="subchapter-disableTextTrack"></a></p>
 <h3>disableTextTrack</h3>
 <p>Deactivate the current text track, if one.</p>
-<hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
-mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
-<hr>
 <p><a name="meth-setVideoTrack"></a>
 <a name="subchapter-setVideoTrack"></a></p>
 <h3>setVideoTrack</h3>
@@ -1095,8 +1107,12 @@ Most notably:
 </li>
 </ul>
 <hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect for contents loaded in <em>DirectFile</em>
-mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect in <em>DirectFile</em> mode
+(see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>) when either :</p>
+<ul>
+<li>No audio track API was supported on the current browser</li>
+<li>The media file tracks are not supported on the browser</li>
+</ul>
 <hr>
 <p><a name="meth-setPreferredAudioTracks"></a>
 <a name="subchapter-setPreferredAudioTracks"></a></p>
@@ -1144,8 +1160,12 @@ You will thus call <code>setPreferredAudioTracks</code> that way.</p>
 ])
 </code></pre>
 <hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method will have no effect for contents loaded in <em>DirectFile</em>
-mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect in <em>DirectFile</em> mode
+(see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>) when either :</p>
+<ul>
+<li>No audio track API was supported on the current browser</li>
+<li>The media file tracks are not supported on the browser</li>
+</ul>
 <hr>
 <p><a name="meth-getPreferredAudioTracks"></a>
 <a name="subchapter-getPreferredAudioTracks"></a></p>
@@ -1209,8 +1229,12 @@ you want no subtitles at all.</p>
 ])
 </code></pre>
 <hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method will have no effect for contents loaded in <em>DirectFile</em>
-mode (see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>).</p>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option will have no effect in <em>DirectFile</em> mode
+(see <a href="loadVideo_options.html#prop-transport">loadVideo options</a>) when either :</p>
+<ul>
+<li>No text track API was supported on the current browser</li>
+<li>The media file tracks are not supported on the browser</li>
+</ul>
 <hr>
 <p><a name="meth-getPreferredTextTracks"></a>
 <a name="subchapter-getPreferredTextTracks"></a></p>
@@ -1312,16 +1336,6 @@ normal playback, <code>2</code> when playing *2, etc.</p>
 <h3>getCurrentKeySystem</h3>
 <p><em>return value</em>: <code>string|undefined</code></p>
 <p>Returns the type of keySystem used for DRM-protected contents.</p>
-<p><a name="meth-getImageTrackData"></a>
-<a name="subchapter-getImageTrackData"></a></p>
-<h3>getImageTrackData</h3>
-<p><em>return value</em>: <code>Array.&lt;Object&gt;|null</code></p>
-<p>The current image track&#x2019;s data, null if no content is loaded / no image track
-data is available.</p>
-<p>The returned array follows the usual image playlist structure, defined
-<a href="images.html#api-structure">here</a>.</p>
-<p><code>null</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
-options</a>).</p>
 <p><a name="meth-getMinimumPosition"></a>
 <a name="subchapter-getMinimumPosition"></a></p>
 <h3>getMinimumPosition</h3>
@@ -1349,6 +1363,20 @@ player.seekTo({
   <span class="hljs-attr">position</span>: player.getMaximumPosition()
 });
 </code></pre>
+<p><a name="meth-getImageTrackData"></a>
+<a name="subchapter-getImageTrackData"></a></p>
+<h3>getImageTrackData</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This method is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
+<p><em>return value</em>: <code>Array.&lt;Object&gt;|null</code></p>
+<p>The current image track&#x2019;s data, null if no content is loaded / no image track
+data is available.</p>
+<p>The returned array follows the usual image playlist structure, defined
+<a href="images.html#api-structure">here</a>.</p>
+<p><code>null</code> in <em>DirectFile</em> mode (see <a href="loadVideo_options.html#prop-transport">loadVideo
+options</a>).</p>
 <p><a name="meth-setFullscreen"></a>
 <a name="subchapter-setFullscreen"></a></p>
 <h3>setFullscreen</h3>
@@ -1409,4 +1437,47 @@ release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).
 <pre><code class="language-js"><span class="hljs-keyword">const</span> el = player.getVideoElement();
 <span class="hljs-keyword">const</span> textTrack = el.textTracks.length ? el.textTracks[<span class="hljs-number">0</span>] : <span class="hljs-literal">null</span>;
 </code></pre>
+<p><a name="tools"></a>
+<a name="chapter-Tools"></a></p>
+<h2>Tools</h2>
+<p><a name="tools-mediaCapabilitiesProber"></a>
+<a name="subchapter-MediaCapabilitiesProber"></a></p>
+<h3>MediaCapabilitiesProber</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This tool is experimental. This only means that its API can change at
+any new RxPlayer version (with all the details in the corresponding release
+note).</p>
+<hr>
+<p>An experimental tool to probe browser media capabilities:</p>
+<ul>
+<li>Decoding capabilities</li>
+<li>DRM support</li>
+<li>HDCP support</li>
+<li>Display capabilities</li>
+</ul>
+<p>You can find its documentation <a href="mediaCapabilitiesProber.html">here</a>.</p>
+<p><a name="tools-textTrackRenderer"></a>
+<a name="subchapter-TextTrackRenderer"></a></p>
+<h3>TextTrackRenderer</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This tool is experimental. This only means that its API can change at
+any new RxPlayer version (with all the details in the corresponding release
+note).</p>
+<hr>
+<p>The TextTrackRenderer allows to easily render subtitles synchronized to a video
+element.</p>
+<p>It allows easily to dynamically add subtitles (as long as it is in one of the
+following format: srt, ttml, webVTT or SAMI) to a played video.</p>
+<p>This tool is documented <a href="TextTrackRenderer.html">here</a>.</p>
+<p><a name="tools-parseBifThumbnails"></a>
+<a name="subchapter-parseBifThumbnails"></a></p>
+<h3>parseBifThumbnails</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This tool is experimental. This only means that its API can change at
+any new RxPlayer version (with all the details in the corresponding release
+note).</p>
+<hr>
+<p>The <code>parseBifThumbnails</code> function parses BIF files, which is a format created by
+Canal+ to declare thumbnails linked to a given content.</p>
+<p>This tool is documented <a href="parseBifThumbnails.html">here</a>.</p>
 </body></html></div></div></div></body>
