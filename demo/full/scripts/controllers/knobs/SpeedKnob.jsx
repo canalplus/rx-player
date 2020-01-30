@@ -39,8 +39,8 @@ const PlaybackRateKnob = ({
   );
 };
 
-export default withModulesState({
+export default React.memo(withModulesState({
   player: {
     playbackRate: "playbackRate",
   },
-})(PlaybackRateKnob);
+})(PlaybackRateKnob));

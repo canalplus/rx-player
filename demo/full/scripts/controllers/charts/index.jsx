@@ -91,4 +91,4 @@ class ChartsManager extends React.Component {
   }
 }
 
-export default ChartsManager;
+export default React.memo(ChartsManager);

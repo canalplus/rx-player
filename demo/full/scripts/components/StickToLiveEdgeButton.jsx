@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function StickToLiveEdgeButton({
+function StickToLiveEdgeButton({
   isStickingToTheLiveEdge,
   changeStickToLiveEdge,
 }) {
@@ -16,3 +16,5 @@ export default function StickToLiveEdgeButton({
     </svg>
   </button>);
 }
+
+export default React.memo(StickToLiveEdgeButton);

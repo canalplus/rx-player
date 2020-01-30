@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function GenerateLinkButton({ enabled, onClick }) {
+function GenerateLinkButton({ enabled, onClick }) {
   return (
     <button
       aria-label="Generate link for the current custom button"
@@ -14,3 +14,5 @@ export default function GenerateLinkButton({ enabled, onClick }) {
     </button>
   );
 }
+
+export default React.memo(GenerateLinkButton);

@@ -46,9 +46,9 @@ const VideoTrackKnobBase = ({
   );
 };
 
-export default withModulesState({
+export default React.memo(withModulesState({
   player: {
     videoTrack: "currentVideoTrack",
     availableVideoTracks: "availableVideoTracks",
   },
-})(VideoTrackKnobBase);
+})(VideoTrackKnobBase));

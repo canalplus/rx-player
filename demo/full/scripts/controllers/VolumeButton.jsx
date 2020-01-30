@@ -14,11 +14,11 @@ import withModulesState from "../lib/withModulesState.jsx";
  * @param {Object} props
  * @returns {Object}
  */
-const VolumeButton = ({
+function VolumeButton({
   className = "",
   player,
   volume,
-}) => {
+}) {
   let volumeLevelClass;
   let charCode;
   if (volume === 0) {
@@ -44,10 +44,10 @@ const VolumeButton = ({
       value={String.fromCharCode(charCode)}
     />
   );
-};
+}
 
-export default withModulesState({
+export default React.memo(withModulesState({
   player: {
     volume: "volume",
   },
-})(VolumeButton);
+})(VolumeButton));

@@ -5,13 +5,13 @@ import React from "react";
  * @param {Object} props
  * @returns {Object}
  */
-export default ({
+function Button({
   ariaLabel,
   className = "",
   onClick,
   value,
   disabled,
-}) => {
+}) {
   if (disabled) {
     return (
       <button
@@ -33,4 +33,6 @@ export default ({
       {value}
     </button>
   );
-};
+}
+
+export default React.memo(Button);

@@ -61,17 +61,16 @@ import {
  *        .findIndex(({ id }) => id === todoId);
  *
  *        if (index < 0) {
- *          // this can help the caller to realize that the todo did not exist
+ *          // Returning a boolean can help the caller to realize that the todo
+ *          // did not exist
  *          return false;
  *        }
  *
- *        // cleaner to clone
+ *        // clone to stay immutable here
  *        const todosClone = [ ...currentTodos ];
- *        todosClone.splice(index, 1);
  *
- *        state.set({
- *          todos: todosClone,
- *        });
+ *        todosClone.splice(index, 1);
+ *        state.set({ todos: todosClone });
  *        return true;
  *     },
  *   };

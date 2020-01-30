@@ -7,7 +7,7 @@ import React, {
  * Simple text input which is focused when mounted.
  * Call `onChange` when updated.
  */
-export default function FocusedInput({
+function FocusedInput({
   ariaLabel,
   className = "",
   onChange,
@@ -32,3 +32,5 @@ export default function FocusedInput({
     />
   );
 }
+
+export default React.memo(FocusedInput);

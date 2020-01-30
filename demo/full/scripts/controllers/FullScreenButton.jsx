@@ -1,4 +1,9 @@
-import React from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import Button from "../components/Button.jsx";
 import withModulesState from "../lib/withModulesState.jsx";
 
@@ -92,60 +97,53 @@ function exitFullscreen() {
  * @param {Object} props
  * @returns {Object}
  */
-class FullscreenButton extends React.Component {
-  constructor() {
-    super();
-    this.state = { isFullscreen: isFullscreen() };
+function FullscreenButton({
+  videoElement,
+  hasCurrentContent,
+  className,
+}) {
+  const isInitiallyFullscreen = useMemo(() => isFullscreen(), []);
+  const [
+    isCurrentlyFullScreen,
+    setFullscreenValue,
+  ] = useState(isInitiallyFullscreen);
 
-    this._fullscreenListener = () => {
+  useEffect(() => {
+    const fullscreenListener = () => {
       const isInFullscreen = isFullscreen();
       if (!isInFullscreen) {
-        this.props.videoElement.classList.remove("fullscreen");
+        videoElement.classList.remove("fullscreen");
       }
-      this.setState({ isFullscreen: isInFullscreen });
+      setFullscreenValue(isInFullscreen);
     };
-    addFullscreenListener(this._fullscreenListener);
-  }
 
-  componentWillUnmount() {
-    removeFullscreenListener(this._fullscreenListener);
-  }
+    addFullscreenListener(fullscreenListener);
 
-  requestFullscreen() {
-    if (this.state.isFullscreen || !this.props.videoElement) {
-      this.setState({ isFullscreen: true });
-      return;
-    }
-    requestFullscreen(this.props.videoElement);
-    this.props.videoElement.classList.add("fullscreen");
-  }
+    return () => {
+      removeFullscreenListener(fullscreenListener);
+    };
+  }, [videoElement]);
 
-  exitFullscreen() {
-    exitFullscreen();
-  }
+  const setFullscreen = useCallback(() => {
+    requestFullscreen(videoElement);
+    videoElement.classList.add("fullscreen");
+  }, [isCurrentlyFullScreen, videoElement]);
 
-  render() {
-    const {
-      className = "",
-      hasCurrentContent,
-    } = this.props;
-    return (
-      <Button
-        ariaLabel="Go/Quit fullscreen"
-        className={"fullscreen-button " + className}
-        onClick={this.state.isFullscreen ?
-          () => { this.exitFullscreen(); } :
-          () => { this.requestFullscreen(); }
-        }
-        disabled={!hasCurrentContent}
-        value={String.fromCharCode(this.state.isFullscreen ? 0xf066 : 0xf065)}
-      />
-    );
-  }
+  return (
+    <Button
+      ariaLabel="Go/Quit fullscreen"
+      className={"fullscreen-button " + className}
+      onClick={isCurrentlyFullScreen ?
+        exitFullscreen :
+        setFullscreen }
+      disabled={!hasCurrentContent}
+      value={String.fromCharCode(isCurrentlyFullScreen ? 0xf066 : 0xf065)}
+    />
+  );
 }
 
-export default withModulesState({
+export default React.memo(withModulesState({
   player: {
     hasCurrentContent: "hasCurrentContent",
   },
-})(FullscreenButton);
+})(FullscreenButton));

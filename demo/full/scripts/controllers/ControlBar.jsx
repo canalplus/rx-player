@@ -1,4 +1,7 @@
-import React from "react";
+import React, {
+  useCallback,
+  useMemo,
+} from "react";
 import withModulesState from "../lib/withModulesState.jsx";
 import Button from "../components/Button.jsx";
 import PositionInfos from "../components/PositionInfos.jsx";
@@ -6,11 +9,11 @@ import LivePosition from "../components/LivePosition.jsx";
 import StickToLiveEdgeButton from "../components/StickToLiveEdgeButton.jsx";
 import PlayPauseButton from "./PlayPauseButton.jsx";
 import FullscreenButton from "./FullScreenButton.jsx";
-import Progressbar from "./ProgressBar.jsx";
+import ProgressBar from "./ProgressBar.jsx";
 import VolumeButton from "./VolumeButton.jsx";
 import VolumeBar from "./VolumeBar.jsx";
 
-function ControlBar ({
+function ControlBar({
   currentTime,
   duration,
   isCatchUpEnabled,
@@ -28,20 +31,20 @@ function ControlBar ({
   toggleSettings,
   videoElement,
 }) {
-  const changeStickToLiveEdge = (shouldStick) => {
+  const changeStickToLiveEdge = useCallback((shouldStick) => {
     if (shouldStick) {
       player.dispatch("ENABLE_LIVE_CATCH_UP");
     } else {
       player.dispatch("DISABLE_LIVE_CATCH_UP");
     }
-  };
+  }, [player]);
 
   let isCloseToLive = undefined;
   if (isLive && lowLatencyMode != null && liveGap != null) {
     isCloseToLive = lowLatencyMode ? liveGap < 7 : liveGap < 18;
   }
 
-  const positionElement = (() => {
+  const positionElement = useMemo(() => {
     if (!isContentLoaded) {
       return null;
     } else if (isLive) {
@@ -52,13 +55,13 @@ function ControlBar ({
         duration={duration}
       />;
     }
-  })();
+  }, [isContentLoaded, isLive, currentTime, duration]);
 
   const isAtLiveEdge = isLive && isCloseToLive && !isCatchingUp;
 
   return (
     <div className="controls-bar-container">
-      <Progressbar
+      <ProgressBar
         player={player}
         onSeek={() => changeStickToLiveEdge(false)}
       />
@@ -128,7 +131,7 @@ function ControlBar ({
   );
 }
 
-export default withModulesState({
+export default React.memo(withModulesState({
   player: {
     currentTime: "currentTime",
     duration: "duration",
@@ -143,4 +146,4 @@ export default withModulesState({
     maximumPosition: "maximumPosition",
     playbackRate: "playbackRate",
   },
-})(ControlBar);
+})(ControlBar));

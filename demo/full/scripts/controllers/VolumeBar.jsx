@@ -10,10 +10,10 @@ import withModulesState from "../lib/withModulesState.jsx";
  * @param {Object} props
  * @returns {Object}
  */
-const VolumeBar = ({
+function VolumeBar({
   player, // current volume percentage
   volume, // callback called with the volume percentage clicked
-}) => {
+}) {
   let element;
 
 
@@ -42,10 +42,10 @@ const VolumeBar = ({
       />
     </div>
   );
-};
+}
 
-export default withModulesState({
+export default React.memo(withModulesState({
   player: {
     volume: "volume",
   },
-})(VolumeBar);
+})(VolumeBar));

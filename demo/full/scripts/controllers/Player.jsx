@@ -1,4 +1,9 @@
-import React from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 import { createModule } from "../lib/vespertine.js";
@@ -13,26 +18,27 @@ import PlayerKnobsSettings from "./PlayerKnobsSettings.jsx";
 // time in ms while seeking/loading/buffering after which the spinner is shown
 const SPINNER_TIMEOUT = 300;
 
-class Player extends React.Component {
-  constructor(...args) {
-    super(...args);
-    this.state = {
-      player: null,
-      autoPlayBlocked: false,
-      displaySpinner: false,
-      displaySettings: false,
-      isStopped: true,
-    };
-  }
+function Player() {
+  const [player, setPlayer] = useState(null);
+  const [autoPlayBlocked, setAutoPlayBlocked] = useState(false);
+  const [displaySpinner, setDisplaySpinner] = useState(false);
+  const [displaySettings, setDisplaySettings] = useState(false);
+  const [isStopped, setIsStopped] = useState(false);
 
-  componentDidMount() {
+  const videoElement = useRef(null);
+  const textTrackElement = useRef(null);
+  const playerWrapperElement = useRef(null);
+
+  useEffect(() => {
     const player = createModule(PlayerModule, {
-      videoElement: this.videoElement,
-      textTrackElement: this.textTrackElement,
+      videoElement: videoElement.current,
+      textTrackElement: textTrackElement.current,
     });
 
-    this._$destroySubject = new Subject();
-    this._$destroySubject.subscribe(() => player.destroy());
+    const $destroySubject = new Subject();
+    $destroySubject.subscribe(() => player.destroy());
+
+    let displaySpinnerTimeout = 0;
 
     // update isStopped and displaySpinner
     player.$get("autoPlayBlocked" ,
@@ -41,7 +47,7 @@ class Player extends React.Component {
                 "isLoading",
                 "isReloading",
                 "isStopped")
-      .pipe(takeUntil(this._$destroySubject))
+      .pipe(takeUntil($destroySubject))
       .subscribe(([
         autoPlayBlocked,
         isSeeking,
@@ -50,148 +56,140 @@ class Player extends React.Component {
         isReloading,
         isStopped,
       ]) => {
-        this.setState({ autoPlayBlocked, isStopped });
+        setAutoPlayBlocked(autoPlayBlocked);
+        setIsStopped(isStopped);
         if (isLoading || isReloading) {
-          this.setState({ displaySpinner: true });
+          setDisplaySpinner(true);
         } else if (isSeeking || isBuffering) {
-          if (this._displaySpinnerTimeout) {
-            clearTimeout(this._displaySpinnerTimeout);
+          if (displaySpinnerTimeout) {
+            clearTimeout(displaySpinnerTimeout);
           }
-          this._displaySpinnerTimeout = setTimeout(() => {
-            this.setState({ displaySpinner: true });
+          displaySpinnerTimeout = setTimeout(() => {
+            setDisplaySpinner(true);
           }, SPINNER_TIMEOUT);
         } else {
-          if (this._displaySpinnerTimeout) {
-            clearTimeout(this._displaySpinnerTimeout);
-            this._displaySpinnerTimeout = 0;
+          if (displaySpinnerTimeout) {
+            clearTimeout(displaySpinnerTimeout);
+            displaySpinnerTimeout = 0;
           }
-
-          if (this.state.displaySpinner) {
-            this.setState({ displaySpinner: false });
-          }
+          setDisplaySpinner(false);
         }
       });
 
-    this.setState({ player });
+    setPlayer(player);
+
     // for DEV mode
     window.playerModule = player;
-  }
 
-  // will never happen, but still
-  componentWillUnmount() {
-    if (this._$destroySubject) {
-      this._$destroySubject.next();
-      this._$destroySubject.complete();
-    }
-    if (this._displaySpinnerTimeout) {
-      clearTimeout(this._displaySpinnerTimeout);
-    }
-  }
+    return () => {
+      if ($destroySubject) {
+        $destroySubject.next();
+        $destroySubject.complete();
+      }
+      if (displaySpinnerTimeout) {
+        clearTimeout(displaySpinnerTimeout);
+      }
+    };
+  }, []);
 
-  onVideoClick() {
-    const { isPaused, isContentLoaded } =
-      this.state.player.get();
+  const onVideoClick = useCallback(() => {
+    const { isPaused, isContentLoaded } = player.get();
 
     if (!isContentLoaded) {
       return;
     }
 
     if (isPaused) {
-      this.state.player.dispatch("PLAY");
+      player.dispatch("PLAY");
     } else {
-      this.state.player.dispatch("DISABLE_LIVE_CATCH_UP");
-      this.state.player.dispatch("PAUSE");
+      player.dispatch("DISABLE_LIVE_CATCH_UP");
+      player.dispatch("PAUSE");
     }
-  }
+  }, [player]);
 
-  render() {
-    const { player,
-            autoPlayBlocked,
-            displaySpinner,
-            isStopped } = this.state;
+  const loadVideo = useCallback((video) => {
+    if (video.lowLatencyMode) {
+      player.dispatch("ENABLE_LIVE_CATCH_UP");
+    } else {
+      player.dispatch("DISABLE_LIVE_CATCH_UP");
+    }
+    player.dispatch("SET_PLAYBACK_RATE", 1);
+    player.dispatch("LOAD", video);
+  }, [player]);
 
-    const loadVideo = (video) => {
-      if (video.lowLatencyMode) {
-        this.state.player.dispatch("ENABLE_LIVE_CATCH_UP");
-      } else {
-        this.state.player.dispatch("DISABLE_LIVE_CATCH_UP");
-      }
-      this.state.player.dispatch("SET_PLAYBACK_RATE", 1);
-      this.state.player.dispatch("LOAD", video);
-    };
-    const stopVideo = () => this.state.player.dispatch("STOP");
+  const stopVideo = useCallback(() => player.dispatch("STOP"), [player]);
 
-    const closeSettings = () => {
-      this.setState({ displaySettings: false });
-    };
-    const toggleSettings = () => {
-      this.setState({ displaySettings: !this.state.displaySettings });
-    };
+  const closeSettings = useCallback(() => {
+    setDisplaySettings(false);
+  }, []);
 
-    return (
-      <section className="video-player-section">
-        <div className="video-player-content">
-          <ContentList
-            loadVideo={loadVideo}
-            isStopped={isStopped}
-          />
-          <div
-            className="video-player-wrapper"
-            ref={element => this.playerWrapperElement = element }
-          >
-            <div className="video-screen-parent">
-              <div
-                className="video-screen"
-                onClick={() => this.onVideoClick()}
-              >
-                <ErrorDisplayer player={player} />
-                {
-                  autoPlayBlocked ?
-                    <div className="video-player-manual-play-container" >
-                      <img
-                        className="video-player-manual-play"
-                        alt="Play"
-                        src="./assets/play.svg"/>
-                    </div> :
-                    null
-                }
-                {
-                  !autoPlayBlocked && displaySpinner ?
+  const toggleSettings = useCallback(() => {
+    setDisplaySettings(!displaySettings);
+  }, [displaySettings]);
+
+  return (
+    <section className="video-player-section">
+      <div className="video-player-content">
+        <ContentList
+          loadVideo={loadVideo}
+          isStopped={isStopped}
+        />
+        <div
+          className="video-player-wrapper"
+          ref={playerWrapperElement}
+        >
+          <div className="video-screen-parent">
+            <div
+              className="video-screen"
+              onClick={() => onVideoClick()}
+            >
+              <ErrorDisplayer player={player} />
+              {
+                autoPlayBlocked ?
+                  <div className="video-player-manual-play-container" >
                     <img
-                      src="./assets/spinner.gif"
-                      className="video-player-spinner"
-                    /> :
-                    null
-                }
-                <div
-                  className="text-track"
-                  ref={element => this.textTrackElement = element }
-                />
-                <video ref={element => this.videoElement = element }/>
-
-              </div>
-              <PlayerKnobsSettings
-                close={closeSettings}
-                shouldDisplay={this.state.displaySettings}
-                player={player}
+                      className="video-player-manual-play"
+                      alt="Play"
+                      src="./assets/play.svg"/>
+                  </div> :
+                  null
+              }
+              {
+                !autoPlayBlocked && displaySpinner ?
+                  <img
+                    src="./assets/spinner.gif"
+                    className="video-player-spinner"
+                  /> :
+                  null
+              }
+              <div
+                className="text-track"
+                ref={textTrackElement}
               />
+              <video ref={videoElement}/>
+
             </div>
-            {
-              player ?
-                <ControlBar
-                  player={player}
-                  videoElement={this.playerWrapperElement}
-                  toggleSettings={toggleSettings}
-                  stopVideo={stopVideo}
-                /> : null
-            }
+            <PlayerKnobsSettings
+              close={closeSettings}
+              shouldDisplay={displaySettings}
+              player={player}
+            />
           </div>
-          {player ?  <ChartsManager player={player} /> : null }
-          {player ?  <LogDisplayer player={player} /> : null}
+          {
+            player ?
+              <ControlBar
+                player={player}
+                videoElement={playerWrapperElement.current}
+                toggleSettings={toggleSettings}
+                stopVideo={stopVideo}
+              /> : null
+          }
         </div>
-      </section>
-    );
-  }
+        {player ?  <ChartsManager player={player} /> : null }
+        {player ?  <LogDisplayer player={player} /> : null}
+      </div>
+    </section>
+  );
 }
 
 export default Player;

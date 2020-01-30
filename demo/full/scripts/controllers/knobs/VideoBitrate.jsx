@@ -50,10 +50,10 @@ const VideoBitrateKnobBase = ({
   );
 };
 
-export default withModulesState({
+export default React.memo(withModulesState({
   player: {
     videoBitrateAuto: "videoBitrateAuto",
     videoBitrate: "videoBitrate",
     availableVideoBitrates: "availableVideoBitrates",
   },
-})(VideoBitrateKnobBase);
+})(VideoBitrateKnobBase));
