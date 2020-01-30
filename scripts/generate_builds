@@ -39,6 +39,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.EME[[:>:]]/false/g" $f
     sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.SMOOTH[[:>:]]/false/g" $f
     sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.DASH[[:>:]]/false/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.LOCAL_MANIFEST[[:>:]]/false/g" $f
     sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.DIRECTFILE[[:>:]]/false/g" $f
     sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.METAPLAYLIST[[:>:]]/false/g" $f
     sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.HTML_SAMI[[:>:]]/false/g" $f
@@ -56,6 +57,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.BIF_PARSER[[:>:]]/\"..\/parsers\/images\/bif.js\"/g" $f
     sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.SMOOTH[[:>:]]/\"..\/transports\/smooth\/index.js\"/g" $f
     sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.DASH[[:>:]]/\"..\/transports\/dash\/index.js\"/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.LOCAL_MANIFEST[[:<:]]/\"..\/transports\/local\/index.js\"/g" $f
     sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.METAPLAYLIST[[:>:]]/\"..\/transports\/metaplaylist\/index.js\"/g" $f
     sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.NATIVE_TEXT_BUFFER[[:>:]]/\"..\/custom_source_buffers\/text\/native\/index.js\"/g" $f
     sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.NATIVE_VTT[[:>:]]/\"..\/parsers\/texttracks\/webvtt\/native.js\"/g" $f
@@ -80,6 +82,7 @@ else
     sed -i -E "s/\b__FEATURES__\.EME\b/false/g" $f
     sed -i -E "s/\b__FEATURES__\.SMOOTH\b/false/g" $f
     sed -i -E "s/\b__FEATURES__\.DASH\b/false/g" $f
+    sed -i -E "s/\b__FEATURES__\.LOCAL_MANIFEST\b/false/g" $f
     sed -i -E "s/\b__FEATURES__\.METAPLAYLIST\b/false/g" $f
     sed -i -E "s/\b__FEATURES__\.DIRECTFILE\b/false/g" $f
     sed -i -E "s/\b__FEATURES__\.HTML_SAMI\b/false/g" $f
@@ -97,6 +100,7 @@ else
     sed -i -E "s/\b__RELATIVE_PATH__\.BIF_PARSER\b/\"..\/parsers\/images\/bif.js\"/g" $f
     sed -i -E "s/\b__RELATIVE_PATH__\.SMOOTH\b/\"..\/transports\/smooth\/index.js\"/g" $f
     sed -i -E "s/\b__RELATIVE_PATH__\.DASH\b/\"..\/transports\/dash\/index.js\"/g" $f
+    sed -i -E "s/\b__RELATIVE_PATH__\.LOCAL_MANIFEST\b/\"..\/transports\/local\/index.js\"/g" $f
     sed -i -E "s/\b__RELATIVE_PATH__\.METAPLAYLIST\b/\"..\/transports\/dash\/index.js\"/g" $f
     sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_TEXT_BUFFER\b/\"..\/custom_source_buffers\/text\/native\/index.js\"/g" $f
     sed -i -E "s/\b__RELATIVE_PATH__\.NATIVE_VTT\b/\"..\/parsers\/texttracks\/webvtt\/native.js\"/g" $f

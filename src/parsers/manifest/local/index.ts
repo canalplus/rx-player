@@ -14,5 +14,12 @@
  * limitations under the License.
  */
 
-export { LOCAL_MANIFEST } from "./local";
-export { METAPLAYLIST } from "./metaplaylist";
+import parseLocalManifest from "./parse_local_manifest";
+
+export {
+  ILocalIndexSegment,
+  ILocalManifest,
+  ILocalManifestInitSegmentLoader,
+  ILocalManifestSegmentLoader,
+} from "./types";
+export default parseLocalManifest;

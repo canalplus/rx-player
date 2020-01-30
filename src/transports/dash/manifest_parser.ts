@@ -53,6 +53,10 @@ function requestStringResource(
   );
 }
 
+/**
+ * @param {Object} options
+ * @returns {Function}
+ */
 export default function generateManifestParser(
   options : ITransportOptions
 ) : (x : IManifestParserArguments) => IManifestParserObservable {

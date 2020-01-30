@@ -97,6 +97,8 @@ export interface IParsedManifest {
   baseURL? : string; // Base URL for relative URLs given in that Manifest.
   clockOffset?: number; // Offset, in milliseconds, the client's clock (in terms
                         // of `performance.now`) has relatively to the server's
+  expired? : Promise<void>; // When this Promise resolves, it means that the
+                            // Manifest needs to be updated.
   lifetime?: number; // Duration of the validity of this Manifest, after which it
                      // should be refreshed.
   maximumTime? : { // Information on the maximum seekable position.

@@ -29,8 +29,8 @@ import {
   IAudioVideoParserObservable,
   ISegmentParserArguments,
 } from "../types";
-import getISOBMFFTimingInfos from "./isobmff_timing_infos";
-import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
+import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
+import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
 
 export default function parser(
   { content,
@@ -75,9 +75,7 @@ export default function parser(
                                    chunkOffset,
                                    appendWindow } });
   }
-
   // we're handling an initialization segment
-
   const { indexRange } = segment;
   const nextSegments = isWEBM ? getSegmentsFromCues(chunkData, 0) :
                                 getSegmentsFromSidx(chunkData,

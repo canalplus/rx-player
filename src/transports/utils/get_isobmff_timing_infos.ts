@@ -35,7 +35,7 @@ import { IChunkTimingInfos } from "../types";
  * @param {number|undefined} initTimescale
  * @returns {Object}
  */
-function getISOBMFFTimingInfos(
+export default function getISOBMFFTimingInfos(
   buffer : Uint8Array,
   isChunked : boolean,
   segment : ISegment,
@@ -104,5 +104,3 @@ function getISOBMFFTimingInfos(
 
   return { timescale, time: startTime, duration };
 }
-
-export default getISOBMFFTimingInfos;

@@ -14,5 +14,12 @@
  * limitations under the License.
  */
 
-export { LOCAL_MANIFEST } from "./local";
-export { METAPLAYLIST } from "./metaplaylist";
+import { IFeaturesObject } from "../../features/types";
+import local from "../../transports/local";
+
+function addLocalManifestFeature(features: IFeaturesObject) {
+  features.transports.local = local;
+}
+
+export { addLocalManifestFeature as LOCAL_MANIFEST };
+export default addLocalManifestFeature;

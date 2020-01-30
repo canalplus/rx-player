@@ -20,6 +20,11 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
+import {
+  ILocalIndexSegment,
+  ILocalManifestInitSegmentLoader,
+  ILocalManifestSegmentLoader,
+} from "../../parsers/manifest/local";
 
 // privateInfos specific to Smooth Initialization Segments
 export interface ISmoothInitSegmentPrivateInfos { codecPrivateData? : string;
@@ -45,9 +50,28 @@ export interface IMetaPlaylistPrivateInfos { transportType : string;
                                              contentStart : number;
                                              contentEnd? : number; }
 
+// privateInfos specific to local Manifest's init segments
+export interface ILocalManifestInitSegmentPrivateInfos {
+  load : ILocalManifestInitSegmentLoader;
+}
+
+// privateInfos specific to local Manifests
+export interface ILocalManifestSegmentPrivateInfos {
+  // Callback used to load local manifest's media segment
+  load : ILocalManifestSegmentLoader;
+
+  // Exact same segment than the one given in a local manifest.
+  // Stored (with at best the same reference than in it) to facilitate the job
+  // of retrieving the wanted segment (this task will generally be done by the
+  // content downloader tool) when the RxPlayer asks for it.
+  segment : ILocalIndexSegment;
+}
+
 export interface IPrivateInfos {
   smoothInit? : ISmoothInitSegmentPrivateInfos;
   metaplaylistInfos? : IMetaPlaylistPrivateInfos;
+  localManifestInitSegment? : ILocalManifestInitSegmentPrivateInfos;
+  localManifestSegment? : ILocalManifestSegmentPrivateInfos;
 }
 
 // ISegment Object.

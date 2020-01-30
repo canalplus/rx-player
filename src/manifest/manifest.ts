@@ -91,6 +91,9 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   // Type of transport used by this Manifest (e.g. `"dash"` or `"smooth"`.
   public transport : string;
 
+  // When that promise resolves, the Manifest needs to be updated
+  public expired : Promise<void> | null;
+
   // Every `Adaptations` for the first `Period` of the Manifest.
   // Deprecated. Please use manifest.periods[0].adaptations instead.
   // @deprecated
@@ -169,6 +172,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
             representationFilter } = options;
     this.parsingErrors = [];
     this.id = args.id;
+    this.expired = args.expired ?? null;
     this.transport = args.transportType;
     this._clockOffset = args.clockOffset;
 

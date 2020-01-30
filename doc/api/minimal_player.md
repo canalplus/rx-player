@@ -135,6 +135,7 @@ Here is the anotated exhaustive list (notes are at the bottom of the table):
 | `HTML_TTML_PARSER` [3]   | Parse TTML text tracks for the HTML text buffer          |
 | `HTML_SAMI_PARSER` [3]   | Parse SAMI text tracks for the HTML text buffer          |
 | `BIF_PARSER` [4]         | Parse BIF image tracks for the image buffer              |
+| `LOCAL_MANIFEST` [5]     | Enable playback of "local" contents                      |
 | `METAPLAYLIST` [5]       | Enable playback of "metaplaylist" contents               |
 
 ---
@@ -251,6 +252,12 @@ ignored during a build.
 #### RXP_DIRECTFILE
 True by default. If set to "false", all code relative to directfile streaming
 will be ignored during a build.
+
+<a name="env-local"></a>
+#### RXP_LOCAL_MANIFEST
+False by default. If set to "true", all code relative to the "local" transport
+(to be able to play content offline for example) will be included during a
+build.
 
 <a name="env-metaplaylist"></a>
 #### RXP_METAPLAYLIST

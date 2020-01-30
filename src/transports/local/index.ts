@@ -14,5 +14,5 @@
  * limitations under the License.
  */
 
-export { LOCAL_MANIFEST } from "./local";
-export { METAPLAYLIST } from "./metaplaylist";
+import LocalManifestPipelines from "./pipelines";
+export default LocalManifestPipelines;
