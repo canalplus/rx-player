@@ -80,11 +80,12 @@ function parsePeriod(
     adaptations: period.adaptations
       .reduce<Partial<Record<string, IParsedAdaptation[]>>>((acc, ada) => {
         const type = ada.type;
-        if (acc[type] == null) {
-          acc[type] = [];
+        let adaps = acc[type];
+        if (adaps === undefined) {
+          adaps = [];
+          acc[type] = adaps;
         }
-        (acc[type] as IParsedAdaptation[])
-          .push(parseAdaptation(ada, adaptationIdGenerator, isFinished));
+        adaps.push(parseAdaptation(ada, adaptationIdGenerator, isFinished));
         return acc;
       }, {}),
   };

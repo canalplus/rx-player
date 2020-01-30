@@ -24,6 +24,7 @@ import Manifest from "../../manifest";
 import parseLocalManifest, {
   ILocalManifest,
 } from "../../parsers/manifest/local";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import {
   IManifestLoaderArguments,
   IManifestLoaderObservable,
@@ -49,7 +50,7 @@ export default function getLocalManifestPipelines(
   const customManifestLoader = options.manifestLoader;
   const manifestPipeline = {
     loader(args : IManifestLoaderArguments) : IManifestLoaderObservable {
-      if (customManifestLoader == null) {
+      if (isNullOrUndefined(customManifestLoader)) {
         throw new Error("A local Manifest is not loadable through regular HTTP(S) " +
                         " calls. You have to set a `manifestLoader` when calling " +
                         "`loadVideo`");

@@ -19,6 +19,7 @@ import {
   ILocalManifestInitSegmentLoader,
   ILocalManifestSegmentLoader,
 } from "../../parsers/manifest/local";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import {
   ILoaderRegularDataEvent,
   ISegmentLoaderArguments,
@@ -133,12 +134,14 @@ export default function segmentLoader(
 ) : ISegmentLoaderObservable< ArrayBuffer | null > {
   const privateInfos = segment.privateInfos;
   if (segment.isInit) {
-    if (privateInfos === undefined || privateInfos.localManifestInitSegment == null) {
+    if (privateInfos === undefined ||
+        isNullOrUndefined(privateInfos.localManifestInitSegment)) {
       throw new Error("Segment is not a local Manifest segment");
     }
     return loadInitSegment(privateInfos.localManifestInitSegment.load);
   }
-  if (privateInfos === undefined || privateInfos.localManifestSegment == null) {
+  if (privateInfos === undefined ||
+      isNullOrUndefined(privateInfos.localManifestSegment)) {
     throw new Error("Segment is not an local Manifest segment");
   }
   return loadSegment(privateInfos.localManifestSegment.segment,
