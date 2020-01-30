@@ -58,6 +58,7 @@ const config = {
         HTML_VTT: JSON.stringify("../parsers/texttracks/webvtt/html/index.ts"),
         IMAGE_BUFFER: JSON.stringify("../custom_source_buffers/image/index.ts"),
         LOCAL_MANIFEST: JSON.stringify("../transports/local/index.ts"),
+        MEDIA_ELEMENT_TRACK_CHOICE_MANAGER: JSON.stringify("../core/api/media_element_track_choice_manager.ts"),
         METAPLAYLIST: JSON.stringify("../transports/metaplaylist/index.ts"),
         NATIVE_SAMI: JSON.stringify("../parsers/texttracks/sami/native.ts"),
         NATIVE_SRT: JSON.stringify("../parsers/texttracks/srt/native.ts"),

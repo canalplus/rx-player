@@ -48,6 +48,7 @@ declare const __RELATIVE_PATH__ : {
   HTML_VTT: string;
   IMAGE_BUFFER: string;
   LOCAL_MANIFEST : string;
+  MEDIA_ELEMENT_TRACK_CHOICE_MANAGER: string;
   METAPLAYLIST: string;
   NATIVE_SAMI: string;
   NATIVE_SRT: string;
