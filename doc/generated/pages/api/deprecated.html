@@ -1,27 +1,33 @@
 <head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Deprecated APIs - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-Deprecated%20APIs">Deprecated APIs</a></p>
 <ul>
 <li><a href="#chapter-Fullscreen%20APIs">Fullscreen APIs</a></li>
+<li><a href="#chapter-Image%20(BIF)%20APIs">Image (BIF) APIs</a></li>
 <li><a href="#chapter-RxPlayer%20Methods">RxPlayer Methods</a>
 <ul>
 <li><a href="#subchapter-getNativeTextTrack">getNativeTextTrack</a></li>
 <li><a href="#subchapter-isFullscreen">isFullscreen</a></li>
 <li><a href="#subchapter-setFullscreen">setFullscreen</a></li>
 <li><a href="#subchapter-exitFullscreen">exitFullscreen</a></li>
+<li><a href="#subchapter-getImageTrackData">getImageTrackData</a></li>
 </ul>
 </li>
 <li><a href="#chapter-RxPlayer%20Events">RxPlayer Events</a>
 <ul>
 <li><a href="#subchapter-nativeTextTracksChange">nativeTextTracksChange</a></li>
+<li><a href="#subchapter-fullscreenChange">fullscreenChange</a></li>
+<li><a href="#subchapter-imageTrackUpdate">imageTrackUpdate</a></li>
 </ul>
 </li>
-<li><a href="#chapter-fullscreenChange">fullscreenChange</a></li>
 <li><a href="#chapter-loadVideo%20options">loadVideo options</a>
 <ul>
 <li><a href="#subchapter-defaultAudioTrack">defaultAudioTrack</a></li>
 <li><a href="#subchapter-defaultTextTrack">defaultTextTrack</a></li>
+<li><a href="#subchapter-supplementaryTextTracks">supplementaryTextTracks</a></li>
+<li><a href="#subchapter-supplementaryImageTracks">supplementaryImageTracks</a></li>
+<li><a href="#subchapter-hideNativeSubtitle">hideNativeSubtitle</a></li>
 </ul>
 </li>
-<li><a href="#chapter-RxPlayer%20options">RxPlayer options</a>
+<li><a href="#chapter-RxPlayer%20constructor%20options">RxPlayer constructor options</a>
 <ul>
 <li><a href="#subchapter-throttleWhenHidden">throttleWhenHidden</a></li>
 </ul>
@@ -66,6 +72,34 @@ and not any other element. This can be misleading.</p>
 </ul>
 <p>The fullscreen logic should now be entirely on the application-side. Replacement
 code is provided for each of those APIs below.</p>
+<p><a name="bif-apis"></a>
+<a name="chapter-Image%20(BIF)%20APIs"></a></p>
+<h2>Image (BIF) APIs</h2>
+<p>The following properties methods and events have been deprecated:</p>
+<ul>
+<li>the <code>imageTrackUpdate</code> event</li>
+<li>the <code>getImageTrackData</code> method</li>
+<li>the <code>supplementaryImageTracks</code> loadVideo option</li>
+</ul>
+<p>This is because most code linked to image management will be moved outside the
+RxPlayer. Doing that will both be more flexible for users and much easier to
+maintain for us (albeit with a small time of transition for the application).</p>
+<p>You can replace those API by this new exported function:
+<a href="parseBifThumbnails.html">parseBifThumbnails</a>.</p>
+<p>To give more details about why those APIs have been deprecated, there are
+multiple reasons:</p>
+<ol>
+<li>How it should be specified for live contents of for multi-Period DASH
+contents is not clear enough.</li>
+<li>Integrating it in the RxPlayer&#x2019;s API means that it had to take multiple
+choices that we prefer to let to the application: whether to retry the
+request if the it fails or if it is unavailable, whether to do the request
+at all for users with a low bitrate&#x2026;</li>
+<li>The task of displaying those thumbnails is ultimately on the UI-side (the
+part that know where the user wants to seek)</li>
+<li>The biggest part of the code related to it was a simple BIF parser, that
+can easily be re-implemented by any application.</li>
+</ol>
 <p><a name="chapter-RxPlayer%20Methods"></a></p>
 <h2>RxPlayer Methods</h2>
 <p>The following RxPlayer methods are deprecated.</p>
@@ -160,6 +194,13 @@ its code can easily be replaced by:</p>
   }
 }
 </code></pre>
+<p><a name="subchapter-getImageTrackData"></a></p>
+<h3>getImageTrackData</h3>
+<p><code>getImageTrackData</code> has been deprecated like most API related to BIF thumbnail
+parsing.
+You can read <a href="#bif-apis">the related chapter</a> for more information.</p>
+<p>You can replace this API by using the
+<a href="parseBifThumbnails.html">parseBifThumbnails</a> tool.</p>
 <p><a name="chapter-RxPlayer%20Events"></a></p>
 <h2>RxPlayer Events</h2>
 <p>The following RxPlayer events has been deprecated.</p>
@@ -170,8 +211,8 @@ won&#x2019;t be sent in a <code>v4.x.x</code> version.</p>
 <p>The reasons are basically the same than for the <code>getNativeTextTracks</code> method.
 It should not be needed anymore as most advanced needs should be better answered
 by an <code>html</code> text track mode.</p>
-<p><a name="chapter-fullscreenChange"></a></p>
-<h2>fullscreenChange</h2>
+<p><a name="subchapter-fullscreenChange"></a></p>
+<h3>fullscreenChange</h3>
 <p><code>fullscreenChange</code> events have been deprecated as it is part of our Fullscreen
 APIs, see <a href="#fullscreen-apis">the related chapter</a> for more information.</p>
 <p>The <code>fullscreenChange</code> event was sent when the media element got in or out of
@@ -190,6 +231,13 @@ mediaElement.addEventListener(<span class="hljs-string">&quot;fullscreenChange&q
   }
 });
 </code></pre>
+<p><a name="subchapter-imageTrackUpdate"></a></p>
+<h3>imageTrackUpdate</h3>
+<p><code>imageTrackUpdate</code> events have been deprecated like most API related to BIF
+thumbnail parsing.
+You can read <a href="#bif-apis">the related chapter</a> for more information.</p>
+<p>You can replace this API by using the
+<a href="parseBifThumbnails.html">parseBifThumbnails</a> tool.</p>
 <p><a name="chapter-loadVideo%20options"></a></p>
 <h2>loadVideo options</h2>
 <p>The following loadVideo options are deprecated.</p>
@@ -201,7 +249,7 @@ option</a> is now the preferred
 This new option allows to handle much more complex use cases and can even be
 updated at any time through <a href="index.html#meth-setPreferredAudioTracks">the <code>setPreferredAudioTracks</code>
 method</a>.</p>
-<h4>How to replace that function</h4>
+<h4>How to replace that option</h4>
 <p>It is very easy to replace <code>defaultAudioTrack</code> by <code>preferredAudioTracks</code>.</p>
 <p>For example, if you want to have a default french audio language, you probably
 previously did:</p>
@@ -227,7 +275,7 @@ RxPlayer:</p>
 <p><code>defaultTextTrack</code> is replaced by <a href="loadVideo_options.html#prop-preferredTextTracks">the <code>preferredTextTracks</code> constructor
 option</a> for the same reason
 than <code>defaultAudioTrack</code>.</p>
-<h4>How to replace that function</h4>
+<h4>How to replace that option</h4>
 <p>It is very easy to replace <code>defaultTextTrack</code> by <code>preferredTextTracks</code>.</p>
 <p>For example, if you want to have a default swedish subtitle language, you
 probably previously did:</p>
@@ -248,8 +296,71 @@ RxPlayer:</p>
 <p>Or at any time, through the <code>setPreferredTextTracks</code> method:</p>
 <pre><code class="language-js">player.setPreferredTextTracks([{ <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;fra&quot;</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> }]);
 </code></pre>
-<p><a name="chapter-RxPlayer%20options"></a></p>
-<h2>RxPlayer options</h2>
+<p><a name="subchapter-supplementaryTextTracks"></a></p>
+<h3>supplementaryTextTracks</h3>
+<p>The <code>supplementaryTextTracks</code> has been deprecated for multiple reasons:</p>
+<ol>
+<li>
+<p>The main reason is that the behavior of this API is not defined for
+multi-Period DASH contents (nor for MetaPlaylist contents): Should we only
+add the subtitles for the first Period or should it be for every Period?
+How to define a different subtitles track for the first and for the second
+Period?</p>
+<p>Adding an external tool much less coupled to the RxPlayer move those
+questions entirely to the application, which should know more than us what
+to do in those different cases.</p>
+</li>
+<li>
+<p>Its API was a little arcane because we had to make it compatible with every
+possible type of contents (i.e. DASH, Smooth, MetaPlaylist etc.) out there.</p>
+</li>
+<li>
+<p>It did not work for Directfile contents yet. Although we could have made it
+compatible with them, we thought that this was the occasion to define a
+better API to replace it.</p>
+</li>
+<li>
+<p>Its behavior was more complex that you would initially think of. For
+example, we could have to re-download multiple times the same subtitles
+file if manual garbage collecting was enabled.</p>
+</li>
+<li>
+<p>All usages of that API that we know of were for Smooth or DASH VoD contents
+which sadly just omitted those subtitles tracks in their Manifest. The true
+&#x201C;clean&#x201D; way to fix the problem in that case is to do it at the source: the
+content.
+In this case, fixing it on the player-side should only be a temporary
+work-around (don&#x2019;t be scared, we still have an API replacement).</p>
+</li>
+</ol>
+<p>The new <code>TextTrackRenderer</code> tool which replace it is much more straightforward.
+As an external tool which just reads and renders already-downloaded text
+subtitles, its API and the extent of what it does should be much more simple.</p>
+<p>It&#x2019;s also compatible with any type of contents, even when playing through an
+other player.</p>
+<h4>How to replace that option</h4>
+<p>Every <code>supplementaryTextTracks</code> feature can be replaced by the
+<code>TextTrackRenderer</code> tool.
+Please bear in mind however that they are two completely different APIs, doing
+the transition might take some time.</p>
+<p>The <code>TextTrackRenderer</code> tool is documented <a href="TextTrackRenderer.html">here</a>.</p>
+<p><a name="subchapter-supplementaryImageTracks"></a></p>
+<h3>supplementaryImageTracks</h3>
+<p>The <code>supplementaryImageTracks</code> events have been deprecated like most API related
+to BIF thumbnail parsing.
+You can read <a href="#bif-apis">the related chapter</a> for more information.</p>
+<p>You can replace this API by using the
+<a href="parseBifThumbnails.html">parseBifThumbnails</a> tool.</p>
+<p><a name="subchapter-hideNativeSubtitle"></a></p>
+<h3>hideNativeSubtitle</h3>
+<p>The <code>hideNativeSubtitle</code> option is deprecated and won&#x2019;t be replaced.</p>
+<p>This is because it was added at a time when our text track API was much less
+advanced. Some applications wanted to handle subtitles themselves and thus hid
+the true &#x201C;native&#x201D; subtitles to display them themselves in a better way.</p>
+<p>However, this API seems to not be used anymore. Please open an issue if you need
+it.</p>
+<p><a name="chapter-RxPlayer%20constructor%20options"></a></p>
+<h2>RxPlayer constructor options</h2>
 <p>The following RxPlayer constructor options are deprecated.</p>
 <p><a name="subchapter-throttleWhenHidden"></a></p>
 <h3>throttleWhenHidden</h3>
@@ -278,7 +389,7 @@ replace:</p>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> manifest = player.getManifest();
 
 <span class="hljs-keyword">if</span> (manifest &amp;&amp; manifest.periods.length) {
-  <span class="hljs-built_in">console</span>.log(manifest.adaptations === manifest.periods[<span class="hljs-number">0</span>]); <span class="hljs-comment">// true</span>
+  <span class="hljs-built_in">console</span>.log(manifest.adaptations === manifest.periods[<span class="hljs-number">0</span>].adaptations); <span class="hljs-comment">// true</span>
 }
 </code></pre>
 <p><a name="subchapter-Smooth"></a></p>

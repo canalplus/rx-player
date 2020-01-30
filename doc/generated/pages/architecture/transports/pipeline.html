@@ -212,13 +212,15 @@ the segment&#x2019;s data:</p>
 <li>whether the segment should be offseted when decoded and by what amount</li>
 <li>the decodable data (which can be wrapped in a container e.g. subtitles in an
 ISOBMFF container).</li>
+<li>the attached protection information and data to be able to decrypt that
+segment.</li>
 </ul>
 <p>It receives the segment or sub-segment as argument and related information:</p>
 <pre><code> INPUT:                                       OUTPUT:
  ------                                       -------
  Segment in a generic format +                Decodable data + time
- isChunked? [1] + Segment        +----------+ information
- information                     |          |
+ isChunked? [1] + Segment        +----------+ information + segment protection
+ information                     |          | information
  ===============================&gt;| SEGMENT  |===========================&gt;
                                  |  PARSER  |
                                  |          |

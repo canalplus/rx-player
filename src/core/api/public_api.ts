@@ -103,9 +103,11 @@ import SourceBuffersStore, {
 import createClock, {
   IClockTick
 } from "./clock";
+import emitSeekEvents from "./emit_seek_events";
 import getPlayerState, {
   PLAYER_STATES,
 } from "./get_player_state";
+import MediaElementTrackChoiceManager from "./media_element_track_choice_manager";
 import {
   IConstructorOptions,
   ILoadVideoOptions,
@@ -171,6 +173,8 @@ interface IPublicAPIEvent {
                                   period : Period;
                                   adaptation : Adaptation;
                                   representation : Representation; }>;
+  seeking : null;
+  seeked : null;
 }
 
 /**
@@ -308,7 +312,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      *
      * null if the current content has no image playlist linked to it.
      *
-     * TODO Need complete refactoring for live or multi-periods contents
+     * @deprecated
      */
     thumbnails : IBifThumbnail[]|null;
 
@@ -375,6 +379,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * has no TrackChoiceManager.
    */
   private _priv_trackChoiceManager : TrackChoiceManager|null;
+
+  /**
+   * MediaElementTrackChoiceManager instance linked to the current content.
+   * Null if no content has been loaded or if the current content loaded
+   * has no MediaElementTrackChoiceManager.
+   */
+  private _priv_mediaElementTrackChoiceManager : MediaElementTrackChoiceManager|null;
 
   /**
    * Emit last picture in picture event.
@@ -475,7 +486,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /*PLAYER_VERSION*/"3.17.1";
+    this.version = /*PLAYER_VERSION*/"3.18.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -552,6 +563,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_mutedMemory = DEFAULT_UNMUTED_VOLUME;
 
     this._priv_trackChoiceManager = null;
+    this._priv_mediaElementTrackChoiceManager = null;
     this._priv_currentError = null;
     this._priv_contentInfos = null;
 
@@ -742,13 +754,60 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       if (features.directfile == null) {
         throw new Error("DirectFile feature not activated in your build.");
       }
-      const directfileInit$ = features.directfile({ autoPlay,
-                                                    clock$,
-                                                    keySystems,
-                                                    mediaElement: videoElement,
-                                                    speed$: this._priv_speed$,
-                                                    startAt,
-                                                    url })
+
+      this._priv_mediaElementTrackChoiceManager =
+        new features.directfile.mediaElementTrackChoiceManager(
+          { preferredAudioTracks: defaultAudioTrack === undefined ?
+              this._priv_preferredAudioTracks :
+              new BehaviorSubject([defaultAudioTrack]),
+            preferredTextTracks: defaultTextTrack === undefined ?
+              this._priv_preferredTextTracks :
+              new BehaviorSubject([defaultTextTrack]) },
+          this.videoElement
+        );
+
+      this.trigger("availableAudioTracksChange",
+        this._priv_mediaElementTrackChoiceManager.getAvailableAudioTracks());
+      this.trigger("availableVideoTracksChange",
+        this._priv_mediaElementTrackChoiceManager.getAvailableVideoTracks());
+      this.trigger("availableTextTracksChange",
+        this._priv_mediaElementTrackChoiceManager.getAvailableTextTracks());
+
+      this.trigger("audioTrackChange",
+        this._priv_mediaElementTrackChoiceManager.getChosenAudioTrack() ?? null);
+      this.trigger("textTrackChange",
+        this._priv_mediaElementTrackChoiceManager.getChosenTextTrack() ?? null);
+      this.trigger("videoTrackChange",
+        this._priv_mediaElementTrackChoiceManager.getChosenVideoTrack() ?? null);
+
+      this._priv_mediaElementTrackChoiceManager
+        .addEventListener("availableVideoTracksChange", (val) =>
+          this.trigger("availableVideoTracksChange", val));
+      this._priv_mediaElementTrackChoiceManager
+        .addEventListener("availableAudioTracksChange", (val) =>
+          this.trigger("availableAudioTracksChange", val));
+      this._priv_mediaElementTrackChoiceManager
+        .addEventListener("availableTextTracksChange", (val) =>
+          this.trigger("availableTextTracksChange", val));
+
+      this._priv_mediaElementTrackChoiceManager
+        .addEventListener("audioTrackChange", (val) =>
+          this.trigger("audioTrackChange", val));
+      this._priv_mediaElementTrackChoiceManager
+        .addEventListener("videoTrackChange", (val) =>
+          this.trigger("videoTrackChange", val));
+      this._priv_mediaElementTrackChoiceManager
+        .addEventListener("textTrackChange", (val) =>
+          this.trigger("textTrackChange", val));
+
+      const directfileInit$ =
+        features.directfile.initDirectFile({ autoPlay,
+                                             clock$,
+                                             keySystems,
+                                             mediaElement: videoElement,
+                                             speed$: this._priv_speed$,
+                                             startAt,
+                                             url })
         .pipe(takeUntil(contentIsStopped$));
 
       playback$ = publish<IInitEvent>()(directfileInit$);
@@ -836,7 +895,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     clock$
       .pipe(takeUntil(this._priv_stopCurrentContent$))
-      .subscribe(x => this._priv_triggerTimeChange(x), noop);
+      .subscribe(x => this._priv_triggerPositionUpdate(x), noop);
+
+    loaded$.pipe(
+      switchMapTo(emitSeekEvents(this.videoElement, clock$)),
+      takeUntil(this._priv_stopCurrentContent$)
+    ).subscribe((evt : "seeking" | "seeked") => {
+      log.info(`API: Triggering "${evt}" event`);
+      this.trigger(evt, null);
+    });
 
     playerState$
       .pipe(takeUntil(this._priv_stopCurrentContent$))
@@ -1510,7 +1577,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return [];
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return this._priv_mediaElementTrackChoiceManager?.getAvailableAudioTracks() ?? [];
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       return [];
     }
@@ -1525,7 +1595,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return [];
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return this._priv_mediaElementTrackChoiceManager?.getAvailableTextTracks() ?? [];
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       return [];
     }
@@ -1540,7 +1613,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return [];
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return this._priv_mediaElementTrackChoiceManager?.getAvailableVideoTracks() ?? [];
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       return [];
     }
@@ -1555,7 +1631,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      if (this._priv_mediaElementTrackChoiceManager === null) {
+        return undefined;
+      }
+      return this._priv_mediaElementTrackChoiceManager.getChosenAudioTrack();
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       return undefined;
     }
@@ -1570,7 +1652,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      if (this._priv_mediaElementTrackChoiceManager === null) {
+        return undefined;
+      }
+      return this._priv_mediaElementTrackChoiceManager.getChosenTextTrack();
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       return undefined;
     }
@@ -1585,7 +1673,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      if (this._priv_mediaElementTrackChoiceManager === null) {
+        return undefined;
+      }
+      return this._priv_mediaElementTrackChoiceManager.getChosenVideoTrack();
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       return undefined;
     }
@@ -1602,7 +1696,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      try {
+        this._priv_mediaElementTrackChoiceManager?.setAudioTrackById(audioId);
+        return;
+      } catch (e) {
+        throw new Error("player: unknown audio track");
+      }
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       throw new Error("No compatible content launched.");
     }
@@ -1624,7 +1726,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      try {
+        this._priv_mediaElementTrackChoiceManager?.setTextTrackById(textId);
+        return;
+      } catch (e) {
+        throw new Error("player: unknown text track");
+      }
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       throw new Error("No compatible content launched.");
     }
@@ -1643,7 +1753,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return;
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      this._priv_mediaElementTrackChoiceManager?.disableTextTrack();
+      return;
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       return;
     }
@@ -1660,7 +1774,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      try {
+        this._priv_mediaElementTrackChoiceManager?.setVideoTrackById(videoId);
+        return;
+      } catch (e) {
+        throw new Error("player: unknown video track");
+      }
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       throw new Error("No compatible content launched.");
     }
@@ -1714,12 +1836,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * @returns {Array.<Object>|null}
+   * @deprecated
    */
   getImageTrackData() : IBifThumbnail[] | null {
+    warnOnce("`getImageTrackData` is deprecated." +
+             "Please use the `parseBifThumbnails` tool instead.");
     if (this._priv_contentInfos === null) {
       return null;
     }
+    /* tslint:disable deprecation */
     return this._priv_contentInfos.thumbnails;
+    /* tslint:enable deprecation */
   }
 
   /**
@@ -1795,6 +1922,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_contentInfos = null;
     this._priv_trackChoiceManager = null;
+    this._priv_mediaElementTrackChoiceManager?.dispose();
+    this._priv_mediaElementTrackChoiceManager = null;
 
     this._priv_contentEventsMemory = {};
 
@@ -1865,14 +1994,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         }
 
         // Manage image tracks
-        // TODO Better way? Perhaps externalize Image track management in a tool
+        // @deprecated
         const { content, segmentData } = event.value;
         if (content.adaptation.type === "image") {
           if (segmentData != null && (segmentData as { type : string }).type === "bif") {
             const imageData = (segmentData as { data : IBifThumbnail[] }).data;
+            /* tslint:disable deprecation */
             this._priv_contentInfos.thumbnails = imageData;
             this.trigger("imageTrackUpdate",
                          { data: this._priv_contentInfos.thumbnails });
+            /* tslint:enable deprecation */
           }
         }
     }
@@ -2298,7 +2429,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    *
    * @param {Object} clockTick
    */
-  private _priv_triggerTimeChange(clockTick : IClockTick) : void {
+  private _priv_triggerPositionUpdate(clockTick : IClockTick) : void {
     if (this._priv_contentInfos === null) {
       log.warn("API: Cannot perform time update: no content loaded.");
       return;
@@ -2374,6 +2505,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
   }
 }
-Player.version = /*PLAYER_VERSION*/"3.17.1";
+Player.version = /*PLAYER_VERSION*/"3.18.0";
 
 export default Player;

@@ -42,6 +42,7 @@ describe("Features - initializeFeaturesObject", () => {
       BIF_PARSER: "../parsers/images/bif.ts",
       SMOOTH: "../transports/smooth/index.ts",
       DASH: "../transports/dash/index.ts",
+      LOCAL_MANIFEST: "../transports/local/index.ts",
       METAPLAYLIST: "../transports/metaplaylist/index.ts",
       NATIVE_TEXT_BUFFER: "../custom_source_buffers/text/native/index.ts",
       NATIVE_VTT: "../parsers/texttracks/webvtt/native/index.ts",
@@ -54,6 +55,7 @@ describe("Features - initializeFeaturesObject", () => {
       HTML_TTML: "../parsers/texttracks/ttml/html/index.ts",
       HTML_SAMI: "../parsers/texttracks/sami/html.ts",
       DIRECTFILE: "../core/init/initialize_directfile.ts",
+      MEDIA_ELEMENT_TRACK_CHOICE_MANAGER: "../core/api/media_element_track_choice_manager.ts",
     };
     const feat = {
       transports: {},
@@ -77,9 +79,14 @@ describe("Features - initializeFeaturesObject", () => {
         metaplaylist: require("../../transports/metaplaylist/index").default,
         dash: require("../../transports/dash/index").default,
         smooth: require("../../transports/smooth/index").default,
+        local: require("../../transports/local/index").default,
       },
-      directfile: require("../../core/init/initialize_directfile").default,
       emeManager: require("../../core/eme/index").default,
+      directfile: {
+        initDirectFile: require("../../core/init/initialize_directfile").default,
+        mediaElementTrackChoiceManager:
+          require("../../core/api/media_element_track_choice_manager").default,
+      },
       imageBuffer: require("../../custom_source_buffers/image/index").default,
       imageParser: require("../../parsers/images/bif").default,
       nativeTextTracksBuffer: require("../../custom_source_buffers/text/native/index")

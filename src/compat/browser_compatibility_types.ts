@@ -139,6 +139,13 @@ const READY_STATES = { HAVE_NOTHING: 0,
                        HAVE_FUTURE_DATA: 3,
                        HAVE_ENOUGH_DATA: 4 };
 
+// TODO w3c defines onremovetrack and onchange attributes which are not present on
+// ts type definition
+export interface ICompatTextTrackList extends TextTrackList {
+  onremovetrack: ((ev: TrackEvent) => void) | null;
+  onchange: (() => void) | null;
+}
+
 export {
   HTMLElement_,
   ICompatDocument,

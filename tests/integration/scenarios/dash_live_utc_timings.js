@@ -33,9 +33,9 @@ describe("DASH live - UTCTimings", () => {
         transport:manifestInfos.transport,
       });
 
-      await sleep(1);
+      await sleep(10);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(10);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1553521448, 3);
       expect(player.getMaximumPosition()).to.be
@@ -55,9 +55,9 @@ describe("DASH live - UTCTimings", () => {
                            },
                          } });
 
-      await sleep(1);
+      await sleep(10);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(10);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1553521748, 1);
       expect(player.getMaximumPosition()).to.be
@@ -95,13 +95,13 @@ describe("DASH live - UTCTimings", () => {
         transport:manifestInfos.transport,
       });
 
-      await sleep(1);
+      await sleep(10);
       await xhrMock.flush(); // Manifest request
-      await sleep(1);
+      await sleep(10);
       await xhrMock.flush(); // time request
-      await sleep(1);
+      await sleep(10);
       await xhrMock.flush(); // Once for the init segment
-      await sleep(1);
+      await sleep(10);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1553521448, 3);
     });
@@ -121,9 +121,9 @@ describe("DASH live - UTCTimings", () => {
         },
       });
 
-      await sleep(1);
+      await sleep(10);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(10);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1553521748, 1);
       expect(player.getMaximumPosition()).to.be
@@ -185,9 +185,9 @@ describe("DASH live - UTCTimings", () => {
         },
       });
 
-      await sleep(1);
+      await sleep(10);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(10);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1553521748, 1);
       expect(player.getMaximumPosition()).to.be
@@ -218,9 +218,9 @@ describe("DASH live - UTCTimings", () => {
         transport:manifestInfos.transport,
       });
 
-      await sleep(1);
+      await sleep(10);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(10);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1553521448, 3);
 
@@ -244,9 +244,9 @@ describe("DASH live - UTCTimings", () => {
         },
       });
 
-      await sleep(1);
+      await sleep(10);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(10);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1553521748, 1);
       expect(player.getMaximumPosition()).to.be

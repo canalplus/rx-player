@@ -6,7 +6,11 @@
 - [Overview](#overview)
 - [Events](#events)
     - [playerStateChange](#events-playerStateChange)
+    - [error](#events-error)
+    - [warning](#events-warning)
     - [positionUpdate](#events-positionUpdate)
+    - [seeking](#events-seeking)
+    - [seeked](#events-seeked)
     - [availableAudioTracksChange](#events-availableAudioTracksChange)
     - [availableTextTracksChange](#events-availableTextTracksChange)
     - [availableVideoTracksChange](#events-availableVideoTracksChange)
@@ -17,13 +21,11 @@
     - [availableVideoBitratesChange](#events-availableVideoBitratesChange)
     - [audioBitrateChange](#events-audioBitrateChange)
     - [videoBitrateChange](#events-videoBitrateChange)
-    - [imageTrackUpdate](#events-imageTrackUpdate)
-    - [fullscreenChange](#events-fullscreenChange)
     - [bitrateEstimationChange](#events-bitrateEstimationChange)
-    - [warning](#events-warning)
-    - [error](#events-error)
     - [periodChange](#events-periodChange)
     - [decipherabilityUpdate](#events-decipherabilityUpdate)
+    - [imageTrackUpdate (deprecated)](#events-imageTrackUpdate)
+    - [fullscreenChange (deprecated)](#events-fullscreenChange)
     - [nativeTextTracksChange (deprecated)](#events-nativeTextTracksChange)
 
 
@@ -66,6 +68,28 @@ As it is a central part of our API and can be difficult concept to understand,
 we have a special [page of documentation on player states](./states.md).
 
 
+<a name="events-error"></a>
+### error ######################################################################
+
+_payload type_: ``Error``
+
+Triggered each time a fatal (for content playback) error happened.
+
+The payload is the corresponding error. See [the Player Error
+documentation](./errors.md) for more information.
+
+
+<a name="events-warning"></a>
+### warning ####################################################################
+
+_payload type_: ``Error``
+
+Triggered each time a non-fatal (for content playback) error happened.
+
+The payload is the corresponding error. See [the Player Error
+documentation](./errors.md) for more information.
+
+
 <a name="events-positionUpdate"></a>
 ### positionUpdate #############################################################
 
@@ -91,10 +115,11 @@ The object emitted as the following properties:
   - ``maximumBufferTime`` (``Number|undefined``): The maximum time until which
     the buffer can currently be filled. That is:
 
-    - for non-live contents, the duration.
+    - for static contents (like VoD), the duration.
 
-    - for live contents, the live edge minus a security margin we added to avoid
-      buffering ahead of it.
+    - for dynamic contents (like live contents), the current maximum available
+      position (live edge for live contents) minus a security margin we added to
+      avoid buffering ahead of it.
 
   - ``wallClockTime`` (``Number|undefined``): Only for live contents. The
     current time converted to wall-clock time in seconds.
@@ -103,15 +128,24 @@ The object emitted as the following properties:
 
 
 
+<a name="events-seeking"></a>
+### seeking #################################################
+
+Emitted when a "seek" operation (to "move"/"skip" to another position) begins
+on the currently loaded content.
+
+
+<a name="events-seeked"></a>
+### seeked #################################################
+
+Emitted when a "seek" operation (to "move"/"skip" to another position) on the
+currently loaded content has finished
+
+
 <a name="events-availableAudioTracksChange"></a>
 ### availableAudioTracksChange #################################################
 
 _payload type_: ``Array.<Object>``
-
----
-
-:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
 
 ---
 
@@ -153,11 +187,6 @@ _payload type_: ``Array.<Object>``
 
 ---
 
-:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
----
-
 Triggered when the currently available video tracks change (e.g.: at the
 beginning of the content, when period changes...).
 
@@ -189,15 +218,10 @@ The array emitted contains object describing each available video track:
 
 
 
-<a name="events-availableVideoTracksChange"></a>
+<a name="events-availableTextTracksChange"></a>
 ### availableTextTracksChange ##################################################
 
 _payload type_: ``Array.<Object>``
-
----
-
-:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
 
 ---
 
@@ -233,11 +257,6 @@ _payload type_: ``Object|null``
 
 ---
 
-:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
----
-
 Information about the current audio track, each time it changes (the last
 received segment got a new one).
 
@@ -261,11 +280,6 @@ _payload type_: ``Object|null``
 
 ---
 
-:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
----
-
 Information about the current text track, each time it changes (the last
 received segment got a new one).
 
@@ -281,11 +295,6 @@ properties:
 ### videoTrackChange ############################################################
 
 _payload type_: ``Object|null``
-
----
-
-:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
 
 ---
 
@@ -395,45 +404,6 @@ time it changes (based on the last received segment).
 `-1` when the bitrate is not known.
 
 
-<a name="events-imageTrackUpdate"></a>
-### imageTrackUpdate ###########################################################
-
-_payload type_: ``Object``
-
----
-
-:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
----
-
-Triggered each time the current image playlist changes (has new images).
-
-Has the following property in its payload:
-  _data_ (``Array.<Object>``): Every image data.
-
-  Each image has a structure as defined in the [Images structure
-  page](./images.md#api-structure).
-
-
-<a name="events-fullscreenChange"></a>
-### fullscreenChange ###########################################################
-
----
-
-:warning: This event is deprecated, it will disappear in the next major
-release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
-
----
-
-_payload type_: ``Boolean``
-
-Triggered each time the video player goes/exits fullscreen mode.
-
-The payload is ``true`` if the player entered fullscreen, ``false`` if it exited
-it.
-
-
 <a name="events-bitrateEstimationChange"></a>
 ### bitrateEstimationChange ####################################################
 
@@ -462,28 +432,6 @@ The payload is an object with the following properties:
     This bitrate is smoothed by doing a (complex) mean on an extended period of
     time, so it often does not link directly to the current calculated bitrate.
 
-
-
-<a name="events-warning"></a>
-### warning ####################################################################
-
-_payload type_: ``Error``
-
-Triggered each time a non-fatal (for content playback) error happened.
-
-The payload is the corresponding error. See [the Player Error
-documentation](./errors.md) for more information.
-
-
-<a name="events-error"></a>
-### error ######################################################################
-
-_payload type_: ``Error``
-
-Triggered each time a fatal (for content playback) error happened.
-
-The payload is the corresponding error. See [the Player Error
-documentation](./errors.md) for more information.
 
 
 <a name="events-periodChange"></a>
@@ -548,6 +496,52 @@ Each of those objects have the following properties:
 
 You can then know if any of those Representations are becoming decipherable or
 not through their `decipherable` property.
+
+
+<a name="events-imageTrackUpdate"></a>
+### imageTrackUpdate ###########################################################
+
+---
+
+:warning: This event is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
+_payload type_: ``Object``
+
+---
+
+:warning: This event is not sent in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
+
+---
+
+Triggered each time the current image playlist changes (has new images).
+
+Has the following property in its payload:
+  _data_ (``Array.<Object>``): Every image data.
+
+  Each image has a structure as defined in the [Images structure
+  page](./images.md#api-structure).
+
+
+<a name="events-fullscreenChange"></a>
+### fullscreenChange ###########################################################
+
+---
+
+:warning: This event is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
+_payload type_: ``Boolean``
+
+Triggered each time the video player goes/exits fullscreen mode.
+
+The payload is ``true`` if the player entered fullscreen, ``false`` if it exited
+it.
 
 
 <a name="events-nativeTextTracksChange"></a>

@@ -161,14 +161,9 @@ value is ``DESC``.
 <a name="manual"></a>
 ## Text tracks added manually ##################################################
 
-It is also possible to add a text track directly through a ``loadVideo`` call,
-thanks to its ``supplementaryTextTracks`` option, [documented
-here](./loadVideo_options.md#prop-supplementaryTextTracks).
-
-The rules for the ``language``, ``mimeType`` and ``codecs`` here are the exact
-same than for DASH' ``lang``, ``mimeType`` and ``codecs`` attributes,
-[documented here](#manifest-dash).
-
+It is also possible to add a supplementary text track dynamically, by using the
+`TextTrackRenderer` tool. You can read its documentation
+[here](./TextTrackRenderer.md).
 
 
 <a name="modes"></a>

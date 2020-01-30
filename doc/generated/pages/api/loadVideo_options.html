@@ -13,10 +13,10 @@
 <li><a href="#subchapter-textTrackElement">textTrackElement</a></li>
 <li><a href="#subchapter-manualBitrateSwitchingMode">manualBitrateSwitchingMode</a></li>
 <li><a href="#subchapter-lowLatencyMode">lowLatencyMode</a></li>
-<li><a href="#subchapter-supplementaryTextTracks">supplementaryTextTracks</a></li>
 <li><a href="#subchapter-supplementaryImageTracks">supplementaryImageTracks</a></li>
 <li><a href="#subchapter-hideNativeSubtitle">hideNativeSubtitle</a></li>
 <li><a href="#subchapter-networkConfig">networkConfig</a></li>
+<li><a href="#subchapter-supplementaryTextTracks">supplementaryTextTracks</a></li>
 <li><a href="#subchapter-defaultAudioTrack">defaultAudioTrack</a></li>
 <li><a href="#subchapter-defaultTextTrack">defaultTextTrack</a></li>
 </ul>
@@ -45,7 +45,8 @@ player.loadVideo(options);
 <a name="subchapter-transport"></a></p>
 <h3>transport</h3>
 <p><em>type</em>: <code>string|undefined</code></p>
-<p>The transport protocol used for this content.</p>
+<p>The transport protocol used for this content.
+This property is mandatory.</p>
 <p>Can be either:</p>
 <ul>
 <li>
@@ -57,16 +58,21 @@ player.loadVideo(options);
 <li>
 <p><code>&quot;directfile&quot;</code> - for loading a video in <em>DirectFile</em> mode, which allows to
 directly play media files (example: <code>.mp4</code> or <code>.webm</code> files) without
-using a transport protocol.</p>
+using a transport protocol. With that option, you can even play HLS
+contents on multiple browsers (mainly safari and iOS browsers).</p>
 <p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> In that mode, multiple APIs won&#x2019;t have any effect.
 This is documented in the documentation of each concerned method, option or
 event in the API.</p>
 </li>
 <li>
-<p><code>&quot;metaplaylist&quot;</code> for <a href="metaplaylist.html">MetaPlaylist</a> streams</p>
+<p><code>&quot;metaplaylist&quot;</code> for <a href="metaplaylist.html">MetaPlaylist</a> streams, which are
+a concatenation of multiple smooth and DASH contents</p>
+</li>
+<li>
+<p><code>&quot;local&quot;</code> for <a href="local_manifest.html">local manifests</a>, which allows to play
+downloaded DASH, Smooth or MetaPlaylist contents (when offline for example).</p>
 </li>
 </ul>
-<p>This property is mandatory.</p>
 <p><a name="prop-url"></a>
 <a name="subchapter-url"></a></p>
 <h3>url</h3>
@@ -392,27 +398,29 @@ into seconds.</p>
 possible one, in seconds.
 That is:</p>
 <ul>
-<li>for live contents, from the beginning of the buffer depth (as defined
-by the Manifest).</li>
-<li>for non-live contents, from the position <code>0</code> (this option should be
-equivalent to <code>position</code>)</li>
+<li>for dynamic (live) contents, from the beginning of the buffer depth (as
+defined by the Manifest).</li>
+<li>for non-dynamic (vod) contents, from the position <code>0</code> (this option
+should be equivalent to <code>position</code>)</li>
 </ul>
 </li>
 <li>
 <p><code>fromLastPosition</code> (<code>Number</code>): relative position from the maximum
 possible one, in seconds. Should be a negative number:</p>
 <ul>
-<li>for live contents, it is the difference between the starting position
-and the live edge (as defined by the manifest)</li>
-<li>for non-live contents, it is the difference between the starting
-position and the end position of the content.</li>
+<li>for dynamic (e.g. live) contents, it is the difference between the
+starting position and the currently last possible position, as defined
+by the manifest.</li>
+<li>for VoD contents, it is the difference between the starting position and
+the end position of the content.</li>
 </ul>
 </li>
 <li>
 <p><code>percentage</code> (<code>Number</code>): percentage of the wanted position. <code>0</code> being
-the minimum position possible (0 for static content, buffer depth for live
-contents) and <code>100</code> being the maximum position possible (<code>duration</code> for
-static content, live edge for live contents).</p>
+the minimum position possible (0 for static content, buffer depth for
+dynamic contents) and <code>100</code> being the maximum position possible
+(<code>duration</code> for VoD content, last currently possible position for dynamic
+contents).</p>
 </li>
 </ul>
 <p>Note: Only one of those properties will be considered, in the same order of
@@ -422,12 +430,12 @@ possible position will be used instead. If it is superior to the maximum
 possible position, the maximum will be used instead as well.</p>
 <p>More information on how the initial position is chosen can be found <a href="../infos/initial_position.html">in the
 specific documentation page on this subject</a>.</p>
-<h4>Notes for live contents</h4>
-<p>For live contents, <code>startAt</code> could work not as expected:</p>
+<h4>Notes for dynamic contents</h4>
+<p>For dynamic contents, <code>startAt</code> could work not as expected:</p>
 <ul>
 <li>
 <p>Depending on the type of Manifest, it will be more or less precize to guess
-the live edge of the content. This will mostly affect the
+the current last position of the content. This will mostly affect the
 <code>fromLastPosition</code> option.</p>
 </li>
 <li>
@@ -436,8 +444,8 @@ buffer, server-side) to respect the position wanted, the maximum buffer
 depth will be used as a starting time instead.</p>
 </li>
 <li>
-<p>If the Manifest does not allow to go far enough in the future (live edge
-sooner) to respect the position wanted, the live edge will be used to define
+<p>If the Manifest does not allow to go far enough in the future to respect the
+position wanted, the current last available position will be used to define
 the starting time instead.</p>
 </li>
 </ul>
@@ -474,8 +482,7 @@ player.loadVideo({
 player.loadVideo({
   <span class="hljs-comment">// ...</span>
   <span class="hljs-attr">startAt</span>: {
-    <span class="hljs-attr">fromLastPosition</span>: <span class="hljs-number">-60</span> <span class="hljs-comment">// 1 minute before the end (before the live edge</span>
-                          <span class="hljs-comment">// for live contents)</span>
+    <span class="hljs-attr">fromLastPosition</span>: <span class="hljs-number">-60</span> <span class="hljs-comment">// 1 minute before the end</span>
   }
 })
 </code></pre>
@@ -527,7 +534,7 @@ generated.</p>
 <p>For the moment, this mode has only an effect for all Smooth contents and
 some DASH contents relying on a number-based SegmentTemplate segment
 indexing scheme.</p>
-<p>The upside is that you might have more segments close to the live edge.</p>
+<p>The upside is that you will have the last segments sooner.</p>
 <p>The downside is that requests for segments which did not had time to
 generate might trigger a <code>NetworkError</code>. Depending on your other settings
 (especially the <code>networkConfig</code> loadVideo options), those errors might just
@@ -700,64 +707,6 @@ you might want to begin to play further from the live edge in those cases
 through the <code>startAt</code> option.</p>
 <p>More information on playing low-latency DASH contents can be found in the
 <a href="low_latency.html">corresponding documentation page</a>.</p>
-<p><a name="prop-supplementaryTextTracks"></a>
-<a name="subchapter-supplementaryTextTracks"></a></p>
-<h3>supplementaryTextTracks</h3>
-<p><em>type</em>: <code>Array.&lt;Object&gt;|Object|undefined</code>
-<em>defaults</em>: <code>[]</code></p>
-<hr>
-<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
-option</a>).</p>
-<hr>
-<p>This option allows to specify information about supplementary text tracks you
-might want to add to those already declared in the
-<a href="../terms.html#manifest">Manifest</a>.</p>
-<p>This only work under the following conditions:</p>
-<ul>
-<li>
-<p>the text track is not fragmented</p>
-</li>
-<li>
-<p>the text track can be retrieved by fetching a single URL</p>
-</li>
-<li>
-<p>the text track is in an understood format and enough information has been
-given to infer it.</p>
-</li>
-</ul>
-<p>Each of those can have the following properties:</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> supplementaryTextTracks = [{
-  <span class="hljs-attr">url</span>: textTrackURL, <span class="hljs-comment">// {string} The url on which the complete text track can be</span>
-                     <span class="hljs-comment">// obtained</span>
-
-  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;eng&quot;</span>, <span class="hljs-comment">// {string} The language the text track is in</span>
-                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
-
-                   <span class="hljs-comment">// Note for SAMI subtitles:</span>
-                   <span class="hljs-comment">// For SAMI subtitles, you have to provide the same language</span>
-                   <span class="hljs-comment">// string than the one indicated in the CSS and p elements.</span>
-                   <span class="hljs-comment">// It usually follows the ISO639-ISO3166 naming conventions</span>
-                   <span class="hljs-comment">// (e.g. en-US or fr-FR).</span>
-                   <span class="hljs-comment">// If we cannot find the provided language in the downloaded</span>
-                   <span class="hljs-comment">// SAMI text track, it won&apos;t be displayed.</span>
-
-  <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track is a closed caption</span>
-                       <span class="hljs-comment">// for the hard of hearing</span>
-
-  <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&quot;application/mp4&quot;</span>, <span class="hljs-comment">// {string} A mimeType used to describe</span>
-                               <span class="hljs-comment">// the text format. Can be &quot;application/mp4&quot; when</span>
-                               <span class="hljs-comment">// encapsulated in an mp4 file. In that case, the</span>
-                               <span class="hljs-comment">// &quot;codecs&quot; argument will be needed.</span>
-
-  <span class="hljs-attr">codecs</span>: <span class="hljs-string">&quot;stpp&quot;</span>               <span class="hljs-comment">// {string|undefined} Depending on the mimeType,</span>
-                               <span class="hljs-comment">// you might need to add codec information.</span>
-                               <span class="hljs-comment">// Here the mimeType is too generic, the codec</span>
-                               <span class="hljs-comment">// helps us understand this is ttml in an mp4</span>
-                               <span class="hljs-comment">// container</span>
-}];
-</code></pre>
-<p>To know which type of formats are supported and how to add them, you can read
-the <a href="text_tracks.html">text track documentation</a>.</p>
 <p><a name="prop-supplementaryImageTracks"></a>
 <a name="subchapter-supplementaryImageTracks"></a></p>
 <h3>supplementaryImageTracks</h3>
@@ -795,6 +744,10 @@ given to infer it.</p>
 <p><a name="prop-hideNativeSubtitle"></a>
 <a name="subchapter-hideNativeSubtitle"></a></p>
 <h3>hideNativeSubtitle</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<hr>
 <p><em>type</em>: <code>Boolean</code></p>
 <p><em>defaults</em>: <code>false</code></p>
 <hr>
@@ -871,6 +824,71 @@ throw a fatal error.</p>
 parsing/interface error)</p>
 </li>
 </ul>
+<p><a name="prop-supplementaryTextTracks"></a>
+<a name="subchapter-supplementaryTextTracks"></a></p>
+<h3>supplementaryTextTracks</h3>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is deprecated, it will disappear in the next major
+release <code>v4.0.0</code> (see <a href="deprecated.html">Deprecated APIs</a>).</p>
+<p>If you want to use supplementary text tracks not defined in the content itself,
+you can use the <code>TextTrackRenderer</code>(./TextTrackRenderer.md) tool, which will
+also work for Directfile contents.</p>
+<hr>
+<p><em>type</em>: <code>Array.&lt;Object&gt;|Object|undefined</code>
+<em>defaults</em>: <code>[]</code></p>
+<hr>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> This option is not available in <em>DirectFile</em> mode (see <a href="#prop-transport">transport
+option</a>).</p>
+<hr>
+<p>This option allows to specify information about supplementary text tracks you
+might want to add to those already declared in the
+<a href="../terms.html#manifest">Manifest</a>.</p>
+<p>This only work under the following conditions:</p>
+<ul>
+<li>
+<p>the text track is not fragmented</p>
+</li>
+<li>
+<p>the text track can be retrieved by fetching a single URL</p>
+</li>
+<li>
+<p>the text track is in an understood format and enough information has been
+given to infer it.</p>
+</li>
+</ul>
+<p>Each of those can have the following properties:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> supplementaryTextTracks = [{
+  <span class="hljs-attr">url</span>: textTrackURL, <span class="hljs-comment">// {string} The url on which the complete text track can be</span>
+                     <span class="hljs-comment">// obtained</span>
+
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;eng&quot;</span>, <span class="hljs-comment">// {string} The language the text track is in</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+
+                   <span class="hljs-comment">// Note for SAMI subtitles:</span>
+                   <span class="hljs-comment">// For SAMI subtitles, you have to provide the same language</span>
+                   <span class="hljs-comment">// string than the one indicated in the CSS and p elements.</span>
+                   <span class="hljs-comment">// It usually follows the ISO639-ISO3166 naming conventions</span>
+                   <span class="hljs-comment">// (e.g. en-US or fr-FR).</span>
+                   <span class="hljs-comment">// If we cannot find the provided language in the downloaded</span>
+                   <span class="hljs-comment">// SAMI text track, it won&apos;t be displayed.</span>
+
+  <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track is a closed caption</span>
+                       <span class="hljs-comment">// for the hard of hearing</span>
+
+  <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&quot;application/mp4&quot;</span>, <span class="hljs-comment">// {string} A mimeType used to describe</span>
+                               <span class="hljs-comment">// the text format. Can be &quot;application/mp4&quot; when</span>
+                               <span class="hljs-comment">// encapsulated in an mp4 file. In that case, the</span>
+                               <span class="hljs-comment">// &quot;codecs&quot; argument will be needed.</span>
+
+  <span class="hljs-attr">codecs</span>: <span class="hljs-string">&quot;stpp&quot;</span>               <span class="hljs-comment">// {string|undefined} Depending on the mimeType,</span>
+                               <span class="hljs-comment">// you might need to add codec information.</span>
+                               <span class="hljs-comment">// Here the mimeType is too generic, the codec</span>
+                               <span class="hljs-comment">// helps us understand this is ttml in an mp4</span>
+                               <span class="hljs-comment">// container</span>
+}];
+</code></pre>
+<p>To know which type of formats are supported and how to add them, you can read
+the <a href="text_tracks.html">text track documentation</a>.</p>
 <p><a name="prop-defaultAudioTrack"></a>
 <a name="subchapter-defaultAudioTrack"></a></p>
 <h3>defaultAudioTrack</h3>

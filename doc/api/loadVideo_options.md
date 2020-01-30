@@ -15,10 +15,10 @@
     - [textTrackElement](#prop-textTrackElement)
     - [manualBitrateSwitchingMode](#prop-manualBitrateSwitchingMode)
     - [lowLatencyMode](#prop-lowLatencyMode)
-    - [supplementaryTextTracks](#prop-supplementaryTextTracks)
     - [supplementaryImageTracks](#prop-supplementaryImageTracks)
     - [hideNativeSubtitle](#prop-hideNativeSubtitle)
     - [networkConfig](#prop-networkConfig)
+    - [supplementaryTextTracks (deprecated)](#prop-supplementaryTextTracks)
     - [defaultAudioTrack (deprecated)](#prop-defaultAudioTrack)
     - [defaultTextTrack (deprecated)](#prop-defaultTextTrack)
 
@@ -52,6 +52,7 @@ player.loadVideo(options);
 _type_: ``string|undefined``
 
 The transport protocol used for this content.
+This property is mandatory.
 
 Can be either:
 
@@ -61,15 +62,18 @@ Can be either:
 
   - ``"directfile"`` - for loading a video in _DirectFile_ mode, which allows to
     directly play media files (example: ``.mp4`` or ``.webm`` files) without
-    using a transport protocol.
+    using a transport protocol. With that option, you can even play HLS
+    contents on multiple browsers (mainly safari and iOS browsers).
 
     :warning: In that mode, multiple APIs won't have any effect.
     This is documented in the documentation of each concerned method, option or
     event in the API.
 
-  - ``"metaplaylist"`` for [MetaPlaylist](./metaplaylist.md) streams
+  - ``"metaplaylist"`` for [MetaPlaylist](./metaplaylist.md) streams, which are
+    a concatenation of multiple smooth and DASH contents
 
-This property is mandatory.
+  - `"local"` for [local manifests](./local_manifest.md), which allows to play
+    downloaded DASH, Smooth or MetaPlaylist contents (when offline for example).
 
 
 <a name="prop-url"></a>
@@ -410,22 +414,24 @@ can be either:
   - ``fromFirstPosition`` (``Number``): relative position from the minimum
     possible one, in seconds.
     That is:
-      - for live contents, from the beginning of the buffer depth (as defined
-        by the Manifest).
-      - for non-live contents, from the position ``0`` (this option should be
-        equivalent to ``position``)
+      - for dynamic (live) contents, from the beginning of the buffer depth (as
+        defined by the Manifest).
+      - for non-dynamic (vod) contents, from the position ``0`` (this option
+        should be equivalent to ``position``)
 
   - ``fromLastPosition`` (``Number``): relative position from the maximum
     possible one, in seconds. Should be a negative number:
-      - for live contents, it is the difference between the starting position
-        and the live edge (as defined by the manifest)
-      - for non-live contents, it is the difference between the starting
-        position and the end position of the content.
+      - for dynamic (e.g. live) contents, it is the difference between the
+        starting position and the currently last possible position, as defined
+        by the manifest.
+      - for VoD contents, it is the difference between the starting position and
+        the end position of the content.
 
   - ``percentage`` (``Number``): percentage of the wanted position. ``0`` being
-    the minimum position possible (0 for static content, buffer depth for live
-    contents) and ``100`` being the maximum position possible (``duration`` for
-    static content, live edge for live contents).
+    the minimum position possible (0 for static content, buffer depth for
+    dynamic contents) and ``100`` being the maximum position possible
+    (``duration`` for VoD content, last currently possible position for dynamic
+    contents).
 
 
 Note: Only one of those properties will be considered, in the same order of
@@ -439,19 +445,20 @@ More information on how the initial position is chosen can be found [in the
 specific documentation page on this subject](../infos/initial_position.md).
 
 
-#### Notes for live contents
-For live contents, ``startAt`` could work not as expected:
+#### Notes for dynamic contents
+
+For dynamic contents, ``startAt`` could work not as expected:
 
   - Depending on the type of Manifest, it will be more or less precize to guess
-    the live edge of the content. This will mostly affect the
+    the current last position of the content. This will mostly affect the
     ``fromLastPosition`` option.
 
   - If the Manifest does not allow to go far enough in the past (not enough
     buffer, server-side) to respect the position wanted, the maximum buffer
     depth will be used as a starting time instead.
 
-  - If the Manifest does not allow to go far enough in the future (live edge
-    sooner) to respect the position wanted, the live edge will be used to define
+  - If the Manifest does not allow to go far enough in the future to respect the
+    position wanted, the current last available position will be used to define
     the starting time instead.
 
 
@@ -490,8 +497,7 @@ player.loadVideo({
 player.loadVideo({
   // ...
   startAt: {
-    fromLastPosition: -60 // 1 minute before the end (before the live edge
-                          // for live contents)
+    fromLastPosition: -60 // 1 minute before the end
   }
 })
 ```
@@ -548,7 +554,7 @@ considered stable:
     some DASH contents relying on a number-based SegmentTemplate segment
     indexing scheme.
 
-    The upside is that you might have more segments close to the live edge.
+    The upside is that you will have the last segments sooner.
 
     The downside is that requests for segments which did not had time to
     generate might trigger a `NetworkError`. Depending on your other settings
@@ -755,70 +761,6 @@ More information on playing low-latency DASH contents can be found in the
 [corresponding documentation page](./low_latency.md).
 
 
-
-<a name="prop-supplementaryTextTracks"></a>
-### supplementaryTextTracks ####################################################
-
-_type_: ``Array.<Object>|Object|undefined``
-_defaults_: ``[]``
-
----
-
-:warning: This option is not available in _DirectFile_ mode (see [transport
-option](#prop-transport)).
-
----
-
-This option allows to specify information about supplementary text tracks you
-might want to add to those already declared in the
-[Manifest](../terms.md#manifest).
-
-This only work under the following conditions:
-
-  - the text track is not fragmented
-
-  - the text track can be retrieved by fetching a single URL
-
-  - the text track is in an understood format and enough information has been
-    given to infer it.
-
-Each of those can have the following properties:
-```js
-const supplementaryTextTracks = [{
-  url: textTrackURL, // {string} The url on which the complete text track can be
-                     // obtained
-
-  language: "eng", // {string} The language the text track is in
-                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
-
-                   // Note for SAMI subtitles:
-                   // For SAMI subtitles, you have to provide the same language
-                   // string than the one indicated in the CSS and p elements.
-                   // It usually follows the ISO639-ISO3166 naming conventions
-                   // (e.g. en-US or fr-FR).
-                   // If we cannot find the provided language in the downloaded
-                   // SAMI text track, it won't be displayed.
-
-  closedCaption: false // {Boolean} Whether the text track is a closed caption
-                       // for the hard of hearing
-
-  mimeType: "application/mp4", // {string} A mimeType used to describe
-                               // the text format. Can be "application/mp4" when
-                               // encapsulated in an mp4 file. In that case, the
-                               // "codecs" argument will be needed.
-
-  codecs: "stpp"               // {string|undefined} Depending on the mimeType,
-                               // you might need to add codec information.
-                               // Here the mimeType is too generic, the codec
-                               // helps us understand this is ttml in an mp4
-                               // container
-}];
-```
-
-To know which type of formats are supported and how to add them, you can read
-the [text track documentation](./text_tracks.md).
-
-
 <a name="prop-supplementaryImageTracks"></a>
 ### supplementaryImageTracks ###################################################
 
@@ -860,6 +802,13 @@ const supplementaryImageTracks = [{
 
 <a name="prop-hideNativeSubtitle"></a>
 ### hideNativeSubtitle #########################################################
+
+---
+
+:warning: This option is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
 
 _type_: ``Boolean``
 
@@ -942,6 +891,81 @@ This object can take the following properties (all are optional):
 
   - the request failed because of an unknown XHR error (might be a
     parsing/interface error)
+
+
+
+<a name="prop-supplementaryTextTracks"></a>
+### supplementaryTextTracks ####################################################
+
+---
+
+:warning: This option is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+If you want to use supplementary text tracks not defined in the content itself,
+you can use the `TextTrackRenderer`(./TextTrackRenderer.md) tool, which will
+also work for Directfile contents.
+
+---
+
+_type_: ``Array.<Object>|Object|undefined``
+_defaults_: ``[]``
+
+---
+
+:warning: This option is not available in _DirectFile_ mode (see [transport
+option](#prop-transport)).
+
+---
+
+This option allows to specify information about supplementary text tracks you
+might want to add to those already declared in the
+[Manifest](../terms.md#manifest).
+
+This only work under the following conditions:
+
+  - the text track is not fragmented
+
+  - the text track can be retrieved by fetching a single URL
+
+  - the text track is in an understood format and enough information has been
+    given to infer it.
+
+Each of those can have the following properties:
+```js
+const supplementaryTextTracks = [{
+  url: textTrackURL, // {string} The url on which the complete text track can be
+                     // obtained
+
+  language: "eng", // {string} The language the text track is in
+                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
+
+                   // Note for SAMI subtitles:
+                   // For SAMI subtitles, you have to provide the same language
+                   // string than the one indicated in the CSS and p elements.
+                   // It usually follows the ISO639-ISO3166 naming conventions
+                   // (e.g. en-US or fr-FR).
+                   // If we cannot find the provided language in the downloaded
+                   // SAMI text track, it won't be displayed.
+
+  closedCaption: false // {Boolean} Whether the text track is a closed caption
+                       // for the hard of hearing
+
+  mimeType: "application/mp4", // {string} A mimeType used to describe
+                               // the text format. Can be "application/mp4" when
+                               // encapsulated in an mp4 file. In that case, the
+                               // "codecs" argument will be needed.
+
+  codecs: "stpp"               // {string|undefined} Depending on the mimeType,
+                               // you might need to add codec information.
+                               // Here the mimeType is too generic, the codec
+                               // helps us understand this is ttml in an mp4
+                               // container
+}];
+```
+
+To know which type of formats are supported and how to add them, you can read
+the [text track documentation](./text_tracks.md).
 
 
 <a name="prop-defaultAudioTrack"></a>

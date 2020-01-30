@@ -10,8 +10,6 @@
     - [ErrorTypes](#static-ErrorTypes)
     - [ErrorCodes](#static-ErrorCodes)
     - [LogLevel](#static-LogLevel)
-- [Tools](#tools)
-    - [Experimental - MediaCapabilitiesProber](#tools-mediaCapabilitiesProber)
 - [Methods](#meth)
     - [loadVideo](#meth-loadVideo)
     - [getVideoElement](#meth-getVideoElement)
@@ -74,13 +72,17 @@
     - [getPlaybackRate](#meth-getPlaybackRate)
     - [setPlaybackRate](#meth-setPlaybackRate)
     - [getCurrentKeySystem](#meth-getCurrentKeySystem)
-    - [getImageTrackData](#meth-getImageTrackData)
     - [getMinimumPosition](#meth-getMinimumPosition)
     - [getMaximumPosition](#meth-getMaximumPosition)
+    - [getImageTrackData (deprecated)](#meth-getImageTrackData)
     - [setFullscreen (deprecated)](#meth-setFullscreen)
     - [exitFullscreen (deprecated)](#meth-exitFullscreen)
     - [isFullscreen (deprecated)](#meth-isFullscreen)
     - [getNativeTextTrack (deprecated)](#meth-getNativeTextTrack)
+- [Tools](#tools)
+    - [Experimental - MediaCapabilitiesProber](#tools-mediaCapabilitiesProber)
+    - [Experimental - TextTrackRenderer](#tools-textTrackRenderer)
+    - [Experimental - parseBifThumbnails](#tools-parseBifThumbnails)
 
 
 
@@ -188,24 +190,6 @@ automatically set to ``"NONE"``.
 import RxPlayer from "rx-player";
 RxPlayer.LogLevel = "WARNING";
 ```
-
-
-
-<a name="tools"></a>
-## Tools #######################################################################
-
-<a name="tools-mediaCapabilitiesProber"></a>
-### MediaCapabilitiesProber ####################################################
-
-_type_: ``Object``
-
-An experimental tool to probe browser media capabilities:
-  - Decoding capabilities
-  - DRM support
-  - HDCP support
-  - Display capabilities
-
-You can find its documentation [here](./mediaCapabilitiesProber.md).
 
 
 
@@ -1044,8 +1028,10 @@ Each of the objects in the returned array have the following properties:
     language.
 
 
-In _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)), returns an empty Array.
+In _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there are
+no supported tracks in the file or no track management API : returns an empty
+Array.
 
 
 <a name="meth-getAvailableTextTracks"></a>
@@ -1076,8 +1062,10 @@ Each of the objects in the returned array have the following properties:
     not.
 
 
-In _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)), returns an empty Array.
+In _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there are
+no supported tracks in the file or no track management API : returns an empty
+Array.
 
 
 <a name="meth-getAvailableVideoTracks"></a>
@@ -1114,8 +1102,10 @@ Each of the objects in the returned array have the following properties:
     - ``frameRate`` (``string|undefined``): The video framerate.
 
 
-In _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)), returns an empty Array.
+In _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there are
+no supported tracks in the file or no track management API : returns an empty
+Array.
 
 
 <a name="meth-getAudioTrack"></a>
@@ -1152,9 +1142,9 @@ The track is an object with the following properties:
 
 ``undefined`` if no content has been loaded yet.
 
-``undefined`` in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
+In _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there is
+no audio tracks API in the browser, return ``undefined``.
 
 <a name="meth-getTextTrack"></a>
 ### getTextTrack ###############################################################
@@ -1184,8 +1174,9 @@ The track is an object with the following properties:
 
 ``undefined`` if no content has been loaded yet.
 
-``undefined`` in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
+In _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there is
+no text tracks API in the browser, return ``undefined``.
 
 
 <a name="meth-getVideoTrack"></a>
@@ -1222,8 +1213,10 @@ The track is an object with the following properties:
 
 ``undefined`` if no content has been loaded yet.
 
-``undefined`` in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
+
+In _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)), if there is
+no video tracks API in the browser, return ``undefined``.
 
 
 <a name="meth-setAudioTrack"></a>
@@ -1235,8 +1228,16 @@ Set a new audio track from its id, recuperated from ``getAvailableAudioTracks``.
 
 ---
 
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+:warning: If used on Safari, in _DirectFile_ mode, the track change may change
+the track on other track type (e.g. changing video track may change subtitle
+track too).
+This has two potential reasons :
+- The HLS defines variants, groups of tracks that may be read together
+- Safari may decide to enable a track for accessibility or user language
+convenience (e.g. Safari may switch subtitle to your OS language if you pick
+another audio language)
+The user may know through the [videoTrackChange]
+(./player_events.md#events-videoTrackChange) event that the track has changed.
 
 ---
 
@@ -1250,8 +1251,16 @@ Set a new text track from its id, recuperated from ``getAvailableTextTracks``.
 
 ---
 
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+:warning: If used on Safari, in _DirectFile_ mode, the track change may change
+the track on other track type (e.g. changing video track may change subtitle
+track too).
+This has two potential reasons :
+- The HLS defines variants, groups of tracks that may be read together
+- Safari may decide to enable a track for accessibility or user language
+convenience (e.g. Safari may switch subtitle to your OS language if you pick
+another audio language)
+The user may know through the [audioTrackChange]
+(./player_events.md#events-audioTrackChange) event that the track has changed.
 
 ---
 
@@ -1260,13 +1269,6 @@ mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
 ### disableTextTrack ###########################################################
 
 Deactivate the current text track, if one.
-
----
-
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
-
----
 
 
 <a name="meth-setVideoTrack"></a>
@@ -1299,8 +1301,10 @@ During this period of time:
 
 ---
 
-:warning: This option will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+:warning: This option will have no effect in _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
+- No audio track API was supported on the current browser
+- The media file tracks are not supported on the browser
 
 ---
 
@@ -1360,8 +1364,10 @@ player.setPreferredAudioTracks([
 
 ---
 
-:warning: This method will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+:warning: This option will have no effect in _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
+- No audio track API was supported on the current browser
+- The media file tracks are not supported on the browser
 
 ---
 
@@ -1443,8 +1449,10 @@ player.setPreferredTextTracks([
 
 ---
 
-:warning: This method will have no effect for contents loaded in _DirectFile_
-mode (see [loadVideo options](./loadVideo_options.md#prop-transport)).
+:warning: This option will have no effect in _DirectFile_ mode
+(see [loadVideo options](./loadVideo_options.md#prop-transport)) when either :
+- No text track API was supported on the current browser
+- The media file tracks are not supported on the browser
 
 ---
 
@@ -1588,21 +1596,6 @@ _return value_: ``string|undefined``
 Returns the type of keySystem used for DRM-protected contents.
 
 
-<a name="meth-getImageTrackData"></a>
-### getImageTrackData ##########################################################
-
-_return value_: ``Array.<Object>|null``
-
-The current image track's data, null if no content is loaded / no image track
-data is available.
-
-The returned array follows the usual image playlist structure, defined
-[here](./images.md#api-structure).
-
-``null`` in _DirectFile_ mode (see [loadVideo
-options](./loadVideo_options.md#prop-transport)).
-
-
 <a name="meth-getMinimumPosition"></a>
 ### getMinimumPosition #########################################################
 
@@ -1640,6 +1633,28 @@ player.seekTo({
   position: player.getMaximumPosition()
 });
 ```
+
+
+<a name="meth-getImageTrackData"></a>
+### getImageTrackData ##########################################################
+
+---
+
+:warning: This method is deprecated, it will disappear in the next major
+release ``v4.0.0`` (see [Deprecated APIs](./deprecated.md)).
+
+---
+
+_return value_: ``Array.<Object>|null``
+
+The current image track's data, null if no content is loaded / no image track
+data is available.
+
+The returned array follows the usual image playlist structure, defined
+[here](./images.md#api-structure).
+
+``null`` in _DirectFile_ mode (see [loadVideo
+options](./loadVideo_options.md#prop-transport)).
 
 
 <a name="meth-setFullscreen"></a>
@@ -1721,3 +1736,66 @@ This is equivalent to:
 const el = player.getVideoElement();
 const textTrack = el.textTracks.length ? el.textTracks[0] : null;
 ```
+
+
+
+<a name="tools"></a>
+## Tools #######################################################################
+
+
+<a name="tools-mediaCapabilitiesProber"></a>
+### MediaCapabilitiesProber ####################################################
+
+---
+
+:warning: This tool is experimental. This only means that its API can change at
+any new RxPlayer version (with all the details in the corresponding release
+note).
+
+---
+
+
+An experimental tool to probe browser media capabilities:
+  - Decoding capabilities
+  - DRM support
+  - HDCP support
+  - Display capabilities
+
+You can find its documentation [here](./mediaCapabilitiesProber.md).
+
+
+<a name="tools-textTrackRenderer"></a>
+### TextTrackRenderer ##########################################################
+
+---
+
+:warning: This tool is experimental. This only means that its API can change at
+any new RxPlayer version (with all the details in the corresponding release
+note).
+
+---
+
+The TextTrackRenderer allows to easily render subtitles synchronized to a video
+element.
+
+It allows easily to dynamically add subtitles (as long as it is in one of the
+following format: srt, ttml, webVTT or SAMI) to a played video.
+
+This tool is documented [here](./TextTrackRenderer.md).
+
+
+<a name="tools-parseBifThumbnails"></a>
+### parseBifThumbnails #########################################################
+
+---
+
+:warning: This tool is experimental. This only means that its API can change at
+any new RxPlayer version (with all the details in the corresponding release
+note).
+
+---
+
+The `parseBifThumbnails` function parses BIF files, which is a format created by
+Canal+ to declare thumbnails linked to a given content.
+
+This tool is documented [here](./parseBifThumbnails.md).

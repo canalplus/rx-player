@@ -8,6 +8,7 @@ const BASE_URL = "http://" +
 const manifestInfos = {
   url: BASE_URL + "Manifest_Not_Starting_at_0.xml",
   transport: "smooth",
+  isDynamic: false,
   isLive: false,
   duration: 75 - 6.016,
   minimumPosition: 6.016,

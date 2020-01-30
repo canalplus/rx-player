@@ -32,8 +32,8 @@ import {
 } from "../types";
 import byteRange from "../utils/byte_range";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
+import isWEBMEmbeddedTrack from "../utils/is_webm_embedded_track";
 import initSegmentLoader from "./init_segment_loader";
-import isWEBMEmbeddedTrack from "./is_webm_embedded_track";
 import lowLatencySegmentLoader from "./low_latency_segment_loader";
 
 type ICustomSegmentLoaderObserver =

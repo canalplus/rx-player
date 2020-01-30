@@ -437,6 +437,8 @@ function parseLoadVideoOptions(
     supplementaryTextTracks: [],
   };
   if (options.supplementaryTextTracks !== undefined) {
+    warnOnce("The `supplementaryTextTracks` loadVideo option is deprecated.\n" +
+             "Please use the `TextTrackRenderer` tool instead.");
     const supplementaryTextTracks =
       Array.isArray(options.supplementaryTextTracks) ?
         options.supplementaryTextTracks : [options.supplementaryTextTracks];
@@ -453,6 +455,8 @@ function parseLoadVideoOptions(
     transportOptions.supplementaryTextTracks = supplementaryTextTracks;
   }
   if (options.supplementaryImageTracks !== undefined) {
+    warnOnce("The `supplementaryImageTracks` loadVideo option is deprecated.\n" +
+             "Please use the `parseBifThumbnails` tool instead.");
     const supplementaryImageTracks =
       Array.isArray(options.supplementaryImageTracks) ?
         options.supplementaryImageTracks : [options.supplementaryImageTracks];
@@ -489,9 +493,12 @@ function parseLoadVideoOptions(
              "`setPreferredTextTracks` method instead");
   }
   const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
-  const hideNativeSubtitle = options.hideNativeSubtitle == null ?
-    !DEFAULT_SHOW_NATIVE_SUBTITLE :
-    !!options.hideNativeSubtitle;
+
+  let hideNativeSubtitle = !DEFAULT_SHOW_NATIVE_SUBTITLE;
+  if (options.hideNativeSubtitle != null) {
+    warnOnce("The `hideNativeSubtitle` loadVideo option is deprecated");
+    hideNativeSubtitle = !!options.hideNativeSubtitle;
+  }
   const manualBitrateSwitchingMode = options.manualBitrateSwitchingMode == null ?
       DEFAULT_MANUAL_BITRATE_SWITCHING_MODE :
       options.manualBitrateSwitchingMode;

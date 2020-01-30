@@ -495,8 +495,15 @@ player.loadVideo({
 <a name="subchapter-subtitles%20parameter"></a></p>
 <h3>subtitles parameter</h3>
 <h4>What changed</h4>
-<p><code>subtitles</code> is renamed as <code>supplementaryTextTracks</code> for clarity.</p>
+<p>You have two possibilities. Either:</p>
+<ol>
+<li>Use the exernal <code>TextTrackRenderer</code> tool, documented
+<a href="api/TextTrackRenderer.html">here</a>. This is the preferred way.</li>
+<li>Replace <code>subtitles</code> by <code>supplementaryTextTracks</code>. Please note
+however that <code>supplementaryTextTracks</code> is a deprecated feature.</li>
+</ol>
 <h4>Replacement example</h4>
+<p>If you go under the <code>supplementaryTextTracks</code> route:</p>
 <pre><code class="language-js"><span class="hljs-comment">// In the previous version</span>
 player.loadVideo({
   <span class="hljs-attr">url</span>: someURL,
@@ -515,6 +522,9 @@ player.loadVideo({
   },
 });
 </code></pre>
+<p>If you prefer to use the <code>TextTrackRenderer</code> instead, I invite you to directly
+read, <a href="api/TextTrackRenderer.html">its documentation</a>, as the API is completely
+different there.</p>
 <p><a name="load-timeFragment"></a>
 <a name="subchapter-timeFragment%20parameter"></a></p>
 <h3>timeFragment parameter</h3>

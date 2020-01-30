@@ -46,14 +46,16 @@ Microsoft Smooth Streaming etc.).</p>
 <p>Basically, the structure of a Manifest file has the following hierarchy:</p>
 <pre><code>Manifest Object
   ...Manifest data and methods
-  Adaptation Object
-    ...Adaptation data and methods
-    Representation Object
-      ...Representation data and methods
-      RepresentationIndex Object
-        ...RepresentationIndex data and methods
-          SegmentObject
-          ...SegmentObject data
+  Period Object
+    ...Period properties
+    Adaptation Object
+      ...Adaptation data and methods
+      Representation Object
+        ...Representation data and methods
+        RepresentationIndex Object
+          ...RepresentationIndex data and methods
+            SegmentObject
+            ...SegmentObject data
 </code></pre>
 <p>Due to this highly hierachical structure, each level will be described in its
 own chapter here.</p>

@@ -10,6 +10,7 @@ const BASE_URL = "http://" +
 export default {
   url: BASE_URL + "dash.mpd",
   transport: "dash",
+  isDynamic: false,
   isLive: false,
   duration: 60.022,
   minimumPosition: 0,

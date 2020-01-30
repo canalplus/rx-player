@@ -1,7 +1,7 @@
 {
   "name": "rx-player",
   "author": "Canal+",
-  "version": "3.17.1",
+  "version": "3.18.0",
   "description": "Canal+ HTML5 Video Player",
   "main": "./dist/rx-player.js",
   "keywords": [
@@ -120,7 +120,7 @@
     "next-tick": "1.0.0",
     "object-assign": "4.1.1",
     "pinkie": "2.0.4",
-    "rxjs": "6.5.4"
+    "rxjs": "6.5.3"
   },
   "devDependencies": {
     "@babel/core": "7.8.3",

@@ -17,6 +17,7 @@
 import {
   defer as observableDefer,
   EMPTY,
+  from as observableFrom,
   merge as observableMerge,
   Observable,
   timer as observableTimer,
@@ -82,10 +83,13 @@ export default function manifestUpdateScheduler(
       return observableTimer(Math.max(updateTimeout, minInterval));
     })();
 
+    const expired$ = manifest.expired === null ? EMPTY :
+                                                 observableFrom(manifest.expired);
+
     // Emit when the manifest should be refreshed. Either when:
     //   - A buffer asks for it to be refreshed
     //   - its lifetime expired.
-    return observableMerge(autoRefresh$, manualRefresh$)
+    return observableMerge(autoRefresh$, manualRefresh$, expired$)
       .pipe(take(1),
             mergeMap(() => refreshManifest(initialManifest.manifest,
                                            fetchManifest)),

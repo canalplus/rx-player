@@ -14,6 +14,7 @@ import XHRMock from "../../utils/request_mock";
  * url {string}
  * transport {string}
  * duration {number}
+ * isDynamic {boolean}
  * isLive {boolean}
  * maximumPosition? {number}
  * minimumPosition? {number}
@@ -45,20 +46,17 @@ import XHRMock from "../../utils/request_mock";
  *                                                .mediaURL {string}
  * ```
  */
-export default function launchTestsForContent(
-  manifestInfos
-) {
+export default function launchTestsForContent(manifestInfos) {
   let player;
   let xhrMock;
 
-  const {
-    availabilityStartTime,
-    isLive,
-    maximumPosition,
-    minimumPosition,
-    periods: periodsInfos,
-    transport,
-  } = manifestInfos;
+  const { availabilityStartTime,
+          isDynamic,
+          isLive,
+          maximumPosition,
+          minimumPosition,
+          periods: periodsInfos,
+          transport } = manifestInfos;
 
   const firstPeriodIndex = isLive ? periodsInfos.length - 1 : 0;
   const videoRepresentationsForFirstPeriod =
@@ -175,6 +173,7 @@ export default function launchTestsForContent(
         expect(typeof manifest).to.equal("object");
         expect(manifest.transport).to.equal(transport);
         expect(typeof manifest.id).to.equal("string");
+        expect(manifest.isDynamic).to.equal(isDynamic);
         expect(manifest.isLive).to.equal(isLive);
         expect(manifest.getUrl()).to.equal(manifestInfos.url);
 
@@ -1454,7 +1453,7 @@ export default function launchTestsForContent(
         await sleep(1);
         expect(player.getAvailableAudioTracks()).to.eql([]);
         await xhrMock.flush();
-        await sleep(1);
+        await sleep(50);
 
         const audioTracks = player.getAvailableAudioTracks();
 
@@ -1502,7 +1501,7 @@ export default function launchTestsForContent(
         await sleep(1);
         expect(player.getAvailableTextTracks()).to.eql([]);
         await xhrMock.flush();
-        await sleep(1);
+        await sleep(50);
 
         const textTracks = player.getAvailableTextTracks();
 
@@ -1550,7 +1549,7 @@ export default function launchTestsForContent(
         await sleep(1);
         expect(player.getAvailableVideoTracks()).to.eql([]);
         await xhrMock.flush();
-        await sleep(1);
+        await sleep(50);
 
         const videoTracks = player.getAvailableVideoTracks();
 

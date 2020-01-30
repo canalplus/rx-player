@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import directfile from "../../../core/init/initialize_directfile";
+import mediaElementTrackChoiceManager from "../../../core/api/media_element_track_choice_manager";
+import initDirectFile from "../../../core/init/initialize_directfile";
 import addDirectfileFeature from "../directfile";
 
 /* tslint:disable no-unsafe-any */
@@ -27,8 +28,13 @@ describe("Features list - Directfile", () => {
   it("should add Directfile in the current features", () => {
     const featureObject : any = {};
     addDirectfileFeature(featureObject);
-    expect(featureObject).toEqual({ directfile });
-    expect(featureObject.directfile).toBe(directfile);
+    expect(featureObject).toEqual({
+      directfile: { initDirectFile,
+                    mediaElementTrackChoiceManager },
+    });
+    expect(featureObject.directfile.initDirectFile).toEqual(initDirectFile);
+    expect(featureObject.directfile.mediaElementTrackChoiceManager)
+      .toEqual(mediaElementTrackChoiceManager);
   });
 });
 /* tslint:enable no-unsafe-any */

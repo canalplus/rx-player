@@ -34,14 +34,16 @@ Basically, the structure of a Manifest file has the following hierarchy:
 ```
 Manifest Object
   ...Manifest data and methods
-  Adaptation Object
-    ...Adaptation data and methods
-    Representation Object
-      ...Representation data and methods
-      RepresentationIndex Object
-        ...RepresentationIndex data and methods
-          SegmentObject
-          ...SegmentObject data
+  Period Object
+    ...Period properties
+    Adaptation Object
+      ...Adaptation data and methods
+      Representation Object
+        ...Representation data and methods
+        RepresentationIndex Object
+          ...RepresentationIndex data and methods
+            SegmentObject
+            ...SegmentObject data
 ```
 
 Due to this highly hierachical structure, each level will be described in its
