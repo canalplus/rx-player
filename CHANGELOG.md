@@ -1,5 +1,39 @@
 # Changelog
 
+## v3.18.0 (2020/01/30)
+
+### Features
+
+  - directfile: support most audio tracks API when playing a directfile content
+  - directfile: support most text tracks API when playing a directfile content
+  - directfile: support most video tracks API when playing a directfile content
+  - api: add `seeking` and `seeked` events which anounce the beginning and end of a seek, even when seeking to an already buffered part
+  - subtitles/ttml: handle styles inheriting other styles in TTML subtitles
+  - local-manifest: add experimental `local` transport to allow the playback of downloaded contents (even when offline)
+  - tools: add the experimental `TextTrackRenderer` tool to be able to add a custom text track to any content
+  - tools: add the experimental `parseBifThumbnails` tool to easily parse thumbnails in the BIF format
+
+### Deprecated
+
+  - api: deprecate the `supplementaryTextTracks` loadVideo option in profit of the external TextTrackRenderer tool
+  - api: aeprecate the `supplementaryImageTracks` loadVideo option in profit of the external parseBifThumbnails tool
+  - api: deprecate the `getImageTrackData` method in profit of the external `parseBifThumbnails` tool
+  - api: deprecate the `imageTrackUpdate` event in profit of the external `parseBifThumbnails` tool
+  - api: deprecate `hideNativeSubtitles` (officially)
+
+### Bug fixes
+
+  - subtitles/ttml: Correctly handle alpha information in the rgba values included in a TTML file
+  - images/bif: fix sometimes incorrect "ts" value on thumbnails returned by the `getImageTrackData` method and the `imageTrackUpdate` event
+
+### Other improvements
+
+  - node: allow the RxPlayer to be imported from Node.js for server-side-rendering
+  - images/bif: throw a better error when an invalid BIF file is received
+  - api: be more "generous" with player events by ditching the deep-equal npm module due to package size and some edge-case behavior
+  - demo: avoid re-rendering multiple ui components when unnecessary
+
+
 ## v3.17.1 (2019/12/20)
 
 ### Bug fixes
