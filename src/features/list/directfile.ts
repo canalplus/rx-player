@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import mediaElementTrackChoiceManager from "../../core/api/media_element_track_choice_manager";
 import directfile from "../../core/init/initialize_directfile";
 import { IFeaturesObject } from "../types";
 
@@ -23,7 +24,8 @@ import { IFeaturesObject } from "../types";
  * @param {Object} features
  */
 function addDirectfileFeature(features : IFeaturesObject) : void {
-  features.directfile = directfile;
+  features.directfile = { initDirectFile: directfile,
+                          mediaElementTrackChoiceManager };
 }
 
 export { addDirectfileFeature as DIRECTFILE };

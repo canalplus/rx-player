@@ -107,6 +107,7 @@ import emitSeekEvents from "./emit_seek_events";
 import getPlayerState, {
   PLAYER_STATES,
 } from "./get_player_state";
+import MediaElementTrackChoiceManager from "./media_element_track_choice_manager";
 import {
   IConstructorOptions,
   ILoadVideoOptions,
@@ -380,6 +381,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_trackChoiceManager : TrackChoiceManager|null;
 
   /**
+   * MediaElementTrackChoiceManager instance linked to the current content.
+   * Null if no content has been loaded or if the current content loaded
+   * has no MediaElementTrackChoiceManager.
+   */
+  private _priv_mediaElementTrackChoiceManager : MediaElementTrackChoiceManager|null;
+
+  /**
    * Emit last picture in picture event.
    */
   private _priv_pictureInPictureEvent$ : ReplaySubject<events.IPictureInPictureEvent>;
@@ -555,6 +563,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_mutedMemory = DEFAULT_UNMUTED_VOLUME;
 
     this._priv_trackChoiceManager = null;
+    this._priv_mediaElementTrackChoiceManager = null;
     this._priv_currentError = null;
     this._priv_contentInfos = null;
 
@@ -745,13 +754,60 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       if (features.directfile == null) {
         throw new Error("DirectFile feature not activated in your build.");
       }
-      const directfileInit$ = features.directfile({ autoPlay,
-                                                    clock$,
-                                                    keySystems,
-                                                    mediaElement: videoElement,
-                                                    speed$: this._priv_speed$,
-                                                    startAt,
-                                                    url })
+
+      this._priv_mediaElementTrackChoiceManager =
+        new features.directfile.mediaElementTrackChoiceManager(
+          { preferredAudioTracks: defaultAudioTrack === undefined ?
+              this._priv_preferredAudioTracks :
+              new BehaviorSubject([defaultAudioTrack]),
+            preferredTextTracks: defaultTextTrack === undefined ?
+              this._priv_preferredTextTracks :
+              new BehaviorSubject([defaultTextTrack]) },
+          this.videoElement
+        );
+
+      this.trigger("availableAudioTracksChange",
+        this._priv_mediaElementTrackChoiceManager.getAvailableAudioTracks());
+      this.trigger("availableVideoTracksChange",
+        this._priv_mediaElementTrackChoiceManager.getAvailableVideoTracks());
+      this.trigger("availableTextTracksChange",
+        this._priv_mediaElementTrackChoiceManager.getAvailableTextTracks());
+
+      this.trigger("audioTrackChange",
+        this._priv_mediaElementTrackChoiceManager.getChosenAudioTrack() ?? null);
+      this.trigger("textTrackChange",
+        this._priv_mediaElementTrackChoiceManager.getChosenTextTrack() ?? null);
+      this.trigger("videoTrackChange",
+        this._priv_mediaElementTrackChoiceManager.getChosenVideoTrack() ?? null);
+
+      this._priv_mediaElementTrackChoiceManager
+        .addEventListener("availableVideoTracksChange", (val) =>
+          this.trigger("availableVideoTracksChange", val));
+      this._priv_mediaElementTrackChoiceManager
+        .addEventListener("availableAudioTracksChange", (val) =>
+          this.trigger("availableAudioTracksChange", val));
+      this._priv_mediaElementTrackChoiceManager
+        .addEventListener("availableTextTracksChange", (val) =>
+          this.trigger("availableTextTracksChange", val));
+
+      this._priv_mediaElementTrackChoiceManager
+        .addEventListener("audioTrackChange", (val) =>
+          this.trigger("audioTrackChange", val));
+      this._priv_mediaElementTrackChoiceManager
+        .addEventListener("videoTrackChange", (val) =>
+          this.trigger("videoTrackChange", val));
+      this._priv_mediaElementTrackChoiceManager
+        .addEventListener("textTrackChange", (val) =>
+          this.trigger("textTrackChange", val));
+
+      const directfileInit$ =
+        features.directfile.initDirectFile({ autoPlay,
+                                             clock$,
+                                             keySystems,
+                                             mediaElement: videoElement,
+                                             speed$: this._priv_speed$,
+                                             startAt,
+                                             url })
         .pipe(takeUntil(contentIsStopped$));
 
       playback$ = publish<IInitEvent>()(directfileInit$);
@@ -1521,7 +1577,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return [];
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return this._priv_mediaElementTrackChoiceManager?.getAvailableAudioTracks() ?? [];
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       return [];
     }
@@ -1536,7 +1595,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return [];
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return this._priv_mediaElementTrackChoiceManager?.getAvailableTextTracks() ?? [];
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       return [];
     }
@@ -1551,7 +1613,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return [];
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return this._priv_mediaElementTrackChoiceManager?.getAvailableVideoTracks() ?? [];
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       return [];
     }
@@ -1566,7 +1631,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      if (this._priv_mediaElementTrackChoiceManager === null) {
+        return undefined;
+      }
+      return this._priv_mediaElementTrackChoiceManager.getChosenAudioTrack();
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       return undefined;
     }
@@ -1581,7 +1652,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      if (this._priv_mediaElementTrackChoiceManager === null) {
+        return undefined;
+      }
+      return this._priv_mediaElementTrackChoiceManager.getChosenTextTrack();
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       return undefined;
     }
@@ -1596,7 +1673,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      if (this._priv_mediaElementTrackChoiceManager === null) {
+        return undefined;
+      }
+      return this._priv_mediaElementTrackChoiceManager.getChosenVideoTrack();
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       return undefined;
     }
@@ -1613,7 +1696,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      try {
+        this._priv_mediaElementTrackChoiceManager?.setAudioTrackById(audioId);
+        return;
+      } catch (e) {
+        throw new Error("player: unknown audio track");
+      }
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       throw new Error("No compatible content launched.");
     }
@@ -1635,7 +1726,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      try {
+        this._priv_mediaElementTrackChoiceManager?.setTextTrackById(textId);
+        return;
+      } catch (e) {
+        throw new Error("player: unknown text track");
+      }
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       throw new Error("No compatible content launched.");
     }
@@ -1654,7 +1753,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return;
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      this._priv_mediaElementTrackChoiceManager?.disableTextTrack();
+      return;
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       return;
     }
@@ -1671,7 +1774,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
     }
-    const { currentPeriod } = this._priv_contentInfos;
+    const { currentPeriod, isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      try {
+        this._priv_mediaElementTrackChoiceManager?.setVideoTrackById(videoId);
+        return;
+      } catch (e) {
+        throw new Error("player: unknown video track");
+      }
+    }
     if (this._priv_trackChoiceManager === null || currentPeriod === null) {
       throw new Error("No compatible content launched.");
     }
@@ -1811,6 +1922,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_contentInfos = null;
     this._priv_trackChoiceManager = null;
+    this._priv_mediaElementTrackChoiceManager?.dispose();
+    this._priv_mediaElementTrackChoiceManager = null;
 
     this._priv_contentEventsMemory = {};
 

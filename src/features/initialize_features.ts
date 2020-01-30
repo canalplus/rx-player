@@ -117,7 +117,11 @@ export default function initializeFeaturesObject() : void {
 
   /* tslint:disable no-var-requires */
   if (__FEATURES__.DIRECTFILE) {
-    features.directfile = require(__RELATIVE_PATH__.DIRECTFILE).default;
+    const initDirectFile = require(__RELATIVE_PATH__.DIRECTFILE).default;
+    const mediaElementTrackChoiceManager =
+      require(__RELATIVE_PATH__.MEDIA_ELEMENT_TRACK_CHOICE_MANAGER).default;
+    features.directfile = { initDirectFile,
+                            mediaElementTrackChoiceManager };
   }
   /* tslint:enable no-var-requires */
   /* tslint:enable no-unsafe-any */

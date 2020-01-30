@@ -95,6 +95,7 @@ const plugins = [
       HTML_TTML: JSON.stringify("../parsers/texttracks/ttml/html/index.ts"),
       HTML_SAMI: JSON.stringify("../parsers/texttracks/sami/html.ts"),
       DIRECTFILE: JSON.stringify("../core/init/initialize_directfile.ts"),
+      MEDIA_ELEMENT_TRACK_CHOICE_MANAGER: JSON.stringify("../core/api/media_element_track_choice_manager.ts"),
     },
     __DEV__: isDevMode,
     __LOGGER_LEVEL__: isDevMode ? "\"INFO\"" : "\"DEBUG\"",
