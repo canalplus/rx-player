@@ -15,49 +15,56 @@
  */
 
 import { IDBPDatabase, openDB } from "idb";
-import { IndexDBError } from "../../utils";
+import { IndexedDBError } from "../../utils";
+
+import PPromise from "../../../../../utils/promise";
 
 /**
- * A very short function to know if IndexDB is supported by the current browser.
+ * A very short function to know if IndexedDB is supported by the current browser.
  *
- * @returns Wether or not IndexDB is supported
+ * @returns Wether or not IndexedDB is supported
  *
  */
-export const isIndexDBSupported = (): boolean => "indexedDB" in window;
+export const isIndexedDBSupported = (): boolean => "indexedDB" in window;
 
 /**
- * Set up IndexDB with few checks and creating table
+ * Set up IndexedDB with few checks and creating tables
  *
- * @returns The IndexDB object
+ * @param {string} dbName The name of the IndexedDB we will initialize.
+ * @returns {Promise<IDBPDatabase>} A Promise with the IndexedDB instance.
  *
  */
-export function setUpDb(nameDB: string): Promise<IDBPDatabase> {
-  if (!isIndexDBSupported()) {
-    throw new IndexDBError("IndexDB is not supported in your browser");
-  }
+export function setUpDb(dbName: string): Promise<IDBPDatabase> {
+  return new PPromise((resolve, reject) => {
+    if (!isIndexedDBSupported()) {
+      return reject(
+        new IndexedDBError("IndexedDB is not supported in your browser")
+      );
+    }
 
-  try {
-    return openDB(nameDB, 1, {
-      upgrade(db) {
-        db.createObjectStore("manifests", {
-          keyPath: "contentID",
-        });
-        const segmentObjStore = db.createObjectStore("segments", {
-          keyPath: "segmentKey", // concat 'time--representationID'
-        });
-        const contentsProtectionObjStore = db.createObjectStore("contentsProtection", {
-          keyPath: "drmKey",
-        });
-        contentsProtectionObjStore.createIndex("contentID", "contentID", {
-          unique: false,
-        });
-        segmentObjStore.createIndex("contentID", "contentID", {
-          unique: false,
-        });
-      },
-    });
-  } catch (e) {
-    const error = e as Error;
-    throw new IndexDBError(error.message);
-  }
+    return resolve(
+      openDB(dbName, 1, {
+        upgrade(db) {
+          db.createObjectStore("manifests", {
+            keyPath: "contentID",
+          });
+          const segmentObjStore = db.createObjectStore("segments", {
+            keyPath: "segmentKey", // concat 'time--representationID'
+          });
+          const contentsProtectionObjStore = db.createObjectStore(
+            "contentsProtection",
+            {
+              keyPath: "drmKey",
+            }
+          );
+          contentsProtectionObjStore.createIndex("contentID", "contentID", {
+            unique: false,
+          });
+          segmentObjStore.createIndex("contentID", "contentID", {
+            unique: false,
+          });
+        },
+      })
+    );
+  });
 }

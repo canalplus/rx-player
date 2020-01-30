@@ -32,7 +32,7 @@ import {
 import { IContentProtection } from "../../../../../core/eme";
 import { SegmentPipelinesManager } from "../../../../../core/pipelines";
 import { IInitSettings } from "../../types";
-import { IndexDBError, SegmentConstuctionError } from "../../utils";
+import { IndexedDBError, SegmentConstuctionError } from "../../utils";
 import ContentManager from "../context/ContentsManager";
 import { ContentType } from "../context/types";
 import EMETransaction from "../drm/keySystems";
@@ -45,9 +45,10 @@ import { ICustomSegment, IInitGroupedSegments, IInitSegment } from "./types";
  * buffer type.
  * Then, he also find out the nextSegments we have to download.
  *
- * @param IInitSettings - Argument we need to start the download.
- * @param IDBPDatabase - An instance of the IndexDB to store the init segment in base
- * @returns An observable
+ * @param {IInitSettings} object Arguments we need to start the download.
+ * @param {IDBPDatabase} db The current opened IndexedDB instance
+ * @returns {Observable<IInitGroupedSegments>} An observable containing
+ * Initialization segments downloaded and next segments to download
  *
  */
 export function initDownloader$(
@@ -133,7 +134,7 @@ export function initDownloader$(
             size: chunkData.data.byteLength,
             contentProtection: chunkData.contentProtection,
           }).catch((err: Error) => {
-            throw new IndexDBError(`
+            throw new IndexedDBError(`
               ${contentID}: Impossible to store the current INIT
               segment (${contentType}) at ${time}: ${err.message}
             `);
@@ -170,7 +171,7 @@ export function initDownloader$(
           segmentPipelinesManager,
         }
       ) => {
-        acc.progress.overall += nextSegments.length;
+        acc.progress.segmentsDownloaded += nextSegments.length;
         acc[contentType].push({
           nextSegments,
           period,
@@ -181,7 +182,7 @@ export function initDownloader$(
         return { ...acc, segmentPipelinesManager, manifest };
       },
       {
-        progress: { percentage: 0, current: 0, overall: 0 },
+        progress: { percentage: 0, segmentsDownloaded: 0, totalSegments: 0 },
         video: [],
         audio: [],
         text: [],

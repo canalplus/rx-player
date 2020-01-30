@@ -22,7 +22,7 @@ import {
   IKeySystemOption,
   IPersistedSessionData,
 } from "../../../../../core/eme/types";
-import { IndexDBError } from "../../utils";
+import { IndexedDBError } from "../../utils";
 import { IUtilsKeySystemsTransaction } from "./types";
 
 /**
@@ -33,9 +33,12 @@ import { IUtilsKeySystemsTransaction } from "./types";
  * adding an additional step to catch the licence and resolve a promise with the licence
  * To get the challenge we need to retrieve the licence
  * we are instanciating a minimal rxPlayer
- * @param ILicenceOptions - The parameters we need to get the licence
- * @returns The licence under a buffer form
- *
+ * @param {ILicenceOptions} KeySystemsOption KeySystems configuration
+ *  provided at the download call
+ * @param {IUtilsKeySystemsTransaction} keySystemsUtils Utils that we need
+ *  to create/store encrypted content
+ * @param {IDBPDatabase} db The current opened IndexedDB instance
+ * @returns {Observable<{...}>} An observable of EME events
  */
 function EMETransaction(
   KeySystemsOption: IKeySystemOption,
@@ -57,8 +60,8 @@ function EMETransaction(
               type: KeySystemsOption.type,
             },
           }).catch((err: Error) => {
-            throw new IndexDBError(`${contentID}:
-              Impossible to store contentProtection in IndexDB: ${err.message}
+            throw new IndexedDBError(`${contentID}:
+              Impossible to store contentProtection in IndexedDB: ${err.message}
             `);
           });
         },

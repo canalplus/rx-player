@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-import { IKeySystemOption, IPersistedSessionData, TypedArray } from "../../../core/eme";
+import {
+  IKeySystemOption,
+  IPersistedSessionData,
+  TypedArray
+} from "../../../core/eme";
 import Manifest, { Representation } from "../../../manifest";
 import { ILocalManifest } from "../../../parsers/manifest/local";
 import { IContextRicher } from "./api/downloader/types";
@@ -25,7 +29,7 @@ export type IQualityInputType = "HIGHEST" | "MEDIUM" | "LOWEST";
 export type VideoQualityPickerType = (videoRepresentation: Representation[]) => unknown;
 
 export interface IGlobalSettings {
-  nameDB?: string;
+  dbName?: string;
 }
 
 export interface IApiLoader {
@@ -56,7 +60,7 @@ export interface IStoredManifest {
     audio: IContextRicher[];
     text: IContextRicher[];
   };
-  progress: IProgressBuilder;
+  progress: IProgressInformations;
   size: number;
   metaData?: {
     [prop: string]: any;
@@ -64,10 +68,10 @@ export interface IStoredManifest {
   duration: number;
 }
 
-export interface IProgressBuilder {
+export interface IProgressInformations {
   percentage: number;
-  current: number;
-  overall: number;
+  segmentsDownloaded: number;
+  totalSegments: number;
 }
 
 export interface IStoredSegmentDB {
@@ -83,7 +87,7 @@ export interface IStoredSegmentDB {
 }
 
 export interface IContentLoader {
-  progress: IProgressBuilder;
+  progress: IProgressInformations;
   size: number;
   transport: "dash" | "smooth";
   contentID: string;

@@ -36,29 +36,30 @@ import {
   IContentLoader,
   IEmitterTrigger,
   IGlobalSettings,
-  IStoredManifest,
+  IStoredManifest
 } from "./types";
 import {
-  checkForPauseAMovie,
-  checkForResumeAPausedMovie,
+  assertResumeADownload,
   checkInitDownloaderOptions,
-  IndexDBError,
-  isSupported,
+  IndexedDBError,
+  isPersistentLicenseSupported,
+  isValidContentID,
   SegmentConstuctionError,
   ValidationArgsError,
 } from "./utils";
 
 /**
- * Instanciate a D2G downloader.
- * @param {Object<{nameDB, storeManifestEvery}>} IOptionsStarter
- * @return {IPublicAPI} IPublicAPI
+ * Instanciate a ContentDownloader
+ *
+ * @param {IGlobalSettings}
+ * @return {IPublicAPI}
  */
 class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
   static isPersistentLicenseSupported(): Promise<boolean> {
-    return isSupported();
+    return isPersistentLicenseSupported();
   }
 
-  public readonly nameDB: string;
+  public readonly dbName: string;
   private db: IDBPDatabase | null;
   private emitter: IEmitterTrigger<IContentDownloaderEvents>;
   private activeDownloads: IActiveDownload;
@@ -66,10 +67,10 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
 
   constructor(options: IGlobalSettings = {}) {
     super();
-    this.nameDB =
-      options.nameDB == null || options.nameDB === ""
-        ? "d2g-canalplus"
-        : options.nameDB;
+    this.dbName =
+      options.dbName == null || options.dbName === ""
+        ? "d2g-rxPlayer"
+        : options.dbName;
     this.activeDownloads = {};
     this.activePauses = {};
     this.db = null;
@@ -79,19 +80,21 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
   }
 
   /**
-   * Initialize an IndexDB instance.
+   * Initialize an IndexedDB instance.
    * @returns {Promise<void>}
    */
   initDB(): Promise<IDBPDatabase> {
     return new Promise((resolve, reject) => {
-      setUpDb(this.nameDB)
+      setUpDb(this.dbName)
         .then(db => {
           this.db = db;
           resolve(db);
         })
-        .catch((error: Error) => {
-          this.trigger("error", { action: "initDB", error });
-          reject(error);
+        .catch((error) => {
+          if (error instanceof Error) {
+            this.trigger("error", { action: "initDB", error });
+            reject(error);
+          }
         });
     });
   }
@@ -106,7 +109,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
     try {
       const db = this.db;
       if (db === null) {
-        throw new Error("The IndexDB database has not been created!");
+        throw new Error("The IndexedDB database has not been created!");
       }
       const contentID = await checkInitDownloaderOptions(options, db);
       const { metaData, transport } = options;
@@ -155,11 +158,12 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
       this.activeDownloads[contentID] = initDownloadSub;
       return contentID;
     } catch (error) {
-      const err = error as Error;
-      this.trigger("error", {
-        action: "init-downloader",
-        error: err,
-      });
+      if (error instanceof Error) {
+        this.trigger("error", {
+          action: "init-downloader",
+          error,
+        });
+      }
     }
   }
 
@@ -172,7 +176,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
     try {
       const db = this.db;
       if (db === null) {
-        throw new Error("The IndexDB database has not been created!");
+        throw new Error("The IndexedDB database has not been created!");
       }
       if (contentID == null || contentID === "") {
         throw new Error("You must specify a valid contentID for resuming.");
@@ -181,7 +185,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
         "manifests",
         contentID
       ) as IStoredManifest;
-      checkForResumeAPausedMovie(storedManifest, this.activeDownloads);
+      assertResumeADownload(storedManifest, this.activeDownloads);
       const pause$ = new AsyncSubject<void>();
       this.activePauses[contentID] = pause$;
       const downloadManager = new DownloadManager({
@@ -244,7 +248,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
    */
   pause(contentID: string): void {
     try {
-      checkForPauseAMovie(contentID);
+      isValidContentID(contentID);
       const activeDownloads = this.activeDownloads;
       const activePauses = this.activePauses;
       if (activeDownloads[contentID] == null && activePauses[contentID] == null) {
@@ -256,13 +260,14 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
       delete activeDownloads[contentID];
       delete activePauses[contentID];
     } catch (e) {
-      const error = e as Error | undefined;
+      if (e instanceof Error) {
       this.trigger("error", {
         action: "pause",
         contentID,
-        error: error !== undefined ? error : new Error("A Unexpected error happened"),
+        error: e !== undefined ? e : new Error("A Unexpected error happened"),
       });
     }
+  }
   }
 
   /**
@@ -274,17 +279,18 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
   ): Promise<IStoredManifest[] | undefined> | void {
     try {
       if (this.db == null) {
-        throw new Error("The IndexDB database has not been created!");
+        throw new Error("The IndexedDB database has not been created!");
       }
       // TODO: return formatted content ?
       return this.db.getAll("manifests", undefined, limit);
     } catch (e) {
-      const error = e as Error;
+      if (e instanceof Error) {
       this.trigger("error", {
         action: "getAllDownloadedMovies",
-        error: new IndexDBError(error.message),
+        error: new IndexedDBError(e.message),
       });
     }
+  }
   }
 
   /**
@@ -296,7 +302,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
   async getSingleContent(contentID: string): Promise<IContentLoader | void> {
     try {
       if (this.db == null) {
-        throw new Error("The IndexDB database has not been created!");
+        throw new Error("The IndexedDB database has not been created!");
       }
       const [contentManifest, contentsProtection]: [
         IStoredManifest?,
@@ -339,13 +345,14 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
         ),
       };
     } catch (e) {
-      const error = e as Error | undefined;
+      if (e instanceof Error) {
       this.trigger("error", {
         action: "getSingleMovie",
         contentID,
-        error: error !== undefined ? error : new Error("A Unexpected error happened"),
+        error: e !== undefined ? e : new Error("A Unexpected error happened"),
       });
     }
+  }
   }
 
   async getAvailableSpaceOnDevice() {
@@ -374,7 +381,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
       const activePauses = this.activePauses;
       const db = this.db;
       if (db == null) {
-        throw new Error("The IndexDB database has not been created!");
+        throw new Error("The IndexedDB database has not been created!");
       }
       if (activeDownloads[contentID] != null && activePauses[contentID] != null) {
         activePauses[contentID].next();
@@ -403,14 +410,15 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
       }
       await db.delete("manifests", contentID);
     } catch (e) {
-      const error = e as Error | undefined;
+      if (e instanceof Error) {
       this.trigger("error", {
         action: "delete-download",
         contentID,
-        error: error !== undefined ? error : new Error("A Unexpected error happened"),
+        error: e !== undefined ? e : new Error("A Unexpected error happened"),
       });
     }
   }
+}
 }
 
 export default ContentDownloader;

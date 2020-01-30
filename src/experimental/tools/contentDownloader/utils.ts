@@ -16,13 +16,12 @@
 
 import { IDBPDatabase } from "idb";
 
+import { isSafari } from "../../../compat/browser_detection";
 import arrayIncludes from "../../../utils/array_includes";
 import MediaCapabilitiesProber from "../mediaCapabilitiesProber";
 import { IMediaKeySystemConfiguration } from "../mediaCapabilitiesProber/types";
 import { IActiveDownload } from "./api/context/types";
 import { IApiLoader, IStoredManifest } from "./types";
-
-/* tslint:disable */
 
 /**
  * A utils class that extends Error object to have custom class errors
@@ -51,20 +50,20 @@ export class RxPlayerError extends Error {
   }
 }
 
-export class IndexDBError extends Error {
+export class IndexedDBError extends Error {
   constructor(message: string) {
     super(message);
-    Object.setPrototypeOf(this, IndexDBError.prototype);
-    this.name = "IndexDBError";
+    Object.setPrototypeOf(this, IndexedDBError.prototype);
+    this.name = "IndexedDBError";
   }
 }
-/* tslint:enable */
 
 /**
  * Check the presence and validity of ISettingsDownloader arguments
  *
- * @param ISettingsDownloader - The arguments that the user of the lib provided
- * @returns ID - Return the ID that the download will use to store as a primary key
+ * @param {IApiLoader} options The arguments that the user of the lib provided
+ * @param {IDBPDatabase} db The current opened IndexedDB instance
+ * @returns {string} - Return the ID that the download will use to store as a primary key
  *
  */
 export async function checkInitDownloaderOptions(
@@ -84,7 +83,7 @@ export async function checkInitDownloaderOptions(
 
   if (!arrayIncludes(["smooth", "dash"], transport)) {
     throw new ValidationArgsError(
-      "You must specify a transport protocol, value possible: smooth - dash"
+      "You must specify a transport protocol, values possible: smooth, dash"
     );
   }
 
@@ -92,17 +91,28 @@ export async function checkInitDownloaderOptions(
   return String(nbDownload + 1);
 }
 
-export function checkForResumeAPausedMovie(
+/**
+ * Assert a resume of a download
+ *
+ * @param {IStoredManifest} manifest The stored manifest in IndexedDB
+ * @param {IActiveDownload} activeDownloads An object of active downloads
+ * @returns {void}
+ *
+ */
+export function assertResumeADownload(
   manifest: IStoredManifest,
   activeDownloads: IActiveDownload
 ) {
-  if (manifest == null) {
+  if (manifest === null || manifest === undefined) {
     throw new ValidationArgsError(
       "No content has been found with the given contentID"
     );
   }
 
-  if (activeDownloads[manifest.contentID] != null) {
+  if (
+    activeDownloads[manifest.contentID] !== null ||
+    activeDownloads[manifest.contentID] !== undefined
+  ) {
     throw new ValidationArgsError("The content is already downloading");
   }
 
@@ -113,11 +123,9 @@ export function checkForResumeAPausedMovie(
   }
 }
 
-export function checkForPauseAMovie(contentID: string) {
-  if (contentID == null || contentID === "") {
-    throw new ValidationArgsError(
-      "A valid contentID is mandatory when pausing"
-    );
+export function isValidContentID(contentID: string) {
+  if (contentID === null || typeof contentID !== "string" || contentID === "") {
+    throw new ValidationArgsError("A valid contentID is mandatory");
   }
 }
 
@@ -146,7 +154,7 @@ const WIDEVINE_ROBUSTNESSES = [
  *
  * @returns {Array.<{type: String, configuration: Object<MediaKeySystemConfiguration>}>}
  */
-export function constructConfig(): Array<{
+export function getMediaKeySystemConfiguration(): Array<{
   type: string;
   configuration: IMediaKeySystemConfiguration;
 }> {
@@ -210,24 +218,20 @@ function isFairplayDrmSupported(): boolean {
   );
 }
 
-function isSafari() {
-  return (
-    navigator.vendor !== undefined &&
-    navigator.vendor.indexOf("Apple") > -1 &&
-    navigator.userAgent !== undefined &&
-    navigator.userAgent.indexOf("CriOS") === -1 &&
-    navigator.userAgent.indexOf("FxiOS") === -1
-  );
-}
-
-export async function isSupported(): Promise<boolean> {
-  if (isSafari() && isFairplayDrmSupported()) {
+/**
+ * Detect if the current environment is supported for persistent licence
+ *
+ * @returns {boolean} - is supported
+ *
+ */
+export async function isPersistentLicenseSupported(): Promise<boolean> {
+  if (isSafari && isFairplayDrmSupported()) {
     // We dont support (HLS/Fairplay) streaming right now :(
     return false;
   }
 
   const drmConfigs = await MediaCapabilitiesProber.getCompatibleDRMConfigurations(
-    constructConfig()
+    getMediaKeySystemConfiguration()
   );
   return drmConfigs.some(
     drmConfig => drmConfig.compatibleConfiguration !== undefined

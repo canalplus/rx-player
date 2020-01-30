@@ -22,7 +22,7 @@ import findIndex from "../../../../../utils/array_find_index";
 import { concat, strToBytes } from "../../../../../utils/byte_parsing";
 
 import { createBox } from "../../../../../parsers/containers/isobmff";
-import { IndexDBError } from "../../utils";
+import { IndexedDBError } from "../../utils";
 import { ContentType } from "../context/types";
 import {
   ContentBufferType,
@@ -35,7 +35,7 @@ import {
   IManifestDBState,
   ISegmentData,
   ISegmentPipelineContext,
-  IUtils,
+  IUtils
 } from "./types";
 
 /**
@@ -45,10 +45,11 @@ import {
  * We are downloading the segment 3 by 3 for now.
  * It's something that will look soon.
  *
- * @param IContext[] - An array of context we have to download.
- * > It's possibly a number, when the segment has already been download
- * @param KeyContextType - Tell what type of buffer it is (VIDEO/AUDIO/TEXT).
- * @returns ICustomSegment - An Object of the downloaded segment.
+ * @param {IContext[]} ctxs An array of segments context to download.
+ * > It's possibly a number, when the segment context has already been download
+ * @param {KeyContextType} contentType Tell what type of buffer it is (VIDEO/AUDIO/TEXT).
+ * @param {ISegmentPipelineContext} - Segment pipeline context, values that are redundant.
+ * @returns {Observable<ICustomSegment>} - An observable of a downloaded segments context.
  *
  */
 export function handleSegmentPipelineFromContexts<
@@ -201,7 +202,7 @@ function handleAbstractSegmentPipelineContextFor(
  * download for each buffer type (VIDEO/AUDIO/TEXT).
  *
  * @remarks
- * - It also store each segment downloaded in IndexDB.
+ * - It also store each segment downloaded in IndexedDB.
  * - Add the segment in the ProgressBarBuilder.
  * - Emit a global progress when a segment has been downloaded.
  * - Eventually, wait an event of the pause$ Subject to put the download in pause.
@@ -260,8 +261,8 @@ export function segmentPipelineDownloader$(
         segmentKey: `${time}--${representationID}--${contentID}`,
         data: chunkData.data,
         size: chunkData.data.byteLength,
-      }).catch((err : Error) => {
-        throw new IndexDBError(`
+        }).catch((err: Error) => {
+          throw new IndexedDBError(`
           ${contentID}: Impossible
           to store the current segment (${contentType}) at ${time}: ${err.message}
         `);
@@ -280,10 +281,11 @@ export function segmentPipelineDownloader$(
         }
       ) => {
         if (progress !== undefined) {
-          acc.progress.overall = progress.overall;
+          acc.progress.totalSegments = progress.totalSegments;
         }
-        acc.progress.current += 1;
-        const percentage = (acc.progress.current / acc.progress.overall) * 100;
+        acc.progress.segmentsDownloaded += 1;
+        const percentage =
+          (acc.progress.segmentsDownloaded / acc.progress.totalSegments) * 100;
         acc.progress.percentage =
           percentage > 98 && percentage < 100
             ? percentage

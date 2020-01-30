@@ -24,6 +24,10 @@ import { getTransportPipelineByTransport } from "./manifest";
 import { segmentPipelineDownloader$ } from "./segment";
 import { IUtilsNotification } from "./types";
 
+/**
+ * DownloadManager that will handle actions to take depending if we are in
+ * resuming or downloading from scratch.
+ */
 class DownloadManager {
   readonly utils: IUtilsNotification;
 
@@ -34,7 +38,7 @@ class DownloadManager {
   initDownload(initSettings: IInitSettings, pause$: AsyncSubject<void>) {
     const { contentID } = initSettings;
     const builderInit = {
-      progress: { percentage: 0, current: 0, overall: 0 },
+      progress: { percentage: 0, segmentsDownloaded: 0, totalSegments: 0 },
       manifest: null,
       video: [],
       audio: [],

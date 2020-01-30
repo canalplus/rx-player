@@ -29,7 +29,7 @@ import { ILocalIndexSegment } from "../../../../../parsers/manifest/local/types"
 import {
   IContentDownloaderEvents,
   IEmitterTrigger,
-  IProgressBuilder,
+  IProgressInformations,
 } from "../../types";
 
 export type ContentBufferType = "video" | "audio" | "text";
@@ -92,7 +92,7 @@ export interface IInitSegment {
 }
 
 export interface IInitGroupedSegments {
-  progress: IProgressBuilder;
+  progress: IProgressInformations;
   video: IContextRicher[];
   audio: IContextRicher[];
   text: IContextRicher[];
@@ -121,7 +121,7 @@ export interface IUtils {
 }
 
 export interface IManifestDBState {
-  progress: IProgressBuilder;
+  progress: IProgressInformations;
   manifest: Manifest | null;
   video: IContextRicher[];
   audio: IContextRicher[];
@@ -142,13 +142,13 @@ export interface ICustomSegment {
   representationID: string;
   isInitData: boolean;
   nextSegments?: ISegment[];
-  progress?: IProgressBuilder;
+  progress?: IProgressInformations;
   type: DownloadType;
 }
 
 export interface ISegmentPipelineContext {
   type: DownloadType;
-  progress?: IProgressBuilder;
+  progress?: IProgressInformations;
   isInitData: boolean;
   segmentPipelinesManager: SegmentPipelinesManager<any>;
   nextSegments?: ISegment[];
@@ -156,7 +156,7 @@ export interface ISegmentPipelineContext {
 
 export interface IAbstractContextCreation {
   type: DownloadType;
-  progress: IProgressBuilder;
+  progress: IProgressInformations;
   segmentPipelinesManager: SegmentPipelinesManager<any>;
   manifest: Manifest;
 }

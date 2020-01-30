@@ -45,8 +45,10 @@ import {
 /**
  * Get the TransportPipeline for current transport.
  *
- * @param transport - Transport option for current manifest.
- * @returns A instance of TransportPipelines for the current url manifest.
+ * @param {smooth|dash} transport HTTP streaming transport protocol
+ *  type for current download to use.
+ * @returns {ITransportPipelines} A instance of TransportPipelines
+ *  for the current download.
  *
  */
 export function getTransportPipelineByTransport(transport: "smooth" | "dash") {
@@ -62,10 +64,10 @@ export function getTransportPipelineByTransport(transport: "smooth" | "dash") {
 /**
  * Get the manifest from an url.
  *
- * @param manifestURL - Manifest url on the web.
- * @param transport - Transport that need to be use.
- * @returns A instance of Manifest for the current url and the
- * transportPipeline associated to it.
+ * @param {string} manifestURL - Manifest url.
+ * @param {smooth|dash} transport HTTP streaming transport protocol type to use.
+ * @returns {Observable<{Manifest, ITransportPipelines}>} An observable that contain
+ *  instance of Manifest for the current url and the transportPipelines associated to it.
  *
  */
 export function manifestLoader(
@@ -96,8 +98,9 @@ export function manifestLoader(
 /**
  * Get the adaptations for the current period.
  *
- * @param IStoredManifest - The global builder we insert in IndexDB
- * @returns An Object of period associated with an array of adaptations.
+ * @param {Pick<IStoredManifest, "builder">} builder The global builder context for each
+ * bufferType we insert in IndexedDB
+ * @returns {IAdaptationForPeriodBuilder} Periods associated with an array of adaptations
  *
  */
 export function getBuilderFormattedForAdaptations({
@@ -139,10 +142,12 @@ export function getBuilderFormattedForAdaptations({
 }
 
 /**
- * Get the segment for the current representation.
+ * Get the segments for the current representation.
  *
- * @param IStoredManifest - The global builder we insert in IndexDB
- * @returns An Object of representation associated with an array of segments.
+ * @param {Pick<IStoredManifest, "builder">} builder The global builder context for each
+ * bufferType we insert in IndexedDB
+ * @returns {ISegmentForRepresentationBuilder} Representation associated
+ *  with an array of segments.
  *
  */
 export function getBuilderFormattedForSegments({
@@ -175,6 +180,15 @@ export function getBuilderFormattedForSegments({
   );
 }
 
+/**
+ * Get the segments for the current representation.
+ *
+ * @param {Pick<IStoredManifest, "builder">} builder The global builder context for each
+ * bufferType we insert in IndexedDB
+ * @returns {ISegmentForRepresentationBuilder} Representation associated
+ *  with an array of segments.
+ *
+ */
 export function getKeySystemsSessionsOffline(
   contentsProtection : IContentProtection[] | undefined
 ) {
@@ -204,15 +218,15 @@ export function getKeySystemsSessionsOffline(
  * @remarks
  * It's mandatory to rebuild again the local manifest
  * when we want to play an offline content because we lose every reference
- * when storing in IndexDB.
+ * when storing in IndexedDB.
  *
- * @param Manifest - The Manifest we downloaded when online
- * @param ISegmentStored[] - The segments we downloaded online for the current content
- * @param IAdaptationForPeriodBuilder - The Adaptations by period
- * @param number - The global duration of the content
- * @param boolean - Tell if the content is 100% complete
- * @param IDBPDatabase - An Instance of IndexDB to be able to retrieve content in base
- * @returns A ILocalManifest to the RxPlayer transport local understand
+ * @param {Manifest} manifest - The Manifest we downloaded when online
+ * @param {IAdaptationForPeriodBuilder} adaptationsBuilder Periods associated with
+ *  an array of adaptations
+ * @param {ISegmentForRepresentationBuilder} representationsBuilder - Representation
+ *  associatedwith an array of segments.
+ * @param {IUtilsOfflineLoader} Object Additional utils...
+ * @returns {ILocalManifest} A ILocalManifest to the RxPlayer transport local
  *
  */
 export function offlineManifestLoader(
@@ -252,7 +266,7 @@ export function offlineManifestLoader(
                         if (segment === undefined) {
                           return reject(
                             new SegmentConstuctionError(`${contentID}:
-                              Impossible to retrieve INIT segment in IndexDB for
+                              Impossible to retrieve INIT segment in IndexedDB for
                               representation: ${id}, got: undefined`
                             )
                           );

@@ -24,6 +24,9 @@ import {
 } from "../downloader/types";
 import { ContentType } from "./types";
 
+/**
+ * ContentManager that will decide which context adaptations/representations to use
+ */
 class ContentManager {
   readonly manifest: Manifest;
   readonly quality: IQualityInputType;
