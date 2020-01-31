@@ -47,6 +47,7 @@ function EMETransaction(
 ) {
   const video = document.createElement("video");
   const { contentID, contentProtection$ } = keySystemsUtils;
+  let id = 0;
   const keySystems = [
     {
       ...KeySystemsOption,
@@ -54,15 +55,21 @@ function EMETransaction(
         save(sessionsIDS: IPersistedSessionData[]) {
           db.add("contentsProtection", {
             contentID,
-            drmKey: `${contentID}--${Date.now()}`,
+            drmKey: `${contentID}--${id}`,
             keySystems: {
               sessionsIDS,
               type: KeySystemsOption.type,
             },
-          }).catch((err: Error) => {
-            throw new IndexedDBError(`${contentID}:
-              Impossible to store contentProtection in IndexedDB: ${err.message}
-            `);
+          })
+          .then(() => {
+            id += 1;
+          })
+          .catch((err) => {
+            if (err instanceof Error) {
+              throw new IndexedDBError(`${contentID}:
+                Impossible to store contentProtection in IndexedDB: ${err.message}
+              `);
+            }
           });
         },
         load() {
