@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
+import objectAssign from "../../../../utils/object_assign";
 import parseSegmentBase, {
   IParsedSegmentBase,
 } from "./SegmentBase";

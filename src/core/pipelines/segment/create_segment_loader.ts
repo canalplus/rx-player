@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import {
   concat as observableConcat,
   EMPTY,
@@ -36,6 +35,7 @@ import {
 } from "../../../transports";
 import assertUnreachable from "../../../utils/assert_unreachable";
 import castToObservable from "../../../utils/cast_to_observable";
+import objectAssign from "../../../utils/object_assign";
 import tryCatch from "../../../utils/rx-try_catch";
 import backoff from "../utils/backoff";
 import errorSelector from "../utils/error_selector";

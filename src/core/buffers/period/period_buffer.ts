@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import {
   BehaviorSubject,
   concat as observableConcat,
@@ -40,6 +39,7 @@ import Manifest, {
   Adaptation,
   Period,
 } from "../../../manifest";
+import objectAssign from "../../../utils/object_assign";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";

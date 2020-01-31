@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import { addClassName } from "../../../../compat";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
+import objectAssign from "../../../../utils/object_assign";
 import getParentElementsByTagName from "../get_parent_elements_by_tag_name";
 import {
   getStylingAttributes,
