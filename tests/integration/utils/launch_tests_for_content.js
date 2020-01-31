@@ -563,6 +563,7 @@ export default function launchTestsForContent(manifestInfos) {
     describe("getVideoLoadedTime", () => {
       // TODO handle live contents
       it("should return the time of the current loaded time", async function() {
+        this.timeout(4000);
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
 
