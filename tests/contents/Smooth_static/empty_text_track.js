@@ -54,7 +54,7 @@ const manifestInfos = {
                       time: 0,
                       timescale: 10000000,
                       duration: 20053333,
-                      mediaURL: BASE_URL + "QualityLevels96000/Fragmentsaudio_und=0",
+                      mediaURLs: [BASE_URL + "QualityLevels96000/Fragmentsaudio_und=0"],
                     },
                   ],
                   // ...
@@ -81,7 +81,7 @@ const manifestInfos = {
                       time: 0,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: BASE_URL + "QualityLevels300000/Fragmentsvideo=0",
+                      mediaURLs: [BASE_URL + "QualityLevels300000/Fragmentsvideo=0"],
                     },
                     // ...
                   ],
@@ -100,7 +100,7 @@ const manifestInfos = {
                       time: 0,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: BASE_URL + "QualityLevels750000/Fragmentsvideo=0",
+                      mediaURLs: [BASE_URL + "QualityLevels750000/Fragmentsvideo=0"],
                     },
                     // ...
                   ],
@@ -119,7 +119,7 @@ const manifestInfos = {
                       time: 0,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: BASE_URL + "QualityLevels1100000/Fragmentsvideo=0",
+                      mediaURLs: [BASE_URL + "QualityLevels1100000/Fragmentsvideo=0"],
                     },
                     // ...
                   ],
@@ -138,7 +138,7 @@ const manifestInfos = {
                       time: 0,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: BASE_URL + "QualityLevels1500000/Fragmentsvideo=0",
+                      mediaURLs: [BASE_URL + "QualityLevels1500000/Fragmentsvideo=0"],
                     },
                     // ...
                   ],
@@ -157,7 +157,7 @@ const manifestInfos = {
                       time: 0,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: BASE_URL + "QualityLevels2100000/Fragmentsvideo=0",
+                      mediaURLs: [BASE_URL + "QualityLevels2100000/Fragmentsvideo=0"],
                     },
                     // ...
                   ],
@@ -176,7 +176,7 @@ const manifestInfos = {
                       time: 0,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: BASE_URL + "QualityLevels3400000/Fragmentsvideo=0",
+                      mediaURLs: [BASE_URL + "QualityLevels3400000/Fragmentsvideo=0"],
                     },
                     // ...
                   ],
@@ -195,7 +195,7 @@ const manifestInfos = {
                       time: 0,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: BASE_URL + "QualityLevels4000000/Fragmentsvideo=0",
+                      mediaURLs: [BASE_URL + "QualityLevels4000000/Fragmentsvideo=0"],
                     },
                     // ...
                   ],
@@ -214,7 +214,7 @@ const manifestInfos = {
                       time: 0,
                       timescale: 10000000,
                       duration: 20000000,
-                      mediaURL: BASE_URL + "QualityLevels5000000/Fragmentsvideo=0",
+                      mediaURLs: [BASE_URL + "QualityLevels5000000/Fragmentsvideo=0"],
                     },
                     // ...
                   ],

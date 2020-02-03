@@ -62,22 +62,22 @@ export default function generateTextTrackLoader(
   function textTrackLoader(
     args : ISegmentLoaderArguments
   ) : ISegmentLoaderObservable< ArrayBuffer | string | null > {
-    const { mediaURL,
-            range } = args.segment;
+    const { range } = args.segment;
+    const { url } = args;
 
-    if (mediaURL == null) {
+    if (url == null) {
       return observableOf({ type: "data-created",
                             value: { responseData: null } });
     }
 
     if (args.segment.isInit) {
-      return initSegmentLoader(mediaURL, args);
+      return initSegmentLoader(url, args);
     }
 
     const isMP4Embedded = isMP4EmbeddedTextTrack(args.representation);
     if (lowLatencyMode && isMP4Embedded) {
       if (fetchIsSupported()) {
-        return lowLatencySegmentLoader(mediaURL, args);
+        return lowLatencySegmentLoader(url, args);
       } else {
         warnOnce("DASH: Your browser does not have the fetch API. You will have " +
                  "a higher chance of rebuffering when playing close to the live edge");
@@ -87,7 +87,7 @@ export default function generateTextTrackLoader(
     // ArrayBuffer when in mp4 to parse isobmff manually, text otherwise
     const responseType = isMP4Embedded ?  "arraybuffer" :
                                           "text";
-    return request<ArrayBuffer|string>({ url: mediaURL,
+    return request<ArrayBuffer|string>({ url,
                                          responseType,
                                          headers: Array.isArray(range) ?
                                            { Range: byteRange(range) } :

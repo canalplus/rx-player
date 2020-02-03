@@ -31,7 +31,6 @@ import {
 import { formatError } from "../../../errors";
 import { ISegment } from "../../../manifest";
 import {
-  ISegmentLoaderArguments,
   ISegmentParserResponse,
   ITransportPipelines,
 } from "../../../transports";
@@ -42,6 +41,7 @@ import {
 } from "../../abr";
 import { IBufferType } from "../../source_buffers";
 import createSegmentLoader, {
+  IContent,
   IPipelineLoaderChunk,
   IPipelineLoaderChunkComplete,
   IPipelineLoaderData,
@@ -62,7 +62,7 @@ export type ISegmentFetcherEvent<T> = ISegmentFetcherChunkCompleteEvent |
                                       ISegmentFetcherChunkEvent<T> |
                                       ISegmentFetcherWarning;
 
-export type ISegmentFetcher<T> = (content : ISegmentLoaderArguments) =>
+export type ISegmentFetcher<T> = (content : IContent) =>
                                    Observable<ISegmentFetcherEvent<T>>;
 
 const generateRequestID = idGenerator();
@@ -95,7 +95,7 @@ export default function createSegmentFetcher<T>(
    * @returns {Observable}
    */
   return function fetchSegment(
-    content : ISegmentLoaderArguments
+    content : IContent
   ) : Observable<ISegmentFetcherEvent<T>> {
     const id = generateRequestID();
     let requestBeginSent = false;

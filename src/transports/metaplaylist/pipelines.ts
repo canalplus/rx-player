@@ -27,8 +27,11 @@ import {
 } from "rxjs/operators";
 import features from "../../features";
 import Manifest, {
+  Adaptation,
   IMetaPlaylistPrivateInfos,
   ISegment,
+  Period,
+  Representation,
 } from "../../manifest";
 import parseMetaPlaylist, {
   IParserResponse as IMPLParserResponse,
@@ -52,15 +55,19 @@ import {
 import generateManifestLoader from "./manifest_loader";
 
 /**
- * Prepare any wrapped segment loader's arguments.
  * @param {Object} segment
  * @param {number} offset
  * @returns {Object}
  */
-function getLoaderArguments(
+function getContent(
   segment : ISegment,
   offset : number
-) : ISegmentLoaderArguments {
+) : { manifest : Manifest;
+      period : Period;
+      adaptation : Adaptation;
+      representation : Representation;
+      segment : ISegment; }
+{
   if (segment.privateInfos == null || segment.privateInfos.metaplaylistInfos == null) {
     throw new Error("MetaPlaylist: missing private infos");
   }
@@ -79,6 +86,21 @@ function getLoaderArguments(
 }
 
 /**
+ * Prepare any wrapped segment loader's arguments.
+ * @param {Object} segment
+ * @param {number} offset
+ * @returns {Object}
+ */
+function getLoaderArguments(
+  segment : ISegment,
+  url : string | null,
+  offset : number
+) : ISegmentLoaderArguments {
+  const content = getContent(segment, offset);
+  return  objectAssign({ url }, content);
+}
+
+/**
  * Prepare any wrapped segment parser's arguments.
  * @param {Object} arguments
  * @param {Object} segment
@@ -92,7 +114,7 @@ function getParserArguments<T>(
 ) : ISegmentParserArguments<T> {
   return { initTimescale,
            response,
-           content: getLoaderArguments(segment, offset) };
+           content: getContent(segment, offset) };
 }
 
 /**
@@ -266,9 +288,9 @@ export default function(options : ITransportOptions): ITransportPipelines {
   }
 
   const audioPipeline = {
-    loader({ segment, period } : ISegmentLoaderArguments) {
+    loader({ segment, period, url } : ISegmentLoaderArguments) {
       const { audio } = getTransportPipelinesFromSegment(segment);
-      return audio.loader(getLoaderArguments(segment, period.start));
+      return audio.loader(getLoaderArguments(segment, url, period.start));
     },
 
     parser(
@@ -295,9 +317,9 @@ export default function(options : ITransportOptions): ITransportPipelines {
   };
 
   const videoPipeline = {
-    loader({ segment, period } : ISegmentLoaderArguments) {
+    loader({ segment, period, url } : ISegmentLoaderArguments) {
       const { video } = getTransportPipelinesFromSegment(segment);
-      return video.loader(getLoaderArguments(segment, period.start));
+      return video.loader(getLoaderArguments(segment, url, period.start));
     },
 
     parser(
@@ -324,9 +346,9 @@ export default function(options : ITransportOptions): ITransportPipelines {
   };
 
   const textTrackPipeline = {
-    loader({ segment, period } : ISegmentLoaderArguments) {
+    loader({ segment, period, url } : ISegmentLoaderArguments) {
       const { text } = getTransportPipelinesFromSegment(segment);
-      return text.loader(getLoaderArguments(segment, period.start));
+      return text.loader(getLoaderArguments(segment, url, period.start));
     },
 
     parser: (
@@ -353,9 +375,9 @@ export default function(options : ITransportOptions): ITransportPipelines {
   };
 
   const imageTrackPipeline = {
-    loader({ segment, period } : ISegmentLoaderArguments) {
+    loader({ segment, period, url } : ISegmentLoaderArguments) {
       const { image } = getTransportPipelinesFromSegment(segment);
-      return image.loader(getLoaderArguments(segment, period.start));
+      return image.loader(getLoaderArguments(segment, url, period.start));
     },
 
     parser(

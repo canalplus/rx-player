@@ -30,14 +30,14 @@ import {
  * @returns {Observable}
  */
 export function imageLoader(
-  { segment } : ISegmentLoaderArguments
+  { segment,
+    url } : ISegmentLoaderArguments
 ) : ISegmentLoaderObservable< ArrayBuffer | null > {
-  if (segment.isInit || segment.mediaURL == null) {
+  if (segment.isInit || url === null) {
     return observableOf({ type: "data-created" as const,
                           value: { responseData: null } });
   }
-  const { mediaURL } = segment;
-  return request({ url: mediaURL,
+  return request({ url,
                    responseType: "arraybuffer",
                    sendProgressEvents: true });
 }

@@ -16,12 +16,11 @@
 
 import log from "../../../log";
 import IRepresentationIndex from "../../../manifest/representation_index";
-import resolveURL from "../../../utils/resolve_url";
 import {
   IContentProtections,
   IParsedRepresentation,
 } from "../types";
-import getRepAvailabilityTimeOffset from "./get_rep_availability_time_offset";
+import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import BaseRepresentationIndex from "./indexes/base";
 import ListRepresentationIndex from "./indexes/list";
 import TemplateRepresentationIndex from "./indexes/template";
@@ -33,14 +32,15 @@ import {
 import {
   IRepresentationIntermediateRepresentation
 } from "./node_parsers/Representation";
+import resolveBaseURLs from "./resolve_base_urls";
 
 // Supplementary context about the current AdaptationSet
 export interface IAdaptationInfos {
   aggressiveMode : boolean; // Whether we should request new segments even if
                             // they are not yet finished
   availabilityTimeOffset: number; // availability time offset of the concerned adaptation
-  baseURL? : string; // Eventual URL from which every relative URL will be based
-                     // on
+  baseURLs : string[]; // Eventual URLs from which every relative URL will be based
+                       // on
   manifestBoundsCalculator : ManifestBoundsCalculator; // Allows to obtain the first
                                                        // available position of a
                                                        // dynamic content
@@ -66,7 +66,7 @@ interface IIndexContext {
                         // RepresentationIndex, in seconds
   periodEnd : number|undefined; // End of the period concerned by this
                                 // RepresentationIndex, in seconds
-  representationBaseURL : string; // Base URL for the Representation concerned
+  representationBaseURLs : string[]; // Base URLs for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
@@ -120,9 +120,8 @@ export default function parseRepresentations(
   adaptationInfos : IAdaptationInfos
 ): IParsedRepresentation[] {
   return representationsIR.map((representation) => {
-    const baseURL = representation.children.baseURL !== undefined ?
-      representation.children.baseURL.value : "";
-    const representationBaseURL = resolveURL(adaptationInfos.baseURL, baseURL);
+    const representationBaseURLs = resolveBaseURLs(adaptationInfos.baseURLs,
+                                                   representation.children.baseURLs);
 
     // 4-2-1. Find Index
     const context = { aggressiveMode: adaptationInfos.aggressiveMode,
@@ -132,7 +131,7 @@ export default function parseRepresentations(
                       periodEnd: adaptationInfos.end,
                       periodStart: adaptationInfos.start,
                       receivedTime: adaptationInfos.receivedTime,
-                      representationBaseURL,
+                      representationBaseURLs,
                       representationBitrate: representation.attributes.bitrate,
                       representationId: representation.attributes.id,
                       timeShiftBufferDepth: adaptationInfos.timeShiftBufferDepth };
@@ -140,9 +139,9 @@ export default function parseRepresentations(
     if (representation.children.segmentBase != null) {
       const { segmentBase } = representation.children;
       context.availabilityTimeOffset =
-        getRepAvailabilityTimeOffset(adaptationInfos.availabilityTimeOffset,
-                                     representation.children.baseURL,
-                                     segmentBase.availabilityTimeOffset);
+        adaptationInfos.availabilityTimeOffset +
+        extractMinimumAvailabilityTimeOffset(representation.children.baseURLs) +
+        (segmentBase.availabilityTimeOffset ?? 0);
       representationIndex = new BaseRepresentationIndex(segmentBase, context);
     } else if (representation.children.segmentList != null) {
       const { segmentList } = representation.children;
@@ -152,10 +151,10 @@ export default function parseRepresentations(
       if (segmentTemplate.indexType === "timeline") {
         representationIndex = new TimelineRepresentationIndex(segmentTemplate, context);
       } else {
-        context.availabilityTimeOffset =
-          getRepAvailabilityTimeOffset(adaptationInfos.availabilityTimeOffset,
-                                       representation.children.baseURL,
-                                       segmentTemplate.availabilityTimeOffset);
+      context.availabilityTimeOffset =
+        adaptationInfos.availabilityTimeOffset +
+        extractMinimumAvailabilityTimeOffset(representation.children.baseURLs) +
+        (segmentTemplate.availabilityTimeOffset ?? 0);
         representationIndex = new TemplateRepresentationIndex(segmentTemplate, context);
       }
     } else {

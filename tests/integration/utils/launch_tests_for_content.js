@@ -38,12 +38,12 @@ import XHRMock from "../../utils/request_mock";
  *                               .width? {number}
  *                               .index
  *                                     .init
- *                                          .mediaURL {string}
+ *                                          .mediaURLs {string}
  *                                     .segments[]
  *                                                .time {number}
  *                                                .timescale {number}
  *                                                .duration {number}
- *                                                .mediaURL {string}
+ *                                                .mediaURLs {string}
  * ```
  */
 export default function launchTestsForContent(manifestInfos) {
@@ -129,19 +129,19 @@ export default function launchTestsForContent(manifestInfos) {
               xhrMock.getLockedXHR()[1].url,
             ];
             expect(requestsDone)
-              .to.include(videoRepresentationInfos.index.init.mediaURL);
+              .to.include(videoRepresentationInfos.index.init.mediaURLs[0]);
             expect(requestsDone)
-              .to.include(audioRepresentationInfos.index.init.mediaURL);
+              .to.include(audioRepresentationInfos.index.init.mediaURLs[0]);
           } else if (!(
             audioRepresentationInfos && audioRepresentationInfos.index.init)
           ) {
             expect(xhrMock.getLockedXHR().length).to.equal(1);
             expect(xhrMock.getLockedXHR()[0].url).to
-              .equal(videoRepresentationInfos.index.init.mediaURL);
+              .equal(videoRepresentationInfos.index.init.mediaURLs[0]);
           } else {
             expect(xhrMock.getLockedXHR().length).to.equal(1);
             expect(xhrMock.getLockedXHR()[0].url).to
-              .equal(audioRepresentationInfos.index.init.mediaURL);
+              .equal(audioRepresentationInfos.index.init.mediaURLs[0]);
           }
         }
       });
@@ -262,8 +262,8 @@ export default function launchTestsForContent(manifestInfos) {
                 const initSegment = reprIndex.getInitSegment();
                 const initSegmentInfos = reprIndexInfos.init;
                 if (initSegmentInfos) {
-                  expect(initSegment.mediaURL)
-                    .to.equal(initSegmentInfos.mediaURL);
+                  expect(initSegment.mediaURLs)
+                    .to.deep.equal(initSegmentInfos.mediaURLs);
                   expect(typeof initSegment.id).to.equal("string");
                 }
 
@@ -290,8 +290,8 @@ export default function launchTestsForContent(manifestInfos) {
                   expect(firstSegment.timescale)
                     .to.equal(reprIndexInfos.segments[0].timescale);
 
-                  expect(firstSegment.mediaURL)
-                    .to.equal(reprIndexInfos.segments[0].mediaURL);
+                  expect(firstSegment.mediaURLs)
+                    .to.deep.equal(reprIndexInfos.segments[0].mediaURLs);
                 }
               }
             }

@@ -109,14 +109,14 @@ export default function generateSegmentLoader(
   function segmentLoader(
     content : ISegmentLoaderArguments
   ) : ISegmentLoaderObservable< Uint8Array | ArrayBuffer | null > {
-    const { mediaURL } = content.segment;
-    if (mediaURL == null) {
+    const { url } = content;
+    if (url == null) {
       return observableOf({ type: "data-created" as const,
                             value: { responseData: null } });
     }
 
     if (lowLatencyMode || customSegmentLoader == null) {
-      return regularSegmentLoader(mediaURL, content, lowLatencyMode);
+      return regularSegmentLoader(url, content, lowLatencyMode);
     }
 
     const args = { adaptation: content.adaptation,
@@ -125,7 +125,7 @@ export default function generateSegmentLoader(
                    representation: content.representation,
                    segment: content.segment,
                    transport: "dash",
-                   url: mediaURL };
+                   url };
 
     return new Observable((obs : ICustomSegmentLoaderObserver) => {
       let hasFinished = false;
@@ -179,7 +179,7 @@ export default function generateSegmentLoader(
        */
       const fallback = () => {
         hasFallbacked = true;
-        const regular$ = regularSegmentLoader(mediaURL, content, lowLatencyMode);
+        const regular$ = regularSegmentLoader(url, content, lowLatencyMode);
 
         // HACK What is TypeScript/RxJS doing here??????
         /* tslint:disable deprecation */

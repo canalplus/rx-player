@@ -36,8 +36,10 @@ export interface IRepresentationIntermediateRepresentation {
 }
 
 export interface IRepresentationChildren {
+  // required
+  baseURLs : IBaseURL[];
+
   // optional
-  baseURL? : IBaseURL;
   segmentBase? : IParsedSegmentBase;
   segmentList? : IParsedSegmentList;
   segmentTemplate? : IParsedSegmentTemplate|IParsedSegmentTimeline;
@@ -69,7 +71,7 @@ function parseRepresentationChildren(
   representationChildren : NodeList
 ) : IRepresentationChildren {
   const children : IRepresentationChildren = {
-    baseURL: undefined,
+    baseURLs: [],
   };
 
   for (let i = 0; i < representationChildren.length; i++) {
@@ -78,7 +80,10 @@ function parseRepresentationChildren(
 
       switch (currentElement.nodeName) {
         case "BaseURL":
-          children.baseURL = parseBaseURL(currentElement);
+          const baseURLObj = parseBaseURL(currentElement);
+          if (baseURLObj !== undefined) {
+            children.baseURLs.push(baseURLObj);
+          }
           break;
         case "SegmentBase":
           children.segmentBase = parseSegmentBase(currentElement);
