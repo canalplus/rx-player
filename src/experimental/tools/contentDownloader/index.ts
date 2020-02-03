@@ -60,18 +60,18 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
    *
    * @returns {boolean} - is supported
    *
-  */
+   */
   static isPersistentLicenseSupported(): Promise<boolean> {
     return isPersistentLicenseSupported();
   }
 
   /**
-   * Get informations on the storage usage of the navigator 
-   * 
+   * Get informations on the storage usage of the navigator
+   *
    * @returns {Object<{ total: number, used: number }>} -
    *  the space used and the total usable
-   * 
-  */
+   *
+   */
   static async getStorageUsageInfos() {
     if (navigator.storage == null || navigator.storage.estimate == null) {
       return null;
@@ -131,7 +131,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
    * @param {Object<ISettingsDownloader>} settings
    * @returns {Promise.<string|void>} contentID -
    *  return the id generated of the content or void if an error happened
-  */
+   */
   async download(options: IApiLoader): Promise<string | void> {
     try {
       const db = this.db;
@@ -184,7 +184,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
           },
           (error) => {
             if (error instanceof Error) {
-              this.trigger("error", { action: "download", error, contentID })
+              this.trigger("error", { action: "download", error, contentID });
             }
           }
         );
@@ -268,7 +268,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
                 action: "resume",
                 error,
                 contentID,
-              })
+              });
             }
           }
         );
