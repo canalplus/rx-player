@@ -64,6 +64,9 @@ export default function createVideoInitSegment(
   const _pssList = pssList === undefined ? [] :
                                            pssList;
   const [, spsHex, ppsHex] = codecPrivateData.split("00000001");
+  if (spsHex === undefined || ppsHex === undefined) {
+    throw new Error("Smooth: unsupported codec private data.");
+  }
   const sps = hexToBytes(spsHex);
   const pps = hexToBytes(ppsHex);
 

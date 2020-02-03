@@ -19,12 +19,12 @@ import isNonEmptyString from "../../../utils/is_non_empty_string";
 /**
  * @param {string} fourCC
  * @param {string} codecPrivateData
- * @returns {string}
+ * @returns {string|null}
  */
 export function getAudioCodecs(
   fourCC : string,
   codecPrivateData : string
-) : string {
+) : string|null {
   let mpProfile : number;
   if (fourCC === "AACH") {
     mpProfile = 5; // High Efficiency AAC Profile
@@ -33,17 +33,21 @@ export function getAudioCodecs(
       (parseInt(codecPrivateData.substring(0, 2), 16) & 0xF8) >> 3 :
       2;
   }
-  return mpProfile !== 0 ? (`mp4a.40.${mpProfile}`) :
-                           "";
+  if (mpProfile === 0) {
+    return null;
+  }
+  return `mp4a.40.${mpProfile}`;
 }
 
 /**
  * @param {string} codecPrivateData
- * @returns {string}
+ * @returns {string|null}
  */
-export function getVideoCodecs(codecPrivateData : string) : string {
+export function getVideoCodecs(codecPrivateData : string) : string|null {
   // we can extract codes only if fourCC is on of "H264", "X264", "DAVC", "AVC1"
   const arr = /00000001\d7([0-9a-fA-F]{6})/.exec(codecPrivateData);
-  return arr !== null && isNonEmptyString(arr[1]) ? "avc1." + arr[1] :
-                                                    "";
+  if (arr === null || !isNonEmptyString(arr[1])) {
+    return null;
+  }
+  return "avc1." + arr[1];
 }

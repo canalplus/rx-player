@@ -182,13 +182,28 @@ function createSmoothStreamingParser(
                         isNaN(parseInt(bitrateAttr, 10)) ? 0 :
                                                            parseInt(bitrateAttr, 10);
 
+        if (fourCC == null ||
+            MIME_TYPES[fourCC] === undefined ||
+            codecPrivateData === undefined) {
+          log.warn("Smooth parser: Unsupported audio codec. Ignoring quality level.");
+          return null;
+        }
+
+        const codecs = getAudioCodecs(fourCC, codecPrivateData);
+
+        if (codecs === null) {
+          log.warn("Smooth parser: Unsupported audio codec. Ignoring quality level.");
+          return null;
+        }
+
         return {
           audiotag: audiotag !== undefined ? parseInt(audiotag, 10) : audiotag,
           bitrate,
           bitsPerSample: bitsPerSample !== undefined ?
             parseInt(bitsPerSample, 10) : bitsPerSample,
           channels: channels !== undefined ? parseInt(channels, 10) : channels,
-          codecPrivateData: takeFirstSet<string>(codecPrivateData, ""),
+          codecPrivateData,
+          codecs,
           customAttributes,
           mimeType: fourCC !== undefined ? MIME_TYPES[fourCC] : fourCC,
           packetSize: packetSize !== undefined ?
@@ -210,12 +225,26 @@ function createSmoothStreamingParser(
                         isNaN(parseInt(bitrateAttr, 10)) ? 0 :
                                                            parseInt(bitrateAttr, 10);
 
+        if (fourCC === undefined ||
+            MIME_TYPES[fourCC] === undefined ||
+            codecPrivateData === undefined) {
+          log.warn("Smooth parser: Unsupported video codec. Ignoring quality level.");
+          return null;
+        }
+
+        const codecs = getVideoCodecs(codecPrivateData);
+
+        if (codecs === null) {
+          log.warn("Smooth parser: Unsupported video codec. Ignoring quality level.");
+          return null;
+        }
+
         return {
           bitrate,
           customAttributes,
           mimeType: fourCC !== undefined ? MIME_TYPES[fourCC] : fourCC,
-          codecPrivateData: takeFirstSet<string>(codecPrivateData, ""),
-          codecs: getVideoCodecs(takeFirstSet<string>(codecPrivateData, "")),
+          codecPrivateData,
+          codecs,
           width: width !== undefined ? parseInt(width, 10) : undefined,
           height: height !== undefined ? parseInt(height, 10) : undefined,
         };
@@ -286,14 +315,6 @@ function createSmoothStreamingParser(
             if (qualityLevel === null) {
               return res;
             }
-            if (adaptationType === "audio") {
-              const fourCCAttr = node.getAttribute("FourCC");
-              const fourCC = fourCCAttr === null ? "" :
-                                                   fourCCAttr;
-
-              qualityLevel.codecs = getAudioCodecs(fourCC,
-                                                   qualityLevel.codecPrivateData);
-            }
 
             // filter out video qualityLevels with small bitrates
             if (adaptationType !== "video" ||
@@ -315,7 +336,7 @@ function createSmoothStreamingParser(
     // we assume that all qualityLevels have the same
     // codec and mimeType
     assert(qualityLevels.length !== 0,
-           "adaptation should have at least one representation");
+           "Adaptation should have at least one playable representation.");
 
     const adaptationID = adaptationType +
                          (isNonEmptyString(language) ? ("_" + language) :
