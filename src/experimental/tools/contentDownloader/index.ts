@@ -164,7 +164,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
               builder: { video, audio, text },
               progress,
               size,
-              duration: manifest.getDuration(),
+              duration: manifest.getMaximumPosition() - manifest.getMinimumPosition(),
               metaData,
             }).then(() =>
               this.trigger("insertDB", {
