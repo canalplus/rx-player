@@ -55,8 +55,35 @@ import {
  * @return {IPublicAPI}
  */
 class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
+  /**
+   * Detect if the current environment is supported for persistent licence
+   *
+   * @returns {boolean} - is supported
+   *
+  */
   static isPersistentLicenseSupported(): Promise<boolean> {
     return isPersistentLicenseSupported();
+  }
+
+  /**
+   * Get informations on the storage usage of the navigator 
+   * 
+   * @returns {Object<{ total: number, used: number }>} -
+   *  the space used and the total usable
+   * 
+  */
+  static async getStorageUsageInfos() {
+    if (navigator.storage == null || navigator.storage.estimate == null) {
+      return null;
+    }
+    const { quota, usage } = await navigator.storage.estimate();
+    if (quota === undefined || usage === undefined) {
+      return null;
+    }
+    return {
+      total: quota / 1e6,
+      used: usage / 1e6,
+    };
   }
 
   public readonly dbName: string;
@@ -103,8 +130,8 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
    * Start a download from scratch.
    * @param {Object<ISettingsDownloader>} settings
    * @returns {Promise.<string|void>} contentID -
-   * return the id generated of the content or void if an error happened
-   */
+   *  return the id generated of the content or void if an error happened
+  */
   async download(options: IApiLoader): Promise<string | void> {
     try {
       const db = this.db;
@@ -146,21 +173,27 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
                 progress: progress.percentage,
               })
             ).catch((err: Error) => {
-              this.trigger("error", {
-                action: "resume-downloader",
-                error: err,
-                contentID,
-              });
+              if (err instanceof Error) {
+                this.trigger("error", {
+                  action: "download",
+                  error: err,
+                  contentID,
+                });
+              }
             });
           },
-          (error: Error) => this.trigger("error", { action: "init-downloader", error })
+          (error) => {
+            if (error instanceof Error) {
+              this.trigger("error", { action: "download", error, contentID })
+            }
+          }
         );
       this.activeDownloads[contentID] = initDownloadSub;
       return contentID;
     } catch (error) {
       if (error instanceof Error) {
         this.trigger("error", {
-          action: "init-downloader",
+          action: "download",
           error,
         });
       }
@@ -219,25 +252,31 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
                 contentID,
                 progress: progress.percentage,
               })
-            ).catch((error: Error) => {
-              this.trigger("error", {
-                action: "resume-downloader",
-                error,
-                contentID,
-              });
+            ).catch((error) => {
+              if (error instanceof Error) {
+                this.trigger("error", {
+                  action: "resume",
+                  error,
+                  contentID,
+                });
+              }
             });
           },
-          (error: Error) =>
-            this.trigger("error", {
-              action: "resume-downloader",
-              error,
-              contentID,
-            })
+          (error) => {
+            if (error instanceof Error) {
+              this.trigger("error", {
+                action: "resume",
+                error,
+                contentID,
+              })
+            }
+          }
         );
       this.activeDownloads[contentID] = resumeDownloadSub;
     } catch (err) {
-      const error = err as Error;
-      this.trigger("error", { action: "resume-downloader", error, contentID });
+      if (err instanceof Error) {
+        this.trigger("error", { action: "resume", error: err, contentID });
+      }
     }
   }
 
@@ -251,7 +290,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
       isValidContentID(contentID);
       const activeDownloads = this.activeDownloads;
       const activePauses = this.activePauses;
-      if (activeDownloads[contentID] == null && activePauses[contentID] == null) {
+      if (activeDownloads[contentID] == null || activePauses[contentID] == null) {
         throw new ValidationArgsError(`Invalid contentID given: ${contentID}`);
       }
       activePauses[contentID].next();
@@ -261,47 +300,47 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
       delete activePauses[contentID];
     } catch (e) {
       if (e instanceof Error) {
-      this.trigger("error", {
-        action: "pause",
-        contentID,
-        error: e !== undefined ? e : new Error("A Unexpected error happened"),
-      });
+        this.trigger("error", {
+          action: "pause",
+          contentID,
+          error: e !== undefined ? e : new Error("A Unexpected error happened"),
+        });
+      }
     }
-  }
   }
 
   /**
    * Get all the downloaded entry (manifest) partially or fully downloaded.
    * @returns {Promise.<IStoredManifest[]|void>}
    */
-  getAllOfflineContent(
+  getAllLocalContent(
     limit?: number
   ): Promise<IStoredManifest[] | undefined> | void {
     try {
-      if (this.db == null) {
+      if (this.db === null) {
         throw new Error("The IndexedDB database has not been created!");
       }
       // TODO: return formatted content ?
       return this.db.getAll("manifests", undefined, limit);
     } catch (e) {
       if (e instanceof Error) {
-      this.trigger("error", {
-        action: "getAllDownloadedMovies",
-        error: new IndexedDBError(e.message),
-      });
+        this.trigger("error", {
+          action: "getAllLocalContent",
+          error: new IndexedDBError(e.message),
+        });
+      }
     }
-  }
   }
 
   /**
-   * Get a singleMovie ready to be played by the rx-player,
+   * Get a single content ready to be played by the rx-player,
    * could be fully or partially downloaded.
    * @param {string} contentID
    * @returns {Promise.<IContentLoader|void>}
    */
   async getSingleContent(contentID: string): Promise<IContentLoader | void> {
     try {
-      if (this.db == null) {
+      if (this.db === null) {
         throw new Error("The IndexedDB database has not been created!");
       }
       const [contentManifest, contentsProtection]: [
@@ -347,7 +386,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
     } catch (e) {
       if (e instanceof Error) {
       this.trigger("error", {
-        action: "getSingleMovie",
+        action: "getSingleContent",
         contentID,
         error: e !== undefined ? e : new Error("A Unexpected error happened"),
       });
@@ -355,23 +394,9 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
   }
   }
 
-  async getAvailableSpaceOnDevice() {
-    if (navigator.storage == null || navigator.storage.estimate == null) {
-      return null;
-    }
-    const { quota, usage } = await navigator.storage.estimate();
-    if (quota === undefined || usage === undefined) {
-      return null;
-    }
-    return {
-      total: quota / 1e6,
-      used: usage / 1e6,
-    };
-  }
-
   /**
    * Delete an entry partially or fully downloaded and stop the download
-   * if the content is downloading, then delete.
+   * if the content is downloading, stop the download and delete it.
    * @param {string} contentID
    * @returns {Promise.<void>}
    */
@@ -412,7 +437,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
     } catch (e) {
       if (e instanceof Error) {
       this.trigger("error", {
-        action: "delete-download",
+        action: "deleteContent",
         contentID,
         error: e !== undefined ? e : new Error("A Unexpected error happened"),
       });
