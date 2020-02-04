@@ -149,6 +149,10 @@ export default function createRepresentationIndex(
       return -1;
     },
 
+    validateIndexSegment(): void {
+      return;
+    },
+
     _update() : void {
       if (__DEV__) {
         log.warn("Tried to update a local Manifest RepresentationIndex");
