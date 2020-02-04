@@ -8,13 +8,13 @@ export default [
     "live": true,
   },
   {
-    "name": "Tears of Steal (clear)",
+    "name": "Tears of Steel (clear)",
     "url": "https://www.bok.net/dash/tears_of_steel/cleartext/stream.mpd",
     "transport": "dash",
     "live": false,
   },
   {
-    "name": "Tears of Steal (DRM Widevine)",
+    "name": "Tears of Steel (DRM Widevine)",
     "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
     "transport": "dash",
     "live": false,
@@ -24,7 +24,7 @@ export default [
     }],
   },
   {
-    "name": "Tears of Steal (DRM PlayReady)",
+    "name": "Tears of Steel (DRM PlayReady)",
     "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-playready.ism/.mpd",
     "transport": "dash",
     "live": false,
