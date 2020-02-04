@@ -168,7 +168,7 @@ export default function AdaptationBuffer<T>({
   // Bitrate higher or equal to this value should not be replaced by segments of
   // better quality.
   // undefined means everything can potentially be replaced
-  const fastSwitchingStep$ = abr$.pipe(
+  const knownStableBitrate$ = abr$.pipe(
     map(({ knownStableBitrate }) => knownStableBitrate),
     // always emit the last on subscribe
     multicast(() => new ReplaySubject< number | undefined >(1)),
@@ -270,7 +270,7 @@ export default function AdaptationBuffer<T>({
                                     segmentFetcher,
                                     terminate$: terminateCurrentBuffer$,
                                     bufferGoal$,
-                                    fastSwitchingStep$ })
+                                    knownStableBitrate$ })
         .pipe(catchError((err : unknown) => {
           const formattedError = formatError(err, {
             defaultCode: "NONE",
