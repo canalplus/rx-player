@@ -16,7 +16,7 @@
 
 import log from "../log";
 import Period from "./period";
-import updatePeriodInPlace from "./update_period_in_place";
+import replacePeriodInPlace from "./replace_period_in_place";
 
 /**
  * Update old periods by adding new periods and removing
@@ -24,10 +24,10 @@ import updatePeriodInPlace from "./update_period_in_place";
  * @param {Array.<Object>} oldPeriods
  * @param {Array.<Object>} newPeriods
  */
-export default function updatePeriods(
+export default function replacePeriods(
   oldPeriods: Period[],
   newPeriods: Period[]
-): void {
+) : void {
   let firstUnhandledPeriodIdx = 0;
   // Example :
   //
@@ -64,7 +64,7 @@ export default function updatePeriods(
       oldPeriod = oldPeriods[j];
     }
     if (oldPeriod != null) {
-      updatePeriodInPlace(oldPeriod, newPeriod);
+      replacePeriodInPlace(oldPeriod, newPeriod);
       const periodsToInclude = newPeriods.slice(firstUnhandledPeriodIdx, i);
       const nbrOfPeriodsToRemove = j - firstUnhandledPeriodIdx;
       oldPeriods.splice(firstUnhandledPeriodIdx,

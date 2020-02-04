@@ -142,9 +142,9 @@ export default function createRepresentationIndex(
       return -1;
     },
 
-    _update() : void {
+    _replace() : void {
       if (__DEV__) {
-        log.warn("Tried to update a local Manifest RepresentationIndex");
+        log.warn("Tried to replace a local Manifest RepresentationIndex");
       }
     },
 

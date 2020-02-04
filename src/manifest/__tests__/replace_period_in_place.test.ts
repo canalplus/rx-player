@@ -15,43 +15,43 @@
  */
 
 import log from "../../log";
-import updatePeriodInPlace from "../update_period_in_place";
+import replacePeriodInPlace from "../replace_period_in_place";
 
-describe("Manifest - updatePeriodInPlace", () => {
+describe("Manifest - replacePeriodInPlace", () => {
   it("should update the first Period given by the second one", () => {
     const oldVideoRepresentation1 = {
       parsingErrors: [],
       id: "rep-video-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldVideoRepresentation2 = {
       parsingErrors: [],
       id: "rep-video-2",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldVideoRepresentation3 = {
       parsingErrors: [],
       id: "rep-video-3",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldVideoRepresentation4 = {
       parsingErrors: [],
       id: "rep-video-4",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldAudioRepresentation = {
       parsingErrors: [],
       id: "rep-audio-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldVideoAdaptation1 = {
@@ -87,35 +87,35 @@ describe("Manifest - updatePeriodInPlace", () => {
       parsingErrors: [],
       id: "rep-video-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newVideoRepresentation2 = {
       parsingErrors: [],
       id: "rep-video-2",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newVideoRepresentation3 = {
       parsingErrors: [],
       id: "rep-video-3",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newVideoRepresentation4 = {
       parsingErrors: [],
       id: "rep-video-4",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newAudioRepresentation = {
       parsingErrors: [],
       id: "rep-audio-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newVideoAdaptation1 = {
@@ -149,31 +149,31 @@ describe("Manifest - updatePeriodInPlace", () => {
 
     const oldPeriodAdaptationsSpy = jest.spyOn(oldPeriod, "getAdaptations");
     const oldVideoRepresentation1UpdateSpy = jest.spyOn(
-      oldVideoRepresentation1.index, "_update");
+      oldVideoRepresentation1.index, "_replace");
     const oldVideoRepresentation2UpdateSpy = jest.spyOn(
-      oldVideoRepresentation2.index, "_update");
+      oldVideoRepresentation2.index, "_replace");
     const oldVideoRepresentation3UpdateSpy = jest.spyOn(
-      oldVideoRepresentation3.index, "_update");
+      oldVideoRepresentation3.index, "_replace");
     const oldVideoRepresentation4UpdateSpy = jest.spyOn(
-      oldVideoRepresentation4.index, "_update");
+      oldVideoRepresentation4.index, "_replace");
     const oldAudioRepresentationUpdateSpy = jest.spyOn(
-      oldAudioRepresentation.index, "_update");
+      oldAudioRepresentation.index, "_replace");
 
     const newPeriodAdaptationsSpy = jest.spyOn(newPeriod, "getAdaptations");
     const newVideoRepresentation1UpdateSpy = jest.spyOn(
-      newVideoRepresentation1.index, "_update");
+      newVideoRepresentation1.index, "_replace");
     const newVideoRepresentation2UpdateSpy = jest.spyOn(
-      newVideoRepresentation2.index, "_update");
+      newVideoRepresentation2.index, "_replace");
     const newVideoRepresentation3UpdateSpy = jest.spyOn(
-      newVideoRepresentation3.index, "_update");
+      newVideoRepresentation3.index, "_replace");
     const newVideoRepresentation4UpdateSpy = jest.spyOn(
-      newVideoRepresentation4.index, "_update");
+      newVideoRepresentation4.index, "_replace");
     const newAudioRepresentationUpdateSpy = jest.spyOn(
-      newAudioRepresentation.index, "_update");
+      newAudioRepresentation.index, "_replace");
 
     const logSpy = jest.spyOn(log, "warn");
 
-    updatePeriodInPlace(oldPeriod as any, newPeriod as any);
+    replacePeriodInPlace(oldPeriod as any, newPeriod as any);
 
     expect(oldPeriod.start).toEqual(500);
     expect(oldPeriod.end).toEqual(520);
@@ -220,21 +220,21 @@ describe("Manifest - updatePeriodInPlace", () => {
       parsingErrors: [],
       id: "rep-video-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldVideoRepresentation2 = {
       parsingErrors: [],
       id: "rep-video-2",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldAudioRepresentation = {
       parsingErrors: [],
       id: "rep-audio-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldVideoAdaptation1 = {
@@ -265,35 +265,35 @@ describe("Manifest - updatePeriodInPlace", () => {
       parsingErrors: [],
       id: "rep-video-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newVideoRepresentation2 = {
       parsingErrors: [],
       id: "rep-video-2",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newVideoRepresentation3 = {
       parsingErrors: [],
       id: "rep-video-3",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newVideoRepresentation4 = {
       parsingErrors: [],
       id: "rep-video-4",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newAudioRepresentation = {
       parsingErrors: [],
       id: "rep-audio-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newVideoAdaptation1 = {
@@ -326,7 +326,7 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
 
     const logSpy = jest.spyOn(log, "warn");
-    updatePeriodInPlace(oldPeriod as any, newPeriod as any);
+    replacePeriodInPlace(oldPeriod as any, newPeriod as any);
     expect(logSpy).not.toHaveBeenCalled();
     expect(oldPeriod.adaptations.video).toHaveLength(1);
     logSpy.mockRestore();
@@ -337,35 +337,35 @@ describe("Manifest - updatePeriodInPlace", () => {
       parsingErrors: [],
       id: "rep-video-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldVideoRepresentation2 = {
       parsingErrors: [],
       id: "rep-video-2",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldVideoRepresentation3 = {
       parsingErrors: [],
       id: "rep-video-3",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldVideoRepresentation4 = {
       parsingErrors: [],
       id: "rep-video-4",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldAudioRepresentation = {
       parsingErrors: [],
       id: "rep-audio-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldVideoAdaptation1 = {
@@ -401,21 +401,21 @@ describe("Manifest - updatePeriodInPlace", () => {
       parsingErrors: [],
       id: "rep-video-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newVideoRepresentation2 = {
       parsingErrors: [],
       id: "rep-video-2",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newAudioRepresentation = {
       parsingErrors: [],
       id: "rep-audio-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newVideoAdaptation1 = {
@@ -443,7 +443,7 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
 
     const logSpy = jest.spyOn(log, "warn");
-    updatePeriodInPlace(oldPeriod as any, newPeriod as any);
+    replacePeriodInPlace(oldPeriod as any, newPeriod as any);
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(logSpy).toHaveBeenCalledWith(
       "Manifest: Adaptation \"ada-video-2\" not found when merging."
@@ -457,14 +457,14 @@ describe("Manifest - updatePeriodInPlace", () => {
       parsingErrors: [],
       id: "rep-video-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldAudioRepresentation = {
       parsingErrors: [],
       id: "rep-audio-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldVideoAdaptation1 = {
@@ -495,21 +495,21 @@ describe("Manifest - updatePeriodInPlace", () => {
       parsingErrors: [],
       id: "rep-video-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newVideoRepresentation2 = {
       parsingErrors: [],
       id: "rep-video-2",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newAudioRepresentation = {
       parsingErrors: [],
       id: "rep-audio-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newVideoAdaptation1 = {
@@ -537,7 +537,7 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
 
     const logSpy = jest.spyOn(log, "warn");
-    updatePeriodInPlace(oldPeriod as any, newPeriod as any);
+    replacePeriodInPlace(oldPeriod as any, newPeriod as any);
     expect(logSpy).not.toHaveBeenCalled();
     expect(oldVideoAdaptation1.representations).toHaveLength(1);
     logSpy.mockRestore();
@@ -548,21 +548,21 @@ describe("Manifest - updatePeriodInPlace", () => {
       parsingErrors: [],
       id: "rep-video-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldVideoRepresentation2 = {
       parsingErrors: [],
       id: "rep-video-2",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldAudioRepresentation = {
       parsingErrors: [],
       id: "rep-audio-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const oldVideoAdaptation1 = {
@@ -593,14 +593,14 @@ describe("Manifest - updatePeriodInPlace", () => {
       parsingErrors: [],
       id: "rep-video-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newAudioRepresentation = {
       parsingErrors: [],
       id: "rep-audio-1",
       index: {
-        _update() { /* noop */ },
+        _replace() { /* noop */ },
       },
     };
     const newVideoAdaptation1 = {
@@ -628,7 +628,7 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
 
     const logSpy = jest.spyOn(log, "warn");
-    updatePeriodInPlace(oldPeriod as any, newPeriod as any);
+    replacePeriodInPlace(oldPeriod as any, newPeriod as any);
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(logSpy).toHaveBeenCalledWith(
       "Manifest: Representation \"rep-video-2\" not found when merging."

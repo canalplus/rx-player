@@ -27,9 +27,9 @@ import Adaptation, {
   IRepresentationFilter,
 } from "./adaptation";
 import Period from "./period";
+import replacePeriods from "./replace_periods";
 import Representation from "./representation";
 import { StaticRepresentationIndex } from "./representation_index";
-import updatePeriods from "./update_periods";
 
 const generateNewId = idGenerator();
 
@@ -315,10 +315,10 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   }
 
   /**
-   * Update the current manifest properties
+   * Replace the current manifest properties
    * @param {Object} Manifest
    */
-  update(newManifest : Manifest) : void {
+  replace(newManifest : Manifest) : void {
     /* tslint:disable:deprecation */
     this.adaptations = newManifest.adaptations;
     /* tslint:enable:deprecation */
@@ -336,7 +336,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.transport = newManifest.transport;
     this.uris = newManifest.uris;
 
-    updatePeriods(this.periods, newManifest.periods);
+    replacePeriods(this.periods, newManifest.periods);
 
     this.trigger("manifestUpdate", null);
   }

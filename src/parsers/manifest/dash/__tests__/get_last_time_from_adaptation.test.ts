@@ -30,7 +30,7 @@ function generateRepresentationIndex(
     isSegmentStillAvailable() : undefined { return ; },
     isFinished() { return false; },
     canBeOutOfSyncError() : true { return true; },
-    _update() { /* noop */ },
+    _replace() { /* noop */ },
     _addSegments() { /* noop */ },
   };
 }

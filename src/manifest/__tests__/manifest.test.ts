@@ -352,7 +352,7 @@ describe("Manifest - Manifest", () => {
       __esModule: true,
       default: fakePeriod,
     }));
-    jest.mock("../update_period_in_place", () =>  ({
+    jest.mock("../replace_period_in_place", () =>  ({
       __esModule: true,
       default: fakeUpdatePeriodInPlace,
     }));
@@ -406,7 +406,7 @@ describe("Manifest - Manifest", () => {
                                 transport: "foob",
                                 uris: ["url3", "url4"] };
 
-    manifest.update(newManifest);
+    manifest.replace(newManifest);
     expect(manifest.adaptations).toEqual(newAdaptations);
     expect(manifest.availabilityStartTime).toEqual(6);
     expect(manifest.baseURL).toEqual("test2");
@@ -473,7 +473,7 @@ describe("Manifest - Manifest", () => {
     });
     jest.mock("../period", () =>  ({ __esModule: true,
                                      default: fakePeriod }));
-    jest.mock("../update_period_in_place", () =>  ({
+    jest.mock("../replace_period_in_place", () =>  ({
       __esModule: true,
       default: fakeUpdatePeriodInPlace,
     }));
@@ -512,7 +512,7 @@ describe("Manifest - Manifest", () => {
                           transport: "foob",
                           uris: ["url3", "url4"] };
 
-    manifest.update(newManifest as any);
+    manifest.replace(newManifest as any);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
@@ -562,7 +562,7 @@ describe("Manifest - Manifest", () => {
     });
     jest.mock("../period", () =>  ({ __esModule: true,
                                      default: fakePeriod }));
-    jest.mock("../update_period_in_place", () =>  ({
+    jest.mock("../replace_period_in_place", () =>  ({
       __esModule: true,
       default: fakeUpdatePeriodInPlace,
     }));
@@ -589,7 +589,7 @@ describe("Manifest - Manifest", () => {
                           transport: "foob",
                           uris: ["url3", "url4"] };
 
-    manifest.update(newManifest as any);
+    manifest.replace(newManifest as any);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
@@ -637,7 +637,7 @@ describe("Manifest - Manifest", () => {
     });
     jest.mock("../period", () =>  ({ __esModule: true,
                                      default: fakePeriod }));
-    jest.mock("../update_period_in_place", () =>  ({
+    jest.mock("../replace_period_in_place", () =>  ({
       __esModule: true,
       default: fakeUpdatePeriodInPlace,
     }));
@@ -663,7 +663,7 @@ describe("Manifest - Manifest", () => {
                           transport: "foob",
                           uris: ["url3", "url4"] };
 
-    manifest.update(newManifest as any);
+    manifest.replace(newManifest as any);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
@@ -711,7 +711,7 @@ describe("Manifest - Manifest", () => {
     });
     jest.mock("../period", () =>  ({ __esModule: true,
                                      default: fakePeriod }));
-    jest.mock("../update_period_in_place", () =>  ({
+    jest.mock("../replace_period_in_place", () =>  ({
       __esModule: true,
       default: fakeUpdatePeriodInPlace,
     }));
@@ -744,7 +744,7 @@ describe("Manifest - Manifest", () => {
                           transport: "foob",
                           uris: ["url3", "url4"] };
 
-    manifest.update(newManifest as any);
+    manifest.replace(newManifest as any);
 
     expect(manifest.periods).toEqual([ newPeriod1,
                                        newPeriod2,
