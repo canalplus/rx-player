@@ -43,8 +43,8 @@ import {
 import assertUnreachable from "../../../utils/assert_unreachable";
 import castToObservable from "../../../utils/cast_to_observable";
 import tryCatch from "../../../utils/rx-try_catch";
-import backoff from "../utils/backoff";
 import errorSelector from "../utils/error_selector";
+import tryURLsWithBackoff from "../utils/try_urls_with_backoff";
 
 // Data comes from a local cache (no request was done)
 interface IPipelineLoaderCache<T> { type : "cache";
@@ -187,36 +187,35 @@ export default function createSegmentLoader<T>(
                     IPipelineLoaderRequest |
                     IPipelineLoaderWarning >
     {
-      // only consider the first URL defined for now
-      // TODO handle multiple URLs per segment
-      const url = wantedContent.segment.mediaURLs?.[0] ?? null;
-      const loaderArgument = objectAssign({ url }, wantedContent);
-      const request$ = backoff<ISegmentLoaderEvent<T>>(
-        tryCatch<ISegmentLoaderArguments,
-                 ISegmentLoaderEvent<T>>(loader, loaderArgument),
-        backoffOptions
-      ).pipe(
+      const request$ = (url : string | null) => {
+        const loaderArgument = objectAssign({ url }, wantedContent);
+        return observableConcat(
+          observableOf({ type: "request" as const, value: loaderArgument }),
+          tryCatch(loader, loaderArgument));
+      };
+      return tryURLsWithBackoff(wantedContent.segment.mediaURLs ?? [null],
+                                                                   request$,
+                                backoffOptions).pipe(
         catchError((error : unknown) : Observable<never> => {
           throw errorSelector(error);
         }),
 
-        map((evt) : ISegmentLoaderEvent<T> | IPipelineLoaderWarning => {
+        map((evt) : ISegmentLoaderEvent<T> |
+                    IPipelineLoaderWarning |
+                    IPipelineLoaderRequest => {
           if (evt.type === "retry") {
             return { type: "warning" as const,
                      value: errorSelector(evt.value) };
+          } else if (evt.value.type === "request") {
+            return evt.value;
           }
 
           const response = evt.value;
           if (response.type === "data-loaded" && cache != null) {
-            cache.add(loaderArgument, response.value);
+            cache.add(wantedContent, response.value);
           }
           return evt.value;
         }));
-
-      return observableConcat(
-        observableOf({ type: "request" as const, value: loaderArgument }),
-        request$
-      );
     }
 
     const dataFromCache = cache != null ? cache.get(wantedContent) :
