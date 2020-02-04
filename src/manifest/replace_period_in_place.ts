@@ -24,8 +24,8 @@ import Period from "./period";
  * @param {Object} oldPeriod
  * @param {Object} newPeriod
  */
-export default function updatePeriodInPlace(oldPeriod : Period,
-                                            newPeriod : Period) : void
+export default function replacePeriodInPlace(oldPeriod : Period,
+                                             newPeriod : Period) : void
 {
   oldPeriod.start = newPeriod.start;
   oldPeriod.end = newPeriod.end;
@@ -56,7 +56,7 @@ export default function updatePeriodInPlace(oldPeriod : Period,
           log.warn(`Manifest: Representation "${oldRepresentations[k].id}" ` +
                    "not found when merging.");
         } else {
-          oldRepresentation.index._update(newRepresentation.index);
+          oldRepresentation.index._replace(newRepresentation.index);
         }
       }
     }

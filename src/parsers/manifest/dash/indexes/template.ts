@@ -371,7 +371,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   /**
    * @param {Object} newIndex
    */
-  _update(newIndex : TemplateRepresentationIndex) : void {
+  _replace(newIndex : TemplateRepresentationIndex) : void {
     this._index = newIndex._index;
     this._aggressiveMode = newIndex._aggressiveMode;
     this._isDynamic = newIndex._isDynamic;

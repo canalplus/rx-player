@@ -470,12 +470,12 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * Update this RepresentationIndex by a newly downloaded one.
+   * Replace this RepresentationIndex by a newly downloaded one.
    * Check if the old index had more information about new segments and re-add
    * them if that's the case.
    * @param {Object} newIndex
    */
-  _update(newIndex : SmoothRepresentationIndex) : void {
+  _replace(newIndex : SmoothRepresentationIndex) : void {
     const oldTimeline = this._index.timeline;
     const newTimeline = newIndex._index.timeline;
     const oldTimescale = this._index.timescale;

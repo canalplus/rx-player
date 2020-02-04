@@ -65,12 +65,12 @@ describe("manifest - StaticRepresentationIndex", () => {
     expect(staticRI.getSegments().length).toBe(1);
   });
 
-  it("should never update and warn when trying to do so", () => {
+  it("should never replace and warn when trying to do so", () => {
     const spy = jest.fn();
     jest.spyOn(log, "warn").mockImplementation(spy);
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
 
-    staticRI._update();
+    staticRI._replace();
 
     expect(spy).toHaveBeenCalledTimes(1);
   });

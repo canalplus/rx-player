@@ -292,7 +292,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   /**
    * @param {Object} newIndex
    */
-  _update(newIndex : BaseRepresentationIndex) : void {
+  _replace(newIndex : BaseRepresentationIndex) : void {
     this._index = newIndex._index;
   }
 }

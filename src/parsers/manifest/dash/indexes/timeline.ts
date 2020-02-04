@@ -453,7 +453,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   /**
    * @param {Object} newIndex
    */
-  _update(newIndex : TimelineRepresentationIndex) : void {
+  _replace(newIndex : TimelineRepresentationIndex) : void {
     this._index = newIndex._index;
     this._isDynamic = newIndex._isDynamic;
     this._scaledPeriodStart = newIndex._scaledPeriodStart;
