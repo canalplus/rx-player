@@ -15,7 +15,7 @@
  */
 
 import { IDBPDatabase } from "idb";
-import { EMPTY, merge, of, Subject } from "rxjs";
+import { EMPTY, merge, of, Subject, throwError } from "rxjs";
 import {
  bufferCount,
  catchError,
@@ -30,8 +30,8 @@ import {
 } from "rxjs/operators";
 
 import { IContentProtection } from "../../../../../core/eme";
-import { SegmentPipelinesManager } from "../../../../../core/pipelines";
-import { IInitSettings } from "../../types";
+import { SegmentPipelineCreator } from "../../../../../core/pipelines";
+import { IContentDownloaderEvents, IEmitterTrigger, IInitSettings } from "../../types";
 import { IndexedDBError, SegmentConstuctionError } from "../../utils";
 import ContentManager from "../context/ContentsManager";
 import { ContentType } from "../context/types";
@@ -53,11 +53,12 @@ import { ICustomSegment, IInitGroupedSegments, IInitSegment } from "./types";
  */
 export function initDownloader$(
   { contentID, url, quality, videoQualityPicker, transport, keySystems }: IInitSettings,
-  db: IDBPDatabase
+  db: IDBPDatabase,
+  emitter: IEmitterTrigger<IContentDownloaderEvents>
 ) {
   return manifestLoader(url, transport).pipe(
     mergeMap(({ manifest, transportPipelines }) => {
-      const segmentPipelinesManager = new SegmentPipelinesManager<any>(
+      const segmentPipelineCreator = new SegmentPipelineCreator<any>(
         transportPipelines,
         {
           lowLatencyMode: false,
@@ -91,25 +92,40 @@ export function initDownloader$(
               distinctUntilKeyChanged("emeEvtType"),
               bufferCount(2),
               timeout(2000),
-              catchError(() => of("handShakesEMEDone")),
+              catchError((err) => {
+                if (err instanceof Error && err.name !== "TimeoutError") {
+                  return throwError(err);
+                }
+                return of("handShakesEMEDone");
+              }),
               mapTo({ type: "eme" }))
             : EMPTY,
             handleSegmentPipelineFromContexts(video, ContentType.VIDEO, {
-              segmentPipelinesManager,
+              segmentPipelineCreator,
               isInitData: true,
               type: "start",
             }),
             handleSegmentPipelineFromContexts(audio, ContentType.AUDIO, {
-              segmentPipelinesManager,
+              segmentPipelineCreator,
               isInitData: true,
               type: "start",
             }),
             handleSegmentPipelineFromContexts(text, ContentType.TEXT, {
-              segmentPipelinesManager,
+              segmentPipelineCreator,
               isInitData: true,
               type: "start",
             })
           );
+        }),
+        catchError((err) => {
+          if (err instanceof Error) {
+            emitter.trigger("error", {
+              action: "download",
+              contentID,
+              error: err !== undefined ? err : new Error("An Unexpected error happened"),
+            });
+          }
+          return EMPTY;
         }),
         mergeMap((initSegment) => {
           if (initSegment.type === "eme") {
@@ -155,7 +171,7 @@ export function initDownloader$(
           return {
             nextSegments,
             ctx,
-            segmentPipelinesManager,
+            segmentPipelineCreator,
             contentType,
           };
         })
@@ -168,10 +184,10 @@ export function initDownloader$(
           nextSegments,
           ctx: { period, adaptation, representation, manifest },
           contentType,
-          segmentPipelinesManager,
+          segmentPipelineCreator,
         }
       ) => {
-        acc.progress.segmentsDownloaded += nextSegments.length;
+        acc.progress.totalSegments += nextSegments.length;
         acc[contentType].push({
           nextSegments,
           period,
@@ -179,14 +195,14 @@ export function initDownloader$(
           representation,
           id: representation.id as string,
         });
-        return { ...acc, segmentPipelinesManager, manifest };
+        return { ...acc, segmentPipelineCreator, manifest };
       },
       {
         progress: { percentage: 0, segmentsDownloaded: 0, totalSegments: 0 },
         video: [],
         audio: [],
         text: [],
-        segmentPipelinesManager: null,
+        segmentPipelineCreator: null,
         manifest: null,
         type: "start",
       }

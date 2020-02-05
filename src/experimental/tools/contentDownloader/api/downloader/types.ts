@@ -18,7 +18,7 @@ import { IDBPDatabase } from "idb";
 import { AsyncSubject } from "rxjs";
 
 import { TypedArray } from "../../../../../core/eme";
-import { SegmentPipelinesManager } from "../../../../../core/pipelines";
+import { SegmentPipelineCreator } from "../../../../../core/pipelines";
 import Manifest, {
   Adaptation,
   ISegment,
@@ -88,7 +88,7 @@ export interface IInitSegment {
   nextSegments: ISegment[];
   ctx: IContext;
   contentType: ContentBufferType;
-  segmentPipelinesManager: SegmentPipelinesManager<any>;
+  segmentPipelineCreator: SegmentPipelineCreator<any>;
 }
 
 export interface IInitGroupedSegments {
@@ -96,7 +96,7 @@ export interface IInitGroupedSegments {
   video: IContextRicher[];
   audio: IContextRicher[];
   text: IContextRicher[];
-  segmentPipelinesManager: SegmentPipelinesManager<any> | null;
+  segmentPipelineCreator: SegmentPipelineCreator<any> | null;
   manifest: Manifest | null;
   type: DownloadType;
 }
@@ -150,14 +150,14 @@ export interface ISegmentPipelineContext {
   type: DownloadType;
   progress?: IProgressInformations;
   isInitData: boolean;
-  segmentPipelinesManager: SegmentPipelinesManager<any>;
+  segmentPipelineCreator: SegmentPipelineCreator<any>;
   nextSegments?: ISegment[];
 }
 
 export interface IAbstractContextCreation {
   type: DownloadType;
   progress: IProgressInformations;
-  segmentPipelinesManager: SegmentPipelinesManager<any>;
+  segmentPipelineCreator: SegmentPipelineCreator<any>;
   manifest: Manifest;
 }
 

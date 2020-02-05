@@ -17,7 +17,7 @@
 import { AsyncSubject, combineLatest, of } from "rxjs";
 import { filter, startWith } from "rxjs/operators";
 
-import { SegmentPipelinesManager } from "../../../../../core/pipelines";
+import { SegmentPipelineCreator } from "../../../../../core/pipelines";
 import { IInitSettings, IStoredManifest } from "../../types";
 import { initDownloader$ } from "./initSegment";
 import { getTransportPipelineByTransport } from "./manifest";
@@ -46,7 +46,7 @@ class DownloadManager {
       size: 0,
     };
     const pipelineSegmentDownloader$ = segmentPipelineDownloader$(
-      initDownloader$(initSettings, this.utils.db),
+      initDownloader$(initSettings, this.utils.db, this.utils.emitter),
       builderInit,
       { contentID, db: this.utils.db, pause$, emitter: this.utils.emitter }
     );
@@ -69,7 +69,7 @@ class DownloadManager {
       transport,
       size,
     } = resumeSettings;
-    const segmentPipelinesManager = new SegmentPipelinesManager<any>(
+    const segmentPipelineCreator = new SegmentPipelineCreator<any>(
       getTransportPipelineByTransport(transport),
       {
         lowLatencyMode: false,
@@ -90,7 +90,7 @@ class DownloadManager {
         audio,
         text,
         manifest,
-        segmentPipelinesManager,
+        segmentPipelineCreator,
         type: "resume",
       }),
       builderInit,

@@ -18,6 +18,7 @@ import { EMPTY, merge, Observable, of, Subject } from "rxjs";
 import { map, mergeMap, reduce, scan, takeUntil, tap } from "rxjs/operators";
 
 import { ISegmentParserResponse } from "../../../../../transports";
+import find from "../../../../../utils/array_find";
 import findIndex from "../../../../../utils/array_find_index";
 import { concat, strToBytes } from "../../../../../utils/byte_parsing";
 
@@ -58,14 +59,14 @@ export function handleSegmentPipelineFromContexts<
   ctxs: IContext[],
   contentType: KeyContextType,
   {
-    segmentPipelinesManager,
+    segmentPipelineCreator,
     isInitData,
     nextSegments,
     progress,
     type,
   }: ISegmentPipelineContext
 ): Observable<ICustomSegment> {
-  const segmentFetcherForCurrentContentType = segmentPipelinesManager.createPipeline(
+  const segmentFetcherForCurrentContentType = segmentPipelineCreator.createPipeline(
     contentType,
     new Subject()
   );
@@ -88,25 +89,43 @@ export function handleSegmentPipelineFromContexts<
             (acc, currSegparserResp) => {
               // For init segment...
               if (currSegparserResp.type === "parsed-init-segment") {
-                const { initializationData, segmentProtection } = currSegparserResp.value;
+                const {
+                  initializationData,
+                  segmentProtections,
+                } = currSegparserResp.value;
                 if (
                   acc.contentProtection === undefined &&
-                  currSegparserResp.value.segmentProtection !== null
+                  segmentProtections !== null
                 ) {
                   acc.contentProtection = new Uint8Array(0);
                 }
                 if (currSegparserResp.value.initializationData === null) {
                   return acc;
                 }
-               return {
-                 data: concat(acc.data, initializationData as Uint8Array),
-                 contentProtection: acc.contentProtection !== undefined ? concat(
-                   acc.contentProtection,
-                   segmentProtection !== null
-                    ? segmentProtection.value
-                    : new Uint8Array(0)
-                ) : undefined,
-               };
+                // create segment init concatened with segment protection cenc.
+                if (
+                  acc.contentProtection !== undefined &&
+                  segmentProtections !== null &&
+                  segmentProtections.length > 0
+                ) {
+                  const cencContentProtection = find(
+                    segmentProtections,
+                    segmentProtection => segmentProtection.type === "cenc"
+                  )?.data;
+                  if (cencContentProtection !== undefined) {
+                    return {
+                      data: concat(acc.data, initializationData as Uint8Array),
+                      contentProtection: concat(
+                        acc.contentProtection,
+                        cencContentProtection
+                      ),
+                    };
+                  }
+                }
+                return {
+                  ...acc,
+                  data: concat(acc.data, initializationData as Uint8Array),
+                };
               }
               // For simple segment
               const { chunkData } = currSegparserResp.value;
@@ -130,7 +149,9 @@ export function handleSegmentPipelineFromContexts<
               return {
                 data: concat(acc.data, chunkData as Uint8Array),
               };
-          }, { data: new Uint8Array(0) }),
+            },
+            { data: new Uint8Array(0) }
+          ),
           map(chunkData => {
             if (nextSegments !== undefined && !isInitData) {
               (nextSegments[index] as any) = [
@@ -172,12 +193,7 @@ export function handleSegmentPipelineFromContexts<
 function handleAbstractSegmentPipelineContextFor(
   contextsRicher: IContextRicher[],
   contentType: ContentBufferType,
-  {
-    type,
-    progress,
-    segmentPipelinesManager,
-    manifest,
-  }: IAbstractContextCreation
+  { type, progress, segmentPipelineCreator, manifest }: IAbstractContextCreation
 ) {
   return of(...contextsRicher).pipe(
     mergeMap(contextRicher => {
@@ -189,7 +205,7 @@ function handleAbstractSegmentPipelineContextFor(
           type,
           progress,
           nextSegments,
-          segmentPipelinesManager,
+          segmentPipelineCreator,
           isInitData: false,
         }
       );
@@ -225,49 +241,59 @@ export function segmentPipelineDownloader$(
         video,
         audio,
         text,
-        segmentPipelinesManager,
+        segmentPipelineCreator,
         manifest,
         progress,
         type,
       }) => {
-        if (manifest == null || segmentPipelinesManager == null) {
+        if (manifest == null || segmentPipelineCreator == null) {
           return EMPTY;
         }
         return merge(
           handleAbstractSegmentPipelineContextFor(video, ContentType.VIDEO, {
             type,
             progress,
-            segmentPipelinesManager,
+            segmentPipelineCreator,
             manifest,
           }),
           handleAbstractSegmentPipelineContextFor(audio, ContentType.AUDIO, {
             type,
             progress,
-            segmentPipelinesManager,
+            segmentPipelineCreator,
             manifest,
           }),
           handleAbstractSegmentPipelineContextFor(text, ContentType.TEXT, {
             type,
             progress,
-            segmentPipelinesManager,
+            segmentPipelineCreator,
             manifest,
           })
         );
       }
     ),
-    tap(({ chunkData, representationID, ctx: { segment: { time } }, contentType }) => {
-      db.put("segments", {
-        contentID,
-        segmentKey: `${time}--${representationID}--${contentID}`,
-        data: chunkData.data,
-        size: chunkData.data.byteLength,
+    tap(
+      ({
+        chunkData,
+        representationID,
+        ctx: {
+          segment: { time, timescale },
+        },
+        contentType,
+      }) => {
+        const timeScaled = (time / timescale) * 1000;
+        db.put("segments", {
+          contentID,
+          segmentKey: `${timeScaled}--${representationID}--${contentID}`,
+          data: chunkData.data,
+          size: chunkData.data.byteLength,
         }).catch((err: Error) => {
           throw new IndexedDBError(`
           ${contentID}: Impossible
-          to store the current segment (${contentType}) at ${time}: ${err.message}
+          to store the current segment (${contentType}) at ${timeScaled}: ${err.message}
         `);
-      });
-    }),
+        });
+      }
+    ),
     scan<ICustomSegment, IManifestDBState>(
       (
         acc,

@@ -303,7 +303,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
         this.trigger("error", {
           action: "pause",
           contentID,
-          error: e !== undefined ? e : new Error("A Unexpected error happened"),
+          error: e !== undefined ? e : new Error("An Unexpected error happened"),
         });
       }
     }
@@ -388,7 +388,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
       this.trigger("error", {
         action: "getSingleContent",
         contentID,
-        error: e !== undefined ? e : new Error("A Unexpected error happened"),
+        error: e !== undefined ? e : new Error("An Unexpected error happened"),
       });
     }
   }
@@ -439,7 +439,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
       this.trigger("error", {
         action: "deleteContent",
         contentID,
-        error: e !== undefined ? e : new Error("A Unexpected error happened"),
+        error: e !== undefined ? e : new Error("An Unexpected error happened"),
       });
     }
   }

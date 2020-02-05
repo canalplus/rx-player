@@ -167,7 +167,10 @@ export function getBuilderFormattedForSegments({
             (accSegts, currSegment) => {
               if (Array.isArray(currSegment)) {
                 const [time, timescale, duration] = currSegment;
-                accSegts.push({ time, timescale, duration });
+                accSegts.push({
+                  time: (time / timescale) * 1000,
+                  duration: (duration / timescale) * 1000,
+                });
                 return accSegts;
               }
             return accSegts;
