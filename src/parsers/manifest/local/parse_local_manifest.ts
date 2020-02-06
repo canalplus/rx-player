@@ -51,6 +51,11 @@ export default function parseLocalManifest(
     availabilityStartTime: 0,
     baseURLs: null,
     duration: localManifest.duration,
+    maximumTime: {
+      isContinuous : false,
+      value : localManifest.duration,
+      time : performance.now(),
+    },
     expired: localManifest.expired,
     id: "local-manifest_" + generateManifestID(),
     transportType: "local",
