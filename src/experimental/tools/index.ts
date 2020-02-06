@@ -15,7 +15,7 @@
  */
 
 import createMetaplaylist from "./createMetaplaylist";
-import contentDownloader from "./contentDownloader";
+import ContentDownloader from "./ContentDownloader";
 import mediaCapabilitiesProber from "./mediaCapabilitiesProber";
 import parseBifThumbnails from "./parseBIFThumbnails";
 import TextTrackRenderer from "./TextTrackRenderer";
@@ -25,5 +25,5 @@ export {
   mediaCapabilitiesProber,
   parseBifThumbnails,
   TextTrackRenderer,
-  contentDownloader,
+  ContentDownloader,
 };
