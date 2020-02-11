@@ -37,7 +37,8 @@ import Manifest, {
 import SimpleSet from "../../../utils/simple_set";
 import { IBufferedChunk } from "../../source_buffers";
 
-const { BITRATE_REBUFFERING_RATIO,
+const { CONTENT_REPLACEMENT_PADDING,
+        BITRATE_REBUFFERING_RATIO,
         MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,
         MINIMUM_SEGMENT_SIZE } = config;
 
@@ -177,7 +178,7 @@ function shouldContentBeReplaced(
   const { segment } = oldContent;
   if (shouldAppendBufferAfterPadding &&
       (segment.time / segment.timescale) <
-      (currentPlaybackTime + segment.duration / segment.timescale)) {
+      (currentPlaybackTime + CONTENT_REPLACEMENT_PADDING)) {
       return false;
   }
 

@@ -819,4 +819,12 @@ export default {
    * @type {Number}
    */
   SOURCE_BUFFER_FLUSHING_INTERVAL: 2000,
+
+  /**
+   * Padding under which we should not buffer from the current time, on
+   * Safari. To avoid some buffer appending issues on it, we decide not
+   * to load a segment if it may be pushed during playback time.
+   * @type {Number} - in seconds
+   */
+  CONTENT_REPLACEMENT_PADDING: 2,
 };
