@@ -36,7 +36,7 @@ export default function resolveBaseURLs(
         result.push(newBaseURLs[i].value);
       }
     }
-    return newBaseURLs.map(newBaseURL => newBaseURL.value);
+    return result;
   } else {
     for (let i = 0; i < currentBaseURLs.length; i++) {
       const rootURL = currentBaseURLs[i];
