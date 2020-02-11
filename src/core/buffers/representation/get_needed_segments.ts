@@ -185,7 +185,6 @@ function shouldContentBeReplaced(
     return true; // replace segments from another Adaptation
   }
 
-
   const oldContentBitrate = oldContent.representation.bitrate;
   if (knownStableBitrate === undefined) {
     // only re-load comparatively-poor bitrates for the same Adaptation.
