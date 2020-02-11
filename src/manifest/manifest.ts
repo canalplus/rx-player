@@ -27,9 +27,13 @@ import Adaptation, {
   IRepresentationFilter,
 } from "./adaptation";
 import Period from "./period";
-import replacePeriods from "./replace_periods";
 import Representation from "./representation";
 import { StaticRepresentationIndex } from "./representation_index";
+import { MANIFEST_UPDATE_TYPE } from "./types";
+import {
+  replacePeriods,
+  updatePeriods,
+} from "./update_periods";
 
 const generateNewId = idGenerator();
 
@@ -55,16 +59,17 @@ interface IManifestParsingOptions {
   representationFilter? : IRepresentationFilter;
 }
 
-export interface IDecipherabilityUpdateElement {
-  manifest : Manifest;
-  period : Period;
-  adaptation : Adaptation;
-  representation : Representation;
-}
+// Representation affected by a `decipherabilityUpdate` event
+export interface IDecipherabilityUpdateElement { manifest : Manifest;
+                                                 period : Period;
+                                                 adaptation : Adaptation;
+                                                 representation : Representation; }
 
+// Events emitted by a Manifest
 export interface IManifestEvents {
-  manifestUpdate : null;
+  // Some Representation's decipherability status has been updated
   decipherabilityUpdate : IDecipherabilityUpdateElement[];
+  manifestUpdate : null; // The Manifest has been updated
 }
 
 /**
@@ -315,30 +320,22 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   }
 
   /**
-   * Replace the current manifest properties
+   * update the current Manifest properties by those from the newly updated
+   * Manifest.
    * @param {Object} Manifest
    */
-  replace(newManifest : Manifest) : void {
-    /* tslint:disable:deprecation */
-    this.adaptations = newManifest.adaptations;
-    /* tslint:enable:deprecation */
+  public replace(newManifest : Manifest) : void {
+    this._performUpdate(newManifest, MANIFEST_UPDATE_TYPE.Full);
+  }
 
-    this.availabilityStartTime = newManifest.availabilityStartTime;
-    this.baseURLs = newManifest.baseURLs;
-    this.id = newManifest.id;
-    this.isDynamic = newManifest.isDynamic;
-    this.isLive = newManifest.isLive;
-    this.lifetime = newManifest.lifetime;
-    this.maximumTime = newManifest.maximumTime;
-    this.minimumTime = newManifest.minimumTime;
-    this.parsingErrors = newManifest.parsingErrors;
-    this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
-    this.transport = newManifest.transport;
-    this.uris = newManifest.uris;
-
-    replacePeriods(this.periods, newManifest.periods);
-
-    this.trigger("manifestUpdate", null);
+  /**
+   * Update current Manifest with a shorter new Manifest.
+   * /!\ Throws if the given Manifest cannot be used or is not sufficient to
+   * update the Manifest.
+   * @param {Object} newManifest
+   */
+  public update(newManifest : Manifest) : void {
+    this._performUpdate(newManifest, MANIFEST_UPDATE_TYPE.Partial);
   }
 
   /**
@@ -538,6 +535,40 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
         adaptations.text != null ? adaptations.text.concat(newTextAdaptations) :
                                    newTextAdaptations;
     }
+  }
+
+  /**
+   * @param {Object} newManifest
+   * @param {number} type
+   */
+  private _performUpdate(
+    newManifest : Manifest,
+    updateType : MANIFEST_UPDATE_TYPE
+  ) : void {
+    this.availabilityStartTime = newManifest.availabilityStartTime;
+    this.baseURLs = newManifest.baseURLs;
+    this.id = newManifest.id;
+    this.isDynamic = newManifest.isDynamic;
+    this.isLive = newManifest.isLive;
+    this.lifetime = newManifest.lifetime;
+    this.maximumTime = newManifest.maximumTime;
+    this.minimumTime = newManifest.minimumTime;
+    this.parsingErrors = newManifest.parsingErrors;
+    this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
+    this.transport = newManifest.transport;
+    this.uris = newManifest.uris;
+
+    if (updateType === MANIFEST_UPDATE_TYPE.Full) {
+      replacePeriods(this.periods, newManifest.periods);
+    } else {
+      updatePeriods(this.periods, newManifest.periods);
+    }
+
+    /* tslint:disable:deprecation */
+    this.adaptations = this.periods[0].adaptations;
+    /* tslint:enable:deprecation */
+
+    this.trigger("manifestUpdate", null);
   }
 }
 

@@ -14,16 +14,8 @@
  * limitations under the License.
  */
 
-import { IStallingItem } from "./get_stalled_events";
-import InitializeOnMediaSource, {
-  IInitEvent,
-  IInitializeArguments,
-} from "./initialize_media_source";
-export * from "./types";
-
-export default InitializeOnMediaSource;
-export {
-  IInitEvent,
-  IInitializeArguments,
-  IStallingItem,
-};
+// Enumerate the different ways a Manifest update can be done
+export enum MANIFEST_UPDATE_TYPE {
+  Full, // The full version of the Manifest has been re-downloaded
+  Partial, // Only a shortened version of the Manifest has been downloaded
+}

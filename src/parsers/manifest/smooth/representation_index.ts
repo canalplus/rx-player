@@ -26,6 +26,7 @@ import {
 import clearTimelineFromPosition from "../utils/clear_timeline_from_position";
 import { getIndexSegmentEnd } from "../utils/index_helpers";
 import isSegmentStillAvailable from "../utils/is_segment_still_available";
+import updateSegmentTimeline from "../utils/update_segment_timeline";
 import addSegmentInfos from "./utils/add_segment_infos";
 import { replaceSegmentSmoothTokens } from "./utils/tokens";
 
@@ -535,6 +536,13 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
         return;
       }
     }
+  }
+
+  _update(newIndex : SmoothRepresentationIndex) : void {
+    updateSegmentTimeline(this._index.timeline, newIndex._index.timeline);
+    this._initialScaledLastPosition = newIndex._initialScaledLastPosition;
+    this._indexValidityTime = newIndex._indexValidityTime;
+    this._scaledLiveGap = newIndex._scaledLiveGap;
   }
 
   /**

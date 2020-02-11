@@ -37,7 +37,6 @@ import {
   tap,
 } from "rxjs/operators";
 import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
-import config from "../../config";
 import { ICustomError } from "../../errors";
 import log from "../../log";
 import { ITransportPipelines } from "../../transports";
@@ -82,11 +81,9 @@ import {
   IWarningEvent,
 } from "./types";
 
-const { OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config;
-
 // Arguments to give to the `InitializeOnMediaSource` function
-export interface IInitializeOptions {
-  adaptiveOptions: IABRManagerArguments; // options concerning the adaptative logic
+export interface IInitializeArguments {
+  adaptiveOptions: IABRManagerArguments; // options concerning the ABR logic
   autoPlay : boolean; // `true` if we should play when loaded
   bufferOptions : { wantedBufferAhead$ : BehaviorSubject<number>;  // buffer "goal"
                     maxBufferAhead$ : Observable<number>; // To GC after the position
@@ -97,6 +94,8 @@ export interface IInitializeOptions {
   clock$ : Observable<IInitClockTick>; // Emit current playback conditions
   keySystems : IKeySystemOption[]; // DRM configuration
   lowLatencyMode : boolean; // `true` to play low-latency contents optimally
+  manifestUpdateUrl? : string; // Allow a custom version of the Manifest for updates
+  maximumManifestUpdateInterval? : number; // Force frequent Manifest updates
   mediaElement : HTMLMediaElement; // The HTMLMediaElement on which we will play
   minimumManifestUpdateInterval : number; // throttle manifest update
   networkConfig: { manifestRetry? : number; // Maximum number of Manifest retry
@@ -140,6 +139,8 @@ export default function InitializeOnMediaSource(
     clock$,
     keySystems,
     lowLatencyMode,
+    manifestUpdateUrl,
+    maximumManifestUpdateInterval,
     mediaElement,
     minimumManifestUpdateInterval,
     networkConfig,
@@ -147,7 +148,7 @@ export default function InitializeOnMediaSource(
     speed$,
     startAt,
     textTrackOptions,
-    url } : IInitializeOptions
+    url } : IInitializeArguments
 ) : Observable<IInitEvent> {
   const { offlineRetry, segmentRetry, manifestRetry } = networkConfig;
 
@@ -160,23 +161,18 @@ export default function InitializeOnMediaSource(
 
   // Fetch and parse the manifest from the URL given.
   // Throttled to avoid doing multiple simultaneous requests.
-  const fetchManifest$ = throttle(
-    (manifestURL : string | undefined,
-     externalClockOffset : number | undefined)
-    : Observable<IFetchManifestResult> => {
-      return manifestPipeline.fetch(manifestURL).pipe(
+  const fetchManifest = throttle((manifestURL? : string, externalClockOffset? : number)
+    : Observable<IFetchManifestResult> =>
+      manifestPipeline.fetch(manifestURL).pipe(
         mergeMap((response) =>
-          manifestPipeline.parse(response.value, manifestURL, externalClockOffset)
-        ),
-        share());
-    }
-  );
+          manifestPipeline.parse(response.value, manifestURL, externalClockOffset)),
+        share()));
 
-  // Creates pipelines for downloading segments.
-  const segmentPipelineCreator =
-    new SegmentPipelineCreator<any>(pipelines, { lowLatencyMode,
-                                                 offlineRetry,
-                                                 segmentRetry });
+  // Instanciate tools to download media segments
+  const segmentPipelineCreator = new SegmentPipelineCreator<any>(pipelines,
+                                                                 { lowLatencyMode,
+                                                                   offlineRetry,
+                                                                   segmentRetry });
 
   // Create ABR Manager, which will choose the right "Representation" for a
   // given "Adaptation".
@@ -203,7 +199,7 @@ export default function InitializeOnMediaSource(
 
   const loadContent$ = observableCombineLatest([
     openMediaSource$,
-    fetchManifest$(url, undefined),
+    fetchManifest(url, undefined),
     emeManager$.pipe(filter(isEMEReadyEvent), take(1)),
   ]).pipe(mergeMap(([ initialMediaSource, { manifest, sendingTime } ]) => {
 
@@ -227,14 +223,15 @@ export default function InitializeOnMediaSource(
                                                         autoPlay);
 
     // Emit when we want to manually update the manifest.
-    // The value allows to set a delay relatively to the last Manifest refresh
-    // (to avoid asking for it too often).
-    const manualManifestRefresh$ = new Subject<number>();
+    const scheduleRefresh$ = new Subject<{ completeRefresh : boolean }>();
 
-    const manifestUpdate$ = manifestUpdateScheduler({ manifest, sendingTime },
-                                                    manualManifestRefresh$,
-                                                    fetchManifest$,
-                                                    minimumManifestUpdateInterval);
+    const manifestUpdate$ = manifestUpdateScheduler({ fetchManifest,
+                                                      initialManifest: { manifest,
+                                                                         sendingTime },
+                                                      manifestUpdateUrl,
+                                                      maximumManifestUpdateInterval,
+                                                      minimumManifestUpdateInterval,
+                                                      scheduleRefresh$ });
 
     const manifestEvents$ = observableMerge(
       fromEvent(manifest, "manifestUpdate")
@@ -257,7 +254,7 @@ export default function InitializeOnMediaSource(
                            setUndecipherableRepresentations$,
                            recursiveLoad$)
       .pipe(startWith(EVENTS.manifestReady(manifest)),
-            finalize(() => { manualManifestRefresh$.complete(); }));
+            finalize(() => { scheduleRefresh$.complete(); }));
 
     /**
      * Load the content defined by the Manifest in the mediaSource given at the
@@ -280,11 +277,10 @@ export default function InitializeOnMediaSource(
         .pipe(tap(evt => {
                 switch (evt.type) {
                   case "needs-manifest-refresh":
-                    manualManifestRefresh$.next(0); // refresh now
+                    scheduleRefresh$.next({ completeRefresh: false });
                     break;
                   case "manifest-might-be-out-of-sync":
-                    // schedule a refresh respecting a delay with the last one
-                    manualManifestRefresh$.next(OUT_OF_SYNC_MANIFEST_REFRESH_DELAY);
+                    scheduleRefresh$.next({ completeRefresh: true });
                     break;
                   case "needs-media-source-reload":
                     reloadMediaSource$.next(evt.value);

@@ -381,6 +381,15 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   }
 
   /**
+   * @param {Object} newIndex
+   */
+  _update(newIndex : TemplateRepresentationIndex) : void {
+    // As segments are not declared individually, as long as this Representation
+    // is present, we have every information we need
+    this._replace(newIndex);
+  }
+
+  /**
    * Returns the timescaled start of the first segment that should be available,
    * relatively to the start of the Period.
    * @returns {number | null | undefined}
