@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../../../log";
 import {
   IRepresentationIndex,
   ISegment,
@@ -294,5 +295,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    */
   _replace(newIndex : BaseRepresentationIndex) : void {
     this._index = newIndex._index;
+  }
+
+  _update() : void {
+    log.error("Base RepresentationIndex: Cannot update a SegmentList");
   }
 }

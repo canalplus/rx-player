@@ -185,15 +185,19 @@ export default interface IRepresentationIndex {
 
   /**
    * Replace the index with another one, such as after a Manifest update.
-   * NOTE: Both this and _addSegments mutate the index
    * @param {Object} newIndex
    */
   _replace(newIndex : IRepresentationIndex) : void;
 
   /**
+   * Update the current index with a new, partial, version.
+   * @param {Object} newIndex
+   */
+  _update(newIndex : IRepresentationIndex) : void;
+
+  /**
    * Add new segments to the index, obtained through various other different
    * ways.
-   * NOTE: Both this and _replace mutate the index
    * @param {Array.<Object>} nextSegments
    * @param {Object} currentSegment
    */

@@ -31,6 +31,7 @@ import {
   toIndexTime,
 } from "../../utils/index_helpers";
 import isSegmentStillAvailable from "../../utils/is_segment_still_available";
+import updateSegmentTimeline from "../../utils/update_segment_timeline";
 import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import getSegmentsFromTimeline from "./get_segments_from_timeline";
@@ -318,14 +319,11 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (!this._isDynamic) {
       return false;
     }
-    if (this._index.timeline.length === 0) {
+
+    const lastTime = TimelineRepresentationIndex.getIndexEnd(this);
+    if (lastTime === null) {
       return true;
     }
-
-    const lastTimelineElt = this._index.timeline[this._index.timeline.length - 1];
-    const lastTime = getIndexSegmentEnd(lastTimelineElt,
-                                        null,
-                                        this._scaledPeriodEnd);
     if (to * this._index.timescale < lastTime) {
       return false;
     }
@@ -358,15 +356,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    */
   getLastPosition() : number|null {
     this._refreshTimeline();
-    const { timeline } = this._index;
-    if (timeline.length === 0) {
-      return null;
-    }
-    const lastTimelineElement = timeline[timeline.length - 1];
-    const lastTime = getIndexSegmentEnd(lastTimelineElement,
-                                        null,
-                                        this._scaledPeriodEnd);
-    return fromIndexTime(lastTime, this._index);
+    const lastTime = TimelineRepresentationIndex.getIndexEnd(this);
+    return lastTime === null ? null :
+                               fromIndexTime(lastTime, this._index);
   }
 
   /**
@@ -463,6 +455,18 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   }
 
   /**
+   * @param {Object} newIndex
+   */
+  _update(newIndex : TimelineRepresentationIndex) : void {
+    updateSegmentTimeline(this._index.timeline, newIndex._index.timeline);
+    this._isDynamic = newIndex._isDynamic;
+    this._scaledPeriodStart = newIndex._scaledPeriodStart;
+    this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
+    this._lastUpdate = newIndex._lastUpdate;
+    this._manifestBoundsCalculator = newIndex._manifestBoundsCalculator;
+  }
+
+  /**
    * We do not have to add new segments to SegmentList-based indexes.
    * @param {Array.<Object>} nextSegments
    * @param {Object|undefined} currentSegmentInfos
@@ -515,17 +519,15 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    */
   private _getTheoriticalLastPosition() : number | undefined {
     const index = this._index;
-    if (index.timeline.length <= 0) {
+
+    const lastPosition = TimelineRepresentationIndex.getIndexEnd(this);
+    if (lastPosition === null) {
       return undefined;
     }
-
-    const lastTimelineElement = index.timeline[index.timeline.length - 1];
-    const lastPosition = getIndexSegmentEnd(lastTimelineElement,
-                                            null,
-                                            this._scaledPeriodEnd);
     if (!this._isDynamic) {
       return lastPosition;
     }
+    const lastTimelineElement = index.timeline[index.timeline.length - 1];
     const lastSegmentDuration = lastTimelineElement.duration;
     const timeDiffInSeconds = (performance.now() - this._lastUpdate) / 1000;
     const timeDiffTS = timeDiffInSeconds * index.timescale;
@@ -534,5 +536,15 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
     const numberOfNewSegments = Math.floor(timeDiffTS / lastSegmentDuration);
     return numberOfNewSegments * lastSegmentDuration + lastPosition;
+  }
+
+  static getIndexEnd(index : TimelineRepresentationIndex) : number | null {
+    const { timeline } = index._index;
+    if (timeline.length <= 0) {
+      return null;
+    }
+    return getIndexSegmentEnd(timeline[timeline.length - 1],
+                              null,
+                              index._scaledPeriodEnd);
   }
 }

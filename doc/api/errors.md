@@ -214,6 +214,11 @@ A MediaError can have the following codes (``code`` property):
     contain any playable Representation. This usually happen when every
     Representation has been blacklisted due to encryption limitations.
 
+  - ``"MANIFEST_UPDATE_ERROR"``: This error should never be emitted, it is a
+    RxPlayer bug if it does. It means that an incoherent new version of the
+    manifest was received during a partial update. We generally trigger a full
+    update when that happens.
+
   - ``"MEDIA_TIME_NOT_FOUND"``: This error should never happen and is a RxPlayer
     bug if it does. It means that a time initially thought to be in the bounds
     of the manifest does not link to any "Period" of the Manifest.

@@ -127,6 +127,13 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
     this._wrappedIndex._replace(newIndex._wrappedIndex);
   }
 
+  public _update(newIndex : IRepresentationIndex): void {
+    if (!(newIndex instanceof MetaRepresentationIndex)) {
+      throw new Error("A MetaPlaylist can only be updated with another MetaPlaylist");
+    }
+    this._wrappedIndex._update(newIndex._wrappedIndex);
+  }
+
   public _addSegments(
     nextSegments : Array<{ time : number;
                            duration : number;

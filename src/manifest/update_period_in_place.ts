@@ -17,6 +17,7 @@
 import log from "../log";
 import arrayFind from "../utils/array_find";
 import Period from "./period";
+import { MANIFEST_UPDATE_TYPE } from "./types";
 
 /**
  * Update oldPeriod attributes with the one from newPeriod (e.g. when updating
@@ -24,8 +25,9 @@ import Period from "./period";
  * @param {Object} oldPeriod
  * @param {Object} newPeriod
  */
-export default function replacePeriodInPlace(oldPeriod : Period,
-                                             newPeriod : Period) : void
+export default function updatePeriodInPlace(oldPeriod : Period,
+                                            newPeriod : Period,
+                                            updateType : MANIFEST_UPDATE_TYPE) : void
 {
   oldPeriod.start = newPeriod.start;
   oldPeriod.end = newPeriod.end;
@@ -56,7 +58,11 @@ export default function replacePeriodInPlace(oldPeriod : Period,
           log.warn(`Manifest: Representation "${oldRepresentations[k].id}" ` +
                    "not found when merging.");
         } else {
-          oldRepresentation.index._replace(newRepresentation.index);
+          if (updateType === MANIFEST_UPDATE_TYPE.Full) {
+            oldRepresentation.index._replace(newRepresentation.index);
+          } else {
+            oldRepresentation.index._update(newRepresentation.index);
+          }
         }
       }
     }

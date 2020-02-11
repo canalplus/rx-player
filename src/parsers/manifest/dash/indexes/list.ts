@@ -267,12 +267,15 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * We do not have to add new segments to SegmentList-based indexes.
-   * @returns {Array}
+   * @param {Object} newIndex
    */
+  _update() : void {
+    log.error("List RepresentationIndex: Cannot update a SegmentList");
+  }
+
   _addSegments() : void {
     if (__DEV__) {
-      log.warn("Tried to add Segments to a list RepresentationIndex");
+      log.warn("List RepresentationIndex: Tried to add Segments to a list RepresentationIndex");
     }
   }
 }

@@ -30,6 +30,7 @@ const minimalRepresentationIndex = {
   canBeOutOfSyncError() : true { return true; },
   isFinished() : true { return true; },
   _replace() { /* noop */ },
+  _update() { /* noop */ },
   _addSegments() { /* noop */ },
 };
 

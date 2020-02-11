@@ -352,7 +352,7 @@ describe("Manifest - Manifest", () => {
       __esModule: true,
       default: fakePeriod,
     }));
-    jest.mock("../replace_period_in_place", () =>  ({
+    jest.mock("../update_period_in_place", () =>  ({
       __esModule: true,
       default: fakeUpdatePeriodInPlace,
     }));
@@ -424,8 +424,8 @@ describe("Manifest - Manifest", () => {
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2]);
 
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod2, newPeriod2);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod1, 0);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod2, newPeriod2, 0);
     expect(eeSpy).toHaveBeenCalledTimes(1);
     expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
     expect(logSpy).not.toHaveBeenCalled();
@@ -473,7 +473,7 @@ describe("Manifest - Manifest", () => {
     });
     jest.mock("../period", () =>  ({ __esModule: true,
                                      default: fakePeriod }));
-    jest.mock("../replace_period_in_place", () =>  ({
+    jest.mock("../update_period_in_place", () =>  ({
       __esModule: true,
       default: fakeUpdatePeriodInPlace,
     }));
@@ -517,7 +517,7 @@ describe("Manifest - Manifest", () => {
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod3);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod3, 0);
     expect(eeSpy).toHaveBeenCalledTimes(1);
     expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
     // expect(logSpy).toHaveBeenCalledTimes(2);
@@ -562,7 +562,7 @@ describe("Manifest - Manifest", () => {
     });
     jest.mock("../period", () =>  ({ __esModule: true,
                                      default: fakePeriod }));
-    jest.mock("../replace_period_in_place", () =>  ({
+    jest.mock("../update_period_in_place", () =>  ({
       __esModule: true,
       default: fakeUpdatePeriodInPlace,
     }));
@@ -594,7 +594,7 @@ describe("Manifest - Manifest", () => {
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod1);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod1, 0);
     expect(eeSpy).toHaveBeenCalledTimes(1);
     expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
     // expect(logSpy).toHaveBeenCalledTimes(1);
@@ -637,7 +637,7 @@ describe("Manifest - Manifest", () => {
     });
     jest.mock("../period", () =>  ({ __esModule: true,
                                      default: fakePeriod }));
-    jest.mock("../replace_period_in_place", () =>  ({
+    jest.mock("../update_period_in_place", () =>  ({
       __esModule: true,
       default: fakeUpdatePeriodInPlace,
     }));
@@ -711,7 +711,7 @@ describe("Manifest - Manifest", () => {
     });
     jest.mock("../period", () =>  ({ __esModule: true,
                                      default: fakePeriod }));
-    jest.mock("../replace_period_in_place", () =>  ({
+    jest.mock("../update_period_in_place", () =>  ({
       __esModule: true,
       default: fakeUpdatePeriodInPlace,
     }));
@@ -753,8 +753,8 @@ describe("Manifest - Manifest", () => {
                                        newPeriod5 ]);
 
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod2);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod2, newPeriod4);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod2, 0);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod2, newPeriod4, 0);
     expect(eeSpy).toHaveBeenCalledTimes(1);
     expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
     // expect(logSpy).toHaveBeenCalledTimes(5);
