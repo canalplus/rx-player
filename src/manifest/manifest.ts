@@ -336,6 +336,18 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   public update(newManifest : Manifest) : void {
     this._performUpdate(newManifest, MANIFEST_UPDATE_TYPE.Partial);
+
+    // Partial updates do not remove old Periods.
+    // This can become a memory problem when playing a content long enough.
+    // Let's clean manually Periods behind the minimum possible position.
+    const min = this.getMinimumPosition();
+    while (this.periods.length > 0) {
+      const period = this.periods[0];
+      if (period.end === undefined || period.end > min) {
+        return;
+      }
+      this.periods.splice(0);
+    }
   }
 
   /**
