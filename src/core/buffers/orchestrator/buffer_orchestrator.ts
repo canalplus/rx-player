@@ -34,7 +34,9 @@ import {
   take,
   takeUntil,
   tap,
+  withLatestFrom,
 } from "rxjs/operators";
+import shouldReloadAtEachPeriodChange from "../../../compat/should_reload_at_each_period_change";
 import config from "../../../config";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
@@ -272,24 +274,29 @@ export default function BufferOrchestrator(
       filter(({ currentTime, wantedTimeOffset }) => {
         return enableOutOfBoundsCheck &&
                manifest.getPeriodForTime(wantedTimeOffset +
-                                           currentTime) !== undefined &&
+                                         currentTime) !== undefined &&
                isOutOfPeriodList(wantedTimeOffset + currentTime);
       }),
-      tap(({ currentTime, wantedTimeOffset }) => {
+      mergeMap(({ currentTime, isPaused, wantedTimeOffset }) => {
         log.info("BO: Current position out of the bounds of the active periods," +
                  "re-creating buffers.",
                  bufferType,
                  currentTime + wantedTimeOffset);
         enableOutOfBoundsCheck = false;
-        destroyBuffers$.next();
-      }),
-      mergeMap(({ currentTime, wantedTimeOffset }) => {
+        const outOfBoundsPeriod = manifest.getPeriodForTime(wantedTimeOffset +
+                                                            currentTime);
+        if (shouldReloadAtEachPeriodChange && outOfBoundsPeriod !== basePeriod) {
+          return observableOf({ type: "needs-media-source-reload" as const,
+                                value: { currentTime: currentTime + 0.01,
+                                         isPaused } });
+        }
         const newInitialPeriod = manifest
           .getPeriodForTime(currentTime + wantedTimeOffset);
         if (newInitialPeriod == null) {
           throw new MediaError("MEDIA_TIME_NOT_FOUND",
                                "The wanted position is not found in the Manifest.");
         }
+        destroyBuffers$.next();
         return launchConsecutiveBuffersForPeriod(newInitialPeriod);
       })
     );
@@ -417,7 +424,7 @@ export default function BufferOrchestrator(
           const nextPeriod = manifest.getPeriodAfter(basePeriod);
           if (nextPeriod == null) {
             return observableOf(EVENTS.bufferComplete(bufferType));
-          } else {
+          } else if (!shouldReloadAtEachPeriodChange) {
             // current buffer is full, create the next one if not
             createNextPeriodBuffer$.next(nextPeriod);
           }
@@ -440,7 +447,25 @@ export default function BufferOrchestrator(
           }))
         );
 
+    const needMediaSourceReloadAfterPeriodEnd$ =
+      manifest.getPeriodAfter(basePeriod) !== null &&
+      shouldReloadAtEachPeriodChange ?
+        endOfCurrentBuffer$.pipe(
+          withLatestFrom(clock$),
+          mergeMap(([_, clock]) => {
+            if (basePeriod.end !== undefined && clock.currentTime >= basePeriod.end) {
+              return observableOf({ type: "needs-media-source-reload" as const,
+                       value: { currentTime: clock.currentTime + 0.01,
+                                isPaused: clock.isPaused } });
+            }
+            return EMPTY;
+          }),
+          take(1)
+        ) :
+        EMPTY;
+
     return observableMerge(currentBuffer$,
+                           needMediaSourceReloadAfterPeriodEnd$,
                            nextPeriodBuffer$,
                            destroyAll$.pipe(ignoreElements()));
   }
