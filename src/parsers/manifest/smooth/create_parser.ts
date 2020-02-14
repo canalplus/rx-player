@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import log from "../../../log";
 import assert from "../../../utils/assert";
 import idGenerator from "../../../utils/id_generator";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
+import objectAssign from "../../../utils/object_assign";
 import resolveURL, {
   normalizeBaseURL,
 } from "../../../utils/resolve_url";

@@ -19,7 +19,6 @@
  * throw if something is wrong, and return a normalized option object.
  */
 
-import objectAssign from "object-assign";
 import config from "../../config";
 import log from "../../log";
 import { IRepresentationFilter } from "../../manifest";
@@ -32,6 +31,7 @@ import {
   normalizeAudioTrack,
   normalizeTextTrack,
 } from "../../utils/languages";
+import objectAssign from "../../utils/object_assign";
 import warnOnce from "../../utils/warn_once";
 import { IKeySystemOption } from "../eme";
 import {
