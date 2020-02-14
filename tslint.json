@@ -58,6 +58,7 @@
     "no-bitwise": false,
     "no-boolean-literal-compare": true,
     "no-conditional-assignment": false,
+    "no-consecutive-blank-lines": true,
     "no-console": true,
     "no-construct": true,
     "no-debugger": true,

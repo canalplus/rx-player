@@ -228,6 +228,7 @@ export default function RepresentationBuffer<T>({
 
       const segmentInventory = queuedSourceBuffer.getInventory();
       let neededSegments = getNeededSegments({ content,
+                                               currentPlaybackTime: timing.currentTime,
                                                knownStableBitrate,
                                                loadedSegmentPendingPush,
                                                neededRange,

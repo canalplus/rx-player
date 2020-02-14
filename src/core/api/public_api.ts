@@ -2308,7 +2308,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             .getChosenVideoTrack(currentPeriod);
           this.trigger("videoTrackChange", videoTrack);
 
-
           const availableVideoBitrates = this.getAvailableVideoBitrates();
           this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",
                                                          availableVideoBitrates);
