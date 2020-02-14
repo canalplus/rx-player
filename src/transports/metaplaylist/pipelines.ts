@@ -97,7 +97,7 @@ function getLoaderArguments(
   offset : number
 ) : ISegmentLoaderArguments {
   const content = getContent(segment, offset);
-  return  objectAssign({ url }, content);
+  return objectAssign({ url }, content);
 }
 
 /**

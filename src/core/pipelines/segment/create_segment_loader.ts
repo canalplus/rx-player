@@ -194,7 +194,7 @@ export default function createSegmentLoader<T>(
           tryCatch(loader, loaderArgument));
       };
       return tryURLsWithBackoff(wantedContent.segment.mediaURLs ?? [null],
-                                                                   request$,
+                                request$,
                                 backoffOptions).pipe(
         catchError((error : unknown) : Observable<never> => {
           throw errorSelector(error);
