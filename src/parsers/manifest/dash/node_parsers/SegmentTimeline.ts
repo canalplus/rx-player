@@ -26,16 +26,12 @@ export type IParsedTimeline = IParsedS[];
  */
 export default function parseSegmentTimeline(root: Element) : IParsedTimeline {
   const parsedS : IParsedS[] = [];
-  const timelineChildren = root.childNodes;
-  for (let i = 0; i < timelineChildren.length; i++) {
-    if (timelineChildren[i].nodeType === Node.ELEMENT_NODE) {
-      const currentElement = timelineChildren[i] as Element;
-
-      if (currentElement.nodeName === "S") {
-        const s = parseS(currentElement);
-        parsedS.push(s);
-      }
-    }
+  const timelineChildren = root.getElementsByTagName("S");
+  const timelineChildrenLength = timelineChildren.length;
+  for (let i = 0; i < timelineChildrenLength; i++) {
+    const currentElement = timelineChildren[i];
+    const s = parseS(currentElement);
+    parsedS.push(s);
   }
   return parsedS;
 }
