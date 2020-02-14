@@ -34,7 +34,6 @@ import {
   take,
   takeUntil,
   tap,
-  withLatestFrom,
 } from "rxjs/operators";
 import shouldReloadAtEachPeriodChange from "../../../compat/should_reload_at_each_period_change";
 import config from "../../../config";
@@ -451,14 +450,17 @@ export default function BufferOrchestrator(
       manifest.getPeriodAfter(basePeriod) !== null &&
       shouldReloadAtEachPeriodChange ?
         endOfCurrentBuffer$.pipe(
-          withLatestFrom(clock$),
-          mergeMap(([_, clock]) => {
-            if (basePeriod.end !== undefined && clock.currentTime >= basePeriod.end) {
-              return observableOf({ type: "needs-media-source-reload" as const,
-                       value: { currentTime: clock.currentTime + 0.01,
-                                isPaused: clock.isPaused } });
-            }
-            return EMPTY;
+          mergeMap(() => {
+            return clock$.pipe(
+              mergeMap((clock) => {
+                if (basePeriod.end !== undefined && clock.currentTime >= basePeriod.end) {
+                  return observableOf({ type: "needs-media-source-reload" as const,
+                           value: { currentTime: clock.currentTime + 0.01,
+                                    isPaused: clock.isPaused } });
+                }
+                return EMPTY;
+              })
+            );
           }),
           take(1)
         ) :
