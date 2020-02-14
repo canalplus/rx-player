@@ -22,8 +22,11 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                                 b : IIndexSegment[]) => void) | undefined;
   beforeEach(() => {
     jest.resetModules();
+
+    /* tslint:disable no-unsafe-any */
     logWarnSpy = jest.spyOn(require("../../../../log").default, "warn");
     updateSegmentTimeline = require("../update_segment_timeline").default;
+    /* tslint:enable no-unsafe-any */
   });
 
   afterEach(() => {
@@ -90,10 +93,12 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
       err = e;
     }
 
+    /* tslint:disable no-unsafe-any */
     expect(err).not.toBeNull();
     expect(err.type).toEqual("MEDIA_ERROR");
     expect(err.code).toEqual("MANIFEST_UPDATE_ERROR");
     expect(err.message).toEqual("MediaError (MANIFEST_UPDATE_ERROR) Cannot perform partial update: not enough data");
+    /* tslint:enable no-unsafe-any */
     expect(oldTimeline1).toEqual(oldTimeline1Cloned);
     expect(logWarnSpy).not.toHaveBeenCalled();
   });
