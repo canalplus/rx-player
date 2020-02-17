@@ -30,6 +30,7 @@ import {
   ignoreElements,
   map,
   mergeMap,
+  mergeMapTo,
   share,
   take,
   takeUntil,
@@ -446,28 +447,25 @@ export default function BufferOrchestrator(
           }))
         );
 
-    const needMediaSourceReloadAfterPeriodEnd$ =
-      manifest.getPeriodAfter(basePeriod) !== null &&
-      shouldReloadAtEachPeriodChange ?
-        endOfCurrentBuffer$.pipe(
-          mergeMap(() => {
-            return clock$.pipe(
-              mergeMap((clock) => {
-                if (basePeriod.end !== undefined && clock.currentTime >= basePeriod.end) {
-                  return observableOf({ type: "needs-media-source-reload" as const,
-                           value: { currentTime: clock.currentTime + 0.01,
-                                    isPaused: clock.isPaused } });
-                }
-                return EMPTY;
-              })
-            );
-          }),
-          take(1)
-        ) :
-        EMPTY;
+    const isLastPeriod = manifest.getPeriodAfter(basePeriod) === null;
+    const reloadAtPeriodEnd$ = isLastPeriod || !shouldReloadAtEachPeriodChange ?
+      EMPTY :
+      endOfCurrentBuffer$.pipe(
+        mergeMapTo(clock$),
+        mergeMap((tick) => {
+          if (basePeriod.end === undefined || tick.currentTime - 0.05 < basePeriod.end) {
+            return EMPTY;
+          }
+          const newTime = tick.currentTime + 0.01;
+          return observableOf({ type: "needs-media-source-reload" as const,
+                                value: { currentTime: newTime,
+                                         isPaused: tick.isPaused } });
+        }),
+        take(1)
+      );
 
     return observableMerge(currentBuffer$,
-                           needMediaSourceReloadAfterPeriodEnd$,
+                           reloadAtPeriodEnd$,
                            nextPeriodBuffer$,
                            destroyAll$.pipe(ignoreElements()));
   }
