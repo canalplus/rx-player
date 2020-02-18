@@ -104,11 +104,16 @@ export function updatePeriods(
                       newPeriods[0],
                       MANIFEST_UPDATE_TYPE.Partial);
 
-  let prevIndexOfNewPeriod = indexOfNewFirstPeriod;
+  let prevIndexOfNewPeriod = indexOfNewFirstPeriod + 1;
   for (let i = 1; i < newPeriods.length; i++) {
     const newPeriod = newPeriods[i];
-    const indexOfNewPeriod = arrayFindIndex(oldPeriods,
-                                            ({ id }) => id === newPeriod.id);
+    let indexOfNewPeriod = -1;
+    for (let j = prevIndexOfNewPeriod; j < oldPeriods.length; j++) {
+      if (newPeriod.id === oldPeriods[j].id) {
+        indexOfNewPeriod = j;
+        break; // end the loop
+      }
+    }
     if (indexOfNewPeriod < 0) {
       oldPeriods.splice(prevIndexOfNewPeriod,
                         oldPeriods.length - prevIndexOfNewPeriod,
@@ -116,15 +121,21 @@ export function updatePeriods(
       return;
     }
 
+    if (indexOfNewPeriod > prevIndexOfNewPeriod) {
+      oldPeriods.splice(prevIndexOfNewPeriod,
+                        indexOfNewPeriod - prevIndexOfNewPeriod);
+      indexOfNewPeriod = prevIndexOfNewPeriod;
+    }
+
     // Later Periods can be fully replaced
     updatePeriodInPlace(oldPeriods[indexOfNewPeriod],
                         newPeriod,
                         MANIFEST_UPDATE_TYPE.Full);
-    prevIndexOfNewPeriod = indexOfNewPeriod;
+    prevIndexOfNewPeriod++;
   }
 
-  if (prevIndexOfNewPeriod < oldPeriods.length - 1)  {
-    oldPeriods.splice(prevIndexOfNewPeriod + 1,
-                      oldPeriods.length - (prevIndexOfNewPeriod + 1));
+  if (prevIndexOfNewPeriod < oldPeriods.length)  {
+    oldPeriods.splice(prevIndexOfNewPeriod,
+                      oldPeriods.length - prevIndexOfNewPeriod);
   }
 }
