@@ -277,12 +277,15 @@ export default function BufferOrchestrator(
                                          currentTime) !== undefined &&
                isOutOfPeriodList(wantedTimeOffset + currentTime);
       }),
-      mergeMap(({ currentTime, isPaused, wantedTimeOffset }) => {
+      tap(({ currentTime, wantedTimeOffset }) => {
         log.info("BO: Current position out of the bounds of the active periods," +
                  "re-creating buffers.",
                  bufferType,
                  currentTime + wantedTimeOffset);
         enableOutOfBoundsCheck = false;
+        destroyBuffers$.next();
+      }),
+      mergeMap(({ currentTime, isPaused, wantedTimeOffset }) => {
         const outOfBoundsPeriod = manifest.getPeriodForTime(wantedTimeOffset +
                                                             currentTime);
         if (shouldReloadAtEachPeriodChange && outOfBoundsPeriod !== basePeriod) {
@@ -296,7 +299,6 @@ export default function BufferOrchestrator(
           throw new MediaError("MEDIA_TIME_NOT_FOUND",
                                "The wanted position is not found in the Manifest.");
         }
-        destroyBuffers$.next();
         return launchConsecutiveBuffersForPeriod(newInitialPeriod);
       })
     );
