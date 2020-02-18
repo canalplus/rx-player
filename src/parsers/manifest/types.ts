@@ -52,7 +52,10 @@ export interface IParsedAdaptation {
   // required
   id: string; // Unique ID for all Adaptation of that Period
   representations: IParsedRepresentation[]; // Qualities available for that Adaptation
-  type: string; // `Type` of Adaptation (e.g. `audio`, `video`, `text`, `image`...)
+  type: "audio" |
+        "video" |
+        "text" |
+        "image";
 
   // optional
   audioDescription? : boolean; // Whether this Adaptation is an audio-track for
