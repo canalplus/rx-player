@@ -182,14 +182,14 @@ function createSmoothStreamingParser(
                         isNaN(parseInt(bitrateAttr, 10)) ? 0 :
                                                            parseInt(bitrateAttr, 10);
 
-        if (fourCC == null ||
-            MIME_TYPES[fourCC] === undefined ||
+        if ((fourCC !== undefined &&
+             MIME_TYPES[fourCC] === undefined) ||
             codecPrivateData === undefined) {
           log.warn("Smooth parser: Unsupported audio codec. Ignoring quality level.");
           return null;
         }
 
-        const codecs = getAudioCodecs(fourCC, codecPrivateData);
+        const codecs = getAudioCodecs(codecPrivateData, fourCC);
 
         if (codecs === null) {
           log.warn("Smooth parser: Unsupported audio codec. Ignoring quality level.");
@@ -225,8 +225,8 @@ function createSmoothStreamingParser(
                         isNaN(parseInt(bitrateAttr, 10)) ? 0 :
                                                            parseInt(bitrateAttr, 10);
 
-        if (fourCC === undefined ||
-            MIME_TYPES[fourCC] === undefined ||
+        if ((fourCC !== undefined &&
+             MIME_TYPES[fourCC] === undefined) ||
             codecPrivateData === undefined) {
           log.warn("Smooth parser: Unsupported video codec. Ignoring quality level.");
           return null;

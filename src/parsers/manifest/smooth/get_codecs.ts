@@ -17,13 +17,13 @@
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 
 /**
- * @param {string} fourCC
  * @param {string} codecPrivateData
+ * @param {string|undefined} fourCC
  * @returns {string|null}
  */
 export function getAudioCodecs(
-  fourCC : string,
-  codecPrivateData : string
+  codecPrivateData : string,
+  fourCC?: string
 ) : string|null {
   let mpProfile : number;
   if (fourCC === "AACH") {
