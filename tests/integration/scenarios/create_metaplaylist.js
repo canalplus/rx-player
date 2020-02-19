@@ -3,7 +3,8 @@ import {
   manifestURL1,
   manifestURL2,
   manifestURL3,
-} from "../../contents/static_manifests_for_metaplaylist/manifests";
+  manifestURL4,
+} from "../../contents/static_manifests_for_metaplaylist";
 import createMetaplaylist from "../../../src/experimental/tools/createMetaplaylist";
 
 describe("Metaplaylist Maker", () => {
@@ -33,6 +34,40 @@ describe("Metaplaylist Maker", () => {
       expect(contents[3].url).to.equal("test-URL");
       expect(contents[3].startTime).to.equal(1072.8516443777778);
       expect(contents[3].endTime).to.equal(1072.8516443777778 + 100);
+      done();
+    });
+  });
+
+  it("Should throw if there is an unsupported transport", (done) => {
+    const contentsInfos = [{ url: manifestURL1,
+                             transport: "rtmp" },
+                           { url: manifestURL2,
+                             transport: "dash" },
+                           { url: manifestURL3,
+                             transport: "smooth" },
+                           { url: "test-URL",
+                             transport: "dash",
+                             duration: 100 } ];
+    createMetaplaylist(contentsInfos).catch((err) => {
+      expect(typeof err).to.equal("object");
+      expect(err.message).to.equal("Metaplaylist Maker: Unknown transport type.");
+      done();
+    });
+  });
+
+  it("Should throw if there is a dynamic manifest", (done) => {
+    const contentsInfos = [{ url: manifestURL4,
+                             transport: "dash" },
+                           { url: manifestURL2,
+                             transport: "dash" },
+                           { url: manifestURL3,
+                             transport: "smooth" },
+                           { url: "test-URL",
+                             transport: "dash",
+                             duration: 100 } ];
+    createMetaplaylist(contentsInfos).catch((err) => {
+      expect(typeof err).to.equal("object");
+      expect(err.message).to.equal("Metaplaylist maker: Can't handle dynamic manifests.");
       done();
     });
   });

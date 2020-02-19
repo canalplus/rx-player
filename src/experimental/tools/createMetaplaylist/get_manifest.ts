@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
+import {
+  Observable,
+  throwError
+} from "rxjs";
 import {
   catchError,
   filter,
@@ -87,7 +90,7 @@ function getManifest(url: string,
       pipelines = metaplaylist({ lowLatencyMode: false });
       break;
     default:
-      throw new Error("Metaplaylist Maker: Unknown transport type.");
+      return throwError(new Error("Metaplaylist Maker: Unknown transport type."));
   }
   const loader = createManifestLoader(pipelines.manifest, loaderOptions);
   const { parser } = pipelines.manifest;
