@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SmoothStreamingMedia MajorVersion="2" MinorVersion="1" Duration="1441706666">
+<StreamIndex Type="audio" Url="QualityLevels({bitrate})/Fragments(audio={start time})" Name="audio" Chunks="29" QualityLevels="1">
+<QualityLevel Index="0" Bitrate="157391" AudioTag="255" Channels="2" SamplingRate="48000" BitsPerSample="16" PacketSize="4" FourCC="AACL" CodecPrivateData=""/>
+<c d="50133333"/>
+<c d="50133333"/>
+<c d="50133334"/>
+<c d="50133333"/>
+<c d="50133333"/>
+<c d="50133334"/>
+<c d="50133333"/>
+<c d="50133333"/>
+<c d="50133334"/>
+<c d="50133333"/>
+<c d="50133333"/>
+<c d="50133334"/>
+<c d="50133333"/>
+<c d="50133333"/>
+<c d="50133334"/>
+<c d="50133333"/>
+<c d="50133333"/>
+<c d="50133334"/>
+<c d="50133333"/>
+<c d="50133333"/>
+<c d="50133334"/>
+<c d="50133333"/>
+<c d="50133333"/>
+<c d="50133334"/>
+<c d="50133333"/>
+<c d="50133333"/>
+<c d="50133334"/>
+<c d="50133333"/>
+<c t="1403733333" d="37973333"/>
+</StreamIndex>
+</SmoothStreamingMedia>
