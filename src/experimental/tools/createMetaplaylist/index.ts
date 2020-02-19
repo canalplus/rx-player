@@ -16,24 +16,18 @@
 
 import pinkie from "pinkie";
 import {
-  EMPTY,
-  from as observableFrom,
+  combineLatest as observableCombineLatest,
   of as observableOf,
 } from "rxjs";
 import {
-  concatMap,
+  map,
   mergeMap,
-  scan,
 } from "rxjs/operators";
 import { IMetaPlaylist } from "../../../parsers/manifest/metaplaylist";
 import getManifest from "./get_manifest";
 
 const PPromise = typeof Promise !== undefined ? Promise :
                                                 pinkie;
-
-interface IMetaplaylistMetadata { version: "0.1";
-                                  data: { dynamic?: boolean;
-                                          pollInterval?: number; }; }
 
 interface IMetaplaylistContentInfos { url: string;
                                       transport: "dash" | "smooth";
@@ -42,46 +36,54 @@ interface IMetaplaylistContentInfos { url: string;
 /**
  * From given information about wanted metaplaylist and contents,
  * get needed supplementary infos and build a standard metaplaylist.
- * @param {Object} metadata
  * @param {Array.<Object>} contentsInfos
  * @returns {Promise<Object>} - metaplaylist
  */
-function createMetaplaylist(metadata: IMetaplaylistMetadata,
-                            contentsInfos: IMetaplaylistContentInfos[]
+function createMetaplaylist(
+  contentsInfos: IMetaplaylistContentInfos[]
 ): Promise<IMetaPlaylist> {
-  if (metadata.version !== "0.1") {
-    return PPromise.reject("Metaplaylist Maker : Unsupported metaplaylist version.");
-  }
-  return observableFrom(contentsInfos).pipe(
-    concatMap(({ url, transport }) => {
-      return getManifest(url, transport).pipe(
-        mergeMap((manifest) => {
-          if (manifest.isDynamic || manifest.isLive) {
-            return EMPTY;
-          }
-          const duration = manifest.getMaximumPosition() -
-                           manifest.getMinimumPosition();
-          return observableOf({ url,
-                                duration,
-                                transport });
-        })
-      );
-    }),
-    scan((acc: IMetaPlaylist, val) => {
-      const { contents } = acc;
-      const lastElement = contents[contents.length - 1];
-      const lastStart = lastElement?.endTime ?? 0;
-      contents.push({ url: val.url,
-                      transport: val.transport,
-                      startTime: lastStart,
-                      endTime: lastStart + val.duration });
-      return acc;
-    }, { type: "MPL" as const,
-         version: "0.1",
-         dynamic: metadata.data.dynamic,
-         pollInterval: metadata.data.pollInterval,
-         contents: [] }
-    )
+  const completeContentsInfos$ = contentsInfos.map((contentInfos) => {
+    const { url, transport, duration } = contentInfos;
+    if (duration !== undefined) {
+      return observableOf({ url,
+                            transport,
+                            duration });
+    }
+    return getManifest(url, transport).pipe(
+      mergeMap((manifest) => {
+        if (manifest.isDynamic || manifest.isLive) {
+          throw new Error("Metaplaylist maker: Can't handle dynamic manifests.");
+        }
+        const manifestDuration = manifest.getMaximumPosition() -
+                                 manifest.getMinimumPosition();
+        return observableOf({ url,
+                              duration: manifestDuration,
+                              transport });
+      })
+    );
+  });
+
+  return observableCombineLatest(completeContentsInfos$).pipe(
+    map((completeContentsInfos) => {
+      const contents = completeContentsInfos
+        .reduce((acc: Array<{ url: string;
+                              transport: "dash" | "smooth" | "metaplaylist";
+                              startTime: number;
+                              endTime: number; }>,
+                 val) => {
+          const lastElement = acc[acc.length - 1];
+          const lastStart = lastElement?.endTime ?? 0;
+          acc.push({ url: val.url,
+                     transport: val.transport,
+                     startTime: lastStart,
+                     endTime: lastStart + val.duration });
+          return acc;
+        }, []);
+    return { type: "MPL" as const,
+             version: "0.1",
+             dynamic: false,
+             contents };
+    })
   ).toPromise(PPromise);
 }
 
