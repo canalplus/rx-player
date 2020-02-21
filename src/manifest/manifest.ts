@@ -564,7 +564,10 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.isLive = newManifest.isLive;
     this.lifetime = newManifest.lifetime;
     this.maximumTime = newManifest.maximumTime;
-    this.minimumTime = newManifest.minimumTime;
+
+    if (updateType === MANIFEST_UPDATE_TYPE.Full) {
+      this.minimumTime = newManifest.minimumTime;
+    }
     this.parsingErrors = newManifest.parsingErrors;
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
     this.transport = newManifest.transport;
