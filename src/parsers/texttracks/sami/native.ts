@@ -28,7 +28,7 @@ import isNonEmptyString from "../../../utils/is_non_empty_string";
 const HTML_ENTITIES = /&#([0-9]+);/g;
 const BR = /<br>/gi;
 const STYLE = /<style[^>]*>([\s\S]*?)<\/style[^>]*>/i;
-const PARAG = /\s*<p (?:class=([^>]+))>(.*)/i;
+const PARAG = /\s*<p (?:class=([^>]+))?>(.*)/i;
 const START = /<sync[^>]+?start="?([0-9]*)"?[^0-9]/i;
 
 interface ISubs { start : number;
