@@ -246,6 +246,21 @@ so be sure you don't need it anymore before calling it.
 
 
 
+### Notes on the SAMI format ###################################################
+
+The SAMI subtitles format might necessitate you to specify the language you want
+to parse.
+
+This can be done on the `setTextTrack` call like this:
+```js
+textTrackRenderer.setTextTrack({
+  data: textTrackData,
+  type: "sami",
+  language: "en-US", // or fr-FR...
+});
+```
+
+
 ## About logs ##################################################################
 
 The TextTrackRenderer can display logs to the console. It relies on the exact
