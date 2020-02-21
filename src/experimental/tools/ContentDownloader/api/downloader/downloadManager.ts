@@ -18,25 +18,25 @@ import { AsyncSubject, combineLatest, of } from "rxjs";
 import { filter, startWith } from "rxjs/operators";
 
 import { SegmentPipelineCreator } from "../../../../../core/pipelines";
-import { IInitSettings, IStoredManifest } from "../../types";
+import { ICallbacks, IInitSettings, IStoredManifest } from "../../types";
 import { initDownloader$ } from "./initSegment";
 import { getTransportPipelineByTransport } from "./manifest";
 import { segmentPipelineDownloader$ } from "./segment";
-import { IUtilsNotification } from "./types";
+import { IDownloadManagerOptions } from "./types";
 
 /**
  * DownloadManager that will handle actions to take depending if we are in
  * resuming or downloading from scratch.
  */
 class DownloadManager {
-  readonly utils: IUtilsNotification;
+  readonly downloadManagerOptions: IDownloadManagerOptions;
 
-  constructor(utils: IUtilsNotification) {
-    this.utils = utils;
+  constructor(downloadManagerOptions: IDownloadManagerOptions) {
+    this.downloadManagerOptions = downloadManagerOptions;
   }
 
   initDownload(initSettings: IInitSettings, pause$: AsyncSubject<void>) {
-    const { contentID } = initSettings;
+    const { contentID, onError, onProgress } = initSettings;
     const builderInit = {
       progress: { percentage: 0, segmentsDownloaded: 0, totalSegments: 0 },
       manifest: null,
@@ -46,9 +46,9 @@ class DownloadManager {
       size: 0,
     };
     const pipelineSegmentDownloader$ = segmentPipelineDownloader$(
-      initDownloader$(initSettings, this.utils.db, this.utils.emitter),
+      initDownloader$(initSettings, this.downloadManagerOptions.db),
       builderInit,
-      { contentID, db: this.utils.db, pause$, emitter: this.utils.emitter }
+      { contentID, onError, onProgress, db: this.downloadManagerOptions.db, pause$ }
     );
     return combineLatest([
       pipelineSegmentDownloader$.pipe(
@@ -60,7 +60,8 @@ class DownloadManager {
     ]);
   }
 
-  resumeDownload(resumeSettings: IStoredManifest, pause$: AsyncSubject<void>) {
+  resumeDownload(resumeSettings: IStoredManifest,
+                  pause$: AsyncSubject<void>, callbacks?: ICallbacks) {
     const {
       progress,
       manifest,
@@ -94,7 +95,7 @@ class DownloadManager {
         type: "resume",
       }),
       builderInit,
-      { contentID, db: this.utils.db, pause$, emitter: this.utils.emitter }
+      { contentID, db: this.downloadManagerOptions.db, pause$, ...callbacks }
     );
     return combineLatest([
       pipelineSegmentDownloader$.pipe(

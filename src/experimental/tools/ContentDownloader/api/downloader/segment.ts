@@ -24,7 +24,7 @@ import { concat, strToBytes } from "../../../../../utils/byte_parsing";
 
 import { createBox } from "../../../../../parsers/containers/isobmff";
 import { IndexedDBError } from "../../utils";
-import { ContentType } from "../context/types";
+import { ContentType } from "../tracksPicker/types";
 import {
   ContentBufferType,
   IAbstractContextCreation,
@@ -233,7 +233,7 @@ function handleAbstractSegmentPipelineContextFor(
 export function segmentPipelineDownloader$(
   builderObs$: Observable<IInitGroupedSegments>,
   builderInit: IManifestDBState,
-  { contentID, emitter, pause$, db }: IUtils
+  { contentID, pause$, db, ...cbsEvt }: IUtils
 ): Observable<IManifestDBState> {
   return builderObs$.pipe(
     mergeMap(
@@ -287,10 +287,10 @@ export function segmentPipelineDownloader$(
           data: chunkData.data,
           size: chunkData.data.byteLength,
         }).catch((err: Error) => {
-          throw new IndexedDBError(`
-          ${contentID}: Impossible
-          to store the current segment (${contentType}) at ${timeScaled}: ${err.message}
-        `);
+          cbsEvt.onError?.(new IndexedDBError(`
+            ${contentID}: Impossible
+            to store the current segment (${contentType}) at ${timeScaled}: ${err.message}
+          `));
         });
       }
     ),
@@ -345,14 +345,8 @@ export function segmentPipelineDownloader$(
       },
       builderInit
     ),
-    tap(({ size, progress }) => {
-      emitter.trigger("progress", {
-        contentID,
-        progress: progress.percentage,
-        size,
-        status: "downloading",
-      });
-    }),
+    tap(({ size, progress }) =>
+      cbsEvt.onProgress?.({ progress: progress.percentage, size })),
     takeUntil(pause$)
   );
 }

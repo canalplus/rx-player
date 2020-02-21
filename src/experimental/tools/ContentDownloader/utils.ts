@@ -20,8 +20,8 @@ import { isSafari } from "../../../compat/browser_detection";
 import arrayIncludes from "../../../utils/array_includes";
 import MediaCapabilitiesProber from "../mediaCapabilitiesProber";
 import { IMediaKeySystemConfiguration } from "../mediaCapabilitiesProber/types";
-import { IActiveDownload } from "./api/context/types";
-import { IApiLoader, IStoredManifest } from "./types";
+import { IActiveDownload } from "./api/tracksPicker/types";
+import { IDownloadArguments, IStoredManifest } from "./types";
 
 /**
  * A utils class that extends Error object to have custom class errors
@@ -67,12 +67,12 @@ export class IndexedDBError extends Error {
  *
  */
 export async function checkInitDownloaderOptions(
-  options: IApiLoader,
+  options: IDownloadArguments,
   db: IDBPDatabase
 ): Promise<string> {
   if (typeof options !== "object" || Object.keys(options).length < 0) {
     throw new ValidationArgsError(
-      "You must at least specify these arguments: { url, contentID, transport }"
+      "You must at least specify these arguments: { url, transport }"
     );
   }
 

@@ -14,46 +14,74 @@
  * limitations under the License.
  */
 
-import {
-  IKeySystemOption,
-  IPersistedSessionData,
-  TypedArray
-} from "../../../core/eme";
-import Manifest, { Representation } from "../../../manifest";
+import { IKeySystemOption } from "../../../core/eme";
+import Manifest from "../../../manifest";
 import { ILocalManifest } from "../../../parsers/manifest/local";
 import { IContextRicher } from "./api/downloader/types";
 
-export type IQualityInputType = "HIGHEST" | "MEDIUM" | "LOWEST";
-
-// Should return a valid representation
-export type VideoQualityPickerType = (videoRepresentation: Representation[]) => unknown;
-
-export interface IGlobalSettings {
-  dbName?: string;
+export interface IDownloadArguments extends Partial<ICallbacks> {
+  url : string;
+  transport : string;
+  keySystems? : IKeySystemOption;
+  metadata? : any; // Should be a valid JSON Object
+  filters? : IRepresentationFilters;
 }
 
-export interface IApiLoader {
-  url: string;
-  transport: "smooth" | "dash";
-  metaData?: {
-    [prop: string]: any;
-  };
-  quality?: IQualityInputType;
-  videoQualityPicker?: VideoQualityPickerType;
-  keySystems?: IKeySystemOption;
+export interface ICallbacks {
+  onProgress? : (evt: IProgressInfos) => void;
+  onError? : (evt: Error) => void;
+  onFinished? : () => void;
 }
 
-export interface IInitSettings extends IApiLoader {
+interface IProgressInfos {
+  progress : number; // Percentage of progression (in terms of download) from 0 to 100
+  size : number; // Size of the downloaded content at time T in bytes
+}
+
+export interface IStorageInfo {
+  total : number; // total space available in that storage, in bytes
+  used : number; // total number of bytes used in that storage
+}
+
+export interface IAvailableContent {
+  id : string;
+  metadata : any; // Should be a valid JSON Object
+  size : number; // approximately the storage space taken by this content, in bytes
+  duration : number; // Duration of the content (when played from start to end), in secs
+  progress : number; // Percentage of progression (in terms of download) from 0 to 100
+  isFinished : boolean; // `true` if the content is fully downloaded
+  url : string; // original URL given for the download content
+  transport : string; // original transport value for the downloaded content
+}
+
+export interface IPlaybackInfo {
+  getManifest() : ILocalManifest; // type from RxPlayer
+  keySystems? : IKeySystemOption[];
+}
+
+export interface IInitSettings extends IDownloadArguments {
   contentID: string;
 }
 
-export interface IResumeSettings extends IStoredManifest {
-  type: "resume";
+export interface IVideoFilterArgs {
+  height?: number;
+  width?: number;
+  bitrate: number;
+  id: string|number;
 }
+
+export type IVideoRepresentationFilter = (filtersArgs: IVideoFilterArgs[]) => string;
+
+export interface IRepresentationFilters {
+  video: IVideoRepresentationFilter;
+}
+
+// ****
 
 export interface IStoredManifest {
+  url: string;
   contentID: string;
-  transport: "smooth" | "dash";
+  transport: string;
   manifest: Manifest | null;
   builder: {
     video: IContextRicher[];
@@ -62,9 +90,7 @@ export interface IStoredManifest {
   };
   progress: IProgressInformations;
   size: number;
-  metaData?: {
-    [prop: string]: any;
-  };
+  metadata?: any;
   duration: number;
 }
 
@@ -72,68 +98,4 @@ export interface IProgressInformations {
   percentage: number;
   segmentsDownloaded: number;
   totalSegments: number;
-}
-
-export interface IStoredSegmentDB {
-  contentID: string;
-  representationID: string;
-  data: TypedArray | ArrayBuffer;
-  time: number;
-  timescale: number;
-  duration: number;
-  isInitData: boolean;
-  segmentKey: string;
-  size: number;
-}
-
-export interface IContentLoader {
-  progress: IProgressInformations;
-  size: number;
-  transport: "dash" | "smooth";
-  contentID: string;
-  metaData?: {
-    [prop: string]: any;
-  };
-  contentProtection?: {
-    sessionsIDS: IPersistedSessionData[];
-    type: string;
-  };
-  offlineManifest: ILocalManifest;
-}
-
-/***
- *
- * Event Emitter type:
- *
- */
-
-type IArgs<
-  TEventRecord,
-  TEventName extends keyof TEventRecord
-> = TEventRecord[TEventName];
-
-export interface IEmitterTrigger<T> {
-  trigger<TEventName extends keyof T>(
-    evt: TEventName,
-    arg: IArgs<T, TEventName>
-  ): void;
-}
-
-export interface IContentDownloaderEvents {
-  progress: {
-    contentID: string;
-    progress: number;
-    size: number;
-    status: string;
-  };
-  error: {
-    action: string;
-    contentID?: string;
-    error: Error;
-  };
-  insertDB: {
-    action: string;
-    contentID: string;
-    progress: number;
-  };
 }

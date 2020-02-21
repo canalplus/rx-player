@@ -17,10 +17,12 @@
 import { IDBPDatabase } from "idb";
 import { AsyncSubject } from "rxjs";
 
-import EventEmitter from "../../../utils/event_emitter";
+import {
+  addFeatures,
+  IFeatureFunction,
+} from "../../../features";
 import PPromise from "../../../utils/promise";
 
-import { IActiveDownload, IActivePauses } from "./api/context/types";
 import { setUpDb } from "./api/db/dbSetUp";
 import DownloadManager from "./api/downloader/downloadManager";
 import {
@@ -30,18 +32,18 @@ import {
   offlineManifestLoader,
 } from "./api/downloader/manifest";
 import { IContentProtection } from "./api/drm/types";
+import { IActiveDownload, IActivePauses } from "./api/tracksPicker/types";
 import {
-  IApiLoader,
-  IContentDownloaderEvents,
-  IContentLoader,
-  IEmitterTrigger,
-  IGlobalSettings,
-  IStoredManifest
+  IAvailableContent,
+  ICallbacks,
+  IDownloadArguments,
+  IPlaybackInfo,
+  IStorageInfo,
+  IStoredManifest,
 } from "./types";
 import {
   assertResumeADownload,
   checkInitDownloaderOptions,
-  IndexedDBError,
   isPersistentLicenseSupported,
   isValidContentID,
   SegmentConstuctionError,
@@ -51,15 +53,21 @@ import {
 /**
  * Instanciate a ContentDownloader
  *
- * @param {IGlobalSettings}
- * @return {IPublicAPI}
+ * @param {}
+ * @return {IContentDownloader}
  */
-class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
+class ContentDownloader {
+ /**
+  * Add a given parser from the list of features.
+  * @param {Array.<Function>} parsersList
+  */
+  static addParsers(parsersList : IFeatureFunction[]) : void {
+    addFeatures(parsersList);
+  }
+
   /**
    * Detect if the current environment is supported for persistent licence
-   *
    * @returns {boolean} - is supported
-   *
    */
   static isPersistentLicenseSupported(): Promise<boolean> {
     return isPersistentLicenseSupported();
@@ -67,12 +75,9 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
 
   /**
    * Get informations on the storage usage of the navigator
-   *
-   * @returns {Object<{ total: number, used: number }>} -
-   *  the space used and the total usable
-   *
+   * @returns {Promise<IStorageInfo | null>} the space used and the total usable in bytes
    */
-  static async getStorageUsageInfos() {
+  static async getStorageInfo(): Promise<IStorageInfo | null> {
     if (navigator.storage == null || navigator.storage.estimate == null) {
       return null;
     }
@@ -81,45 +86,37 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
       return null;
     }
     return {
-      total: quota / 1e6,
-      used: usage / 1e6,
+      total: quota,
+      used: usage,
     };
   }
 
   public readonly dbName: string;
   private db: IDBPDatabase | null;
-  private emitter: IEmitterTrigger<IContentDownloaderEvents>;
   private activeDownloads: IActiveDownload;
   private activePauses: IActivePauses;
 
-  constructor(options: IGlobalSettings = {}) {
-    super();
-    this.dbName =
-      options.dbName == null || options.dbName === ""
-        ? "d2g-rxPlayer"
-        : options.dbName;
+  constructor() {
+    this.dbName = "d2g-rxPlayer";
     this.activeDownloads = {};
     this.activePauses = {};
     this.db = null;
-    this.emitter = {
-      trigger: (eventName, payload) => this.trigger(eventName, payload),
-    };
   }
 
   /**
-   * Initialize an IndexedDB instance.
+   * Initialize the download environment.
+   * Must be invocated at the beginning in order to store segment.
    * @returns {Promise<void>}
    */
-  initDB(): Promise<IDBPDatabase> {
+  initialize(): Promise<void> {
     return new Promise((resolve, reject) => {
       setUpDb(this.dbName)
         .then(db => {
           this.db = db;
-          resolve(db);
+          resolve();
         })
         .catch((error) => {
           if (error instanceof Error) {
-            this.trigger("error", { action: "initDB", error });
             reject(error);
           }
         });
@@ -132,18 +129,17 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
    * @returns {Promise.<string|void>} contentID -
    *  return the id generated of the content or void if an error happened
    */
-  async download(options: IApiLoader): Promise<string | void> {
+  async download(options: IDownloadArguments): Promise<string | void> {
     try {
-      const db = this.db;
-      if (db === null) {
-        throw new Error("The IndexedDB database has not been created!");
+      if (this.db === null) {
+        throw new Error("You must run initialize() first!");
       }
+      const db = this.db;
       const contentID = await checkInitDownloaderOptions(options, db);
-      const { metaData, transport } = options;
+      const { metadata, transport, url } = options;
       const pause$ = new AsyncSubject<void>();
       this.activePauses[contentID] = pause$;
       const downloadManager = new DownloadManager({
-        emitter: this.emitter,
         db,
       });
       const initDownloadSub = downloadManager
@@ -158,6 +154,7 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
               return;
             }
             db.put("manifests", {
+              url,
               contentID,
               transport,
               manifest,
@@ -165,37 +162,24 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
               progress,
               size,
               duration: manifest.getMaximumPosition() - manifest.getMinimumPosition(),
-              metaData,
-            }).then(() =>
-              this.trigger("insertDB", {
-                action: "store",
-                contentID,
-                progress: progress.percentage,
-              })
-            ).catch((err: Error) => {
+              metadata,
+            }).catch((err: Error) => {
               if (err instanceof Error) {
-                this.trigger("error", {
-                  action: "download",
-                  error: err,
-                  contentID,
-                });
+               return options?.onError?.(err);
               }
             });
           },
-          (error) => {
-            if (error instanceof Error) {
-              this.trigger("error", { action: "download", error, contentID });
+          (err) => {
+            if (err instanceof Error) {
+              return options?.onError?.(err);
             }
           }
         );
       this.activeDownloads[contentID] = initDownloadSub;
       return contentID;
-    } catch (error) {
-      if (error instanceof Error) {
-        this.trigger("error", {
-          action: "download",
-          error,
-        });
+    } catch (err) {
+      if (err instanceof Error) {
+        return options?.onError?.(err);
       }
     }
   }
@@ -205,12 +189,12 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
    * @param {string} contentID
    * @returns {Promise.<void>}
    */
-  async resume(contentID: string): Promise<void> {
+  async resume(contentID: string, callbacks?: ICallbacks): Promise<void> {
     try {
-      const db = this.db;
-      if (db === null) {
-        throw new Error("The IndexedDB database has not been created!");
+      if (this.db === null) {
+        throw new Error("You must run initialize() first!");
       }
+      const db = this.db;
       if (contentID == null || contentID === "") {
         throw new Error("You must specify a valid contentID for resuming.");
       }
@@ -222,11 +206,10 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
       const pause$ = new AsyncSubject<void>();
       this.activePauses[contentID] = pause$;
       const downloadManager = new DownloadManager({
-        emitter: this.emitter,
         db,
       });
       const resumeDownloadSub = downloadManager
-        .resumeDownload(storedManifest, pause$)
+        .resumeDownload(storedManifest, pause$, callbacks)
         .subscribe(
           ([download]) => {
             if (download === null) {
@@ -236,8 +219,9 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
             if (manifest === null) {
               return;
             }
-            const { metaData, transport, duration } = storedManifest;
+            const { metadata, transport, duration, url } = storedManifest;
             db.put("manifests", {
+              url,
               contentID,
               transport,
               manifest,
@@ -245,37 +229,23 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
               progress,
               size,
               duration,
-              metaData,
-            }).then(() =>
-              this.trigger("insertDB", {
-                action: "store",
-                contentID,
-                progress: progress.percentage,
-              })
-            ).catch((error) => {
-              if (error instanceof Error) {
-                this.trigger("error", {
-                  action: "resume",
-                  error,
-                  contentID,
-                });
+              metadata,
+            }).catch((err) => {
+              if (err instanceof Error) {
+               return callbacks?.onError?.(err);
               }
             });
           },
-          (error) => {
-            if (error instanceof Error) {
-              this.trigger("error", {
-                action: "resume",
-                error,
-                contentID,
-              });
+          (err) => {
+            if (err instanceof Error) {
+              return callbacks?.onError?.(err);
             }
           }
         );
       this.activeDownloads[contentID] = resumeDownloadSub;
     } catch (err) {
       if (err instanceof Error) {
-        this.trigger("error", { action: "resume", error: err, contentID });
+        return callbacks?.onError?.(err);
       }
     }
   }
@@ -286,113 +256,121 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
    * @returns {void}
    */
   pause(contentID: string): void {
-    try {
-      isValidContentID(contentID);
-      const activeDownloads = this.activeDownloads;
-      const activePauses = this.activePauses;
-      if (activeDownloads[contentID] == null || activePauses[contentID] == null) {
-        throw new ValidationArgsError(`Invalid contentID given: ${contentID}`);
-      }
-      activePauses[contentID].next();
-      activePauses[contentID].complete();
-      activeDownloads[contentID].unsubscribe();
-      delete activeDownloads[contentID];
-      delete activePauses[contentID];
-    } catch (e) {
-      if (e instanceof Error) {
-        this.trigger("error", {
-          action: "pause",
-          contentID,
-          error: e !== undefined ? e : new Error("An Unexpected error happened"),
-        });
-      }
+    isValidContentID(contentID);
+    const activeDownloads = this.activeDownloads;
+    const activePauses = this.activePauses;
+    if (activeDownloads[contentID] == null || activePauses[contentID] == null) {
+      throw new ValidationArgsError(`Invalid contentID given: ${contentID}`);
     }
+    activePauses[contentID].next();
+    activePauses[contentID].complete();
+    activeDownloads[contentID].unsubscribe();
+    delete activeDownloads[contentID];
+    delete activePauses[contentID];
   }
 
   /**
    * Get all the downloaded entry (manifest) partially or fully downloaded.
-   * @returns {Promise.<IStoredManifest[]|void>}
+   * @returns {Promise.<IAvailableContent[]>}
    */
-  getAllLocalContent(
+  getAvailableContents(
     limit?: number
-  ): Promise<IStoredManifest[] | undefined> | void {
-    try {
+  ): Promise<IAvailableContent[]> | undefined {
+    return new Promise((resolve, reject) => {
       if (this.db === null) {
-        throw new Error("The IndexedDB database has not been created!");
+        return reject(new Error("You must run initialize() first!"));
       }
-      // TODO: return formatted content ?
-      return this.db.getAll("manifests", undefined, limit);
-    } catch (e) {
-      if (e instanceof Error) {
-        this.trigger("error", {
-          action: "getAllLocalContent",
-          error: new IndexedDBError(e.message),
-        });
-      }
-    }
+
+      return resolve(this.db.getAll("manifests", undefined, limit)
+        .then((manifests: IStoredManifest[]) => {
+          return manifests.map(
+            ({ contentID, metadata, size, duration, progress, url, transport }) => ({
+          id: contentID,
+          metadata,
+          size,
+          duration,
+          progress: progress.percentage,
+          isFinished: progress.percentage === 100,
+          url,
+          transport,
+        }));
+      }));
+    });
   }
 
   /**
    * Get a single content ready to be played by the rx-player,
    * could be fully or partially downloaded.
    * @param {string} contentID
-   * @returns {Promise.<IContentLoader|void>}
+   * @returns {Promise.<IPlaybackInfo|void>}
    */
-  async getSingleContent(contentID: string): Promise<IContentLoader | void> {
-    try {
-      if (this.db === null) {
-        throw new Error("The IndexedDB database has not been created!");
-      }
-      const [contentManifest, contentsProtection]: [
-        IStoredManifest?,
-        IContentProtection[]?,
-      ] = await PPromise.all([
-        this.db.get("manifests", contentID),
-        this.db
-          .transaction("contentsProtection", "readonly")
-          .objectStore("contentsProtection")
-          .index("contentID")
-          .getAll(IDBKeyRange.only(contentID)),
-      ]);
-      if (contentManifest === undefined || contentManifest.manifest === null) {
-        throw new SegmentConstuctionError(
-          `No Manifest found for current content ${contentID}`
-        );
-      }
-      const {
-        progress,
-        transport,
-        size,
-        metaData,
-        manifest,
-        duration,
-      } = contentManifest;
-      const contentProtection = getKeySystemsSessionsOffline(contentsProtection);
-
-      return {
-        progress,
-        size,
-        transport,
-        contentID,
-        metaData,
-        contentProtection,
-        offlineManifest: offlineManifestLoader(
-          manifest,
-          getBuilderFormattedForAdaptations(contentManifest),
-          getBuilderFormattedForSegments(contentManifest),
-          { contentID, duration, isFinished: progress.percentage === 100, db: this.db }
-        ),
-      };
-    } catch (e) {
-      if (e instanceof Error) {
-      this.trigger("error", {
-        action: "getSingleContent",
-        contentID,
-        error: e !== undefined ? e : new Error("An Unexpected error happened"),
-      });
+  async getPlaybackInfo(contentID: string): Promise<IPlaybackInfo | void> {
+    if (this.db === null) {
+      throw new Error("You must run initialize() first!");
     }
-  }
-  }
+    const db = this.db;
+    const [contentManifest, contentsProtection]: [
+      IStoredManifest?,
+      IContentProtection[]?,
+    ] = await PPromise.all([
+      db.get("manifests", contentID),
+      db
+      .transaction("contentsProtection", "readonly")
+      .objectStore("contentsProtection")
+      .index("contentID")
+      .getAll(IDBKeyRange.only(contentID)),
+    ]);
+    if (contentManifest === undefined || contentManifest.manifest === null) {
+      throw new SegmentConstuctionError(
+        `No Manifest found for current content ${contentID}`
+      );
+    }
+    const {
+      progress,
+      duration,
+      manifest,
+    } = contentManifest;
+    const contentProtection = getKeySystemsSessionsOffline(contentsProtection);
+
+    if (contentProtection === undefined) {
+      return {
+        getManifest() {
+          return offlineManifestLoader(
+            manifest,
+            getBuilderFormattedForAdaptations(contentManifest),
+            getBuilderFormattedForSegments(contentManifest),
+            { contentID, duration, isFinished: progress.percentage === 100, db }
+          );
+        },
+       };
+      }
+    return {
+      getManifest() {
+      return offlineManifestLoader(
+        manifest,
+        getBuilderFormattedForAdaptations(contentManifest),
+        getBuilderFormattedForSegments(contentManifest),
+        { contentID, duration, isFinished: progress.percentage === 100, db }
+      );
+    },
+    keySystems: [{
+      type: contentProtection.type,
+      persistentStateRequired: true,
+      persistentLicense: true,
+      licenseStorage: {
+        load() {
+          return contentProtection.sessionsIDS;
+        },
+        save() {
+          return;
+        },
+      },
+      getLicense() {
+        return null;
+      },
+    }],
+  };
+}
 
   /**
    * Delete an entry partially or fully downloaded and stop the download
@@ -401,49 +379,39 @@ class ContentDownloader extends EventEmitter<IContentDownloaderEvents> {
    * @returns {Promise.<void>}
    */
   async deleteContent(contentID: string): Promise<void> {
-    try {
-      const activeDownloads = this.activeDownloads;
-      const activePauses = this.activePauses;
-      const db = this.db;
-      if (db == null) {
-        throw new Error("The IndexedDB database has not been created!");
-      }
-      if (activeDownloads[contentID] != null && activePauses[contentID] != null) {
-        activePauses[contentID].next();
-        activePauses[contentID].complete();
-        activeDownloads[contentID].unsubscribe();
-        delete activeDownloads[contentID];
-        delete activePauses[contentID];
-      }
-      const indexTxSEG = db
-        .transaction("segments", "readwrite")
-        .objectStore("segments")
-        .index("contentID");
-      let cursor = await indexTxSEG.openCursor(IDBKeyRange.only(contentID));
-      while (cursor !== null) {
-        await cursor.delete();
-        cursor = await cursor.continue();
-      }
-      const indexTxDRM = db
-        .transaction("contentsProtection", "readwrite")
-        .objectStore("contentsProtection")
-        .index("contentID");
-      let cursorDRM = await indexTxDRM.openCursor(IDBKeyRange.only(contentID));
-      while (cursorDRM !== null) {
-        await cursorDRM.delete();
-        cursorDRM = await cursorDRM.continue();
-      }
-      await db.delete("manifests", contentID);
-    } catch (e) {
-      if (e instanceof Error) {
-      this.trigger("error", {
-        action: "deleteContent",
-        contentID,
-        error: e !== undefined ? e : new Error("An Unexpected error happened"),
-      });
+    const activeDownloads = this.activeDownloads;
+    const activePauses = this.activePauses;
+    const db = this.db;
+    if (db == null) {
+      throw new Error("You must run initialize() first!");
     }
+    if (activeDownloads[contentID] != null && activePauses[contentID] != null) {
+      activePauses[contentID].next();
+      activePauses[contentID].complete();
+      activeDownloads[contentID].unsubscribe();
+      delete activeDownloads[contentID];
+      delete activePauses[contentID];
+    }
+    const indexTxSEG = db
+      .transaction("segments", "readwrite")
+      .objectStore("segments")
+      .index("contentID");
+    let cursor = await indexTxSEG.openCursor(IDBKeyRange.only(contentID));
+    while (cursor !== null) {
+      await cursor.delete();
+      cursor = await cursor.continue();
+    }
+    const indexTxDRM = db
+      .transaction("contentsProtection", "readwrite")
+      .objectStore("contentsProtection")
+      .index("contentID");
+    let cursorDRM = await indexTxDRM.openCursor(IDBKeyRange.only(contentID));
+    while (cursorDRM !== null) {
+      await cursorDRM.delete();
+      cursorDRM = await cursorDRM.continue();
+    }
+    await db.delete("manifests", contentID);
   }
-}
 }
 
 export default ContentDownloader;

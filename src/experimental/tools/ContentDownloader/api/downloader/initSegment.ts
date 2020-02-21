@@ -31,11 +31,11 @@ import {
 
 import { IContentProtection } from "../../../../../core/eme";
 import { SegmentPipelineCreator } from "../../../../../core/pipelines";
-import { IContentDownloaderEvents, IEmitterTrigger, IInitSettings } from "../../types";
+import { IInitSettings } from "../../types";
 import { IndexedDBError, SegmentConstuctionError } from "../../utils";
-import ContentManager from "../context/ContentsManager";
-import { ContentType } from "../context/types";
 import EMETransaction from "../drm/keySystems";
+import DownloadTracksPicker from "../tracksPicker/DownloadTracksPicker";
+import { ContentType } from "../tracksPicker/types";
 import { manifestLoader } from "./manifest";
 import { handleSegmentPipelineFromContexts } from "./segment";
 import { ICustomSegment, IInitGroupedSegments, IInitSegment } from "./types";
@@ -51,11 +51,8 @@ import { ICustomSegment, IInitGroupedSegments, IInitSegment } from "./types";
  * Initialization segments downloaded and next segments to download
  *
  */
-export function initDownloader$(
-  { contentID, url, quality, videoQualityPicker, transport, keySystems }: IInitSettings,
-  db: IDBPDatabase,
-  emitter: IEmitterTrigger<IContentDownloaderEvents>
-) {
+export function initDownloader$(initSettings: IInitSettings, db: IDBPDatabase) {
+  const { contentID, url, transport, keySystems, filters } = initSettings;
   return manifestLoader(url, transport).pipe(
     mergeMap(({ manifest, transportPipelines }) => {
       const segmentPipelineCreator = new SegmentPipelineCreator<any>(
@@ -65,11 +62,10 @@ export function initDownloader$(
         }
       );
       const contentProtection$ = new Subject<IContentProtection>();
-      const contentManager = new ContentManager(
+      const contentManager = new DownloadTracksPicker({
         manifest,
-        quality,
-        videoQualityPicker
-      );
+        filters,
+      });
       return of(contentManager.getContextsForCurrentSession()).pipe(
         mergeMap(globalCtx => {
           const { video, audio, text } = contentManager.getContextsFormatted(
@@ -119,11 +115,7 @@ export function initDownloader$(
         }),
         catchError((err) => {
           if (err instanceof Error) {
-            emitter.trigger("error", {
-              action: "download",
-              contentID,
-              error: err !== undefined ? err : new Error("An Unexpected error happened"),
-            });
+            initSettings.onError?.(err);
           }
           return EMPTY;
         }),
@@ -149,20 +141,28 @@ export function initDownloader$(
             data: chunkData.data,
             size: chunkData.data.byteLength,
             contentProtection: chunkData.contentProtection,
+          }).then(() => {
+            initSettings.onProgress?.({ progress: 0, size: 0 });
           }).catch((err: Error) => {
-            throw new IndexedDBError(`
+            initSettings.onError?.(new IndexedDBError(`
               ${contentID}: Impossible to store the current INIT
               segment (${contentType}) at ${time}: ${err.message}
-            `);
+            `));
           });
         }),
         map(({ ctx, contentType }) => {
           const durationForCurrentPeriod = ctx.period.duration;
           if (durationForCurrentPeriod === undefined) {
-            throw new SegmentConstuctionError(`
+            initSettings.onError?.(new SegmentConstuctionError(`
               Impossible to get future video segments for ${contentType} buffer,
               the duration should be an valid integer but: ${durationForCurrentPeriod}
-            `);
+            `));
+            return {
+              nextSegments: [],
+              ctx,
+              segmentPipelineCreator,
+              contentType,
+            };
           }
           const nextSegments = ctx.representation.index.getSegments(
             0,

@@ -15,36 +15,46 @@
  */
 
 import Manifest, { Adaptation, Representation } from "../../../../../manifest";
-import { IQualityInputType, VideoQualityPickerType } from "../../types";
+import { IRepresentationFilters } from "../../types";
 import {
   ContentBufferType,
   IContext,
   IContextUniq,
   IGlobalContext,
 } from "../downloader/types";
-import { ContentType } from "./types";
+import { ContentType, IContextManager } from "./types";
 
 /**
  * ContentManager that will decide which context adaptations/representations to use
  */
-class ContentManager {
-  readonly manifest: Manifest;
-  readonly quality: IQualityInputType;
-  readonly videoQualityPicker?: VideoQualityPickerType;
+class DownloadTracksPicker {
 
-  constructor(
-    manifest: Manifest,
-    quality: IQualityInputType = "MEDIUM",
-    videoQualityPicker?: VideoQualityPickerType
-  ) {
+  static getHighestRepresentationIDByBitrate(
+    representations: Representation[]
+  ): string | null {
+    if (representations.length === 0) {
+      return null;
+    }
+    const representation = representations.reduce<Representation>((acc, currRepre) => {
+      if (acc.bitrate < currRepre.bitrate) {
+        return currRepre;
+      }
+      return acc;
+    }, representations[0]);
+    return String(representation.id);
+  }
+
+  readonly manifest: Manifest;
+  readonly filters: IRepresentationFilters | undefined ;
+
+  constructor({ manifest, filters }: IContextManager) {
     this.manifest = manifest;
-    this.quality = quality;
-    this.videoQualityPicker = videoQualityPicker;
+    this.filters = filters === null || typeof filters !== "object" ? undefined : filters;
   }
 
   getContextsForCurrentSession(): IGlobalContext {
-    return this.manifest.periods.reduce(
-      (acc: IGlobalContext, period) => {
+    return this.manifest.periods.reduce<IGlobalContext>(
+      (acc, period) => {
         const videoContexts = this.decideUniqContext(
           period.getAdaptationsForType(ContentType.VIDEO),
           ContentType.VIDEO
@@ -69,8 +79,8 @@ class ContentManager {
   getContextsFormatted(
     globalCtx: IGlobalContext
   ): { video: IContext[]; audio: IContext[]; text: IContext[] } {
-    const video = globalCtx.video.reduce(
-      (_: IContext[], currVideo): IContext[] => {
+    const video = globalCtx.video.reduce<IContext[]>(
+      (_, currVideo) => {
         return currVideo.contexts.map(
           (videoContext): IContext => ({
             manifest: globalCtx.manifest,
@@ -81,8 +91,8 @@ class ContentManager {
       },
       []
     );
-    const audio = globalCtx.audio.reduce(
-      (_: IContext[], currAudio): IContext[] => {
+    const audio = globalCtx.audio.reduce<IContext[]>(
+      (_, currAudio) => {
         return currAudio.contexts.map(
           (audioContext): IContext => ({
             manifest: globalCtx.manifest,
@@ -93,8 +103,8 @@ class ContentManager {
       },
       []
     );
-    const text = globalCtx.text.reduce(
-      (_: IContext[], currText): IContext[] => {
+    const text = globalCtx.text.reduce<IContext[]>(
+      (_, currText) => {
         return currText.contexts.map(
           (textContext): IContext => ({
             manifest: globalCtx.manifest,
@@ -108,68 +118,45 @@ class ContentManager {
     return { video, audio, text };
   }
 
-  private getRepresentationByQualityBitrate(representations: Representation[]) {
-    switch (this.quality) {
-      case "HIGHEST":
-        return representations.reduce((acc, curr) => {
-          if (curr.bitrate > acc.bitrate) {
-            return curr;
-          }
-          return acc;
-        });
-      case "MEDIUM":
-        return representations[Math.floor(representations.length / 2)];
-      case "LOWEST":
-        return representations.reduce((acc, curr) => {
-          if (curr.bitrate < acc.bitrate) {
-            return curr;
-          }
-          return acc;
-        });
-      default:
-        return representations[Math.floor(representations.length / 2)];
-    }
-  }
-
-  private getVideoRepresentationByManualPicker(
+  private getRepresentationWithFilter(
+    filterType: "video",
     representations: Representation[]
-  ): Representation | undefined {
-    if (
-      this.videoQualityPicker === undefined ||
-      typeof this.videoQualityPicker !== "function"
-    ) {
+  ) : string | undefined {
+    if (this.filters === undefined || typeof this.filters[filterType] !== "function") {
       return undefined;
     }
-   const videoRepresentationPicked = this.videoQualityPicker(representations);
-   if (videoRepresentationPicked instanceof Representation) {
-    return videoRepresentationPicked;
-   }
-    return undefined;
+    const representationFilterFn = this.filters[filterType];
+    return representationFilterFn(representations.map(
+      ({ width, height, id, bitrate }) => ({ width, height, id, bitrate })
+    ));
   }
 
   private decideRepresentation(
-    representations: Representation[],
-    contentType: ContentBufferType
-  ): Representation {
+    contentType: ContentBufferType,
+    representations: Representation[]
+  ): string | null {
     switch (contentType) {
       // If we want to take a representation by bufferType
       case ContentType.VIDEO: {
-        const representationManualPicker = this.getVideoRepresentationByManualPicker(
+        const representationIDPickedByFilter = this.getRepresentationWithFilter(
+          ContentType.VIDEO,
           representations
         );
-        if (representationManualPicker === undefined) {
-          return this.getRepresentationByQualityBitrate(representations);
+        if (representationIDPickedByFilter === undefined) {
+          return DownloadTracksPicker.getHighestRepresentationIDByBitrate(
+            representations
+          );
         }
-        return representationManualPicker;
+        return representationIDPickedByFilter;
       }
       // case ContentType.AUDIO: {
-      //   return this.getRepresentationByQualityBitrate(representations);
+      //   return this.getHighestRepresentationIDByBitrate(representations);
       // }
       // case ContentType.TEXT: {
-      //   return this.getRepresentationByQualityBitrate(representations);
+      //   return this.getHighestRepresentationIDByBitrate(representations);
       // }
       default:
-        return this.getRepresentationByQualityBitrate(representations);
+        return DownloadTracksPicker.getHighestRepresentationIDByBitrate(representations);
     }
   }
 
@@ -178,10 +165,17 @@ class ContentManager {
     contentType: ContentBufferType
   ): IContextUniq[] {
     return adaptations.reduce((acc: IContextUniq[], adaptation) => {
-      const representation = this.decideRepresentation(
-        adaptation.representations,
-        contentType
+      const representationID = this.decideRepresentation(
+        contentType,
+        adaptation.representations
       );
+      if (representationID === null) {
+        throw new Error("No representation playable");
+      }
+      const representation = adaptation.getRepresentation(representationID);
+      if (representation === undefined) {
+        throw new Error("No representation playable");
+      }
       const segment = representation.index.getInitSegment();
       if (segment === null) {
         throw new Error("Error while constructing the init segment");
@@ -196,4 +190,4 @@ class ContentManager {
   }
 }
 
-export default ContentManager;
+export default DownloadTracksPicker;

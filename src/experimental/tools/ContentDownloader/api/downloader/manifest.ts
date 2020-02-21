@@ -17,8 +17,7 @@
 import { Observable, Subject } from "rxjs";
 import { map, mergeMap } from "rxjs/operators";
 
-import DASHFeature from "../../../../../transports/dash";
-import SMOOTHFeature from "../../../../../transports/smooth";
+import features from "../../../../../features/";
 
 import { IPersistedSessionData } from "../../../../../core/eme";
 import { createManifestPipeline } from "../../../../../core/pipelines";
@@ -51,12 +50,12 @@ import {
  *  for the current download.
  *
  */
-export function getTransportPipelineByTransport(transport: "smooth" | "dash") {
-  const pipelineTypes = {
-    smooth: SMOOTHFeature,
-    dash: DASHFeature,
-  };
-  return pipelineTypes[transport]({
+export function getTransportPipelineByTransport(transport: string) {
+  const transportFn = features.transports[transport];
+  if (typeof transportFn !== "function") {
+    throw new Error(`transport "${transport}" not supported`);
+  }
+  return transportFn({
     lowLatencyMode: false,
   });
 }
@@ -72,7 +71,7 @@ export function getTransportPipelineByTransport(transport: "smooth" | "dash") {
  */
 export function manifestLoader(
   manifestURL: string,
-  transport: "smooth" | "dash" = "dash"
+  transport: string
 ): Observable<{ manifest: Manifest; transportPipelines: ITransportPipelines }> {
   const transportPipelines = getTransportPipelineByTransport(transport);
   const manifestPipeline = createManifestPipeline(

@@ -15,12 +15,8 @@
  */
 
 import { AsyncSubject, Subscription } from "rxjs";
-
-export enum Quality {
-  HIGH = "HIGH",
-  MEDIUM = "MEDIUM",
-  LOW = "LOW",
-}
+import Manifest from "../../../../../manifest";
+import { IRepresentationFilters } from "../../types";
 
 export enum ContentType {
   VIDEO = "video",
@@ -34,4 +30,9 @@ export interface IActiveDownload {
 
 export interface IActivePauses {
   [contentID: string]: AsyncSubject<void>;
+}
+
+export interface IContextManager {
+  manifest: Manifest;
+  filters?: IRepresentationFilters;
 }

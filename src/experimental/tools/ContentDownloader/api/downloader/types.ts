@@ -26,11 +26,7 @@ import Manifest, {
   Representation,
 } from "../../../../../manifest";
 import { ILocalIndexSegment } from "../../../../../parsers/manifest/local/types";
-import {
-  IContentDownloaderEvents,
-  IEmitterTrigger,
-  IProgressInformations,
-} from "../../types";
+import { ICallbacks, IProgressInformations } from "../../types";
 
 export type ContentBufferType = "video" | "audio" | "text";
 export type DownloadType = "start" | "resume";
@@ -108,13 +104,11 @@ export interface ISegmentStored {
   size: number;
 }
 
-export interface IUtilsNotification {
-  emitter: IEmitterTrigger<IContentDownloaderEvents>;
+export interface IDownloadManagerOptions {
   db: IDBPDatabase;
 }
 
-export interface IUtils {
-  emitter: IEmitterTrigger<IContentDownloaderEvents>;
+export interface IUtils extends ICallbacks {
   db: IDBPDatabase;
   pause$: AsyncSubject<void>;
   contentID: string;
