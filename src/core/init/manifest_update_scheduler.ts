@@ -45,7 +45,9 @@ export type IManifestFetcher =
 export interface IManifestUpdateSchedulerArguments {
   fetchManifest : IManifestFetcher;
   initialManifest : { manifest : Manifest;
-                      sendingTime? : number; };
+                      sendingTime? : number;
+                      receivedTime? : number;
+                      parsingTime : number; };
   manifestUpdateUrl : string | undefined;
   maximumManifestUpdateInterval? : number;
   minimumManifestUpdateInterval : number;
@@ -70,7 +72,10 @@ export default function manifestUpdateScheduler({
 
   function handleManifestRefresh$(
     manifestInfos: { manifest: Manifest;
-                     sendingTime?: number; }): Observable<never> {
+                     sendingTime?: number;
+                     receivedTime? : number;
+                     parsingTime : number;
+                     updatingTime? : number; }): Observable<never> {
     const { sendingTime } = manifestInfos;
 
     const internalRefresh$ = scheduleRefresh$.pipe(mergeMap(({ completeRefresh }) =>
@@ -82,10 +87,22 @@ export default function manifestUpdateScheduler({
                                                    performance.now() - sendingTime;
     const minInterval = Math.max(minimumManifestUpdateInterval - timeSinceRequest, 0);
 
-    const autoRefresh$ = manifest.lifetime === undefined || manifest.lifetime <= 0 ?
-      EMPTY :
-      observableTimer(Math.max(manifest.lifetime * 1000 - timeSinceRequest,
-                               minInterval)).pipe(mapTo({ completeRefresh: false }));
+    let autoRefresh$;
+    if (manifest.lifetime === undefined || manifest.lifetime < 0) {
+      autoRefresh$ = EMPTY;
+    } else {
+      const { parsingTime, updatingTime } = manifestInfos;
+      let autoRefreshInterval = manifest.lifetime * 1000 - timeSinceRequest;
+      if (autoRefreshInterval < 2000 &&
+          parsingTime + (updatingTime ?? 0) >= timeSinceRequest / 3)
+      {
+        log.info("MUS: Previous Manifest took too long to parse. " +
+                 "Postponing the next request by 2 seconds");
+        autoRefreshInterval = 2000;
+      }
+      autoRefresh$ = observableTimer(Math.max(autoRefreshInterval, minInterval))
+        .pipe(mapTo({ completeRefresh: false }));
+    }
 
     const expired$ = manifest.expired === null ?
       EMPTY :
@@ -128,24 +145,34 @@ export default function manifestUpdateScheduler({
      }
      const externalClockOffset = manifest.getClockOffset();
      return fetchManifest(refreshURL, externalClockOffset)
-       .pipe(mergeMap(({ manifest: newManifest, sendingTime: newSendingTime }) => {
-         if (completeRefresh) {
+       .pipe(mergeMap((value) => {
+         const { manifest: newManifest,
+                 sendingTime: newSendingTime,
+                 receivedTime,
+                 parsingTime } = value;
+         const updateTimeStart = performance.now();
+
+         if (fullRefresh) {
            manifest.replace(newManifest);
-           return observableOf({ manifest, sendingTime: newSendingTime });
+         } else {
+           try {
+             manifest.update(newManifest);
+           } catch (e) {
+             const message = e instanceof Error ? e.message :
+                                                  "unknown error";
+             log.warn(`MUS: Attempt to update Manifest failed: ${message}`,
+                      "Re-downloading the Manifest fully");
+             return startInternalRefreshInterval(true,
+                                                 minimumManifestUpdateInterval,
+                                                 newSendingTime)
+               .pipe(mergeMap(() => refreshManifest(true)));
+           }
          }
-         try {
-           manifest.update(newManifest);
-         } catch (e) {
-           const message = e instanceof Error ? e.message :
-                                                "unknown error";
-           log.warn(`MUS: Attempt to update Manifest failed: ${message}`,
-                    "Re-downloading the Manifest fully");
-           return startInternalRefreshInterval(true,
-                                               minimumManifestUpdateInterval,
-                                               newSendingTime)
-             .pipe(mergeMap(() => refreshManifest(true)));
-         }
-         return observableOf({ manifest, sendingTime: newSendingTime });
+         return observableOf({ manifest,
+                               sendingTime: newSendingTime,
+                               receivedTime,
+                               parsingTime,
+                               updatingTime: performance.now() - updateTimeStart });
        }));
    }
 }

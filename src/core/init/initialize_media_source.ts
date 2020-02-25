@@ -201,7 +201,8 @@ export default function InitializeOnMediaSource(
     openMediaSource$,
     fetchManifest(url, undefined),
     emeManager$.pipe(filter(isEMEReadyEvent), take(1)),
-  ]).pipe(mergeMap(([ initialMediaSource, { manifest, sendingTime } ]) => {
+  ]).pipe(mergeMap(([ initialMediaSource, initialManifestObj ]) => {
+    const { manifest } = initialManifestObj;
 
     log.debug("Init: Calculating initial time");
     const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
@@ -226,8 +227,7 @@ export default function InitializeOnMediaSource(
     const scheduleRefresh$ = new Subject<{ completeRefresh : boolean }>();
 
     const manifestUpdate$ = manifestUpdateScheduler({ fetchManifest,
-                                                      initialManifest: { manifest,
-                                                                         sendingTime },
+                                                      initialManifest: initialManifestObj,
                                                       manifestUpdateUrl,
                                                       maximumManifestUpdateInterval,
                                                       minimumManifestUpdateInterval,
