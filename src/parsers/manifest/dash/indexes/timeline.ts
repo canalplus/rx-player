@@ -314,24 +314,10 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * @param {Number} to
    * @returns {Boolean}
    */
-  shouldRefresh(_up : number, to : number) : boolean {
-    this._refreshTimeline();
-    if (!this._isDynamic) {
-      return false;
-    }
-
-    const lastTime = TimelineRepresentationIndex.getIndexEnd(this);
-    if (lastTime === null) {
-      return true;
-    }
-    if (to * this._index.timescale < lastTime) {
-      return false;
-    }
-    const lastTheoriticalPosition = this._getTheoriticalLastPosition();
-    if (lastTheoriticalPosition == null) {
-      return true;
-    }
-    return lastTheoriticalPosition > lastTime;
+  shouldRefresh() : false {
+    // DASH Manifest based on a SegmentTimeline should have minimumUpdatePeriod
+    // attribute which should be sufficient to know when to refresh it.
+    return false;
   }
 
   /**
