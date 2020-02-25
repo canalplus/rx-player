@@ -20,7 +20,7 @@ import parseSegmentBase, {
   IParsedSegmentBase
 } from "./SegmentBase";
 import parseSegmentTimeline, {
-  IParsedTimeline,
+  ITimelineParser,
 } from "./SegmentTimeline";
 import {
   parseBoolean,
@@ -46,7 +46,7 @@ export interface IParsedSegmentTemplate extends IParsedSegmentBase {
 
 export interface IParsedSegmentTimeline {
   indexType: "timeline";
-  timeline: IParsedTimeline;
+  parseTimeline : ITimelineParser;
   availabilityTimeComplete : boolean;
   indexRangeExact : boolean;
   timescale : number;
@@ -87,13 +87,13 @@ export default function parseSegmentTemplate(
   let availabilityTimeOffset : string|undefined;
   let media : string|undefined;
   let bitstreamSwitching : boolean|undefined;
-  let timeline : IParsedTimeline|undefined;
+  let parseTimeline : ITimelineParser|undefined;
 
   for (let i = 0; i < root.childNodes.length; i++) {
     if (root.childNodes[i].nodeType === Node.ELEMENT_NODE) {
       const currentNode = root.childNodes[i] as Element;
       if (currentNode.nodeName === "SegmentTimeline") {
-        timeline = parseSegmentTimeline(currentNode);
+        parseTimeline = parseSegmentTimeline(currentNode);
       }
     }
   }
@@ -127,10 +127,10 @@ export default function parseSegmentTemplate(
     }
   }
 
-  if (timeline != null) {
+  if (parseTimeline != null) {
     ret = objectAssign({}, base, {
       indexType: "timeline" as "timeline",
-      timeline,
+      parseTimeline,
     });
   } else {
     const segmentDuration = base.duration;
