@@ -434,7 +434,6 @@ describe("updatePeriods", () => {
     /* tslint:enable no-unsafe-any */
   });
 
-
   // Case 8 :
   //
   // old periods : p0, p1
@@ -596,7 +595,6 @@ describe("updatePeriods", () => {
                                MANIFEST_UPDATE_TYPE.Full);
     /* tslint:enable no-unsafe-any */
   });
-
 
   // Case 13 :
   //
