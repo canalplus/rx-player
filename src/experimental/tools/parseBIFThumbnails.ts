@@ -24,7 +24,7 @@ export interface IBifObject { version : string;
 
 /**
  * Parse thumbnails in the "BIF" format into a more exploitable form.
- * @param {Uint8Array} buf - The BIF file
+ * @param {ArrayBuffer} buf - The BIF file
  * @returns {Object}
  */
 export default function parseBifThumbnails(
