@@ -21,7 +21,7 @@ import { IIndexSegment } from "./index_helpers";
  * considered available.
  * Returns false if it is not available anymore.
  * Returns undefined if we cannot know whether it is still available or not.
- * /!\ We do not check the mediaURL of the segment.
+ * /!\ We do not check the mediaURLs of the segment.
  * @param {Object} segment
  * @param {Array.<Object>} timescale
  * @param {number} timeline

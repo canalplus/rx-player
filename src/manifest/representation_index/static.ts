@@ -27,13 +27,13 @@ export interface IStaticRepresentationIndexInfos { media: string; }
  */
 export default class StaticRepresentationIndex implements IRepresentationIndex {
   // URL of the content
-  private readonly _mediaURL: string;
+  private readonly _mediaURLs: string;
 
   /**
    * @param {Object} infos
    */
   constructor(infos : IStaticRepresentationIndexInfos) {
-    this._mediaURL = infos.media;
+    this._mediaURLs = infos.media;
   }
 
   /**
@@ -56,7 +56,7 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
               time: 0,
               duration: Number.MAX_VALUE,
               timescale: 1,
-              mediaURL: this._mediaURL }];
+              mediaURLs: [this._mediaURLs] }];
   }
 
   /**

@@ -36,9 +36,7 @@ export interface IPeriodIntermediateRepresentation {
 export interface IPeriodChildren {
   // required
   adaptations : IAdaptationSetIntermediateRepresentation[];
-
-  // optionnal
-  baseURL? : IBaseURL; // BaseURL for the contents.
+  baseURLs : IBaseURL[];
 }
 
 // intermediate representation for a Period's attributes
@@ -57,7 +55,7 @@ export interface IPeriodAttributes {
  * @returns {Object}
  */
 function parsePeriodChildren(periodChildren : NodeList) : IPeriodChildren {
-  let baseURL;
+  const baseURLs : IBaseURL[] = [];
   const adaptations : IAdaptationSetIntermediateRepresentation[] = [];
 
   for (let i = 0; i < periodChildren.length; i++) {
@@ -67,7 +65,10 @@ function parsePeriodChildren(periodChildren : NodeList) : IPeriodChildren {
       switch (currentElement.nodeName) {
 
         case "BaseURL":
-          baseURL = parseBaseURL(currentElement);
+          const baseURLObj = parseBaseURL(currentElement);
+          if (baseURLObj !== undefined) {
+            baseURLs.push(baseURLObj);
+          }
           break;
 
         case "AdaptationSet":
@@ -79,7 +80,7 @@ function parsePeriodChildren(periodChildren : NodeList) : IPeriodChildren {
     }
   }
 
-  return { baseURL, adaptations };
+  return { baseURLs, adaptations };
 }
 
 /**

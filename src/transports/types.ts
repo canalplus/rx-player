@@ -74,6 +74,7 @@ export interface ISegmentLoaderArguments {
   adaptation : Adaptation; // Adaptation related to this segment
   representation : Representation; // Representation related to this segment
   segment : ISegment; // Segment we want to load
+  url : string | null; // URL at which the segment should be downloaded
 }
 
 // -- response

@@ -16,11 +16,10 @@
 
 import arrayFind from "../../../utils/array_find";
 import idGenerator from "../../../utils/id_generator";
-import resolveURL, {
-  normalizeBaseURL,
-} from "../../../utils/resolve_url";
+import { normalizeBaseURL } from "../../../utils/resolve_url";
 import { IParsedManifest } from "../types";
 import checkManifestIDs from "../utils/check_manifest_ids";
+import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
 import getMinimumAndMaximumPosition from "./get_minimum_and_maximum_positions";
@@ -36,6 +35,7 @@ import parseAvailabilityStartTime from "./parse_availability_start_time";
 import parsePeriods, {
   IXLinkInfos,
 } from "./parse_periods";
+import resolveBaseURLs from "./resolve_base_urls";
 
 const generateManifestID = idGenerator();
 
@@ -199,23 +199,21 @@ function parseCompleteIntermediateRepresentation(
   const { children: rootChildren,
           attributes: rootAttributes } = mpdIR;
   const isDynamic : boolean = rootAttributes.type === "dynamic";
-  const baseURL = resolveURL(normalizeBaseURL(args.url == null ? "" :
-                                                                 args.url),
-                             rootChildren.baseURL !== undefined ?
-                               rootChildren.baseURL.value :
-                               "");
+  const baseURLs = resolveBaseURLs(args.url === undefined ?
+                                     [] :
+                                     [normalizeBaseURL(args.url)],
+                                   rootChildren.baseURLs);
   const availabilityStartTime = parseAvailabilityStartTime(rootAttributes,
                                                            args.referenceDateTime);
   const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
   const clockOffset = args.externalClockOffset;
-
   const availabilityTimeOffset =
-    rootChildren.baseURL?.attributes.availabilityTimeOffset ?? 0;
+    extractMinimumAvailabilityTimeOffset(rootChildren.baseURLs);
 
   const manifestInfos = { aggressiveMode: args.aggressiveMode,
                           availabilityStartTime,
                           availabilityTimeOffset,
-                          baseURL,
+                          baseURLs,
                           clockOffset,
                           duration: rootAttributes.duration,
                           isDynamic,
@@ -226,7 +224,7 @@ function parseCompleteIntermediateRepresentation(
   const mediaPresentationDuration = rootAttributes.duration;
   const parsedMPD : IParsedManifest = {
     availabilityStartTime,
-    baseURL,
+    baseURLs,
     clockOffset: args.externalClockOffset,
     id: rootAttributes.id != null ? rootAttributes.id :
                                     "gen-dash-manifest-" + generateManifestID(),

@@ -27,20 +27,20 @@ export default {
                 mimeType: "audio/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "A48/init.mp4",
+                    mediaURLs: [BASE_URL + "A48/init.mp4"],
                   },
                   segments: [
                     {
                       time: 73320372578304,
                       timescale: 48000,
                       duration: 288768,
-                      mediaURL: BASE_URL + "A48/t73320372578304.m4s",
+                      mediaURLs: [BASE_URL + "A48/t73320372578304.m4s"],
                     },
                     {
                       time: 73320372867072,
                       timescale: 48000,
                       duration: 287744,
-                      mediaURL: BASE_URL + "A48/t73320372867072.m4s",
+                      mediaURLs: [BASE_URL + "A48/t73320372867072.m4s"],
                     },
                   ],
                   // ...
@@ -60,20 +60,20 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "V300/init.mp4",
+                    mediaURLs: [BASE_URL + "V300/init.mp4"],
                   },
                   segments: [
                     {
                       time: 137475698580000,
                       timescale: 90000,
                       duration: 540000,
-                      mediaURL: BASE_URL + "V300/t137475698580000.m4s",
+                      mediaURLs: [BASE_URL + "V300/t137475698580000.m4s"],
                     },
                     {
                       time: 137475699120000,
                       timescale: 90000,
                       duration: 540000,
-                      mediaURL: BASE_URL + "V300/t137475699120000.m4s",
+                      mediaURLs: [BASE_URL + "V300/t137475699120000.m4s"],
                     },
                   ],
                   // ...

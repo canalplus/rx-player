@@ -33,8 +33,8 @@ import {
   ITransportManifestPipeline,
 } from "../../../transports";
 import tryCatch$ from "../../../utils/rx-try_catch";
-import backoff from "../utils/backoff";
 import errorSelector from "../utils/error_selector";
+import { tryRequestObservableWithBackoff } from "../utils/try_urls_with_backoff";
 
 // An Error happened while loading (usually a request error)
 export interface IPipelineLoaderWarning { type : "warning";
@@ -134,7 +134,7 @@ export default function createManifestLoader(
                   IPipelineLoaderWarning >
   {
     const loader$ = tryCatch$(loader, loaderArgument);
-    return backoff(loader$, backoffOptions).pipe(
+    return tryRequestObservableWithBackoff(loader$, backoffOptions).pipe(
       catchError((error : unknown) : Observable<never> => {
         throw errorSelector(error);
       }),

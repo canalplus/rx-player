@@ -34,7 +34,7 @@ import isSegmentStillAvailable from "../../utils/is_segment_still_available";
 import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import getSegmentsFromTimeline from "./get_segments_from_timeline";
-import { createIndexURL } from "./tokens";
+import { createIndexURLs } from "./tokens";
 
 // Index property defined for a SegmentTimeline RepresentationIndex
 // This object contains every property needed to generate an ISegment for a
@@ -54,11 +54,11 @@ export interface ITimelineIndex {
                             // beginning at:
                             // ``` T * timescale + indexTimeOffset ```
   initialization? : { // information on the initialization segment
-    mediaURL: string; // URL to access the initialization segment
+    mediaURLs: string[] | null; // URLs to access the initialization segment
     range?: [number, number]; // possible byte range to request it
   };
-  mediaURL : string; // base URL to access any segment. Can contain token to
-                     // replace to convert it to a real URL
+  mediaURLs : string[] | null ; // base URL to access any segment. Can contain
+                               // token to replace to convert it to real URLs
   startNumber? : number; // number from which the first segments in this index
                          // starts with
   timeline : IIndexSegment[]; // Every segments defined in this index
@@ -107,7 +107,7 @@ export interface ITimelineIndexContextArgument {
   isDynamic : boolean; // Whether the corresponding Manifest is dynamic
   receivedTime? : number; // time (in terms of `performance.now`) at which the
                           // XML file containing this index was received
-  representationBaseURL : string; // Base URL for the Representation concerned
+  representationBaseURLs : string[]; // Base URL for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
 }
@@ -222,7 +222,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   ) {
     const { manifestBoundsCalculator,
             isDynamic,
-            representationBaseURL,
+            representationBaseURLs,
             representationId,
             representationBitrate,
             periodStart,
@@ -267,16 +267,16 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                     initialization: index.initialization == null ?
                       undefined :
                       {
-                        mediaURL: createIndexURL(representationBaseURL,
-                                                 index.initialization.media,
-                                                 representationId,
-                                                 representationBitrate),
+                        mediaURLs: createIndexURLs(representationBaseURLs,
+                                                  index.initialization.media,
+                                                  representationId,
+                                                  representationBitrate),
                         range: index.initialization.range,
                       },
-                    mediaURL: createIndexURL(representationBaseURL,
-                                             index.media,
-                                             representationId,
-                                             representationBitrate),
+                    mediaURLs: createIndexURLs(representationBaseURLs,
+                                               index.media,
+                                               representationId,
+                                               representationBitrate),
                     startNumber: index.startNumber,
                     timeline,
                     timescale };

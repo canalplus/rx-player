@@ -216,7 +216,7 @@ describe("Manifest - Manifest", () => {
     const oldPeriod2 = { id: "1", start: 12, adaptations: {} };
     const time = performance.now();
     const oldManifestArgs = { availabilityStartTime: 5,
-                              baseURL: "test",
+                              baseURLs: ["test1", "test2"],
                               duration: 12,
                               id: "man",
                               isDynamic: false,
@@ -243,7 +243,7 @@ describe("Manifest - Manifest", () => {
 
     expect(manifest.adaptations).toEqual({});
     expect(manifest.availabilityStartTime).toEqual(5);
-    expect(manifest.baseURL).toEqual("test");
+    expect(manifest.baseURLs).toEqual(["test1", "test2"]);
     expect(manifest.id).toEqual("man");
     expect(manifest.isDynamic).toEqual(false);
     expect(manifest.isLive).toEqual(false);
@@ -392,7 +392,7 @@ describe("Manifest - Manifest", () => {
     const newPeriod2 = { id: "foo1", start: 12, adaptations: {} };
     const newManifest : any = { adaptations: newAdaptations,
                                 availabilityStartTime: 6,
-                                baseURL: "test2",
+                                baseURLs: ["test2"],
                                 id: "man2",
                                 isDynamic: true,
                                 isLive: true,
@@ -409,7 +409,7 @@ describe("Manifest - Manifest", () => {
     manifest.update(newManifest);
     expect(manifest.adaptations).toEqual(newAdaptations);
     expect(manifest.availabilityStartTime).toEqual(6);
-    expect(manifest.baseURL).toEqual("test2");
+    expect(manifest.baseURLs).toEqual(["test2"]);
     expect(manifest.id).toEqual("man2");
     expect(manifest.isDynamic).toEqual(true);
     expect(manifest.isLive).toEqual(true);

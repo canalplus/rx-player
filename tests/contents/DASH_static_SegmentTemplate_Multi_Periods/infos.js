@@ -31,20 +31,20 @@ export default {
                 mimeType: "audio/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "mp4-live-periods-aaclc-.mp4",
+                    mediaURLs: [BASE_URL + "mp4-live-periods-aaclc-.mp4"],
                   },
                   segments: [
                     {
                       time: 0,
                       timescale: 44100,
                       duration: 440029,
-                      mediaURL: BASE_URL + "mp4-live-periods-aaclc-1.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-aaclc-1.m4s"],
                     },
                     {
                       time: 440029,
                       timescale: 44100,
                       duration: 440029,
-                      mediaURL: BASE_URL + "mp4-live-periods-aaclc-2.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-aaclc-2.m4s"],
                     },
                   ],
                   // ...
@@ -66,20 +66,20 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "mp4-live-periods-h264bl_low-.mp4",
+                    mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_low-.mp4"],
                   },
                   segments: [
                     {
                       time: 0,
                       timescale: 25000,
                       duration: 250000,
-                      mediaURL: BASE_URL + "mp4-live-periods-h264bl_low-1.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_low-1.m4s"],
                     },
                     {
                       time: 250000,
                       timescale: 25000,
                       duration: 250000,
-                      mediaURL: BASE_URL + "mp4-live-periods-h264bl_low-2.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_low-2.m4s"],
                     },
                     // ...
                   ],
@@ -95,20 +95,20 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "mp4-live-periods-h264bl_mid-.mp4",
+                    mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_mid-.mp4"],
                   },
                   segments: [
                     {
                       time: 0,
                       timescale: 25000,
                       duration: 250000,
-                      mediaURL: BASE_URL + "mp4-live-periods-h264bl_mid-1.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_mid-1.m4s"],
                     },
                     {
                       time: 250000,
                       timescale: 25000,
                       duration: 250000,
-                      mediaURL: BASE_URL + "mp4-live-periods-h264bl_mid-2.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_mid-2.m4s"],
                     },
                     // ...
                   ],
@@ -124,20 +124,20 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "mp4-live-periods-h264bl_hd-.mp4",
+                    mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_hd-.mp4"],
                   },
                   segments: [
                     {
                       time: 0,
                       timescale: 25000,
                       duration: 250000,
-                      mediaURL: BASE_URL + "mp4-live-periods-h264bl_hd-1.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_hd-1.m4s"],
                     },
                     {
                       time: 250000,
                       timescale: 25000,
                       duration: 250000,
-                      mediaURL: BASE_URL + "mp4-live-periods-h264bl_hd-2.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_hd-2.m4s"],
                     },
                     // ...
                   ],
@@ -153,20 +153,20 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "mp4-live-periods-h264bl_full-.mp4",
+                    mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_full-.mp4"],
                   },
                   segments: [
                     {
                       time: 0,
                       timescale: 25000,
                       duration: 250000,
-                      mediaURL: BASE_URL + "mp4-live-periods-h264bl_full-1.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_full-1.m4s"],
                     },
                     {
                       time: 250000,
                       timescale: 25000,
                       duration: 250000,
-                      mediaURL: BASE_URL + "mp4-live-periods-h264bl_full-2.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_full-2.m4s"],
                     },
                     // ...
                   ],
@@ -192,20 +192,20 @@ export default {
                 mimeType: "audio/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "mp4-live-periods-aaclc-.mp4",
+                    mediaURLs: [BASE_URL + "mp4-live-periods-aaclc-.mp4"],
                   },
                   segments: [
                     {
                       time: 120 * 44100,
                       timescale: 44100,
                       duration: 440029,
-                      mediaURL: BASE_URL + "mp4-live-periods-aaclc-13.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-aaclc-13.m4s"],
                     },
                     {
                       time: 120 * 44100 + 440029,
                       timescale: 44100,
                       duration: 440029,
-                      mediaURL: BASE_URL + "mp4-live-periods-aaclc-14.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-aaclc-14.m4s"],
                     },
                   ],
                   // ...
@@ -227,20 +227,20 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "mp4-live-periods-h264bl_low-.mp4",
+                    mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_low-.mp4"],
                   },
                   segments: [
                     {
                       time: 12 * 250000,
                       timescale: 25000,
                       duration: 250000,
-                      mediaURL: BASE_URL + "mp4-live-periods-h264bl_low-13.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_low-13.m4s"],
                     },
                     {
                       time: 13 * 250000,
                       timescale: 25000,
                       duration: 250000,
-                      mediaURL: BASE_URL + "mp4-live-periods-h264bl_low-14.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_low-14.m4s"],
                     },
                     // ...
                   ],
@@ -256,20 +256,20 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "mp4-live-periods-h264bl_mid-.mp4",
+                    mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_mid-.mp4"],
                   },
                   segments: [
                     {
                       time: 12 * 250000,
                       timescale: 25000,
                       duration: 250000,
-                      mediaURL: BASE_URL + "mp4-live-periods-h264bl_mid-13.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_mid-13.m4s"],
                     },
                     {
                       time: 13 * 250000,
                       timescale: 25000,
                       duration: 250000,
-                      mediaURL: BASE_URL + "mp4-live-periods-h264bl_mid-14.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_mid-14.m4s"],
                     },
                     // ...
                   ],
@@ -285,20 +285,20 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "mp4-live-periods-h264bl_hd-.mp4",
+                    mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_hd-.mp4"],
                   },
                   segments: [
                     {
                       time: 12 * 250000,
                       timescale: 25000,
                       duration: 250000,
-                      mediaURL: BASE_URL + "mp4-live-periods-h264bl_hd-13.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_hd-13.m4s"],
                     },
                     {
                       time: 13 * 250000,
                       timescale: 25000,
                       duration: 250000,
-                      mediaURL: BASE_URL + "mp4-live-periods-h264bl_hd-14.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_hd-14.m4s"],
                     },
                     // ...
                   ],
@@ -314,20 +314,20 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "mp4-live-periods-h264bl_full-.mp4",
+                    mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_full-.mp4"],
                   },
                   segments: [
                     {
                       time: 12 * 250000,
                       timescale: 25000,
                       duration: 250000,
-                      mediaURL: BASE_URL + "mp4-live-periods-h264bl_full-13.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_full-13.m4s"],
                     },
                     {
                       time: 13 * 250000,
                       timescale: 25000,
                       duration: 250000,
-                      mediaURL: BASE_URL + "mp4-live-periods-h264bl_full-14.m4s",
+                      mediaURLs: [BASE_URL + "mp4-live-periods-h264bl_full-14.m4s"],
                     },
                     // ...
                   ],

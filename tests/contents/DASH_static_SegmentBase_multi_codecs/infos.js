@@ -33,7 +33,7 @@ export default {
                 mimeType: "audio/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "a-spa-0128k-aac.mp4",
+                    mediaURLs: [BASE_URL + "a-spa-0128k-aac.mp4"],
                     range: [0, 745],
                   },
                   segments: [],
@@ -52,7 +52,7 @@ export default {
                 mimeType: "audio/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "a-deu-0128k-aac.mp4",
+                    mediaURLs: [BASE_URL + "a-deu-0128k-aac.mp4"],
                     range: [0, 745],
                   },
                   segments: [],
@@ -71,7 +71,7 @@ export default {
                 mimeType: "audio/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "a-fra-0128k-aac.mp4",
+                    mediaURLs: [BASE_URL + "a-fra-0128k-aac.mp4"],
                     range: [0, 745],
                   },
                   segments: [],
@@ -90,7 +90,7 @@ export default {
                 mimeType: "audio/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "a-eng-0128k-aac.mp4",
+                    mediaURLs: [BASE_URL + "a-eng-0128k-aac.mp4"],
                     range: [0, 745],
                   },
                   segments: [],
@@ -109,7 +109,7 @@ export default {
                 mimeType: "audio/webm",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "a-eng-0128k-libopus.webm",
+                    mediaURLs: [BASE_URL + "a-eng-0128k-libopus.webm"],
                     range: [0, 319],
                   },
                   segments: [],
@@ -128,7 +128,7 @@ export default {
                 mimeType: "audio/webm",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "a-fra-0128k-libopus.webm",
+                    mediaURLs: [BASE_URL + "a-fra-0128k-libopus.webm"],
                     range: [0, 319],
                   },
                   segments: [],
@@ -147,7 +147,7 @@ export default {
                 mimeType: "audio/webm",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "a-deu-0128k-libopus.webm",
+                    mediaURLs: [BASE_URL + "a-deu-0128k-libopus.webm"],
                     range: [0, 319],
                   },
                   segments: [],
@@ -166,7 +166,7 @@ export default {
                 mimeType: "audio/webm",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "a-ita-0128k-libopus.webm",
+                    mediaURLs: [BASE_URL + "a-ita-0128k-libopus.webm"],
                     range: [0, 319],
                   },
                   segments: [],
@@ -185,7 +185,7 @@ export default {
                 mimeType: "audio/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "a-ita-0128k-aac.mp4",
+                    mediaURLs: [BASE_URL + "a-ita-0128k-aac.mp4"],
                     range: [0, 745],
                   },
                   segments: [],
@@ -204,7 +204,7 @@ export default {
                 mimeType: "audio/webm",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "a-spa-0128k-libopus.webm",
+                    mediaURLs: [BASE_URL + "a-spa-0128k-libopus.webm"],
                     range: [0, 319],
                   },
                   segments: [],
@@ -225,11 +225,11 @@ export default {
                 mimeType: "text/vtt",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "s-el.webvtt",
+                    mediaURLs: [BASE_URL + "s-el.webvtt"],
                   },
                   segments: [
                     {
-                      mediaURL: BASE_URL + "s-el.webvtt",
+                      mediaURLs: [BASE_URL + "s-el.webvtt"],
                       time: 0,
                       timescale: 1,
                       duration: 60.022,
@@ -250,11 +250,11 @@ export default {
                 mimeType: "text/vtt",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "s-en.webvtt",
+                    mediaURLs: [BASE_URL + "s-en.webvtt"],
                   },
                   segments: [
                     {
-                      mediaURL: BASE_URL + "s-en.webvtt",
+                      mediaURLs: [BASE_URL + "s-en.webvtt"],
                       time: 0,
                       timescale: 1,
                       duration: 60.022,
@@ -275,11 +275,11 @@ export default {
                 mimeType: "text/vtt",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "s-fr.webvtt",
+                    mediaURLs: [BASE_URL + "s-fr.webvtt"],
                   },
                   segments: [
                     {
-                      mediaURL: BASE_URL + "s-fr.webvtt",
+                      mediaURLs: [BASE_URL + "s-fr.webvtt"],
                       time: 0,
                       timescale: 1,
                       duration: 60.022,
@@ -300,11 +300,11 @@ export default {
                 mimeType: "text/vtt",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "s-pt-BR.webvtt",
+                    mediaURLs: [BASE_URL + "s-pt-BR.webvtt"],
                   },
                   segments: [
                     {
-                      mediaURL: BASE_URL + "s-pt-BR.webvtt",
+                      mediaURLs: [BASE_URL + "s-pt-BR.webvtt"],
                       time: 0,
                       timescale: 1,
                       duration: 60.022,
@@ -327,7 +327,7 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "v-0144p-0100k-libx264.mp4",
+                    mediaURLs: [BASE_URL + "v-0144p-0100k-libx264.mp4"],
                     range: [0, 806],
                   },
                   segments: [],
@@ -342,7 +342,7 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "v-0240p-0400k-libx264.mp4",
+                    mediaURLs: [BASE_URL + "v-0240p-0400k-libx264.mp4"],
                     range: [0, 808],
                   },
                   segments: [],
@@ -357,7 +357,7 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "v-0360p-0750k-libx264.mp4",
+                    mediaURLs: [BASE_URL + "v-0360p-0750k-libx264.mp4"],
                     range: [0, 809],
                   },
                   segments: [],
@@ -372,7 +372,7 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "v-0480p-1000k-libx264.mp4",
+                    mediaURLs: [BASE_URL + "v-0480p-1000k-libx264.mp4"],
                     range: [0, 808],
                   },
                   segments: [],
@@ -387,7 +387,7 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "v-0576p-1400k-libx264.mp4",
+                    mediaURLs: [BASE_URL + "v-0576p-1400k-libx264.mp4"],
                     range: [0, 807],
                   },
                   segments: [],
@@ -406,7 +406,7 @@ export default {
                 mimeType: "video/webm",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "v-0144p-0100k-vp9.webm",
+                    mediaURLs: [BASE_URL + "v-0144p-0100k-vp9.webm"],
                     range: [0, 293],
                   },
                   segments: [],
@@ -421,7 +421,7 @@ export default {
                 mimeType: "video/webm",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "v-0240p-0300k-vp9.webm",
+                    mediaURLs: [BASE_URL + "v-0240p-0300k-vp9.webm"],
                     range: [0, 295],
                   },
                   segments: [],
@@ -436,7 +436,7 @@ export default {
                 mimeType: "video/webm",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "v-0360p-0550k-vp9.webm",
+                    mediaURLs: [BASE_URL + "v-0360p-0550k-vp9.webm"],
                     range: [0, 297],
                   },
                   segments: [],
@@ -451,7 +451,7 @@ export default {
                 mimeType: "video/webm",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "v-0480p-0750k-vp9.webm",
+                    mediaURLs: [BASE_URL + "v-0480p-0750k-vp9.webm"],
                     range: [0, 297],
                   },
                   segments: [],
@@ -466,7 +466,7 @@ export default {
                 mimeType: "video/webm",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "v-0576p-1000k-vp9.webm",
+                    mediaURLs: [BASE_URL + "v-0576p-1000k-vp9.webm"],
                     range: [0, 297],
                   },
                   segments: [],

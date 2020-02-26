@@ -26,7 +26,7 @@ export interface IBaseURL {
  * @param {Element} root
  * @returns {Object}
  */
-export default function parseBaseURL(root: Element): IBaseURL|undefined {
+export default function parseBaseURL(root: Element) : IBaseURL | undefined {
   const attributes: { availabilityTimeOffset?: number } = {};
   const value = root.textContent;
   if (value === null || value.length === 0) {
@@ -44,8 +44,6 @@ export default function parseBaseURL(root: Element): IBaseURL|undefined {
     }
   }
 
-  return {
-    value,
-    attributes,
-  };
+  return { value,
+           attributes };
 }

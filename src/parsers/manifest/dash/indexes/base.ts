@@ -26,7 +26,7 @@ import {
 } from "../../utils/index_helpers";
 import getInitSegment from "./get_init_segment";
 import getSegmentsFromTimeline from "./get_segments_from_timeline";
-import { createIndexURL } from "./tokens";
+import { createIndexURLs } from "./tokens";
 
 // index property defined for a SegmentBase RepresentationIndex
 export interface IBaseIndex {
@@ -44,11 +44,11 @@ export interface IBaseIndex {
                             // beginning at:
                             // ``` T * timescale + indexTimeOffset ```
   initialization? : { // information on the initialization segment
-    mediaURL: string; // URL to access the initialization segment
+    mediaURLs: string[] | null; // URLs to access the initialization segment
     range?: [number, number]; // possible byte range to request it
   };
-  mediaURL : string; // base URL to access any segment. Can contain token to
-                     // replace to convert it to a real URL
+  mediaURLs : string[] | null; // base URLs to access any segment. Can contain token to
+                              // replace to convert it to a real URL
   startNumber? : number; // number from which the first segments in this index
                          // starts with
   timeline : IIndexSegment[]; // Every segments defined in this index
@@ -89,7 +89,7 @@ export interface IBaseIndexContextArgument {
                         // RepresentationIndex, in seconds
   periodEnd : number|undefined; // End of the period concerned by this
                                 // RepresentationIndex, in seconds
-  representationBaseURL : string; // Base URL for the Representation concerned
+  representationBaseURLs : string[]; // Base URLs for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
 }
@@ -148,7 +148,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   constructor(index : IBaseIndexIndexArgument, context : IBaseIndexContextArgument) {
     const { periodStart,
             periodEnd,
-            representationBaseURL,
+            representationBaseURLs,
             representationId,
             representationBitrate } = context;
     const { timescale } = index;
@@ -158,10 +158,10 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
     const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
 
-    const mediaURL = createIndexURL(representationBaseURL,
-                                    index.initialization !== undefined ?
-                                      index.initialization.media :
-                                      undefined,
+    const mediaURLs = createIndexURLs(representationBaseURLs,
+                                     index.initialization !== undefined ?
+                                       index.initialization.media :
+                                       undefined,
                                     representationId,
                                     representationBitrate);
 
@@ -178,11 +178,11 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
     this._index = { indexRange: index.indexRange,
                     indexTimeOffset,
-                    initialization: { mediaURL, range },
-                    mediaURL: createIndexURL(representationBaseURL,
-                                             index.media,
-                                             representationId,
-                                             representationBitrate),
+                    initialization: { mediaURLs, range },
+                    mediaURLs: createIndexURLs(representationBaseURLs,
+                                               index.media,
+                                               representationId,
+                                               representationBitrate),
                     startNumber: index.startNumber,
                     timeline: index.timeline,
                     timescale };

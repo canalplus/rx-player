@@ -67,13 +67,6 @@ export default class PendingRequestsStore {
    */
   public add(payload : IBeginRequestValue) : void {
     const { id, time, duration, requestTimestamp } = payload;
-    if (this._currentRequests[id] != null) {
-      if (__DEV__) {
-        throw new Error("ABR: request already added.");
-      }
-      log.warn("ABR: request already added.");
-      return;
-    }
     this._currentRequests[id] = { time,
                                   duration,
                                   requestTimestamp,

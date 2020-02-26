@@ -124,8 +124,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   public suggestedPresentationDelay? : number;
 
   // Base URL from which relative segment's URLs will be relative to.
-  // @param {string}
-  public baseURL? : string;
+  // `null` if not relevant
+  public baseURLs : string[] | null;
 
   // Amount of time, in seconds, this Manifest is valid from its fetching time.
   // If not valid, you will need to refresh and update this Manifest (the latter
@@ -202,7 +202,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.suggestedPresentationDelay = args.suggestedPresentationDelay;
     this.availabilityStartTime = args.availabilityStartTime;
     this.maximumTime = args.maximumTime;
-    this.baseURL = args.baseURL;
+    this.baseURLs = args.baseURLs;
 
     if (supplementaryImageTracks.length > 0) {
       this.addSupplementaryImageAdaptations(supplementaryImageTracks);
@@ -324,7 +324,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     /* tslint:enable:deprecation */
 
     this.availabilityStartTime = newManifest.availabilityStartTime;
-    this.baseURL = newManifest.baseURL;
+    this.baseURLs = newManifest.baseURLs;
     this.id = newManifest.id;
     this.isDynamic = newManifest.isDynamic;
     this.isLive = newManifest.isLive;

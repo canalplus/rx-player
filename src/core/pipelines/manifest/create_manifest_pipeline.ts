@@ -37,8 +37,8 @@ import {
   ITransportPipelines,
 } from "../../../transports";
 import tryCatch from "../../../utils/rx-try_catch";
-import backoff from "../utils/backoff";
 import errorSelector from "../utils/error_selector";
+import { tryRequestObservableWithBackoff } from "../utils/try_urls_with_backoff";
 import createManifestLoader, {
   IPipelineLoaderResponse,
   IPipelineLoaderResponseValue,
@@ -105,7 +105,8 @@ export default function createManifestPipeline(
                              maxDelay: parsedOptions.maxDelay,
                              maxRetryRegular: parsedOptions.maxRetry,
                              maxRetryOffline: parsedOptions.maxRetryOffline };
-    return backoff(tryCatch(request, undefined), backoffOptions).pipe(
+    return tryRequestObservableWithBackoff(tryCatch(request, undefined),
+                                           backoffOptions).pipe(
       mergeMap(evt => {
         if (evt.type === "retry") {
           warning$.next(errorSelector(evt.value));

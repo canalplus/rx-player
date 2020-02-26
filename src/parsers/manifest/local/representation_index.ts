@@ -45,7 +45,7 @@ export default function createRepresentationIndex(
         time: 0,
         duration: 0,
         timescale: 1,
-        mediaURL: null,
+        mediaURLs: null,
         privateInfos: {
           localManifestInitSegment: { load: index.loadInitSegment } },
       };
@@ -81,7 +81,7 @@ export default function createRepresentationIndex(
             duration: wantedSegment.duration,
             timescale: 1000,
             timestampOffset: wantedSegment.timestampOffset,
-            mediaURL: null,
+            mediaURLs: null,
             privateInfos: {
               localManifestSegment: { load: index.loadSegment,
                                       segment: wantedSegment },

@@ -49,6 +49,7 @@ export default function parseLocalManifest(
   const { isFinished } = localManifest;
   const manifest = {
     availabilityStartTime: 0,
+    baseURLs: null,
     duration: localManifest.duration,
     expired: localManifest.expired,
     id: "local-manifest_" + generateManifestID(),

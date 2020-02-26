@@ -49,7 +49,7 @@ function getWantedRepeatIndex(
  * @returns {Array.<Object>}
  */
 export default function getSegmentsFromTimeline(
-  index : { mediaURL : string;
+  index : { mediaURLs : string[] | null;
             startNumber? : number;
             timeline : IIndexSegment[];
             timescale : number;
@@ -60,7 +60,7 @@ export default function getSegmentsFromTimeline(
 ) : ISegment[] {
   const scaledUp = toIndexTime(from, index);
   const scaledTo = toIndexTime(from + durationWanted, index);
-  const { timeline, timescale, mediaURL, startNumber } = index;
+  const { timeline, timescale, mediaURLs, startNumber } = index;
 
   let currentNumber = startNumber != null ? startNumber :
                                             undefined;
@@ -86,15 +86,17 @@ export default function getSegmentsFromTimeline(
     while (segmentTime < scaledTo && segmentNumberInCurrentRange <= repeat) {
       const segmentNumber = currentNumber != null ?
         currentNumber + segmentNumberInCurrentRange : undefined;
+
+      const detokenizedURLs = mediaURLs?.map(url => {
+        return replaceSegmentDASHTokens(url, segmentTime, segmentNumber);
+      }) ?? null;
       const segment = { id: String(segmentTime),
                         time: segmentTime - index.indexTimeOffset,
                         isInit: false,
                         range,
                         duration,
                         timescale,
-                        mediaURL: replaceSegmentDASHTokens(mediaURL,
-                                                           segmentTime,
-                                                           segmentNumber),
+                        mediaURLs: detokenizedURLs,
                         number: segmentNumber,
                         timestampOffset: -(index.indexTimeOffset / timescale) };
       segments.push(segment);

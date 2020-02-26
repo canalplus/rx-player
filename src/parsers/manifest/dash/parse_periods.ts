@@ -18,17 +18,18 @@ import log from "../../../log";
 import flatMap from "../../../utils/flat_map";
 import idGenerator from "../../../utils/id_generator";
 import objectValues from "../../../utils/object_values";
-import resolveURL from "../../../utils/resolve_url";
 import {
   IParsedAdaptation,
   IParsedAdaptations,
   IParsedPeriod,
 } from "../types";
+import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import flattenOverlappingPeriods from "./flatten_overlapping_periods";
 import getPeriodsTimeInformation from "./get_periods_time_infos";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import { IPeriodIntermediateRepresentation } from "./node_parsers/Period";
 import parseAdaptationSets from "./parse_adaptation_sets";
+import resolveBaseURLs from "./resolve_base_urls";
 
 const generatePeriodID = idGenerator();
 
@@ -46,7 +47,7 @@ export interface IManifestInfos {
   availabilityTimeOffset: number; // availability time offset of the concerned
                                   // manifest they are not yet finished
   availabilityStartTime : number; // Time from which the content starts
-  baseURL? : string;
+  baseURLs : string[];
   clockOffset? : number;
   duration? : number;
   isDynamic : boolean;
@@ -88,9 +89,8 @@ export default function parsePeriods(
   for (let i = periodsIR.length - 1; i >= 0; i--) {
     const periodIR = periodsIR[i];
     const xlinkInfos = manifestInfos.xlinkInfos.get(periodIR);
-    const periodBaseURL = resolveURL(manifestInfos.baseURL,
-                                     periodIR.children.baseURL !== undefined ?
-                                       periodIR.children.baseURL.value : "");
+    const periodBaseURLs = resolveBaseURLs(manifestInfos.baseURLs,
+                                           periodIR.children.baseURLs);
 
     const { periodStart,
             periodDuration,
@@ -108,12 +108,12 @@ export default function parsePeriods(
                                                     manifestInfos.receivedTime;
 
     const availabilityTimeOffset =
-      (periodIR.children.baseURL?.attributes.availabilityTimeOffset ?? 0) +
+      extractMinimumAvailabilityTimeOffset(periodIR.children.baseURLs) +
       manifestInfos.availabilityTimeOffset;
 
     const periodInfos = { aggressiveMode: manifestInfos.aggressiveMode,
                           availabilityTimeOffset,
-                          baseURL: periodBaseURL,
+                          baseURLs: periodBaseURLs,
                           manifestBoundsCalculator,
                           end: periodEnd,
                           isDynamic,

@@ -49,15 +49,21 @@ function processFormatedToken(
  * @param {number|undefined} bitrate
  * @returns {string}
  */
-export function createIndexURL(
-  representationURL : string,
+export function createIndexURLs(
+  baseURLs : string[],
   media?: string,
   id?: string,
   bitrate?: number
-): string {
-  return replaceRepresentationDASHTokens(resolveURL(representationURL, media),
-                                         id,
-                                         bitrate);
+): string[] | null {
+  if (baseURLs.length === 0) {
+    return media !== undefined ? [replaceRepresentationDASHTokens(media, id, bitrate)] :
+                                 null;
+  }
+  return baseURLs.map(baseURL => {
+    return replaceRepresentationDASHTokens(resolveURL(baseURL, media),
+                                           id,
+                                           bitrate);
+  });
 }
 
 /**
