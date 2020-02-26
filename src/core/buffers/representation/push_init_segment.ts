@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import {
   defer as observableDefer,
   EMPTY,
@@ -27,6 +26,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import objectAssign from "../../../utils/object_assign";
 import {
   IPushedChunkData,
   QueuedSourceBuffer,

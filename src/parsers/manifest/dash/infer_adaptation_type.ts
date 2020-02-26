@@ -18,7 +18,11 @@ import arrayFind from "../../../utils/array_find";
 import arrayIncludes from "../../../utils/array_includes";
 import { IRepresentationIntermediateRepresentation } from "./node_parsers/Representation";
 
-const KNOWN_ADAPTATION_TYPES = ["audio", "video", "text", "image"];
+type IAdaptationType = "audio" |
+                       "video" |
+                       "text" |
+                       "image";
+const KNOWN_ADAPTATION_TYPES : IAdaptationType[] = ["audio", "video", "text", "image"];
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
 
 interface IScheme {
@@ -42,17 +46,18 @@ interface IScheme {
  */
 export default function inferAdaptationType(
   representations: IRepresentationIntermediateRepresentation[],
-  adaptationMimeType : string|null,
-  adaptationCodecs : string|null,
-  adaptationRoles : IScheme[]|null
-) : string {
+  adaptationMimeType : string | null,
+  adaptationCodecs : string | null,
+  adaptationRoles : IScheme[] | null
+) : IAdaptationType | undefined {
   function fromMimeType(
     mimeType : string,
     roles : IScheme[]|null
-  ) : string|undefined {
+  ) : IAdaptationType | undefined {
     const topLevel = mimeType.split("/")[0];
-    if (arrayIncludes(KNOWN_ADAPTATION_TYPES, topLevel)) {
-      return topLevel;
+    if (arrayIncludes<IAdaptationType>(KNOWN_ADAPTATION_TYPES,
+                                       topLevel as IAdaptationType)) {
+      return topLevel as IAdaptationType;
     }
     if (mimeType === "application/bif") {
       return "image";
@@ -72,10 +77,10 @@ export default function inferAdaptationType(
           return "text";
         }
       }
-      return "metadata";
+      return undefined;
     }
   }
-  function fromCodecs(codecs : string) {
+  function fromCodecs(codecs : string) : IAdaptationType | undefined {
     switch (codecs.substring(0, 3)) {
       case "avc":
       case "hev":
@@ -97,43 +102,34 @@ export default function inferAdaptationType(
         return "text";
     }
   }
-  if (adaptationMimeType != null) {
+  if (adaptationMimeType !== null) {
     const typeFromMimeType = fromMimeType(adaptationMimeType, adaptationRoles);
-    if (typeFromMimeType != null) {
+    if (typeFromMimeType !== undefined) {
       return typeFromMimeType;
     }
   }
-  if (adaptationCodecs != null) {
+  if (adaptationCodecs !== null) {
     const typeFromCodecs = fromCodecs(adaptationCodecs);
-    if (typeFromCodecs != null) {
+    if (typeFromCodecs !== undefined) {
       return typeFromCodecs;
     }
   }
 
-  const representationMimeTypes = representations
-    .map(representation => representation.attributes.mimeType)
-    .filter((mimeType : string|undefined) : mimeType is string => mimeType != null);
-  const representationCodecs = representations
-    .map(representation => representation.attributes.codecs)
-    .filter((codecs : string|undefined) : codecs is string => codecs != null);
-
-  for (let i = 0; i < representationMimeTypes.length; i++) {
-    const representationMimeType = representationMimeTypes[i];
-    if (representationMimeType != null) {
-      const typeFromMimeType = fromMimeType(representationMimeType, adaptationRoles);
-      if (typeFromMimeType != null) {
+  for (let i = 0; i < representations.length; i++) {
+    const representation = representations[i];
+    const { mimeType, codecs } = representation.attributes;
+    if (mimeType !== undefined) {
+      const typeFromMimeType = fromMimeType(mimeType, adaptationRoles);
+      if (typeFromMimeType !== undefined) {
         return typeFromMimeType;
       }
     }
-  }
-  for (let i = 0; i < representationCodecs.length; i++) {
-    const codecs = representationCodecs[i];
-    if (codecs != null) {
-      const typeFromMimeType = fromCodecs(codecs);
-      if (typeFromMimeType != null) {
-        return typeFromMimeType;
+    if (codecs !== undefined) {
+      const typeFromCodecs = fromCodecs(codecs);
+      if (typeFromCodecs !== undefined) {
+        return typeFromCodecs;
       }
     }
   }
-  return "unknown";
+  return undefined;
 }

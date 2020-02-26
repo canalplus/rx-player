@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import {
   asapScheduler,
   BehaviorSubject,
@@ -43,6 +42,7 @@ import { ICustomError } from "../../errors";
 import log from "../../log";
 import { ITransportPipelines } from "../../transports";
 import { fromEvent } from "../../utils/event_emitter";
+import objectAssign from "../../utils/object_assign";
 import throttle from "../../utils/rx-throttle";
 import ABRManager, {
   IABRManagerArguments,

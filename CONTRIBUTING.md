@@ -151,7 +151,7 @@ compatibility with every browsers. To work around those, we usually rely on
 "ponyfills" which are JavaScript re-implementations.
 
 This concerns the following static methods:
-  - `Object.assign`: use the `object-assign` dependency instead
+  - `Object.assign`: use `src/utils/object_assign.ts` instead
   - `Object.values`: use `src/utils/object_values.ts` instead
 
 The following methods:

@@ -97,7 +97,7 @@ function parseBif(buf : Uint8Array) : IBifObject {
       // calculate for index-1
       const ts = previousImageInfo.timestamp * framewiseSeparation;
       const duration = framewiseSeparation;
-      const data = buf.subarray(previousImageInfo.offset, currentImageOffset);
+      const data = buf.slice(previousImageInfo.offset, currentImageOffset);
 
       thumbs.push({ index, duration, ts, data });
 

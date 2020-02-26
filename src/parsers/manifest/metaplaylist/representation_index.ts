@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import { ICustomError } from "../../../errors";
 import {
   IBaseContentInfos,
   IRepresentationIndex,
   ISegment,
 } from "../../../manifest";
+import objectAssign from "../../../utils/object_assign";
 
 /**
  * The MetaRepresentationIndex is wrapper for all kind of indexes (dash, smooth, etc)

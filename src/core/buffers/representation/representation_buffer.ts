@@ -24,7 +24,6 @@
  */
 
 import nextTick from "next-tick";
-import objectAssign from "object-assign";
 import {
   combineLatest as observableCombineLatest,
   concat as observableConcat,
@@ -62,6 +61,7 @@ import {
   ISegmentParserParsedInitSegment,
   ISegmentParserSegment,
 } from "../../../transports";
+import objectAssign from "../../../utils/object_assign";
 import SimpleSet from "../../../utils/simple_set";
 import {
   IPrioritizedSegmentFetcher,
@@ -228,6 +228,7 @@ export default function RepresentationBuffer<T>({
 
       const segmentInventory = queuedSourceBuffer.getInventory();
       let neededSegments = getNeededSegments({ content,
+                                               currentPlaybackTime: timing.currentTime,
                                                knownStableBitrate,
                                                loadedSegmentPendingPush,
                                                neededRange,

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import log from "../../../log";
 import arrayFindIndex from "../../../utils/array_find_index";
 import arrayIncludes from "../../../utils/array_includes";
+import objectAssign from "../../../utils/object_assign";
 import { IStyleObject } from "./get_styling";
 
 /**

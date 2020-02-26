@@ -19,7 +19,6 @@
  * It also starts the different sub-parts of the player on various API calls.
  */
 
-import objectAssign from "object-assign";
 import {
   BehaviorSubject,
   combineLatest as observableCombineLatest,
@@ -55,6 +54,7 @@ import EventEmitter, {
 } from "../../utils/event_emitter";
 import Logger from "../../utils/logger";
 import noop from "../../utils/noop";
+import objectAssign from "../../utils/object_assign";
 import PPromise from "../../utils/promise";
 import {
   getLeftSizeOfRange,
@@ -2307,7 +2307,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           const videoTrack = this._priv_trackChoiceManager
             .getChosenVideoTrack(currentPeriod);
           this.trigger("videoTrackChange", videoTrack);
-
 
           const availableVideoBitrates = this.getAvailableVideoBitrates();
           this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",

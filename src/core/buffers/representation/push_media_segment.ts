@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import {
   defer as observableDefer,
   EMPTY,
@@ -28,6 +27,7 @@ import Manifest, {
   Representation,
 } from "../../../manifest";
 import { ISegmentParserParsedSegment } from "../../../transports";
+import objectAssign from "../../../utils/object_assign";
 import { QueuedSourceBuffer } from "../../source_buffers";
 import EVENTS from "../events_generators";
 import { IBufferEventAddedSegment } from "../types";

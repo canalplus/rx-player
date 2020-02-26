@@ -75,4 +75,22 @@ describe("utils - normalizeBaseURL", () => {
     expect(normalizeBaseURL(";ojdsfgje/eprowig/tohjroj/9ohyjwoij/s"))
       .toBe(";ojdsfgje/eprowig/tohjroj/9ohyjwoij/");
   });
+  it("should do nothing if the only slash are part of the protocol", () => {
+    expect(normalizeBaseURL("http://www.example.com"))
+      .toBe("http://www.example.com");
+    expect(normalizeBaseURL("https://a.t"))
+      .toBe("https://a.t");
+    expect(normalizeBaseURL("ftp://s"))
+      .toBe("ftp://s");
+  });
+  it("should not include slash coming in query parameters", () => {
+    expect(normalizeBaseURL("http://www.example.com?test/toto"))
+      .toBe("http://www.example.com");
+    expect(normalizeBaseURL("https://ww/ddd?test/toto/efewf/ffe/"))
+      .toBe("https://ww/");
+    expect(normalizeBaseURL("https://ww/rr/d?test/toto/efewf/ffe/"))
+      .toBe("https://ww/rr/");
+    expect(normalizeBaseURL("https://ww/rr/d/?test/toto/efewf/ffe/"))
+      .toBe("https://ww/rr/d/");
+  });
 });

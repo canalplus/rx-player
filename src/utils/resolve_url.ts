@@ -96,12 +96,28 @@ export default function resolveURL(...args : Array<string|undefined>) : string {
  * @returns {string}
  */
 function normalizeBaseURL(url : string) : string {
-  const slash = url.lastIndexOf("/");
-  if (slash >= 0) {
-    return url.substring(0, slash + 1);
-  } else {
+  const indexOfLastSlash = url.lastIndexOf("/");
+  if (indexOfLastSlash < 0) {
     return url;
   }
+
+  if (schemeRe.test(url)) {
+    const firstSlashIndex = url.indexOf("/");
+    if (firstSlashIndex >= 0 && indexOfLastSlash === firstSlashIndex + 1) {
+      // The "/" detected is actually the one from the protocol part of the URL
+      // ("https://")
+      return url;
+    }
+  }
+
+  const indexOfQuestionMark = url.indexOf("?");
+  if (indexOfQuestionMark >= 0 && indexOfQuestionMark < indexOfLastSlash) {
+    // There are query parameters. Let's ignore them and re-run the logic
+    // without
+    return normalizeBaseURL(url.substring(0, indexOfQuestionMark));
+  }
+
+  return url.substring(0, indexOfLastSlash + 1);
 }
 
 export { normalizeBaseURL };

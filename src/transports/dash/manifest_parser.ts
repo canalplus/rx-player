@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import {
   combineLatest as observableCombineLatest,
   Observable,
@@ -29,6 +28,7 @@ import Manifest from "../../manifest";
 import dashManifestParser, {
   IMPDParserResponse,
 } from "../../parsers/manifest/dash";
+import objectAssign from "../../utils/object_assign";
 import request from "../../utils/request";
 import {
   ILoaderDataLoadedValue,

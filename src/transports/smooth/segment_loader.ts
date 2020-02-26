@@ -82,10 +82,13 @@ const generateSegmentLoader = (
     }
     const smoothInitPrivateInfos = segment.privateInfos.smoothInit;
     let responseData : Uint8Array;
-    const { codecPrivateData = "",
+    const { codecPrivateData,
             protection = { keyId: undefined,
                            keySystems: undefined } } = smoothInitPrivateInfos;
 
+    if (codecPrivateData === undefined) {
+      throw new Error("Smooth: no codec private data.");
+    }
     switch (adaptation.type) {
       case "video": {
         const { width = 0, height = 0 } = representation;

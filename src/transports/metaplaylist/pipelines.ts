@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import {
   combineLatest,
   Observable,
@@ -37,6 +36,7 @@ import parseMetaPlaylist, {
   IParserResponse as IMPLParserResponse,
 } from "../../parsers/manifest/metaplaylist";
 import { IParsedManifest } from "../../parsers/manifest/types";
+import objectAssign from "../../utils/object_assign";
 import {
   IAudioVideoParserObservable,
   IChunkTimingInfos,
