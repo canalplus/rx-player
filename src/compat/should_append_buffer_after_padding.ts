@@ -14,25 +14,16 @@
  * limitations under the License.
  */
 
-import { getUuidContent } from "../../../parsers/containers/isobmff";
-import { be8toi } from "../../../utils/byte_parsing";
-
-export interface IISOBMFFBasicSegment {
-  time : number;
-  duration : number;
-}
+import { isSafari } from "./browser_detection";
 
 /**
- * @param {Uint8Array} traf
- * @returns {Object|undefined}
+ * When the player decides to load another quality and replace
+ * currently buffered one, it may append buffer on current playback time.
+ *
+ * On Safari, with HSS contents, this provoques green macro-block screens
+ * during the transition. To avoid this situation, we decide not to load a
+ * segment if it may be pushed during playback time. We should not buffer
+ * under a certain padding from the current time.
  */
-export default function parseTfxd(traf : Uint8Array) : IISOBMFFBasicSegment|undefined {
-  const tfxd = getUuidContent(traf, 0x6D1D9B05, 0x42D544E6, 0x80E2141D, 0xAFF757B2);
-  if (tfxd === undefined) {
-    return undefined;
-  }
-  return {
-    duration:  be8toi(tfxd, 12),
-    time: be8toi(tfxd,  4),
-  };
-}
+const shouldAppendBufferAfterPadding = isSafari;
+export default shouldAppendBufferAfterPadding;

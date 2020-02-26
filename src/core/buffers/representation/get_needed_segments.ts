@@ -24,6 +24,7 @@
  */
 
 // import objectAssign from "object-assign";
+import shouldAppendBufferAfterPadding from "../../../compat/should_append_buffer_after_padding";
 import config from "../../../config";
 import log from "../../../log";
 import Manifest, {
@@ -36,7 +37,8 @@ import Manifest, {
 import SimpleSet from "../../../utils/simple_set";
 import { IBufferedChunk } from "../../source_buffers";
 
-const { BITRATE_REBUFFERING_RATIO,
+const { CONTENT_REPLACEMENT_PADDING,
+        BITRATE_REBUFFERING_RATIO,
         MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,
         MINIMUM_SEGMENT_SIZE } = config;
 
@@ -44,6 +46,7 @@ export interface ISegmentFilterArgument { content: { adaptation : Adaptation;
                                                      manifest : Manifest;
                                                      period : Period;
                                                      representation : Representation; };
+                                          currentPlaybackTime: number;
                                           knownStableBitrate : number | undefined;
                                           loadedSegmentPendingPush : SimpleSet;
                                           neededRange : { start: number;
@@ -56,6 +59,7 @@ export interface ISegmentFilterArgument { content: { adaptation : Adaptation;
  */
 export default function getNeededSegments({
   content,
+  currentPlaybackTime,
   knownStableBitrate,
   loadedSegmentPendingPush,
   neededRange,
@@ -73,6 +77,7 @@ export default function getNeededSegments({
   const consideredSegments = currentSegments
     .filter((bufferedSegment) => !shouldContentBeReplaced(bufferedSegment.infos,
                                                           content,
+                                                          currentPlaybackTime,
                                                           knownStableBitrate));
 
   // 3 - remove from that list the segments who appeared to have been GCed
@@ -151,6 +156,7 @@ export default function getNeededSegments({
  * in the buffer should be replaced by segments coming from `currentContent`.
  * @param {Object} oldContent
  * @param {Object} currentContent
+ * @param {number} currentPlaybackTime
  * @param {number} [knownStableBitrate]
  * @returns {boolean}
  */
@@ -162,10 +168,18 @@ function shouldContentBeReplaced(
   currentContent : { adaptation : Adaptation;
                      period : Period;
                      representation : Representation; },
+  currentPlaybackTime: number,
   knownStableBitrate? : number
 ) : boolean {
   if (oldContent.period.id !== currentContent.period.id) {
     return false; // keep segments from another Period by default.
+  }
+
+  const { segment } = oldContent;
+  if (shouldAppendBufferAfterPadding &&
+      (segment.time / segment.timescale) <
+      (currentPlaybackTime + CONTENT_REPLACEMENT_PADDING)) {
+      return false;
   }
 
   if (oldContent.adaptation.id !== currentContent.adaptation.id) {

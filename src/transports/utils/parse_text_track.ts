@@ -45,8 +45,10 @@ export function extractTextTrackFromISOBMFF(chunkBytes : Uint8Array) : string {
 export function getISOBMFFTextTrackFormat(
   representation : Representation
 ) : "ttml" | "vtt" {
-  const codec = representation.codec == null ? "" :
-                                               representation.codec;
+  const codec = representation.codec;
+  if (codec === undefined) {
+    throw new Error("Cannot parse subtitles: unknown format");
+  }
   switch (codec.toLowerCase()) {
     case "stpp": // stpp === TTML in MP4
     case "stpp.ttml.im1t":
@@ -54,7 +56,6 @@ export function getISOBMFFTextTrackFormat(
     case "wvtt": // wvtt === WebVTT in MP4
       return "vtt";
   }
-
   throw new Error("The codec used for the subtitles " +
                   `"${codec}" is not managed yet.`);
 }
@@ -109,7 +110,7 @@ export function getISOBMFFEmbeddedTextTrackData(
   let startTime : number | undefined;
   let endTime : number | undefined;
   let timescale : number = 1;
-  if (chunkInfos == null) {
+  if (chunkInfos === null) {
     if (!isChunked) {
       log.warn("Transport: Unavailable time data for current text track.");
     } else {
@@ -119,7 +120,7 @@ export function getISOBMFFEmbeddedTextTrackData(
     }
   } else {
     startTime = chunkInfos.time;
-    if (chunkInfos.duration != null) {
+    if (chunkInfos.duration !== undefined) {
       endTime = startTime + chunkInfos.duration;
     } else if (!isChunked) {
       endTime = startTime + segment.duration;

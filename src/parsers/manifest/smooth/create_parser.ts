@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import log from "../../../log";
+import arrayIncludes from "../../../utils/array_includes";
 import assert from "../../../utils/assert";
 import idGenerator from "../../../utils/id_generator";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
+import objectAssign from "../../../utils/object_assign";
 import resolveURL, {
   normalizeBaseURL,
 } from "../../../utils/resolve_url";
@@ -62,14 +63,18 @@ interface IAdaptationParserArguments { root : Element;
                                        timeShiftBufferDepth? : number;
                                        manifestReceivedTime? : number; }
 
+type IAdaptationType = "audio" |
+                       "video" |
+                       "text" |
+                       "image";
+
+const KNOWN_ADAPTATION_TYPES : IAdaptationType[] = ["audio", "video", "text", "image"];
+
 const DEFAULT_MIME_TYPES : Partial<Record<string, string>> = {
   audio: "audio/mp4",
   video: "video/mp4",
   text: "application/ttml+xml",
 };
-
-const DEFAULT_CODECS : Partial<Record<string, string>> = { audio: "mp4a.40.2",
-                                                          video: "avc1.4D401E" };
 
 const MIME_TYPES : Partial<Record<string, string>> = {
   AACL: "audio/mp4",
@@ -182,13 +187,23 @@ function createSmoothStreamingParser(
                         isNaN(parseInt(bitrateAttr, 10)) ? 0 :
                                                            parseInt(bitrateAttr, 10);
 
+        if ((fourCC !== undefined &&
+             MIME_TYPES[fourCC] === undefined) ||
+            codecPrivateData === undefined) {
+          log.warn("Smooth parser: Unsupported audio codec. Ignoring quality level.");
+          return null;
+        }
+
+        const codecs = getAudioCodecs(codecPrivateData, fourCC);
+
         return {
           audiotag: audiotag !== undefined ? parseInt(audiotag, 10) : audiotag,
           bitrate,
           bitsPerSample: bitsPerSample !== undefined ?
             parseInt(bitsPerSample, 10) : bitsPerSample,
           channels: channels !== undefined ? parseInt(channels, 10) : channels,
-          codecPrivateData: takeFirstSet<string>(codecPrivateData, ""),
+          codecPrivateData,
+          codecs,
           customAttributes,
           mimeType: fourCC !== undefined ? MIME_TYPES[fourCC] : fourCC,
           packetSize: packetSize !== undefined ?
@@ -210,12 +225,21 @@ function createSmoothStreamingParser(
                         isNaN(parseInt(bitrateAttr, 10)) ? 0 :
                                                            parseInt(bitrateAttr, 10);
 
+        if ((fourCC !== undefined &&
+             MIME_TYPES[fourCC] === undefined) ||
+            codecPrivateData === undefined) {
+          log.warn("Smooth parser: Unsupported video codec. Ignoring quality level.");
+          return null;
+        }
+
+        const codecs = getVideoCodecs(codecPrivateData);
+
         return {
           bitrate,
           customAttributes,
           mimeType: fourCC !== undefined ? MIME_TYPES[fourCC] : fourCC,
-          codecPrivateData: takeFirstSet<string>(codecPrivateData, ""),
-          codecs: getVideoCodecs(takeFirstSet<string>(codecPrivateData, "")),
+          codecPrivateData,
+          codecs,
           width: width !== undefined ? parseInt(width, 10) : undefined,
           height: height !== undefined ? parseInt(height, 10) : undefined,
         };
@@ -262,10 +286,14 @@ function createSmoothStreamingParser(
                        isNaN(+timescaleAttr) ? timescale :
                                                +timescaleAttr;
 
-    const adaptationType = root.getAttribute("Type");
-    if (adaptationType == null) {
+    const typeAttribute = root.getAttribute("Type");
+    if (typeAttribute === null) {
       throw new Error("StreamIndex without type.");
     }
+    if (!arrayIncludes(KNOWN_ADAPTATION_TYPES, typeAttribute)) {
+      log.warn("Smooth Parser: Unrecognized adaptation type:", typeAttribute);
+    }
+    const adaptationType = typeAttribute as IAdaptationType;
 
     const subType = root.getAttribute("Subtype");
     const language = root.getAttribute("Language");
@@ -285,14 +313,6 @@ function createSmoothStreamingParser(
             const qualityLevel = parseQualityLevel(node, adaptationType);
             if (qualityLevel === null) {
               return res;
-            }
-            if (adaptationType === "audio") {
-              const fourCCAttr = node.getAttribute("FourCC");
-              const fourCC = fourCCAttr === null ? "" :
-                                                   fourCCAttr;
-
-              qualityLevel.codecs = getAudioCodecs(fourCC,
-                                                   qualityLevel.codecPrivateData);
             }
 
             // filter out video qualityLevels with small bitrates
@@ -315,7 +335,7 @@ function createSmoothStreamingParser(
     // we assume that all qualityLevels have the same
     // codec and mimeType
     assert(qualityLevels.length !== 0,
-           "adaptation should have at least one representation");
+           "Adaptation should have at least one playable representation.");
 
     const adaptationID = adaptationType +
                          (isNonEmptyString(language) ? ("_" + language) :
@@ -336,9 +356,7 @@ function createSmoothStreamingParser(
       const mimeType = isNonEmptyString(qualityLevel.mimeType) ?
         qualityLevel.mimeType :
         DEFAULT_MIME_TYPES[adaptationType];
-      const codecs = isNonEmptyString(qualityLevel.codecs) ?
-        qualityLevel.codecs :
-        DEFAULT_CODECS[adaptationType];
+      const codecs = qualityLevel.codecs;
       const id =  adaptationID + "_" +
                   (adaptationType != null ? adaptationType + "-" :
                                             "") +
@@ -473,17 +491,17 @@ function createSmoothStreamingParser(
     }
 
     const adaptations: IParsedAdaptations = adaptationNodes
-      .map((node: Element) => {
-        return parseAdaptation({ root: node,
-                                 rootURL,
-                                 timescale,
-                                 protections,
-                                 isLive,
-                                 timeShiftBufferDepth,
-                                 manifestReceivedTime });
-      })
-      .filter((adaptation) : adaptation is IParsedAdaptation => adaptation != null)
-      .reduce((acc: IParsedAdaptations, adaptation) => {
+      .reduce((acc: IParsedAdaptations, node : Element) => {
+        const adaptation = parseAdaptation({ root: node,
+                                             rootURL,
+                                             timescale,
+                                             protections,
+                                             isLive,
+                                             timeShiftBufferDepth,
+                                             manifestReceivedTime });
+        if (adaptation === null) {
+          return acc;
+        }
         const type = adaptation.type;
         const adaps = acc[type];
         if (adaps === undefined) {

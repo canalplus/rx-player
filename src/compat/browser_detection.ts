@@ -35,7 +35,15 @@ const isFirefox : boolean = !isNode &&
 const isSamsungBrowser : boolean = !isNode &&
                                    /SamsungBrowser/.test(navigator.userAgent);
 
-const isSafari : boolean = !isNode && /Safari/i.test(navigator.userAgent);
+const isSafari : boolean =
+  !isNode &&
+  /* tslint:disable ban */
+  Object.prototype.toString.call(window.HTMLElement).includes("Constructor") ||
+  /* tslint:enable ban */
+  /* tslint:disable no-unsafe-any */
+  (window as any).safari?.pushNotification.toString() ===
+    "[object SafariRemoteNotification]";
+  /* tslint:enable no-unsafe-any */
 
 const isSafariMobile : boolean = !isNode &&
                                  typeof navigator.platform === "string" &&

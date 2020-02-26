@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import {
   combineLatest,
   Observable,
@@ -37,6 +36,8 @@ import parseMetaPlaylist, {
   IParserResponse as IMPLParserResponse,
 } from "../../parsers/manifest/metaplaylist";
 import { IParsedManifest } from "../../parsers/manifest/types";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import objectAssign from "../../utils/object_assign";
 import {
   IAudioVideoParserObservable,
   IChunkTimingInfos,
@@ -68,7 +69,7 @@ function getContent(
       representation : Representation;
       segment : ISegment; }
 {
-  if (segment.privateInfos == null || segment.privateInfos.metaplaylistInfos == null) {
+  if (segment.privateInfos?.metaplaylistInfos === undefined) {
     throw new Error("MetaPlaylist: missing private infos");
   }
   const { manifest,
@@ -129,13 +130,13 @@ function getTransportPipelines(
   options : ITransportOptions
 ) : ITransportPipelines {
   const initialTransport = transports[transportName];
-  if (initialTransport != null) {
+  if (initialTransport !== undefined) {
     return initialTransport;
   }
 
   const feature = features.transports[transportName];
 
-  if (feature == null) {
+  if (feature === undefined) {
     throw new Error(`MetaPlaylist: Unknown transport ${transportName}.`);
   }
   const transport = feature(options);
@@ -149,7 +150,7 @@ function getTransportPipelines(
  */
 function getMetaPlaylistPrivateInfos(segment : ISegment) : IMetaPlaylistPrivateInfos {
   const { privateInfos } = segment;
-  if (privateInfos == null || privateInfos.metaplaylistInfos == null) {
+  if (privateInfos?.metaplaylistInfos === undefined) {
     throw new Error("MetaPlaylist: Undefined transport for content for metaplaylist.");
   }
   return privateInfos.metaplaylistInfos;
@@ -177,8 +178,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
         scheduleRequest,
         externalClockOffset } : IManifestParserArguments
     ) : IManifestParserObservable {
-      const url = response.url == null ? loaderURL :
-                                         response.url;
+      const url = response.url === undefined ? loaderURL :
+                                               response.url;
       const { responseData } = response;
 
       const parserOptions = {
@@ -201,9 +202,6 @@ export default function(options : ITransportOptions): ITransportPipelines {
             const transport = getTransportPipelines(transports,
                                                     ressource.transportType,
                                                     otherTransportOptions);
-            if (transport == null) {
-              throw new Error("MPL: Unrecognized transport.");
-            }
             const request$ = scheduleRequest(() =>
                 transport.manifest.loader({ url : ressource.url }).pipe(
                   filter((e): e is ILoaderDataLoaded< Document | string > =>
@@ -256,7 +254,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
         chunkOffset : number;
         appendWindow : [ number | undefined, number | undefined ]; } {
     const offsetedSegmentOffset = segmentResponse.chunkOffset + contentOffset;
-    if (segmentResponse.chunkData == null) {
+    if (isNullOrUndefined(segmentResponse.chunkData)) {
       return { chunkInfos: segmentResponse.chunkInfos,
                chunkOffset: offsetedSegmentOffset,
                appendWindow: [undefined, undefined] };
@@ -270,16 +268,16 @@ export default function(options : ITransportOptions): ITransportPipelines {
       offsetedChunkInfos.time += scaledContentOffset;
     }
 
-    const offsetedWindowStart = appendWindow[0] != null ?
+    const offsetedWindowStart = appendWindow[0] !== undefined ?
       Math.max(appendWindow[0] + contentOffset, contentOffset) :
       contentOffset;
 
     let offsetedWindowEnd : number|undefined;
-    if (appendWindow[1] != null) {
-      offsetedWindowEnd = contentEnd != null ? Math.min(appendWindow[1] + contentOffset,
-                                                        contentEnd) :
-                                               appendWindow[1] + contentOffset;
-    } else if (contentEnd != null) {
+    if (appendWindow[1] !== undefined) {
+      offsetedWindowEnd = contentEnd !== undefined ?
+        Math.min(appendWindow[1] + contentOffset, contentEnd) :
+        appendWindow[1] + contentOffset;
+    } else if (contentEnd !== undefined) {
       offsetedWindowEnd = contentEnd;
     }
     return { chunkInfos: offsetedChunkInfos,

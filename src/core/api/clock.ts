@@ -21,7 +21,6 @@
  * media element to sub-parts of the player.
  */
 
-import objectAssign from "object-assign";
 import {
   defer as observableDefer,
   fromEvent as observableFromEvent,
@@ -39,6 +38,7 @@ import {
 } from "rxjs/operators";
 import config from "../../config";
 import log from "../../log";
+import objectAssign from "../../utils/object_assign";
 import {
   getLeftSizeOfRange,
   getRange,

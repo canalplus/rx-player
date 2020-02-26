@@ -26,6 +26,8 @@ export interface ISetTextTrackArguments {
   type : string; // The text track format (e.g. "ttml", "srt", "vtt" or "sami")
   timeOffset? : number; // Offset, in seconds, that will be added to each
                         // subtitle's start and end time.
+  language? : string; // Define the language of the subtitles.
+                      // Only needed by some formats, such as SAMI.
 }
 
 /**
@@ -72,6 +74,7 @@ export default class TextTrackRenderer {
                                           start: 0,
                                           end: Number.MAX_VALUE,
                                           data: args.data,
+                                          language: args.language,
                                           type: args.type });
   }
 

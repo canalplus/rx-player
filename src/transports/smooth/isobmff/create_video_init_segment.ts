@@ -64,13 +64,16 @@ export default function createVideoInitSegment(
   const _pssList = pssList === undefined ? [] :
                                            pssList;
   const [, spsHex, ppsHex] = codecPrivateData.split("00000001");
+  if (spsHex === undefined || ppsHex === undefined) {
+    throw new Error("Smooth: unsupported codec private data.");
+  }
   const sps = hexToBytes(spsHex);
   const pps = hexToBytes(ppsHex);
 
   // TODO NAL length is forced to 4
   const avcc = createAVCCBox(sps, pps, nalLength);
   let stsd;
-  if (_pssList.length === 0 || keyId == null) {
+  if (_pssList.length === 0 || keyId === undefined) {
     const avc1 = createAVC1Box(width, height, hRes, vRes, "AVC Coding", 24, avcc);
     stsd = createSTSDBox([avc1]);
   } else {

@@ -40,19 +40,25 @@ export interface IParsedRepresentation {
   frameRate?: string;
   height?: number;
   mimeType?: string;
+  url? : string;
   width?: number;
 }
 
+export type IParsedAdaptationType = "audio" |
+                                    "video" |
+                                    "text" |
+                                    "image";
+
 // Collection of multiple `Adaptation`, regrouped by type
 export type IParsedAdaptations =
-  Partial<Record<string, IParsedAdaptation[]>>;
+  Partial<Record<IParsedAdaptationType, IParsedAdaptation[]>>;
 
 // Representation of a "track" available in any Period
 export interface IParsedAdaptation {
   // required
   id: string; // Unique ID for all Adaptation of that Period
   representations: IParsedRepresentation[]; // Qualities available for that Adaptation
-  type: string; // `Type` of Adaptation (e.g. `audio`, `video`, `text`, `image`...)
+  type: IParsedAdaptationType;
 
   // optional
   audioDescription? : boolean; // Whether this Adaptation is an audio-track for

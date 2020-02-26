@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import {
   combineLatest as observableCombineLatest,
   Observable,
   of as observableOf,
 } from "rxjs";
 import { map } from "rxjs/operators";
+import objectAssign from "../../utils/object_assign";
 import { IABRFilters } from "./representation_estimator";
 
 /**
@@ -53,6 +53,7 @@ export default function createFilters(
   // from.
   return deviceEventsArray.length > 0 ?
     observableCombineLatest(deviceEventsArray)
-      .pipe(map((args : IABRFilters[]) => objectAssign({}, ...args))) :
+      .pipe(map((args : IABRFilters[]) : IABRFilters =>
+        objectAssign({}, ...args) as IABRFilters)) :
     observableOf({});
 }

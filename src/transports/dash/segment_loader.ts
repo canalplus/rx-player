@@ -68,8 +68,9 @@ function regularSegmentLoader(
   return xhr({ url,
                responseType: "arraybuffer",
                sendProgressEvents: true,
-               headers: segment.range != null ? { Range: byteRange(segment.range) } :
-                                                undefined });
+               headers: segment.range !== undefined ?
+                 { Range: byteRange(segment.range) } :
+                 undefined });
 }
 
 /**
@@ -115,7 +116,7 @@ export default function generateSegmentLoader(
                             value: { responseData: null } });
     }
 
-    if (lowLatencyMode || customSegmentLoader == null) {
+    if (lowLatencyMode || customSegmentLoader === undefined) {
       return regularSegmentLoader(url, content, lowLatencyMode);
     }
 

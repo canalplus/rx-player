@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import {
   fromEvent,
   interval,
@@ -39,6 +38,7 @@ import {
   Period,
   Representation,
 } from "../../manifest";
+import objectAssign from "../../utils/object_assign";
 import SegmentInventory, {
   IBufferedChunk,
   IInsertedChunkInfos,

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import objectAssign from "object-assign";
 import {
   ICompatVTTCue,
   isVTTCue,
@@ -22,6 +21,7 @@ import {
 } from "../../../../compat";
 import arrayFind from "../../../../utils/array_find";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
+import objectAssign from "../../../../utils/object_assign";
 import getParameters, {
   ITTParameters,
 } from "../get_parameters";
