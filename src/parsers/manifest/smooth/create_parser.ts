@@ -15,6 +15,7 @@
  */
 
 import log from "../../../log";
+import arrayIncludes from "../../../utils/array_includes";
 import assert from "../../../utils/assert";
 import idGenerator from "../../../utils/id_generator";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
@@ -61,6 +62,13 @@ interface IAdaptationParserArguments { root : Element;
                                        isLive : boolean;
                                        timeShiftBufferDepth? : number;
                                        manifestReceivedTime? : number; }
+
+type IAdaptationType = "audio" |
+                       "video" |
+                       "text" |
+                       "image";
+
+const KNOWN_ADAPTATION_TYPES : IAdaptationType[] = ["audio", "video", "text", "image"];
 
 const DEFAULT_MIME_TYPES : Partial<Record<string, string>> = {
   audio: "audio/mp4",
@@ -262,10 +270,14 @@ function createSmoothStreamingParser(
                        isNaN(+timescaleAttr) ? timescale :
                                                +timescaleAttr;
 
-    const adaptationType = root.getAttribute("Type");
-    if (adaptationType == null) {
+    const typeAttribute = root.getAttribute("Type");
+    if (typeAttribute === null) {
       throw new Error("StreamIndex without type.");
     }
+    if (!arrayIncludes(KNOWN_ADAPTATION_TYPES, typeAttribute)) {
+      log.warn("Smooth Parser: Unrecognized adaptation type:", typeAttribute);
+    }
+    const adaptationType = typeAttribute as IAdaptationType;
 
     const subType = root.getAttribute("Subtype");
     const language = root.getAttribute("Language");
@@ -473,17 +485,17 @@ function createSmoothStreamingParser(
     }
 
     const adaptations: IParsedAdaptations = adaptationNodes
-      .map((node: Element) => {
-        return parseAdaptation({ root: node,
-                                 rootURL,
-                                 timescale,
-                                 protections,
-                                 isLive,
-                                 timeShiftBufferDepth,
-                                 manifestReceivedTime });
-      })
-      .filter((adaptation) : adaptation is IParsedAdaptation => adaptation != null)
-      .reduce((acc: IParsedAdaptations, adaptation) => {
+      .reduce((acc: IParsedAdaptations, node : Element) => {
+        const adaptation = parseAdaptation({ root: node,
+                                             rootURL,
+                                             timescale,
+                                             protections,
+                                             isLive,
+                                             timeShiftBufferDepth,
+                                             manifestReceivedTime });
+        if (adaptation === null) {
+          return acc;
+        }
         const type = adaptation.type;
         const adaps = acc[type];
         if (adaps === undefined) {

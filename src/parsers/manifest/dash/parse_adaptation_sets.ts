@@ -230,6 +230,9 @@ export default function parseAdaptationSets(
                                        adaptationChildren.roles != null ?
                                          adaptationChildren.roles :
                                          null);
+      if (type === undefined) {
+        return acc; // let's not parse unrecognized tracks
+      }
       const representations = parseRepresentations(representationsIR,
                                                    adaptation,
                                                    adaptationInfos);
