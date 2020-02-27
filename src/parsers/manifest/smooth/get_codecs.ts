@@ -34,7 +34,8 @@ export function getAudioCodecs(
       2;
   }
   if (mpProfile === 0) {
-    return null;
+    // Return default audio codec
+    return "mp4a.40.2";
   }
   return `mp4a.40.${mpProfile}`;
 }
@@ -46,8 +47,12 @@ export function getAudioCodecs(
 export function getVideoCodecs(codecPrivateData : string) : string|null {
   // we can extract codes only if fourCC is on of "H264", "X264", "DAVC", "AVC1"
   const arr = /00000001\d7([0-9a-fA-F]{6})/.exec(codecPrivateData);
-  if (arr === null || !isNonEmptyString(arr[1])) {
+  if (arr === null) {
     return null;
+  }
+  if (!isNonEmptyString(arr[1])) {
+    // Return default video codec
+    return "avc1.4D401E";
   }
   return "avc1." + arr[1];
 }

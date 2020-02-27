@@ -68,9 +68,6 @@ const DEFAULT_MIME_TYPES : Partial<Record<string, string>> = {
   text: "application/ttml+xml",
 };
 
-const DEFAULT_CODECS : Partial<Record<string, string>> = { audio: "mp4a.40.2",
-                                                          video: "avc1.4D401E" };
-
 const MIME_TYPES : Partial<Record<string, string>> = {
   AACL: "audio/mp4",
   AVC1: "video/mp4",
@@ -357,9 +354,7 @@ function createSmoothStreamingParser(
       const mimeType = isNonEmptyString(qualityLevel.mimeType) ?
         qualityLevel.mimeType :
         DEFAULT_MIME_TYPES[adaptationType];
-      const codecs = isNonEmptyString(qualityLevel.codecs) ?
-        qualityLevel.codecs :
-        DEFAULT_CODECS[adaptationType];
+      const codecs = qualityLevel.codecs;
       const id =  adaptationID + "_" +
                   (adaptationType != null ? adaptationType + "-" :
                                             "") +
