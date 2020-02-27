@@ -55,7 +55,7 @@ function createMetaplaylist(
     return getManifest(url, transport).pipe(
       mergeMap((manifest) => {
         if (manifest.isDynamic || manifest.isLive) {
-          throw new Error("Metaplaylist maker: Can't handle dynamic manifests.");
+          throw new Error("createMetaplaylist: Can't handle dynamic manifests.");
         }
         const manifestDuration = manifest.getMaximumPosition() -
                                  manifest.getMinimumPosition();

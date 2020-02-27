@@ -65,7 +65,7 @@ describe("createMetaplaylist", () => {
     expect(contents[3].endTime).to.equal(1072.8516443777778 + 100 + 10);
   });
 
-  it("Should throw if there is an unsupported transport", (done) => {
+  it("Should throw if there is an unsupported transport", async () => {
     const contentsInfos = [{ url: manifestURL1,
                              transport: "rtmp" },
                            { url: manifestURL2,
@@ -75,14 +75,18 @@ describe("createMetaplaylist", () => {
                            { url: "test-URL",
                              transport: "dash",
                              duration: 100 } ];
-    createMetaplaylist(contentsInfos).catch((err) => {
-      expect(typeof err).to.equal("object");
-      expect(err.message).to.equal("Metaplaylist Maker: Unknown transport type.");
-      done();
-    });
+    let error;
+    try {
+      await createMetaplaylist(contentsInfos);
+    } catch(err) {
+      error = err;
+    }
+
+    expect(typeof error).to.equal("object");
+    expect(error.message).to.equal("createMetaplaylist: Unknown transport type.");
   });
 
-  it("Should throw if there is a dynamic manifest", (done) => {
+  it("Should throw if there is a dynamic manifest", async () => {
     const contentsInfos = [{ url: manifestURL4,
                              transport: "dash" },
                            { url: manifestURL2,
@@ -92,10 +96,15 @@ describe("createMetaplaylist", () => {
                            { url: "test-URL",
                              transport: "dash",
                              duration: 100 } ];
-    createMetaplaylist(contentsInfos).catch((err) => {
-      expect(typeof err).to.equal("object");
-      expect(err.message).to.equal("Metaplaylist maker: Can't handle dynamic manifests.");
-      done();
-    });
+    let error;
+    try {
+      await createMetaplaylist(contentsInfos);
+    } catch(err) {
+      error = err;
+    }
+
+    expect(typeof error).to.equal("object");
+    expect(error.message).to.equal("createMetaplaylist: Can't handle " +
+                                   "dynamic manifests.");
   });
 });

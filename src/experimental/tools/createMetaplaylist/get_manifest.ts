@@ -90,7 +90,7 @@ function getManifest(url: string,
       pipelines = metaplaylist({ lowLatencyMode: false });
       break;
     default:
-      return throwError(new Error("Metaplaylist Maker: Unknown transport type."));
+      return throwError(new Error("createMetaplaylist: Unknown transport type."));
   }
   const loader = createManifestLoader(pipelines.manifest, loaderOptions);
   const { parser } = pipelines.manifest;
