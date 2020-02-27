@@ -37,11 +37,14 @@ interface IMetaplaylistContentInfos { url: string;
  * From given information about wanted metaplaylist and contents,
  * get needed supplementary infos and build a standard metaplaylist.
  * @param {Array.<Object>} contentsInfos
+ * @param {number|undefined} metaplaylistOffset
  * @returns {Promise<Object>} - metaplaylist
  */
 function createMetaplaylist(
-  contentsInfos: IMetaplaylistContentInfos[]
+  contentsInfos: IMetaplaylistContentInfos[],
+  metaplaylistOffset?: number
 ): Promise<IMetaPlaylist> {
+  const offset = metaplaylistOffset ?? 0;
   const completeContentsInfos$ = contentsInfos.map((contentInfos) => {
     const { url, transport, duration } = contentInfos;
     if (duration !== undefined) {
@@ -72,11 +75,11 @@ function createMetaplaylist(
                               endTime: number; }>,
                  val) => {
           const lastElement = acc[acc.length - 1];
-          const lastStart = lastElement?.endTime ?? 0;
+          const startTime = lastElement?.endTime ?? offset;
           acc.push({ url: val.url,
                      transport: val.transport,
-                     startTime: lastStart,
-                     endTime: lastStart + val.duration });
+                     startTime,
+                     endTime: startTime + val.duration });
           return acc;
         }, []);
     return { type: "MPL" as const,

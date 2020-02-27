@@ -26,33 +26,41 @@ You can then begin to use it right away.
 ## How to use it ###############################################################
 
 
-`createMetaplaylist` takes as an argument the list of content information, in 
-the playback order they should have in the metaplaylist.
+`createMetaplaylist` takes two arguments :
 
-The list is an array of objects with this attributes :
-- url (``string``): The URL of the source content
-- transport (``string``): The transport type of the content (`dash`, `smooth`
-or even `metaplaylist`)
+- contentInfos (``Array<Object>``) : The list of content information, in the
+    playback order they should have in the metaplaylist.
+
+    The list is an array of objects with this attributes :
+    - url (``string``): The URL of the source content
+    - transport (``string``): The transport type of the content (`dash`, `smooth`
+    or even `metaplaylist`)
+
+- metaplaylistOffset (``number|undefined``) : the optionnal time offset that
+    applies to the metaplaylist start time (default is 0).
 
 Example:
 ```js
-[
-    // dash content, 10mn long
-    {
-        url: "https://somedashcontent.mpd",
-        transport: "dash",
-    },
-    // smooth content, 35s long
-    {
-        url: "https://somesmoothcontent.ism",
-        transport: "smooth",
-    },
-    // metaplaylist content, 100mn long
-    {
-        url: "https://somemetaplaylistcontent",
-        transport: "metaplaylist",
-    }
-]
+createMetaplaylist(
+    [
+        // dash content, 10mn long
+        {
+            url: "https://somedashcontent.mpd",
+            transport: "dash",
+        },
+        // smooth content, 35s long
+        {
+            url: "https://somesmoothcontent.ism",
+            transport: "smooth",
+        },
+        // metaplaylist content, 100mn long
+        {
+            url: "https://somemetaplaylistcontent",
+            transport: "metaplaylist",
+        }
+    ],
+    1000
+)
 ```
 
 The returned metaplaylist will look like :
@@ -65,20 +73,20 @@ The returned metaplaylist will look like :
             {
                 url: "https://somedashcontent.mpd",
                 transport: "dash",
-                startTime: 0,
-                endTime: 600,
+                startTime: 1000,
+                endTime: 1600,
             },
             {
                 url: "https://somesmoothcontent.ism",
                 transport: "smooth",
-                startTime: 600,
-                endTime: 635,
+                startTime: 1600,
+                endTime: 1635,
             },
             {
                 url: "https://somemetaplaylistcontent",
                 transport: "metaplaylist",
-                startTime: 635,
-                endTime: 6635,
+                startTime: 1635,
+                endTime: 7635,
             },
         ],
     }
