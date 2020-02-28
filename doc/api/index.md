@@ -1802,7 +1802,7 @@ Canal+ to declare thumbnails linked to a given content.
 This tool is documented [here](./parseBifThumbnails.md).
 
 <a name="tools-createMetaplaylist"></a>
-### parseBifThumbnails #########################################################
+### createMetaplaylist #########################################################
 
 ---
 
