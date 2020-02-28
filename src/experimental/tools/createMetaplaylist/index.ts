@@ -19,12 +19,9 @@ import {
   combineLatest as observableCombineLatest,
   of as observableOf,
 } from "rxjs";
-import {
-  map,
-  mergeMap,
-} from "rxjs/operators";
+import { map } from "rxjs/operators";
 import { IMetaPlaylist } from "../../../parsers/manifest/metaplaylist";
-import getManifest from "./get_manifest";
+import getDurationFromManifest from "./get_duration_from_manifest";
 
 const PPromise = typeof Promise !== undefined ? Promise :
                                                 pinkie;
@@ -52,16 +49,11 @@ function createMetaplaylist(
                             transport,
                             duration });
     }
-    return getManifest(url, transport).pipe(
-      mergeMap((manifest) => {
-        if (manifest.isDynamic || manifest.isLive) {
-          throw new Error("createMetaplaylist: Can't handle dynamic manifests.");
-        }
-        const manifestDuration = manifest.getMaximumPosition() -
-                                 manifest.getMinimumPosition();
-        return observableOf({ url,
-                              duration: manifestDuration,
-                              transport });
+    return getDurationFromManifest(url, transport).pipe(
+      map((manifestDuration) => {
+        return { url,
+                 duration: manifestDuration,
+                 transport };
       })
     );
   });

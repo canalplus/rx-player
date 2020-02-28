@@ -26,14 +26,14 @@ describe("createMetaplaylist", () => {
 
     const { contents } = metaplaylist;
     expect(contents[0].startTime).to.equal(0);
-    expect(contents[0].endTime).to.equal(193.68097777777777);
-    expect(contents[1].startTime).to.equal(193.68097777777777);
-    expect(contents[1].endTime).to.equal(928.6809777777778);
-    expect(contents[2].startTime).to.equal(928.6809777777778);
-    expect(contents[2].endTime).to.equal(1072.8516443777778);
+    expect(contents[0].endTime).to.equal(193.68);
+    expect(contents[1].startTime).to.equal(193.68);
+    expect(contents[1].endTime).to.equal(927.6800000000001);
+    expect(contents[2].startTime).to.equal(927.6800000000001);
+    expect(contents[2].endTime).to.equal(1071.8506666);
     expect(contents[3].url).to.equal("test-URL");
-    expect(contents[3].startTime).to.equal(1072.8516443777778);
-    expect(contents[3].endTime).to.equal(1072.8516443777778 + 100);
+    expect(contents[3].startTime).to.equal(1071.8506666);
+    expect(contents[3].endTime).to.equal(1071.8506666 + 100);
   });
 
 
@@ -55,14 +55,14 @@ describe("createMetaplaylist", () => {
 
     const { contents } = metaplaylist;
     expect(contents[0].startTime).to.equal(0 + 10);
-    expect(contents[0].endTime).to.equal(193.68097777777777 + 10);
-    expect(contents[1].startTime).to.equal(193.68097777777777 + 10);
-    expect(contents[1].endTime).to.equal(928.6809777777778 + 10);
-    expect(contents[2].startTime).to.equal(928.6809777777778 + 10);
-    expect(contents[2].endTime).to.equal(1072.8516443777778 + 10);
+    expect(contents[0].endTime).to.equal(193.68 + 10);
+    expect(contents[1].startTime).to.equal(193.68 + 10);
+    expect(contents[1].endTime).to.equal(927.6800000000001 + 10);
+    expect(contents[2].startTime).to.equal(927.6800000000001 + 10);
+    expect(contents[2].endTime).to.equal(1071.8506666 + 10);
     expect(contents[3].url).to.equal("test-URL");
-    expect(contents[3].startTime).to.equal(1072.8516443777778 + 10);
-    expect(contents[3].endTime).to.equal(1072.8516443777778 + 100 + 10);
+    expect(contents[3].startTime).to.equal(1071.8506666 + 10);
+    expect(contents[3].endTime).to.equal(1071.8506666 + 100 + 10);
   });
 
   it("Should throw if there is an unsupported transport", async () => {
@@ -104,7 +104,6 @@ describe("createMetaplaylist", () => {
     }
 
     expect(typeof error).to.equal("object");
-    expect(error.message).to.equal("createMetaplaylist: Can't handle " +
-                                   "dynamic manifests.");
+    expect(error.message).to.equal("createMetaplaylist: No duration on DASH content.");
   });
 });
