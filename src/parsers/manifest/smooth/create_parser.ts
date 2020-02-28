@@ -188,11 +188,6 @@ function createSmoothStreamingParser(
 
         const codecs = getAudioCodecs(codecPrivateData, fourCC);
 
-        if (codecs === null) {
-          log.warn("Smooth parser: Unsupported audio codec. Ignoring quality level.");
-          return null;
-        }
-
         return {
           audiotag: audiotag !== undefined ? parseInt(audiotag, 10) : audiotag,
           bitrate,
@@ -230,11 +225,6 @@ function createSmoothStreamingParser(
         }
 
         const codecs = getVideoCodecs(codecPrivateData);
-
-        if (codecs === null) {
-          log.warn("Smooth parser: Unsupported video codec. Ignoring quality level.");
-          return null;
-        }
 
         return {
           bitrate,
