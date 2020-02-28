@@ -93,12 +93,13 @@ export default function manifestUpdateScheduler({
     } else {
       const { parsingTime, updatingTime } = manifestInfos;
       let autoRefreshInterval = manifest.lifetime * 1000 - timeSinceRequest;
-      if (autoRefreshInterval < 2000 &&
-          parsingTime + (updatingTime ?? 0) >= timeSinceRequest / 3)
-      {
-        log.info("MUS: Previous Manifest took too long to parse. " +
-                 "Postponing the next request by 2 seconds");
-        autoRefreshInterval = 2000;
+      if (parsingTime + (updatingTime ?? 0) >= manifest.lifetime / 4) {
+        const newInterval = Math.max(autoRefreshInterval, 0)
+                            + parsingTime + (updatingTime ?? 0);
+        log.info("MUS: Manifest took too long to parse. Postponing next request",
+                 autoRefreshInterval,
+                 newInterval);
+        autoRefreshInterval = newInterval;
       }
       autoRefresh$ = observableTimer(Math.max(autoRefreshInterval, minInterval))
         .pipe(mapTo({ completeRefresh: false }));
