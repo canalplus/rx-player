@@ -36,7 +36,7 @@ You can then begin to use it right away.
     - transport (``string``): The transport type of the content (`dash`, `smooth`
     or even `metaplaylist`)
 
-- metaplaylistOffset (``number|undefined``) : the optionnal time offset that
+- timeOffset (``number|undefined``) : the optionnal time offset that
     applies to the metaplaylist start time (default is 0).
 
 Example:
