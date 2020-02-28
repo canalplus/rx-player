@@ -76,9 +76,6 @@ const DEFAULT_MIME_TYPES : Partial<Record<string, string>> = {
   text: "application/ttml+xml",
 };
 
-const DEFAULT_CODECS : Partial<Record<string, string>> = { audio: "mp4a.40.2",
-                                                          video: "avc1.4D401E" };
-
 const MIME_TYPES : Partial<Record<string, string>> = {
   AACL: "audio/mp4",
   AVC1: "video/mp4",
@@ -190,13 +187,23 @@ function createSmoothStreamingParser(
                         isNaN(parseInt(bitrateAttr, 10)) ? 0 :
                                                            parseInt(bitrateAttr, 10);
 
+        if ((fourCC !== undefined &&
+             MIME_TYPES[fourCC] === undefined) ||
+            codecPrivateData === undefined) {
+          log.warn("Smooth parser: Unsupported audio codec. Ignoring quality level.");
+          return null;
+        }
+
+        const codecs = getAudioCodecs(codecPrivateData, fourCC);
+
         return {
           audiotag: audiotag !== undefined ? parseInt(audiotag, 10) : audiotag,
           bitrate,
           bitsPerSample: bitsPerSample !== undefined ?
             parseInt(bitsPerSample, 10) : bitsPerSample,
           channels: channels !== undefined ? parseInt(channels, 10) : channels,
-          codecPrivateData: takeFirstSet<string>(codecPrivateData, ""),
+          codecPrivateData,
+          codecs,
           customAttributes,
           mimeType: fourCC !== undefined ? MIME_TYPES[fourCC] : fourCC,
           packetSize: packetSize !== undefined ?
@@ -218,12 +225,21 @@ function createSmoothStreamingParser(
                         isNaN(parseInt(bitrateAttr, 10)) ? 0 :
                                                            parseInt(bitrateAttr, 10);
 
+        if ((fourCC !== undefined &&
+             MIME_TYPES[fourCC] === undefined) ||
+            codecPrivateData === undefined) {
+          log.warn("Smooth parser: Unsupported video codec. Ignoring quality level.");
+          return null;
+        }
+
+        const codecs = getVideoCodecs(codecPrivateData);
+
         return {
           bitrate,
           customAttributes,
           mimeType: fourCC !== undefined ? MIME_TYPES[fourCC] : fourCC,
-          codecPrivateData: takeFirstSet<string>(codecPrivateData, ""),
-          codecs: getVideoCodecs(takeFirstSet<string>(codecPrivateData, "")),
+          codecPrivateData,
+          codecs,
           width: width !== undefined ? parseInt(width, 10) : undefined,
           height: height !== undefined ? parseInt(height, 10) : undefined,
         };
@@ -298,14 +314,6 @@ function createSmoothStreamingParser(
             if (qualityLevel === null) {
               return res;
             }
-            if (adaptationType === "audio") {
-              const fourCCAttr = node.getAttribute("FourCC");
-              const fourCC = fourCCAttr === null ? "" :
-                                                   fourCCAttr;
-
-              qualityLevel.codecs = getAudioCodecs(fourCC,
-                                                   qualityLevel.codecPrivateData);
-            }
 
             // filter out video qualityLevels with small bitrates
             if (adaptationType !== "video" ||
@@ -327,7 +335,7 @@ function createSmoothStreamingParser(
     // we assume that all qualityLevels have the same
     // codec and mimeType
     assert(qualityLevels.length !== 0,
-           "adaptation should have at least one representation");
+           "Adaptation should have at least one playable representation.");
 
     const adaptationID = adaptationType +
                          (isNonEmptyString(language) ? ("_" + language) :
@@ -348,9 +356,7 @@ function createSmoothStreamingParser(
       const mimeType = isNonEmptyString(qualityLevel.mimeType) ?
         qualityLevel.mimeType :
         DEFAULT_MIME_TYPES[adaptationType];
-      const codecs = isNonEmptyString(qualityLevel.codecs) ?
-        qualityLevel.codecs :
-        DEFAULT_CODECS[adaptationType];
+      const codecs = qualityLevel.codecs;
       const id =  adaptationID + "_" +
                   (adaptationType != null ? adaptationType + "-" :
                                             "") +
