@@ -24,7 +24,7 @@ export type ITimelineParser = () => IParsedS[];
  * @param {Element} root
  * @returns {Function}
  */
-export default function parseSegmentTimeline(root: Element) : ITimelineParser {
+export default function createSegmentTimelineParser(root: Element) : ITimelineParser {
   let result : IParsedS[] | null = null;
   return function() {
     if (result === null) {

@@ -19,7 +19,7 @@ import { IParsedInitialization } from "./Initialization";
 import parseSegmentBase, {
   IParsedSegmentBase
 } from "./SegmentBase";
-import parseSegmentTimeline, {
+import createSegmentTimelineParser, {
   ITimelineParser,
 } from "./SegmentTimeline";
 import {
@@ -93,7 +93,7 @@ export default function parseSegmentTemplate(
     if (root.childNodes[i].nodeType === Node.ELEMENT_NODE) {
       const currentNode = root.childNodes[i] as Element;
       if (currentNode.nodeName === "SegmentTimeline") {
-        parseTimeline = parseSegmentTimeline(currentNode);
+        parseTimeline = createSegmentTimelineParser(currentNode);
       }
     }
   }

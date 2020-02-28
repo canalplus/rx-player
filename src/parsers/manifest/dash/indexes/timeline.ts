@@ -321,12 +321,12 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
 
     // destructuring to please TypeScript
-    const { mediaURL,
+    const { mediaURLs,
             startNumber,
             timeline,
             timescale,
             indexTimeOffset } = this._index;
-    return getSegmentsFromTimeline({ mediaURL,
+    return getSegmentsFromTimeline({ mediaURLs,
                                      startNumber,
                                      timeline,
                                      timescale,
