@@ -115,7 +115,7 @@ export default function PeriodBuffer({
   return adaptation$.pipe(
     switchMap((adaptation) => {
       if (adaptation == null) {
-        log.info(`Buffer: Set no ${bufferType} Adaptation`, period);
+        log.info(`Buffer: Set no ${bufferType} Adaptation`, period.id);
         const previousQSourceBuffer = sourceBuffersStore.get(bufferType);
         let cleanBuffer$ : Observable<unknown>;
 
@@ -135,7 +135,7 @@ export default function PeriodBuffer({
         );
       }
 
-      log.info(`Buffer: Updating ${bufferType} adaptation`, adaptation, period);
+      log.info(`Buffer: Updating ${bufferType} adaptation`, adaptation.id);
 
       const newBuffer$ = clock$.pipe(
         take(1),

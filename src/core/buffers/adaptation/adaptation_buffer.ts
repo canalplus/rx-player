@@ -260,7 +260,7 @@ export default function AdaptationBuffer<T>({
         map((wba) => wba * bufferGoalRatio)
       );
 
-      log.info("Buffer: changing representation", adaptation.type, representation);
+      log.info("Buffer: changing representation", adaptation.type, representation.id);
       return RepresentationBuffer({ clock$,
                                     content: { representation,
                                                adaptation,

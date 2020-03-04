@@ -345,7 +345,7 @@ export default function RepresentationEstimator({
           })();
           if (forceBandwidthMode) {
             log.debug("ABR: Choosing representation with bandwith estimation.",
-                      chosenRepFromBandwidth);
+                      chosenRepFromBandwidth.id, chosenRepFromBandwidth.bitrate);
             return { bitrate: bandwidthEstimate,
                      representation: chosenRepFromBandwidth,
                      urgent: networkAnalyzer.isUrgent(chosenRepFromBandwidth.bitrate,
@@ -359,7 +359,7 @@ export default function RepresentationEstimator({
               chosenRepFromBandwidth.bitrate >= bufferBasedBitrate)
           {
             log.debug("ABR: Choosing representation with bandwith estimation.",
-                      chosenRepFromBandwidth);
+                      chosenRepFromBandwidth.id, chosenRepFromBandwidth.bitrate);
             return { bitrate: bandwidthEstimate,
                      representation: chosenRepFromBandwidth,
                      urgent: networkAnalyzer.isUrgent(chosenRepFromBandwidth.bitrate,
@@ -382,7 +382,7 @@ export default function RepresentationEstimator({
           })();
           if (bufferBasedBitrate <= maxAutoBitrate) {
             log.debug("ABR: Choosing representation with buffer based bitrate ceiling.",
-                      chosenRepresentation);
+                      chosenRepresentation.id, chosenRepresentation.bitrate);
           }
           return { bitrate: bandwidthEstimate,
                    representation: chosenRepresentation,

@@ -581,7 +581,12 @@ export default class SegmentInventory {
     for (let i = 0; i < inventory.length; i++) {
       if (areSameContent(inventory[i].infos, content)) {
         if (foundIt) {
-          log.warn("SI: Completed Segment is splitted.", content);
+          log.warn("SI: Completed Segment is splitted.", {
+            segmentId: content.segment.id,
+            representationId: content.representation.id,
+            adaptationId: content.segment.id,
+            periodId: content.period.id,
+          });
         }
         foundIt = true;
 
@@ -608,7 +613,12 @@ export default class SegmentInventory {
     }
 
     if (!foundIt) {
-      log.warn("SI: Completed Segment not found", content);
+      log.warn("SI: Completed Segment not found", {
+        segmentId: content.segment.id,
+        representationId: content.representation.id,
+        adaptationId: content.segment.id,
+        periodId: content.period.id,
+      });
     }
   }
 

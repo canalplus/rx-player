@@ -172,7 +172,7 @@ export default function BufferOrchestrator(
   const activePeriodChanged$ = ActivePeriodEmitter(buffersArray).pipe(
     filter((period) : period is Period => period != null),
     map(period => {
-      log.info("Buffer: New active period", period);
+      log.info("Buffer: New active period", period.id);
       return EVENTS.activePeriodChanged(period);
     }));
 
@@ -344,7 +344,7 @@ export default function BufferOrchestrator(
     basePeriod : Period,
     destroy$ : Observable<void>
   ) : Observable<IMultiplePeriodBuffersEvent> {
-    log.info("BO: Creating new Buffer for", bufferType, basePeriod);
+    log.info("BO: Creating new Buffer for", bufferType, basePeriod.id);
 
     // Emits the Period of the next Period Buffer when it can be created.
     const createNextPeriodBuffer$ = new Subject<Period>();
@@ -420,7 +420,7 @@ export default function BufferOrchestrator(
         periodBuffer$.pipe(takeUntil(killCurrentBuffer$)),
         observableOf(EVENTS.periodBufferCleared(bufferType, basePeriod))
           .pipe(tap(() => {
-            log.info("BO: Destroying buffer for", bufferType, basePeriod);
+            log.info("BO: Destroying buffer for", bufferType, basePeriod.id);
           }))
         );
 
