@@ -28,7 +28,7 @@ export interface IISOBMFFBasicSegment {
  */
 export default function parseTfxd(traf : Uint8Array) : IISOBMFFBasicSegment|undefined {
   const tfxd = getUuidContent(traf, 0x6D1D9B05, 0x42D544E6, 0x80E2141D, 0xAFF757B2);
-  if (tfxd == null) {
+  if (tfxd === undefined) {
     return undefined;
   }
   return {

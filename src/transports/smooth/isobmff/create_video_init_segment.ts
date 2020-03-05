@@ -73,7 +73,7 @@ export default function createVideoInitSegment(
   // TODO NAL length is forced to 4
   const avcc = createAVCCBox(sps, pps, nalLength);
   let stsd;
-  if (_pssList.length === 0 || keyId == null) {
+  if (_pssList.length === 0 || keyId === undefined) {
     const avc1 = createAVC1Box(width, height, hRes, vRes, "AVC Coding", 24, avcc);
     stsd = createSTSDBox([avc1]);
   } else {

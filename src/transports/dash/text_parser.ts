@@ -137,7 +137,7 @@ export default function textTrackParser(
   const { period, representation, segment } = content;
   const { timestampOffset = 0 } = segment;
   const { data, isChunked } = response;
-  if (data == null) { // No data, just return empty infos
+  if (data === null) { // No data, just return empty infos
     if (segment.isInit) {
       return observableOf({ type: "parsed-init-segment",
                             value: { initializationData: null,

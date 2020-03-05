@@ -51,11 +51,11 @@ export default function callCustomManifestLoader(
         if (!hasFallbacked) {
           hasFinished = true;
           const receivedTime =
-            _args.receivingTime != null ? _args.receivingTime - timeAPIsDelta :
-            undefined;
+            _args.receivingTime !== undefined ? _args.receivingTime - timeAPIsDelta :
+                                                undefined;
           const sendingTime =
-            _args.sendingTime != null ? _args.sendingTime - timeAPIsDelta :
-            undefined;
+            _args.sendingTime !== undefined ? _args.sendingTime - timeAPIsDelta :
+                                              undefined;
 
           obs.next({ type: "data-loaded",
                      value: { responseData: _args.data,

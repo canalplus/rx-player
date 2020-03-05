@@ -65,7 +65,7 @@ export default function generateTextTrackLoader(
     const { mediaURL,
             range } = args.segment;
 
-    if (mediaURL == null) {
+    if (mediaURL === null) {
       return observableOf({ type: "data-created",
                             value: { responseData: null } });
     }

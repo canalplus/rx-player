@@ -20,6 +20,7 @@ import {
   getDurationFromTrun,
   getTRAF,
 } from "../../parsers/containers/isobmff";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import {
   IChunkTimingInfos,
   INextSegmentsInfos,
@@ -87,7 +88,7 @@ export default function extractTimingsInfos(
                                       segment.duration / 4);
 
   const trunDuration = getDurationFromTrun(data);
-  if (trunDuration >= 0 && (segment.duration == null ||
+  if (trunDuration >= 0 && (isNullOrUndefined(segment.duration) ||
       Math.abs(trunDuration - segment.duration) <= maxDecodeTimeDelta)
   ) {
     chunkInfos = { time: segment.time,
