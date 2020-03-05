@@ -27,7 +27,8 @@ import { be4toi } from "../../../utils/byte_parsing";
  */
 function getBoxContent(buf : Uint8Array, boxName : number) : Uint8Array|null {
   const offsets = getBoxOffsets(buf, boxName);
-  return offsets != null ? buf.subarray(offsets[0] + 8, offsets[1]) : null;
+  return offsets !== null ? buf.subarray(offsets[0] + 8, offsets[1]) :
+                            null;
 }
 
 /**
@@ -41,7 +42,8 @@ function getBoxContent(buf : Uint8Array, boxName : number) : Uint8Array|null {
  */
 function getBox(buf : Uint8Array, boxName : number) : Uint8Array|null {
   const offsets = getBoxOffsets(buf, boxName);
-  return offsets != null ? buf.subarray(offsets[0], offsets[1]) : null;
+  return offsets !== null ? buf.subarray(offsets[0], offsets[1]) :
+                            null;
 }
 
 /**

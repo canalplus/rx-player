@@ -29,7 +29,7 @@ import callCustomManifestLoader from "../utils/call_custom_manifest_loader";
 function regularManifestLoader(
   { url } : IManifestLoaderArguments
 ) : IManifestLoaderObservable {
-  if (url == null) {
+  if (url === undefined) {
     throw new Error("Cannot perform HTTP(s) request. URL not known");
   }
   return request({ url, responseType: "text" });

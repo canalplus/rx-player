@@ -37,7 +37,7 @@ export default function replaceMoofInSegment(
   const moofDelta = newMoof.length - oldMoofLength;
 
   const mdatOffsets = getBoxOffsets(segment, 0x6D646174 /* "mdat" */);
-  if (mdatOffsets == null) {
+  if (mdatOffsets === null) {
     throw new Error("Smooth: Invalid ISOBMFF given");
   }
   if (canPatchISOBMFFSegment() && (moofDelta === 0 || moofDelta <= -8)) {

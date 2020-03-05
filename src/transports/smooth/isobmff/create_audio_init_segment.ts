@@ -61,7 +61,7 @@ export default function createAudioInitSegment(
 
   const esds = createESDSBox(1, _codecPrivateData);
   const stsd : Uint8Array = (() => {
-    if (pssList.length === 0 || keyId == null) {
+    if (pssList.length === 0 || keyId === undefined) {
       const mp4a = createMP4ABox(1,
                                  channelsCount,
                                  sampleSize,

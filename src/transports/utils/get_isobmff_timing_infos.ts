@@ -19,6 +19,7 @@ import {
   getDurationFromTrun,
   getTrackFragmentDecodeTime,
 } from "../../parsers/containers/isobmff";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { IChunkTimingInfos } from "../types";
 
 /**
@@ -70,23 +71,24 @@ export default function getISOBMFFTimingInfos(
 
   if (timescale === segment.timescale) {
     maxDecodeTimeDelta = Math.min(timescale * 0.9,
-                                  segment.duration != null ? segment.duration / 4 :
-                                                             0.25);
+                                  !isNullOrUndefined(segment.duration) ?
+                                    segment.duration / 4 :
+                                    0.25);
     segmentDuration = segment.duration;
   } else {
     maxDecodeTimeDelta =
       Math.min(timescale * 0.9,
-               segment.duration != null ?
+               !isNullOrUndefined(segment.duration) ?
                  ((segment.duration / segment.timescale) * timescale) / 4 :
                    0.25
     );
-    segmentDuration = segment.duration != null ?
+    segmentDuration = !isNullOrUndefined(segment.duration) ?
                         (segment.duration / segment.timescale) * timescale :
                         undefined;
   }
 
   if (baseDecodeTime >= 0) {
-    startTime = segment.timestampOffset != null ?
+    startTime = segment.timestampOffset !== undefined ?
                   baseDecodeTime + (segment.timestampOffset * timescale) :
                   baseDecodeTime;
   } else {
@@ -95,7 +97,7 @@ export default function getISOBMFFTimingInfos(
 
   if (trunDuration >= 0 &&
       (
-        segmentDuration == null ||
+        segmentDuration === undefined ||
         Math.abs(trunDuration - segmentDuration) <= maxDecodeTimeDelta
       ))
   {
