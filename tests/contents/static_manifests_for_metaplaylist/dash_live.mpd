@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MPD availabilityStartTime="1970-01-01T00:00:00Z" id="Config part of url maybe?" minBufferTime="PT2S" minimumUpdatePeriod="PT0S" profiles="urn:mpeg:dash:profile:isoff-live:2011,urn:com:dashif:dash264" publishTime="2020-02-19T16:59:01Z" timeShiftBufferDepth="PT5M" type="dynamic" ns1:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd" xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:ns1="http://www.w3.org/2001/XMLSchema-instance">
+   <ProgramInformation>
+      <Title>Media Presentation Description by MobiTV. Powered by MDL Team@Sweden.</Title>
+   </ProgramInformation>
+   <BaseURL>https://vm2.dashif.org/livesim-dev/sts_1582131540/sid_c3c4ad14/segtimeline_1/testpic_6s/</BaseURL>
+<Period id="p0" start="PT0S" ns2:publishTime="1970-01-01T00:00:00Z" xmlns:ns2="urn:mobitv">
+      <AdaptationSet contentType="audio" lang="eng" mimeType="audio/mp4" segmentAlignment="true" startWithSAP="1" ns2:qualityLevel="SD">
+         <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+         <SegmentTemplate initialization="$RepresentationID$/init.mp4" media="$RepresentationID$/t$Time$.m4s" timescale="48000">
+<SegmentTimeline>
+<S d="287744" t="75942299520000" />
+<S d="288768" r="2" />
+<S d="287744" />
+<S d="288768" r="2" />
+<S d="287744" />
+<S d="288768" r="2" />
+<S d="287744" />
+<S d="288768" r="2" />
+<S d="287744" />
+<S d="288768" r="2" />
+<S d="287744" />
+<S d="288768" r="2" />
+<S d="287744" />
+<S d="288768" r="2" />
+<S d="287744" />
+<S d="288768" r="2" />
+<S d="287744" />
+<S d="288768" r="2" />
+<S d="287744" />
+<S d="288768" r="2" />
+<S d="287744" />
+<S d="288768" r="2" />
+<S d="287744" />
+<S d="288768" r="2" />
+<S d="287744" />
+<S d="288768" />
+</SegmentTimeline>
+</SegmentTemplate>
+         <Representation audioSamplingRate="48000" bandwidth="48000" codecs="mp4a.40.2" id="A48">
+            <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2" />
+         </Representation>
+      </AdaptationSet>
+      <AdaptationSet contentType="video" maxFrameRate="60/2" maxHeight="360" maxWidth="640" mimeType="video/mp4" minHeight="360" minWidth="640" par="16:9" segmentAlignment="true" startWithSAP="1" ns2:qualityLevel="SD">
+         <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+         <SegmentTemplate initialization="$RepresentationID$/init.mp4" media="$RepresentationID$/t$Time$.m4s" timescale="90000">
+<SegmentTimeline>
+<S d="540000" r="49" t="142391811600000" />
+</SegmentTimeline>
+</SegmentTemplate>
+         <Representation bandwidth="300000" codecs="avc1.64001e" frameRate="60/2" height="360" id="V300" sar="1:1" width="640" />
+      </AdaptationSet>
+   </Period>
+</MPD>

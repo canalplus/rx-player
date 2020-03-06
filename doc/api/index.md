@@ -83,6 +83,7 @@
     - [Experimental - MediaCapabilitiesProber](#tools-mediaCapabilitiesProber)
     - [Experimental - TextTrackRenderer](#tools-textTrackRenderer)
     - [Experimental - parseBifThumbnails](#tools-parseBifThumbnails)
+    - [Experimental - createMetaplaylist](#tools-createMetaplaylist)
 
 
 
@@ -1799,3 +1800,19 @@ The `parseBifThumbnails` function parses BIF files, which is a format created by
 Canal+ to declare thumbnails linked to a given content.
 
 This tool is documented [here](./parseBifThumbnails.md).
+
+<a name="tools-createMetaplaylist"></a>
+### createMetaplaylist #########################################################
+
+---
+
+:warning: This tool is experimental. This only means that its API can change at
+any new RxPlayer version (with all the details in the corresponding release
+note).
+
+---
+
+The `createMetaplaylist` function build a metaplaylist object from given
+informations about contents.
+
+This tool is documented [here](./createMetaplaylist.md).
