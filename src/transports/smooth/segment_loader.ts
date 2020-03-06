@@ -76,7 +76,7 @@ const generateSegmentLoader = (
 } : ISegmentLoaderArguments) : ISegmentLoaderObservable<Uint8Array|ArrayBuffer|null> => {
   if (segment.isInit) {
     if (segment.privateInfos === undefined ||
-        segment.privateInfos.smoothInit == null)
+        segment.privateInfos.smoothInit === undefined)
     {
       throw new Error("Smooth: Invalid segment format");
     }
@@ -125,7 +125,8 @@ const generateSegmentLoader = (
 
     return observableOf({ type: "data-created" as const,
                           value: { responseData } });
-  } else if (url == null) {
+  }
+  else if (url === null) {
     return observableOf({ type: "data-created" as const,
                           value: { responseData: null } });
   } else {

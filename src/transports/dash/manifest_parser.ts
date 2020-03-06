@@ -62,7 +62,7 @@ export default function generateManifestParser(
 ) : (x : IManifestParserArguments) => IManifestParserObservable {
   const { aggressiveMode,
           referenceDateTime } = options;
-  const serverTimeOffset = options.serverSyncInfos != null ?
+  const serverTimeOffset = options.serverSyncInfos !== undefined ?
     options.serverSyncInfos.serverTimestamp - options.serverSyncInfos.clientTime :
     undefined;
   return function manifestParser(
@@ -71,16 +71,14 @@ export default function generateManifestParser(
     const { response, scheduleRequest } = args;
     const argClockOffset = args.externalClockOffset;
     const loaderURL = args.url;
-    const url = response.url == null ? loaderURL :
-                                       response.url;
+    const url = response.url ?? loaderURL;
     const data = typeof response.responseData === "string" ?
                    new DOMParser().parseFromString(response.responseData,
                                                    "text/xml") :
                    // TODO find a way to check if Document?
                    response.responseData as Document;
 
-    const externalClockOffset = serverTimeOffset == null ? argClockOffset :
-                                                           serverTimeOffset;
+    const externalClockOffset = serverTimeOffset ?? argClockOffset;
     const parsedManifest = dashManifestParser(data, { aggressiveMode:
                                                         aggressiveMode === true,
                                                       url,
