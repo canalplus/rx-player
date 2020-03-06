@@ -49,8 +49,8 @@ function getDurationFromManifest(url: string,
           const periodElements = root.getElementsByTagName("Period");
           const firstDASHStartAttribute = periodElements[0]?.getAttribute("start");
           const firstDASHStart =
-            firstDASHStartAttribute != null ? parseDuration(firstDASHStartAttribute) :
-                                              0;
+            firstDASHStartAttribute !== null ? parseDuration(firstDASHStartAttribute) :
+                                               0;
           return parseDuration(dashDurationAttribute) - firstDASHStart;
         }
         // smooth
@@ -58,12 +58,7 @@ function getDurationFromManifest(url: string,
         if (smoothDurationAttribute === null) {
           throw new Error("createMetaplaylist: No duration on smooth content.");
         }
-        const cElements = root.getElementsByTagName("c");
-        const firstStartAttribute = cElements[0]?.getAttribute("t");
-        const firstStart =
-          firstStartAttribute != null ? parseInt(firstStartAttribute, 10) :
-          0;
-        return (parseInt(smoothDurationAttribute, 10) - firstStart) / 10000000;
+        return (parseInt(smoothDurationAttribute, 10)) / 10000000;
       })
     );
   }
