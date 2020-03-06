@@ -761,6 +761,16 @@ export default {
   OUT_OF_SYNC_MANIFEST_REFRESH_DELAY: 3000,
 
   /**
+   * When a partial Manifest update (that is an update with a partial sub-set
+   * of the Manifest) fails, we will perform an update with the whole Manifest
+   * instead.
+   * To not overload the client - as parsing a Manifest can be resource heavy -
+   * we set a minimum delay to wait before doing the corresponding request.
+   * @type {Number}
+   */
+  FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY: 3000,
+
+  /**
    * Max simultaneous MediaKeySessions that will be kept as a cache to avoid
    * doing superfluous license requests.
    * If this number is reached, any new session creation will close the oldest

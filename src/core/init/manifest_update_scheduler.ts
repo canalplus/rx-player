@@ -36,7 +36,7 @@ import Manifest from "../../manifest";
 import isNonEmptyString from "../../utils/is_non_empty_string";
 import { IFetchManifestResult } from "../pipelines";
 
-const { OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config;
+const { FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY } = config;
 
 export type IManifestFetcher =
     (manifestURL? : string, externalClockOffset?: number) =>
@@ -51,8 +51,16 @@ export interface IManifestUpdateSchedulerArguments {
   manifestUpdateUrl : string | undefined;
   maximumManifestUpdateInterval? : number;
   minimumManifestUpdateInterval : number;
-  scheduleRefresh$ : Observable<{ completeRefresh : boolean }>;
+  scheduleRefresh$ : IManifestRefreshScheduler;
 }
+
+export interface IManifestRefreshSchedulerEvent {
+  completeRefresh : boolean; // if true, the Manifest should be fully updated
+  delay? : number; // optional wanted refresh delay, which is the minimum time
+                   // you want to wait before updating the manifest
+}
+
+export type IManifestRefreshScheduler = Observable<IManifestRefreshSchedulerEvent>;
 
 /**
  * Refresh the Manifest at the right time.
@@ -78,10 +86,13 @@ export default function manifestUpdateScheduler({
                      updatingTime? : number; }): Observable<never> {
     const { sendingTime } = manifestInfos;
 
-    const internalRefresh$ = scheduleRefresh$.pipe(mergeMap(({ completeRefresh }) =>
-      startInternalRefreshInterval(completeRefresh,
-                                   minimumManifestUpdateInterval,
-                                   sendingTime).pipe(mapTo({ completeRefresh }))));
+    const internalRefresh$ = scheduleRefresh$
+      .pipe(mergeMap(({ completeRefresh, delay }) => {
+        return startManualRefreshTimer(delay ?? 0,
+                                       minimumManifestUpdateInterval,
+                                       sendingTime)
+          .pipe(mapTo({ completeRefresh }));
+      }));
 
     const timeSinceRequest = sendingTime == null ? 0 :
                                                    performance.now() - sendingTime;
@@ -163,9 +174,9 @@ export default function manifestUpdateScheduler({
                                                   "unknown error";
              log.warn(`MUS: Attempt to update Manifest failed: ${message}`,
                       "Re-downloading the Manifest fully");
-             return startInternalRefreshInterval(true,
-                                                 minimumManifestUpdateInterval,
-                                                 newSendingTime)
+             return startManualRefreshTimer(FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY,
+                                            minimumManifestUpdateInterval,
+                                            newSendingTime)
                .pipe(mergeMap(() => refreshManifest(true)));
            }
          }
@@ -179,28 +190,34 @@ export default function manifestUpdateScheduler({
 }
 
 /**
- * @param {boolean} completeRefresh
+ * Launch a timer Observable which will emit when it is time to refresh the
+ * Manifest.
+ * The timer's delay is calculated from:
+ *   - a target delay (`wantedDelay`), which is the minimum time we want to wait
+ *     in the best scenario
+ *   - the minimum set possible interval between manifest updates
+ *     (`minimumManifestUpdateInterval`)
+ *   - the time at which was done the last Manifest refresh
+ *     (`lastManifestRequestTime`)
+ * @param {number} wantedDelay
  * @param {number} minimumManifestUpdateInterval
  * @param {number|undefined} lastManifestRequestTime
- * @returns {Observable.<boolean>}
+ * @returns {Observable}
  */
-function startInternalRefreshInterval(
-  completeRefresh : boolean,
+function startManualRefreshTimer(
+  wantedDelay : number,
   minimumManifestUpdateInterval : number,
   lastManifestRequestTime : number | undefined
 ) : Observable<unknown> {
   return observableDefer(() => {
     // The value allows to set a delay relatively to the last Manifest refresh
     // (to avoid asking for it too often).
-    const delay = completeRefresh ? OUT_OF_SYNC_MANIFEST_REFRESH_DELAY :
-                                    0;
     const timeSinceLastRefresh = lastManifestRequestTime == null ?
                                    0 :
                                    performance.now() - lastManifestRequestTime;
-    const _minInterval = Math.max(minimumManifestUpdateInterval
-                                    - timeSinceLastRefresh,
+    const _minInterval = Math.max(minimumManifestUpdateInterval - timeSinceLastRefresh,
                                   0);
-    return observableTimer(Math.max(delay - timeSinceLastRefresh,
+    return observableTimer(Math.max(wantedDelay - timeSinceLastRefresh,
                                     _minInterval));
   });
 }

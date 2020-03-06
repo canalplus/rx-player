@@ -37,6 +37,7 @@ import {
   tap,
 } from "rxjs/operators";
 import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
+import config from "../../config";
 import { ICustomError } from "../../errors";
 import log from "../../log";
 import { ITransportPipelines } from "../../transports";
@@ -70,7 +71,9 @@ import isEMEReadyEvent from "./is_eme_ready";
 import createMediaSourceLoader, {
   IMediaSourceLoaderEvent,
 } from "./load_on_media_source";
-import manifestUpdateScheduler from "./manifest_update_scheduler";
+import manifestUpdateScheduler, {
+  IManifestRefreshSchedulerEvent,
+} from "./manifest_update_scheduler";
 import throwOnMediaError from "./throw_on_media_error";
 import {
   IDecipherabilityUpdateEvent,
@@ -80,6 +83,8 @@ import {
   IReloadingMediaSourceEvent,
   IWarningEvent,
 } from "./types";
+
+const { OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config;
 
 // Arguments to give to the `InitializeOnMediaSource` function
 export interface IInitializeArguments {
@@ -224,7 +229,7 @@ export default function InitializeOnMediaSource(
                                                         autoPlay);
 
     // Emit when we want to manually update the manifest.
-    const scheduleRefresh$ = new Subject<{ completeRefresh : boolean }>();
+    const scheduleRefresh$ = new Subject<IManifestRefreshSchedulerEvent>();
 
     const manifestUpdate$ = manifestUpdateScheduler({ fetchManifest,
                                                       initialManifest: initialManifestObj,
@@ -280,7 +285,8 @@ export default function InitializeOnMediaSource(
                     scheduleRefresh$.next({ completeRefresh: false });
                     break;
                   case "manifest-might-be-out-of-sync":
-                    scheduleRefresh$.next({ completeRefresh: true });
+                    scheduleRefresh$.next({ completeRefresh: true,
+                                            delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY });
                     break;
                   case "needs-media-source-reload":
                     reloadMediaSource$.next(evt.value);
