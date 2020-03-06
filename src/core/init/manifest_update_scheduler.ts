@@ -93,7 +93,7 @@ export default function manifestUpdateScheduler({
     } else {
       const { parsingTime, updatingTime } = manifestInfos;
       let autoRefreshInterval = manifest.lifetime * 1000 - timeSinceRequest;
-      if (parsingTime + (updatingTime ?? 0) >= manifest.lifetime / 4) {
+      if (parsingTime + (updatingTime ?? 0) >= (manifest.lifetime * 1000) / 4) {
         const newInterval = Math.max(autoRefreshInterval, 0)
                             + parsingTime + (updatingTime ?? 0);
         log.info("MUS: Manifest took too long to parse. Postponing next request",
