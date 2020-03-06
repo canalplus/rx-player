@@ -55,10 +55,14 @@ function getDurationFromManifest(url: string,
         }
         // smooth
         const smoothDurationAttribute = root.getAttribute("Duration");
+        const smoothTimeScaleAttribute = root.getAttribute("TimeScale");
         if (smoothDurationAttribute === null) {
           throw new Error("createMetaplaylist: No duration on smooth content.");
         }
-        return (parseInt(smoothDurationAttribute, 10)) / 10000000;
+        const timescale = smoothTimeScaleAttribute !== null ?
+          parseInt(smoothTimeScaleAttribute, 10) :
+          10000000;
+        return (parseInt(smoothDurationAttribute, 10)) / timescale;
       })
     );
   }
