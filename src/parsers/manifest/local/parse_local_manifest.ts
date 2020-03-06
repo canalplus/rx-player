@@ -21,7 +21,7 @@ import {
   IParsedPeriod,
   IParsedRepresentation,
 } from "../types";
-import createRepresentationIndex from "./representation_index";
+import LocalRepresentationIndex from "./representation_index";
 import {
   ILocalAdaptation,
   ILocalManifest,
@@ -107,8 +107,7 @@ function parseAdaptation(
     type: adaptation.type,
     audioDescription: adaptation.audioDescription,
     closedCaption: adaptation.closedCaption,
-    representations: adaptation.representations
-      .map((representation) =>
+    representations: adaptation.representations.map((representation) =>
         parseRepresentation(representation, representationIdGenerator, isFinished)),
   };
 }
@@ -123,14 +122,12 @@ function parseRepresentation(
   isFinished : boolean
 ) : IParsedRepresentation {
   const id = "representation-" + representationIdGenerator();
-  return {
-    id,
-    bitrate: representation.bitrate,
-    height: representation.height,
-    width: representation.width,
-    codecs: representation.codecs,
-    mimeType: representation.mimeType,
-    index: createRepresentationIndex(representation.index, id, isFinished),
-    contentProtections: representation.contentProtections,
-  };
+  return { id,
+           bitrate: representation.bitrate,
+           height: representation.height,
+           width: representation.width,
+           codecs: representation.codecs,
+           mimeType: representation.mimeType,
+           index: new LocalRepresentationIndex(representation.index, id, isFinished),
+           contentProtections: representation.contentProtections };
 }

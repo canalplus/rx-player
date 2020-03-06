@@ -184,10 +184,13 @@ export default interface IRepresentationIndex {
   isFinished() : boolean;
 
   /**
-   * Update the index with another one, such as after a Manifest update.
-   * TODO Both this and _addSegments mutate the index. They should not be
-   * accessible like that.
-   * Think of another implementation?
+   * Replace the index with another one, such as after a Manifest update.
+   * @param {Object} newIndex
+   */
+  _replace(newIndex : IRepresentationIndex) : void;
+
+  /**
+   * Update the current index with a new, partial, version.
    * @param {Object} newIndex
    */
   _update(newIndex : IRepresentationIndex) : void;
@@ -195,9 +198,6 @@ export default interface IRepresentationIndex {
   /**
    * Add new segments to the index, obtained through various other different
    * ways.
-   * TODO Both this and _update mutate the index. They should not be accessible
-   * like that.
-   * Think of another implementation?
    * @param {Array.<Object>} nextSegments
    * @param {Object} currentSegment
    */

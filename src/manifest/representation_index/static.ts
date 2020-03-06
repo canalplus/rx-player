@@ -117,6 +117,10 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
     log.warn("Tried add Segments to a static RepresentationIndex");
   }
 
+  _replace() : void {
+    log.warn("Tried to replace a static RepresentationIndex");
+  }
+
   _update() : void {
     log.warn("Tried to update a static RepresentationIndex");
   }

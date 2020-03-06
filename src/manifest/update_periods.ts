@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
+import { MediaError } from "../errors";
 import log from "../log";
+import arrayFindIndex from "../utils/array_find_index";
 import Period from "./period";
+import { MANIFEST_UPDATE_TYPE } from "./types";
 import updatePeriodInPlace from "./update_period_in_place";
 
 /**
@@ -24,37 +27,11 @@ import updatePeriodInPlace from "./update_period_in_place";
  * @param {Array.<Object>} oldPeriods
  * @param {Array.<Object>} newPeriods
  */
-export default function updatePeriods(
+export function replacePeriods(
   oldPeriods: Period[],
   newPeriods: Period[]
-): void {
+) : void {
   let firstUnhandledPeriodIdx = 0;
-  // Example :
-  //
-  // old periods : [p0] [p2] [pX] [pF]
-  // new periods : [p1] [p2] [pM] [pX] [pU]
-  //
-  // The `for` loop will remove old periods and replace new ones
-  // between the common periods between the two, in the old periods array.
-  //
-  // - Step 1 : Handle common period p2
-  //    - the p0 is removed the p2
-  //    - the p1 is added before the p2
-  //
-  //                   First unhandled period index
-  //                             |
-  //                             v
-  //    old periods : [p1] [p2] [pX] [pF]
-  //    new periods : [p1] [p2] [pM] [pX] [pU]
-  //
-  // - Step 2 : Handle common period pX
-  //    - the pM is added before the pX
-  //
-  //                              First unhandled period index
-  //                                        |
-  //                                        v
-  // old periods : [p1]  [p2]  [pM]  [pX]  [pF]
-  // new periods : [p1]  [p2]  [pM]  [pX]  [pU]
   for (let i = 0; i < newPeriods.length; i++) {
     const newPeriod = newPeriods[i];
     let j = firstUnhandledPeriodIdx;
@@ -64,7 +41,7 @@ export default function updatePeriods(
       oldPeriod = oldPeriods[j];
     }
     if (oldPeriod != null) {
-      updatePeriodInPlace(oldPeriod, newPeriod);
+      updatePeriodInPlace(oldPeriod, newPeriod, MANIFEST_UPDATE_TYPE.Full);
       const periodsToInclude = newPeriods.slice(firstUnhandledPeriodIdx, i);
       const nbrOfPeriodsToRemove = j - firstUnhandledPeriodIdx;
       oldPeriods.splice(firstUnhandledPeriodIdx,
@@ -78,19 +55,6 @@ export default function updatePeriods(
     log.error("Manifest: error when updating Periods");
     return;
   }
-
-  // At this point, the first unhandled period index refers to the first
-  // position from which :
-  // - there are only undesired periods in old periods array.
-  // - there only new wanted periods in new periods array.
-  //
-  //                              First unhandled period index
-  //                                        |
-  //                                        v
-  // old periods : [p1]  [p2]  [pM]  [pX]  [pF (undesired)]
-  // new periods : [p1]  [p2]  [pM]  [pX]  [pU (wanted)]
-  //
-  // final array (old periods array) : [p1]  [p2]  [pM]  [pX]  [pU]
   if (firstUnhandledPeriodIdx < oldPeriods.length) {
     oldPeriods.splice(firstUnhandledPeriodIdx,
                       oldPeriods.length - firstUnhandledPeriodIdx);
@@ -99,5 +63,79 @@ export default function updatePeriods(
                                                newPeriods.length);
   if (remainingNewPeriods.length > 0) {
     oldPeriods.push(...remainingNewPeriods);
+  }
+}
+
+/**
+ * Update old periods by adding new periods and removing
+ * not available ones.
+ * @param {Array.<Object>} oldPeriods
+ * @param {Array.<Object>} newPeriods
+ */
+export function updatePeriods(
+  oldPeriods: Period[],
+  newPeriods: Period[]
+) : void {
+  if (oldPeriods.length === 0) {
+    oldPeriods.splice(0, oldPeriods.length, ...newPeriods);
+    return;
+  }
+  if (newPeriods.length === 0) {
+    return;
+  }
+  const oldLastPeriod = oldPeriods[oldPeriods.length - 1];
+  if (oldLastPeriod.start < newPeriods[0].start) {
+    if (oldLastPeriod.end !== newPeriods[0].start) {
+      throw new MediaError("MANIFEST_UPDATE_ERROR",
+                           "Cannot perform partial update: not enough data");
+    }
+    oldPeriods.push(...newPeriods);
+    return;
+  }
+  const indexOfNewFirstPeriod = arrayFindIndex(oldPeriods,
+                                               ({ id }) => id === newPeriods[0].id);
+  if (indexOfNewFirstPeriod < 0) {
+    throw new MediaError("MANIFEST_UPDATE_ERROR",
+                         "Cannot perform partial update: incoherent data");
+  }
+
+  // The first updated Period can only be a partial part
+  updatePeriodInPlace(oldPeriods[indexOfNewFirstPeriod],
+                      newPeriods[0],
+                      MANIFEST_UPDATE_TYPE.Partial);
+
+  let prevIndexOfNewPeriod = indexOfNewFirstPeriod + 1;
+  for (let i = 1; i < newPeriods.length; i++) {
+    const newPeriod = newPeriods[i];
+    let indexOfNewPeriod = -1;
+    for (let j = prevIndexOfNewPeriod; j < oldPeriods.length; j++) {
+      if (newPeriod.id === oldPeriods[j].id) {
+        indexOfNewPeriod = j;
+        break; // end the loop
+      }
+    }
+    if (indexOfNewPeriod < 0) {
+      oldPeriods.splice(prevIndexOfNewPeriod,
+                        oldPeriods.length - prevIndexOfNewPeriod,
+                        ...newPeriods.slice(i, newPeriods.length));
+      return;
+    }
+
+    if (indexOfNewPeriod > prevIndexOfNewPeriod) {
+      oldPeriods.splice(prevIndexOfNewPeriod,
+                        indexOfNewPeriod - prevIndexOfNewPeriod);
+      indexOfNewPeriod = prevIndexOfNewPeriod;
+    }
+
+    // Later Periods can be fully replaced
+    updatePeriodInPlace(oldPeriods[indexOfNewPeriod],
+                        newPeriod,
+                        MANIFEST_UPDATE_TYPE.Full);
+    prevIndexOfNewPeriod++;
+  }
+
+  if (prevIndexOfNewPeriod < oldPeriods.length)  {
+    oldPeriods.splice(prevIndexOfNewPeriod,
+                      oldPeriods.length - prevIndexOfNewPeriod);
   }
 }

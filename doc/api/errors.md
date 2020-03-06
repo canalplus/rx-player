@@ -214,9 +214,19 @@ A MediaError can have the following codes (``code`` property):
     contain any playable Representation. This usually happen when every
     Representation has been blacklisted due to encryption limitations.
 
-  - ``"MEDIA_TIME_NOT_FOUND"``: This error should never happen and is a RxPlayer
-    bug if it does. It means that a time initially thought to be in the bounds
-    of the manifest does not link to any "Period" of the Manifest.
+  - ``"MANIFEST_UPDATE_ERROR"``: This error should never be emitted as it is
+    handled internally by the RxPlayer. Please open an issue if you encounter
+    it.
+
+    This error is triggered when an incoherent version of the Manifest was
+    received during a partial update. The RxPlayer should catch the error and
+    trigger a full update instead when that happens.
+
+  - ``"MEDIA_TIME_NOT_FOUND"``: This error should never be emitted by the
+    RxPlayer. Please open an issue if you encounter it.
+
+    It is triggered when a time we initially thought to be in the bounds of the
+    Manifest actually does not link to any "Period" of the Manifest.
 
 
 
@@ -265,10 +275,12 @@ An EncryptedMediaError can have the following codes (``code`` property):
   - ``"MEDIA_IS_ENCRYPTED_ERROR"``: The media is encrypted and no key system
     was given to the RxPlayer's APIs.
 
-  - ``"MULTIPLE_SESSIONS_SAME_INIT_DATA"``: This error should never happen and
-    is a RxPlayer bug if it does. It means that we were going to open multiple
-    `MediaKeySession` for the same initialization data (instead of using the
-    exact same `MediaKeySession`).
+  - ``"MULTIPLE_SESSIONS_SAME_INIT_DATA"``: This error should never be emitted
+    by the RxPlayer. Please open an issue if you encounter it.
+
+    It is emitted when the RxPlayer try to open multiple `MediaKeySession` for
+    the same initialization data (instead of using the exact same
+    `MediaKeySession`).
 
 
 

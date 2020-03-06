@@ -24,134 +24,172 @@ import {
   ILocalIndexSegment,
 } from "./types";
 
-/**
- * @param {Object} index
- * @param {string} representationId
- * @returns {Object}
- */
-export default function createRepresentationIndex(
-  index : ILocalIndex,
-  representationId : string,
-  isFinished : boolean
-) : IRepresentationIndex {
-  return {
-    /**
-     * @returns {Object}
-     */
-    getInitSegment() : ISegment|null {
-      return {
-        id: `${representationId}_init`,
-        isInit: true,
-        time: 0,
-        duration: 0,
-        timescale: 1,
-        mediaURLs: null,
-        privateInfos: {
-          localManifestInitSegment: { load: index.loadInitSegment } },
-      };
-    },
+export default class LocalRepresentationIndex implements IRepresentationIndex {
+  private _index : ILocalIndex;
+  private _representationId : string;
+  private _isFinished : boolean;
+  constructor(index : ILocalIndex, representationId : string, isFinished : boolean) {
+    this._index = index;
+    this._representationId = representationId;
+    this._isFinished = isFinished;
+  }
 
-    /**
-     * @param {Number} up
-     * @param {Number} duration
-     * @returns {Array.<Object>}
-     */
-    getSegments(up : number, duration : number) : ISegment[] {
-      const startTime = up;
-      const endTime = up + duration;
-      const wantedSegments : ILocalIndexSegment[] = [];
-      for (let i = 0; i < index.segments.length; i++) {
-        const segment = index.segments[i];
-        const segmentStart = segment.time / 1000;
-        if (endTime <= segmentStart) {
-          break;
+  /**
+   * @returns {Object}
+   */
+  getInitSegment() : ISegment|null {
+    return {
+      id: `${this._representationId}_init`,
+      isInit: true,
+      time: 0,
+      duration: 0,
+      timescale: 1,
+      mediaURLs: null,
+      privateInfos: {
+        localManifestInitSegment: { load: this._index.loadInitSegment } },
+    };
+  }
+
+  /**
+   * @param {Number} up
+   * @param {Number} duration
+   * @returns {Array.<Object>}
+   */
+  getSegments(up : number, duration : number) : ISegment[] {
+    const startTime = up;
+    const endTime = up + duration;
+    const wantedSegments : ILocalIndexSegment[] = [];
+    for (let i = 0; i < this._index.segments.length; i++) {
+      const segment = this._index.segments[i];
+      const segmentStart = segment.time / 1000;
+      if (endTime <= segmentStart) {
+        break;
+      }
+      const segmentEnd = (segment.time + segment.duration) / 1000;
+      if (segmentEnd > startTime) {
+        wantedSegments.push(segment);
+      }
+    }
+
+    return wantedSegments
+      .map(wantedSegment => {
+        return {
+          id: `${this._representationId}_${wantedSegment.time}`,
+          isInit: false,
+          time: wantedSegment.time,
+          duration: wantedSegment.duration,
+          timescale: 1000,
+          timestampOffset: wantedSegment.timestampOffset,
+          mediaURLs: null,
+          privateInfos: {
+            localManifestSegment: { load: this._index.loadSegment,
+                                    segment: wantedSegment },
+          },
+        };
+      });
+  }
+
+  /**
+   * @returns {Number|undefined}
+   */
+  getFirstPosition() : number|undefined {
+    if (this._index.segments.length === 0) {
+      return undefined;
+    }
+    return this._index.segments[0].time;
+  }
+
+  /**
+   * @returns {Number|undefined}
+   */
+  getLastPosition() : number|undefined {
+    if (this._index.segments.length === 0) {
+      return undefined;
+    }
+    return this._index.segments[this._index.segments.length - 1].time;
+  }
+
+  /**
+   * @returns {Boolean}
+   */
+  shouldRefresh() : false {
+    return false;
+  }
+
+  /**
+   * @returns {Boolean}
+   */
+  isSegmentStillAvailable() : true {
+    return true;
+  }
+
+  isFinished() : boolean {
+    return this._isFinished;
+  }
+
+  /**
+   * @returns {Boolean}
+   */
+  canBeOutOfSyncError() : false {
+    return false;
+  }
+
+  /**
+   * @returns {Number}
+   */
+  checkDiscontinuity() : -1 {
+    return -1;
+  }
+
+  _replace(newIndex : LocalRepresentationIndex) : void {
+    this._index.segments = newIndex._index.segments;
+    this._index.loadSegment = newIndex._index.loadSegment;
+    this._index.loadInitSegment = newIndex._index.loadInitSegment;
+  }
+
+  _update(newIndex : LocalRepresentationIndex) : void {
+    const newSegments = newIndex._index.segments;
+    if (newSegments.length <= 0) {
+      return;
+    }
+    const insertNewIndexAtPosition = (pos : number) : void => {
+      this._index.segments.splice(pos, oldIndexLength - pos, ...newSegments);
+      this._index.loadSegment = newIndex._index.loadSegment;
+      this._index.loadInitSegment = newIndex._index.loadInitSegment;
+    };
+    const oldIndexLength = this._index.segments.length;
+    const newIndexStart = newSegments[0].time;
+    for (let i = oldIndexLength - 1; i >= 0; i--) {
+      const currSegment = this._index.segments[i];
+      if (currSegment.time === newIndexStart) {
+        return insertNewIndexAtPosition(i);
+      } else if (currSegment.time < newIndexStart) {
+        if (currSegment.time + currSegment.duration > newIndexStart) {
+          // the new Manifest overlaps a previous segment (weird). Remove the latter.
+          log.warn("Local RepresentationIndex: Manifest update removed" +
+            " previous segments");
+          return insertNewIndexAtPosition(i);
         }
-        const segmentEnd = (segment.time + segment.duration) / 1000;
-        if (segmentEnd > startTime) {
-          wantedSegments.push(segment);
-        }
+        return insertNewIndexAtPosition(i + 1);
       }
+    }
 
-      return wantedSegments
-        .map(wantedSegment => {
-          return {
-            id: `${representationId}_${wantedSegment.time}`,
-            isInit: false,
-            time: wantedSegment.time,
-            duration: wantedSegment.duration,
-            timescale: 1000,
-            timestampOffset: wantedSegment.timestampOffset,
-            mediaURLs: null,
-            privateInfos: {
-              localManifestSegment: { load: index.loadSegment,
-                                      segment: wantedSegment },
-            },
-          };
-        });
-    },
+    // if we got here, it means that every segments in the previous manifest are
+    // after the new one. This is unusual.
+    // Either the new one has more depth or it's an older one.
+    const oldIndexEnd = this._index.segments[oldIndexLength - 1].time +
+                        this._index.segments[oldIndexLength - 1].duration;
+    const newIndexEnd = newSegments[newSegments.length - 1].time +
+                          newSegments[newSegments.length - 1].duration;
+    if (oldIndexEnd >= newIndexEnd) {
+      return;
+    }
+    return this._replace(newIndex);
+  }
 
-    /**
-     * @returns {Number|undefined}
-     */
-    getFirstPosition() : number|undefined {
-      if (index.segments.length === 0) {
-        return undefined;
-      }
-      return index.segments[0].time;
-    },
-
-    /**
-     * @returns {Number|undefined}
-     */
-    getLastPosition() : number|undefined {
-      if (index.segments.length === 0) {
-        return undefined;
-      }
-      return index.segments[index.segments.length - 1].time;
-    },
-
-    /**
-     * @returns {Boolean}
-     */
-    shouldRefresh() : false {
-      return false;
-    },
-
-    /**
-     * @returns {Boolean}
-     */
-    isSegmentStillAvailable() : true {
-      return true;
-    },
-
-    isFinished() : boolean {
-      return isFinished;
-    },
-
-    /**
-     * @returns {Boolean}
-     */
-    canBeOutOfSyncError() : false {
-      return false;
-    },
-
-    /**
-     * @returns {Number}
-     */
-    checkDiscontinuity() : -1 {
-      return -1;
-    },
-
-    _update() : void {
-      if (__DEV__) {
-        log.warn("Tried to update a local Manifest RepresentationIndex");
-      }
-    },
-
-    _addSegments() : void {
-      if (__DEV__) {
-        log.warn("Tried to add Segments to a local Manifest RepresentationIndex");
-      }
-    },
-  };
+  _addSegments() : void {
+    if (__DEV__) {
+      log.warn("Tried to add Segments to a local Manifest RepresentationIndex");
+    }
+  }
 }

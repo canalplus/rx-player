@@ -406,7 +406,7 @@ describe("Manifest - Manifest", () => {
                                 transport: "foob",
                                 uris: ["url3", "url4"] };
 
-    manifest.update(newManifest);
+    manifest.replace(newManifest);
     expect(manifest.adaptations).toEqual(newAdaptations);
     expect(manifest.availabilityStartTime).toEqual(6);
     expect(manifest.baseURLs).toEqual(["test2"]);
@@ -424,8 +424,8 @@ describe("Manifest - Manifest", () => {
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2]);
 
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod2, newPeriod2);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod1, 0);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod2, newPeriod2, 0);
     expect(eeSpy).toHaveBeenCalledTimes(1);
     expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
     expect(logSpy).not.toHaveBeenCalled();
@@ -512,12 +512,12 @@ describe("Manifest - Manifest", () => {
                           transport: "foob",
                           uris: ["url3", "url4"] };
 
-    manifest.update(newManifest as any);
+    manifest.replace(newManifest as any);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod3);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod3, 0);
     expect(eeSpy).toHaveBeenCalledTimes(1);
     expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
     // expect(logSpy).toHaveBeenCalledTimes(2);
@@ -589,12 +589,12 @@ describe("Manifest - Manifest", () => {
                           transport: "foob",
                           uris: ["url3", "url4"] };
 
-    manifest.update(newManifest as any);
+    manifest.replace(newManifest as any);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod1);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod1, 0);
     expect(eeSpy).toHaveBeenCalledTimes(1);
     expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
     // expect(logSpy).toHaveBeenCalledTimes(1);
@@ -663,7 +663,7 @@ describe("Manifest - Manifest", () => {
                           transport: "foob",
                           uris: ["url3", "url4"] };
 
-    manifest.update(newManifest as any);
+    manifest.replace(newManifest as any);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
@@ -744,7 +744,7 @@ describe("Manifest - Manifest", () => {
                           transport: "foob",
                           uris: ["url3", "url4"] };
 
-    manifest.update(newManifest as any);
+    manifest.replace(newManifest as any);
 
     expect(manifest.periods).toEqual([ newPeriod1,
                                        newPeriod2,
@@ -753,8 +753,8 @@ describe("Manifest - Manifest", () => {
                                        newPeriod5 ]);
 
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod2);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod2, newPeriod4);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod2, 0);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod2, newPeriod4, 0);
     expect(eeSpy).toHaveBeenCalledTimes(1);
     expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
     // expect(logSpy).toHaveBeenCalledTimes(5);

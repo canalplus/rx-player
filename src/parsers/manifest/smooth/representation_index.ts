@@ -26,6 +26,7 @@ import {
 import clearTimelineFromPosition from "../utils/clear_timeline_from_position";
 import { getIndexSegmentEnd } from "../utils/index_helpers";
 import isSegmentStillAvailable from "../utils/is_segment_still_available";
+import updateSegmentTimeline from "../utils/update_segment_timeline";
 import addSegmentInfos from "./utils/add_segment_infos";
 import { replaceSegmentSmoothTokens } from "./utils/tokens";
 
@@ -470,12 +471,12 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * Update this RepresentationIndex by a newly downloaded one.
+   * Replace this RepresentationIndex by a newly downloaded one.
    * Check if the old index had more information about new segments and re-add
    * them if that's the case.
    * @param {Object} newIndex
    */
-  _update(newIndex : SmoothRepresentationIndex) : void {
+  _replace(newIndex : SmoothRepresentationIndex) : void {
     const oldTimeline = this._index.timeline;
     const newTimeline = newIndex._index.timeline;
     const oldTimescale = this._index.timescale;
@@ -535,6 +536,13 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
         return;
       }
     }
+  }
+
+  _update(newIndex : SmoothRepresentationIndex) : void {
+    updateSegmentTimeline(this._index.timeline, newIndex._index.timeline);
+    this._initialScaledLastPosition = newIndex._initialScaledLastPosition;
+    this._indexValidityTime = newIndex._indexValidityTime;
+    this._scaledLiveGap = newIndex._scaledLiveGap;
   }
 
   /**
