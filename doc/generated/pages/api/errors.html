@@ -228,9 +228,18 @@ contain any playable Representation. This usually happen when every
 Representation has been blacklisted due to encryption limitations.</p>
 </li>
 <li>
-<p><code>&quot;MEDIA_TIME_NOT_FOUND&quot;</code>: This error should never happen and is a RxPlayer
-bug if it does. It means that a time initially thought to be in the bounds
-of the manifest does not link to any &#x201C;Period&#x201D; of the Manifest.</p>
+<p><code>&quot;MANIFEST_UPDATE_ERROR&quot;</code>: This error should never be emitted as it is
+handled internally by the RxPlayer. Please open an issue if you encounter
+it.</p>
+<p>This error is triggered when an incoherent version of the Manifest was
+received during a partial update. The RxPlayer should catch the error and
+trigger a full update instead when that happens.</p>
+</li>
+<li>
+<p><code>&quot;MEDIA_TIME_NOT_FOUND&quot;</code>: This error should never be emitted by the
+RxPlayer. Please open an issue if you encounter it.</p>
+<p>It is triggered when a time we initially thought to be in the bounds of the
+Manifest actually does not link to any &#x201C;Period&#x201D; of the Manifest.</p>
 </li>
 </ul>
 <p><a name="types-encrypted_media_error"></a>
@@ -287,10 +296,11 @@ license was given to the CDM).</p>
 was given to the RxPlayer&#x2019;s APIs.</p>
 </li>
 <li>
-<p><code>&quot;MULTIPLE_SESSIONS_SAME_INIT_DATA&quot;</code>: This error should never happen and
-is a RxPlayer bug if it does. It means that we were going to open multiple
-<code>MediaKeySession</code> for the same initialization data (instead of using the
-exact same <code>MediaKeySession</code>).</p>
+<p><code>&quot;MULTIPLE_SESSIONS_SAME_INIT_DATA&quot;</code>: This error should never be emitted
+by the RxPlayer. Please open an issue if you encounter it.</p>
+<p>It is emitted when the RxPlayer try to open multiple <code>MediaKeySession</code> for
+the same initialization data (instead of using the exact same
+<code>MediaKeySession</code>).</p>
 </li>
 </ul>
 <p><a name="types-other_error"></a>
