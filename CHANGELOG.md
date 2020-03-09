@@ -21,6 +21,7 @@
   - dash: add multiple performance improvements related to MPD parsing on embedded devices
   - dash/smooth/metaplaylist/local: refresh less often the Manifest when parsing it takes too much time to improve performance
   - smooth: filter unsupported video and audio QualityLevels when parsing a Smooth Manifest
+  - code: greatly reduce the time needed to produce a modular build through the `npm run build:modular` script
   - code: remove Object.assign dependency
 
 
