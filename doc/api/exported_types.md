@@ -26,48 +26,71 @@ through the following line in your file:
 import { SOME_TYPE } from "rx-player/types"
 ```
 
-The exported types are:
+Here are the list of exported types, per category.
 
-  - ``IConstructorOptions``: Argument to give to ``new RxPlayer(args)``.
-    Example:
 
-    ```ts
-    import RxPlayer from "rx-player";
-    import { IConstructorOptions } from "rx-player/types";
+### RxPlayer Constructor #######################################################
 
-    function generateConstructorOptions() : IConstructorOptions {
-      const videoElement = document.querySelector("video");
-      return {
-        stopAtEnd: false,
-        videoElement,
-      };
-    }
+The type ``IConstructorOptions`` corresponds to the interface that the
+RxPlayer constructor accepts as an argument.
 
-    const options = generateConstructorOptions();
-    const player = new RxPlayer(options);
+Example:
 
-    export default player;
-    ```
+```ts
+import RxPlayer from "rx-player";
+import { IConstructorOptions } from "rx-player/types";
 
-  - ``ILoadVideoOptions``: Argument to give to a ``loadVideo`` call.
-    Example:
+function generateConstructorOptions() : IConstructorOptions {
+  const videoElement = document.querySelector("video");
+  return {
+    stopAtEnd: false,
+    videoElement,
+  };
+}
 
-    ```ts
-    import { ILoadVideoOptions } from "rx-player/types";
-    import player from "./player"; // define an RxPlayer instance
-    import config from "./config"; // define a global config
+const options = generateConstructorOptions();
+const player = new RxPlayer(options);
 
-    function generateLoadVideoOptions(url : string) : ILoadVideoOptions {
-      return {
-        url,
-        transport: "dash",
-        autoPlay: true,
-      };
-    }
+export default player;
+```
 
-    const loadVideoOpts = generateLoadVideoOptions(config.DEFAULT_URL);
-    player.loadVideo(loadVideoOpts);
-    ```
+Two constructor options have also their type definition exported, those are:
+
+  - `IAudioTrackPreference`: which is the type of a single element in the
+    `preferredAudioTracks` array.
+
+  - `ITextTrackPreference`: which is the type of a single element in the
+    `preferredTextTracks` array.
+
+
+### loadVideo ##################################################################
+
+The ``ILoadVideoOptions`` type corresponds to the argument to give to the
+RxPlayer's method ``loadVideo``.
+
+Example:
+
+```ts
+// the type(s) wanted
+import { ILoadVideoOptions } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+// hypothetical file exporting a configuration object
+import config from "./config"; // define a global config
+
+function generateLoadVideoOptions(url : string) : ILoadVideoOptions {
+  return {
+    url,
+    transport: "dash",
+    autoPlay: true,
+  };
+}
+
+const loadVideoOpts = generateLoadVideoOptions(config.DEFAULT_URL);
+rxPlayer.loadVideo(loadVideoOpts);
+```
 
 Speaking of ``loadVideo``, some subparts of ``ILoadVideoOptions`` are also
 exported:
@@ -101,10 +124,152 @@ exported:
   - ``IStartAtOption``: type for the ``startAt`` property optionally given to
     ``loadVideo``.
 
-Two constructor options have also their type definition exported, those are:
 
-  - `IAudioTrackPreference`: which is the type of a single element in the
-    `preferredAudioTracks` array.
+### getAvailableAudioTracks ####################################################
 
-  - `ITextTrackPreference`: which is the type of a single element in the
-    `preferredTextTracks` array.
+The return type of the `getAvailableAudioTracks` method is an array of objects.
+Each of this objects corresponds to the `IAvailableAudioTrack` interface.
+
+Example:
+
+```js
+// the type(s) wanted
+import { IAvailableAudioTrack } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+// hypothetical file exporting a configuration object
+import config from "./config"; // define a global config
+
+function getAvailableAudioTracks() : IAvailableAudioTrack[] {
+  return rxPlayer.getAvailableAudioTracks();
+}
+```
+
+
+### getAvailableTextTracks #####################################################
+
+The return type of the `getAvailableTextTracks` method is an array of objects.
+Each of this objects corresponds to the `IAvailableTextTrack` interface.
+
+Example:
+
+```js
+// the type(s) wanted
+import { IAvailableTextTrack } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+// hypothetical file exporting a configuration object
+import config from "./config"; // define a global config
+
+function getAvailableTextTracks() : IAvailableTextTrack[] {
+  return rxPlayer.getAvailableTextTracks();
+}
+```
+
+
+### getAvailableVideoTracks ####################################################
+
+The return type of the `getAvailableVideoTracks` method is an array of objects.
+Each of this objects corresponds to the `IAvailableVideoTrack` interface.
+
+Example:
+
+```js
+// the type(s) wanted
+import { IAvailableVideoTrack } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+// hypothetical file exporting a configuration object
+import config from "./config"; // define a global config
+
+function getAvailableVideoTracks() : IAvailableVideoTrack[] {
+  return rxPlayer.getAvailableVideoTracks();
+}
+```
+
+
+### getAudioTrack/audioTrackChange #############################################
+
+The `IAudioTrack` corresponds to both the type returned by the `getAudioTrack`
+method and emitted as the payload of the `audioTrackChange` event.
+
+Example:
+
+```js
+// the type(s) wanted
+import { IAudioTrack } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+// hypothetical file exporting a configuration object
+import config from "./config"; // define a global config
+
+rxPlayer.addEventListener("audioTrackChange", (track : IAudioTrack) => {
+  console.log("current track:", track);
+});
+
+function getCurrentlyDownloadedAudioTrack() : IAudioTrack {
+  return rxPlayer.getAudioTrack();
+}
+```
+
+
+### getTextTrack/textTrackChange ###############################################
+
+The `ITextTrack` corresponds to both the type returned by the `getTextTrack`
+method and emitted as the payload of the `textTrackChange` event.
+
+Example:
+
+```js
+// the type(s) wanted
+import { ITextTrack } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+// hypothetical file exporting a configuration object
+import config from "./config"; // define a global config
+
+rxPlayer.addEventListener("textTrackChange", (track : ITextTrack) => {
+  console.log("current track:", track);
+});
+
+function getCurrentlyDownloadedTextTrack() : ITextTrack {
+  return rxPlayer.getTextTrack();
+}
+```
+
+
+### getVideoTrack/videoTrackChange #############################################
+
+The `IVideoTrack` corresponds to both the type returned by the `getVideoTrack`
+method and emitted as the payload of the `videoTrackChange` event.
+
+Example:
+
+```js
+// the type(s) wanted
+import { IVideoTrack } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+// hypothetical file exporting a configuration object
+import config from "./config"; // define a global config
+
+rxPlayer.addEventListener("videoTrackChange", (track : IVideoTrack) => {
+  console.log("current track:", track);
+});
+
+function getCurrentlyDownloadedVideoTrack() : IVideoTrack {
+  return rxPlayer.getVideoTrack();
+}
+```
