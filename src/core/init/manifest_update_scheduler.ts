@@ -49,7 +49,6 @@ export interface IManifestUpdateSchedulerArguments {
                       receivedTime? : number;
                       parsingTime : number; };
   manifestUpdateUrl : string | undefined;
-  maximumManifestUpdateInterval? : number;
   minimumManifestUpdateInterval : number;
   scheduleRefresh$ : IManifestRefreshScheduler;
 }
@@ -71,7 +70,6 @@ export default function manifestUpdateScheduler({
   fetchManifest,
   initialManifest,
   manifestUpdateUrl,
-  maximumManifestUpdateInterval,
   minimumManifestUpdateInterval,
   scheduleRefresh$,
 } : IManifestUpdateSchedulerArguments) : Observable<never> {
@@ -122,15 +120,10 @@ export default function manifestUpdateScheduler({
         .pipe(mergeMapTo(observableFrom(manifest.expired)),
               mapTo({ completeRefresh: true }));
 
-   const maxInterval$ = maximumManifestUpdateInterval === undefined ?
-     EMPTY :
-     observableTimer(maximumManifestUpdateInterval)
-       .pipe(mapTo({ completeRefresh: false }));
-
     // Emit when the manifest should be refreshed. Either when:
     //   - A buffer asks for it to be refreshed
     //   - its lifetime expired.
-    return observableMerge(autoRefresh$, internalRefresh$, expired$, maxInterval$).pipe(
+    return observableMerge(autoRefresh$, internalRefresh$, expired$).pipe(
       take(1),
       mergeMap(({ completeRefresh }) => refreshManifest(completeRefresh)),
       mergeMap(handleManifestRefresh$),

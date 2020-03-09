@@ -100,7 +100,6 @@ export interface IInitializeArguments {
   keySystems : IKeySystemOption[]; // DRM configuration
   lowLatencyMode : boolean; // `true` to play low-latency contents optimally
   manifestUpdateUrl? : string; // Allow a custom version of the Manifest for updates
-  maximumManifestUpdateInterval? : number; // Force frequent Manifest updates
   mediaElement : HTMLMediaElement; // The HTMLMediaElement on which we will play
   minimumManifestUpdateInterval : number; // throttle manifest update
   networkConfig: { manifestRetry? : number; // Maximum number of Manifest retry
@@ -145,7 +144,6 @@ export default function InitializeOnMediaSource(
     keySystems,
     lowLatencyMode,
     manifestUpdateUrl,
-    maximumManifestUpdateInterval,
     mediaElement,
     minimumManifestUpdateInterval,
     networkConfig,
@@ -234,7 +232,6 @@ export default function InitializeOnMediaSource(
     const manifestUpdate$ = manifestUpdateScheduler({ fetchManifest,
                                                       initialManifest: initialManifestObj,
                                                       manifestUpdateUrl,
-                                                      maximumManifestUpdateInterval,
                                                       minimumManifestUpdateInterval,
                                                       scheduleRefresh$ });
 

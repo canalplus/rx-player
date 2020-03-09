@@ -575,28 +575,6 @@ considered stable:
       }
     });
     ```
-  - __maximumManifestUpdateInterval__ (`number|undefined`):
-
-    Set a maximum time between Manifest updates. That is: if the manifest has
-    never been updated during that interval, the RxPlayer will force a Manifest
-    update.
-
-    This is generally never needed as the RxPlayer can generally safely know
-    when to perform an update. It though can be used in conjunction with the
-    `manifestUpdateUrl` transportOptions property to ensure that the shorter
-    version of the manifest (associated to that URL) is refreshed frequently
-    enough so the RxPlayer will never miss any new segment anouncement.
-
-    Example:
-    ```js
-    rxPlayer.loadVideo({
-      // ...
-      transportOptions: {
-        maximumManifestUpdateInterval: 60000, // Perform Manifest updates at
-                                              // least every minutes
-      }
-    });
-    ```
 
   - __manifestUpdateUrl__ (`string|undefined`):
 

@@ -546,26 +546,6 @@ would be without that option.</p>
 </code></pre>
 </li>
 <li>
-<p><strong>maximumManifestUpdateInterval</strong> (<code>number|undefined</code>):</p>
-<p>Set a maximum time between Manifest updates. That is: if the manifest has
-never been updated during that interval, the RxPlayer will force a Manifest
-update.</p>
-<p>This is generally never needed as the RxPlayer can generally safely know
-when to perform an update. It though can be used in conjunction with the
-<code>manifestUpdateUrl</code> transportOptions property to ensure that the shorter
-version of the manifest (associated to that URL) is refreshed frequently
-enough so the RxPlayer will never miss any new segment anouncement.</p>
-<p>Example:</p>
-<pre><code class="language-js">rxPlayer.loadVideo({
-  <span class="hljs-comment">// ...</span>
-  <span class="hljs-attr">transportOptions</span>: {
-    <span class="hljs-attr">maximumManifestUpdateInterval</span>: <span class="hljs-number">60000</span>, <span class="hljs-comment">// Perform Manifest updates at</span>
-                                          <span class="hljs-comment">// least every minutes</span>
-  }
-});
-</code></pre>
-</li>
-<li>
 <p><strong>manifestUpdateUrl</strong> (<code>string|undefined</code>):</p>
 <p>Set a custom Manifest URL for Manifest updates.
 This URL can point to another version of the Manifest with a shorter
