@@ -12,12 +12,12 @@
 ### Bug fixes
 
   - dash/smooth: fix segment url resolution when there is query parameters in the Manifest URL and/or segment path, themselves containing "/" characters
-  - compat: avoid pushing a segment on top of the current position in Safari, as it can sometime lead to green macro-blocks
   - local-manifest: fix videoElement's duration and `getVideoDuration` for contents in the experimental `local` transport
   - tools/parseBifThumbnails: do not return an ArrayBuffer of the whole thing in each `image` property in the experimental `parseBifThumbnails` function
 
 ### Other improvements
 
+  - compat: avoid pushing a segment on top of the current position in Safari, as it can sometime lead to green macro-blocks
   - dash: add multiple performance improvements related to MPD parsing on embedded devices
   - dash/smooth/metaplaylist/local: refresh less often the Manifest when parsing it takes too much time to improve performance
   - smooth: filter unsupported video and audio QualityLevels when parsing a Smooth Manifest
