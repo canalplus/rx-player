@@ -7,13 +7,15 @@
   - dash: handle multiple URL per segment anounced through multiple BaseURL elements in the MPD
   - dash/smooth/metaplaylist: add `manifestUpdateUrl` to loadVideo's `transportOptions` to provide a shorter version of the Manifest, used for more resource-efficient Manifest updates
   - tools/createMetaplaylist: add the experimental `createMetaplaylist` tool, which allows to generate Metaplaylist contents from given Manifests
-  - tools/TextTrackRenderer: add the optional `language` property to the setTextTrack method of the experimental TextTrackRenderer tool as it could be needed when parsing SAMI subtitles
+  - tools/TextTrackRenderer: add the optional `language` property to the `setTextTrack` method of the experimental `TextTrackRenderer` tool as it could be needed when parsing SAMI subtitles
+  - types: export IAvailableAudioTrack, IAvailableTextTrack and IAvailableVideoTrack types
+  - types: export IAudioTrack, ITextTrack and IVideoTrack types
 
 ### Bug fixes
 
   - dash/smooth: fix segment url resolution when there is query parameters in the Manifest URL and/or segment path, themselves containing "/" characters
   - local-manifest: fix videoElement's duration and `getVideoDuration` for contents in the experimental `local` transport
-  - tools/parseBifThumbnails: do not return an ArrayBuffer of the whole thing in each `image` property in the experimental `parseBifThumbnails` function
+  - tools/parseBifThumbnails: do not return an un-displayable ArrayBuffer of the whole thing in each `image` property in the experimental `parseBifThumbnails` function
 
 ### Other improvements
 
