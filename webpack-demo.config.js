@@ -26,8 +26,8 @@ module.exports = {
     ] : [],
   },
   performance: {
-    maxEntrypointSize: shouldMinify ? 1000000 : 2000000,
-    maxAssetSize: shouldMinify ? 1000000 : 2000000,
+    maxEntrypointSize: shouldMinify ? 1000000 : 2500000,
+    maxAssetSize: shouldMinify ? 1000000 : 2500000,
   },
   module: {
     rules: [
