@@ -641,6 +641,48 @@ sometimes send you incomplete/corrupted segments.</p>
 </code></pre>
 </li>
 <li>
+<p><strong>serverSyncInfos</strong> (<code>Object|undefined</code>):</p>
+<p>Allows to provide a time synchronization mechanism between the client and
+the server.</p>
+<p>This value is mainly useful for live DASH contents based on a
+SegmentTemplate scheme without SegmentTimeline elements as those rely on
+having a synchronized clock on the client side.</p>
+<p>The <code>serverSyncInfos</code> object contains two keys:</p>
+<ul>
+<li>
+<p><code>serverTimestamp</code> (<code>number</code>): Unix timestamp of the server at a given
+point in time, in milliseconds.</p>
+</li>
+<li>
+<p><code>clientTime</code> (<code>number</code>): Value of the <code>performance.now()</code> API at the time
+the <code>serverTimestamp</code> value was true. Please note that if your page contains
+multiple worker, the <code>performance.now()</code> call should be done on the same
+worker than the one in which loadVideo is called.</p>
+<p><em>The <code>performance.now()</code> API is used here because it is the main API to
+obtain a monotically increasing clock on the client-side.</em></p>
+</li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> timeResponse = <span class="hljs-keyword">await</span> fetch(timeServerURL);
+<span class="hljs-keyword">const</span> clientTime = performance.now();
+<span class="hljs-keyword">const</span> serverTimestamp = <span class="hljs-keyword">await</span> timeResponse.text();
+<span class="hljs-keyword">const</span> serverSyncInfos = { serverTimestamp, clientTime };
+rxPlayer.loadVideo({
+  <span class="hljs-comment">// ...</span>
+  <span class="hljs-attr">transportOptions</span>: { serverSyncInfos }
+})
+</code></pre>
+<p>If indicated, we will ignore any time indication on the MPD and only consider
+<code>serverSyncInfos</code> to calculate the time on the server side.</p>
+<p>This value is also very useful for low-latency contents, as some of them do not
+indicate any server&#x2019;s time, relying on the client one instead.</p>
+<p>Note that there is a risk of us losing synchronization when leap seconds are
+added/substracted to unix time. However we consider those situations rare enough
+(and the effect should be relatively weak) to let this as is for the moment. For
+a complete explanation, you can look at the <a href="low_latency.html#note-time-sync">corresponding chapter of the
+low-latency documentation</a>.</p>
+</li>
+<li>
 <p><strong>aggressiveMode</strong> (<code>boolean|undefined</code>):</p>
 <p>If set to true, we will try to download segments very early, even if we are
 not sure they had time to be completely generated.</p>
@@ -680,48 +722,6 @@ the &#x201C;live time&#x201D;, for example through the <code>getWallClockTime</c
   }
 });
 </code></pre>
-</li>
-<li>
-<p><strong>serverSyncInfos</strong> (<code>Object|undefined</code>):</p>
-<p>Allows to provide a time synchronization mechanism between the client and
-the server.</p>
-<p>This value is mainly useful for live DASH contents based on a
-SegmentTemplate scheme without SegmentTimeline elements as those rely on
-having a synchronized clock on the client side.</p>
-<p>The <code>serverSyncInfos</code> object contains two keys:</p>
-<ul>
-<li>
-<p><code>serverTimestamp</code> (<code>number</code>): Unix timestamp of the server at a given
-point in time, in milliseconds.</p>
-</li>
-<li>
-<p><code>clientTime</code> (<code>number</code>): Value of the <code>performance.now()</code> API at the time
-the <code>serverTimestamp</code> value was true. Please note that if your page contains
-multiple worker, the <code>performance.now()</code> call should be done on the same
-worker than the one in which loadVideo is called.</p>
-<p><em>The <code>performance.now()</code> API is used here because it is the main API to
-obtain a monotically increasing clock on the client-side.</em></p>
-</li>
-</ul>
-<p>Example:</p>
-<pre><code class="language-js"><span class="hljs-keyword">const</span> timeResponse = <span class="hljs-keyword">await</span> fetch(timeServerURL);
-<span class="hljs-keyword">const</span> serverTimestamp = <span class="hljs-keyword">await</span> timeResponse.text();
-<span class="hljs-keyword">const</span> clientTime = performance.now();
-<span class="hljs-keyword">const</span> serverSyncInfos = { serverTimestamp, clientTime };
-rxPlayer.loadVideo({
-  <span class="hljs-comment">// ...</span>
-  <span class="hljs-attr">transportOptions</span>: { serverSyncInfos }
-})
-</code></pre>
-<p>If indicated, we will ignore any time indication on the MPD and only consider
-<code>serverSyncInfos</code> to calculate the time on the server side.</p>
-<p>This value is also very useful for low-latency contents, as some of them do not
-indicate any server&#x2019;s time, relying on the client one instead.</p>
-<p>Note that there is a risk of us losing synchronization when leap seconds are
-added/substracted to unix time. However we consider those situations rare enough
-(and the effect should be relatively weak) to let this as is for the moment. For
-a complete explanation, you can look at the <a href="low_latency.html#note-time-sync">corresponding chapter of the
-low-latency documentation</a>.</p>
 </li>
 </ul>
 <p><a name="prop-textTrackMode"></a>
