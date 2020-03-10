@@ -771,6 +771,22 @@ export default {
   FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY: 3000,
 
   /**
+   * DASH Manifest based on a SegmentTimeline should normally have an
+   * MPD@minimumUpdatePeriod attribute which should be sufficient to
+   * know when to refresh it.
+   * However, there is a specific case, for when it is equal to 0.
+   * As of DASH-IF IOP (valid in v4.3), when a DASH's MPD set a
+   * MPD@minimumUpdatePeriod to `0`, a client should not refresh the MPD
+   * unless told to do so through inband events, in the stream.
+   * In reality however, we found it to not always be the case (even with
+   * DASH-IF own streams) and moreover to not always be the best thing to do.
+   * We prefer to refresh in average at a regular interval when we do not have
+   * this information.
+   * /!\ This value is expressed in seconds.
+   */
+  DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0: 3,
+
+  /**
    * Max simultaneous MediaKeySessions that will be kept as a cache to avoid
    * doing superfluous license requests.
    * If this number is reached, any new session creation will close the oldest
