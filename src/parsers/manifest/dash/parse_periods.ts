@@ -51,6 +51,7 @@ export interface IManifestInfos {
   clockOffset? : number;
   duration? : number;
   isDynamic : boolean;
+  minimumUpdatePeriod : number | undefined; // Value of MPD@minimumUpdatePeriod
   receivedTime? : number; // time (in terms of `performance.now`) at which the
                           // XML file containing this Period was received
   timeShiftBufferDepth? : number; // Depth of the buffer for the whole content,
@@ -117,6 +118,7 @@ export default function parsePeriods(
                           manifestBoundsCalculator,
                           end: periodEnd,
                           isDynamic,
+                          minimumUpdatePeriod: manifestInfos.minimumUpdatePeriod,
                           receivedTime,
                           start: periodStart,
                           timeShiftBufferDepth };

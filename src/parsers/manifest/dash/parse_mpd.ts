@@ -217,6 +217,7 @@ function parseCompleteIntermediateRepresentation(
                           clockOffset,
                           duration: rootAttributes.duration,
                           isDynamic,
+                          minimumUpdatePeriod: rootAttributes.minimumUpdatePeriod,
                           receivedTime: args.manifestReceivedTime,
                           timeShiftBufferDepth,
                           xlinkInfos };

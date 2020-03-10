@@ -46,6 +46,7 @@ export interface IAdaptationInfos {
                                                        // dynamic content
   end? : number; // End time of the current period, in seconds
   isDynamic : boolean; // Whether the Manifest can evolve with time
+  minimumUpdatePeriod : number | undefined; // Value of MPD@minimumUpdatePeriod
   receivedTime? : number; // time (in terms of `performance.now`) at which the
                           // XML file containing this Representation was received
   start : number; // Start time of the current period, in seconds
@@ -62,6 +63,7 @@ interface IIndexContext {
                                                        // available position of a
                                                        // dynamic content
   isDynamic : boolean; // Whether the Manifest can evolve with time
+  minimumUpdatePeriod : number | undefined; // Value of MPD@minimumUpdatePeriod
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
   periodEnd : number|undefined; // End of the period concerned by this
@@ -128,6 +130,7 @@ export default function parseRepresentations(
                       availabilityTimeOffset: adaptationInfos.availabilityTimeOffset,
                       manifestBoundsCalculator: adaptationInfos.manifestBoundsCalculator,
                       isDynamic: adaptationInfos.isDynamic,
+                      minimumUpdatePeriod: adaptationInfos.minimumUpdatePeriod,
                       periodEnd: adaptationInfos.end,
                       periodStart: adaptationInfos.start,
                       receivedTime: adaptationInfos.receivedTime,

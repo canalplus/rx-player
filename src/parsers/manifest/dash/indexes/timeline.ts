@@ -137,6 +137,7 @@ export interface ITimelineIndexContextArgument {
   periodEnd : number|undefined; // End of the period concerned by this
                                 // RepresentationIndex, in seconds
   isDynamic : boolean; // Whether the corresponding Manifest is dynamic
+  minimumUpdatePeriod : number | undefined; // Value of MPD@minimumUpdatePeriod
   receivedTime? : number; // time (in terms of `performance.now`) at which the
                           // XML file containing this index was received
   representationBaseURLs : string[]; // Base URL for the Representation concerned
@@ -240,8 +241,14 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   // Whether this RepresentationIndex can change over time.
   private _isDynamic : boolean;
 
+  // Value of the MPD@minimumUpdatePeriod attribute on the MPD
+  private _minimumUpdatePeriod : number | undefined;
+
+  // Allows to calculate the maximum and minimum position in a dynamic or
+  // static MPD.
   private _manifestBoundsCalculator : ManifestBoundsCalculator;
 
+  // Allows to lazily parse a SegmentTimeline, which can be resource heavy
   private _parseTimeline : () => IParsedS[];
 
   /**
@@ -253,6 +260,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     context : ITimelineIndexContextArgument
   ) {
     const { manifestBoundsCalculator,
+            minimumUpdatePeriod,
             isDynamic,
             representationBaseURLs,
             representationId,
@@ -269,6 +277,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const indexTimeOffset = presentationTimeOffset - scaledStart;
 
     this._manifestBoundsCalculator = manifestBoundsCalculator;
+    this._minimumUpdatePeriod = minimumUpdatePeriod;
 
     this._lastUpdate = context.receivedTime == null ?
                                  performance.now() :
@@ -342,10 +351,45 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * @param {Number} to
    * @returns {Boolean}
    */
-  shouldRefresh() : false {
-    // DASH Manifest based on a SegmentTimeline should have minimumUpdatePeriod
-    // attribute which should be sufficient to know when to refresh it.
-    return false;
+  shouldRefresh(_up : number, to : number) : boolean {
+    // DASH Manifest based on a SegmentTimeline should normally have an
+    // MPD@minimumUpdatePeriod attribute which should be sufficient to
+    // know when to refresh it.
+    if (this._minimumUpdatePeriod !== 0) {
+      return false;
+    }
+
+    // However, there is a specific case, for when it is equal to 0.
+    // As of DASH-IF IOP (valid in v4.3), when a DASH's MPD set a
+    // MPD@minimumUpdatePeriod to `0`, a client should not refresh the MPD
+    // unless told to do so through inband events, in the stream.
+    // In reality however, we found it to not always be the case (even with
+    // DASH-IF own streams) and moreover to not always be the best thing to do.
+    // We prefer to rely here on our own logic in that case:
+    // If a new segment had time to be generated since the last update, we
+    // refresh.
+    this._refreshTimeline();
+    if (!this._isDynamic) {
+      return false;
+    }
+
+    if (this._index.timeline === null) {
+      this._index.timeline = constructTimeline(this._parseTimeline,
+                                               this._scaledPeriodStart);
+    }
+    const lastTime = TimelineRepresentationIndex.getIndexEnd(this._index.timeline,
+                                                             this._scaledPeriodEnd);
+    if (lastTime === null) {
+      return true;
+    }
+    if (to * this._index.timescale < lastTime) {
+      return false;
+    }
+    const lastTheoriticalPosition = this._getTheoriticalLastPosition();
+    if (lastTheoriticalPosition == null) {
+      return true;
+    }
+    return lastTheoriticalPosition > lastTime;
   }
 
   /**
@@ -568,5 +612,34 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     return getIndexSegmentEnd(timeline[timeline.length - 1],
                               null,
                               scaledPeriodEnd);
+  }
+
+  /**
+   * Returns last position if new segments have the same duration than the
+   * current last one.
+   * @returns {number}
+   */
+  private _getTheoriticalLastPosition() : number | undefined {
+    const index = this._index;
+    if (index.timeline === null) {
+      index.timeline = constructTimeline(this._parseTimeline,
+                                         this._scaledPeriodStart);
+    }
+
+    const lastTimelineElement = index.timeline[index.timeline.length - 1];
+    const lastPosition = getIndexSegmentEnd(lastTimelineElement,
+                                            null,
+                                            this._scaledPeriodEnd);
+    if (!this._isDynamic) {
+      return lastPosition;
+    }
+    const lastSegmentDuration = lastTimelineElement.duration;
+    const timeDiffInSeconds = (performance.now() - this._lastUpdate) / 1000;
+    const timeDiffTS = timeDiffInSeconds * index.timescale;
+    if (timeDiffTS < lastSegmentDuration) {
+      return lastPosition;
+    }
+    const numberOfNewSegments = Math.floor(timeDiffTS / lastSegmentDuration);
+    return numberOfNewSegments * lastSegmentDuration + lastPosition;
   }
 }
