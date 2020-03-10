@@ -36,7 +36,7 @@ function generateRepresentationIndex(
   };
 }
 
-describe("DASH parsers getLastPositionFromAdaptation", function() {
+describe("parsers utils - getLastPositionFromAdaptation", function() {
   it("should return null if no representation", () => {
     expect(getLastPositionFromAdaptation({ id: "0",
                                             type: "audio",

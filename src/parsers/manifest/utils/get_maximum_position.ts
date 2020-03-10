@@ -62,7 +62,7 @@ export default function getMaximumPosition(
           (firstVideoAdaptationFromPeriod !== undefined &&
             maximumVideoPosition === null)
       ) {
-        log.info("DASH Parser: found Period with no segment. ",
+        log.info("Parser utils: found Period with no segment. ",
                  "Going to previous one to calculate last position");
         return undefined;
       }
