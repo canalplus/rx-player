@@ -1383,6 +1383,22 @@ function isNonEmptyString(x) {
   FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY: 3000,
 
   /**
+   * DASH Manifest based on a SegmentTimeline should normally have an
+   * MPD@minimumUpdatePeriod attribute which should be sufficient to
+   * know when to refresh it.
+   * However, there is a specific case, for when it is equal to 0.
+   * As of DASH-IF IOP (valid in v4.3), when a DASH's MPD set a
+   * MPD@minimumUpdatePeriod to `0`, a client should not refresh the MPD
+   * unless told to do so through inband events, in the stream.
+   * In reality however, we found it to not always be the case (even with
+   * DASH-IF own streams) and moreover to not always be the best thing to do.
+   * We prefer to refresh in average at a regular interval when we do not have
+   * this information.
+   * /!\ This value is expressed in seconds.
+   */
+  DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0: 3,
+
+  /**
    * Max simultaneous MediaKeySessions that will be kept as a cache to avoid
    * doing superfluous license requests.
    * If this number is reached, any new session creation will close the oldest
@@ -31882,7 +31898,7 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
     videoElement.preload = "auto";
     _this.version =
     /*PLAYER_VERSION*/
-    "3.18.0";
+    "3.19.0";
     _this.log = log["a" /* default */];
     _this.state = "STOPPED";
     _this.videoElement = videoElement;
@@ -34153,7 +34169,7 @@ var public_api_Player = /*#__PURE__*/function (_EventEmitter) {
 
 public_api_Player.version =
 /*PLAYER_VERSION*/
-"3.18.0";
+"3.19.0";
 /* harmony default export */ var public_api = (public_api_Player);
 // CONCATENATED MODULE: ./src/core/api/index.ts
 /**
@@ -34484,6 +34500,9 @@ var mergeMap = __webpack_require__(47);
 // EXTERNAL MODULE: ./src/manifest/index.ts + 10 modules
 var src_manifest = __webpack_require__(89);
 
+// EXTERNAL MODULE: ./src/config.ts
+var config = __webpack_require__(3);
+
 // EXTERNAL MODULE: ./src/utils/array_find.ts
 var array_find = __webpack_require__(14);
 
@@ -34605,7 +34624,7 @@ function getHTTPUTCTimingURL(mpdIR) {
   });
   return UTCTimingHTTP.length > 0 ? UTCTimingHTTP[0].value : undefined;
 }
-// CONCATENATED MODULE: ./src/parsers/manifest/dash/get_last_time_from_adaptation.ts
+// CONCATENATED MODULE: ./src/parsers/manifest/utils/get_last_time_from_adaptation.ts
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -34658,7 +34677,7 @@ function getLastPositionFromAdaptation(adaptation) {
 
   return min;
 }
-// CONCATENATED MODULE: ./src/parsers/manifest/dash/get_maximum_position.ts
+// CONCATENATED MODULE: ./src/parsers/manifest/utils/get_maximum_position.ts
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -34684,15 +34703,15 @@ function getLastPositionFromAdaptation(adaptation) {
 function getMaximumPosition(manifest) {
   for (var i = manifest.periods.length - 1; i >= 0; i--) {
     var periodAdaptations = manifest.periods[i].adaptations;
-    var firstAudioAdaptationFromPeriod = periodAdaptations.audio == null ? undefined : periodAdaptations.audio[0];
-    var firstVideoAdaptationFromPeriod = periodAdaptations.video == null ? undefined : periodAdaptations.video[0];
+    var firstAudioAdaptationFromPeriod = periodAdaptations.audio === undefined ? undefined : periodAdaptations.audio[0];
+    var firstVideoAdaptationFromPeriod = periodAdaptations.video === undefined ? undefined : periodAdaptations.video[0];
 
-    if (firstAudioAdaptationFromPeriod != null || firstVideoAdaptationFromPeriod != null) {
+    if (firstAudioAdaptationFromPeriod !== undefined || firstVideoAdaptationFromPeriod !== undefined) {
       // null == no segment
       var maximumAudioPosition = null;
       var maximumVideoPosition = null;
 
-      if (firstAudioAdaptationFromPeriod != null) {
+      if (firstAudioAdaptationFromPeriod !== undefined) {
         var lastPosition = getLastPositionFromAdaptation(firstAudioAdaptationFromPeriod);
 
         if (lastPosition === undefined) {
@@ -34702,7 +34721,7 @@ function getMaximumPosition(manifest) {
         maximumAudioPosition = lastPosition;
       }
 
-      if (firstVideoAdaptationFromPeriod != null) {
+      if (firstVideoAdaptationFromPeriod !== undefined) {
         var _lastPosition = getLastPositionFromAdaptation(firstVideoAdaptationFromPeriod);
 
         if (_lastPosition === undefined) {
@@ -34712,26 +34731,26 @@ function getMaximumPosition(manifest) {
         maximumVideoPosition = _lastPosition;
       }
 
-      if (firstAudioAdaptationFromPeriod != null && maximumAudioPosition === null || firstVideoAdaptationFromPeriod != null && maximumVideoPosition === null) {
-        log["a" /* default */].info("DASH Parser: found Period with no segment. ", "Going to previous one to calculate last position");
+      if (firstAudioAdaptationFromPeriod !== undefined && maximumAudioPosition === null || firstVideoAdaptationFromPeriod !== undefined && maximumVideoPosition === null) {
+        log["a" /* default */].info("Parser utils: found Period with no segment. ", "Going to previous one to calculate last position");
         return undefined;
       }
 
-      if (maximumVideoPosition != null) {
-        if (maximumAudioPosition != null) {
+      if (maximumVideoPosition !== null) {
+        if (maximumAudioPosition !== null) {
           return Math.min(maximumAudioPosition, maximumVideoPosition);
         }
 
         return maximumVideoPosition;
       }
 
-      if (maximumAudioPosition != null) {
+      if (maximumAudioPosition !== null) {
         return maximumAudioPosition;
       }
     }
   }
 }
-// CONCATENATED MODULE: ./src/parsers/manifest/dash/get_first_time_from_adaptation.ts
+// CONCATENATED MODULE: ./src/parsers/manifest/utils/get_first_time_from_adaptation.ts
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -34782,7 +34801,7 @@ function getFirstPositionFromAdaptation(adaptation) {
 
   return max;
 }
-// CONCATENATED MODULE: ./src/parsers/manifest/dash/get_minimum_position.ts
+// CONCATENATED MODULE: ./src/parsers/manifest/utils/get_minimum_position.ts
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -34808,15 +34827,15 @@ function getFirstPositionFromAdaptation(adaptation) {
 function getMinimumPosition(manifest) {
   for (var i = 0; i <= manifest.periods.length - 1; i++) {
     var periodAdaptations = manifest.periods[i].adaptations;
-    var firstAudioAdaptationFromPeriod = periodAdaptations.audio == null ? undefined : periodAdaptations.audio[0];
-    var firstVideoAdaptationFromPeriod = periodAdaptations.video == null ? undefined : periodAdaptations.video[0];
+    var firstAudioAdaptationFromPeriod = periodAdaptations.audio === undefined ? undefined : periodAdaptations.audio[0];
+    var firstVideoAdaptationFromPeriod = periodAdaptations.video === undefined ? undefined : periodAdaptations.video[0];
 
-    if (firstAudioAdaptationFromPeriod != null || firstVideoAdaptationFromPeriod != null) {
+    if (firstAudioAdaptationFromPeriod !== undefined || firstVideoAdaptationFromPeriod !== undefined) {
       // null == no segment
       var minimumAudioPosition = null;
       var minimumVideoPosition = null;
 
-      if (firstAudioAdaptationFromPeriod != null) {
+      if (firstAudioAdaptationFromPeriod !== undefined) {
         var firstPosition = getFirstPositionFromAdaptation(firstAudioAdaptationFromPeriod);
 
         if (firstPosition === undefined) {
@@ -34826,7 +34845,7 @@ function getMinimumPosition(manifest) {
         minimumAudioPosition = firstPosition;
       }
 
-      if (firstVideoAdaptationFromPeriod != null) {
+      if (firstVideoAdaptationFromPeriod !== undefined) {
         var _firstPosition = getFirstPositionFromAdaptation(firstVideoAdaptationFromPeriod);
 
         if (_firstPosition === undefined) {
@@ -34836,20 +34855,20 @@ function getMinimumPosition(manifest) {
         minimumVideoPosition = _firstPosition;
       }
 
-      if (firstAudioAdaptationFromPeriod != null && minimumAudioPosition === null || firstVideoAdaptationFromPeriod != null && minimumVideoPosition === null) {
-        log["a" /* default */].info("DASH Parser: found Period with no segment. ", "Going to next one to calculate first position");
+      if (firstAudioAdaptationFromPeriod !== undefined && minimumAudioPosition === null || firstVideoAdaptationFromPeriod !== undefined && minimumVideoPosition === null) {
+        log["a" /* default */].info("Parser utils: found Period with no segment. ", "Going to next one to calculate first position");
         return undefined;
       }
 
-      if (minimumVideoPosition != null) {
-        if (minimumAudioPosition != null) {
+      if (minimumVideoPosition !== null) {
+        if (minimumAudioPosition !== null) {
           return Math.max(minimumAudioPosition, minimumVideoPosition);
         }
 
         return minimumVideoPosition;
       }
 
-      if (minimumAudioPosition != null) {
+      if (minimumAudioPosition !== null) {
         return minimumAudioPosition;
       }
     }
@@ -37756,9 +37775,6 @@ var list_ListRepresentationIndex = /*#__PURE__*/function () {
 }();
 
 
-// EXTERNAL MODULE: ./src/config.ts
-var config = __webpack_require__(3);
-
 // CONCATENATED MODULE: ./src/parsers/manifest/dash/indexes/template.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -39465,6 +39481,8 @@ function getMaximumLastPosition(adaptationsPerType) {
 
 
 
+
+var DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 = config["a" /* default */].DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0;
 var generateManifestID = Object(id_generator["a" /* default */])();
 /**
  * @param {Element} root - The MPD root.
@@ -39642,8 +39660,8 @@ function parseCompleteIntermediateRepresentation(mpdIR, args, xlinkInfos) {
     uris: args.url == null ? rootChildren.locations : [args.url].concat(rootChildren.locations)
   }; // -- add optional fields --
 
-  if (rootAttributes.minimumUpdatePeriod != null && rootAttributes.minimumUpdatePeriod > 0) {
-    parsedMPD.lifetime = rootAttributes.minimumUpdatePeriod;
+  if (rootAttributes.minimumUpdatePeriod !== undefined && rootAttributes.minimumUpdatePeriod >= 0) {
+    parsedMPD.lifetime = rootAttributes.minimumUpdatePeriod === 0 ? DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 : rootAttributes.minimumUpdatePeriod;
   }
 
   Object(check_manifest_ids["a" /* default */])(parsedMPD);
