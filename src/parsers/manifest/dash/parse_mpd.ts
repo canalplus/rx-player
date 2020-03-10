@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../../../config";
 import arrayFind from "../../../utils/array_find";
 import idGenerator from "../../../utils/id_generator";
 import { normalizeBaseURL } from "../../../utils/resolve_url";
@@ -36,6 +37,8 @@ import parsePeriods, {
   IXLinkInfos,
 } from "./parse_periods";
 import resolveBaseURLs from "./resolve_base_urls";
+
+const { DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 } = config;
 
 const generateManifestID = idGenerator();
 
@@ -238,10 +241,12 @@ function parseCompleteIntermediateRepresentation(
   };
 
   // -- add optional fields --
-  if (rootAttributes.minimumUpdatePeriod != null
-      && rootAttributes.minimumUpdatePeriod > 0)
+  if (rootAttributes.minimumUpdatePeriod !== undefined &&
+      rootAttributes.minimumUpdatePeriod >= 0)
   {
-    parsedMPD.lifetime = rootAttributes.minimumUpdatePeriod;
+    parsedMPD.lifetime = rootAttributes.minimumUpdatePeriod === 0 ?
+      DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 :
+      rootAttributes.minimumUpdatePeriod;
   }
 
   checkManifestIDs(parsedMPD);
