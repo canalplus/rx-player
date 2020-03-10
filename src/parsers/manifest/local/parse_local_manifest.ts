@@ -15,6 +15,9 @@
  */
 
 import idGenerator from "../../../utils/id_generator";
+import getMaximumPosition from "../utils/get_maximum_position";
+import getMinimumPosition from "../utils/get_minimum_position";
+
 import {
   IParsedAdaptation,
   IParsedManifest,
@@ -47,10 +50,9 @@ export default function parseLocalManifest(
   }
   const periodIdGenerator = idGenerator();
   const { isFinished } = localManifest;
-  const manifest = {
+  const manifest: IParsedManifest = {
     availabilityStartTime: 0,
     baseURLs: null,
-    duration: localManifest.duration,
     expired: localManifest.expired,
     id: "local-manifest_" + generateManifestID(),
     transportType: "local",
@@ -59,6 +61,20 @@ export default function parseLocalManifest(
     uris: [],
     periods: localManifest.periods
       .map(period => parsePeriod(period, periodIdGenerator, isFinished)),
+  };
+  const maximumPosition = getMaximumPosition(manifest);
+  if (maximumPosition !== undefined) {
+    manifest.maximumTime = {
+        isContinuous : false,
+        value : maximumPosition,
+        time : performance.now(),
+    };
+  }
+  const minimumPosition = getMinimumPosition(manifest);
+  manifest.minimumTime = {
+    isContinuous : false,
+    value : minimumPosition !== undefined ? minimumPosition : 0,
+    time : performance.now(),
   };
   return manifest;
 }
