@@ -1,0 +1,308 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>TextTrackRenderer - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-TextTrackRenderer">TextTrackRenderer</a></p>
+<ul>
+<li><a href="#chapter-Overview">Overview</a></li>
+<li><a href="#chapter-Brief%20summary">Brief summary</a></li>
+<li><a href="#chapter-How%20to%20import%20it">How to import it</a></li>
+<li><a href="#chapter-How%20to%20use%20it">How to use it</a>
+<ul>
+<li><a href="#subchapter-Preamble">Preamble</a></li>
+<li><a href="#subchapter-Creating%20a%20TextTrackRenderer">Creating a TextTrackRenderer</a></li>
+<li><a href="#subchapter-Setting%20a%20text%20track%20on%20it">Setting a text track on it</a></li>
+<li><a href="#subchapter-Removing%20the%20current%20text%20track">Removing the current text track</a></li>
+<li><a href="#subchapter-Disposing%20of%20the%20TextTrackRenderer">Disposing of the TextTrackRenderer</a></li>
+<li><a href="#subchapter-Notes%20on%20the%20SAMI%20format">Notes on the SAMI format</a></li>
+</ul>
+</li>
+<li><a href="#chapter-About%20logs">About logs</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-TextTrackRenderer"></a></p>
+<h1>TextTrackRenderer</h1>
+<p><a name="chapter-Overview"></a></p>
+<h2>Overview</h2>
+<p>The TextTrackRenderer is a tool allowing to render subtitles synchronized with
+a video element (or any HTMLMediaElement).</p>
+<p>For now it supports the following formats:</p>
+<ul>
+<li>TTML</li>
+<li>webVTT</li>
+<li>srt</li>
+<li>sami</li>
+</ul>
+<p>The video does not need to be played through the RxPlayer for the
+TextTrackRenderer to work. It is a completely independent tool which just
+rely on the video element for synchronization information.</p>
+<p><a name="chapter-Brief%20summary"></a></p>
+<h2>Brief summary</h2>
+<p>If you don&#x2019;t want to read all this documentation, here is a complete example of
+how it can be used:</p>
+<pre><code class="language-js"><span class="hljs-comment">// import TextTrackRenderer and the parsers we want</span>
+<span class="hljs-keyword">import</span> TextTrackRenderer, {
+  TTML_PARSER,
+  VTT_PARSER,
+  SRT_PARSER,
+  SAMI_PARSER,
+} <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/tools/TextTrackRenderer&quot;</span>;
+
+<span class="hljs-comment">// Add the needed parsers to the TextTrackRenderer</span>
+TextTrackRenderer.addParsers([ TTML_PARSER, VTT_PARSER, SRT_PARSER, SAMI_PARSER ]);
+
+
+<span class="hljs-comment">// get video element the subtitles has to be synchronized to</span>
+<span class="hljs-keyword">const</span> videoElement = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">&quot;video&quot;</span>);
+
+<span class="hljs-comment">// get HTML element in which the text track will be displayed</span>
+<span class="hljs-comment">// Should generally be on top of the video, with the same size than it (but can</span>
+<span class="hljs-comment">// also be in any shape, corresponding to your UI needs).</span>
+<span class="hljs-keyword">const</span> textTrackElement = <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">&quot;.text-track-container&quot;</span>);
+
+<span class="hljs-keyword">const</span> textTrackRenderer = <span class="hljs-keyword">new</span> TextTrackRenderer({
+  videoElement,
+  textTrackElement,
+});
+
+<span class="hljs-comment">// example: a &quot;.srt&quot; track</span>
+<span class="hljs-keyword">const</span> exampleSRT = <span class="hljs-string">`1
+00:00:01,600 --&gt; 00:00:04,200
+English (US)
+
+2
+00:00:05,900 --&gt; 00:00:07,999
+This is a subtitle in American English
+
+3
+00:00:10,000 --&gt; 00:00:14,000
+Adding subtitles is very easy to do
+`</span>;
+
+<span class="hljs-keyword">try</span> {
+  textTrackRenderer.setTextTrack({
+    <span class="hljs-attr">data</span>: exampleSRT,
+    <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;srt&quot;</span>, <span class="hljs-comment">// or &quot;ttml&quot; / &quot;vtt&quot; / &quot;sami&quot;</span>
+    <span class="hljs-comment">// timeOffset: 2.3, // optional offset in seconds to add to the subtitles</span>
+  });
+} <span class="hljs-keyword">catch</span> (e) {
+  <span class="hljs-built_in">console</span>.error(<span class="hljs-string">`Could not parse the subtitles: <span class="hljs-subst">${e}</span>`</span>);
+}
+</code></pre>
+<p><a name="chapter-How%20to%20import%20it"></a></p>
+<h2>How to import it</h2>
+<p>The TextTrackRenderer is still considered an &#x201C;experimental&#x201D; tool. This means
+that its API could change at any new version of the RxPlayer (don&#x2019;t worry, we
+would still document all changes made to it in the corresponding release note).</p>
+<p>As an experimental tool, the TextTrackRenderer is imported as such:</p>
+<pre><code class="language-ts"><span class="hljs-keyword">import</span> TextTrackRenderer <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/tools/TextTrackRenderer&quot;</span>;
+</code></pre>
+<p>But just importing the TextTrackRenderer alone is pointless, you also have to
+import the text track parsers you want to use manually (this is a choice we
+made to avoid wasting space for subtitles formats you might not want).</p>
+<p>To import the parsers you want, you just have to do something along the line
+of:</p>
+<pre><code class="language-js"><span class="hljs-comment">// Add two parsers to the TextTrackRenderer: one for TTML subtitles and one for</span>
+<span class="hljs-comment">// srt subtitles</span>
+<span class="hljs-keyword">import</span> TextTrackRenderer, {
+  TTML_PARSER,
+  SRT_PARSER,
+} <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/tools/TextTrackRenderer&quot;</span>;
+TextTrackRenderer.addParsers([ TTML_PARSER, SRT_PARSER ]);
+</code></pre>
+<p>Here are the different available parsers:</p>
+<table>
+<thead>
+<tr>
+<th>Import name</th>
+<th>Subtitles format parsed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TTML_PARSER</code></td>
+<td>TTML</td>
+</tr>
+<tr>
+<td><code>VTT_PARSER</code></td>
+<td>WebVTT</td>
+</tr>
+<tr>
+<td><code>SRT_PARSER</code></td>
+<td>SubRip (.srt)</td>
+</tr>
+<tr>
+<td><code>SAMI_PARSER</code></td>
+<td>SAMI</td>
+</tr>
+</tbody>
+</table>
+<p><a name="chapter-How%20to%20use%20it"></a></p>
+<h2>How to use it</h2>
+<p><a name="subchapter-Preamble"></a></p>
+<h3>Preamble</h3>
+<p>Now that it is imported, we can begin to use it.</p>
+<p>We will need three items:</p>
+<ol>
+<li>
+<p>The video element our subtitles has to be synchronized to.</p>
+</li>
+<li>
+<p>Another HTML element, in which the various subtitles will be rendered by
+the TextTrackRenderer. In general, you want that element to be on top of
+the video element, with the same dimensions. You might however set it in
+the shape and size you want.</p>
+<p>It can even be reduced dynamically at any time (for example, to reduce this
+element&#x2019;s height when a UI element appear at  the bottom of the screen,
+thus avoiding the subtitles from overlapping that new element).</p>
+</li>
+<li>
+<p>The whole text track data, as a string (you will have to download the
+subtitles yourself).</p>
+</li>
+</ol>
+<p>To simplify, let&#x2019;s give a name to all those 3 elements:</p>
+<ol>
+<li>the <code>videoElement</code></li>
+<li>the <code>textTrackElement</code></li>
+<li>the <code>textTrackData</code></li>
+</ol>
+<p><a name="subchapter-Creating%20a%20TextTrackRenderer"></a></p>
+<h3>Creating a TextTrackRenderer</h3>
+<p>We first have to create a new TextTrackRenderer with the first two items:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> textTrackRenderer = <span class="hljs-keyword">new</span> TextTrackRenderer({
+  videoElement,
+  textTrackElement,
+});
+</code></pre>
+<p><a name="subchapter-Setting%20a%20text%20track%20on%20it"></a></p>
+<h3>Setting a text track on it</h3>
+<p>With <code>textTrackRenderer</code>, the TextTrackRenderer instance, we can now add at
+any time a text track through its <code>setTextTrack</code> method:</p>
+<pre><code class="language-js"><span class="hljs-keyword">try</span> {
+  textTrackRenderer.setTextTrack({
+    <span class="hljs-attr">data</span>: textTrackData,
+    <span class="hljs-attr">type</span>: SUBTITLES_FORMAT,
+  });
+} <span class="hljs-keyword">catch</span> (e) {
+  <span class="hljs-built_in">console</span>.error(<span class="hljs-string">`Could not parse the subtitles: <span class="hljs-subst">${e}</span>`</span>);
+}
+</code></pre>
+<p>Here, <code>SUBTITLES_FORMAT</code> is a string indicating in which format the subtitles
+are. It can be any of those strings:</p>
+<table>
+<thead>
+<tr>
+<th>type</th>
+<th>Corresponding subtitles format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&quot;ttml&quot;</code></td>
+<td>TTML</td>
+</tr>
+<tr>
+<td><code>&quot;vtt&quot;</code></td>
+<td>WebVTT</td>
+</tr>
+<tr>
+<td><code>&quot;srt&quot;</code></td>
+<td>SubRip (.srt)</td>
+</tr>
+<tr>
+<td><code>&quot;sami&quot;</code></td>
+<td>SAMI</td>
+</tr>
+</tbody>
+</table>
+<p>(Each format needs the corresponding parser to be imported. See the previous
+chapter for more information.)</p>
+<p>Note that the <code>setTextTrack</code> method can throw if the subtitles are found to be
+invalid.</p>
+<p>Any subsequent call to <code>setTextTrack</code> will remove the current text track and
+replace them with the new text track instead:</p>
+<pre><code class="language-js"><span class="hljs-comment">// Add TTML subtitles</span>
+textTrackRenderer.setTextTrack({
+  <span class="hljs-attr">data</span>: textTrackData1,
+  <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;ttml&quot;</span>,
+});
+
+<span class="hljs-comment">// Completely removes the TTML subtitles and replace them by other subtitles, in</span>
+<span class="hljs-comment">// webVTT this time</span>
+textTrackRenderer.setTextTrack({
+  <span class="hljs-attr">data</span>: textTrackData2,
+  <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;vtt&quot;</span>,
+});
+</code></pre>
+<p>If your subtitles have a delay or are in advance relatively to the video, you
+can also set an offset in seconds through the <code>timeOffset</code> property.</p>
+<p>For example, this will display each subtitles 1.3 seconds later (for when
+subtitles appear and disappear too much in advance):</p>
+<pre><code class="language-js">textTrackRenderer.setTextTrack({
+  <span class="hljs-attr">data</span>: textTrackData,
+  <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;srt&quot;</span>,
+  <span class="hljs-attr">timeOffset</span>: <span class="hljs-number">1.3</span>,
+});
+</code></pre>
+<p>And this will display each subtitles 1.3 seconds before they normally appear
+and disappear (for when subtitles are too late):</p>
+<pre><code class="language-js">textTrackRenderer.setTextTrack({
+  <span class="hljs-attr">data</span>: textTrackData,
+  <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;srt&quot;</span>,
+  <span class="hljs-attr">timeOffset</span>: <span class="hljs-number">-1.3</span>,
+});
+</code></pre>
+<p><a name="subchapter-Removing%20the%20current%20text%20track"></a></p>
+<h3>Removing the current text track</h3>
+<p>If you just want to completely remove the current text track, you can call the
+<code>removeTextTrack</code> method:</p>
+<pre><code class="language-js">textTrackRenderer.removeTextTrack();
+</code></pre>
+<p><a name="subchapter-Disposing%20of%20the%20TextTrackRenderer"></a></p>
+<h3>Disposing of the TextTrackRenderer</h3>
+<p>If you&#x2019;re sure that you won&#x2019;t need the TextTrackRenderer anymore, you can
+dispose of most ressources (which is not much) it took on your page by calling
+the <code>dispose</code> method:</p>
+<pre><code class="language-js">textTrackRenderer.dispose();
+</code></pre>
+<p>That TextTrackRenderer instance won&#x2019;t be usable once you&#x2019;ve call this method,
+so be sure you don&#x2019;t need it anymore before calling it.</p>
+<p><a name="subchapter-Notes%20on%20the%20SAMI%20format"></a></p>
+<h3>Notes on the SAMI format</h3>
+<p>The SAMI subtitles format might necessitate you to specify the language you want
+to parse.</p>
+<p>This can be done on the <code>setTextTrack</code> call like this:</p>
+<pre><code class="language-js">textTrackRenderer.setTextTrack({
+  <span class="hljs-attr">data</span>: textTrackData,
+  <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;sami&quot;</span>,
+  <span class="hljs-attr">language</span>: <span class="hljs-string">&quot;en-US&quot;</span>, <span class="hljs-comment">// or fr-FR...</span>
+});
+</code></pre>
+<p><a name="chapter-About%20logs"></a></p>
+<h2>About logs</h2>
+<p>The TextTrackRenderer can display logs to the console. It relies on the exact
+same logger instance than the RxPlayer.</p>
+<p>This logger can be independently imported from <code>&quot;rx-player/logger&quot;</code>:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> logger <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/logger&quot;</span>;
+</code></pre>
+<p>You can then set its verbosity through its <code>setLevel</code> method:</p>
+<pre><code class="language-js">logger.setLevel(LOGGER_LEVEL);
+</code></pre>
+<p><code>LOGGER_LEVEL</code> can be any of those strings (from the less verbose to the most):</p>
+<ul>
+<li>
+<p><code>&quot;NONE&quot;</code>: no log</p>
+</li>
+<li>
+<p><code>&quot;ERROR&quot;</code>: unexpected errors (via <code>console.error</code>)</p>
+</li>
+<li>
+<p><code>&quot;WARNING&quot;</code>: The previous level + minor problems encountered (via
+<code>console.warn</code>)</p>
+</li>
+<li>
+<p><code>&quot;INFO&quot;</code>: The previous levels + noteworthy events (via <code>console.info</code>)</p>
+</li>
+<li>
+<p><code>&quot;DEBUG&quot;</code>: The previous levels + regular events (via <code>console.log</code>)</p>
+</li>
+</ul>
+<p><span class="emoji emoji_warning">&#x26A0;&#xFE0F;</span> Updating the logger level will also update the RxPlayer&#x2019;s logger
+level as it is the exact same logger that is used there.</p>
+</body></html></div></div></div></body>

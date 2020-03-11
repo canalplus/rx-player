@@ -1,0 +1,91 @@
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>createMetaplaylist - RxPlayer Documentation</title></head><body><div class="page-wrapper"><div class="sidebar"><div class="sidebar-nav"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div><div class="toc"><p><a href="#title-createMetaplaylist">createMetaplaylist</a></p>
+<ul>
+<li><a href="#chapter-How%20to%20import%20it">How to import it</a></li>
+<li><a href="#chapter-How%20to%20use%20it">How to use it</a></li>
+</ul>
+</div></div><div class="content-wrapper"><div class="header"><div class="header-content"><a href="../index.html"><span class="nav-icon">🏠</span><span class="nav-text">Home</span></a><a href="../../list.html"><span class="nav-icon">🗎</span><span class="nav-text">Page List</span></a><a href="#"><span class="nav-icon">↑</span><span class="nav-text">Top</span></a></div></div><div class="content"><html><head></head><body><p><a name="title-createMetaplaylist"></a></p>
+<h1>createMetaplaylist</h1>
+<p><code>createMetaplaylist</code> is a function that allows to build a [metaplaylist]
+(./metaplaylist.md) object from given contents information.</p>
+<p>You may need to use this function because not all information about contents
+are known by the user when wanting to create a metaplaylist. For example,
+the end of a content will be found thanks to the content duration, that can be
+parsed from the content manifest.</p>
+<p><a name="chapter-How%20to%20import%20it"></a></p>
+<h2>How to import it</h2>
+<p><code>createMetaplaylist</code> is for now considered an &#x201C;experimental&#x201D; tool. This means
+that its API could change at any new version of the RxPlayer (don&#x2019;t worry, we
+would still document all changes made to it in the corresponding release note).</p>
+<p>As an experimental tool, it is imported as such:</p>
+<pre><code class="language-ts"><span class="hljs-keyword">import</span> { createMetaplaylist } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;rx-player/experimental/tools&quot;</span>;
+</code></pre>
+<p>You can then begin to use it right away.</p>
+<p><a name="chapter-How%20to%20use%20it"></a></p>
+<h2>How to use it</h2>
+<p><code>createMetaplaylist</code> takes two arguments :</p>
+<ul>
+<li>
+<p>contentInfos (<code>Array&lt;Object&gt;</code>) : The list of content information, in the
+playback order they should have in the metaplaylist.</p>
+<p>The list is an array of objects with this attributes :</p>
+<ul>
+<li>url (<code>string</code>): The URL of the source content</li>
+<li>transport (<code>string</code>): The transport type of the content (<code>dash</code>, <code>smooth</code>
+or even <code>metaplaylist</code>)</li>
+</ul>
+</li>
+<li>
+<p>timeOffset (<code>number|undefined</code>) : the optionnal time offset that
+applies to the metaplaylist start time (default is 0).</p>
+</li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-js">createMetaplaylist(
+    [
+        <span class="hljs-comment">// dash content, 10mn long</span>
+        {
+            <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;https://somedashcontent.mpd&quot;</span>,
+            <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+        },
+        <span class="hljs-comment">// smooth content, 35s long</span>
+        {
+            <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;https://somesmoothcontent.ism&quot;</span>,
+            <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;smooth&quot;</span>,
+        },
+        <span class="hljs-comment">// metaplaylist content, 100mn long</span>
+        {
+            <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;https://somemetaplaylistcontent&quot;</span>,
+            <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;metaplaylist&quot;</span>,
+        }
+    ],
+    <span class="hljs-number">1000</span>
+)
+</code></pre>
+<p>The returned metaplaylist will look like :</p>
+<pre><code class="language-js">    {
+        <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;MPL&quot;</span>,
+        <span class="hljs-attr">version</span>: <span class="hljs-string">&quot;0.1&quot;</span>,
+        <span class="hljs-attr">dynamic</span>: <span class="hljs-literal">false</span>,
+        <span class="hljs-attr">contents</span>: [
+            {
+                <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;https://somedashcontent.mpd&quot;</span>,
+                <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;dash&quot;</span>,
+                <span class="hljs-attr">startTime</span>: <span class="hljs-number">1000</span>,
+                <span class="hljs-attr">endTime</span>: <span class="hljs-number">1600</span>,
+            },
+            {
+                <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;https://somesmoothcontent.ism&quot;</span>,
+                <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;smooth&quot;</span>,
+                <span class="hljs-attr">startTime</span>: <span class="hljs-number">1600</span>,
+                <span class="hljs-attr">endTime</span>: <span class="hljs-number">1635</span>,
+            },
+            {
+                <span class="hljs-attr">url</span>: <span class="hljs-string">&quot;https://somemetaplaylistcontent&quot;</span>,
+                <span class="hljs-attr">transport</span>: <span class="hljs-string">&quot;metaplaylist&quot;</span>,
+                <span class="hljs-attr">startTime</span>: <span class="hljs-number">1635</span>,
+                <span class="hljs-attr">endTime</span>: <span class="hljs-number">7635</span>,
+            },
+        ],
+    }
+</code></pre>
+</body></html></div></div></div></body>
