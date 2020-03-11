@@ -36,14 +36,15 @@ const isSamsungBrowser : boolean = !isNode &&
                                    /SamsungBrowser/.test(navigator.userAgent);
 
 const isSafari : boolean =
-  !isNode &&
-  /* tslint:disable ban */
-  Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 ||
-  /* tslint:enable ban */
-  /* tslint:disable no-unsafe-any */
-  (window as any).safari?.pushNotification.toString() ===
-    "[object SafariRemoteNotification]";
-  /* tslint:enable no-unsafe-any */
+  !isNode && (
+    /* tslint:disable ban */
+    Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 ||
+    /* tslint:enable ban */
+    /* tslint:disable no-unsafe-any */
+    (window as any).safari?.pushNotification.toString() ===
+      "[object SafariRemoteNotification]"
+    /* tslint:enable no-unsafe-any */
+  );
 
 const isSafariMobile : boolean = !isNode &&
                                  typeof navigator.platform === "string" &&
