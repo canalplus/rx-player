@@ -3430,7 +3430,7 @@ var isFirefox = !_is_node__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"] && nav
 var isSamsungBrowser = !_is_node__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"] && /SamsungBrowser/.test(navigator.userAgent);
 var isSafari = !_is_node__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"] &&
 /* tslint:disable ban */
-Object.prototype.toString.call(window.HTMLElement).includes("Constructor") ||
+Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 ||
 /* tslint:enable ban */
 
 /* tslint:disable no-unsafe-any */
@@ -4146,17 +4146,17 @@ function of() {
 
 
 
-function subscribeToResult(outerSubscriber, result, outerValue, outerIndex, innerSubscriber) {
-    if (innerSubscriber === void 0) {
-        innerSubscriber = new _InnerSubscriber__WEBPACK_IMPORTED_MODULE_0__[/* InnerSubscriber */ "a"](outerSubscriber, outerValue, outerIndex);
+function subscribeToResult(outerSubscriber, result, outerValue, outerIndex, destination) {
+    if (destination === void 0) {
+        destination = new _InnerSubscriber__WEBPACK_IMPORTED_MODULE_0__[/* InnerSubscriber */ "a"](outerSubscriber, outerValue, outerIndex);
     }
-    if (innerSubscriber.closed) {
+    if (destination.closed) {
         return undefined;
     }
     if (result instanceof _Observable__WEBPACK_IMPORTED_MODULE_2__[/* Observable */ "a"]) {
-        return result.subscribe(innerSubscriber);
+        return result.subscribe(destination);
     }
-    return Object(_subscribeTo__WEBPACK_IMPORTED_MODULE_1__[/* subscribeTo */ "a"])(result)(innerSubscriber);
+    return Object(_subscribeTo__WEBPACK_IMPORTED_MODULE_1__[/* subscribeTo */ "a"])(result)(destination);
 }
 //# sourceMappingURL=subscribeToResult.js.map
 
@@ -5313,13 +5313,10 @@ var MergeMapSubscriber = /*@__PURE__*/ (function (_super) {
         this._innerSub(result, value, index);
     };
     MergeMapSubscriber.prototype._innerSub = function (ish, value, index) {
-        var innerSubscriber = new _InnerSubscriber__WEBPACK_IMPORTED_MODULE_3__[/* InnerSubscriber */ "a"](this, value, index);
+        var innerSubscriber = new _InnerSubscriber__WEBPACK_IMPORTED_MODULE_3__[/* InnerSubscriber */ "a"](this, undefined, undefined);
         var destination = this.destination;
         destination.add(innerSubscriber);
-        var innerSubscription = Object(_util_subscribeToResult__WEBPACK_IMPORTED_MODULE_1__[/* subscribeToResult */ "a"])(this, ish, undefined, undefined, innerSubscriber);
-        if (innerSubscription !== innerSubscriber) {
-            destination.add(innerSubscription);
-        }
+        Object(_util_subscribeToResult__WEBPACK_IMPORTED_MODULE_1__[/* subscribeToResult */ "a"])(this, ish, value, index, innerSubscriber);
     };
     MergeMapSubscriber.prototype._complete = function () {
         this.hasCompleted = true;
@@ -10643,30 +10640,23 @@ var tslib_es6 = __webpack_require__(4);
 // CONCATENATED MODULE: ./node_modules/rxjs/_esm5/internal/util/Immediate.js
 /** PURE_IMPORTS_START  PURE_IMPORTS_END */
 var nextHandle = 1;
-var RESOLVED = /*@__PURE__*/ (function () { return /*@__PURE__*/ Promise.resolve(); })();
-var activeHandles = {};
-function findAndClearHandle(handle) {
-    if (handle in activeHandles) {
-        delete activeHandles[handle];
-        return true;
+var tasksByHandle = {};
+function runIfPresent(handle) {
+    var cb = tasksByHandle[handle];
+    if (cb) {
+        cb();
     }
-    return false;
 }
 var Immediate = {
     setImmediate: function (cb) {
         var handle = nextHandle++;
-        activeHandles[handle] = true;
-        RESOLVED.then(function () { return findAndClearHandle(handle) && cb(); });
+        tasksByHandle[handle] = cb;
+        Promise.resolve().then(function () { return runIfPresent(handle); });
         return handle;
     },
     clearImmediate: function (handle) {
-        findAndClearHandle(handle);
+        delete tasksByHandle[handle];
     },
-};
-var TestTools = {
-    pending: function () {
-        return Object.keys(activeHandles).length;
-    }
 };
 //# sourceMappingURL=Immediate.js.map
 
@@ -13907,13 +13897,10 @@ var SwitchMapSubscriber = /*@__PURE__*/ (function (_super) {
         if (innerSubscription) {
             innerSubscription.unsubscribe();
         }
-        var innerSubscriber = new _InnerSubscriber__WEBPACK_IMPORTED_MODULE_2__[/* InnerSubscriber */ "a"](this, value, index);
+        var innerSubscriber = new _InnerSubscriber__WEBPACK_IMPORTED_MODULE_2__[/* InnerSubscriber */ "a"](this, undefined, undefined);
         var destination = this.destination;
         destination.add(innerSubscriber);
-        this.innerSubscription = Object(_util_subscribeToResult__WEBPACK_IMPORTED_MODULE_3__[/* subscribeToResult */ "a"])(this, result, undefined, undefined, innerSubscriber);
-        if (this.innerSubscription !== innerSubscriber) {
-            destination.add(this.innerSubscription);
-        }
+        this.innerSubscription = Object(_util_subscribeToResult__WEBPACK_IMPORTED_MODULE_3__[/* subscribeToResult */ "a"])(this, result, value, index, innerSubscriber);
     };
     SwitchMapSubscriber.prototype._complete = function () {
         var innerSubscription = this.innerSubscription;
@@ -19085,7 +19072,6 @@ function shareReplayOperator(_a) {
                 },
                 complete: function () {
                     isComplete = true;
-                    subscription = undefined;
                     subject.complete();
                 },
             });
@@ -24673,13 +24659,10 @@ var exhaustMap_ExhaustMapSubscriber = /*@__PURE__*/ (function (_super) {
         this._innerSub(result, value, index);
     };
     ExhaustMapSubscriber.prototype._innerSub = function (result, value, index) {
-        var innerSubscriber = new InnerSubscriber["a" /* InnerSubscriber */](this, value, index);
+        var innerSubscriber = new InnerSubscriber["a" /* InnerSubscriber */](this, undefined, undefined);
         var destination = this.destination;
         destination.add(innerSubscriber);
-        var innerSubscription = Object(subscribeToResult["a" /* subscribeToResult */])(this, result, undefined, undefined, innerSubscriber);
-        if (innerSubscription !== innerSubscriber) {
-            destination.add(innerSubscription);
-        }
+        Object(subscribeToResult["a" /* subscribeToResult */])(this, result, value, index, innerSubscriber);
     };
     ExhaustMapSubscriber.prototype._complete = function () {
         this.hasCompleted = true;
@@ -48980,10 +48963,7 @@ var CatchSubscriber = /*@__PURE__*/ (function (_super) {
             this._unsubscribeAndRecycle();
             var innerSubscriber = new _InnerSubscriber__WEBPACK_IMPORTED_MODULE_2__[/* InnerSubscriber */ "a"](this, undefined, undefined);
             this.add(innerSubscriber);
-            var innerSubscription = Object(_util_subscribeToResult__WEBPACK_IMPORTED_MODULE_3__[/* subscribeToResult */ "a"])(this, result, undefined, undefined, innerSubscriber);
-            if (innerSubscription !== innerSubscriber) {
-                this.add(innerSubscription);
-            }
+            Object(_util_subscribeToResult__WEBPACK_IMPORTED_MODULE_3__[/* subscribeToResult */ "a"])(this, result, undefined, undefined, innerSubscriber);
         }
     };
     return CatchSubscriber;
