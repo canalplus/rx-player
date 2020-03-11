@@ -38,7 +38,7 @@ const isSamsungBrowser : boolean = !isNode &&
 const isSafari : boolean =
   !isNode &&
   /* tslint:disable ban */
-  Object.prototype.toString.call(window.HTMLElement).includes("Constructor") ||
+  Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 ||
   /* tslint:enable ban */
   /* tslint:disable no-unsafe-any */
   (window as any).safari?.pushNotification.toString() ===
