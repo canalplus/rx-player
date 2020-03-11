@@ -15,13 +15,16 @@
  */
 
 import idGenerator from "../../../utils/id_generator";
+import getMaximumPosition from "../utils/get_maximum_position";
+import getMinimumPosition from "../utils/get_minimum_position";
+
 import {
   IParsedAdaptation,
   IParsedManifest,
   IParsedPeriod,
   IParsedRepresentation,
 } from "../types";
-import createRepresentationIndex from "./representation_index";
+import LocalRepresentationIndex from "./representation_index";
 import {
   ILocalAdaptation,
   ILocalManifest,
@@ -47,9 +50,9 @@ export default function parseLocalManifest(
   }
   const periodIdGenerator = idGenerator();
   const { isFinished } = localManifest;
-  const manifest = {
+  const manifest: IParsedManifest = {
     availabilityStartTime: 0,
-    duration: localManifest.duration,
+    baseURLs: null,
     expired: localManifest.expired,
     id: "local-manifest_" + generateManifestID(),
     transportType: "local",
@@ -58,6 +61,20 @@ export default function parseLocalManifest(
     uris: [],
     periods: localManifest.periods
       .map(period => parsePeriod(period, periodIdGenerator, isFinished)),
+  };
+  const maximumPosition = getMaximumPosition(manifest);
+  if (maximumPosition !== undefined) {
+    manifest.maximumTime = {
+        isContinuous : false,
+        value : maximumPosition,
+        time : performance.now(),
+    };
+  }
+  const minimumPosition = getMinimumPosition(manifest);
+  manifest.minimumTime = {
+    isContinuous : false,
+    value : minimumPosition !== undefined ? minimumPosition : 0,
+    time : performance.now(),
   };
   return manifest;
 }
@@ -106,8 +123,7 @@ function parseAdaptation(
     type: adaptation.type,
     audioDescription: adaptation.audioDescription,
     closedCaption: adaptation.closedCaption,
-    representations: adaptation.representations
-      .map((representation) =>
+    representations: adaptation.representations.map((representation) =>
         parseRepresentation(representation, representationIdGenerator, isFinished)),
   };
 }
@@ -122,14 +138,12 @@ function parseRepresentation(
   isFinished : boolean
 ) : IParsedRepresentation {
   const id = "representation-" + representationIdGenerator();
-  return {
-    id,
-    bitrate: representation.bitrate,
-    height: representation.height,
-    width: representation.width,
-    codecs: representation.codecs,
-    mimeType: representation.mimeType,
-    index: createRepresentationIndex(representation.index, id, isFinished),
-    contentProtections: representation.contentProtections,
-  };
+  return { id,
+           bitrate: representation.bitrate,
+           height: representation.height,
+           width: representation.width,
+           codecs: representation.codecs,
+           mimeType: representation.mimeType,
+           index: new LocalRepresentationIndex(representation.index, id, isFinished),
+           contentProtections: representation.contentProtections };
 }

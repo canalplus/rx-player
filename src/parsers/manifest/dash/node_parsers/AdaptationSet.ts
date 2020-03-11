@@ -52,11 +52,11 @@ export interface IAdaptationSetIntermediateRepresentation {
 
 export interface IAdaptationSetChildren {
   // required
+  baseURLs : IBaseURL[];
   representations : IRepresentationIntermediateRepresentation[];
 
   // optional
   accessibility? : IScheme;
-  baseURL? : IBaseURL; // BaseURL for the contents.
   contentComponent? : IParsedContentComponent;
   contentProtections? : IParsedContentProtection[];
   essentialProperties? : IScheme[];
@@ -103,7 +103,7 @@ function parseAdaptationSetChildren(
   adaptationSetChildren : NodeList
 ) : IAdaptationSetChildren {
   const children : IAdaptationSetChildren = {
-    baseURL: undefined,
+    baseURLs: [],
     representations: [],
   };
   const contentProtections = [];
@@ -118,7 +118,10 @@ function parseAdaptationSetChildren(
           break;
 
         case "BaseURL":
-          children.baseURL = parseBaseURL(currentElement);
+          const baseURLObj = parseBaseURL(currentElement);
+          if (baseURLObj !== undefined) {
+            children.baseURLs.push(baseURLObj);
+          }
           break;
 
         case "ContentComponent":

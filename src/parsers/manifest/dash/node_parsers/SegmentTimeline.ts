@@ -18,24 +18,26 @@ import parseS, {
   IParsedS,
 } from "./S";
 
-export type IParsedTimeline = IParsedS[];
+export type ITimelineParser = () => IParsedS[];
 
 /**
  * @param {Element} root
- * @returns {Array.<Object>}
+ * @returns {Function}
  */
-export default function parseSegmentTimeline(root: Element) : IParsedTimeline {
-  const parsedS : IParsedS[] = [];
-  const timelineChildren = root.childNodes;
-  for (let i = 0; i < timelineChildren.length; i++) {
-    if (timelineChildren[i].nodeType === Node.ELEMENT_NODE) {
-      const currentElement = timelineChildren[i] as Element;
-
-      if (currentElement.nodeName === "S") {
+export default function createSegmentTimelineParser(root: Element) : ITimelineParser {
+  let result : IParsedS[] | null = null;
+  return function() {
+    if (result === null) {
+      const parsedS : IParsedS[] = [];
+      const timelineChildren = root.getElementsByTagName("S");
+      const timelineChildrenLength = timelineChildren.length;
+      for (let i = 0; i < timelineChildrenLength; i++) {
+        const currentElement = timelineChildren[i];
         const s = parseS(currentElement);
         parsedS.push(s);
       }
+      result = parsedS;
     }
-  }
-  return parsedS;
+    return result;
+  };
 }

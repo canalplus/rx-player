@@ -26,6 +26,12 @@ import {
   mergeMap,
 } from "rxjs/operators";
 import { ICustomError } from "../../../errors";
+import Manifest, {
+  Adaptation,
+  ISegment,
+  Period,
+  Representation,
+} from "../../../manifest";
 import {
   ILoaderDataLoadedValue,
   ILoaderProgress,
@@ -37,8 +43,8 @@ import assertUnreachable from "../../../utils/assert_unreachable";
 import castToObservable from "../../../utils/cast_to_observable";
 import objectAssign from "../../../utils/object_assign";
 import tryCatch from "../../../utils/rx-try_catch";
-import backoff from "../utils/backoff";
 import errorSelector from "../utils/error_selector";
+import tryURLsWithBackoff from "../utils/try_urls_with_backoff";
 
 // Data comes from a local cache (no request was done)
 interface IPipelineLoaderCache<T> { type : "cache";
@@ -84,9 +90,9 @@ export type IPipelineLoaderEvent<T> = IPipelineLoaderData<T> |
 
 // Options you can pass on to the loader
 export interface ISegmentPipelineLoaderOptions<T> {
-  cache? : { add : (obj : ISegmentLoaderArguments,
+  cache? : { add : (obj : IContent,
                     arg : ILoaderDataLoadedValue<T>) => void;
-             get : (obj : ISegmentLoaderArguments)
+             get : (obj : IContent)
                      => ILoaderDataLoadedValue<T>; }; // Caching logic
   maxRetry : number; // Maximum number of time a request on error will be retried
   maxRetryOffline : number; // Maximum number of time a request be retried when
@@ -97,6 +103,14 @@ export interface ISegmentPipelineLoaderOptions<T> {
 
 export type ISegmentPipelineLoader<T> =
   (x : ISegmentLoaderArguments) => ISegmentLoaderObservable<T>;
+
+export interface IContent {
+  manifest : Manifest;
+  period : Period;
+  adaptation : Adaptation;
+  representation : Representation;
+  segment : ISegment;
+}
 
 /**
  * Returns function allowing to download the wanted data through the loader.
@@ -139,7 +153,7 @@ export type ISegmentPipelineLoader<T> =
 export default function createSegmentLoader<T>(
   loader : ISegmentPipelineLoader<T>,
   options : ISegmentPipelineLoaderOptions<T>
-) : (x : ISegmentLoaderArguments) => Observable<IPipelineLoaderEvent<T>> {
+) : (x : IContent) => Observable<IPipelineLoaderEvent<T>> {
   const { cache, maxRetry, maxRetryOffline } = options;
 
   // Backoff options given to the backoff retry done with the loader function.
@@ -157,7 +171,7 @@ export default function createSegmentLoader<T>(
    * @returns {Observable}
    */
   function loadData(
-    loaderArgument : ISegmentLoaderArguments
+    wantedContent : IContent
   ) : Observable< ISegmentLoaderEvent<T> |
                   IPipelineLoaderRequest |
                   IPipelineLoaderWarning |
@@ -173,35 +187,38 @@ export default function createSegmentLoader<T>(
                     IPipelineLoaderRequest |
                     IPipelineLoaderWarning >
     {
-      const request$ = backoff<ISegmentLoaderEvent<T>>(
-        tryCatch<ISegmentLoaderArguments,
-                 ISegmentLoaderEvent<T>>(loader, loaderArgument),
-        backoffOptions
-      ).pipe(
+      const request$ = (url : string | null) => {
+        const loaderArgument = objectAssign({ url }, wantedContent);
+        return observableConcat(
+          observableOf({ type: "request" as const, value: loaderArgument }),
+          tryCatch(loader, loaderArgument));
+      };
+      return tryURLsWithBackoff(wantedContent.segment.mediaURLs ?? [null],
+                                request$,
+                                backoffOptions).pipe(
         catchError((error : unknown) : Observable<never> => {
           throw errorSelector(error);
         }),
 
-        map((evt) : ISegmentLoaderEvent<T> | IPipelineLoaderWarning => {
+        map((evt) : ISegmentLoaderEvent<T> |
+                    IPipelineLoaderWarning |
+                    IPipelineLoaderRequest => {
           if (evt.type === "retry") {
             return { type: "warning" as const,
                      value: errorSelector(evt.value) };
+          } else if (evt.value.type === "request") {
+            return evt.value;
           }
 
           const response = evt.value;
           if (response.type === "data-loaded" && cache != null) {
-            cache.add(loaderArgument, response.value);
+            cache.add(wantedContent, response.value);
           }
           return evt.value;
         }));
-
-      return observableConcat(
-        observableOf({ type: "request" as const, value: loaderArgument }),
-        request$
-      );
     }
 
-    const dataFromCache = cache != null ? cache.get(loaderArgument) :
+    const dataFromCache = cache != null ? cache.get(wantedContent) :
                                           null;
 
     if (dataFromCache != null) {
@@ -223,7 +240,7 @@ export default function createSegmentLoader<T>(
    * @returns {Observable}
    */
   return function startPipeline(
-    pipelineInputData : ISegmentLoaderArguments
+    pipelineInputData : IContent
   ) : Observable<IPipelineLoaderEvent<T>> {
     return loadData(pipelineInputData).pipe(
       mergeMap((arg) : Observable<IPipelineLoaderEvent<T>> => {

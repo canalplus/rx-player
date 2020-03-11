@@ -75,6 +75,15 @@ Can be either:
   - `"local"` for [local manifests](./local_manifest.md), which allows to play
     downloaded DASH, Smooth or MetaPlaylist contents (when offline for example).
 
+Example:
+```js
+// play some dash content
+rxPlayer.loadVideo({
+  transport: "dash",
+  url: https://www.example.com/dash.mpd
+})
+```
+
 
 <a name="prop-url"></a>
 ### url ########################################################################
@@ -90,6 +99,15 @@ depends on the current browser).
 This property is mandatory unless a `manifestLoader` is defined in the
 [transportOptions](#prop-transportOptions), in which case that callback will be
 called instead any time we want to load the Manifest.
+
+Example:
+```js
+// play some dash content
+rxPlayer.loadVideo({
+  url: https://www.example.com/dash.mpd,
+  transport: "dash"
+})
+```
 
 
 <a name="prop-keySystems"></a>
@@ -107,12 +125,12 @@ here](../tutorials/contents_with_DRM.md).
 This property is an array of objects with the following properties (only
 ``type`` and ``getLicense`` are mandatory here):
 
-  - ``type`` (``string``): name of the DRM system used. Can be either
+  - __type__ (``string``): name of the DRM system used. Can be either
     ``"widevine"``, ``"playready"`` or ``clearkey`` or the type (reversed domain
     name) of the keySystem (e.g. ``"com.widevine.alpha"``,
     ``"com.microsoft.playready"`` ...).
 
-  - ``getLicense`` (``Function``): Callback which will be triggered everytime a
+  - __getLicense__ (``Function``): Callback which will be triggered everytime a
     message is sent by the Content Decryption Module (CDM), usually to
     fetch/renew the license.
 
@@ -188,7 +206,7 @@ This property is an array of objects with the following properties (only
           you're encouraged either to use Widevine (only on Chromium-based Edge)
           or to not make use of the `fallBackOnLastTry` option on that browser.
 
-  - `getLicenseConfig` (`Object|undefined`): Optional configuration for the
+  - __getLicenseConfig__ (`Object|undefined`): Optional configuration for the
     `getLicense` callback. Can contain the following properties:
        - `retry` (`Number`|`undefined`) (default: `2`): number of time
          `getLicense` is retried on error or on timeout before we fail on a
@@ -198,20 +216,20 @@ This property is an array of objects with the following properties (only
 
          Set it to `-1` to disable any timeout.
 
-  - ``serverCertificate`` (``BufferSource|undefined``): Eventual certificate
+  - __serverCertificate__ (``BufferSource|undefined``): Eventual certificate
     used to encrypt messages to the license server.
     If set, we will try to set this certificate on the CDM. If it fails, we will
     still continue to try deciphering the content (albeit a
     [warning](./errors.md) will be emitted in that case with the code
     ``"LICENSE_SERVER_CERTIFICATE_ERROR"``).
 
-  - ``persistentLicense`` (``Boolean|undefined``): Set it to ``true`` if you
+  - __persistentLicense__ (``Boolean|undefined``): Set it to ``true`` if you
     want the ability to persist the license for later retrieval.
     In that case, you will also need to set the ``licenseStorage`` attribute to
     be able to persist the license through your preferred method. This is not
     needed for most usecases.
 
-  - ``licenseStorage`` (``Object|undefined``): Required only if
+  - __licenseStorage__ (``Object|undefined``): Required only if
     ``persistentLicense`` has been set to ``true``. It's an object containing
     two functions ``load`` and ``save``:
       - ``save``: take into argument an ``Array.<Object>`` which will be the set
@@ -219,13 +237,13 @@ This property is an array of objects with the following properties (only
       - ``load``: take no argument and returns the stored ``Array.<Object>``
         (the last given to ``save``) synchronously.
 
-  - ``persistentStateRequired`` (``Boolean|undefined``): Set it to ``true`` if
+  - __persistentStateRequired__ (``Boolean|undefined``): Set it to ``true`` if
     the chosen CDM should have the ability to persist a license, ``false`` if
     you don't care. This is not needed for most usecases. ``false`` by default.
     You do not have to set it to ``true`` if the ``persistentLicense`` option is
     set.
 
-  - ``distinctiveIdentifierRequired`` (``Boolean|undefined``): When set to
+  - __distinctiveIdentifierRequired__ (``Boolean|undefined``): When set to
     ``true``, the use of
     [Distinctive Indentifier(s)](https://www.w3.org/TR/encrypted-media/#distinctive-identifier)
     or
@@ -233,7 +251,7 @@ This property is an array of objects with the following properties (only
     will be required. This is not needed for most usecases. ``false`` if you do
     not care. ``false`` by default.
 
-  - ``throwOnLicenseExpiration`` (``Boolean|undefined``): `true` by default.
+  - __throwOnLicenseExpiration__ (``Boolean|undefined``): `true` by default.
 
     If set to `true` or not set, the playback will be interrupted as soon as one
     of the current licenses expires. In that situation, you will be warned with
@@ -251,7 +269,7 @@ This property is an array of objects with the following properties (only
     In that case, content may continue to play once the license has been
     updated.
 
-  - ``fallbackOn`` (`Object`): This advanced option allows to fallback on other
+  - __fallbackOn__ (`Object`): This advanced option allows to fallback on other
       Representations (e.g. qualities) when one of them has its decription key
       refused.
 
@@ -287,7 +305,7 @@ This property is an array of objects with the following properties (only
       MediaError with a `NO_PLAYABLE_REPRESENTATION` code, as documented [in
       the errors documentation](./errors.md#types-media_error).
 
-  - ``onKeyStatusesChange`` (``Function|undefined``): Not needed for most
+  - __onKeyStatusesChange__ (``Function|undefined``): Not needed for most
     usecases.
 
     Triggered each time the key statuses of the current session
@@ -311,7 +329,7 @@ This property is an array of objects with the following properties (only
     As every other `onKeyStatusesChange`-related errors, this error will have
     the `KEY_STATUS_CHANGE_ERROR` `code` property.
 
-  - ``closeSessionsOnStop`` (``Boolean|undefined``): If set to ``true``, the
+  - __closeSessionsOnStop__ (``Boolean|undefined``): If set to ``true``, the
     ``MediaKeySession`` created for a content will be immediately closed when
     the content stops its playback. This might be required by your key system
     implementation (most often, it is not).
@@ -319,7 +337,7 @@ This property is an array of objects with the following properties (only
     If set to ``false`` or not set, the ``MediaKeySession`` can be reused if the
     same content needs to be re-decrypted.
 
-  - ``disableMediaKeysAttachmentLock`` (``Boolean|undefined``):
+  - __disableMediaKeysAttachmentLock__ (``Boolean|undefined``):
     In regular conditions, we might want to wait for the media element to have
     decryption capabilities (what we call here "MediaKeys attachment") before
     beginning to load the actual content.
@@ -402,16 +420,16 @@ the ``seekTo`` API.
 If defined, this property must be an object containing a single key. This key
 can be either:
 
-  - ``position`` (``Number``): The starting position, in seconds.
+  - __position__ (``Number``): The starting position, in seconds.
 
-  - ``wallClockTime`` (``Number|Date``): The starting wall-clock time (re-scaled
+  - __wallClockTime__ (``Number|Date``): The starting wall-clock time (re-scaled
     position from [Manifest](../terms.md#manifest) information to obtain a
     timestamp on live contents), in seconds.
     Useful to use the type of time returned by the ``getWallClockTime`` API for
     live contents. If a Date object is given, it will automatically be converted
     into seconds.
 
-  - ``fromFirstPosition`` (``Number``): relative position from the minimum
+  - __fromFirstPosition__ (``Number``): relative position from the minimum
     possible one, in seconds.
     That is:
       - for dynamic (live) contents, from the beginning of the buffer depth (as
@@ -419,7 +437,7 @@ can be either:
       - for non-dynamic (vod) contents, from the position ``0`` (this option
         should be equivalent to ``position``)
 
-  - ``fromLastPosition`` (``Number``): relative position from the maximum
+  - __fromLastPosition__ (``Number``): relative position from the maximum
     possible one, in seconds. Should be a negative number:
       - for dynamic (e.g. live) contents, it is the difference between the
         starting position and the currently last possible position, as defined
@@ -427,7 +445,7 @@ can be either:
       - for VoD contents, it is the difference between the starting position and
         the end position of the content.
 
-  - ``percentage`` (``Number``): percentage of the wanted position. ``0`` being
+  - __percentage__ (``Number``): percentage of the wanted position. ``0`` being
     the minimum position possible (0 for static content, buffer depth for
     dynamic contents) and ``100`` being the maximum position possible
     (``duration`` for VoD content, last currently possible position for dynamic
@@ -525,56 +543,10 @@ That is, the part of the code:
 This Object can contain multiple properties. Only those documented here are
 considered stable:
 
-  - ``segmentLoader`` (``Function``): defines a custom segment loader. More info
-    on it can be found [here](./plugins.md#segmentLoader).
+  - __minimumManifestUpdateInterval__ (`number|undefined`):
 
-  - ``manifestLoader`` (``Function``): defines a custom Manifest loader. More
-    info on it can be found [here](./plugins.md#manifestLoader).
-
-  - ``representationFilter`` (``Function``): allows to filter out
-    `Representation`s (i.e. media qualities) from the Manifest to avoid playing
-    them.
-    More infos on it can be found [here](./plugins.md#representationFilter).
-
-  - ``checkMediaSegmentIntegrity`` (``Boolean``): If set to true, the RxPlayer
-    will retry a media segment request - with the same retry rules than other
-    retry-able HTTP errors (like an HTTP 404) - if that segment seems corrupted.
-
-    If not set or set to false, the RxPlayer might interrupt playback in the
-    same situation.
-
-    You can set this option if you suspect the CDN providing your contents to
-    sometimes send you incomplete/corrupted segments.
-
-  - ``aggressiveMode`` (``Boolean``): If set to true, we will download segments
-    much sooner, even if we are not sure they had time to be completely
-    generated.
-
-    For the moment, this mode has only an effect for all Smooth contents and
-    some DASH contents relying on a number-based SegmentTemplate segment
-    indexing scheme.
-
-    The upside is that you will have the last segments sooner.
-
-    The downside is that requests for segments which did not had time to
-    generate might trigger a `NetworkError`. Depending on your other settings
-    (especially the `networkConfig` loadVideo options), those errors might just
-    be sent as warnings and the corresponding requests be retried.
-
-  - ``referenceDateTime`` (``Number``): Only useful for live contents. This is
-    the default amount of time, in seconds, to add as an offset to a given media
-    content's time, to obtain the real live time.
-    For example, if the media has it's `0` time corresponding to the 30th of
-    January 2010 at midnight, you can set the `referenceDateTime` to
-    `new Date(2010-01-30) / 1000`. This value is useful to communicate back to
-    you the "live time", for example through the `getWallClockTime` method.
-
-    This will only be taken into account for live contents, and if the
-    Manifest / MPD does not already contain an offset (example: an
-    availabilityStartTime in a DASH MPD).
-
-  - `minimumManifestUpdateInterval` (`Number`): Set the minimum time, in
-    milliseconds, we have to wait between Manifest updates.
+    Set the minimum time, in milliseconds, we have to wait between Manifest
+    updates.
 
     A Manifest may need to be updated in regular intervals (e.g. many DASH
     dynamic contents depend on that behavior).
@@ -590,30 +562,159 @@ considered stable:
     might help.
 
     Please note however than reducing that frequency can raise the chance of
-    rebuffering, as we might be aware of newly generated segments later than
-    we would be without that option.
-
-  - ``serverSyncInfos`` (``Object``): Mainly useful for live DASH contents
-    based on a SegmentTemplate scheme without SegmentTimeline elements.
-
-    Allows to provide a time synchronization mechanism between the client and
-    the server.
-    The `serverSyncInfos` object contains two keys:
-      - `serverTimestamp` (`number`): Unix timestamp of the server at a given
-        point in time, in milliseconds.
-      - `clientTime` (`number`): Value of the `performance.now()` API at the
-        time the `serverTimestamp` value was true. Please note that if your page
-        contains multiple worker, the `performance.now()` call should be done on
-        the same worker than the one in which loadVideo is called.
-
-    The `performance.now()` API is used here because it is the main API to
-    obtain a monotically increasing clock on the client-side.
+    rebuffering, as we might be aware of newly generated segments later than we
+    would be without that option.
 
     Example:
     ```js
-    const timeResponse = await fetch(serverTimeURL);
-    const serverTimestamp = await timeResponse.text();
+    rxPlayer.loadVideo({
+      // ...
+      transportOptions: {
+        minimumManifestUpdateInterval: 5000, // Perform Manifest updates at most
+                                             // every 5 seconds
+      }
+    });
+    ```
+
+  - __manifestUpdateUrl__ (`string|undefined`):
+
+    Set a custom Manifest URL for Manifest updates.
+    This URL can point to another version of the Manifest with a shorter
+    timeshift window, to lighten the CPU, memory and bandwidth impact of
+    Manifest updates.
+
+    Example:
+    ```js
+    rxPlayer.loadVideo({
+      transport: "dash",
+      url: "https://example.com/full-content.mpd",
+      transportOptions: {
+        manifestUpdateUrl: "https://example.com/content-with-shorter-window.mpd"
+      }
+    });
+    ```
+
+    When the RxPlayer plays a live content, it may have to refresh frequently
+    the Manifest to be aware of where to find new media segments.
+    It generally uses the regular Manifest URL when doing so, meaning that the
+    information about the whole content is downloaded again.
+
+    This is generally not a problem though: The Manifest is generally short
+    enough meaning that this process won't waste much bandwidth memory or
+    parsing time.
+    However, we found that for huge Manifests (multiple MB uncompressed), this
+    behavior could be a problem on some low-end devices (some set-top-boxes,
+    chromecasts) where slowdowns can be observed when Manifest refresh are
+    taking place.
+
+    The `manifestUpdateUrl` will thus allow an application to provide a second
+    URL, specifically used for Manifest updates, which can represent the same
+    content with a shorter timeshift window (e.g. using only 5 minutes of
+    timeshift window instead of 10 hours for the full Manifest). The content
+    will keep its original timeshift window and the RxPlayer will be able to get
+    information about new segments at a lower cost.
+
+  - __representationFilter__ (`Function|undefined`):
+
+    Allows to filter out `Representation`s (i.e. media qualities) from the
+    Manifest to avoid playing them.
+
+    ```js
+    rxPlayer.loadVideo({
+      // ...
+      transportOptions: {
+        representationFilter(representations, infos) {
+          // ...
+        }
+      }
+    });
+    ```
+
+    More infos on it can be found [here](./plugins.md#representationFilter).
+
+  - __segmentLoader__ (``Function|undefined``):
+
+    Defines a custom segment loader for when you want to perform the requests
+    yourself.
+    ```js
+    rxPlayer.loadVideo({
+      // ...
+      transportOptions: {
+        segmentLoader(infos, callbacks) {
+          // logic to download a segment
+        }
+      }
+    });
+    ```
+
+    More info on it can be found [here](./plugins.md#segmentLoader).
+
+  - __manifestLoader__ (`function|undefined`):
+
+    Defines a custom Manifest loader (allows to set a custom logic for the
+    Manifest request).
+
+    ```js
+    rxPlayer.loadVideo({
+      // ...
+      transportOptions: {
+        manifestLoader(url, callbacks) {
+          // logic to fetch the Manifest
+        }
+      }
+    });
+    ```
+
+    More info on it can be found [here](./plugins.md#manifestLoader).
+
+  - __checkMediaSegmentIntegrity__ (`boolean|undefined`):
+
+    If set to true, the RxPlayer will retry a media segment request if that
+    segment seems corrupted.
+
+    If not set or set to false, the RxPlayer might interrupt playback in the
+    same situation.
+
+    You can set this option if you suspect the CDN providing your contents to
+    sometimes send you incomplete/corrupted segments.
+
+    Example:
+    ```js
+    rxPlayer.loadVideo({
+      // ...
+      transportOptions: {
+        checkMediaSegmentIntegrity: true,
+      }
+    });
+    ```
+
+  - __serverSyncInfos__ (`Object|undefined`):
+
+    Allows to provide a time synchronization mechanism between the client and
+    the server.
+
+    This value is mainly useful for live DASH contents based on a
+    SegmentTemplate scheme without SegmentTimeline elements as those rely on
+    having a synchronized clock on the client side.
+
+    The `serverSyncInfos` object contains two keys:
+
+      - `serverTimestamp` (`number`): Unix timestamp of the server at a given
+        point in time, in milliseconds.
+
+      - `clientTime` (`number`): Value of the `performance.now()` API at the time
+        the `serverTimestamp` value was true. Please note that if your page contains
+        multiple worker, the `performance.now()` call should be done on the same
+        worker than the one in which loadVideo is called.
+
+        _The `performance.now()` API is used here because it is the main API to
+        obtain a monotically increasing clock on the client-side._
+
+    Example:
+    ```js
+    const timeResponse = await fetch(timeServerURL);
     const clientTime = performance.now();
+    const serverTimestamp = await timeResponse.text();
     const serverSyncInfos = { serverTimestamp, clientTime };
     rxPlayer.loadVideo({
       // ...
@@ -621,18 +722,68 @@ considered stable:
     })
     ```
 
-    If indicated, we will ignore any time indication on the MPD and only
-    consider `serverSyncInfos` to calculate the time on the server side.
+    If indicated, we will ignore any time indication on the MPD and only consider
+    `serverSyncInfos` to calculate the time on the server side.
 
-    This value is mostly useful for low-latency contents, as some of them do not
+    This value is also very useful for low-latency contents, as some of them do not
     indicate any server's time, relying on the client one instead.
 
-    Note that there is a risk of us losing synchronization when leap seconds
-    are added/substracted to unix time. However we consider those situations
-    rare enough (and the effect should be relatively weak) to let this as is for
-    the moment. For a more complete explanation, you can look at the
-    [corresponding chapter of the low-latency
-    documentation](./low_latency.md#note-time-sync).
+    Note that there is a risk of us losing synchronization when leap seconds are
+    added/substracted to unix time. However we consider those situations rare enough
+    (and the effect should be relatively weak) to let this as is for the moment. For
+    a complete explanation, you can look at the [corresponding chapter of the
+    low-latency documentation](./low_latency.md#note-time-sync).
+
+  - __aggressiveMode__ (``boolean|undefined``):
+
+    If set to true, we will try to download segments very early, even if we are
+    not sure they had time to be completely generated.
+
+    For the moment, this mode has only an effect for all Smooth contents and
+    some DASH contents relying on a number-based SegmentTemplate segment
+    indexing scheme.
+
+    The upside is that you might have the last segments sooner.
+    The downside is that requests for segments which did not had time to
+    generate might trigger a `NetworkError`. Depending on your other settings
+    (especially the `networkConfig` loadVideo options), those errors might just
+    be sent as warnings and the corresponding requests be retried.
+
+    Example:
+    ```js
+    rxPlayer.loadVideo({
+      // ...
+      transportOptions: {
+        aggressiveMode: true,
+      }
+    });
+    ```
+
+  - __referenceDateTime__ (`number|undefined`):
+
+    Only useful for live contents. This is the default amount of time, in
+    seconds, to add as an offset to a given media content's time, to obtain the
+    real live time.
+
+    For example, if the media has it's `0` time corresponding to the 30th of
+    January 2010 at midnight, you can set the `referenceDateTime` to `new
+    Date(2010-01-30) / 1000`. This value is useful to communicate back to you
+    the "live time", for example through the `getWallClockTime` method.
+
+    This will only be taken into account for live contents, and if the Manifest
+    / MPD does not already contain an offset (example: an
+    "availabilityStartTime" attribute in a DASH MPD).
+
+    Example:
+    ```js
+    rxPlayer.loadVideo({
+      // ...
+      transportOptions: {
+        referenceDateTime: new Date(2015-05-29) / 1000,
+      }
+    });
+    ```
+
 
 
 <a name="prop-textTrackMode"></a>

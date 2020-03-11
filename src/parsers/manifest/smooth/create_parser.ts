@@ -625,6 +625,7 @@ function createSmoothStreamingParser(
       availabilityStartTime: availabilityStartTime === undefined ?
         0 :
         availabilityStartTime,
+      baseURLs: null,
       clockOffset: serverTimeOffset,
       id: "gen-smooth-manifest-" + generateManifestID(),
       isLive,

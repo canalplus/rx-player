@@ -37,8 +37,8 @@ import {
   ITransportPipelines,
 } from "../../../transports";
 import tryCatch from "../../../utils/rx-try_catch";
-import backoff from "../utils/backoff";
 import errorSelector from "../utils/error_selector";
+import { tryRequestObservableWithBackoff } from "../utils/try_urls_with_backoff";
 import createManifestLoader, {
   IPipelineLoaderResponse,
   IPipelineLoaderResponseValue,
@@ -47,7 +47,9 @@ import parseManifestPipelineOptions from "./parse_manifest_pipeline_options";
 
 // What will be sent once parsed
 export interface IFetchManifestResult { manifest : Manifest;
-                                        sendingTime? : number; }
+                                        sendingTime? : number;
+                                        receivedTime? : number;
+                                        parsingTime : number; }
 
 // The Manifest Pipeline generated here
 export interface ICoreManifestPipeline {
@@ -105,7 +107,8 @@ export default function createManifestPipeline(
                              maxDelay: parsedOptions.maxDelay,
                              maxRetryRegular: parsedOptions.maxRetry,
                              maxRetryOffline: parsedOptions.maxRetryOffline };
-    return backoff(tryCatch(request, undefined), backoffOptions).pipe(
+    return tryRequestObservableWithBackoff(tryCatch(request, undefined),
+                                           backoffOptions).pipe(
       mergeMap(evt => {
         if (evt.type === "retry") {
           warning$.next(errorSelector(evt.value));
@@ -149,7 +152,8 @@ export default function createManifestPipeline(
       fetchedURL? : string,
       externalClockOffset? : number
     ) : Observable<IFetchManifestResult> {
-      const { sendingTime } = value;
+      const { sendingTime, receivedTime } = value;
+      const parsingTimeStart = performance.now();
       return parser({ response: value,
                       url: fetchedURL,
                       externalClockOffset,
@@ -166,7 +170,8 @@ export default function createManifestPipeline(
           for (let i = 0; i < warnings.length; i++) {
             warning$.next(warnings[i]); // TODO not through warning$
           }
-          return { manifest, sendingTime };
+          const parsingTime = performance.now() - parsingTimeStart;
+          return { manifest, sendingTime, receivedTime, parsingTime };
         })
       );
     },

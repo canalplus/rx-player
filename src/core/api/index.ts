@@ -30,6 +30,14 @@ export {
   IStartAtOption,
 } from "./option_parsers";
 export {
+  ITMAudioTrackListItem,
+  ITMTextTrackListItem,
+  ITMVideoTrackListItem,
+
+  ITMAudioTrack,
+  ITMTextTrack,
+  ITMVideoTrack,
+
   IAudioTrackPreference,
   ITextTrackPreference,
 } from "./track_choice_manager";

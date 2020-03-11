@@ -15,12 +15,10 @@
  */
 
 import config from "../../../config";
-import {
-  ILoaderDataLoadedValue,
-  ISegmentLoaderArguments,
-} from "../../../transports";
+import { ILoaderDataLoadedValue } from "../../../transports";
 import arrayIncludes from "../../../utils/array_includes";
 import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
+import { IContent } from "./create_segment_loader";
 
 const { DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
         DEFAULT_MAX_PIPELINES_RETRY_ON_OFFLINE,
@@ -28,9 +26,9 @@ const { DEFAULT_MAX_PIPELINES_RETRY_ON_ERROR,
         MAX_BACKOFF_DELAY_BASE } = config;
 
 export interface ISegmentPipelineLoaderOptions<T> {
-  cache? : { add : (obj : ISegmentLoaderArguments,
+  cache? : { add : (obj : IContent,
                     arg : ILoaderDataLoadedValue<T>) => void;
-             get : (obj : ISegmentLoaderArguments)
+             get : (obj : IContent)
                      => ILoaderDataLoadedValue<T>; }; // Caching logic
   maxRetry : number; // Maximum number of time a request on error will be retried
   maxRetryOffline : number; // Maximum number of time a request be retried when

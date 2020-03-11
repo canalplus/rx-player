@@ -23,7 +23,7 @@ import {
 import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import {
-  createIndexURL,
+  createIndexURLs,
   replaceSegmentDASHTokens,
 } from "./tokens";
 
@@ -40,11 +40,11 @@ export interface ITemplateIndex {
   indexRange?: [number, number]; // byte range for a possible index of segments
                                  // in the server
   initialization?: { // information on the initialization segment
-    mediaURL: string; // URL to access the initialization segment
+    mediaURLs: string[] | null; // URLs to access the initialization segment
     range?: [number, number]; // possible byte range to request it
   };
-  mediaURL : string; // base URL to access any segment. Can contain token to
-                     // replace to convert it to a real URL
+  mediaURLs : string[] | null; // base URL to access any segment. Can contain
+                              // token to replace to convert it to real URLs
   indexTimeOffset : number; // Temporal offset, in the current timescale (see
                             // timescale), to add to the presentation time
                             // (time a segment has at decoding time) to
@@ -93,7 +93,7 @@ export interface ITemplateIndexContextArgument {
                                 // RepresentationIndex, in seconds
   periodStart : number; // Start of the Period concerned by this
                         // RepresentationIndex, in seconds
-  representationBaseURL : string; // Base URL for the Representation concerned
+  representationBaseURLs : string[]; // Base URL for the Representation concerned
                                   // i.e. Common beginning of the URL
   representationBitrate? : number; // Bitrate of the Representation concerned
   representationId? : string; // ID of the Representation concerned
@@ -130,7 +130,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             isDynamic,
             periodEnd,
             periodStart,
-            representationBaseURL,
+            representationBaseURLs,
             representationId,
             representationBitrate } = context;
 
@@ -151,15 +151,15 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                     indexTimeOffset,
                     initialization: index.initialization == null ?
                       undefined :
-                      { mediaURL: createIndexURL(representationBaseURL,
-                                                 index.initialization.media,
-                                                 representationId,
+                      { mediaURLs: createIndexURLs(representationBaseURLs,
+                                                  index.initialization.media,
+                                                  representationId,
                                                  representationBitrate),
                         range: index.initialization.range },
-                    mediaURL: createIndexURL(representationBaseURL,
-                                             index.media,
-                                             representationId,
-                                             representationBitrate),
+                    mediaURLs: createIndexURLs(representationBaseURLs,
+                                              index.media,
+                                              representationId,
+                                              representationBitrate),
                     presentationTimeOffset,
                     startNumber: index.startNumber };
     this._isDynamic = isDynamic;
@@ -186,7 +186,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const { duration,
             startNumber,
             timescale,
-            mediaURL } = index;
+            mediaURLs } = index;
 
     const scaledStart = this._periodStart * timescale;
     const scaledEnd = this._relativePeriodEnd == null ?
@@ -231,14 +231,17 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                              duration;
       const realTime = timeFromPeriodStart + scaledStart;
       const manifestTime = timeFromPeriodStart + this._index.presentationTimeOffset;
-      const realURL = replaceSegmentDASHTokens(mediaURL, manifestTime, realNumber);
+
+      const detokenizedURLs = mediaURLs?.map(url => {
+        return replaceSegmentDASHTokens(url, manifestTime, realNumber);
+      }) ?? null;
       const args = { id: String(realNumber),
                      number: realNumber,
                      time: realTime,
                      isInit: false,
                      duration: realDuration,
                      timescale,
-                     mediaURL: realURL,
+                     mediaURLs: detokenizedURLs,
                      timestampOffset: -(index.indexTimeOffset / timescale) };
       segments.push(args);
       numberIndexedToZero++;
@@ -368,13 +371,22 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   /**
    * @param {Object} newIndex
    */
-  _update(newIndex : TemplateRepresentationIndex) : void {
+  _replace(newIndex : TemplateRepresentationIndex) : void {
     this._index = newIndex._index;
     this._aggressiveMode = newIndex._aggressiveMode;
     this._isDynamic = newIndex._isDynamic;
     this._periodStart = newIndex._periodStart;
     this._relativePeriodEnd = newIndex._relativePeriodEnd;
     this._manifestBoundsCalculator = newIndex._manifestBoundsCalculator;
+  }
+
+  /**
+   * @param {Object} newIndex
+   */
+  _update(newIndex : TemplateRepresentationIndex) : void {
+    // As segments are not declared individually, as long as this Representation
+    // is present, we have every information we need
+    this._replace(newIndex);
   }
 
   /**

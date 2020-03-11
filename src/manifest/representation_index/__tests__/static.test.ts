@@ -25,15 +25,13 @@ describe("manifest - StaticRepresentationIndex", () => {
 
   it("should return a single segment with the maximum duration and the right url", () => {
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
-    expect(staticRI.getSegments()).toEqual([{
-      id: "0",
-      isInit: false,
-      number: 0,
-      time: 0,
-      duration: Number.MAX_VALUE,
-      timescale: 1,
-      mediaURL: "foo",
-    }]);
+    expect(staticRI.getSegments()).toEqual([{ id: "0",
+                                              isInit: false,
+                                              number: 0,
+                                              time: 0,
+                                              duration: Number.MAX_VALUE,
+                                              timescale: 1,
+                                              mediaURLs: ["foo"] }]);
   });
 
   it("should return no first position", () => {
@@ -67,12 +65,12 @@ describe("manifest - StaticRepresentationIndex", () => {
     expect(staticRI.getSegments().length).toBe(1);
   });
 
-  it("should never update and warn when trying to do so", () => {
+  it("should never replace and warn when trying to do so", () => {
     const spy = jest.fn();
     jest.spyOn(log, "warn").mockImplementation(spy);
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
 
-    staticRI._update();
+    staticRI._replace();
 
     expect(spy).toHaveBeenCalledTimes(1);
   });

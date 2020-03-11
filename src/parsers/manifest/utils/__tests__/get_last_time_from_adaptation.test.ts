@@ -15,35 +15,36 @@
  */
 
 import { IRepresentationIndex } from "../../../../manifest";
-import getFirstPositionFromAdaptation from "../get_first_time_from_adaptation";
+import getLastPositionFromAdaptation from "../get_last_time_from_adaptation";
 
 function generateRepresentationIndex(
-  firstPosition : number|undefined|null
+  lastPosition : number|undefined|null
 ) : IRepresentationIndex {
   return {
     getInitSegment() { return null; },
     getSegments() { return []; },
     shouldRefresh() { return false; },
-    getFirstPosition() : number|undefined|null { return firstPosition; },
-    getLastPosition() : undefined { return ; },
+    getFirstPosition() : undefined { return ; },
+    getLastPosition() : number|undefined|null { return lastPosition; },
     checkDiscontinuity() { return -1; },
     isSegmentStillAvailable() : undefined { return ; },
     isFinished() { return false; },
     canBeOutOfSyncError() : true { return true; },
+    _replace() { /* noop */ },
     _update() { /* noop */ },
     _addSegments() { /* noop */ },
   };
 }
 
-describe("DASH parsers getFirstPositionFromAdaptation", function() {
+describe("parsers utils - getLastPositionFromAdaptation", function() {
   it("should return null if no representation", () => {
-    expect(getFirstPositionFromAdaptation({ id: "0",
+    expect(getLastPositionFromAdaptation({ id: "0",
                                             type: "audio",
                                             representations: [] }))
       .toEqual(null);
   });
 
-  it("should return the first position if a single representation is present", () => {
+  it("should return the last position if a single representation is present", () => {
     const representation1 = { id: "1",
                               bitrate: 12,
                               index: generateRepresentationIndex(37) };
@@ -53,22 +54,22 @@ describe("DASH parsers getFirstPositionFromAdaptation", function() {
     const representation3 = { id: "1",
                               bitrate: 12,
                               index: generateRepresentationIndex(null) };
-    expect(getFirstPositionFromAdaptation({ id: "0",
+    expect(getLastPositionFromAdaptation({ id: "0",
                                             type: "audio",
                                             representations: [representation1] }))
       .toEqual(37);
-    expect(getFirstPositionFromAdaptation({ id: "0",
+    expect(getLastPositionFromAdaptation({ id: "0",
                                             type: "audio",
                                             representations: [representation2] }))
       .toEqual(undefined);
-    expect(getFirstPositionFromAdaptation({ id: "0",
+    expect(getLastPositionFromAdaptation({ id: "0",
                                             type: "audio",
                                             representations: [representation3] }))
       .toEqual(null);
   });
 
   /* tslint:disable max-line-length*/
-  it("should return the maximum first position if many representations is present", () => {
+  it("should return the minimum first position if many representations is present", () => {
   /* tslint:enable max-line-length*/
     const representation1 = { id: "1",
                               bitrate: 12,
@@ -79,12 +80,12 @@ describe("DASH parsers getFirstPositionFromAdaptation", function() {
     const representation3 = { id: "1",
                               bitrate: 12,
                               index: generateRepresentationIndex(57) };
-    expect(getFirstPositionFromAdaptation({ id: "0",
+    expect(getLastPositionFromAdaptation({ id: "0",
                                             type: "audio",
                                             representations: [representation1,
                                                               representation2,
                                                               representation3] }))
-      .toEqual(137);
+      .toEqual(37);
   });
 
   it("should return undefined if one of the first position is", () => {
@@ -97,7 +98,7 @@ describe("DASH parsers getFirstPositionFromAdaptation", function() {
     const representation3 = { id: "1",
                               bitrate: 12,
                               index: generateRepresentationIndex(undefined) };
-    expect(getFirstPositionFromAdaptation({ id: "0",
+    expect(getLastPositionFromAdaptation({ id: "0",
                                             type: "audio",
                                             representations: [representation1,
                                                               representation2,
@@ -115,12 +116,12 @@ describe("DASH parsers getFirstPositionFromAdaptation", function() {
     const representation3 = { id: "1",
                               bitrate: 12,
                               index: generateRepresentationIndex(null) };
-    expect(getFirstPositionFromAdaptation({ id: "0",
+    expect(getLastPositionFromAdaptation({ id: "0",
                                             type: "audio",
                                             representations: [representation1,
                                                               representation2,
                                                               representation3] }))
-      .toEqual(137);
+      .toEqual(37);
   });
 
   it("should return null if every first positions are", () => {
@@ -133,7 +134,7 @@ describe("DASH parsers getFirstPositionFromAdaptation", function() {
     const representation3 = { id: "1",
                               bitrate: 12,
                               index: generateRepresentationIndex(null) };
-    expect(getFirstPositionFromAdaptation({ id: "0",
+    expect(getLastPositionFromAdaptation({ id: "0",
                                             type: "audio",
                                             representations: [representation1,
                                                               representation2,

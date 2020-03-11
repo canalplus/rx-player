@@ -15,8 +15,8 @@
  */
 
 import { IParsedManifest } from "../types";
-import getMaximumPosition from "./get_maximum_position";
-import getMinimumPosition from "./get_minimum_position";
+import getMaximumPosition from "../utils/get_maximum_position";
+import getMinimumPosition from "../utils/get_minimum_position";
 
 /**
  * @param {Object} manifest

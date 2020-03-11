@@ -21,7 +21,7 @@ import {
 } from "../../../../manifest";
 import { getTimescaledRange } from "../../utils/index_helpers";
 import getInitSegment from "./get_init_segment";
-import { createIndexURL } from "./tokens";
+import { createIndexURLs } from "./tokens";
 
 // index property defined for a SegmentList RepresentationIndex
 export interface IListIndex {
@@ -31,7 +31,7 @@ export interface IListIndex {
   duration : number; // duration of each element in the list, in the
                      // timescale given (see timescale and list)
   list: Array<{ // List of Segments for this index
-    mediaURL : string; // URL of the segment
+    mediaURLs : string[] | null; // URLs of the segment
     mediaRange? : [number, number]; // possible byte-range of the segment
   }>;
   indexTimeOffset : number; // Temporal offset, in the current timescale (see
@@ -47,7 +47,7 @@ export interface IListIndex {
                             // ``` T * timescale + indexTimeOffset ```
 
   initialization? : { // information on the initialization segment
-    mediaURL: string; // URL to access the initialization segment
+    mediaURLs: string[] | null; // URLs to access the initialization segment
     range?: [number, number]; // possible byte range to request it
   };
   indexRange?: [number, number]; // byte range for a possible index of segments
@@ -94,7 +94,7 @@ export interface IListIndexIndexArgument {
 export interface IListIndexContextArgument {
   periodStart : number; // Start of the period concerned by this
                         // RepresentationIndex, in seconds
-  representationBaseURL : string; // Base URL for the Representation concerned
+  representationBaseURLs : string[]; // Base URL for the Representation concerned
   representationId? : string; // ID of the Representation concerned
   representationBitrate? : number; // Bitrate of the Representation concerned
 }
@@ -113,7 +113,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    */
   constructor(index : IListIndexIndexArgument, context : IListIndexContextArgument) {
     const { periodStart,
-            representationBaseURL,
+            representationBaseURLs,
             representationId,
             representationBitrate } = context;
 
@@ -124,10 +124,10 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     const indexTimeOffset = presentationTimeOffset - periodStart * index.timescale;
 
     const list = index.list.map((lItem) => ({
-      mediaURL: createIndexURL(representationBaseURL,
-                               lItem.media,
-                               representationId,
-                               representationBitrate),
+      mediaURLs: createIndexURLs(representationBaseURLs,
+                                 lItem.media,
+                                 representationId,
+                                 representationBitrate),
       mediaRange: lItem.mediaRange }));
     this._index = { list,
                     timescale: index.timescale,
@@ -136,10 +136,10 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
                     indexRange: index.indexRange,
                     initialization: index.initialization == null ?
                       undefined :
-                      { mediaURL: createIndexURL(representationBaseURL,
-                                               index.initialization.media,
-                                               representationId,
-                                               representationBitrate),
+                      { mediaURLs: createIndexURLs(representationBaseURLs,
+                                                  index.initialization.media,
+                                                  representationId,
+                                                  representationBitrate),
                         range: index.initialization.range, }, };
   }
 
@@ -168,14 +168,14 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     let i = Math.floor(up / duration);
     while (i <= length) {
       const range = list[i].mediaRange;
-      const mediaURL = list[i].mediaURL;
+      const mediaURLs = list[i].mediaURLs;
       const args = { id: String(i),
                      time: i * duration + scaledStart,
                      isInit: false,
                      range,
                      duration,
                      timescale,
-                     mediaURL,
+                     mediaURLs,
                      timestampOffset: -(index.indexTimeOffset / timescale) };
       segments.push(args);
       i++;
@@ -262,17 +262,20 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   /**
    * @param {Object} newIndex
    */
-  _update(newIndex : ListRepresentationIndex) : void {
+  _replace(newIndex : ListRepresentationIndex) : void {
     this._index = newIndex._index;
   }
 
   /**
-   * We do not have to add new segments to SegmentList-based indexes.
-   * @returns {Array}
+   * @param {Object} newIndex
    */
+  _update() : void {
+    log.error("List RepresentationIndex: Cannot update a SegmentList");
+  }
+
   _addSegments() : void {
     if (__DEV__) {
-      log.warn("Tried to add Segments to a list RepresentationIndex");
+      log.warn("List RepresentationIndex: Tried to add Segments to a list RepresentationIndex");
     }
   }
 }

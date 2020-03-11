@@ -29,14 +29,13 @@
  * It always should be imported through the `features` object.
  */
 
-import assert from "../../../utils/assert";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import { IHTMLCue } from "../types";
 
 const HTML_ENTITIES = /&#([0-9]+);/g;
 const BR = /<br>/gi;
 const STYLE = /<style[^>]*>([\s\S]*?)<\/style[^>]*>/i;
-const PARAG = /\s*<p class=([^>]+)>(.*)/i;
+const PARAG = /\s*<p (?:class=([^>]+))?>(.*)/i;
 const START = /<sync[^>]+?start="?([0-9]*)"?[^0-9]/i;
 
 /**
@@ -125,10 +124,14 @@ function parseSami(smi : string, timeOffset : number, lang? : string) : IHTMLCue
 
   const langs = getClassNameByLang(css);
   const pCSS = getPCSSRules(css);
-  const klass = isNonEmptyString(lang) ? langs[lang] :
-                                         undefined;
 
-  assert(isNonEmptyString(klass), `sami: could not find lang ${lang} in CSS`);
+  let klass : string | undefined;
+  if (isNonEmptyString(lang)) {
+    klass = langs[lang];
+    if (klass === undefined) {
+      throw new Error(`sami: could not find lang ${lang} in CSS`);
+    }
+  }
 
   while (true) {
     up = syncOpen.exec(smi);

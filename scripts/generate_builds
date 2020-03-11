@@ -32,44 +32,44 @@ files="$(find dist/_esm5.processed -type f -iname '*.js')"
 # and then delete back-up unwanted files.
 if [[ "$OSTYPE" == "darwin"* ]]; then
   for f in "$files"; do
-    sed -i.DELETE -E "s/[[:<:]]__DEV__[[:>:]]/false/g" $f
+    sed -i.DELETE -E "s/[[:<:]]__DEV__[[:>:]]/false/g; \
 
-    sed -i.DELETE -E "s/[[:<:]]__LOGGER_LEVEL__[[:>:]]/\"NONE\"/g" $f
+                      s/[[:<:]]__LOGGER_LEVEL__[[:>:]]/\"NONE\"/g; \
 
-    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.EME[[:>:]]/false/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.SMOOTH[[:>:]]/false/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.DASH[[:>:]]/false/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.LOCAL_MANIFEST[[:>:]]/false/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.DIRECTFILE[[:>:]]/false/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.METAPLAYLIST[[:>:]]/false/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.HTML_SAMI[[:>:]]/false/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.HTML_SRT[[:>:]]/false/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.HTML_TTML[[:>:]]/false/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.HTML_VTT[[:>:]]/false/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.NATIVE_SAMI[[:>:]]/false/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.NATIVE_SRT[[:>:]]/false/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.NATIVE_TTML[[:>:]]/false/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.NATIVE_VTT[[:>:]]/false/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__FEATURES__\.BIF_PARSER[[:>:]]/false/g" $f
+                      s/[[:<:]]__FEATURES__\.EME[[:>:]]/false/g; \
+                      s/[[:<:]]__FEATURES__\.SMOOTH[[:>:]]/false/g; \
+                      s/[[:<:]]__FEATURES__\.DASH[[:>:]]/false/g; \
+                      s/[[:<:]]__FEATURES__\.LOCAL_MANIFEST[[:>:]]/false/g; \
+                      s/[[:<:]]__FEATURES__\.DIRECTFILE[[:>:]]/false/g; \
+                      s/[[:<:]]__FEATURES__\.METAPLAYLIST[[:>:]]/false/g; \
+                      s/[[:<:]]__FEATURES__\.HTML_SAMI[[:>:]]/false/g; \
+                      s/[[:<:]]__FEATURES__\.HTML_SRT[[:>:]]/false/g; \
+                      s/[[:<:]]__FEATURES__\.HTML_TTML[[:>:]]/false/g; \
+                      s/[[:<:]]__FEATURES__\.HTML_VTT[[:>:]]/false/g; \
+                      s/[[:<:]]__FEATURES__\.NATIVE_SAMI[[:>:]]/false/g; \
+                      s/[[:<:]]__FEATURES__\.NATIVE_SRT[[:>:]]/false/g; \
+                      s/[[:<:]]__FEATURES__\.NATIVE_TTML[[:>:]]/false/g; \
+                      s/[[:<:]]__FEATURES__\.NATIVE_VTT[[:>:]]/false/g; \
+                      s/[[:<:]]__FEATURES__\.BIF_PARSER[[:>:]]/false/g; \
 
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.EME_MANAGER[[:>:]]/\"..\/core\/eme\/index.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.IMAGE_BUFFER[[:>:]]/\"..\/custom_source_buffers\/image\/index.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.BIF_PARSER[[:>:]]/\"..\/parsers\/images\/bif.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.SMOOTH[[:>:]]/\"..\/transports\/smooth\/index.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.DASH[[:>:]]/\"..\/transports\/dash\/index.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.LOCAL_MANIFEST[[:<:]]/\"..\/transports\/local\/index.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.METAPLAYLIST[[:>:]]/\"..\/transports\/metaplaylist\/index.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.NATIVE_TEXT_BUFFER[[:>:]]/\"..\/custom_source_buffers\/text\/native\/index.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.NATIVE_VTT[[:>:]]/\"..\/parsers\/texttracks\/webvtt\/native.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.NATIVE_SRT[[:>:]]/\"..\/parsers\/texttracks\/srt\/native.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.NATIVE_TTML[[:>:]]/\"..\/parsers\/texttracks\/ttml\/native\/index.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.NATIVE_SAMI[[:>:]]/\"..\/parsers\/texttracks\/sami\/native.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.HTML_TEXT_BUFFER[[:>:]]/\"..\/custom_source_buffers\/text\/html\/index.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.HTML_VTT[[:>:]]/\"..\/parsers\/texttracks\/webvtt\/html\/index.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.HTML_SRT[[:>:]]/\"..\/parsers\/texttracks\/srt\/html.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.HTML_TTML[[:>:]]/\"..\/parsers\/texttracks\/ttml\/html\/index.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.HTML_SAMI[[:>:]]/\"..\/parsers\/texttracks\/sami\/html.js\"/g" $f
-    sed -i.DELETE -E "s/[[:<:]]__RELATIVE_PATH__\.DIRECTFILE[[:>:]]/\"..\/core\/init\/directfile.js\"/g" $f
+                      s/[[:<:]]__RELATIVE_PATH__\.EME_MANAGER[[:>:]]/\"..\/core\/eme\/index.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.IMAGE_BUFFER[[:>:]]/\"..\/custom_source_buffers\/image\/index.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.BIF_PARSER[[:>:]]/\"..\/parsers\/images\/bif.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.SMOOTH[[:>:]]/\"..\/transports\/smooth\/index.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.DASH[[:>:]]/\"..\/transports\/dash\/index.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.LOCAL_MANIFEST[[:<:]]/\"..\/transports\/local\/index.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.METAPLAYLIST[[:>:]]/\"..\/transports\/metaplaylist\/index.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.NATIVE_TEXT_BUFFER[[:>:]]/\"..\/custom_source_buffers\/text\/native\/index.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.NATIVE_VTT[[:>:]]/\"..\/parsers\/texttracks\/webvtt\/native.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.NATIVE_SRT[[:>:]]/\"..\/parsers\/texttracks\/srt\/native.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.NATIVE_TTML[[:>:]]/\"..\/parsers\/texttracks\/ttml\/native\/index.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.NATIVE_SAMI[[:>:]]/\"..\/parsers\/texttracks\/sami\/native.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.HTML_TEXT_BUFFER[[:>:]]/\"..\/custom_source_buffers\/text\/html\/index.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.HTML_VTT[[:>:]]/\"..\/parsers\/texttracks\/webvtt\/html\/index.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.HTML_SRT[[:>:]]/\"..\/parsers\/texttracks\/srt\/html.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.HTML_TTML[[:>:]]/\"..\/parsers\/texttracks\/ttml\/html\/index.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.HTML_SAMI[[:>:]]/\"..\/parsers\/texttracks\/sami\/html.js\"/g; \
+                      s/[[:<:]]__RELATIVE_PATH__\.DIRECTFILE[[:>:]]/\"..\/core\/init\/directfile.js\"/g" $f
   done
 
   find dist/_esm5.processed -type f -name "*.DELETE" -delete

@@ -228,22 +228,22 @@ export default function(options : ITransportOptions) : ITransportPipelines {
   };
 
   const textTrackPipeline = {
-    loader({
-      segment,
-      representation,
-    } : ISegmentLoaderArguments
+    loader(
+      { segment,
+        representation,
+        url } : ISegmentLoaderArguments
     ) : ISegmentLoaderObservable<string|ArrayBuffer|null> {
-      if (segment.isInit || segment.mediaURL === null) {
+      if (segment.isInit || url === null) {
         return observableOf({ type: "data-created" as const,
                               value: { responseData: null } });
       }
       const isMP4 = isMP4EmbeddedTrack(representation);
       if (!isMP4 || options.checkMediaSegmentIntegrity !== true) {
-        return request({ url: segment.mediaURL,
+        return request({ url,
                          responseType: isMP4 ? "arraybuffer" : "text",
                          sendProgressEvents: true });
       }
-      return request({ url: segment.mediaURL,
+      return request({ url,
                        responseType: "arraybuffer",
                        sendProgressEvents: true })
         .pipe(tap(res => {
@@ -397,15 +397,16 @@ export default function(options : ITransportOptions) : ITransportPipelines {
 
   const imageTrackPipeline = {
     loader(
-      { segment } : ISegmentLoaderArguments
+      { segment,
+        url } : ISegmentLoaderArguments
     ) : ISegmentLoaderObservable<ArrayBuffer|null> {
-      if (segment.isInit || segment.mediaURL === null) {
+      if (segment.isInit || url === null) {
         // image do not need an init segment. Passthrough directly to the parser
         return observableOf({ type: "data-created" as const,
                               value: { responseData: null } });
       }
 
-      return request({ url: segment.mediaURL,
+      return request({ url,
                        responseType: "arraybuffer",
                        sendProgressEvents: true });
     },

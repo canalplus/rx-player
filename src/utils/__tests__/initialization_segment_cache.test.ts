@@ -30,6 +30,7 @@ const representation1 = {
     isSegmentStillAvailable() : undefined { return ; },
     canBeOutOfSyncError() : true { return true; },
     isFinished() : true { return true; },
+    _replace() : never { throw new Error("Not implemented"); },
     _update() : never { throw new Error("Not implemented"); },
     _addSegments() : never { throw new Error("Not implemented"); },
   },
@@ -51,6 +52,7 @@ const representation2 = {
     isSegmentStillAvailable() : undefined { return ; },
     canBeOutOfSyncError() : false { return false; },
     isFinished() : true { return true; },
+    _replace() : never { throw new Error("Not implemented"); },
     _update() : never { throw new Error("Not implemented"); },
     _addSegments() : never { throw new Error("Not implemented"); },
   },
@@ -63,7 +65,7 @@ const initSegment1 = {
   isInit: true,
   time: 0,
   timescale: 1000,
-  mediaURL: "http://www.example.com/some.URLinit1",
+  mediaURLs: ["http://www.example.com/some.URLinit1"],
   duration: 0,
 };
 
@@ -72,7 +74,7 @@ const initSegment2 = {
   isInit: true,
   time: 0,
   timescale: 1000,
-  mediaURL: "http://www.example.com/some.URLinit2",
+  mediaURLs: ["http://www.example.com/some.URLinit2"],
   duration: 0,
 };
 
@@ -81,7 +83,7 @@ const initSegment3 = {
   isInit: true,
   time: 0,
   timescale: 1000,
-  mediaURL: "http://www.example.com/some.URLinit3",
+  mediaURLs: ["http://www.example.com/some.URLinit3"],
   duration: 0,
 };
 
@@ -90,7 +92,7 @@ const segment1 = {
   isInit: false,
   time: 0,
   timescale: 1000,
-  mediaURL: "http://www.example.com/some.URL2",
+  mediaURLs: ["http://www.example.com/some.URL2"],
   duration: 2000,
 };
 
@@ -99,7 +101,7 @@ const segment2 = {
   isInit: false,
   time: 2000,
   timescale: 1000,
-  mediaURL: "http://www.example.com/some.URL2",
+  mediaURLs: ["http://www.example.com/some.URL2"],
   duration: 2000,
 };
 
@@ -108,7 +110,7 @@ const segment3 = {
   isInit: false,
   time: 4000,
   timescale: 1000,
-  mediaURL: "http://www.example.com/some.URL3",
+  mediaURLs: ["http://www.example.com/some.URL3"],
   duration: 2000,
 };
 
@@ -117,7 +119,7 @@ const segment4 = {
   isInit: false,
   time: 6000,
   timescale: 1000,
-  mediaURL: "http://www.example.com/some.URL4",
+  mediaURLs: ["http://www.example.com/some.URL4"],
   duration: 2000,
 };
 

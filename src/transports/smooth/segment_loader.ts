@@ -72,6 +72,7 @@ const generateSegmentLoader = (
   adaptation,
   period,
   manifest,
+  url,
 } : ISegmentLoaderArguments) : ISegmentLoaderObservable<Uint8Array|ArrayBuffer|null> => {
   if (segment.isInit) {
     if (segment.privateInfos === undefined ||
@@ -125,12 +126,10 @@ const generateSegmentLoader = (
     return observableOf({ type: "data-created" as const,
                           value: { responseData } });
   }
-  else if (segment.mediaURL === null) {
+  else if (url === null) {
     return observableOf({ type: "data-created" as const,
                           value: { responseData: null } });
-  }
-  else {
-    const url = segment.mediaURL;
+  } else {
     const args = { adaptation,
                    manifest,
                    period,

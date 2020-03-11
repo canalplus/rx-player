@@ -26,7 +26,7 @@ export default {
                 mimeType: "audio/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "A48/init.mp4",
+                    mediaURLs: [BASE_URL + "A48/init.mp4"],
                   },
                   segments: [
                   ],
@@ -47,7 +47,7 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURL: BASE_URL + "V300/init.mp4",
+                    mediaURLs: [BASE_URL + "V300/init.mp4"],
                   },
                   segments: [
                   ],

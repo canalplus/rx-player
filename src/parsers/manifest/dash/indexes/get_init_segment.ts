@@ -23,7 +23,7 @@ import { ISegment } from "../../../../manifest";
  */
 export default function getInitSegment(
   index: { timescale: number;
-           initialization?: { mediaURL: string; range?: [number, number] };
+           initialization?: { mediaURLs: string[] | null; range?: [number, number] };
            indexRange?: [number, number];
            indexTimeOffset : number; }
 ) : ISegment {
@@ -35,8 +35,7 @@ export default function getInitSegment(
            range: initialization != null ? initialization.range :
                                            undefined,
            indexRange: index.indexRange,
-           mediaURL: initialization  != null ? initialization.mediaURL :
-                                               null,
+           mediaURLs: initialization?.mediaURLs ?? null,
            timescale: index.timescale,
            timestampOffset: -(index.indexTimeOffset / index.timescale) };
 }

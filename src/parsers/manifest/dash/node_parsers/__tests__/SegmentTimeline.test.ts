@@ -20,6 +20,22 @@ describe("DASH Node parsers - SegmentTimeline", () => {
     jest.resetModules();
   });
 
+  it("should return a function to parse lazily the timeline", () => {
+    const parseS = jest.fn();
+    jest.mock("../S", () => ({
+      __esModule: true,
+      default: parseS,
+    }));
+    const parseSegmentTimeline = require("../SegmentTimeline").default;
+
+    const element = new DOMParser()
+      .parseFromString("<Root S=\"a\"/>", "text/xml")
+      .childNodes[0] as Element;
+    const timeline = parseSegmentTimeline(element);
+    expect(typeof timeline).toEqual("function");
+    expect(timeline.length).toEqual(0);
+  });
+
   it("should do nothing if no childNode is present", () => {
     const parseS = jest.fn();
     jest.mock("../S", () => ({
@@ -32,7 +48,8 @@ describe("DASH Node parsers - SegmentTimeline", () => {
       .parseFromString("<Root S=\"a\"/>", "text/xml")
       .childNodes[0] as Element;
 
-    expect(parseSegmentTimeline(element)).toEqual([]);
+    const timeline = parseSegmentTimeline(element);
+    expect(timeline()).toEqual([]);
     expect(parseS).not.toHaveBeenCalled();
   });
 
@@ -57,11 +74,12 @@ describe("DASH Node parsers - SegmentTimeline", () => {
     element.appendChild(aElement);
     element.appendChild(oElement);
 
-    expect(parseSegmentTimeline(element)).toEqual([]);
+    const timeline = parseSegmentTimeline(element);
+    expect(timeline()).toEqual([]);
     expect(parseS).not.toHaveBeenCalled();
   });
 
-  it("should parse S elements", () => {
+  it("should parse S elements only when called for the first time", () => {
     const parseS = jest.fn((s) => ({ start: +s.innerHTML }));
     jest.mock("../S", () => ({
       __esModule: true,
@@ -90,10 +108,16 @@ describe("DASH Node parsers - SegmentTimeline", () => {
     element.appendChild(oElement);
     element.appendChild(sElement2);
 
-    expect(parseSegmentTimeline(element)).toEqual([{ start: 1 }, { start: 2 }]);
+    const timeline = parseSegmentTimeline(element);
+    expect(parseS).toHaveBeenCalledTimes(0);
+    expect(timeline()).toEqual([{ start: 1 }, { start: 2 }]);
     expect(parseS).toHaveBeenCalledTimes(2);
     expect(parseS).toHaveBeenCalledWith(sElement1);
     expect(parseS).toHaveBeenCalledWith(sElement2);
+    timeline();
+    expect(parseS).toHaveBeenCalledTimes(2);
+    timeline();
+    expect(parseS).toHaveBeenCalledTimes(2);
   });
 });
 /* tslint:enable no-unsafe-any */

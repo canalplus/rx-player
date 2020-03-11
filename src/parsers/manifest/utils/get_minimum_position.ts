@@ -27,20 +27,20 @@ export default function getMinimumPosition(
 ) : number | undefined {
   for (let i = 0; i <= manifest.periods.length - 1; i++) {
     const periodAdaptations = manifest.periods[i].adaptations;
-    const firstAudioAdaptationFromPeriod = periodAdaptations.audio == null ?
+    const firstAudioAdaptationFromPeriod = periodAdaptations.audio === undefined ?
       undefined :
       periodAdaptations.audio[0];
-    const firstVideoAdaptationFromPeriod =  periodAdaptations.video == null ?
+    const firstVideoAdaptationFromPeriod =  periodAdaptations.video === undefined ?
       undefined :
       periodAdaptations.video[0];
 
-    if (firstAudioAdaptationFromPeriod != null ||
-        firstVideoAdaptationFromPeriod != null)
+    if (firstAudioAdaptationFromPeriod !== undefined ||
+        firstVideoAdaptationFromPeriod !== undefined)
     {
       // null == no segment
       let minimumAudioPosition : number | null = null;
       let minimumVideoPosition : number | null = null;
-      if (firstAudioAdaptationFromPeriod != null) {
+      if (firstAudioAdaptationFromPeriod !== undefined) {
         const firstPosition =
           getFirstPositionFromAdaptation(firstAudioAdaptationFromPeriod);
         if (firstPosition === undefined) {
@@ -48,7 +48,7 @@ export default function getMinimumPosition(
         }
         minimumAudioPosition = firstPosition;
       }
-      if (firstVideoAdaptationFromPeriod != null) {
+      if (firstVideoAdaptationFromPeriod !== undefined) {
         const firstPosition =
           getFirstPositionFromAdaptation(firstVideoAdaptationFromPeriod);
         if (firstPosition === undefined) {
@@ -57,20 +57,22 @@ export default function getMinimumPosition(
         minimumVideoPosition = firstPosition;
       }
 
-      if ((firstAudioAdaptationFromPeriod != null && minimumAudioPosition === null) ||
-          (firstVideoAdaptationFromPeriod != null && minimumVideoPosition === null)) {
-        log.info("DASH Parser: found Period with no segment. ",
+      if ((firstAudioAdaptationFromPeriod !== undefined &&
+           minimumAudioPosition === null) ||
+          (firstVideoAdaptationFromPeriod !== undefined &&
+           minimumVideoPosition === null)) {
+        log.info("Parser utils: found Period with no segment. ",
                  "Going to next one to calculate first position");
         return undefined;
       }
 
-      if (minimumVideoPosition != null) {
-        if (minimumAudioPosition != null) {
+      if (minimumVideoPosition !== null) {
+        if (minimumAudioPosition !== null) {
           return Math.max(minimumAudioPosition, minimumVideoPosition);
         }
         return minimumVideoPosition;
       }
-      if (minimumAudioPosition != null) {
+      if (minimumAudioPosition !== null) {
         return minimumAudioPosition;
       }
     }
