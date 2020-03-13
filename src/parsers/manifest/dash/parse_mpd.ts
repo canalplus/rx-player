@@ -227,7 +227,6 @@ function parseCompleteIntermediateRepresentation(
   const mediaPresentationDuration = rootAttributes.duration;
   const parsedMPD : IParsedManifest = {
     availabilityStartTime,
-    baseURLs,
     clockOffset: args.externalClockOffset,
     id: rootAttributes.id != null ? rootAttributes.id :
                                     "gen-dash-manifest-" + generateManifestID(),

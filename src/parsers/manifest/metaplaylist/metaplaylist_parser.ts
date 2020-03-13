@@ -294,7 +294,6 @@ function createManifest(
 
   const time = performance.now();
   const manifest = { availabilityStartTime: 0,
-                     baseURLs: null,
                      clockOffset,
                      suggestedPresentationDelay: 10,
                      id: "gen-metaplaylist-man-" + generateManifestID(),

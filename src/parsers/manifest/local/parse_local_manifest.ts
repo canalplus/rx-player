@@ -52,7 +52,6 @@ export default function parseLocalManifest(
   const { isFinished } = localManifest;
   const manifest: IParsedManifest = {
     availabilityStartTime: 0,
-    baseURLs: null,
     expired: localManifest.expired,
     id: "local-manifest_" + generateManifestID(),
     transportType: "local",

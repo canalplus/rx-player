@@ -38,7 +38,6 @@ describe("Manifest - Manifest", () => {
 
     expect(manifest.adaptations).toEqual({});
     expect(manifest.availabilityStartTime).toEqual(undefined);
-    expect(manifest.baseURL).toEqual(undefined);
     expect(manifest.id).toEqual("man");
     expect(manifest.isDynamic).toEqual(false);
     expect(manifest.isLive).toEqual(false);
@@ -216,7 +215,6 @@ describe("Manifest - Manifest", () => {
     const oldPeriod2 = { id: "1", start: 12, adaptations: {} };
     const time = performance.now();
     const oldManifestArgs = { availabilityStartTime: 5,
-                              baseURLs: ["test1", "test2"],
                               duration: 12,
                               id: "man",
                               isDynamic: false,
@@ -243,7 +241,6 @@ describe("Manifest - Manifest", () => {
 
     expect(manifest.adaptations).toEqual({});
     expect(manifest.availabilityStartTime).toEqual(5);
-    expect(manifest.baseURLs).toEqual(["test1", "test2"]);
     expect(manifest.id).toEqual("man");
     expect(manifest.isDynamic).toEqual(false);
     expect(manifest.isLive).toEqual(false);
@@ -284,7 +281,6 @@ describe("Manifest - Manifest", () => {
     const Manifest = require("../manifest").default;
 
     const oldManifestArgs1 = { availabilityStartTime: 5,
-                               baseURL: "test",
                                duration: 12,
                                id: "man",
                                isDynamic: false,
@@ -304,7 +300,6 @@ describe("Manifest - Manifest", () => {
     expect(manifest1.getUrl()).toEqual("url1");
 
     const oldManifestArgs2 = { availabilityStartTime: 5,
-                               baseURL: "test",
                                duration: 12,
                                id: "man",
                                isDynamic: false,
@@ -358,7 +353,6 @@ describe("Manifest - Manifest", () => {
     }));
 
     const oldManifestArgs = { availabilityStartTime: 5,
-                              baseURL: "test",
                               duration: 12,
                               id: "man",
                               isDynamic: false,
@@ -392,7 +386,6 @@ describe("Manifest - Manifest", () => {
     const newPeriod2 = { id: "foo1", start: 12, adaptations: {} };
     const newManifest : any = { adaptations: newAdaptations,
                                 availabilityStartTime: 6,
-                                baseURLs: ["test2"],
                                 id: "man2",
                                 isDynamic: true,
                                 isLive: true,
@@ -409,7 +402,6 @@ describe("Manifest - Manifest", () => {
     manifest.replace(newManifest);
     expect(manifest.adaptations).toEqual(newAdaptations);
     expect(manifest.availabilityStartTime).toEqual(6);
-    expect(manifest.baseURLs).toEqual(["test2"]);
     expect(manifest.id).toEqual("man2");
     expect(manifest.isDynamic).toEqual(true);
     expect(manifest.isLive).toEqual(true);
@@ -441,7 +433,6 @@ describe("Manifest - Manifest", () => {
     }));
 
     const oldManifestArgs = { availabilityStartTime: 5,
-                              baseURL: "test",
                               duration: 12,
                               id: "man",
                               isDynamic: false,
@@ -497,7 +488,6 @@ describe("Manifest - Manifest", () => {
                          parsingErrors: [] };
     const newManifest = { adaptations: {},
                           availabilityStartTime: 6,
-                          baseURL: "test2",
                           id: "man2",
                           isDynamic: false,
                           isLive: true,
@@ -535,7 +525,6 @@ describe("Manifest - Manifest", () => {
                                      default: log }));
 
     const oldManifestArgs = { availabilityStartTime: 5,
-                              baseURL: "test",
                               duration: 12,
                               id: "man",
                               isDynamic: false,
@@ -577,7 +566,6 @@ describe("Manifest - Manifest", () => {
     const newPeriod3 = { id: "post1" };
     const newManifest = { adaptations: {},
                           availabilityStartTime: 6,
-                          baseURL: "test2",
                           id: "man2",
                           isDynamic: false,
                           isLive: true,
@@ -610,7 +598,6 @@ describe("Manifest - Manifest", () => {
                                      default: log }));
 
     const oldManifestArgs = { availabilityStartTime: 5,
-                              baseURL: "test",
                               duration: 12,
                               id: "man",
                               isDynamic: false,
@@ -651,7 +638,6 @@ describe("Manifest - Manifest", () => {
     const newPeriod3 = { id: "diff2" };
     const newManifest = { adaptations: {},
                           availabilityStartTime: 6,
-                          baseURL: "test2",
                           id: "man2",
                           isDynamic: false,
                           isLive: true,
@@ -681,7 +667,6 @@ describe("Manifest - Manifest", () => {
                                      default: log }));
 
     const oldManifestArgs = { availabilityStartTime: 5,
-                              baseURL: "test",
                               duration: 12,
                               id: "man",
                               isDynamic: false,
@@ -728,7 +713,6 @@ describe("Manifest - Manifest", () => {
     const newPeriod5 = { id: "post0", start: 5 };
     const newManifest = { adaptations: {},
                           availabilityStartTime: 6,
-                          baseURL: "test2",
                           id: "man2",
                           isDynamic: false,
                           isLive: true,

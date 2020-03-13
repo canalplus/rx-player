@@ -92,8 +92,6 @@ export interface IParsedPeriod {
 // Representation of the whole Manifest file
 export interface IParsedManifest {
   // required
-  baseURLs : string[] | null; // Base URL for relative URLs given in that Manifest.
-                              // `null` if not relevant
   id: string; // Unique ID for the manifest.
   isDynamic : boolean; // If true, this Manifest can be updated
   isLive : boolean; // If true, this Manifest describes a "live" content
